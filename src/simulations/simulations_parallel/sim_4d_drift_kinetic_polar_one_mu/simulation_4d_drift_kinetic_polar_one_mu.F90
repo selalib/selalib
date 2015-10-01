@@ -47,25 +47,25 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_remapper
   use sll_constants
   use sll_test_4d_initializer
-  use sll_module_poisson_2d_base
+  use sll_m_poisson_2d_base
   use sll_poisson_2d_periodic_cartesian_par
-  use sll_module_cubic_spline_interpolator_1d
-  use sll_module_hermite_interpolator_2d
+  use sll_m_cubic_spline_interpolator_1d
+  use sll_m_hermite_interpolator_2d
   use sll_simulation_base
   use sll_fdistribu4D_DK
   use sll_cartesian_meshes
   use sll_reduction_module
-  use sll_module_advection_2d_BSL
-  use sll_module_characteristics_2d_explicit_euler
-  use sll_module_characteristics_2d_verlet
-  use sll_module_cubic_spline_interpolator_2d
-  use sll_module_advection_1d_periodic
-  use sll_module_poisson_2d_polar
-  use sll_module_gyroaverage_2d_polar_hermite_solver
-  use sll_module_gyroaverage_2d_polar_splines_solver
-  use sll_module_gyroaverage_2d_polar_pade_solver
+  use sll_m_advection_2d_BSL
+  use sll_m_characteristics_2d_explicit_euler
+  use sll_m_characteristics_2d_verlet
+  use sll_m_cubic_spline_interpolator_2d
+  use sll_m_advection_1d_periodic
+  use sll_m_poisson_2d_polar
+  use sll_m_gyroaverage_2d_polar_hermite_solver
+  use sll_m_gyroaverage_2d_polar_splines_solver
+  use sll_m_gyroaverage_2d_polar_pade_solver
   use sll_hermite_interpolation_2d_module
-  use sll_module_qn_2d_polar_splines_solver
+  use sll_m_qn_2d_polar_splines_solver
 
 
   implicit none

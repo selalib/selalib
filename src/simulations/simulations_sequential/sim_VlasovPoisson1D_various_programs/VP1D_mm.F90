@@ -14,8 +14,8 @@ program VP1d_deltaf
 #include "sll_utilities.h"
 
   use sll_cubic_splines
-  use sll_module_cubic_spline_interpolator_1d
-  use sll_module_periodic_interpolator_1d
+  use sll_m_cubic_spline_interpolator_1d
+  use sll_m_periodic_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function

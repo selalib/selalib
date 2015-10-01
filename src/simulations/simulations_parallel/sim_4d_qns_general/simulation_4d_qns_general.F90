@@ -7,15 +7,15 @@ module sll_simulation_4d_qns_general_module
 #include "sll_utilities.h"
 
 use sll_collective
-use sll_module_interpolators_1d_base
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_interpolators_1d_base
+use sll_m_cubic_spline_interpolator_1d
 use sll_simulation_base
 use sll_parallel_array_initializer_module
 use sll_gnuplot_parallel
 use sll_general_coordinate_elliptic_solver_module
-use sll_module_scalar_field_2d_base
-use sll_module_scalar_field_2d
-use sll_module_arbitrary_degree_spline_interpolator_2d
+use sll_m_scalar_field_2d_base
+use sll_m_scalar_field_2d
+use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_timer
 
 implicit none

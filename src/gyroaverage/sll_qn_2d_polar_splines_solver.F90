@@ -17,12 +17,12 @@
 
 
 
-module sll_module_qn_2d_polar_splines_solver
+module sll_m_qn_2d_polar_splines_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_timer
-use sll_module_qn_2d_base
+use sll_m_qn_2d_base
 use sll_qn_2d_polar
 implicit none
 
@@ -136,4 +136,4 @@ call precompute_inverse_qn_matrix_polar_splines(qn%quasineutral,mu_points,mu_wei
 
   end subroutine solve_qn_2d_polar_splines
   
-end module sll_module_qn_2d_polar_splines_solver
+end module sll_m_qn_2d_polar_splines_solver

@@ -1,8 +1,8 @@
-module sll_module_deboor_splines_2d
+module sll_m_deboor_splines_2d
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_module_deboor_splines_1d
+use sll_m_deboor_splines_1d
   
   implicit none 
   
@@ -822,4 +822,4 @@ subroutine spli2d_der(&
 
    
    
- end module sll_module_deboor_splines_2d
+ end module sll_m_deboor_splines_2d

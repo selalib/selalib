@@ -27,7 +27,7 @@ module sll_pic_1d_field_solver
       sll_collective_globalsum_array_comp64, &
       sll_collective_globalsum_array_real64
 
-!    use sll_module_poisson_1d_periodic_solver
+!    use sll_m_poisson_1d_periodic_solver
     use sll_poisson_1d_fem, only: &
       poisson_1d_fem, &
       poisson_1d_fem_rhs_function ,&

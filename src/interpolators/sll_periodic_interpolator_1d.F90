@@ -6,11 +6,11 @@
 !! sll_interpolator_1d_base
 !! Define periodic interpolation of values in data define on original grid at
 !! points coordinates
-module sll_module_periodic_interpolator_1d
+module sll_m_periodic_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 use periodic_interp_module
 implicit none
 private
@@ -357,4 +357,4 @@ contains  ! ****************************************************************
     stop
   end function get_coefficients_per1d
 
-end module sll_module_periodic_interpolator_1d
+end module sll_m_periodic_interpolator_1d

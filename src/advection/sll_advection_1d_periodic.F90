@@ -15,15 +15,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-! for the moment mimic of sll_module_periodic_interpolator_1d.F90
+! for the moment mimic of sll_m_periodic_interpolator_1d.F90
 
 
-module sll_module_advection_1d_periodic
+module sll_m_advection_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_advection_1d_base
+use sll_m_advection_1d_base
 use periodic_interp_module
 
 implicit none
@@ -171,4 +171,4 @@ contains
 
 
 
-end module sll_module_advection_1d_periodic
+end module sll_m_advection_1d_periodic

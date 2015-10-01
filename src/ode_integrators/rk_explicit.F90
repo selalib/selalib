@@ -9,15 +9,15 @@
 !       l = low-storage
 !----------------------
 
-module sll_module_rk_explicit
+module sll_m_rk_explicit
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
 
-  use sll_module_vector_space_base, only: &
+  use sll_m_vector_space_base, only: &
     sll_vector_space_base
 
-  use sll_module_ode_integrator_base, only: &
+  use sll_m_ode_integrator_base, only: &
     sll_ode_base, &
     sll_ode_integrator_base
  
@@ -387,4 +387,4 @@ contains
     deallocate( self%work )
   end subroutine clean__rk4e_classic
 
-end module sll_module_rk_explicit
+end module sll_m_rk_explicit

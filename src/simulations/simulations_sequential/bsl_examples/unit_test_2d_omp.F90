@@ -4,8 +4,8 @@ program unit_test_4d
 #include "sll_assert.h"
 
 use sll_constants
-use sll_module_interpolators_2d_base
-use sll_module_cubic_spline_interpolator_2d
+use sll_m_interpolators_2d_base
+use sll_m_cubic_spline_interpolator_2d
 use sll_utilities, only: int2string
 use sll_boundary_condition_descriptors
 

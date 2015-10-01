@@ -5,7 +5,7 @@ module sll_vp_cartesian_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use sll_module_interpolators_1d_base
+  use sll_m_interpolators_1d_base
   use sll_time_splitting
   use distribution_function
   use sll_poisson_1d_periodic

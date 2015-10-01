@@ -37,7 +37,7 @@ module sll_m_xdmf_serial
 
   !----------------------------------------------------------------------------
   !> XDMF file, sequential
-  type, public :: sll_t_xdmf_file
+  type :: sll_t_xdmf_file
 
     sll_real64                            :: time =  0.0_f64
     type(sll_t_xml_document), allocatable :: xml_doc
@@ -172,13 +172,14 @@ contains
     ! Determine size of 'self%grids' array
     if (allocated( self%grids )) then
       ng = size( self%grids )
+      allocate( tmp(ng+1) )
+      tmp(1:ng) = self%grids(1:ng)
     else
       ng = 0
+      allocate( tmp(1) )
     end if
 
     ! Extend 'self%grids' array and store pointer to new grid
-    allocate( tmp(ng+1) )
-    tmp(1:ng) = self%grids(1:ng)
     tmp(ng+1)%xml_grid => grid
     tmp(ng+1)%dims     =  dims
     call move_alloc( from=tmp, to=self%grids )

@@ -16,14 +16,14 @@
 !**************************************************************
 
 !> @ingroup poisson_solvers
-module sll_module_quasi_neutral_3d_solver
+module sll_m_quasi_neutral_3d_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 !use sll_boundary_condition_descriptors
-use sll_module_poisson_3d_base
-use sll_module_poisson_2d_base
+use sll_m_poisson_3d_base
+use sll_m_poisson_2d_base
 use sll_remapper
 use sll_collective
 
@@ -220,4 +220,4 @@ contains
   
   
   
-end module sll_module_quasi_neutral_3d_solver
+end module sll_m_quasi_neutral_3d_solver

@@ -2,7 +2,7 @@ program pic1d1v_vp_periodic
 
 #include "sll_working_precision.h"
     
-    use sll_module_simulation_pic1d1v_vp_periodic, only: &
+    use sll_m_simulation_pic1d1v_vp_periodic, only: &
       sll_simulation_pic1d1v_vp_periodic, &
       sll_delete
     

@@ -10,7 +10,7 @@ program vp_cartesian_4d
   use sll_constants
   use sll_cartesian_meshes
   use sll_common_array_initializers_module
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_timer
   implicit none

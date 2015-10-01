@@ -30,18 +30,18 @@
 
 
 !> @ingroup poisson_solvers
-module sll_module_poisson_2d_mudpack_curvilinear_solver_old
+module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_coordinate_transformations.h"
 !use sll_boundary_condition_descriptors
 use sll_constants
-use sll_module_poisson_2d_base
+use sll_m_poisson_2d_base
 use sll_mudpack_curvilinear
-use sll_module_interpolators_2d_base
-use sll_module_cubic_spline_interpolator_1d
-use sll_module_cubic_spline_interpolator_2d
+use sll_m_interpolators_2d_base
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_2d
 !use sll_poisson_2d_polar
 implicit none
 
@@ -787,11 +787,11 @@ enddo
 end subroutine coefy_array  
   
   
-end module sll_module_poisson_2d_mudpack_curvilinear_solver_old
+end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 
 
 subroutine mudpack_curvilinear_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 implicit none
 real(8)  :: x,cxx,cx
 real(8)  :: y,cyy,cy,ce
@@ -804,7 +804,7 @@ return
 end
 
 subroutine mudpack_curvilinear_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
@@ -819,7 +819,7 @@ return
 end
 !> input mixed derivative b.c. to mud2sp
 subroutine mudpack_curvilinear_bndcr(kbdy,xory,alfa,gbdy)
-use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py

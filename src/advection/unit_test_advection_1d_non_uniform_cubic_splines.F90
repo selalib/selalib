@@ -17,8 +17,8 @@
 
 program unit_test_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
-use sll_module_advection_1d_base
-use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_base
+use sll_m_advection_1d_non_uniform_cubic_splines
 
 implicit none
   

@@ -26,7 +26,7 @@ module sll_qn_solver_3d_polar_parallel_x1_wrapper_module
   use sll_boundary_condition_descriptors
   use sll_remapper, only: &
     layout_2D
-  use sll_module_poisson_3d_base
+  use sll_m_poisson_3d_base
   use sll_qn_solver_3d_polar_parallel_x1_module, only: &
     sll_qn_solver_3d_polar_parallel_x1, &
     new, &

@@ -7,15 +7,15 @@ program vm2d_spectral
 #include "sll_constants.h"
 
 use sll_boundary_condition_descriptors
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_1d
  
 #include "sll_fftw.h"
 
 use sll_vlasov2d_base
 use sll_vlasov2d_spectral
 use sll_poisson_1d_periodic  
-use sll_module_poisson_1d_periodic_solver
-use sll_module_ampere_vlasov_1d
+use sll_m_poisson_1d_periodic_solver
+use sll_m_ampere_vlasov_1d
 use sll_collective
 use sll_remapper
 use init_functions, only: landau_1d, tsi, TSI_CASE, LANDAU_X_CASE

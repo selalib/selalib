@@ -15,10 +15,10 @@ program test_maxwell_2d_discrete
 #include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
-use sll_module_cubic_spline_interpolator_2d
+use sll_m_cubic_spline_interpolator_2d
 use sll_dg_fields
 use sll_maxwell_solvers_base
-use sll_module_maxwell_2d_diga
+use sll_m_maxwell_2d_diga
 
 implicit none
   
