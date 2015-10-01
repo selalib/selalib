@@ -17,10 +17,10 @@
 
 program unit_test_characteristics_2d_verlet
 #include "sll_working_precision.h"
-use sll_module_characteristics_2d_verlet
+use sll_m_characteristics_2d_verlet
 use sll_boundary_condition_descriptors
-use sll_module_cubic_spline_interpolator_1d
-use sll_module_cubic_spline_interpolator_2d
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_2d
 
 implicit none
   

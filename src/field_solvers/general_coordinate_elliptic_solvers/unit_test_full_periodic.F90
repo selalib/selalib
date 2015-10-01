@@ -5,13 +5,13 @@ program test_gces_full_periodic
 #include "sll_file_io.h"
 
 use sll_cartesian_meshes
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
-use sll_module_scalar_field_2d
+use sll_m_scalar_field_2d
 use sll_constants
-use sll_module_arbitrary_degree_spline_interpolator_2d
-use sll_module_deboor_splines_2d
-use sll_module_gces_full_periodic
+use sll_m_arbitrary_degree_spline_interpolator_2d
+use sll_m_deboor_splines_2d
+use sll_m_gces_full_periodic
 
 implicit none
 

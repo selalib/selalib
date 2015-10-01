@@ -18,8 +18,8 @@
 program unit_test_advection_2d_CSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_advection_2d_CSL
-use sll_module_characteristics_2d_explicit_euler_conservative
+use sll_m_advection_2d_CSL
+use sll_m_characteristics_2d_explicit_euler_conservative
 
 implicit none
   

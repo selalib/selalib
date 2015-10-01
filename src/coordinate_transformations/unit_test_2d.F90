@@ -4,7 +4,7 @@ program unit_test_2d
 #include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
   use sll_constants
-  use sll_module_cubic_spline_interpolator_2d
+  use sll_m_cubic_spline_interpolator_2d
   use sll_boundary_condition_descriptors
   
   implicit none

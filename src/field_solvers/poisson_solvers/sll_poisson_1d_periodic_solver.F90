@@ -1,11 +1,11 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
-module sll_module_poisson_1d_periodic_solver
+module sll_m_poisson_1d_periodic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
-use sll_module_poisson_1d_base
+use sll_m_poisson_1d_base
 use sll_poisson_1d_periodic
 implicit none
 
@@ -111,5 +111,5 @@ contains
   
   
   
-end module sll_module_poisson_1d_periodic_solver
+end module sll_m_poisson_1d_periodic_solver
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

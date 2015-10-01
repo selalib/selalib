@@ -20,12 +20,12 @@
 !> Class for the bspline inmplementation of sll_interpolator_2d_base
 !> @details
 !> Implements the sll_interpolator_2d_base interface
-module sll_module_bspline_interpolator_2d
+module sll_m_bspline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-use sll_module_interpolators_2d_base
+use sll_m_interpolators_2d_base
 use sll_bsplines
 implicit none
 private
@@ -473,4 +473,4 @@ contains
     !stop
   end function coefficients_are_set_bs2d
 
-end module sll_module_bspline_interpolator_2d
+end module sll_m_bspline_interpolator_2d

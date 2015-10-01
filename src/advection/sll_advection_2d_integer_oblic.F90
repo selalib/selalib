@@ -19,14 +19,14 @@
 ! data are on uniform (fine) grid in x1
 ! we use a shift that corresponds to a mesh point
 
-module sll_module_advection_2d_integer_oblic
+module sll_m_advection_2d_integer_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_advection_1d_base
-use sll_module_characteristics_2d_base
-use sll_module_interpolators_2d_base
+use sll_m_advection_1d_base
+use sll_m_characteristics_2d_base
+use sll_m_interpolators_2d_base
 !use sll_fcisl_module
 
 implicit none
@@ -326,4 +326,4 @@ contains
 
 
 
-end module sll_module_advection_2d_integer_oblic
+end module sll_m_advection_2d_integer_oblic

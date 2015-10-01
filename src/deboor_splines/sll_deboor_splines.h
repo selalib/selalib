@@ -18,6 +18,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_module_deboor_splines_1d
+use sll_m_deboor_splines_1d
 
 #endif

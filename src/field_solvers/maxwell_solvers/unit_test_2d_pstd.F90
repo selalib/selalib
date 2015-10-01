@@ -11,7 +11,7 @@ program test_maxwell_2d_pstd
 #include "sll_maxwell_solvers.h"
 use sll_constants
 
-use sll_module_maxwell_2d_pstd
+use sll_m_maxwell_2d_pstd
 
 implicit none
 

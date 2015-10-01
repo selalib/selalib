@@ -11,7 +11,7 @@ program qns_4d_mixed
   use sll_collective
   use sll_constants
   use sll_cartesian_meshes
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   implicit none

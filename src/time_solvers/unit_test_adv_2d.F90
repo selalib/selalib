@@ -7,9 +7,9 @@ program test_operator_splitting_adv_2d
 #include "sll_assert.h"
 #include "sll_field_2d.h"
   use sll_split_advection_2d
-  use sll_module_advection_1d_BSL
-  use sll_module_characteristics_1d_explicit_euler
-  use sll_module_cubic_spline_interpolator_1d
+  use sll_m_advection_1d_BSL
+  use sll_m_characteristics_1d_explicit_euler
+  use sll_m_cubic_spline_interpolator_1d
   use sll_operator_splitting
   use sll_hdf5_io_serial
   implicit none

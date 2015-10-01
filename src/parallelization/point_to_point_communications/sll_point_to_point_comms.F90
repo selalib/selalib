@@ -182,12 +182,12 @@ contains
     sll_int32 :: higher
     sll_int32 :: lower
 
-    ! for the lower part of the tag, pick the lowest 14 bits of the integer
+    ! for the lower part of the tag, pick the lowest 8 bits of the integer
     ! that represents the local process's port together with the value of the
     ! bit field, pushed to the 15th bit position.
     ! In decimal notation, z'3fff' = 16,384, just in case it is needed.
-    lower  = ior( ishft(         bit, 14), iand(my_port,   int(z'3fff',i32)))  
-    higher = ior( ishft(flip_bit(bit),14), iand(other_port,int(z'3fff',i32)))
+    lower  = ior( ishft(         bit, 8), iand(my_port,   int(z'3fff',i32)))  
+    higher = ior( ishft(flip_bit(bit),8), iand(other_port,int(z'3fff',i32)))
 
     ! shift the higher part of the tag to the upper bits, starting at bit 16 
     ! and leaving the lower 15 bits available for the lower part of the tag.
@@ -204,8 +204,8 @@ contains
     sll_int32 :: higher
     sll_int32 :: lower
 
-    lower  = ior( ishft(flip_bit(bit),14), iand(other_port, int(z'3fff',i32)))  
-    higher = ior( ishft(         bit, 14), iand(my_port,    int(z'3fff',i32)))
+    lower  = ior( ishft(flip_bit(bit),8), iand(other_port, int(z'3fff',i32)))  
+    higher = ior( ishft(         bit, 8), iand(my_port,    int(z'3fff',i32)))
     send_tag = ior(ishft(higher,15),lower)
   end function send_tag
 
@@ -313,7 +313,7 @@ contains
     ! The maximum number of ports is determined by the tagging system that 
     ! we use. It is important to verify that we don't have any problems due
     ! to the use of signed integers...
-    max_num_ports = ishft(1,14)
+    max_num_ports = ishft(1,8)
 
     SLL_ALLOCATE(comm%ports(num_ports), ierr)
 

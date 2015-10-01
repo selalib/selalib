@@ -6,7 +6,7 @@
 !> Solve Maxwell equations on cartesian domain with Discontinuous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
-module sll_module_maxwell_2d_diga
+module sll_m_maxwell_2d_diga
 
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
@@ -674,4 +674,4 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
 
 end subroutine compute_normals
 
-end module sll_module_maxwell_2d_diga
+end module sll_m_maxwell_2d_diga

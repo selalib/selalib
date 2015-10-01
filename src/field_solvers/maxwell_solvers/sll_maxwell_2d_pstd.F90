@@ -55,7 +55,7 @@ self%d_dy = self%d_dy / nc_y
 !>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
-module sll_module_maxwell_2d_pstd
+module sll_m_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -447,4 +447,4 @@ call fftw_destroy_plan(self%bwy)
 
 end subroutine free_maxwell_2d_pstd
 
-end module sll_module_maxwell_2d_pstd
+end module sll_m_maxwell_2d_pstd

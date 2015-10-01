@@ -50,7 +50,7 @@ module sll_coordinate_transformation_multipatch_module
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
   use sll_cartesian_meshes_multipatch
-  use sll_module_coordinate_transformations_2d_nurbs
+  use sll_m_coordinate_transformations_2d_nurbs
   implicit none
 
   !> @brief basic type for the multipatch. It is meant to be an opaque

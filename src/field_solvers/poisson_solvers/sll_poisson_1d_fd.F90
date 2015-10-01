@@ -9,7 +9,7 @@ module sll_poisson_1d_fd
     use sll_cartesian_meshes
     use sll_arbitrary_degree_splines
     use sll_boundary_condition_descriptors
-    use sll_module_arbitrary_degree_spline_interpolator_1d
+    use sll_m_arbitrary_degree_spline_interpolator_1d
     use sll_fft
     implicit none
     !  private
