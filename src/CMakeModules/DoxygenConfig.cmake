@@ -4,7 +4,7 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
 
    get_filename_component(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
-   set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../doc/build/html/doxygen)
+   set(DOXYGEN_OUTPUT_DIR ${CMAKE_BINARY_DIR}/doc)
    file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
    message(STATUS "The documentation is in ${DOXYGEN_OUTPUT_DIR}")
 
