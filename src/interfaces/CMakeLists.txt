@@ -1,7 +1,3 @@
-ADD_SUBDIRECTORY(fftpack)
-ADD_SUBDIRECTORY(mudpack)
-ADD_SUBDIRECTORY(fishpack)
-ADD_SUBDIRECTORY(agmg)
 ADD_SUBDIRECTORY(sparse_matrix_manager)
 ADD_SUBDIRECTORY(fft)
 
