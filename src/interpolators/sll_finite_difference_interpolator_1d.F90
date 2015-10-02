@@ -14,12 +14,12 @@
 !! If we are only interested in having the derivatives on the nodes of an
 !! array, this is a service provided by the basic interpolator, hence we
 !! can 
-module sll_module_finite_difference_interpolator_1d
+module sll_m_finite_difference_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_interpolators_1d_base_macros.h"
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 implicit none
 private
 
@@ -120,4 +120,4 @@ contains
 
   DEFINE_NULL_INTERPOLATE_1D_DISP(sll_finite_difference_interpolator_1d, null_fd_1d_array_disp)
 
-end module sll_module_finite_difference_interpolator_1d
+end module sll_m_finite_difference_interpolator_1d

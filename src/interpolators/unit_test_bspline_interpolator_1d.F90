@@ -1,9 +1,11 @@
 program bspline_1d_dirichlet
+
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
-use sll_module_bspline_interpolator_1d
+use sll_m_bspline_interpolator_1d
 use sll_boundary_condition_descriptors
+
 implicit none
 
 #define NPTS 65
@@ -75,25 +77,26 @@ end if
 
 call sll_delete(interpolator)
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 
-function f(x)
-
-  sll_real64 :: x
-  sll_real64 :: f
-
-  f = sin(2.0_f64*sll_pi*x)+1
-
-end function f
-
-function df(x)
-
-  sll_real64 :: x
-  sll_real64 :: df
-
-  df = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*x)
-
-end function df
+  function f(x)
+  
+    sll_real64 :: x
+    sll_real64 :: f
+  
+    f = sin(2.0_f64*sll_pi*x)+1
+  
+  end function f
+  
+  function df(x)
+  
+    sll_real64 :: x
+    sll_real64 :: df
+  
+    df = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*x)
+  
+  end function df
 
 
 end program bspline_1d_dirichlet

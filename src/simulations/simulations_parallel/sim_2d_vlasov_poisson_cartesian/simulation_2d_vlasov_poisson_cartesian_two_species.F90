@@ -39,22 +39,22 @@ use sll_constants
 use sll_cartesian_meshes  
 use sll_gnuplot_parallel
 use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
-use sll_module_advection_1d_periodic
-use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_periodic
+use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_fft
 use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_poisson_1d_periodic  
-use sll_module_poisson_1d_periodic_solver
-use sll_module_poisson_1d_polar_solver
-use sll_module_advection_1d_ampere
-#ifdef _OPENMP
-use omp_lib
-#endif
+use sll_m_poisson_1d_periodic_solver
+use sll_m_poisson_1d_polar_solver
+use sll_m_advection_1d_ampere
+!#ifdef _OPENMP
+!use omp_lib
+!#endif
 
 
   implicit none
@@ -266,12 +266,14 @@ contains
     sll_real64 :: eps_sp1
     sll_real64 :: sigma_sp1
     sll_real64 :: v0_sp1
+    sll_real64 :: factor1_sp1
     sll_real64 :: alpha_gaussian_sp1
     character(len=256) :: initial_function_case_sp2
     sll_real64 :: kmode_sp2
     sll_real64 :: eps_sp2
     sll_real64 :: sigma_sp2
     sll_real64 :: v0_sp2
+    sll_real64 :: factor1_sp2
     sll_real64 :: alpha_gaussian_sp2
     character(len=256) :: restart_file
     logical :: time_init_from_restart_file
@@ -361,12 +363,14 @@ contains
       eps_sp1, &
       sigma_sp1, &
       v0_sp1, &
+      factor1_sp1, &
       alpha_gaussian_sp1, &
       initial_function_case_sp2, &
       kmode_sp2, &
       eps_sp2, &
       sigma_sp2, &
       v0_sp2, &
+      factor1_sp2, &
       alpha_gaussian_sp2, &
       restart_file, &
       time_init_from_restart_file
@@ -415,13 +419,13 @@ contains
 
     num_threads = 1
 
-#ifdef _OPENMP
-!$OMP PARALLEL SHARED(num_threads)
-    if(omp_get_thread_num()==0)then
-      num_threads =  omp_get_num_threads()      
-    endif
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL SHARED(num_threads)
+!    if(omp_get_thread_num()==0)then
+!      num_threads =  omp_get_num_threads()      
+!    endif
+!!$OMP END PARALLEL
+!#endif
    sim%num_threads = num_threads
    print *,'#num_threads=',num_threads
 
@@ -451,6 +455,7 @@ contains
     eps_sp1 = 0.001_f64
     sigma_sp1 = 1._f64
     v0_sp1 = 0._f64
+    factor1_sp1 = 1._f64/sqrt(2._f64*sll_pi)
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian_sp1 = 0.2_f64
     !initial_function_case = "SLL_PLASMA_SHEATH"
@@ -462,6 +467,7 @@ contains
     eps_sp2 = 0.001_f64
     sigma_sp2 = 1._f64
     v0_sp2 = 0._f64
+    factor1_sp2 = 1._f64/sqrt(2._f64*sll_pi)
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian_sp2 = 0.2_f64
     !initial_function_case = "SLL_PLASMA_SHEATH"
@@ -650,9 +656,11 @@ contains
        sim%eps_sp1 = eps_sp1
     case ("SLL_TWO_STREAM_INSTABILITY")
        sim%init_func_sp1 => sll_two_stream_instability_initializer_2d
-       SLL_ALLOCATE(sim%params_sp1(2),ierr)
+       SLL_ALLOCATE(sim%params_sp1(4),ierr)
        sim%params_sp1(1) = kmode_sp1
        sim%params_sp1(2) = eps_sp1
+       sim%params_sp1(3) = sigma_sp1
+       sim%params_sp1(4) = factor1_sp1
        sim%nrj0_sp1 = 0._f64  !compute the right value
        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
        !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
@@ -705,9 +713,11 @@ contains
        sim%eps_sp2 = eps_sp2
     case ("SLL_TWO_STREAM_INSTABILITY")
        sim%init_func_sp2 => sll_two_stream_instability_initializer_2d
-       SLL_ALLOCATE(sim%params_sp2(2),ierr)
+       SLL_ALLOCATE(sim%params_sp2(4),ierr)
        sim%params_sp2(1) = kmode_sp2
        sim%params_sp2(2) = eps_sp2
+       sim%params_sp2(3) = sigma_sp2
+       sim%params_sp2(4) = factor1_sp2
        sim%nrj0_sp2 = 0._f64  !compute the right value
        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
        !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
@@ -792,11 +802,11 @@ contains
     SLL_ALLOCATE(sim%advect_x2_sp2(num_threads),ierr)
 
     tid = 1
-#ifdef _OPENMP
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(tid)
-    tid = omp_get_thread_num()+1
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL DEFAULT(SHARED) &
+!!$OMP PRIVATE(tid)
+!    tid = omp_get_thread_num()+1
+!#endif
     select case (advector_x1_sp1)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x1_sp1(tid)%ptr => new_periodic_1d_advector( &
@@ -935,9 +945,9 @@ contains
         stop 
     end select
 
-#ifdef _OPENMP
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP END PARALLEL
+!#endif
     select case (advection_form_x2_sp1)
       case ("SLL_ADVECTIVE")
         sim%advection_form_x2_sp1 = SLL_ADVECTIVE
@@ -1376,7 +1386,6 @@ contains
     SLL_ALLOCATE(f_hat_x2_sp2(nb_mode+1),ierr)
 
 
-
     !temporary poisson
     !N_buf_poisson=2*(np_x1-1)+15  
     !allocate(buf_poisson(N_buf_poisson))
@@ -1434,6 +1443,7 @@ contains
        sim%init_func_sp1, &
        sim%params_sp1)
 
+
     call sll_2d_parallel_array_initializer_cartesian( &
        layout_x1_sp2, &
        sim%x1_array, &
@@ -1441,6 +1451,8 @@ contains
        f_x1_sp2, &
        sim%init_func_sp2, &
        sim%params_sp2)
+
+
 
     iproc = sll_get_collective_rank(sll_world_collective)
     call int2string(iproc, cproc)
@@ -1561,7 +1573,7 @@ contains
 
 
 
-      print *,'#maxf',maxval(f_visu_sp1), minval(f_visu_sp1) 
+      print *,'#maxfe = maxf_sp1',maxval(f_visu_sp1), minval(f_visu_sp1) 
 
     endif
 
@@ -1585,7 +1597,7 @@ contains
 
 
 
-      print *,'#maxf',maxval(f_visu_sp2), minval(f_visu_sp2) 
+      print *,'#maxfi = maxf_sp2',maxval(f_visu_sp2), minval(f_visu_sp2) 
 
     endif
     
@@ -1694,13 +1706,13 @@ contains
         if(split_T) then
           !! T ADVECTION 
           tid=1          
-#ifdef _OPENMP
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
-          !advection in x
-          tid = omp_get_thread_num()+1
-!$OMP DO
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL DEFAULT(SHARED) &
+!!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
+!          !advection in x
+!          tid = omp_get_thread_num()+1
+!!$OMP DO
+!#endif
 
           do i_omp = 1, local_size_x2_sp1
              ig_omp = i_omp+global_indices_sp1(2)-1
@@ -1728,10 +1740,10 @@ contains
              f_x1_sp2(1:np_x1,i_omp)=f1d_omp_out_sp2(1:np_x1,tid)
              
           end do
-#ifdef _OPENMP
-!$OMP END DO          
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP END DO          
+!!$OMP END PARALLEL
+!#endif
           t_step = t_step+sim%split%split_step(split_istep)
           !computation of electric field
           rho_loc_sp1 = 0._f64
@@ -1798,13 +1810,13 @@ contains
            global_indices_sp2(1:2) = local_to_global( layout_x2_sp2, (/1, 1/) )
            tid = 1
            
-#ifdef _OPENMP
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
-          !advection in v
-          tid = omp_get_thread_num()+1
-!$OMP DO
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL DEFAULT(SHARED) &
+!!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
+!          !advection in v
+!          tid = omp_get_thread_num()+1
+!!$OMP DO
+!#endif
           !advection in v
           do i_omp = 1,local_size_x1_sp1
              ig_omp=i_omp+global_indices_sp1(1)-1
@@ -1844,10 +1856,10 @@ contains
              f_x2_sp2(i_omp,1:num_dof_x2_sp2) = f1d_omp_out_sp2(1:num_dof_x2_sp2,tid)
              
           end do
-#ifdef _OPENMP
-!$OMP END DO          
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP END DO          
+!!$OMP END PARALLEL
+!#endif
          !transposition
          call apply_remap_2D( remap_plan_x2_x1_sp1, f_x2_sp1, f_x1_sp1 )
          call apply_remap_2D( remap_plan_x2_x1_sp2, f_x2_sp2, f_x1_sp2 )

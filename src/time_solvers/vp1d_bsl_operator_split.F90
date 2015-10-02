@@ -10,8 +10,8 @@ program VP1d_BSL_time_split
   use sll_constants
   use sll_common_coordinate_transformations
   use sll_cartesian_meshes
-  use sll_module_coordinate_transformations_2d
-  use sll_module_cubic_spline_interpolator_1d
+  use sll_m_coordinate_transformations_2d
+  use sll_m_cubic_spline_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function

@@ -1,0 +1,45 @@
+&geometry
+  mesh_case_x1 = "SLL_LANDAU_MESH"
+  num_cells_x1 = 64
+  x1_min = 0.0
+  nbox_x1 = 1
+  mesh_case_x2 = "SLL_CARTESIAN_MESH"
+  num_cells_x2 = 256
+  x2_min = -8.0
+  x2_max = 8.0
+/
+
+&initial_function
+  initial_function_case = "SLL_BUMP_ON_TAIL"
+  kmode = 0.3
+  eps = 0.01
+/
+
+&time_iterations
+  dt                = 0.1
+  number_iterations = 1000
+  freq_diag         = 100
+  freq_diag_time    = 1
+/
+
+&advector
+ advector_x1 = "SLL_LAGRANGE"
+ order_x1    = 10
+ advector_x2 = "SLL_LAGRANGE"
+ order_x2    = 10
+/
+
+&poisson
+  ampere_solver  = "SLL_VLASOV_AMPERE"
+  poisson_solver = "SLL_FFT"
+/
+
+&berk_breizman
+  gamma_d =  1.0
+  nu_a    =  0.1289
+/
+
+&drive
+  drive_type = "SLL_NO_DRIVE"
+/
+

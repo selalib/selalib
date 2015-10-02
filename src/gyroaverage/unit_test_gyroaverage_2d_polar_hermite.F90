@@ -19,7 +19,9 @@ program unit_test_gyroaverage_2d_polar_hermite
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_gyroaverage_2d_polar_hermite_solver
+use sll_m_gyroaverage_2d_polar_hermite_solver
+
+!use sll_qn_2d_polar
 
 implicit none
   
@@ -45,6 +47,9 @@ implicit none
   Nc(2)=16
   
   SLL_ALLOCATE(f(Nc(1)+1,Nc(2)+1),ierr)
+
+  !call compute_init_f_polar(f,(/1,1/),Nc,eta_min,eta_max)
+
   
   f = 1._f64
   err = 0._f64
@@ -78,3 +83,4 @@ implicit none
   endif
 
 end program
+

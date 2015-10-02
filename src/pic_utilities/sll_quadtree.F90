@@ -1,3 +1,7 @@
+ !> @ingroup pic_utilities
+ !> @author Eric Sonnendrucker
+ !> @brief Quad tree sorting algorithm
+ !> @details Puts particles in a quad tree structure
 module sll_quadtree
 #include "sll_working_precision.h"
 #include "sll_memory.h"

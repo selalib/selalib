@@ -1,0 +1,108 @@
+IF(PASTIX_FOUND)
+
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
+  ADD_LIBRARY(sll_sparse_matrix STATIC 
+              sll_pastix.F90
+              partition.F90
+  	        sll_sparse_matrix_pastix_module.F90
+	        sll_sparse_matrix_mp_module.F90)
+
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective
+                                           sll_working_precision 
+                                           sll_memory
+                                           sll_assert
+                                           ${PASTIX_LIBRARIES} 
+                                           ${PTSCOTCH_LIBRARIES}
+                                           ${SCOTCH_LIBRARIES}
+                                           ${BLAS_LIBRARIES})
+ELSEIF(SUITESPARSE_FOUND)
+
+  INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+
+  ADD_LIBRARY(sll_sparse_matrix STATIC 
+              partition.F90
+  	        sll_sparse_matrix_umfpack_module.F90
+	        sll_sparse_matrix_mp_module.F90)
+
+  ADD_LIBRARY(sll_umfpack_wrapper STATIC mod_umfpack.F90 umf4_f77wrapper.c)
+
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision
+                                           sll_memory
+                                           sll_assert
+                                           sll_umfpack_wrapper 
+                                           ${SUITESPARSE_LIBRARIES}
+                                           ${BLAS_LIBRARIES})
+
+
+ELSE()
+
+  ADD_LIBRARY(sll_sparse_matrix STATIC 
+              partition.F90
+  	        sll_sparse_matrix_module.F90
+	        sll_sparse_matrix_mp_module.F90 )
+
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision
+                                           sll_memory
+                                           sll_assert)
+
+
+ENDIF()
+
+
+#PN Do not know why sll_collective is necessary here...
+IF(BUILD_TESTING)
+
+  IF(MPI_ENABLED)
+    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+    ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90 )
+    TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
+    ADD_MPI_TEST( sparse_matrix test_sparse_matrix 2 " " )
+    SET_TESTS_PROPERTIES( sparse_matrix PROPERTIES TIMEOUT 20 )
+  ENDIF(MPI_ENABLED)
+
+  ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
+  TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
+  ADD_EXECUTABLE( test_csr_one_constraint unit_test_csr_one_constraint.F90 )
+  TARGET_LINK_LIBRARIES( test_csr_one_constraint sll_csr_one_constraint )
+
+  IF(Fortran_COMPILER MATCHES IBM)
+   SET_SOURCE_FILES_PROPERTIES(dPackgmres.f PROPERTIES COMPILE_FLAGS -qfixed)
+  ENDIF(Fortran_COMPILER MATCHES IBM)
+  ADD_EXECUTABLE( test_gmres test_gmres_driver.F90 dPackgmres.f )
+  TARGET_LINK_LIBRARIES( test_gmres ${BLAS_LIBRARIES} )
+  ADD_TEST( NAME gmres COMMAND test_gmres )
+  SET_TESTS_PROPERTIES( gmres PROPERTIES TIMEOUT 2 )
+
+  ADD_EXECUTABLE(test_csr_matrix unit_test_csr_matrix.F90)
+  TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
+  ADD_TEST( NAME agmg COMMAND test_csr_matrix )
+  SET_TESTS_PROPERTIES( agmg PROPERTIES TIMEOUT 5 )
+
+  IF(BUILD_PARALUTION)
+
+    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
+    LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution-build/lib/)
+    ADD_LIBRARY(sll_paralution paralution_fortran.cpp sll_paralution.F90)
+    ADD_EXECUTABLE(paralution_solver unit_test_paralution.F90) 
+    TARGET_LINK_LIBRARIES(paralution_solver sll_sparse_matrix sll_paralution paralution)
+    ADD_TEST( NAME paralution COMMAND paralution_solver )
+    SET_TESTS_PROPERTIES( paralution PROPERTIES TIMEOUT 10 )
+
+  ENDIF(BUILD_PARALUTION)
+
+  IF(PASTIX_FOUND)
+    
+    ADD_EXECUTABLE(test_pastix sll_pastix.F90 unit_test_pastix.F90)
+    TARGET_LINK_LIBRARIES(test_pastix sll_collective
+                                      sll_memory
+                                      ${PASTIX_LIBRARIES} 
+                                      ${PTSCOTCH_LIBRARIES}
+                                      ${SCOTCH_LIBRARIES}
+                                      ${BLAS_LIBRARIES})
+    ADD_TEST( NAME pastix COMMAND test_pastix )
+    SET_TESTS_PROPERTIES( pastix PROPERTIES TIMEOUT 20 )
+
+  ENDIF(PASTIX_FOUND)
+
+ENDIF(BUILD_TESTING)
