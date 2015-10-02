@@ -108,4 +108,20 @@ contains
     r = self%q / self%m
   end function q_over_m
 
+  !----------------------------------------------------------------------------
+  function species_new( &
+      species_charge,     &
+      species_mass        &
+  ) result(res)
+    sll_real64, intent ( in )   :: species_charge
+    sll_real64, intent ( in )   :: species_mass
+    type(sll_species), pointer  :: res
+    sll_int32  :: ierr
+
+    SLL_ALLOCATE( res, ierr )
+    !    res%name =
+    res%q = species_charge
+    res%m = species_mass
+
+  end function species_new
 end module sll_m_pic_base

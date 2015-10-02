@@ -9,7 +9,7 @@ module sll_m_particle_group_2x2v
 #include "sll_assert.h"
 
   use sll_working_precision
-  use sll_module_pic_base
+  use sll_m_pic_base
 
   implicit none
 

@@ -10,7 +10,7 @@ module sll_m_operator_splitting_pic_1d2v_vm
 
 
  
-  use sll_module_pic_base
+  use sll_m_pic_base
   use sll_m_kernel_smoother_base
   use sll_collective
   use sll_arbitrary_degree_splines
