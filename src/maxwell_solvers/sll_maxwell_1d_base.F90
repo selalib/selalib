@@ -16,11 +16,13 @@ module sll_m_maxwell_1d_base
 
    contains
      procedure(compute_field1_from_field2), deferred :: &
-          compute_E_from_B !< Solve E and B part of Amperes law with B constant in time
+          compute_E_from_B !< Solve E and B part of Ampere's law with B constant in time
      procedure(compute_field1_from_field2), deferred :: &
           compute_B_from_E !< Solve Faraday equation with E constant in time
      procedure(signature_compute_E_from_rho_1d), deferred :: &
           compute_E_from_rho !< Solve E from rho using Poisson
+     procedure(signature_compute_E_from_j_1d), deferred :: &
+          compute_E_from_j !< Solve E from time integrated current (second part of Ampere's law)
      !procedure(signature_solve), deferred :: &
      !     solve !< Solve Amperes law and Faraday equation
   end type sll_maxwell_1d_base
@@ -45,6 +47,17 @@ module sll_m_maxwell_1d_base
       sll_real64,dimension(:),intent(in) :: rho
       sll_real64,dimension(:),intent(out) :: E
     end subroutine signature_compute_E_from_rho_1d
+  end interface
+
+  abstract interface
+     subroutine signature_compute_E_from_j_1d(this, current, component, E)
+      use sll_working_precision
+      import sll_maxwell_1d_base
+       class(sll_maxwell_1d_base)             :: this
+       sll_real64,dimension(:),intent(in)    :: current
+       sll_int32, intent(in)                 :: component
+       sll_real64,dimension(:),intent(inout) :: E
+     end subroutine signature_compute_E_from_j_1d
   end interface
 
 contains
