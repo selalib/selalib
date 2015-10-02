@@ -13,15 +13,15 @@ module sll_m_sim_pic_2x2v_vp_cart
   use sll_collective
   use sll_simulation_base
   use sll_cartesian_meshes
-  use sll_module_poisson_2d_base
-  use sll_module_pic_base
+  use sll_m_pic_base
   use sll_m_particle_initializer
   use sll_m_particle_group_2x2v
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d
-  use sll_module_poisson_2d_fft ! TODO: Use generic interface
+  use sll_m_poisson_2d_fft ! TODO: Use generic interface
+  use sll_m_poisson_2d_base
   use sll_operator_splitting
-  use sll_m_operator_splitting_pic_2x2v_vp
+  !use sll_m_operator_splitting_pic_2x2v_vp
   use sll_ascii_io
 
   type, extends(sll_simulation_base_class) :: sll_sim_pic_2x2v_vp_cart
