@@ -8,7 +8,7 @@ module sll_m_pic_maxwell_1d_fourier_modes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-  use sll_module_pic_base
+  use sll_m_pic_base
   use sll_m_pic_maxwell_base
   use sll_constants, only: sll_pi
 

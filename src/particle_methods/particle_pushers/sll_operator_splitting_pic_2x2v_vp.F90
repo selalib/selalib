@@ -15,7 +15,7 @@ module sll_m_operator_splitting_pic_2x2v_vp
   use sll_operator_splitting
   use sll_collective
   
-  use sll_module_poisson_2d_fft
+  use sll_m_poisson_2d_fft
 
   implicit none
 
