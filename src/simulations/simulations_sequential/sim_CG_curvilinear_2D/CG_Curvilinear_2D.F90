@@ -13,9 +13,9 @@ program cg_curvilinear_2D
  ! use sll_general_coordinate_qn_solver
  ! use sll_cartesian_meshes
  ! use sll_common_coordinate_transformations
- ! use sll_module_scalar_field_2d
+ ! use sll_m_scalar_field_2d
  ! use sll_constants
- ! use sll_module_arbitrary_degree_spline_interpolator_2d
+ ! use sll_m_arbitrary_degree_spline_interpolator_2d
   use sll_boundary_condition_descriptors
 
   implicit none

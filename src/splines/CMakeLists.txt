@@ -4,6 +4,7 @@ ADD_LIBRARY( sll_splines STATIC
   sll_bsplines.F90
   sll_arbitrary_degree_splines.F90
   cubic_nonuniform_splines.F90 )
+
 TARGET_LINK_LIBRARIES( sll_splines
   sll_utilities
   sll_boundary_condition_descriptors
@@ -33,7 +34,7 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_quintic_splines unit_test_quintic_splines.F90 )
   TARGET_LINK_LIBRARIES( test_quintic_splines sll_splines )
 
-  ADD_EXECUTABLE( test_bsplines_1d unit_test_bsplines.F90 )
+  ADD_EXECUTABLE( test_bsplines_1d unit_test_bsplines_1d.F90 )
   TARGET_LINK_LIBRARIES( test_bsplines_1d sll_splines )
 
   ADD_EXECUTABLE( test_bsplines_2d unit_test_bsplines_2d.F90 )

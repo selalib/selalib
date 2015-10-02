@@ -3,7 +3,7 @@ program unit_test_1d
 #include "sll_memory.h"
 use sll_cartesian_meshes
 use sll_constants
-use sll_module_scalar_field_1d
+use sll_m_scalar_field_1d
 implicit none
   
 #define SPLINE_DEG1 3

@@ -15,11 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_gyroaverage_2d_polar_hermite_solver
+module sll_m_gyroaverage_2d_polar_hermite_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_gyroaverage_2d_base
+use sll_m_gyroaverage_2d_base
 use sll_gyroaverage_2d_polar
 implicit none
 
@@ -155,4 +155,4 @@ contains
     
   end subroutine compute_gyroaverage_2d_polar_hermite
   
-end module sll_module_gyroaverage_2d_polar_hermite_solver
+end module sll_m_gyroaverage_2d_polar_hermite_solver

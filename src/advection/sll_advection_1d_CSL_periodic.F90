@@ -19,15 +19,15 @@
 ! attached with computation of characteristics
 
 
-module sll_module_advection_1d_CSL_periodic
+module sll_m_advection_1d_CSL_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
 use sll_boundary_condition_descriptors
-use sll_module_advection_1d_base
-use sll_module_characteristics_1d_base
-use sll_module_interpolators_1d_base
+use sll_m_advection_1d_base
+use sll_m_characteristics_1d_base
+use sll_m_interpolators_1d_base
 use sll_hermite_interpolation_1d_module
 use gauss_legendre_integration
 use lagrange_interpolation
@@ -1748,4 +1748,4 @@ contains
   end function contribution_gauss_lagrange  
   
 
-end module sll_module_advection_1d_CSL_periodic
+end module sll_m_advection_1d_CSL_periodic

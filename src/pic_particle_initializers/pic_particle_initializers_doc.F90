@@ -10,9 +10,9 @@
 
 
 !> @defgroup pic_particle_initializers sll_pic_particle_initializers 
-!> @brief 
-!> Description of pic_particle_initializers library (72 characters)
-!> @author Selalib team 
+!> @brief  Contains initialization routines for several distribution functions
+!>         in 2d and 4d PIC framework.
+!> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
 !> Long description of  pic_particle_initializers, you can add some references or math equations.

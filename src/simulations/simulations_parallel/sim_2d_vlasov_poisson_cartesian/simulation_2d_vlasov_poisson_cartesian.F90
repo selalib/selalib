@@ -40,19 +40,19 @@ use sll_constants
 use sll_cartesian_meshes  
 use sll_gnuplot_parallel
 use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
-use sll_module_advection_1d_periodic
-use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_periodic
+use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_fft
 use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_poisson_1d_periodic  
-use sll_module_poisson_1d_periodic_solver
-use sll_module_poisson_1d_polar_solver
-use sll_module_advection_1d_ampere
+use sll_m_poisson_1d_periodic_solver
+use sll_m_poisson_1d_polar_solver
+use sll_m_advection_1d_ampere
 
 #ifdef _OPENMP
 use omp_lib
@@ -1007,7 +1007,7 @@ contains
     sll_real64                          :: tmp_loc(5)
     sll_real64                          :: tmp(5)
     sll_int32                           :: i
-    sll_int32                           :: istep
+    sll_int32                           :: istep = 0
     sll_int32                           :: ig
     sll_int32                           :: k
 
@@ -1390,7 +1390,7 @@ contains
                !advection in x
                !$ tid = omp_get_thread_num()+1
                
-               sim%advect_ampere_x1(tid)%ptr%rk = cmplx(0.0,0.0,kind=f64)
+               sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
                !$OMP DO 
                do i_omp = 1, local_size_x2
                
@@ -1412,8 +1412,8 @@ contains
                               kind=f64)
                  end do
                
-                 sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) = &
-                      sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) &
+                 sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
                     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
                     * sim%integration_weight(ig_omp)
                
@@ -1432,7 +1432,7 @@ contains
                rk_loc = cmplx(0.0,0.0,kind=f64)
                do i = 2, nc_x1/2+1
                  do tid = 1, sim%num_threads
-                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%rk(i)
+                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%r1(i)
                  end do
                end do
                
@@ -1442,7 +1442,7 @@ contains
                     rk_loc,                                         &
                     nc_x1/2+1,                                      &
                     MPI_SUM,                                        &
-                    sim%advect_ampere_x1(1)%ptr%rk )
+                    sim%advect_ampere_x1(1)%ptr%r1 )
                
                sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
                call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
@@ -1452,7 +1452,7 @@ contains
                
                do i = 2, nc_x1/2+1
                  sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-                    - sim%advect_ampere_x1(1)%ptr%rk(i) &
+                    - sim%advect_ampere_x1(1)%ptr%r1(i) &
                     * (sim%mesh2d%eta1_max-sim%mesh2d%eta1_min) &
                     / (2*sll_pi*cmplx(0.,i-1,kind=f64))
                end do
@@ -1682,7 +1682,9 @@ contains
                 rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
              enddo
 
-             write(th_diag_id,'(f12.5,7g20.12)',advance='no') &
+             !write(th_diag_id,'(8g20.12)',advance='no') &
+             !write(th_diag_id,'(8d25.15)',advance='no') &
+             write(th_diag_id,'(8g25.15)',advance='no') &
                   time,                                          &
                   mass,                                          &
                   l1norm,                                        &
@@ -1691,16 +1693,16 @@ contains
                   kinetic_energy,                                &
                   potential_energy,                              &
                   kinetic_energy + potential_energy
-
              do k=0,nb_mode
-                write(th_diag_id,'(g20.12)',advance='no') abs(rho_mode(k))
+                write(th_diag_id,'(1g25.15)',advance='no') real(rho_mode(k),f64)
+                write(th_diag_id,'(1g25.15)',advance='no') aimag(rho_mode(k))
              enddo
 
              do k=0,nb_mode-1
-                write(th_diag_id,'(g20.12)',advance='no') f_hat_x2(k+1)
+                write(th_diag_id,'(1g25.15)',advance='no') f_hat_x2(k+1)
              enddo
 
-             write(th_diag_id,'(g20.12)') f_hat_x2(nb_mode+1)
+             write(th_diag_id,'(1g25.15)') f_hat_x2(nb_mode+1)
 
              call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
              call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)

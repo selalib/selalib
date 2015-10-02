@@ -4,8 +4,8 @@ program bsl_1d_cubic_nonuniform_compact
 #include "sll_assert.h"
 
 use sll_constants
-use sll_module_cubic_spline_interpolator_1d
-use sll_module_interpolators_1d_base
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_interpolators_1d_base
 
 use sll_utilities, only: int2string
 
