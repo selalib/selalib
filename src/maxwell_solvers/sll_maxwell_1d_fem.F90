@@ -19,7 +19,7 @@ module sll_m_maxwell_1d_fem
   private
   
   public :: sll_new_maxwell_1d_fem, solve_circulant, compute_E_from_B_1d_fem, &
-       compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection, compute_fem_rhs
+       compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection, compute_fem_rhs, L2norm
 
   type, public, extends(sll_maxwell_1d_base) :: sll_maxwell_1d_fem
 
@@ -44,6 +44,8 @@ module sll_m_maxwell_1d_fem
           compute_B_from_E => compute_B_from_E_1d_fem!< Solve Faraday equation with E constant in time
      procedure :: &
           compute_E_from_rho => compute_E_from_rho_1d_fem!< Solve E from rho using Poisson
+     procedure :: &
+          compute_E_from_j => compute_E_from_j_1d_fem !< Solve E from j 
   end type sll_maxwell_1d_fem
 
 contains
@@ -84,6 +86,28 @@ contains
     field_out(1) = field_out(1) + coef * ( field_in(this%n_dofs) - field_in(1) )
    end subroutine compute_B_from_E_1d_fem
 
+   !> Compute E_i from j_i integrated over the time interval using weak Ampere formulation
+   subroutine compute_E_from_j_1d_fem(this, current, component, E)
+     class(sll_maxwell_1d_fem)             :: this !< Maxwell solver class
+     sll_real64,dimension(:),intent(in)    :: current !< Component \a component of the current integrated over time interval
+     sll_int32, intent(in)                 :: component !< Component of the Efield to be computed
+     sll_real64,dimension(:),intent(inout) :: E !< Updated electric field
+     ! local variables
+     sll_int32 :: i 
+
+     ! Multiply by inverse mass matrix  using the eigenvalues of the circulant inverse matrix
+     if (component == 1) then
+        call solve_circulant(this, this%eig_mass1, current, this%work)
+     elseif (component == 2) then
+        call solve_circulant(this, this%eig_mass0, current, this%work)
+     else
+        print*, 'Component ', component, 'not implemented in compute_E_from_j_1d_fem.'
+     end if
+
+     ! Update the electric field and scale
+     E = E - this%work/this%delta_x
+
+   end subroutine compute_E_from_j_1d_fem
   
    subroutine compute_E_from_rho_1d_fem(this, E, rho )       
      class(sll_maxwell_1d_fem) :: this
@@ -205,6 +229,41 @@ contains
 
    end subroutine L2projection
 
+   !> Compute square of the L2norm 
+   function L2norm(this, val_dofs, form) 
+     class(sll_maxwell_1d_fem) :: this !< Maxwell solver object
+     sll_real64 :: val_dofs(this%n_dofs) !< Coefficient for each DoF
+     sll_int32  :: form !< Specify 0- or 1- form
+     sll_real64 :: L2norm !< Result: squared L2 norm
+
+     !Local variables
+     sll_int32 :: j, k
+
+     if (form == 0 ) then
+        L2norm = sum(val_dofs**2)*this%mass_0(1)*0.5_f64
+     
+        do j = 2,this%s_deg_0+1
+           L2norm = L2norm + this%mass_0(j)*sum(val_dofs(1:this%n_dofs-j+1)*val_dofs(j:this%n_dofs))
+           do k= 1,j-1
+              L2norm = L2norm + this%mass_0(j)*val_dofs(this%n_dofs-j+1+k)*val_dofs(k)
+           end do
+        end do
+     elseif (form == 1) then
+         L2norm = sum(val_dofs**2)*this%mass_1(1)*0.5_f64
+     
+        do j = 2,this%s_deg_0
+           L2norm = L2norm + this%mass_1(j)*sum(val_dofs(1:this%n_dofs-j+1)*val_dofs(j:this%n_dofs))
+           do k= 1,j-1
+              L2norm = L2norm + this%mass_1(j)*val_dofs(this%n_dofs-j+1+k)*val_dofs(k)
+           end do
+        end do
+     end if
+
+     L2norm = L2norm*this%delta_x*2.0_f64
+        
+   end function L2norm
+
+
    function sll_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(this)
      sll_real64 :: domain(2)     ! xmin, xmax
      sll_int32 :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
@@ -316,6 +375,7 @@ contains
      this%eig_weak_ampere(n_dofs) = 2.0_f64 * (coef1 / coef0)
      this%eig_weak_poisson(n_dofs) = 1.0_f64 / (coef1 *4.0_f64) 
    end function sll_new_maxwell_1d_fem
+
 
 
 end module sll_m_maxwell_1d_fem
