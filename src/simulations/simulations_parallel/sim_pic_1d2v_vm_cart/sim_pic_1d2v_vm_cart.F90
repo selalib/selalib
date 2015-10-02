@@ -161,7 +161,7 @@ contains
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
-       call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+       call sll_ascii_file_create('thdiag5.dat', th_diag_id, ierr)
     end if
 
     ! Initialize the particles   (mass and charge set to 1.0)
@@ -177,11 +177,11 @@ contains
     ! Initialize kernel smoother    
     sim%specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
          sim%domain, [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother) 
+         sim%n_particles, sim%degree_smoother-1) 
     sim%kernel_smoother_1 => sim%specific_kernel_smoother_1
     sim%specific_kernel_smoother_0 => &
          sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother-1) 
+         sim%n_particles, sim%degree_smoother) 
     sim%kernel_smoother_0 => sim%specific_kernel_smoother_0
     
     ! Set the seed for the random initialization
@@ -235,49 +235,32 @@ contains
     do i_part=1,sim%particle_group%n_particles
        vi = sim%particle_group%get_v(i_part)
        kinetic_energy = kinetic_energy + &
-            (vi(1)+vi(2))*sim%particle_group%get_charge(i_part)
+            (vi(1)**2+vi(2)**2)*sim%particle_group%get_charge(i_part)
     end do
     total_energy = 0.0_f64
     call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
          MPI_SUM, 0, total_energy)
     if (sim%rank == 0) then
-       ! Compute fields at grid points from dofs
-       sim%fields_grid(:,1) = eval_uniform_periodic_spline_curve(sim%degree_smoother-1, &
-            sim%propagator%efield_dofs(:,1))
-       sim%fields_grid(:,2) = eval_uniform_periodic_spline_curve(sim%degree_smoother, &
-            sim%propagator%efield_dofs(:,2))
-       sim%fields_grid(:,3) = eval_uniform_periodic_spline_curve(sim%degree_smoother-1, &
-            sim%propagator%bfield_dofs) 
-       potential_energy(1) = sum(sim%fields_grid(:,1)**2)*sim%mesh%delta_eta
-       potential_energy(2) = sum(sim%fields_grid(:,2)**2)*sim%mesh%delta_eta
-       potential_energy(3) = sum(sim%fields_grid(:,3)**2)*sim%mesh%delta_eta
-       total_energy = total_energy + sum(potential_energy)
-       write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
+       potential_energy(1) = L2norm(sim%specific_maxwell_solver, sim%propagator%efield_dofs(:,1), 1)
+       potential_energy(2) = L2norm(sim%specific_maxwell_solver, sim%propagator%efield_dofs(:,2), 0)
+       potential_energy(3) = L2norm(sim%specific_maxwell_solver, sim%propagator%bfield_dofs, 1)
+       write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
             0.0_f64,  &
-            potential_energy, total_energy
+            potential_energy, total_energy, total_energy + sum(potential_energy)
        print*, 'Time loop'
     end if
     ! Time loop
     do j=1, sim%n_time_steps
-       ! Lie splitting
-!!$       call sim%propagator%operatorHf(sim%delta_t)
-!!$       call sim%propagator%operatorHE(sim%delta_t)
-!!$       call sim%propagator%operatorHB(sim%delta_t)
        ! Strang splitting
-       call sim%propagator%operatorHf(0.5_f64*sim%delta_t)
-       call sim%propagator%operatorHE(0.5_f64*sim%delta_t)
-       call sim%propagator%operatorHB(sim%delta_t)
-       call sim%propagator%operatorHE(0.5_f64*sim%delta_t)
-       call sim%propagator%operatorHf(0.5_f64*sim%delta_t)
+       call sim%propagator%strang_splitting(sim%delta_t)
 
        ! Diagnostics
-
        ! Kinetic energy
        kinetic_energy = 0.0_f64
        do i_part=1,sim%particle_group%n_particles
           vi = sim%particle_group%get_v(i_part)
           kinetic_energy = kinetic_energy + &
-               (vi(1)+vi(2))*sim%particle_group%get_charge(i_part)
+               (vi(1)**2+vi(2)**2)*sim%particle_group%get_charge(i_part)
        end do
        total_energy = 0.0_f64
        call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
@@ -285,20 +268,12 @@ contains
 
        if (sim%rank == 0) then
           print*, 'Iteration=', j 
-          ! Compute fields at grid points from dofs
-          sim%fields_grid(:,1) = eval_uniform_periodic_spline_curve(&
-               sim%degree_smoother-1, sim%propagator%efield_dofs(:,1))
-          sim%fields_grid(:,2) = eval_uniform_periodic_spline_curve(&
-               sim%degree_smoother, sim%propagator%efield_dofs(:,2))
-          sim%fields_grid(:,3) = eval_uniform_periodic_spline_curve(&
-               sim%degree_smoother-1, sim%propagator%bfield_dofs)
-          potential_energy(1) = sum(sim%fields_grid(:,1)**2)*sim%mesh%delta_eta
-          potential_energy(2) = sum(sim%fields_grid(:,2)**2)*sim%mesh%delta_eta
-          potential_energy(3) = sum(sim%fields_grid(:,3)**2)*sim%mesh%delta_eta
-          total_energy = total_energy + sum(potential_energy)
-          write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
+          potential_energy(1) = L2norm(sim%specific_maxwell_solver, sim%propagator%efield_dofs(:,1), 1)
+          potential_energy(2) = L2norm(sim%specific_maxwell_solver, sim%propagator%efield_dofs(:,2), 0)
+          potential_energy(3) = L2norm(sim%specific_maxwell_solver, sim%propagator%bfield_dofs, 1)
+          write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
                real(j,f64)*sim%delta_t,  &
-               potential_energy, total_energy
+               potential_energy, total_energy, total_energy + sum(potential_energy)
        end if
     end do
     
