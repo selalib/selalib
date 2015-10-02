@@ -257,23 +257,47 @@ subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
   sll_int32,        intent(in)  :: iplot
   sll_int32,        intent(out) :: error
   
-  character(len=4)  :: fin   
-  sll_int32, save   :: gnu_id
-  sll_int32         :: file_id
-  sll_int32         :: i, j
+!  sll_int32, save  :: gnu_id !OLD VERSION
+  sll_int32        :: file_id
+  sll_int32        :: i, j
+  character(len=4) :: fin   
+  character(len=8) :: gnu_status
   
-  call int2string(iplot, fin)
-  
-  if ( iplot == 1 ) then
-     call sll_new_file_id(gnu_id, error)
-  end if
-  
-  open(gnu_id,file=array_name//".gnu", position="append")
-  write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
-  close(gnu_id)
-  
-  call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
+  ! Check that plot index is strictly positive
+  SLL_ASSERT( iplot > 0 )
 
+  ! Convert plot index to string
+  call int2string( iplot, fin )
+  
+  ! Determine Gnuplot file status
+  if (iplot == 1) then
+    ! A new ASCII file will be created (replaced if already existing)
+    gnu_status = 'replace'
+  else
+    ! A pre-existing ASCII file will be appended
+    gnu_status = 'old'
+  end if
+
+  ! Open Gnuplot file
+  open( file= array_name//'.gnu', &
+    status  = gnu_status,  &
+    form    = 'formatted', &
+    position= 'append',    &
+    newunit = file_id,     &
+    iostat  = error )
+
+  ! Write Gnuplot instructions, than close file
+  write(file_id,*) "splot '"//array_name//"_"//fin//".dat' w l"
+  close(file_id)
+
+  ! Create new data file
+  open( file= array_name//'_'//fin//'.dat', &
+    status  = 'replace',   &
+    form    = 'formatted', &
+    newunit = file_id,     &
+    iostat  = error )
+
+  ! Write array, then close file
   do i=1,nx
      do j=1,ny
         write(file_id,*) sngl(xvec(i)), &
@@ -282,9 +306,32 @@ subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
      end do
      write(file_id,*)
   enddo
-
   close(file_id)
 
+! OLD VERSION
+!------------
+!  call int2string(iplot, fin)
+!  
+!  if ( iplot == 1 ) then
+!     call sll_new_file_id(gnu_id, error)
+!  end if
+!  
+!  open(gnu_id,file=array_name//".gnu", position="append")
+!  write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
+!  close(gnu_id)
+!  
+!  call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
+!
+!  do i=1,nx
+!     do j=1,ny
+!        write(file_id,*) sngl(xvec(i)), &
+!                         sngl(yvec(j)), &
+!                         sngl(array(i,j)) 
+!     end do
+!     write(file_id,*)
+!  enddo
+!
+!  close(file_id)
 end subroutine sll_gnuplot_rect_2d
 
 !> Write a data file plotable by gnuplot to visualize a 2d curvilinear mesh
@@ -303,18 +350,30 @@ subroutine sll_gnuplot_mesh_2d( nx, ny, xcoord, ycoord, array_name, error)
   character(len=*)            , intent(in)  :: array_name !< field name
   sll_int32                   , intent(out) :: error      !< error code
 
-  sll_int32, save :: gnu_id
+!  sll_int32, save :: gnu_id !OLD VERSION
   sll_int32 :: file_id
   sll_int32 :: i, j
-  
-  call sll_new_file_id(gnu_id, error)
-  
-  open(gnu_id,file=array_name//".gnu")
-  write(gnu_id,*)"set view 0,0"
-  write(gnu_id,*)"splot '"//array_name//"_mesh.dat' with lines"
-  close(gnu_id)
-  
-  call sll_ascii_file_create(array_name//'_mesh.dat', file_id, error )
+
+  ! Create new Gnuplot file (replace if existing)
+  open( file= array_name//'.gnu', &
+    status  = 'replace',   &
+    form    = 'formatted', &
+    newunit = file_id,     &
+    iostat  = error )
+
+  ! Write Gnuplot instructions, than close file
+  write(file_id,*) "set view 0,0"
+  write(file_id,*) "splot '"//array_name//"_mesh.dat' with lines"
+  close(file_id)
+ 
+  ! Create new data file (replace if existing)
+  open( file= array_name//'_mesh.dat', &
+    status  = 'replace',   &
+    form    = 'formatted', &
+    newunit = file_id,     &
+    iostat  = error )
+
+  ! Write array, then close file
   do i=1,nx
      do j=1,ny
         write(file_id,*) sngl(xcoord(i,j)), &
@@ -324,6 +383,24 @@ subroutine sll_gnuplot_mesh_2d( nx, ny, xcoord, ycoord, array_name, error)
   enddo
   close(file_id)
 
+! OLD VERSION
+!------------
+!  call sll_new_file_id(gnu_id, error)
+!  
+!  open(gnu_id,file=array_name//".gnu")
+!  write(gnu_id,*)"set view 0,0"
+!  write(gnu_id,*)"splot '"//array_name//"_mesh.dat' with lines"
+!  close(gnu_id)
+!  
+!  call sll_ascii_file_create(array_name//'_mesh.dat', file_id, error )
+!  do i=1,nx
+!     do j=1,ny
+!        write(file_id,*) sngl(xcoord(i,j)), &
+!                         sngl(ycoord(i,j)), 0.0_f32
+!     end do
+!     write(file_id,*)
+!  enddo
+!  close(file_id)
 end subroutine sll_gnuplot_mesh_2d
 
 
@@ -350,24 +427,48 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)
   sll_int32,        intent(in)  :: iplot        
   sll_int32,        intent(out) :: error        
   
-  sll_int32, save  :: gnu_id
+!  sll_int32, save  :: gnu_id !OLD VERSION
   sll_int32        :: file_id
   sll_int32        :: i, j
-  character(len=4) :: fin   
-  
-  call int2string(iplot, fin)
-  
-  if ( iplot == 1 ) then
-     call sll_new_file_id(gnu_id, error)
-  end if
-  
-  open(gnu_id,file=array_name//".gnu", position="append")
-  write(gnu_id,*)"set output '"//array_name//"_"//fin//".png'"
-  write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
-  close(gnu_id)
-  
-  call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
+  character(len=4) :: fin
+  character(len=8) :: gnu_status
 
+  ! Check that plot index is strictly positive
+  SLL_ASSERT( iplot > 0 )
+
+  ! Convert plot index to string
+  call int2string( iplot, fin )
+  
+  ! Determine Gnuplot file status
+  if (iplot == 1) then
+    ! A new ASCII file will be created (replaced if already existing)
+    gnu_status = 'replace'
+  else
+    ! A pre-existing ASCII file will be appended
+    gnu_status = 'old'
+  end if
+
+  ! Open Gnuplot file
+  open( file= array_name//'.gnu', &
+    status  = gnu_status,  &
+    form    = 'formatted', &
+    position= 'append',    &
+    newunit = file_id,     &
+    iostat  = error )
+
+  ! Write Gnuplot instructions, then close file
+  write(file_id,*) "set output '"//array_name//"_"//fin//".png'"
+  write(file_id,*) "splot '"     //array_name//"_"//fin//".dat' w l"
+  close(file_id)
+
+  ! Create new data file
+  open( file= array_name//'_'//fin//'.dat', &
+    status  = 'replace',   &
+    form    = 'formatted', &
+    newunit = file_id,     &
+    iostat  = error )
+
+  ! Write array, then close file
   do i=1,nx
      do j=1,ny
         write(file_id,*) sngl(x(i,j)), &
@@ -378,6 +479,28 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)
   enddo
   close(file_id)
 
+! OLD VERSION
+!------------
+!  if ( iplot == 1 ) then
+!     call sll_new_file_id(gnu_id, error)
+!  end if
+!  
+!  open(gnu_id,file=array_name//".gnu", position="append")
+!  write(gnu_id,*)"set output '"//array_name//"_"//fin//".png'"
+!  write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
+!  close(gnu_id)
+!  
+!  call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
+!
+!  do i=1,nx
+!     do j=1,ny
+!        write(file_id,*) sngl(x(i,j)), &
+!                         sngl(y(i,j)), &
+!                         sngl(array(i,j)) 
+!     end do
+!     write(file_id,*)
+!  enddo
+!  close(file_id)
 end subroutine sll_gnuplot_curv_2d
 
 
