@@ -35,11 +35,29 @@ module sll_m_operator_splitting_pic_2x2v_vp
    contains
      procedure :: operatorT => advection_x_pic_2x2v_vp  !< Operator for x advection
      procedure :: operatorV => advection_v_pic_2x2v_vp  !< Operator for v advection
+     procedure :: strang_splitting => strang_splitting_pic_2x2v_vp !< Strang splitting
 
      procedure :: initialize => initialize_operator_splitting_pic_2x2v
   end type sll_operator_splitting_pic_2x2v_vp
 
 contains
+
+  !---------------------------------------------------------------------------!
+  !> Strang splitting
+  subroutine strang_splitting_pic_2x2v_vp(this, dt)
+    class(sll_operator_splitting_pic_2x2v_vp), intent(inout) :: this !< time splitting object 
+    sll_real64, intent(in) :: dt   !< time step
+
+
+    call this%operatorT(0.5_f64*dt)
+    call this%operatorV(dt)
+    call this%operatorT(0.5_f64*dt)
+
+
+  end subroutine strang_splitting_pic_2x2v_vp
+  
+  !---------------------------------------------------------------------------!
+
 
   !---------------------------------------------------------------------------!
   !> Push x 

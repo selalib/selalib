@@ -186,9 +186,8 @@ contains
     print*, 'Time loop'
     ! Time loop
     do j=1, sim%n_time_steps
-       ! Lie splitting
-       call sim%propagator%operatorT(sim%delta_t)
-       call sim%propagator%operatorV(sim%delta_t)
+
+       call sim%specific_propagator%strang_splitting(sim%delta_t)
 
        ! Diagnostics
        if (sim%rank == 0) then
