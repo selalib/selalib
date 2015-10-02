@@ -8,7 +8,7 @@ module sll_m_kernel_smoother_spline_2d
 #include "sll_memory.h"
 
   use sll_m_kernel_smoother_base
-  use sll_module_pic_base
+  use sll_m_pic_base
   use sll_arbitrary_degree_splines
   
   implicit none

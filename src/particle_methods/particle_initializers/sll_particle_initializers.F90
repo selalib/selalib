@@ -8,7 +8,7 @@ module sll_m_particle_initializer
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_module_pic_base
+  use sll_m_pic_base
   use gaussian, only: gaussian_deviate_2D
   
   implicit none

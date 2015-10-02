@@ -12,7 +12,7 @@ module sll_m_sim_pic_1d2v_vm_cart
   use sll_collective
   use sll_simulation_base
   use sll_cartesian_meshes
-  use sll_module_pic_base
+  use sll_m_pic_base
   use sll_m_particle_initializer
   use sll_m_particle_group_1d2v
   use sll_m_operator_splitting_pic_1d2v_vm

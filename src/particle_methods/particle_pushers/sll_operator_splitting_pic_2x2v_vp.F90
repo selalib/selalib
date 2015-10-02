@@ -10,7 +10,7 @@ module sll_m_operator_splitting_pic_2x2v_vp
 
 
  
-  use sll_module_pic_base
+  use sll_m_pic_base
   use sll_m_kernel_smoother_base
   use sll_operator_splitting
   use sll_collective

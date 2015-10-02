@@ -6,7 +6,7 @@ module sll_m_kernel_smoother_base
 
 #include "sll_working_precision.h"
 
-  use sll_module_pic_base
+  use sll_m_pic_base
 
   implicit none
   private
