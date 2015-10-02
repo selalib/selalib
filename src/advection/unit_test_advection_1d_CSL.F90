@@ -18,10 +18,10 @@
 program unit_test_advection_1d_CSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_advection_1d_CSL
-use sll_module_advection_1d_PSM
-use sll_module_characteristics_1d_trapezoid_conservative
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_advection_1d_CSL
+use sll_m_advection_1d_PSM
+use sll_m_characteristics_1d_trapezoid_conservative
+use sll_m_cubic_spline_interpolator_1d
 
 implicit none
   

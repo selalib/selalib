@@ -17,8 +17,8 @@ module sll_pic_simulation_2d_cartesian_module
   use sll_particle_sort_module
   use sll_charge_to_density_module
   use sll_pic_utilities
-  use sll_module_poisson_2d_fft
-  use sll_module_poisson_2d_base
+  use sll_m_poisson_2d_fft
+  use sll_m_poisson_2d_base
 !  use sll_representation_conversion_module
   use sll_gnuplot
   use sll_timer
@@ -298,7 +298,7 @@ contains
        if (sim%my_rank == 0) then
           call normL2_field(enst,ncx,ncy,sim%rho,sim%m2d%delta_eta1,sim%m2d%delta_eta2)
           diag_enstrophy(0) = enst
-          it = 0
+          it = 1
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'RHO_init_CS', it, ierr )
@@ -341,7 +341,7 @@ contains
 !             write(50,*)
 !          enddo
 !          close(50)
-          it = 0
+          it = 1
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'RHO_init', it, ierr )
@@ -663,7 +663,7 @@ contains
           enddo
        endif
        if (sim%my_rank == 0) then
-          it = 0
+          it = 1
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'RHO_init_CS', it, ierr )
@@ -692,7 +692,7 @@ contains
           enddo
        endif
        if (sim%my_rank == 0) then
-          it = 0
+          it = 1
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'RHO_init_CS', it, ierr )

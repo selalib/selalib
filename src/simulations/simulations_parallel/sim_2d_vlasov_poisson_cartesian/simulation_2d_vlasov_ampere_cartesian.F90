@@ -40,20 +40,20 @@ use sll_constants
 use sll_cartesian_meshes  
 use sll_gnuplot_parallel
 use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
-use sll_module_advection_1d_periodic
-use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_periodic
+use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_poisson_1d_periodic  
 use sll_fft
 use sll_simulation_base
 use sll_time_splitting_coeff_module
-use sll_module_poisson_1d_periodic_solver
-use sll_module_poisson_1d_polar_solver
-use sll_module_advection_1d_spectral
-use sll_module_advection_1d_ampere
+use sll_m_poisson_1d_periodic_solver
+use sll_m_poisson_1d_polar_solver
+use sll_m_advection_1d_spectral
+use sll_m_advection_1d_ampere
 
 #ifdef _OPENMP
 use omp_lib
@@ -1377,7 +1377,7 @@ contains
     !advection in x
     !$ tid = omp_get_thread_num()+1
     
-    sim%advect_ampere_x1(tid)%ptr%rk = cmplx(0.0,0.0,kind=f64)
+    sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
     !$OMP DO 
     do i_omp = 1, local_size_x2
     
@@ -1397,8 +1397,8 @@ contains
                   -sin(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp),kind=f64)
       end do
     
-      sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) = &
-           sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) &
+      sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
+           sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
          + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
     
       call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, &
@@ -1424,14 +1424,14 @@ contains
     do i = 2, nc_x1/2+1
       s = cmplx(0.0,0.0,kind=f64)
       do tid = 1, sim%num_threads
-        s = s + sim%advect_ampere_x1(tid)%ptr%rk(i)
+        s = s + sim%advect_ampere_x1(tid)%ptr%r1(i)
       end do
-      sim%advect_ampere_x1(1)%ptr%rk(i) = s
+      sim%advect_ampere_x1(1)%ptr%r1(i) = s
     end do
     
     do i = 2, nc_x1/2+1
       sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-         - sim%advect_ampere_x1(1)%ptr%rk(i) * sim%L / (2*sll_pi*cmplx(0.,i-1,kind=f64))
+         - sim%advect_ampere_x1(1)%ptr%r1(i) * sim%L / (2*sll_pi*cmplx(0.,i-1,kind=f64))
     end do
     
     call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &

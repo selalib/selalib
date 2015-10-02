@@ -9,6 +9,7 @@ SET( SRC_UTILITIES
   sol.f muls.f 
   banfac.f90 
   banslv.f90  
+  pivotbande.F90
 )
 
 IF(Fortran_COMPILER MATCHES IBM)

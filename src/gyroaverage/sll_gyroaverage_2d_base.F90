@@ -1,4 +1,4 @@
-module sll_module_gyroaverage_2d_base
+module sll_m_gyroaverage_2d_base
 #include "sll_working_precision.h"
   implicit none
 
@@ -19,4 +19,4 @@ module sll_module_gyroaverage_2d_base
     end subroutine signature_compute_gyroaverage_2d
   end interface
 
-end module sll_module_gyroaverage_2d_base
+end module sll_m_gyroaverage_2d_base

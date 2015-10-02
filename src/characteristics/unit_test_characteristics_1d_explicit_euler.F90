@@ -17,8 +17,8 @@
 
 program unit_test_characteristics_1d_explicit_euler
 #include "sll_working_precision.h"
-use sll_module_characteristics_1d_base
-use sll_module_characteristics_1d_explicit_euler
+use sll_m_characteristics_1d_base
+use sll_m_characteristics_1d_explicit_euler
 use sll_boundary_condition_descriptors
 
 implicit none

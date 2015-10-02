@@ -1,3 +1,4 @@
+! Eric Sonnendrücker
 program unit_test_sll_quadtree
 #include "sll_working_precision.h"
 #include "sll_memory.h"

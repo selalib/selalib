@@ -1,6 +1,6 @@
 ADD_LIBRARY( deboor_splines STATIC
-             sll_module_deboor_splines_2d.F90
-             sll_module_deboor_splines_1d.F90 )
+             sll_m_deboor_splines_2d.F90
+             sll_m_deboor_splines_1d.F90 )
 
 TARGET_LINK_LIBRARIES( deboor_splines 
                        sll_utilities

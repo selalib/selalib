@@ -20,12 +20,12 @@
 ! we explore here the spaghetti to compute this derivative
 
 
-module sll_module_derivative_2d_oblic
+module sll_m_derivative_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_advection_1d_base
+use sll_m_advection_1d_base
 use sll_fcisl_module
 
 implicit none
@@ -191,4 +191,4 @@ contains
   end subroutine compute_oblic_derivative_2d  
   
   
-end module sll_module_derivative_2d_oblic
+end module sll_m_derivative_2d_oblic
