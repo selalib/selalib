@@ -180,9 +180,9 @@ contains
     end if
 
     ! Extend 'self%grids' array and store pointer to new grid
+    allocate( tmp(ng+1)%dims( size( dims ) ) )
     tmp(ng+1)%xml_grid => grid
-    allocate( tmp(ng+1)%dims, source=dims )
-    !tmp(ng+1)%dims     =  dims
+    tmp(ng+1)%dims     =  dims
     call move_alloc( from=tmp, to=self%grids )
 
     ! Return the grid id, i.e. the last index in the 'self%grids' array
