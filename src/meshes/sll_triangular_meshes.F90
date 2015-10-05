@@ -20,8 +20,8 @@ module sll_triangular_meshes
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_boundary_condition_descriptors.h"
 
 use sll_meshes_base
@@ -566,17 +566,15 @@ end function global_to_x2
 
 subroutine write_triangular_mesh_mtv(mesh, mtv_file)
 
-type(sll_triangular_mesh_2d) :: mesh
-sll_real64                   :: x1, x2
-sll_real64                   :: y1, y2
-character(len=*)             :: mtv_file
-sll_int32                    :: out_unit
-sll_int32                    :: error
-sll_int32                    :: i, j, k, l
+type(sll_triangular_mesh_2d), intent(in) :: mesh
+character(len=*),             intent(in) :: mtv_file
 
-call sll_new_file_id(out_unit, error)
+sll_real64 :: x1, x2
+sll_real64 :: y1, y2
+sll_int32  :: out_unit
+sll_int32  :: i, j, k, l
 
-open( out_unit, file=mtv_file)
+open( file=mtv_file, status='replace', form='formatted', newunit=out_unit )
 
 !--- Trace du maillage ---
 

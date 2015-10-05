@@ -10,6 +10,9 @@ program test_hex_hermite
   use sll_hex_meshes
   use hex_poisson
   use pivotbande
+  
+  use sll_utilities, only: int2string
+  
   implicit none
 
   !*************************************************************
