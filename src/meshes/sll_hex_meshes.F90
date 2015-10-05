@@ -25,11 +25,35 @@ module sll_hex_meshes
 #include "sll_memory.h"
 
 use sll_constants
-use sll_utilities
 use sll_meshes_base
 use sll_tri_mesh_xmf
 
   implicit none
+  
+  public ::                   &
+    sll_hex_mesh_2d,          &
+    new_hex_mesh_2d,          &
+    cart_to_hex1,             &
+    cart_to_hex2,             &
+    hex_to_global,            &
+    local_to_global,          &
+    index_hex_to_global,      &
+    cells_to_origin,          &
+    cell_type,                &
+    get_triangle_index,       &
+    get_edge_index,           &
+    get_cell_vertices_index,  &
+    get_neighbours,           &
+    change_elements_notation, &
+    write_hex_mesh_mtv,       &
+    write_hex_mesh_2d,        &
+    write_field_hex_mesh_xmf, &
+    write_caid_files,         &
+    sll_display,              &
+    delete_hex_mesh_2d,       &
+    delete
+
+  private
 
   !> @brief 2d hexagonal mesh
   type,extends(sll_mesh_2d_base) ::  sll_hex_mesh_2d
@@ -1120,12 +1144,16 @@ contains
   !> @param[OUT] s2 index of 2nd vertex of the cell where (x,y) is
   !> @param[OUT] s3 index of 3rd vertex of the cell where (x,y) is
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
-    type(sll_hex_mesh_2d), pointer            :: mesh
-    sll_real64, intent(in)                :: x, y
-    sll_int32, intent(out)                :: s1, s2, s3
-    sll_real64                            :: xi, radius, step
-    sll_int32                             :: num_cells 
-    sll_int32                             :: i, j
+    sll_real64,            intent(in)  :: x
+    sll_real64,            intent(in)  :: y
+    type(sll_hex_mesh_2d), intent(in)  :: mesh ! Was pointer (YG - 05.10.2015)
+    sll_int32,             intent(out) :: s1
+    sll_int32,             intent(out) :: s2
+    sll_int32,             intent(out) :: s3
+    
+    sll_real64 :: xi, radius, step
+    sll_int32  :: num_cells 
+    sll_int32  :: i, j
 
     num_cells = mesh%num_cells
     radius    = mesh%radius
@@ -1220,12 +1248,14 @@ contains
   !> @param[IN] mesh hexagonal mesh
   !> @param[IN] x first cartesian coordiante of point we wish to localize
   !> @param[OUT] triangle_index index of the cell where the point is localized
-  subroutine get_triangle_index(k1,k2,mesh,x,triangle_index)
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
-    sll_int32, intent(in)      :: k1, k2
-    sll_int32, intent(out)     :: triangle_index
-    sll_int32                  :: global
+  subroutine get_triangle_index( k1, k2, mesh, x, triangle_index )
+    sll_int32,             intent(in)  :: k1
+    sll_int32,             intent(in)  :: k2
+    type(sll_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
+    sll_real64,            intent(in)  :: x   !cartessian_abscisse_other_vertice
+    sll_int32,             intent(out) :: triangle_index
+
+    sll_int32 :: global
 
     triangle_index = -1
 
@@ -1254,9 +1284,13 @@ contains
   !> @param[OUT] nei_1 integer: index of the 1st neighbour
   !> @param[OUT] nei_2 integer: index of the 2nd neighbour
   !> @param[OUT] nei_3 integer: index of the 3rd neighbour
-  subroutine get_neighbours(mesh, cell_index, nei_1, nei_2, nei_3)
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_int32, intent(in) :: cell_index
+  subroutine get_neighbours( mesh, cell_index, nei_1, nei_2, nei_3 )
+    type(sll_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
+    sll_int32,             intent(in)  :: cell_index
+    sll_int32,             intent(out) :: nei_1
+    sll_int32,             intent(out) :: nei_2
+    sll_int32,             intent(out) :: nei_3
+
     sll_real64 :: xc
     sll_real64 :: yc
     sll_int32  :: s1
@@ -1270,9 +1304,6 @@ contains
     sll_int32  :: k1
     sll_int32  :: k2
     sll_real64 :: coef
-    sll_int32, intent(out) :: nei_1
-    sll_int32, intent(out) :: nei_2
-    sll_int32, intent(out) :: nei_3
 
     ! Getting the cell's center coordinates:
     xc = mesh%center_cartesian_coord(1, cell_index)
@@ -1706,16 +1737,19 @@ contains
   !> the hexagonal and cartesian coordinates
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_hex_mesh_2d(mesh, name)
-    ! Writes the mesh information in a file named "name"
-    type(sll_hex_mesh_2d), pointer :: mesh
-    character(len=*) :: name
+  subroutine write_hex_mesh_2d( mesh, name )
+    type(sll_hex_mesh_2d), intent(in) :: mesh ! Was pointer (YG - 05.10.2015)
+    character(len=*)     , intent(in) :: name
+
     sll_int32  :: i
     sll_int32  :: num_pts_tot
     sll_int32  :: k1, k2
-    sll_int32, parameter :: out_unit=20
+    sll_int32  :: out_unit
 
-    open (unit=out_unit,file=name,action="write",status="replace")
+! Changed to use 'newunit' Fortran feature (YG - 05.10.2015)
+!    sll_int32, parameter :: out_unit=20
+!    open (unit=out_unit,file=name,action="write",status="replace")
+    open( file=name, status="replace", form="formatted", newunit=out_unit )
 
     num_pts_tot = mesh%num_pts_tot
 
@@ -1793,8 +1827,6 @@ contains
     sll_int32  :: error
     sll_real64 :: x1, x2
 
-    call sll_new_file_id(out_unit, error)
-
     num_pts_tot = mesh%num_pts_tot
     num_triangles = mesh%num_triangles
     SLL_ALLOCATE(coor(2,num_pts_tot),error)
@@ -1817,8 +1849,6 @@ contains
          name, coor, ntri, &
          num_pts_tot, num_triangles, field, 'values')
 
-    close(out_unit)
-
   end subroutine write_field_hex_mesh_xmf
 
 
@@ -1830,8 +1860,10 @@ contains
   !> To visualize use plotmtv.
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_hex_mesh_mtv(mesh, mtv_file)
-    type(sll_hex_mesh_2d), pointer :: mesh
+  subroutine write_hex_mesh_mtv( mesh, mtv_file )
+    type(sll_hex_mesh_2d), intent(in) :: mesh    ! Was pointer (YG - 05.10.2015)
+    character(len=*)     , intent(in) :: mtv_file
+
     sll_real64                 :: coor(2,mesh%num_pts_tot)
     sll_int32                  :: ntri(3,mesh%num_triangles)
     sll_real64                 :: x1
@@ -1839,14 +1871,13 @@ contains
     sll_int32                  :: is1
     sll_int32                  :: is2
     sll_int32                  :: is3
-    character(len=*)           :: mtv_file
     sll_int32                  :: out_unit
-    sll_int32                  :: error
     sll_int32                  :: i
     
-    call sll_new_file_id(out_unit, error)
-
-    open( out_unit, file=mtv_file)
+! Changed to use 'newunit' Fortran feature (YG - 05.10.2015)
+!    call sll_new_file_id(out_unit, error)
+!    open( out_unit, file=mtv_file)
+    open( file=mtv_file, status="replace", form="formatted", newunit=out_unit )
     
     !--- Drawing mesh ---
     
