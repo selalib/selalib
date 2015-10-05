@@ -50,6 +50,7 @@ use sll_tri_mesh_xmf
     write_field_hex_mesh_xmf, &
     write_caid_files,         &
     sll_display,              &
+    display_hex_mesh_2d,      &
     delete_hex_mesh_2d,       &
     delete
 
