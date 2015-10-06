@@ -1740,11 +1740,6 @@ contains
                      'intdeltafdx',                   &
                      iplot )
 
-                call sll_gnuplot_1d(         &
-                     f_visu_buf1d(1:num_dof_x2),      &
-                     node_positions_x2(1:num_dof_x2), &
-                     'intdeltafdx')                        
-
                 call sll_binary_write_array_2d(deltaf_id,           &
                      f_visu(1:np_x1-1,1:np_x2-1),ierr)  
 
@@ -1783,11 +1778,6 @@ contains
                      node_positions_x2(1:num_dof_x2), &
                      'intfdx',                        &
                      iplot )
-
-                call sll_gnuplot_1d(         &
-                     f_visu_buf1d(1:num_dof_x2),      &
-                     node_positions_x2(1:num_dof_x2), &
-                     'intfdx')
 
                 call sll_plot_f_cartesian( iplot,             &
                      f_visu,            &
