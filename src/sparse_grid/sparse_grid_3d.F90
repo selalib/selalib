@@ -14,8 +14,9 @@ use sll_m_lagrange_interpolator_1d
 use sll_sparse_grid_interpolator
 use sll_constants, only: sll_pi
 implicit none
+private
 
-type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
+type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
 sll_int32, dimension(:,:,:), pointer  :: index
 
 contains
@@ -24,6 +25,7 @@ contains
   procedure :: interpolate_const_disp
   procedure :: fg_to_sg
   procedure :: SPFFT
+  procedure :: ISPFFT
   procedure :: interpolate_array_disp_sgfft
 
 end type sparse_grid_interpolator_3d
