@@ -10,10 +10,12 @@ module sll_poisson_2d_sparse_grid_fft
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sparse_grid_2d
+  use sparse_grid_2d
 
-use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_c_binding
+  use sll_constants, only: sll_pi
   implicit none
+  private
 
 
 type,public:: sll_fft_derivative
@@ -22,8 +24,8 @@ type,public:: sll_fft_derivative
    sll_comp64, dimension(:),pointer :: fcoeffs,fcoeffs2
 
 contains
-   procedure,pass(this) :: initialize=>new_poisson_2d_sparse_grid_fft
-   procedure,pass(this) :: solve=>solve_for_electric_field!
+   procedure :: initialize=>new_poisson_2d_sparse_grid_fft
+   procedure :: solve=>solve_for_electric_field!
 end type sll_fft_derivative
 
 
@@ -89,14 +91,14 @@ subroutine solve_potential(this,interpolator,rho,phi)
   sll_real64,dimension(:),intent(inout) ::rho
   sll_int32 :: i
 
-call SPFFT(interpolator,rho,this%fcoeffs)
+call interpolator%SPFFT(rho,this%fcoeffs)
 
 do i=1,interpolator%size_basis
    this%fcoeffs(i) =  this%fcoeffs(i)*this%kpot(i)
    !this%fcoeffs(i)*this%kx(i)
 end do
 
-call ISPFFT(interpolator,this%fcoeffs,phi)
+call interpolator%ISPFFT(this%fcoeffs,phi)
 
 
 end subroutine solve_potential
@@ -109,7 +111,7 @@ subroutine solve_for_electric_field(this,interpolator,rho,ex,ey)
   sll_real64,dimension(:),intent(inout) ::rho
   sll_int32 :: i
 
-call SPFFT(interpolator,rho,this%fcoeffs)
+call interpolator%SPFFT(rho,this%fcoeffs)
 
 do i=1,interpolator%size_basis
    this%fcoeffs2(i) = cmplx(- aimag(this%fcoeffs(i))*this%key(i), &
@@ -118,8 +120,8 @@ do i=1,interpolator%size_basis
           real(this%fcoeffs(i))*this%kex(i), kind=f64)
 end do
 
-call ISPFFT(interpolator,this%fcoeffs,ex)
-call ISPFFT(interpolator,this%fcoeffs2,ey)
+call interpolator%ISPFFT(this%fcoeffs,ex)
+call interpolator%ISPFFT(this%fcoeffs2,ey)
 
 end subroutine solve_for_electric_field
 

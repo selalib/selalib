@@ -1,13 +1,18 @@
+!> @ingroup sparse_grid
+!> @author Katharina Kormann, IPP 
+!> @brief Implementation of a 4D sparse grid with interpolation routines.
+!> @details <DETAILED_DESCRIPTION>
+
 module sparse_grid_4d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_module_periodic_interpolator_1d
+use sll_m_periodic_interpolator_1d
 use sll_arbitrary_degree_splines
-use sll_module_lagrange_interpolator_1d
+use sll_m_lagrange_interpolator_1d
 use sll_sparse_grid_interpolator
-
+use sll_constants, only: sll_pi
 
 implicit none
 
@@ -36,7 +41,7 @@ contains
 
 
 
-! Compute the value of the sparse grid interpolant at position eta
+!< Compute the value of the sparse grid interpolant at position eta
   function interpolate_value( interpolator,data, eta ) result(val)
 #ifdef STDF95
     type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
@@ -94,8 +99,8 @@ subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data
                          +ind(ind_order(2)+1,2)*no(3)*no(4)+&
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
                     ! Evaluate along dorder(1)-stripe
-                    call interpolate_disp_1d_periodic&
-                    (interpolator,displacement,dorder(1),&
+                    call interpolator%interpolate_disp_1d_periodic&
+                         (displacement,dorder(1),&
                          min(interpolator%levels(dorder(1)),&
                          interpolator%max_level-ind_order(dorder(2))-&
                          ind_order(dorder(3))-&
@@ -110,12 +115,12 @@ subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data
   if (hiera .EQV. .FALSE.) then
      ! Dehierarchization along dimension dorder(1) only
      do j=interpolator%order,2,-1
-        call dehierarchical_part_order&
-             (interpolator,data_out,&
+        call interpolator%dehierarchical_part_order&
+             (data_out,&
              interpolator%dim,2,dorder,j)
      end do
 
-     call dehierarchical_part(interpolator,data_out,&
+     call interpolator%dehierarchical_part(data_out,&
           interpolator%dim,2,dorder)
   end if
 
@@ -149,11 +154,11 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
 
   ! Dehierarchization along dimension dorder(1) only
   do j=interpolator%order,2,-1
-     call dehierarchical_part_order&
-          (interpolator%sparse_grid_interpolator,data_in,1,1,dorder,j)
+     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+          (data_in,1,1,dorder,j)
   end do
 
-  call dehierarchical_part(interpolator%sparse_grid_interpolator,data_in,1,1,dorder)
+  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_in,1,1,dorder)
   ! Interpolation in dorder(1)/dorder(2)-plane
   ind_order(dorder(1)) = 0
   no(dorder(1)) = 1
@@ -182,8 +187,8 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
                          +ind(ind_order(2)+1,2)*no(3)*no(4)+&
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
                     ! Evaluate along dorder(1)-stripe
-                    call interpolate_disp_1d_periodic_self&
-                    (interpolator%sparse_grid_interpolator,disp,dorder(1),&
+                    call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
+                         (disp,dorder(1),&
                          min(interpolator%levels(dorder(1)),&
                          interpolator%max_level-ind_order(dorder(2))-&
                          ind_order(dorder(3))-&
@@ -196,12 +201,12 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
                     do while(index_parent<index_parent_old)
                        coordinate_ancestor = interpolator%hierarchy(index_parent)%&
                             coordinate(dorder(2))
-                       call basis_function((coordinate_self-coordinate_ancestor)/&
+                       call interpolator%basis_function((coordinate_self-coordinate_ancestor)/&
                             interpolator%length(dorder(2))*&
                             2**(interpolator%hierarchy(index_parent)%level(dorder(2))), factor,&
                             interpolator%hierarchy(index_parent)%function_type(dorder(2)))
-                       call interpolate_disp_1d_periodic_for_neighbor&
-                       (interpolator%sparse_grid_interpolator,disp,factor,&
+                       call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
+                            (disp,factor,&
                             dorder(1),min(interpolator%levels(dorder(1)),&
                             interpolator%max_level-&
                             interpolator%hierarchy(index_parent)%level(dorder(2))-&
@@ -226,29 +231,11 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
 
   ! Dehierarchization along dimension dorder(3) dorder(4)
   do j=interpolator%order,2,-1
-     call dehierarchical_part_order&
-          (interpolator%sparse_grid_interpolator,data_out,4,3,dorder,j)
+     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+          (data_out,4,3,dorder,j)
   end do
 
-  call dehierarchical_part(interpolator%sparse_grid_interpolator,data_out,4,3,dorder)
-!!$
-!!$
-!!$! Hierarchization along dimension dorder(1) and dorder(2)
-!!$call hierarchical_part(interpolator%sparse_grid_interpolator,data_out,2,1,dorder)
-!!$
-!!$do j=2,interpolator%order
-!!$   call hierarchical_part_order&
-!!$        (interpolator%sparse_grid_interpolator,data_out,2,1,dorder,j)
-!!$end do
-!!$
-!!$
-!!$! Dehierarchization of the hierarchical surplus
-!!$do j=interpolator%order,2,-1
-!!$   call dehierarchical_order&
-!!$        (interpolator%sparse_grid_interpolator,data_out,j)
-!!$end do
-!!$
-!!$call dehierarchical(interpolator%sparse_grid_interpolator,data_out)
+  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_out,4,3,dorder)
 
 
 end subroutine Interpolate_disp_nconst_in_1d
@@ -272,11 +259,11 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
 
   ! Dehierarchization along dimension dorder(1) only
   do j=interpolator%order,2,-1
-     call dehierarchical_part_order&
-          (interpolator%sparse_grid_interpolator,data_in,1,1,dorder,j)
+     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+          (data_in,1,1,dorder,j)
   end do
 
-  call dehierarchical_part(interpolator%sparse_grid_interpolator,data_in,1,1,dorder)
+  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_in,1,1,dorder)
 
  ! Interpolation in dorder(1)/dorder(2)-plane
   ind_order(dorder(1)) = 0
@@ -306,8 +293,8 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
                     disp = displacement*interpolator%hierarchy(counter)%coordinate(dorder(2))
                     ! Evaluate along dorder(1)-stripe
-                    call interpolate_disp_1d_periodic_self&
-                    (interpolator%sparse_grid_interpolator,disp,dorder(1),&
+                    call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
+                    (disp,dorder(1),&
                     min(interpolator%levels(dorder(1)),interpolator%max_level&
                     -ind_order(dorder(2))-ind_order(dorder(3))-&
                     ind_order(dorder(4))),counter,data_in,data_out)
@@ -319,12 +306,12 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
                     do while(index_parent<index_parent_old)
                        coordinate_ancestor = interpolator%hierarchy(index_parent)%&
                             coordinate(dorder(2))
-                       call basis_function((coordinate_self-coordinate_ancestor)/&
+                       call interpolator%basis_function((coordinate_self-coordinate_ancestor)/&
                             interpolator%length(dorder(2))*&
                             2**(interpolator%hierarchy(index_parent)%level(dorder(2))), factor,&
                             interpolator%hierarchy(index_parent)%function_type(dorder(2)))
-                       call interpolate_disp_1d_periodic_for_neighbor&
-                            (interpolator%sparse_grid_interpolator,disp,factor,&
+                       call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
+                            (disp,factor,&
                             dorder(1),min(interpolator%levels(dorder(1)),&
                             interpolator%max_level-&
                             interpolator%hierarchy(index_parent)%level(dorder(2))-&
@@ -349,30 +336,11 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
 
   ! Dehierarchization along dimension dorder(3) dorder(4)
   do j=interpolator%order,2,-1
-     call dehierarchical_part_order&
-          (interpolator%sparse_grid_interpolator,data_out,4,3,dorder,j)
+     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+          (data_out,4,3,dorder,j)
   end do
 
-  call dehierarchical_part(interpolator%sparse_grid_interpolator,data_out,4,3,dorder)
-!!$
-!!$
-!!$! Hierarchization along dimension dorder(1) and dorder(2)
-!!$call hierarchical_part(interpolator%sparse_grid_interpolator,data_out,2,1,dorder)
-!!$
-!!$do j=2,interpolator%order
-!!$   call hierarchical_part_order&
-!!$        (interpolator%sparse_grid_interpolator,data_out,2,1,dorder,j)
-!!$end do
-!!$
-!!$
-!!$! Dehierarchization of the hierarchical surplus
-!!$do j=interpolator%order,2,-1
-!!$   call dehierarchical_order&
-!!$        (interpolator%sparse_grid_interpolator,data_out,j)
-!!$end do
-!!$
-!!$call dehierarchical(interpolator%sparse_grid_interpolator,data_out)
-
+  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_out,4,3,dorder)
 
 end subroutine Interpolate4d_disp_linnconst_in_1d
 
@@ -401,11 +369,12 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
 
   ! Dehierarchization along dimension dorder(1) only
   do j=interpolator%order,2,-1
-     call dehierarchical_part_order&
-          (interpolator%sparse_grid_interpolator,data_in,1,1,dorder,j)
+     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+          (data_in,1,1,dorder,j)
   end do
 
-  call dehierarchical_part(interpolator%sparse_grid_interpolator,data_in,1,1,dorder)
+  call interpolator%sparse_grid_interpolator%dehierarchical_part(&
+       data_in,1,1,dorder)
 
   !print*, data_in
 
@@ -446,8 +415,8 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
 
                     ! Evaluate along dorder(1)-stripe
-                    call interpolate_disp_1d_periodic_self&
-                         (interpolator%sparse_grid_interpolator,disp,dorder(1),&
+                    call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
+                         (disp,dorder(1),&
                          min(interpolator%levels(dorder(1)),&
                          interpolator%max_level-ind_order(dorder(2))-&
                          ind_order(dorder(3))-&
@@ -466,7 +435,7 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
                     do while (index_upper<index_upper_old)
                        coordinate_ancestor = interpolator%hierarchy(index_upper)%&
                                coordinate(dorder(3))
-                       call basis_function((coordinate_self_upper-coordinate_ancestor)/&
+                       call interpolator%basis_function((coordinate_self_upper-coordinate_ancestor)/&
                             interpolator%length(dorder(3))*&
                             2**(interpolator%hierarchy(index_upper)%level(dorder(3))), &
                             factor_upper,&
@@ -485,7 +454,7 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
                        do while(index_parent<index_old)
                           coordinate_ancestor = interpolator%hierarchy(index_parent)%&
                                coordinate(dorder(2))
-                          call basis_function((coordinate_self-coordinate_ancestor)/&
+                          call interpolator%basis_function((coordinate_self-coordinate_ancestor)/&
                                interpolator%length(dorder(2))*&
                                2**(interpolator%hierarchy(index_parent)%level(dorder(2))), &
                                factor_lower,&
@@ -495,9 +464,8 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
                           !   print*, index_parent,data_out(30)
                           !end if
                          ! print*, counter, index_parent, factor, factor_upper, factor_lower
-                          call interpolate_disp_1d_periodic_for_neighbor&
-                               (interpolator%sparse_grid_interpolator,&
-                               disp,factor,&
+                          call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
+                               (disp,factor,&
                                dorder(1),min(interpolator%levels(dorder(1)),&
                                interpolator%max_level-&
                                interpolator%hierarchy(index_parent)%level(dorder(2))-&
@@ -532,21 +500,22 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
 !print*, data_out
 
 ! Hierarchization along dimension dorder(1)-dorder(3)
-call hierarchical_part(interpolator%sparse_grid_interpolator,data_out,3,1,dorder)
+call interpolator%sparse_grid_interpolator%hierarchical_part(data_out,3,1,dorder)
 
 do j=2,interpolator%order
-   call hierarchical_part_order&
-        (interpolator%sparse_grid_interpolator,data_out,3,1,dorder,j)
+   call interpolator%sparse_grid_interpolator%hierarchical_part_order&
+        (data_out,3,1,dorder,j)
 end do
 
 
 ! Dehierarchization of the hierarchical surplus
 do j=interpolator%order,2,-1
-   call dehierarchical_order&
-        (interpolator%sparse_grid_interpolator,data_out,j)
+   call interpolator%sparse_grid_interpolator%dehierarchical_order&
+        (data_out,j)
 end do
 
-call dehierarchical(interpolator%sparse_grid_interpolator,data_out)
+call interpolator%sparse_grid_interpolator%dehierarchical&
+     (data_out)
 
 
 end subroutine Interpolate_disp_nconst_in_2d
@@ -617,10 +586,10 @@ subroutine displace_disp_nconst1(interpolator, surplus,  data, dorder,displaceme
      end do
   end do
 
-  call hierarchical_part(interpolator%sparse_grid_interpolator,data,2,1,dorder)
+  call interpolator%sparse_grid_interpolator%hierarchical_part(data,2,1,dorder)
 
 
-  call dehierarchical(interpolator%sparse_grid_interpolator,data)
+  call interpolator%sparse_grid_interpolator%dehierarchical(data)
 
 
 end subroutine displace_disp_nconst1
@@ -646,7 +615,7 @@ end subroutine displace_disp_nconst1
 
     SLL_ALLOCATE(ind(0:interpolator%max_level,1:4),j)
 
-    val = 0
+    val = 0.0_f64
     ind(0:1,1:4) = 0
 
     do j=1,4
@@ -680,7 +649,7 @@ end subroutine displace_disp_nconst1
                      l(4))+ind(l1,1)*no(2)*no(3)*no(4)&
                      +ind(l2,2)*no(3)*no(4)+ind(l3,3)*no(4)+ind(l(4),4)
                 do j=1,4
-                   call basis_function(real(2**(max(l(j),1)),f64)*eta_norm(j)&
+                   call interpolator%basis_function(real(2**(max(l(j),1)),f64)*eta_norm(j)&
                         -real(2*ind(l(j),j),f64)-1.0_f64, phi(j),&
                         interpolator%hierarchy(index)%function_type(j))
                 end do
@@ -716,7 +685,7 @@ end subroutine displace_disp_nconst1
     sll_real64 :: scale
     sll_int32 :: index,maxl2
 
-    val = 0
+    val = 0.0_f64
     ind(1:2,1:4) = 0
     no(dorder(3)) = no_in(dorder(3));
     no(dorder(4)) = no_in(dorder(4));
@@ -748,7 +717,7 @@ end subroutine displace_disp_nconst1
           index = interpolator%index(l(1),l(2),l(3),l(4))+ind(l(1)+1,1)*no(2)*no(3)*no(4)&
                +ind(l(2)+1,2)*no(3)*no(4)+ind(l(3)+1,3)*no(4)+ind(l(4)+1,4)
           do j=1,2
-             call basis_function(real(2**(max(l(dorder(j)),1)),f64)*eta_norm(j)&
+             call interpolator%basis_function(real(2**(max(l(dorder(j)),1)),f64)*eta_norm(j)&
                   -real(2*ind(l(dorder(j))+1,dorder(j)),f64)-1.0_f64, phi(j),&
                   interpolator%hierarchy(index)%function_type(dorder(j)))
           end do
@@ -759,29 +728,6 @@ end subroutine displace_disp_nconst1
        end do
     end do
 
-!!$ if(1>2) then
-!!$    do level = 1, interpolator%levels-l(dorder(3))-l(dorder(4))
-!!$       !print*, level
-!!$       do l1 = 0, level-1
-!!$          l(dorder(1)) = l1
-!!$          no(dorder(1)) = max(2**(l1-1),1)
-!!$          l2 = level-l1
-!!$          l(dorder(2)) = l2
-!!$          no(dorder(2)) = max(2**(l2-1),1)
-!!$          index = interpolator%index(l(1),l(2),l(3),l(4))+ind(l(1)+1,1)*no(2)*no(3)*no(4)&
-!!$               +ind(l(2)+1,2)*no(3)*no(4)+ind(l(3)+1,3)*no(4)+ind(l(4)+1,4)
-!!$          !print*, interpolator%hierachy(index),
-!!$          do j=1,2
-!!$             call basis_function(real(2**(max(l(dorder(j)),1)),f64)*eta_norm(j)&
-!!$                  -real(2*ind(l(dorder(j))+1,dorder(j)),f64)-1.0_f64, phi(j),&
-!!$                  interpolator%hierarchy(index)%function_type(dorder(j)))
-!!$          end do
-!!$          val = val + interpolator%coeffsq(index)&
-!!$               *phi(1)*phi(2)
-!!$          write(31,*), l1,l2, phi(1), phi(2)
-!!$       end do
-!!$    end do
-!!$ end if
 
   end function interpolate_from_2D_hierarchical_surplus
 
@@ -846,7 +792,7 @@ end subroutine displace_disp_nconst1
        end do
     end do
 
-    call  initialize_sg( interpolator, levels, order, interpolation,&
+    call  interpolator%initialize_sg( levels, order, interpolation,&
     interpolation_type, eta_min, eta_max);
 
     SLL_ALLOCATE(interpolator%index(0:interpolator%levels(1),0:interpolator%levels(2),0:interpolator%levels(3),0:interpolator%levels(4)),ierr)
@@ -933,7 +879,7 @@ subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
 
   stride = cdim*2-1
   if (ld==0) then
-     interpolator%hierarchy(counter)%coordinate(cdim) = 0
+     interpolator%hierarchy(counter)%coordinate(cdim) = 0.0_f64
      interpolator%hierarchy(counter)%parent(stride) = &
           counter
      interpolator%hierarchy(counter)%parent(stride+1) = &
