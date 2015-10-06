@@ -10,6 +10,8 @@ program sim2d_gc_hex_hermite
   use hex_poisson
   use pivotbande
   use sll_interpolation_hex_hermite
+  use sll_utilities, only: int2string, sll_new_file_id
+  
   implicit none
 
   type(sll_hex_mesh_2d),      pointer     :: mesh
