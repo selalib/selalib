@@ -828,19 +828,19 @@ contains
           call sll_gnuplot_1d( &
             sim%rho3d_seqx1x2(1:nc_x1+1,1,1)/sim%n0_r(1:nc_x1+1)-1._f64, &
             'rho_0_init', &
-            iter)
+            1)
         endif
         if(iter==2)then
           call sll_gnuplot_1d( &
             sim%rho3d_seqx1x2(1:nc_x1+1,1,1)/sim%n0_r(1:nc_x1+1)-1._f64, &
             'rho_1_init', &
-            iter)
+            1)
         endif
         if(iter==2)then
           call sll_gnuplot_1d( &
             sim%phi3d_seqx1x2(1:nc_x1+1,1,1), &
             'phi_1', &
-            iter)
+            1)
         endif
       endif
 
