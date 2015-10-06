@@ -16,6 +16,7 @@ module sll_m_sim_pic_1d2v_vm_cart
   use sll_m_particle_initializer
   use sll_m_particle_group_1d2v
   use sll_m_operator_splitting_pic_1d2v_vm
+  !use sll_m_operator_splitting_cef_pic_1d2v_vm
   use sll_ascii_io
   
   use sll_m_kernel_smoother_base
@@ -23,6 +24,11 @@ module sll_m_sim_pic_1d2v_vm_cart
   use sll_m_maxwell_1d_base
   use sll_m_maxwell_1d_fem
   use sll_arbitrary_degree_splines
+
+  implicit none
+
+  sll_int32, parameter :: SLL_INIT_RANDOM=0
+  sll_int32, parameter :: SLL_INIT_SOBOL=1
 
     type, extends(sll_simulation_base_class) :: sll_sim_pic_1d2v_vm_cart
 
@@ -73,6 +79,8 @@ module sll_m_sim_pic_1d2v_vm_cart
      sll_int32  :: rank
      sll_int32  :: world_size
      
+     ! Case definitions
+     sll_int32 :: init_case
      
    contains
      procedure :: init_from_file => init_pic_1d2v_vm
@@ -91,11 +99,13 @@ contains
     class(sll_sim_pic_1d2v_vm_cart), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
 
+    sll_int32   :: io_stat
     sll_int32   :: n_time_steps
     sll_real64  :: delta_t, alpha, n_mode, thermal_v, T_r, beta
     sll_int32   :: ng_x
     sll_real64  :: x1_min, x1_max
     sll_int32   :: n_particles!, degree_smoother
+    character(len=256)   :: init_case
 
     sll_int32, parameter :: input_file = 99
     
@@ -104,7 +114,7 @@ contains
     
     namelist /grid_dims/          ng_x, x1_min, x1_max
 
-    namelist /pic_params/         n_particles!, degree_smoother
+    namelist /pic_params/         n_particles, init_case!, degree_smoother
 
     ! Read parameters from file
     open(unit = input_file, file=trim(filename), IOStat=io_stat)
@@ -138,6 +148,14 @@ contains
     sim%n_total_particles = sim%n_particles * sim%world_size
     sim%degree_smoother = 3!degree_smoother
     
+    select case(init_case)
+    case("SLL_INIT_RANDOM")
+       sim%init_case = SLL_INIT_RANDOM
+    case("SLL_INIT_SOBOL")
+       sim%init_case = SLL_INIT_SOBOL
+    case default
+       print*, '#init case ', init_case, ' not implemented.'
+    end select
 
   end subroutine init_pic_1d2v_vm
 
@@ -148,8 +166,9 @@ contains
 
     ! Local variables
     sll_int32, allocatable :: rnd_seed(:)
-    sll_int32 :: j, ierr
     sll_int32 :: rnd_seed_size
+    sll_int64 :: sobol_seed
+    sll_int32 :: j, ierr, i_part
     sll_real64 :: eenergy
     sll_int32 :: th_diag_id
 
@@ -184,18 +203,29 @@ contains
          sim%n_particles, sim%degree_smoother) 
     sim%kernel_smoother_0 => sim%specific_kernel_smoother_0
     
-    ! Set the seed for the random initialization
-    call random_seed(size=rnd_seed_size)
-    SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
-    do j=1, rnd_seed_size
-       rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
-    end do
 
-    ! Initialize position and velocity of the particles.
-    call sll_particle_initialize_landau_1d2v (sim%particle_group, sim%landau_param, &
-         sim%domain(1) , &
-         sim%domain(3), &
-         sim%thermal_velocity, rnd_seed)
+    if (sim%init_case == SLL_INIT_RANDOM) then
+       ! Set the seed for the random initialization
+       call random_seed(size=rnd_seed_size)
+       SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
+       do j=1, rnd_seed_size
+          rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
+       end do
+
+       ! Initialize position and velocity of the particles.
+       ! Random initialization
+       call sll_particle_initialize_random_landau_1d2v &
+            (sim%particle_group, sim%landau_param, &
+            sim%domain(1) , &
+            sim%domain(3), &
+            sim%thermal_velocity, rnd_seed)
+    elseif (sim%init_case == SLL_INIT_SOBOL) then
+       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
+       ! Pseudorandom initialization with sobol numbers
+       call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
+            sim%landau_param, sim%domain(1),sim%domain(3), &
+            sim%thermal_velocity, sobol_seed)
+    end if
 
     ! Initialize the time-splitting propagator
     sim%propagator => sll_new_splitting_pic_1d2v_vm(sim%maxwell_solver, &
