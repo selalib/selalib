@@ -1,0 +1,20 @@
+Directory structure
+===================
+   test_2d_va_cartesian         -- executable (simulation)
+   vasim2d_cartesian_input.nml  -- input file #1: Landau damping
+   README                       -- info (this file)
+   run/                         -- output directory
+   vpsim2d_cartesian*.gnu       -- gnuplot scripts   (5 files)
+   vpsim2d_cartesian*_ref.dat   -- reference results (5 files)
+
+HOWTO
+=====
+0. Create output directory if missing, and move into it
+     $ mkdir run
+     $ cd run
+
+1. Run parallel simulation within directory
+     $ mpirun -np 4 ../test_2d_va_cartesian ../vasim2d_cartesian_input
+
+2. Run included gnuplot script
+     $ gnuplot --persist ../vpsim2d_cartesian.gnu
