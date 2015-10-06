@@ -1,14 +1,46 @@
 IF (FFTW_FOUND AND FFTW_ENABLED)
 
   SET( SPARSEGRID_SRC_FILES    
-    sll_sparsegrid_interpolator.F90
+    sll_sparse_grid_interpolator.F90
     sparse_grid_4d.F90
     sparse_grid_3d.F90
     sparse_grid_2d.F90
-    sll_poisson_2d_sparsegrid_fft.F90
-    sll_poisson_3d_sparsegrid_fft.F90)
+    sll_poisson_2d_sparse_grid_fft.F90
+    sll_poisson_3d_sparse_grid_fft.F90)
 
-  ADD_LIBRARY(sll_sparsegrid ${SPARSEGRID_SRC_FILES})
-  TARGET_LINK_LIBRARIES(sll_sparsegrid sll_interpolators sll_periodic_interpolation sll_utilities ${LAPACK_LIBRARIES})
+  ADD_LIBRARY(sll_sparse_grid ${SPARSEGRID_SRC_FILES})
+  TARGET_LINK_LIBRARIES(sll_sparse_grid sll_interpolators sll_periodic_interpolation sll_utilities ${LAPACK_LIBRARIES})
+
+  IF (BUILD_TESTING)
+    ADD_EXECUTABLE( test_sparse_grid_2d testing/sparse_grid_2d/test_sparse_grid_2d.F90 )
+    TARGET_LINK_LIBRARIES (test_sparse_grid_2d sll_sparse_grid sll_interpolators sll_periodic_interpolation)
+    ADD_TEST( NAME sparse_grid_2d  COMMAND test_sparse_grid_2d )
+    SET_TESTS_PROPERTIES( sparse_grid_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+    ADD_EXECUTABLE( test_sparse_grid_3d testing/sparse_grid_3d/test_sparse_grid_3d.F90 )
+    TARGET_LINK_LIBRARIES (test_sparse_grid_3d sll_sparse_grid sll_interpolators sll_periodic_interpolation)
+    ADD_TEST( NAME sparse_grid_3d  COMMAND test_sparse_grid_3d )
+    SET_TESTS_PROPERTIES( sparse_grid_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+    ADD_EXECUTABLE( test_sparse_grid_4d testing/sparse_grid_4d/test_sparse_grid_4d.F90 )
+    TARGET_LINK_LIBRARIES (test_sparse_grid_4d sll_sparse_grid sll_interpolators sll_periodic_interpolation)
+    ADD_TEST( NAME sparse_grid_4d  COMMAND test_sparse_grid_4d )
+    SET_TESTS_PROPERTIES( sparse_grid_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+    ADD_EXECUTABLE( test_poisson_2d_sparse_grid_fft testing/poisson_2d_sparse_grid_fft/test_poisson_2d_sparse_grid_fft.F90 )
+    TARGET_LINK_LIBRARIES( test_poisson_2d_sparse_grid_fft 
+      ${POISSON_LIBS} sll_sparse_grid ${FFTW_LIBRARIES} )
+    ADD_TEST( NAME poisson_2d_sparse_grid_fft  COMMAND test_poisson_2d_sparse_grid_fft )
+    SET_TESTS_PROPERTIES( poisson_2d_sparse_grid_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+    ADD_EXECUTABLE( test_poisson_3d_sparse_grid_fft 
+      testing/poisson_3d_sparse_grid_fft/test_poisson_3d_sparse_grid_fft.F90 )
+    TARGET_LINK_LIBRARIES( test_poisson_3d_sparse_grid_fft 
+      ${POISSON_LIBS} sll_sparse_grid ${FFTW_LIBRARIES} )
+    ADD_TEST( NAME poisson_3d_sparse_grid_fft  COMMAND test_poisson_3d_sparse_grid_fft )
+    SET_TESTS_PROPERTIES( poisson_3d_sparse_grid_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+  ENDIF()
+
 
 ENDIF()

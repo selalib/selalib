@@ -10,6 +10,7 @@ program test_poisson_3d_sparsegrid_fft
 
    use sll_poisson_3d_sparse_grid_fft
    use sparse_grid_3d
+   use sll_constants, only : sll_pi
 
    implicit none
 

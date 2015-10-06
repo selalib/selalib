@@ -9,14 +9,15 @@ module sll_poisson_3d_sparse_grid_fft
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sparse_grid_3d
-use, intrinsic :: iso_c_binding
+  use sparse_grid_3d
+  use, intrinsic :: iso_c_binding
+  use sll_constants, only: sll_pi
   implicit none
  !include 'fftw3.f03'
 
 
 
-!private
+  !private
 !public ::new,solve
 
 
