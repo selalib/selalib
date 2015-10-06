@@ -17,8 +17,6 @@ module sll_sparse_grid_interpolator
   implicit none
   private
 
-!  public :: compute_hierarchical_surplus,  compute_linear_hierarchical_surplus, compute_dehierarchical, dehierarchical, dehierarchical_part, hierarchical_part, interpolate_disp, integrate_trapezoidal, integrate_trapezoidal2, extract_periodic, hierarchical_stripe,  dehierarchical_stripe, insert_periodic, interpolate_disp_1d_periodic_self, basis_function, dehierarchical_part_order, interpolate_disp_1d_periodic_for_neighbor, interpolate_disp_1d_periodic, displace1d, tonodal1d, tonodal1d_comp, todehi1d, tohira1d, tohierarchical1d, tohierarchical1d_comp, initialize_sg, hierarchical_part_order, dehierarchical_order 
-
   include 'fftw3.f03'
 
   !> class to hold values for hierarchical fft computations
@@ -96,6 +94,7 @@ module sll_sparse_grid_interpolator
      procedure :: insert_periodic
      procedure :: interpolate_disp_1d_periodic_self
      procedure, nopass :: basis_function
+     procedure, nopass :: basis_function_derivative
      procedure :: dehierarchical_part_order
      procedure :: interpolate_disp_1d_periodic_for_neighbor
      procedure :: interpolate_disp_1d_periodic
