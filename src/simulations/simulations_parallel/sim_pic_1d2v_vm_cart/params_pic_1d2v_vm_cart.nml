@@ -16,4 +16,5 @@
 
 &pic_params
         n_particles = 100000
+        init_case = "SLL_INIT_SOBOL"
 /
