@@ -92,8 +92,8 @@ implicit none
   R0 = 10._f64
   smallr = 2._f64
   psipr = 4._f64
-  dt = 0.1_f64
-  num_time_points = 1500
+  dt = 0.01_f64
+  num_time_points = 15000
   theta0 = 0._f64
   phi0 = 0._f64
   
@@ -107,12 +107,17 @@ implicit none
   F0=-psipr*R0/(smallr*iota)
 
 
-psipr=4;
-F0=-2.40*psipr;
-R0=10;
-smallr=4; 
+psipr=4._f64;
+F0=-2.4_f64*psipr;
+R0=10._f64;
+smallr=4._f64; 
 
 iota=-psipr*R0/(smallr*F0)
+
+R0=10._f64;
+F0=-psipr*R0/(smallr*iota)
+
+
 print*,"iota=",iota  
   
   SLL_ALLOCATE(time_points(num_time_points),ierr)
