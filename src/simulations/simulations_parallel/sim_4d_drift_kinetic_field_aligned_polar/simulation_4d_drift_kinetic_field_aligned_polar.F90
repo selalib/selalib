@@ -1005,6 +1005,7 @@ contains
       call hdf5_file%write_array( sim%Te_r, 'Te_r' )
       call hdf5_file%delete()
 
+      ierr = 1
       call sll_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
       call sll_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
       call sll_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
@@ -1526,6 +1527,7 @@ contains
     if (sll_get_collective_rank(sll_world_collective)==0) then
       write(file_id,'(f12.5,2g20.12)') real(step,f64)*sim%dt, nrj
       if (step==0) then
+        ierr = 1
         call sll_gnuplot_1d(sim%phi3d_parx3(:,1,1),'phi_0',ierr)
         !call sll_gnuplot_1d(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
         call sll_gnuplot_1d(sim%Ti_r(:),'Ti_r',ierr)

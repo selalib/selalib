@@ -1054,6 +1054,7 @@ contains
         A1 = -A1
      end select
 
+     ierr = 1
      call sll_gnuplot_1d(A1(1,:),'A1_init',ierr)
      call sll_gnuplot_1d(A2(1,:),'A2_init',ierr)
     
