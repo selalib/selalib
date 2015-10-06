@@ -15,8 +15,9 @@ use sll_sparse_grid_interpolator
 use sll_constants, only: sll_pi
 
 implicit none
+private
 
-type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_4d
+type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_4d
 sll_int32, dimension(:,:,:,:), pointer  :: index
 
 contains
