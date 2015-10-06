@@ -26,9 +26,6 @@ module sll_plotmtv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-use sll_ascii_io
-use sll_utilities, only: sll_new_file_id, int2string
-
 implicit none
 
 !> Create the mtv file to plot a structured mesh (cartesian or curvilinear)
@@ -46,14 +43,18 @@ sll_int32                    :: ny     !< y points number
 sll_real64, dimension(nx,ny) :: xcoord !< x coordinates
 sll_real64, dimension(nx,ny) :: ycoord !< y coordiantes
 character(len=*)             :: label  !< field name
+sll_int32                    :: error  !< error code
+
 sll_int32                    :: file_id
-sll_int32                    :: error                         !< error code
 sll_int32                    :: i, j
 sll_real64                   :: x1, y1
 
-call sll_new_file_id(file_id, error)
-
-call sll_ascii_file_create(label//'.mtv', file_id, error )
+! Create new ASCII file (replace if already existing) using default properties
+open( file= label//'.mtv', &
+  status  = 'replace',     &
+  form    = 'formatted',   &
+  newunit = file_id,       &
+  iostat  = error )
 
 write(file_id,"(a)")"$DATA=CURVE2D"
 write(file_id,"('% xmin=',f7.3,' xmax=', f7.3)") minval(xcoord), maxval(xcoord)

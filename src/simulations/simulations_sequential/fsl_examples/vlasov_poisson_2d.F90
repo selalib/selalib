@@ -14,6 +14,8 @@ use sll_fft
 use iso_c_binding
 implicit none
 
+#ifndef __INTEL_COMPILER
+
 include "fftw3.f03"
 
 type(C_PTR) :: PlnFwd,PlnBwd
@@ -405,6 +407,8 @@ do i=1,Neta1+1
   write(850,*) ' '
 enddo
 close(850)
+
+#endif /* __INTEL_COMPILER */
 
 end program
 
