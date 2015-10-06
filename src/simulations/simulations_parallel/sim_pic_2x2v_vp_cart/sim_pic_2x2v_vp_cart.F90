@@ -21,7 +21,7 @@ module sll_m_sim_pic_2x2v_vp_cart
   use sll_m_poisson_2d_fft ! TODO: Use generic interface
   use sll_m_poisson_2d_base
   use sll_operator_splitting
-  !use sll_m_operator_splitting_pic_2x2v_vp
+  use sll_m_operator_splitting_pic_2x2v_vp
   use sll_ascii_io
 
   type, extends(sll_simulation_base_class) :: sll_sim_pic_2x2v_vp_cart
