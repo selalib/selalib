@@ -1267,8 +1267,8 @@ contains
             print *,'#step=',istep,sim%time_init+real(istep,f64)*sim%dt,'iplot=',iplot
           endif
     
-          call gnuplot_write(sim, layout_x1, f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
-          call gnuplot_write(sim, layout_x1, f_x1,                 'f',      'intfdx')
+          !call gnuplot_write(sim, layout_x1, f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
+          !call gnuplot_write(sim, layout_x1, f_x1,                 'f',      'intfdx')
     
           iplot = iplot+1  
                     
@@ -1625,11 +1625,6 @@ contains
         sim%node_positions_x2(1:sim%num_dof_x2), &
         intfname,                                &
         iplot )
-    
-      call sll_gnuplot_1d(                       &
-        f_visu_buf1d(1:sim%num_dof_x2),          &
-        sim%node_positions_x2(1:sim%num_dof_x2), &
-        intfname )                        
     
       call sll_binary_write_array_2d(deltaf_id,                      &
                                      f_visu(1:np_x1-1,1:np_x2-1),    &
