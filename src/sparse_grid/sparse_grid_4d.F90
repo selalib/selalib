@@ -43,12 +43,8 @@ contains
 
 
 !< Compute the value of the sparse grid interpolant at position eta
-  function interpolate_value( interpolator,data, eta ) result(val)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
+  function interpolate_value( interpolator,data, eta ) result(val)	
     class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
     sll_real64 :: val
     sll_real64,dimension(:), intent(in) :: eta,data
     val =  interpolate_from_hierarchical_surplus(&
@@ -57,20 +53,16 @@ contains
   end function interpolate_value
 
 ! Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
-subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
+  subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)	
     class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
-  sll_real64, dimension(:), intent(inout) :: data_in
-  sll_real64, dimension(:), intent(out) :: data_out
-  sll_int32, dimension(:), intent(in) :: dorder
-  sll_real64, intent(in) ::displacement
-  sll_int32 :: i1,i2,i3,i4,k2,k3,k4,counter,j
-  sll_int32, dimension(4) :: l, no,ind_order
-  sll_int32, dimension(:,:), allocatable :: ind
-  logical, intent(in) :: hiera
+    sll_real64, dimension(:), intent(inout) :: data_in
+    sll_real64, dimension(:), intent(out) :: data_out
+    sll_int32, dimension(:), intent(in) :: dorder
+    sll_real64, intent(in) ::displacement
+    sll_int32 :: i1,i2,i3,i4,k2,k3,k4,counter,j
+    sll_int32, dimension(4) :: l, no,ind_order
+    sll_int32, dimension(:,:), allocatable :: ind
+    logical, intent(in) :: hiera
 
   SLL_ALLOCATE(ind(interpolator%max_level+1,4), i1);
 
@@ -136,12 +128,8 @@ end subroutine Interpolate_const_disp
 ! data_in: hierarchical surplus of the present function
 ! data_out: value of the displaced functions
 
-subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
+subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)	
+  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
   sll_int32, dimension(:), intent(in) :: dorder
@@ -241,12 +229,8 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
 
 end subroutine Interpolate_disp_nconst_in_1d
 
-subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
+subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,data_in, data_out)	
+  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
   sll_int32, dimension(:), intent(in) :: dorder
@@ -348,12 +332,8 @@ end subroutine Interpolate4d_disp_linnconst_in_1d
 
 
 ! As previous function but with displacement displacement*coordinate(dorder(2))
-subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_in, data_out)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
+subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_in, data_out)	
+  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
   sll_int32, dimension(:), intent(in) :: dorder
@@ -525,11 +505,7 @@ end subroutine Interpolate_disp_nconst_in_2d
 
 ! Note dorder should contain: dorder(1) dimension with displacement (1 or 2), dorder(2) dimension where displacement is non-constant (3 or 4), dorder(3) other of 1 or 2, dorder(4) other of 3 or 4
 subroutine displace_disp_nconst1(interpolator, surplus,  data, dorder,displacement)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
+  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in) :: surplus
   sll_real64, dimension(:), intent(out) :: data
   sll_int32, dimension(:), intent(in) :: dorder
@@ -599,12 +575,8 @@ end subroutine displace_disp_nconst1
 ! helper functions
 
  function interpolate_from_hierarchical_surplus( interpolator,data, eta ) result(val)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
-    sll_int32 :: j,l1,l2,l3,level
+   class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+   sll_int32 :: j,l1,l2,l3,level
     sll_real64 :: val
     sll_real64,dimension(:), intent(in) :: data,eta
     sll_real64,dimension(4) :: eta_norm
@@ -667,12 +639,8 @@ end subroutine displace_disp_nconst1
 
 
  function interpolate_from_2D_hierarchical_surplus( interpolator, surplus,eta, dorder,no_in,ind,l ) result(val)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
-    sll_real64, dimension(:), intent(in) :: surplus
+   class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+   sll_real64, dimension(:), intent(in) :: surplus
     sll_int32 :: j,l1,l2,level
     sll_real64 :: val
     sll_real64,dimension(:), intent(in) :: eta
@@ -750,13 +718,8 @@ end subroutine displace_disp_nconst1
     interpolation, &
     interpolation_type, &
     eta_min, &
-    eta_max)
-
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
+    eta_max)	
     class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
     sll_real64,dimension(:), intent(in)           :: eta_min
     sll_real64,dimension(:), intent(in)           :: eta_max
     sll_int32, dimension(:), intent(in)           :: levels
@@ -853,12 +816,8 @@ end subroutine displace_disp_nconst1
   end subroutine initialize_sg4d
 
 ! For a given sparse grid point fill the hierarchy information (4D specific)
-subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
-#ifdef STDF95
-    type(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#else	
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-#endif
+subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)	
+  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_int32 :: ld ! current level
   sll_int32 :: kd ! current index within level
   sll_int32,intent(in) :: cdim ! current dimension
