@@ -165,6 +165,7 @@ ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(field_solvers)
 ADD_SUBDIRECTORY(descriptors)
 ADD_SUBDIRECTORY(io)
+ADD_SUBDIRECTORY(sparse_grid)
 
 #Fortran version is checked in CMakeModules/FortranConfig.cmake
 IF(F2008)

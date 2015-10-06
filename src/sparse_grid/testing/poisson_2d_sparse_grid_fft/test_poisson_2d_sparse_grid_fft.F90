@@ -10,6 +10,7 @@ program test_poisson_2d_sparse_grid_fft
 
    use sll_poisson_2d_sparse_grid_fft
    use sparse_grid_2d
+   use sll_constants, only : sll_pi
 
    implicit none
 

@@ -1,14 +1,18 @@
+!> @ingroup sparse_grid
+!> @author Katharina Kormann, IPP 
+!> @brief Implementation of a 3D sparse grid with interpolation routines.
+!> @details <DETAILED_DESCRIPTION>
+
 module sparse_grid_3d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_module_periodic_interpolator_1d
+use sll_m_periodic_interpolator_1d
 use sll_arbitrary_degree_splines
-use sll_module_lagrange_interpolator_1d
+use sll_m_lagrange_interpolator_1d
 use sll_sparse_grid_interpolator
-
-
+use sll_constants, only: sll_pi
 implicit none
 
 type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
@@ -90,8 +94,8 @@ subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data
                    +ind(ind_order(2)+1,2)*no(3)+&
                    ind(ind_order(3)+1,3)
               ! Evaluate along dorder(1)-stripe
-              call interpolate_disp_1d_periodic&
-                   (interpolator,displacement,dorder(1),&
+              call interpolator%interpolate_disp_1d_periodic&
+                   (displacement,dorder(1),&
                    min(interpolator%levels(dorder(1)),&
                    interpolator%max_level-ind_order(dorder(2))-&
                    ind_order(dorder(3))),counter,data_in,data_out,hiera)
@@ -103,12 +107,12 @@ subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data
   if (hiera .EQV. .FALSE.) then
      ! Dehierarchization along dimension dorder(1) only
      do j=interpolator%order,2,-1
-        call dehierarchical_part_order&
-             (interpolator,data_out,&
+        call interpolator%dehierarchical_part_order&
+             (data_out,&
              interpolator%dim,2,dorder,j)
      end do
 
-     call dehierarchical_part(interpolator,data_out,&
+     call interpolator%dehierarchical_part(data_out,&
           interpolator%dim,2,dorder)
   end if
 
@@ -137,7 +141,7 @@ end subroutine Interpolate_const_disp
 
     SLL_ALLOCATE(ind(0:interpolator%max_level,1:3),j)
 
-    val = 0
+    val = 0.0_f64
     ind(0:1,1:3) = 0
 
     do j=1,interpolator%dim
@@ -168,7 +172,7 @@ end subroutine Interpolate_const_disp
              index = interpolator%index(l1,l2,l3)+ind(l1,1)*no(2)*no(3)&
                   +ind(l2,2)*no(3)+ind(l3,3)
              do j=1,3
-                call basis_function(real(2**(max(l(j),1)),f64)*eta_norm(j)&
+                call interpolator%basis_function(real(2**(max(l(j),1)),f64)*eta_norm(j)&
                      -real(2*ind(l(j),j),f64)-1.0_f64, phi(j),&
                      interpolator%hierarchy(index)%function_type(j))
              end do
@@ -200,7 +204,7 @@ end subroutine Interpolate_const_disp
 
     SLL_ALLOCATE(ind(0:interpolator%max_level,1:interpolator%dim),j)
 
-    val = 0
+    val = 0.0_f64
     ind(0:1,1:interpolator%dim) = 0
 
     do j=1,interpolator%dim
@@ -247,7 +251,7 @@ end subroutine Interpolate_const_disp
                            +ind(l2,2)*no(3) + ind(l3,3)
 
                       do j=1,interpolator%dim
-                         call basis_function(real(2**l(j),f64)*eta_norm(j)&
+                         call interpolator%basis_function(real(2**l(j),f64)*eta_norm(j)&
                               -real(2*ind(l(j),j),f64)-1.0_f64, phi(j),&
                               interpolator%hierarchy(index)%function_type(j))
                       end do
@@ -257,15 +261,15 @@ end subroutine Interpolate_const_disp
                       index = interpolator%index(l1,l2,l3)+ &
                            ind(l1,1)*no(2)*no(3)&
                            +ind(l2,2)*no(3) + ind(l3,3)
-                      call basis_function(real(2**l(1),f64)*eta_norm(1)&
+                      call interpolator%basis_function(real(2**l(1),f64)*eta_norm(1)&
                            -real(2*ind(l(1),1),f64)-1.0_f64, phi(1),&
                            interpolator%hierarchy(index)%function_type(1))
-                      call basis_function(real(2**l(2),f64)*eta_norm(2)&
+                      call interpolator%basis_function(real(2**l(2),f64)*eta_norm(2)&
                            -real(2*ind(l(2),2),f64)-1.0_f64, phi(2),&
                            interpolator%hierarchy(index)%function_type(2))
-                      call basis_function(eta_norm(3), phi(3), -1)
+                      call interpolator%basis_function(eta_norm(3), phi(3), -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3);
-                      call basis_function(eta_norm(3)-1.0_f64, phi(3), -1)
+                      call interpolator%basis_function(eta_norm(3)-1.0_f64, phi(3), -1)
                       val = val + data(index+1)*phi(1)*phi(2)*phi(3);
                    end if
                 else !l2 = 0
@@ -273,26 +277,26 @@ end subroutine Interpolate_const_disp
                       index = interpolator%index(l1,l2,l3)+ &
                            ind(l1,1)*no(2)*no(3)&
                            +ind(l2,2)*no(3) + ind(l3,3)
-                      call basis_function(real(2**l(1),f64)*eta_norm(1)&
+                      call interpolator%basis_function(real(2**l(1),f64)*eta_norm(1)&
                            -real(2*ind(l(1),1),f64)-1.0_f64, phi(1),&
                            interpolator%hierarchy(index)%function_type(1))
-                      call basis_function(real(2**l(3),f64)*eta_norm(3)&
+                      call interpolator%basis_function(real(2**l(3),f64)*eta_norm(3)&
                            -real(2*ind(l(3),3),f64)-1.0_f64, phi(3),&
                            interpolator%hierarchy(index)%function_type(3))
-                      call basis_function(eta_norm(2), phi(2), -1)
+                      call interpolator%basis_function(eta_norm(2), phi(2), -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3);
-                      call basis_function(eta_norm(2)-1.0_f64, phi(2), -1)
+                      call interpolator%basis_function(eta_norm(2)-1.0_f64, phi(2), -1)
                       val = val + data(index+no(3))*phi(1)*phi(2)*phi(3);
                    else !l3=l2=0 
                       index =  interpolator%index(l1,l2,l3)+ &
                            ind(l1,1)*no(2)*no(3)+ind(l2,2)*no(3) + ind(l3,3);
-                      call basis_function(real(2**l(1),f64)*eta_norm(1)&
+                      call interpolator%basis_function(real(2**l(1),f64)*eta_norm(1)&
                            -real(2*ind(l(1),1),f64)-1.0_f64, phi(1),&
                            interpolator%hierarchy(index)%function_type(1))
-                      call basis_function(eta_norm(3), phi(3), -1)
-                      call basis_function(eta_norm(3)-1.0_f64, phi3a, -1)
-                      call basis_function(eta_norm(2), phi(2), -1)
-                      call basis_function(eta_norm(2)-1.0_f64, phi2a, -1)
+                      call interpolator%basis_function(eta_norm(3), phi(3), -1)
+                      call interpolator%basis_function(eta_norm(3)-1.0_f64, phi3a, -1)
+                      call interpolator%basis_function(eta_norm(2), phi(2), -1)
+                      call interpolator%basis_function(eta_norm(2)-1.0_f64, phi2a, -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3) + &
                            data(index+1)*phi(1)*phi(2)*phi3a + &
                            data(index+2)*phi(1)*phi2a*phi(3) + &
@@ -307,25 +311,25 @@ end subroutine Interpolate_const_disp
                            +ind(l2,2)*no(3) + ind(l3,3)
 
                       do j=2,interpolator%dim
-                         call basis_function(real(2**l(j),f64)*eta_norm(j)&
+                         call interpolator%basis_function(real(2**l(j),f64)*eta_norm(j)&
                               -real(2*ind(l(j),j),f64)-1.0_f64, phi(j),&
                               interpolator%hierarchy(index)%function_type(j))
                       end do
-                      call basis_function(eta_norm(1), phi(1), -1)
+                      call interpolator%basis_function(eta_norm(1), phi(1), -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3);
-                      call basis_function(eta_norm(1)-1.0_f64, phi(1), -1)
+                      call interpolator%basis_function(eta_norm(1)-1.0_f64, phi(1), -1)
                       val = val + data(index+no(2)*no(3))*phi(1)*phi(2)*phi(3)
                    else ! l1=l3=0
                       index = interpolator%index(l1,l2,l3)+ &
                            ind(l1,1)*no(2)*no(3)&
                            +ind(l2,2)*no(3) + ind(l3,3)
-                      call basis_function(eta_norm(1), phi(1), -1)            
-                      call basis_function(eta_norm(1)-1.0_f64, phi1a, -1)
-                      call basis_function(real(2**l(2),f64)*eta_norm(2)&
+                      call interpolator%basis_function(eta_norm(1), phi(1), -1)            
+                      call interpolator%basis_function(eta_norm(1)-1.0_f64, phi1a, -1)
+                      call interpolator%basis_function(real(2**l(2),f64)*eta_norm(2)&
                            -real(2*ind(l(2),2),f64)-1.0_f64, phi(2),&
                            interpolator%hierarchy(index)%function_type(2))
-                      call basis_function(eta_norm(3), phi(3), -1)
-                      call basis_function(eta_norm(3)-1.0_f64, phi3a, -1)
+                      call interpolator%basis_function(eta_norm(3), phi(3), -1)
+                      call interpolator%basis_function(eta_norm(3)-1.0_f64, phi3a, -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3)+&
                            data(index+1)*phi(1)*phi(2)*phi3a + &
                            data(index+no(2)*no(3))*phi1a*phi(2)*phi(3) + &
@@ -336,13 +340,13 @@ end subroutine Interpolate_const_disp
                       index = interpolator%index(l1,l2,l3)+ &
                            ind(l1,1)*no(2)*no(3)&
                            +ind(l2,2)*no(3) + ind(l3,3)
-                      call basis_function(eta_norm(1), phi(1), -1)            
-                      call basis_function(eta_norm(1)-1.0_f64, phi1a, -1)
-                      call basis_function(real(2**l(3),f64)*eta_norm(3)&
+                      call interpolator%basis_function(eta_norm(1), phi(1), -1)            
+                      call interpolator%basis_function(eta_norm(1)-1.0_f64, phi1a, -1)
+                      call interpolator%basis_function(real(2**l(3),f64)*eta_norm(3)&
                            -real(2*ind(l(3),3),f64)-1.0_f64, phi(3),&
                            interpolator%hierarchy(index)%function_type(3))
-                      call basis_function(eta_norm(2), phi(2), -1)
-                      call basis_function(eta_norm(2)-1.0_f64, phi2a, -1)
+                      call interpolator%basis_function(eta_norm(2), phi(2), -1)
+                      call interpolator%basis_function(eta_norm(2)-1.0_f64, phi2a, -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3)+&
                            data(index+no(3))*phi(1)*phi2a*phi(3) + &
                            data(index+no(2)*no(3))*phi1a*phi(2)*phi(3) + &
@@ -350,12 +354,12 @@ end subroutine Interpolate_const_disp
                    else !l3=l2=0 
                       index =  interpolator%index(l1,l2,l3)+ &
                            ind(l1,1)*no(2)*no(3)+ind(l2,2)*no(3) + ind(l3,3);
-                      call basis_function(eta_norm(1), phi(1), -1)            
-                      call basis_function(eta_norm(1)-1.0_f64, phi1a, -1)
-                      call basis_function(eta_norm(3), phi(3), -1)
-                      call basis_function(eta_norm(3)-1.0_f64, phi3a, -1)
-                      call basis_function(eta_norm(2), phi(2), -1)
-                      call basis_function(eta_norm(2)-1.0_f64, phi2a, -1)
+                      call interpolator%basis_function(eta_norm(1), phi(1), -1)            
+                      call interpolator%basis_function(eta_norm(1)-1.0_f64, phi1a, -1)
+                      call interpolator%basis_function(eta_norm(3), phi(3), -1)
+                      call interpolator%basis_function(eta_norm(3)-1.0_f64, phi3a, -1)
+                      call interpolator%basis_function(eta_norm(2), phi(2), -1)
+                      call interpolator%basis_function(eta_norm(2)-1.0_f64, phi2a, -1)
                       val = val + data(index)*phi(1)*phi(2)*phi(3) + &
                            data(index+1)*phi(1)*phi(2)*phi3a + &
                            data(index+2)*phi(1)*phi2a*phi(3) + &
@@ -486,7 +490,7 @@ end subroutine interpolate_array_disp_sgfft
        end do
     end if
 
-    call  initialize_sg( interpolator, levels, order, interpolation,&
+    call  interpolator%initialize_sg(levels, order, interpolation,&
     interpolation_type, eta_min, eta_max);
 
     SLL_ALLOCATE(interpolator%index(0:interpolator%levels(1),0:interpolator%levels(2),0:interpolator%levels(3)),ierr)
@@ -581,7 +585,7 @@ subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
 
   stride = cdim*2-1
   if (ld==0) then
-     interpolator%hierarchy(counter)%coordinate(cdim) = 0
+     interpolator%hierarchy(counter)%coordinate(cdim) = 0.0_f64
      interpolator%hierarchy(counter)%parent(stride) = &
           counter
      interpolator%hierarchy(counter)%parent(stride+1) = &
@@ -811,7 +815,7 @@ subroutine ToHierarchical(interpolator,data_in, data_out)
      do i3 = 0, min(interpolator%max_level - i2,interpolator%levels(3))
         do j = interpolator%index(0,i2,i3),&
              interpolator%index(0,i2,i3)+max(2**(i2-1),1)*max(2**(i3-1),1)-1
-           call ToHierarchical1D(interpolator,1,&
+           call interpolator%ToHierarchical1D(1,&
                 min(interpolator%levels(1),interpolator%max_level-i2-i3),&
              j,data_in,data_out)
         end do
@@ -822,8 +826,8 @@ subroutine ToHierarchical(interpolator,data_in, data_out)
      do i3 = 0, min(interpolator%max_level - i1,interpolator%levels(3))
         do j = interpolator%index(i1,0,i3),&
              interpolator%index(i1,0,i3)+max(2**(i1-1),1)*max(2**(i3-1),1)-1
-           call ToHierarchical1D_comp &
-                (interpolator,2,&
+           call interpolator%ToHierarchical1D_comp &
+                (2,&
                 min(interpolator%levels(2),interpolator%max_level-i1-i3),j,&
                 data_out)
         end do
@@ -834,8 +838,8 @@ subroutine ToHierarchical(interpolator,data_in, data_out)
      do i2 = 0, min(interpolator%max_level - i1,interpolator%levels(2))
         do j = interpolator%index(i1,i2,0),&
              interpolator%index(i1,i2,0)+max(2**(i1-1),1)*max(2**(i2-1),1)-1
-           call ToHierarchical1D_comp &
-                (interpolator,3,&
+           call interpolator%ToHierarchical1D_comp &
+                (3,&
                 min(interpolator%levels(3),interpolator%max_level-i1-i2),j,&
                 data_out)
         end do
@@ -854,8 +858,8 @@ end subroutine ToHierarchical
      do i2 = 0, min(interpolator%max_level - i1,interpolator%levels(2))
         do j = interpolator%index(i1,i2,0),&
              interpolator%index(i1,i2,0)+max(2**(i1-1),1)*max(2**(i2-1),1)-1
-           call ToDehi1D &
-                (interpolator,3,&
+           call interpolator%ToDehi1D &
+                (3,&
                 min(interpolator%levels(3),interpolator%max_level-i1-i2),j,&
                 data_array)
         end do
@@ -866,8 +870,8 @@ end subroutine ToHierarchical
      do i3 = 0, min(interpolator%max_level - i1,interpolator%levels(3))
         do j = interpolator%index(i1,0,i3),&
              interpolator%index(i1,0,i3)+max(2**(i1-1),1)*max(2**(i3-1),1)-1
-           call ToDehi1D &
-                (interpolator,2,&
+           call interpolator%ToDehi1D &
+                (2,&
                 min(interpolator%levels(2),interpolator%max_level-i1-i3),j,&
                 data_array)
         end do
@@ -878,7 +882,7 @@ end subroutine ToHierarchical
      do i3 = 0, min(interpolator%max_level - i2,interpolator%levels(3))
         do j = interpolator%index(0,i2,i3),&
              interpolator%index(0,i2,i3)+max(2**(i2-1),1)*max(2**(i3-1),1)-1
-           call ToDehi1D(interpolator,1,&
+           call interpolator%ToDehi1D(1,&
                 min(interpolator%levels(1),interpolator%max_level-i2-i3),&
              j,data_array)
         end do
@@ -900,7 +904,7 @@ subroutine ToHira(interpolator,data_array)
      do i3 = 0, min(interpolator%max_level - i2,interpolator%levels(3))
         do j = interpolator%index(0,i2,i3),&
              interpolator%index(0,i2,i3)+max(2**(i2-1),1)*max(2**(i3-1),1)-1
-           call ToHira1D(interpolator,1,&
+           call interpolator%ToHira1D(1,&
                 min(interpolator%levels(1),interpolator%max_level-i2-i3),&
                 j,data_array)
         end do
@@ -911,8 +915,8 @@ subroutine ToHira(interpolator,data_array)
      do i3 = 0, min(interpolator%max_level - i1,interpolator%levels(3))
         do j = interpolator%index(i1,0,i3),&
              interpolator%index(i1,0,i3)+max(2**(i1-1),1)*max(2**(i3-1),1)-1
-           call ToHira1D &
-                (interpolator,2,&
+           call interpolator%ToHira1D &
+                (2,&
                 min(interpolator%levels(2),interpolator%max_level-i1-i3),j,&
                 data_array)
         end do
@@ -923,8 +927,8 @@ subroutine ToHira(interpolator,data_array)
      do i2 = 0, min(interpolator%max_level - i1,interpolator%levels(2))
         do j = interpolator%index(i1,i2,0),&
              interpolator%index(i1,i2,0)+max(2**(i1-1),1)*max(2**(i2-1),1)-1
-           call ToHira1D &
-                (interpolator,3,&
+           call interpolator%ToHira1D &
+                (3,&
                 min(interpolator%levels(3),interpolator%max_level-i1-i2),j,&
                 data_array)
         end do
@@ -944,8 +948,8 @@ subroutine ToNodal(interpolator,data_in,data_out)
      do i2 = 0, min(interpolator%max_level - i1,interpolator%levels(2))
         do j = interpolator%index(i1,i2,0),&
              interpolator%index(i1,i2,0)+max(2**(i1-1),1)*max(2**(i2-1),1)-1
-           call ToNodal1D_comp &
-                (interpolator,3,&
+           call interpolator%ToNodal1D_comp &
+                (3,&
                 min(interpolator%levels(3),interpolator%max_level-i1-i2),j,&
                 data_in)
         end do
@@ -956,8 +960,8 @@ subroutine ToNodal(interpolator,data_in,data_out)
      do i3 = 0, min(interpolator%max_level - i1,interpolator%levels(3))
         do j = interpolator%index(i1,0,i3),&
              interpolator%index(i1,0,i3)+max(2**(i1-1),1)*max(2**(i3-1),1)-1
-           call ToNodal1D_comp &
-                (interpolator,2,&
+           call interpolator%ToNodal1D_comp &
+                (2,&
                 min(interpolator%levels(2),interpolator%max_level-i1-i3),j,&
                 data_in)
         end do
@@ -968,7 +972,7 @@ subroutine ToNodal(interpolator,data_in,data_out)
      do i3 =0, min(interpolator%max_level - i2,interpolator%levels(3))
         do j = interpolator%index(0,i2,i3),&
              interpolator%index(0,i2,i3)+max(2**(i2-1),1)*max(2**(i3-1),1)-1
-           call ToNodal1D(interpolator,1,&
+           call interpolator%ToNodal1D(1,&
                 min(interpolator%levels(1),interpolator%max_level-i2-i3),&
                 j,data_in,data_out)
         end do
@@ -990,7 +994,7 @@ subroutine Displace(interpolator,dim,displacement,data)
         do i3 = 0 ,min(interpolator%max_level - i2,interpolator%levels(3))
            do j = interpolator%index(0,i2,i3),&
                 interpolator%index(0,i2,i3)+max(2**(i2-1),1)*max(2**(i3-1),1)-1
-              call Displace1D(interpolator,1,interpolator%levels(1)-i2-i3,&
+              call interpolator%Displace1D(1,interpolator%levels(1)-i2-i3,&
                    j,displacement,data)
            end do
         end do
@@ -1000,7 +1004,7 @@ subroutine Displace(interpolator,dim,displacement,data)
         do i3 = 0 ,min(interpolator%max_level - i1,interpolator%levels(3))
            do j = interpolator%index(i1,0,i3),&
                 interpolator%index(i1,0,i3)+max(2**(i1-1),1)*max(2**(i3-1),1)-1
-              call Displace1D(interpolator,2,interpolator%levels(2)-i1-i3,&
+              call interpolator%Displace1D(2,interpolator%levels(2)-i1-i3,&
                    j,displacement, data)
            end do
         end do
@@ -1010,7 +1014,7 @@ subroutine Displace(interpolator,dim,displacement,data)
         do i2 = 0,min(interpolator%max_level - i1,interpolator%levels(2))
            do j = interpolator%index(i1,i2,0),&
                 interpolator%index(i1,i2,0)+max(2**(i1-1),1)*max(2**(i2-1),1)-1
-              call Displace1D(interpolator,3,interpolator%levels(3)-i1-i2,&
+              call interpolator%Displace1D(3,interpolator%levels(3)-i1-i2,&
                    j,displacement,data)
            end do
         end do
