@@ -5,8 +5,8 @@ program cubic_spline_interpolator_1d
 #include "sll_constants.h"
 
 use util_constants
-use sll_module_interpolators_1d_base
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_interpolators_1d_base
+use sll_m_cubic_spline_interpolator_1d
 
 implicit none
 

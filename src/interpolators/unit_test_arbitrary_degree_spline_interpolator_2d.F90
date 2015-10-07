@@ -270,23 +270,23 @@ print*, 'Error norm H1 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normH1(8))
 print*, 'Error norm H1 (hermite-hermite-hermite-hermite)     = ',sqrt(normH1(9)),h1**(SPL_DEG-3)
 
 
-if (( sqrt(normL2(1)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(2)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(3)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(4)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(5)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(6)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(7)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(8)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normL2(9)) <= h1*h1*h1     )   .AND. &
-    ( sqrt(normH1(1)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(2)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(3)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(4)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(5)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(6)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(7)) <= h1**(SPL_DEG-3)) .AND. &
-    ( sqrt(normH1(8)) <= h1**(SPL_DEG-3)) .AND. &
+if (( sqrt(normL2(1)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(2)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(3)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(4)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(5)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(6)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(7)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(8)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normL2(9)) <= h1*h1*h1     )   .and. &
+    ( sqrt(normH1(1)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(2)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(3)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(4)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(5)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(6)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(7)) <= h1**(SPL_DEG-3)) .and. &
+    ( sqrt(normH1(8)) <= h1**(SPL_DEG-3)) .and. &
     ( sqrt(normH1(9)) <= h1**(SPL_DEG-3))) then
     
   print *, 'PASSED'

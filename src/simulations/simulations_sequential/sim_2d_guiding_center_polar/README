@@ -6,6 +6,8 @@ Directory structure
    run/                     -- output directory
    gcsim2d_polar.gnu        -- gnuplot script
    gcsim2d_polar_ref.dat    -- reference results
+   cg_polar_irmahpc2.backup -- for running on host machine 
+                            -- with several param
 
 HOWTO
 =====
@@ -20,6 +22,9 @@ HOWTO
      $ gnuplot --persist ../gcsim2d_polar.gnu
 
 3. Open *.xmf database with Visit (*)
+
+4. For cg_polar_irmahpc2.backup, see in the file, 
+   or ask mehrenbe@math.unistra.fr
 
 
 (*) Make sure that the Xdmf plugin is installed!

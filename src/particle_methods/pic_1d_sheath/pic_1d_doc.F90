@@ -1,23 +1,44 @@
-In the build directory run
+!> @defgroup pic1d sll_pic1d
+!!
+!! @authors Jakob Ameres   - <jakob.ameres@tum.de>
+!! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
+!!
+!! @brief
+!! Object-oriented particle-in-cell (PIC) code for the solution of the 1D-1V
+!! Vlasov-Poisson equation in a periodic domain (electrons + uniform ions).
+!!
+!! @details
+!! This is an attempt at restructuring the original code by Jakob.
+!! The code is split into library side (this directory) + simulation side.
+!!
+!! Here (library side) we have:
+!!   * a wrapper for different field solvers
+!!   * particle description
+!!   * functions for particle loading
+!!   * reconstruction of the distribution function
+!!   * other post-processing utilities
+!!
+!! On the simulation side we have:
+!!   * A simulation type is defined
+!!   * Input parameters are read from .nml files rather than hard-coded
+!!   * It is easy to switch between different algorithms (FEM/FD, various
+!!     time integrators, order of splines, etc.)
+!! 
+!! @todo
+!! * Time integrators from the sll_ode_integrators library should be used.
+!! * The PIC abstract class should be extended
+!!
+!! <h4> How to use it </h4>
+!!  + Import Fortran modules:
+!!    \code
+!!      use sll_pic1d
+!!    \endcode
+!!  + Add dependency to *CMakeLists.txt*:
+!!    \code
+!!      target_link_libraries( <my_lib/exec> sll_pic1d ... )
+!!    \endcode
+!!
+!! <h4> Examples </h4>
+!! @todo
+!! Add some fortran lines to explain how to use the library
 
-make all
-make test_pic_1d
-
-Run with 2**7 mesh cells, and spline degree sdeg
-Output is saved in path
-
-Landau damping with delta-f and Runge Kutta 2, and 2^5 elements
-mpirun -np 2   ./bin/test_pic_1d nmark=100000,femp=5,sdeg=3,tstepw=0.1,tsteps=100,ppusher=\"rk2\",psolver=\"fem\",lalpha=0.1,path=\'/tmp/\',scenario=\'landau\',deltaf=1
-
-With live output
-
-mpirun -np 2   ./bin/test_pic_1d nmark=100000,femp=5,sdeg=3,tstepw=0.1,tsteps=100,ppusher=\"rk2\",psolver=\"fem\",lalpha=0.1,path=\'/tmp/\',scenario=\'landau\',deltaf=1,gpinline=1 | gnuplot
-
-
-Error estimates with mersons pusher
-mpirun -np 2   ./bin/test_pic_1d nmark=10000,femp=7,sdeg=3,tstepw=0.1,tsteps=100,ppusher=\"merson\",psolver=\"fem\",lalpha=0.1,path=\'/tmp/\',scenario=\'landau\',deltaf=1
-
-
-To view results go to output directory and type
-
-gnuplot -persistent ./pic1dresult.gnu

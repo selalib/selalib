@@ -10,37 +10,42 @@ module sll_pic_1d_field_solver
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
+
+
 !    use sll_arbitrary_degree_spline_interpolator_1d_module
 !    use sll_arbitrary_degree_splines
 !    use gauss_lobatto_integration
 !    use sll_fft
 !    use sll_constants
 
+    use sll_collective, only: &
+      sll_collective_t, &
+      sll_get_collective_size, &
+      sll_get_collective_rank, &
+      sll_collective_bcast_real64, &
+      sll_collective_globalsum, &
+      sll_collective_globalsum_array_comp64, &
+      sll_collective_globalsum_array_real64
 
-
-
-
-     use sll_collective , only :  sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&
-     sll_collective_globalsum_array_real64
-
-
-
-!    use sll_module_poisson_1d_periodic_solver
-     use sll_poisson_1d_fem , only :   poisson_1d_fem, poisson_1d_fem_rhs_function ,&
- new_poisson_1d_fem         !Finite Element Bspline
+!    use sll_m_poisson_1d_periodic_solver
+    use sll_poisson_1d_fem, only: &
+      poisson_1d_fem, &
+      poisson_1d_fem_rhs_function ,&
+      new_poisson_1d_fem         !Finite Element Bspline
   
-  
-     use sll_cartesian_meshes, only : sll_cartesian_mesh_1d , new_cartesian_mesh_1d 
+    use sll_cartesian_meshes, only: sll_cartesian_mesh_1d, new_cartesian_mesh_1d 
 !we work in 1d so all 2d - 3d 4d modules are not used here
     use sll_poisson_1d_fd!Finite difference solver
-    use sll_poisson_1d_periodic , only : poisson_1d_periodic , new , solve
+    use sll_poisson_1d_periodic, only: poisson_1d_periodic, new, solve
+    use sll_poisson_1d_fourier,  only: poisson_1d_fourier, new_poisson_1d_fourier
     use sll_particle_1d_description
-    use sll_poisson_1d_fourier , only :  poisson_1d_fourier, new_poisson_1d_fourier
+
     implicit none
     !initialize
     !solve
     !interpolate_solution
     !destroy
+
     sll_int32, parameter :: SLL_SOLVER_FEM = 1
     sll_int32, parameter :: SLL_SOLVER_FD = 2
     sll_int32, parameter :: SLL_SOLVER_SPECTRAL = 3
@@ -84,12 +89,12 @@ module sll_pic_1d_field_solver
         sll_int32, private :: coll_rank, coll_size
         type(sll_collective_t), pointer, private :: collective
     contains
-        procedure,  pass(this) :: initialize =>pic_1d_field_solver_initialize
-        procedure, pass(this), public ::  delete=>pic_1d_field_solver_delete
+        procedure, pass(this)         :: initialize => pic_1d_field_solver_initialize
+        procedure, pass(this), public :: delete     => pic_1d_field_solver_delete
 
 
         !Solving
-        procedure, pass(this), public ::  BC=>pic_1d_field_solver_boundary_conditions
+        procedure, pass(this), public :: BC => pic_1d_field_solver_boundary_conditions
 
         !Setting up solve
         procedure, pass(this), public :: set_ions_constant           => pic_1d_field_solver_set_ions_constant
@@ -99,36 +104,36 @@ module sll_pic_1d_field_solver
 
         procedure, pass(this)         :: solve                       => pic_1d_field_solver_solve
 
-        procedure, pass(this), public :: reset_particles=>pic_1d_field_solver_reset_particles
-        procedure, pass(this), public :: add_species=>pic_1d_field_solver_add_species
-        procedure, pass(this), public :: set_species=>pic_1d_field_solver_set_species
+        procedure, pass(this), public :: reset_particles => pic_1d_field_solver_reset_particles
+        procedure, pass(this), public :: add_species     => pic_1d_field_solver_add_species
+        procedure, pass(this), public :: set_species     => pic_1d_field_solver_set_species
 
-        procedure, pass(this), public :: set_electrons_only_weighted=>pic_1d_field_solver_set_electrons_only_weighted
+        procedure, pass(this), public :: set_electrons_only_weighted => pic_1d_field_solver_set_electrons_only_weighted
 
-        procedure, pass(this), public :: set_charged_allparticles_weighted=>&
+        procedure, pass(this), public :: set_charged_allparticles_weighted => &
             pic_1d_field_solver_set_charged_allparticles_weighted
 
 
-        procedure, pass(this), public :: add_particles_weighted=>&
+        procedure, pass(this), public :: add_particles_weighted => &
             pic_1d_field_solver_add_particles_weighted
 
 
 
-        procedure, pass(this), public :: fieldenergy=>pic_1d_field_solver_fieldenergy
+        procedure, pass(this), public :: fieldenergy => pic_1d_field_solver_fieldenergy
         !procedure,  pass(this) :: initialize =>pic_1d_field_solver_initialize
 
-        procedure, pass(this), public :: get_problemsize=>pic_1d_field_solver_get_problemsize
+        procedure, pass(this), public :: get_problemsize => pic_1d_field_solver_get_problemsize
 
-        procedure, pass(this), public :: set_bg_particles=>pic_1d_field_solver_set_background_particles
+        procedure, pass(this), public :: set_bg_particles => pic_1d_field_solver_set_background_particles
 
-        procedure, pass(this), public :: evalE=>pic_1d_field_solver_eval_electricfield
-        procedure, pass(this), public :: evalPhi=>pic_1d_field_solver_eval_potential
+        procedure, pass(this), public :: evalE   => pic_1d_field_solver_eval_electricfield
+        procedure, pass(this), public :: evalPhi => pic_1d_field_solver_eval_potential
 
-        procedure, pass(this), public :: getPotential=>pic_1d_field_solver_get_potential
+        procedure, pass(this), public :: getPotential => pic_1d_field_solver_get_potential
 
         !Interpolatin schemes
-        procedure, pass(this), private :: get_rhs_cic=>pic_1d_field_solver_get_rhs_cic
-        procedure, pass(this), public :: set_num_sample=>pic_1d_field_solver_set_num_sample
+        procedure, pass(this), private:: get_rhs_cic    => pic_1d_field_solver_get_rhs_cic
+        procedure, pass(this), public :: set_num_sample => pic_1d_field_solver_set_num_sample
 
     end type pic_1d_field_solver
 
@@ -225,7 +230,7 @@ contains
 
             case(SLL_SOLVER_FD)
                 this%problemsize=num_cells
-                this%fdsolver=>new(this%mesh,1,this%boundary_type,ierr)
+                this%fdsolver=>new(this%mesh,2,spline_degree,this%boundary_type,ierr)
             case(SLL_SOLVER_FOURIER)
                 this%num_fourier_modes=spline_degree
                 this%problemsize=this%num_fourier_modes
@@ -389,7 +394,7 @@ contains
 
                 endif
             case(SLL_SOLVER_FD)
-                this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
+                this%inhomogenity=-this%fdsolver%get_rhs_klimontovich( this%BC(ppos),pweight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
@@ -437,7 +442,7 @@ contains
                         get_rhs_from_klimontovich_density_weighted(this%BC(ppos),pweight)
                 endif
             case(SLL_SOLVER_FD)
-                this%inhomogenity=  this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
+                this%inhomogenity=  this%inhomogenity +this%fdsolver%get_rhs_klimontovich( this%BC(ppos),pweight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=    this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
@@ -484,7 +489,7 @@ contains
             case(SLL_SOLVER_FD)
                 this%inhomogenity=this%inhomogenity + &
                     sign(1.0_f64, pspecies%qm)*&
-                    this%get_rhs_cic( this%BC(pspecies%particle%dx), pspecies%particle%weight)
+                    this%fdsolver%get_rhs_klimontovich( this%BC(pspecies%particle%dx), pspecies%particle%weight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=this%inhomogenity + &
                     sign(1.0_f64, pspecies%qm)*this%get_rhs_cic( this%BC(pspecies%particle%dx),pspecies%particle%weight)

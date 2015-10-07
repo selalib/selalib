@@ -1,0 +1,8 @@
+ADD_SUBDIRECTORY(maxwell_solvers)
+ADD_SUBDIRECTORY(quasi_neutral_solvers)
+ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
+ADD_SUBDIRECTORY(poisson_solvers)
+
+IF (MPI_ENABLED)
+  ADD_SUBDIRECTORY(poisson_solvers_parallel)
+ENDIF (MPI_ENABLED)

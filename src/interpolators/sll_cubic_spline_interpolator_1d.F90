@@ -23,13 +23,13 @@
 !! sll_interpolator_1d and define spline interpolation of values in 
 !! data define on original grid at points coordinates
 !!
-module sll_module_cubic_spline_interpolator_1d
+module sll_m_cubic_spline_interpolator_1d
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 use sll_cubic_splines
 
 implicit none
@@ -45,31 +45,18 @@ type, extends(sll_interpolator_1d_base), public :: sll_cubic_spline_interpolator
 
 contains
 
-    !> PLEASE ADD DOCUMENTATION
-   procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
-    !> PLEASE ADD DOCUMENTATION
+   procedure :: initialize => initialize_cs1d_interpolator
    procedure :: compute_interpolants => compute_interpolants_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_value => interpolate_value_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_values => interpolate_values_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => spline_interpolate1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => spline_interpolate1d_disp
-    !> PLEASE ADD DOCUMENTATION
-   procedure :: reconstruct_array => reconstruct_array ! this is suspicious...
-    !> PLEASE ADD DOCUMENTATION
+   procedure :: reconstruct_array => reconstruct_array 
    procedure :: set_coefficients => set_coefficients_cs1d
-    !> PLEASE ADD DOCUMENTATION
    procedure :: get_coefficients => get_coefficients_cs1d
 
 end type sll_cubic_spline_interpolator_1d
@@ -94,16 +81,17 @@ contains  ! ****************************************************************
 
   function spline_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
+
     class(sll_cubic_spline_interpolator_1d),  intent(in)       :: this
-    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
-    ! compute the interpolating spline coefficients
+    
     call compute_cubic_spline_1D( data, this%spline )
     call interpolate_array_values( coordinates, data_out, num_points, &
          this%spline )
+
   end function
 
   function spline_interpolate1d_disp(this, num_points, data, alpha) &
@@ -375,4 +363,4 @@ contains  ! ****************************************************************
     stop
   end function get_coefficients_cs1d
 
-end module sll_module_cubic_spline_interpolator_1d
+end module sll_m_cubic_spline_interpolator_1d

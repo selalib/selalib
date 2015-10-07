@@ -15,12 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_characteristics_1d_explicit_euler_conservative
+module sll_m_characteristics_1d_explicit_euler_conservative
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_characteristics_1d_base
+use sll_m_characteristics_1d_base
 implicit none
 
   type,extends(sll_characteristics_1d_base) :: explicit_euler_conservative_1d_charac_computer
@@ -172,6 +172,9 @@ contains
       case (SLL_PERIODIC)
         output_min = output(Npts-1) - (eta_max-eta_min)
         output_max = output(1) + (eta_max-eta_min)
+        !print *,"output_min=",output_min
+        !print *,"output_max=",output_max
+        !stop
       case (SLL_SET_TO_LIMIT)
         output_min = 2._f64*eta_min-output(1)
         output_max = 2._f64*eta_max-output(Npts-1)
@@ -206,4 +209,4 @@ contains
 
   
   
-end module sll_module_characteristics_1d_explicit_euler_conservative
+end module sll_m_characteristics_1d_explicit_euler_conservative
