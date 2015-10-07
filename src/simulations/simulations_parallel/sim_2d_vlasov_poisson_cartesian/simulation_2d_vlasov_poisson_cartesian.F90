@@ -1362,15 +1362,8 @@ contains
        print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
     endif
 
-    iplot = iplot+1  
-
     do istep = 1, sim%num_iterations
 
-       if (mod(istep,sim%freq_diag)==0) then
-          if (MPI_MASTER) then        
-             print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
-          endif
-       endif
 
        split_T = sim%split%split_begin_T
        t_step = real(istep-1,f64)
@@ -1740,11 +1733,6 @@ contains
                      'intdeltafdx',                   &
                      iplot )
 
-                call sll_gnuplot_1d(         &
-                     f_visu_buf1d(1:num_dof_x2),      &
-                     node_positions_x2(1:num_dof_x2), &
-                     'intdeltafdx')                        
-
                 call sll_binary_write_array_2d(deltaf_id,           &
                      f_visu(1:np_x1-1,1:np_x2-1),ierr)  
 
@@ -1784,11 +1772,6 @@ contains
                      'intfdx',                        &
                      iplot )
 
-                call sll_gnuplot_1d(         &
-                     f_visu_buf1d(1:num_dof_x2),      &
-                     node_positions_x2(1:num_dof_x2), &
-                     'intfdx')
-
                 call sll_plot_f_cartesian( iplot,             &
                      f_visu,            &
                      sim%x1_array,      &
@@ -1796,9 +1779,11 @@ contains
                      node_positions_x2, &
                      sim%num_dof_x2,    &
                      'f', time)                    
+
              endif
 
              iplot = iplot+1  
+             if (MPI_MASTER)  print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
 
           endif
 

@@ -9,8 +9,6 @@ ADD_LIBRARY( sll_operator_splitting STATIC
 TARGET_LINK_LIBRARIES( sll_operator_splitting
   sll_distribution_function
   sll_interpolators
-  sll_utilities	
-  sll_file_io
   sll_advection
   sll_poisson_solvers
   ode_solvers )

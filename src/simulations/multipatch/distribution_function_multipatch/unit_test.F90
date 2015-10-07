@@ -74,7 +74,7 @@ program unit_test_2d
   call f_mp%set_to_sequential_x3x4()
 
   if(rank == 0) then
-     call rho_mp%write_to_file(0)
+     call rho_mp%write_to_file(1) ! iplot must be > 0 [YG - 06.10.2015]
   end if
 
   call sll_delete(f_mp)

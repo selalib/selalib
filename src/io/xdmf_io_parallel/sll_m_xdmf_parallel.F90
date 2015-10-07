@@ -214,6 +214,7 @@ contains
 
     ! NOT MASTER ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     else
+      allocate( recbuf(0) ) ! allocate empty buffer (ifort complains otherwise)
       call sll_collective_gather( self%comm, buf, 0, recbuf )
       write( rank_str, '(i8)' ) self%rank
       print *, "PROC #"//trim( adjustl( rank_str ) )//": gather"

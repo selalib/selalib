@@ -713,6 +713,7 @@ subroutine sll_plot_f_cartesian( iplot,      &
   sll_int32                               :: j
   character(len=4)                        :: cplot
   
+  SLL_ASSERT(iplot > 0)
   if (iplot == 1) then
 
     SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
