@@ -4,6 +4,7 @@ add_library( sll_bsl_lt_pic_utilities STATIC
 
 target_link_libraries( sll_bsl_lt_pic_utilities
   sll_pic_accumulators
+  sll_bsl_lt_pic_particles
   sll_assert
   sll_meshes
   sll_memory

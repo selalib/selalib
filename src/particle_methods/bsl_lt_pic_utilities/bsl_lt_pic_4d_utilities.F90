@@ -24,12 +24,10 @@ module sll_bsl_lt_pic_4d_utilities_module
 !#include "particle_representation.h"
 
   use sll_constants, only: sll_pi
-!  use sll_bsl_lt_pic_4d_particle_module
   use sll_cartesian_meshes
   use sll_working_precision
   use sll_bsl_lt_pic_4d_particle_module
 
-!  use sll_representation_conversion_module
   use sll_timer
   use sll_utilities, only: sll_new_file_id, int2string
   use sll_gnuplot
