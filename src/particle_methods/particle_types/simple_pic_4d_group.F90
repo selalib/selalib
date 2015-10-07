@@ -34,8 +34,8 @@ module sll_simple_pic_4d_group_module
   use sll_working_precision
   use sll_simple_pic_4d_particle_module
   use sll_cartesian_meshes
-  use sll_module_pic_base
-  use sll_pic_random_initializers
+  use sll_m_remapped_pic_base
+  use sll_pic_random_initializers !! todo: specify ... , only:
   use sll_bsl_lt_pic_4d_utilities_module, only: x_is_in_domain_2d
 
   implicit none
@@ -44,7 +44,7 @@ module sll_simple_pic_4d_group_module
 
   ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
   
-  type, extends(sll_particle_group_base) :: sll_simple_pic_4d_group
+  type, extends(sll_c_remapped_particle_group) :: sll_simple_pic_4d_group
 
     !> @name The particles
     !> @{
@@ -414,7 +414,7 @@ contains
     SLL_ALLOCATE( res, ierr )
 
     ! the group
-    res%species => species_new( species_charge, species_mass )
+    res%species => temp_species_new( species_charge, species_mass )
 
     res%id = particle_group_id
     res%dimension_x = 2

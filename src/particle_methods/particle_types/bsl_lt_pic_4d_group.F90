@@ -35,7 +35,7 @@ module sll_bsl_lt_pic_4d_group_module
   use sll_constants, only: sll_pi
   use sll_working_precision
   use sll_cartesian_meshes
-  use sll_module_pic_base
+  use sll_m_remapped_pic_base
   use sll_bsl_lt_pic_4d_particle_module
   use sll_bsl_lt_pic_4d_utilities_module
   use sll_gnuplot
@@ -43,7 +43,7 @@ module sll_bsl_lt_pic_4d_group_module
   implicit none
 
   !> Group of @ref sll_bsl_lt_pic_4d_particle
-  type, extends(sll_particle_group_base) :: sll_bsl_lt_pic_4d_group
+  type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group
 
     !> @name The particles
     !> @{
@@ -567,7 +567,7 @@ contains
     SLL_ALLOCATE( res, ierr )
 
     !> create the species object for this particle group
-    res%species => species_new( species_charge, species_mass )
+    res%species => temp_species_new( species_charge, species_mass )
 
     res%id = particle_group_id
     res%dimension_x = 2

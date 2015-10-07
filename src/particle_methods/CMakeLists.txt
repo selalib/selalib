@@ -1,4 +1,8 @@
-ADD_LIBRARY( sll_pic_interface STATIC sll_pic_base.F90 )
+ADD_LIBRARY( sll_pic_interface STATIC
+  sll_pic_base.F90
+  sll_remapped_pic_base.F90
+  )
+
 TARGET_LINK_LIBRARIES( sll_pic_interface sll_working_precision )
 
 if( MPI_ENABLED )

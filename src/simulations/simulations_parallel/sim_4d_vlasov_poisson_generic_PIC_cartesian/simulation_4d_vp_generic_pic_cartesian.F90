@@ -4,8 +4,8 @@
 
 !> @details Generic simulation algorithm for simple PIC particles of type ::sll_simple_pic_4d_group_module <!--
 !> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] --> and LTPIC
-!> particles based on the generic class ::sll_module_pic_base <!--
-!> [[selalib:src/particle_methods/sll_pic_base.F90::sll_module_pic_base]] -->. The basis for this development was
+!> particles based on the generic class ::sll_m_remapped_pic_base <!--
+!> [[selalib:src/particle_methods/sll_pic_base.F90::sll_m_remapped_pic_base]] -->. The basis for this development was
 !> ::sll_simulation_4d_vp_lt_pic_cartesian_module <!--
 !> [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]] --> which itself was
 !> based on ::sll_pic_simulation_4d_cartesian_module <!--
@@ -36,7 +36,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_collective
   use sll_ascii_io
 
-  use sll_module_pic_base
+  use sll_m_remapped_pic_base
   use sll_simple_pic_4d_group_module
   use sll_bsl_lt_pic_4d_group_module
   use sll_particle_initializers_4d
@@ -65,9 +65,9 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 
      !> the abstract particle group
      
-     ! <<particle_group>> of type [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
+     ! <<particle_group>> of type [[file:~/selalib/src/particle_methods/sll_remapped_pic_base.F90::sll_c_remapped_particle_group]]
      
-     class(sll_particle_group_base),  pointer     :: particle_group
+     class(sll_c_remapped_particle_group),  pointer     :: particle_group
 
      !> @name Physics/numerical parameters
      !> @{
@@ -84,7 +84,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      !> unused at the moment
      sll_int32  :: remap_period
 
-     !> cf sll_particle_group_base::set_landau_parameters <!--
+     !> cf sll_c_remapped_particle_group::set_landau_parameters <!--
      !> [[selalib:src/particle_methods/sll_pic_base.F90::set_landau_parameters]] -->
      sll_real64 :: thermal_speed_ions
      
@@ -170,7 +170,7 @@ contains
     do k = 1,sim%number_particles,1000
 
        ! reference to [[particle_group]] of type
-       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
+       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_c_remapped_particle_group]]
        
        x = sim%particle_group%get_x(k)
        v = sim%particle_group%get_v(k)
@@ -614,8 +614,8 @@ contains
 
        !> This simulation does not have access to the particles (because they may be of different incompatible types
        !> like "ltpic" or "simple") so we use the standard interface defined in
-       !> sll_module_pic_base::sll_particle_group_base <!--
-       !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_particle_group_base]] -->
+       !> sll_m_remapped_pic_base::sll_c_remapped_particle_group <!--
+       !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_c_remapped_particle_group]] -->
 
        coords = sim%particle_group%get_v(k)
        bors = bors + coords(1)**2 + coords(2)**2
