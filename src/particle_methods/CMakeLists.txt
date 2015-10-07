@@ -11,9 +11,9 @@ TARGET_LINK_LIBRARIES( sll_pic_interface
 if( MPI_ENABLED )
   set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
   add_subdirectory( pic_1d_sheath )
+  add_subdirectory( pic_2d_standard )
   add_subdirectory( particle_types )
   add_subdirectory( particle_initializers )
   add_subdirectory( bsl_lt_pic_utilities )
-  add_subdirectory( standard_pic_2d )
 endif( MPI_ENABLED )
 
