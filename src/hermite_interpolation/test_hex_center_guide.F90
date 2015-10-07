@@ -10,6 +10,9 @@ program test_hex_hermite
   use sll_hex_meshes
   use hex_poisson
   use pivotbande
+  
+  use sll_utilities, only: int2string
+  
   implicit none
 
   !*************************************************************
@@ -79,10 +82,10 @@ program test_hex_hermite
   sll_real64   :: step , aire, h1, h2, f_min, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
 
-  sll_int32    :: p = 7!-> degree of the approximation for the derivative 
+  sll_int32    :: p = 6!-> degree of the approximation for the derivative 
   ! distribution at time n
 
-  sll_int32    :: num_method = 12
+  sll_int32    :: num_method = 15
 
   logical      :: inside
   character(len = 50) :: filename
@@ -97,11 +100,11 @@ program test_hex_hermite
 
   open(unit =111,  file="perf", action="write", status="replace")
 
-  do num_cells = 80,80,20 
+  do num_cells = 128,128,20 
 
      t = 0._f64
-     tmax  = 100._f64
-     dt    = 0.01_f64!*20._f64 !/ real(num_cells,f64)  
+     tmax  = 110._f64
+     dt    = 0.125_f64!*20._f64 !/ real(num_cells,f64)  
      cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -808,7 +811,7 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: f_tn, center_values_tn, edge_values_tn
     sll_int32  :: num_method
-    sll_real64 :: x, y, epsilon = 0.1_f64
+    sll_real64 :: x, y, epsilon = 0.001_f64
     sll_real64 :: rho
     sll_real64 :: r
     sll_int32  :: i
@@ -819,7 +822,7 @@ contains
        r = sqrt( x**2 + y**2 )
 
        if ( r <= 8._f64  .and. r >= 5._f64 ) then
-          f_tn(i) = (1._f64 + epsilon * cos( 9._f64 * atan2(y,x)) )*&
+          f_tn(i) = (1._f64 + epsilon * cos( 6._f64 * atan2(y,x)) )*&
                exp( -4._f64*(r-6.5_f64)**2)
        else
           f_tn(i) = 0._f64

@@ -9,7 +9,7 @@ module sll_poly_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_module_mapped_meshes_2d_base
+  use sll_m_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   implicit none
 

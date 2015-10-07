@@ -22,7 +22,7 @@
 !> @todo
 !> Function names should be reviewed and improved. What is the best way to
 !> express that a derivative is in a particular direction? Why eta???
-module sll_module_interpolators_2d_base
+module sll_m_interpolators_2d_base
 #include "sll_working_precision.h" 
 use sll_boundary_condition_descriptors
 implicit none
@@ -239,4 +239,4 @@ implicit none
 
 #endif
 
-end module sll_module_interpolators_2d_base
+end module sll_m_interpolators_2d_base

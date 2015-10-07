@@ -15,7 +15,7 @@ program qns_4d_general
   use sll_constants
   use sll_cartesian_meshes
   use sll_common_array_initializers_module
-  use sll_module_poisson_2d_elliptic_solver, &
+  use sll_m_poisson_2d_elliptic_solver, &
      only: es_gauss_legendre
   implicit none
 

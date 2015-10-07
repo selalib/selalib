@@ -1,4 +1,4 @@
-module sll_module_scalar_field_1d_base
+module sll_m_scalar_field_1d_base
 #include "sll_working_precision.h"
   implicit none
   
@@ -119,4 +119,4 @@ module sll_module_scalar_field_1d_base
      end subroutine field_1d_subroutine
   end interface
 !  
-end module sll_module_scalar_field_1d_base
+end module sll_m_scalar_field_1d_base

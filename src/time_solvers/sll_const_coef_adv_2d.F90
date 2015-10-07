@@ -4,7 +4,7 @@ module sll_const_coef_advection_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_module_interpolators_1d_base
+  use sll_m_interpolators_1d_base
   use sll_operator_splitting
 
   implicit none
@@ -68,8 +68,8 @@ contains
     sll_real64, dimension(:,:), pointer, intent(in) :: data   !< initial value of function
     sll_int32, intent(in)  :: n1   !< dimension in first direction
     sll_int32, intent(in)  :: n2   !< dimension in second direction
-    sll_real64, intent(in) :: a1   !< advection coeeficient in first direction
-    sll_real64, intent(in) :: a2   !< advection coeeficient in first direction
+    sll_real64, intent(in) :: a1   !< advection coefficient in first direction
+    sll_real64, intent(in) :: a2   !< advection coefficient in second direction
     class(sll_interpolator_1d_base), pointer    :: interp1  !< interpolator for first direction
     class(sll_interpolator_1d_base), pointer    :: interp2  !< interpolator for second direction
     sll_int32, intent(in)  :: split_case  !< defines  splitting method

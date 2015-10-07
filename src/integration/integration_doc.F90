@@ -14,7 +14,7 @@
 !> @defgroup integration sll_integration 
 !> @brief 
 !> Integrate a function.
-!> @author Selalib team 
+!> @authors Edwin Chacon-Golcher, Laura Mendoza and Pierre Navaro.
 !! @details 
 !> This module aims at providing a single interface to the process of 
 !> integrating a function on a given interval.
