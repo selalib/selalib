@@ -26,7 +26,6 @@ module sll_particle_initializers_2d
   use sll_cartesian_meshes
 !  use gaussian
   use hammersley
-  use sll_representation_conversion_module
 
   implicit none
   
