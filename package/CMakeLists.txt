@@ -49,7 +49,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d.F90
-    ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/field_solvers/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
