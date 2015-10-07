@@ -1,7 +1,8 @@
 program unit_test
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
+use sll_m_arbitrary_degree_spline_interpolator_1d
+use sll_boundary_condition_descriptors
 implicit none
 
 #define NPTS1 31
@@ -28,6 +29,8 @@ sll_real64 :: normL2_0, normL2_1,normL2_2,normL2_3
 sll_real64 :: normL2_4,normL2_5,normL2_6,normL2_7
 sll_real64 :: normH1_0,normH1_1,normH1_2,normH1_3
 sll_real64 :: normH1_4,normH1_5,normH1_6,normH1_7
+sll_real64, parameter :: dpi   = 2*sll_pi
+sll_real64, parameter :: dpisq = dpi*dpi
   
 h1 = (X1MAX-X1MIN)/real(NPTS1-1,f64)
   
@@ -37,10 +40,6 @@ allocate(reference(NPTS1))
 allocate(eta1_pos(NPTS1))
 allocate(eta1_prime(2))
 
-!print *, '***********************************************************'
-!print *, '              periodic case'
-!print *, '***********************************************************'
-  
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
   eta1_pos(i+1)  = eta1
@@ -68,10 +67,6 @@ do i=0,NPTS1-2
 end do
 
 call sll_delete(ad1d)
-  
-!print *, '***********************************************************'
-!print *, '              dirichlet case'
-!print *, '***********************************************************'
   
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
@@ -101,10 +96,6 @@ end do
 
 call sll_delete(ad1d)
   
-!print *, '***********************************************************'
-!print *, '              dirichlet case non homogene'
-!print *, '***********************************************************'
-
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
   eta1_pos(i+1)  = eta1
@@ -135,10 +126,6 @@ do i=0,NPTS1-2
 end do
   
 call sll_delete(ad1d)
-
-!print *, '***********************************************************'
-!print *, '              Hermite-Hermite case '
-!print *, '***********************************************************'
 
 do i=0,NPTS1-1
      eta1               = X1MIN + real(i,f64)*h1
@@ -178,10 +165,6 @@ do i=0,NPTS1-2
 end do
   
 call sll_delete(ad1d)
-
-!print *, '***********************************************************'
-!print *, '              Neumann-Dirichlet case '
-!print *, '***********************************************************'
 
 do i=0,NPTS1-1
   eta1               = X1MIN + real(i,f64)*h1
@@ -223,10 +206,6 @@ end do
 
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Neumann-Dirichlet case '
-!print *, '***********************************************************'
-
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
    eta1_pos(i+1)  = eta1
@@ -265,10 +244,6 @@ do i=0,NPTS1-1
 end do
 
 call sll_delete(ad1d)
-
-!print *, '***********************************************************'
-!print *, '              Neumann-Neumann case '
-!print *, '***********************************************************'
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
@@ -309,10 +284,6 @@ end do
 
 call sll_delete(ad1d)
 
-print *, '***********************************************************'
-print *, '              Hermite-Neumann case '
-print *, '***********************************************************'
-
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
    eta1_pos(i+1)  = eta1
@@ -351,10 +322,6 @@ do i=0,NPTS1-1
 end do
 
 call sll_delete(ad1d)
-
-!print *, '***********************************************************'
-!print *, '              Neumann-Hermite case '
-!print *, '***********************************************************'
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
@@ -435,14 +402,14 @@ write(*,100) ' '
 write(*,100)'--------------------------------------------'
 write(*,100)' Norm H1 error '
 write(*,100)'--------------------------------------------'
-write(*,100)'periodic               = ', sqrt(normH1_0), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'dirichlet              = ', sqrt(normH1_1), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'dirichlet non homogene = ', sqrt(normH1_2), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'Hermite-Hermite        = ', sqrt(normH1_3), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'Neumann-Dirichlet      = ', sqrt(normH1_4), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'Neumann-Neumann        = ', sqrt(normH1_5), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'Hermite-Neumann        = ', sqrt(normH1_6), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-write(*,100)'Neumann-Hermite        = ', sqrt(normH1_7), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'periodic               = ', sqrt(normH1_0), h1**(SPL_DEG-2)*dpisq
+write(*,100)'dirichlet              = ', sqrt(normH1_1), h1**(SPL_DEG-2)*dpisq
+write(*,100)'dirichlet non homogene = ', sqrt(normH1_2), h1**(SPL_DEG-2)*dpisq
+write(*,100)'Hermite-Hermite        = ', sqrt(normH1_3), h1**(SPL_DEG-2)*dpisq
+write(*,100)'Neumann-Dirichlet      = ', sqrt(normH1_4), h1**(SPL_DEG-2)*dpisq
+write(*,100)'Neumann-Neumann        = ', sqrt(normH1_5), h1**(SPL_DEG-2)*dpisq
+write(*,100)'Hermite-Neumann        = ', sqrt(normH1_6), h1**(SPL_DEG-2)*dpisq
+write(*,100)'Neumann-Hermite        = ', sqrt(normH1_7), h1**(SPL_DEG-2)*dpisq
 
 100 format(a,2f25.20)
 

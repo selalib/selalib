@@ -487,24 +487,6 @@ program test_hex_hermite
   
 contains
 
-  
-  function dio(x,y,epsilon) result (rho)
-    sll_real64 :: x, y, epsilon
-    sll_real64 :: rho
-    sll_real64 :: r
-
-    r = sqrt( x**2 + y**2 )
-
-    if ( r <= 8._f64  .and. r >= 5._f64 ) then
-       rho = (1._f64 + epsilon * cos( 7._f64 * atan2(y,x)) )*&
-            exp( -4._f64*(r-6.5_f64)**2)
-    else
-       rho = 0._f64
-    endif
-
-  end function dio
-
-
 
   subroutine compute_hex_fields(mesh,uxn,uyn,dxux,dyux,dxuy,dyuy,phi,type)
     type(sll_hex_mesh_2d), pointer :: mesh
@@ -529,70 +511,7 @@ contains
 
        end do
     endif
-
-
   end subroutine compute_hex_fields
-
-
-  subroutine compute_characteristic_euler_2d_hex( x1,x2,uxn,uyn,i,y1,y2,dt)
-
-    sll_real64,dimension(:),intent(in):: uxn, uyn
-    sll_real64, intent(in)  :: dt
-    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
-    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
-    sll_int32, intent(in)   :: i
-    
-    y1 = x1 - dt*uxn(i)
-    y2 = x2 - dt*uyn(i)
-
-  end subroutine compute_characteristic_euler_2d_hex
-
-  subroutine compute_characteristic_leapfrog_2d_hex( x1,x2,uxn,uyn,dxux,dyux,dxuy,dyuy,i,y1,y2,dt)
-
-    sll_real64,dimension(:),intent(in):: uxn, uyn,dxux,dyux,dxuy,dyuy
-    sll_real64, intent(in)  :: dt
-    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
-    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
-    sll_int32, intent(in)   :: i
-    sll_real64              :: d1x, d1y, dij0, dij1 
-    	
-    
-    d1x = dt * uxn(i);
-    d1y = dt * uyn(i);
-
-    dij0 = d1x - dt *( d1x*dxUx(i) + d1y*dyUx(i) ); 
-    dij1 = d1y - dt *( d1y*dyUy(i) + d1x*dxUy(i) );
-
-    y1 = x1 - 2.0*dij0;
-    y2 = x2 - 2.0*dij1;
-
-  end subroutine compute_characteristic_leapfrog_2d_hex
-
-
-
-  subroutine compute_characteristic_adams2_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
-       dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)
-    sll_real64,dimension(:),intent(in):: uxn, uyn, uxn_1, uyn_1
-    sll_real64,dimension(:),intent(in):: dxuxn,dyuxn,dxuyn,dyuyn
-    sll_real64, intent(in)  :: dt
-    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
-    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
-    sll_int32, intent(in)   :: i
-    sll_real64              :: d1x, d1y, dij0, dij1, uxn1, uyn1 
-    
-    uxn1 = 2._f64*uxn(i) - uxn_1(i)
-    uyn1 = 2._f64*uyn(i) - uyn_1(i)
-
-    d1x = 0.5_f64*dt * ( uxn1 + uxn(i) )
-    d1y = 0.5_f64*dt * ( uyn1 + uyn(i) )
-
-    dij0 = d1x - 0.5_f64*dt * ( d1x*dxuxn(i) + d1y*dyuxn(i) ) 
-    dij1 = d1y - 0.5_f64*dt * ( d1x*dxuyn(i) + d1y*dyuyn(i) )
-
-    y1 = x1 - dij0
-    y2 = x2 - dij1
-
-  end subroutine compute_characteristic_adams2_2d_hex
 
 
 end program test_hex_hermite

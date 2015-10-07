@@ -25,16 +25,16 @@
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_module_scalar_field_1d
+module sll_m_scalar_field_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_module_scalar_field_1d_base
+  use sll_m_scalar_field_1d_base
   use sll_constants
   use sll_cartesian_meshes
-  use sll_module_interpolators_1d_base
-  use sll_module_arbitrary_degree_spline_interpolator_1d
+  use sll_m_interpolators_1d_base
+  use sll_m_arbitrary_degree_spline_interpolator_1d
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot
@@ -256,7 +256,15 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_right
  
     field%func      => func
-    if (present(func_params)) field%params    => func_params   
+    if (present( func_params )) then
+      field%params  => func_params
+    else
+      ! Allocate an empty array in order to avoid passing a non associated
+      ! pointer to 'func', which has a non-pointer array dummy argument.
+      ! Note that ifort segfaults without the following line!
+      ! [YG - 06.10.2015]
+      allocate( field%params(0) )
+    end if
     field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right
@@ -267,7 +275,7 @@ contains   ! *****************************************************************
     end if
   end subroutine initialize_scalar_field_1d_analytic
 
-  
+
   ! The following pair of subroutines are tricky. We want them as general 
   ! services by the fields, hence we need this subroutine interface, yet
   ! we would also like a flexibility in how the derivatives are computed.
@@ -542,4 +550,4 @@ contains   ! *****************************************************************
 
 
 
-end module sll_module_scalar_field_1d
+end module sll_m_scalar_field_1d

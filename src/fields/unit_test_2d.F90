@@ -3,8 +3,8 @@ program unit_test_2d
 #include "sll_memory.h"
   use sll_cartesian_meshes
   use sll_constants
-  use sll_module_scalar_field_2d
-  use sll_module_coordinate_transformations_2d
+  use sll_m_scalar_field_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use helper_functions
   implicit none
@@ -171,7 +171,7 @@ program unit_test_2d
   !print*, normL2_1
   
   ! -------> field visualization 
-  call doubly_periodic_analytic%write_to_file(0)
+  call doubly_periodic_analytic%write_to_file(1)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -233,7 +233,7 @@ program unit_test_2d
   end do
 
   ! -------> field visualization
-   call periodic_dirichlet_analytic%write_to_file(0)
+   call periodic_dirichlet_analytic%write_to_file(1)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -298,7 +298,7 @@ program unit_test_2d
   end do
 
   ! -------> field visualization 
-   call dirichlet_periodic_analytic%write_to_file(0)
+   call dirichlet_periodic_analytic%write_to_file(1)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -360,7 +360,7 @@ program unit_test_2d
      end do
   end do
   ! -------> field visualization 
-   call dirichlet_dirichlet_analytic%write_to_file(0)
+   call dirichlet_dirichlet_analytic%write_to_file(1)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -465,7 +465,7 @@ program unit_test_2d
   end do
   !print*, normH1_5
   ! -------> field visualization 
-  call doubly_periodic_discrete%write_to_file(0)
+  call doubly_periodic_discrete%write_to_file(1)
 
 
   ! -------> delete field
@@ -565,7 +565,7 @@ program unit_test_2d
   end do
   
   ! -------> field visualization 
-  call periodic_dirichlet_discrete%write_to_file(0)
+  call periodic_dirichlet_discrete%write_to_file(1)
 
 
   ! -------> delete field
@@ -669,7 +669,7 @@ program unit_test_2d
   end do
   
   ! -------> field visualization 
-  call dirichlet_periodic_discrete%write_to_file(0)
+  call dirichlet_periodic_discrete%write_to_file(1)
 
 
   ! -------> delete field
@@ -782,7 +782,7 @@ program unit_test_2d
   end do
   
   ! -------> field visualization 
-  call dirichlet_dirichlet_discrete%write_to_file(0)
+  call dirichlet_dirichlet_discrete%write_to_file(1)
 
 
   ! -------> delete field

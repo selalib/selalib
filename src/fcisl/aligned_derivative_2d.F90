@@ -4,8 +4,8 @@ program aligned_derivative_2d
 #include "sll_memory.h"
   use sll_fcisl_module
   use sll_constants
-  use sll_module_advection_1d_periodic
-  use sll_module_derivative_2d_oblic
+  use sll_m_advection_1d_periodic
+  use sll_m_derivative_2d_oblic
   
   implicit none
   

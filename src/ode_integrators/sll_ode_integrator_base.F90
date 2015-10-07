@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE:   sll_module_ode_integrator_base
+! MODULE:   sll_m_ode_integrator_base
 !
 ! DESCRIPTION:
 !> @ingroup ode_integrators
@@ -10,11 +10,11 @@
 !> @brief   Abstract types for: 1) generic ODE system, and 2) ODE integrator.
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
-module sll_module_ode_integrator_base
+module sll_m_ode_integrator_base
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
-  use sll_module_vector_space_base, only: sll_vector_space_base
+  use sll_m_vector_space_base, only: sll_vector_space_base
 
   implicit none
 !  public :: sll_ode_base, sll_ode_integrator_base
@@ -152,4 +152,4 @@ module sll_module_ode_integrator_base
 !    sll_real64           , intent( in    ) :: t
 !  end subroutine solve
 
-end module sll_module_ode_integrator_base
+end module sll_m_ode_integrator_base

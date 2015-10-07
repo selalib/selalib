@@ -19,7 +19,7 @@ program unit_test_gyroaverage_2d_polar_pade
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_gyroaverage_2d_polar_pade_solver
+use sll_m_gyroaverage_2d_polar_pade_solver
 
 implicit none
   
@@ -47,10 +47,17 @@ implicit none
   larmor_rad = 0.01_f64
 
 
+!  gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
+!    eta_min, &
+!    eta_max, &
+!    Nc)
+  
   gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
     eta_min, &
     eta_max, &
-    Nc)
+    Nc, &
+    (/2,4/))  
+  
   
   call gyroaverage%compute_gyroaverage( larmor_rad, f)
 

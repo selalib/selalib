@@ -11,15 +11,13 @@
 
 !> @defgroup boundary_condition_descriptors sll_boundary_condition_descriptors 
 !> @brief 
-!> Descriptors for boundary_condition_descriptors
+!> Descriptors for boundary conditions 
 !> @details
-!> Add here parameters to select your boundary conditions.
 !>
 !> <b> Headers file available </b>
 !>  - sll_boundary_condition_descriptors.h
 !>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_boundary_condition_descriptors.h' \endcode
-!> - Link with <code>-lsll_boundar_condition_descriptors</code>
-!> - Add <code> use sll_boundary_condition_descriptors </code>
-!>
+!> 	SLL_PERIODIC 	Periodic boundary condition u(1)=u(n)
+!>    SLL_DIRICHLET    	Dirichlet boundary condition 
+!> 	SLL_NEUMANN       Neumann boundary condition 
+!> 	SLL_HERMITE       Hermite boundary condition 

@@ -15,14 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_characteristics_2d_verlet
+module sll_m_characteristics_2d_verlet
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_characteristics_2d_base
-use sll_module_interpolators_2d_base
-use sll_module_interpolators_1d_base
+use sll_m_characteristics_2d_base
+use sll_m_interpolators_2d_base
+use sll_m_interpolators_1d_base
 
 implicit none
 
@@ -380,8 +380,8 @@ contains
           iter=iter+1
         end do
         if (iter==charac%x1_maxiter .and. abs(x1_old-x1)>charac%x1_tol) then
-       !   print*,'#not enough iterations for compute_characteristics2D_verlet x1',&
-       !     iter,abs(x1_old-x1)
+          print*,'#not enough iterations for compute_characteristics2D_verlet x1',&
+            iter,abs(x1_old-x1)
        !   stop
         end if
         if((x1<=charac%eta1_min).or.(x1>=charac%eta1_max))then
@@ -405,8 +405,8 @@ contains
           iter=iter+1
         end do
         if (iter==charac%x2_maxiter .and. abs(x2_old-x2)>charac%x2_tol) then
-        !  print*,'#not enough iterations for compute_characteristics2D_verlet x2',&
-        !    iter,abs(x2_old-x2)
+          print*,'#not enough iterations for compute_characteristics2D_verlet x2',&
+            iter,abs(x2_old-x2)
         !  stop
         end if
         if((x2<=charac%eta2_min).or.(x2>=charac%eta2_max))then
@@ -430,4 +430,4 @@ contains
 
   
   
-end module sll_module_characteristics_2d_verlet
+end module sll_m_characteristics_2d_verlet

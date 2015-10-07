@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE:   sll_module_vector_space_base
+! MODULE:   sll_m_vector_space_base
 !
 ! DESCRIPTION:
 !> @ingroup vector_space
@@ -10,7 +10,7 @@
 !> @brief   Abstract type implementing a generic vector space.
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
-module sll_module_vector_space_base
+module sll_m_vector_space_base
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
@@ -411,4 +411,4 @@ module sll_module_vector_space_base
 
   !============================================================================
 
-end module sll_module_vector_space_base
+end module sll_m_vector_space_base

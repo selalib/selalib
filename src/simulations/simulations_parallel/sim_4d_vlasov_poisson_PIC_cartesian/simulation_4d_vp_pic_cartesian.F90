@@ -18,8 +18,8 @@ module sll_pic_simulation_4d_cartesian_module
   use sll_particle_sort_module
   use sll_charge_to_density_module
   use sll_pic_utilities
-  use sll_module_poisson_2d_fft
-  use sll_module_poisson_2d_base
+  use sll_m_poisson_2d_fft
+  use sll_m_poisson_2d_base
   use sll_representation_conversion_module
   use sll_gnuplot
   use sll_timer

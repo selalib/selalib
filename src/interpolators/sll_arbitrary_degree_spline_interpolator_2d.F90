@@ -16,13 +16,13 @@
 !**************************************************************
 
 !> Class of arbitrary degree version of 2d irnterpolator
-module sll_module_arbitrary_degree_spline_interpolator_2d
+module sll_m_arbitrary_degree_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h" 
-use sll_module_interpolators_2d_base
+use sll_m_interpolators_2d_base
 use sll_utilities
-use sll_module_arbitrary_degree_spline_interpolator_1d
+use sll_m_arbitrary_degree_spline_interpolator_1d
 
 implicit none
 private
@@ -1643,12 +1643,12 @@ case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
   SLL_ALLOCATE(interpolator%gtau_der2(my,nx+mx),ierr)
 
   interpolator%gtau                 = data_array(1:nx,1:ny)
-  taux_deriv(1)        = 1
-  taux_deriv(2)        = nx
+  taux_deriv(1)                     = 1
+  taux_deriv(2)                     = nx
   interpolator%gtau_der1(1,1:ny)    = 0.0_f64
   interpolator%gtau_der1(2,1:ny)    = 0.0_f64
-  tauy_deriv(1)        = 1
-  tauy_deriv(2)        = ny
+  tauy_deriv(1)                     = 1
+  tauy_deriv(2)                     = ny
   interpolator%gtau_der2(1,1:nx+mx) = 0.0_f64
   interpolator%gtau_der2(2,1:nx+mx) = 0.0_f64
 
@@ -2008,10 +2008,10 @@ x   = eta1
 y   = eta2
 val = 0.0_f64
 
-if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
-if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
-if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
-if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
+!if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
+!if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
+!if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
+!if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
@@ -3878,4 +3878,4 @@ call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
 end subroutine splint_der
 
   
-end module sll_module_arbitrary_degree_spline_interpolator_2d
+end module sll_m_arbitrary_degree_spline_interpolator_2d
