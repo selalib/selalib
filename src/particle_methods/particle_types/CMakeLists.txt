@@ -24,7 +24,8 @@ TARGET_LINK_LIBRARIES( sll_bsl_lt_pic_particles
   sll_meshes
   sll_pic_interface
   sll_bsl_lt_pic_utilities
-  sll_pic_accumulators )
+  sll_pic_accumulators
+  )
 
 
 ADD_EXECUTABLE(test_bsl_lt_pic_4d_remap unit_test_bsl_lt_pic_4d.F90)

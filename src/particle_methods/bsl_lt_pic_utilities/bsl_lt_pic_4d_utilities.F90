@@ -26,7 +26,7 @@ module sll_bsl_lt_pic_4d_utilities_module
   use sll_constants, only: sll_pi
   use sll_cartesian_meshes
   use sll_working_precision
-  use sll_bsl_lt_pic_4d_particle_module
+  ! use sll_bsl_lt_pic_4d_particle_module
 
   use sll_timer
   use sll_utilities, only: sll_new_file_id, int2string
@@ -167,108 +167,6 @@ contains
 
   end subroutine
 
-  ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
-  ! corresponds to one of x,y,vx,vy.
-
-  subroutine onestep(dim,dim_t0,kprime,p_list,h_parts_dim)
-
-    sll_int :: dim
-    sll_real64 :: dim_t0
-    sll_int32 :: neighbour
-
-    ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-p_list]]
-    type(sll_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
-
-    sll_int32 :: ngb_dim_right_index
-    sll_int32 :: ngb_dim_left_index
-    sll_real64 :: h_parts_dim
-    sll_int32 :: kprime
-    sll_int32 :: j,jumps
-
-    ! <<up>> means that kprime needs to go up ie increase in coordinate
-
-    logical :: up
-
-    ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
-    ! dim_t0
-
-    if(kprime == 0)return
-
-    ! How many jumps do we need to do in that direction to reduce the distance 'dim_t0' to a minimum?
-
-    jumps = int(abs(dim_t0/h_parts_dim))
-
-    ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate). If dim_t0
-    ! is negative, add one step to move to a positive relative signed distance between dim_t0 and kprime.
-
-    up = .true.
-    if(dim_t0 < 0) then
-       jumps = jumps + 1
-       up = .false.
-    end if
-
-    ! resulting signed distance between marker at t0 and kprime
-
-    if(up) then
-       dim_t0 = dim_t0 - jumps * h_parts_dim
-    else
-       dim_t0 = dim_t0 + jumps * h_parts_dim
-    endif
-
-    ! do as many jumps as required through the neighbour pointers in the given dimension (1:x, 2:y, 3:vx, 4:vy). kprime
-    ! can become zero (ie fall out of the domain) in non-periodic dimensions.
-
-    j = 1
-    do while(j<=jumps .and. kprime/=0)
-
-       ! going through neighbours
-       ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
-
-       select case (dim)
-#define ALONG_X 1
-       case(ALONG_X)
-          if(up) then
-             neighbour = p_list(kprime)%ngb_xright_index
-          else
-             neighbour = p_list(kprime)%ngb_xleft_index
-          endif
-#define ALONG_Y 2
-       case(ALONG_Y)
-          if(up) then
-             neighbour = p_list(kprime)%ngb_yright_index
-          else
-             neighbour = p_list(kprime)%ngb_yleft_index
-          endif
-#define ALONG_VX 3
-       case(ALONG_VX)
-          if(up) then
-             neighbour = p_list(kprime)%ngb_vxright_index
-          else
-             neighbour = p_list(kprime)%ngb_vxleft_index
-          endif
-#define ALONG_VY 4
-       case(ALONG_VY)
-          if(up) then
-             neighbour = p_list(kprime)%ngb_vyright_index
-          else
-             neighbour = p_list(kprime)%ngb_vyleft_index
-          endif
-       case default
-          SLL_ASSERT(.false.)
-       end select
-
-       ! The convention in
-       ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]] is
-       ! that if there is no neighbour then a neighbour index is equal to the particle index
-
-       if(neighbour/=kprime) then
-          kprime = neighbour
-       else
-          kprime = 0
-       endif
-       j = j + 1
-    end do
-  end subroutine onestep
 
   ! <<sll_pic_shape>>
   !> sll_pic_shape(degree, x, y, vx, vy, inv_hx, inv_hy, inv_hvx, inv_hvy)
