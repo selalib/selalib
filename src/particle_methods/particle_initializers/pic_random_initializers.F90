@@ -28,7 +28,7 @@ module sll_pic_random_initializers
 
   use sll_constants, only: sll_pi
   use sll_cartesian_meshes
-  use sll_module_pic_base
+  use sll_m_remapped_pic_base
   use gaussian
 
   implicit none
@@ -38,7 +38,7 @@ contains
 
   !> initialize an abstract particle group with the landau f0 distribution
   !
-  !> this routine takes as arguments a newly created particle group of type sll_particle_group_base
+  !> this routine takes as arguments a newly created particle group of type sll_c_remapped_particle_group
   !> and it creates the particle list inside this group, using the public interface
   !
   !> note: here we assume that the abstract particles are in dimension 2Dx2V,
@@ -53,7 +53,7 @@ contains
 
     sll_int32,                          intent(in)              :: number_particles
     sll_real64,                         intent(in)              :: thermal_speed, alpha, k_landau
-    class(sll_particle_group_base),  intent(inout)              :: particle_group
+    class(sll_c_remapped_particle_group),  intent(inout)        :: particle_group
     type(sll_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
 
     sll_int32, dimension(:),            intent(in), optional    :: rand_seed
