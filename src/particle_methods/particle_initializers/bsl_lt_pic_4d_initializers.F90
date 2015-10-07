@@ -15,6 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+
+!!!!!!!!!!!!!!!!!!!           THIS MODULE DOES NOT SEEM TO BE USED...
+
 module sll_bsl_lt_pic_4d_initializers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
