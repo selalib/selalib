@@ -3,8 +3,8 @@ add_library( sll_bsl_lt_pic_utilities STATIC
              bsl_lt_pic_4d_utilities.F90 )
 
 target_link_libraries( sll_bsl_lt_pic_utilities
-  sll_pic_accumulators
   sll_bsl_lt_pic_particles
+  sll_pic_accumulators
   sll_assert
   sll_meshes
   sll_memory
@@ -12,7 +12,6 @@ target_link_libraries( sll_bsl_lt_pic_utilities
   sll_working_precision
   sll_file_io )
 
-#  sll_bsl_lt_pic_particles
 
 ######## todo: OLD doc, please update
 
