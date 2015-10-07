@@ -29,7 +29,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
-                         sll_field_accumulators
                          sll_interpolators
                          sll_point_to_point_communications
                          sll_splines
