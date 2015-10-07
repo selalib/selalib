@@ -829,9 +829,6 @@ contains  ! ****************************************************************
     ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
     ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
 
-! Changed to use 'newunit' Fortran feature (YG - 05.10.2015)
-!    call sll_new_file_id(out_unit, ierr)
-!    open (unit=out_unit,file=name,action="write",status="replace")
     open( file=name, status="replace", form="formatted", newunit=out_unit )
 
     write(out_unit, "(i6)") num_fek
@@ -964,9 +961,6 @@ contains  ! ****************************************************************
     ! Number of non Zero splines depends on the degree
     non_zero = 3*deg*deg
 
-! Changed to use 'newunit' Fortran feature (YG - 05.10.2015)
-!    call sll_new_file_id(out_unit, ierr)
-!    open (unit=out_unit,file=name,action="write",status="replace")
     ! We open file
     open( file=name, status="replace", form="formatted", newunit=out_unit )
 
