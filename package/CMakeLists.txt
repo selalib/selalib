@@ -1,7 +1,6 @@
 SET(SLL_DIR ${CMAKE_SOURCE_DIR})
 
-FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR} "*.h")
-
+FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/*.h )
 
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_memory.F90
@@ -182,7 +181,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   ${SLL_DIR}/simulations/multipatch/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_ampere_cartesian.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sl_1d1v_va_cart_spectral/simulation_2d_vlasov_ampere_cartesian.F90
   ${SLL_DIR}/simulations/multipatch/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)
