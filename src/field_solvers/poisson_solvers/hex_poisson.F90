@@ -3,7 +3,7 @@ module hex_poisson
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   implicit none
 
   !***********************************************************

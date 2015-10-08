@@ -1,5 +1,5 @@
 # Cartesian mesh ..........
-ADD_EXECUTABLE( test_meshes unit_test.F90 )
+ADD_EXECUTABLE( test_meshes test_cartesian_meshes.F90 )
 TARGET_LINK_LIBRARIES( test_meshes sll_meshes )
 
 ADD_TEST( NAME meshes COMMAND test_meshes )
@@ -12,6 +12,6 @@ TARGET_LINK_LIBRARIES( test_hex_meshes sll_meshes )
 #..........................
 
 # Triangular mesh .........
-ADD_EXECUTABLE( test_triangular_mesh unit_test_triangular_mesh.F90 )
+ADD_EXECUTABLE( test_triangular_mesh test_triangular_meshes.F90 )
 TARGET_LINK_LIBRARIES( test_triangular_mesh sll_meshes )
 #..........................
