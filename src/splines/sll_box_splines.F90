@@ -20,7 +20,7 @@ module sll_box_splines
 #include "sll_utilities.h"
 #include "sll_boundary_condition_descriptors.h"
 use hex_pre_filters
-use sll_hex_meshes
+use sll_hexagonal_meshes
 use fekete_integration
 use gauss_triangle_integration
 
