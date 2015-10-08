@@ -1,4 +1,4 @@
-program test_hex_meshes
+program test_hexagonal_meshes
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -14,19 +14,18 @@ sll_int32                   :: error
 sll_real64                  :: x1
 sll_real64                  :: x2
 sll_int32                   :: i
-sll_int32                   :: i_elmt
 sll_int32                   :: nei1
 sll_int32                   :: nei2
 sll_int32                   :: nei3
 sll_int32                   :: type
 sll_int32                   :: spline_degree
-sll_int32, allocatable      :: connectivity(:)
 
 num_cells = 4
 spline_degree = 1
 
 print *, ""
-print *, "Creating a mesh with", num_cells, "cells, mesh coordinates written in ./hex_mesh_coo.txt"
+print *, "Creating a mesh with", num_cells, &
+     "cells, mesh coordinates written in ./hex_mesh_coo.txt"
 mesh => new_hex_mesh_2d(num_cells)
 call sll_display(mesh)
 call write_hex_mesh_2d(mesh,"hex_mesh_coo.txt")
@@ -57,4 +56,6 @@ end do
 
 call delete(mesh)
 
-end program test_hex_meshes
+print *, 'PASSED'
+
+end program test_hexagonal_meshes
