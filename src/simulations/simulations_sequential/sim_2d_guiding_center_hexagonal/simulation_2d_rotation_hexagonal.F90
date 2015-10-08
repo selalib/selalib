@@ -7,7 +7,7 @@ program rotation_2d_hexagonal
 use sll_ascii_io
 
   use sll_constants
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   use sll_box_splines
   use sll_interpolation_hex_hermite
   implicit none

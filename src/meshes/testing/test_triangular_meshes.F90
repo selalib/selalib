@@ -1,7 +1,7 @@
 !> @internal [example]
 program unit_test_triangular_mesh
 #include "sll_working_precision.h"
-use sll_hex_meshes
+use sll_hexagonal_meshes
 use sll_triangular_meshes
 
 implicit none
