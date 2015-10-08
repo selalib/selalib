@@ -11,14 +11,14 @@ TARGET_LINK_LIBRARIES( sll_splines
   ${LAPACK_LIBRARIES} )
 
 ADD_LIBRARY( hex_pre_filters STATIC hex_pre_filters.F90 )
-TARGET_LINK_LIBRARIES( hex_pre_filters sll_hex_meshes )
+TARGET_LINK_LIBRARIES( hex_pre_filters sll_meshes )
 
 ADD_LIBRARY( sll_box_splines STATIC sll_box_splines.F90 )
 TARGET_LINK_LIBRARIES( sll_box_splines
   sll_splines
   sll_utilities
   hex_pre_filters
-  sll_hex_meshes
+  sll_meshes
   sll_integration
   sll_boundary_condition_descriptors
   ${LAPACK_LIBRARIES})
