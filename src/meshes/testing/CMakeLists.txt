@@ -18,6 +18,7 @@ SET_TESTS_PROPERTIES( hexagonal_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSE
 ADD_EXECUTABLE( test_triangular_meshes test_triangular_meshes.F90 )
 TARGET_LINK_LIBRARIES( test_triangular_meshes sll_meshes )
 # Ctest:
-# ADD_TEST( NAME triangular_meshes COMMAND test_triangular_meshes )
-# SET_TESTS_PROPERTIES( triangular_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET( REFERENCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/diode.maa )
+ADD_TEST( NAME triangular_meshes COMMAND test_triangular_meshes ${REFERENCE_FILE})
+SET_TESTS_PROPERTIES( triangular_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #..........................
