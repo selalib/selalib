@@ -11,19 +11,5 @@ TARGET_LINK_LIBRARIES( sll_meshes sll_working_precision
 
 # Tests
 IF(BUILD_TESTING)
-
-  # Ctest
-  ADD_EXECUTABLE( test_meshes unit_test.F90 )
-  TARGET_LINK_LIBRARIES( test_meshes sll_meshes )
-  ADD_TEST( NAME meshes COMMAND test_meshes )
-  SET_TESTS_PROPERTIES( meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-  # Other
-  ADD_EXECUTABLE( test_hex_meshes test_hex_meshes.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_meshes sll_meshes )
-
-  ADD_EXECUTABLE( test_triangular_mesh unit_test_triangular_mesh.F90 )
-  TARGET_LINK_LIBRARIES( test_triangular_mesh sll_meshes )
-  #ADD_TEST( NAME triangular_mesh COMMAND test_triangular_mesh )
-
+  ADD_SUBDIRECTORY( testing )
 ENDIF(BUILD_TESTING)
