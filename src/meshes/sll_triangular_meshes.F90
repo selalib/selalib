@@ -850,7 +850,9 @@ integer          :: iout = 6
 integer          :: imxref
 
 write(iout,"(/////10x,'>>> Read mesh from file <<<'/)")
+print *, " will open : ", maafil
 open(nfmaa,file=maafil,status='OLD',err=80)
+print *, " opened    : ", maafil
 write(*,1050,advance='no') trim(maafil)
 
 write(iout,"(10x,'Open the file'                      &
