@@ -26,7 +26,7 @@ module sll_maxwell_fdtd_hex_mesh
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
-use sll_hex_meshes
+use sll_hexagonal_meshes
 
 implicit none
 !private

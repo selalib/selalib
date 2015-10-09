@@ -1,7 +1,7 @@
 program unit_test_advection_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_hex_meshes
+use sll_hexagonal_meshes
 use sll_triangular_meshes
 use sll_advection_2d_tri_mesh
 use sll_gnuplot
