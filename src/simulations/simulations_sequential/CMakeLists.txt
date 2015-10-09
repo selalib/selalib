@@ -38,6 +38,8 @@ IF(HDF5_ENABLED)
   ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords_mudpack  )
 ENDIF(HDF5_ENABLED)
 
+ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_fullsparsegrid )
+
 ADD_SUBDIRECTORY(bsl_examples)
 ADD_SUBDIRECTORY(csl_examples)
 ADD_SUBDIRECTORY(fsl_examples)
