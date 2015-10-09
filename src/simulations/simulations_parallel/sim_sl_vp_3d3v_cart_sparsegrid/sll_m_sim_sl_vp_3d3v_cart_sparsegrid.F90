@@ -46,7 +46,6 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 
      !Distribution function 6D
      sll_real64 :: eps, v2, v0
-     sll_real64, dimension(3) :: kxyz
      sll_real64, dimension(:,:), allocatable :: f_x, f_v,ft_v,f2_x,ft2_v
      sll_real64, dimension(:,:), allocatable :: f0v_inv
      
@@ -284,16 +283,13 @@ contains
              else
                 sim%f_x(i1,i2) = sim%f_x(i1,i2)*0.5_f64*&
                      (exp(-(eta(4)-sim%v0)**2*0.5_f64) + &
-                     exp(-(eta(4)+sim%v0)**2*0.5_f64))* &
-                     exp(-(eta(5)**2+eta(6)**2)*0.5_f64)
+                     exp(-(eta(4)+sim%v0)**2*0.5_f64))
              end if
           elseif ((sim%test_case == SLL_LANDAU) .AND. (sim%is_mdeltaf .EQV. .FALSE.)) then
              sim%f_x(i1,i2) = sim%f_x(i1,i2)*exp(-.5_f64*( eta(4)**2+eta(5)**2+eta(6)**2))
           end if
        end do
     end do
-
-    print*, maxval(sim%f_x)
 
     time = 0.0_f64
     ! Propagate v half a step
