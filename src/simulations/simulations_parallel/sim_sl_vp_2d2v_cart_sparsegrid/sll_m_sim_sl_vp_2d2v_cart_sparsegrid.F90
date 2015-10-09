@@ -1,9 +1,9 @@
 !------------------------------------------------------------------------------!
 ! Implementation of sgxsgv tensor product sparse grid semi-Lagrangian solver for
-! 6D Vlasov-Poisson
+! 4D Vlasov-Poisson
 ! Implemented test cases: Landau damping (test_case = SLL_LANDAU) and
 ! TSI (test_case = SLL_TSI) where TSI along x1v1 and Landau along x2v2.
-!
+! Author: Katharina Kormann, IPP
 !------------------------------------------------------------------------------
 
 module sll_m_sim_sl_vp_2d2v_cart_sparsegrid
@@ -47,7 +47,6 @@ module sll_m_sim_sl_vp_2d2v_cart_sparsegrid
      !Distribution function 6D
      sll_real64 :: eps, v2, v0
      sll_real64, dimension(:,:), allocatable :: f_x, f_v,ft_v,f2_x,ft2_v
-     sll_real64, dimension(:,:), allocatable :: f0v_inv
      
      !Electric fields and charge density
      sll_real64, dimension(:), allocatable :: ex
@@ -80,9 +79,6 @@ module sll_m_sim_sl_vp_2d2v_cart_sparsegrid
 
     end type sll_t_sim_sl_vp_2d2v_cart_sparsegrid
 
-  interface sll_delete
-     module procedure delete_sparsegrid_2d2v
-  end interface sll_delete
 contains
 !------------------------------------------------------------------------------!
   subroutine init_sparsegrid_2d2v (sim, filename)
@@ -179,7 +175,6 @@ contains
        sim%v0 = 2.4_f64
     end if
 
-
     ! Initialize the sparse grids in x and v
     call sim%interp_x%initialize(sim%levelsx,sim%order_sg, sim%order_sg+1,0, &
          sim%eta_min(1:2),sim%eta_max(1:2), 0, 0);
@@ -248,7 +243,6 @@ contains
     SLL_ALLOCATE(sim%ez(sim%interp_x%size_basis),error)
     SLL_ALLOCATE(sim%dv(sim%local_size_v(1)),error)
     
-    SLL_ALLOCATE(sim%f0v_inv(sim%local_size_v(2),3),error);
     SLL_ALLOCATE(sim%nrj(0:sim%n_time_steps), error)
 
 
@@ -277,7 +271,7 @@ contains
                      exp(-(eta(3)+sim%v0)**2*0.5_f64))
              end if
           elseif ((sim%test_case == SLL_LANDAU) .AND. (sim%is_mdeltaf .EQV. .FALSE.)) then
-             sim%f_x(i1,i2) = sim%f_x(i1,i2)*exp(-.5_f64*( eta(3)*2+eta(4)**2))
+             sim%f_x(i1,i2) = sim%f_x(i1,i2)*exp(-.5_f64*( eta(3)**2+eta(4)**2))
           end if
        end do
     end do
@@ -351,12 +345,6 @@ contains
 
 
   end subroutine run_sparsegrid_2d2v
-  
-!------------------------------------------------------------------------------!
-
-  subroutine delete_sparsegrid_2d2v (sim)
-    class(sll_t_sim_sl_vp_2d2v_cart_sparsegrid), intent(inout) :: sim
-  end subroutine delete_sparsegrid_2d2v
   
 !------------------------------------------------------------------------------!
   subroutine advection_x(sim, dt)

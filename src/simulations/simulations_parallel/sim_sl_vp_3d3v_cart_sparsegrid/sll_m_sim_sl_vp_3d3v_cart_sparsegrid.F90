@@ -3,7 +3,7 @@
 ! 6D Vlasov-Poisson
 ! Implemented test cases: Landau damping (test_case = SLL_LANDAU) and
 ! TSI (test_case = SLL_TSI) where TSI along x1v1 and Landau along x2v2.
-!
+! Author: Katharina Kormann, IPP
 !------------------------------------------------------------------------------
 
 module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
@@ -47,7 +47,6 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
      !Distribution function 6D
      sll_real64 :: eps, v2, v0
      sll_real64, dimension(:,:), allocatable :: f_x, f_v,ft_v,f2_x,ft2_v
-     sll_real64, dimension(:,:), allocatable :: f0v_inv
      
      !Electric fields and charge density
      sll_real64, dimension(:), allocatable :: ex
@@ -83,9 +82,6 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 
     end type sll_t_sim_sl_vp_3d3v_cart_sparsegrid
 
-  interface sll_delete
-     module procedure delete_sparsegrid_3d3v
-  end interface sll_delete
 contains
 !------------------------------------------------------------------------------!
   subroutine init_sparsegrid_3d3v (sim, filename)
@@ -254,7 +250,6 @@ contains
     SLL_ALLOCATE(sim%ez(sim%interp_x%size_basis),error)
     SLL_ALLOCATE(sim%dv(sim%local_size_v(1)),error)
     
-    SLL_ALLOCATE(sim%f0v_inv(sim%local_size_v(2),3),error);
     SLL_ALLOCATE(sim%nrj(0:sim%n_time_steps), error)
 
 
@@ -370,12 +365,6 @@ contains
   end subroutine run_sparsegrid_3d3v
   
 !------------------------------------------------------------------------------!
-
-  subroutine delete_sparsegrid_3d3v (sim)
-    class(sll_t_sim_sl_vp_3d3v_cart_sparsegrid), intent(inout) :: sim
-  end subroutine delete_sparsegrid_3d3v
-  
-!------------------------------------------------------------------------------!
   subroutine advection_x(sim, dt)
     class(sll_t_sim_sl_vp_3d3v_cart_sparsegrid), intent(inout) :: sim
     sll_real64, intent(in) :: dt
@@ -476,83 +465,6 @@ contains
 
 !------------------------------------------------------------------------------!
 
-!!$  subroutine advection_v_df2(sim, dt)
-!!$    class(sll_t_sim_sl_vp_3d3v_cart_sparsegrid), intent(inout) :: sim
-!!$    sll_real64, intent(in) :: dt
-!!$    sll_real64 :: vv
-!!$    sll_int32 :: i1, i2
-!!$
-!!$    ! Destinguish Landau und TSI since for TSI part along direction v1 we do not use the multiplicative deltaf method
-!!$    if (sim%test_case == SLL_LANDAU) then 
-!!$       do i1 = 1, sim%local_size_v(1) 
-!!$          call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-!!$          call sim%interp_v%interpolate_const_disp(sim%dorder1,&
-!!$               dt*sim%ex(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
-!!$       end do
-!!$
-!!$       !do i2 = 1, sim%local_size_v(2)
-!!$       !   vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(1)
-!!$       !   sim%dv = sim%ex(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
-!!$       !   sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
-!!$       !end do
-!!$       sim%ft_v = sim%ft2_v
-!!$
-!!$       ! v2 interpolation
-!!$       do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
-!!$          call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-!!$          call sim%interp_v%interpolate_const_disp(sim%dorder2,&
-!!$               dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
-!!$       end do
-!!$    elseif (sim%test_case == SLL_TSI) then
-!!$       do i1 = 1, sim%local_size_v(1) 
-!!$          call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-!!$          call sim%interp_v%interpolate_const_disp(sim%dorder1,&
-!!$               dt*sim%ex(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.TRUE.);
-!!$       end do
-!!$
-!!$       sim%ft_v = sim%ft2_v
-!!$       ! v2 interpolation
-!!$       do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
-!!$          !call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-!!$          call sim%interp_v%interpolate_const_disp(sim%dorder2,&
-!!$               dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
-!!$       end do
-!!$    end if
-!!$       
-!!$
-!!$    ! v2 interpolation
-!!$    do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
-!!$       call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-!!$       call sim%interp_v%interpolate_const_disp(sim%dorder2,&
-!!$            dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
-!!$    end do
-!!$    sim%ft_v = sim%ft2_v
-!!$    ! Take care of the shift in the exponential    
-!!$    !do i2 = 1, sim%local_size_v(2)
-!!$    !   vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(2)
-!!$    !   sim%dv = sim%ey(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
-!!$    !   sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
-!!$    !end do
-!!$
-!!$    ! v3 interpolation
-!!$    do i1 = 1, sim%local_size_v(1) 
-!!$       call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-!!$       call sim%interp_v%interpolate_const_disp(sim%dorder3,&
-!!$            dt*sim%ez(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
-!!$    end do
-!!$
-!!$    sim%ft_v = sim%ft2_v
-!!$    ! Take care of the shift in the exponential
-!!$    !do i2 = 1, sim%local_size_v(2)
-!!$    !   vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(3)
-!!$    !   sim%dv = sim%ez(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
-!!$    !      sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
-!!$    !end do
-!!$    
-!!$  end subroutine advection_v_df2
-  
-  !------------------------------------------------------------------------------!
-  
   subroutine compute_rho(sim)
     class(sll_t_sim_sl_vp_3d3v_cart_sparsegrid), intent(inout) :: sim
     
