@@ -21,10 +21,14 @@ module sll_sparse_grid_interpolator
 
   !> class to hold values for hierarchical fft computations
   type, public :: fft_hierarchical
-     type(C_PTR)  :: fw,bw
-     complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: in,out
-     type(C_PTR) :: p_in, p_out
-     integer(C_SIZE_T) :: sz_in, sz_out
+     type(C_PTR)  :: fw
+     type(C_PTR)  :: bw
+     complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: in
+     complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: out
+     type(C_PTR) :: p_in
+     type(C_PTR) :: p_out
+     integer(C_SIZE_T) :: sz_in
+     integer(C_SIZE_T) :: sz_out
   end type fft_hierarchical
 
   !> Data type for sparse grid node
@@ -40,7 +44,7 @@ module sll_sparse_grid_interpolator
   end type sparsegrid_node
 
 
-  type, public :: interpolator_base_ptr
+  type :: interpolator_base_ptr
      class(sll_interpolator_1d_base), pointer :: ptr
   end type interpolator_base_ptr
 
@@ -127,11 +131,13 @@ contains
     eta_max)	
     class(sparse_grid_interpolator), intent(inout) :: interpolator
 
-    sll_real64, dimension(:), intent(in)          :: eta_min
-    sll_real64, dimension(:),  intent(in)         :: eta_max
-    sll_int32, dimension(:), intent(in)           :: levels
-    sll_int32, intent(in)                         :: order, interpolation
-    sll_int32, intent(in)                         :: interpolation_type
+    sll_real64, dimension(:), intent(in)          :: eta_min !< \a eta_min defines the lower bound of the domain
+    sll_real64, dimension(:),  intent(in)         :: eta_max !< \a eta_max defines the upper bound of the domain
+    sll_int32, dimension(:), intent(in)           :: levels !< \a levels defines the maximum level in the sparse grid
+    sll_int32, intent(in)                         :: order !< \a order of the sparse grid functions
+    sll_int32, intent(in)                         :: interpolation !< \a Order of the interpolator
+    sll_int32, intent(in)                         :: interpolation_type !< Choose spline (\a interpolation_type = 0) or Lagrange (\a interpolation_type = 1) interpolation for the 1D interpolators if not traditional sparse grid interpolation is used.
+
     sll_int32                                     :: i,j
     sll_int32                                     :: ierr
 
@@ -1700,6 +1706,7 @@ subroutine fft_finalize(fft_object,levels)
 
 end subroutine fft_finalize
 
+!> Compute Fourier coefficients on sparse grid along dimension \a dim. 
 subroutine ToHierarchical1D(interpolator,dim,max_level,index,data_in,data_out)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in) :: data_in
@@ -1719,6 +1726,7 @@ subroutine ToHierarchical1D(interpolator,dim,max_level,index,data_in,data_out)
        index,interpolator%fft_object(max_level+1)%in,data_out)
 end subroutine ToHierarchical1D
 
+!> Complex version of \a ToHierarchical1d_comp
 subroutine ToHierarchical1D_comp(interpolator,dim,max_level,index,data)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_comp64, dimension(:), intent(inout) :: data
@@ -1735,7 +1743,7 @@ subroutine ToHierarchical1D_comp(interpolator,dim,max_level,index,data)
        index,interpolator%fft_object(max_level+1)%in,data)
 end subroutine ToHierarchical1D_comp
 
-
+!>
 subroutine ToHira1D(interpolator,dim,max_level,index,data)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_comp64, dimension(:), intent(inout) :: data
@@ -1749,6 +1757,7 @@ subroutine ToHira1D(interpolator,dim,max_level,index,data)
 
 end subroutine ToHira1D
 
+!>
 subroutine ToNodal1D(interpolator,dim,max_level,index,data_in,data_out)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_comp64, dimension(:), intent(in) :: data_in
@@ -1767,6 +1776,7 @@ subroutine ToNodal1D(interpolator,dim,max_level,index,data_in,data_out)
 
 end subroutine ToNodal1D
 
+!>
 subroutine ToNodal1D_comp(interpolator,dim,max_level,index,data)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_comp64, dimension(:), intent(inout) :: data

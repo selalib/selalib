@@ -24,7 +24,7 @@ program test_interpolation_3d
 
   sll_int32, dimension(3) :: dorder, levelsini
 
-  type(sparse_grid_interpolator_3d), target   :: interp
+  type(sparse_grid_interpolator_3d)   :: interp
 
   logical :: fail
 
