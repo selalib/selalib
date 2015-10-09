@@ -163,7 +163,6 @@ ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(field_solvers)
 ADD_SUBDIRECTORY(descriptors)
 ADD_SUBDIRECTORY(io)
-ADD_SUBDIRECTORY(sparse_grid)
 
 #Fortran version is checked in CMakeModules/FortranConfig.cmake
 IF(F2008)
@@ -188,6 +187,8 @@ ADD_SUBDIRECTORY(time_solvers)
 ADD_SUBDIRECTORY(distribution_function)
 ADD_SUBDIRECTORY(ode_solvers)
 ADD_SUBDIRECTORY(mesh_calculus)
+
+ADD_SUBDIRECTORY(add_ons)
 
 IF(BUILD_PACKAGE)
   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../package ${CMAKE_BINARY_DIR}/package)
