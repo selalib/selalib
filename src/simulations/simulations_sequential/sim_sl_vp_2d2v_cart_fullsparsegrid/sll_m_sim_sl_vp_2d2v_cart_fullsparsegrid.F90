@@ -382,6 +382,7 @@ contains
     do lev1 = 0, sim%interp_xv%max_level
        do l1 = max(0, lev1-sim%interp_xv%levels(2)), min (lev1, sim%interp_xv%levels(1))
           l2 = lev1-l1
+          counter2 = 0
           do k1 = 0, max(2**(l1-1),1)-1
              do k2 = 0, max(2**(l2-1),1)-1
                 sim%rho(counter) = 0.0_f64
@@ -391,7 +392,7 @@ contains
                       no = 2**(max(l3-1,0))*2**(max(l4-1,0))
                       do k=sim%interp_xv%index(l1,l2,l3,l4)+ no*counter2, &
                            sim%interp_xv%index(l1,l2,l3,l4)+ no*(counter2+1)-1
-                         if (test_case == SLL_LANDAU) then
+                         if (sim%test_case == SLL_LANDAU) then
                             if(sim%interp_xv%hierarchy(k)%level(3) == 0) then
                                factor = sqrt(2.0_f64*sll_pi)
                             else
