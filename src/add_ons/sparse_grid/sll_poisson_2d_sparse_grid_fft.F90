@@ -30,6 +30,7 @@ type,public:: sll_fft_derivative
 contains
    procedure :: initialize=>new_poisson_2d_sparse_grid_fft
    procedure :: solve=>solve_for_electric_field!
+   procedure :: solve_potential
 end type sll_fft_derivative
 
 

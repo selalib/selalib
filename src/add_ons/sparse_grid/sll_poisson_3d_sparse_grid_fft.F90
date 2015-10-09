@@ -30,6 +30,7 @@ contains
    procedure :: initialize=>new_poisson_3d_sparse_grid_fft
    !procedure :: delete=>free_poisson
    procedure :: solve=>solve_for_electric_field
+   procedure :: solve_potential
 end type sll_fft3d_derivative
 
 contains
