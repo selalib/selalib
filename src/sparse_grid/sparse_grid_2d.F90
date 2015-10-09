@@ -19,6 +19,7 @@ use, intrinsic :: iso_c_binding
 implicit none
 private
 
+!> Object for sparse grid fast Fourier transform implemented based on FFTW library
   type, public :: fft_fg_2d
      type(C_PTR)  :: bw
      complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: in
@@ -27,23 +28,26 @@ private
      integer(C_SIZE_T) :: sz
   end type fft_fg_2d
 
+!> Sparse grid object for 2d with interpolation routines.
 type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_2d
-sll_int32, dimension(:,:), pointer  :: index
-type(fft_fg_2d) :: fft_object_fg
+sll_int32, dimension(:,:), pointer  :: index !< 2d mapping: for each 2d index l on the sparse grid, \a index gives the index of the first node belonging to this level 
+type(fft_fg_2d) :: fft_object_fg !< FFT object for sparse grid FFT implementation based on FFTW
 
 contains
-  procedure :: initialize => initialize_sg2d! Initialization routine
+  procedure :: initialize => initialize_sg2d!> Initialization routine
   procedure :: interpolate_const_disp
-  procedure :: interpolate_value=>interpolate_value_sg ! Compute the value of the sparse grid interpolant at position eta
-  procedure :: interpolate_disp_nconst_in_1d ! Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
-  procedure :: interpolate_disp_linnconst_in_1d ! Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
+  procedure :: interpolate_value=>interpolate_value_sg !> Compute the value of the sparse grid interpolant at position eta
+  procedure :: interpolate_disp_nconst_in_1d !> Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
+  procedure :: interpolate_disp_linnconst_in_1d !> Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
   procedure :: fg_to_sg
-  procedure :: SPFFT ! Compute the Sparse grid FFT coefficients
-  procedure :: ISPFFT ! Inverse FFT on sparsegrid.
-  procedure :: interpolate_array_disp_sgfft ! Compute value at displaced grid points using trigonometric interpolation (based on SG FFT)
+  procedure :: SPFFT !> Compute the Sparse grid FFT coefficients
+  procedure :: ISPFFT !> Inverse FFT on sparsegrid.
+  procedure :: interpolate_array_disp_sgfft !> Compute value at displaced grid points using trigonometric interpolation (based on SG FFT)
+  ! Filter functions that can be used for stabilization
   procedure :: filter_highest
   procedure :: filter
   procedure :: linear_filter
+  ! From here these are helper functions
   procedure :: displace
   procedure :: set_hierarchy_info
   procedure :: set_hierarchy_info_boundary
@@ -58,12 +62,14 @@ contains
 !------------------------------------------------------------------------------!
 !!!! SGFFT routines !!!!!
 
+!>  Compute value at displaced grid points using trigonometric interpolation (based on SG FFT)
 subroutine interpolate_array_disp_sgfft(interpolator,dim, displacment_in,data_in,data_out)
-  class(sparse_grid_interpolator_2d),  intent(inout)       :: interpolator
-  sll_int32, intent(in) :: dim
-  sll_real64, intent(in) :: displacment_in
-  sll_comp64, dimension(:), intent(inout)   :: data_in
-  sll_real64, dimension(:), intent(out) :: data_out
+  class(sparse_grid_interpolator_2d),  intent(inout)       :: interpolator !< Sparse grid object
+  sll_int32, intent(in) :: dim !< dimension along which the points should be displaced with \a displacement_in
+  sll_real64, intent(in) :: displacment_in !< displacement of the data points along dimension \a dim
+  sll_comp64, dimension(:), intent(inout)   :: data_in !< Fourier transformed values on the sparse grid
+  sll_real64, dimension(:), intent(out) :: data_out !< Function values on the sparse grid after displacement
+
   sll_real64:: displacement
   
   displacement = displacment_in*2.0_f64*sll_pi/interpolator%length(dim)
@@ -80,6 +86,7 @@ end subroutine interpolate_array_disp_sgfft
 !------------------------------------------------------------------------------!
 !!!!!!!!!! Initialization routines !!!!!!!!
 
+!> Initialize a 2d sparse grid object
   subroutine initialize_sg2d( &
     interpolator, &
     levels, &
@@ -91,13 +98,16 @@ end subroutine interpolate_array_disp_sgfft
     boundary, &
     modified)
 	
-    class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-    sll_real64, dimension(:), intent(in)          :: eta_min
-    sll_real64, dimension(:),  intent(in)         :: eta_max
-    sll_int32, dimension(:),intent(in)            :: levels
-    sll_int32, intent(in)                         :: order, interpolation
-    sll_int32, intent(in)                         :: interpolation_type
-    sll_int32, intent(in)                         :: modified, boundary
+    class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< sparse grid object
+    sll_real64, dimension(:), intent(in)          :: eta_min !< \a eta_min defines the lower bound of the domain
+    sll_real64, dimension(:),  intent(in)         :: eta_max !< \a eta_max defines the upper bound of the domain
+    sll_int32, dimension(:),intent(in)            :: levels !< \a levels defines the maximum level in the sparse grid for each direction
+    sll_int32, intent(in)                         :: order !< \a order of the sparse grid functions
+    sll_int32, intent(in)                         :: interpolation !< order of the interpolator
+    sll_int32, intent(in)                         :: interpolation_type !< Choose spline (\a interpolation_type = 0) or Lagrange (\a interpolation_type = 1) interpolation for the 1D interpolators if not traditional sparse grid interpolation is used.
+    sll_int32, intent(in)                         :: modified !< \a modified defines if we have a traditional sparse grid for \a modified = 0 (then the l_1 norm of the levels is bounded by max(\a levels) ) or if the boundary is sparsified for \a modified = 1 (then the l_1 norm of the levels is bounded by max(\a levels)+1 )
+    sll_int32, intent(in)                         :: boundary !< \a boundary defines the boundary conditions: define 0 for periodic boundary conditions and 1 for zero inflow boundaries
+
     sll_int32                                     :: i,j,k1,k2,l1,l2,l,counter
     sll_int32                                     :: ierr
     sll_int32, dimension(:) ,allocatable          :: novec,lvec,kvec
@@ -203,13 +213,16 @@ end subroutine interpolate_array_disp_sgfft
 
   end subroutine initialize_sg2d
 
+!> Helfer function for initialization. Setting all the information needed for node \a counter of the sparse grid along dimension \a cdim.
 subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
   class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_int32 :: ld ! current level
-  sll_int32 :: kd ! current index within level
-  sll_int32,intent(in) :: cdim ! current dimension
+  sll_int32 :: ld !< current level along \a cdim
+  sll_int32 :: kd !< current index within level along \a cdim
+  sll_int32,intent(in) :: cdim !< current dimension
   sll_int32,intent(in) :: counter ! counter for node
-  sll_int32, dimension(:), intent(in) :: lvecin,kvecin,novecin
+  sll_int32, dimension(:), intent(in) :: lvecin !< vector of current levels
+  sll_int32, dimension(:), intent(in) :: kvecin !< vector of current index within level
+  sll_int32, dimension(:), intent(in) :: novecin !< vector with number of points on the current level along each dimension
   sll_int32, dimension(:), allocatable :: lvec,kvec,novec
   sll_int32 :: jj,stride
 
@@ -282,13 +295,13 @@ subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
 
 end subroutine set_hierarchy_info
 
-
+!> Same as \a set_hierarchy_info but for points on the boundary along dimension \a cdim
 subroutine set_hierarchy_info_boundary(interpolator,counter,cdim,lvecin,kvecin,novecin)
   class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_int32 :: ld ! current level
-  sll_int32 :: kd ! current index within level
-  sll_int32,intent(in) :: cdim ! current dimension
-  sll_int32,intent(in) :: counter ! counter for node
+  sll_int32 :: ld !< current level
+  sll_int32 :: kd !< current index within level
+  sll_int32,intent(in) :: cdim !< current dimension
+  sll_int32,intent(in) :: counter !< counter for node
   sll_int32, dimension(:), intent(in) :: lvecin,kvecin,novecin
   sll_int32, dimension(:), allocatable :: lvec,kvec,novec
   sll_int32 :: jj,stride
@@ -397,12 +410,13 @@ end subroutine set_hierarchy_info_boundary
 !!!!! Interpolation functions !!!!!!
 
 
-
+!> Value at \a eta interpolated from the hierarchical surplus \a data using standard sparse grid interpolation.
 function interpolate_value_sg( interpolator,data,  eta ) result(val)
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(in) :: data
-  sll_real64 :: val
-  sll_real64, dimension(:), intent(in) :: eta
+  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< Sparse grid object
+  sll_real64, dimension(:), intent(in) :: data !< values of the hierarchical surplus
+  sll_real64 :: val !< result of the interpolation
+  sll_real64, dimension(:), intent(in) :: eta !< coordinates of the point where to interpolate
+
   if (interpolator%boundary == 0) then
      val =  interpolate_from_hierarchical_surplus(interpolator,data,eta)
   else
@@ -414,6 +428,7 @@ end function interpolate_value_sg
 
 ! helper function for interpolate_value
 
+!> Implementation of \a interpolate_value_sg for periodic sparse grid
  function interpolate_from_hierarchical_surplus( interpolator,data, eta ) result(val)
     class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
     sll_int32 :: j,l1,l2,level
@@ -472,7 +487,8 @@ end function interpolate_value_sg
 
 ! interpolation from hierarchical surplus non-periodic
 
- function interpolate_from_hierarchical_surplus_boundary( interpolator,data, eta ) result(val)	
+!> Implementation of \a interpolate_value_sg for sparse grid with boundary
+  function interpolate_from_hierarchical_surplus_boundary( interpolator,data, eta ) result(val)
     class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
     sll_int32 :: j,l1,l2,level
     sll_real64 :: val
@@ -570,19 +586,21 @@ end function interpolate_value_sg
 
 
 
-! Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
-subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)	
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(inout) :: data_in
-  sll_real64, dimension(:), intent(out) :: data_out
-  sll_real64, intent(in) ::displacement
-  sll_int32 :: j,counter,i2,k2
-  sll_int32, dimension(:), intent(in) :: dorder
-  sll_int32, dimension(2) :: ind_order,no
-  sll_int32, dimension(:,:), allocatable :: ind
-  logical, intent(in) :: hiera
+!> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
+  subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
+    class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< sparse grid object
+    sll_int32, dimension(:), intent(in) :: dorder !< \a dorder(1) gives the dimension along which to displace the points, \a dorder(2) the other dimension
+    sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus
+    sll_real64, dimension(:), intent(out) :: data_out !< Value of the function or the hierarchical surplus (depending on value of \a hiera) for the displaced data points. 
+    sll_real64, intent(in) ::displacement !< Constant diplacement along dimension \a dorder(1)
+    logical, intent(in) :: hiera !< If the result should be the hierarchical surplus, define \a hiera = .TRUE.; if the result should be the function values at the data points give \a hiera = .FALSE.
 
-  SLL_ALLOCATE(ind(interpolator%max_level+1,2), i2);
+
+    sll_int32 :: j,counter,i2,k2
+    sll_int32, dimension(2) :: ind_order,no
+    sll_int32, dimension(:,:), allocatable :: ind
+    
+    SLL_ALLOCATE(ind(interpolator%max_level+1,2), i2);
 
 
   ind_order(dorder(1)) = 0
@@ -624,20 +642,14 @@ end subroutine Interpolate_const_disp
 
 
 
-! Functionality: Interpolates the function values for a displacement on in dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is allowed to be non-constant in one other dimension (Dirichlet b.c. i.e. dimension 3 or 3).
-!INPUT:
-! interpolator: interpolator handle
-! displacement: Vector containing the values of the displacement (in hierarchical order, one dimensional)
-! dorder: Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where we want to displace, dorder(2) (=3 or 4) gives the dimension of which the displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3 or 4 not dorder(2).
-! data_in: hierarchical surplus of the present function
-! data_out: value of the displaced functions
+!> Functionality: Interpolates the function values for a displacement on in dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is allowed to be non-constant in one other dimension (Dirichlet b.c. i.e. dimension 3 or 3).
+subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
+  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< Sparse grid object
+  sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus of the present function
+  sll_real64, dimension(:), intent(out) :: data_out !< values of the displaced function
+  sll_int32, dimension(:), intent(in) :: dorder !< Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where we want to displace, dorder(2) (=3 or 4) gives the dimension of which the displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3 or 4 not dorder(2).
+  sll_real64,dimension(:), intent(in) ::displacement !< Vector containing the values of the displacement (in hierarchical order, one dimensional)
 
-subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)	
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(inout) :: data_in
-  sll_real64, dimension(:), intent(out) :: data_out
-  sll_int32, dimension(:), intent(in) :: dorder
-  sll_real64,dimension(:), intent(in) ::displacement
   sll_int32 :: i1,i2,k2,counter,j, index_parent,index_parent_old
   sll_int32, dimension(4) :: no,ind_order
   sll_int32, dimension(:,:), allocatable :: ind
@@ -707,8 +719,8 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
 
 end subroutine interpolate_disp_nconst_in_1d
 
-! As previous function but displacement dependent on displacement*coordinate(dorder(2))
-subroutine interpolate_disp_linnconst_in_1d(interpolator,displacement,dorder,data_in, data_out)	
+!> As \a interpolate_disp_nconst_in_1d but displacement dependent on displacement*coordinate(dorder(2))
+subroutine interpolate_disp_linnconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
   class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
@@ -786,10 +798,12 @@ end subroutine interpolate_disp_linnconst_in_1d
 !------------------------------------------------------------------------------!
 ! Functions to evaluate fg on sg and sg on fg
 
+!> Set sparse grid values from fg vector
 subroutine fg_to_sg(interpolator,fg_values,sg_values)
-sll_real64, dimension(:,:), intent(in) :: fg_values
-sll_real64, dimension(:), intent(out) :: sg_values
-class(sparse_grid_interpolator_2d), intent(in) :: interpolator
+sll_real64, dimension(:,:), intent(in) :: fg_values !< Values of the full grid
+sll_real64, dimension(:), intent(out) :: sg_values !< Vectro with sparse grid values
+class(sparse_grid_interpolator_2d), intent(in) :: interpolator !< sparse grid object
+
 sll_int32 :: j
 sll_int32, dimension(2) :: fg_ind
 
@@ -800,7 +814,7 @@ end do
 
 end subroutine fg_to_sg
 
-! Complex version
+! Complex version of \a fg_to_sg
 subroutine sg_to_fg_complex(interpolator,sg_values,fg_values)
 sll_comp64, dimension(:,:), intent(out) :: fg_values
 sll_comp64, dimension(:), intent(in) :: sg_values
@@ -816,11 +830,11 @@ end do
 end subroutine sg_to_fg_complex
 
 
-! Compute the index of a sparse grid node on level "level" with index "index_on_level" on full grid with of max_level
+!> Compute the index of a sparse grid node on level "level" with index "index_on_level" on full grid with of max_level
 function fg_index(interpolator,sg_index)  
-sll_int32, intent(in) :: sg_index
-sll_int32, dimension(2) :: fg_index
-class(sparse_grid_interpolator_2d), intent(in) :: interpolator
+sll_int32, intent(in) :: sg_index !< index of point on sparse grid
+sll_int32, dimension(2) :: fg_index !< vector of full grid indices
+class(sparse_grid_interpolator_2d), intent(in) :: interpolator !< Sparse grid object
 sll_int32 :: j
 
 do j=1,interpolator%dim
@@ -842,13 +856,13 @@ end function fg_index
 
 
 !------------------------------------------------------------------------------!
-!!!! SGFFT helper functions (Some clean-up needed) !!!!
+!!!! SGFFT helper functions !!!!
 
-
+!> Compute Fourier coefficient on sparse grid
 subroutine ToHierarchical(interpolator,data_in, data_out)
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(in) :: data_in
-  sll_comp64, dimension(:), intent(out) :: data_out
+  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< Sparse grid object
+  sll_real64, dimension(:), intent(in) :: data_in !< Values at the sparse grid points
+  sll_comp64, dimension(:), intent(out) :: data_out !< Values of the linear hierarchical surplus
   sll_int32 :: i,j
   
 ! Maybe possible with index in index to make dimension independent
@@ -860,9 +874,6 @@ subroutine ToHierarchical(interpolator,data_in, data_out)
              j,data_in,data_out)
      end do
   end do
- ! print*, 'Data nach FFT in dim 2'
- ! print*, data_out
- ! print*,''
   do i = 0,interpolator%levels(1)
      do j = interpolator%index(i,0),&
           interpolator%index(i,0) + max(2**(i-1),1)-1
@@ -870,16 +881,14 @@ subroutine ToHierarchical(interpolator,data_in, data_out)
              min(interpolator%levels(2),interpolator%max_level-i),j,data_out)
      end do
   end do
-!print*,'Data nach FFT in both dim'
-!print*, data_out
-!print*,''
 
 end subroutine ToHierarchical
 
-
+!> 
  subroutine ToDehi(interpolator,data_array)
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_comp64, dimension(:), intent(inout) :: data_array
+  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< Sparse grid object
+  sll_comp64, dimension(:), intent(inout) :: data_array !<  on input: hierarchical surplus; on output: function values
+
   sll_int32 :: i,j
 
 ! Maybe possible with index in index to make dimension independent
@@ -957,12 +966,13 @@ subroutine ToNodal(interpolator,data_in,data_out)
  
 end subroutine ToNodal
 
-
+!> Compute the Fourier coefficients of at displaced grid points from Fourier coefficients
 subroutine displace(interpolator,dim,displacement,data)
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_comp64, dimension(:), intent(inout) :: data
-  sll_real64,intent(in) :: displacement
-  sll_int32, intent(in) :: dim
+  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator !< sparse grid object
+  sll_comp64, dimension(:), intent(inout) :: data !< Fourier coefficients of input and output function, respectively
+  sll_real64,intent(in) :: displacement !< The constant displacement along dimension \a dim
+  sll_int32, intent(in) :: dim !< Dimension along which we displace.
+
   sll_int32 :: i,j
   
   if (dim == 1) then
@@ -1016,6 +1026,7 @@ subroutine DisplaceVar(interpolator,alpha1,alpha2,data)
 
 end subroutine DISPLACEVAR
 
+!> Fourier transform on sparse grid
 subroutine SPFFT(interpolator,data_in,data_out)
   class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in) :: data_in
@@ -1026,6 +1037,7 @@ subroutine SPFFT(interpolator,data_in,data_out)
 
 end subroutine SPFFT
 
+!> Inverse Fourier transform
 subroutine ISPFFT(interpolator,data_in, data_out)
   class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
   sll_comp64, dimension(:), intent(inout) :: data_in
