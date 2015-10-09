@@ -68,6 +68,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
     ADD_SUBDIRECTORY(sl_1d1v_vm_cart_berk_breizman)
 
+    ADD_SUBDIRECTORY(sim_sl_vp_2d2v_cart_sparsegrid)
     ADD_SUBDIRECTORY(sim_sl_vp_3d3v_cart_sparsegrid)
 
     # Particle simulations (mostly PIC)
