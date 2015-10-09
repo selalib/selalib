@@ -6,7 +6,7 @@ ADD_LIBRARY( sll_integration STATIC gauss_legendre.F90
                                     fekete.F90)
 
 TARGET_LINK_LIBRARIES( sll_integration sll_splines
-                                       sll_hex_meshes
+                                       sll_meshes
                                        sll_box_splines
                                        sll_memory
                                        sll_utilities)
