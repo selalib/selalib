@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------!
+
+
+!------------------------------------------------------------------------------
+
 module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 #include "sll_assert.h"
 #include "sll_working_precision.h"
@@ -31,7 +36,6 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
      !Time domain
      sll_int32  :: n_time_steps
      sll_real64 :: delta_t
-     sll_real64 :: time
 
      !Sparse grid parameters
      sll_int32 :: level, order
@@ -54,7 +58,7 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
      type(sll_fft3d_derivative)  :: poisson
      
      ! Interpolator
-     class(sparse_grid_interpolator_3d), pointer   :: interp_x, interp_v
+     type(sparse_grid_interpolator_3d)   :: interp_x, interp_v
 
      ! For parallelization
      type(remap_plan_2d_real64), pointer :: remap_x2v, remap_v2x ! Remapper between layoutx and layoutv
@@ -111,7 +115,7 @@ contains
 
     sim%is_mdeltaf = is_mdeltaf
     sim%levelx = levelx
-    sim%levelsv = levelv
+    sim%levelv = levelv
     sim%order_sg = order_sg
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
@@ -151,6 +155,34 @@ contains
     sim%dorder1 = (/1, 2, 3 /); 
     sim%dorder2 = (/2, 1, 3 /);
     sim%dorder3 = (/3, 1, 2 /);
+
+    ! Set the domain for one of the two test cases
+    if (sim%test_case == SLL_LANDAU ) then
+       !x domain
+       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  4.0_f64 * sll_pi
+       sim%eta_min(2:3) = sim%eta_min(1); sim%eta_max(2:3) = sim%eta_max(1)
+       !v domain
+       sim%eta_min(4) = -6.0_f64; sim%eta_max(4) = 6.0_f64
+       sim%eta_min(5:6) = sim%eta_min(4); sim%eta_max(5:6) = sim%eta_max(4)
+    elseif (sim%test_case  == SLL_TSI) then
+       !x domain
+       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  10.0_f64 * sll_pi
+       sim%eta_min(2) =  0.0_f64; sim%eta_max(2) =  4.0_f64 * sll_pi
+       sim%eta_min(3) =  0.0_f64; sim%eta_max(3) =  4.0_f64 * sll_pi
+       !v domain
+       sim%eta_min(4) = -8.0_f64; sim%eta_max(4) = 8.0_f64
+       sim%eta_min(5) = -6.0_f64; sim%eta_max(5) = 6.0_f64
+       sim%eta_min(6) = -6.0_f64; sim%eta_max(6) = 6.0_f64
+    end if
+
+    ! Set the perturbation
+    if (sim%test_case == SLL_LANDAU) then
+       sim%eps = 0.01_f64
+    elseif (sim%test_case == SLL_TSI) then
+       sim%eps = 0.001_f64
+       sim%v0 = 2.4_f64
+    end if
+
 
     ! Initialize the sparse grids in x and v
     call sim%interp_x%initialize(sim%levelsx,sim%order_sg, sim%order_sg+1,0, &
@@ -223,32 +255,6 @@ contains
     SLL_ALLOCATE(sim%f0v_inv(sim%local_size_v(2),3),error);
     SLL_ALLOCATE(sim%nrj(0:sim%n_time_steps), error)
 
-    ! Set the domain for one of the two test cases
-    if (sim%test_case == SLL_LANDAU ) then
-       !x domain
-       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  4.0_f64 * sll_pi
-       sim%eta_min(2:3) = sim%eta_min(1); sim%eta_max(2:3) = sim%eta_max(1)
-       !v domain
-       sim%eta_min(4) = -6.0_f64; sim%eta_max(4) = 6.0_f64
-       sim%eta_min(5:6) = sim%eta_min(4); sim%eta_max(5:6) = sim%eta_max(4)
-    elseif (sim%test_case  == SLL_TSI) then
-       !x domain
-       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  10.0_f64 * sll_pi
-       sim%eta_min(2) =  0.0_f64; sim%eta_max(2) =  4.0_f64 * sll_pi
-       sim%eta_min(3) =  0.0_f64; sim%eta_max(3) =  4.0_f64 * sll_pi
-       !v domain
-       sim%eta_min(4) = -8.0_f64; sim%eta_max(4) = 8.0_f64
-       sim%eta_min(5) = -6.0_f64; sim%eta_max(5) = 6.0_f64
-       sim%eta_min(6) = -6.0_f64; sim%eta_max(6) = 6.0_f64
-    end if
-
-    ! Set the perturbation
-    if (sim%test_case == SLL_LANDAU) then
-       sim%eps = 0.01_f64
-    elseif (sim%test_case == SLL_TSI) then
-       sim%eps = 0.001_f64
-       sim%v0 = 2.4_f64
-    end if
 
     ! Compute the step where to switch to linear interpolations
     sim%switch_step = int(45/sim%delta_t)
@@ -284,6 +290,9 @@ contains
        end do
     end do
 
+    print*, maxval(sim%f_x)
+
+    time = 0.0_f64
     ! Propagate v half a step
     call apply_remap_2D(sim%remap_x2v, sim%f_x, sim%f_v);
     sim%ft_v = transpose(sim%f_v);
@@ -302,19 +311,19 @@ contains
     end if
     sim%f_v = transpose(sim%ft_v);
     call apply_remap_2D(sim%remap_v2x, sim%f_v, sim%f_x);
-    call compute_energy(sim, sim%nrj(i_step));
+    call compute_energy(sim, sim%nrj(0));
        
    
-    if (sim%myrank == 1) then
+    if (sim%myrank == 0) then
        open(11, file='sgxsgv6d_output.dat', position='append')
        rewind(11)
-       write(11,*) 0.0_f64, sim%nrj(0)
+       write(11,*) time, sim%nrj(0)
     end if
 
     do i_step = 1, sim%n_time_steps !Loop over time
 
        if (sim%myrank == 0) then
-          if(mod(i_step,10) == 0) then
+          if(mod(i_step,100) == 0) then
              print*, i_step
           end if
        end if
@@ -326,8 +335,6 @@ contains
           call sim%interp_v%initialize(sim%levelsv,1,2,0, sim%eta_min(4:6), sim%eta_max(4:6),&
                1, 1);
        end if
-
-       time  = time + 0.5_f64*sim%delta_t
        
        call advection_x(sim, sim%delta_t)
        
@@ -350,10 +357,9 @@ contains
        call apply_remap_2D(sim%remap_v2x, sim%f_v, sim%f_x);
        call compute_energy(sim, sim%nrj(i_step));
        
-
-       time  = time + 0.5_f64*sim%delta_t
+       time  = time + sim%delta_t
        
-       if (sim%myrank == 1) then
+       if (sim%myrank == 0) then
           open(11, file='sgxsgv6d_output.dat', position='append')
           write(11,*) time, sim%nrj(i_step)
           close(11)
@@ -411,37 +417,31 @@ contains
     sim%ft_v = sim%ft2_v;
     
   end subroutine advection_v
-!------------------------------------------------------------------------------!
 
   subroutine advection_v_df(sim, dt)
     class(sll_t_sim_sl_vp_3d3v_cart_sparsegrid), intent(inout) :: sim
     sll_real64, intent(in) :: dt
-    sll_real64 :: vv
-    sll_real64, dimension(3) :: dvv
     sll_int32 :: i1, i2
+    sll_real64 :: vv
 
-    ! Destinguish Landau und TSI since for TSI part along direction v1 we do not use the multiplicative deltaf method
     if (sim%test_case == SLL_LANDAU) then 
        do i1 = 1, sim%local_size_v(1) 
           call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
           call sim%interp_v%interpolate_const_disp(sim%dorder1,&
                dt*sim%ex(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
        end do
-
        do i2 = 1, sim%local_size_v(2)
           vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(1)
           sim%dv = sim%ex(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
           sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
        end do
-
-       ! v2 interpolation
-       do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
+       do i1 = 1, sim%local_size_v(1) 
           call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
           call sim%interp_v%interpolate_const_disp(sim%dorder2,&
                dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
        end do
     elseif (sim%test_case == SLL_TSI) then
-       do i1 = 1, sim%local_size_v(1) 
+        do i1 = 1, sim%local_size_v(1) 
           call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
           call sim%interp_v%interpolate_const_disp(sim%dorder1,&
                dt*sim%ex(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.TRUE.);
@@ -455,37 +455,102 @@ contains
                dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
        end do
     end if
-       
-
-    ! v2 interpolation
-    do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
-       call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
-       call sim%interp_v%interpolate_const_disp(sim%dorder2,&
-            dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
-    end do
-
     ! Take care of the shift in the exponential    
     do i2 = 1, sim%local_size_v(2)
        vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(2)
        sim%dv = sim%ey(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
-       sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
+          sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
     end do
-
-    ! v3 interpolation
-    do i1 = 1, sim%local_size_v(1) 
+    do i1 = 1, sim%local_size_v(1)
        call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
        call sim%interp_v%interpolate_const_disp(sim%dorder3,&
             dt*sim%ez(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
     end do
-
     ! Take care of the shift in the exponential
     do i2 = 1, sim%local_size_v(2)
        vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(3)
        sim%dv = sim%ez(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
           sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
     end do
-    
+
   end subroutine advection_v_df
+
+!------------------------------------------------------------------------------!
+
+!!$  subroutine advection_v_df2(sim, dt)
+!!$    class(sll_t_sim_sl_vp_3d3v_cart_sparsegrid), intent(inout) :: sim
+!!$    sll_real64, intent(in) :: dt
+!!$    sll_real64 :: vv
+!!$    sll_int32 :: i1, i2
+!!$
+!!$    ! Destinguish Landau und TSI since for TSI part along direction v1 we do not use the multiplicative deltaf method
+!!$    if (sim%test_case == SLL_LANDAU) then 
+!!$       do i1 = 1, sim%local_size_v(1) 
+!!$          call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
+!!$          call sim%interp_v%interpolate_const_disp(sim%dorder1,&
+!!$               dt*sim%ex(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
+!!$       end do
+!!$
+!!$       !do i2 = 1, sim%local_size_v(2)
+!!$       !   vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(1)
+!!$       !   sim%dv = sim%ex(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
+!!$       !   sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
+!!$       !end do
+!!$       sim%ft_v = sim%ft2_v
+!!$
+!!$       ! v2 interpolation
+!!$       do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
+!!$          call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
+!!$          call sim%interp_v%interpolate_const_disp(sim%dorder2,&
+!!$               dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
+!!$       end do
+!!$    elseif (sim%test_case == SLL_TSI) then
+!!$       do i1 = 1, sim%local_size_v(1) 
+!!$          call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
+!!$          call sim%interp_v%interpolate_const_disp(sim%dorder1,&
+!!$               dt*sim%ex(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.TRUE.);
+!!$       end do
+!!$
+!!$       sim%ft_v = sim%ft2_v
+!!$       ! v2 interpolation
+!!$       do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
+!!$          !call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
+!!$          call sim%interp_v%interpolate_const_disp(sim%dorder2,&
+!!$               dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
+!!$       end do
+!!$    end if
+!!$       
+!!$
+!!$    ! v2 interpolation
+!!$    do i1 = 1, sim%local_size_v(1)!interp_x%size_basis 
+!!$       call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
+!!$       call sim%interp_v%interpolate_const_disp(sim%dorder2,&
+!!$            dt*sim%ey(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
+!!$    end do
+!!$    sim%ft_v = sim%ft2_v
+!!$    ! Take care of the shift in the exponential    
+!!$    !do i2 = 1, sim%local_size_v(2)
+!!$    !   vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(2)
+!!$    !   sim%dv = sim%ey(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
+!!$    !   sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
+!!$    !end do
+!!$
+!!$    ! v3 interpolation
+!!$    do i1 = 1, sim%local_size_v(1) 
+!!$       call sim%interp_v%compute_hierarchical_surplus(sim%ft_v(:,i1));
+!!$       call sim%interp_v%interpolate_const_disp(sim%dorder3,&
+!!$            dt*sim%ez(sim%global_v(1)+i1),sim%ft_v(:,i1), sim%ft2_v(:,i1),.FALSE.);
+!!$    end do
+!!$
+!!$    sim%ft_v = sim%ft2_v
+!!$    ! Take care of the shift in the exponential
+!!$    !do i2 = 1, sim%local_size_v(2)
+!!$    !   vv = sim%interp_v%hierarchy(sim%global_v(2)+i2)%coordinate(3)
+!!$    !   sim%dv = sim%ez(sim%global_v(1)+1:sim%global_v(1)+sim%local_size_v(1))*dt
+!!$    !      sim%ft_v(i2,:) = sim%ft2_v(i2,:)*exp(-vv*sim%dv-sim%dv**2*0.5_f64)
+!!$    !end do
+!!$    
+!!$  end subroutine advection_v_df2
   
   !------------------------------------------------------------------------------!
   
