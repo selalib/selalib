@@ -17,7 +17,7 @@ program test_poisson_3d_sparsegrid_fft
    sll_real64                    :: eta_max(3), eta_min(3)
    sll_int32                    :: error
 
-   type(sparse_grid_interpolator_3d), target :: interp
+   type(sparse_grid_interpolator_3d) :: interp
 
    sll_real64, allocatable      :: ex(:)
    sll_real64, allocatable      :: ey(:)
