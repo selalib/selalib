@@ -1,6 +1,9 @@
 !------------------------------------------------------------------------------!
-
-
+! Implementation of sgxsgv tensor product sparse grid semi-Lagrangian solver for
+! 6D Vlasov-Poisson
+! Implemented test cases: Landau damping (test_case = SLL_LANDAU) and
+! TSI (test_case = SLL_TSI) where TSI along x1v1 and Landau along x2v2.
+!
 !------------------------------------------------------------------------------
 
 module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
