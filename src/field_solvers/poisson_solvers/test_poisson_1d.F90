@@ -4,7 +4,7 @@ program test_poisson_1d
 #include "sll_assert.h"
 #include "sll_constants.h"
   use sll_cubic_splines
-  use sll_poisson_1D_periodic
+  use sll_poisson_1d_periodic
 
   implicit none
 
