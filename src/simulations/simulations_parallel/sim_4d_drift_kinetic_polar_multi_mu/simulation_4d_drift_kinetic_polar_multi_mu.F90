@@ -46,7 +46,7 @@ module sll_simulation_4d_drift_kinetic_polar_multi_mu_module
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_test_4d_initializer
+  !use sll_test_4d_initializer
   use sll_m_poisson_2d_base
   use sll_poisson_2d_periodic_cartesian_par
   use sll_m_cubic_spline_interpolator_1d
@@ -67,6 +67,8 @@ module sll_simulation_4d_drift_kinetic_polar_multi_mu_module
   use sll_buffer_loader_utilities_module
   use sll_hermite_interpolation_2d_module
   use sll_m_qn_2d_polar_splines_solver
+  use sll_ascii_io
+  use sll_hdf5_io_serial
 
 
   implicit none
