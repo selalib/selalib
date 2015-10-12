@@ -218,11 +218,11 @@ contains
     ! Initialize kernel smoother    
     sim%specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
          sim%domain, [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother-1) 
+         sim%n_particles, sim%degree_smoother-1, SLL_GALERKIN) 
     sim%kernel_smoother_1 => sim%specific_kernel_smoother_1
     sim%specific_kernel_smoother_0 => &
          sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother) 
+         sim%n_particles, sim%degree_smoother, SLL_GALERKIN) 
     sim%kernel_smoother_0 => sim%specific_kernel_smoother_0
     
 
