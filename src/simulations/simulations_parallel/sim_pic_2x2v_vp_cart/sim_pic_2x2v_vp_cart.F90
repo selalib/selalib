@@ -31,6 +31,9 @@ module sll_m_sim_pic_2x2v_vp_cart
      ! Specific particle group
      class(sll_particle_group_2x2v), pointer :: specific_particle_group 
 
+     ! Array for efield
+     sll_real64 :: efield
+
      ! Cartesian mesh
      type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 
@@ -169,7 +172,7 @@ contains
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
     sim%specific_kernel_smoother => sll_new_smoother_spline_2d(&
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
-         sim%degree_smoother)
+         sim%degree_smoother, SLL_COLLOCATION)
     sim%kernel_smoother => sim%specific_kernel_smoother
 
     ! Initialize position and velocity of the particles.
