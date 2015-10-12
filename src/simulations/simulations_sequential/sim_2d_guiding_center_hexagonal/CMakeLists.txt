@@ -38,7 +38,7 @@ set( EXECUTABLE5 "test_${TEST_NAME5}" )
 ADD_EXECUTABLE( ${EXECUTABLE1} simulation_${SIM_NAME1}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE1} sll_simulations_sequential ${SIM_LIBS}
                                                                 sll_box_splines
-                                                                sll_hex_meshes
+                                                                sll_meshes
                                                                 hex_poisson
                                                                 sll_utilities
                                                                 euler_2d_hex)
@@ -47,7 +47,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE1} sll_simulations_sequential ${SIM_LIBS}
 ADD_EXECUTABLE( ${EXECUTABLE2} simulation_${SIM_NAME2}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_simulations_sequential ${SIM_LIBS}
                                                                 hex_hermite
-                                                                sll_hex_meshes
+                                                                sll_meshes
                                                                 hex_poisson
                                                                 sll_utilities
                                                                 euler_2d_hex)
@@ -60,7 +60,7 @@ TARGET_LINK_LIBRARIES(
   ${SIM_LIBS}
   hex_hermite
   sll_box_splines
-  sll_hex_meshes)
+  sll_meshes)
 
 # Fourth test :
 ADD_EXECUTABLE( ${EXECUTABLE4} simulation_${SIM_NAME4}.F90)
@@ -70,13 +70,13 @@ TARGET_LINK_LIBRARIES(
   ${SIM_LIBS}
   hex_hermite
   sll_box_splines
-  sll_hex_meshes)
+  sll_meshes)
 
 # Fifth test :
 ADD_EXECUTABLE( ${EXECUTABLE5} simulation_${SIM_NAME5}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE5} sll_simulations_sequential ${SIM_LIBS}
                                                                 sll_box_splines
-                                                                sll_hex_meshes
+                                                                sll_meshes
                                                                 hex_hermite
                                                                 hex_poisson
                                                                 sll_utilities

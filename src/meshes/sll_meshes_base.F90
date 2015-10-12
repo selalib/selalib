@@ -15,8 +15,8 @@ module sll_meshes_base
   !> @brief 2D logical mesh
   type, abstract :: sll_mesh_2d_base
    contains
-     procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_node 
-     procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_node 
+     procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_node
+     procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_node
      procedure(get_geometry_2d_one_arg), deferred, pass(mesh) :: eta1_cell_one_arg
      procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_cell_two_arg
      procedure(get_geometry_2d_one_arg), deferred, pass(mesh) :: eta2_cell_one_arg

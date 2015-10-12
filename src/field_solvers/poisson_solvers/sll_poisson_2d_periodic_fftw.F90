@@ -293,5 +293,5 @@ subroutine delete_poisson_2d_periodic_fftw(self)
 
 end subroutine delete_poisson_2d_periodic_fftw
 
-end module sll_poisson_2D_periodic_fftw
+end module sll_poisson_2d_periodic_fftw
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

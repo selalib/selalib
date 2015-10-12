@@ -13,13 +13,14 @@
 
 module sll_box_splines
 #include "sll_working_precision.h"
+#include "sll_constants.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
 #include "sll_boundary_condition_descriptors.h"
 use hex_pre_filters
-use sll_hex_meshes
+use sll_hexagonal_meshes
 use fekete_integration
 use gauss_triangle_integration
 
@@ -828,8 +829,7 @@ contains  ! ****************************************************************
     ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
     ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
 
-    call sll_new_file_id(out_unit, ierr)
-    open (unit=out_unit,file=name,action="write",status="replace")
+    open( file=name, status="replace", form="formatted", newunit=out_unit )
 
     write(out_unit, "(i6)") num_fek
 
@@ -962,8 +962,7 @@ contains  ! ****************************************************************
     non_zero = 3*deg*deg
 
     ! We open file
-    call sll_new_file_id(out_unit, ierr)
-    open (unit=out_unit,file=name,action="write",status="replace")
+    open( file=name, status="replace", form="formatted", newunit=out_unit )
 
     ! We write total number of cells
     write(out_unit, "(i6)") mesh%num_triangles

@@ -10,7 +10,6 @@ program test_maxwell_dg_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_hex_meshes
 use sll_constants
 use sll_maxwell_diga_hex_mesh
 
