@@ -418,8 +418,6 @@ contains
                       end do
                    end do
                 end do
-                sim%rho(counter) = sim%rho(counter)* sim%interp_xv%length(3)*&
-                     sim%interp_xv%length(4)
                 counter = counter+1
                 counter2 = counter2+1
              end do

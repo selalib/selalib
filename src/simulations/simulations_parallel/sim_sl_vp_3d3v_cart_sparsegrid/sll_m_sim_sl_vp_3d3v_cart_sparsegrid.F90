@@ -327,7 +327,7 @@ contains
           call sim%interp_x%initialize(sim%levelsx,1, 2,0,sim%eta_min(1:3),sim%eta_max(1:3),&
                0, 0);
           call sim%interp_v%initialize(sim%levelsv,1,2,0, sim%eta_min(4:6), sim%eta_max(4:6),&
-               1, 1);
+               0, 1);
        end if
        
        call advection_x(sim, sim%delta_t)

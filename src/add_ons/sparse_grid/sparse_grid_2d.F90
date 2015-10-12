@@ -1,6 +1,7 @@
 !> @ingroup sparse_grid
 !> @author Katharina Kormann, IPP 
 !> @brief Implementation of a 2D sparse grid with interpolation routines.
+!> @todo Implement the optimized interpolation routines for option boundary=1
 !> @details <DETAILED_DESCRIPTION>
 
 module sparse_grid_2d
