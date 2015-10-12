@@ -227,7 +227,7 @@ contains
     
     call compute_energy(sim, sim%nrj(0));
        
-    open(11, file='sgxsgv4d_output.dat', position='append')
+    open(11, file='sgxv4d_output.dat', position='append')
     rewind(11)
     write(11,*) time, sim%nrj(0)
     
