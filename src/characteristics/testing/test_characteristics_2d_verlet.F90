@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_characteristics_2d_verlet
+program test_characteristics_2d_verlet
 #include "sll_working_precision.h"
 use sll_m_characteristics_2d_verlet
 use sll_boundary_condition_descriptors
@@ -143,4 +143,4 @@ implicit none
     print *, '#PASSED'
   endif
 
-end program
+end program test_characteristics_2d_verlet

@@ -15,80 +15,86 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_characteristics_2d_verlet
+program test_characteristics_1d_explicit_euler_conservative
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_trapezoid_conservative
+use sll_m_characteristics_1d_explicit_euler_conservative
 use sll_boundary_condition_descriptors
-use sll_m_cubic_spline_interpolator_1d
 
 implicit none
   
-  class(sll_characteristics_1d_base),pointer :: trap
-
+  class(sll_characteristics_1d_base), pointer :: euler 
   
   sll_int32 :: Npts
   sll_real64, dimension(:), allocatable :: input
   sll_real64, dimension(:), allocatable :: output
   sll_real64, dimension(:), allocatable :: A
-  !sll_int32 :: ierr
   sll_int32 :: i
   sll_real64 :: dt
   sll_real64 :: err
-  class(sll_interpolator_1d_base), pointer   :: A_interp
 
   
   
   
-  Npts = 32
-  dt = 0.1_f64
+  Npts = 101
+  dt = 0._f64 !0.1_f64
   
   
-
+  !initialization for explicit_euler_1d
   
-  !initialization for verlet
-  A_interp => new_cubic_spline_interpolator_1d( &
-    Npts, &
-    0._f64, &
-    1._f64, &
-    SLL_PERIODIC)
-
-
-
-
-
-  trap => &
-    new_trapezoid_conservative_1d_charac(&
+  euler => &
+    new_explicit_euler_conservative_1d_charac(&
       Npts, &
-      A_interp, &
-      bc_type=SLL_PERIODIC)
-                  
+      SLL_PERIODIC)
+
+  
+
+
+
+
+  
+      
+      
+      
 
   allocate(input(Npts))
   allocate(output(Npts))
   allocate(A(Npts))
   
-
   do i=1,Npts
     input(i) = real(i-1,f64)/real(Npts-1,f64)
   enddo
-  
-  do i=1,Npts
-      A(i) = 1._f64 !-input(i)+0.5_f64
-  enddo
-      
-      
-  err = 0._f64  
-  
-  call trap%compute_characteristics( &
-      A, &
-      dt, &
-      input, &
-      output)
 
+  
+  do i=1,Npts   
+    A(i) = -input(i)+0.5_f64
+  enddo
+
+  call euler%compute_characteristics( &
+    A, &
+    dt, &
+    input, &
+    output)
+      
+      
+  err = 0._f64
+  
+!  do i=1,Npts   
+!    tmp = input(i)-dt*A(i)
+!    tmp = tmp-floor(tmp)
+!    tmp=abs(tmp-output(i))
+!    if(tmp>err)then
+!        err=tmp
+!    endif
+!  enddo
+  
+  print *,'#err=',err
+  
+  
+  
   
 
   if(err==0)then    
     print *, '#PASSED'
   endif
 
-end program
+end program test_characteristics_1d_explicit_euler_conservative

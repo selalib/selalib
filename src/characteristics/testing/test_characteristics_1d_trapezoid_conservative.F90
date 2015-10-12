@@ -15,9 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_characteristics_2d_verlet
+program test_characteristics_1d_trapezoid_conservative
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_trapezoid
+use sll_m_characteristics_1d_trapezoid_conservative
 use sll_boundary_condition_descriptors
 use sll_m_cubic_spline_interpolator_1d
 
@@ -57,7 +57,7 @@ implicit none
 
 
   trap => &
-    new_trapezoid_1d_charac(&
+    new_trapezoid_conservative_1d_charac(&
       Npts, &
       A_interp, &
       bc_type=SLL_PERIODIC)
@@ -91,4 +91,4 @@ implicit none
     print *, '#PASSED'
   endif
 
-end program
+end program test_characteristics_1d_trapezoid_conservative
