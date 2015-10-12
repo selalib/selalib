@@ -111,12 +111,12 @@ contains
 
     ! Evaluate efield1 at particle positions
     this%rho_dofs = reshape(this%efield1(1:this%kernel_smoother%n_grid(1),1:this%kernel_smoother%n_grid(2)), [this%kernel_smoother%n_dofs])
-    call this%kernel_smoother%evaluate_kernel_function(this%particle_group, &
+    call this%kernel_smoother%evaluate_kernel_function_particles(this%particle_group, &
          this%rho_dofs, this%efield(:,1))
     
     ! Evaluate efield2 at particle positions
     this%rho_dofs = reshape(this%efield2(1:this%kernel_smoother%n_grid(1),1:this%kernel_smoother%n_grid(2)), [this%kernel_smoother%n_dofs])
-    call this%kernel_smoother%evaluate_kernel_function(this%particle_group, &
+    call this%kernel_smoother%evaluate_kernel_function_particles(this%particle_group, &
          this%rho_dofs, this%efield(:,2))
 
 
