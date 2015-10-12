@@ -8,7 +8,7 @@ module sll_simulation_4d_vlasov_poisson_cartesian
   use sll_remapper
   use sll_constants
   use sll_m_cubic_spline_interpolator_1d
-  use sll_test_4d_initializer
+  use sll_distribution_function_initializer_4d
   use sll_poisson_2d_periodic_cartesian_par
   use sll_m_interpolators_1d_base
   use sll_m_cubic_spline_interpolator_1d

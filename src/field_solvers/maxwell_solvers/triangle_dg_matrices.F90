@@ -246,7 +246,7 @@ contains
    ! On commence a calculer la matrice de VanderMonde 1d
 
    ! Les points du bord sont les k+1 premiers, il faut les ramener
-   ! de l'intervalle [0,1] à [-1,1] 
+   ! de l'intervalle [0,1] x [-1,1] 
    do n=0,k
       vdm1d(:,n+1)=JacobiP(n,0.0d0,0.0d0,2.0d0*x(1:k+1)-1.0d0)
       vdm1d(:,n+1)=vdm1d(:,n+1)*sqrt(real(2*n+1,8))  ! normalisation
