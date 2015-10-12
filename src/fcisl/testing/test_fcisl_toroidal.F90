@@ -1,4 +1,4 @@
-program fcisl_toroidal_test
+program test_fcisl_toroidal
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -423,4 +423,4 @@ print*,"iota=",iota
   print*,'#PASSED'
 
 
-end program
+end program test_fcisl_toroidal

@@ -1,4 +1,4 @@
-program fcisl_test
+program test_fcisl
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -301,4 +301,4 @@ program fcisl_test
 
 
 
-end program
+end program test_fcisl
