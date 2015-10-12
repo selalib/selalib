@@ -19,7 +19,7 @@ module sll_m_maxwell_1d_fem
   private
   
   public :: sll_new_maxwell_1d_fem, solve_circulant, compute_E_from_B_1d_fem, &
-       compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection, compute_fem_rhs, L2norm
+       compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection_1d_fem, compute_fem_rhs, L2norm_squarred_1d_fem
 
   type, public, extends(sll_maxwell_1d_base) :: sll_maxwell_1d_fem
 
@@ -46,6 +46,12 @@ module sll_m_maxwell_1d_fem
           compute_E_from_rho => compute_E_from_rho_1d_fem!< Solve E from rho using Poisson
      procedure :: &
           compute_E_from_j => compute_E_from_j_1d_fem !< Solve E from j 
+     procedure :: &
+          compute_rhs_from_function => compute_fem_rhs
+     procedure :: &
+          L2norm_squarred => L2norm_squarred_1d_fem
+     procedure :: &
+          L2projection => L2projection_1d_fem
   end type sll_maxwell_1d_fem
 
 contains
@@ -156,112 +162,113 @@ contains
 
    !> Compute the FEM right-hand-side for a given function f and periodic splines of given degree
    !> Its components are $\int f N_i dx$ where $N_i$ is the B-spline starting at $x_i$ 
-   subroutine compute_fem_rhs(this, f, deg, rhs)
+   subroutine compute_fem_rhs(this, func, degree, coefs_dofs)
      class(sll_maxwell_1d_fem) :: this
-     procedure(function_1d_legendre) :: f
-     sll_int32, intent(in) :: deg
-     sll_real64, intent(out) :: rhs(:)  ! Finite Element right-hand-side
+     procedure(function_1d_legendre) :: func
+     sll_int32, intent(in) :: degree
+     sll_real64, intent(out) :: coefs_dofs(:)  ! Finite Element right-hand-side
      ! local variables
      sll_int32 :: i,j,k
      sll_real64 :: coef
-     sll_real64, dimension(2,deg+1) :: xw_gauss
-     sll_real64, dimension(deg+1,deg+1) :: bspl
+     sll_real64, dimension(2,degree+1) :: xw_gauss
+     sll_real64, dimension(degree+1,degree+1) :: bspl
 
      ! take enough Gauss points so that projection is exact for splines of degree deg
      ! rescale on [0,1] for compatibility with B-splines
-     xw_gauss = gauss_legendre_points_and_weights(deg+1, 0.0_f64, 1.0_f64)
+     xw_gauss = gauss_legendre_points_and_weights(degree+1, 0.0_f64, 1.0_f64)
      ! Compute bsplines at gauss_points
-     do k=1,deg+1
-        bspl(k,:) = uniform_b_splines_at_x(deg,xw_gauss(1,k))
+     do k=1,degree+1
+        bspl(k,:) = uniform_b_splines_at_x(degree,xw_gauss(1,k))
         !print*, 'bs', bspl(k,:)
      end do
 
-     ! Compute rhs = int f(x)N_i(x) 
+     ! Compute coefs_dofs = int f(x)N_i(x) 
      do i = 1, this%n_dofs
         coef=0_f64
         ! loop over support of B spline
-        do j = 1, deg+1
+        do j = 1, degree+1
            ! loop over Gauss points
-           do k=1, deg+1
-              coef = coef + xw_gauss(2,k)*f(this%delta_x*(xw_gauss(1,k) + i + j - 2)) * bspl(k,deg+2-j)
+           do k=1, degree+1
+              coef = coef + xw_gauss(2,k)*func(this%delta_x*(xw_gauss(1,k) + i + j - 2)) * bspl(k,degree+2-j)
               !print*, i,j,k, xw_gauss(2,k), xw_gauss(1,k),f(this%delta_x*(xw_gauss(1,k) + i + j - 2)) 
            enddo
         enddo
         ! rescale by cell size
-        rhs(i) = coef!*this%delta_x
+        coefs_dofs(i) = coef!*this%delta_x
      enddo
 
    end subroutine compute_fem_rhs
 
    !> Compute the L2 projection of a given function f on periodic splines of given degree
-   subroutine L2projection(this, f, deg, scoef)
+   subroutine L2projection_1d_fem(this, func, degree, coefs_dofs)
      class(sll_maxwell_1d_fem) :: this
-     procedure(function_1d_legendre) :: f
-     sll_int32, intent(in) :: deg
-     sll_real64, intent(out) :: scoef(:)  ! spline coefficients of projection
+     procedure(function_1d_legendre) :: func
+     sll_int32, intent(in) :: degree
+     sll_real64, intent(out) :: coefs_dofs(:)  ! spline coefficients of projection
      ! local variables
      sll_int32 :: i,j,k
      sll_real64 :: coef
-     sll_real64, dimension(2,deg+1) :: xw_gauss
-     sll_real64, dimension(deg+1,deg+1) :: bspl
+     sll_real64, dimension(2,degree+1) :: xw_gauss
+     sll_real64, dimension(degree+1,degree+1) :: bspl
      sll_real64, dimension(this%n_dofs) :: eigvals
 
      ! Compute right-hand-side
-     call compute_fem_rhs(this, f, deg, this%work)
+     call compute_fem_rhs(this, func, degree, this%work)
 
      ! Multiply by inverse mass matrix (! complex numbers stored in real array with fftpack ordering)
      eigvals=0_f64
-     if (deg == this%s_deg_0) then
+     if (degree == this%s_deg_0) then
         eigvals(1) = 1.0_f64 / this%eig_mass0(1)
         do i=1,this%n_dofs/2
            eigvals(2*i) = 1.0_f64 / this%eig_mass0(2*i)
         end do
-     elseif  (deg == this%s_deg_0-1) then
+     elseif  (degree == this%s_deg_0-1) then
         eigvals(1) = 1.0_f64 / this%eig_mass1(1)
         do i=1,this%n_dofs/2
            eigvals(2*i) = 1.0_f64 / this%eig_mass1(2*i)
         end do
      else
-        print*, 'degree ', deg, 'not availlable in maxwell_1d_fem object' 
+        print*, 'degree ', degree, 'not availlable in maxwell_1d_fem object' 
      endif
 
-     call solve_circulant(this, eigvals, this%work, scoef)
+     call solve_circulant(this, eigvals, this%work, coefs_dofs)
 
-   end subroutine L2projection
+   end subroutine L2projection_1d_fem
 
    !> Compute square of the L2norm 
-   function L2norm(this, val_dofs, form) 
+   function L2norm_squarred_1d_fem(this, coefs_dofs, degree) result (r)
      class(sll_maxwell_1d_fem) :: this !< Maxwell solver object
-     sll_real64 :: val_dofs(this%n_dofs) !< Coefficient for each DoF
-     sll_int32  :: form !< Specify 0- or 1- form
-     sll_real64 :: L2norm !< Result: squared L2 norm
+     sll_real64 :: coefs_dofs(:) !< Coefficient for each DoF
+     sll_int32  :: degree !< Specify the degree of the basis functions
+     sll_real64 :: r !< Result: squared L2 norm
 
      !Local variables
      sll_int32 :: j, k
 
-     if (form == 0 ) then
-        L2norm = sum(val_dofs**2)*this%mass_0(1)*0.5_f64
+     if (degree == this%s_deg_0 ) then
+        r = sum(coefs_dofs**2)*this%mass_0(1)*0.5_f64
      
         do j = 2,this%s_deg_0+1
-           L2norm = L2norm + this%mass_0(j)*sum(val_dofs(1:this%n_dofs-j+1)*val_dofs(j:this%n_dofs))
+           r = r + this%mass_0(j)*sum(coefs_dofs(1:this%n_dofs-j+1)*coefs_dofs(j:this%n_dofs))
            do k= 1,j-1
-              L2norm = L2norm + this%mass_0(j)*val_dofs(this%n_dofs-j+1+k)*val_dofs(k)
+              r = r + this%mass_0(j)*coefs_dofs(this%n_dofs-j+1+k)*coefs_dofs(k)
            end do
         end do
-     elseif (form == 1) then
-         L2norm = sum(val_dofs**2)*this%mass_1(1)*0.5_f64
+     elseif (degree == this%s_deg_1) then
+         r = sum(coefs_dofs**2)*this%mass_1(1)*0.5_f64
      
         do j = 2,this%s_deg_0
-           L2norm = L2norm + this%mass_1(j)*sum(val_dofs(1:this%n_dofs-j+1)*val_dofs(j:this%n_dofs))
+           r = r + this%mass_1(j)*sum(coefs_dofs(1:this%n_dofs-j+1)*&
+                coefs_dofs(j:this%n_dofs))
            do k= 1,j-1
-              L2norm = L2norm + this%mass_1(j)*val_dofs(this%n_dofs-j+1+k)*val_dofs(k)
+              r = r + this%mass_1(j)*coefs_dofs(this%n_dofs-j+1+k)*coefs_dofs(k)
            end do
         end do
      end if
 
-     L2norm = L2norm*this%delta_x*2.0_f64
+     r = r*this%delta_x*2.0_f64
         
-   end function L2norm
+   end function L2norm_squarred_1d_fem
 
 
    function sll_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(this)

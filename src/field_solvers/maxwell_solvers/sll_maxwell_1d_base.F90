@@ -8,6 +8,8 @@ module sll_m_maxwell_1d_base
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
+  use gauss_legendre_integration, only: function_1d_legendre
+
   implicit none
   private
   public :: sll_plot_two_fields_1d
@@ -25,13 +27,44 @@ module sll_m_maxwell_1d_base
           compute_E_from_j !< Solve E from time integrated current (second part of Ampere's law)
      !procedure(signature_solve), deferred :: &
      !     solve !< Solve Amperes law and Faraday equation
+     procedure(update_dofs_function), deferred :: &
+          compute_rhs_from_function !< Compute the right-hand-side for a given function f. For Galerkin this is the inner product with the basis functions. For Collocation this is simply a function evaluation at the grid points.
+     procedure(norm_squarred), deferred :: &
+          L2norm_squarred !< Square of the L2norm
+     procedure(update_dofs_function), deferred :: &
+            L2projection !< L2 projection
+
   end type sll_maxwell_1d_base
 
+!---------------------------------------------------------------------------!
+  abstract interface
+     function norm_squarred(this, coefs_dofs, degree) result( r )
+       use sll_working_precision
+       import sll_maxwell_1d_base
+       class( sll_maxwell_1d_base)                    :: this !< Maxwell solver object.
+       sll_real64                                     :: coefs_dofs(:) !< Values of the coefficient vectors for each DoF
+       sll_int32                                      :: degree !< Degree of the basis function used for whcih the DoF-coefficients are given.
+       sll_real64                                     :: r
+     end function norm_squarred
+  end interface
+
+!---------------------------------------------------------------------------!
+  abstract interface
+     subroutine update_dofs_function(this, func, degree, coefs_dofs)
+       use sll_working_precision
+       import sll_maxwell_1d_base
+       class( sll_maxwell_1d_base)                    :: this !< Maxwell solver object.
+       procedure(function_1d_legendre)                :: func !< Function to be projected.
+       sll_int32, intent(in)                          :: degree !< Degree of the basis function that should be used for projection.
+       sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+     end subroutine update_dofs_function
+  end interface
+  
+!---------------------------------------------------------------------------!
   abstract interface 
      subroutine compute_field1_from_field2(this, delta_t, field_in, field_out)
      use sll_working_precision
-     import sll_maxwell_1d_base
-     
+     import sll_maxwell_1d_base     
      class(sll_maxwell_1d_base) :: this
      sll_real64, intent(in)     :: delta_t
      sll_real64, intent(in)     :: field_in(:)
