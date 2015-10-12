@@ -5,11 +5,6 @@ if( MPI_ENABLED )
   set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
   add_subdirectory( pic_1d_sheath )
   add_subdirectory( pic_2d_standard )
-
-  add_subdirectory( particle_initializers )
-  add_subdirectory( particle_types )
-  add_subdirectory( kernel_smoother )
+  add_subdirectory( pic_basic )
   add_subdirectory( maxwell_kernel )
-  add_subdirectory( particle_pushers )
 endif( MPI_ENABLED )
-
