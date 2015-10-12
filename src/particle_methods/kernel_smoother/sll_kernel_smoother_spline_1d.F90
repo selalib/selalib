@@ -38,8 +38,7 @@ module sll_m_kernel_smoother_spline_1d
      procedure :: compute_shape_factors => compute_shape_factors_spline_1d
      procedure :: accumulate_rho_from_klimontovich => accumulate_rho_from_klimontovich_spline_1d
      procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_1d
-     procedure :: evaluate_kernel_function => evaluate_kernel_function_spline_1d
-
+     procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_1d
 
   end type sll_kernel_smoother_spline_1d
   
@@ -122,27 +121,26 @@ contains
   end subroutine accumulate_j_from_klimontovich_spline_1d
   
   !---------------------------------------------------------------------------!
-  subroutine evaluate_kernel_function_spline_1d(this, particle_group, rho_dofs, particle_values)
+  subroutine evaluate_kernel_function_particle_spline_1d(this, rho_dofs, i_part, particle_value)
     class( sll_kernel_smoother_spline_1d), intent(in)    :: this
-    class( sll_particle_group_base), intent(in)     :: particle_group
-    sll_real64, intent(in)                       :: rho_dofs(:)
-    sll_real64, intent(out)                      :: particle_values(:)
-    
+    sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
+    sll_int32, intent(in)                        :: i_part !< particle number
+    sll_real64, intent(out)                      :: particle_value !< Value of the function at the position of particle \a i_part
+  
     !local variables
-    sll_int32 :: i_part, i1
+    sll_int32 :: i1
     sll_int32 :: index1d
 
-    do i_part = 1, particle_group%n_particles
-       particle_values(i_part) = 0.0_f64
-       do i1 = 1, this%n_span
-          index1d = modulo(this%index_grid(1,i_part)+i1-2, this%n_grid(1))+1
-          particle_values(i_part ) = particle_values(i_part) + &
-               rho_dofs(index1d) *  &
-               this%values_grid(i1,1, i_part)
-       end do
+    particle_value = 0.0_f64
+    do i1 = 1, this%n_span
+       index1d = modulo(this%index_grid(1,i_part)+i1-2, this%n_grid(1))+1
+       particle_value = particle_value + &
+            rho_dofs(index1d) *  &
+            this%values_grid(i1,1, i_part)
     end do
 
-  end subroutine evaluate_kernel_function_spline_1d
+  end subroutine evaluate_kernel_function_particle_spline_1d
+
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 

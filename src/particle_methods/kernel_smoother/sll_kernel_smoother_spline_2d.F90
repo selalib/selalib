@@ -38,7 +38,7 @@ module sll_m_kernel_smoother_spline_2d
      procedure :: compute_shape_factors => compute_shape_factors_spline_2d
      procedure :: accumulate_rho_from_klimontovich => accumulate_rho_from_klimontovich_spline_2d
      procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_2d
-     procedure :: evaluate_kernel_function => evaluate_kernel_function_spline_2d
+     procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_2d
 
      !procedure :: initialize => initialize_smoother_spline_2d
 
@@ -137,33 +137,32 @@ contains
 
   end subroutine accumulate_j_from_klimontovich_spline_2d
   
+
   !---------------------------------------------------------------------------!
-  subroutine evaluate_kernel_function_spline_2d(this, particle_group, rho_dofs, particle_values)
+  subroutine evaluate_kernel_function_particle_spline_2d(this, rho_dofs, i_part, particle_value)
     class( sll_kernel_smoother_spline_2d), intent(in)    :: this
-    class( sll_particle_group_base), intent(in)     :: particle_group
-    sll_real64, intent(in)                       :: rho_dofs(:)
-    sll_real64, intent(out)                      :: particle_values(:)
+    sll_real64, intent(in)                               :: rho_dofs(:) !< Degrees of freedom in kernel representation.
+    sll_int32, intent(in)                                :: i_part !< particle number
+    sll_real64, intent(out)                              :: particle_value !< Value of the function at the position of particle \a i_part
     
     !local variables
-    sll_int32 :: i_part, i1, i2, index2d
+    sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
 
-    do i_part = 1, particle_group%n_particles
-       particle_values(i_part) = 0.0_f64
-       do i1 = 1, this%n_span
-          index1d(1) = this%index_grid(1,i_part)+i1-2
-          do i2 = 1, this%n_span
-             index1d(2) = this%index_grid(2,i_part)+i2-2
-             index2d = index_1dto2d_column_major(this,index1d)
-             particle_values(i_part ) = particle_values(i_part) + &
-                  rho_dofs(index2d) *  &
-                  this%values_grid(i1,1, i_part) *&
-                  this%values_grid(i2, 2, i_part)
-          end do
+    particle_value = 0.0_f64
+    do i1 = 1, this%n_span
+       index1d(1) = this%index_grid(1,i_part)+i1-2
+       do i2 = 1, this%n_span
+          index1d(2) = this%index_grid(2,i_part)+i2-2
+          index2d = index_1dto2d_column_major(this,index1d)
+          particle_value = particle_value + &
+               rho_dofs(index2d) *  &
+               this%values_grid(i1,1, i_part) *&
+               this%values_grid(i2, 2, i_part)
        end do
     end do
 
-  end subroutine evaluate_kernel_function_spline_2d
+  end subroutine evaluate_kernel_function_particle_spline_2d
 
 ! Version as a subroutine. Not up to date with sll_new function.
 !!$  subroutine initialize_smoother_spline_2d(this, domain, n_grid, no_particles, spline_degree)
