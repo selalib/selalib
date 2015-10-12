@@ -15,9 +15,10 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_characteristics_1d_explicit_euler_conservative
+program test_characteristics_1d_explicit_euler
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_explicit_euler_conservative
+use sll_m_characteristics_1d_base
+use sll_m_characteristics_1d_explicit_euler
 use sll_boundary_condition_descriptors
 
 implicit none
@@ -31,18 +32,19 @@ implicit none
   sll_int32 :: i
   sll_real64 :: dt
   sll_real64 :: err
+  sll_real64 :: tmp
 
   
   
   
-  Npts = 101
-  dt = 0._f64 !0.1_f64
+  Npts = 28
+  dt = 0.1_f64
   
   
   !initialization for explicit_euler_1d
   
   euler => &
-    new_explicit_euler_conservative_1d_charac(&
+    new_explicit_euler_1d_charac(&
       Npts, &
       SLL_PERIODIC)
 
@@ -78,14 +80,14 @@ implicit none
       
   err = 0._f64
   
-!  do i=1,Npts   
-!    tmp = input(i)-dt*A(i)
-!    tmp = tmp-floor(tmp)
-!    tmp=abs(tmp-output(i))
-!    if(tmp>err)then
-!        err=tmp
-!    endif
-!  enddo
+  do i=1,Npts   
+    tmp = input(i)-dt*A(i)
+    tmp = tmp-floor(tmp)
+    tmp=abs(tmp-output(i))
+    if(tmp>err)then
+        err=tmp
+    endif
+  enddo
   
   print *,'#err=',err
   
@@ -97,4 +99,4 @@ implicit none
     print *, '#PASSED'
   endif
 
-end program
+end program test_characteristics_1d_explicit_euler
