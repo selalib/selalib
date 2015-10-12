@@ -1,4 +1,4 @@
-module sll_m_coordinate_transformations_2d
+module sll_m_coordinate_transformations_2d_hex
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -1644,4 +1644,4 @@ contains
     mesh_2d_jacobian_cell = transf%jacobians_c(i,j)
   end function mesh_2d_jacobian_cell
 #endif
-end module sll_m_coordinate_transformations_2d
+end module sll_m_coordinate_transformations_2d_hex
