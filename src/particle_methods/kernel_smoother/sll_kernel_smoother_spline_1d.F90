@@ -15,7 +15,7 @@ module sll_m_kernel_smoother_spline_1d
   private
 
   public :: sll_new_smoother_spline_1d
-  
+
   !>  Spline kernel smoother in1d.
   type, public, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_1d
 
@@ -29,6 +29,7 @@ module sll_m_kernel_smoother_spline_1d
      ! 
      sll_int32 :: spline_degree !< Degree of smoothing kernel spline
      sll_int32 :: n_span !< Number of intervals where spline non zero (spline_degree + 1)
+     sll_int32 :: smoothing_type !< Defines whether we use Galerkin or collocation in order to decide on scaling when accumulating
 
      ! Sparse structure for shape factors
      sll_int32,  allocatable :: index_grid(:,:)    !< First dof index with contribution from th
@@ -84,12 +85,14 @@ contains
           index1d = modulo(this%index_grid(1,i_part)+i1-2,this%n_grid(1))+1
           rho_dofs(index1d) = rho_dofs(index1d) +&
                (particle_group%get_charge(i_part) * &
-               this%values_grid(i1, 1, i_part)) *&
-               real(this%n_grid(1), f64)
+               this%values_grid(i1, 1, i_part))
        end do
     end do
 
-
+    if (this%smoothing_type == SLL_COLLOCATION) then
+       rho_dofs = rho_dofs/this%delta_x(1)
+    end if
+       
   end subroutine accumulate_rho_from_klimontovich_spline_1d
 
   !---------------------------------------------------------------------------!
@@ -112,11 +115,13 @@ contains
           j_dofs(index1d) = j_dofs(index1d) +&
                (particle_group%get_charge(i_part) * &
                vpart(component) * &
-               this%values_grid(i1,1,i_part)) *&
-               real(product(this%n_grid), f64)
+               this%values_grid(i1,1,i_part))
        end do
     end do
    
+    if (this%smoothing_type == SLL_COLLOCATION) then
+       j_dofs = j_dofs/this%delta_x(1)
+    end if
 
   end subroutine accumulate_j_from_klimontovich_spline_1d
   
@@ -144,12 +149,13 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  function sll_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree) result (this)
+  function sll_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
     class( sll_kernel_smoother_spline_1d), pointer   :: this
     sll_int32, intent(in) :: n_grid(1)
     sll_real64, intent(in) :: domain(2)
     sll_int32, intent(in) :: no_particles
     sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
+    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
 
     !local variables
     sll_int32 :: ierr
@@ -169,6 +175,9 @@ contains
     ! Initialize information on the spline
     this%spline_degree = spline_degree
     this%n_span = spline_degree + 1
+
+    ! Initialize information on smoothing type
+    this%smoothing_type = smoothing_type
 
     ! Initialize sparse structure for shape factors
     SLL_ALLOCATE(this%index_grid(1, no_particles),ierr)
