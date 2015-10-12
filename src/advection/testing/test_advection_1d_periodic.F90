@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_1d_periodic
+program test_advection_1d_periodic
 #include "sll_working_precision.h"
 use sll_m_advection_1d_base
 use sll_m_advection_1d_periodic
@@ -71,4 +71,4 @@ implicit none
     print *,'#PASSED' 
   endif
 
-end program
+end program test_advection_1d_periodic

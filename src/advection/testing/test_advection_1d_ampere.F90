@@ -15,12 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_1d_spectral
+program test_advection_1d_ampere
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
 use sll_m_advection_1d_base
-use sll_m_advection_1d_spectral
+use sll_m_advection_1d_ampere
 use sll_boundary_condition_descriptors
 
 !$ use omp_lib
@@ -29,9 +29,9 @@ implicit none
   
 type(sll_advection_1d_base_ptr), pointer  :: adv(:)
 
-sll_real64                            :: xmin
-sll_real64                            :: xmax
-sll_int32                             :: num_cells
+sll_real64                            :: xmin, vmin
+sll_real64                            :: xmax, vmax
+sll_int32                             :: nc_x, nc_v
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: input
 sll_real64, dimension(:), allocatable :: output
@@ -42,37 +42,47 @@ sll_real64                            :: err
 sll_int32                             :: ierr
 sll_int32                             :: prank = 0
 sll_int32                             :: psize = 1
+sll_int32                             :: istep
 sll_int32                             :: i
+sll_int32                             :: nstep = 100
 
-xmin      = 0.0_f64
-xmax      = 1.0_f64
-num_cells = 32
-a         = 1._f64
-dt        = 0.01_f64
-SLL_ALLOCATE(x(num_cells+1),    ierr)
-SLL_ALLOCATE(solution(num_cells+1),    ierr)
-SLL_ALLOCATE(input(num_cells+1),    ierr)
-SLL_ALLOCATE(output(num_cells+1),   ierr)
+xmin = 0.0_f64
+xmax = 1.0_f64
+nc_x = 32
+vmin = 0.0_f64
+vmax = 1.0_f64
+nc_v = 32
+a    = 1._f64
+dt   = 0.01_f64
+SLL_ALLOCATE(x(nc_x+1),    ierr)
+SLL_ALLOCATE(solution(nc_x+1),    ierr)
+SLL_ALLOCATE(input(nc_x+1),    ierr)
+SLL_ALLOCATE(output(nc_x+1),   ierr)
 
-do i = 1, num_cells+1
-  x(i) = xmin + (i-1)*(xmax-xmin)/num_cells - 0.5
+do i = 1, nc_x+1
+  x(i) = xmin + (i-1)*(xmax-xmin)/nc_x - 0.5
 end do
 
 !$OMP PARALLEL
 !$ prank = OMP_GET_THREAD_NUM()
 !$ print*, ' prank = ', prank
 !$ psize = OMP_GET_NUM_THREADS()
-!$ print*, ' psize = ', psize, xmin, xmax, num_cells
+!$ print*, ' psize = ', psize, xmin, xmax, nc_x
 
-SLL_ALLOCATE(adv(psize),ierr)
+SLL_ALLOCATE(adv(psize),            ierr)
 
-input = 1.0_f64
+solution = exp(-(x*x)/0.01)
+input = solution
 
-adv(prank+1)%ptr => new_spectral_1d_advector(num_cells, xmin, xmax) 
+adv(prank+1)%ptr => new_ampere_1d_advector(nc_x, xmin, xmax  )
 
-call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
+do istep = 1, nstep
+   call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
+   input = output
+   call sll_gnuplot_1d(output, x, 'f_ampere', istep)
+end do
 
-err = maxval(abs(output-input))
+err = maxval(abs(solution-input))
 
 print *,'# err=',err
 if(err <= 1e-3)then  
@@ -81,4 +91,4 @@ endif
 
 !$OMP END PARALLEL
 
-end program unit_test_advection_1d_spectral
+end program test_advection_1d_ampere
