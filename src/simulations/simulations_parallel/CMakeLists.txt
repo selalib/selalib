@@ -29,7 +29,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
-                         sll_field_accumulators
                          sll_interpolators
                          sll_point_to_point_communications
                          sll_splines
@@ -74,6 +73,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
     ADD_SUBDIRECTORY( sim_pic1d1v_vlasov-poisson_periodic      )
+    ADD_SUBDIRECTORY( sl_1d1v_va_cart_spectral )
 
 ENDIF()
 

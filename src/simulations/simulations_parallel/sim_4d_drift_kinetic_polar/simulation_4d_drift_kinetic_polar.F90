@@ -46,7 +46,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_test_4d_initializer
+  !use sll_test_4d_initializer
   use sll_m_poisson_2d_base
   use sll_poisson_2d_periodic_cartesian_par
   use sll_m_cubic_spline_interpolator_1d
@@ -61,6 +61,10 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_m_advection_1d_periodic
   use sll_m_poisson_2d_polar
   use sll_hermite_interpolation_2d_module
+  use sll_hdf5_io_serial
+  use sll_ascii_io
+  use sll_gnuplot
+
 
 
   implicit none
@@ -781,6 +785,7 @@ contains
       call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
       call sll_hdf5_file_close(file_id,file_err)
       
+      ierr = 1
       call sll_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
       call sll_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
       call sll_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
@@ -827,19 +832,19 @@ contains
           call sll_gnuplot_1d( &
             sim%rho3d_seqx1x2(1:nc_x1+1,1,1)/sim%n0_r(1:nc_x1+1)-1._f64, &
             'rho_0_init', &
-            ierr)
+            1)
         endif
         if(iter==2)then
           call sll_gnuplot_1d( &
             sim%rho3d_seqx1x2(1:nc_x1+1,1,1)/sim%n0_r(1:nc_x1+1)-1._f64, &
             'rho_1_init', &
-            ierr)
+            1)
         endif
         if(iter==2)then
           call sll_gnuplot_1d( &
             sim%phi3d_seqx1x2(1:nc_x1+1,1,1), &
             'phi_1', &
-            ierr)
+            1)
         endif
       endif
 
@@ -991,6 +996,7 @@ contains
         nrj
 
       if(step==0)then    
+        ierr = 1
         call sll_gnuplot_1d(sim%phi3d_seqx1x2(:,1,1),'phi_0',ierr)
         call sll_gnuplot_1d(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
         call sll_gnuplot_1d(sim%Ti_r(:),'Ti_r',ierr)

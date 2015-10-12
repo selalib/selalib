@@ -10,7 +10,7 @@ TARGET_LINK_LIBRARIES( sll_hermite_aligned_interpolation
 
 
 ADD_LIBRARY( hex_hermite STATIC sll_hex_interpolation_hermite.F90 )
-TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation sll_hex_meshes )
+TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation sll_meshes )
 
 
 ADD_LIBRARY ( euler_2d_hex STATIC euler_2d_hex.F90)
@@ -35,16 +35,16 @@ IF(BUILD_TESTING)
   # 2nd executable
   ADD_EXECUTABLE( test_hex_hermite test_hex_hermite.F90 )
   TARGET_LINK_LIBRARIES( test_hex_hermite
-    sll_hermite_interpolation 
-    hex_hermite 
-    sll_hex_meshes 
+    sll_hermite_interpolation
+    hex_hermite
+    sll_meshes
     sll_constants )
   # 2nd bis executable ( circular advection )
   ADD_EXECUTABLE( test_hex_hermite_circ test_hex_hermite_circ.F90 )
   TARGET_LINK_LIBRARIES( test_hex_hermite_circ
-    sll_hermite_interpolation 
-    hex_hermite 
-    sll_hex_meshes 
+    sll_hermite_interpolation
+    hex_hermite
+    sll_meshes
     sll_constants )
 
   # 3rd executable
@@ -56,14 +56,14 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_dimitrov sll_constants sll_memory )
 
   # 5th executable
-  ADD_EXECUTABLE( test_hex_center_guide 
-    test_hex_center_guide.F90 
+  ADD_EXECUTABLE( test_hex_center_guide
+    test_hex_center_guide.F90
     euler_2d_hex.F90
     ../utilities/pivotbande.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_center_guide 
-    sll_hermite_interpolation 
-    hex_hermite 
-    sll_hex_meshes 
+  TARGET_LINK_LIBRARIES( test_hex_center_guide
+    sll_hermite_interpolation
+    hex_hermite
+    sll_meshes
     hex_poisson
     sll_constants )
 
