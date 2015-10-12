@@ -20,7 +20,8 @@ module sll_m_kernel_smoother_base
      procedure(update_this), deferred           :: compute_shape_factors !< Prepare for the accumulation by computing the shape factors
      procedure(update_dofs), deferred           :: accumulate_rho_from_klimontovich !< Accumulate the charge density
      procedure(update_dofs_component), deferred :: accumulate_j_from_klimontovich !< Accumulate the current density
-     procedure(evaluate), deferred              :: evaluate_kernel_function !< Evaluate a function based on the given degrees of freedom
+     procedure(evaluate_particle), deferred     :: evaluate_kernel_function_particle !< Evaluate function for a certain particle based on the precomputed shape factors
+     procedure    :: evaluate_kernel_function_particles !< Evaluate function for all particle based on the precomputed shape factors
   end type sll_kernel_smoother_base
 
 !---------------------------------------------------------------------------!
@@ -64,16 +65,34 @@ module sll_m_kernel_smoother_base
 
 !---------------------------------------------------------------------------!
   abstract interface
-     subroutine evaluate(this, particle_group, rho_dofs, particle_values)       
+     subroutine evaluate_particle(this, rho_dofs, i_part, particle_value)       
        use sll_working_precision
-       import sll_particle_group_base
        import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
+       class( sll_kernel_smoother_base), intent(in) :: this !< Kernel smoother object.
        sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
-       sll_real64, intent(out)                      :: particle_values(:) !< Values of the function represented by \a rho_dofs at particle positions.
-     end subroutine evaluate
+       sll_int32, intent(in)                        :: i_part !< particle number
+       sll_real64, intent(out)                      :: particle_value !< Value of the function at the position of particle \a i_part
+     end subroutine evaluate_particle
   end interface
+
+contains
+  
+  !---------------------------------------------------------------------------!
+  subroutine evaluate_kernel_function_particles(this, particle_group, rho_dofs, particle_values)       
+    class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
+    class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
+    sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
+    sll_real64, intent(out)                      :: particle_values(:) !< Values of the function represented by \a rho_dofs at particle positions.
+    
+    !local variables
+    sll_int32 :: i_part
+    
+    do i_part = 1, particle_group%n_particles
+       call this%evaluate_kernel_function_particle(rho_dofs, i_part, particle_values(i_part))
+    end do
+    
+  end subroutine evaluate_kernel_function_particles
+
 
 
 end module sll_m_kernel_smoother_base
