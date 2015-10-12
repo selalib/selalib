@@ -31,7 +31,6 @@ ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
 TARGET_LINK_LIBRARIES( sll_advection
                        sll_meshes
-                       sll_tri_meshes
                        sll_characteristics
                        sll_interpolators
                        sll_periodic_interpolation

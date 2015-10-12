@@ -256,7 +256,15 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_right
  
     field%func      => func
-    if (present(func_params)) field%params    => func_params   
+    if (present( func_params )) then
+      field%params  => func_params
+    else
+      ! Allocate an empty array in order to avoid passing a non associated
+      ! pointer to 'func', which has a non-pointer array dummy argument.
+      ! Note that ifort segfaults without the following line!
+      ! [YG - 06.10.2015]
+      allocate( field%params(0) )
+    end if
     field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right
@@ -267,7 +275,7 @@ contains   ! *****************************************************************
     end if
   end subroutine initialize_scalar_field_1d_analytic
 
-  
+
   ! The following pair of subroutines are tricky. We want them as general 
   ! services by the fields, hence we need this subroutine interface, yet
   ! we would also like a flexibility in how the derivatives are computed.

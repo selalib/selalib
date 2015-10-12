@@ -1,4 +1,4 @@
-module sll_test_4d_initializer
+module sll_distribution_function_initializer_4d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -342,4 +342,4 @@ contains
 
 
 
-end module sll_test_4d_initializer
+end module sll_distribution_function_initializer_4d
