@@ -11,6 +11,12 @@ module sll_m_kernel_smoother_base
   implicit none
   private
 
+  public :: SLL_GALERKIN, SLL_COLLOCATION
+  
+  ! Define parameters to set if Galerkin or collocation scaling should be used in accumulation routines
+  sll_int32, parameter :: SLL_GALERKIN = 0
+  sll_int32, parameter :: SLL_COLLOCATION = 1
+
   !> Basic type of a kernel smoother used for PIC simulations
   type, public, abstract :: sll_kernel_smoother_base
      sll_int32              :: n_dofs  !< Number of degrees of freedom of the smoothing kernels.
