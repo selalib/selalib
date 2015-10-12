@@ -1,5 +1,5 @@
 !> @internal [example]
-program unit_test_cartesian_meshes
+program test_cartesian_meshes
 #include "sll_working_precision.h"
 
 use sll_cartesian_meshes
@@ -56,5 +56,5 @@ call sll_delete(mv)
 
 print *, 'PASSED'
 
-end program unit_test_cartesian_meshes
+end program test_cartesian_meshes
 !> @internal [example]

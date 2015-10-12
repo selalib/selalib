@@ -49,7 +49,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d.F90
-    ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/field_solvers/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
@@ -94,8 +93,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/meshes/sll_triangular_meshes.F90
-    ${SLL_DIR}/meshes/sll_hex_meshes.F90
-    ${SLL_DIR}/fields/scalar_field_initializer_base.F90
+    ${SLL_DIR}/meshes/sll_hexagonal_meshes.F90
+    ${SLL_DIR}/fields/parallel_scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
@@ -181,7 +180,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   ${SLL_DIR}/simulations/multipatch/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_ampere_cartesian.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sl_1d1v_va_cart_spectral/simulation_2d_vlasov_ampere_cartesian.F90
   ${SLL_DIR}/simulations/multipatch/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)

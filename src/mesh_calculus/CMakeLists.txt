@@ -5,7 +5,7 @@ ENDIF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
 ADD_LIBRARY(sll_mesh_calculus STATIC sll_mesh_calculus_module.F90 )
 
 TARGET_LINK_LIBRARIES(sll_mesh_calculus sll_coordinate_transformations
-                                        sll_tri_meshes
+                                        sll_meshes
                                         sll_integration
                                         sll_assert
                                         sll_working_precision)

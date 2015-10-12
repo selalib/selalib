@@ -1,8 +1,7 @@
 program test_tri_poisson
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-                        
-use sll_hex_meshes
+use sll_hexagonal_meshes
 use tri_poisson
 use sll_triangular_meshes
 use sll_mesh_calculus_2d_module

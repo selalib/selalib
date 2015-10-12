@@ -439,6 +439,6 @@ subroutine doubcfftinv(this,array)
 
 end subroutine doubcfftinv
 
-end module sll_poisson_2D_periodic_fftpack
+end module sll_poisson_2d_periodic_fftpack
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

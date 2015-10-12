@@ -13,7 +13,7 @@ module fekete_integration
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
 
   implicit none
 

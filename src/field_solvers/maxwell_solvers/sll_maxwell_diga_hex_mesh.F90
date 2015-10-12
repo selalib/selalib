@@ -6,7 +6,7 @@ module sll_maxwell_diga_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_hex_meshes
+use sll_hexagonal_meshes
 use triangle_dg_matrices,     only: ElementRef, AssMatElem
 
 implicit none

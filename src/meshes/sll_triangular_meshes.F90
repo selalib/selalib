@@ -179,7 +179,7 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
   type(sll_triangular_mesh_2d),      pointer :: tri_mesh
 
@@ -850,7 +850,9 @@ integer          :: iout = 6
 integer          :: imxref
 
 write(iout,"(/////10x,'>>> Read mesh from file <<<'/)")
+print *, " will open : ", maafil
 open(nfmaa,file=maafil,status='OLD',err=80)
+print *, " opened    : ", maafil
 write(*,1050,advance='no') trim(maafil)
 
 write(iout,"(10x,'Open the file'                      &

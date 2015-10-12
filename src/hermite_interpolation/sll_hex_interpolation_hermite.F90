@@ -3,7 +3,7 @@ module sll_interpolation_hex_hermite
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   use sll_hermite_interpolation_2d_module
   implicit none
 

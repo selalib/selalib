@@ -6,7 +6,7 @@ program sim2d_gc_hex_hermite
 
   use sll_constants
   use euler_2d_hex
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   use hex_poisson
   use pivotbande
   use sll_interpolation_hex_hermite
