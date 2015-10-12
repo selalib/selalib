@@ -15,24 +15,22 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_1d_CSL_periodic
+program test_advection_1d_PSM
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_m_advection_1d_CSL_periodic
-use sll_m_characteristics_1d_explicit_euler
-use sll_m_cubic_spline_interpolator_1d
+use sll_m_advection_1d_PSM
 
 implicit none
   
   class(sll_advection_1d_base), pointer :: adv
-  class(sll_interpolator_1d_base), pointer :: interp
-  class(sll_characteristics_1d_base), pointer :: charac
   sll_real64 :: x_min
   sll_real64 :: x_max
+  sll_real64 :: x_min_bis
+  sll_real64 :: x_max_bis
   sll_int32 :: num_cells
   sll_real64, dimension(:), allocatable :: input
   sll_real64, dimension(:), allocatable :: output
-  sll_real64, dimension(:), pointer :: mesh
+  !sll_real64, dimension(:), pointer :: mesh
   sll_real64 :: dt
   sll_real64,dimension(:), allocatable :: A
   sll_real64 :: err
@@ -42,19 +40,21 @@ implicit none
   
   x_min = 0._f64
   x_max = 1._f64
-  num_cells = 32
-  dt = 0.1_f64
+  num_cells = 100
+  dt = 0._f64 !0.1_f64
   
   delta = (x_max-x_min)/real(num_cells,f64)
-  SLL_ALLOCATE(mesh(num_cells+1),ierr)
+  !SLL_ALLOCATE(mesh(num_cells+1),ierr)
   SLL_ALLOCATE(input(num_cells+1),ierr)
   SLL_ALLOCATE(output(num_cells+1),ierr)
   SLL_ALLOCATE(A(num_cells+1),ierr)
 
-  do i=1,num_cells+1
-    mesh(i) = x_min+real(i-1,f64)*delta
-  enddo
+  !do i=1,num_cells+1
+  !  mesh(i) = x_min+real(i-1,f64)*delta
+  !enddo
 
+  x_min_bis = x_min -0.5_f64*delta
+  x_max_bis = x_max -0.5_f64*delta
   
   input = 1._f64
 
@@ -62,25 +62,18 @@ implicit none
 
   err=0._f64
 
-
-  interp => new_cubic_spline_interpolator_1d( &
-    num_cells+1, &
-    x_min, &
-    x_max, &
-    SLL_PERIODIC)
-
-
-  charac => new_explicit_euler_1d_charac(&
-      num_cells+1, &
-      SLL_PERIODIC)
   
-  adv => new_CSL_periodic_1d_advector(&
-    interp, &
-    charac, &
+  adv => new_PSM_1d_advector(&
     num_cells+1, &
-    eta_coords = mesh)
-  
+    eta_min = x_min, &
+    eta_max = x_max)
+
+
   call adv%advect_1d(A, dt, input, output)
+  
+  do i=1,num_cells+1
+    print *,i,input(i),output(i)
+  enddo
   
   err=maxval(abs(input-output))
   
@@ -89,4 +82,4 @@ implicit none
     print *,'#PASSED' 
   endif
 
-end program
+end program test_advection_1d_PSM

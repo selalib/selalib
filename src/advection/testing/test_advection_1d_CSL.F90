@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_1d_CSL
+program test_advection_1d_CSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_m_advection_1d_CSL
@@ -133,4 +133,4 @@ implicit none
     print *,'#PASSED' 
   endif
 
-end program
+end program test_advection_1d_CSL

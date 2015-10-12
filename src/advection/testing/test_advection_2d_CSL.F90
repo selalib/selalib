@@ -15,20 +15,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_2d_integer_oblic
+program test_advection_2d_CSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_m_advection_2d_integer_oblic
-use sll_m_characteristics_2d_explicit_euler
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_advection_1d_periodic
+use sll_m_advection_2d_CSL
+use sll_m_characteristics_2d_explicit_euler_conservative
 
 implicit none
   
-  type(integer_oblic_2d_advector), pointer :: adv
-  class(sll_advection_1d_base), pointer :: adv_x1
-  class(sll_advection_1d_base), pointer :: adv_aligned
-  class(sll_interpolator_2d_base), pointer :: interp
+  class(sll_advection_2d_base), pointer :: adv
   class(sll_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -41,13 +36,13 @@ implicit none
   sll_real64, dimension(:), pointer :: x1_mesh
   sll_real64, dimension(:), pointer :: x2_mesh
   sll_real64 :: dt
-  sll_real64,dimension(:,:), allocatable :: phi
+  sll_real64,dimension(:,:), allocatable :: A1
+  sll_real64,dimension(:,:), allocatable :: A2
   sll_real64 :: err
   sll_int32 :: ierr
   sll_int32 :: i
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
-  sll_int32 :: shift
   
   x1_min = 0._f64
   x1_max = 1._f64
@@ -55,8 +50,7 @@ implicit none
   x2_max = 1._f64
   num_cells_x1 = 32
   num_cells_x2 = 32
-  dt = 0.1_f64
-  shift = 0
+  dt = 0.1_f64 !0.1_f64
   
   delta_x1 = (x1_max-x1_min)/real(num_cells_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(num_cells_x2,f64)
@@ -64,7 +58,8 @@ implicit none
   SLL_ALLOCATE(x2_mesh(num_cells_x2+1),ierr)
   SLL_ALLOCATE(input(num_cells_x1+1,num_cells_x2+1),ierr)
   SLL_ALLOCATE(output(num_cells_x1+1,num_cells_x2+1),ierr)
-  SLL_ALLOCATE(phi(num_cells_x1+1,num_cells_x2+1),ierr)
+  SLL_ALLOCATE(A1(num_cells_x1+1,num_cells_x2+1),ierr)
+  SLL_ALLOCATE(A2(num_cells_x1+1,num_cells_x2+1),ierr)
 
   do i=1,num_cells_x1+1
     x1_mesh(i) = x1_min+real(i-1,f64)*delta_x1
@@ -77,54 +72,28 @@ implicit none
   
   input = 1._f64
 
-  phi = 1._f64
+  A1 = 1._f64
+  A2 = 1._f64
 
   err=0._f64
 
-  adv_x1 => new_periodic_1d_advector( &
-    num_cells_x1, &
-    x1_min, &
-    x1_max, &
-    SPLINE, & 
-    4) 
-
-  adv_aligned => new_periodic_1d_advector( &
-    num_cells_x1, &
-    x1_min, &
-    x1_max, &
-    SPLINE, & 
-    4) 
 
 
-  interp => new_cubic_spline_interpolator_2d( &
-    num_cells_x1+1, &
-    num_cells_x2+1, &
-    x1_min, &
-    x1_max, &
-    x2_min, &
-    x2_max, &
-    SLL_PERIODIC, &
-    SLL_PERIODIC)
 
-
-  charac => new_explicit_euler_2d_charac(&
+  charac => new_explicit_euler_conservative_2d_charac(&
       num_cells_x1+1, &
       num_cells_x2+1, &
       SLL_PERIODIC, &
       SLL_PERIODIC)
   
-  adv => new_integer_oblic_2d_advector(&
-    adv_x1, &
-    adv_aligned, &
-    interp, &
+  adv => new_CSL_2d_advector(&
     charac, &
     num_cells_x1+1, &
     num_cells_x2+1, &
     eta1_coords = x1_mesh, &
     eta2_coords = x2_mesh)
   
-  
-  call integer_oblic_advect_2d(adv, phi, shift, dt, input, output)
+  call adv%advect_2d(A1, A2, dt, input, output)
   
   err=maxval(abs(input-output))
   
@@ -133,4 +102,4 @@ implicit none
     print *,'#PASSED' 
   endif
 
-end program
+end program test_advection_2d_CSL
