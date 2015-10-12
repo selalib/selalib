@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_derivative_2d_oblic
+program test_derivative_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_m_derivative_2d_oblic
@@ -95,4 +95,4 @@ implicit none
   endif
 
 
-end program
+end program test_derivative_2d_oblic
