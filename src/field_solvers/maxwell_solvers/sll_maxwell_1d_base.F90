@@ -53,6 +53,7 @@ module sll_m_maxwell_1d_base
      subroutine update_dofs_function(this, func, degree, coefs_dofs)
        use sll_working_precision
        import sll_maxwell_1d_base
+       import function_1d_legendre
        class( sll_maxwell_1d_base)                    :: this !< Maxwell solver object.
        procedure(function_1d_legendre)                :: func !< Function to be projected.
        sll_int32, intent(in)                          :: degree !< Degree of the basis function that should be used for projection.
