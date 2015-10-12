@@ -56,7 +56,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_test_4d_initializer
+  !use sll_test_4d_initializer
   use sll_m_poisson_2d_base
   use sll_poisson_2d_periodic_cartesian_par
   use sll_m_cubic_spline_interpolator_1d
@@ -74,6 +74,9 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_fcisl_module
   use sll_m_derivative_2d_oblic
   use sll_m_advection_2d_oblic
+  use sll_ascii_io
+  use sll_hdf5_io_serial
+  use sll_gnuplot
   
   use sll_xdmf_io         , only: sll_t_hdf5_serial
   use sll_xdmf_io_parallel, only: sll_t_xdmf_parallel_file
