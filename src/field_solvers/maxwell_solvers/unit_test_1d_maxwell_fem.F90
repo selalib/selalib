@@ -116,7 +116,7 @@ program test_maxwell_1d_fem
 
   ! Compute initial fields 
   ex = 0.0_f64 ! 0-form -> splines of degree deg
-  call L2projection(maxwell_1d, cos_k, deg-1, bz) ! 0-form -> splines of degree deg-1
+  call maxwell_1d%L2projection(cos_k, deg-1, bz) ! 0-form -> splines of degree deg-1
 
   ! Time loop. Second order Strang splitting
   do istep = 1, nstep 
