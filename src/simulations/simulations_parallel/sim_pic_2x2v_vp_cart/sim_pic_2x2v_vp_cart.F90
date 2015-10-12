@@ -32,7 +32,7 @@ module sll_m_sim_pic_2x2v_vp_cart
      class(sll_particle_group_2x2v), pointer :: specific_particle_group 
 
      ! Array for efield
-     sll_real64 :: efield
+     sll_real64, pointer :: efield(:,:)
 
      ! Cartesian mesh
      type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
@@ -182,7 +182,8 @@ contains
          sim%thermal_velocity, rnd_seed)
 
     ! Initialize the time-splitting propagator
-    sim%specific_propagator => sll_new_splitting_pic_2x2v_vp(sim%poisson_solver, sim%kernel_smoother, sim%particle_group)
+    SLL_ALLOCATE(sim%efield(sim%kernel_smoother%n_dofs,2),ierr)
+    sim%specific_propagator => sll_new_splitting_pic_2x2v_vp(sim%poisson_solver, sim%kernel_smoother, sim%particle_group, sim%efield)
     sim%propagator => sim%specific_propagator
 
 
@@ -194,7 +195,7 @@ contains
 
        ! Diagnostics
        if (sim%rank == 0) then
-          eenergy = sum(sim%specific_propagator%efield1**2)*&
+          eenergy = sum(sim%efield(:,1)**2)*&
                sim%mesh%delta_eta1*sim%mesh%delta_eta2
           write(th_diag_id,'(f12.5,2g20.12)' ) real(j,f64)*sim%delta_t,  eenergy
        end if
