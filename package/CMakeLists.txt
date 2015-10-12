@@ -95,6 +95,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/meshes/sll_triangular_meshes.F90
     ${SLL_DIR}/meshes/sll_hexagonal_meshes.F90
     ${SLL_DIR}/fields/parallel_scalar_field_initializer_base.F90
+    ${SLL_DIR}/distribution_function/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
