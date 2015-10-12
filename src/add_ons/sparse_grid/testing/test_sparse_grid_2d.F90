@@ -11,9 +11,6 @@ program test_interpolation_2d
 #include "sll_constants.h"
 
 
-! TODO: Use only the SG with 8 levels and check the accuracy of the error.
-! Then do the same for 4d and 3d
-
   use sparse_grid_2d
   implicit none
 
