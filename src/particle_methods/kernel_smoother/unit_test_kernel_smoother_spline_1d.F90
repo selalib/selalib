@@ -2,6 +2,7 @@ program unit_test_kernel_smoother_spline_1d
 
 #include "sll_working_precision.h"
 
+  use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_1d  
   use sll_m_pic_base  
   use sll_m_particle_group_1d2v
@@ -71,7 +72,8 @@ program unit_test_kernel_smoother_spline_1d
 
 
   ! Initialize the kernel
-  kernel => sll_new_smoother_spline_1d(domain, [n_cells], n_particles, spline_degree)
+  kernel => sll_new_smoother_spline_1d&
+       (domain, [n_cells], n_particles, spline_degree, SLL_COLLOCATION)
 
   
   ! Compute the shape factors
@@ -98,7 +100,7 @@ program unit_test_kernel_smoother_spline_1d
   rho_dofs_ref(1) = values_grid(4,1,1)
   rho_dofs_ref(1:4) = rho_dofs_ref(1:4) + values_grid(:,1,2) + values_grid(:,1,3)
   rho_dofs_ref(5:8) = rho_dofs_ref(5:8) + values_grid(:,1,4)
-  rho_dofs_ref = rho_dofs_ref * real(n_cells,f64)/real(n_particles, f64)
+  rho_dofs_ref = rho_dofs_ref * real(n_cells,f64)/domain(2)/real(n_particles, f64)
   error = maxval(abs(rho_dofs-rho_dofs_ref))
   if (error > 1.e-14) then
      passed = .FALSE.
@@ -113,7 +115,7 @@ program unit_test_kernel_smoother_spline_1d
   j_dofs_ref(1:4) = j_dofs_ref(1:4) + values_grid(:,1,2)*v_vec(2,1) + &
        values_grid(:,1,3)*v_vec(3,1)
   j_dofs_ref(5:8) = j_dofs_ref(5:8) + values_grid(:,1,4)*v_vec(4,1)
-  j_dofs_ref = j_dofs_ref * real(n_cells,f64)/real(n_particles, f64)
+  j_dofs_ref = j_dofs_ref * real(n_cells,f64)/domain(2)/real(n_particles, f64)
   error = maxval(abs(j_dofs-j_dofs_ref))
   if (error > 1.e-14) then
      passed = .FALSE.
@@ -121,10 +123,10 @@ program unit_test_kernel_smoother_spline_1d
 
 
   ! Test function evaluation
-  call kernel%evaluate_kernel_function(particle_group, rho_dofs, &
+  call kernel%evaluate_kernel_function_particles(particle_group, rho_dofs, &
        particle_values)
   particle_values_ref = [1.1560058593749998_f64,       2.3149278428819446_f64, &
-       2.2656250000000000_f64,        1.1512586805555554_f64];
+       2.2656250000000000_f64,        1.1512586805555554_f64]/domain(2);
   error = maxval(abs(particle_values-particle_values_ref))
   if (error > 1.e-14) then
      passed = .FALSE.
