@@ -15,88 +15,80 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_characteristics_1d_explicit_euler
+program test_characteristics_1d_trapezoid
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_base
-use sll_m_characteristics_1d_explicit_euler
+use sll_m_characteristics_1d_trapezoid
 use sll_boundary_condition_descriptors
+use sll_m_cubic_spline_interpolator_1d
 
 implicit none
   
-  class(sll_characteristics_1d_base), pointer :: euler 
+  class(sll_characteristics_1d_base),pointer :: trap
+
   
   sll_int32 :: Npts
   sll_real64, dimension(:), allocatable :: input
   sll_real64, dimension(:), allocatable :: output
   sll_real64, dimension(:), allocatable :: A
+  !sll_int32 :: ierr
   sll_int32 :: i
   sll_real64 :: dt
   sll_real64 :: err
-  sll_real64 :: tmp
+  class(sll_interpolator_1d_base), pointer   :: A_interp
 
   
   
   
-  Npts = 28
+  Npts = 32
   dt = 0.1_f64
   
   
-  !initialization for explicit_euler_1d
+
   
-  euler => &
-    new_explicit_euler_1d_charac(&
+  !initialization for verlet
+  A_interp => new_cubic_spline_interpolator_1d( &
+    Npts, &
+    0._f64, &
+    1._f64, &
+    SLL_PERIODIC)
+
+
+
+
+
+  trap => &
+    new_trapezoid_1d_charac(&
       Npts, &
-      SLL_PERIODIC)
-
-  
-
-
-
-
-  
-      
-      
-      
+      A_interp, &
+      bc_type=SLL_PERIODIC)
+                  
 
   allocate(input(Npts))
   allocate(output(Npts))
   allocate(A(Npts))
   
+
   do i=1,Npts
     input(i) = real(i-1,f64)/real(Npts-1,f64)
   enddo
-
   
-  do i=1,Npts   
-    A(i) = -input(i)+0.5_f64
+  do i=1,Npts
+      A(i) = 1._f64 !-input(i)+0.5_f64
   enddo
-
-  call euler%compute_characteristics( &
-    A, &
-    dt, &
-    input, &
-    output)
       
       
-  err = 0._f64
+  err = 0._f64  
   
-  do i=1,Npts   
-    tmp = input(i)-dt*A(i)
-    tmp = tmp-floor(tmp)
-    tmp=abs(tmp-output(i))
-    if(tmp>err)then
-        err=tmp
-    endif
-  enddo
-  
-  print *,'#err=',err
-  
-  
-  
+  call trap%compute_characteristics( &
+      A, &
+      dt, &
+      input, &
+      output)
+
   
 
   if(err==0)then    
     print *, '#PASSED'
   endif
 
-end program
+end program test_characteristics_1d_trapezoid
