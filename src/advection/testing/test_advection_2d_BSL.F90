@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_2d_BSL
+program test_advection_2d_BSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_m_advection_2d_BSL
@@ -114,4 +114,4 @@ implicit none
     print *,'#PASSED' 
   endif
 
-end program
+end program test_advection_2d_BSL

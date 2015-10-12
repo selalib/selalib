@@ -1,4 +1,4 @@
-program unit_test_advection_2d
+program test_advection_2d_tri_mesh
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_hexagonal_meshes
@@ -88,4 +88,4 @@ do it = 1, t_mesh%num_triangles
 end do
 call sll_delete(t_mesh)
 
-end program unit_test_advection_2d
+end program test_advection_2d_tri_mesh

@@ -15,15 +15,26 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_2d_CSL
+program test_advection_2d_tensor_product
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_m_advection_2d_CSL
-use sll_m_characteristics_2d_explicit_euler_conservative
+use sll_m_advection_2d_tensor_product
+use sll_m_characteristics_2d_explicit_euler
+use sll_m_cubic_spline_interpolator_2d
+use sll_m_advection_1d_BSL
+use sll_m_characteristics_1d_explicit_euler
+use sll_m_cubic_spline_interpolator_1d
 
 implicit none
   
   class(sll_advection_2d_base), pointer :: adv
+  class(sll_advection_1d_base), pointer :: adv_x1
+  class(sll_advection_1d_base), pointer :: adv_x2
+  class(sll_interpolator_1d_base), pointer :: interp_x1
+  class(sll_interpolator_1d_base), pointer :: interp_x2
+  class(sll_characteristics_1d_base), pointer :: charac_x1
+  class(sll_characteristics_1d_base), pointer :: charac_x2
+  class(sll_interpolator_2d_base), pointer :: interp
   class(sll_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -50,7 +61,7 @@ implicit none
   x2_max = 1._f64
   num_cells_x1 = 32
   num_cells_x2 = 32
-  dt = 0.1_f64 !0.1_f64
+  dt = 0.1_f64
   
   delta_x1 = (x1_max-x1_min)/real(num_cells_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(num_cells_x2,f64)
@@ -79,20 +90,67 @@ implicit none
 
 
 
+  interp_x1 => new_cubic_spline_interpolator_1d( &
+    num_cells_x1+1, &
+    x1_min, &
+    x1_max, &
+    SLL_PERIODIC)
 
-  charac => new_explicit_euler_conservative_2d_charac(&
+
+  charac_x1 => new_explicit_euler_1d_charac(&
+      num_cells_x1+1, &
+      SLL_PERIODIC)
+  
+  adv_x1 => new_BSL_1d_advector(&
+    interp_x1, &
+    charac_x1, &
+    num_cells_x1+1, &
+    eta_coords = x1_mesh)
+
+  interp_x2 => new_cubic_spline_interpolator_1d( &
+    num_cells_x2+1, &
+    x2_min, &
+    x2_max, &
+    SLL_PERIODIC)
+
+
+  charac_x2 => new_explicit_euler_1d_charac(&
+      num_cells_x2+1, &
+      SLL_PERIODIC)
+  
+  adv_x2 => new_BSL_1d_advector(&
+    interp_x2, &
+    charac_x2, &
+    num_cells_x2+1, &
+    eta_coords = x2_mesh)
+
+
+
+
+
+  interp => new_cubic_spline_interpolator_2d( &
+    num_cells_x1+1, &
+    num_cells_x2+1, &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max, &
+    SLL_PERIODIC, &
+    SLL_PERIODIC)
+
+
+  charac => new_explicit_euler_2d_charac(&
       num_cells_x1+1, &
       num_cells_x2+1, &
       SLL_PERIODIC, &
       SLL_PERIODIC)
   
-  adv => new_CSL_2d_advector(&
-    charac, &
+  adv => new_tensor_product_2d_advector(&
+    adv_x1, &
+    adv_x2, &
     num_cells_x1+1, &
-    num_cells_x2+1, &
-    eta1_coords = x1_mesh, &
-    eta2_coords = x2_mesh)
-  
+    num_cells_x2+1)
+    
   call adv%advect_2d(A1, A2, dt, input, output)
   
   err=maxval(abs(input-output))
@@ -102,4 +160,4 @@ implicit none
     print *,'#PASSED' 
   endif
 
-end program
+end program test_advection_2d_tensor_product
