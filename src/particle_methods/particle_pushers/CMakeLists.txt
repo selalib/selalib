@@ -1,5 +1,6 @@
 ADD_LIBRARY(sll_particle_pushers STATIC sll_operator_splitting_pic_2x2v_vp.F90 
-  sll_operator_splitting_pic_1d2v_vm.F90)
+  sll_operator_splitting_pic_1d2v_vm.F90
+  sll_operator_splitting_cef_pic_1d2v_vm.F90)
 
 TARGET_LINK_LIBRARIES( sll_particle_pushers
   sll_memory

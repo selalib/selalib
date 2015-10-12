@@ -2,7 +2,7 @@
 !> @author Katharina Kormann
 !> @brief Particle pusher based on operator splitting for 1d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
-module sll_m_operator_splitting_pic_1d2v_vm
+module sll_m_operator_splitting_cef_pic_1d2v_vm
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -14,14 +14,14 @@ module sll_m_operator_splitting_pic_1d2v_vm
   use sll_m_kernel_smoother_base
   use sll_collective
   use sll_arbitrary_degree_splines
-  
-  use sll_m_maxwell_1d_base
   use sll_m_operator_splitting_base
+
+  use sll_m_maxwell_1d_base
 
   implicit none
 
   !> Operator splitting type for Vlasov-Maxwell 1d2v
-  type, extends(sll_t_operator_splitting_base) :: sll_operator_splitting_pic_1d2v_vm
+  type, extends(sll_t_operator_splitting_base) :: sll_operator_splitting_cef_pic_1d2v_vm
      class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
@@ -43,41 +43,46 @@ module sll_m_operator_splitting_pic_1d2v_vm
 
    contains
      procedure :: operatorHp1 => operatorHp1_pic_1d2v_vm  !< Operator for H_p1 part
-     procedure :: operatorHp2 => operatorHp2_pic_1d2v_vm  !< Operator for H_p2 part
      procedure :: operatorHE => operatorHE_pic_1d2v_vm  !< Operator for H_E part
      procedure :: operatorHB => operatorHB_pic_1d2v_vm  !< Operator for H_B part
-     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm
      procedure :: strang_splitting => strang_splitting_pic_1d2v_vm
+     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm
      procedure :: update_jv
 
-  end type sll_operator_splitting_pic_1d2v_vm
+  end type sll_operator_splitting_cef_pic_1d2v_vm
 
 contains
 
   subroutine strang_splitting_pic_1d2v_vm(this,dt, number_steps)
-    class(sll_operator_splitting_pic_1d2v_vm) :: this !< time splitting object 
+    class(sll_operator_splitting_cef_pic_1d2v_vm) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
     sll_int32, intent(in)  :: number_steps !< number of time steps
 
-    call this%operatorHp1(0.5_f64*dt)
-    call this%operatorHp2(0.5_f64*dt)
-    call this%operatorHE(0.5_f64*dt)
-    call this%operatorHB(dt)
-    call this%operatorHE(0.5_f64*dt)
-    call this%operatorHp2(0.5_f64*dt)
-    call this%operatorHp1(0.5_f64*dt)
+    sll_int32 :: i
+
+    do i=1,number_steps
+       call this%operatorHp1(0.5_f64*dt)
+       call this%operatorHE(0.5_f64*dt)
+       call this%operatorHB(dt)
+       call this%operatorHE(0.5_f64*dt)
+       call this%operatorHp1(0.5_f64*dt)
+    end do
 
   end subroutine strang_splitting_pic_1d2v_vm
 
-  subroutine lie_splitting_pic_1d2v_vm(this,dt, number_steps)
-    class(sll_operator_splitting_pic_1d2v_vm) :: this !< time splitting object 
+  !---------------------------------------------------------------------------!  
+ subroutine lie_splitting_pic_1d2v_vm(this,dt, number_steps)
+    class(sll_operator_splitting_cef_pic_1d2v_vm) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
     sll_int32, intent(in)  :: number_steps !< number of time steps
 
-    call this%operatorHp1(dt)
-    call this%operatorHp2(dt)
-    call this%operatorHE(dt)
-    call this%operatorHB(dt)
+    sll_int32 :: i
+
+    do i=1,number_steps
+       call this%operatorHp1(dt)
+       call this%operatorHE(dt)
+       call this%operatorHB(dt)
+    end do
 
   end subroutine lie_splitting_pic_1d2v_vm
 
@@ -88,7 +93,7 @@ contains
   !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
   !> \partial_t B = 0 => B_new = B_old 
   subroutine operatorHp1_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+    class(sll_operator_splitting_cef_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -139,26 +144,24 @@ contains
 
        if (index_old == index_new) then
           if (r_old < r_new) then
-             call this%update_jv(r_old, r_new, index_old, wi, 1.0_f64, vi(2))
+             call this%update_jv(r_old, r_new, index_old, wi, 1.0_f64, vi)
           else
-             call this%update_jv(r_new, r_old, index_old, wi, -1.0_f64, vi(2))
+             call this%update_jv(r_new, r_old, index_old, wi, -1.0_f64, vi)
           end if
        elseif (index_old < index_new) then
-          call this%update_jv (r_old, 1.0_f64, index_old, wi, 1.0_f64, vi(2))
-          call this%update_jv (0.0_f64, r_new, index_new, wi, 1.0_f64, vi(2))
+          call this%update_jv (r_old, 1.0_f64, index_old, wi, 1.0_f64, vi)
+          call this%update_jv (0.0_f64, r_new, index_new, wi, 1.0_f64, vi)
           do ind = index_old+1, index_new-1
-             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, 1.0_f64, vi(2))
+             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, 1.0_f64, vi)
           end do
        else
-          call this%update_jv (r_new, 1.0_f64, index_new, wi, -1.0_f64, vi(2))
-          call this%update_jv (0.0_f64, r_old, index_old, wi, -1.0_f64, vi(2))
+          call this%update_jv (r_new, 1.0_f64, index_new, wi, -1.0_f64, vi)
+          call this%update_jv (0.0_f64, r_old, index_old, wi, -1.0_f64, vi)
           do ind = index_new+1, index_old-1
-             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, -1.0_f64, vi(2))
+             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, -1.0_f64, vi)
           end do
        end if
              
-
-       call this%particle_group%set_v(i_part, vi)
 
     end do
 
@@ -166,10 +169,13 @@ contains
     ! MPI to sum up contributions from each processor
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
+    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,2), &
+         n_cells, MPI_SUM, this%j_dofs(:,2))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
     !this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
+    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,2), 2, this%efield_dofs(:,2))
 
     ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
    call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
@@ -178,15 +184,14 @@ contains
  end subroutine operatorHp1_pic_1d2v_vm
 
  ! TODO: This is hard coded for quadratic, cubic splines. Make general.
-! TODO: VZ unklar.
  subroutine update_jv(this, lower, upper, index, weight, sign, vi)
-   class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+   class(sll_operator_splitting_cef_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
    sll_real64, intent(in) :: lower
    sll_real64, intent(in) :: upper
    sll_int32,  intent(in) :: index
    sll_real64, intent(in) :: weight
    sll_real64, intent(in) :: sign
-   sll_real64, intent(inout) :: vi
+   sll_real64, intent(in) :: vi(3)
 
    !Local variables
    sll_real64 :: m, c, y1, y2, fy(this%spline_degree+1)
@@ -209,15 +214,26 @@ contains
       i_mod = modulo(i_grid, n_cells ) + 1
       this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
            weight*fy(ind)
-      vi = vi - fy(ind)*this%bfield_dofs(i_mod)
       ind = ind + 1
    end do
 
+   fy = sign*m*this%delta_x*&
+        (uniform_b_splines_at_x(this%spline_degree, y1) +&
+        uniform_b_splines_at_x(this%spline_degree, y2))
+
+   ind = 1
+   do i_grid = index - this%spline_degree, index
+      i_mod = modulo(i_grid, n_cells ) + 1
+      this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+           weight*fy(ind)*vi(2)/vi(1)
+      ind = ind + 1
+   end do
 
  end subroutine update_jv
 
+ ! TODO: Update this is from correct splitting
  subroutine operatorHp1_pic_1d2v_vm_prim(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+    class(sll_operator_splitting_cef_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -339,75 +355,6 @@ contains
 
  end subroutine operatorHp1_pic_1d2v_vm_prim
 
-
-
-
-
- !---------------------------------------------------------------------------!
-  !> Push Hf2: Equations to solve are
-  !> \partial_t f + v_1 \partial_{x_1} f = 0    -> X_new = X_old + dt V_1
-  !> \partial_t E_1 = - \int v_1 f(t,x_1, v) dv -> E_{1,new} = E_{1,old} - \int \int v_1 f(t,x_1+s v_1,v) dv ds
-  !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
-  !> \partial_t B = 0 => B_new = B_old
-  subroutine operatorHp2_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
-
-    !local variables
-    sll_int32  :: i_part, n_cells
-    sll_real64 :: vi(3), xi(3)
-    sll_real64 :: x_box, r_box
-    sll_int32  :: index_box, ind, i_mod, i_grid
-    sll_real64 :: values_0(4)
-    sll_real64 :: bfield
-
-    n_cells = this%kernel_smoother_0%n_dofs
-
-    this%j_dofs_local = 0.0_f64
-
-    ! Update v_1
-    do i_part=1,this%particle_group%n_particles
-       ! Evaluate bfield at particle position (splines of order p)
-       call this%kernel_smoother_1%evaluate_kernel_function_particle&
-            (this%bfield_dofs, i_part, bfield)
-       vi = this%particle_group%get_v(i_part)
-       vi(1) = vi(1) + dt*vi(2)*bfield!this%bfield(i_part)
-       call this%particle_group%set_v(i_part, vi)
-
-       xi = this%particle_group%get_x(i_part)
-       ! Compute the new box index index_box and normalized position r_box.
-       x_box = (xi(1) - this%x_min) /&
-            this%delta_x
-       index_box = floor(x_box)
-       r_box = x_box - real(index_box ,f64) 
-
-       ! Scale vi by weight to combine both factors for accumulation of integral over j
-       vi = vi*this%particle_group%get_charge(i_part)
-
-       ! Now, we loop through the DoFs and add the contributions.
-       values_0 = uniform_b_splines_at_x(this%spline_degree, r_box)
-       ind = 1
-       do i_grid = index_box - this%spline_degree, index_box
-          i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
-               values_0(ind)*vi (2)
-          ind = ind + 1
-       end do     
-
-    end do
-
-    this%j_dofs = 0.0_f64
-    ! MPI to sum up contributions from each processor
-    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,2), &
-         n_cells, MPI_SUM, this%j_dofs(:,2))
-
-    ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
-    this%j_dofs(:,2) = this%j_dofs(:,2)*dt!/this%Lx
-    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,2), 2, this%efield_dofs(:,2))
-    !!this%efield_dofs(:,2) = this%efield_dofs(:,2) - this%j_dofs(:,2)/this%Lx*dt
-    
-
- end subroutine operatorHp2_pic_1d2v_vm
   
   !---------------------------------------------------------------------------!
   !> Push H_E: Equations to be solved
@@ -416,7 +363,7 @@ contains
   !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
   !> \partial_t B + \partial_{x_1} E_2 = 0 => B_new = B_old - dt \partial_{x_1} E_2
   subroutine operatorHE_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+    class(sll_operator_splitting_cef_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -424,17 +371,15 @@ contains
     sll_real64 :: v_new(3)
     sll_real64 :: efield(2)
 
-
     ! V_new = V_old + dt * E
     do i_part=1,this%particle_group%n_particles
-       v_new = this%particle_group%get_v(i_part)
        ! Evaluate efields at particle position
        call this%kernel_smoother_1%evaluate_kernel_function_particle&
             (this%efield_dofs(:,1), i_part, efield(1))
        call this%kernel_smoother_0%evaluate_kernel_function_particle&
             (this%efield_dofs(:,2), i_part, efield(2))
        v_new = this%particle_group%get_v(i_part)
-       v_new(1:2) = v_new(1:2) + dt * efield!this%efield(i_part,:) 
+       v_new(1:2) = v_new(1:2) + dt * efield 
        call this%particle_group%set_v(i_part, v_new)
     end do
     
@@ -453,13 +398,27 @@ contains
   !> \partial_t E_2 = - \partial_{x_1} B -> E_{2,new} = E_{2,old}-dt*\partial_{x_1} B
   !> \partial_t B = 0 -> B_new = B_old
   subroutine operatorHB_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+    class(sll_operator_splitting_cef_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
     sll_int32 :: i_part
     sll_real64 :: v_old(3), v_new(3)
+    sll_real64 :: bfield
 
+
+    ! V_new = V_old + dt * (cos(B dt)  sin(B dt) \\ -sin(B dt) cos(B dt)) * V_old
+    do i_part=1,this%particle_group%n_particles       
+       ! Evaluate bfield at particle position (splines of order p)
+       call this%kernel_smoother_1%evaluate_kernel_function_particle&
+            (this%bfield_dofs, i_part, bfield)
+       v_old = this%particle_group%get_v(i_part)
+       v_new(1) = v_old(1) * cos(bfield*dt) + &
+            v_old(2) * sin(bfield*dt)
+       v_new(2) = v_old(2) * cos(bfield*dt) - &
+            v_old(1) * sin(bfield*dt) 
+       call this%particle_group%set_v(i_part, v_new)
+    end do
     
     ! Update efield2
     call this%maxwell_solver%compute_E_from_B(&
@@ -472,7 +431,7 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_splitting_pic_1d2v_vm(&
+  function sll_new_splitting_cef_pic_1d2v_vm(&
        maxwell_solver, &
        kernel_smoother_0, &
        kernel_smoother_1, &
@@ -481,7 +440,7 @@ contains
        bfield_dofs, &
        x_min, &
        Lx) result(this)
-    class(sll_operator_splitting_pic_1d2v_vm), pointer :: this !< time splitting object 
+    class(sll_operator_splitting_cef_pic_1d2v_vm), pointer :: this !< time splitting object 
     class(sll_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
     class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
@@ -523,7 +482,7 @@ contains
     this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
     this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
 
-  end function sll_new_splitting_pic_1d2v_vm
+  end function sll_new_splitting_cef_pic_1d2v_vm
 
 
   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
@@ -563,4 +522,4 @@ contains
 
 
 
-end module sll_m_operator_splitting_pic_1d2v_vm
+end module sll_m_operator_splitting_cef_pic_1d2v_vm
