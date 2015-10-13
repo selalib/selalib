@@ -87,8 +87,8 @@ contains
           call particle_group%set_x(i_part, x)
           call particle_group%set_v(i_part, v)
           ! Set weights.
-          call particle_group%set_weight(i_part, &
-               Lx(1)*Lx(2)/real(particle_group%n_total_particles, f64))
+          call particle_group%set_weights(i_part, &
+               [Lx(1)*Lx(2)/real(particle_group%n_total_particles, f64)])
        end if
     end do
 
@@ -142,8 +142,8 @@ contains
           call particle_group%set_x(i_part, x)
           call particle_group%set_v(i_part, v)
           ! Set weights.
-          call particle_group%set_weight(i_part, &
-               Lx/real(particle_group%n_total_particles, f64))
+          call particle_group%set_weights(i_part, &
+               [Lx/real(particle_group%n_total_particles, f64)])
        end if
     end do
 
@@ -199,8 +199,8 @@ contains
        call particle_group%set_x(i_part, x)
        call particle_group%set_v(i_part, v)
        ! Set weights.
-       call particle_group%set_weight(i_part, &
-            wi/real(particle_group%n_total_particles, f64))
+       call particle_group%set_weights(i_part, &
+            [wi/real(particle_group%n_total_particles, f64)])
     end do
 
 
@@ -252,8 +252,8 @@ contains
        call particle_group%set_x(i_part, x)
        call particle_group%set_v(i_part, v)
        ! Set weights.
-       call particle_group%set_weight(i_part, &
-            wi/real(particle_group%n_total_particles, f64))
+       call particle_group%set_weights(i_part, &
+            [wi/real(particle_group%n_total_particles, f64)])
     end do
 
 
