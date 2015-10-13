@@ -28,24 +28,7 @@ TARGET_LINK_LIBRARIES( sll_time_composition
 # Tests
 IF(BUILD_TESTING)
 
-  IF(HDF5_ENABLED)
-    #ADD_EXECUTABLE( vp1d_bsl_operator_split vp1d_bsl_operator_split.F90 )
-    #TARGET_LINK_LIBRARIES( vp1d_bsl_operator_split sll_operator_splitting )
-    ADD_EXECUTABLE( test_linear_pendulum unit_test_linear_pendulum.F90 )
-    TARGET_LINK_LIBRARIES( test_linear_pendulum sll_operator_splitting )
-    ADD_TEST( NAME splitting_linear_pendulum COMMAND test_linear_pendulum )
-    # Ctest
-    ADD_EXECUTABLE( test_const_coef_adv_2d unit_test_const_coef_adv_2d.F90 )
-    TARGET_LINK_LIBRARIES( test_const_coef_adv_2d sll_operator_splitting )
-    ADD_TEST( NAME splitting_const_coef_adv_2d COMMAND test_const_coef_adv_2d )
+  ADD_SUBDIRECTORY(testing)
 
-    ADD_EXECUTABLE( test_adv_2d unit_test_adv_2d.F90 )
-    TARGET_LINK_LIBRARIES( test_adv_2d sll_operator_splitting )
-    ADD_TEST( NAME splitting_adv_2d COMMAND test_adv_2d )
-
-    SET_TESTS_PROPERTIES( splitting_linear_pendulum
-                      #splitting_const_coef_adv_2d
-                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-  ENDIF(HDF5_ENABLED)
 
 ENDIF(BUILD_TESTING)
