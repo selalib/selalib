@@ -16,7 +16,7 @@ module sll_m_particle_initializer
   implicit none
 
 ! Different ansatz. Use or remove
-!!$  type :: sll_particle_initializer_2x2v
+!!$  type :: sll_particle_initializer_2d2v
 !!$     
 !!$
 !!$   contains
@@ -28,8 +28,8 @@ module sll_m_particle_initializer
 contains
 !!$  !---------------------------------------------------------------------------!
 !!$  
-!!$  subroutine draw_product_density_2x2v (this, particle_group, random_seed)
-!!$    class(sll_particle_initializer_2x2v), intent(inout)         :: this
+!!$  subroutine draw_product_density_2d2v (this, particle_group, random_seed)
+!!$    class(sll_particle_initializer_2d2v), intent(inout)         :: this
 !!$    class(sll_particle_group_base),  intent(inout)              :: particle_group
 !!$    !sll_real64, intent(in)                                      :: thermal_velocity
 !!$    sll_int32,  intent(in)                                      :: random_seed
@@ -41,7 +41,7 @@ contains
 !!$  end subroutine draw_product_density_2x2v
 
   !> Initialization to initialize a 2x2v particle group. Maxwellian distribution of V, cosine perturbation along x1, equal weights.
-  subroutine sll_particle_initialize_landaux1_2x2v(&
+  subroutine sll_particle_initialize_landaux1_2d2v(&
        particle_group, &
        landau_param, &
        xmin, &
@@ -94,7 +94,7 @@ contains
 
     
 
-  end subroutine sll_particle_initialize_landaux1_2x2v
+  end subroutine sll_particle_initialize_landaux1_2d2v
 
 
 !> Initialization to initialize a 1d2v particle group. Maxwellian distribution of V, cosine perturbation along x, equal weights.

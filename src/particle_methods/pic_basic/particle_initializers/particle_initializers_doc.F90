@@ -1,4 +1,4 @@
-!> @defgroup particle_initializers sll_particle_initializerss
+!> @defgroup particle_initializers sll_particle_initializers
 !> @brief
 !> Library implementing various routines for particle initialization.
 !> @details
