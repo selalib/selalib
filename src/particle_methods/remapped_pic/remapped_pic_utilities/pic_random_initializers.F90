@@ -19,7 +19,7 @@
 
 !> @brief Random particle initializers
 
-module sll_pic_random_initializers
+module sll_m_pic_random_initializers
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -128,4 +128,4 @@ contains
     eval_landau = 1._f64 + alpha * cos(kx * x)
   end function eval_landau
 
-end module sll_pic_random_initializers
+end module sll_m_pic_random_initializers

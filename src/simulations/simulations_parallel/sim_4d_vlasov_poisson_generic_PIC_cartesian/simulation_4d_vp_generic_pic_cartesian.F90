@@ -2,8 +2,8 @@
 !> @author MCP ALH
 !> @brief Generic simulation algorithms for PIC particles
 
-!> @details Generic simulation algorithm for simple PIC particles of type ::sll_simple_pic_4d_group_module <!--
-!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] --> and LTPIC
+!> @details Generic simulation algorithm for simple PIC particles of type ::sll_m_simple_pic_4d_group <!--
+!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_m_simple_pic_4d_group]] --> and LTPIC
 !> particles based on the generic class ::sll_m_remapped_pic_base <!--
 !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_m_remapped_pic_base]] -->. The basis for this development was
 !> ::sll_simulation_4d_vp_lt_pic_cartesian_module <!--
@@ -37,12 +37,12 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_ascii_io
 
   use sll_m_remapped_pic_base
-  use sll_simple_pic_4d_group_module
-  use sll_bsl_lt_pic_4d_group_module
-  use sll_particle_initializers_4d
-  use sll_particle_sort_module
-  use sll_charge_to_density_module
-  use sll_pic_utilities
+  use sll_m_simple_pic_4d_group
+  use sll_m_bsl_lt_pic_4d_group
+  ! use sll_particle_initializers_4d
+  ! use sll_particle_sort_module
+  ! use sll_charge_to_density_module
+  ! use sll_pic_utilities
   ! use sll_representation_conversion_module
 
   implicit none
@@ -58,7 +58,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   !> @ingroup particle_methods
 
   !> @brief Test simulation applied to PIC particles of type
-  !> sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle <!--
+  !> sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle <!--
   !> [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
   
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian

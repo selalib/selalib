@@ -22,7 +22,7 @@
 !> @brief Module for groups of particles of type sll_simple_pic_4d_particle <!--
 !> [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
 
-module sll_simple_pic_4d_group_module
+module sll_m_simple_pic_4d_group
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -32,14 +32,14 @@ module sll_simple_pic_4d_group_module
 ! #include "particle_representation.h"   NEEDED?
 
   use sll_working_precision
-  use sll_simple_pic_4d_particle_module
+  use sll_m_simple_pic_4d_particle
   use sll_cartesian_meshes
   use sll_m_remapped_pic_base
-  use sll_pic_random_initializers !! todo: specify ... , only:
+  use sll_m_pic_random_initializers, only: sll_pic_4d_random_unweighted_initializer_landau_f0
   use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
   implicit none
 
-  !> Group of sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle
+  !> Group of sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle
 
   ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
   
@@ -449,4 +449,4 @@ contains
   end subroutine sll_simple_pic_4d_group_delete
 
 
-end module sll_simple_pic_4d_group_module
+end module sll_m_simple_pic_4d_group

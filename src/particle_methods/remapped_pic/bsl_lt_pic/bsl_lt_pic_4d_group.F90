@@ -22,7 +22,7 @@
 !> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle <!--
 !> [[file:bsl_lt_pic_4d_particle.F90::sll_bsl_lt_pic_4d_particle]] -->
 
-module sll_bsl_lt_pic_4d_group_module
+module sll_m_bsl_lt_pic_4d_group
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -36,8 +36,8 @@ module sll_bsl_lt_pic_4d_group_module
   use sll_working_precision
   use sll_cartesian_meshes
   use sll_m_remapped_pic_base
-  use sll_bsl_lt_pic_4d_particle_module
-  use sll_bsl_lt_pic_4d_utilities_module
+  use sll_m_bsl_lt_pic_4d_particle
+  use sll_m_bsl_lt_pic_4d_utilities
   use sll_gnuplot
 
   implicit none
@@ -2930,4 +2930,4 @@ subroutine periodic_correction(p_group, x, y)
   end subroutine sll_bsl_lt_pic_4d_group_delete
 
 
-end module sll_bsl_lt_pic_4d_group_module
+end module sll_m_bsl_lt_pic_4d_group
