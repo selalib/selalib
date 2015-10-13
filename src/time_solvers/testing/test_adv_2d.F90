@@ -1,7 +1,7 @@
 !> @ingroup operator_splitting
 !> @brief Unit test for operator splitting. Constant coefficient advection.
 !> 
-program test_operator_splitting_adv_2d
+program test_adv_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -176,4 +176,4 @@ program test_operator_splitting_adv_2d
 
 
   
-end program test_operator_splitting_adv_2d
+end program test_adv_2d

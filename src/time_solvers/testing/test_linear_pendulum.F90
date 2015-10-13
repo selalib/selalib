@@ -2,7 +2,7 @@
 !> @brief Unit test for operator splitting. Order check for linear pendulum 
 !> 
 
-program test_operator_splitting_linear_pendulum
+program test_linear_pendulum
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   
@@ -97,5 +97,5 @@ program test_operator_splitting_linear_pendulum
 
   if (test_passed) print*, 'PASSED'
 
-end program test_operator_splitting_linear_pendulum
+end program test_linear_pendulum
 
