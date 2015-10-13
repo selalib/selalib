@@ -1,4 +1,4 @@
-program assert_test
+program test_assert
 !#include "sll_memory.h"
 #include "sll_assert.h"
 !#include "sll_working_precision.h"
@@ -30,4 +30,4 @@ contains
   end function get_val
 
 
-end program assert_test
+end program test_assert
