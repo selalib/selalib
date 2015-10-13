@@ -13,7 +13,7 @@ module sll_m_remapped_pic_base
   public :: temp_species_new
 
   !============================================================================
-  !> @brief Particle species (temporary class)
+  !> @brief Particle species (temporary: should use the common type for that)
   !============================================================================
   type, public :: sll_temp_species
     !      character(len=64) :: name !< species name
