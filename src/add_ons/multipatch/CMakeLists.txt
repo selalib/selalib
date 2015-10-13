@@ -1,7 +1,7 @@
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
 
-   ADD_LIBRARY(sll_distribution_function_multipatch
+   ADD_LIBRARY(sll_multipatch
      STATIC sll_distribution_function_4d_multipatch.F90
             sll_meshes_multipatch.F90
             sll_coordinate_transformation_multipatch.F90
