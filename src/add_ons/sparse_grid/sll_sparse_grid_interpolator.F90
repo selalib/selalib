@@ -1664,6 +1664,8 @@ subroutine fft_initialize(fft_object,levels)
   class(fft_hierarchical), dimension(:),pointer :: fft_object
   sll_int32,intent(in) :: levels 
   sll_int32 :: l,size
+  sll_int32 :: ierr
+
   size = 1
   do l=1,levels+1
 
