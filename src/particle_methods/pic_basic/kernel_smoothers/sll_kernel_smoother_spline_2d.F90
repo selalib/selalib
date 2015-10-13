@@ -1,5 +1,5 @@
-!> @ingroup particle_methods
-!> @author Katharina Kormann
+!> @ingroup kernel_smoothers
+!> @author Katharina Kormann, IPP
 !> @brief Kernel smoother for 2d with splines of arbitrary degree placed on a uniform mesh.
 !> @details  Spline with index i starts at point i
 module sll_m_kernel_smoother_spline_2d
@@ -21,7 +21,7 @@ module sll_m_kernel_smoother_spline_2d
 
      ! Information about the 2d mesh
      sll_real64 :: delta_x(2)  !< Value of grid spacing along both directions.
-     sll_real64 :: domain(2,2) !< Definition of the domain: domain(1,1) = x1_min, domain(1,2) = x2_min,  domain(2,1) = x1_max, domain(2,2) = x2_max
+     sll_real64 :: domain(2,2) !< Definition of the domain: domain(1,1) = x1_min, domain(2,1) = x2_min,  domain(1,2) = x1_max, domain(2,2) = x2_max
      
      ! Information about the particles
      sll_int32 :: no_particles !< Number of particles of underlying PIC method (processor local)
@@ -69,9 +69,6 @@ contains
        this%values_grid(:,2,i_part) = spline_val
     end do
 
-    !write(21,*) this%values_grid
-    !write(21,*) this%index_grid
-
   end subroutine compute_shape_factors_spline_2d
 
   !---------------------------------------------------------------------------!
@@ -87,12 +84,11 @@ contains
     sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
-       index1d = this%index_grid(i_part,:)
        wi = particle_group%get_weights(i_part)
        do i1 = 1, this%n_span
-          index1d(1) = this%index_grid(i_part,1)+i1-2
+          index1d(1) = this%index_grid(1,i_part)+i1-2
           do i2 = 1, this%n_span
-             index1d(2) = this%index_grid(i_part,2)+i2-2
+             index1d(2) = this%index_grid(2, i_part)+i2-2
              index2d = index_1dto2d_column_major(this,index1d)
              rho_dofs(index2d) = rho_dofs(index2d) +&
                   ( wi(1)* &
@@ -123,7 +119,6 @@ contains
     sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
-       index1d = this%index_grid(:,i_part)
        wi = particle_group%get_weights(i_part)
        do i1 = 1, this%n_span
           index1d(1) = this%index_grid(1,i_part)+i1-2
