@@ -84,16 +84,18 @@ contains
     !local variables
     sll_int32 :: i_part, i1, i2, index2d
     sll_int32 :: index1d(2)
+    sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
        index1d = this%index_grid(i_part,:)
+       wi = particle_group%get_weights(i_part)
        do i1 = 1, this%n_span
           index1d(1) = this%index_grid(i_part,1)+i1-2
           do i2 = 1, this%n_span
              index1d(2) = this%index_grid(i_part,2)+i2-2
              index2d = index_1dto2d_column_major(this,index1d)
              rho_dofs(index2d) = rho_dofs(index2d) +&
-                  (particle_group%get_charge(i_part) * &
+                  ( wi(1)* &
                   this%values_grid(i1, 1, i_part) *&
                   this%values_grid(i2, 2, i_part))
           end do
@@ -118,9 +120,11 @@ contains
     sll_int32 :: i_part, i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_real64 :: vpart(3)
+    sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
        index1d = this%index_grid(:,i_part)
+       wi = particle_group%get_weights(i_part)
        do i1 = 1, this%n_span
           index1d(1) = this%index_grid(1,i_part)+i1-2
           do i2 = 1, this%n_span
@@ -128,7 +132,7 @@ contains
              index2d = index_1dto2d_column_major(this,index1d)
              vpart = particle_group%get_v(i_part)
              j_dofs(index2d) = j_dofs(index2d) +&
-                  (particle_group%get_charge(i_part) * &
+                  (wi(1) * &
                   vpart(component) * &
                   this%values_grid(i1,1,i_part) *&
                   this%values_grid(i2,2,i_part)) 

@@ -1,5 +1,5 @@
-!> @ingroup particle_methods
-!> @author Katharina Kormann
+!> @ingroup particle_types
+!> @author Katharina Kormann, IPP
 !> @brief Simple particle group type for 1d2v.
 !> @details ...
 module sll_m_particle_group_1d2v
@@ -24,11 +24,14 @@ contains
     procedure :: get_v  => get_v_1d2v
     procedure :: get_charge => get_charge_1d2v
     procedure :: get_mass => get_mass_1d2v
+    procedure :: get_weights => get_weight_1d2v
+    procedure :: get_common_weight => get_common_weight_1d2v
 
     ! Setters
     procedure :: set_x => set_x_1d2v
     procedure :: set_v => set_v_1d2v
-    procedure :: set_weight => set_weight_1d2v
+    procedure :: set_weights => set_weight_1d2v
+    procedure :: set_common_weight => set_common_weight_1d2v
 
     ! Initializer
     procedure :: initialize => initialize_particle_group_1d2v 
@@ -56,6 +59,8 @@ contains
     SLL_ALLOCATE(self%particle_array(self%n_particles,4), ierr) 
     self%species => species_new( charge, mass)
 
+    self%n_weights = 1
+    
   end function sll_new_particle_group_1d2v
   
   !----------------------------------------------------------------------!
@@ -84,9 +89,19 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%q * self%particle_array(i,4)
+    r = self%species%q 
 
   end function get_charge_1d2v
+
+  !----------------------------------------------------------------------!
+  pure function get_weight_1d2v( self, i) result (r)
+        class( sll_particle_group_1d2v ), intent( in ) :: self
+    sll_int32                       , intent( in ) :: i
+    sll_real64 :: r(self%n_weights)
+
+    r = self%species%m
+
+  end function get_weight_1d2v
 
   !----------------------------------------------------------------------!
   pure function get_mass_1d2v( self, i) result (r)
@@ -94,9 +109,20 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%m * self%particle_array(i,4)
+    r = self%species%q_over_m() * self%particle_array(i, 4)
 
   end function get_mass_1d2v
+
+
+  !----------------------------------------------------------------------!
+  pure function get_common_weight_1d2v( self, i) result (r)
+        class( sll_particle_group_1d2v ), intent( in ) :: self
+    sll_int32                       , intent( in ) :: i
+    sll_real64 :: r
+
+    r = 1.0_f64
+
+  end function get_common_weight_1d2v
 
   !----------------------------------------------------------------------!
   subroutine set_x_1d2v( self, i, x )
@@ -121,11 +147,20 @@ contains
   subroutine set_weight_1d2v( self, i, x )
     class( sll_particle_group_1d2v ), intent( inout ) :: self
     sll_int32                       , intent( in ) :: i
-    sll_real64                      , intent( in):: x
+    sll_real64                      , intent( in):: x(self%n_weights)
 
-    self%particle_array(i, 4) = x
+    self%particle_array(i, 4) = x(1)
     
   end subroutine set_weight_1d2v
+
+  
+  !----------------------------------------------------------------------!
+  subroutine set_common_weight_1d2v( self, i, x )
+    class( sll_particle_group_1d2v ), intent( inout ) :: self
+    sll_int32                       , intent( in ) :: i
+    sll_real64                      , intent( in):: x
+    
+  end subroutine set_common_weight_1d2v
 
   !----------------------------------------------------------------------!
   subroutine initialize_particle_group_1d2v (self, n_particles)

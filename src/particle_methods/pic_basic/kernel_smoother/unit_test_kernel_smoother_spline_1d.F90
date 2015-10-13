@@ -62,7 +62,7 @@ program unit_test_kernel_smoother_spline_1d
   do i_part = 1,n_particles
      xi(1) = x_vec(i_part)
      call specific_particle_group%set_x(i_part, xi)
-     call specific_particle_group%set_weight(i_part, 1/real(n_particles,f64))
+     call specific_particle_group%set_weights(i_part, [1/real(n_particles,f64)])
      xi(1:2) = v_vec(i_part,:)
      call specific_particle_group%set_v(i_part, xi)
   end do

@@ -79,12 +79,14 @@ contains
     !local variables
     sll_int32 :: i_part, i1
     sll_int32 :: index1d
+    sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
+       wi = particle_group%get_weights(i_part)
        do i1 = 1, this%n_span
           index1d = modulo(this%index_grid(1,i_part)+i1-2,this%n_grid(1))+1
           rho_dofs(index1d) = rho_dofs(index1d) +&
-               (particle_group%get_charge(i_part) * &
+               (wi(1) * &
                this%values_grid(i1, 1, i_part))
        end do
     end do
@@ -107,13 +109,15 @@ contains
     sll_int32 :: i_part, i1
     sll_int32 :: index1d
     sll_real64 :: vpart(3)
+    sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
+       wi = particle_group%get_weights(i_part)
        do i1 = 1, this%n_span
           index1d = modulo(this%index_grid(1,i_part)+i1-2,this%n_grid(1))+1
           vpart = particle_group%get_v(i_part)
           j_dofs(index1d) = j_dofs(index1d) +&
-               (particle_group%get_charge(i_part) * &
+               (wi(1) * &
                vpart(component) * &
                this%values_grid(i1,1,i_part))
        end do
