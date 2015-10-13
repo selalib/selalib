@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_qn_solver_3d_polar_parallel_x1_wrapper
+program test_qn_solver_3d_polar_parallel_x1_wrapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -123,4 +123,4 @@ implicit none
   
   call sll_halt_collective()
   
-end program unit_test_qn_solver_3d_polar_parallel_x1_wrapper
+end program test_qn_solver_3d_polar_parallel_x1_wrapper
