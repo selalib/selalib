@@ -16,7 +16,7 @@ program test_interpolation_4d
   sll_int32 :: levels
   sll_int32 :: ierr, j,k, counter, iter, its
   sll_real64 :: disp, error, dispt
-  sll_real64, dimension(:), allocatable :: errorvec, tol
+  sll_real64, dimension(:), allocatable :: errorvec
 
   sll_real64, dimension(4)   :: eta_min,eta_max,dx
   sll_real64, dimension(:), allocatable :: f, fref, finterp
