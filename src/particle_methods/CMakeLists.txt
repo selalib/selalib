@@ -1,6 +1,5 @@
 ADD_LIBRARY( sll_pic_interface STATIC
   sll_pic_base.F90
-  sll_remapped_pic_base.F90
   )
 
 TARGET_LINK_LIBRARIES( sll_pic_interface
@@ -12,8 +11,6 @@ if( MPI_ENABLED )
   set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
   add_subdirectory( pic_1d_sheath )
   add_subdirectory( pic_2d_standard )
-  add_subdirectory( particle_types )
-  add_subdirectory( particle_initializers )
-  add_subdirectory( bsl_lt_pic_utilities )
+  add_subdirectory( remapped_pic )
 endif( MPI_ENABLED )
 
