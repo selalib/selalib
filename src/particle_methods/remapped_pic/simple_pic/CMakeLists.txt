@@ -8,37 +8,11 @@ TARGET_LINK_LIBRARIES( sll_simple_pic_particles
   sll_working_precision
   sll_assert
   sll_meshes
-  sll_pic_interface
+  sll_remapped_pic
+  # sll_pic_interface
   sll_pic_accumulators
-  sll_pic_interface_initializers )
-
-ADD_LIBRARY( sll_bsl_lt_pic_particles STATIC
-  bsl_lt_pic_4d_particle.F90
-  bsl_lt_pic_4d_group.F90
+  sll_remapped_pic_utilities
   )
-
-TARGET_LINK_LIBRARIES( sll_bsl_lt_pic_particles
-  sll_memory
-  sll_working_precision
-  sll_assert
-  sll_meshes
-  sll_pic_interface
-  sll_bsl_lt_pic_utilities
-  sll_pic_accumulators
-  )
-
-
-ADD_EXECUTABLE(test_bsl_lt_pic_4d_remap unit_test_bsl_lt_pic_4d.F90)
-
-TARGET_LINK_LIBRARIES(test_bsl_lt_pic_4d_remap
-  sll_timer
-  sll_constants
-  sll_working_precision
-  sll_assert
-  sll_bsl_lt_pic_utilities
-  sll_bsl_lt_pic_particles
-  )
-
 
 # Ctest
 IF(BUILD_TESTING)
