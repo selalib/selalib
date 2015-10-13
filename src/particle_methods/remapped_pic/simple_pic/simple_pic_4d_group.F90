@@ -36,8 +36,7 @@ module sll_simple_pic_4d_group_module
   use sll_cartesian_meshes
   use sll_m_remapped_pic_base
   use sll_pic_random_initializers !! todo: specify ... , only:
-  use sll_bsl_lt_pic_4d_utilities_module, only: x_is_in_domain_2d
-
+  use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
   implicit none
 
   !> Group of sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle
