@@ -133,7 +133,7 @@ contains
 
     ! Prepare strings with data
     write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
-    call sll_s_ints_to_string( dims, dims_str )
+    call sll_s_ints_to_string( (/ dims(2), dims(1) /), dims_str )
 
     ! Add new grid to domain
     grid => self%xml_domain%new_element( 'Grid' )
