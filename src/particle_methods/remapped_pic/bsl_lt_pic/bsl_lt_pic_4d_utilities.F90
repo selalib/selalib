@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_bsl_lt_pic_4d_utilities_module
+module sll_m_bsl_lt_pic_4d_utilities
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -26,7 +26,6 @@ module sll_bsl_lt_pic_4d_utilities_module
   use sll_constants, only: sll_pi
   use sll_cartesian_meshes
   use sll_working_precision
-  ! use sll_bsl_lt_pic_4d_particle_module
 
   use sll_timer
   use sll_utilities, only: sll_new_file_id, int2string
@@ -391,4 +390,4 @@ contains
                                                  * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
   end function eval_hat_function
 
-end module  sll_bsl_lt_pic_4d_utilities_module
+end module  sll_m_bsl_lt_pic_4d_utilities

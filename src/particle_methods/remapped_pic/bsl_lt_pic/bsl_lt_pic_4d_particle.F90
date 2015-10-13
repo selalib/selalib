@@ -21,7 +21,7 @@
 
 !> @brief Particle model for bsl_lt_pic method
 
-module sll_bsl_lt_pic_4d_particle_module
+module sll_m_bsl_lt_pic_4d_particle
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -67,4 +67,4 @@ module sll_bsl_lt_pic_4d_particle_module
 
   end type sll_bsl_lt_pic_4d_particle
 
-end module sll_bsl_lt_pic_4d_particle_module
+end module sll_m_bsl_lt_pic_4d_particle

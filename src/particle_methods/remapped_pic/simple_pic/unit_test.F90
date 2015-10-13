@@ -1,6 +1,6 @@
   !> @ingroup particle_methods
 
-  !> @brief Unit test for particles of type \ref sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle
+  !> @brief Unit test for particles of type \ref sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle
 
   ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
 
@@ -10,7 +10,7 @@ program simple_pic_4d_group_tester
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_simple_pic_4d_group_module
+  use sll_m_simple_pic_4d_group
   use sll_cartesian_meshes
 
   implicit none

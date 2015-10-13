@@ -36,9 +36,8 @@ program unit_test_bsl_lt_pic_4d
 #include "sll_assert.h"
 
   use sll_constants, only: sll_pi
-  use sll_bsl_lt_pic_4d_group_module
+  use sll_m_bsl_lt_pic_4d_group
   use sll_cartesian_meshes
-!  use sll_representation_conversion_module
   use sll_timer
   use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
 

@@ -29,7 +29,7 @@
 ! [[sll_simple_pic_4d_particle]]
 ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
 
-module sll_simple_pic_4d_particle_module
+module sll_m_simple_pic_4d_particle
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -67,4 +67,4 @@ module sll_simple_pic_4d_particle_module
 
   end type sll_simple_pic_4d_particle
 
-end module sll_simple_pic_4d_particle_module
+end module sll_m_simple_pic_4d_particle
