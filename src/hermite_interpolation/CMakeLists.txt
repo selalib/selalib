@@ -19,17 +19,8 @@ TARGET_LINK_LIBRARIES( euler_2d_hex sll_utilities)
 # Tests
 IF(BUILD_TESTING)
 
-  # 1st executable
-  ADD_EXECUTABLE( test_hermite_interpolation unit_test.F90 )
-  TARGET_LINK_LIBRARIES( test_hermite_interpolation
-    sll_hermite_interpolation
-    sll_constants )
+  ADD_SUBDIRECTORY(testing)
 
-  # executable
-  ADD_EXECUTABLE( test_hermite_aligned_interpolation test_hermite_aligned.F90 )
-  TARGET_LINK_LIBRARIES( test_hermite_aligned_interpolation
-    sll_hermite_aligned_interpolation
-    sll_constants )
 
 
   # 2nd executable
@@ -70,13 +61,6 @@ IF(BUILD_TESTING)
 
 
   
-  # Ctest for executable 1
-  ADD_TEST( NAME hermite_interpolation COMMAND test_hermite_interpolation )
-  SET_TESTS_PROPERTIES( hermite_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-  # Ctest for executable 1
-  ADD_TEST( NAME hermite_aligned_interpolation COMMAND test_hermite_aligned_interpolation )
-  SET_TESTS_PROPERTIES( hermite_aligned_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 
 ENDIF(BUILD_TESTING)
