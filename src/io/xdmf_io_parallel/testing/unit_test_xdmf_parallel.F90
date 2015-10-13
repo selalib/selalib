@@ -9,8 +9,8 @@ program test_xdmf_parallel
     sll_get_collective_size, &
     sll_get_collective_rank
 
-  use sll_m_xdmf_parallel, only: sll_t_xdmf_parallel_file
-  use sll_m_io_utilities , only: sll_f_check_equal_files
+  use sll_m_xdmf_light_parallel, only: sll_t_xdmf_parallel_file
+  use sll_m_io_utilities,        only: sll_f_check_equal_files
 
   implicit none
 
