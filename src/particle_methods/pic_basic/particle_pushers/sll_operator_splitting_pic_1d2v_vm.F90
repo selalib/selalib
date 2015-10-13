@@ -93,7 +93,7 @@ contains
 
     !local variables
     sll_int32 :: i_part, i_grid, i_mod, ind, j
-    sll_real64 :: xi, x_new(3), vi(3), wi
+    sll_real64 :: xi, x_new(3), vi(3), wi(1)
     sll_int32  :: n_cells
     sll_real64 :: r_new, r_old
     sll_int32 :: index_new, index_old
@@ -135,7 +135,7 @@ contains
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_charge(i_part)
+       wi = this%particle_group%get_weights(i_part)
 
        if (index_old == index_new) then
           if (r_old < r_new) then
@@ -184,7 +184,7 @@ contains
    sll_real64, intent(in) :: lower
    sll_real64, intent(in) :: upper
    sll_int32,  intent(in) :: index
-   sll_real64, intent(in) :: weight
+   sll_real64, intent(in) :: weight(1)
    sll_real64, intent(in) :: sign
    sll_real64, intent(inout) :: vi
 
@@ -208,7 +208,7 @@ contains
    do i_grid = index - this%spline_degree + 1, index
       i_mod = modulo(i_grid, n_cells ) + 1
       this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-           weight*fy(ind)
+           weight(1)*fy(ind)
       vi = vi - fy(ind)*this%bfield_dofs(i_mod)
       ind = ind + 1
    end do
@@ -222,7 +222,7 @@ contains
 
     !local variables
     sll_int32 :: i_part, i_grid, i_mod, ind, j
-    sll_real64 :: xi, x_new(3), vi(3), wi
+    sll_real64 :: xi, x_new(3), vi(3), wi(1)
     sll_int32  :: n_cells
     sll_real64 :: r_new, r_old
     sll_int32 :: index_new, index_old
@@ -264,7 +264,7 @@ contains
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_charge(i_part)
+       wi = this%particle_group%get_weights(i_part)
 
        ! Compute the primitives at r_old for each interval
        primitive_1 = -primitive_uniform_quadratic_b_spline_at_x( r_old )
@@ -277,7 +277,7 @@ contains
        do i_grid = index_old - this%spline_degree + 1, index_old
           i_mod = modulo(i_grid, n_cells ) + 1
           this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-               primitive_1(ind)*wi
+               primitive_1(ind)*wi(1)
           vi(2) = vi(2) - primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
           ind = ind + 1
        end do      
@@ -291,7 +291,7 @@ contains
        do i_grid = index_new - this%spline_degree + 1, index_new
           i_mod = modulo(i_grid, n_cells ) + 1
           this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-               primitive_1(ind)*wi
+               primitive_1(ind)*wi(1)
           vi(2) = vi(2) - primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
           ind = ind + 1
        end do
@@ -302,7 +302,7 @@ contains
           do i_grid = j - this%spline_degree + 1, j
              i_mod = modulo(i_grid, n_cells ) + 1
              this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-                  this%cell_integrals_1(ind)*wi
+                  this%cell_integrals_1(ind)*wi(1)
              vi(2) = vi(2) - &
                   this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
              ind = ind + 1
@@ -314,7 +314,7 @@ contains
           do i_grid = j - this%spline_degree + 1, j
              i_mod = modulo(i_grid, n_cells ) + 1
              this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
-                  this%cell_integrals_1(ind)*wi
+                  this%cell_integrals_1(ind)*wi(1)
              vi(2) = vi(2) + this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
              ind = ind + 1
           end do
@@ -355,7 +355,7 @@ contains
 
     !local variables
     sll_int32  :: i_part, n_cells
-    sll_real64 :: vi(3), xi(3)
+    sll_real64 :: vi(3), xi(3), wi(1)
     sll_real64 :: x_box, r_box
     sll_int32  :: index_box, ind, i_mod, i_grid
     sll_real64 :: values_0(4)
@@ -382,7 +382,8 @@ contains
        r_box = x_box - real(index_box ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       vi = vi*this%particle_group%get_charge(i_part)
+       wi = this%particle_group%get_weights(i_part)
+       vi = vi*wi(1)
 
        ! Now, we loop through the DoFs and add the contributions.
        values_0 = uniform_b_splines_at_x(this%spline_degree, r_box)

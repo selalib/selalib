@@ -15,7 +15,7 @@ module sll_m_sim_pic_2x2v_vp_cart
   use sll_cartesian_meshes
   use sll_m_pic_base
   use sll_m_particle_initializer
-  use sll_m_particle_group_2x2v
+  use sll_m_particle_group_2d2v
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d
   use sll_m_poisson_2d_fft ! TODO: Use generic interface
@@ -29,7 +29,7 @@ module sll_m_sim_pic_2x2v_vp_cart
      ! Abstract particle group
      class(sll_particle_group_base), pointer :: particle_group
      ! Specific particle group
-     class(sll_particle_group_2x2v), pointer :: specific_particle_group 
+     class(sll_particle_group_2d2v), pointer :: specific_particle_group 
 
      ! Array for efield
      sll_real64, pointer :: efield(:,:)
@@ -147,7 +147,7 @@ contains
     end if
 
     ! Initialize the particles   
-     sim%specific_particle_group => sll_new_particle_group_2x2v(sim%n_particles, &
+     sim%specific_particle_group => sll_new_particle_group_2d2v(sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64)
     
     !print*, 'size', size(sim%specific_particle_group%particle_array,1)
