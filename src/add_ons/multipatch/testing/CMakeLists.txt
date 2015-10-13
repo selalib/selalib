@@ -1,4 +1,6 @@
-ADD_EXECUTABLE( test_distribution_function_4d_multipatch unit_test.F90 )
+ADD_EXECUTABLE( test_distribution_function_4d_multipatch
+                test_distribution_function_4d_multipatch.F90 )
+
 TARGET_LINK_LIBRARIES( test_distribution_function_4d_multipatch sll_multipatch
   sll_common_array_initializers
   sll_timer
@@ -6,21 +8,24 @@ TARGET_LINK_LIBRARIES( test_distribution_function_4d_multipatch sll_multipatch
 
 IF(PYTHON3_FOUND)
   SET( ARGS " " )
-   ADD_MPI_TEST( distribution_function_4d_multipatch 
+  ADD_MPI_TEST( distribution_function_4d_multipatch 
      test_distribution_function_4d_multipatch ${PROCS} ${ARGS} )
-   SET_TESTS_PROPERTIES( distribution_function_4d_multipatch 
+  SET_TESTS_PROPERTIES( distribution_function_4d_multipatch 
      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(PYTHON3_FOUND)
+
 SET( INPUT_FILES_DIR ${CMAKE_SOURCE_DIR}/CAID_coordinate_transformations/square_4p_n10/ )
 FILE( GLOB INPUT_FILES "${INPUT_FILES_DIR}/*.nml" )
 FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
-ADD_EXECUTABLE( test_meshes_multipatch unit_test.F90)
+ADD_EXECUTABLE( test_meshes_multipatch test_meshes_multipatch.F90)
 TARGET_LINK_LIBRARIES( test_meshes_multipatch sll_multipatch )
 ADD_TEST( NAME meshes_multipatch COMMAND test_meshes_multipatch )
 SET_TESTS_PROPERTIES( meshes_multipatch PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_coordinate_transformation_multipatch_2d unit_test_2d.F90 )
+ADD_EXECUTABLE( test_coordinate_transformation_multipatch_2d 
+                test_coordinate_transformation_multipatch_2d.F90 )
+
 TARGET_LINK_LIBRARIES(test_coordinate_transformation_multipatch_2d
    sll_multipatch sll_file_io)
 
@@ -35,7 +40,8 @@ SET( INPUT_FILES_DIR ${CMAKE_SOURCE_DIR}/CAID_coordinate_transformations/circle_
 FILE( GLOB INPUT_FILES "${INPUT_FILES_DIR}/*.nml" )
 FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
-ADD_EXECUTABLE( test_scalar_field_multipatch_2d unit_test_2d.F90 )
+ADD_EXECUTABLE( test_scalar_field_multipatch_2d
+                test_scalar_field_multipatch_2d.F90 )
 TARGET_LINK_LIBRARIES( test_scalar_field_multipatch_2d sll_multipatch )
 
 IF(PYTHON3_FOUND)
@@ -48,7 +54,9 @@ FILE( GLOB INPUT_FILES "${INPUT_FILES_DIR}/*.nml" )
 FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
 ADD_EXECUTABLE( test_general_coordinate_elliptic_solver_multipatch 
-                test_functions.F90 unit_test.F90)
+                test_functions.F90 
+                test_general_coordinate_elliptic_solver_multipatch.F90)
+
 TARGET_LINK_LIBRARIES( test_general_coordinate_elliptic_solver_multipatch
   sll_multipatch)
 
