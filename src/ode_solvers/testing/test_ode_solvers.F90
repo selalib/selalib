@@ -1,4 +1,4 @@
-program unit_test_implicit_ode_nonuniform
+program test_ode_solvers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use ode_solvers
@@ -185,4 +185,4 @@ print *, 'do I see this?'
 
   print *, 'Successful, exiting program.'
   
-end program unit_test_implicit_ode_nonuniform
+end program test_ode_solvers
