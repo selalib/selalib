@@ -1,4 +1,4 @@
-program lagrange_test
+program test_lagrange_interpolation
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -58,5 +58,5 @@ sll_real64 :: x,f
 f=cos(2*sll_pi*x/(num_points-1.0))
 end function
 
-end program
+end program test_lagrange_interpolation
 
