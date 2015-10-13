@@ -1,4 +1,4 @@
-program test_periodic_interp
+program test_periodic_interpolation
 #include "sll_working_precision.h"
   use periodic_interp_module
   use sll_fft
@@ -47,5 +47,5 @@ program test_periodic_interp
   end do
  
   print*, 'PASSED'
-end program test_periodic_interp
+end program test_periodic_interpolation
 
