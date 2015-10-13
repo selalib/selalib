@@ -1,0 +1,9 @@
+&sim_params
+  is_mdeltaf = .TRUE.
+  test_case = "SLL_LANDAU"
+  levelx = 5
+  levelv = 7
+  order_sg = 3
+  delta_t = 0.025
+  n_time_steps = 4000
+/
