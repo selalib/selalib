@@ -28,6 +28,7 @@ program test_interpolation_4d
   type(sparse_grid_interpolator_4d), target   :: interp
   type(sparse_grid_interpolator_2d), target   :: interp2d
 
+  sll_real64 :: tol(8)
   logical :: fail
 
   ! 
