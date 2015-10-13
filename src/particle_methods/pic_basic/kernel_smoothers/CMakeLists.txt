@@ -13,8 +13,5 @@ TARGET_LINK_LIBRARIES( sll_kernel_smoothers
 
 # Tests
 IF(BUILD_TESTING)
-  ADD_EXECUTABLE( test_kernel_smoother_spline_1d unit_test_kernel_smoother_spline_1d.F90)
-  TARGET_LINK_LIBRARIES( test_kernel_smoother_spline_1d sll_kernel_smoothers )
-  ADD_TEST( NAME kernel_smoother_spline_1d COMMAND test_kernel_smoother_spline_1d)
-
+  ADD_SUBDIRECTORY(testing)
 ENDIF(BUILD_TESTING)

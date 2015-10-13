@@ -12,9 +12,12 @@ module sll_m_particle_group_2d2v
   use sll_m_pic_base
 
   implicit none
+  private
+  
+  public :: sll_new_particle_group_2d2v
 
 !> Simple version of a PIC particle group in 2d2v
-type, extends(sll_particle_group_base) :: sll_particle_group_2d2v
+type, public, extends(sll_particle_group_base) :: sll_particle_group_2d2v
    !sll_int32               :: n_particles !< number of particle
    sll_real64, pointer :: particle_array(:,:) !< array of particles
 
