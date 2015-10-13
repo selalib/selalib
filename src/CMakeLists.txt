@@ -188,6 +188,8 @@ ADD_SUBDIRECTORY(distribution_function)
 ADD_SUBDIRECTORY(ode_solvers)
 ADD_SUBDIRECTORY(mesh_calculus)
 
+ADD_SUBDIRECTORY(add_ons)
+
 IF(BUILD_PACKAGE)
   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../package ${CMAKE_BINARY_DIR}/package)
   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
