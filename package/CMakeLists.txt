@@ -101,10 +101,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-    ${SLL_DIR}/simulations/multipatch/meshes_multipatch/sll_meshes_multipatch.F90
-    ${SLL_DIR}/simulations/multipatch/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
-    ${SLL_DIR}/simulations/multipatch/fields_multipatch/sll_scalar_field_2d_multipatch.F90
-    ${SLL_DIR}/simulations/multipatch/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
+    ${SLL_DIR}/add_ons/multipatch/sll_meshes_multipatch.F90
+    ${SLL_DIR}/add_ons/multipatch/sll_coordinate_transformation_multipatch.F90
+    ${SLL_DIR}/add_ons/multipatch/sll_scalar_field_2d_multipatch.F90
+    ${SLL_DIR}/add_ons/multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
     ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
@@ -178,11 +178,11 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/io/file_io_parallel/sll_hdf5_io_parallel.F90
   ${SLL_DIR}/io/file_io_parallel/sll_xdmf_parallel.F90
-  ${SLL_DIR}/simulations/multipatch/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
+  ${SLL_DIR}/add_ons/multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/simulations/simulations_parallel/sl_1d1v_va_cart_spectral/simulation_2d_vlasov_ampere_cartesian.F90
-  ${SLL_DIR}/simulations/multipatch/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_sl_va_1d1v_cart_spectral/simulation_2d_vlasov_ampere_cartesian.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_sl_vp_2d2v_cart_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)
 
