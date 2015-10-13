@@ -1,0 +1,7 @@
+&time dt=0.01, nbiter=1000/
+&diag fdiag=1000, fthdiag=1/
+&phys_space x0=0., x1=12.566370614359172, nx=128/
+&vel_space vx0=-6.0, vx1=6.0, nvx=128/
+&test_case num_case=1/ !landau
+&algo_charge /
+&field_solvers /
