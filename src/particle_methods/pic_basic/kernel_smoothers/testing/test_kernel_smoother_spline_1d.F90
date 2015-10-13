@@ -1,4 +1,4 @@
-program unit_test_kernel_smoother_spline_1d
+program test_kernel_smoother_spline_1d
 
 #include "sll_working_precision.h"
 
@@ -142,4 +142,4 @@ program unit_test_kernel_smoother_spline_1d
   end if
 
 
-end program unit_test_kernel_smoother_spline_1d
+end program test_kernel_smoother_spline_1d
