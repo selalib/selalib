@@ -102,7 +102,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(self%n_weights)
 
-    r = self%species%m
+    r = self%species%q_over_m() * self%particle_array(i, 4)
 
   end function get_weight_1d2v
 
@@ -112,7 +112,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%q_over_m() * self%particle_array(i, 4)
+    r = self%species%m
 
   end function get_mass_1d2v
 
