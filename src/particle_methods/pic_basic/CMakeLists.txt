@@ -1,0 +1,4 @@
+add_subdirectory(kernel_smoother)
+add_subdirectory(particle_types)
+add_subdirectory(particle_initializers)
+add_subdirectory(particle_pushers)
