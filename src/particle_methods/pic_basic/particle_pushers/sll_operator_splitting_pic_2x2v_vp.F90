@@ -1,5 +1,5 @@
-!> @ingroup particle_methods
-!> @author Katharina Kormann
+!> @ingroup particle_pushers
+!> @author Katharina Kormann, IPP
 !> @brief Particle pusher based on operator splitting for 2x2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries.
 module sll_m_operator_splitting_pic_2x2v_vp
