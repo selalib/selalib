@@ -12,10 +12,10 @@
 !> Last modification:: April 17, 2014
 !   
 !> @authors                    
-!> Michel MEHRENBERGER (mehrebe@math.unistra.fr), 
+!> Michel MEHRENBERGER (mehrenbe@math.unistra.fr), 
 !                                  
 !***************************************************************************
-program unit_test_qn_solver_3d_polar_parallel_x1
+program test_qn_solver_3d_polar_parallel_x1
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -29,4 +29,4 @@ implicit none
 
   print *,'#PASSED'
 
-end program unit_test_qn_solver_3d_polar_parallel_x1
+end program test_qn_solver_3d_polar_parallel_x1
