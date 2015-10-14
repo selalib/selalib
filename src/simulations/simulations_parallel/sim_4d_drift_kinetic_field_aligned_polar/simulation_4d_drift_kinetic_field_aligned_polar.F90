@@ -1039,14 +1039,24 @@ contains
 
     ! (r,theta) slice: poloidal plane
     dims_x1x2 = [sim%m_x1%num_cells+1, sim%m_x2%num_cells+1]
-    call write_mesh_x1x2_polar( sim%m_x1, sim%m_x2, &
-      dataset_x1_polar, dataset_x2_polar )
+    if(sll_get_collective_rank(sll_world_collective)==0) then
+      call write_mesh_x1x2_polar( sim%m_x1, sim%m_x2, &
+        dataset_x1_polar, dataset_x2_polar )
+    else     
+      call write_mesh_x1x2_polar_light( sim%m_x1, sim%m_x2, &
+        dataset_x1_polar, dataset_x2_polar )
+    endif
+    
 
     ! (theta,z) slice: flux surface
     dims_x2x3 = [sim%m_x2%num_cells+1, sim%m_x3%num_cells+1]
-    call write_mesh_x2x3_cart ( sim%m_x2, sim%m_x3, &
-      dataset_x2_cart , dataset_x3_cart  )
-
+    if(sll_get_collective_rank(sll_world_collective)==0) then
+      call write_mesh_x2x3_cart( sim%m_x2, sim%m_x3, &
+        dataset_x2_cart , dataset_x3_cart  )
+    else
+      call write_mesh_x2x3_cart_light( sim%m_x2, sim%m_x3, &
+        dataset_x2_cart , dataset_x3_cart  )        
+    endif
     !--------------------------------------------------------------------------
     ! Time cycle
     !--------------------------------------------------------------------------
@@ -2427,6 +2437,53 @@ contains
 
   end subroutine
 
+
+  subroutine write_mesh_x1x2_polar_light( mesh_x1, mesh_x2, dataset_x1, dataset_x2 )
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x1
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    character(len=*)           , intent(  out) :: dataset_x1
+    character(len=*)           , intent(  out) :: dataset_x2
+
+    sll_real64, allocatable :: x1(:,:), x2(:,:)
+    sll_real64              :: r, dr, rmin, rmax, theta, dtheta
+    sll_int32               :: i, j, nnodes_x1, nnodes_x2
+    sll_int32               :: file_id, error
+    type(sll_t_hdf5_serial) :: hdf5_file
+
+    !nnodes_x1 = mesh_x1%num_cells+1
+    !nnodes_x2 = mesh_x2%num_cells+1
+    !rmin      = mesh_x1%eta_min
+    !rmax      = mesh_x1%eta_max
+    !dr        = mesh_x1%delta_eta
+    !dtheta    = mesh_x2%delta_eta
+
+    !SLL_ALLOCATE( x1(nnodes_x1,nnodes_x2), error )
+    !SLL_ALLOCATE( x2(nnodes_x1,nnodes_x2), error )
+
+    !do j = 1,nnodes_x2
+    !  do i = 1,nnodes_x1
+    !    r       = rmin+real(i-1,f64)*dr
+    !    theta   = real(j-1,f64)*dtheta
+    !    x1(i,j) = r*cos(theta)
+    !    x2(i,j) = r*sin(theta)
+    !  end do
+    !end do
+
+    !call hdf5_file%init( "mesh_x1x2_polar.h5" )
+    !call hdf5_file%create()
+    !call hdf5_file%write_array( x1, "/x1" )
+    !call hdf5_file%write_array( x2, "/x2" )
+    !call hdf5_file%delete()
+
+    dataset_x1 = "mesh_x1x2_polar.h5:/x1"
+    dataset_x2 = "mesh_x1x2_polar.h5:/x2"
+
+    !deallocate( x1 )
+    !deallocate( x2 )
+
+  end subroutine
+
+
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
@@ -2466,6 +2523,46 @@ contains
     deallocate( x3 )
 
   end subroutine
+
+
+
+  subroutine write_mesh_x2x3_cart_light( mesh_x2, mesh_x3, dataset_x2, dataset_x3 )
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x3
+    character(len=*)           , intent(  out) :: dataset_x2
+    character(len=*)           , intent(  out) :: dataset_x3
+
+    sll_real64, allocatable :: x2(:,:), x3(:,:)
+    sll_int32               :: i, j, nnodes_x2, nnodes_x3
+    sll_int32               :: file_id, error
+
+    !nnodes_x2 = mesh_x2%num_cells+1
+    !nnodes_x3 = mesh_x3%num_cells+1
+
+    !SLL_ALLOCATE( x2(nnodes_x2,nnodes_x3), error )
+    !SLL_ALLOCATE( x3(nnodes_x2,nnodes_x3), error )
+
+    !do i = 1,nnodes_x2
+    !  x2(i,:) = mesh_x2%eta1_node( i )
+    !end do
+
+    !do j = 1,nnodes_x3
+    !  x3(:,j) = mesh_x3%eta1_node( j )
+    !end do
+
+    !call sll_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
+    !call sll_hdf5_write_array( file_id, x2, "/x2", error )
+    !call sll_hdf5_write_array( file_id, x3, "/x3", error )
+    !call sll_hdf5_file_close ( file_id, error )
+
+    dataset_x2 = "mesh_x2x3_cart.h5:/x2"
+    dataset_x3 = "mesh_x2x3_cart.h5:/x3"
+
+    !deallocate( x2 )
+    !deallocate( x3 )
+
+  end subroutine
+
 
 !==============================================================================
 

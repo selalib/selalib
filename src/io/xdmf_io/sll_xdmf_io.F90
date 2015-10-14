@@ -12,7 +12,7 @@ use sll_m_xml, only:    &
     sll_t_xml_document, &        ! XML document tree, only for output
     sll_t_xml_element            ! most basic object in an XML tree
 
-use sll_m_xdmf_serial, only: &
+use sll_m_xdmf_light_serial, only: &
     sll_t_xdmf_file              ! helper: XML doc creation in XDMF database
 
 #ifndef NOHDF5
