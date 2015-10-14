@@ -81,7 +81,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
     ADD_SUBDIRECTORY( sim_pic_vp_2d2v_cart                     )
     ADD_SUBDIRECTORY( sim_pic_1d2v_vm_cart                     )
-    ADD_SUBDIRECTORY( sl_1d1v_va_cart_spectral )
 
 ENDIF()
 
