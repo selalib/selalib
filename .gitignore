@@ -42,7 +42,7 @@ Portindex*
 /usr/
 
 # Geometry input files generated automatically by Python script
-/src/CAID_coordinate_transformations/*/*.nml
+/src/add_ons/multipatch/testing/CAID_coordinate_transformations/*/*.nml
 
 # Other stuff (to be removed?)
 #prototype/release/*

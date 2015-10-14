@@ -2,7 +2,7 @@ program test_lagrange_interpolation
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
- use sll_lagrange_interpolation
+ use sll_m_lagrange_interpolation_1d
  use sll_constants
 implicit none
 sll_int32  :: i,d,num_points

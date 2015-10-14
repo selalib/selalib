@@ -29,7 +29,7 @@ cd build; {
 ${CMAKE} \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DHDF5_PARALLEL_ENABLED=ON \
-	${WORKSPACE}/src 
+	${WORKSPACE} 
 make Experimental
 }; cd -
 
@@ -40,7 +40,7 @@ exit 0
 
 mkdir build
 cd build; {
-cmake ../src
+cmake ../
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild

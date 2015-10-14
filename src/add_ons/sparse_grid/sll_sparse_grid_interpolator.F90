@@ -12,7 +12,7 @@ module sll_sparse_grid_interpolator
   use sll_m_interpolators_1d_base
   use sll_constants
   use sll_m_periodic_interpolator_1d
-  use sll_lagrange_interpolation
+  use sll_m_lagrange_interpolation_1d
   use, intrinsic :: iso_c_binding
   implicit none
   private
