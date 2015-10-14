@@ -217,7 +217,7 @@ contains
 
     ! Initialize kernel smoother    
     sim%specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
-         sim%domain, [sim%n_gcells], &
+         sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother-1, SLL_GALERKIN) 
     sim%kernel_smoother_1 => sim%specific_kernel_smoother_1
     sim%specific_kernel_smoother_0 => &
@@ -242,7 +242,7 @@ contains
             sim%domain(3), &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
+       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles*3
        ! Pseudorandom initialization with sobol numbers
        call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
             sim%landau_param, sim%domain(1),sim%domain(3), &
