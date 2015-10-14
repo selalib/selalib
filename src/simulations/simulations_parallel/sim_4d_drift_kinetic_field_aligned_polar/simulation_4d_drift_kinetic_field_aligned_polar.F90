@@ -69,7 +69,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_m_characteristics_2d_verlet
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_advection_1d_periodic
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_polar_wrapper
   use sll_qn_solver_3d_polar_parallel_x1_wrapper_module
   use sll_fcisl_module
   use sll_m_derivative_2d_oblic

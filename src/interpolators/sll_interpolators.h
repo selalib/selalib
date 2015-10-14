@@ -31,7 +31,7 @@ use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_periodic_interpolator_1d
 use sll_m_lagrange_interpolator_1d
 use periodic_interp_module
-use sll_lagrange_interpolation
+use sll_m_lagrange_interpolation_1d
 
 #include "sll_splines.h"
 
