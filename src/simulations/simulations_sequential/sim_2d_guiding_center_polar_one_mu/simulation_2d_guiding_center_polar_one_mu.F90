@@ -33,8 +33,7 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
   use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  !use sll_m_poisson_2d_polar_solver
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_polar_wrapper
   use sll_m_poisson_2d_elliptic_solver
   use sll_m_scalar_field_2d_base
   !use sll_m_scalar_field_2d_alternative
