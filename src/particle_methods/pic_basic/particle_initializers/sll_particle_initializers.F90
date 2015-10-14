@@ -26,6 +26,7 @@ module sll_m_particle_initializer
  
 
 contains
+! Alternative versions. Decide if use or remove.
 !!$  !---------------------------------------------------------------------------!
 !!$  
 !!$  subroutine draw_product_density_2d2v (this, particle_group, random_seed)
