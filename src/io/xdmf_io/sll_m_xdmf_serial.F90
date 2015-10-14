@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE:   sll_m_xdmf_serial
+! MODULE:   sll_m_xdmf_light_serial
 !
 ! DESCRIPTION:
 !> @ingroup xdmf_io
@@ -9,7 +9,7 @@
 !> @brief   Construct the XML component of an XDMF database (sequential).
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
-module sll_m_xdmf_serial
+module sll_m_xdmf_light_serial
 
 #include "sll_working_precision.h"
 
@@ -133,7 +133,7 @@ contains
 
     ! Prepare strings with data
     write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
-    call sll_s_ints_to_string( dims, dims_str )
+    call sll_s_ints_to_string( (/ dims(2), dims(1) /), dims_str )
 
     ! Add new grid to domain
     grid => self%xml_domain%new_element( 'Grid' )
@@ -220,4 +220,4 @@ contains
 
   end subroutine t_xdmf__add_field
 
-end module sll_m_xdmf_serial
+end module sll_m_xdmf_light_serial
