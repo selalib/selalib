@@ -59,7 +59,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_m_characteristics_2d_verlet
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_advection_1d_periodic
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_polar_wrapper
   use sll_hermite_interpolation_2d_module
   use sll_hdf5_io_serial
   use sll_ascii_io

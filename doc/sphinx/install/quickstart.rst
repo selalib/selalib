@@ -18,7 +18,7 @@ Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DBUILD_PACKAGE=ON <src_dir>
+         -DBUILD_PACKAGE=ON <selalib_dir>
    make 
    make install
 
