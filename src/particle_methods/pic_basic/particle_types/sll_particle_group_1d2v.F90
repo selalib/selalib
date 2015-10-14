@@ -72,6 +72,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
+    r = 1.0_f64
     r(1) = self%particle_array(i, 1)
     
   end function get_x_1d2v
@@ -82,6 +83,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
+    r = 1.0_f64
     r(1:2) = self%particle_array(i, 2:3)
     
   end function get_v_1d2v
@@ -174,8 +176,8 @@ contains
 
     self%n_particles = n_particles
     SLL_ALLOCATE(self%particle_array(n_particles,4), ierr) 
-    self%species%q = 1.0
-    self%species%m = 1.0
+    self%species%q = 1.0_f64
+    self%species%m = 1.0_f64
 
   end subroutine initialize_particle_group_1d2v
 

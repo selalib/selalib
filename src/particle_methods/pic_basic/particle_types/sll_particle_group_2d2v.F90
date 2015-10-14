@@ -72,6 +72,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
+    r = 1.0_f64
     r(1:2) = self%particle_array(i, 1:2)
     
   end function get_x_2d2v
@@ -82,6 +83,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
+    r = 1.0_f64
     r(1:2) = self%particle_array(i, 3:4)
     
   end function get_v_2d2v
