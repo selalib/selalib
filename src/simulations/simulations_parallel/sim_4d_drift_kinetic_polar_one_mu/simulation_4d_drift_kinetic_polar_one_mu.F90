@@ -60,7 +60,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_m_characteristics_2d_verlet
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_advection_1d_periodic
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_polar_wrapper
   use sll_m_gyroaverage_2d_polar_hermite_solver
   use sll_m_gyroaverage_2d_polar_splines_solver
   use sll_m_gyroaverage_2d_polar_pade_solver

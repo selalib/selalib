@@ -37,7 +37,7 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 !  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_polar_wrapper
   use sll_m_poisson_2d_elliptic_solver, &
      only: new_poisson_2d_elliptic_solver, &
            es_gauss_legendre
