@@ -38,9 +38,7 @@ module sll_hexagonal_meshes
     new_hex_mesh_2d,          &
     cart_to_hex1,             &
     cart_to_hex2,             &
-    hex_to_global,            &
     local_to_global,          &
-    index_hex_to_global,      &
     cells_to_origin,          &
     get_triangle_index,       &
     get_edge_index,           &

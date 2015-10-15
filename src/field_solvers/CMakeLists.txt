@@ -5,4 +5,5 @@ ADD_SUBDIRECTORY(poisson_solvers)
 
 IF (MPI_ENABLED)
   ADD_SUBDIRECTORY(poisson_solvers_parallel)
+  ADD_SUBDIRECTORY(maxwell_solvers_parallel)
 ENDIF (MPI_ENABLED)
