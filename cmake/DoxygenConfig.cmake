@@ -8,10 +8,10 @@ if(DOXYGEN_FOUND)
    file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
    message(STATUS "The documentation is in ${DOXYGEN_OUTPUT_DIR}")
 
-   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/../doc/doxygen/Doxyfile-dev
+   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile-dev
      ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile-dev @ONLY)
 
-   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/../doc/doxygen/Doxyfile-user
+   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile-user
      ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile-user @ONLY)
    
    add_custom_target( doc-dev
