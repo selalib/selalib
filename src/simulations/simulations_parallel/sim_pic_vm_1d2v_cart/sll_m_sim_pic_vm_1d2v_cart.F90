@@ -242,7 +242,7 @@ contains
             sim%domain(3), &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles*3
+       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
        ! Pseudorandom initialization with sobol numbers
        call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
             sim%landau_param, sim%domain(1),sim%domain(3), &
