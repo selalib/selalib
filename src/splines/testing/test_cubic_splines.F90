@@ -1,19 +1,4 @@
-!*****************************************************************************
-!
-! Selalib      
-! Module: unit_test.F90
-!
-!> @brief 
-!> sll_splines unit test
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr), 
-!> Eric SONNENDRÜCKER (sonnen@math.unistra.fr)
-!> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
-!                                  
-!*****************************************************************************
-
-program spline_tester
+program test_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -363,4 +348,4 @@ contains
 
   end subroutine test_2d_cubic_splines_periodic
 
-end program spline_tester
+end program test_cubic_splines
