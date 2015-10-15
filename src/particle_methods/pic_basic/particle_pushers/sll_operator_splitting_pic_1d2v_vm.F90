@@ -42,13 +42,13 @@ module sll_m_operator_splitting_pic_1d2v_vm
      sll_real64, allocatable :: j_dofs_local(:,:)!< MPI-processor local part of one component of \a j_dofs
 
    contains
-     procedure :: operatorHp1 => operatorHp1_pic_1d2v_vm  !< Operator for H_p1 part
-     procedure :: operatorHp2 => operatorHp2_pic_1d2v_vm  !< Operator for H_p2 part
-     procedure :: operatorHE => operatorHE_pic_1d2v_vm  !< Operator for H_E part
-     procedure :: operatorHB => operatorHB_pic_1d2v_vm  !< Operator for H_B part
-     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm
-     procedure :: strang_splitting => strang_splitting_pic_1d2v_vm
-     procedure :: update_jv
+     procedure :: operatorHp1 => operatorHp1_pic_1d2v_vm  !> Operator for H_p1 part
+     procedure :: operatorHp2 => operatorHp2_pic_1d2v_vm  !> Operator for H_p2 part
+     procedure :: operatorHE => operatorHE_pic_1d2v_vm  !> Operator for H_E part
+     procedure :: operatorHB => operatorHB_pic_1d2v_vm  !> Operator for H_B part
+     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm !> Lie splitting propagator
+     procedure :: strang_splitting => strang_splitting_pic_1d2v_vm !> Strang splitting propagator
+     procedure :: update_jv !> Helper function to compute the integral of j using Gauss quadrature
 
   end type sll_operator_splitting_pic_1d2v_vm
 
@@ -82,10 +82,11 @@ contains
   end subroutine lie_splitting_pic_1d2v_vm
 
   !---------------------------------------------------------------------------!
-  !> Push Hf1: Equations to solve are
+  !> Push Hp1: Equations to solve are
   !> \partial_t f + v_1 \partial_{x_1} f = 0    -> X_new = X_old + dt V_1
+  !> V_new,2 = V_old,2 + \int_0 h V_old,1 B_old
   !> \partial_t E_1 = - \int v_1 f(t,x_1, v) dv -> E_{1,new} = E_{1,old} - \int \int v_1 f(t,x_1+s v_1,v) dv ds
-  !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
+  !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
   !> \partial_t B = 0 => B_new = B_old 
   subroutine operatorHp1_pic_1d2v_vm(this, dt)
     class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
@@ -104,12 +105,12 @@ contains
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
-    ! j_k(s) = 1/L_x \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h)/h v_k,
+    ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
     ! where h is the grid spacing and N the normalized B-spline
     ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
-    ! j_k(s) = 1/L_x  \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i)/h v_k.
+    ! j_k(s) = \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i) v_k.
     ! Now, we want the integral 
-    ! \int_{0..dt} j_k(s) d s = 1/Lx \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i)/h ds =  1/Lx \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt/h}  N(y_k + w v_{1,k}-y_i) dw
+    ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
 
 
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
@@ -178,7 +179,6 @@ contains
  end subroutine operatorHp1_pic_1d2v_vm
 
  ! TODO: This is hard coded for quadratic, cubic splines. Make general.
-! TODO: VZ unklar.
  subroutine update_jv(this, lower, upper, index, weight, sign, vi)
    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
    sll_real64, intent(in) :: lower
@@ -216,6 +216,7 @@ contains
 
  end subroutine update_jv
 
+ !> Alternative implementation of the Hp1 operator based on the primal function of the spline
  subroutine operatorHp1_pic_1d2v_vm_prim(this, dt)
     class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
@@ -233,12 +234,12 @@ contains
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
-    ! j_k(s) = 1/L_x \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h)/h v_k,
+    ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
     ! where h is the grid spacing and N the normalized B-spline
     ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
-    ! j_k(s) = 1/L_x  \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i)/h v_k.
+    ! j_k(s) = \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i) v_k.
     ! Now, we want the integral 
-    ! \int_{0..dt} j_k(s) d s = 1/Lx \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i)/h ds =  1/Lx \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt/h}  N(y_k + w v_{1,k}-y_i) dw
+    ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
 
 
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
@@ -330,7 +331,7 @@ contains
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
-    this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
+    this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
 
     ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
@@ -344,9 +345,10 @@ contains
 
 
  !---------------------------------------------------------------------------!
-  !> Push Hf2: Equations to solve are
-  !> \partial_t f + v_1 \partial_{x_1} f = 0    -> X_new = X_old + dt V_1
-  !> \partial_t E_1 = - \int v_1 f(t,x_1, v) dv -> E_{1,new} = E_{1,old} - \int \int v_1 f(t,x_1+s v_1,v) dv ds
+  !> Push Hp2: Equations to solve are
+  !> X_new = X_old
+  !> V_new,1 = V_old,1 + \int_0 h V_old,2 B_old
+  !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old} 
   !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
   !> \partial_t B = 0 => B_new = B_old
   subroutine operatorHp2_pic_1d2v_vm(this, dt)
@@ -435,7 +437,7 @@ contains
        call this%kernel_smoother_0%evaluate_kernel_function_particle&
             (this%efield_dofs(:,2), i_part, efield(2))
        v_new = this%particle_group%get_v(i_part)
-       v_new(1:2) = v_new(1:2) + dt * efield!this%efield(i_part,:) 
+       v_new(1:2) = v_new(1:2) + dt * efield
        call this%particle_group%set_v(i_part, v_new)
     end do
     
@@ -506,10 +508,6 @@ contains
 
     ! TODO: Check that n_dofs is the same for both kernel smoothers.
 
-    !SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
-    !SLL_ALLOCATE(this%bfield_dofs(this%kernel_smoother_0%n_dofs), ierr)
-    !SLL_ALLOCATE(this%efield(this%particle_group%n_particles,2), ierr)
-    !SLL_ALLOCATE(this%bfield(this%particle_group%n_particles), ierr)
     SLL_ALLOCATE(this%j_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
     SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother_0%n_dofs,2), ierr)
 
