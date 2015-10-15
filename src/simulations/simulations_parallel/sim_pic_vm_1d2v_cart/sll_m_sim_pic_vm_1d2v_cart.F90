@@ -199,6 +199,7 @@ contains
     sll_real64 :: total_energy(1)
     sll_real64 :: potential_energy(3)
     sll_real64 :: vi(3)
+    sll_real64 :: wi(1)
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
@@ -302,8 +303,9 @@ contains
     kinetic_energy = 0.0_f64
     do i_part=1,sim%particle_group%n_particles
        vi = sim%particle_group%get_v(i_part)
+       wi = sim%particle_group%get_weights(i_part)
        kinetic_energy = kinetic_energy + &
-            (vi(1)**2+vi(2)**2)*sim%particle_group%get_charge(i_part)
+            (vi(1)**2+vi(2)**2)*wi(1)
     end do
     total_energy = 0.0_f64
     call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
@@ -330,8 +332,9 @@ contains
        kinetic_energy = 0.0_f64
        do i_part=1,sim%particle_group%n_particles
           vi = sim%particle_group%get_v(i_part)
+          wi = sim%particle_group%get_weights(i_part)
           kinetic_energy = kinetic_energy + &
-               (vi(1)**2+vi(2)**2)*sim%particle_group%get_charge(i_part)
+               (vi(1)**2+vi(2)**2)*wi(1)
        end do
        total_energy = 0.0_f64
        call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
