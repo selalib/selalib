@@ -3,7 +3,7 @@ ADD_LIBRARY( sll_splines STATIC
   sll_quintic_splines.F90
   sll_bsplines.F90
   sll_arbitrary_degree_splines.F90
-  sll_hex_pre_filters.F90
+  sll_hex_prefilters.F90
   sll_box_splines.F90
   cubic_nonuniform_splines.F90 )
 
