@@ -18,9 +18,12 @@ module sll_m_operator_splitting_pic_vp_2d2v
   use sll_m_poisson_2d_fft
 
   implicit none
+  private
+
+  public :: sll_new_hamiltonian_splitting_pic_vp_2d2v
 
   !> Operator splitting type for 2d2v Vlasov-Poisson
-  type, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
+  type, public, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
      class(poisson_2d_fft_solver), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
      class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
@@ -164,7 +167,7 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, particle_group, efield_dofs) result(this)
+  function sll_new_hamiltonian_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, particle_group, efield_dofs) result(this)
     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: this !< time splitting object 
     class(poisson_2d_fft_solver),pointer, intent(in) :: poisson_solver !< Poisson solver
     class(sll_kernel_smoother_base),pointer, intent(in) :: kernel_smoother !< Kernel smoother
@@ -187,7 +190,7 @@ contains
     SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
     SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
 
-  end function sll_new_splitting_pic_vp_2d2v
+  end function sll_new_hamiltonian_splitting_pic_vp_2d2v
 
 
 
