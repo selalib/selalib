@@ -1,9 +1,9 @@
-program unit_test_pic_1d2v_vm_cart
+program sim_pic_vm_1d2v_cart
 
 #include "sll_working_precision.h"
-  use sll_m_sim_pic_1d2v_vm_cart
+  use sll_m_sim_pic_vm_1d2v_cart
   
-  type(sll_sim_pic_1d2v_vm_cart)  :: sim
+  type(sll_sim_pic_vm_1d2v_cart)  :: sim
   character(len=256)                               :: filename
   integer                                          :: rank, size
  
@@ -21,4 +21,4 @@ program unit_test_pic_1d2v_vm_cart
   call sll_halt_collective()
 
 
-end program unit_test_pic_1d2v_vm_cart
+end program sim_pic_vm_1d2v_cart

@@ -1,7 +1,7 @@
 ! Simulation of 1d2v Vlasov-Maxwell with simple PIC method, periodic boundary conditions, Weibel instability. FEM with splines, degree 3 for B and 2 for E
 
 
-module sll_m_sim_pic_1d2v_vm_cart
+module sll_m_sim_pic_vm_1d2v_cart
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -34,7 +34,7 @@ module sll_m_sim_pic_1d2v_vm_cart
   sll_int32, parameter :: SLL_SPLITTING_SYMPLECTIC=0
   sll_int32, parameter :: SLL_SPLITTING_CEF=1
 
-    type, extends(sll_simulation_base_class) :: sll_sim_pic_1d2v_vm_cart
+    type, extends(sll_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart
 
      ! Abstract particle group
      class(sll_particle_group_base), pointer :: particle_group
@@ -97,17 +97,17 @@ module sll_m_sim_pic_1d2v_vm_cart
      procedure :: init_from_file => init_pic_1d2v_vm
      procedure :: run => run_pic_1d2v_vm
 
-  end type sll_sim_pic_1d2v_vm_cart
+  end type sll_t_sim_pic_vm_1d2v_cart
 
   interface sll_delete
-     module procedure delete_pic_1d2v_vm
+     module procedure delete_pic_vm_1d2v
   end interface sll_delete
   
 contains
 !------------------------------------------------------------------------------!
   ! Read in the simulation parameters from input file
-  subroutine init_pic_1d2v_vm (sim, filename)
-    class(sll_sim_pic_1d2v_vm_cart), intent(inout) :: sim
+  subroutine init_pic_vm_1d2v (sim, filename)
+    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
 
     sll_int32   :: io_stat
@@ -178,12 +178,12 @@ contains
        print*, '#splitting case ', splitting_case, ' not implemented.'
     end select
 
-  end subroutine init_pic_1d2v_vm
+  end subroutine init_pic_vm_1d2v
 
 !------------------------------------------------------------------------------!
 
-  subroutine run_pic_1d2v_vm (sim)
-    class(sll_sim_pic_1d2v_vm_cart), intent(inout) :: sim
+  subroutine run_pic_vm_1d2v (sim)
+    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
 
     ! Local variables
     sll_int32, allocatable :: rnd_seed(:)
@@ -358,17 +358,17 @@ contains
 
       beta_cos_k = sim%beta * cos(2*sll_pi*x/sim%domain(3)) 
     end function beta_cos_k
-  end subroutine run_pic_1d2v_vm
+  end subroutine run_pic_vm_1d2v
 
 !------------------------------------------------------------------------------!
 
-  subroutine delete_pic_1d2v_vm (sim)
-    class(sll_sim_pic_1d2v_vm_cart), intent(inout) :: sim
-  end subroutine delete_pic_1d2v_vm
+  subroutine delete_pic_vm_1d2v (sim)
+    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+  end subroutine delete_pic_vm_1d2v
 
 !------------------------------------------------------------------------------!
 
 
 
 
-end module sll_m_sim_pic_1d2v_vm_cart
+end module sll_m_sim_pic_vm_1d2v_cart
