@@ -45,9 +45,9 @@ module sll_m_operator_splitting_cef_pic_1d2v_vm
      procedure :: operatorHp1 => operatorHp1_pic_1d2v_vm  !< Operator for H_p1 part
      procedure :: operatorHE => operatorHE_pic_1d2v_vm  !< Operator for H_E part
      procedure :: operatorHB => operatorHB_pic_1d2v_vm  !< Operator for H_B part
-     procedure :: strang_splitting => strang_splitting_pic_1d2v_vm
-     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm
-     procedure :: update_jv
+     procedure :: strang_splitting => strang_splitting_pic_1d2v_vm !< Strang splitting propagator
+     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm !< Lie splitting propagator
+     procedure :: update_jv !< helper function for Gauss integration of j over time
 
   end type sll_operator_splitting_cef_pic_1d2v_vm
 
@@ -109,13 +109,12 @@ contains
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
-    ! j_k(s) = 1/L_x \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h)/h v_k,
+    ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
     ! where h is the grid spacing and N the normalized B-spline
     ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
-    ! j_k(s) = 1/L_x  \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i)/h v_k.
+    ! j_k(s) = \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i) v_k.
     ! Now, we want the integral 
-    ! \int_{0..dt} j_k(s) d s = 1/Lx \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i)/h ds =  1/Lx \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt/h}  N(y_k + w v_{1,k}-y_i) dw
-
+    ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
 
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
     ! Then update particle position:  X_new = X_old + dt * V
@@ -464,10 +463,6 @@ contains
 
     ! TODO: Check that n_dofs is the same for both kernel smoothers.
 
-    !SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
-    !SLL_ALLOCATE(this%bfield_dofs(this%kernel_smoother_0%n_dofs), ierr)
-    !SLL_ALLOCATE(this%efield(this%particle_group%n_particles,2), ierr)
-    !SLL_ALLOCATE(this%bfield(this%particle_group%n_particles), ierr)
     SLL_ALLOCATE(this%j_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
     SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother_0%n_dofs,2), ierr)
 
