@@ -57,7 +57,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
    
-  call sll_boot_collective()
+!  call sll_boot_collective()
 
   ! Set parameters
   n_particles = 2!10
@@ -121,7 +121,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   efield = 1.0_f64
   bfield = 1.0_f64
 
-  propagator => sll_new_splitting_cef_pic_vm_1d2v(maxwell_solver, &
+  propagator => sll_new_hamiltonian_splitting_cef_pic_vm_1d2v(maxwell_solver, &
             kernel_smoother_0, kernel_smoother_1, particle_group, &
             efield, bfield, &
             eta_min, eta_max-eta_min)
@@ -223,5 +223,5 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
      stop
   end if
   
-  call sll_halt_collective()
+ ! call sll_halt_collective()
 end program test_hamiltonian_splitting_cef_pic_vm_1d2v
