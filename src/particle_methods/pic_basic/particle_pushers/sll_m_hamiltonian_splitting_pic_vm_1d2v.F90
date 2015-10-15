@@ -1,8 +1,8 @@
 !> @ingroup particle_pushers
 !> @author Katharina Kormann, IPP
-!> @brief Particle pusher based on operator splitting for 1d2v Vlasov-Poisson.
+!> @brief Particle pusher based on Hamiltonian splitting for 1d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
-module sll_m_operator_splitting_pic_1d2v_vm
+module sll_m_hamiltonian_splitting_pic_vm_1d2v
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -16,12 +16,12 @@ module sll_m_operator_splitting_pic_1d2v_vm
   use sll_arbitrary_degree_splines
   
   use sll_m_maxwell_1d_base
-  use sll_m_operator_splitting_base
+  use sll_m_hamiltonian_splitting_base
 
   implicit none
 
   !> Operator splitting type for Vlasov-Maxwell 1d2v
-  type, extends(sll_t_operator_splitting_base) :: sll_operator_splitting_pic_1d2v_vm
+  type, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
      class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
@@ -42,44 +42,52 @@ module sll_m_operator_splitting_pic_1d2v_vm
      sll_real64, allocatable :: j_dofs_local(:,:)!< MPI-processor local part of one component of \a j_dofs
 
    contains
-     procedure :: operatorHp1 => operatorHp1_pic_1d2v_vm  !> Operator for H_p1 part
-     procedure :: operatorHp2 => operatorHp2_pic_1d2v_vm  !> Operator for H_p2 part
-     procedure :: operatorHE => operatorHE_pic_1d2v_vm  !> Operator for H_E part
-     procedure :: operatorHB => operatorHB_pic_1d2v_vm  !> Operator for H_B part
-     procedure :: lie_splitting => lie_splitting_pic_1d2v_vm !> Lie splitting propagator
-     procedure :: strang_splitting => strang_splitting_pic_1d2v_vm !> Strang splitting propagator
+     procedure :: operatorHp1 => operatorHp1_pic_vm_1d2v  !> Operator for H_p1 part
+     procedure :: operatorHp2 => operatorHp2_pic_vm_1d2v  !> Operator for H_p2 part
+     procedure :: operatorHE => operatorHE_pic_vm_1d2v  !> Operator for H_E part
+     procedure :: operatorHB => operatorHB_pic_vm_1d2v  !> Operator for H_B part
+     procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
+     procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
      procedure :: update_jv !> Helper function to compute the integral of j using Gauss quadrature
 
-  end type sll_operator_splitting_pic_1d2v_vm
+  end type sll_t_hamiltonian_splitting_pic_vm_1d2v
 
 contains
 
-  subroutine strang_splitting_pic_1d2v_vm(this,dt, number_steps)
-    class(sll_operator_splitting_pic_1d2v_vm) :: this !< time splitting object 
+  subroutine strang_splitting_pic_vm_1d2v(this,dt, number_steps)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
     sll_int32, intent(in)  :: number_steps !< number of time steps
 
-    call this%operatorHp1(0.5_f64*dt)
-    call this%operatorHp2(0.5_f64*dt)
-    call this%operatorHE(0.5_f64*dt)
-    call this%operatorHB(dt)
-    call this%operatorHE(0.5_f64*dt)
-    call this%operatorHp2(0.5_f64*dt)
-    call this%operatorHp1(0.5_f64*dt)
+    sll_int32 :: i_step
 
-  end subroutine strang_splitting_pic_1d2v_vm
+    do i_step = 1, number_steps
+       call this%operatorHp1(0.5_f64*dt)
+       call this%operatorHp2(0.5_f64*dt)
+       call this%operatorHE(0.5_f64*dt)
+       call this%operatorHB(dt)
+       call this%operatorHE(0.5_f64*dt)
+       call this%operatorHp2(0.5_f64*dt)
+       call this%operatorHp1(0.5_f64*dt)
+    end do
 
-  subroutine lie_splitting_pic_1d2v_vm(this,dt, number_steps)
-    class(sll_operator_splitting_pic_1d2v_vm) :: this !< time splitting object 
+  end subroutine strang_splitting_pic_vm_1d2v
+
+  subroutine lie_splitting_pic_vm_1d2v(this,dt, number_steps)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
     sll_int32, intent(in)  :: number_steps !< number of time steps
 
-    call this%operatorHp1(dt)
-    call this%operatorHp2(dt)
-    call this%operatorHE(dt)
-    call this%operatorHB(dt)
+    sll_int32 :: i_step
 
-  end subroutine lie_splitting_pic_1d2v_vm
+    do i_step = 1, number_steps
+       call this%operatorHp1(dt)
+       call this%operatorHp2(dt)
+       call this%operatorHE(dt)
+       call this%operatorHB(dt)
+    end do
+
+  end subroutine lie_splitting_pic_vm_1d2v
 
   !---------------------------------------------------------------------------!
   !> Push Hp1: Equations to solve are
@@ -88,8 +96,8 @@ contains
   !> \partial_t E_1 = - \int v_1 f(t,x_1, v) dv -> E_{1,new} = E_{1,old} - \int \int v_1 f(t,x_1+s v_1,v) dv ds
   !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
   !> \partial_t B = 0 => B_new = B_old 
-  subroutine operatorHp1_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+  subroutine operatorHp1_pic_vm_1d2v(this, dt)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -176,11 +184,11 @@ contains
    call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
    call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
 
- end subroutine operatorHp1_pic_1d2v_vm
+ end subroutine operatorHp1_pic_vm_1d2v
 
  ! TODO: This is hard coded for quadratic, cubic splines. Make general.
  subroutine update_jv(this, lower, upper, index, weight, sign, vi)
-   class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+   class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
    sll_real64, intent(in) :: lower
    sll_real64, intent(in) :: upper
    sll_int32,  intent(in) :: index
@@ -217,8 +225,8 @@ contains
  end subroutine update_jv
 
  !> Alternative implementation of the Hp1 operator based on the primal function of the spline
- subroutine operatorHp1_pic_1d2v_vm_prim(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+ subroutine operatorHp1_pic_vm_1d2v_prim(this, dt)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -338,7 +346,7 @@ contains
    call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
    call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
 
- end subroutine operatorHp1_pic_1d2v_vm_prim
+ end subroutine operatorHp1_pic_vm_1d2v_prim
 
 
 
@@ -351,8 +359,8 @@ contains
   !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old} 
   !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
   !> \partial_t B = 0 => B_new = B_old
-  subroutine operatorHp2_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+  subroutine operatorHp2_pic_vm_1d2v(this, dt)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -410,7 +418,7 @@ contains
     !!this%efield_dofs(:,2) = this%efield_dofs(:,2) - this%j_dofs(:,2)/this%Lx*dt
     
 
- end subroutine operatorHp2_pic_1d2v_vm
+  end subroutine operatorHp2_pic_vm_1d2v
   
   !---------------------------------------------------------------------------!
   !> Push H_E: Equations to be solved
@@ -418,8 +426,8 @@ contains
   !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old} 
   !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
   !> \partial_t B + \partial_{x_1} E_2 = 0 => B_new = B_old - dt \partial_{x_1} E_2
-  subroutine operatorHE_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+  subroutine operatorHE_pic_vm_1d2v(this, dt)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -446,7 +454,7 @@ contains
          dt, this%efield_dofs(:,2), this%bfield_dofs)
     
 
-  end subroutine operatorHE_pic_1d2v_vm
+  end subroutine operatorHE_pic_vm_1d2v
   
 
   !---------------------------------------------------------------------------!
@@ -455,8 +463,8 @@ contains
   !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old}
   !> \partial_t E_2 = - \partial_{x_1} B -> E_{2,new} = E_{2,old}-dt*\partial_{x_1} B
   !> \partial_t B = 0 -> B_new = B_old
-  subroutine operatorHB_pic_1d2v_vm(this, dt)
-    class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
+  subroutine operatorHB_pic_vm_1d2v(this, dt)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -469,13 +477,13 @@ contains
          dt, this%bfield_dofs, this%efield_dofs(:,2))
     
 
-  end subroutine operatorHB_pic_1d2v_vm
+  end subroutine operatorHB_pic_vm_1d2v
 
 
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_splitting_pic_1d2v_vm(&
+  function sll_new_splitting_pic_vm_1d2v(&
        maxwell_solver, &
        kernel_smoother_0, &
        kernel_smoother_1, &
@@ -484,7 +492,7 @@ contains
        bfield_dofs, &
        x_min, &
        Lx) result(this)
-    class(sll_operator_splitting_pic_1d2v_vm), pointer :: this !< time splitting object 
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), pointer :: this !< time splitting object 
     class(sll_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
     class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
@@ -522,7 +530,7 @@ contains
     this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
     this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
 
-  end function sll_new_splitting_pic_1d2v_vm
+  end function sll_new_splitting_pic_vm_1d2v
 
 
   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
@@ -562,4 +570,4 @@ contains
 
 
 
-end module sll_m_operator_splitting_pic_1d2v_vm
+end module sll_m_hamiltonian_splitting_pic_vm_1d2v
