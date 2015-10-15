@@ -4,9 +4,9 @@ module ode_collection
 #include "sll_assert.h"
 #include "sll_errors.h"
 
-  use sll_module_vector_space_base       , only: sll_vector_space_base
-  use sll_module_vector_space_real_arrays, only: sll_vector_space_real_1d
-  use sll_module_ode_integrator_base     , only: sll_ode_base
+  use sll_m_vector_space_base       , only: sll_vector_space_base
+  use sll_m_vector_space_real_arrays, only: sll_vector_space_real_1d
+  use sll_m_ode_integrator_base     , only: sll_ode_base
 
   implicit none
 !  public :: harmonic_oscillator
@@ -79,10 +79,10 @@ program test_ode_integrators
   use sll_working_precision
   use sll_errors
 
-  use sll_module_vector_space_real_arrays, only: &
+  use sll_m_vector_space_real_arrays, only: &
     sll_vector_space_real_1d
 
-  use sll_module_rk_explicit, only: &
+  use sll_m_rk_explicit, only: &
     sll_rk1e_fwd_euler, &
     sll_rk2e_midpoint , &
     sll_rk2e_heun     , &
@@ -90,7 +90,7 @@ program test_ode_integrators
     sll_rk3e_heun3    , &
     sll_rk4e_classic
 
-  use sll_module_ode_integrator_base, only: &
+  use sll_m_ode_integrator_base, only: &
     sll_ode_base, &
     sll_ode_integrator_base
 

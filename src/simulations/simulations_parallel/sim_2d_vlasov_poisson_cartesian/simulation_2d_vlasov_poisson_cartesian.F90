@@ -40,19 +40,19 @@ use sll_constants
 use sll_cartesian_meshes  
 use sll_gnuplot_parallel
 use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
-use sll_module_advection_1d_periodic
-use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_periodic
+use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_fft
 use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_poisson_1d_periodic  
-use sll_module_poisson_1d_periodic_solver
-use sll_module_poisson_1d_polar_solver
-use sll_module_advection_1d_ampere
+use sll_m_poisson_1d_periodic_solver
+use sll_m_poisson_1d_polar_solver
+use sll_m_advection_1d_ampere
 
 #ifdef _OPENMP
 use omp_lib
@@ -1007,7 +1007,7 @@ contains
     sll_real64                          :: tmp_loc(5)
     sll_real64                          :: tmp(5)
     sll_int32                           :: i
-    sll_int32                           :: istep
+    sll_int32                           :: istep = 0
     sll_int32                           :: ig
     sll_int32                           :: k
 
@@ -1362,15 +1362,8 @@ contains
        print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
     endif
 
-    iplot = iplot+1  
-
     do istep = 1, sim%num_iterations
 
-       if (mod(istep,sim%freq_diag)==0) then
-          if (MPI_MASTER) then        
-             print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
-          endif
-       endif
 
        split_T = sim%split%split_begin_T
        t_step = real(istep-1,f64)
@@ -1390,7 +1383,7 @@ contains
                !advection in x
                !$ tid = omp_get_thread_num()+1
                
-               sim%advect_ampere_x1(tid)%ptr%rk = cmplx(0.0,0.0,kind=f64)
+               sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
                !$OMP DO 
                do i_omp = 1, local_size_x2
                
@@ -1412,8 +1405,8 @@ contains
                               kind=f64)
                  end do
                
-                 sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) = &
-                      sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) &
+                 sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
                     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
                     * sim%integration_weight(ig_omp)
                
@@ -1432,7 +1425,7 @@ contains
                rk_loc = cmplx(0.0,0.0,kind=f64)
                do i = 2, nc_x1/2+1
                  do tid = 1, sim%num_threads
-                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%rk(i)
+                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%r1(i)
                  end do
                end do
                
@@ -1442,7 +1435,7 @@ contains
                     rk_loc,                                         &
                     nc_x1/2+1,                                      &
                     MPI_SUM,                                        &
-                    sim%advect_ampere_x1(1)%ptr%rk )
+                    sim%advect_ampere_x1(1)%ptr%r1 )
                
                sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
                call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
@@ -1452,7 +1445,7 @@ contains
                
                do i = 2, nc_x1/2+1
                  sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-                    - sim%advect_ampere_x1(1)%ptr%rk(i) &
+                    - sim%advect_ampere_x1(1)%ptr%r1(i) &
                     * (sim%mesh2d%eta1_max-sim%mesh2d%eta1_min) &
                     / (2*sll_pi*cmplx(0.,i-1,kind=f64))
                end do
@@ -1740,11 +1733,6 @@ contains
                      'intdeltafdx',                   &
                      iplot )
 
-                call sll_gnuplot_1d(         &
-                     f_visu_buf1d(1:num_dof_x2),      &
-                     node_positions_x2(1:num_dof_x2), &
-                     'intdeltafdx')                        
-
                 call sll_binary_write_array_2d(deltaf_id,           &
                      f_visu(1:np_x1-1,1:np_x2-1),ierr)  
 
@@ -1784,11 +1772,6 @@ contains
                      'intfdx',                        &
                      iplot )
 
-                call sll_gnuplot_1d(         &
-                     f_visu_buf1d(1:num_dof_x2),      &
-                     node_positions_x2(1:num_dof_x2), &
-                     'intfdx')
-
                 call sll_plot_f_cartesian( iplot,             &
                      f_visu,            &
                      sim%x1_array,      &
@@ -1796,9 +1779,11 @@ contains
                      node_positions_x2, &
                      sim%num_dof_x2,    &
                      'f', time)                    
+
              endif
 
              iplot = iplot+1  
+             if (MPI_MASTER)  print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
 
           endif
 

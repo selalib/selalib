@@ -7,15 +7,15 @@ module sll_simulation_4d_qns_general_module
 #include "sll_utilities.h"
 
 use sll_collective
-use sll_module_interpolators_1d_base
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_interpolators_1d_base
+use sll_m_cubic_spline_interpolator_1d
 use sll_simulation_base
 use sll_parallel_array_initializer_module
 use sll_gnuplot_parallel
 use sll_general_coordinate_elliptic_solver_module
-use sll_module_scalar_field_2d_base
-use sll_module_scalar_field_2d
-use sll_module_arbitrary_degree_spline_interpolator_2d
+use sll_m_scalar_field_2d_base
+use sll_m_scalar_field_2d
+use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_timer
 
 implicit none
@@ -791,19 +791,18 @@ call compute_charge_density( &
      sim%partial_reduction,  &
      sim%rho_split )
 
-global_indices(1:2) =  &
-     local_to_global( sim%split_rho_layout, (/1, 1/) )
+global_indices(1:2) = local_to_global( sim%split_rho_layout, (/1, 1/) )
 
 call sll_gnuplot_rect_2d_parallel( &
-     sim%mesh2d_x%eta1_min, &
-     sim%mesh2d_x%delta_eta1, &
-     sim%mesh2d_x%eta2_min, &
-     sim%mesh2d_x%delta_eta2, &
-     size(sim%rho_split,1), &
-     size(sim%rho_split,2), &
-     sim%rho_split, &
-     "rho_split", &
-     0, &
+     sim%mesh2d_x%eta1_min,        &
+     sim%mesh2d_x%delta_eta1,      &
+     sim%mesh2d_x%eta2_min,        &
+     sim%mesh2d_x%delta_eta2,      &
+     size(sim%rho_split,1),        &
+     size(sim%rho_split,2),        &
+     sim%rho_split,                &
+     "rho_split",                  &
+     0,                            &
      ierr )
 
 call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )

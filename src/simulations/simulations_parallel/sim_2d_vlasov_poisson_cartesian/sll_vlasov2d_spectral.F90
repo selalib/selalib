@@ -5,7 +5,7 @@ module sll_vlasov2d_spectral
 #include "sll_assert.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 use sll_collective
 use sll_remapper
 #include "sll_fftw.h"

@@ -1,4 +1,4 @@
-module sll_module_qn_2d_polar_precompute
+module sll_m_qn_2d_polar_precompute
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -954,4 +954,4 @@ contains
     
   end subroutine precompute_matrix
 
-end module sll_module_qn_2d_polar_precompute
+end module sll_m_qn_2d_polar_precompute

@@ -24,7 +24,7 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install pastix
 	$ brew install fftw
 	$ cd selalib/build
-	$ cmake ../src -DPASTIX_ENABLED=ON  \
+	$ cmake ../ -DPASTIX_ENABLED=ON  \
 		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
 		-DHDF5_PARALLEL_ENABLED=ON
 	$ make
@@ -53,4 +53,4 @@ A special options file is available in selalib/cmake directory ::
 
 	$ mkdir selalib/build
 	$ cd selalib/build
-	$ cmake ../src -DOPTIONS_FILE=../../cmake/macports_update_2014.cmake 
+	$ cmake ../ -DOPTIONS_FILE=../../cmake/macports_update_2014.cmake 

@@ -1,0 +1,7 @@
+ADD_LIBRARY( sll_remap STATIC sll_remap.F90 )
+TARGET_LINK_LIBRARIES( sll_remap sll_collective ) 
+
+
+IF(BUILD_TESTING)
+  ADD_SUBDIRECTORY(testing)
+ENDIF(BUILD_TESTING)

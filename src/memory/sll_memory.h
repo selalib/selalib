@@ -91,7 +91,7 @@ use sll_memory
 
 #define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
   SLL_ALLOCATE(arry_name_and_lims, error_var)             \
-  SLL_INIT_ARRAY(arry_name_and_lims, 0.0) 
+  SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
 
   ! **************************************************************************
   ! IMPLEMENTATION NOTES FOR sll_memory.h:
