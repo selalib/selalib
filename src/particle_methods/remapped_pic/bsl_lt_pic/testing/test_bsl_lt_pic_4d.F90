@@ -24,7 +24,7 @@
 
 ! todo: finish the unit test (some functions not written), and add the test in CMakeLists
 
-program unit_test_bsl_lt_pic_4d
+program test_bsl_lt_pic_4d
 
   ! [[file:../working_precision/sll_working_precision.h]]
 #include "sll_working_precision.h"
@@ -269,7 +269,7 @@ program unit_test_bsl_lt_pic_4d
   call sll_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
      ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
-     print*, "[unit_test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
+     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
      stop
      print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
      ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( particle_group )
@@ -479,4 +479,5 @@ contains
     new_vy = vy
 
   end subroutine test_backward_push
-end program
+
+end program test_bsl_lt_pic_4d

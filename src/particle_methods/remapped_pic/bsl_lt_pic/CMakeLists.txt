@@ -17,24 +17,7 @@ TARGET_LINK_LIBRARIES( sll_bsl_lt_pic
   sll_file_io # needed?
   )
 
-
-ADD_EXECUTABLE(test_bsl_lt_pic_4d_remap unit_test_bsl_lt_pic_4d.F90)
-
-TARGET_LINK_LIBRARIES(test_bsl_lt_pic_4d_remap
-  sll_timer
-  sll_constants
-  sll_working_precision
-  sll_assert
-  sll_remapped_pic
-  sll_bsl_lt_pic
-  )
-
-
 # Ctest
-IF(BUILD_TESTING)
-  # TODO
-  # ADD_EXECUTABLE( test_bsl_lt_pic unit_test.F90 )
-  # TARGET_LINK_LIBRARIES( test_bsl_lt_pic sll_bsl_lt_pic_pic )
-  # ADD_TEST( NAME bsl_lt_pic COMMAND test_bsl_lt_pic )
-  # SET_TESTS_PROPERTIES( bsl_lt_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ENDIF(BUILD_TESTING)
+if( BUILD_TESTING )
+  add_subdirectory( testing )
+endif( BUILD_TESTING )

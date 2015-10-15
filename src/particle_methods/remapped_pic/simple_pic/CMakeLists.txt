@@ -16,8 +16,5 @@ TARGET_LINK_LIBRARIES( sll_simple_pic
 
 # Ctest
 IF(BUILD_TESTING)
-  ADD_EXECUTABLE( test_simple_pic unit_test.F90 )
-  TARGET_LINK_LIBRARIES( test_simple_pic sll_simple_pic )
-  ADD_TEST( NAME simple_pic COMMAND test_simple_pic )
-  SET_TESTS_PROPERTIES( simple_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  add_subdirectory( testing )
 ENDIF(BUILD_TESTING)
