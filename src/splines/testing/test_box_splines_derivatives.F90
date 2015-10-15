@@ -5,7 +5,7 @@
 !> Laura S. Mendoza
 !*****************************************************************************
 
-program box_spline_tester
+program test_box_splines_derivatives
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -153,4 +153,4 @@ program box_spline_tester
   end do
   print *, "     sum =", somme
 
-end program box_spline_tester
+end program test_box_splines_derivatives
