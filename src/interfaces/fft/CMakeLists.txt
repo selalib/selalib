@@ -1,4 +1,3 @@
-
 IF(${FFT_LIB} STREQUAL "FFTPACK")
 
   SET(FFT_SRC fftpack/sll_fft.F90)
@@ -32,9 +31,6 @@ TARGET_LINK_LIBRARIES( sll_fft sll_utilities
                                sll_assert 
                                sll_constants
                                ${DEPENDENCIES} )
-
 IF(BUILD_TESTING)
-  ADD_EXECUTABLE( test_fft unit_test.F90 )
-  TARGET_LINK_LIBRARIES( test_fft sll_fft )
-  ADD_TEST( NAME fft COMMAND test_fft )
+  ADD_SUBDIRECTORY( testing )
 ENDIF(BUILD_TESTING)
