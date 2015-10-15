@@ -16,13 +16,13 @@
 !**************************************************************
 
 !> Class of arbitrary degree version of 2d irnterpolator
-module sll_module_arbitrary_degree_spline_interpolator_2d
+module sll_m_arbitrary_degree_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h" 
-use sll_module_interpolators_2d_base
+use sll_m_interpolators_2d_base
 use sll_utilities
-use sll_module_arbitrary_degree_spline_interpolator_1d
+use sll_m_arbitrary_degree_spline_interpolator_1d
 
 implicit none
 private
@@ -3878,4 +3878,4 @@ call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
 end subroutine splint_der
 
   
-end module sll_module_arbitrary_degree_spline_interpolator_2d
+end module sll_m_arbitrary_degree_spline_interpolator_2d

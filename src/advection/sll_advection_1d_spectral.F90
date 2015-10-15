@@ -18,7 +18,7 @@
 !> @brief Spectral 1d advection
 !> @details We are using FFTW to compute ffts. Boundary conditions
 !> must be periodic.
-module sll_module_advection_1d_spectral
+module sll_m_advection_1d_spectral
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -26,8 +26,8 @@ module sll_module_advection_1d_spectral
 #include "sll_constants.h"
 
 use sll_boundary_condition_descriptors
-use sll_module_advection_1d_base
-use sll_module_interpolators_1d_base
+use sll_m_advection_1d_base
+use sll_m_interpolators_1d_base
 
 #ifdef FFTW_F2003
 #include "sll_fftw.h"
@@ -210,4 +210,4 @@ subroutine delete(adv)
    
 end subroutine delete
 
-end module sll_module_advection_1d_spectral
+end module sll_m_advection_1d_spectral

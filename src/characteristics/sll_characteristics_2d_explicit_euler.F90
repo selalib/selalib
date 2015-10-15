@@ -15,12 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_characteristics_2d_explicit_euler
+module sll_m_characteristics_2d_explicit_euler
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_characteristics_2d_base
+use sll_m_characteristics_2d_base
 implicit none
 
   type,extends(sll_characteristics_2d_base) :: explicit_euler_2d_charac_computer
@@ -273,4 +273,4 @@ contains
 
   
   
-end module sll_module_characteristics_2d_explicit_euler
+end module sll_m_characteristics_2d_explicit_euler

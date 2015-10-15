@@ -20,7 +20,7 @@ program unit_test_qn_2d_polar_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
 !#include "sll_field_2d.h"
-use sll_module_qn_2d_polar_splines_solver
+use sll_m_qn_2d_polar_splines_solver
 
 implicit none
   

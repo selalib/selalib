@@ -35,36 +35,6 @@ TARGET_LINK_LIBRARIES( VPpostprocessing_drive_KEEN dfftpack )
 INSTALL( TARGETS VPpostprocessing_drive_KEEN DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES vp_plots.py DESTINATION ${INSTALL_DIR} )
 
-IF(FFTW_FOUND AND FFTW_ENABLED)
-
-  #PN Vlasov Ampere version of Michel program
-  SET( TEST_NAME   2d_va_cartesian            )
-  SET( SIM_NAME    2d_vlasov_ampere_cartesian )
-  SET( EXECUTABLE "test_${TEST_NAME}"         )
-  
-  ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
-                                unit_test_${TEST_NAME}.F90 )
-    
-  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel sll_ampere_solvers )
-  
-  INSTALL( TARGETS ${EXECUTABLE} DESTINATION ${INSTALL_DIR} )
-  
-  IF(BUILD_TESTING)
-    FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-    SET(  ARGS ${CMAKE_CURRENT_BINARY_DIR}/vasim2d_cartesian_input )
-    ADD_MPI_TEST( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
-    SET_TESTS_PROPERTIES( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-  ENDIF(BUILD_TESTING)
-  
-  ADD_EXECUTABLE( vm2d_spectral sll_vlasov2d_base.F90
-                                sll_vlasov2d_spectral.F90
-                                init_functions.F90
-                                vm2d_spectral.F90)
-    
-  TARGET_LINK_LIBRARIES( vm2d_spectral sll_simulations_parallel sll_ampere_solvers)
-
-ENDIF(FFTW_FOUND AND FFTW_ENABLED)
-  
 #================================================================
 # add two species simulations
 # for the moment, only a copy of one specy simulation

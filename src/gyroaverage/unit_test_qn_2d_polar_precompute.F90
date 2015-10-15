@@ -20,14 +20,14 @@ program unit_test_qn_2d_polar_precompute
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-use sll_module_qn_2d_polar_precompute
+use sll_m_qn_2d_polar_precompute
 use sll_timer
 use sll_ascii_io
 use gauss_lobatto_integration
 use gauss_legendre_integration
 use sll_gnuplot
 use sll_qn_2d_polar
-use sll_module_gyroaverage_2d_polar_hermite_solver
+use sll_m_gyroaverage_2d_polar_hermite_solver
 
 implicit none
 
@@ -451,7 +451,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
     call compute_error(phi_qn,phi_init,1-gamma0_num,error,(/1,1/),Nc)
     print *,'#error whole domain=',error
 
-stop  
+!stop  
   
 !  call test_solve_qn_polar_new(Nc,eta_min,eta_max, &
 !    mu_points(1:N_mu),mu_weights(1:N_mu),N_mu,mode,phi_init,phi_qn)

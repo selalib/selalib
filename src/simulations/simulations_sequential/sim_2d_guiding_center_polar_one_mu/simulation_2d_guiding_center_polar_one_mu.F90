@@ -17,34 +17,33 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
 #include "sll_poisson_solvers.h"
   !use sll_logical_meshes 
   use sll_cartesian_meshes  
-  use sll_module_advection_1d_periodic
-  use sll_module_advection_2d_BSL
-  use sll_module_characteristics_2d_explicit_euler
-  use sll_module_characteristics_2d_verlet
+  use sll_m_advection_1d_periodic
+  use sll_m_advection_2d_BSL
+  use sll_m_characteristics_2d_explicit_euler
+  use sll_m_characteristics_2d_verlet
   !use sll_poisson_2d_periodic  
   use sll_fft
   use sll_reduction_module
   use sll_simulation_base
   !use sll_cubic_spline_interpolator_2d
   !use sll_cubic_spline_interpolator_1d
-  use sll_module_cubic_spline_interpolator_1d
-  use sll_module_cubic_spline_interpolator_2d
+  use sll_m_cubic_spline_interpolator_1d
+  use sll_m_cubic_spline_interpolator_2d
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  !use sll_module_poisson_2d_polar_solver
-  use sll_module_poisson_2d_polar
-  use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  !use sll_module_scalar_field_2d_alternative
+  use sll_m_poisson_2d_polar_wrapper
+  use sll_m_poisson_2d_elliptic_solver
+  use sll_m_scalar_field_2d_base
+  !use sll_m_scalar_field_2d_alternative
   use sll_parallel_array_initializer_module
-  use sll_module_gyroaverage_2d_polar_hermite_solver
-  use sll_module_gyroaverage_2d_polar_splines_solver
-  use sll_module_gyroaverage_2d_polar_pade_solver
+  use sll_m_gyroaverage_2d_polar_hermite_solver
+  use sll_m_gyroaverage_2d_polar_splines_solver
+  use sll_m_gyroaverage_2d_polar_pade_solver
 #ifdef MUDPACK
-  use sll_module_poisson_2d_mudpack
-  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_m_poisson_2d_mudpack
+  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 
   

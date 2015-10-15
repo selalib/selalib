@@ -31,7 +31,6 @@ ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
 TARGET_LINK_LIBRARIES( sll_advection
                        sll_meshes
-                       sll_tri_meshes
                        sll_characteristics
                        sll_interpolators
                        sll_periodic_interpolation
@@ -43,102 +42,8 @@ TARGET_LINK_LIBRARIES( sll_advection
 
 IF(BUILD_TESTING)
 
-  ADD_EXECUTABLE( test_advection_1d_spectral unit_test_advection_1d_spectral.F90)
-  TARGET_LINK_LIBRARIES( test_advection_1d_spectral sll_advection sll_file_io sll_fft)
+  ADD_SUBDIRECTORY(testing)
 
-  ADD_EXECUTABLE( test_advection_1d_ampere unit_test_advection_1d_ampere.F90)
-  TARGET_LINK_LIBRARIES( test_advection_1d_ampere sll_advection sll_file_io sll_fft)
-
-  ADD_EXECUTABLE( test_advection_1d_periodic unit_test_advection_1d_periodic.F90)
-  TARGET_LINK_LIBRARIES( test_advection_1d_periodic sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_1d_non_uniform_cubic_splines
-    unit_test_advection_1d_non_uniform_cubic_splines.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_1d_non_uniform_cubic_splines
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_1d_BSL
-    unit_test_advection_1d_BSL.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_1d_BSL
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_1d_CSL_periodic
-    unit_test_advection_1d_CSL_periodic.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_1d_CSL_periodic
-    sll_advection)
-
-
-  ADD_EXECUTABLE(
-    test_advection_1d_CSL
-    unit_test_advection_1d_CSL.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_1d_CSL
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_1d_PSM
-    unit_test_advection_1d_PSM.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_1d_PSM
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_2d_BSL
-    unit_test_advection_2d_BSL.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_2d_BSL
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_2d_integer_oblic
-    unit_test_advection_2d_integer_oblic.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_2d_integer_oblic
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_2d_oblic
-    unit_test_advection_2d_oblic.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_2d_oblic
-    sll_advection)
-
-  ADD_EXECUTABLE( test_lagrange unit_test_lagrange.F90 )
-  TARGET_LINK_LIBRARIES( test_lagrange sll_advection )
-
-  ADD_EXECUTABLE(
-    test_advection_2d_tensor_product
-    unit_test_advection_2d_tensor_product.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_2d_tensor_product
-    sll_advection)
-
-  ADD_EXECUTABLE(
-    test_advection_2d_CSL
-    unit_test_advection_2d_CSL.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_advection_2d_CSL
-    sll_advection)
-
-  ADD_EXECUTABLE(test_advection_2d_tri_mesh unit_test_advection_2d_tri_mesh.F90)
-
-  TARGET_LINK_LIBRARIES(test_advection_2d_tri_mesh sll_advection sll_mesh_calculus)
 
 
   IF(MPI_ENABLED)
@@ -170,29 +75,6 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_rotation_2d rotation_2d.F90)
   TARGET_LINK_LIBRARIES( test_rotation_2d sll_advection)
 
-#PN Test fails are commented out
-  # Ctests
-  ADD_TEST( NAME lagrange                  COMMAND test_lagrange              )
-  ADD_TEST( NAME advection_1d_periodic     COMMAND test_advection_1d_periodic )
-  ADD_TEST( NAME advection_1d_non_uniform_cubic_splines
-            COMMAND test_advection_1d_non_uniform_cubic_splines )
-#  ADD_TEST( NAME advection_1d_BSL          COMMAND test_advection_1d_BSL      )
-#  ADD_TEST( NAME advection_1d_CSL          COMMAND test_advection_1d_CSL      )
-#  ADD_TEST( NAME advection_1d_PSM          COMMAND test_advection_1d_PSM      )
-  ADD_TEST( NAME advection_2d_BSL          COMMAND test_advection_2d_BSL      )
-#  ADD_TEST( NAME advection_2d_CSL          COMMAND test_advection_2d_CSL      )
-  ADD_TEST( NAME advection_2d_tensor_product 
-            COMMAND test_advection_2d_tensor_product )
-
-  SET_TESTS_PROPERTIES( advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-  SET_TESTS_PROPERTIES( advection_1d_non_uniform_cubic_splines
-                          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#  SET_TESTS_PROPERTIES( advection_1d_BSL  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#  SET_TESTS_PROPERTIES( advection_1d_CSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
-#  SET_TESTS_PROPERTIES( advection_1d_PSM PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
-  SET_TESTS_PROPERTIES( advection_2d_BSL  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#  SET_TESTS_PROPERTIES( advection_2d_CSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
-  SET_TESTS_PROPERTIES( advection_2d_tensor_product PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF(BUILD_TESTING)
 

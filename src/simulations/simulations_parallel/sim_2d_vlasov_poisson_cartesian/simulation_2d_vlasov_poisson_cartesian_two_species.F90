@@ -39,19 +39,19 @@ use sll_constants
 use sll_cartesian_meshes  
 use sll_gnuplot_parallel
 use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
-use sll_module_advection_1d_periodic
-use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_periodic
+use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_fft
 use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_poisson_1d_periodic  
-use sll_module_poisson_1d_periodic_solver
-use sll_module_poisson_1d_polar_solver
-use sll_module_advection_1d_ampere
+use sll_m_poisson_1d_periodic_solver
+use sll_m_poisson_1d_polar_solver
+use sll_m_advection_1d_ampere
 !#ifdef _OPENMP
 !use omp_lib
 !#endif
@@ -144,6 +144,8 @@ use sll_module_advection_1d_ampere
    !poisson solver
    class(sll_poisson_1d_base), pointer   :: poisson
    sll_real64 :: mass_ratio
+   sll_real64 :: alpha_sp1
+   sll_real64 :: alpha_sp2
    !sll_real64, dimension(:), pointer :: mixt_bc
    
    contains
@@ -259,6 +261,8 @@ contains
     !physical_params
     sll_real64 :: mass_ratio
     sll_real64 :: vd
+    sll_real64 :: alpha_sp1
+    sll_real64 :: alpha_sp2
     
     !initial_function
     character(len=256) :: initial_function_case_sp1
@@ -355,7 +359,9 @@ contains
 
     namelist /physical_params/ &
          mass_ratio, &
-         vd
+         vd, &
+         alpha_sp1, &
+         alpha_sp2
     
     namelist /initial_function/ &
       initial_function_case_sp1, &
@@ -448,6 +454,8 @@ contains
     !physical_params
     mass_ratio = 0.0005_f64
     vd = 0._f64
+    alpha_sp1 = 1._f64
+    alpha_sp2 = 1._f64
         
     !initial_function
     initial_function_case_sp1 = "SLL_LANDAU"
@@ -1025,7 +1033,9 @@ contains
     end select  
 
     sim%mass_ratio = mass_ratio
-    
+    sim%alpha_sp1 = alpha_sp1    
+    sim%alpha_sp2 = alpha_sp2
+        
     !poisson
     !SLL_ALLOCATE(sim%mixt_bc(2),ierr)
     select case (poisson_solver)
@@ -1820,7 +1830,7 @@ contains
           !advection in v
           do i_omp = 1,local_size_x1_sp1
              ig_omp=i_omp+global_indices_sp1(1)-1
-             alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) * sim%split%split_step(split_istep)
+             alpha_omp = -(efield(ig_omp)+sim%alpha_sp1*e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp1(1:num_dof_x2_sp1,tid) = f_x2_sp1(i_omp,1:num_dof_x2_sp1)
              if(sim%advection_form_x2_sp1==SLL_CONSERVATIVE)then
                 call function_to_primitive(f1d_omp_in_sp1(:,tid),x2_array_unit_sp1,np_x2_sp1-1,mean_omp)
@@ -1838,7 +1848,7 @@ contains
 
           do i_omp = 1,local_size_x1_sp2
              ig_omp=i_omp+global_indices_sp2(1)-1
-             alpha_omp = sim%mass_ratio*(efield(ig_omp)-e_app(ig_omp)) * sim%split%split_step(split_istep)
+             alpha_omp = sim%mass_ratio*(efield(ig_omp)-sim%alpha_sp2*e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp2(1:num_dof_x2_sp2,tid) = f_x2_sp2(i_omp,1:num_dof_x2_sp2)
              if(sim%advection_form_x2_sp2==SLL_CONSERVATIVE)then
                 call function_to_primitive(f1d_omp_in_sp2(:,tid),x2_array_unit_sp2,np_x2_sp2-1,mean_omp)

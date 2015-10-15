@@ -4,7 +4,7 @@
 	PARTICLE_ARRAY_SIZE = 1010000
 	THERM_SPEED         = 1.0
 	dt     =  0.01
-	number_iterations   = 50
+	number_iterations   = 10
 	QoverM = 1.0
 	ALPHA  = 0.05
 	UseCubicSplines = .false.
