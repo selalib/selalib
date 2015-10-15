@@ -235,7 +235,7 @@ program sim2d_gc_hex_splines
         do i = 1, mesh%num_pts_tot
            k1 = mesh%hex_coord(1, i)
            k2 = mesh%hex_coord(2, i)
-           call index_hex_to_global(mesh, k1, k2, index_tab)
+           call mesh%index_hex_to_global(k1, k2, index_tab)
            phi(i) = phi_interm(index_tab)
         enddo
         call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
@@ -336,7 +336,7 @@ program sim2d_gc_hex_splines
            do i = 1, mesh%num_pts_tot    ! need to re-index phi :
               k1 = mesh%hex_coord(1, i)
               k2 = mesh%hex_coord(2, i)
-              call index_hex_to_global(mesh, k1, k2, index_tab)
+              call mesh%index_hex_to_global(k1, k2, index_tab)
               phi(i) = phi_interm(index_tab)
            enddo
 
