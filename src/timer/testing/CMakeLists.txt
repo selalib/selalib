@@ -1,0 +1,4 @@
+ADD_EXECUTABLE( test_timer test_timer.F90 )
+TARGET_LINK_LIBRARIES( test_timer sll_timer )
+ADD_TEST( NAME timer COMMAND test_timer )
+SET_TESTS_PROPERTIES( timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

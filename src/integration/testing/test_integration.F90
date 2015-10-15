@@ -1,4 +1,4 @@
-program integration_tester
+program test_integration
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -175,4 +175,4 @@ print *, "sum weights = ", SUM(xyw(3,:))
 
 print*, 'PASSED'
 
-end program integration_tester
+end program test_integration

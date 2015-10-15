@@ -1,9 +1,4 @@
 ADD_LIBRARY( sll_timer STATIC sll_timer.F90 )
-
-# Ctest
 IF(BUILD_TESTING)
-  ADD_EXECUTABLE( test_timer unit_test.F90 )
-  TARGET_LINK_LIBRARIES( test_timer sll_timer )
-  ADD_TEST( NAME timer COMMAND test_timer )
-  SET_TESTS_PROPERTIES( timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  ADD_SUBDIRECTORY(testing)
 ENDIF(BUILD_TESTING)

@@ -3,7 +3,9 @@ module hex_poisson
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_hexagonal_meshes
+  use sll_hexagonal_meshes, only : &
+       sll_hex_mesh_2d, &
+       new_hex_mesh_2d
   implicit none
 
   !***********************************************************
@@ -18,7 +20,6 @@ module hex_poisson
   !***********************************************************
 
 contains
- 
 
   subroutine hex_matrix_poisson( matrix_poisson, mesh,type)
     type(sll_hex_mesh_2d), pointer         :: mesh
@@ -27,15 +28,14 @@ contains
     sll_int32,                   intent(in):: type ! unused parameter atm
 
     sll_int32                              :: num_cells ! number of hex cells
-    sll_int32                              :: global    ! global index 
+    sll_int32                              :: global    ! global index
 
-    ! index on the matrix 
+    ! index on the matrix
     sll_int32                              :: index_tab, index_tabij
-    sll_int32                              :: index_tabi_1j, index_tabij_1 
+    sll_int32                              :: index_tabi_1j, index_tabij_1
     sll_int32                              :: index_tabij1, index_tabi1j
     sll_int32                              :: index_tabi1j1, index_tabi_1j_1
- 
-   sll_int32                              :: k1, k2, n
+    sll_int32                              :: k1, k2, n
 
     num_cells = mesh%num_cells
 
@@ -60,14 +60,14 @@ contains
        k1 = mesh%hex_coord(1, global)
        k2 = mesh%hex_coord(2, global)
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
 
-       call index_hex_to_global(mesh, k1-1, k2-1, index_tabi_1j_1)
-       call index_hex_to_global(mesh, k1-1, k2  , index_tabi_1j)
-       call index_hex_to_global(mesh, k1  , k2-1, index_tabij_1)
-       call index_hex_to_global(mesh, k1  , k2+1, index_tabij1 )
-       call index_hex_to_global(mesh, k1+1, k2  , index_tabi1j )
-       call index_hex_to_global(mesh, k1+1, k2+1, index_tabi1j1 )
+       call mesh%index_hex_to_global(k1-1, k2-1, index_tabi_1j_1)
+       call mesh%index_hex_to_global(k1-1, k2  , index_tabi_1j)
+       call mesh%index_hex_to_global(k1  , k2-1, index_tabij_1)
+       call mesh%index_hex_to_global(k1  , k2+1, index_tabij1 )
+       call mesh%index_hex_to_global(k1+1, k2  , index_tabi1j )
+       call mesh%index_hex_to_global(k1+1, k2+1, index_tabi1j1 )
 
        index_tabij = index_tab
 
@@ -233,7 +233,7 @@ contains
           k1 = mesh%hex_coord(1, global)
           k2 = mesh%hex_coord(2, global)
 
-          call index_hex_to_global(mesh, k1, k2, index_tab)
+          call mesh%index_hex_to_global(k1, k2, index_tab)
 
           f1 = value_if_inside_rho(k1+1,k2  ,mesh,rho)
           f2 = value_if_inside_rho(k1+1,k2+1,mesh,rho)
@@ -256,17 +256,17 @@ contains
 
        ! corners of the hexagon
 
-       call index_hex_to_global(mesh,num_cells , 0, index_tab)
+       call mesh%index_hex_to_global(num_cells , 0, index_tab)
        second_terme(index_tab) = 0._f64
-       call index_hex_to_global(mesh,num_cells , num_cells, index_tab)
+       call mesh%index_hex_to_global(num_cells , num_cells, index_tab)
        second_terme(index_tab) = 0._f64
-       call index_hex_to_global(mesh,0 , num_cells, index_tab)
+       call mesh%index_hex_to_global(0 , num_cells, index_tab)
        second_terme(index_tab) = 0._f64
-       call index_hex_to_global(mesh,-num_cells , 0, index_tab)
+       call mesh%index_hex_to_global(-num_cells , 0, index_tab)
        second_terme(index_tab) = 0._f64
-       call index_hex_to_global(mesh,-num_cells , -num_cells, index_tab)
+       call mesh%index_hex_to_global(-num_cells , -num_cells, index_tab)
        second_terme(index_tab) = 0._f64
-       call index_hex_to_global(mesh,0 , -num_cells, index_tab)
+       call mesh%index_hex_to_global(0 , -num_cells, index_tab)
        second_terme(index_tab) = 0._f64
 
 
@@ -275,22 +275,22 @@ contains
        do i = 1,num_cells-1   !( 0 and num_cells  are the corners )
 
           ! top right edge
-          call index_hex_to_global(mesh, num_cells, i, index_tab)
+          call mesh%index_hex_to_global(num_cells, i, index_tab)
           second_terme(index_tab) = 0._f64
           ! top left edge
-          call index_hex_to_global(mesh, num_cells - i, num_cells , index_tab)
+          call mesh%index_hex_to_global(num_cells - i, num_cells , index_tab)
           second_terme(index_tab) = 0._f64
           ! left edge
-          call index_hex_to_global(mesh, - i, num_cells- i , index_tab)
+          call mesh%index_hex_to_global(- i, num_cells- i , index_tab)
           second_terme(index_tab) = 0._f64
           ! bottom left edge
-          call index_hex_to_global(mesh, - num_cells, - i , index_tab)
+          call mesh%index_hex_to_global(- num_cells, - i , index_tab)
           second_terme(index_tab) = 0._f64
           ! bottom right edge
-          call index_hex_to_global(mesh, - i, - num_cells , index_tab)
+          call mesh%index_hex_to_global(- i, - num_cells , index_tab)
           second_terme(index_tab) = 0._f64
           ! right edge
-          call index_hex_to_global(mesh, num_cells - i, - i , index_tab)
+          call mesh%index_hex_to_global(num_cells - i, - i , index_tab)
           second_terme(index_tab) = 0._f64
 
        enddo
@@ -301,41 +301,41 @@ contains
 
        ! corners of the hexagon
 
-       call index_hex_to_global(mesh,num_cells-1 , 1, index_tab)
+       call mesh%index_hex_to_global(num_cells-1 , 1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       call index_hex_to_global(mesh,num_cells-1 , num_cells-1, index_tab)
+       call mesh%index_hex_to_global(num_cells-1 , num_cells-1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       call index_hex_to_global(mesh,1 , num_cells-1, index_tab)
+       call mesh%index_hex_to_global(1 , num_cells-1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       call index_hex_to_global(mesh,-num_cells+1 , 1, index_tab)
+       call mesh%index_hex_to_global(-num_cells+1 , 1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       call index_hex_to_global(mesh,-num_cells+1 , -num_cells+1, index_tab)
+       call mesh%index_hex_to_global(-num_cells+1 , -num_cells+1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       call index_hex_to_global(mesh,1 , -num_cells+1, index_tab)
+       call mesh%index_hex_to_global(1 , -num_cells+1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
 
 
-       ! edges of the hexagon  
+       ! edges of the hexagon
 
        do i = 2,num_cells-2   !( 1 and num_cells-1 are the corners )
 
           ! top right edge
-          call index_hex_to_global(mesh, num_cells-1, i, index_tab)
+          call mesh%index_hex_to_global(num_cells-1, i, index_tab)
           second_terme(index_tab) = second_terme(index_tab) + 0._f64
           ! top left edge
-          call index_hex_to_global(mesh, num_cells-1 - i, num_cells-1 , index_tab)
+          call mesh%index_hex_to_global(num_cells-1 - i, num_cells-1 , index_tab)
           second_terme(index_tab) = second_terme(index_tab) + 0._f64
           ! left edge
-          call index_hex_to_global(mesh, - i, num_cells-1 - i , index_tab)
+          call mesh%index_hex_to_global(- i, num_cells-1 - i , index_tab)
           second_terme(index_tab) = second_terme(index_tab) + 0._f64
           ! bottom left edge
-          call index_hex_to_global(mesh, - num_cells+1, - i , index_tab)
+          call mesh%index_hex_to_global(- num_cells+1, - i , index_tab)
           second_terme(index_tab) = second_terme(index_tab) + 0._f64
           ! bottom right edge
-          call index_hex_to_global(mesh, - i, - num_cells+1 , index_tab)
+          call mesh%index_hex_to_global(- i, - num_cells+1 , index_tab)
           second_terme(index_tab) = second_terme(index_tab) + 0._f64
           ! right edge
-          call index_hex_to_global(mesh, num_cells-1 - i, - i , index_tab)
+          call mesh%index_hex_to_global(num_cells-1 - i, - i , index_tab)
           second_terme(index_tab) = second_terme(index_tab) + 0._f64
 
        enddo
@@ -343,19 +343,18 @@ contains
 
   end subroutine hex_second_terme_poisson
 
-  ! test to check if a point is inside the mesh or not
-  
+  !> @details test to check if a point is inside the mesh or not
   function value_if_inside_rho(k1,k2,mesh,rho) result(f)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: rho
     sll_int32  :: k1, k2, n
-    sll_real64 :: f 
+    sll_real64 :: f
 
     if ( abs(k1) > mesh%num_cells .or. abs(k2) > mesh%num_cells .or. &
          (k1)*(k2)< 0 .and. ( abs(k1) + abs(k2) > mesh%num_cells) ) then
        f = 0._f64 ! null dirichlet boundary condition
     else
-       n = hex_to_global(mesh,k1,k2)
+       n = mesh%hex_to_global(k1,k2)
        f = rho(n)
     endif
 
@@ -511,13 +510,13 @@ subroutine compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: phi
     sll_int32  :: k1, k2, n
-    sll_real64 :: f 
+    sll_real64 :: f
 
     if ( abs(k1) > mesh%num_cells .or. abs(k2) > mesh%num_cells .or. &
          (k1)*(k2)< 0 .and. ( abs(k1) + abs(k2) > mesh%num_cells) ) then
        f = 0._f64 ! null dirichlet boundary condition
     else
-       n = hex_to_global(mesh,k1,k2)
+       n = mesh%hex_to_global(k1,k2)
        f = phi(n)
     endif
 
