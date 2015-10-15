@@ -385,7 +385,7 @@ program sim2d_gc_hex_hermite
            do i = 1, mesh%num_pts_tot
               k1 = mesh%hex_coord(1, i)
               k2 = mesh%hex_coord(2, i)
-              call index_hex_to_global(mesh, k1, k2, index_tab)
+              call mesh%index_hex_to_global(k1, k2, index_tab)
               phi(i) = phi_interm(index_tab)
            enddo
            call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
@@ -408,7 +408,7 @@ program sim2d_gc_hex_hermite
            do i = 1, n_points2   ! need to re-index phi : 
               k1 = mesh2%hex_coord(1, i)
               k2 = mesh2%hex_coord(2, i)
-              call index_hex_to_global(mesh2, k1, k2, index_tab)
+              call mesh2%index_hex_to_global(k1, k2, index_tab)
               phi2(i) = phi2_interm(index_tab)
            enddo
            call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
@@ -593,7 +593,7 @@ program sim2d_gc_hex_hermite
               do i = 1, mesh%num_pts_tot    ! need to re-index phi :
                  k1 = mesh%hex_coord(1, i)
                  k2 = mesh%hex_coord(2, i)
-                 call index_hex_to_global(mesh, k1, k2, index_tab)
+                 call mesh%index_hex_to_global(k1, k2, index_tab)
                  phi(i) = phi_interm(index_tab)
               enddo
 
@@ -617,7 +617,7 @@ program sim2d_gc_hex_hermite
               do i = 1, n_points2  ! need to re-index phi : 
                  k1 = mesh2%hex_coord(1, i)
                  k2 = mesh2%hex_coord(2, i)
-                 call index_hex_to_global(mesh2, k1, k2, index_tab)
+                 call mesh2%index_hex_to_global(k1, k2, index_tab)
                  phi2(i) = phi2_interm(index_tab)
               enddo
               call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
@@ -1243,7 +1243,7 @@ contains
        if (m1<0) k1 = k1 - 1
        if (m2<0) k2 = k2 - 1
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
        if ( abs(m1) > eps .and. abs(m2) > eps ) then
@@ -1282,7 +1282,7 @@ contains
        if (m1<0) k1 = k1 - 1
        if (m2<0) k2 = k2 - 1
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
        if ( abs(m1) > eps .and. abs(m2) > eps ) then
