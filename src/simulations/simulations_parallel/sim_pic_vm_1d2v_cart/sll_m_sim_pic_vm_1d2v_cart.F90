@@ -94,8 +94,8 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_int32 :: init_case
      
    contains
-     procedure :: init_from_file => init_pic_1d2v_vm
-     procedure :: run => run_pic_1d2v_vm
+     procedure :: init_from_file => init_pic_vm_1d2v
+     procedure :: run => run_pic_vm_1d2v
 
   end type sll_t_sim_pic_vm_1d2v_cart
 
