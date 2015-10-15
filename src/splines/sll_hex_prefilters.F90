@@ -4,7 +4,7 @@
 !> @details This module defines pre-filters for quasi-interpolation for
 !> box splines on a hexagonal mesh subdivided in equilateral triangles
 !> Reference : Condat2006 "Three-directional box splines"
-module hex_pre_filters
+module sll_m_hex_pre_filters
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use sll_hexagonal_meshes
@@ -304,4 +304,4 @@ contains
   end function pre_filter_int
 
 
-end module hex_pre_filters
+end module sll_m_hex_pre_filters
