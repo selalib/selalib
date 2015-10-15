@@ -9,7 +9,7 @@ module test_processes_module
   use sll_boundary_condition_descriptors
   implicit none
 
-  abstract interface 
+  abstract interface
      function fx(x)
        use sll_working_precision
        sll_real64 :: fx
@@ -247,7 +247,7 @@ contains
          X2MIN, X2MAX, &
          SLL_PERIODIC, SLL_PERIODIC )
     call compute_cubic_spline_2D( data_2d, sp2d_1 )
-    acc_2D = 0.0
+    acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
@@ -273,7 +273,7 @@ contains
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
     call compute_cubic_spline_2D( data_2d, sp2d_2 )
-    acc_2D = 0.0
+    acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
@@ -298,7 +298,7 @@ contains
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
     call compute_cubic_spline_2D( data_2d, sp2d_3 )
-    acc_2D = 0.0
+    acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
@@ -323,7 +323,7 @@ contains
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
     call compute_cubic_spline_2D( data_2d, sp2d_4 )
-    acc_2D = 0.0
+    acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
@@ -394,7 +394,7 @@ contains
     if(present(criterion)) then
        max_tolerable_err = criterion
     else
-       max_tolerable_err = 1.0e-14
+       max_tolerable_err = 1.0e-14_f64
     end if
     h1 = (xmax - xmin)/real(npts-1,f64)
     acc = 0.0_f64
@@ -468,7 +468,7 @@ contains
     if(present(criterion)) then
        max_tolerable_err = criterion
     else
-       max_tolerable_err = 1.0e-14
+       max_tolerable_err = 1.0e-14_f64
     end if
 
     test_passed = .true.
@@ -685,8 +685,8 @@ contains
     h2  = 1.0_f64/real(NPX2-1,f64)
     acc = 0.0_f64
 
-    max_err = 0.0
-    min_err = 1.0
+    max_err = 0.0_f64
+    min_err = 1.0_f64
     ! allocate arrays and initialize them
     SLL_ALLOCATE(data_in(NPX1,NPX2),ierr)
     SLL_ALLOCATE(correct_data_out(NPX1,NPX2), ierr)

@@ -595,18 +595,17 @@ program test_hex_hermite
 
         edge_values_tn  = edge_values_tn1
 
-        
         ! call int2string(nloops,filenum)
         ! filename2 = "ana_dist"//trim(filenum)
         ! filename  = "num_dist"//trim(filenum)
-        ! call write_field_hex_mesh_xmf(mesh, f_tn1, trim(filename))
-        ! call write_field_hex_mesh_xmf(mesh, f_sol, trim(filename2))
+        ! call mesh%write_field_hex_mesh_xmf( f_tn1, trim(filename))
+        ! call mesh%write_field_hex_mesh_xmf( f_sol, trim(filename2))
 
         f_tn = f_tn1
 
      end do
      
-     !call write_field_hex_mesh(mesh, f_tn, "result_hex.txt")
+     !call mesh%write_field_hex_mesh(f_tn, "result_hex.txt")
 
      SLL_DEALLOCATE_ARRAY(f_init,ierr)
      SLL_DEALLOCATE_ARRAY(f_tn,ierr)
