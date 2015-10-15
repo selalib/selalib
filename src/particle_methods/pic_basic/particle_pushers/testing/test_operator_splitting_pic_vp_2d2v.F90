@@ -51,7 +51,7 @@ program test_operator_splitting_pic_vp_2d2v
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
    
-  call sll_boot_collective()
+  !call sll_boot_collective()
 
   ! Set parameters
   n_particles = 2!10
@@ -103,7 +103,7 @@ program test_operator_splitting_pic_vp_2d2v
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
   SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
-  propagator => sll_new_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, &
+  propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, &
        particle_group, efield)
 
 
@@ -163,5 +163,5 @@ program test_operator_splitting_pic_vp_2d2v
      stop
   end if
   
-  call sll_halt_collective()
+  !call sll_halt_collective()
 end program test_operator_splitting_pic_vp_2d2v

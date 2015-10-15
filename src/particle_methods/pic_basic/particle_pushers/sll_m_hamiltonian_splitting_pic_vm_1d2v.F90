@@ -19,9 +19,12 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   use sll_m_hamiltonian_splitting_base
 
   implicit none
+  private
+  
+  public :: sll_new_hamiltonian_splitting_pic_vm_1d2v
 
   !> Operator splitting type for Vlasov-Maxwell 1d2v
-  type, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
+  type, public, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
      class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
@@ -483,7 +486,7 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_splitting_pic_vm_1d2v(&
+  function sll_new_hamiltonian_splitting_pic_vm_1d2v(&
        maxwell_solver, &
        kernel_smoother_0, &
        kernel_smoother_1, &
@@ -530,7 +533,7 @@ contains
     this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
     this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
 
-  end function sll_new_splitting_pic_vm_1d2v
+  end function sll_new_hamiltonian_splitting_pic_vm_1d2v
 
 
   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
