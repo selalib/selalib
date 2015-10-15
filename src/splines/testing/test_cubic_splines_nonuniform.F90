@@ -1,18 +1,4 @@
-
-!******************************************************************************
-!
-! Selalib      
-! Module: unit_test_nonuniform.F90
-!
-!> @brief 
-!> cubic_nonuniform_splines unit test
-!   
-!> @authors                    
-!> Michel Mehrenberger (mehrenbe@math.unistra.fr)
-!                                  
-!******************************************************************************
-
-program nonuniform_spline_tester
+program test_cubic_splines_nonuniform
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -483,11 +469,11 @@ program nonuniform_spline_tester
   endif
 
   if(max_err(4)>1.e-10)then
-    print *,'#problem with continuity of second derivative', max_err(4)  
+    print *,'#problem with continuity of second derivative', max_err(4)
     print *,'#bdr_case=',bdr_case
     test_passed = .false.
-  endif
-  
+ endif
+
   if(abs(max_err(5)/unif_val_max-1._f64)>1.e-2)then
     print *,'#problem with random non uniformity',unif_val_max,max_err(5)
     print *,'#bdr_case=',bdr_case
@@ -499,11 +485,10 @@ program nonuniform_spline_tester
     print *,'#bdr_case=',bdr_case
     test_passed = .false.
   endif
-  
-  
-enddo  
-  
-   if (test_passed .eqv. .true.) then
+
+enddo
+
+if (test_passed .eqv. .true.) then
      print *, '#'
      print *, '# cubic_non_uniform_splines unit test: PASSED'
      print *, '# '
@@ -512,7 +497,5 @@ enddo
      print *, 'cubic_non_uniform_splines unit test: FAILED'
      print *, ' '
   endif
- 
-  
-  
-end program nonuniform_spline_tester
+
+end program test_cubic_splines_nonuniform
