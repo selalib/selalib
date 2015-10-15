@@ -10,9 +10,20 @@ program box_spline_tester
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+#include "sll_boundary_condition_descriptors.h"
 
-  use sll_box_splines
-  use hex_pre_filters
+  use sll_hexagonal_meshes, only : &
+       sll_hex_mesh_2d, &
+       new_hex_mesh_2d
+  use sll_box_splines, only : &
+       sll_box_spline_2d, &
+       new_box_spline_2d, &
+       boxspline_x1_derivative, &
+       boxspline_x2_derivative, &
+       compute_box_spline, &
+       write_all_django_files
+  use sll_m_hex_pre_filters, only : &
+       pre_filter_pfir
   implicit none
 
   ! Variable to check is successful. By default it is the case.
@@ -21,7 +32,7 @@ program box_spline_tester
   type(sll_hex_mesh_2d),   pointer   :: mesh
   type(sll_box_spline_2d), pointer   :: spline
   sll_int32,  parameter :: max_deg = 5
-  sll_real64, parameter :: criterion = 1.0e-14
+  sll_real64, parameter :: criterion = 1.0e-14_f64
   sll_int32    :: ierr
   sll_int32    :: num_cells
   sll_int32    :: degree
@@ -46,8 +57,8 @@ program box_spline_tester
   ! Mesh initialization
   num_cells = 20
   mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
-  call sll_display(mesh)
-  
+  call mesh%display()
+
   ! Spline initialization
   spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
@@ -114,7 +125,7 @@ program box_spline_tester
   ! print *, "------------ testing degree 3 -----------"
   ! num_cells = 3
   ! mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
-  ! call sll_display(mesh)
+  ! call mesh%display()
   ! degree = 3
   ! spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
   ! SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
