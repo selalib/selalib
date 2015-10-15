@@ -1,15 +1,14 @@
-
 !****************************************************
 !
-! Selalib      
+! Selalib
 ! Module: test_func_module.F90
 !
-! @brief 
+! @brief
 ! Module of test functions for sll_splines unit test
-!   
-! @authors                    
+!
+! @authors
 ! Aliou DIOUF (aliou.l.diouf@inria.fr)
-!                                  
+!
 !****************************************************
 
 module test_func_module
@@ -23,7 +22,7 @@ module test_func_module
 
 
     function f(x, function_num )
-     
+
       sll_real64, intent(in) :: x
       sll_real64             :: phase
       sll_real64             :: f
@@ -31,7 +30,7 @@ module test_func_module
 
       function_test: select case(function_num)
         case(1)
-           f = 200*cos(x)
+           f = 200._f64*cos(x)
         case(2)
            f = sin(x)
         case(3)
@@ -68,21 +67,21 @@ module test_func_module
     end function f
 
 
-    function fprime(x, function_num ) 
-     
+    function fprime(x, function_num )
+
       sll_real64, intent(in) :: x
       sll_real64             :: fprime
       sll_int32              :: function_num
 
       function_test: select case(function_num)
         case(1)
-           fprime = -200*sin(x)
+           fprime = -200._f64*sin(x)
         case(2)
            fprime = cos(x)
         case(3)
            fprime = cos(x) - sin(x)
         case(4)
-           fprime = cos(2*x)
+           fprime = cos(2._f64*x)
         case(5)
            fprime = -sin(x) * exp(cos(x))
         case(6)
@@ -96,9 +95,9 @@ module test_func_module
         case(10)
            fprime = -sin(x)*cos(cos(x))
         case(11)
-           fprime = -sin(2*x)
+           fprime = -sin(2._f64*x)
         case(12)
-           fprime = sin(2*x)
+           fprime = sin(2._f64*x)
         case default
            fprime = 0.d0
            ! This is just for fprime(XiMIN) and fprime(XiMAX)

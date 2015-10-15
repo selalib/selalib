@@ -14,7 +14,7 @@
 !>  This module defines a triangular mesh.
 !>
 !> @details
-!>  Triangular mesh 
+!>  Triangular mesh
 !------------------------------------------------------------------------------
 module sll_triangular_meshes
 #include "sll_working_precision.h"
@@ -31,8 +31,8 @@ implicit none
 
 
 !> @brief 2d hexagonal mesh
-!  vtaux  - composante x des vecteurs tangeants         
-!  vtauy  - composante y des vecteurs tangeants        
+!  vtaux  - composante x des vecteurs tangeants
+!  vtauy  - composante y des vecteurs tangeants
 type :: sll_triangular_mesh_2d
 
   sll_int32           :: num_nodes  
@@ -222,7 +222,7 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     y1 = hex_mesh%center_cartesian_coord(2, i)
     
     call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
-    call get_neighbours(hex_mesh, i, iv1, iv2, iv3)
+    call hex_mesh%get_neighbours( i, iv1, iv2, iv3)
 
     xa = tri_mesh%coord(1,is1)
     ya = tri_mesh%coord(2,is1)
