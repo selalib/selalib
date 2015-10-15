@@ -325,20 +325,20 @@ program test_hex_hermite
      if (num_method /= 15) then
         call int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh, rho_tn, trim(filename))
+        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+        call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
         count = 0
         if ( num_method == 10 ) then
            filename  = "center_guide_rho_center"//trim(filenum)//".dat"
            call write_center(mesh,rho_center_tn1,filename)
         endif
-     elseif ( num_method == 15 ) then 
+     elseif ( num_method == 15 ) then
         call int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh2, rho2, trim(filename))
+        call mesh2%write_field_hex_mesh_xmf(rho2, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh2, phi2, trim(filename))
+        call mesh2%write_field_hex_mesh_xmf(phi2, trim(filename))
         count = 0
      endif
 
@@ -352,7 +352,7 @@ program test_hex_hermite
      !*********************************************************
      !                          Time loop
      !*********************************************************
-     
+
      call cpu_time(t3)
 
      print*,"fin init",t3 - t_init
@@ -616,21 +616,21 @@ program test_hex_hermite
         if ( num_method /= 15 .and.count == 10.and.nloops<10000) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+           call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+           call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
            count = 0
            if ( num_method == 10 ) then
 
               filename  = "center_guide_rho_center"//trim(filenum)//".dat"
               call write_center(mesh,rho_center_tn1,filename)
            endif
-        elseif ( num_method == 15 .and. count == 10.and.nloops<10000 ) then 
+        elseif ( num_method == 15 .and. count == 10.and.nloops<10000 ) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh2, rho2, trim(filename))
+           call mesh2%write_field_hex_mesh_xmf( rho2, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh2, phi2, trim(filename))
+           call mesh2%write_field_hex_mesh_xmf( phi2, trim(filename))
            count = 0
         endif
 

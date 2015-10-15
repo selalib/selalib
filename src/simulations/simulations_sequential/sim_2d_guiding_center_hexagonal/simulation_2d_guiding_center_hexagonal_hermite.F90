@@ -6,12 +6,13 @@ program sim2d_gc_hex_hermite
 
   use sll_constants
   use euler_2d_hex
-  use sll_hexagonal_meshes
+  use sll_hexagonal_meshes, only : &
+       sll_hex_mesh_2d
   use hex_poisson
   use pivotbande
   use sll_interpolation_hex_hermite
   use sll_utilities, only: int2string, sll_new_file_id
-  
+
   implicit none
 
   type(sll_hex_mesh_2d),      pointer     :: mesh
@@ -684,10 +685,10 @@ program sim2d_gc_hex_hermite
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "center_guide_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               if (model_name.eq."GC") then
                  filename  = "center_guide_phi"//trim(filenum)
-                 call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+                 call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
               end if
               count = 0
            endif
@@ -696,7 +697,7 @@ program sim2d_gc_hex_hermite
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               count = 0
            endif
         end if

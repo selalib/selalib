@@ -42,17 +42,11 @@ module sll_hexagonal_meshes
     local_to_global,          &
     index_hex_to_global,      &
     cells_to_origin,          &
-    cell_type,                &
     get_triangle_index,       &
     get_edge_index,           &
     get_cell_vertices_index,  &
-    get_neighbours,           &
     change_elements_notation, &
-    write_hex_mesh_mtv,       &
-    write_hex_mesh_2d,        &
-    write_field_hex_mesh_xmf, &
     write_caid_files,         &
-    sll_display,              &
     display_hex_mesh_2d,      &
     delete_hex_mesh_2d,       &
     delete
@@ -120,7 +114,12 @@ module sll_hexagonal_meshes
      procedure, pass(mesh) :: global_to_local
      procedure, pass(mesh) :: local_to_global
      procedure, pass(mesh) :: local_hex_to_global
+     procedure, pass(mesh) :: cell_type
+     procedure, pass(mesh) :: write_hex_mesh_2d
+     procedure, pass(mesh) :: write_hex_mesh_mtv
+     procedure, pass(mesh) :: get_neighbours
      procedure, pass(mesh) :: display => display_hex_mesh_2d
+     procedure, pass(mesh) :: write_field_hex_mesh_xmf
      procedure, pass(mesh) :: delete => delete_hex_mesh_2d
   end type sll_hex_mesh_2d
 
@@ -135,14 +134,6 @@ module sll_hexagonal_meshes
 !> @details <DETAILED_DESCRIPTION>
      module procedure delete_hex_mesh_2d
   end interface delete
-
-  interface sll_display
-!> @ingroup <DIRECTORY_NAME>
-!> @author <MODULE_AUTHOR_NAME_AND_AFFILIATION>
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-     module procedure display_hex_mesh_2d
-  end interface sll_display
 
 contains
 
@@ -855,10 +846,10 @@ contains
   !> @param[IN] mesh hexagonal mesh
   !> @param[OUT] val integer val = 1 if triangle of type I, 2 if triangle
   !> of type II, or -1 if there was an error
-  function cell_type(mesh, num_ele) result(val)
-    sll_int32, intent(in)  :: num_ele
+  subroutine cell_type(mesh, num_ele, val)
     class(sll_hex_mesh_2d) :: mesh
-    sll_int32  :: val
+    sll_int32, intent(in)  :: num_ele
+    sll_int32, intent(out) :: val
     sll_int32  :: k1
     sll_int32  :: k2
     sll_int32  :: num_hex
@@ -905,7 +896,7 @@ contains
           val = 1
        end if
     end if
-  end function cell_type
+  end subroutine cell_type
 
   !---------------------------------------------------------
   !> @brief Transform hexagonal coordinates to global index.
@@ -1289,11 +1280,11 @@ contains
   !> @param[OUT] nei_2 integer: index of the 2nd neighbour
   !> @param[OUT] nei_3 integer: index of the 3rd neighbour
   subroutine get_neighbours( mesh, cell_index, nei_1, nei_2, nei_3 )
-    type(sll_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
-    sll_int32,             intent(in)  :: cell_index
-    sll_int32,             intent(out) :: nei_1
-    sll_int32,             intent(out) :: nei_2
-    sll_int32,             intent(out) :: nei_3
+    class(sll_hex_mesh_2d), intent(in)  :: mesh
+    sll_int32,              intent(in)  :: cell_index
+    sll_int32,              intent(out) :: nei_1
+    sll_int32,              intent(out) :: nei_2
+    sll_int32,              intent(out) :: nei_3
 
     sll_real64 :: xc
     sll_real64 :: yc
@@ -1657,14 +1648,14 @@ contains
        !... we write its global number
        write (out_unit, "(i6)") change_elements_notation(mesh, i)
        !... we write its type (1 or 2)
-       type = cell_type(mesh, i)
+       call mesh%cell_type(i, type)
        write (out_unit, "(i6)") type
        !... we write the spline degree
        write(out_unit, "(i6)") spline_deg
        !... we write the scale of the element
        write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
-       call get_neighbours(mesh, i, nei1, nei2, nei3)
+       call mesh%get_neighbours(i, nei1, nei2, nei3)
        write(out_unit, "(3((i6),(a,1x)))",advance='no') &
             change_elements_notation(mesh, nei1), ",", &
             change_elements_notation(mesh, nei2), ",", &
@@ -1742,17 +1733,14 @@ contains
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
   subroutine write_hex_mesh_2d( mesh, name )
-    type(sll_hex_mesh_2d), intent(in) :: mesh ! Was pointer (YG - 05.10.2015)
-    character(len=*)     , intent(in) :: name
+    class(sll_hex_mesh_2d), intent(in) :: mesh
+    character(len=*)      , intent(in) :: name
 
     sll_int32  :: i
     sll_int32  :: num_pts_tot
     sll_int32  :: k1, k2
     sll_int32  :: out_unit
 
-! Changed to use 'newunit' Fortran feature (YG - 05.10.2015)
-!    sll_int32, parameter :: out_unit=20
-!    open (unit=out_unit,file=name,action="write",status="replace")
     open( file=name, status="replace", form="formatted", newunit=out_unit )
 
     num_pts_tot = mesh%num_pts_tot
@@ -1815,13 +1803,13 @@ contains
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] field a vector of size =(number of pts of the mesh) containg the
   !> values of a field on every mesh point.
-  !> @param[IN] name the name of the file where the info will be written into. 
+  !> @param[IN] name the name of the file where the info will be written into.
   subroutine write_field_hex_mesh_xmf(mesh, field, name)
-    ! Writes the points cartesian coordinates and
-    ! field(vector) values in a file named "name"
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64,dimension(:) :: field
-    character(len=*) :: name
+
+    class(sll_hex_mesh_2d),   intent(in) :: mesh
+    sll_real64, dimension(:), intent(in) :: field
+    character(len=*),         intent(in) :: name
+
     sll_int32  :: i
     sll_int32  :: num_triangles
     sll_int32  :: num_pts_tot
@@ -1865,8 +1853,8 @@ contains
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
   subroutine write_hex_mesh_mtv( mesh, mtv_file )
-    type(sll_hex_mesh_2d), intent(in) :: mesh    ! Was pointer (YG - 05.10.2015)
-    character(len=*)     , intent(in) :: mtv_file
+    class(sll_hex_mesh_2d), intent(in) :: mesh
+    character(len=*)      , intent(in) :: mtv_file
 
     sll_real64                 :: coor(2,mesh%num_pts_tot)
     sll_int32                  :: ntri(3,mesh%num_triangles)

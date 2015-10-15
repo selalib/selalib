@@ -3,26 +3,16 @@ ADD_LIBRARY( sll_splines STATIC
   sll_quintic_splines.F90
   sll_bsplines.F90
   sll_arbitrary_degree_splines.F90
+  sll_hex_prefilters.F90
+  sll_box_splines.F90
   cubic_nonuniform_splines.F90 )
 
 TARGET_LINK_LIBRARIES( sll_splines
   sll_utilities
   sll_boundary_condition_descriptors
-  ${LAPACK_LIBRARIES} )
-
-ADD_LIBRARY( hex_pre_filters STATIC hex_pre_filters.F90 )
-TARGET_LINK_LIBRARIES( hex_pre_filters sll_meshes )
-
-ADD_LIBRARY( sll_box_splines STATIC sll_box_splines.F90 )
-TARGET_LINK_LIBRARIES( sll_box_splines
-  sll_splines
-  sll_utilities
-  hex_pre_filters
   sll_meshes
   sll_integration
-  sll_boundary_condition_descriptors
-  ${LAPACK_LIBRARIES})
-
+  ${LAPACK_LIBRARIES} )
 
 # Tests
 IF(BUILD_TESTING)
@@ -47,7 +37,7 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_arbitrary_degree_splines sll_splines )
 
   ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
-  TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_box_splines )
+  TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
   # Ctests
   ADD_TEST( NAME cubic_splines             COMMAND test_cubic_splines            )
