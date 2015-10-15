@@ -1,5 +1,5 @@
 ADD_LIBRARY( sll_operator_splitting STATIC
-  sll_m_operator_splitting_base.F90
+  sll_m_hamiltonian_splitting_base.F90
   sll_time_splitting_base.F90 
   sll_operator_splitting_base.F90
   sll_linear_pendulum_operators.F90
