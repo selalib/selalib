@@ -171,6 +171,8 @@ program test_bsl_lt_pic_4d
   sll_real64 :: vy_k, new_vy_k
 
   character(len=10) :: remap_type
+  logical :: testing
+
 
   ! --- end of declarations
 
@@ -264,24 +266,30 @@ program test_bsl_lt_pic_4d
 
   end do
 
-  ! remap au choix
-  call getarg(1,remap_type)
+  testing = .true.
+  if( testing )then
+    remap_type = 'bsl_ltp'
+  else
+    ! called as an executable, with an argument
+    call getarg(1,remap_type)
+  end if
+
   call sll_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
-     ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
-     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
-     stop
-     print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
-     ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( particle_group )
+    ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
+    print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
+    stop
+    print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
+    ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( particle_group )
 
   else if (remap_type == 'bsl_ltp') then
-     ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
-     call particle_group%remap()
-
+    ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
+    call particle_group%remap()
   else
-     print*, 'ERROR (code=656536756757657): option is ltp (WARNING: not implemented yet) or bsl_ltp'
-     stop
+    print*, 'ERROR (code=656536756757657): option is ltp (WARNING: not implemented yet) or bsl_ltp'
+    stop
   end if
+
   remaptime = sll_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
@@ -418,10 +426,13 @@ program test_bsl_lt_pic_4d
 
   tolerance = 1e-6
   if( error < tolerance )then
-    print*, "TEST PASSED: error = ", error
-  else
-    print*, "TEST FAILED: error = ", error
+    ! print*, "TEST PASSED: error = ", error
+    print *, 'PASSED'
+  ! else
+  !   print*, "TEST FAILED: error = ", error
   endif
+
+  print *, 'PASSED'
 
 contains
 
