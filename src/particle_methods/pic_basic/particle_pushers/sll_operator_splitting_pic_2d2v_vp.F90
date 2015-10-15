@@ -19,7 +19,7 @@ module sll_m_operator_splitting_pic_2d2v_vp
 
   implicit none
 
-  !> Operator splitting type fo
+  !> Operator splitting type for 2d2v Vlasov-Poisson
   type, extends(operator_splitting) :: sll_operator_splitting_pic_2d2v_vp
      class(poisson_2d_fft_solver), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
@@ -139,11 +139,12 @@ contains
   end subroutine advection_v_pic_2d2v_vp
   
   !---------------------------------------------------------------------------!
+  !> Initialization function
   subroutine initialize_operator_splitting_pic_2d2v(this, poisson_solver, kernel_smoother, particle_group)
     class(sll_operator_splitting_pic_2d2v_vp), intent(out) :: this !< object 
-    class(poisson_2d_fft_solver),pointer, intent(in) :: poisson_solver
-    class(sll_kernel_smoother_base),pointer, intent(in) :: kernel_smoother
-    class(sll_particle_group_base),pointer, intent(in) :: particle_group
+    class(poisson_2d_fft_solver),pointer, intent(in) :: poisson_solver !< poisson solver
+    class(sll_kernel_smoother_base),pointer, intent(in) :: kernel_smoother !< kernel smoother
+    class(sll_particle_group_base),pointer, intent(in) :: particle_group !< particle group
 
     !local variables
     sll_int32 :: ierr

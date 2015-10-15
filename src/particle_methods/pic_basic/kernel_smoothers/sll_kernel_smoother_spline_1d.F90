@@ -36,10 +36,10 @@ module sll_m_kernel_smoother_spline_1d
      sll_real64, allocatable :: values_grid(:,:,:) !< Values of the space factors in each dimesion.
      
    contains
-     procedure :: compute_shape_factors => compute_shape_factors_spline_1d
-     procedure :: accumulate_rho_from_klimontovich => accumulate_rho_from_klimontovich_spline_1d
-     procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_1d
-     procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_1d
+     procedure :: compute_shape_factors => compute_shape_factors_spline_1d !> Compute shape factors 
+     procedure :: accumulate_rho_from_klimontovich => accumulate_rho_from_klimontovich_spline_1d !> accumulate density
+     procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_1d !> accumulate component of current density 
+     procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_1d !> Evaluate spline function with given coefficients
 
   end type sll_kernel_smoother_spline_1d
   
@@ -72,9 +72,9 @@ contains
   !---------------------------------------------------------------------------!
   subroutine accumulate_rho_from_klimontovich_spline_1d(this, particle_group,&
        rho_dofs)
-    class( sll_kernel_smoother_spline_1d), intent(in)    :: this
-    class( sll_particle_group_base), intent(in)     :: particle_group
-    sll_real64, intent(inout)                       :: rho_dofs(:)
+    class( sll_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
+    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+    sll_real64, intent(inout)                       :: rho_dofs(:) !< array holding the spline coefficients accumulated rho
     
     !local variables
     sll_int32 :: i_part, i1
@@ -100,10 +100,10 @@ contains
   !---------------------------------------------------------------------------!
   subroutine accumulate_j_from_klimontovich_spline_1d(this, particle_group,&
        j_dofs, component)
-    class( sll_kernel_smoother_spline_1d), intent(in)    :: this
-    class( sll_particle_group_base), intent(in)     :: particle_group
-    sll_real64, intent(inout)                       :: j_dofs(:)
-    sll_int32, intent(in)                           :: component
+    class( sll_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
+    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+    sll_real64, intent(inout)                       :: j_dofs(:) !< array holding the spline coefficients of component \a component the accumulated j
+    sll_int32, intent(in)                           :: component !< component of \a j_dof to be accumulated
     
     !local variables
     sll_int32 :: i_part, i1
@@ -131,7 +131,7 @@ contains
   
   !---------------------------------------------------------------------------!
   subroutine evaluate_kernel_function_particle_spline_1d(this, rho_dofs, i_part, particle_value)
-    class( sll_kernel_smoother_spline_1d), intent(in)    :: this
+    class( sll_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
     sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
     sll_int32, intent(in)                        :: i_part !< particle number
     sll_real64, intent(out)                      :: particle_value !< Value of the function at the position of particle \a i_part
@@ -154,10 +154,10 @@ contains
   !-------------------------------------------------------------------------------------------
   !< Constructor 
   function sll_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
-    class( sll_kernel_smoother_spline_1d), pointer   :: this
-    sll_int32, intent(in) :: n_grid(1)
-    sll_real64, intent(in) :: domain(2)
-    sll_int32, intent(in) :: no_particles
+    class( sll_kernel_smoother_spline_1d), pointer   :: this !< kernel smoother object
+    sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
+    sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
+    sll_int32, intent(in) :: no_particles !< number of particles
     sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
     sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
 

@@ -36,12 +36,11 @@ module sll_m_kernel_smoother_spline_2d
      sll_real64, allocatable :: values_grid(:,:,:) !< Values of the space factors in each dimesion.
      
    contains
-     procedure :: compute_shape_factors => compute_shape_factors_spline_2d
-     procedure :: accumulate_rho_from_klimontovich => accumulate_rho_from_klimontovich_spline_2d
-     procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_2d
-     procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_2d
+     procedure :: compute_shape_factors => compute_shape_factors_spline_2d !> Compute the shape factors
+     procedure :: accumulate_rho_from_klimontovich => accumulate_rho_from_klimontovich_spline_2d !> Accumulate the density
+     procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_2d !> Accumulate a component of the current density
+     procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_2d !> Evaluate the spline with given coefficients
 
-     !procedure :: initialize => initialize_smoother_spline_2d
 
   end type sll_kernel_smoother_spline_2d
   
@@ -74,9 +73,9 @@ contains
   !---------------------------------------------------------------------------!
   subroutine accumulate_rho_from_klimontovich_spline_2d(this, particle_group,&
        rho_dofs)
-    class( sll_kernel_smoother_spline_2d), intent(in)    :: this
-    class( sll_particle_group_base), intent(in)     :: particle_group
-    sll_real64, intent(inout)                       :: rho_dofs(:)
+    class( sll_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
+    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+    sll_real64, intent(inout)                       :: rho_dofs(:) !< spline coefficient of accumulated density
     
     !local variables
     sll_int32 :: i_part, i1, i2, index2d
@@ -107,10 +106,10 @@ contains
   !---------------------------------------------------------------------------!
   subroutine accumulate_j_from_klimontovich_spline_2d(this, particle_group,&
        j_dofs, component)
-    class( sll_kernel_smoother_spline_2d), intent(in)    :: this
-    class( sll_particle_group_base), intent(in)     :: particle_group
-    sll_real64, intent(inout)                       :: j_dofs(:)
-    sll_int32, intent(in)                           :: component
+    class( sll_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
+    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+    sll_real64, intent(inout)                       :: j_dofs(:) !< spline coefficients ofcomponent \a component accumulated current density
+    sll_int32, intent(in)                           :: component !< component of \a j_dofs to be accumulated.
     
     !local variables
     sll_int32 :: i_part, i1, i2, index2d
@@ -144,7 +143,7 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine evaluate_kernel_function_particle_spline_2d(this, rho_dofs, i_part, particle_value)
-    class( sll_kernel_smoother_spline_2d), intent(in)    :: this
+    class( sll_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
     sll_real64, intent(in)                               :: rho_dofs(:) !< Degrees of freedom in kernel representation.
     sll_int32, intent(in)                                :: i_part !< particle number
     sll_real64, intent(out)                              :: particle_value !< Value of the function at the position of particle \a i_part
@@ -168,44 +167,13 @@ contains
 
   end subroutine evaluate_kernel_function_particle_spline_2d
 
-! Version as a subroutine. Not up to date with sll_new function.
-!!$  subroutine initialize_smoother_spline_2d(this, domain, n_grid, no_particles, spline_degree)
-!!$    class( sll_kernel_smoother_spline_2d), intent(inout)    :: this
-!!$    sll_int32, intent(in) :: n_grid(2)
-!!$    sll_real64, intent(in) :: domain(2,2)
-!!$    sll_int32, intent(in) :: no_particles
-!!$    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
-!!$
-!!$    !local variables
-!!$    sll_int32 :: ierr
-!!$
-!!$    ! Store grid information
-!!$    this%domain = domain
-!!$    SLL_ALLOCATE(this%n_grid(2), ierr)
-!!$    this%n_grid = n_grid
-!!$    this%n_dofs = product(n_grid)
-!!$    this%delta_x = (domain(:,2)-domain(:,1))/n_grid
-!!$
-!!$    ! Store basis function information
-!!$    this%no_particles = no_particles
-!!$
-!!$    ! Initialize information on the spline
-!!$    this%spline_degree = spline_degree
-!!$    this%n_span = spline_degree + 1
-!!$
-!!$    ! Initialize sparse structure for shape factors
-!!$    SLL_ALLOCATE(this%index_grid(no_particles, 2),ierr)
-!!$    SLL_ALLOCATE(this%values_grid(no_particles, 2, this%n_span),ierr)
-!!$
-!!$  end subroutine initialize_smoother_spline_2d
-
   !-------------------------------------------------------------------------------------------
   !< Constructor 
   function sll_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
     class( sll_kernel_smoother_spline_2d), pointer   :: this
-    sll_int32, intent(in) :: n_grid(2)
-    sll_real64, intent(in) :: domain(2,2)
-    sll_int32, intent(in) :: no_particles
+    sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
+    sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
+    sll_int32, intent(in) :: no_particles !< no. of particles
     sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
     sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
 
