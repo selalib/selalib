@@ -1,4 +1,4 @@
-SET(SLL_DIR ${CMAKE_SOURCE_DIR})
+SET(SLL_DIR ${CMAKE_SOURCE_DIR}/src)
 
 FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/*.h )
 
@@ -216,7 +216,7 @@ IF(BUILD_PACKAGE)
           ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
   COMMAND ${CMAKE_COMMAND} -E copy 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../src/documentation.f90 
+          ${CMAKE_SOURCE_DIR}/src/documentation.f90 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
   COMMAND ${CMAKE_COMMAND} -E copy 
           ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
@@ -228,10 +228,10 @@ IF(BUILD_PACKAGE)
           ${CMAKE_CURRENT_SOURCE_DIR}/../doc/sphinx/_static/logo2.png 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../src/external/fftpack 
+          ${CMAKE_SOURCE_DIR}/external/fftpack 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../src/external/mudpack 
+          ${CMAKE_SOURCE_DIR}/external/mudpack 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
           ${CMAKE_CURRENT_SOURCE_DIR}/examples 
