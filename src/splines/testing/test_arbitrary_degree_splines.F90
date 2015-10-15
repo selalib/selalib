@@ -1,4 +1,4 @@
-program arbitrary_degree_spline_tester
+program test_arbitrary_degree_splines
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -388,4 +388,4 @@ contains
     end if
   end function find_index
 
-end program arbitrary_degree_spline_tester
+end program test_arbitrary_degree_splines
