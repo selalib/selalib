@@ -1,5 +1,6 @@
 IF(BUILD_TESTING)
-  ADD_EXECUTABLE( test_integration unit_test.F90 test_func_module.F90 )
+  ADD_EXECUTABLE( test_integration test_integration.F90
+                                   test_func_module.F90 )
   TARGET_LINK_LIBRARIES( test_integration sll_integration )
   # Ctest
   ADD_TEST( NAME integration COMMAND test_integration )
