@@ -1,6 +1,6 @@
 ! TODO: Use input from file to initialize and compare
 
-program test_operator_splitting_pic_2d2v
+program test_operator_splitting_pic_vp_2d2v
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -11,7 +11,7 @@ program test_operator_splitting_pic_2d2v
   use sll_m_particle_group_2d2v
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d
-  use sll_m_operator_splitting_pic_2d2v_vp
+  use sll_m_operator_splitting_pic_vp_2d2v
   use sll_m_poisson_2d_fft 
   use sll_m_poisson_2d_base
 
@@ -33,7 +33,7 @@ program test_operator_splitting_pic_2d2v
   class(poisson_2d_fft_solver), pointer :: poisson_solver 
   
   ! Specific operator splitting
-  class(sll_operator_splitting_pic_2d2v_vp), pointer :: propagator
+  class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
   
   ! Parameters
   sll_int32  :: n_particles
@@ -103,7 +103,7 @@ program test_operator_splitting_pic_2d2v
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
   SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
-  propagator => sll_new_splitting_pic_2d2v_vp(poisson_solver, kernel_smoother, &
+  propagator => sll_new_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, &
        particle_group, efield)
 
 
@@ -164,4 +164,4 @@ program test_operator_splitting_pic_2d2v
   end if
   
   call sll_halt_collective()
-end program test_operator_splitting_pic_2d2v
+end program test_operator_splitting_pic_vp_2d2v

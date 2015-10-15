@@ -15,9 +15,9 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_pic_base
   use sll_m_particle_initializer
   use sll_m_particle_group_1d2v
-  use sll_m_operator_splitting_base
-  use sll_m_operator_splitting_pic_1d2v_vm
-  use sll_m_operator_splitting_cef_pic_1d2v_vm
+  use sll_m_hamiltonian_splitting_base
+  use sll_m_hamiltonian_splitting_pic_1d2v_vm
+  use sll_m_hamiltonian_splitting_cef_pic_1d2v_vm
   use sll_ascii_io
   
   use sll_m_kernel_smoother_base
@@ -63,9 +63,9 @@ module sll_m_sim_pic_vm_1d2v_cart
 
 
      ! Specific operator splitting
-     class(sll_t_operator_splitting_base), pointer :: propagator
-     class(sll_operator_splitting_pic_1d2v_vm), pointer :: propagator_symplectic
-     class(sll_operator_splitting_cef_pic_1d2v_vm), pointer :: propagator_cef
+     class(sll_t_hamiltonian_splitting_base), pointer :: propagator
+     class(sll_t_hamiltonian_splitting_pic_1d2v_vm), pointer :: propagator_symplectic
+     class(sll_t_hamiltonian_splitting_cef_pic_1d2v_vm), pointer :: propagator_cef
      sll_int32 :: splitting_case
 
      ! Fields on the grid
@@ -261,7 +261,7 @@ contains
             sim%domain(1), sim%domain(3))
        sim%propagator => sim%propagator_symplectic
     elseif (sim%splitting_case == SLL_SPLITTING_CEF) then
-       sim%propagator_cef =>  sll_new_splitting_cef_pic_1d2v_vm(sim%maxwell_solver, &
+       sim%propagator_cef =>  sll_new_splitting_cef_pic_vm_1d2v(sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
