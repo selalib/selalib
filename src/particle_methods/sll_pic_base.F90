@@ -1,9 +1,12 @@
-module sll_module_pic_base
+module sll_m_pic_base
 
 #include "sll_working_precision.h"
+#include "sll_memory.h"
 
   implicit none
   private
+
+  public :: species_new
 
   !============================================================================
   ! Particle species
@@ -27,17 +30,28 @@ module sll_module_pic_base
 
     class( sll_species ), pointer :: species
     sll_int32                     :: id
-    
+    sll_int32                     :: n_particles !< number of particles local to the processor
+    sll_int32                     :: n_total_particles !< number of particles in total simulation    
+    sll_int32                     :: n_weights !< number of weights per particle
+
   contains
     ! Getters
     procedure( i_get_coords ), deferred :: get_x
     procedure( i_get_coords ), deferred :: get_v
     procedure( i_get_scalar ), deferred :: get_charge
     procedure( i_get_scalar ), deferred :: get_mass
+    procedure( i_get_array  ), deferred :: get_weights
+    procedure( i_get_scalar ), deferred :: get_common_weight
 
     ! Setters
     procedure( i_set_coords ), deferred :: set_x
     procedure( i_set_coords ), deferred :: set_v
+    procedure( i_set_array  ), deferred :: set_weights
+    procedure( i_set_scalar ), deferred :: set_common_weight
+
+!    ! Getters for the whole group
+!    procedure( get_all_coords), deferred :: get_all_x
+!    procedure( get_all_coords), deferred :: get_all_v
 
   end type sll_particle_group_base
 
@@ -65,6 +79,17 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
+   pure function i_get_array( self, i ) result( r )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( in ) :: self
+    sll_int32                       , intent( in ) :: i
+    sll_real64 :: r(self%n_weights)
+  end function i_get_array
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
    subroutine i_set_coords( self, i, x )
     use sll_working_precision
     import sll_particle_group_base
@@ -73,6 +98,29 @@ module sll_module_pic_base
     sll_real64                      , intent( in    ) :: x(3)
    end subroutine i_set_coords
   end interface
+
+!----------------------------------------------------------------------------
+  abstract interface
+   subroutine i_set_scalar( self, i, x )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: i
+    sll_real64                      , intent( in    ) :: x
+  end subroutine i_set_scalar
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine i_set_array( self, i, x )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: i
+    sll_real64                      , intent( in    ) :: x(self%n_weights)
+  end subroutine i_set_array
+  end interface
+
 
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
@@ -86,4 +134,20 @@ contains
     r = self%q / self%m
   end function q_over_m
 
-end module sll_module_pic_base
+  !----------------------------------------------------------------------------
+  function species_new( &
+      species_charge,     &
+      species_mass        &
+  ) result(res)
+    sll_real64, intent ( in )   :: species_charge
+    sll_real64, intent ( in )   :: species_mass
+    type(sll_species), pointer  :: res
+    sll_int32  :: ierr
+
+    SLL_ALLOCATE( res, ierr )
+    !    res%name =
+    res%q = species_charge
+    res%m = species_mass
+
+  end function species_new
+end module sll_m_pic_base

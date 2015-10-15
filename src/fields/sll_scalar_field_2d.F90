@@ -1,7 +1,7 @@
 !> @ingroup fields
 !> @brief
 !> Implements the field descriptor types
-module sll_module_scalar_field_2d
+module sll_m_scalar_field_2d
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -9,10 +9,10 @@ module sll_module_scalar_field_2d
 #include "sll_file_io.h"
 #include "sll_utilities.h"
 
-use sll_module_scalar_field_2d_base
+use sll_m_scalar_field_2d_base
 use sll_constants
-use sll_module_interpolators_2d_base
-use sll_module_arbitrary_degree_spline_interpolator_2d
+use sll_m_interpolators_2d_base
+use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_boundary_condition_descriptors
 use sll_gnuplot
 
@@ -833,4 +833,4 @@ SLL_DEALLOCATE_ARRAY(values,ierr)
 
 end subroutine write_to_file_discrete_2d
 
-end module sll_module_scalar_field_2d
+end module sll_m_scalar_field_2d

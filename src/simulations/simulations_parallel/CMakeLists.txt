@@ -8,9 +8,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
    #Add new dependencies concerning simulation_MYMETHOD.F90
    TARGET_LINK_LIBRARIES(sll_simulations_parallel
                          sll_collective
-                         sll_distribution_function_multipatch
-                         sll_general_coordinate_elliptic_solvers_multipatch
-                         sll_scalar_field_multipatch
                          sll_parallel_array_utilities
                          sll_advection
                          sll_parallel_utilities
@@ -32,7 +29,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
-                         sll_field_accumulators
                          sll_interpolators
                          sll_point_to_point_communications
                          sll_splines
@@ -68,14 +64,24 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
     ADD_SUBDIRECTORY( sim_4d_mixed_qns_cartesian               )
     ADD_SUBDIRECTORY( sim_4d_qns_general                       )
-    ADD_SUBDIRECTORY( sim_4d_qns_general_multipatch            )
     ADD_SUBDIRECTORY( sim_6d                                   )
+
+    ADD_SUBDIRECTORY( sim_sl_va_1d1v_cart_berk_breizman        )
+    ADD_SUBDIRECTORY( sim_sl_va_1d1v_cart_spectral             )
+    ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_sparsegrid           )
+    ADD_SUBDIRECTORY( sim_sl_vp_3d3v_cart_sparsegrid           )
+    ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_multipatch           )
+    ADD_SUBDIRECTORY( sl_dk_3d1v_curv_field_aligned        )
+ 
 
     # Particle simulations (mostly PIC)
     ADD_SUBDIRECTORY( sim_2d_guiding_center_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
     ADD_SUBDIRECTORY( sim_pic1d1v_vlasov-poisson_periodic      )
+
+    ADD_SUBDIRECTORY( sim_pic_vp_2d2v_cart                     )
+    ADD_SUBDIRECTORY( sim_pic_vm_1d2v_cart                     )
 
 ENDIF()
 

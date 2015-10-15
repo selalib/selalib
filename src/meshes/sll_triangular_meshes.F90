@@ -14,14 +14,14 @@
 !>  This module defines a triangular mesh.
 !>
 !> @details
-!>  Triangular mesh 
+!>  Triangular mesh
 !------------------------------------------------------------------------------
 module sll_triangular_meshes
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_boundary_condition_descriptors.h"
 
 use sll_meshes_base
@@ -31,8 +31,8 @@ implicit none
 
 
 !> @brief 2d hexagonal mesh
-!  vtaux  - composante x des vecteurs tangeants         
-!  vtauy  - composante y des vecteurs tangeants        
+!  vtaux  - composante x des vecteurs tangeants
+!  vtauy  - composante y des vecteurs tangeants
 type :: sll_triangular_mesh_2d
 
   sll_int32           :: num_nodes  
@@ -179,7 +179,7 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
   type(sll_triangular_mesh_2d),      pointer :: tri_mesh
 
@@ -222,7 +222,7 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     y1 = hex_mesh%center_cartesian_coord(2, i)
     
     call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
-    call get_neighbours(hex_mesh, i, iv1, iv2, iv3)
+    call hex_mesh%get_neighbours( i, iv1, iv2, iv3)
 
     xa = tri_mesh%coord(1,is1)
     ya = tri_mesh%coord(2,is1)
@@ -566,17 +566,15 @@ end function global_to_x2
 
 subroutine write_triangular_mesh_mtv(mesh, mtv_file)
 
-type(sll_triangular_mesh_2d) :: mesh
-sll_real64                   :: x1, x2
-sll_real64                   :: y1, y2
-character(len=*)             :: mtv_file
-sll_int32                    :: out_unit
-sll_int32                    :: error
-sll_int32                    :: i, j, k, l
+type(sll_triangular_mesh_2d), intent(in) :: mesh
+character(len=*),             intent(in) :: mtv_file
 
-call sll_new_file_id(out_unit, error)
+sll_real64 :: x1, x2
+sll_real64 :: y1, y2
+sll_int32  :: out_unit
+sll_int32  :: i, j, k, l
 
-open( out_unit, file=mtv_file)
+open( file=mtv_file, status='replace', form='formatted', newunit=out_unit )
 
 !--- Trace du maillage ---
 
@@ -852,7 +850,9 @@ integer          :: iout = 6
 integer          :: imxref
 
 write(iout,"(/////10x,'>>> Read mesh from file <<<'/)")
+print *, " will open : ", maafil
 open(nfmaa,file=maafil,status='OLD',err=80)
+print *, " opened    : ", maafil
 write(*,1050,advance='no') trim(maafil)
 
 write(iout,"(10x,'Open the file'                      &

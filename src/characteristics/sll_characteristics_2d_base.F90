@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_characteristics_2d_base
+module sll_m_characteristics_2d_base
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   implicit none
@@ -135,4 +135,4 @@ contains
   
   
   
-end module sll_module_characteristics_2d_base
+end module sll_m_characteristics_2d_base

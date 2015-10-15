@@ -1,4 +1,4 @@
-module sll_module_coordinate_transformations_2d
+module sll_m_coordinate_transformations_2d_hex
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -6,9 +6,9 @@ module sll_module_coordinate_transformations_2d
   use sll_cubic_splines
   use sll_xdmf
   use sll_meshes_base
-  use sll_module_interpolators_2d_base
+  use sll_m_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_deboor_splines_2d
+  use sll_m_deboor_splines_2d
   implicit none
   
   ! ---------------------------------------------------------------------
@@ -1644,4 +1644,4 @@ contains
     mesh_2d_jacobian_cell = transf%jacobians_c(i,j)
   end function mesh_2d_jacobian_cell
 #endif
-end module sll_module_coordinate_transformations_2d
+end module sll_m_coordinate_transformations_2d_hex

@@ -3,31 +3,43 @@ module sll_interpolation_hex_hermite
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   use sll_hermite_interpolation_2d_module
   implicit none
 
 contains
 
 
-  subroutine der_finite_difference( f_tn, p, step, mesh, deriv ) 
+  subroutine der_finite_difference( f_tn, p, step, mesh, deriv )
     !-> computation of the partial derivatives in the directions H1, H2 and H3
     ! with dirichlet boundary condition
     type(sll_hex_mesh_2d), pointer         :: mesh
-    sll_real64, dimension(:,:), intent(out):: deriv 
-    sll_real64, dimension(:), intent(in)   :: f_tn 
+    sll_real64, dimension(:,:), intent(out):: deriv
+    sll_real64, dimension(:), intent(in)   :: f_tn
     sll_real64, intent(in)                 :: step
     sll_int32,  intent(in)                 :: p
     sll_int32                              :: num_cells, i, j, r, s, n_points
     sll_int32                              :: n1, n2, n3, n4, n5, n6, nc1
     sll_real64                             :: dh1, dh2, dh3, dh4, dh5, dh6
     sll_int32                              :: h1, h2, h1t, h2t, p2
-    sll_int32                              :: index_boundary, index_boundary1, index_boundary2
-    sll_int32                              :: index_boundary3, index_boundary4, index_boundary5
-    sll_int32                              :: index_boundary6, maxrs
-    logical                                :: opsign1, opsign2, opsign3
-    logical                                :: boundary,boundary1,boundary2,boundary3
-    logical                                :: boundary4,boundary5,boundary6
+    sll_int32                              :: index_boundary
+    sll_int32                              :: index_boundary1
+    sll_int32                              :: index_boundary2
+    sll_int32                              :: index_boundary3
+    sll_int32                              :: index_boundary4
+    sll_int32                              :: index_boundary5
+    sll_int32                              :: index_boundary6
+    sll_int32                              :: maxrs
+    logical                                :: opsign1
+    logical                                :: opsign2
+    logical                                :: opsign3
+    logical                                :: boundary
+    logical                                :: boundary1
+    logical                                :: boundary2
+    logical                                :: boundary3
+    logical                                :: boundary4
+    logical                                :: boundary5
+    logical                                :: boundary6
     logical                                :: secure
     sll_real64, dimension(:),allocatable   :: w
     sll_real64, dimension(:,:),allocatable :: f
@@ -36,14 +48,14 @@ contains
     num_cells = mesh%num_cells
 
     !*********************************************************************
-    ! computation of the coefficients in fonction of the degree p 
+    ! computation of the coefficients in fonction of the degree p
     ! of the approximation required
     !*********************************************************************
 
     p2 = p/2
 
     if ( (p2)*2 == p ) then !if p is even
-       r = -p2       
+       r = -p2
        s = p2
     else  !if p is odd
        r = -p2 - 1 ! de-centered to the left      
@@ -89,13 +101,13 @@ contains
              h1t = h1 + j 
              h2t = h2 + j
 
-             n1 = hex_to_global(mesh,h1t,h2)
+             n1 = mesh%hex_to_global(h1t,h2)
              f(1,j) = f_tn(n1) 
 
-             n2 = hex_to_global(mesh,h1,h2t)
+             n2 = mesh%hex_to_global(h1,h2t)
              f(2,j) = f_tn(n2) 
 
-             n3 = hex_to_global(mesh,h1t,h2t)
+             n3 = mesh%hex_to_global(h1t,h2t)
              f(3,j) = f_tn(n3) 
 
              !find the required points in the -h1, -h2 and -h3 directions 
@@ -103,13 +115,13 @@ contains
              h1t = h1 - j
              h2t = h2 - j
 
-             n4 = hex_to_global(mesh,h1t,h2)
+             n4 = mesh%hex_to_global(h1t,h2)
              f(4,j) = f_tn(n4) 
 
-             n5 = hex_to_global(mesh,h1,h2t)
+             n5 = mesh%hex_to_global(h1,h2t)
              f(5,j) = f_tn(n5) 
 
-             n6 = hex_to_global(mesh,h1t,h2t)
+             n6 = mesh%hex_to_global(h1t,h2t)
              f(6,j) = f_tn(n6) 
 
           enddo
@@ -156,7 +168,7 @@ contains
                 if (  abs(h1t) > num_cells .or. opsign1 .and. ( abs(h1t) + abs(h2) > num_cells) ) then
                    f(1,j) = f_tn(index_boundary) ! dirichlet boundary condition
                 else
-                   n1 = hex_to_global(mesh,h1t,h2)
+                   n1 = mesh%hex_to_global(h1t,h2)
                    f(1,j) = f_tn(n1) 
                 endif
 
@@ -164,14 +176,14 @@ contains
                 if (  abs(h2t) > num_cells .or. opsign2 .and. ( abs(h1) + abs(h2t) > num_cells) ) then 
                    f(2,j) = f_tn(index_boundary) 
                 else
-                   n2 = hex_to_global(mesh,h1,h2t)
+                   n2 = mesh%hex_to_global(h1,h2t)
                    f(2,j) = f_tn(n2) 
                 endif
 
                 if ( abs(h1t) > num_cells .or. abs(h2t) > num_cells .or. opsign3 .and. ( abs(h1t) + abs(h2t) > num_cells) ) then
                    f(3,j) = f_tn(index_boundary) 
                 else
-                   n3 = hex_to_global(mesh,h1t,h2t)
+                   n3 = mesh%hex_to_global(h1t,h2t)
                    f(3,j) = f_tn(n3) 
                 endif
 
@@ -194,7 +206,7 @@ contains
                      opsign1 .and. ( abs(h1t) + abs(h2) > num_cells) ) then
                    f(4,j) = f_tn(index_boundary) ! dirichlet boundary condition
                 else
-                   n4 = hex_to_global(mesh,h1t,h2)
+                   n4 = mesh%hex_to_global(h1t,h2)
                    f(4,j) = f_tn(n4) 
                 endif
 
@@ -202,7 +214,7 @@ contains
                      opsign2 .and. ( abs(h1) + abs(h2t) > num_cells) ) then
                    f(5,j) = f_tn(index_boundary) 
                 else
-                   n5 = hex_to_global(mesh,h1,h2t)
+                   n5 = mesh%hex_to_global(h1,h2t)
                    f(5,j) = f_tn(n5) 
                 endif
 
@@ -210,7 +222,7 @@ contains
                    opsign3 .and. ( abs(h1t) + abs(h2t) > num_cells) ) then
                    f(6,j) = f_tn(index_boundary)
                 else
-                   n6 = hex_to_global(mesh,h1t,h2t)
+                   n6 = mesh%hex_to_global(h1t,h2t)
                    f(6,j) = f_tn(n6) 
                 endif
 
@@ -239,7 +251,7 @@ contains
                    if ( h1t == num_cells .and. h2 >= 0 .and. h2 <= num_cells .or. &
                         h2 <= 0 .and. h1t >= 0 .and. h1t - h2 == num_cells) then
                       boundary1       = .true.
-                      index_boundary1 = hex_to_global(mesh,h1t,h2)
+                      index_boundary1 = mesh%hex_to_global(h1t,h2)
                    endif
                 endif
 
@@ -247,7 +259,7 @@ contains
                    if (h2t ==  num_cells .and. h1 >= 0 .and. h1 <=  num_cells .or. &
                         h1 <= 0 .and. h2t >= 0 .and. h2t - h1 == num_cells) then
                       boundary2       = .true.
-                      index_boundary2 = hex_to_global(mesh,h1,h2t)
+                      index_boundary2 = mesh%hex_to_global(h1,h2t)
                    endif
                 endif
 
@@ -255,7 +267,7 @@ contains
                    if (h1t == num_cells .and. h2t >= 0 .and. h2t <= num_cells .or. &
                         h2t ==  num_cells .and. h1t >= 0 .and. h1t <=  num_cells) then
                       boundary3       = .true.
-                      index_boundary3 = hex_to_global(mesh,h1t,h2t)
+                      index_boundary3 = mesh%hex_to_global(h1t,h2t)
                    endif
                 endif
 
@@ -263,21 +275,21 @@ contains
                 if ( boundary1 ) then
                    f(1,j) = f_tn(index_boundary1) ! dirichlet boundary condition
                 else
-                   n1 = hex_to_global(mesh,h1t,h2)
+                   n1 = mesh%hex_to_global(h1t,h2)
                    f(1,j) = f_tn(n1) 
                 endif
 
                 if ( boundary2 ) then 
                    f(2,j) = f_tn(index_boundary2) 
                 else
-                   n2 = hex_to_global(mesh,h1,h2t)
+                   n2 = mesh%hex_to_global(h1,h2t)
                    f(2,j) = f_tn(n2) 
                 endif
 
                 if ( boundary3 ) then
                    f(3,j) = f_tn(index_boundary3) 
                 else
-                   n3 = hex_to_global(mesh,h1t,h2t)
+                   n3 = mesh%hex_to_global(h1t,h2t)
                    f(3,j) = f_tn(n3) 
                 endif
 
@@ -288,7 +300,7 @@ contains
                    if (h1t == -num_cells .and. h2 <= 0 .and. h2 >= -num_cells .or. &
                         h1t <= 0 .and. h2 >= 0 .and. h2 - h1t == num_cells) then
                       boundary4       = .true.
-                      index_boundary4 = hex_to_global(mesh,h1t,h2)
+                      index_boundary4 = mesh%hex_to_global(h1t,h2)
                    endif
                 endif
 
@@ -296,7 +308,7 @@ contains
                    if (h2t == -num_cells .and. h1 <= 0 .and. h1 >= -num_cells .or. &
                         h2t <= 0 .and. h1 >= 0 .and. h1 - h2t == num_cells) then
                       boundary5       = .true.
-                      index_boundary5 = hex_to_global(mesh,h1,h2t)
+                      index_boundary5 = mesh%hex_to_global(h1,h2t)
                    endif
                 endif
 
@@ -304,7 +316,7 @@ contains
                    if (h1t == -num_cells .and. h2t <= 0 .and. h2t >= -num_cells .or. &
                         h2t == -num_cells .and. h1t <= 0 .and. h1t >= -num_cells) then
                       boundary6       = .true.
-                      index_boundary6 = hex_to_global(mesh,h1t,h2t)
+                      index_boundary6 = mesh%hex_to_global(h1t,h2t)
                    endif
                 endif
 
@@ -312,21 +324,21 @@ contains
                 if ( boundary4 ) then
                    f(4,j) = f_tn(index_boundary4) ! dirichlet boundary condition
                 else
-                   n4 = hex_to_global(mesh,h1t,h2)
+                   n4 = mesh%hex_to_global(h1t,h2)
                    f(4,j) = f_tn(n4) 
                 endif
 
                 if ( boundary5 ) then 
                    f(5,j) = f_tn(index_boundary5) 
                 else
-                   n5 = hex_to_global(mesh,h1,h2t)
+                   n5 = mesh%hex_to_global(h1,h2t)
                    f(5,j) = f_tn(n5) 
                 endif
 
                 if ( boundary6 ) then
                    f(6,j) = f_tn(index_boundary6) 
                 else
-                   n6 = hex_to_global(mesh,h1t,h2t)
+                   n6 = mesh%hex_to_global(h1t,h2t)
                    f(6,j) = f_tn(n6) 
                 endif
 
@@ -348,7 +360,7 @@ contains
                    if (h1t == -num_cells .and. h2 <= 0 .and. h2 >= -num_cells .or. &
                         h1t <= 0 .and. h2 >= 0 .and. h2 - h1t == num_cells) then
                       boundary1       = .true.
-                      index_boundary1 = hex_to_global(mesh,h1t,h2)
+                      index_boundary1 = mesh%hex_to_global(h1t,h2)
                    endif
                 endif
                 
@@ -356,7 +368,7 @@ contains
                    if (h2t == -num_cells .and. h1 <= 0 .and. h1 >= -num_cells .or. &
                         h2t <= 0 .and. h1 >= 0 .and. h1 - h2t == num_cells) then
                       boundary2       = .true.
-                      index_boundary2 = hex_to_global(mesh,h1,h2t)
+                      index_boundary2 = mesh%hex_to_global(h1,h2t)
                    endif
                 endif
 
@@ -364,7 +376,7 @@ contains
                    if (h1t == -num_cells .and. h2t <= 0 .and. h2t >= -num_cells .or. &
                         h2t == -num_cells .and. h1t <= 0 .and. h1t >= -num_cells) then
                       boundary3       = .true.
-                      index_boundary3 = hex_to_global(mesh,h1t,h2t)
+                      index_boundary3 = mesh%hex_to_global(h1t,h2t)
                    endif
                 endif
 
@@ -372,21 +384,21 @@ contains
                 if ( boundary1 ) then
                    f(1,j) = f_tn(index_boundary1) ! dirichlet boundary condition
                 else
-                   n1 = hex_to_global(mesh,h1t,h2)
+                   n1 = mesh%hex_to_global(h1t,h2)
                    f(1,j) = f_tn(n1) 
                 endif
 
                 if ( boundary2 ) then 
                    f(2,j) = f_tn(index_boundary2) 
                 else
-                   n2 = hex_to_global(mesh,h1,h2t)
+                   n2 = mesh%hex_to_global(h1,h2t)
                    f(2,j) = f_tn(n2) 
                 endif
 
                 if ( boundary3 ) then
                    f(3,j) = f_tn(index_boundary3) 
                 else
-                   n3 = hex_to_global(mesh,h1t,h2t)
+                   n3 = mesh%hex_to_global(h1t,h2t)
                    f(3,j) = f_tn(n3) 
                 endif
 
@@ -397,7 +409,7 @@ contains
                    if  ( h1t == num_cells .and. h2 >= 0 .and. h2 <= num_cells .or. &
                         h2 <= 0 .and. h1t >= 0 .and. h1t - h2 == num_cells) then
                       boundary4       = .true.
-                      index_boundary4 = hex_to_global(mesh,h1t,h2)
+                      index_boundary4 = mesh%hex_to_global(h1t,h2)
                    endif
                 endif
 
@@ -405,7 +417,7 @@ contains
                    if (h2t ==  num_cells .and. h1 >= 0 .and. h1 <=  num_cells .or. &
                         h1 <= 0 .and. h2t >= 0 .and. h2t - h1 == num_cells) then
                       boundary5       = .true.
-                      index_boundary5 = hex_to_global(mesh,h1,h2t)
+                      index_boundary5 = mesh%hex_to_global(h1,h2t)
                    endif
                 endif
 
@@ -413,7 +425,7 @@ contains
                    if (h1t == num_cells .and. h2t >= 0 .and. h2t <= num_cells .or. &
                         h2t ==  num_cells .and. h1t >= 0 .and. h1t <=  num_cells) then
                       boundary6       = .true.
-                      index_boundary6 = hex_to_global(mesh,h1t,h2t)
+                      index_boundary6 = mesh%hex_to_global(h1t,h2t)
                    endif
                 endif
 
@@ -421,21 +433,21 @@ contains
                 if ( boundary4 ) then
                    f(4,j) = f_tn(index_boundary4) ! dirichlet boundary condition
                 else
-                   n4 = hex_to_global(mesh,h1t,h2)
+                   n4 = mesh%hex_to_global(h1t,h2)
                    f(4,j) = f_tn(n4) 
                 endif
 
                 if ( boundary5 ) then 
                    f(5,j) = f_tn(index_boundary5) 
                 else
-                   n5 = hex_to_global(mesh,h1,h2t)
+                   n5 = mesh%hex_to_global(h1,h2t)
                    f(5,j) = f_tn(n5) 
                 endif
 
                 if ( boundary6 ) then
                    f(6,j) = f_tn(index_boundary6) 
                 else
-                   n6 = hex_to_global(mesh,h1t,h2t)
+                   n6 = mesh%hex_to_global(h1t,h2t)
                    f(6,j) = f_tn(n6) 
                 endif
 
@@ -1132,42 +1144,42 @@ contains
        if ( test_in(h13,h26,num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,h13,h26)
+          ni_2 = mesh%hex_to_global(h13,h26)
           fi_2 = deriv(1,ni_2) * n1_l(1) + deriv(2,ni_2) * n1_l(2)
        endif
 
        if ( test_in(h12,h24,num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,h12,h24)
+          ni_1 = mesh%hex_to_global(h12,h24)
           fi_1 = deriv(1,ni_1) * n1_l(1) + deriv(2,ni_1)* n1_l(2)
        endif
 
        if ( test_in(h11,h22,num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,h11,h22)
+          ni = mesh%hex_to_global(h11,h22)
           fi = deriv(1,ni) * n1_l(1) + deriv(2,ni)* n1_l(2)
        endif
 
        if ( test_in(h1,h2,num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,h1,h2)
+          ni1 = mesh%hex_to_global(h1,h2)
           fi1 = deriv(1,ni1) * n1_l(1) + deriv(2,ni1)* n1_l(2)
        endif
 
        if ( test_in(h1_1,h2_2,num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,h1_1,h2_2)
+          ni2 = mesh%hex_to_global(h1_1,h2_2)
           fi2 = deriv(1,ni2) * n1_l(1) + deriv(2,ni2)* n1_l(2)
        endif
 
        if ( test_in(h1_2,h2_4,num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,h1_2,h2_4)
+          ni3 = mesh%hex_to_global(h1_2,h2_4)
           fi3 = deriv(1,ni3) * n1_l(1) + deriv(2,ni3) * n1_l(2)
        endif
 
@@ -1181,42 +1193,42 @@ contains
        if ( test_in(h13,h2_2,num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,h13,h2_2)
+          ni_2 = mesh%hex_to_global(h13,h2_2)
           fi_2 = deriv(1,ni_2) * n2_l(1) + deriv(2,ni_2) * n2_l(2)
        endif
 
        if ( test_in(h12,h2_1,num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,h12,h2_1)
+          ni_1 = mesh%hex_to_global(h12,h2_1)
           fi_1 = deriv(1,ni_1) * n2_l(1) + deriv(2,ni_1)* n2_l(2)
        endif
 
        if ( test_in(h11,h2,num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,h11,h2)
+          ni = mesh%hex_to_global(h11,h2)
           fi = deriv(1,ni) * n2_l(1) + deriv(2,ni)* n2_l(2)
        endif
 
        if ( test_in(h1,h2,num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,h1,h21)
+          ni1 = mesh%hex_to_global(h1,h21)
           fi1 = deriv(1,ni1) * n2_l(1) + deriv(2,ni1)* n2_l(2)
        endif
 
        if ( test_in(h1_1,h22,num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,h1_1,h22)
+          ni2 = mesh%hex_to_global(h1_1,h22)
           fi2 = deriv(1,ni2) * n2_l(1) + deriv(2,ni2)* n2_l(2)
        endif
 
        if ( test_in(h1_2,h23,num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,h1_2,h23)
+          ni3 = mesh%hex_to_global(h1_2,h23)
           fi3 = deriv(1,ni3) * n2_l(1) + deriv(2,ni3) * n2_l(2)
        endif
 
@@ -1229,42 +1241,42 @@ contains
        if ( test_in(h1_5,h2_2,num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,h1_5,h2_2)
+          ni_2 = mesh%hex_to_global(h1_5,h2_2)
           fi_2 = deriv(1,ni_2) * n3_l(1) + deriv(2,ni_2) * n3_l(2)
        endif
 
        if ( test_in(h1_3,h2_1,num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,h1_3,h2_1)
+          ni_1 = mesh%hex_to_global(h1_3,h2_1)
           fi_1 = deriv(1,ni_1) * n3_l(1) + deriv(2,ni_1)* n3_l(2)
        endif
 
        if ( test_in(h1_1,h2,num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,h1_1,h2)
+          ni = mesh%hex_to_global(h1_1,h2)
           fi = deriv(1,ni) * n3_l(1) + deriv(2,ni)* n3_l(2)
        endif
 
        if ( test_in(h11,h21,num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,h11,h21)
+          ni1 = mesh%hex_to_global(h11,h21)
           fi1 = deriv(1,ni1) * n3_l(1) + deriv(2,ni1)* n3_l(2)
        endif
 
        if ( test_in(h13,h22,num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,h13,h22)
+          ni2 = mesh%hex_to_global(h13,h22)
           fi2 = deriv(1,ni2) * n3_l(1) + deriv(2,ni2)* n3_l(2)
        endif
 
        if ( test_in(h15,h23,num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,h15,h23)
+          ni3 = mesh%hex_to_global(h15,h23)
           fi3 = deriv(1,ni3) * n3_l(1) + deriv(2,ni3) * n3_l(2)
        endif
 
@@ -1279,35 +1291,35 @@ contains
        if ( test_in(h16,h23,num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,h16,h23)
+          ni_2 = mesh%hex_to_global(h16,h23)
           fi_2 = deriv(1,ni_2) * n1_r(1) + deriv(2,ni_2) * n1_r(2)
        endif
 
        if ( test_in(h14,h22,num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,h14,h22)
+          ni_1 = mesh%hex_to_global(h14,h22)
           fi_1 = deriv(1,ni_1) * n1_r(1) + deriv(2,ni_1)* n1_r(2)
        endif
 
        if ( test_in(h12,h21,num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,h12,h21)
+          ni = mesh%hex_to_global(h12,h21)
           fi = deriv(1,ni) * n1_r(1) + deriv(2,ni)* n1_r(2)
        endif
 
        if ( test_in(h1,h2,num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,h1,h2)
+          ni1 = mesh%hex_to_global(h1,h2)
           fi1 = deriv(1,ni1) * n1_r(1) + deriv(2,ni1) * n1_r(2)
        endif
 
        if ( test_in(h1_2,h2_1,num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,h1_2,h2_1)
+          ni2 = mesh%hex_to_global(h1_2,h2_1)
           fi2 = deriv(1,ni2) * n1_r(1) + deriv(2,ni2) * n1_r(2)
        endif
 
@@ -1315,7 +1327,7 @@ contains
        if ( test_in(h1_4,h2_2,num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,h1_4,h2_2)
+          ni3 = mesh%hex_to_global(h1_4,h2_2)
           fi3 = deriv(1,ni3) * n1_r(1) + deriv(2,ni3) * n1_r(2)
        endif
 
@@ -1329,35 +1341,35 @@ contains
        if ( test_in(h1_2,h23,num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,h1_2,h23)
+          ni_2 = mesh%hex_to_global(h1_2,h23)
           fi_2 = deriv(1,ni_2) * n2_r(1) + deriv(2,ni_2) * n2_r(2)
        endif
 
        if ( test_in(h1_1,h22,num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,h1_1,h22)
+          ni_1 = mesh%hex_to_global(h1_1,h22)
           fi_1 = deriv(1,ni_1) * n2_r(1) + deriv(2,ni_1) * n2_r(2)
        endif
 
        if ( test_in(h1,h21,num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,h1,h21)
+          ni = mesh%hex_to_global(h1,h21)
           fi = deriv(1,ni) * n2_r(1) + deriv(2,ni) * n2_r(2)
        endif
 
        if ( test_in(h11,h2,num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,h11,h2)
+          ni1 = mesh%hex_to_global(h11,h2)
           fi1 = deriv(1,ni1) * n2_r(1) + deriv(2,ni1) * n2_r(2)
        endif
 
        if ( test_in(h12,h2_1,num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,h12,h2_1)
+          ni2 = mesh%hex_to_global(h12,h2_1)
           fi2 = deriv(1,ni2) * n2_r(1) + deriv(2,ni2) * n2_r(2)
        endif
 
@@ -1365,7 +1377,7 @@ contains
        if ( test_in(h13,h2_2,num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,h13,h2_2)
+          ni3 = mesh%hex_to_global(h13,h2_2)
           fi3 = deriv(1,ni3) * n2_r(1) + deriv(2,ni3) * n2_r(2)
        endif
 
@@ -1378,42 +1390,42 @@ contains
        if ( test_in(h1_2,h2_5,num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,h1_2,h2_5)
+          ni_2 = mesh%hex_to_global(h1_2,h2_5)
           fi_2 = deriv(1,ni_2) * n3_r(1) + deriv(2,ni_2) * n3_r(2)
        endif
 
        if ( test_in(h1_1,h2_3,num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,h1_1,h2_3)
+          ni_1 = mesh%hex_to_global(h1_1,h2_3)
           fi_1 = deriv(1,ni_1) * n3_r(1) + deriv(2,ni_1) * n3_r(2)
        endif
 
        if ( test_in(h1,h2_1,num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,h1,h2_1)
+          ni = mesh%hex_to_global(h1,h2_1)
           fi = deriv(1,ni) * n3_r(1) + deriv(2,ni) * n3_r(2)
        endif
 
        if ( test_in(h11,h21,num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,h11,h21)
+          ni1 = mesh%hex_to_global(h11,h21)
           fi1 = deriv(1,ni1) * n3_r(1) + deriv(2,ni1) * n3_r(2)
        endif
 
        if ( test_in(h12,h23,num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,h12,h23)
+          ni2 = mesh%hex_to_global(h12,h23)
           fi2 = deriv(1,ni2) * n3_r(1) + deriv(2,ni2) * n3_r(2)
        endif
 
        if ( test_in(h13,h25,num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,h13,h25)
+          ni3 = mesh%hex_to_global(h13,h25)
           fi3 = deriv(1,ni3) * n3_r(1) + deriv(2,ni3) * n3_r(2)
        endif
 
@@ -1553,56 +1565,56 @@ contains
     if ( test_in(k11-3,k12+4,mesh%num_cells) ) then
        fi_3 = 0._f64  
     else
-       ni_3 = hex_to_global(mesh,k11-3,k12+4)
+       ni_3 = mesh%hex_to_global(k11-3,k12+4)
        fi_3 = f_tn(ni_3) 
     endif
 
     if ( test_in(k11-2,k12+3,mesh%num_cells) ) then
        fi_2 = 0._f64  
     else
-       ni_2 = hex_to_global(mesh,k11-2,k12+3)
+       ni_2 = mesh%hex_to_global(k11-2,k12+3)
        fi_2 = f_tn(ni_2) 
     endif
 
     if ( test_in(k11-1,k12+2,mesh%num_cells) ) then
        fi_1 = 0._f64 
     else
-       ni_1 = hex_to_global(mesh,k11-1,k12+2)
+       ni_1 = mesh%hex_to_global(k11-1,k12+2)
        fi_1 = f_tn(ni_1)
     endif
 
     if ( test_in(k11,k12+1,mesh%num_cells) ) then
        fi = 0._f64  
     else
-       ni = hex_to_global(mesh,k11,k12+1)
+       ni = mesh%hex_to_global(k11,k12+1)
        fi = f_tn(ni)
     endif
 
     if ( test_in(k11+1,k12,mesh%num_cells) ) then
        fi1 = 0._f64  
     else
-       ni1 = hex_to_global(mesh,k11+1,k12)
+       ni1 = mesh%hex_to_global(k11+1,k12)
        fi1 = f_tn(ni1)
     endif
 
     if ( test_in(k11+2,k12-1,mesh%num_cells) ) then
        fi2 = 0._f64  
     else
-       ni2 = hex_to_global(mesh,k11+2,k12-1)
+       ni2 = mesh%hex_to_global(k11+2,k12-1)
        fi2 = f_tn(ni2)
     endif
     
     if ( test_in(k11+3,k12-2,mesh%num_cells) ) then
        fi3 = 0._f64  
     else
-       ni3 = hex_to_global(mesh,k11+3,k12-2)
+       ni3 = mesh%hex_to_global(k11+3,k12-2)
        fi3 = f_tn(ni3)
     endif
 
     if ( test_in(k11+4,k12-3,mesh%num_cells) ) then
        fi4 = 0._f64  
     else
-       ni4 = hex_to_global(mesh,k11+4,k12-3)
+       ni4 = mesh%hex_to_global(k11+4,k12-3)
        fi4 = f_tn(ni4)
     endif
 
@@ -1673,56 +1685,56 @@ contains
        if ( test_in(k11+4,k12+8,mesh%num_cells) ) then
           fi_3 = 0._f64  
        else
-          ni_3 = hex_to_global(mesh,k11+4,k12+8)
+          ni_3 = mesh%hex_to_global(k11+4,k12+8)
           fi_3 = f_tn(ni_3) 
        endif
 
        if ( test_in(k11+3,k12+6,mesh%num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,k11+3,k12+6)
+          ni_2 = mesh%hex_to_global(k11+3,k12+6)
           fi_2 = f_tn(ni_2) 
        endif
 
        if ( test_in(k11+2,k12+4,mesh%num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,k11+2,k12+4)
+          ni_1 = mesh%hex_to_global(k11+2,k12+4)
           fi_1 = f_tn(ni_1)
        endif
 
        if ( test_in(k11+1,k12+2,mesh%num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,k11+1,k12+2)
+          ni = mesh%hex_to_global(k11+1,k12+2)
           fi = f_tn(ni)
        endif
 
        if ( test_in(k11,k12,mesh%num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,k11,k12)
+          ni1 = mesh%hex_to_global(k11,k12)
           fi1 = f_tn(ni1)
        endif
 
        if ( test_in(k11-1,k12-2,mesh%num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,k11-1,k12-2)
+          ni2 = mesh%hex_to_global(k11-1,k12-2)
           fi2 = f_tn(ni2)
        endif
 
        if ( test_in(k11-2,k12-4,mesh%num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,k11-2,k12-4)
+          ni3 = mesh%hex_to_global(k11-2,k12-4)
           fi3 = f_tn(ni3)
        endif
 
        if ( test_in(k11-3,k12-3,mesh%num_cells) ) then
           fi4 = 0._f64  
        else
-          ni4 = hex_to_global(mesh,k11-3,k12-3)
+          ni4 = mesh%hex_to_global(k11-3,k12-3)
           fi4 = f_tn(ni4)
        endif
 
@@ -1734,56 +1746,56 @@ contains
        if ( test_in(k11-7,k12-3,mesh%num_cells) ) then
           fi_3 = 0._f64  
        else
-          ni_3 = hex_to_global(mesh,k11-7,k12-3)
+          ni_3 = mesh%hex_to_global(k11-7,k12-3)
           fi_3 = f_tn(ni_3) 
        endif
 
        if ( test_in(k11-5,k12-2,mesh%num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,k11-5,k12-2)
+          ni_2 = mesh%hex_to_global(k11-5,k12-2)
           fi_2 = f_tn(ni_2) 
        endif
 
        if ( test_in(k11-3,k12-1,mesh%num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,k11-3,k12-1)
+          ni_1 = mesh%hex_to_global(k11-3,k12-1)
           fi_1 = f_tn(ni_1)
        endif
 
        if ( test_in(k11-1,k12,mesh%num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,k11-1,k12)
+          ni = mesh%hex_to_global(k11-1,k12)
           fi = f_tn(ni)
        endif
 
        if ( test_in(k11+1,k12+1,mesh%num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,k11+1,k12+1)
+          ni1 = mesh%hex_to_global(k11+1,k12+1)
           fi1 = f_tn(ni1)
        endif
 
        if ( test_in(k11+3,k12+2,mesh%num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,k11+3,k12+2)
+          ni2 = mesh%hex_to_global(k11+3,k12+2)
           fi2 = f_tn(ni2)
        endif
 
        if ( test_in(k11+5,k12+3,mesh%num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,k11+5,k12+3)
+          ni3 = mesh%hex_to_global(k11+5,k12+3)
           fi3 = f_tn(ni3)
        endif
 
        if ( test_in(k11+7,k12+4,mesh%num_cells) ) then
           fi4 = 0._f64  
        else
-          ni4 = hex_to_global(mesh,k11+7,k12+4)
+          ni4 = mesh%hex_to_global(k11+7,k12+4)
           fi4 = f_tn(ni4)
        endif
 
@@ -1798,56 +1810,56 @@ contains
        if ( test_in(k11+4,k12+7,mesh%num_cells) ) then
           fi_3 = 0._f64  
        else
-          ni_3 = hex_to_global(mesh,k11+4,k12+7)
+          ni_3 = mesh%hex_to_global(k11+4,k12+7)
           fi_3 = f_tn(ni_3) 
        endif
 
        if ( test_in(k11+3,k12+5,mesh%num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,k11+3,k12+5)
+          ni_2 = mesh%hex_to_global(k11+3,k12+5)
           fi_2 = f_tn(ni_2) 
        endif
 
        if ( test_in(k11+2,k12+3,mesh%num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,k11+2,k12+3)
+          ni_1 = mesh%hex_to_global(k11+2,k12+3)
           fi_1 = f_tn(ni_1)
        endif
 
        if ( test_in(k11+1,k12+1,mesh%num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,k11+1,k12+1)
+          ni = mesh%hex_to_global(k11+1,k12+1)
           fi = f_tn(ni)
        endif
 
        if ( test_in(k11,k12-1,mesh%num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,k11,k12-1)
+          ni1 = mesh%hex_to_global(k11,k12-1)
           fi1 = f_tn(ni1)
        endif
 
        if ( test_in(k11-1,k12-3,mesh%num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,k11-1,k12-3)
+          ni2 = mesh%hex_to_global(k11-1,k12-3)
           fi2 = f_tn(ni2)
        endif
 
        if ( test_in(k11-3,k12-5,mesh%num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,k11-3,k12-5)
+          ni3 = mesh%hex_to_global(k11-3,k12-5)
           fi3 = f_tn(ni3)
        endif
 
        if ( test_in(k11-4,k12-7,mesh%num_cells) ) then
           fi4 = 0._f64  
        else
-          ni4 = hex_to_global(mesh,k11-4,k12-7)
+          ni4 = mesh%hex_to_global(k11-4,k12-7)
           fi4 = f_tn(ni4)
        endif
 
@@ -1859,56 +1871,56 @@ contains
        if ( test_in(k11-6,k12-3,mesh%num_cells) ) then
           fi_3 = 0._f64  
        else
-          ni_3 = hex_to_global(mesh,k11-6,k12-3)
+          ni_3 = mesh%hex_to_global(k11-6,k12-3)
           fi_3 = f_tn(ni_3) 
        endif
 
        if ( test_in(k11-4,k12-2,mesh%num_cells) ) then
           fi_2 = 0._f64  
        else
-          ni_2 = hex_to_global(mesh,k11-4,k12-2)
+          ni_2 = mesh%hex_to_global(k11-4,k12-2)
           fi_2 = f_tn(ni_2) 
        endif
 
        if ( test_in(k11-2,k12-1,mesh%num_cells) ) then
           fi_1 = 0._f64 
        else
-          ni_1 = hex_to_global(mesh,k11-2,k12-1)
+          ni_1 = mesh%hex_to_global(k11-2,k12-1)
           fi_1 = f_tn(ni_1)
        endif
 
        if ( test_in(k11,k12,mesh%num_cells) ) then
           fi = 0._f64  
        else
-          ni = hex_to_global(mesh,k11,k12)
+          ni = mesh%hex_to_global(k11,k12)
           fi = f_tn(ni)
        endif
 
        if ( test_in(k11+2,k12+1,mesh%num_cells) ) then
           fi1 = 0._f64  
        else
-          ni1 = hex_to_global(mesh,k11+2,k12+1)
+          ni1 = mesh%hex_to_global(k11+2,k12+1)
           fi1 = f_tn(ni1)
        endif
 
        if ( test_in(k11+4,k12+2,mesh%num_cells) ) then
           fi2 = 0._f64  
        else
-          ni2 = hex_to_global(mesh,k11+4,k12+2)
+          ni2 = mesh%hex_to_global(k11+4,k12+2)
           fi2 = f_tn(ni2)
        endif
 
        if ( test_in(k11+6,k12+3,mesh%num_cells) ) then
           fi3 = 0._f64  
        else
-          ni3 = hex_to_global(mesh,k11+6,k12+3)
+          ni3 = mesh%hex_to_global(k11+6,k12+3)
           fi3 = f_tn(ni3)
        endif
 
        if ( test_in(k11+8,k12+4,mesh%num_cells) ) then
           fi4 = 0._f64  
        else
-          ni4 = hex_to_global(mesh,k11+8,k12+4)
+          ni4 = mesh%hex_to_global(k11+8,k12+4)
           fi4 = f_tn(ni4)
        endif
 
