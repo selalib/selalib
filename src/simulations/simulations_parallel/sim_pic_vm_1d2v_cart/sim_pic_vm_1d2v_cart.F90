@@ -3,7 +3,7 @@ program sim_pic_vm_1d2v_cart
 #include "sll_working_precision.h"
   use sll_m_sim_pic_vm_1d2v_cart
   
-  type(sll_sim_pic_vm_1d2v_cart)  :: sim
+  type(sll_t_sim_pic_vm_1d2v_cart)  :: sim
   character(len=256)                               :: filename
   integer                                          :: rank, size
  
