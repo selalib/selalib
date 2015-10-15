@@ -1,7 +1,7 @@
 Directory structure
 ===================
-   test_pic_1d2v_vm_cart        -- executable (simulation)
-   params_pic_1d2v_vm_cart      -- input file
+   test_pic_vm_1d2v_cart        -- executable (simulation)
+   params_pic_vm_1d2v_cart      -- input file
    README                       -- info (this file)
    run/                         -- output directory
 
@@ -12,4 +12,4 @@ HOWTO
      $ cd run
 
 1. Run parallel simulation within directory
-     $ mpirun -np 2 ../../../bin/test_pic_1d2v_vm_cart params_pic_1d2v_vm_cart.nml
+     $ mpirun -np 2 ../../../bin/test_pic_vm_1d2v_cart params_pic_vm_1d2_cart.nml
