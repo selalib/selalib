@@ -192,4 +192,5 @@ print*, tcpu2-tcpu1
 
 call MPI_FINALIZE(code)
 
+print*, 'PASSED'
 end program test_serial_blocks
