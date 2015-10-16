@@ -6,7 +6,7 @@ program sim2d_gc_hex_splines
 
   use sll_constants
   use euler_2d_hex
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
   use hex_poisson
   use pivotbande
   use sll_box_splines
@@ -105,7 +105,7 @@ program sim2d_gc_hex_splines
   ! Interpolation
   spline_degree = 2
   hermite_method = 9
-  
+
   ! ----------------------------
   ! Reading from file
   ! ----------------------------
@@ -166,7 +166,7 @@ program sim2d_gc_hex_splines
 
      ! Mesh creation -------------------------
      mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
-         radius=radius, EXTRA_TABLES = EXTRA_TABLES )
+          radius=radius, EXTRA_TABLES = EXTRA_TABLES )
      call display_hex_mesh_2d(mesh)
 
      n_points   = mesh%num_pts_tot
@@ -186,7 +186,7 @@ program sim2d_gc_hex_splines
 
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
-     
+
      SLL_ALLOCATE(dxuxn( n_points),ierr)
      SLL_ALLOCATE(dxuyn( n_points ),ierr)
      SLL_ALLOCATE(dyuxn( n_points),ierr)
@@ -196,7 +196,7 @@ program sim2d_gc_hex_splines
         ! variables only used in the guiding center model
         SLL_ALLOCATE(phi( n_points),ierr)
         SLL_ALLOCATE(phi_interm( n_points),ierr)
-        
+
         SLL_ALLOCATE(uxn_1( n_points),ierr)
         SLL_ALLOCATE(uyn_1( n_points ),ierr)
         SLL_ALLOCATE(second_term( n_points),ierr)
@@ -206,7 +206,7 @@ program sim2d_gc_hex_splines
         SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
      end if
 
-     
+
      call cpu_time(t_init)
 
      !*********************************************************
@@ -235,7 +235,7 @@ program sim2d_gc_hex_splines
         do i = 1, mesh%num_pts_tot
            k1 = mesh%hex_coord(1, i)
            k2 = mesh%hex_coord(2, i)
-           call index_hex_to_global(mesh, k1, k2, index_tab)
+           call mesh%index_hex_to_global(k1, k2, index_tab)
            phi(i) = phi_interm(index_tab)
         enddo
         call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
@@ -244,18 +244,18 @@ program sim2d_gc_hex_splines
 
      if (model_name.eq."GC") then
         call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
-	call int2string(nloops,filenum)
-     	filename  = "guiding_center_rho"//trim(filenum)
-     	call write_field_hex_mesh_xmf(mesh, rho_tn, trim(filename))
-     	filename  = "guiding_center_phi"//trim(filenum)
-     	call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+        call int2string(nloops,filenum)
+        filename  = "guiding_center_rho"//trim(filenum)
+        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
+        filename  = "guiding_center_phi"//trim(filenum)
+        call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
      elseif (model_name.eq."CIRCULAR") then
         call hex_diagnostics_circ(rho_tn, t, &
              mesh, nloops, spline_degree, &
              tmax, cells_min, cells_max, &
              gauss_x1, gauss_x2, gauss_sig, gauss_amp)
      end if
-        
+
      !*********************************************************
      !                          Time loop
      !*********************************************************
@@ -274,7 +274,7 @@ program sim2d_gc_hex_splines
         !                     interpolation
         !*********************************************************
 
-        call compute_coeff_box_spline_2d( rho_tn, spline_degree, spline )
+        call spline%compute_coeff_box_spline_2d( rho_tn, spline_degree)
 
         do i=1, n_points
 
@@ -294,20 +294,25 @@ program sim2d_gc_hex_splines
                  call compute_characteristic_euler_2d_hex( &
                       x,y,uxn,uyn,i,xx,yy,dt )
               else !the rest is done with Adams 2
-                 call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
-                      dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+                 call compute_characteristic_adams2_2d_hex(x, y, &
+                      uxn, uyn, uxn_1, uyn_1, &
+                      dxuxn,dyuxn,dxuyn,dyuyn, &
+                      i, xx, yy, dt)
               endif
            end if
-           
+
            inside = .true.
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
 
-           if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
+           if ( abs(h1) > radius-mesh%delta .or. abs(h2) > radius-mesh%delta ) &
+                inside = .false.
+           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) &
+                inside = .false.
 
            if ( inside ) then
-              rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+              rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, &
+                   spline, spline_degree)
            else
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            endif
@@ -320,21 +325,23 @@ program sim2d_gc_hex_splines
         ! ...........................................
 
         !*********************************************************
-        !      computing the solution of the poisson equation 
+        !      computing the solution of the poisson equation
         !*********************************************************
         if (model_name.eq."GC") then
            call hex_second_terme_poisson( second_term, mesh, rho_tn )
 
-           call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
+           call solvlub_bande(l,u,phi_interm,second_term,n_points,&
+                width_band1,width_band2)
 
            do i = 1, mesh%num_pts_tot    ! need to re-index phi :
               k1 = mesh%hex_coord(1, i)
               k2 = mesh%hex_coord(2, i)
-              call index_hex_to_global(mesh, k1, k2, index_tab)
+              call mesh%index_hex_to_global(k1, k2, index_tab)
               phi(i) = phi_interm(index_tab)
            enddo
 
-           call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+           call compute_hex_fields(mesh,uxn,uyn,&
+                dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
            ! Updating the new field values ............
            uxn_1 = uxn
@@ -346,23 +353,25 @@ program sim2d_gc_hex_splines
         !                  writing diagostics
         !*********************************************************
         if (model_name.eq."GC") then
-           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,&
+                tmax,cells_min,cells_max)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "guiding_center_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               if (model_name.eq."GC") then
                  filename  = "guiding_center_phi"//trim(filenum)
-                 call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+                 call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
               end if
               count = 0
            endif
         elseif (model_name.eq."CIRCULAR") then
-           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
+           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,&
+                cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               count = 0
            endif
         end if
@@ -496,7 +505,7 @@ contains
        call int2string(mesh%num_cells,filenum)
        call int2string(deg,splinedeg)
        filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
-       
+
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
           open(unit = out_unit, file=filename, action="write", status="replace")
@@ -544,7 +553,7 @@ contains
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        endif
-       
+
        do i = 1,mesh%num_pts_tot
           mass = mass + rho(i)
           norm_l1 = norm_l1 + abs(rho(i))
@@ -572,7 +581,7 @@ contains
     end if
   end subroutine hex_diagnostics_gc
 
-  
+
   !-------------------------------------------------------------------------
   !> @brief Writes diagnostics files
   !> @details Write two sort of documents: "diag_circ_spline*_*.dat" and 
@@ -629,7 +638,7 @@ contains
        call int2string(mesh%num_cells,filenum)
        call int2string(deg,splinedeg)
        filename  = "diag_circ_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".txt"
-       
+
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
           open(unit = out_unit, file=filename, action="write", status="replace")
@@ -697,7 +706,7 @@ contains
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        endif
-       
+
        do i = 1,mesh%num_pts_tot
           ! We compute the exact solution:
           x = mesh%cartesian_coord(1,i)*cos(t) - & 

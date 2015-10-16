@@ -1,4 +1,4 @@
-module sll_lagrange_interpolation
+module sll_m_lagrange_interpolation_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -174,5 +174,5 @@ subroutine delete_lagrange_interpolation_1D( lagrange_interpolation )
    SLL_DEALLOCATE( lagrange_interpolation, ierr )
 end subroutine delete_lagrange_interpolation_1D
 
-end module
+end module sll_m_lagrange_interpolation_1d
 

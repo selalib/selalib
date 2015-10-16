@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE:   sll_m_xdmf_parallel
+! MODULE:   sll_m_xdmf_light_parallel
 !
 ! DESCRIPTION:
 !> @ingroup xdmf_io_parallel
@@ -9,7 +9,7 @@
 !> @brief   Construct the XML component of an XDMF database (parallel).
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
-module sll_m_xdmf_parallel
+module sll_m_xdmf_light_parallel
 
 #include "sll_working_precision.h"
 
@@ -20,7 +20,7 @@ module sll_m_xdmf_parallel
     sll_collective_bcast,    &
     sll_collective_gather
 
-  use sll_m_xdmf_serial, only: &
+  use sll_m_xdmf_light_serial, only: &
     sll_t_xdmf_file
 
   implicit none
@@ -237,4 +237,4 @@ contains
 
   end subroutine t_xdmf_parallel__add_field
 
-end module sll_m_xdmf_parallel
+end module sll_m_xdmf_light_parallel

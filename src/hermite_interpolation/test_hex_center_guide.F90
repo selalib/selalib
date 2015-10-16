@@ -1,22 +1,21 @@
 program test_hex_hermite
-  
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  
+
   use sll_constants
   use sll_interpolation_hex_hermite
   use euler_2d_hex
-  use sll_hex_meshes
   use hex_poisson
   use pivotbande
-  
-  use sll_utilities, only: int2string
-  
+  use sll_utilities, only: &
+       int2string
+
   implicit none
 
   !*************************************************************
-  ! Test computing the solution of the guiding centre model for 
+  ! Test computing the solution of the guiding centre model for
   ! a hexagonal mesh
   ! for any question : prouveur@math.univ-lyon1.fr
   !*************************************************************
@@ -273,7 +272,7 @@ program test_hex_hermite
         do i = 1, mesh%num_pts_tot    ! need to re-index phi : 
            k1 = mesh%hex_coord(1, i)
            k2 = mesh%hex_coord(2, i)
-           call index_hex_to_global(mesh, k1, k2, index_tab)
+           call mesh%index_hex_to_global(k1, k2, index_tab)
            phi(i) = phi_interm(index_tab)
         enddo
         call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
@@ -308,7 +307,7 @@ program test_hex_hermite
         do i = 1, n_points2   ! need to re-index phi : 
            k1 = mesh2%hex_coord(1, i)
            k2 = mesh2%hex_coord(2, i)
-           call index_hex_to_global(mesh2, k1, k2, index_tab)
+           call mesh2%index_hex_to_global(k1, k2, index_tab)
            phi2(i) = phi2_interm(index_tab)
         enddo
 
@@ -326,20 +325,20 @@ program test_hex_hermite
      if (num_method /= 15) then
         call int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh, rho_tn, trim(filename))
+        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+        call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
         count = 0
         if ( num_method == 10 ) then
            filename  = "center_guide_rho_center"//trim(filenum)//".dat"
            call write_center(mesh,rho_center_tn1,filename)
         endif
-     elseif ( num_method == 15 ) then 
+     elseif ( num_method == 15 ) then
         call int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh2, rho2, trim(filename))
+        call mesh2%write_field_hex_mesh_xmf(rho2, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh2, phi2, trim(filename))
+        call mesh2%write_field_hex_mesh_xmf(phi2, trim(filename))
         count = 0
      endif
 
@@ -353,7 +352,7 @@ program test_hex_hermite
      !*********************************************************
      !                          Time loop
      !*********************************************************
-     
+
      call cpu_time(t3)
 
      print*,"fin init",t3 - t_init
@@ -560,7 +559,7 @@ program test_hex_hermite
            do i = 1, mesh%num_pts_tot    ! need to re-index phi : 
               k1 = mesh%hex_coord(1, i)
               k2 = mesh%hex_coord(2, i)
-              call index_hex_to_global(mesh, k1, k2, index_tab)
+              call mesh%index_hex_to_global(k1, k2, index_tab)
               phi(i) = phi_interm(index_tab)
            enddo
 
@@ -591,7 +590,7 @@ program test_hex_hermite
            do i = 1, n_points2  ! need to re-index phi : 
               k1 = mesh2%hex_coord(1, i)
               k2 = mesh2%hex_coord(2, i)
-              call index_hex_to_global(mesh2, k1, k2, index_tab)
+              call mesh2%index_hex_to_global(k1, k2, index_tab)
               phi2(i) = phi2_interm(index_tab)
            enddo
            call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
@@ -617,21 +616,21 @@ program test_hex_hermite
         if ( num_method /= 15 .and.count == 10.and.nloops<10000) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+           call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+           call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
            count = 0
            if ( num_method == 10 ) then
 
               filename  = "center_guide_rho_center"//trim(filenum)//".dat"
               call write_center(mesh,rho_center_tn1,filename)
            endif
-        elseif ( num_method == 15 .and. count == 10.and.nloops<10000 ) then 
+        elseif ( num_method == 15 .and. count == 10.and.nloops<10000 ) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh2, rho2, trim(filename))
+           call mesh2%write_field_hex_mesh_xmf( rho2, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh2, phi2, trim(filename))
+           call mesh2%write_field_hex_mesh_xmf( phi2, trim(filename))
            count = 0
         endif
 
@@ -943,7 +942,7 @@ contains
        if (m1<0) k1 = k1 - 1
        if (m2<0) k2 = k2 - 1
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
        if ( abs(m1) > eps .and. abs(m2) > eps ) then
@@ -988,7 +987,7 @@ contains
        if (m1<0) k1 = k1 - 1
        if (m2<0) k2 = k2 - 1
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
        if ( abs(m1) > eps .and. abs(m2) > eps ) then

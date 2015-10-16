@@ -1,53 +1,32 @@
+# - Find GSL
+# Find the native GSL includes and library
 #
-# this module look for gsl (http://www.gnu.org/software/gsl) support
-# it will define the following values
-#
-# GSL_INCLUDE_DIR = where gsl/gsl_version.h can be found
-# GSL_LIBRARY     = the library to link against libgsl
-# FOUND_GSL       = set to 1 if gsl is found
-#
+#  GSL_INCLUDES    - where to find gsl/gsl_*.h, etc.
+#  GSL_LIBRARIES   - List of libraries when using GSL.
+#  GSL_FOUND       - True if GSL found.
 
-IF(EXISTS ${PROJECT_CMAKE}/GslConfig.cmake)
-  INCLUDE(${PROJECT_CMAKE}/GslConfig.cmake)
-ENDIF(EXISTS ${PROJECT_CMAKE}/GslConfig.cmake)
 
-IF(Gsl_INCLUDE_DIRS)
+if (GSL_INCLUDES)
+  # Already in cache, be silent
+  set (GSL_FIND_QUIETLY TRUE)
+endif (GSL_INCLUDES)
 
-  FIND_PATH(GSL_INCLUDE_DIR gsl/gsl_version.h ${Gsl_INCLUDE_DIRS})
-  FIND_LIBRARY(GSL_LIBRARY gsl ${Gsl_LIBRARY_DIRS})
+find_path (GSL_INCLUDES gsl/gsl_math.h)
 
-ELSE(Gsl_INCLUDE_DIRS)
+find_library (GSL_LIB NAMES gsl)
 
-  SET(TRIAL_LIBRARY_PATHS
-    $ENV{GSL_HOME}/lib
-    /usr/lib 
-    /usr/local/lib
-    /opt/lib
-    /sw/lib
-   )
+set (GSL_CBLAS_LIB "" CACHE FILEPATH "If your program fails to link
+(usually because GSL is not automatically linking a CBLAS and no other
+component of your project provides a CBLAS) then you may need to point
+this variable to a valid CBLAS.  Usually GSL is distributed with
+libgslcblas.{a,so} (next to GSL_LIB) which you may use if an optimized
+CBLAS is unavailable.")
 
-  SET(TRIAL_INCLUDE_PATHS
-    $ENV{GSL_HOME}/include
-    /usr/include
-    /opt/include
-    /usr/local/include
-    /sw/include
-  )
+set (GSL_LIBRARIES "${GSL_LIB}" "${GSL_CBLAS_LIB}")
 
-  FIND_LIBRARY(GSL_LIBRARY gsl ${TRIAL_LIBRARY_PATHS})
-  FIND_PATH(GSL_INCLUDE_DIR gsl/gsl_version.h ${TRIAL_INCLUDE_PATHS} )
+# handle the QUIETLY and REQUIRED arguments and set GSL_FOUND to TRUE if
+# all listed variables are TRUE
+include (FindPackageHandleStandardArgs)
+find_package_handle_standard_args (GSL DEFAULT_MSG GSL_LIBRARIES GSL_INCLUDES)
 
-ENDIF(Gsl_INCLUDE_DIRS)
-
-IF(GSL_INCLUDE_DIR AND GSL_LIBRARY)
-  SET(FOUND_GSL 1 CACHE BOOL "Found gsl library")
-  SET(GSL_LIBRARY ${GSL_LIBRARY} -lgslcblas)
-ELSE(GSL_INCLUDE_DIR AND GSL_LIBRARY)
-  SET(FOUND_GSL 0 CACHE BOOL "Not fount gsl library")
-ENDIF(GSL_INCLUDE_DIR AND GSL_LIBRARY)
-
-MARK_AS_ADVANCED(
-  GSL_INCLUDE_DIR 
-  GSL_LIBRARY 
-  FOUND_GSL
-  )
+mark_as_advanced (GSL_LIB GSL_CBLAS_LIB GSL_INCLUDES)
