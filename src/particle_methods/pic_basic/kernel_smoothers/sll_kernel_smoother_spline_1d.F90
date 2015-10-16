@@ -82,7 +82,7 @@ contains
     sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
-       wi = particle_group%get_weights(i_part)
+       wi = particle_group%get_charge(i_part)
        do i1 = 1, this%n_span
           index1d = modulo(this%index_grid(1,i_part)+i1-2,this%n_grid(1))+1
           rho_dofs(index1d) = rho_dofs(index1d) +&
@@ -112,7 +112,7 @@ contains
     sll_real64 :: wi(1)
 
     do i_part = 1, particle_group%n_particles
-       wi = particle_group%get_weights(i_part)
+       wi = particle_group%get_charge(i_part)
        do i1 = 1, this%n_span
           index1d = modulo(this%index_grid(1,i_part)+i1-2,this%n_grid(1))+1
           vpart = particle_group%get_v(i_part)

@@ -73,7 +73,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   
   ! Initialize
   specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
-       n_particles ,1.0_f64, 1.0_f64)
+       n_particles ,1.0_f64, 1.0_f64, 1)
   particle_group => specific_particle_group
 
   ! Initial particle information   
@@ -150,7 +150,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
         passed = .FALSE.
      end if
-     xi(1:1) = particle_group%get_weights(i_part)
+     xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
      end if
@@ -174,7 +174,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
         passed = .FALSE.
      end if
-     xi(1:1) = particle_group%get_weights(i_part)
+     xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
      end if
@@ -197,7 +197,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
         passed = .FALSE.
      end if
-     xi(1:1) = particle_group%get_weights(i_part)
+     xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
      end if
@@ -221,7 +221,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
         passed = .FALSE.
      end if
-     xi(1:1) = particle_group%get_weights(i_part)
+     xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
      end if
