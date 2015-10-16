@@ -1,7 +1,7 @@
+ADD_SUBDIRECTORY(low_level_utilities)
 ADD_SUBDIRECTORY(interfaces)
 ADD_SUBDIRECTORY(assert)
 ADD_SUBDIRECTORY(errors)
-ADD_SUBDIRECTORY(low_level_utilities)
 ADD_SUBDIRECTORY(utilities)
 ADD_SUBDIRECTORY(linear_solvers)
 ADD_SUBDIRECTORY(splines)
