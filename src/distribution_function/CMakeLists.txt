@@ -21,11 +21,8 @@ IF(MPI_ENABLED)
                                                   sll_file_io
                                                   sll_collective
                                                   sll_remap )
-  # Ctest
   IF(BUILD_TESTING)
-    ADD_EXECUTABLE(test_distribution_function unit_test.F90)
-    TARGET_LINK_LIBRARIES(test_distribution_function sll_distribution_function)
-    ADD_TEST( NAME distribution_function COMMAND test_distribution_function )
+    ADD_SUBDIRECTORY(testing)
   ENDIF(BUILD_TESTING)
 
 ELSE()
