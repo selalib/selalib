@@ -3,9 +3,9 @@
 ! - 4D: x1,x2,x3,v3 (or v1) with cartesian coordinate 
 ! - parallel
 
-program DK_hybrid_4d
+program dk_hybrid_4d
 #include "sll_working_precision.h"
-  use sll_simulation_4d_DK_hybrid_module
+  use sll_simulation_4d_dk_hybrid_module
   use sll_collective
   use sll_constants
   use sll_cartesian_meshes
@@ -89,6 +89,6 @@ program DK_hybrid_4d
   print *, 'PASSED'
 
   call sll_halt_collective()
-end program DK_hybrid_4d
 
+end program dk_hybrid_4d
 

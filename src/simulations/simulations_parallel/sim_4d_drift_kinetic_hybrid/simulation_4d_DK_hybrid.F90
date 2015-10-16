@@ -2586,4 +2586,4 @@ contains
 
   end subroutine compute_norm_L1_L2_Linf
 
-end module sll_simulation_4d_DK_hybrid_module
+end module sll_simulation_4d_dk_hybrid_module
