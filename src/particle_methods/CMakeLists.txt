@@ -8,3 +8,5 @@ if( MPI_ENABLED )
   add_subdirectory( pic_basic )
   add_subdirectory( remapped_pic )
 endif( MPI_ENABLED )
+
+ADD_SUBDIRECTORY(visu_pic)
