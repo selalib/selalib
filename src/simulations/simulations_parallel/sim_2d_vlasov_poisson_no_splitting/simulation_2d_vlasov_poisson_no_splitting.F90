@@ -36,7 +36,7 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
   use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_m_advection_2d_BSL
+  use sll_m_advection_2d_bsl
   use sll_m_advection_2d_tensor_product
   use sll_m_characteristics_2d_explicit_euler
   use sll_m_characteristics_2d_verlet

@@ -19,7 +19,7 @@
 ! attached with computation of characteristics
 
 
-module sll_m_advection_2d_BSL
+module sll_m_advection_2d_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -236,4 +236,4 @@ contains
 
 
 
-end module sll_m_advection_2d_BSL
+end module sll_m_advection_2d_bsl

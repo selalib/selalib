@@ -58,7 +58,7 @@
 !>  sll_advection_2d_base.F90
 !>  -> new suggested name: sll_c_advection_2d.F90  
 !>    sll_advection_2d_BSL.F90
-!>    -> new suggested name: sll_m_advection_2d_BSL.F90
+!>    -> new suggested name: sll_m_advection_2d_bsl.F90
 !>    -> 2d extension of advection_1d_BSL    
 !>    sll_advection_2d_tensor_product.F90
 !>    -> new suggested name: sll_m_advection_2d_tensor_product.F90
