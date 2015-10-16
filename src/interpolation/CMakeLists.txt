@@ -1,1 +1,2 @@
+ADD_SUBDIRECTORY(deboor_splines)
 ADD_SUBDIRECTORY(interpolators)

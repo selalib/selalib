@@ -3,8 +3,8 @@ SET(SLL_DIR ${CMAKE_SOURCE_DIR}/src)
 FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/*.h )
 
 SET(SLL_SOURCE_FILES
-    ${SLL_DIR}/memory/sll_memory.F90
-    ${SLL_DIR}/working_precision/sll_working_precision.F90
+    ${SLL_DIR}/low_level_utilities/memory/sll_memory.F90
+    ${SLL_DIR}/low_level_utilities/working_precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
     ${SLL_DIR}/advection/sll_advection_1d_periodic.F90
     ${SLL_DIR}/advection/sll_advection_1d_non_uniform_cubic_splines.F90
@@ -18,7 +18,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
     ${SLL_DIR}/advection/sll_advection_1d_ampere.F90
     ${SLL_DIR}/advection/sll_advection_1d_spectral.F90
-    ${SLL_DIR}/constants/sll_constants.F90
+    ${SLL_DIR}/low_level_utilities/constants/sll_constants.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid.F90
@@ -45,29 +45,29 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/io/file_io/sll_xml_io.F90
     ${SLL_DIR}/io/file_io/sll_plotmtv.F90
     ${SLL_DIR}/io/file_io/sll_tri_mesh_xmf.F90
-    ${SLL_DIR}/visu_pic/sll_visu_pic.F90
-    ${SLL_DIR}/timer/sll_timer.F90
-    ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
-    ${SLL_DIR}/fields/sll_scalar_field_1d.F90
-    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
-    ${SLL_DIR}/fields/sll_scalar_field_2d.F90
+    ${SLL_DIR}/particle_methods/visu_pic/sll_visu_pic.F90
+    ${SLL_DIR}/low_level_utilities/timer/sll_timer.F90
+    ${SLL_DIR}/data_structures/fields/sll_scalar_field_1d_base.F90
+    ${SLL_DIR}/data_structures/fields/sll_scalar_field_1d.F90
+    ${SLL_DIR}/data_structures/fields/sll_scalar_field_2d_base.F90
+    ${SLL_DIR}/data_structures/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/field_solvers/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
     ${SLL_DIR}/splines/sll_bsplines.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/sll_m_deboor_splines_1d.F90
-    ${SLL_DIR}/deboor_splines/sll_m_deboor_splines_2d.F90
+    ${SLL_DIR}/interpolation/deboor_splines/sll_m_deboor_splines_1d.F90
+    ${SLL_DIR}/interpolation/deboor_splines/sll_m_deboor_splines_2d.F90
     ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
-    ${SLL_DIR}/interpolators/sll_interpolators_1d_base.F90
-    ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
-    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
-    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d_nonuniform.F90
-    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
-    ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
-    ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
-    ${SLL_DIR}/interpolators/sll_periodic_interpolator_1d.F90
-    ${SLL_DIR}/interpolators/sll_lagrange_interpolator_1d.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_interpolators_1d_base.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_interpolators_2d_base.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_cubic_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_cubic_spline_interpolator_1d_nonuniform.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_cubic_spline_interpolator_2d.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_periodic_interpolator_1d.F90
+    ${SLL_DIR}/interpolation/interpolators/sll_lagrange_interpolator_1d.F90
     ${SLL_DIR}/field_solvers/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/field_solvers/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
@@ -89,26 +89,26 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interfaces/sparse_matrix_manager/partition.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_module.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
-    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
+    ${SLL_DIR}/data_structures/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/meshes/sll_triangular_meshes.F90
     ${SLL_DIR}/meshes/sll_hexagonal_meshes.F90
-    ${SLL_DIR}/fields/parallel_scalar_field_initializer_base.F90
-    ${SLL_DIR}/distribution_function/scalar_field_initializer_base.F90
-    ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
-    ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
+    ${SLL_DIR}/data_structures/fields/parallel_scalar_field_initializer_base.F90
+    ${SLL_DIR}/data_structures/distribution_function/scalar_field_initializer_base.F90
+    ${SLL_DIR}/data_structures/distribution_function/sll_scalar_field_2d_old.F90
+    ${SLL_DIR}/mesh/coordinate_transformations/sll_common_coordinate_transformations.F90
+    ${SLL_DIR}/mesh/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
+    ${SLL_DIR}/mesh/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
+    ${SLL_DIR}/mesh/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/add_ons/multipatch/sll_meshes_multipatch.F90
     ${SLL_DIR}/add_ons/multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/add_ons/multipatch/sll_scalar_field_2d_multipatch.F90
     ${SLL_DIR}/add_ons/multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
-    ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
-    ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
-    ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
+    ${SLL_DIR}/mesh/mesh_calculus/sll_mesh_calculus_module.F90
+    ${SLL_DIR}/data_structures/distribution_function/distribution_function_initializer_4d.F90
+    ${SLL_DIR}/data_structures/distribution_function/sll_fdistribu4d_DK.F90
     ${SLL_DIR}/reduction/sll_reduction.F90
     ${SLL_DIR}/random_deviate_generators/gaussian.F90
     ${SLL_DIR}/random_deviate_generators/hammersley.F90

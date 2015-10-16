@@ -386,34 +386,14 @@ contains
     call sim%particle_group%initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
     SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
 
-
-    !$omp parallel
-#ifdef _OPENMP
-    if (OMP_GET_THREAD_NUM() == 0) then
-       sim%n_threads =  OMP_GET_NUM_THREADS()
-    endif
-#else
-    sim%n_threads =  1
-#endif
-    !$omp end parallel
-
+    sim%n_threads = 1
     print*, 'number of threads is ', sim%n_threads
 
    SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
 
-   print *, "AA 20"
-
    thread_id = 0
-   !$omp parallel PRIVATE(thread_id)
-#ifdef _OPENMP
-       thread_id = OMP_GET_THREAD_NUM()
-#endif
-   print *, "AA 30"
    sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
-   !$omp end parallel
    sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
-
-   print *, "AA 40"
 
    !! -- --  First charge deposition [begin]  -- --
 
@@ -421,7 +401,6 @@ contains
 
    target_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
 
-   print *, "AA 50"
    call sim%particle_group%deposit_charge_2d( charge_accumulator, target_charge)
 
    !! -- --  First charge deposition [end]  -- --
@@ -490,8 +469,9 @@ contains
     sll_real64 :: coords(3)
 
     ! Timings and statistics
-    sll_real64 :: deposit_time,loop_time
-    type(sll_time_mark) :: deposit_time_mark,loop_time_mark
+    sll_real64 :: deposit_time
+    sll_real64 :: loop_time
+    type(sll_time_mark) :: deposit_time_mark, loop_time_mark
     
     ! ------------------------------
     ncx = sim%mesh_2d%num_cells1
@@ -608,8 +588,7 @@ contains
     call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
          ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
     bors = 0.0_f64
-    !$omp parallel
-    !$omp do reduction(+:bors)
+
     do k = 1, sim%number_particles
 
        !> This simulation does not have access to the particles (because they may be of different incompatible types
@@ -620,8 +599,6 @@ contains
        coords = sim%particle_group%get_v(k)
        bors = bors + coords(1)**2 + coords(2)**2
     enddo
-    !$omp end do
-    !$omp end parallel
     diag_TOTenergy(0) = bors * 0.5_f64*(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min)  &
          * (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%number_particles)  &
          + tot_ee * 0.5_f64
@@ -633,8 +610,7 @@ contains
 
     call reset_field_accumulator_to_zero( sim%E_accumulator )
     call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
-    !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
-    !$&omp FIRSTPRIVATE(dt_q_over_m)
+
     do k = 1, sim%number_particles
 
       ! particle position
@@ -664,7 +640,6 @@ contains
       coords(3) = 0
       call sim%particle_group%set_v(k, coords)
     enddo
-    !$omp end parallel do
 
     ! -- --  half v-push  [end]  -- --
 
@@ -675,9 +650,9 @@ contains
     psi = sim%elec_params(4)
 
     if (sim%my_rank ==0) open(65,file='logE_standPush.dat')
-#ifdef _OPENMP
-    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
-#endif
+    !#ifdef _OPENMP
+    !    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
+    !#endif
 
     !AAA-ALH-HERE
     !  ----------------------------------------------------------------------------------------------------
@@ -732,20 +707,13 @@ contains
 
        !> ### Particles are pushed as follows
 
-       some_val = 0.0_f64
+      some_val = 0.0_f64
 
-       !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,tmp1,tmp2,tmp5,tmp6,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum)
-       !$&omp FIRSTPRIVATE(dt,dt_q_over_m,ncx,xmin,ymin,rdx,rdy)
-#ifdef _OPENMP
-       thread_id = OMP_GET_THREAD_NUM()
-#endif
+      thread_id = 0
       call reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
-      ! p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-      !gi = 0
-      !$omp do!! reduction(+:some_val)
 
-      !! -- --  particle loop: treat the particles by pair for faster treatment ?  -- --
+      !! -- --  particle loop -- --
 
       do k = 1, sim%number_particles
 
@@ -921,8 +889,7 @@ contains
         call reset_field_accumulator_to_zero( sim%E_accumulator )
         call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
         some_val = 0.0_f64
-        !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
-        !$omp do reduction(+:some_val)
+
         do k = 1, sim%number_particles
 
              ! particle position
@@ -956,8 +923,7 @@ contains
                     + (pp_vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
                     + (pp_vy + 0.5_f64 * dt_q_over_m * Ey)**2
         enddo
-        !$omp end do
-        !$omp end parallel
+
         call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
            ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
         diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
@@ -978,22 +944,22 @@ contains
     !  ------
     !  ----------------------------------------------------------------------------------------------------
 
-#ifdef _OPENMP
-    time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
-
-    if (sim%my_rank ==0) then 
-       close(65)
-       open(93,file='time_parts_sec_omp.dat',position='append')
-       write(93,*) '# Nb of threads  ||  time (sec)  ||  average pushes/sec'
-       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%number_particles,i64)/(time-t2)
-       close(93)
-       open(65,file='Energie_totale_standPush.dat')
-       do it=0,sim%num_iterations-1
-          write(65,*) it*dt,  diag_TOTenergy(it), (diag_TOTenergy(it)-diag_TOTenergy(0))/diag_TOTenergy(0)
-       enddo
-       close(65)
-    endif
-#endif
+    !#ifdef _OPENMP
+    !    time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
+    !
+    !    if (sim%my_rank ==0) then
+    !       close(65)
+    !       open(93,file='time_parts_sec_omp.dat',position='append')
+    !       write(93,*) '# Nb of threads  ||  time (sec)  ||  average pushes/sec'
+    !       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%number_particles,i64)/(time-t2)
+    !       close(93)
+    !       open(65,file='Energie_totale_standPush.dat')
+    !       do it=0,sim%num_iterations-1
+    !          write(65,*) it*dt,  diag_TOTenergy(it), (diag_TOTenergy(it)-diag_TOTenergy(0))/diag_TOTenergy(0)
+    !       enddo
+    !       close(65)
+    !    endif
+    !#endif
 
     ! ALH - Time statistics. The number of deposits is computed separately to take the number of LTP BSL virtual
     ! particles into account.
