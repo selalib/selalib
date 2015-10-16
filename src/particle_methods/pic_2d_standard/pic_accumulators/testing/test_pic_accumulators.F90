@@ -1,8 +1,9 @@
-program initialize_tester
+program test_pic_accumulators
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
+#include "sll_accumulators.h"
+  use sll_pic_utilities
   use sll_constants, only: sll_pi
   use sll_particle_group_4d_module
   use sll_particle_group_2d_module
@@ -10,48 +11,50 @@ program initialize_tester
   use sll_particle_initializers_4d
   use sll_cartesian_meshes
 
+
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
-#define GUARD_SIZE 10000_i32
+#define GUARD_SIZE    10000_i32
 #define PARTICLE_ARRAY_SIZE 150000_i32
-#define ALPHA 0.5_f64
-#define NC_X 128_i32
+#define ALPHA  0.5_f64
+#define NC_X 256_i32
 #define XMIN 0._f64
 #define KX   0.5_f64
 #define XMAX 2._f64*sll_pi/KX
-#define NC_Y 32_i32
+#define NC_Y 64_i32
 #define YMIN 0._f64
 #define YMAX 1._f64
 #define QoverM 1._f64
 
   
   implicit none
-  type(sll_particle_group_4d), pointer :: init_group
-  type(sll_particle_group_2d), pointer :: init_group_GC
+  type(sll_particle_group_4d), pointer :: part_group
   type(sll_cartesian_mesh_2d),   pointer :: m2d
+  type(sll_charge_accumulator_2d), pointer :: all_charge
 
   m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
 
-  init_group => new_particle_4d_group( &
+  part_group => new_particle_4d_group( &
        NUM_PARTICLES, &
        PARTICLE_ARRAY_SIZE, &
        GUARD_SIZE, QoverM, m2d )
 
   call sll_initial_particles_4d(THERM_SPEED, &
-        ALPHA, KX, m2d, NUM_PARTICLES, init_group )
+        ALPHA, KX, m2d, &
+ 	NUM_PARTICLES, part_group )
 
-  init_group_GC => new_particle_2d_group( &
-       NUM_PARTICLES, &
-       PARTICLE_ARRAY_SIZE, &
-       GUARD_SIZE, QoverM, m2d )
-  call sll_initial_particles_2d( ALPHA, &
-       KX, m2d, NUM_PARTICLES, init_group_GC )
-  
-  call sll_delete( init_group )
+  all_charge => new_charge_accumulator_2d( m2d )
+
+!  call sll_first_charge_accumulation_2d( part_group, all_charge )
+! I changed the type of all_charge in order to do multi-threading
+! 
+  call sll_delete( part_group )
   call sll_delete( m2d )
+  call sll_delete( all_charge )
+
   print*, "PASSED"
 
 !contains
   
-end program initialize_tester
+end program test_pic_accumulators
