@@ -2,7 +2,7 @@
 ! SELALIB
 !-----------------------------------------------------------
 !
-! MODULE: sll_fdistribu4d_DK
+! MODULE: sll_fdistribu4d_dk
 !
 !> @author
 !> - Virginie Grandgirard
@@ -15,7 +15,7 @@
 !>
 !>@details
 !-----------------------------------------------------------
-module sll_fdistribu4d_DK
+module sll_fdistribu4d_dk
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
@@ -399,4 +399,5 @@ module sll_fdistribu4d_DK
       end do
     end do
   end subroutine init_fequilibrium_xy
-end module sll_fdistribu4d_DK
+
+end module sll_fdistribu4d_dk

@@ -17,7 +17,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 !  use sll_m_interpolators_1d_base
   use sll_m_advection_2d_base
   use sll_m_characteristics_1d_explicit_euler
-  use sll_m_advection_2d_BSL
+  use sll_m_advection_2d_bsl
   use sll_m_advection_2d_tensor_product
   use sll_m_characteristics_2d_explicit_euler
   use sll_m_characteristics_2d_verlet
