@@ -14,7 +14,7 @@ module sll_m_pic_base
   type, public :: sll_species
 
     character(len=64) :: name !< species name
-    sll_real64        :: q    !< charge of a single particle 
+    sll_real64        :: q    !< charge of a single particle
     sll_real64        :: m    !< mass   of a single particle
 
   contains
