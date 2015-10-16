@@ -38,10 +38,8 @@ module sll_m_pic_base
     ! Getters
     procedure( i_get_coords ), deferred :: get_x
     procedure( i_get_coords ), deferred :: get_v
-    procedure( i_get_scalar ), deferred :: get_charge
-    procedure( i_get_scalar ), deferred :: get_mass
-    procedure( i_get_array  ), deferred :: get_weights
-    procedure( i_get_scalar ), deferred :: get_common_weight
+    procedure( i_get_array  ), deferred :: get_charge
+    procedure( i_get_array  ), deferred :: get_mass
 
     ! Setters
     procedure( i_set_coords ), deferred :: set_x

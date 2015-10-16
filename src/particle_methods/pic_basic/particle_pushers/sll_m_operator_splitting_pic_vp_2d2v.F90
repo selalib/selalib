@@ -93,6 +93,7 @@ contains
     sll_int32 :: i_part
     sll_real64 :: v_new(3)
     sll_real64 :: efield(2)
+    sll_real64 :: qm
 
 
     ! Assemble right-hand-side
@@ -126,7 +127,8 @@ contains
     !     this%rho_dofs, this%efield(:,2))
 
 
-    ! V_new = V_old + dt * E
+    ! V_new = V_old + dt *q/m* E
+    qm = this%particle_group%species%q_over_m();
     do i_part=1,this%particle_group%n_particles
        ! Evaluate efields at particle position
        call this%kernel_smoother%evaluate_kernel_function_particle&
@@ -134,7 +136,7 @@ contains
        call this%kernel_smoother%evaluate_kernel_function_particle&
             (this%efield_dofs(:,2), i_part, efield(2))
        v_new = this%particle_group%get_v(i_part)
-       v_new(1:2) = v_new(1:2) + dt * efield!this%efield(i_part,:) 
+       v_new(1:2) = v_new(1:2) + dt * qm * efield
        call this%particle_group%set_v(i_part, v_new)
     end do
     

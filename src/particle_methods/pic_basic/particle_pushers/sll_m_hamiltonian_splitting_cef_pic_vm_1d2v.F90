@@ -142,7 +142,7 @@ contains
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_weights(i_part)
+       wi = this%particle_group%get_charge(i_part)
 
        if (index_old == index_new) then
           if (r_old < r_new) then
@@ -245,9 +245,11 @@ contains
     sll_real64 :: r_new, r_old
     sll_int32 :: index_new, index_old
     sll_real64 :: primitive_1(3)
+    sll_real64 :: qm
 
     this%j_dofs_local = 0.0_f64
-    n_cells = this%kernel_smoother_0%n_dofs
+    n_cells = this%kernel_smoother_0%n_dofs    
+    qm = this%particle_group%species%q_over_m()
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
@@ -282,7 +284,7 @@ contains
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_weights(i_part)
+       wi = this%particle_group%get_charge(i_part)
 
        ! Compute the primitives at r_old for each interval
        primitive_1 = -primitive_uniform_quadratic_b_spline_at_x( r_old )
@@ -296,7 +298,7 @@ contains
           i_mod = modulo(i_grid, n_cells ) + 1
           this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
                primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
           ind = ind + 1
        end do      
        ! Now contribution from r_new in the same way but different sign
@@ -310,7 +312,7 @@ contains
           i_mod = modulo(i_grid, n_cells ) + 1
           this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
                primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
           ind = ind + 1
        end do
        ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
@@ -322,7 +324,7 @@ contains
              this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
                   this%cell_integrals_1(ind)*wi(1)
              vi(2) = vi(2) - &
-                  this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+                  qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
              ind = ind + 1
           end do
        end do
@@ -333,7 +335,7 @@ contains
              i_mod = modulo(i_grid, n_cells ) + 1
              this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
                   this%cell_integrals_1(ind)*wi(1)
-             vi(2) = vi(2) + this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+             vi(2) = vi(2) + qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
              ind = ind + 1
           end do
        end do 
@@ -372,7 +374,11 @@ contains
     sll_int32 :: i_part
     sll_real64 :: v_new(3)
     sll_real64 :: efield(2)
+    sll_real64 :: qm
 
+
+    
+    qm = this%particle_group%species%q_over_m();
     ! V_new = V_old + dt * E
     do i_part=1,this%particle_group%n_particles
        ! Evaluate efields at particle position
@@ -381,7 +387,7 @@ contains
        call this%kernel_smoother_0%evaluate_kernel_function_particle&
             (this%efield_dofs(:,2), i_part, efield(2))
        v_new = this%particle_group%get_v(i_part)
-       v_new(1:2) = v_new(1:2) + dt * efield 
+       v_new(1:2) = v_new(1:2) + dt* qm* efield 
        call this%particle_group%set_v(i_part, v_new)
     end do
     
