@@ -1,5 +1,4 @@
 ADD_SUBDIRECTORY(interfaces)
-ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(assert)
 ADD_SUBDIRECTORY(errors)
 ADD_SUBDIRECTORY(low_level_utilities)
