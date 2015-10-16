@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_qn_2d_polar_splines
+program test_qn_2d_polar_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -187,4 +187,4 @@ implicit none
     print *, '#PASSED'
   endif
 
-end program
+end program test_qn_2d_polar_splines
