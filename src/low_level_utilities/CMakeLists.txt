@@ -1,2 +1,3 @@
 ADD_SUBDIRECTORY(constants)
 ADD_SUBDIRECTORY(working_precision)
+ADD_SUBDIRECTORY(memory)
