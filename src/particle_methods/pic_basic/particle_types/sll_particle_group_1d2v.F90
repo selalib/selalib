@@ -88,24 +88,56 @@ contains
     
   end function get_v_1d2v
 
-  !----------------------------------------------------------------------!
-  pure function get_charge_1d2v( self, i ) result (r)
-        class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
-    sll_int32                       , intent( in ) :: i !< no. of the particle
-    sll_real64 :: r(self%n_weights) !< charges(s) of particle i
+! Old version without optional argument
+!!$  !----------------------------------------------------------------------!
+!!$  pure function get_charge_1d2v( self, i ) result (r)
+!!$        class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
+!!$    sll_int32                       , intent( in ) :: i !< no. of the particle
+!!$    sll_real64 :: r(self%n_weights) !< charges(s) of particle i
+!!$
+!!$    r = self%species%q  * self%particle_array(i, 4:3+self%n_weights)
+!!$
+!!$  end function get_charge_1d2v
+!!$
+!!$
+!!$  !----------------------------------------------------------------------!
+!!$  pure function get_mass_1d2v( self, i) result (r)
+!!$        class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
+!!$    sll_int32                       , intent( in ) :: i !< no. of the particle
+!!$    sll_real64 :: r(self%n_weights) !< masses(s) of particle i
+!!$
+!!$    r = self%species%m * self%particle_array(i, 4:3+self%n_weights)
+!!$
+!!$  end function get_mass_1d2v
 
-    r = self%species%q  * self%particle_array(i, 4:3+self%n_weights)
+  !----------------------------------------------------------------------!
+  pure function get_charge_1d2v( self, i , i_weight) result (r)
+        class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
+    sll_int32                           , intent( in ) :: i !< no. of the particle
+    sll_int32, optional                 , intent( in ) :: i_weight
+    sll_real64 :: r !< charges(s) of particle i
+
+    sll_int32 :: i_wi
+
+    i_wi = 1
+    if(present(i_weight)) i_wi = i_weight
+    r = self%species%q  * self%particle_array(i, 3+i_wi)
 
   end function get_charge_1d2v
 
 
   !----------------------------------------------------------------------!
-  pure function get_mass_1d2v( self, i) result (r)
+  pure function get_mass_1d2v( self, i, i_weight) result (r)
         class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
-    sll_int32                       , intent( in ) :: i !< no. of the particle
-    sll_real64 :: r(self%n_weights) !< masses(s) of particle i
+    sll_int32                           , intent( in ) :: i !< no. of the particle
+    sll_int32, optional                 , intent( in ) :: i_weight 
+    sll_real64 :: r !< masses(s) of particle i
 
-    r = self%species%m * self%particle_array(i, 4:3+self%n_weights)
+    sll_int32 :: i_wi
+
+    i_wi = 1
+    if(present(i_weight)) i_wi = i_weight
+    r = self%species%m * self%particle_array(i, 3+i_wi)
 
   end function get_mass_1d2v
 
