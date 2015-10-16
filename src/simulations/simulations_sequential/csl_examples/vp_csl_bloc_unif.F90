@@ -3,10 +3,10 @@ program vp_csl_bloc_unif
 #include "sll_working_precision.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use sll_constants
-  !use distribution_function
+  use sll_m_constants
+  !use sll_m_distribution_function
   !use sll_diagnostics
-  use bgk_mesh_construction
+  use sll_m_bgk_mesh_construction
   implicit none
 
   sll_int :: nc_eta1,nc_eta2,mesh_case,N_x1,N_x2

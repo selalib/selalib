@@ -18,7 +18,7 @@
 !------------------------------------------------------------------------------
 ! Selalib
 !------------------------------------------------------------------------------
-! MODULE: sll_collective
+! MODULE: sll_m_collective
 !
 ! DESCRIPTION:
 !> @ingroup collective
@@ -44,11 +44,11 @@
 !!         the same size and "vector" where each item can be a different size.
 !!         The 'v' at the end indicates vector variant.
 !>
-!> <b> How to use the sll_collective module :</b> \n
+!> <b> How to use the sll_m_collective module :</b> \n
 !> *****************************************
 !>
 !> Include the line
-!> \code use sll_collective \endcode
+!> \code use sll_m_collective \endcode
 !> \warning Never put the line "use mpi"!
 !>
 !> Any use of the module's functionalities must be preceeded by calling
@@ -66,7 +66,7 @@
 !>
 !> <table border="1">
 !> <tr>
-!> <th>sll_collective</th>
+!> <th>sll_m_collective</th>
 !> <th>MPI</th>
 !> </tr>
 !> <tr>
@@ -110,9 +110,9 @@
 !------------------------------------------------------------------------------
 
 ! ***************************************************************************
-! sll_collective is a module that encapsulates our calls to the MPI library.
+! sll_m_collective is a module that encapsulates our calls to the MPI library.
 ! Any module that wants to access distributed multiprocessing capabilities
-! must use sll_collective instead of MPI directly. If one were to desire
+! must use sll_m_collective instead of MPI directly. If one were to desire
 ! some MPI capability that is not included here, such capability should not
 ! be plugged in directly but rather this module should be expanded.
 !
@@ -125,7 +125,7 @@
 !
 ! ***************************************************************************
 
-module sll_collective
+module sll_m_collective
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -1865,4 +1865,4 @@ contains !************************** Operations **************************
  endsubroutine sll_collective_globalsum_real32
 
 
-end module sll_collective
+end module sll_m_collective

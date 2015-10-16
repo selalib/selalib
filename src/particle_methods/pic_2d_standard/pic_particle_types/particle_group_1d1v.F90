@@ -16,13 +16,13 @@
 !**************************************************************
 
 
-module sll_particle_group_1d1v_module
+module sll_m_particle_group_1d1v
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "particle_representation.h"
 
-!  use sll_particle_representations
+!  use sll_m_particle_representations
   use sll_logical_meshes
   implicit none
 
@@ -70,7 +70,7 @@ module sll_particle_group_1d1v_module
     !Probability
     abstract interface
         function sll_pdf_1d(x) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(size(x)) :: p
         endfunction
@@ -79,7 +79,7 @@ module sll_particle_group_1d1v_module
 
     abstract interface
         function sll_pdf_1d1t(x,t) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(:),intent(in) :: t
             sll_real64, dimension(size(x),size(t)) :: p
@@ -88,7 +88,7 @@ module sll_particle_group_1d1v_module
 
     abstract interface
         function sll_pdf_1d1v(x,v) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(:) ,intent(in):: v
             sll_real64, dimension(size(x)) :: p
@@ -97,7 +97,7 @@ module sll_particle_group_1d1v_module
 
     abstract interface
         function sll_pdf_1d1v1t(x,v,t) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(:),intent(in) :: v
             sll_real64, dimension(:),intent(in) :: t
@@ -188,4 +188,4 @@ contains
 !
 !  end subroutine set_group_particle_values
 !
-end module sll_particle_group_1d1v_module
+end module sll_m_particle_group_1d1v

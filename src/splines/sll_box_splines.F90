@@ -11,7 +11,7 @@
 !>  Reference :
 !>     \@Condat2006 "Three-directional box splines"
 
-module sll_box_splines
+module sll_m_box_splines
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
@@ -22,10 +22,10 @@ module sll_box_splines
 
   use sll_m_hex_pre_filters, only: &
        pre_filter_pfir
-  use sll_hexagonal_meshes, only: &
+  use sll_m_hexagonal_meshes, only: &
        sll_hex_mesh_2d
-  use fekete_integration
-  use gauss_triangle_integration
+  use sll_m_fekete_integration
+  use sll_m_gauss_triangle_integration
 
 
   implicit none
@@ -1029,4 +1029,4 @@ contains  ! ****************************************************************
     SLL_DEALLOCATE(spline, ierr)
   end subroutine delete_box_spline_2d
 
-end module sll_box_splines
+end module sll_m_box_splines

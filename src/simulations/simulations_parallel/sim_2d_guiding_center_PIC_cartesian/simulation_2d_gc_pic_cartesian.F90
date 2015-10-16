@@ -1,4 +1,4 @@
-module sll_pic_simulation_2d_cartesian_module
+module sll_m_sim_pic_2d_cartesian
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -8,21 +8,21 @@ module sll_pic_simulation_2d_cartesian_module
 #include "particle_representation.h"
 
 
-  use sll_constants
-  use sll_simulation_base
-  use sll_cartesian_meshes
-  use sll_timer
-  use sll_particle_group_2d_module
-  use sll_particle_initializers_2d
-  use sll_particle_sort_module
-  use sll_charge_to_density_module
-  use sll_pic_utilities
+  use sll_m_constants
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
+  use sll_m_timer
+  use sll_m_particle_group_2d
+  use sll_m_particle_initializers_2d
+  use sll_m_particle_sort
+  use sll_m_charge_to_density
+  use sll_m_pic_utilities
   use sll_m_poisson_2d_fft
   use sll_m_poisson_2d_base
-!  use sll_representation_conversion_module
-  use sll_gnuplot
-  use sll_timer
-  use sll_collective 
+!  use sll_m_representation_conversion
+  use sll_m_gnuplot
+  use sll_m_timer
+  use sll_m_collective 
 #ifdef _OPENMP
   use omp_lib
 #endif
@@ -890,4 +890,4 @@ contains
     res = log(res)*0.5_f64
   end subroutine lognormL2_field_Ex
   
-end module sll_pic_simulation_2d_cartesian_module
+end module sll_m_sim_pic_2d_cartesian

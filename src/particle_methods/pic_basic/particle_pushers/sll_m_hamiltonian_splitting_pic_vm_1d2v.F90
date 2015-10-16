@@ -12,8 +12,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
  
   use sll_m_pic_base
   use sll_m_kernel_smoother_base
-  use sll_collective
-  use sll_arbitrary_degree_splines
+  use sll_m_collective
+  use sll_m_arbitrary_degree_splines
   
   use sll_m_maxwell_1d_base
   use sll_m_hamiltonian_splitting_base

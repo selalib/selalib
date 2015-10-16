@@ -1,8 +1,8 @@
-module sll_landau_2d_initializer
+module sll_m_landau_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_constants
-  use sll_scalar_field_initializers_base
+  use sll_m_constants
+  use sll_m_scalar_field_initializers_base
   implicit none
 
   type, extends(scalar_field_2d_initializer_base) :: init_landau_2d
@@ -95,4 +95,4 @@ contains
     end do
   end subroutine
 
-end module sll_landau_2d_initializer
+end module sll_m_landau_2d_initializer

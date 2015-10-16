@@ -7,23 +7,23 @@
 
 program qns_4d_general_multipatch
 #include "sll_working_precision.h"
-  use sll_coordinate_transformation_multipatch_module
-  use sll_simulation_4d_qns_general_multipatch_module, only: &
+  use sll_m_coordinate_transformation_multipatch
+  use sll_m_sim_4d_qns_general_multipatch, only: &
      sll_simulation_4d_qns_general_multipatch, &
      initialize_4d_qns_gen_mp, &
      run_4d_qns_general_mp
-  use sll_collective
-!  use sll_constants
-  use sll_cartesian_meshes
+  use sll_m_collective
+!  use sll_m_constants
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
+  use sll_m_common_coordinate_transformations
 !  use sll_m_coordinate_transformations_2d_nurbs
-  use sll_common_array_initializers_module
+  use sll_m_common_array_initializers
   ! use sll_m_poisson_2d_elliptic_solver, &
   !    only: es_gauss_legendre
-  use sll_coordinate_transformation_multipatch_module, only: &
+  use sll_m_coordinate_transformation_multipatch, only: &
      sll_coordinate_transformation_multipatch_2d
-  use sll_general_coordinate_elliptic_solver_module
+  use sll_m_general_coordinate_elliptic_solver
 !  use sll_m_scalar_field_2d_multipatch
   implicit none
 
@@ -94,7 +94,7 @@ program qns_4d_general_multipatch
   call mp%read_from_file("circle_mp5_pts12")
 
   ! ---------------------------------------------------------------------
-  ! define the values of the parameters for the gaussian beam initializer
+  ! define the values of the parameters for the sll_m_gaussian beam initializer
   ! ---------------------------------------------------------------------
 
   ! sll_gaussian_beam_initializer_4d parameters

@@ -23,18 +23,18 @@
 !> data is separate from the values themselves. Light data is stored using XML, 
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
-module sll_xdmf_serial_blocks
+module sll_m_xdmf_serial_blocks
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
   use mpi
-  use sll_utilities
+  use sll_m_utilities
 #ifndef NOHDF5
   use hdf5
-  use sll_hdf5_io_serial
+  use sll_m_hdf5_io_serial
 #endif
-  use sll_ascii_io
-  use sll_xml_io
+  use sll_m_ascii_io
+  use sll_m_xml_io
   
   implicit none
   
@@ -179,4 +179,4 @@ contains
   end subroutine sll_xdmf_close_serial_blocks
 
 
-end module sll_xdmf_serial_blocks
+end module sll_m_xdmf_serial_blocks

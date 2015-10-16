@@ -17,7 +17,7 @@
 !> containing on the one hand the data on which the operators act
 !> and a specific implementation of the two operators
 !>
-module sll_operator_splitting
+module sll_m_operator_splitting
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -47,7 +47,7 @@ module sll_operator_splitting
      !> current time to be incremented 
      sll_real64 :: current_time = 0.0_f64  
      !> defines the splitting method to be chosen from those defined as global variables in 
-     !> sll_operator_splitting module
+     !> sll_m_operator_splitting module
      sll_int32 :: split_case  
      !> number of split steps in the method 
      sll_int32 :: nb_split_step
@@ -587,4 +587,4 @@ contains
   end subroutine do_split_steps
 
 
-end module sll_operator_splitting
+end module sll_m_operator_splitting

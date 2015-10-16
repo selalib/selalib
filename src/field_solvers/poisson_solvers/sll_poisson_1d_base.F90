@@ -26,7 +26,7 @@ module sll_m_poisson_1d_base
 
   abstract interface
     subroutine signature_compute_phi_from_rho_1d( poisson, phi, rho )
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_poisson_1d_base      
       class(sll_poisson_1d_base), target :: poisson
       sll_real64,dimension(:),intent(in) :: rho
@@ -36,7 +36,7 @@ module sll_m_poisson_1d_base
 
   abstract interface    
     subroutine signature_compute_E_from_rho_1d( poisson, E, rho )
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_poisson_1d_base       
       class(sll_poisson_1d_base) :: poisson
       sll_real64,dimension(:),intent(in) :: rho

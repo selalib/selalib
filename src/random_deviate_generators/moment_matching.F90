@@ -4,12 +4,12 @@
 
 !Transform samples of random distributions such that certain moments are
 !exactly matched
-module sll_moment_matching
+module sll_m_moment_matching
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_constants
+use sll_m_constants
 
 
 implicit none
@@ -58,4 +58,4 @@ sumw=sum(w)/num
 
 x= (x- meanx/sumw)*sqrt((sumw*mom2 - mean**2)/(sumw*mom2x-meanx**2)) + mean/sumw
 end subroutine match_moment_1D_weight_linear_real64
-end module sll_moment_matching
+end module sll_m_moment_matching

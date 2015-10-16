@@ -3,8 +3,8 @@ program test_fcisl_toroidal
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_file_io.h"
-  use sll_fcisl_toroidal_module
-  use sll_constants
+  use sll_m_fcisl_toroidal
+  use sll_m_constants
   use sll_m_interpolators_2d_base
   use sll_m_cubic_spline_interpolator_2d
 

@@ -6,7 +6,7 @@ program test_linear_pendulum
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   
-  use sll_linear_pendulum_operators
+  use sll_m_linear_pendulum_operators
   implicit none
  
   ! variables

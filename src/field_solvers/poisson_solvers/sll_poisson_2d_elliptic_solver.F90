@@ -28,9 +28,9 @@ module sll_m_poisson_2d_elliptic_solver
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-!use sll_boundary_condition_descriptors
+!use sll_m_boundary_condition_descriptors
   use sll_m_poisson_2d_base
-  use sll_general_coordinate_elliptic_solver_module
+  use sll_m_general_coordinate_elliptic_solver
   use sll_m_scalar_field_2d_base
   use sll_m_scalar_field_2d
   use sll_m_cubic_spline_interpolator_2d

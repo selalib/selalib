@@ -4,19 +4,19 @@ program cg_curvilinear_2D
 #include "sll_assert.h"
 
    
-  use module_cg_curvi_structure
-  use curvilinear_2D_advection
-  use module_cg_curvi_function
-  use module_diagnostic
+  use sll_m_cg_curvi_structure
+  use sll_m_curvilinear_2D_advection
+  use sll_m_cg_curvi_function
+  use sll_m_diagnostic
   !--*Poisson*----
-  use sll_mudpack_colella
+  use sll_m_mudpack_colella
  ! use sll_general_coordinate_qn_solver
- ! use sll_cartesian_meshes
- ! use sll_common_coordinate_transformations
+ ! use sll_m_cartesian_meshes
+ ! use sll_m_common_coordinate_transformations
  ! use sll_m_scalar_field_2d
- ! use sll_constants
+ ! use sll_m_constants
  ! use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors
 
   implicit none
 
@@ -75,7 +75,7 @@ sll_real :: landau_alpha,landau_mode
   f_case = 1  ! 0 : constant function 
               ! 1 : 1+alpha*cos(mode*eta2)
               ! 3 : sin(eta_2)+landau_alpha*cos(landau_mode*eta_1)
-              ! 4 : gaussian in x and y
+              ! 4 : sll_m_gaussian in x and y
 
   grad_case = 2
 
@@ -109,9 +109,9 @@ sll_real :: landau_alpha,landau_mode
   eta2_max = 1._f64
   x1c_r=0._f64  ! center for rotation
   x2c_r=0._f64
-  x1c = 0.5_f64 ! center of gaussian 
+  x1c = 0.5_f64 ! center of sll_m_gaussian 
   x2c = 0.5_f64
-  sigma_x1 = 10._f64  ! variance for gaussian (exp(-(x-x1c)^2/(2*sigma_1^2)))
+  sigma_x1 = 10._f64  ! variance for sll_m_gaussian (exp(-(x-x1c)^2/(2*sigma_1^2)))
   sigma_x2 = 10._f64
   
 !read(*,NML=param)
@@ -254,8 +254,8 @@ sll_real :: landau_alpha,landau_mode
   ! distribution function
   if (f_case > 5) then
     print*,'#Non existing case'
-    print*,'#test_case = 1 :f=1, 2 : cos(eta2), 3 :gaussian in eta1,'
-    print*,'#4 :centered gaussian in eta1 and eta2 depending on the mesh type or 5 :centered dirac'
+    print*,'#test_case = 1 :f=1, 2 : cos(eta2), 3 :sll_m_gaussian in eta1,'
+    print*,'#4 :centered sll_m_gaussian in eta1 and eta2 depending on the mesh type or 5 :centered dirac'
     STOP
   endif
   ! advection field
@@ -496,7 +496,7 @@ end program cg_curvilinear_2D
 !==============================================================================
 ! Auxiliary subroutines 'coef' and 'bnd' defined here (copied from file 
 ! 'test_mudpack_colella.F90').  These definitions are needed by subroutine 
-! 'initialize_poisson_colella_mudpack' inside module 'sll_mudpack_colella'.
+! 'initialize_poisson_colella_mudpack' inside module 'sll_m_mudpack_colella'.
 !==============================================================================
 
 #define alpha 0.00

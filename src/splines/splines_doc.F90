@@ -17,7 +17,7 @@
 !> Low level modules for sll_interpolators.
 !> Library to use splines, contains:
 !>    - cubic_splines            : B-splines of degree 3
-!>    - cubic_non_uniform_splines: non-uniform B-splines of degree 3
+!>    - sll_m_cubic_non_uniform_splines: non-uniform B-splines of degree 3
 !>    - quintic_splines          : B-splines of degree 5
 !>    - bsplines                 : B-splines 1D and 2D
 !>    - arbitrary_degree_splines : De Boor splines of arbitrary degree

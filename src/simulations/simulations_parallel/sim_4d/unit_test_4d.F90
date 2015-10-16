@@ -4,8 +4,8 @@
 ! - parallel
 
 program vlasov_poisson_4d
-  use sll_simulation_4d_vlasov_poisson_cartesian
-  use sll_collective
+  use sll_m_sim_4d_vlasov_poisson_cartesian
+  use sll_m_collective
   implicit none
 
   character(len=256) :: filename

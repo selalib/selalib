@@ -9,10 +9,10 @@ module sll_m_sim_pic_vp_2d2v_cart
 #include "sll_memory.h"
 #include "sll_utilities.h"
 
-  use sll_constants
-  use sll_collective
-  use sll_simulation_base
-  use sll_cartesian_meshes
+  use sll_m_constants
+  use sll_m_collective
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
   use sll_m_pic_base
   use sll_m_particle_initializer
   use sll_m_particle_group_2d2v
@@ -20,9 +20,9 @@ module sll_m_sim_pic_vp_2d2v_cart
   use sll_m_kernel_smoother_spline_2d
   use sll_m_poisson_2d_fft ! TODO: Use generic interface
   use sll_m_poisson_2d_base
-  use sll_operator_splitting
+  use sll_m_operator_splitting
   use sll_m_operator_splitting_pic_vp_2d2v
-  use sll_ascii_io
+  use sll_m_ascii_io
 
   sll_int32, parameter :: SLL_INIT_RANDOM=0
   sll_int32, parameter :: SLL_INIT_SOBOL=1
@@ -38,7 +38,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      sll_real64, pointer :: efield(:,:)
 
      ! Cartesian mesh
-     type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+     type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 
      ! Abstract kernel smoother
      class(sll_kernel_smoother_base), pointer :: kernel_smoother

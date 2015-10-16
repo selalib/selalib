@@ -4,9 +4,9 @@ module sll_parallel_array_output_module
 #include "sll_memory.h"
 #include "sll_meshes.h"
 #include "sll_utilities.h"
-use sll_collective
-use sll_remapper
-use sll_xml_io
+use sll_m_collective
+use sll_m_remapper
+use sll_m_xml_io
 
 #ifndef NOHDF5
 use hdf5, only: hid_t, hssize_t, hsize_t
@@ -19,7 +19,7 @@ contains
 subroutine write_mesh_4d(mesh)
 
 #ifndef NOHDF5
-  use sll_hdf5_io_serial
+  use sll_m_hdf5_io_serial
 #endif
 
   type(sll_cartesian_mesh_4d), intent(in) :: mesh
@@ -158,7 +158,7 @@ end subroutine write_attribute
 subroutine write_fx1x2(f, layout, cplot)
 
 #ifndef NOHDF5
-  use sll_hdf5_io_serial
+  use sll_m_hdf5_io_serial
 #endif
 
   sll_real64, dimension(:,:,:,:)          :: f
@@ -194,7 +194,7 @@ end subroutine write_fx1x2
 subroutine write_fx1x3(f, layout, cplot)
 
 #ifndef NOHDF5
-  use sll_hdf5_io_serial
+  use sll_m_hdf5_io_serial
 #endif
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
@@ -229,7 +229,7 @@ end subroutine write_fx1x3
 subroutine write_fx2x4(f, layout, cplot)
 
 #ifndef NOHDF5
-  use sll_hdf5_io_parallel
+  use sll_m_hdf5_io_parallel
 #endif
 
   sll_real64, dimension(:,:,:,:)          :: f
@@ -268,7 +268,7 @@ end subroutine write_fx2x4
 
 subroutine write_fx3x4(f, layout, cplot)
 
-  use sll_hdf5_io_parallel
+  use sll_m_hdf5_io_parallel
 
   sll_real64, dimension(:,:,:,:)          :: f
   Type(layout_4D), pointer                :: layout

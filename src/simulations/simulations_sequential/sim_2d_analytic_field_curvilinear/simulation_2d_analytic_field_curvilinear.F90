@@ -1,4 +1,4 @@
-module sll_simulation_2d_analytic_field_curvilinear_module
+module sll_m_sim_2d_analytic_field_curvilinear
 
 !2d analytic field curvilinear simulation
 !contact: Adnane Hamiaz (hamiaz@math.unistra.fr
@@ -10,8 +10,8 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 #include "sll_fields.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_constants
-  use sll_cartesian_meshes  
+  use sll_m_constants
+  use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
   use sll_m_advection_2d_bsl
   use sll_m_advection_2d_tensor_product
@@ -25,29 +25,29 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   use sll_m_characteristics_1d_trapezoid
   use sll_m_characteristics_1d_explicit_euler_conservative
   use sll_m_characteristics_1d_trapezoid_conservative
-  use sll_reduction_module
-  use sll_simulation_base
+  use sll_m_reduction
+  use sll_m_sim_base
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_cubic_spline_interpolator_1d
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
-  !use sll_mudpack_curvilinear
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
+  !use sll_m_mudpack_curvilinear
 #ifdef MUDPACK
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 !  use sll_m_poisson_2d_elliptic_solver
-!  use sll_timer
-!  use sll_fft
+!  use sll_m_timer
+!  use sll_m_fft
 !  use sll_m_poisson_2d_periodic_solver
-  use sll_parallel_array_initializer_module
-  use sll_hermite_interpolation_2d_module
+  use sll_m_parallel_array_initializer
+  use sll_m_hermite_interpolation_2d
   use sll_m_hermite_interpolator_2d
-  use sll_hermite_interpolation_1d_module
+  use sll_m_hermite_interpolation_1d
   use sll_m_hermite_interpolator_1d
-  use sll_operator_splitting
-  use sll_split_advection_2d
+  use sll_m_operator_splitting
+  use sll_m_split_advection_2d
   
   implicit none
   
@@ -1828,8 +1828,8 @@ contains
     n1, &
     n2, &
     transf)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     character(len=*), intent(in) :: filename  !< file name
     sll_int32, intent(in) :: iplot
     sll_real64, dimension(:,:), intent(in) :: f
@@ -1912,8 +1912,8 @@ contains
 !*********************
 
   subroutine plot_visit_curvilinear(iplot,f,mesh_2d,transf,file_name)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -3360,7 +3360,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
   ! periodic case
   ! called when bc_type = SLL_PERIODIC
   function process_outside_point_periodic1( eta, eta_min, eta_max ) result(eta_out)
-      use sll_working_precision
+      use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
@@ -3389,7 +3389,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
   ! called when bc_type = SLL_SET_TO_LIMIT
   
   function process_outside_point_set_to_limit1( eta, eta_min, eta_max ) result(eta_out)
-      use sll_working_precision
+      use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
@@ -3629,4 +3629,4 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
 
 
 
-end module sll_simulation_2d_analytic_field_curvilinear_module
+end module sll_m_sim_2d_analytic_field_curvilinear

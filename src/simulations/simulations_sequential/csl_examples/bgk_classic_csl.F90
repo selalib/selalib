@@ -4,11 +4,11 @@ program bgk_classic_csl
 #include "sll_memory.h"
 !contact: mehrenbe@math.unistra.fr for this  program
 
-  use sll_constants
-  use cubic_non_uniform_splines
-  use bgk_mesh_construction
-  use contrib_rho_module
-  use classical_conservative_semi_lagrangian
+  use sll_m_constants
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_bgk_mesh_construction
+  use sll_m_contrib_rho
+  use sll_m_classical_conservative_semi_lagrangian
   implicit none
   
   !parameters
@@ -165,7 +165,7 @@ program bgk_classic_csl
         val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/(x1_max-x1_min)*x1))
       endif
       if(test_case==6.or.test_case==7)then
-        !gaussian equilibrium
+        !sll_m_gaussian equilibrium
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
         !f_equil(i1,i2) = val*jac_array(i1,i2)
       endif

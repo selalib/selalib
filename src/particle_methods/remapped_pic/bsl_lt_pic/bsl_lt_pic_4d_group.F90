@@ -32,13 +32,13 @@ module sll_m_bsl_lt_pic_4d_group
 
 ! #include "particle_representation.h"   NEEDED?
 
-  use sll_constants, only: sll_pi
-  use sll_working_precision
-  use sll_cartesian_meshes
+  use sll_m_constants, only: sll_pi
+  use sll_m_working_precision
+  use sll_m_cartesian_meshes
   use sll_m_remapped_pic_base
   use sll_m_bsl_lt_pic_4d_particle
   use sll_m_bsl_lt_pic_4d_utilities
-  use sll_gnuplot
+  use sll_m_gnuplot
 
   implicit none
 
@@ -138,7 +138,7 @@ module sll_m_bsl_lt_pic_4d_group
 
 !  interface
 !    subroutine bsl_lt_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
-!    use sll_working_precision
+!    use sll_m_working_precision
 !    import sll_bsl_lt_pic_4d_group
 !    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
 !    sll_int32                       , intent( in    ) :: initial_density_identifier

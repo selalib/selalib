@@ -11,11 +11,11 @@
 !
 ! **********************************************************
 
-module sll_mudpack_colella
+module sll_m_mudpack_colella
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-use sll_mudpack_base
+use sll_m_mudpack_base
 implicit none
 
 contains
@@ -205,6 +205,6 @@ SLL_ASSERT(ierror == 0)
 return
 end subroutine solve_poisson_colella_mudpack
 
-end module sll_mudpack_colella
+end module sll_m_mudpack_colella
 
 

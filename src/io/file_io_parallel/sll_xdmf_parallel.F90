@@ -25,19 +25,19 @@
 !> Paraview.
 !>
 !> Here an example using the layout_2d object, check out how to compute
-!> offset values before calling sll_gnuplot_parallel subroutines.
+!> offset values before calling sll_m_gnuplot_parallel subroutines.
 !> @snippet remap/unit_test_parallel.F90 example
-module sll_xdmf_parallel
+module sll_m_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
-  use sll_collective
+  use sll_m_collective
 #ifndef NOHDF5
   use hdf5
-  use sll_hdf5_io_parallel
+  use sll_m_hdf5_io_parallel
 #endif
-  use sll_ascii_io
-  use sll_xml_io
+  use sll_m_ascii_io
+  use sll_m_xml_io
   
   implicit none
   
@@ -229,6 +229,6 @@ contains
   end subroutine sll_xdmf_close_parallel
 
 
-end module sll_xdmf_parallel
+end module sll_m_xdmf_parallel
 
 

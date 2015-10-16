@@ -27,7 +27,7 @@
 !>
 !> Periodic boundary conditions are not implemented. You must set function value
 !> and its derivative a the boundary
-module sll_quintic_splines
+module sll_m_quintic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -468,4 +468,4 @@ do i = 1, n
 
 end subroutine inspl5_periodic
 
-end module sll_quintic_splines
+end module sll_m_quintic_splines

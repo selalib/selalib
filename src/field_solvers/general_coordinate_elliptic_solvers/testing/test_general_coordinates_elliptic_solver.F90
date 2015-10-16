@@ -4,19 +4,19 @@ program test_general_elliptic_solver
 #include "sll_utilities.h"
 #include "sll_file_io.h"
 
-use sll_cartesian_meshes
+use sll_m_cartesian_meshes
 use sll_m_coordinate_transformations_2d
-use sll_common_coordinate_transformations
+use sll_m_common_coordinate_transformations
 use sll_m_scalar_field_2d
-use sll_constants
+use sll_m_constants
 use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_timer
+use sll_m_timer
 use sll_m_deboor_splines_2d
 
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack
 #else
-  use sll_general_coordinate_elliptic_solver_module
+  use sll_m_general_coordinate_elliptic_solver
 #endif
 
 implicit none

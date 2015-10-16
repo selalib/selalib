@@ -1,10 +1,10 @@
 program guiding_center_2d_curvilinear
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_simulation_2d_guiding_center_curvilinear_module
-  use sll_collective
-  use sll_timer
-  use sll_constants
+  use sll_m_sim_2d_guiding_center_curvilinear
+  use sll_m_collective
+  use sll_m_timer
+  use sll_m_constants
   implicit none
   
   !class(sll_simulation_base_class), pointer :: sim

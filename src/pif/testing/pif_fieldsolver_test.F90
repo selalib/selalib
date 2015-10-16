@@ -9,8 +9,8 @@ program pif_fieldsolver_test
 #include "sll_utilities.h"
 
 
-use sll_pif_fieldsolver
-use sll_timer
+use sll_m_pif_fieldsolver
+use sll_m_timer
 implicit none
 
 

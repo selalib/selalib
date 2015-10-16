@@ -4,7 +4,7 @@ program test_mudpack_colella
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-use sll_mudpack_colella
+use sll_m_mudpack_colella
 
 implicit none
 

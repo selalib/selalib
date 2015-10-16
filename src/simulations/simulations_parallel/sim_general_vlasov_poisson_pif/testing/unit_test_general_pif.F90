@@ -4,8 +4,8 @@
 ! - parallel
 
 program general_vlasov_poisson_pif
-   use sll_general_vlasov_poisson_pif
-   use sll_collective
+   use sll_m_general_vlasov_poisson_pif
+   use sll_m_collective
    implicit none
 ! 
    character(len=256) :: filename

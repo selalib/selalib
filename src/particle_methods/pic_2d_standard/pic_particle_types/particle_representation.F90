@@ -16,12 +16,12 @@
 !**************************************************************
 
 
-module sll_particle_representations
+module sll_m_particle_representations
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
 
   implicit none
 
@@ -64,4 +64,4 @@ module sll_particle_representations
 
 !contains
 
-end module sll_particle_representations
+end module sll_m_particle_representations

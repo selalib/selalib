@@ -20,23 +20,23 @@
 ! 08 jul 2014 - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_distribution_function_4d_multipatch_module
+module sll_m_distribution_function_4d_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_coordinate_transformation_multipatch_module
-  use sll_constants
-  use sll_remapper
-  use sll_collective
+  use sll_m_coordinate_transformation_multipatch
+  use sll_m_constants
+  use sll_m_remapper
+  use sll_m_collective
   use sll_m_interpolators_2d_base
   use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_utilities
-  use sll_boundary_condition_descriptors
-  use sll_gnuplot
-  use sll_parallel_array_initializer_module
+  use sll_m_utilities
+  use sll_m_boundary_condition_descriptors
+  use sll_m_gnuplot
+  use sll_m_parallel_array_initializer
   use sll_m_scalar_field_2d_multipatch
-  use sll_timer
+  use sll_m_timer
   implicit none
 
 
@@ -813,4 +813,4 @@ contains
     SLL_DEALLOCATE(df, ierr)
   end subroutine delete_df_4d_mp_ptr
 
-end module sll_distribution_function_4d_multipatch_module
+end module sll_m_distribution_function_4d_multipatch

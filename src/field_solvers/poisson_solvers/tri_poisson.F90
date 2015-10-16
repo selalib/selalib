@@ -3,13 +3,13 @@
 !
 ! Traduit en Fortran 90 a partir de M2V ou DEGAS2D
 !
-module tri_poisson
+module sll_m_tri_poisson
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
-use sll_triangular_meshes
-use choleski
+use sll_m_triangular_meshes
+use sll_m_choleski
 
 implicit none
 
@@ -1655,4 +1655,4 @@ end do
 
 end subroutine poliss
 
-end module tri_poisson
+end module sll_m_tri_poisson

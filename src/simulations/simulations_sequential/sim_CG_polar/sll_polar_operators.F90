@@ -1,14 +1,14 @@
-module polar_operators
+module sll_m_polar_operators
 ! definition of gradient and divergence in polar coordinate
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-  use sll_boundary_condition_descriptors
-  use sll_poisson_2d_polar
-  use sll_fft
-  use sll_cubic_splines
+  use sll_m_boundary_condition_descriptors
+  use sll_m_poisson_2d_polar
+  use sll_m_fft
+  use sll_m_cubic_splines
   implicit none
 
   !>type plan_polar_op
@@ -285,4 +285,4 @@ contains
 
   end subroutine divergence_scalar_field
 
-end module polar_operators
+end module sll_m_polar_operators

@@ -7,7 +7,7 @@
 !> the default multigrid options.  
 !>  - first mud2cr is called to generate a second-order approximation.  
 !>  - then mud24cr is called to improve the estimate to fourth-order.
-module sll_mudpack_curvilinear
+module sll_m_mudpack_curvilinear
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_coordinate_transformations.h"
@@ -283,7 +283,7 @@ allocate(this%iwork(ixp+1,jyq+1))
 if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
    print*, "nx,nc_eta1+1=", nx, nc_eta1+1
    print*, "ny,nc_eta2+1=", ny, nc_eta2+1
-   stop ' nx or ny different in sll_mudpack_curvilinear '
+   stop ' nx or ny different in sll_m_mudpack_curvilinear '
 end if
 
 ! set multigrid arguments (w(2,1) cycling with fully weighted
@@ -566,13 +566,13 @@ do j=1,ny
  enddo
 enddo 
 end subroutine coefy_array
-end module sll_mudpack_curvilinear
+end module sll_m_mudpack_curvilinear
 
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 subroutine coefcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_mudpack_curvilinear
+use sll_m_mudpack_curvilinear
 implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce

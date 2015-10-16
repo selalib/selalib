@@ -1,10 +1,10 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE: sll_triangular_meshes
+! MODULE: sll_m_triangular_meshes
 !
 ! DESCRIPTION:
-!> @file sll_triangular_meshes.F90
+!> @file sll_m_triangular_meshes.F90
 !>
 !> @author
 !> - Aurore Back
@@ -16,7 +16,7 @@
 !> @details
 !>  Triangular mesh
 !------------------------------------------------------------------------------
-module sll_triangular_meshes
+module sll_m_triangular_meshes
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
@@ -24,8 +24,8 @@ module sll_triangular_meshes
 #include "sll_errors.h"
 #include "sll_boundary_condition_descriptors.h"
 
-use sll_meshes_base
-use sll_tri_mesh_xmf
+use sll_m_meshes_base
+use sll_m_tri_mesh_xmf
 
 implicit none
 
@@ -179,7 +179,7 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
-  use sll_hexagonal_meshes
+  use sll_m_hexagonal_meshes
   type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
   type(sll_triangular_mesh_2d),      pointer :: tri_mesh
 
@@ -1895,4 +1895,4 @@ end subroutine analyze_triangular_mesh
 
 
 
-end module sll_triangular_meshes
+end module sll_m_triangular_meshes

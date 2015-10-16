@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup visu_pic sll_visu_pic 
+!> @defgroup visu_pic sll_m_visu_pic 
 !> @brief 
 !> Output routines to plot particles and field after PIC simulation.
 !> @author Pierre Navaro
@@ -17,5 +17,5 @@
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_visu_pic
+!>  - sll_m_visu_pic
 !>

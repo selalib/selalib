@@ -1,7 +1,7 @@
 program collective_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_collective
+  use sll_m_collective
   implicit none
   intrinsic :: int
 

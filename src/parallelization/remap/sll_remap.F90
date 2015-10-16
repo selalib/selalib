@@ -20,12 +20,12 @@
 !> @ingroup remap
 !> @brief
 !> Module for remapping
-module sll_remapper
+module sll_m_remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-  use sll_collective
+  use sll_m_collective
 
   implicit none
   private
@@ -5713,4 +5713,4 @@ print *, 'remap 2d complex:'
 
   end subroutine write_to_file
 
-end module sll_remapper
+end module sll_m_remapper

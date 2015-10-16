@@ -1,5 +1,5 @@
 program test_tridiag
-  use sll_tridiagonal
+  use sll_m_tridiagonal
 #include "sll_memory.h"
 #include "sll_working_precision.h"
   implicit none

@@ -3,9 +3,9 @@ program bsl_1d_cubic_nonuniform_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_constants
+use sll_m_constants
 use sll_m_cubic_spline_interpolator_1d_nonuniform
-use sll_utilities, only: int2string
+use sll_m_utilities, only: int2string
 
 use sll_m_interpolators_1d_base
 
@@ -52,7 +52,7 @@ end do
 advfield_x = 1_f64 
 advfield_v = 0.0 
 
-print*, 'initialize 2d distribution function f(x,v) gaussian'
+print*, 'initialize 2d distribution function f(x,v) sll_m_gaussian'
 print*, 'checking advection of a Gaussian in a uniform field'
 call spline_x%initialize(nc_x+1, x_min, x_max, SLL_PERIODIC )
 call spline_v%initialize(nc_v+1, v_min, v_max, SLL_PERIODIC )

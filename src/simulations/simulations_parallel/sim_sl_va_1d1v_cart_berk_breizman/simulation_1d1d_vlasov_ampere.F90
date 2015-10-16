@@ -22,7 +22,7 @@
 ! current investigations:
 !   BERK-BREIZMAN test case
 
-module sll_simulation_2d_vlasov_ampere_cartesian
+module sll_m_sim_2d_vlasov_ampere_cartesian
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -31,17 +31,17 @@ module sll_simulation_2d_vlasov_ampere_cartesian
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
 
-use sll_collective
-use sll_remapper
-use sll_buffer_loader_utilities_module
-use sll_constants
-use sll_cartesian_meshes  
-use sll_common_array_initializers_module
-use sll_parallel_array_initializer_module
+use sll_m_collective
+use sll_m_remapper
+use sll_m_buffer_loader_utilities
+use sll_m_constants
+use sll_m_cartesian_meshes  
+use sll_m_common_array_initializers
+use sll_m_parallel_array_initializer
 use sll_m_advection_1d_periodic
-use sll_poisson_1d_periodic  
-use sll_fft
-use sll_simulation_base
+use sll_m_poisson_1d_periodic  
+use sll_m_fft
+use sll_m_sim_base
 use sll_m_poisson_1d_periodic_solver
 use sll_m_advection_1d_spectral
 use sll_m_advection_1d_ampere
@@ -1509,4 +1509,4 @@ endif
       
 end subroutine delete_va2d_par_cart
 
-end module sll_simulation_2d_vlasov_ampere_cartesian
+end module sll_m_sim_2d_vlasov_ampere_cartesian

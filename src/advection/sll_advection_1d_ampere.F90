@@ -25,10 +25,10 @@ module sll_m_advection_1d_ampere
 #include "sll_utilities.h"
 #include "sll_constants.h"
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
 use sll_m_interpolators_1d_base
-use sll_fft
+use sll_m_fft
 
 implicit none
 

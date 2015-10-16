@@ -9,9 +9,9 @@ module sll_m_particle_initializer
 #include "sll_assert.h"
 
   use sll_m_pic_base
-  use gaussian, only: gaussian_deviate_2D
-  use sll_sobol, only: i8_sobol
-  use sll_prob, only: normal_cdf_inv
+  use sll_m_gaussian, only: gaussian_deviate_2D
+  use sll_m_sobol, only: i8_sobol
+  use sll_m_prob, only: normal_cdf_inv
   
   implicit none
 

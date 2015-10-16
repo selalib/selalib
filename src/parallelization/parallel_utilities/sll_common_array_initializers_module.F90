@@ -1,4 +1,4 @@
-module sll_common_array_initializers_module
+module sll_m_common_array_initializers
 #include "sll_assert.h" 
 #include "sll_working_precision.h"
 #include "sll_constants.h"
@@ -7,7 +7,7 @@ module sll_common_array_initializers_module
   implicit none
 
   ! The functions specified here are meant to have the specific signature
-  ! described in the sll_parallel_array_initializer_module. Else, they could
+  ! described in the sll_m_parallel_array_initializer. Else, they could
   ! not be used with this module.
 
 contains
@@ -1546,7 +1546,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
   !                         Periodic Maxwellian
   !
   ! 4D distribution in [0,1]X[0,1][-6,6]X[-6,6]  with the property of being 
-  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  ! periodic in the spatial directions (x1,x2) and sll_m_gaussian in velocity space.
   !
   ! f(x,y,vx,vy) = sin(kx*x)*sin(ky*y) + 
   !                beta* exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))
@@ -1609,7 +1609,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
   !                         Periodic-Periodic initializer
   !
   ! 4D distribution in [0,2*pi/kx]X[0,2*pi/ky][-6,6]X[-6,6]  with the property of being 
-  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  ! periodic in the spatial directions (x1,x2) and sll_m_gaussian in velocity space.
   !
   ! f(x,y,vx,vy) = (1 + alpha * cos(kx*x)*cos(ky*y) )
   !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))/ 2*pi
@@ -1685,7 +1685,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
   !                         Periodic-Periodic initializer another
   !
   ! 4D distribution in [0,2*pi/kx]X[0,2*pi/ky][-6,6]X[-6,6]  with the property of being 
-  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  ! periodic in the spatial directions (x1,x2) and sll_m_gaussian in velocity space.
   !
   ! f(x,y,vx,vy) = (1 + alpha * (cos(kx*x) + cos(ky*y)) )
   !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))/ (2*sll_pi)
@@ -1811,4 +1811,4 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     
   end function sll_gaussian_beam_initializer_4d
 
-end module sll_common_array_initializers_module
+end module sll_m_common_array_initializers

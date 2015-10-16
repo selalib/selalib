@@ -1,14 +1,14 @@
-module curvilinear_2D_advection
+module sll_m_curvilinear_2D_advection
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
  
-  use module_cg_curvi_function
-  use module_cg_curvi_structure
+  use sll_m_cg_curvi_function
+  use sll_m_cg_curvi_structure
   !--*Poisson*----
   !use sll_general_coordinate_qn_solver
-   use sll_mudpack_colella
+   use sll_m_mudpack_colella
 
   implicit none
 
@@ -668,4 +668,4 @@ contains
 
 
 
-end module curvilinear_2D_advection
+end module sll_m_curvilinear_2D_advection

@@ -13,17 +13,17 @@ program VP1d_deltaf
 #include "sll_constants.h"
 #include "sll_utilities.h"
 
-  use sll_cubic_splines
+  use sll_m_cubic_splines
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_periodic_interpolator_1d
-  use sll_landau_2d_initializer
-  use sll_tsi_2d_initializer
-  use distribution_function
-  use sll_poisson_1d_periodic
-  use sll_timer
+  use sll_m_landau_2d_initializer
+  use sll_m_tsi_2d_initializer
+  use sll_m_distribution_function
+  use sll_m_poisson_1d_periodic
+  use sll_m_timer
   use omp_lib
-  use sll_hdf5_io_serial
-  use periodic_interp_module
+  use sll_m_hdf5_io_serial
+  use sll_m_periodic_interp
   implicit none
 
 !  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
@@ -237,7 +237,7 @@ program VP1d_deltaf
   open(unit = eapp_diag, file = 'eappdiag.dat')
   open(unit = adr_diag, file = 'adrdiag.dat') 
 
-  ! initialization of distribution_function
+  ! initialization of sll_m_distribution_function
   SLL_ALLOCATE(f(Ncx+1,Ncv+Ncvh-(iHmax-iHmin+1)+1),ierr)
   SLL_ALLOCATE(fg(Ncx+1,Ncv+1),ierr)
   SLL_ALLOCATE(ff(Ncx+1,Ncvh+1),ierr)

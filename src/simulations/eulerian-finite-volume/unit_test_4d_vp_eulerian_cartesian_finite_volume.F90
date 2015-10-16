@@ -5,14 +5,14 @@
 
 program vp_cartesian_4d
 #include "sll_working_precision.h"
-  use sll_simulation_4d_vp_eulerian_cart_finite_volume_module
-  use sll_collective
-  use sll_constants
-  use sll_cartesian_meshes
-  use sll_common_array_initializers_module
+  use sll_m_sim_4d_vp_eulerian_cart_finite_volume
+  use sll_m_collective
+  use sll_m_constants
+  use sll_m_cartesian_meshes
+  use sll_m_common_array_initializers
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_timer
+  use sll_m_common_coordinate_transformations
+  use sll_m_timer
   implicit none
 
   type(sll_simulation_4d_vp_eulerian_cart_finite_volume)      :: simulation

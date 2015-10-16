@@ -24,15 +24,15 @@
 !> and CG_polar
 !> should be obsolete and replaced/translated in advection, characteristics modules
 
-module polar_advection
+module sll_m_polar_advection
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use polar_operators
-  use sll_poisson_2d_polar
-  use sll_constants
-  use sll_cubic_splines
+  use sll_m_polar_operators
+  use sll_m_poisson_2d_polar
+  use sll_m_constants
+  use sll_m_cubic_splines
   implicit none
 
   !>type sll_plan_adv_polar
@@ -2716,4 +2716,4 @@ endif
 
 
 
-end module polar_advection
+end module sll_m_polar_advection

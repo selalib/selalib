@@ -22,7 +22,7 @@
 !> Implements the Poisson solver in 2D with periodic boundary conditions
 !> @details
 !> This module uses fftw library
-module sll_poisson_2d_periodic_fftw
+module sll_m_poisson_2d_periodic_fftw
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -30,7 +30,7 @@ module sll_poisson_2d_periodic_fftw
 #include "sll_constants.h"
 #include "sll_fftw.h"
 
-use fftw3
+use sll_m_fftw3
 
 implicit none
 
@@ -293,5 +293,5 @@ subroutine delete_poisson_2d_periodic_fftw(self)
 
 end subroutine delete_poisson_2d_periodic_fftw
 
-end module sll_poisson_2d_periodic_fftw
+end module sll_m_poisson_2d_periodic_fftw
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

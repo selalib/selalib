@@ -33,7 +33,7 @@
 module test_fornberg
 #include "sll_working_precision.h"
 
-  use fornberg, only: populate_weights
+  use sll_m_fornberg, only: populate_weights
 
   implicit none
 
@@ -92,7 +92,7 @@ program main
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 use test_fornberg
-use fornberg
+use sll_m_fornberg
 
 sll_int32, parameter :: n_pts = 65
 sll_real64 :: eta_min = - sll_pi

@@ -1,5 +1,5 @@
 #define MPI_MASTER 0
-module sll_vlasov2d_base
+module sll_m_vlasov2d_base
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -8,10 +8,10 @@ module sll_vlasov2d_base
 #include "sll_constants.h"
 #include "sll_interpolators.h"
 #include "sll_utilities.h"
-  use sll_collective
-  use sll_remapper
-  use sll_xml_io
-  use init_functions, only: VA_VALIS, PSTD, METH_BSL_CUBIC_SPLINES, SPECTRAL
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_xml_io
+  use sll_m_init_functions, only: VA_VALIS, PSTD, METH_BSL_CUBIC_SPLINES, SPECTRAL
 
   implicit none
 
@@ -188,7 +188,7 @@ contains
 
   subroutine initialize_vlasov2d_base(this)
 
-    use sll_hdf5_io_serial
+    use sll_m_hdf5_io_serial
 
     class(vlasov2d_base),intent(inout)    :: this
     sll_int32                             :: error
@@ -378,7 +378,7 @@ contains
   subroutine write_xmf_file(this, iplot)
 
     use hdf5
-    use sll_hdf5_io_serial
+    use sll_m_hdf5_io_serial
 
     class(vlasov2d_base),intent(in) :: this
     sll_int32, intent(in)           :: iplot
@@ -457,7 +457,7 @@ contains
 
   subroutine write_fx1x2(this,cplot)
 
-    use sll_hdf5_io_serial
+    use sll_m_hdf5_io_serial
     class(vlasov2d_base),intent(in)     :: this
     character(len=*)                    :: cplot
     sll_int32                           :: error
@@ -483,4 +483,4 @@ contains
 
   end subroutine write_energy
 
-end module sll_vlasov2d_base
+end module sll_m_vlasov2d_base

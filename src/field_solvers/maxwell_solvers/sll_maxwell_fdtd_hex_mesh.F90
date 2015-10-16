@@ -19,14 +19,14 @@
 !
 !**************************************************************
 
-module sll_maxwell_fdtd_hex_mesh
+module sll_m_maxwell_fdtd_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
-  use sll_hexagonal_meshes, only : &
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d
 
 implicit none
@@ -229,4 +229,4 @@ end subroutine ampere_hex_mesh_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module sll_maxwell_fdtd_hex_mesh
+end module sll_m_maxwell_fdtd_hex_mesh

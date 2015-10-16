@@ -1,4 +1,4 @@
-module sll_hermite_interpolation_2d_module
+module sll_m_hermite_interpolation_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"

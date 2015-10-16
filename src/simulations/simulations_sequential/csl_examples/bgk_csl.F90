@@ -3,13 +3,13 @@ program bgk_csl
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
 
-  use sll_constants
-  use distribution_function
+  use sll_m_constants
+  use sll_m_distribution_function
   use sll_diagnostics
-  use sll_csl
+  use sll_m_csl
   use sll_splines
-  use contrib_rho_module
-  use bgk_mesh_construction
+  use sll_m_contrib_rho
+  use sll_m_bgk_mesh_construction
   
   implicit none
   external compute_translate_nodes_periodic,compute_non_unif_integral2
@@ -41,7 +41,7 @@ program bgk_csl
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
-  character(32), parameter  :: name = 'distribution_function'
+  character(32), parameter  :: name = 'sll_m_distribution_function'
   type(field_2D_vec1), pointer :: uniform_field
   type(field_2D_vec1), pointer :: uniform_field_new
   type(field_2D_vec1), pointer :: uniform_field_velocity
@@ -794,7 +794,7 @@ program bgk_csl
         val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/(x1_max-x1_min)*x1))
       endif
       if(test_case==6.or.test_case==7)then
-        !gaussian equilibrium
+        !sll_m_gaussian equilibrium
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
         !f_equil(i1,i2) = val*jac_array(i1,i2)
       endif
@@ -1293,7 +1293,7 @@ end program
 subroutine compute_translate_nodes_periodic(alpha,N_cells,old_node_positions,new_node_positions)
   ! compute displaced nodes in the case of a translation
   ! the nodes are put in [x_min,x_max] by periodicity
-  use sll_constants
+  use sll_m_constants
   implicit none
 
   sll_int,intent(in) :: N_cells
@@ -1324,7 +1324,7 @@ end subroutine compute_translate_nodes_periodic
 
 
 subroutine compute_non_unif_integral2(x_points,f_points,N_points,val)
-  use sll_constants
+  use sll_m_constants
   implicit none
   sll_real64,intent(out) :: val
   sll_int,intent(in) :: N_points
@@ -1354,7 +1354,7 @@ end  subroutine compute_non_unif_integral2
 
 
 subroutine poisson1dpertrap(E,L,N)
-  use sll_constants
+  use sll_m_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E

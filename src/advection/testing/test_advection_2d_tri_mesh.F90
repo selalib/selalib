@@ -1,13 +1,13 @@
 program test_advection_2d_tri_mesh
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_hexagonal_meshes, only : &
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d, &
        new_hex_mesh_2d
-use sll_triangular_meshes
-use sll_advection_2d_tri_mesh
-use sll_gnuplot
-use sll_mesh_calculus_2d_module
+use sll_m_triangular_meshes
+use sll_m_advection_2d_tri_mesh
+use sll_m_gnuplot
+use sll_m_mesh_calculus_2d
 
 implicit none
 

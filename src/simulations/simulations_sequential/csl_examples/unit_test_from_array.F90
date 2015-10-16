@@ -2,10 +2,10 @@ program unit_test_from_array
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
-  use sll_constants
-  use distribution_function
+  use sll_m_constants
+  use sll_m_distribution_function
   use sll_diagnostics
-  use sll_csl
+  use sll_m_csl
   implicit none
 
   sll_int32 :: nc_eta1, nc_eta2
@@ -24,7 +24,7 @@ program unit_test_from_array
   type(field_2D_vec1), pointer :: rotating_field
   type(field_2D_vec1), pointer :: uniform_field
   type(csl_workspace), pointer :: csl_work
-  character(32), parameter  :: name = 'distribution_function'
+  character(32), parameter  :: name = 'sll_m_distribution_function'
   logical, parameter :: read_from_file = .false.
 
   r_min = 0._f64

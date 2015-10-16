@@ -9,12 +9,12 @@ program vlasov_poisson_4d_polar
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
-  use sll_simulation_4d_vlasov_poisson_polar
-  use sll_collective
-  use sll_cartesian_meshes
+  use sll_m_sim_4d_vlasov_poisson_polar
+  use sll_m_collective
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
   implicit none
 
   character(len=256)                  :: filename
@@ -75,7 +75,7 @@ program vlasov_poisson_4d_polar
        sll_periodic_gaussian_initializer_4d, &
        params )
 
-!  function defined in  parallel_array_initializers/sll_common_array_initializers_module.F90
+!  function defined in  parallel_array_initializers/sll_m_common_array_initializers.F90
 !  sll_periodic_gaussian_initializer_4d(x,y,vx,xy) = 
 !  val = alpha*exp(-0.5_f64*((x -xc )**2+(y -yc )**2)) + &
 !        beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))

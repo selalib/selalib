@@ -4,9 +4,9 @@ program test_hex_poisson
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_constants
-  use hex_poisson
-  use pivotbande
+  use sll_m_constants
+  use sll_m_hex_poisson
+  use sll_m_pivotbande
 
   implicit none
 

@@ -4,12 +4,12 @@ program sim2d_gc_hex_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_constants
-  use euler_2d_hex
-  use sll_hexagonal_meshes
-  use hex_poisson
-  use pivotbande
-  use sll_box_splines
+  use sll_m_constants
+  use sll_m_euler_2d_hex
+  use sll_m_hexagonal_meshes
+  use sll_m_hex_poisson
+  use sll_m_pivotbande
+  use sll_m_box_splines
   implicit none
 
   type(sll_hex_mesh_2d),   pointer        :: mesh

@@ -31,9 +31,9 @@ module sll_m_simple_pic_4d_group
 
 ! #include "particle_representation.h"   NEEDED?
 
-  use sll_working_precision
+  use sll_m_working_precision
   use sll_m_simple_pic_4d_particle
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
   use sll_m_remapped_pic_base
   use sll_m_pic_random_initializers, only: sll_pic_4d_random_unweighted_initializer_landau_f0
   use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d

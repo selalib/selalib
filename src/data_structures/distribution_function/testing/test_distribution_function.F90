@@ -2,12 +2,12 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-  use sll_constants
-  use distribution_function
-  use sll_common_coordinate_transformations
-  use sll_cartesian_meshes
+  use sll_m_constants
+  use sll_m_distribution_function
+  use sll_m_common_coordinate_transformations
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_landau_2d_initializer
+  use sll_m_landau_2d_initializer
   use sll_m_cubic_spline_interpolator_1d
   implicit none
  
@@ -54,7 +54,7 @@ program unit_test
   interp_eta2_ptr => interp_eta2
 
 
-  print*, 'initialization of distribution_function'
+  print*, 'initialization of sll_m_distribution_function'
 
   call init_landau%initialize(m,CELL_CENTERED_FIELD,0.001_f64)
   p_init_f => init_landau

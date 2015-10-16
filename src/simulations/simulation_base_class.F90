@@ -1,6 +1,6 @@
 !> @ingroup simulations
 !> Parent class module for simulation
-module sll_simulation_base
+module sll_m_sim_base
   implicit none
 
   ! Basic signature for all simulations. These can be declared, initialized,
@@ -44,4 +44,4 @@ module sll_simulation_base
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-end module sll_simulation_base
+end module sll_m_sim_base

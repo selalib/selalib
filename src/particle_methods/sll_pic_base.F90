@@ -57,7 +57,7 @@ module sll_m_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_scalar( self, i , i_weight) result( r )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
@@ -69,7 +69,7 @@ module sll_m_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_coords( self, i ) result( r )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
@@ -80,7 +80,7 @@ module sll_m_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_array( self, i ) result( r )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
@@ -91,7 +91,7 @@ module sll_m_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_set_coords( self, i, x )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
@@ -102,7 +102,7 @@ module sll_m_pic_base
 !----------------------------------------------------------------------------
   abstract interface
    subroutine i_set_scalar( self, i, x )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
@@ -113,7 +113,7 @@ module sll_m_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_set_array( self, i, x )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i

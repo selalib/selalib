@@ -1,6 +1,6 @@
 !> @ingroup splines
 !> Contains bsplines implementation
-module sll_bsplines
+module sll_m_bsplines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -1939,4 +1939,4 @@ sll_real64, intent(out) :: y(:,:)
 
 end subroutine interpolate_array_x2_derivatives_2d
 
-end module sll_bsplines
+end module sll_m_bsplines

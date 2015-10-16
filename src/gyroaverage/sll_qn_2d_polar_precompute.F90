@@ -4,12 +4,12 @@ module sll_m_qn_2d_polar_precompute
 #include "sll_assert.h"
 !#include "sll_field_2d.h"
 
-  use sll_fft
-  use sll_tridiagonal
-  use sll_constants
-  use sll_boundary_condition_descriptors
-  use sll_timer
-  use sll_qn_2d_polar
+  use sll_m_fft
+  use sll_m_tridiagonal
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
+  use sll_m_timer
+  use sll_m_qn_2d_polar
 
   implicit none
 

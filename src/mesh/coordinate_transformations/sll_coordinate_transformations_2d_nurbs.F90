@@ -17,13 +17,13 @@ module sll_m_coordinate_transformations_2d_nurbs
 #include "sll_assert.h"
 #include "sll_file_io.h"
 #include "sll_constants.h"
-  use sll_xdmf
-  use sll_meshes_base
-  use sll_cartesian_meshes
+  use sll_m_xdmf
+  use sll_m_meshes_base
+  use sll_m_cartesian_meshes
   use sll_m_cubic_spline_interpolator_2d
-  use sll_gnuplot
+  use sll_m_gnuplot
   use sll_m_interpolators_2d_base
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_deboor_splines_2d
 
   implicit none

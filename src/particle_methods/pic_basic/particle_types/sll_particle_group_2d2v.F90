@@ -8,7 +8,7 @@ module sll_m_particle_group_2d2v
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_working_precision
+  use sll_m_working_precision
   use sll_m_pic_base
 
   implicit none

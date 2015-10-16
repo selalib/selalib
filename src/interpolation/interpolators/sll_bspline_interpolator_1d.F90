@@ -26,7 +26,7 @@ module sll_m_bspline_interpolator_1d
 
 #define interpo interpolator
 
-use sll_bsplines
+use sll_m_bsplines
 use sll_m_interpolators_1d_base
 
 implicit none

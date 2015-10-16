@@ -16,12 +16,12 @@
 !**************************************************************
 
 
-module sll_sparse_matrix_mp_module
+module sll_m_sparse_matrix_mp
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   
-  use sll_sparse_matrix_module
+  use sll_m_sparse_matrix
   
   implicit none
    
@@ -389,4 +389,4 @@ contains
       
       
       
-end module sll_sparse_matrix_mp_module
+end module sll_m_sparse_matrix_mp

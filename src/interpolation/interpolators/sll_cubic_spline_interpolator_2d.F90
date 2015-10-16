@@ -26,7 +26,7 @@ module sll_m_cubic_spline_interpolator_2d
 #include "sll_memory.h"
 
 use sll_m_interpolators_2d_base
-use sll_cubic_splines
+use sll_m_cubic_splines
 implicit none
 private
   

@@ -1,6 +1,6 @@
 !*****************************************************************************
 !> @brief
-!> sll_box_splines unit test
+!> sll_m_box_splines unit test
 !> @author
 !> Laura S. Mendoza
 !*****************************************************************************
@@ -12,10 +12,10 @@ program test_box_splines_derivatives
 #include "sll_assert.h"
 #include "sll_boundary_condition_descriptors.h"
 
-  use sll_hexagonal_meshes, only : &
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d, &
        new_hex_mesh_2d
-  use sll_box_splines, only : &
+  use sll_m_box_splines, only : &
        sll_box_spline_2d, &
        new_box_spline_2d, &
        boxspline_x1_derivative, &

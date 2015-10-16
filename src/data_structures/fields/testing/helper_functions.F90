@@ -10,7 +10,7 @@ contains
 
  ! ------------->FUNCTION PERIODIC- PERIODIC
 function test_function_perper( eta1, eta2, params ) result(res)
-   use sll_constants
+   use sll_m_constants
   real(8) :: res
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
@@ -20,7 +20,7 @@ function test_function_perper( eta1, eta2, params ) result(res)
 end function test_function_perper
 
 function test_function_perper_der1( eta1, eta2, params) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -30,7 +30,7 @@ function test_function_perper_der1( eta1, eta2, params) result(res)
 end function test_function_perper_der1
 
 function test_function_perper_der2( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -42,7 +42,7 @@ end function test_function_perper_der2
 
  ! ------------->FUNCTION PERIODIC- DIRICHLET
 function test_function_perdir( eta1, eta2, params) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -52,7 +52,7 @@ function test_function_perdir( eta1, eta2, params) result(res)
 end function test_function_perdir
 
 function test_function_perdir_der1( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -62,7 +62,7 @@ function test_function_perdir_der1( eta1, eta2, params ) result(res)
 end function test_function_perdir_der1
 
 function test_function_perdir_der2( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -73,7 +73,7 @@ end function test_function_perdir_der2
 
 ! ------------->FUNCTION DIRICHLET- PERIODIC
 function test_function_dirper( eta1, eta2, params) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -83,7 +83,7 @@ function test_function_dirper( eta1, eta2, params) result(res)
 end function test_function_dirper
 
 function test_function_dirper_der1( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -93,7 +93,7 @@ function test_function_dirper_der1( eta1, eta2, params ) result(res)
 end function test_function_dirper_der1
 
 function test_function_dirper_der2( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -107,7 +107,7 @@ end function test_function_dirper_der2
 
 
 function test_function_dirdir( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -117,7 +117,7 @@ function test_function_dirdir( eta1, eta2, params ) result(res)
 end function test_function_dirdir
 
 function test_function_dirdir_der1( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -127,7 +127,7 @@ function test_function_dirdir_der1( eta1, eta2, params ) result(res)
 end function test_function_dirdir_der1
 
 function test_function_dirdir_der2( eta1, eta2, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1

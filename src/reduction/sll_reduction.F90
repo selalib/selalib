@@ -1,15 +1,15 @@
-module sll_reduction_module
+module sll_m_reduction
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
 
-use sll_cartesian_meshes
+use sll_m_cartesian_meshes
 implicit none
 
   abstract interface
      function sll_integration_discrete_1d( data, Npts, delta, params ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64                                  :: res
        sll_real64,dimension(:), intent(in)         :: data
        sll_int32, intent(in)                       :: Npts
@@ -612,4 +612,4 @@ contains
 
 
 
-end module sll_reduction_module
+end module sll_m_reduction

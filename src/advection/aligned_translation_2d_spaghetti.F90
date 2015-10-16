@@ -31,8 +31,8 @@ program aligned_translation_2d
 #include "sll_memory.h"
 use sll_m_advection_1d_base
 use sll_m_advection_1d_periodic
-use lagrange_interpolation
-use sll_fcisl_module
+use sll_m_lagrange_interpolation
+use sll_m_fcisl
 use sll_m_advection_2d_oblic
 
 implicit none
@@ -315,7 +315,7 @@ implicit none
 !    nnodes_x2, &
 !    array_name, time)    
 !    !mesh_2d)
-!    use sll_xdmf
+!    use sll_m_xdmf
 !    use sll_hdf5_io
 !    sll_int32 :: file_id
 !    sll_int32 :: error

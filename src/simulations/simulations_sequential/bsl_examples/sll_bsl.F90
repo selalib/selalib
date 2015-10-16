@@ -1,5 +1,5 @@
 
-module sll_bsl
+module sll_m_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -404,4 +404,4 @@ boundary2_type = dist_func_4D%field%descriptor_1%boundary2_type
 
 end subroutine bsl_step_4d
 
-end module sll_bsl
+end module sll_m_bsl

@@ -1,5 +1,5 @@
 program guiding_center_2d_cartesian
-  use sll_simulation_2d_guiding_center_cartesian_module
+  use sll_m_sim_2d_guiding_center_cartesian
   implicit none
   class(sll_simulation_base_class), pointer :: sim
   character(len=256) :: filename

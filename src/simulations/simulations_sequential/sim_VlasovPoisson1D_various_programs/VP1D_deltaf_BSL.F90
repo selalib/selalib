@@ -11,17 +11,17 @@ program VP1d_deltaf
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 
-  use sll_constants
-  use sll_cartesian_meshes
+  use sll_m_constants
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
+  use sll_m_common_coordinate_transformations
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_periodic_interpolator_1d
-  use periodic_interp_module
-  use sll_landau_2d_initializer
-  use sll_tsi_2d_initializer
-  use distribution_function
-  use sll_poisson_1d_periodic
+  use sll_m_periodic_interp
+  use sll_m_landau_2d_initializer
+  use sll_m_tsi_2d_initializer
+  use sll_m_distribution_function
+  use sll_m_poisson_1d_periodic
   use omp_lib
   implicit none
 
@@ -220,7 +220,7 @@ program VP1d_deltaf
   open(unit = eapp_diag, file = 'eappdiag.dat')
   open(unit = adr_diag, file = 'adrdiag.dat') 
 
-  ! initialization of distribution_function
+  ! initialization of sll_m_distribution_function
   call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, &
        is_delta_f)
   call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, &

@@ -102,7 +102,7 @@
 !!
 !!
 !<
-module sll_common_coordinate_transformations
+module sll_m_common_coordinate_transformations
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
@@ -2314,5 +2314,5 @@ contains
   end function D_sharped_Geo_jac
         
 
-end module sll_common_coordinate_transformations
+end module sll_m_common_coordinate_transformations
 

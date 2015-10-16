@@ -9,7 +9,7 @@ module sll_m_kernel_smoother_spline_1d
 
   use sll_m_kernel_smoother_base
   use sll_m_pic_base
-  use sll_arbitrary_degree_splines
+  use sll_m_arbitrary_degree_splines
   
   implicit none
   private

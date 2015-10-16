@@ -44,12 +44,12 @@
 !> The object's resources can be liberated by a call to 'sll_delete()'.
 
 
-module sll_coordinate_transformation_multipatch_module
+module sll_m_coordinate_transformation_multipatch
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-  use sll_cartesian_meshes_multipatch
+  use sll_m_cartesian_meshes_multipatch
   use sll_m_coordinate_transformations_2d_nurbs
   implicit none
 
@@ -783,4 +783,4 @@ contains
     res=mp%local_to_global_ind(patch+1)%array(splines_local,num_cell)
   end function get_spline_local_to_global_index_Tmp2d
 
-end module sll_coordinate_transformation_multipatch_module
+end module sll_m_coordinate_transformation_multipatch

@@ -24,9 +24,9 @@ module sll_m_derivative_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
-use sll_fcisl_module
+use sll_m_fcisl
 
 implicit none
 

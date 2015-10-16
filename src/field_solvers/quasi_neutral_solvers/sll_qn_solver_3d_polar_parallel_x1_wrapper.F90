@@ -15,19 +15,19 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> wrapper around sll_qn_solver_3d_polar_parallel_x1_module
+!> wrapper around sll_m_qn_solver_3d_polar_parallel_x1
 !> for abstract class flexibility purposes
 !> here it is a specification of 3d poisson solver
 
-module sll_qn_solver_3d_polar_parallel_x1_wrapper_module
+module sll_m_qn_solver_3d_polar_parallel_x1_wrapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_boundary_condition_descriptors
-  use sll_remapper, only: &
+  use sll_m_boundary_condition_descriptors
+  use sll_m_remapper, only: &
     layout_2D
   use sll_m_poisson_3d_base
-  use sll_qn_solver_3d_polar_parallel_x1_module, only: &
+  use sll_m_qn_solver_3d_polar_parallel_x1, only: &
     sll_qn_solver_3d_polar_parallel_x1, &
     new, &
     solve_qns3d_polar
@@ -185,4 +185,4 @@ contains
 
 
 
-end module sll_qn_solver_3d_polar_parallel_x1_wrapper_module
+end module sll_m_qn_solver_3d_polar_parallel_x1_wrapper

@@ -1,9 +1,9 @@
 program unit_test_2d
 #include "sll_working_precision.h"
-  use sll_coordinate_transformation_multipatch_module
-  use sll_distribution_function_4d_multipatch_module
-  use sll_collective
-  use sll_common_array_initializers_module
+  use sll_m_coordinate_transformation_multipatch
+  use sll_m_distribution_function_4d_multipatch
+  use sll_m_collective
+  use sll_m_common_array_initializers
   implicit none
 
   type(sll_coordinate_transformation_multipatch_2d)      :: t_mp

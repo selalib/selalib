@@ -11,11 +11,11 @@ program simple_pic_4d_group_tester
 #include "sll_assert.h"
 
   use sll_m_simple_pic_4d_group
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
 
   implicit none
 
-! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 type(sll_cartesian_mesh_2d),    pointer     :: mesh_2d
 type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 

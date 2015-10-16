@@ -19,12 +19,12 @@
 !> @brief Sparse matrix linear solver utilities
 !> @details This part of selalib is derived from SPM library
 !> developed by Ahmed Ratnani (http://ratnani.org/spm_doc/html/)
-module sll_sparse_matrix_module
+module sll_m_sparse_matrix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use qsort_partition
+use sll_m_qsort_partition
 
 implicit none
 
@@ -670,4 +670,4 @@ this%num_nz = l
 return
 end subroutine uni2D
 
-end module sll_sparse_matrix_module
+end module sll_m_sparse_matrix

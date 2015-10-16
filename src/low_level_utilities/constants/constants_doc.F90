@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup constants sll_constants 
+!> @defgroup constants sll_m_constants 
 !> @brief
 !> Some physical and mathematical constants.
 !> @details
@@ -18,12 +18,12 @@
 !> @author Pierre Navaro
 !>
 !> <b> Headers file available </b>
-!>  - sll_constants.h
+!>  - sll_m_constants.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_constants
+!>  - sll_m_constants
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_constants.h' \endcode
+!> - Header file : \code #include 'sll_m_constants.h' \endcode
 !> - Link with   <code>-lsll_constants</code>

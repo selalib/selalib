@@ -10,11 +10,11 @@ module sll_m_scalar_field_2d
 #include "sll_utilities.h"
 
 use sll_m_scalar_field_2d_base
-use sll_constants
+use sll_m_constants
 use sll_m_interpolators_2d_base
 use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_boundary_condition_descriptors
-use sll_gnuplot
+use sll_m_boundary_condition_descriptors
+use sll_m_gnuplot
 
 implicit none
 
@@ -114,7 +114,7 @@ end type sll_scalar_field_2d_discrete_ptr
 abstract interface
 
   function two_var_parametrizable_function( eta1, eta2, params )
-    use sll_working_precision
+    use sll_m_working_precision
     sll_real64 :: two_var_parametrizable_function
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -126,7 +126,7 @@ end interface
 abstract interface
 
   function scalar_function_2d( eta1, eta2 )
-    use sll_working_precision
+    use sll_m_working_precision
     sll_real64 :: scalar_function_2d
     sll_real64, intent(in)  :: eta1
     sll_real64, intent(in)  :: eta2

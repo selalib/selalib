@@ -2,7 +2,7 @@ module sll_m_lagrange_interpolation_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 
 implicit none
 
@@ -166,12 +166,12 @@ end if
 end subroutine interpolate_array_values 
  
  
-subroutine delete_lagrange_interpolation_1D( lagrange_interpolation )
- type(sll_lagrange_interpolation_1D), pointer :: lagrange_interpolation
+subroutine delete_lagrange_interpolation_1D( sll_m_lagrange_interpolation )
+ type(sll_lagrange_interpolation_1D), pointer :: sll_m_lagrange_interpolation
  sll_int32                    :: ierr
-   SLL_ASSERT( associated(lagrange_interpolation) )
-   SLL_DEALLOCATE( lagrange_interpolation%wj, ierr )
-   SLL_DEALLOCATE( lagrange_interpolation, ierr )
+   SLL_ASSERT( associated(sll_m_lagrange_interpolation) )
+   SLL_DEALLOCATE( sll_m_lagrange_interpolation%wj, ierr )
+   SLL_DEALLOCATE( sll_m_lagrange_interpolation, ierr )
 end subroutine delete_lagrange_interpolation_1D
 
 end module sll_m_lagrange_interpolation_1d

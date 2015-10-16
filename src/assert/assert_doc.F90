@@ -1,4 +1,4 @@
-!> @defgroup assert sll_assert
+!> @defgroup assert sll_m_assert
 !!
 !! @authors
 !! Selalib team <br>
@@ -8,14 +8,14 @@
 !! Provides macro `SLL_ASSERT(x)`
 !!
 !! <h4> Header files available </h4>
-!!  + *sll_assert.h*
+!!  + *sll_m_assert.h*
 !!
 !! <h4> How to use it </h4>
 !!  + Include header file:
-!!    \code #include "sll_assert.h" \endcode
+!!    \code #include "sll_m_assert.h" \endcode
 !!  + Add dependency to *CMakeLists.txt*:
 !!    \code
-!!      target_link_libraries( <my_lib/exec> sll_assert ... )
+!!      target_link_libraries( <my_lib/exec> sll_m_assert ... )
 !!    \endcode
 !!
 !! <h4> Examples </h4>

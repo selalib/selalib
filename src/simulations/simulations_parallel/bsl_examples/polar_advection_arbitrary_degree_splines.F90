@@ -4,7 +4,7 @@
 ! - Initial field is a gaussain function
 !
 
-program polar_advection
+program sll_m_polar_advection
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_interpolators.h"
@@ -108,4 +108,4 @@ do itime = 1, nbiter
 end do
 
 
-end program polar_advection
+end program sll_m_polar_advection

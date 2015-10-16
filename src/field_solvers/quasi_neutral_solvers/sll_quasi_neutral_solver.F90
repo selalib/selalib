@@ -14,13 +14,13 @@
 #define NUMP_X2    2
 #define NUMP_X3    1
   
-  module sll_quasi_neutral_solver
-    use sll_collective
+  module sll_m_quasi_neutral_solver
+    use sll_m_collective
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 !#include "sll_mesh_types.h"
 #include "sll_remap.h"
-    use sll_constants
+    use sll_m_constants
     implicit none
     
     type quasi_neutral_plan
@@ -613,6 +613,6 @@
       enddo
     end subroutine evalsplgrid
     
-  end module sll_quasi_neutral_solver
+  end module sll_m_quasi_neutral_solver
   
 

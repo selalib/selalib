@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup CSL sll_csl 
+!> @defgroup CSL sll_m_csl 
 !> @brief 
 !> Description of csl library (72 characters)
 !> @author Selalib team 
@@ -18,16 +18,16 @@
 !> Long description of  csl, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
-!>  - sll_csl.h
+!>  - sll_m_csl.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_csl
+!>  - sll_m_csl
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_csl.h' \endcode
+!> - Header file : \code #include 'sll_m_csl.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_csl </code>
+!> - Add <code> use sll_m_csl </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library

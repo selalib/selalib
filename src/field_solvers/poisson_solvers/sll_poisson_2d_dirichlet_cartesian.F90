@@ -12,14 +12,14 @@
 !> conditions.
 !**************************************************************************
 
-module sll_poisson_2d_dirichlet_cartesian
+module sll_m_poisson_2d_dirichlet_cartesian
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-!  use sll_fft
-  use sll_constants
+!  use sll_m_fft
+  use sll_m_constants
   implicit none
   private
 
@@ -222,5 +222,5 @@ contains
 
 
 
-end module sll_poisson_2d_dirichlet_cartesian
+end module sll_m_poisson_2d_dirichlet_cartesian
 #endif  /* DOXYGEN_SHOULD_SKIP_THIS */

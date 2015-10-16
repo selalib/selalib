@@ -1,11 +1,11 @@
 !> Initializes a Gaussian of the form 
 !> exp -((x-xc)**2/(2*sigma_x)**2 + (y-yc)**2/(2*sigma_y)**2)
 !--------------------------------------------
-module sll_gaussian_2d_initializer
+module sll_m_gaussian_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_constants
-  use sll_scalar_field_initializers_base
+  use sll_m_constants
+  use sll_m_scalar_field_initializers_base
   implicit none
 
   type, extends(scalar_field_2d_initializer_base) :: init_gaussian_2d
@@ -71,7 +71,7 @@ contains
        num_pts1 = mesh%num_cells1 + 1
        num_pts2 = mesh%num_cells2 + 1
     else
-       print*, 'sll_gaussian_2d_initializer: Pb with data_position', init_obj%data_position
+       print*, 'sll_m_gaussian_2d_initializer: Pb with data_position', init_obj%data_position
     end if
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
     SLL_ASSERT( size(data_out,2) .ge. num_pts2 )
@@ -102,4 +102,4 @@ contains
     end if
   end subroutine
 
-end module sll_gaussian_2d_initializer
+end module sll_m_gaussian_2d_initializer

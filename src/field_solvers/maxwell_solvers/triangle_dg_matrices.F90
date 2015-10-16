@@ -6,7 +6,7 @@
 !
 !  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
 !
-module triangle_dg_matrices 
+module sll_m_triangle_dg_matrices 
 
 implicit none
 private
@@ -293,4 +293,4 @@ contains
    return
 end subroutine AssMatElem
 
-end module triangle_dg_matrices
+end module sll_m_triangle_dg_matrices

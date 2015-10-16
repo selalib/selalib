@@ -35,7 +35,7 @@ module sll_m_simple_pic_4d_particle
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
 
   implicit none
 

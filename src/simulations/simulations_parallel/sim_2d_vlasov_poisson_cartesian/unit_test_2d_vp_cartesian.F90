@@ -8,11 +8,11 @@ program vlasov_poisson_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-use sll_simulation_2d_vlasov_poisson_cartesian
-use sll_common_array_initializers_module
-use sll_collective
-use sll_timer
-use sll_constants
+use sll_m_sim_2d_vlasov_poisson_cartesian
+use sll_m_common_array_initializers
+use sll_m_collective
+use sll_m_timer
+use sll_m_constants
 implicit none
 
 class(sll_simulation_2d_vlasov_poisson_cart), pointer :: sim

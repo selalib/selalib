@@ -16,16 +16,16 @@
 !**************************************************************
 
 !> @file sll_cartesian_multipatch.F90
-!> @defgroup meshes_multipatch sll_cartesian_meshes_multipatch
+!> @defgroup meshes_multipatch sll_m_cartesian_meshes_multipatch
 !> @brief basic types to describe a collection of logical meshes
 !> associated with the decomposition of a physical region with the 
 !> multipatch approach.
 
-module sll_cartesian_meshes_multipatch
+module sll_m_cartesian_meshes_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
   implicit none
 
   !> @brief basic logical mesh multipatch object.
@@ -156,4 +156,4 @@ MAKE_ACCESS_FUNC_MULTIPATCH(get_delta_eta2_lmmp2d,OBJECT,delta_eta2,sll_real64)
     SLL_DEALLOCATE(mp, ierr)
   end subroutine delete_logical_mesh_lmmp2d
 
-end module sll_cartesian_meshes_multipatch
+end module sll_m_cartesian_meshes_multipatch

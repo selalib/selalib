@@ -1,6 +1,6 @@
 !> This fortran module is dedicated to advection on
 !> triangular mesh.
-module sll_advection_2d_tri_mesh
+module sll_m_advection_2d_tri_mesh
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
@@ -8,8 +8,8 @@ module sll_advection_2d_tri_mesh
 #include "sll_assert.h"
 #include "sll_boundary_condition_descriptors.h"
 
-use sll_meshes_base
-use sll_triangular_meshes
+use sll_m_meshes_base
+use sll_m_triangular_meshes
 
 implicit none
 
@@ -625,4 +625,4 @@ f_in = adv%f_out
 
 end subroutine advection_2d
 
-end module sll_advection_2d_tri_mesh
+end module sll_m_advection_2d_tri_mesh

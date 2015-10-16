@@ -5,11 +5,11 @@
 
 program dk_hybrid_4d
 #include "sll_working_precision.h"
-  use sll_simulation_4d_dk_hybrid_module
-  use sll_collective
-  use sll_constants
-  use sll_cartesian_meshes
-  use sll_common_coordinate_transformations
+  use sll_m_sim_4d_dk_hybrid
+  use sll_m_collective
+  use sll_m_constants
+  use sll_m_cartesian_meshes
+  use sll_m_common_coordinate_transformations
   use sll_m_coordinate_transformations_2d
   implicit none
 

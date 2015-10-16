@@ -30,7 +30,7 @@ module sll_m_cubic_spline_interpolator_1d
 #include "sll_assert.h"
 
 use sll_m_interpolators_1d_base
-use sll_cubic_splines
+use sll_m_cubic_splines
 
 implicit none
 private

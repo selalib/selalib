@@ -1,4 +1,4 @@
-module sll_simulation_4d_qns_general_module
+module sll_m_sim_4d_qns_general
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -6,17 +6,17 @@ module sll_simulation_4d_qns_general_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-use sll_collective
+use sll_m_collective
 use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
-use sll_simulation_base
-use sll_parallel_array_initializer_module
-use sll_gnuplot_parallel
-use sll_general_coordinate_elliptic_solver_module
+use sll_m_sim_base
+use sll_m_parallel_array_initializer
+use sll_m_gnuplot_parallel
+use sll_m_general_coordinate_elliptic_solver
 use sll_m_scalar_field_2d_base
 use sll_m_scalar_field_2d
 use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_timer
+use sll_m_timer
 
 implicit none
 
@@ -1576,7 +1576,7 @@ end subroutine unload_buffer
 
 subroutine writeHDF5_diag_qns( sim )
 
-use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
+use sll_m_hdf5_io_serial, only: sll_hdf5_file_create, &
   sll_hdf5_write_array_1d, sll_hdf5_file_close
 
 class(sll_simulation_4d_qns_general), intent(inout) :: sim
@@ -1973,4 +1973,4 @@ end do
   
 end subroutine compute_values_jacobian_and_mesh_points
 
-end module sll_simulation_4d_qns_general_module
+end module sll_m_sim_4d_qns_general

@@ -6,12 +6,12 @@
 program vlasov_ampere_2d
 #include "sll_working_precision.h"
 
-use gaussian
-use sll_collective
-use sll_timer
-use sll_constants
-use sll_parallel_array_initializer_module
-use sll_simulation_2d_vlasov_ampere_cartesian
+use sll_m_gaussian
+use sll_m_collective
+use sll_m_timer
+use sll_m_constants
+use sll_m_parallel_array_initializer
+use sll_m_sim_2d_vlasov_ampere_cartesian
 implicit none
 
 class(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim

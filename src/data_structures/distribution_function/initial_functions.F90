@@ -1,6 +1,6 @@
-module initial_distribution_functions
+module sll_m_initial_distribution_functions
 #include "sll_working_precision.h"
-use sll_constants
+use sll_m_constants
   implicit none
   
 contains 
@@ -9,7 +9,7 @@ contains
     sll_real64 :: landau
     sll_real64, parameter :: eps = 0.01_f64
     
-    ! sll_kx is defined in the sll_constants module. 
+    ! sll_kx is defined in the sll_m_constants module. 
     ! It is set at the mesh initialization 
     landau = ( 1 + eps * cos(sll_kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*v*v)
   end function landau
@@ -22,7 +22,7 @@ contains
     sll_real64, parameter :: xi = 0.90_f64
     sll_real64, parameter :: v0 = 2.4_f64
     sll_real64 :: vv
-    ! sll_kx is defined in the sll_constants module. 
+    ! sll_kx is defined in the sll_m_constants module. 
     ! It is set at the mesh initialization 
     vv = v*v
     fval=(1+eps*((cos(2*sll_kx*x)+cos(3*sll_kx*x))/1.2_f64+cos(sll_kx*x)))* &
@@ -43,7 +43,7 @@ contains
   ! gcc 4.7.0 in the unit_test because he does'nt like pointer to elemental 
   ! function.
 
-  pure function gaussian(x,v) result(fval)
+  pure function sll_m_gaussian(x,v) result(fval)
     sll_real64, intent(in) :: x, v
     sll_real64 :: fval
     ! local variables
@@ -54,6 +54,6 @@ contains
     xx = (x - xoffset )**2
     vv = (v - voffset )**2
     fval =  exp(-0.5_f64*(xx+vv)*40.)
-  end function gaussian
+  end function sll_m_gaussian
 
 end module

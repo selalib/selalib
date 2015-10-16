@@ -1,4 +1,4 @@
-module qsort_partition
+module sll_m_qsort_partition
 
 contains
 
@@ -55,4 +55,4 @@ subroutine partition(A, marker)
 
 end subroutine partition
 
-end module qsort_partition
+end module sll_m_qsort_partition

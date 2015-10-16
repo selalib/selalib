@@ -2,8 +2,8 @@ program particle_fourier_modes_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-    use sll_constants
-    use sll_timer
+    use sll_m_constants
+    use sll_m_timer
     
     implicit none
 

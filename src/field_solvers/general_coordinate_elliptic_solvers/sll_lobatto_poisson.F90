@@ -1,13 +1,13 @@
-module sll_lobatto_poisson
+module sll_m_lobatto_poisson
 
 #include "sll_working_precision.h"
 
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use map_function_module, only: set_map_function
-  use lobalap
-  use sll_dg_fields
+  use sll_m_common_coordinate_transformations
+  use sll_m_map_function, only: set_map_function
+  use sll_m_lobalap
+  use sll_m_dg_fields
 
   implicit none
   
@@ -80,4 +80,4 @@ subroutine delete_lobatto_poisson(this)
 
 end subroutine delete_lobatto_poisson
 
-end module sll_lobatto_poisson
+end module sll_m_lobatto_poisson

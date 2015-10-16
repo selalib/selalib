@@ -54,7 +54,7 @@
 !>    make the call like: 
 !>          solve_cyclic_tridiag(cts, ipiv, b, n, b)
 !>
-module sll_tridiagonal
+module sll_m_tridiagonal
 #include "sll_working_precision.h"
 implicit none
 
@@ -670,4 +670,4 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    ! CALL solve_cyclic_tridiag( cts, ipiv, b, n, x )
    !END SUBROUTINE solve_tridiag
 
-end module sll_tridiagonal
+end module sll_m_tridiagonal

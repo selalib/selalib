@@ -28,15 +28,15 @@
 !> coefficients and interpolate data at a given point or collections of points.
 !> Derivatives can also be interpolated. After usage, resources allocated
 !> for the spline object can be liberated by a call to 'sll_delete()'.
-!> More details by following the link sll_cubic_splines
+!> More details by following the link sll_m_cubic_splines
 
-module sll_cubic_splines
+module sll_m_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-  use sll_tridiagonal  ! Used for 'slow' algorithm implementation
-  use sll_boundary_condition_descriptors
+  use sll_m_tridiagonal  ! Used for 'slow' algorithm implementation
+  use sll_m_boundary_condition_descriptors
   implicit none
   private
   
@@ -66,7 +66,7 @@ module sll_cubic_splines
      logical SLL_PRIV                           :: compute_slope_R
      !> Data required for the 'slow' algorithm based on a standard
      !> tridiagonal system solution. Note that we use the same nomenclature
-     !> as in the sll_tridiagonal module.
+     !> as in the sll_m_tridiagonal module.
      logical SLL_PRIV                           :: use_fast_algorithm
      !> Tridiagonal solver data
      sll_real64, dimension(:), pointer SLL_PRIV :: a => null()
@@ -2673,5 +2673,5 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
 
 
 #undef NUM_TERMS
-end module sll_cubic_splines
+end module sll_m_cubic_splines
 

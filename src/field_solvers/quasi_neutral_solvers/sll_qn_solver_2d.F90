@@ -15,15 +15,15 @@
 !                                  
 !***************************************************************************
 
-module sll_qn_solver_2d
+module sll_m_qn_solver_2d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-  use sll_constants
-  use sll_fft
-  use sll_tridiagonal
-  use sll_boundary_condition_descriptors
+  use sll_m_constants
+  use sll_m_fft
+  use sll_m_tridiagonal
+  use sll_m_boundary_condition_descriptors
 
   implicit none
 
@@ -239,5 +239,5 @@ contains
   end subroutine neumann_matrix
 
 
-end module sll_qn_solver_2d
+end module sll_m_qn_solver_2d
 

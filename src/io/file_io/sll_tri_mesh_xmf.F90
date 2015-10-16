@@ -1,4 +1,4 @@
-module sll_tri_mesh_xmf
+module sll_m_tri_mesh_xmf
 implicit none
 
 !*****************************************
@@ -55,4 +55,4 @@ write(xmf,"(a)") "</Xdmf>"
 
 end subroutine write_tri_mesh_xmf
 
-end module sll_tri_mesh_xmf
+end module sll_m_tri_mesh_xmf

@@ -3,8 +3,8 @@
 program test_pastix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_collective
-use sll_pastix 
+use sll_m_collective
+use sll_m_pastix 
 
 implicit none
 

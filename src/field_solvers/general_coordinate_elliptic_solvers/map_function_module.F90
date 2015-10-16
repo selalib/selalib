@@ -1,4 +1,4 @@
-module map_function_module
+module sll_m_map_function
 #include "sll_coordinate_transformations.h"
 
 class(sll_coordinate_transformation_2d_base),pointer :: tau
@@ -38,5 +38,5 @@ contains
 
   end subroutine map
 
-end module map_function_module
+end module sll_m_map_function
 

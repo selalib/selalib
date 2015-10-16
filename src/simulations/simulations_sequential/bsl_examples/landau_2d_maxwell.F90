@@ -6,10 +6,10 @@ program landau_4d
 #include "sll_poisson_solvers.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_constants
+use sll_m_constants
 use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
-use sll_utilities, only: int2string
+use sll_m_utilities, only: int2string
 use sll_m_maxwell_2d_pstd
 
 implicit none

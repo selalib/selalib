@@ -7,12 +7,12 @@
 
 program gc_2d_general
 #include "sll_working_precision.h"
-  use sll_simulation_2d_guiding_center_generalized_coords_module
-  use sll_constants
-  use sll_cartesian_meshes
+  use sll_m_sim_2d_guiding_center_generalized_coords
+  use sll_m_constants
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
   use sll_m_scalar_field_2d
   use sll_m_scalar_field_2d_base
   use sll_m_arbitrary_degree_spline_interpolator_2d
@@ -203,7 +203,7 @@ end function func_zero
 
 
 function func_khp1( x, y, params ) result(res)
-  use sll_constants
+  use sll_m_constants
   real(8), intent(in) :: x
   real(8), intent(in) :: y
   real(8) :: landau_mode,landau_alpha

@@ -1,8 +1,8 @@
 program test_ode_solvers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use ode_solvers
-  use sll_constants
+  use sll_m_ode_solvers
+  use sll_m_constants
 
   implicit none
   

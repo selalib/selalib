@@ -1,9 +1,9 @@
-module hex_poisson
+module sll_m_hex_poisson
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_hexagonal_meshes, only : &
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d, &
        new_hex_mesh_2d
   implicit none
@@ -522,4 +522,4 @@ subroutine compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
 
   endfunction value_if_inside_phi
 
-end module hex_poisson
+end module sll_m_hex_poisson

@@ -26,10 +26,10 @@ module sll_m_pic_random_initializers
 #include "sll_assert.h"
 !#include "particle_representation.h"
 
-  use sll_constants, only: sll_pi
-  use sll_cartesian_meshes
+  use sll_m_constants, only: sll_pi
+  use sll_m_cartesian_meshes
   use sll_m_remapped_pic_base
-  use gaussian
+  use sll_m_gaussian
 
   implicit none
   

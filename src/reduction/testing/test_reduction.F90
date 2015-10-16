@@ -2,7 +2,7 @@ program test_reduction
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-use sll_reduction_module
+use sll_m_reduction
 implicit none
 
   sll_real64, dimension(:,:,:,:), allocatable   :: data_4d

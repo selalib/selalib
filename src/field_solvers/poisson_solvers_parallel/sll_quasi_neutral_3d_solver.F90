@@ -21,11 +21,11 @@ module sll_m_quasi_neutral_3d_solver
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-!use sll_boundary_condition_descriptors
+!use sll_m_boundary_condition_descriptors
 use sll_m_poisson_3d_base
 use sll_m_poisson_2d_base
-use sll_remapper
-use sll_collective
+use sll_m_remapper
+use sll_m_collective
 
 implicit none
 

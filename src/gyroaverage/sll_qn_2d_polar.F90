@@ -17,19 +17,19 @@
 
 
 
-module sll_qn_2d_polar
+module sll_m_qn_2d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !#include "sll_field_2d.h"
 
-  use sll_fft
-  use sll_tridiagonal
-  use sll_constants
-  use sll_boundary_condition_descriptors
-  use sll_timer
-  use sll_gnuplot
-  use sll_gyroaverage_utilities
+  use sll_m_fft
+  use sll_m_tridiagonal
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
+  use sll_m_timer
+  use sll_m_gnuplot
+  use sll_m_gyroaverage_utilities
 
   implicit none
 
@@ -1951,4 +1951,4 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
   
 
 
-end module sll_qn_2d_polar
+end module sll_m_qn_2d_polar

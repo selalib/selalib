@@ -13,10 +13,10 @@ module sll_m_sim_sl_vp_2d2v_cart_fullsparsegrid
 #include "sll_constants.h"
 #include "sll_poisson_solvers.h"
 
-  use sparse_grid_2d
-  use sparse_grid_4d
-  use sll_poisson_2d_sparse_grid_fft
-  use sll_simulation_base
+  use sll_m_sparse_grid_2d
+  use sll_m_sparse_grid_4d
+  use sll_m_poisson_2d_sparse_grid_fft
+  use sll_m_sim_base
 
   implicit none
 

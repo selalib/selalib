@@ -1,11 +1,11 @@
 
-module contrib_rho_module
+module sll_m_contrib_rho
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_constants
-  use cubic_non_uniform_splines
+  use sll_m_constants
+  use sll_m_cubic_non_uniform_splines
   !use utils
   implicit none
 contains  
@@ -818,5 +818,5 @@ end function compute_contrib_rho
 
 
 
-end module contrib_rho_module
+end module sll_m_contrib_rho
 

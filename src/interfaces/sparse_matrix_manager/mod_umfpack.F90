@@ -81,7 +81,7 @@
 !! \note One should consider rewriting this module by making use of
 !! the standardized fortran/C interoperability.
 !<
-module mod_umfpack
+module sll_m_umfpack
 #include "sll_working_precision.h"
 
 !-----------------------------------------------------------------------
@@ -296,7 +296,7 @@ module mod_umfpack
  end interface
 
  character(len=*), parameter :: &
-   this_mod_name = 'mod_umfpack'
+   this_mod_name = 'sll_m_umfpack'
 
 !-----------------------------------------------------------------------
 
@@ -350,5 +350,5 @@ contains
 
 !-----------------------------------------------------------------------
 
-end module mod_umfpack
+end module sll_m_umfpack
 

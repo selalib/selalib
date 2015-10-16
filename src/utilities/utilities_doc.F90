@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup utilities sll_utilities 
+!> @defgroup utilities sll_m_utilities 
 !> @brief 
 !> Some numerical low level utilities
 !> @details
@@ -21,10 +21,10 @@
 !> @author Selalib team 
 !>
 !> <b> Headers file available </b>
-!>  - sll_utilities.h
+!>  - sll_m_utilities.h
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_utilities.h' \endcode
+!> - Header file : \code #include 'sll_m_utilities.h' \endcode
 !> - Link with   <code>-lsll_utilities</code>
-!> - Add <code> use sll_utilities </code>
+!> - Add <code> use sll_m_utilities </code>
 !>

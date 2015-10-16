@@ -43,12 +43,12 @@
 !> Module providing data structures and tools to implement domain decompositions.
 !> @author
 !> Klaus Reuter, Max Planck Computing and Data Facility (MPCDF)
-module sll_decomposition
+module sll_m_decomposition
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-   use sll_collective
+   use sll_m_collective
    use mpi
 
    implicit none
@@ -354,4 +354,4 @@ module sll_decomposition
    end subroutine
 
 
-end module sll_decomposition
+end module sll_m_decomposition

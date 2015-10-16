@@ -1,12 +1,12 @@
-module sll_distribution_function_6d_initializer
+module sll_m_distribution_function_6d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_constants
+  use sll_m_constants
 !  use sll_m_mapped_meshes_2d_base
-  use sll_scalar_field_initializers_base
-  use sll_collective
-  use sll_remapper
+  use sll_m_scalar_field_initializers_base
+  use sll_m_collective
+  use sll_m_remapper
   implicit none
 
 
@@ -310,4 +310,4 @@ contains
     end do
   end subroutine compact_6d_field
 
-end module sll_distribution_function_6d_initializer
+end module sll_m_distribution_function_6d_initializer

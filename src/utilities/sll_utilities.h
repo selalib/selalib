@@ -39,10 +39,10 @@
 ! nice to have.
 #define XSTRNG( x ) STRNG( x )
 
-! BYTE_SIZEOF() uses the byte_size, which is defined in sll_utilities.F90. This
+! BYTE_SIZEOF() uses the byte_size, which is defined in sll_m_utilities.F90. This
 ! macro returns the size of 'var' measured in bytes.
 ! INT32_SIZEOF() uses i32, which is defined in the basic numeric types:
-! sll_working_precision.F90. The use of the integer as a yardstick is a
+! sll_m_working_precision.F90. The use of the integer as a yardstick is a
 ! more natural choice in some contexts.
 
 #define BYTE_SIZEOF( var )  size(transfer(var, (/1_byte_size/) ))
@@ -55,8 +55,8 @@
 #include "sll_errors.h"
 !=========================================================================
 
-use sll_utilities
-use fornberg
-use sll_primitives
+use sll_m_utilities
+use sll_m_fornberg
+use sll_m_primitives
 
 #endif

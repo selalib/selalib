@@ -1,4 +1,4 @@
-module sll_hermite_aligned_interpolation_2d_module
+module sll_m_hermite_aligned_interpolation_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -34,4 +34,4 @@ subroutine initialize_hermite_aligned_interpolation_2d( interp )
    
 end subroutine initialize_hermite_aligned_interpolation_2d 
 
-end module sll_hermite_aligned_interpolation_2d_module
+end module sll_m_hermite_aligned_interpolation_2d

@@ -2,13 +2,13 @@
 !  Author: Jakob Ameres, jakob.ameres@tum.de
 !**************************************************************
 
-module sll_pif_fieldsolver
+module sll_m_pif_fieldsolver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-    use sll_constants
+    use sll_m_constants
 implicit none
 
 
@@ -527,4 +527,4 @@ function  diag_dot_matrix_real64( diagonal,matrix)
 end function diag_dot_matrix_real64
  
  
-end module sll_pif_fieldsolver
+end module sll_m_pif_fieldsolver

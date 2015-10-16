@@ -25,15 +25,15 @@ module sll_m_advection_1d_spectral
 #include "sll_utilities.h"
 #include "sll_constants.h"
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
 use sll_m_interpolators_1d_base
 
 #ifdef FFTW_F2003
 #include "sll_fftw.h"
-use fftw3
+use sll_m_fftw3
 #else
-use sll_fft
+use sll_m_fft
 #endif
 
 implicit none

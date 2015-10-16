@@ -4,7 +4,7 @@
   module test_poisson_1d_fd_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
+use sll_m_constants
     sll_real64 :: testfunction_test_mode
 
     contains
@@ -24,9 +24,9 @@ program unit_test_poisson_1d_fd
 #include "sll_assert.h"
 #include "sll_utilities.h"
     use test_poisson_1d_fd_module
-    use sll_poisson_1d_fd
-    use sll_cartesian_meshes
-    use sll_constants
+    use sll_m_poisson_1d_fd
+    use sll_m_cartesian_meshes
+    use sll_m_constants
     implicit none
     integer :: ierr
     sll_int :: idx, jdx

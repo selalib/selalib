@@ -2,7 +2,7 @@
 ! SELALIB
 !-----------------------------------------------------------
 !
-! MODULE: sll_fdistribu4d_dk
+! MODULE: sll_m_fdistribu4d_dk
 !
 !> @author
 !> - Virginie Grandgirard
@@ -15,12 +15,12 @@
 !>
 !>@details
 !-----------------------------------------------------------
-module sll_fdistribu4d_dk
+module sll_m_fdistribu4d_dk
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-  use sll_constants
-  use sll_boundary_condition_descriptors
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
 
   implicit none
 
@@ -282,8 +282,8 @@ module sll_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_r(r_grid,func_r, &
     xgrid_2d,ygrid_2d,func_xy)
-    use sll_cubic_splines
-    use sll_common_coordinate_transformations, only : &
+    use sll_m_cubic_splines
+    use sll_m_common_coordinate_transformations, only : &
       polar_eta1
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
@@ -323,9 +323,9 @@ module sll_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_rtheta(r_grid,theta_grid, &
     func_rtheta,xgrid_2d,ygrid_2d,func_xy)
-    use sll_constants
-    use sll_cubic_splines
-    use sll_common_coordinate_transformations, only : &
+    use sll_m_constants
+    use sll_m_cubic_splines
+    use sll_m_common_coordinate_transformations, only : &
       polar_eta1, polar_eta2
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: theta_grid
@@ -400,4 +400,4 @@ module sll_fdistribu4d_dk
     end do
   end subroutine init_fequilibrium_xy
 
-end module sll_fdistribu4d_dk
+end module sll_m_fdistribu4d_dk
