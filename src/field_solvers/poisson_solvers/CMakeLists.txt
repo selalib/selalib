@@ -38,10 +38,10 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   ${LAPACK_LIBRARIES})
 
 ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
-TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
+TARGET_LINK_LIBRARIES( hex_poisson sll_meshes )
 
 ADD_LIBRARY( tri_poisson STATIC tri_poisson.F90 )
-TARGET_LINK_LIBRARIES( tri_poisson sll_tri_meshes )
+TARGET_LINK_LIBRARIES( tri_poisson sll_meshes )
 
 # Tests
 IF(BUILD_TESTING)
@@ -90,7 +90,7 @@ IF(BUILD_TESTING)
   ### BEGIN MACRO ###
   MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
     ADD_EXECUTABLE( test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90 )
-    TARGET_LINK_LIBRARIES( test_mudpack_${TEST_NAME} ${POISSON_LIBS}
+    TARGET_LINK_LIBRARIES( test_mudpack_${TEST_NAME} mudpack
       sll_poisson_solvers sll_file_io )
     ADD_TEST( NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
     SET_TESTS_PROPERTIES( sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

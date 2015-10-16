@@ -14,9 +14,7 @@ ADD_LIBRARY( sll_pic_initializers STATIC
   )
 
 TARGET_LINK_LIBRARIES( sll_pic_initializers
-  sll_pic_utilities
   sll_pic_particles
-#  sll_visu_pic
   sll_meshes
   sll_working_precision
   sll_assert

@@ -53,7 +53,7 @@ Create a new directory, build the libraries within ::
 
  mkdir build
  cd build
- cmake ../src/
+ cmake ../
  make
  make Experimental
 
@@ -64,7 +64,7 @@ If you have already performed cmake you can run ::
 
 otherwise run ::
 
- ccmake ../src/
+ ccmake ../
 
 As you can see there is now a user interface that allows to edit parameters.
 Press [c] to configure up to the configuration is valid and that the line "Press [g] to generate and exit" appear.

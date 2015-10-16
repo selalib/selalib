@@ -13,7 +13,7 @@ module fekete_integration
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_hex_meshes
+  use sll_hexagonal_meshes
 
   implicit none
 
@@ -644,7 +644,7 @@ contains
        write(*, '(a,i8)') '  Illegal RULE = ', rule
        STOP
     end if
-    
+
     !  The listed weights are twice what we want!.
     do s = 1, suborder_num
        suborder_w(s) = 0.5_f64 * suborder_w(s)
@@ -829,7 +829,7 @@ contains
     xyw = fekete_points_and_weights(pxy, 1)
 
     N = 10
-    fekete_integral = 0.
+    fekete_integral = 0._f64
     do k=1,N
        fekete_integral = fekete_integral + f(xyw(1,k), xyw(2,k))*xyw(3,k)
     end do
@@ -848,7 +848,7 @@ contains
     v3(2) = pxy(2, 3) - pxy(2, 2)
     c = sqrt(v3(1)*v3(1) + v3(2)*v3(2))
     ! Computing demi-perimeter
-    p = 0.5*(a+b+c)
+    p = 0.5_f64*(a+b+c)
     ! area
     area = sqrt(p*(p-a)*(p-b)*(p-c))
 
@@ -861,7 +861,7 @@ contains
   sll_real64 :: area
   sll_real64 :: node_xy(2,3)
 
-  area = 0.5D+00 * ( &
+  area = 0.5_f64 * ( &
        node_xy(1,1) * ( node_xy(2,2) - node_xy(2,3) ) &
        + node_xy(1,2) * ( node_xy(2,3) - node_xy(2,1) ) &
        + node_xy(1,3) * ( node_xy(2,1) - node_xy(2,2) ) )

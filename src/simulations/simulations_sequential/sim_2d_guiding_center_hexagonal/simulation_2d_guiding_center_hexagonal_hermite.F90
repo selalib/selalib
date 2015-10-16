@@ -6,12 +6,13 @@ program sim2d_gc_hex_hermite
 
   use sll_constants
   use euler_2d_hex
-  use sll_hex_meshes
+  use sll_hexagonal_meshes, only : &
+       sll_hex_mesh_2d
   use hex_poisson
   use pivotbande
   use sll_interpolation_hex_hermite
   use sll_utilities, only: int2string, sll_new_file_id
-  
+
   implicit none
 
   type(sll_hex_mesh_2d),      pointer     :: mesh
@@ -384,7 +385,7 @@ program sim2d_gc_hex_hermite
            do i = 1, mesh%num_pts_tot
               k1 = mesh%hex_coord(1, i)
               k2 = mesh%hex_coord(2, i)
-              call index_hex_to_global(mesh, k1, k2, index_tab)
+              call mesh%index_hex_to_global(k1, k2, index_tab)
               phi(i) = phi_interm(index_tab)
            enddo
            call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
@@ -407,7 +408,7 @@ program sim2d_gc_hex_hermite
            do i = 1, n_points2   ! need to re-index phi : 
               k1 = mesh2%hex_coord(1, i)
               k2 = mesh2%hex_coord(2, i)
-              call index_hex_to_global(mesh2, k1, k2, index_tab)
+              call mesh2%index_hex_to_global(k1, k2, index_tab)
               phi2(i) = phi2_interm(index_tab)
            enddo
            call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
@@ -592,7 +593,7 @@ program sim2d_gc_hex_hermite
               do i = 1, mesh%num_pts_tot    ! need to re-index phi :
                  k1 = mesh%hex_coord(1, i)
                  k2 = mesh%hex_coord(2, i)
-                 call index_hex_to_global(mesh, k1, k2, index_tab)
+                 call mesh%index_hex_to_global(k1, k2, index_tab)
                  phi(i) = phi_interm(index_tab)
               enddo
 
@@ -616,7 +617,7 @@ program sim2d_gc_hex_hermite
               do i = 1, n_points2  ! need to re-index phi : 
                  k1 = mesh2%hex_coord(1, i)
                  k2 = mesh2%hex_coord(2, i)
-                 call index_hex_to_global(mesh2, k1, k2, index_tab)
+                 call mesh2%index_hex_to_global(k1, k2, index_tab)
                  phi2(i) = phi2_interm(index_tab)
               enddo
               call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
@@ -684,10 +685,10 @@ program sim2d_gc_hex_hermite
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "center_guide_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               if (model_name.eq."GC") then
                  filename  = "center_guide_phi"//trim(filenum)
-                 call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+                 call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
               end if
               count = 0
            endif
@@ -696,7 +697,7 @@ program sim2d_gc_hex_hermite
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               count = 0
            endif
         end if
@@ -1242,7 +1243,7 @@ contains
        if (m1<0) k1 = k1 - 1
        if (m2<0) k2 = k2 - 1
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
        if ( abs(m1) > eps .and. abs(m2) > eps ) then
@@ -1281,7 +1282,7 @@ contains
        if (m1<0) k1 = k1 - 1
        if (m2<0) k2 = k2 - 1
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+       call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
        if ( abs(m1) > eps .and. abs(m2) > eps ) then
