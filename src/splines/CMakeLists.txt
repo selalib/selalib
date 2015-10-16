@@ -12,6 +12,7 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_boundary_condition_descriptors
   sll_meshes
   sll_integration
+  sll_linear_solvers
   ${LAPACK_LIBRARIES} )
 
 # Tests
