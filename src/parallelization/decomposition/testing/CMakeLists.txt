@@ -1,0 +1,12 @@
+SET(ARGS " ")
+
+ADD_EXECUTABLE( test_decomposition test_decomposition.F90 )
+TARGET_LINK_LIBRARIES( test_decomposition sll_decomposition )
+ADD_MPI_TEST( decomposition test_decomposition ${PROCS} ${ARGS} )
+SET_TESTS_PROPERTIES( decomposition PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+#  IF(PROCESSOR_COUNT GREATER 1)
+#  ENDIF(PROCESSOR_COUNT GREATER 1)
+#
+#  IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+#  ENDIF()
