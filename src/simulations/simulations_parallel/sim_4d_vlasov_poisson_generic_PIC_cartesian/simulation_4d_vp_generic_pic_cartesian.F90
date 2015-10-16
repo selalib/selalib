@@ -31,7 +31,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_cartesian_meshes
   use sll_timer
   use sll_m_poisson_2d_fft
-  use sll_module_poisson_2d_base
+  use sll_m_poisson_2d_base
   use sll_gnuplot
   use sll_collective
   use sll_ascii_io
