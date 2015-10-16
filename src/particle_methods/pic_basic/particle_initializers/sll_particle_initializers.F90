@@ -178,6 +178,10 @@ contains
     x = 0.0_f64
     v = 0.0_f64
 
+    !rdn(1) = 0.1_f64
+    !call normal_cdf_inv(rdn(1), 0.0_f64, 1.0_f64, v(1))
+    !print*, 'cdf', v(1)
+
 
     do i_part = 1, particle_group%n_particles
        ! Generate Sobol numbers on [0,1]
