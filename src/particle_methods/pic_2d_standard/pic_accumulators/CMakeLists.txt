@@ -24,18 +24,20 @@ IF(BUILD_TESTING)
     sll_pic_accumulators
     sll_pic_particles
     sll_meshes
-    sll_assert )
+    sll_assert
+    sll_constants )
   ADD_TEST( NAME pic_accumulator COMMAND test_pic_accumulator )
   SET_TESTS_PROPERTIES( pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(BUILD_TESTING)
 
-
+# TODO: why is there an executable here?
 ADD_EXECUTABLE(particle_fourier_modes_test  particle_fourier_modes_test.F90)
 TARGET_LINK_LIBRARIES(particle_fourier_modes_test sll_memory 
 						sll_assert
 						sll_working_precision
-						sll_timer)
-ADD_DEPENDENCIES(particle_fourier_modes_test sll_memory 
-						sll_assert
-						sll_working_precision
-						sll_timer)
+						sll_timer
+            sll_constants )
+#ADD_DEPENDENCIES(particle_fourier_modes_test sll_memory 
+#						sll_assert
+#						sll_working_precision
+#						sll_timer)
