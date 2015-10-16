@@ -3,7 +3,7 @@
 ! debugging/understanding the behavior of the QNS one. Once this objective is
 ! fulfilled, this simulation can be deleted.
 
-module sll_simulation_4d_DK_hybrid_module
+module sll_simulation_4d_dk_hybrid_module
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -17,7 +17,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
   use sll_m_coordinate_transformations_2d
-  use sll_fdistribu4D_DK
+  use sll_fdistribu4d_dk
   use sll_general_coordinate_elliptic_solver_module
   use sll_m_scalar_field_2d_base
   use sll_m_scalar_field_2d

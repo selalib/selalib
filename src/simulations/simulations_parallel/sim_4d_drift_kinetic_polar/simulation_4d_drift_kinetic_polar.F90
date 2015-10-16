@@ -51,10 +51,10 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_poisson_2d_periodic_cartesian_par
   use sll_m_cubic_spline_interpolator_1d
   use sll_simulation_base
-  use sll_fdistribu4D_DK
+  use sll_fdistribu4d_dk
   use sll_cartesian_meshes
   use sll_reduction_module
-  use sll_m_advection_2d_BSL
+  use sll_m_advection_2d_bsl
   use sll_m_characteristics_2d_explicit_euler
   use sll_m_characteristics_2d_verlet
   use sll_m_cubic_spline_interpolator_2d

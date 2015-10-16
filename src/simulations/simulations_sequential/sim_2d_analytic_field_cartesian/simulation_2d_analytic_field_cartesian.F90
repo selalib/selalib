@@ -21,7 +21,7 @@ module sll_simulation_2d_analytic_field_cartesian_module
   use sll_constants
   use sll_cartesian_meshes  
   use sll_m_advection_1d_periodic
-  use sll_m_advection_2d_BSL
+  use sll_m_advection_2d_bsl
   use sll_m_advection_2d_tensor_product
   use sll_m_characteristics_2d_explicit_euler
   use sll_m_characteristics_2d_verlet

@@ -18,7 +18,7 @@
 program test_advection_2d_BSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_m_advection_2d_BSL
+use sll_m_advection_2d_bsl
 use sll_m_characteristics_2d_explicit_euler
 use sll_m_cubic_spline_interpolator_2d
 
