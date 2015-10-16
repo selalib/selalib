@@ -1,15 +1,15 @@
 SET( GYROAVERAGE_SRC_FILES 
-  sll_gyroaverage_2d_base.F90
-  sll_gyroaverage_2d_polar.F90
-  sll_gyroaverage_utilities.F90
-  #sll_gyroaverage_2d_polar_computation.F90
-  sll_gyroaverage_2d_polar_pade_solver.F90
-  sll_gyroaverage_2d_polar_splines_solver.F90
-  sll_gyroaverage_2d_polar_hermite_solver.F90 
-  sll_qn_2d_polar_precompute.F90
-  sll_qn_2d_base.F90
-  sll_qn_2d_polar.F90
-  sll_qn_2d_polar_splines_solver.F90)
+  sll_m_gyroaverage_2d_base.F90
+  sll_m_gyroaverage_2d_polar.F90
+  sll_m_gyroaverage_utilities.F90
+  #sll_m_gyroaverage_2d_polar_computation.F90
+  sll_m_gyroaverage_2d_polar_pade_solver.F90
+  sll_m_gyroaverage_2d_polar_splines_solver.F90
+  sll_m_gyroaverage_2d_polar_hermite_solver.F90 
+  sll_m_qn_2d_polar_precompute.F90
+  sll_m_qn_2d_base.F90
+  sll_m_qn_2d_polar.F90
+  sll_m_qn_2d_polar_splines_solver.F90)
 
 ADD_LIBRARY( sll_gyroaverage STATIC ${GYROAVERAGE_SRC_FILES} )
 
@@ -32,17 +32,17 @@ ENDIF(BUILD_TESTING)
 ### OLD CMAKELISTS.txt before prototype/src move
 
 #   SET( GYROAVERAGE_SRC_FILES 
-# 	sll_gyroaverage_2d_base.F90
-# 	sll_gyroaverage_2d_polar.F90
-# 	sll_gyroaverage_utilities.F90
-# 	#sll_gyroaverage_2d_polar_computation.F90
-#         sll_gyroaverage_2d_polar_pade_solver.F90
-#         sll_gyroaverage_2d_polar_splines_solver.F90
-#         sll_gyroaverage_2d_polar_hermite_solver.F90
-#         sll_qn_2d_polar_precompute.F90
-#         sll_qn_2d_base.F90
-#         sll_qn_2d_polar.F90
-#         sll_qn_2d_polar_splines_solver.F90)
+# 	sll_m_gyroaverage_2d_base.F90
+# 	sll_m_gyroaverage_2d_polar.F90
+# 	sll_m_gyroaverage_utilities.F90
+# 	#sll_m_gyroaverage_2d_polar_computation.F90
+#         sll_m_gyroaverage_2d_polar_pade_solver.F90
+#         sll_m_gyroaverage_2d_polar_splines_solver.F90
+#         sll_m_gyroaverage_2d_polar_hermite_solver.F90
+#         sll_m_qn_2d_polar_precompute.F90
+#         sll_m_qn_2d_base.F90
+#         sll_m_qn_2d_polar.F90
+#         sll_m_qn_2d_polar_splines_solver.F90)
 # 
 #   ADD_LIBRARY(
 #     sll_gyroaverage

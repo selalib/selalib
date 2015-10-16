@@ -1,9 +1,9 @@
 ADD_LIBRARY(sll_fields STATIC 
-            sll_array_plotting_module.F90
-            sll_scalar_field_1d_base.F90
-            sll_scalar_field_1d.F90
-            sll_scalar_field_2d_base.F90
-            sll_scalar_field_2d.F90)		
+            sll_m_array_plotting.F90
+            sll_m_scalar_field_1d_base.F90
+            sll_m_scalar_field_1d.F90
+            sll_m_scalar_field_2d_base.F90
+            sll_m_scalar_field_2d.F90)		
 
 TARGET_LINK_LIBRARIES(sll_fields
                       sll_coordinate_transformations
@@ -27,9 +27,9 @@ TARGET_LINK_LIBRARIES(sll_fields
 #
 #TARGET_LINK_LIBRARIES(test_scalar_field sll_scalar_field)
 
-ADD_LIBRARY(sll_dg_fields STATIC sll_dg_fields_2d.F90 init_function_module.F90)		
+ADD_LIBRARY(sll_dg_fields STATIC sll_m_dg_fields.F90 init_function_module.F90)		
 TARGET_LINK_LIBRARIES(sll_dg_fields sll_coordinate_transformations sll_integration)
-ADD_LIBRARY(sll_fem_fields STATIC sll_fem_fields_2d.F90 init_function_module.F90)		
+ADD_LIBRARY(sll_fem_fields STATIC sll_m_fem_fields.F90 init_function_module.F90)		
 TARGET_LINK_LIBRARIES(sll_fem_fields sll_coordinate_transformations sll_integration)
 
 IF(BUILD_TESTING)

@@ -1,6 +1,6 @@
 ADD_LIBRARY( sll_remapped_pic_utilities STATIC
-  remapped_pic_utilities.F90
-  pic_random_initializers.F90
+  sll_m_remapped_pic_utilities.F90
+  sll_m_pic_random_initializers.F90
   )
 
 TARGET_LINK_LIBRARIES( sll_remapped_pic_utilities

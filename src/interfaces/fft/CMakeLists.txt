@@ -21,10 +21,10 @@ ENDIF()
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
   SET(DEPENDENCIES ${DEPENDENCIES} ${FFTW_LIBRARIES})
-  SET(FFT_SRC ${FFT_SRC} fftw3.F90)
+  SET(FFT_SRC ${FFT_SRC} sll_m_fftw3.F90)
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
-ADD_LIBRARY(sll_fft STATIC sll_fft_utils.F90 ${FFT_SRC})
+ADD_LIBRARY(sll_fft STATIC sll_m_fft_utils.F90 ${FFT_SRC})
 
 TARGET_LINK_LIBRARIES( sll_fft sll_utilities 
                                sll_memory 

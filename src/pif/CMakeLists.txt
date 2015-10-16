@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_pif_fieldsolver STATIC sll_pif_fieldsolver.F90 )
+ADD_LIBRARY( sll_pif_fieldsolver STATIC sll_m_pif_fieldsolver.F90 )
 TARGET_LINK_LIBRARIES( sll_pif_fieldsolver
   sll_memory
   sll_assert
@@ -7,7 +7,7 @@ TARGET_LINK_LIBRARIES( sll_pif_fieldsolver
   sll_constants
   sll_utilities)
 
-ADD_LIBRARY( sll_wedge_product_generaldim STATIC sll_wedge_product_generaldim.F90 )
+ADD_LIBRARY( sll_wedge_product_generaldim STATIC sll_m_wedge_product_generaldim.F90 )
 TARGET_LINK_LIBRARIES( sll_wedge_product_generaldim
   sll_memory
   sll_assert

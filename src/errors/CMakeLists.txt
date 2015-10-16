@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_errors STATIC sll_errors.F90 )
+ADD_LIBRARY( sll_errors STATIC sll_m_errors.F90 )
 
 # Tests
 if( BUILD_TESTING )

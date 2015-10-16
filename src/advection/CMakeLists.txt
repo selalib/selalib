@@ -9,23 +9,23 @@ IF(MPI_ENABLED)
 ENDIF()
 
 SET( ADVECTION_SRC_FILES 
-       lagrange_interpolation.F90 
-       sll_advection_1d_periodic.F90
-       sll_advection_1d_non_uniform_cubic_splines.F90
-       sll_advection_1d_BSL.F90
-       sll_advection_1d_CSL.F90
-       sll_advection_1d_CSL_periodic.F90
-       sll_advection_1d_PSM.F90
-       sll_advection_1d_base.F90
-       sll_advection_2d_BSL.F90
-       sll_advection_2d_integer_oblic.F90
-       sll_advection_2d_oblic.F90
-       sll_advection_2d_tensor_product.F90
-       sll_advection_2d_CSL.F90
-       sll_advection_2d_base.F90
-       sll_advection_1d_spectral.F90
-       sll_advection_1d_ampere.F90
-       sll_advection_2d_tri_mesh.F90)
+       sll_m_lagrange_interpolation.F90 
+       sll_m_advection_1d_periodic.F90
+       sll_m_advection_1d_non_uniform_cubic_splines.F90
+       sll_m_advection_1d_BSL.F90
+       sll_m_advection_1d_CSL.F90
+       sll_m_advection_1d_CSL_periodic.F90
+       sll_m_advection_1d_PSM.F90
+       sll_m_advection_1d_base.F90
+       sll_m_advection_2d_bsl.F90
+       sll_m_advection_2d_integer_oblic.F90
+       sll_m_advection_2d_oblic.F90
+       sll_m_advection_2d_tensor_product.F90
+       sll_m_advection_2d_CSL.F90
+       sll_m_advection_2d_base.F90
+       sll_m_advection_1d_spectral.F90
+       sll_m_advection_1d_ampere.F90
+       sll_m_advection_2d_tri_mesh.F90)
 
 ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
