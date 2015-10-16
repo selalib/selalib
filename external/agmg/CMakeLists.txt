@@ -16,7 +16,7 @@ ADD_LIBRARY(dagmg_seq   STATIC dagmg_mumps.f90 dagmg.f90)
 
 TARGET_LINK_LIBRARIES(dagmg_seq lapack_agmg blas_agmg) 
 ADD_EXECUTABLE(test_dagmg_seq example_seq.f90)
-TARGET_LINK_LIBRARIES(test_dagmg_seq dagmg_seq sll_working_precision)
+TARGET_LINK_LIBRARIES(test_dagmg_seq dagmg_seq)
 
 IF(MPI_ENABLED)
 

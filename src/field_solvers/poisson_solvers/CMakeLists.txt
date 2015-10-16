@@ -38,7 +38,7 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   ${LAPACK_LIBRARIES})
 
 ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
-TARGET_LINK_LIBRARIES( hex_poisson sll_meshes )
+TARGET_LINK_LIBRARIES( hex_poisson sll_meshes sll_linear_solvers )
 
 ADD_LIBRARY( tri_poisson STATIC tri_poisson.F90 )
 TARGET_LINK_LIBRARIES( tri_poisson sll_meshes )
