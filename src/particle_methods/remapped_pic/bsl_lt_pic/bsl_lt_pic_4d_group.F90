@@ -1968,10 +1968,15 @@ contains
 #define ALONG_Y 2
 #define ALONG_VX 3
 #define ALONG_VY 4
+
+#ifndef __INTEL_COMPILER
                                   ONESTEPMACRO(ALONG_X,x)
                                   ONESTEPMACRO(ALONG_Y,y)
                                   ONESTEPMACRO(ALONG_VX,vx)
                                   ONESTEPMACRO(ALONG_VY,vy)
+#else
+#warning some lines are commented here
+#endif
 
                                   !if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
                                   !  if( (i > p_group%number_parts_x * 95/100) &
