@@ -12,7 +12,7 @@ program unit_test_vp1d_fourier_fem
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use simulation_vp1d_fourier_fem
+  use sll_m_sim_vp1d_fourier_fem
   implicit none
 
     type(sll_simulation_vp1d_fourier_fem) :: simulation
@@ -20,7 +20,7 @@ program unit_test_vp1d_fourier_fem
     print *, 'Begin of vp1d_fourier_fem test'
     call simulation%run( )
 
-    print *, 'reached end of simulation_vp1d_fourier_fem test'
+    print *, 'reached end of sll_m_sim_vp1d_fourier_fem test'
     print *, 'PASSED'
     !call delete_vp4d_par_cart(simulation)
 

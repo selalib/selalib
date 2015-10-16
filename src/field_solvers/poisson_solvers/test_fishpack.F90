@@ -1,6 +1,6 @@
 program test_fishpack
 
-use sll_fishpack
+use sll_m_fishpack
 
 implicit none
 integer :: l, m, n, mp1, np1

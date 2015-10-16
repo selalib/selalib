@@ -16,12 +16,12 @@
 !**************************************************************
 
 
-module sll_sparse_matrix_module
+module sll_m_sparse_matrix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use mod_umfpack
-use qsort_partition
+use sll_m_umfpack
+use sll_m_qsort_partition
 
 
 !> @brief type for CSR format
@@ -834,4 +834,4 @@ this%num_nz = l
 return
 end subroutine uni2D
 
-end module sll_sparse_matrix_module
+end module sll_m_sparse_matrix

@@ -5,11 +5,11 @@
 
 program dk_cartesian_4d
 #include "sll_working_precision.h"
-  use sll_simulation_4d_drift_kinetic_cartesian_finite_volume
-  use sll_collective
-  use sll_constants
-  use sll_cartesian_meshes
-  use sll_common_array_initializers_module
+  use sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
+  use sll_m_collective
+  use sll_m_constants
+  use sll_m_cartesian_meshes
+  use sll_m_common_array_initializers
   implicit none
 
   type(sll_simulation_4d_drift_kinetic_cart_finite_volume)      :: simulation

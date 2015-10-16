@@ -18,7 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_cubic_splines
-use sll_arbitrary_degree_splines
+use sll_m_cubic_splines
+use sll_m_arbitrary_degree_splines
 
 #endif

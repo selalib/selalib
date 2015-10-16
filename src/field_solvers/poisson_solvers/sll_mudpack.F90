@@ -7,7 +7,7 @@
 !> This library contains multigrid solvers for PDE equations
 !> You have to download and install mudpack 
 !> http://www2.cisl.ucar.edu/resources/legacy/mudpack
-module sll_mudpack
+module sll_m_mudpack
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
@@ -491,7 +491,7 @@ SLL_ASSERT(ierror == 0)
 return
 end subroutine solve_mudpack_polar
 
-end module sll_mudpack
+end module sll_m_mudpack
 
 
 !> input pde coefficients at any grid point (x,y) in the solution region

@@ -9,7 +9,7 @@ program test_interpolation_3d
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-  use sparse_grid_3d
+  use sll_m_sparse_grid_3d
   implicit none
 
   sll_int32, dimension(:), allocatable :: order

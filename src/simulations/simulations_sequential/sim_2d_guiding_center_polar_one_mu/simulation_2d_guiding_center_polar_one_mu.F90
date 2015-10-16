@@ -1,4 +1,4 @@
-module sll_simulation_2d_guiding_center_polar_one_mu_module
+module sll_m_sim_2d_guiding_center_polar_one_mu
 
 !2d guiding center polar simulation
 !related to simulation_2d_guiding_center_curvilinear.F90
@@ -16,28 +16,28 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
   !use sll_logical_meshes 
-  use sll_cartesian_meshes  
+  use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
   use sll_m_advection_2d_bsl
   use sll_m_characteristics_2d_explicit_euler
   use sll_m_characteristics_2d_verlet
   !use sll_poisson_2d_periodic  
-  use sll_fft
-  use sll_reduction_module
-  use sll_simulation_base
+  use sll_m_fft
+  use sll_m_reduction
+  use sll_m_sim_base
   !use sll_cubic_spline_interpolator_2d
   !use sll_cubic_spline_interpolator_1d
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_cubic_spline_interpolator_2d
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
   use sll_m_poisson_2d_polar_wrapper
   use sll_m_poisson_2d_elliptic_solver
   use sll_m_scalar_field_2d_base
   !use sll_m_scalar_field_2d_alternative
-  use sll_parallel_array_initializer_module
+  use sll_m_parallel_array_initializer
   use sll_m_gyroaverage_2d_polar_hermite_solver
   use sll_m_gyroaverage_2d_polar_splines_solver
   use sll_m_gyroaverage_2d_polar_pade_solver
@@ -47,7 +47,7 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
 #endif
 
   
-  !use sll_parallel_array_initializer_module
+  !use sll_m_parallel_array_initializer
 
   implicit none
 
@@ -106,7 +106,7 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
 
 !  abstract interface
 !    function sll_scalar_initializer_2d( x1, x2, params )
-!      use sll_working_precision
+!      use sll_m_working_precision
 !      sll_real64                                     :: sll_scalar_initializer_2d
 !      sll_real64, intent(in)                         :: x1
 !      sll_real64, intent(in)                         :: x2
@@ -1111,8 +1111,8 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,mesh_2d)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -1177,4 +1177,4 @@ contains
 
 
 
-end module sll_simulation_2d_guiding_center_polar_one_mu_module
+end module sll_m_sim_2d_guiding_center_polar_one_mu

@@ -1,10 +1,10 @@
-module pic_1d_distribution
+module sll_m_pic_1d_distribution
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_file_io.h"
 
-  use sll_visu_pic, only: compute_df_cic
+  use sll_m_visu_pic, only: compute_df_cic
 
   implicit none
 
@@ -173,5 +173,5 @@ contains
   end subroutine pic1d_ed__print_moments
 
 
-end module pic_1d_distribution
+end module sll_m_pic_1d_distribution
 

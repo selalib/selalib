@@ -20,9 +20,9 @@ program unit_test_poisson_polar_parallel_solver
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_m_poisson_2d_polar_parallel_solver
-!use sll_boundary_condition_descriptors
-use sll_collective
-use sll_gnuplot_parallel
+!use sll_m_boundary_condition_descriptors
+use sll_m_collective
+use sll_m_gnuplot_parallel
 
 implicit none
   

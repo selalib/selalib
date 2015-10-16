@@ -20,7 +20,7 @@ module sll_m_gyroaverage_2d_polar_hermite_solver
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_m_gyroaverage_2d_base
-use sll_gyroaverage_2d_polar
+use sll_m_gyroaverage_2d_polar
 implicit none
 
 

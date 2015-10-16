@@ -22,9 +22,9 @@ program test_poisson_2d_curvilinear
 #include "sll_assert.h"
 #include "sll_boundary_condition_descriptors.h"
 
-use sll_constants
+use sll_m_constants
 use sll_m_poisson_2d_curvilinear
-use sll_general_coordinate_elliptic_solver_module
+use sll_m_general_coordinate_elliptic_solver
 implicit none
 
   type(poisson_2d_curvilinear), pointer :: poisson

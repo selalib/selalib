@@ -1,11 +1,11 @@
 ! Main test program for
-! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_simulation_4d_vp_generic_pic_cartesian_module]]
+! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_m_sim_4d_vp_generic_pic_cartesian]]
 
 !> @ingroup particle_methods
 
 !> @author MCP ALH
 
-!> @brief Unit test for ::sll_simulation_4d_vp_generic_pic_cartesian_module
+!> @brief Unit test for ::sll_m_sim_4d_vp_generic_pic_cartesian
 
 ! Program listed by Doxygen as part of the particle_methods in
 ! [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]]
@@ -13,9 +13,9 @@
 program unit_test_4d_vp_generic_pic_cartesian
 
 #include "sll_working_precision.h"
-  use sll_simulation_4d_vp_generic_pic_cartesian_module
-  use sll_collective 
-  use sll_timer
+  use sll_m_sim_4d_vp_generic_pic_cartesian
+  use sll_m_collective 
+  use sll_m_timer
 
   type(sll_simulation_4d_vp_generic_pic_cartesian) :: sim
   character(len=256)                          :: filename

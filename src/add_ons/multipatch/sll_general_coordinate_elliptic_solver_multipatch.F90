@@ -1,15 +1,15 @@
-module sll_general_coordinate_elliptic_solver_multipatch_module
+module sll_m_general_coordinate_elliptic_solver_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use gauss_legendre_integration
-use gauss_lobatto_integration
-use sll_timer 
-use sll_sparse_matrix_module
-use sll_sparse_matrix_mp_module
+use sll_m_gauss_legendre_integration
+use sll_m_gauss_lobatto_integration
+use sll_m_timer 
+use sll_m_sparse_matrix
+use sll_m_sparse_matrix_mp
 use sll_m_scalar_field_2d_multipatch
-use sll_general_coordinate_elliptic_solver_module
+use sll_m_general_coordinate_elliptic_solver
 use sll_m_deboor_splines_1d
 
 implicit none
@@ -350,7 +350,7 @@ subroutine factorize_mat_es_mp( es_mp,          &
                                 b1_field_vect,  &
                                 b2_field_vect,  &
                                 c_field)
-use sll_timer
+use sll_m_timer
 type(general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
 
 class(sll_scalar_field_multipatch_2d), pointer :: a11_field_mat
@@ -1093,4 +1093,4 @@ end if
   
 end subroutine initialize_knots_all
   
-end module sll_general_coordinate_elliptic_solver_multipatch_module
+end module sll_m_general_coordinate_elliptic_solver_multipatch

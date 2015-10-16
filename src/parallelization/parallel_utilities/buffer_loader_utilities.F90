@@ -1,12 +1,12 @@
 !> @ingroup parallel_utilities
 
-module sll_buffer_loader_utilities_module
+module sll_m_buffer_loader_utilities
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-use sll_collective
-use sll_remapper
+use sll_m_collective
+use sll_m_remapper
 
 implicit none
 
@@ -261,4 +261,4 @@ contains
 
 
 
-end module sll_buffer_loader_utilities_module
+end module sll_m_buffer_loader_utilities

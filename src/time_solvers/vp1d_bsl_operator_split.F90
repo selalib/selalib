@@ -7,16 +7,16 @@ program VP1d_BSL_time_split
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 
-  use sll_constants
-  use sll_common_coordinate_transformations
-  use sll_cartesian_meshes
+  use sll_m_constants
+  use sll_m_common_coordinate_transformations
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
   use sll_m_cubic_spline_interpolator_1d
-  use sll_landau_2d_initializer
-  use sll_tsi_2d_initializer
-  use distribution_function
-  use sll_poisson_1d_periodic
-  use sll_vp_cartesian_2d
+  use sll_m_landau_2d_initializer
+  use sll_m_tsi_2d_initializer
+  use sll_m_distribution_function
+  use sll_m_poisson_1d_periodic
+  use sll_m_vp_cartesian_2d
   implicit none
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
@@ -198,7 +198,7 @@ program VP1d_BSL_time_split
   SLL_ALLOCATE(efield(Ncx+1),ierr)
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
 
-  ! initialization of distribution_function
+  ! initialization of sll_m_distribution_function
   call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
   call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, is_delta_f)
   if (case == "landau") then

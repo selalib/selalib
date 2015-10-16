@@ -108,7 +108,7 @@ module sll_m_vector_space_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_scal( self, a )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_vector_space_base
     class( sll_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a

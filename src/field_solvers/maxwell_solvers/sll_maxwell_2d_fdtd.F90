@@ -46,7 +46,7 @@ module sll_m_maxwell_2d_fdtd
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
 
-use sll_maxwell_solvers_base
+use sll_m_maxwell_solvers_base
 implicit none
 
 !> Initialize maxwell solver 2d with FDTD scheme

@@ -14,17 +14,17 @@
 !> which may be an in-place operation, needs to be treated as a 4D array
 !> in order to remap it appropriately with the 4D distribution function.
 !> There might be ways around this, like using 'reshape'...
-module sll_poisson_2d_periodic_cartesian_par
+module sll_m_poisson_2d_periodic_cartesian_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
-  use sll_remapper
-  use sll_fft
-  use sll_constants
-  use sll_collective
+  use sll_m_remapper
+  use sll_m_fft
+  use sll_m_constants
+  use sll_m_collective
 
   implicit none
 
@@ -648,4 +648,4 @@ contains
   end subroutine verify_argument_sizes_par
 
 
-end module sll_poisson_2d_periodic_cartesian_par
+end module sll_m_poisson_2d_periodic_cartesian_par

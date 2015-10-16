@@ -3,9 +3,9 @@ program radial_1d_SL
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_cubic_splines
-  use sll_constants
-  use sll_boundary_condition_descriptors
+  use sll_m_cubic_splines
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
   implicit none
 
   type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
@@ -47,8 +47,8 @@ program radial_1d_SL
   ! -- distribution function --
   ! 1 : f=1
   ! 2 : cos eta2
-  ! 3 : gaussian in eta1
-  ! 4 : centered gaussian in eta1 and eta2
+  ! 3 : sll_m_gaussian in eta1
+  ! 4 : centered sll_m_gaussian in eta1 and eta2
   ! 5 : centered dirac 
   test_case = 4
   
@@ -137,8 +137,8 @@ program radial_1d_SL
   ! distribution function
   if (test_case > 5) then
     print*,'Non existing case'
-    print*,'test_case = 1 (f=1), 2 (cos(eta2)), 3 (gaussian in eta1),'
-    print*,'4 (centered gaussian in eta1 and eta2 depending on the mesh type) or 5 (centered dirac)'
+    print*,'test_case = 1 (f=1), 2 (cos(eta2)), 3 (sll_m_gaussian in eta1),'
+    print*,'4 (centered sll_m_gaussian in eta1 and eta2 depending on the mesh type) or 5 (centered dirac)'
     STOP
   endif
   ! advection field

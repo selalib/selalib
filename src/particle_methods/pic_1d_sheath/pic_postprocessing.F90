@@ -1,5 +1,5 @@
 
-module pic_postprocessing
+module sll_m_pic_postprocessing
 #include "sll_working_precision.h"
 #include "sll_assert.h"
     implicit none
@@ -227,4 +227,4 @@ contains
 
     end subroutine peakdet
 
-end module pic_postprocessing
+end module sll_m_pic_postprocessing

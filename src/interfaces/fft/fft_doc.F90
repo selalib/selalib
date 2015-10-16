@@ -1,19 +1,19 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE: sll_fft
+! MODULE: sll_m_fft
 !
 ! DESCRIPTION:
-!> @defgroup fft sll_fft
+!> @defgroup fft sll_m_fft
 !> @author Edwin Chacon-Golcher, Samuel De Santis and Pierre Navaro.
 !> @brief Interface around fftpack, fftw and the selalib fft.
 !> @details 
 !> 
 !>
-!> \section how How to use sll_fft module?
+!> \section how How to use sll_m_fft module?
 !>
-!> The first thing is to add the line \code use sll_fft \endcode
-!> The sll_fft module can use internal or external librarie 
+!> The first thing is to add the line \code use sll_m_fft \endcode
+!> The sll_m_fft module can use internal or external librarie 
 !> 
 !> 1. Declare a fft plan
 !> \code type(sll_fft_plan), pointer :: p \endcode
@@ -286,7 +286,7 @@
 !> call fft_delete_plan(p)
 !> \endcode
 !>
-!> \section what What sll_fft really computes
+!> \section what What sll_m_fft really computes
 !>
 !> The forward (FFT_FORWARD) DFT of a 1d complex array x of size n computes an array X, where:
 !>

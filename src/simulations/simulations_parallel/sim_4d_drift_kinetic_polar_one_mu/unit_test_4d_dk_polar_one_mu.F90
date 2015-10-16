@@ -5,8 +5,8 @@
 ! - parallel
 
 program drift_kinetic_polar_one_mu
-  use sll_simulation_4d_drift_kinetic_polar_one_mu_module
-  use sll_collective
+  use sll_m_sim_4d_drift_kinetic_polar_one_mu
+  use sll_m_collective
   implicit none
 
   character(len=256) :: filename

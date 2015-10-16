@@ -1,33 +1,33 @@
-module sll_m_simulation_pic1d1v_vp_periodic
+module sll_m_sim_pic1d1v_vp_periodic
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors
 
-  use sll_simulation_base, only: sll_simulation_base_class
+  use sll_m_sim_base, only: sll_simulation_base_class
     
-  use sll_constants , only : sll_pi
+  use sll_m_constants , only : sll_pi
   
-  use sll_utilities , only : sll_new_file_id
+  use sll_m_utilities , only : sll_new_file_id
   
-  use sll_visu_pic  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
+  use sll_m_visu_pic  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
     
-  use sll_collective , only :       sll_world_collective , sll_collective_barrier ,&
+  use sll_m_collective , only :       sll_world_collective , sll_collective_barrier ,&
      sll_boot_collective, sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&
      sll_collective_globalsum_array_real64
      
-  use sll_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
+  use sll_m_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
   
-  use sll_particle_1d_description, only: sll_particle_1d_group
+  use sll_m_particle_1d_description, only: sll_particle_1d_group
   
-  use sll_pic_1d_field_solver    , only: pic_1d_field_solver, new_pic_1d_field_solver
+  use sll_m_pic_1d_field_solver    , only: pic_1d_field_solver, new_pic_1d_field_solver
   
-  use pic_postprocessing , only : det_landau_damping 
+  use sll_m_pic_postprocessing , only : det_landau_damping 
   
-  use pic_1d_particle_loading, only : & 
+  use sll_m_pic_1d_particle_loading, only : & 
          sll_initialize_intrinsic_mpi_random ,&   
          load_particle_species ,&
          set_loading_parameters, &
@@ -39,7 +39,7 @@ module sll_m_simulation_pic1d1v_vp_periodic
          SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, &
          SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS ,SLL_PIC1D_TESTCASE_QUIET ,&
          SLL_PIC1D_TESTCASE_BUMPONTAIL
-  use pic_1d_distribution 
+  use sll_m_pic_1d_distribution 
   
   implicit none
    
@@ -143,7 +143,7 @@ module sll_m_simulation_pic1d1v_vp_periodic
 
   abstract interface
       function sll_pic_1d_electric_field_external( sim, x, t ) result(E)
-          use sll_working_precision
+          use sll_m_working_precision
           import sll_simulation_pic1d1v_vp_periodic
           class( sll_simulation_pic1d1v_vp_periodic ), intent( in ) :: sim  !< Simulation obj.
           sll_real64                                 , intent( in ) :: x(:) !< Position
@@ -316,7 +316,7 @@ contains
     read(input_file,params)
     close(input_file) 
   
-    ! Define global variables in "pic_1d_particle_loading" module
+    ! Define global variables in "sll_m_pic_1d_particle_loading" module
     ! (needed for loading initial distribution function)
     call set_loading_parameters( lalpha, lmode, nstreams )
 
@@ -1818,7 +1818,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
     
 
-end module sll_m_simulation_pic1d1v_vp_periodic
+end module sll_m_sim_pic1d1v_vp_periodic
 
 
 

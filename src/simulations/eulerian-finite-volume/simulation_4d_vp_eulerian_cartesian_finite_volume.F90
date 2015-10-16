@@ -1,20 +1,20 @@
-module sll_simulation_4d_vp_eulerian_cart_finite_volume_module
+module sll_m_sim_4d_vp_eulerian_cart_finite_volume
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-  use sll_collective
-  use sll_remapper
-  use sll_poisson_2d_periodic_cartesian_par
-  use sll_simulation_base
-  use sll_parallel_array_initializer_module  
-  use sll_cartesian_meshes
-  use sll_mesh_calculus_2d_module
-  use sll_gnuplot_parallel
-  use sll_timer
-  use sll_point_to_point_comms_module
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_poisson_2d_periodic_cartesian_par
+  use sll_m_sim_base
+  use sll_m_parallel_array_initializer  
+  use sll_m_cartesian_meshes
+  use sll_m_mesh_calculus_2d
+  use sll_m_gnuplot_parallel
+  use sll_m_timer
+  use sll_m_point_to_point_comms
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -378,9 +378,9 @@ subroutine run_vp_cart(sim)
 
  ! the function is passed by the user when the init_vp subroutine is called.
  ! The routine sll_4d_parallel_array_initializer_cartesian is in 
- ! src/parallal_array_initializers/sll_parallel_array_initializer_module.F90
+ ! src/parallal_array_initializers/sll_m_parallel_array_initializer.F90
  ! the particular initializer is in
- ! parallel_array_initializers/sll_common_array_initializers_module.F90
+ ! parallel_array_initializers/sll_m_common_array_initializers.F90
 
 !!$    call sll_4d_parallel_array_initializer_cartesian( &
 !!$         sim%sequential_v1v2, &
@@ -2060,10 +2060,10 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
 
 !!$  subroutine plot_fields(itime, sim)
-!!$    use sll_collective
+!!$    use sll_m_collective
 !!$    use hdf5
-!!$    use sll_hdf5_io_parallel
-!!$    use sll_xml_io
+!!$    use sll_m_hdf5_io_parallel
+!!$    use sll_m_xml_io
 !!$    sll_int32, intent(in) :: itime
 !!$    character(len=4)      :: ctime
 !!$    sll_int32             :: i_layout
@@ -3499,4 +3499,4 @@ end do
   end subroutine poisson_dirichlet
 
 
-end module sll_simulation_4d_vp_eulerian_cart_finite_volume_module
+end module sll_m_sim_4d_vp_eulerian_cart_finite_volume

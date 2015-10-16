@@ -31,13 +31,13 @@ module sll_m_scalar_field_2d_multipatch
 #include "sll_assert.h"
 #include "sll_file_io.h"
   use sll_m_scalar_field_2d
-  use sll_coordinate_transformation_multipatch_module
-  use sll_constants
+  use sll_m_coordinate_transformation_multipatch
+  use sll_m_constants
   use sll_m_interpolators_2d_base
   use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_utilities
-  use sll_boundary_condition_descriptors
-  use sll_gnuplot
+  use sll_m_utilities
+  use sll_m_boundary_condition_descriptors
+  use sll_m_gnuplot
   implicit none
 
 

@@ -3,18 +3,18 @@
 !> The algorithm is described in Crouseilles, Mehrenberger, Sonnendrucker, J. Comput. Phys. 229, pp 1927-1953, 2010
 !> http://dx.doi.org/10.1016/j.jcp.2009.11.007, preprint is available on HAL http://hal.inria.fr/hal-00363643/en
 
-module sll_csl
+module sll_m_csl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !#include "sll_mesh_types.h"
 #include "sll_field_2d.h"
 
-  use sll_constants
+  use sll_m_constants
   !use sll_splines
-  use cubic_non_uniform_splines
-  use ode_solvers
-  use distribution_function
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_ode_solvers
+  use sll_m_distribution_function
   implicit none
   integer, parameter :: PERIODIC = 0,COMPACT = 1
 
@@ -61,7 +61,7 @@ contains
     else if (boundary1_type == COMPACT) then
        new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, SLL_HERMITE)
     else
-       print*, 'sll_csl.F90: new_csl_workspace. boundary1_type ', boundary1_type, ' not implemented'
+       print*, 'sll_m_csl.F90: new_csl_workspace. boundary1_type ', boundary1_type, ' not implemented'
        stop
     end if
     if (boundary2_type == PERIODIC) then
@@ -69,7 +69,7 @@ contains
     else if (boundary2_type == COMPACT) then
        new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, SLL_HERMITE)  
     else
-       print*, 'sll_csl.F90: new_csl_workspace. boundary2_type ', boundary2_type, ' not implemented'
+       print*, 'sll_m_csl.F90: new_csl_workspace. boundary2_type ', boundary2_type, ' not implemented'
        stop
     end if
 
@@ -608,4 +608,4 @@ endif
     end select
   end subroutine advance_1D_nonuniform
 
-end module sll_csl
+end module sll_m_csl

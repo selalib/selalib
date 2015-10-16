@@ -4,11 +4,11 @@ program unit_test
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-     use sll_collective , only :       sll_world_collective , sll_collective_barrier ,&
+     use sll_m_collective , only :       sll_world_collective , sll_collective_barrier ,&
      sll_boot_collective
     
     
-    use sll_pic_1d  , only : new_sll_pic_1d, sll_solver_fourier, sll_solver_fd, sll_solver_fem, sll_pic1d_testcase_quiet ,&
+    use sll_m_pic_1d  , only : new_sll_pic_1d, sll_solver_fourier, sll_solver_fd, sll_solver_fem, sll_pic1d_testcase_quiet ,&
     sll_pic1d_testcase_landau, sll_pic1d_testcase_ionbeam, sll_pic1d_testcase_bumpontail, sll_pic1d_ppusher_verlet ,&     
     enable_deltaf, interval_a, interval_b, landau_alpha, landau_mode, pic1d_testcase, root_path, sll_pi ,&
     sll_pic1d_ppusher_euler, sll_pic1d_ppusher_shift, sll_pic1d_ppusher_rk2, sll_pic1d_ppusher_rk4, sll_pic1d_ppusher_none ,&

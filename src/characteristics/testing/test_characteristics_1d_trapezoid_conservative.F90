@@ -18,7 +18,7 @@
 program test_characteristics_1d_trapezoid_conservative
 #include "sll_working_precision.h"
 use sll_m_characteristics_1d_trapezoid_conservative
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_cubic_spline_interpolator_1d
 
 implicit none

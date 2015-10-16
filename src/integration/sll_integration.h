@@ -1,9 +1,9 @@
 #ifndef _sll_integration_h_
 #define _sll_integration_h_
 
-use rectangle_integration
-use trapz_integration
-use gauss_legendre_integration
-use gauss_lobatto_integration
+use sll_m_rectangle_integration
+use sll_m_trapz_integration
+use sll_m_gauss_legendre_integration
+use sll_m_gauss_lobatto_integration
 
 #endif

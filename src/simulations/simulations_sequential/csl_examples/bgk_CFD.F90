@@ -4,14 +4,14 @@ program bgk_CFD
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
 
-  use sll_constants
-  use distribution_function
+  use sll_m_constants
+  use sll_m_distribution_function
   use sll_diagnostics
-  use sll_csl
+  use sll_m_csl
   use sll_splines
-  use contrib_rho_module
-  use conservative_finite_difference
-  use bgk_mesh_construction
+  use sll_m_contrib_rho
+  use sll_m_conservative_finite_difference
+  use sll_m_bgk_mesh_construction
 
   implicit none
   sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2,tmp
@@ -37,7 +37,7 @@ program bgk_CFD
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
-  character(32), parameter  :: name = 'distribution_function'
+  character(32), parameter  :: name = 'sll_m_distribution_function'
   sll_real64,dimension(:,:,:), pointer :: integration_points
   sll_real64,dimension(:,:), pointer :: integration_points_val
   sll_real64 :: geom_eta(2,2),geom_x(2,2)
@@ -475,7 +475,7 @@ program bgk_CFD
         val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/L*x1))
       endif
       if(test_case==6.or.test_case==7)then
-        !gaussian equilibrium
+        !sll_m_gaussian equilibrium
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
         !f_equil(i1,i2) = val*jac_array(i1,i2)
       endif

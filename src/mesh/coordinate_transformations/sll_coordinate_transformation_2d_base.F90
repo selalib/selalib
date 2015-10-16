@@ -18,11 +18,11 @@
 !> The base class contains all the services (in the form of functions) that
 !> the different 'flavors' of coordinate transformations (analytic, discrete)
 !> should implement.
-module sll_coordinate_transformation_2d_base_module
+module sll_m_coordinate_transformation_2d_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
   implicit none
   
 
@@ -100,7 +100,7 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function geometry_function_ct( transf, eta1, eta2 ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_coordinate_transformation_2d_base
        class(sll_coordinate_transformation_2d_base) :: transf
        sll_real64, intent(in)   :: eta1
@@ -111,7 +111,7 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function geometry_function_indices_ct( transf, i, j ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_coordinate_transformation_2d_base       
        class(sll_coordinate_transformation_2d_base) :: transf
        sll_int32, intent(in)   :: i
@@ -122,7 +122,7 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function matrix_geometry_function_ct( transf, eta1, eta2 )
-       use sll_working_precision       
+       use sll_m_working_precision       
        import sll_coordinate_transformation_2d_base
        class(sll_coordinate_transformation_2d_base),intent(in) :: transf
        sll_real64, intent(in)         :: eta1
@@ -136,7 +136,7 @@ module sll_coordinate_transformation_2d_base_module
   ! pass it when the function is called.
   abstract interface
      function transformation_func_nopass( eta1, eta2, params ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
        sll_real64, dimension(:), intent(in) :: params
@@ -146,7 +146,7 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function matrix_geometry_function_nopass( eta1, eta2 ) result(res)
-       use sll_working_precision 
+       use sll_m_working_precision 
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
        sll_real64             :: res(2,2)
@@ -161,7 +161,7 @@ module sll_coordinate_transformation_2d_base_module
   ! to initialize the analytic transformations.
   abstract interface
      function two_arg_scalar_function( eta1, eta2 )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64             :: two_arg_scalar_function
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
@@ -170,7 +170,7 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function two_arg_message_passing_func( transf, eta1, eta2 )
-       use sll_working_precision
+       use sll_m_working_precision
        import     :: sll_coordinate_transformation_2d_base
        sll_real64                      :: two_arg_message_passing_func
        class(sll_coordinate_transformation_2d_base)  :: transf
@@ -189,7 +189,7 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      subroutine write_transformation_signature( transf, output_format )
-       use sll_working_precision
+       use sll_m_working_precision
        import :: sll_coordinate_transformation_2d_base
        class(sll_coordinate_transformation_2d_base)  :: transf
        sll_int32, optional :: output_format
@@ -213,4 +213,4 @@ module sll_coordinate_transformation_2d_base_module
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
   
-end module sll_coordinate_transformation_2d_base_module
+end module sll_m_coordinate_transformation_2d_base

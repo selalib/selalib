@@ -6,14 +6,14 @@
 !> The main functions are taken from the following site but have been
 !> modified to respect Selalib's structure:
 !> http://people.sc.fsu.edu/~jburkardt/f_src/triangle_fekete_rule/
-module fekete_integration
+module sll_m_fekete_integration
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_hexagonal_meshes
+  use sll_m_hexagonal_meshes
 
   implicit none
 
@@ -21,7 +21,7 @@ module fekete_integration
   abstract interface
      !> 2d real function
      function function_2D(x, y)
-       use sll_working_precision ! can't pass a header file because the
+       use sll_m_working_precision ! can't pass a header file because the
        ! preprocessor prevents double inclusion.
        ! This is very rare.
        sll_real64             :: function_2D
@@ -870,4 +870,4 @@ contains
 end subroutine triangle_area
 
   
-end module fekete_integration
+end module sll_m_fekete_integration

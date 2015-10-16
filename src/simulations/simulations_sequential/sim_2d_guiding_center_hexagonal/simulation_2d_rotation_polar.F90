@@ -7,11 +7,11 @@ program rotation_2d_polar
 #include "sll_utilities.h"
 #include "sll_interpolators.h"
 #include "sll_coordinate_transformations.h"
-use sll_ascii_io
+use sll_m_ascii_io
 
-  use sll_constants
+  use sll_m_constants
   use sll_m_hermite_interpolator_2d
-  use sll_hermite_interpolation_2d_module
+  use sll_m_hermite_interpolation_2d
   implicit none
 
 

@@ -36,7 +36,7 @@ module sll_m_gces_dirichlet
 #include "sll_assert.h"
 #include "sll_errors.h"
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
 use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
@@ -48,15 +48,15 @@ use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
-use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
+use sll_m_sparse_matrix, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
                                      sll_factorize_csr_matrix,       &
                                      sll_add_to_csr_matrix,          &
                                      sll_mult_csr_matrix_vector,     &
                                      sll_solve_csr_matrix,           &
                                      sll_delete
-use gauss_legendre_integration
-use gauss_lobatto_integration
+use sll_m_gauss_legendre_integration
+use sll_m_gauss_lobatto_integration
 
 #ifdef _OPENMP
 use omp_lib

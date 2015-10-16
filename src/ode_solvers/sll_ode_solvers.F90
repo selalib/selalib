@@ -1,4 +1,4 @@
-module ode_solvers
+module sll_m_ode_solvers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -10,7 +10,7 @@ module ode_solvers
 
   abstract interface
      function scalar_function_1D( eta )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64 :: scalar_function_1D
        sll_real64, intent(in)  :: eta
      end function scalar_function_1D
@@ -19,7 +19,7 @@ module ode_solvers
 contains
 
   function f_one( eta )
-    use sll_working_precision
+    use sll_m_working_precision
     sll_real64 :: f_one
     sll_real64, intent(in)  :: eta
 
@@ -1104,4 +1104,4 @@ contains
   end subroutine rk4_non_unif
 
 
-end module ode_solvers
+end module sll_m_ode_solvers

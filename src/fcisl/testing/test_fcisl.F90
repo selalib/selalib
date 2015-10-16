@@ -2,8 +2,8 @@ program test_fcisl
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_fcisl_module
-  use sll_constants
+  use sll_m_fcisl
+  use sll_m_constants
   use sll_m_advection_1d_periodic
   
   implicit none

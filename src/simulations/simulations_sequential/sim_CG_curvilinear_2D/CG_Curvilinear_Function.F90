@@ -1,4 +1,4 @@
-module module_cg_curvi_function
+module sll_m_cg_curvi_function
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -7,8 +7,8 @@ module module_cg_curvi_function
 #include "sll_utilities.h"
 
 
-   use module_cg_curvi_structure
-   use sll_boundary_condition_descriptors
+   use sll_m_cg_curvi_structure
+   use sll_m_boundary_condition_descriptors
     !--*Poisson*----
   
 contains
@@ -624,8 +624,8 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
 !*****
 subroutine plot_f1(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)!
 
-  use sll_xdmf
-  use sll_hdf5_io_serial
+  use sll_m_xdmf
+  use sll_m_hdf5_io_serial
   sll_int32 :: file_id
   sll_int32 :: error
   sll_real64, dimension (:,:), allocatable :: f
@@ -873,7 +873,7 @@ end subroutine lire_appel
 !!!************************************************************************
 
 
-end module module_cg_curvi_function
+end module sll_m_cg_curvi_function
 
 
 

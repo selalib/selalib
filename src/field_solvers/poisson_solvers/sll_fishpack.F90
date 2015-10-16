@@ -15,7 +15,7 @@
 !> 
 !> <b>Example in polar coordinates</b>
 !> @snippet poisson_solvers/test_fishpack.F90 example_polar
-module sll_fishpack
+module sll_m_fishpack
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -261,6 +261,6 @@ contains
   
   end subroutine solve_3d
   
-end module sll_fishpack
+end module sll_m_fishpack
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

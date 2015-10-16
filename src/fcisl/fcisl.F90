@@ -1,8 +1,8 @@
-module sll_fcisl_module
+module sll_m_fcisl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
   use sll_m_advection_1d_base
 implicit none
 
@@ -684,4 +684,4 @@ contains
 
 
 
-end module sll_fcisl_module
+end module sll_m_fcisl

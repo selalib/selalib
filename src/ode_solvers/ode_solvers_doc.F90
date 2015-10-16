@@ -9,13 +9,13 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup ode_solvers sll_ode_solvers 
+!> @defgroup sll_m_ode_solvers sll_ode_solvers 
 !> @brief 
-!> Description of ode_solvers library (72 characters)
+!> Description of sll_m_ode_solvers library (72 characters)
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  ode_solvers, you can add some references or math equations.
+!> Long description of  sll_m_ode_solvers, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
 !>  - sll_ode_solvers.h

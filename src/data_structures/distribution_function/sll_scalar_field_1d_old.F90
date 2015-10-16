@@ -28,14 +28,14 @@
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_scalar_field_1d_old
+module sll_m_scalar_field_1d_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
 #include "sll_utilities.h"
-  use sll_constants
-  use sll_scalar_field_initializers_base
+  use sll_m_constants
+  use sll_m_scalar_field_initializers_base
   implicit none
   
   !I removed this line because, it not exists in 2d version
@@ -51,7 +51,7 @@ module sll_scalar_field_1d_old
 
   abstract interface
      function scalar_function_1D( eta1 )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64 :: scalar_function_1D
        sll_real64, intent(in)  :: eta1
      end function scalar_function_1D
@@ -153,4 +153,4 @@ contains   ! *i****************************************************************
     call sll_gnuplot_write(scalar_field%data,file_name,error)
   end subroutine write_scalar_field_1d
 
-end module sll_scalar_field_1d_old
+end module sll_m_scalar_field_1d_old

@@ -6,11 +6,11 @@ program test_const_coef_adv_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use sll_const_coef_advection_2d
+  use sll_m_const_coef_advection_2d
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_interpolators_1d_base
-  use sll_operator_splitting
-  use sll_hdf5_io_serial
+  use sll_m_operator_splitting
+  use sll_m_hdf5_io_serial
   implicit none
 #define N1 50
 #define N2 60

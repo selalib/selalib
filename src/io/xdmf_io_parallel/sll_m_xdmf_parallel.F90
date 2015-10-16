@@ -13,7 +13,7 @@ module sll_m_xdmf_light_parallel
 
 #include "sll_working_precision.h"
 
-  use sll_collective, only:  &
+  use sll_m_collective, only:  &
     sll_collective_t,        &
     sll_get_collective_size, &
     sll_get_collective_rank, &

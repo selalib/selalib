@@ -24,7 +24,7 @@
 !> delete function for this type
 module sll_m_interpolators_1d_base
 #include "sll_working_precision.h"
-  use sll_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors
   implicit none
 
   !>Abstract class for 1D interpolation and reconstruction
@@ -83,7 +83,7 @@ contains
 
   abstract interface
      function interpolator_one_arg_msg( interpolator, eta1 ) result(val)
-       use sll_working_precision
+       use sll_m_working_precision
        import :: sll_interpolator_1d_base
        sll_real64                                     :: val !< value
        class(sll_interpolator_1d_base), intent(inout) :: interpolator !< interpolator
@@ -94,7 +94,7 @@ contains
   !> Signature of the interpolating function derivative for one point
   abstract interface
      function interpolator_one_arg_sub( interpolator, eta1 ) result(val)
-       use sll_working_precision
+       use sll_m_working_precision
        import :: sll_interpolator_1d_base
        sll_real64                                     :: val
        class(sll_interpolator_1d_base), intent(in) :: interpolator
@@ -109,7 +109,7 @@ contains
           interpolator, data_array,&
           eta_coords, &
           size_eta_coords)
-       use sll_working_precision
+       use sll_m_working_precision
        import :: sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(inout) :: interpolator
        sll_real64, dimension(:), intent(in) :: data_array
@@ -126,7 +126,7 @@ contains
        vals_to_interpolate, &
        output_array )
 
-       use sll_working_precision
+       use sll_m_working_precision
        import :: sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(in) :: interpolator
        sll_int32, intent(in)                :: num_pts
@@ -143,7 +143,7 @@ contains
        vals_to_interpolate, &
        output )
 
-       use sll_working_precision
+       use sll_m_working_precision
        import :: sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(in) :: interpolator
        sll_int32, intent(in)                :: num_pts
@@ -157,7 +157,7 @@ contains
      function interpolate_1d_array(this, num_points, data, coordinates) &
           result(res)
 
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(in)     :: this
        sll_int32, intent(in)  :: num_points    ! size of output array
@@ -176,7 +176,7 @@ contains
        data, &
        alpha) result(res)
 
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(in)     :: this
        sll_int32, intent(in)  :: num_points    ! size of output array
@@ -190,7 +190,7 @@ contains
   !> Signature of interpolating function
   abstract interface
      function reconstruct_1d_array(this, num_points, data) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(in)     :: this
        sll_int32, intent(in)     :: num_points    ! size of output array
@@ -202,7 +202,7 @@ contains
   !> Signature of interpolating function
   abstract interface
      subroutine interpolator_1d_set_coeffs( interpolator, coeffs )
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(inout) :: interpolator
        ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
@@ -214,7 +214,7 @@ contains
    abstract interface
   !> Signature of interpolating function
      function get_coeffs_1d(interpolator)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(in) :: interpolator
        sll_real64, dimension(:), pointer         :: get_coeffs_1d

@@ -17,21 +17,21 @@
 
 !> @ingroup file_io_parallel
 !> @brief
-!> parallel version of sll_gnuplot
+!> parallel version of sll_m_gnuplot
 !> @details
 !> Data files are in ASCII format so these subroutines are slow and use
 !> a lot of disk space. Consider to use it for debug purpose.
 !> Here an example using the layout_2d object, check out how to compute
-!> offset values before calling sll_gnuplot_parallel subroutines.
+!> offset values before calling sll_m_gnuplot_parallel subroutines.
 !> @snippet remap/unit_test_parallel.F90 example
 #define MPI_MASTER 0
 
-module sll_gnuplot_parallel
+module sll_m_gnuplot_parallel
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-use sll_ascii_io, only: sll_ascii_file_create
-use sll_utilities, only: sll_new_file_id, int2string
+use sll_m_ascii_io, only: sll_ascii_file_create
+use sll_m_utilities, only: sll_new_file_id, int2string
 use mpi
 
 implicit none
@@ -310,4 +310,4 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$end subroutine sll_gnuplot_rect_2d_parallel
 
 
-end module sll_gnuplot_parallel
+end module sll_m_gnuplot_parallel

@@ -5,7 +5,7 @@
 !> Implements the Poisson solver in 2D with periodic boundary conditions
 !> @details
 !> This module uses FFTPACK library
-module sll_poisson_2d_periodic_fftpack
+module sll_m_poisson_2d_periodic_fftpack
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -439,6 +439,6 @@ subroutine doubcfftinv(this,array)
 
 end subroutine doubcfftinv
 
-end module sll_poisson_2d_periodic_fftpack
+end module sll_m_poisson_2d_periodic_fftpack
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

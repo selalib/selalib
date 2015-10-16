@@ -21,9 +21,9 @@ module sll_m_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
-use cubic_non_uniform_splines
+use sll_m_cubic_non_uniform_splines
 
 implicit none
 
@@ -242,7 +242,7 @@ contains
     ibuf)
     !alpha and node_positions are normalized to [0,1]
     !use numeric_constants
-    !use cubic_non_uniform_splines
+    !use sll_m_cubic_non_uniform_splines
     implicit none
     
     sll_real64, dimension(:), intent(inout) :: f

@@ -16,14 +16,14 @@
 !**************************************************************
 
 
-module sll_particle_group_2d_module
+module sll_m_particle_group_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "particle_representation.h"
 
-!  use sll_particle_representations
-  use sll_cartesian_meshes
+!  use sll_m_particle_representations
+  use sll_m_cartesian_meshes
 #ifdef _OPENMP
   use omp_lib
 #endif
@@ -132,4 +132,4 @@ contains
     SLL_DEALLOCATE(p_group, ierr)
   end subroutine delete_particle_2d_group
 
-end module sll_particle_group_2d_module
+end module sll_m_particle_group_2d

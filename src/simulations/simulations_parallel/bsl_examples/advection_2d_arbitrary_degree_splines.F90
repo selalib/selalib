@@ -4,7 +4,7 @@ program sequential_advection
 #include "sll_memory.h"
 #include "sll_interpolators.h"
 #include "sll_utilities.h"
-use sll_gnuplot
+use sll_m_gnuplot
 
 implicit none
 

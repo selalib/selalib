@@ -17,21 +17,21 @@
 !> @brief
 !> Implements the functions to write data file plotable by GNUplot
 !> @details
-!> This is an example of how use the sll_gnuplot module.
+!> This is an example of how use the sll_m_gnuplot module.
 !> More details about this example
 !> @snippet file_io/unit_test_gnuplot.F90 example
 !> Here a snapshot when you execute:
 !> <code>$ gnuplot -persistent plot_2.gnu </code>
 !
 !> @image html gnuplot.png
-module sll_gnuplot
+module sll_m_gnuplot
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-! use sll_ascii_io                                      !OLD VERSION
-! use sll_utilities, only: sll_new_file_id, int2string  !OLD VERSION
-use sll_utilities, only: int2string
+! use sll_m_ascii_io                                      !OLD VERSION
+! use sll_m_utilities, only: sll_new_file_id, int2string  !OLD VERSION
+use sll_m_utilities, only: int2string
 
 implicit none
 
@@ -813,5 +813,5 @@ subroutine write_unstructured_field( field_at_node,  &
 ! close(gnu_id)
 end subroutine write_unstructured_field
 
-end module sll_gnuplot
+end module sll_m_gnuplot
 

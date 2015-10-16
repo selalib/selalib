@@ -15,10 +15,10 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module lagrange_interpolation
+module sll_m_lagrange_interpolation
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
   implicit none
   
   integer, parameter :: SLL_SIZE_STENCIL_MAX = 30
@@ -597,4 +597,4 @@ contains
 
 
 
-end module lagrange_interpolation
+end module sll_m_lagrange_interpolation

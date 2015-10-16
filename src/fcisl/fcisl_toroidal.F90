@@ -1,12 +1,12 @@
-module sll_fcisl_toroidal_module
+module sll_m_fcisl_toroidal
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-use sll_constants
-use sll_parallel_array_initializer_module
-use sll_hermite_interpolation_2d_module
-use lagrange_interpolation
+use sll_m_constants
+use sll_m_parallel_array_initializer
+use sll_m_hermite_interpolation_2d
+use sll_m_lagrange_interpolation
 implicit none
 
 !we consider i this test a case where magnetic filed
@@ -780,4 +780,4 @@ end subroutine compute_hermite_derivatives_aligned
 
 
 
-end module sll_fcisl_toroidal_module
+end module sll_m_fcisl_toroidal

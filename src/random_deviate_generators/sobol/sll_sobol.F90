@@ -1,4 +1,4 @@
-module sll_sobol
+module sll_m_sobol
 
   implicit none
 
@@ -3337,4 +3337,4 @@ subroutine timestamp_sobol ( )
   return
 end subroutine
 
-end module sll_sobol
+end module sll_m_sobol

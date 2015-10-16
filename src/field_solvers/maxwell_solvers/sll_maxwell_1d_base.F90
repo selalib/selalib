@@ -8,7 +8,7 @@ module sll_m_maxwell_1d_base
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
-  use gauss_legendre_integration, only: function_1d_legendre
+  use sll_m_gauss_legendre_integration, only: function_1d_legendre
 
   implicit none
   private
@@ -39,7 +39,7 @@ module sll_m_maxwell_1d_base
 !---------------------------------------------------------------------------!
   abstract interface
      function norm_squarred(this, coefs_dofs, degree) result( r )
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_maxwell_1d_base
        class( sll_maxwell_1d_base)                    :: this !< Maxwell solver object.
        sll_real64                                     :: coefs_dofs(:) !< Values of the coefficient vectors for each DoF
@@ -51,7 +51,7 @@ module sll_m_maxwell_1d_base
 !---------------------------------------------------------------------------!
   abstract interface
      subroutine update_dofs_function(this, func, degree, coefs_dofs)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_maxwell_1d_base
        import function_1d_legendre
        class( sll_maxwell_1d_base)                    :: this !< Maxwell solver object.
@@ -64,7 +64,7 @@ module sll_m_maxwell_1d_base
 !---------------------------------------------------------------------------!
   abstract interface 
      subroutine compute_field1_from_field2(this, delta_t, field_in, field_out)
-     use sll_working_precision
+     use sll_m_working_precision
      import sll_maxwell_1d_base     
      class(sll_maxwell_1d_base) :: this
      sll_real64, intent(in)     :: delta_t
@@ -75,7 +75,7 @@ module sll_m_maxwell_1d_base
 
   abstract interface    
     subroutine signature_compute_E_from_rho_1d(this, E, rho )
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_maxwell_1d_base       
       class(sll_maxwell_1d_base) :: this
       sll_real64,dimension(:),intent(in) :: rho
@@ -85,7 +85,7 @@ module sll_m_maxwell_1d_base
 
   abstract interface
      subroutine signature_compute_E_from_j_1d(this, current, component, E)
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_maxwell_1d_base
        class(sll_maxwell_1d_base)             :: this
        sll_real64,dimension(:),intent(in)    :: current

@@ -1,7 +1,7 @@
 program test_periodic_interpolation
 #include "sll_working_precision.h"
-  use periodic_interp_module
-  use sll_fft
+  use sll_m_periodic_interp
+  use sll_m_fft
   implicit none 
   
   sll_int32, parameter    :: N0 = 16

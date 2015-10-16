@@ -19,14 +19,14 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_memory
+! MODULE: sll_m_memory
 !
 !> @ingroup memory
 !> @author
 !> Edwin Chacon-Golcher INRIA
 !> @brief
 !> Implements the error testing function and other related functionalities.
-module sll_memory
+module sll_m_memory
   implicit none
   intrinsic :: merge
 
@@ -67,4 +67,4 @@ contains
   end subroutine test_error_code
 
 
-end module sll_memory
+end module sll_m_memory

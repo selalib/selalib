@@ -2,7 +2,7 @@
 ! Selalib
 !------------------------------------------------------------------------------
 !
-! MODULE: pic_1d_particle_loading
+! MODULE: sll_m_pic_1d_particle_loading
 !
 ! DESCRIPTION:
 !> @author Jakob Ameres
@@ -17,7 +17,7 @@
 
 !module pic_1d_distribution_functions
 !        function sll_pdf_1d1v(x,v) result(p)
-!            use sll_working_precision
+!            use sll_m_working_precision
 !            sll_real64, dimension(:),intent(in) :: x
 !            sll_real64, dimension(:) ,intent(in):: v
 !            sll_real64, dimension(size(x)) :: p
@@ -30,17 +30,17 @@
 
 
 
-module pic_1d_particle_loading
+module sll_m_pic_1d_particle_loading
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 #include "sll_boundary_condition_descriptors.h"
-    use sll_constants
-    use sll_collective
-    use sll_particle_1d_description
-    use sll_sobol
-    use sll_prob
+    use sll_m_constants
+    use sll_m_collective
+    use sll_m_particle_1d_description
+    use sll_m_sobol
+    use sll_m_prob
     implicit none
 
     !Definitions for different loadings
@@ -99,7 +99,7 @@ module pic_1d_particle_loading
     !Probability
     abstract interface
         function sll_pdf_1d(x) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(size(x)) :: p
         endfunction
@@ -108,7 +108,7 @@ module pic_1d_particle_loading
 
     abstract interface
         function sll_pdf_1d1t(x,t) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(:),intent(in) :: t
             sll_real64, dimension(size(x),size(t)) :: p
@@ -120,7 +120,7 @@ module pic_1d_particle_loading
     !<ever need this interface. We keep it here for sake of completeness
     abstract interface
         function sll_pdf_1d1v(x,v) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(:) ,intent(in):: v
             sll_real64, dimension(size(x)) :: p
@@ -129,7 +129,7 @@ module pic_1d_particle_loading
 
     abstract interface
         function sll_pdf_1d1v1t(x,v,t) result(p)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(:),intent(in) :: v
             sll_real64, dimension(:),intent(in) :: t
@@ -163,7 +163,7 @@ contains
 
     function gaussianrnd( mu , sigma  ) RESULT(X)
 #include "sll_working_precision.h"
-    use sll_constants
+    use sll_m_constants
     IMPLICIT NONE
     sll_real64 :: mu    !< mean
     sll_real64 :: sigma !< standard deviation
@@ -198,8 +198,8 @@ endfunction
 
 !
 !function box_mueller_antithetic( mu , sigma , uniform_random_numbers  ) RESULT(gaussian_random_numbers)
-!#include "sll_working_precision.h"
-!    use sll_constants
+!#include "sll_m_working_precision.h"
+!    use sll_m_constants
 !    IMPLICIT NONE
 !    sll_real , intent(in):: mu    !< mean
 !    sll_real, intent(in) :: sigma !< standard deviation
@@ -227,7 +227,7 @@ endfunction
 
 function gaussian_from_rnd( mu , sigma , uniform_random_numbers  ) RESULT(gaussian_random_numbers)
 #include "sll_working_precision.h"
-    use sll_constants
+    use sll_m_constants
     IMPLICIT NONE
     sll_real , intent(in):: mu    !< mean
     sll_real, intent(in) :: sigma !< standard deviation
@@ -339,7 +339,7 @@ endfunction
 function sll_maxwellboltzmann1d (m ,T, velocity) &
         result(prob)
 #include "sll_working_precision.h"
-    use sll_constants
+    use sll_m_constants
     IMPLICIT NONE
 
     sll_real64, intent(in) :: T !< temperature in K
@@ -477,9 +477,9 @@ end function ionbeam
 !
 !subroutine  load_particles (nparticles, interval_a_user, interval_b_user,steadyparticleposition, &
     !        particleposition, particlespeed, particleweight, particleweight_constant, particle_qm)
-!#include "sll_working_precision.h"
-!#include "sll_memory.h"
-!    use sll_constants
+!#include "sll_m_working_precision.h"
+!#include "sll_m_memory.h"
+!    use sll_m_constants
 !    implicit none
 !    integer, intent(in) :: nparticles
 !    sll_real64, intent(in) ::interval_a_user
@@ -898,7 +898,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
         !        particleposition, particlespeed, particleweight, particleweight_constant, particle_qm)
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-    use sll_constants
+    use sll_m_constants
     implicit none
     integer, intent(in) :: nparticles
     sll_real64, intent(in) ::interval_a_user

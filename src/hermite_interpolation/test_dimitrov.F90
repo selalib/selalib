@@ -3,7 +3,7 @@ program test_hctc
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_constants
+  use sll_m_constants
 
 ! small test to verify each part of the computation of an interpolation using 
 ! the hctc hermite finite element

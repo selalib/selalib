@@ -14,7 +14,7 @@ module sll_m_hamiltonian_splitting_base
 
   abstract interface
      subroutine splitting(this, dt, number_steps)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_t_hamiltonian_splitting_base
        class(sll_t_hamiltonian_splitting_base)   :: this !< time splitting object
        sll_real64, intent(in)             :: dt !< time step size

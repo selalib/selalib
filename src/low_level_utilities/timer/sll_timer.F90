@@ -15,15 +15,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @file sll_timer.F90
-!> @defgroup timer sll_timer
+!> @file sll_m_timer.F90
+!> @defgroup timer sll_m_timer
 !> @author samuel de santis samuel.desantis@math.unistra.fr
 !> @brief Timing facility
 !> @details <b> How to use-it </b>
 !>
 !>
 !> First, add the line
-!> @code use sll_timer @endcode
+!> @code use sll_m_timer @endcode
 !> declare an sll_time_mark object
 !> @code type(sll_time_mark) :: mark @endcode
 !> 
@@ -37,7 +37,7 @@
 !> time = time_elapsed_since(mark2)
 !> @endcode
 !> 
-module sll_timer
+module sll_m_timer
   implicit none
 
   !> @brief type use for clock reading
@@ -95,4 +95,4 @@ module sll_timer
   end function sll_time_elapsed_since
 
 
-end module sll_timer
+end module sll_m_timer

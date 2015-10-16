@@ -24,7 +24,7 @@
 !> If HDF5 is not installed you can use this module. \n
 !> This is controlled by the variable <code>HDF5_ENABLE</code>.
 !>
-module sll_binary_io
+module sll_m_binary_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
@@ -149,4 +149,4 @@ end subroutine
 
 
 
-end module sll_binary_io
+end module sll_m_binary_io

@@ -4,12 +4,12 @@ program cg_polar
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_timer 
-  use polar_operators
-  use polar_advection
-  use sll_fft
+  use sll_m_timer 
+  use sll_m_polar_operators
+  use sll_m_polar_advection
+  use sll_m_fft
   !use poisson_polar
-  use sll_constants
+  use sll_m_constants
   implicit none
 
   type(sll_SL_polar), pointer :: plan_sl
@@ -716,8 +716,8 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f(iplot)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1

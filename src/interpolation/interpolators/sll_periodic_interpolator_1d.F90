@@ -11,7 +11,7 @@ module sll_m_periodic_interpolator_1d
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_m_interpolators_1d_base
-use periodic_interp_module
+use sll_m_periodic_interp
 implicit none
 private
 

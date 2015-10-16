@@ -76,8 +76,8 @@ program test_ode_integrators
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
-  use sll_working_precision
-  use sll_errors
+  use sll_m_working_precision
+  use sll_m_errors
 
   use sll_m_vector_space_real_arrays, only: &
     sll_vector_space_real_1d

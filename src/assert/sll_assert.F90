@@ -18,7 +18,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 
-module sll_assert
+module sll_m_assert
   implicit none
 
 contains
@@ -38,6 +38,6 @@ subroutine sll_assertion(msg, file, line)
   stop ':  ASSERTION FAILURE'
 end subroutine sll_assertion
 
-end module sll_assert
+end module sll_m_assert
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -19,7 +19,7 @@
 
 !> @ingroup maxwell_solvers
 !> This module contains common subroutines for  Maxwell solvers
-module sll_maxwell_solvers_base
+module sll_m_maxwell_solvers_base
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -27,7 +27,7 @@ module sll_maxwell_solvers_base
 #include "sll_constants.h"
 #include "sll_utilities.h"
 #include "sll_maxwell_solvers_macros.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 
 implicit none
 
@@ -94,4 +94,4 @@ close(90)
 
 end subroutine sll_plot_two_fields
 
-end module sll_maxwell_solvers_base
+end module sll_m_maxwell_solvers_base

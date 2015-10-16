@@ -1,14 +1,14 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-module sll_vp_cartesian_2d
+module sll_m_vp_cartesian_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
   use sll_m_interpolators_1d_base
-  use sll_time_splitting
-  use distribution_function
-  use sll_poisson_1d_periodic
+  use sll_m_time_splitting
+  use sll_m_distribution_function
+  use sll_m_poisson_1d_periodic
   implicit none
 
   type :: app_field_params
@@ -163,5 +163,5 @@ contains
     return
   end subroutine PF_envelope
 
-end module sll_vp_cartesian_2d
+end module sll_m_vp_cartesian_2d
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

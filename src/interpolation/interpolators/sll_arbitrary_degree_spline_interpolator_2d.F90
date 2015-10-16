@@ -21,7 +21,7 @@ module sll_m_arbitrary_degree_spline_interpolator_2d
 #include "sll_memory.h"
 #include "sll_assert.h" 
 use sll_m_interpolators_2d_base
-use sll_utilities
+use sll_m_utilities
 use sll_m_arbitrary_degree_spline_interpolator_1d
 
 implicit none

@@ -4,9 +4,9 @@ program test_hex_hermite
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_constants
-  use sll_interpolation_hex_hermite
-  !use euler_2d_hex
+  use sll_m_constants
+  use sll_m_interpolation_hex_hermite
+  !use sll_m_euler_2d_hex
 
   implicit none
 

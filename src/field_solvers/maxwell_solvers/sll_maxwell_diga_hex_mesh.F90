@@ -2,13 +2,13 @@
 !
 !  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
 !
-module sll_maxwell_diga_hex_mesh
+module sll_m_maxwell_diga_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_hexagonal_meshes, only : &
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d
-use triangle_dg_matrices, only : &
+use sll_m_triangle_dg_matrices, only : &
      ElementRef, &
      AssMatElem
 
@@ -501,4 +501,4 @@ end if
 
 end function iddl_voisin
 
-end module sll_maxwell_diga_hex_mesh
+end module sll_m_maxwell_diga_hex_mesh

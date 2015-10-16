@@ -2,8 +2,8 @@
 program test_io_gnuplot
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_gnuplot
-use sll_constants
+use sll_m_gnuplot
+use sll_m_constants
 implicit none
 
 sll_int32 :: i, j     

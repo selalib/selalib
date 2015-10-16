@@ -1,4 +1,4 @@
-module sll_errors
+module sll_m_errors
 
   use, intrinsic :: iso_fortran_env, only: error_unit
   implicit none
@@ -97,4 +97,4 @@ contains
   end subroutine errout
   !----------------------------------------------------------------------------
 
-end module sll_errors
+end module sll_m_errors

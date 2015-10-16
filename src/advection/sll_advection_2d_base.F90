@@ -40,7 +40,7 @@ module sll_m_advection_2d_base
       dt, &
       input, &
       output)
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_advection_2d_base       
       class(sll_advection_2d_base) :: adv
       sll_real64, dimension(:,:), intent(in) :: A1

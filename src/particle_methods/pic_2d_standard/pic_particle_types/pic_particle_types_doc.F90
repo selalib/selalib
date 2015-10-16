@@ -17,7 +17,7 @@
 !> @details  The particle_representation.h file contains Macros
 !>           for conversion between standard (position,velocity) 
 !>           particle type and the type defined in the module
-!>           sll_particle_representations.
+!>           sll_m_particle_representations.
 !> <b> Headers file available </b>
 !>  - sll_pic_particle_types.h
 !>

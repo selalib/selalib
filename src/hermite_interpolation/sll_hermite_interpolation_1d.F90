@@ -1,8 +1,8 @@
-module sll_hermite_interpolation_1d_module
+module sll_m_hermite_interpolation_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors
 implicit none
 
 !Hermite interpolation in 1d
@@ -12,7 +12,7 @@ implicit none
 !If p is even, the reconstruction has continuous derivatives
 !p=6 should be quite similar to cubic splines
 !do not hesitate to take large odd p, like the favourite p=17
-!see also sll_hermite_interpolation_2d_module
+!see also sll_m_hermite_interpolation_2d
   type :: sll_hermite_interpolation_1d
     sll_real64 :: eta_min !< eta1 min
     sll_real64 :: eta_max !< eta1 max

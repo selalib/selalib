@@ -24,13 +24,13 @@ module sll_m_advection_1d_CSL_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
 use sll_m_characteristics_1d_base
 use sll_m_interpolators_1d_base
-use sll_hermite_interpolation_1d_module
-use gauss_legendre_integration
-use lagrange_interpolation
+use sll_m_hermite_interpolation_1d
+use sll_m_gauss_legendre_integration
+use sll_m_lagrange_interpolation
 implicit none
 
   type,extends(sll_advection_1d_base) :: CSL_periodic_1d_advector

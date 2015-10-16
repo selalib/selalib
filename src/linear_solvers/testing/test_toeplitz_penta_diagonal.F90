@@ -4,7 +4,7 @@
 ! Module: test_sll_penta_diagonal.F90
 !
 !> @brief 
-!> Selalib sll_penta_diagonal.F90 tester
+!> Selalib sll_m_penta_diagonal.F90 tester
 !
 !> Last modification: September 20, 2012
 !   
@@ -17,7 +17,7 @@ program test_sll_penta_diagonal
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_penta_diagonal
+use sll_m_penta_diagonal
   implicit none
 
 

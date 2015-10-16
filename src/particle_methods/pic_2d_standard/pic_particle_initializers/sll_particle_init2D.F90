@@ -15,17 +15,17 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_particle_initializers_2d
+module sll_m_particle_initializers_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "particle_representation.h"
 
-  use sll_constants, only: sll_pi
-  use sll_particle_group_2d_module
-  use sll_cartesian_meshes
-!  use gaussian
-  use hammersley
+  use sll_m_constants, only: sll_pi
+  use sll_m_particle_group_2d
+  use sll_m_cartesian_meshes
+!  use sll_m_gaussian
+  use sll_m_hammersley
 
   implicit none
   
@@ -183,4 +183,4 @@ contains
   end function eval_KH
 
 
-end module sll_particle_initializers_2d
+end module sll_m_particle_initializers_2d

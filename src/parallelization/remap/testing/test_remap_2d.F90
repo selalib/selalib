@@ -1,6 +1,6 @@
 program remap_2d_unit_test
-  use sll_collective
-  use sll_remapper
+  use sll_m_collective
+  use sll_m_remapper
 !#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"

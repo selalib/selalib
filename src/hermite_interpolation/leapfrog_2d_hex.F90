@@ -1,8 +1,8 @@
-module module_characteristics_2d_leapfrog
+module sll_m_characteristics_2d_leapfrog
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_constants
+  use sll_m_constants
   use sll_m_characteristics_2d_base
   implicit none
 

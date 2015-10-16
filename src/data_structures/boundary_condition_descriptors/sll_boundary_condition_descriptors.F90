@@ -10,14 +10,14 @@
 !>
 !> Just add the line
 !> @code
-!> #include "sll_boundary_condition_descriptors.h"
+!> #include "sll_m_boundary_condition_descriptors.h"
 !> @endcode
 !
 ! To be considered here is to include also BC combinations, which may help
 ! save some coding instead of managing this internally within routines, for
 ! example a flag like SLL_DIRICHLET_NEUMANN could indicate two BC's along
 ! a particular dimension...
-module sll_boundary_condition_descriptors
+module sll_m_boundary_condition_descriptors
 #include "sll_working_precision.h"
 
   implicit none
@@ -46,4 +46,4 @@ module sll_boundary_condition_descriptors
   sll_int32, parameter :: SLL_SILVER_MULLER  = 9
 
 
-end module sll_boundary_condition_descriptors
+end module sll_m_boundary_condition_descriptors

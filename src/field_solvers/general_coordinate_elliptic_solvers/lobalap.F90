@@ -4,8 +4,8 @@
 ! le terme source est la charge: rho
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
-module lobalap
-  use map_function_module, only : map
+module sll_m_lobalap
+  use sll_m_map_function, only : map
   implicit none
   ! ordre de l'interpolation élément fini
   integer :: order
@@ -253,7 +253,7 @@ contains
     end do
        
 
-    open(101,file='lobalap.msh')
+    open(101,file='sll_m_lobalap.msh')
     write(101,'(A)') '$MeshFormat'
     write(101,'(A)') '2 0 8'
     write(101,'(A)') '$EndMeshFormat'
@@ -814,5 +814,5 @@ contains
 
 
 
-end module lobalap
+end module sll_m_lobalap
 

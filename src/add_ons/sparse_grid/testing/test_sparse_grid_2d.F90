@@ -11,7 +11,7 @@ program test_interpolation_2d
 #include "sll_constants.h"
 
 
-  use sparse_grid_2d
+  use sll_m_sparse_grid_2d
   implicit none
 
   sll_int32, dimension(:), allocatable :: order

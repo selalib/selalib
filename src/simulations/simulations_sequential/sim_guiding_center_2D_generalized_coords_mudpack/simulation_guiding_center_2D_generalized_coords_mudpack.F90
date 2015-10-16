@@ -1,4 +1,4 @@
-module sll_simulation_2d_gc_curvilinear_mudpack_module
+module sll_m_sim_2d_gc_curvilinear_mudpack
 
 !the aim is to create guiding center cartesian in simulation class
 !related to
@@ -12,23 +12,23 @@ module sll_simulation_2d_gc_curvilinear_mudpack_module
 #include "sll_fields.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_constants
-  use sll_cartesian_meshes  
+  use sll_m_constants
+  use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
   use sll_m_advection_2d_bsl
   use sll_m_characteristics_2d_explicit_euler
   use sll_m_characteristics_2d_verlet
-  use sll_reduction_module
-  use sll_simulation_base
+  use sll_m_reduction
+  use sll_m_sim_base
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_cubic_spline_interpolator_1d
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
-  use sll_mudpack_curvilinear
-  use sll_parallel_array_initializer_module
-  use sll_fft
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
+  use sll_m_mudpack_curvilinear
+  use sll_m_parallel_array_initializer
+  use sll_m_fft
   implicit none
   
   
@@ -884,8 +884,8 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -952,4 +952,4 @@ contains
 #endif
 
 
-end module sll_simulation_2d_gc_curvilinear_mudpack_module
+end module sll_m_sim_2d_gc_curvilinear_mudpack

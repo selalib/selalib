@@ -21,20 +21,20 @@
 !> data is separate from the values themselves. Light data is stored using XML, 
 !> Heavy data is stored using HDF5 or Binary files. \n
 !>
-module sll_xdmf
+module sll_m_xdmf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
   
 #ifdef NOHDF5
-use sll_binary_io
+use sll_m_binary_io
 #else
-use sll_hdf5_io_serial
+use sll_m_hdf5_io_serial
 #endif
 
-use sll_ascii_io
-use sll_xml_io
+use sll_m_ascii_io
+use sll_m_xml_io
   
 implicit none
   
@@ -830,4 +830,4 @@ end subroutine sll_plot_f
 
 
 
-end module sll_xdmf
+end module sll_m_xdmf

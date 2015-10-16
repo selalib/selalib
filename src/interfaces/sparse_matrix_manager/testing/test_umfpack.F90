@@ -4,7 +4,7 @@ program test_umfpack
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use mod_umfpack
+use sll_m_umfpack
 implicit none
 
 integer(umf_void) :: symbolic

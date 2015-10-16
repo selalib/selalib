@@ -3,18 +3,18 @@
 !**************************************************************
 
 !> Module to solve Poisson equation on one dimensional mesh using Finite Elements
-module sll_poisson_1d_fem
+module sll_m_poisson_1d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-    use sll_constants
-    use sll_cartesian_meshes
-    use sll_arbitrary_degree_splines
-    use sll_boundary_condition_descriptors
-    use gauss_legendre_integration
-    use sll_utilities
-    use sll_fft
+    use sll_m_constants
+    use sll_m_cartesian_meshes
+    use sll_m_arbitrary_degree_splines
+    use sll_m_boundary_condition_descriptors
+    use sll_m_gauss_legendre_integration
+    use sll_m_utilities
+    use sll_m_fft
     implicit none
     !  private
     !  public :: initialize, new, solve
@@ -100,7 +100,7 @@ module sll_poisson_1d_fem
     !Interface for one dimensional function for right hand side
     abstract interface
         function poisson_1d_fem_rhs_function(x) result(y)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(size(x)) :: y
         endfunction

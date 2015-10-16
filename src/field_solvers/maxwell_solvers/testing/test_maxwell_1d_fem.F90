@@ -22,7 +22,7 @@ program test_maxwell_1d_fem
 
   use sll_m_maxwell_1d_base
   use sll_m_maxwell_1d_fem
-  use sll_arbitrary_degree_splines
+  use sll_m_arbitrary_degree_splines
 
   implicit none
 

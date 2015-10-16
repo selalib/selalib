@@ -1,4 +1,4 @@
-module sll_mudpack_base
+module sll_m_mudpack_base
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -28,4 +28,4 @@ enum, bind(C)
    enumerator :: NEUMANN      = 2
 end enum
 
-end module sll_mudpack_base
+end module sll_m_mudpack_base

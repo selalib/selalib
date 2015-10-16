@@ -1,17 +1,17 @@
-module finite_volume
+module sll_m_finite_volume
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_constants
-  use cubic_non_uniform_splines
+  use sll_m_constants
+  use sll_m_cubic_non_uniform_splines
   !use utils
   implicit none
 
 contains 
 subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use sll_constants
+  use sll_m_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -599,7 +599,7 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
   
 end subroutine compute_psi
 
-end module finite_volume
+end module sll_m_finite_volume
 
 
 program bgk_fv
@@ -607,13 +607,13 @@ program bgk_fv
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
 
-  use sll_constants
-  use distribution_function
+  use sll_m_constants
+  use sll_m_distribution_function
   use sll_diagnostics
-  use sll_csl
+  use sll_m_csl
   use sll_splines
-  use contrib_rho_module
-  use finite_volume
+  use sll_m_contrib_rho
+  use sll_m_finite_volume
   implicit none
   external Compute_flux!,compute_psi
   !external poisson1dpertrap
@@ -640,7 +640,7 @@ program bgk_fv
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
-  character(32), parameter  :: name = 'distribution_function'
+  character(32), parameter  :: name = 'sll_m_distribution_function'
   sll_real64,dimension(:,:,:), pointer :: integration_points
   sll_real64,dimension(:,:), pointer :: integration_points_val
   sll_real64 :: geom_eta(2,2),geom_x(2,2)
@@ -1072,7 +1072,7 @@ program bgk_fv
         val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/L*x1))
       endif
       if(test_case==6.or.test_case==7)then
-        !gaussian equilibrium
+        !sll_m_gaussian equilibrium
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
         !f_equil(i1,i2) = val*jac_array(i1,i2)
       endif
@@ -1469,7 +1469,7 @@ program bgk_fv
 end program
 
 subroutine Compute_flux2(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
-  use sll_constants
+  use sll_m_constants
   implicit none
   
   
@@ -2175,7 +2175,7 @@ end subroutine compute_flux2
 
 subroutine compute_psi2(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use sll_constants
+  use sll_m_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -2683,7 +2683,7 @@ end subroutine compute_psi2
 
 
 subroutine poisson1dpertrap(E,L,N)
-  use sll_constants
+  use sll_m_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -2720,7 +2720,7 @@ end subroutine poisson1dpertrap
 
 
 subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
-  use sll_constants
+  use sll_m_constants
   implicit none
   
   

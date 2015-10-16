@@ -8,13 +8,13 @@
 program qns_4d_general
 #include "sll_working_precision.h"
 #include "sll_coordinate_transformations.h"
-  use sll_simulation_4d_qns_general_module, only: &
+  use sll_m_sim_4d_qns_general, only: &
      sll_simulation_4d_qns_general, initialize_4d_qns_general, &
      run_4d_qns_general
-  use sll_collective
-  use sll_constants
-  use sll_cartesian_meshes
-  use sll_common_array_initializers_module
+  use sll_m_collective
+  use sll_m_constants
+  use sll_m_cartesian_meshes
+  use sll_m_common_array_initializers
   use sll_m_poisson_2d_elliptic_solver, &
      only: es_gauss_legendre
   implicit none

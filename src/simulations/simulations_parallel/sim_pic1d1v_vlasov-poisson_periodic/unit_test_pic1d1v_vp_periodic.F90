@@ -2,11 +2,11 @@ program pic1d1v_vp_periodic
 
 #include "sll_working_precision.h"
     
-    use sll_m_simulation_pic1d1v_vp_periodic, only: &
+    use sll_m_sim_pic1d1v_vp_periodic, only: &
       sll_simulation_pic1d1v_vp_periodic, &
       sll_delete
     
-    use sll_collective, only: &
+    use sll_m_collective, only: &
       sll_world_collective,   &
       sll_collective_barrier, &
       sll_boot_collective,    &

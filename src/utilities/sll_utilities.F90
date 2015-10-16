@@ -17,7 +17,7 @@
 
 !> @ingroup utilities
 !> Some common numerical utilities
-module sll_utilities
+module sll_m_utilities
 #include "sll_working_precision.h"
 #include "sll_errors.h"
 
@@ -527,4 +527,4 @@ subroutine compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
 end subroutine compute_mesh_from_bloc
 
 
-end module sll_utilities
+end module sll_m_utilities

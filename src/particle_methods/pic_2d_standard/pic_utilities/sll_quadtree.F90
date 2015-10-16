@@ -2,7 +2,7 @@
  !> @author Eric Sonnendrucker
  !> @brief Quad tree sorting algorithm
  !> @details Puts particles in a quad tree structure
-module sll_quadtree
+module sll_m_quadtree
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -11,7 +11,7 @@ module sll_quadtree
 
   !Replace this with pz as particle%dx, pv as particle%pv,
   !use global, only : POS1 => PZ,  POS2 => PV, WEIGHT => PF
-  use sll_particle_representations
+  use sll_m_particle_representations
 
 
   implicit none
@@ -323,4 +323,4 @@ end subroutine quadtree_traversal
    endsubroutine
 
 
-end module sll_quadtree
+end module sll_m_quadtree

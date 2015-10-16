@@ -1,7 +1,7 @@
 program test_random_deviate_generators
 #include "sll_working_precision.h"
-  use gaussian
-  use hammersley
+  use sll_m_gaussian
+  use sll_m_hammersley
   implicit none
 
 #define Xmin  0._f64

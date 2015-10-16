@@ -19,10 +19,10 @@
 !> @brief
 !> Module that contains routines to write data in ASCII format file
 !> @details 
-!> This is an example of how use the sll_ascii_io module.
+!> This is an example of how use the sll_m_ascii_io module.
 !> More details about this example
 !> @snippet file_io/unit_test_ascii.F90 example
-module sll_ascii_io
+module sll_m_ascii_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   implicit none
@@ -155,5 +155,5 @@ sll_real64, intent(in)  :: array(:,:,:)
 write(file_id,*,IOSTAT=error) array
 end subroutine
 
-end module sll_ascii_io
+end module sll_m_ascii_io
 

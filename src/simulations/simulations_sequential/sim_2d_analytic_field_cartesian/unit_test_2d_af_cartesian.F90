@@ -1,5 +1,5 @@
 program analytic_field_2d_cartesian
-  use sll_simulation_2d_analytic_field_cartesian_module, only : &
+  use sll_m_sim_2d_analytic_field_cartesian, only : &
               sll_simulation_base_class, new_analytic_field_2d_cartesian
   implicit none
   

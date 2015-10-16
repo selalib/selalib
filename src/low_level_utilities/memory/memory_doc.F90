@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup memory sll_memory 
+!> @defgroup memory sll_m_memory 
 !> @author Edwin Chacon-Golcher
 !> @brief 
 !> Implements the error testing function and allocation related functionalities.
@@ -19,7 +19,7 @@
 !> 
 !> The following directive will make available macros:
 !> @code
-!> #include "sll_memory.h" 
+!> #include "sll_m_memory.h" 
 !> @endcode
 !>
 !> - SLL_ALLOCATE
@@ -28,7 +28,7 @@
 !> - SLL_CLEAR_ALLOCATE
 !>
 !> and will provide any additional functionality included in the 
-!> sll_memory.F90 module. This directive should be put in the 'use' section 
+!> sll_m_memory.F90 module. This directive should be put in the 'use' section 
 !> of the subprogram that wants to use the allocator.
 !>
 !> Examples: 

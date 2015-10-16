@@ -3,7 +3,7 @@
 ! debugging/understanding the behavior of the QNS one. Once this objective is
 ! fulfilled, this simulation can be deleted.
 
-module sll_simulation_4d_qns_mixed_module
+module sll_m_sim_4d_qns_mixed
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -11,18 +11,18 @@ module sll_simulation_4d_qns_mixed_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_collective
-  use sll_remapper
-  use sll_constants
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_constants
   use sll_m_cubic_spline_interpolator_2d
-  use sll_poisson_2d_periodic_cartesian_par
+  use sll_m_poisson_2d_periodic_cartesian_par
   use sll_m_cubic_spline_interpolator_1d
-  use sll_simulation_base
-  use sll_cartesian_meshes
-  use sll_parallel_array_initializer_module
-  use sll_coordinate_transformation_2d_base_module
-  use sll_gnuplot_parallel
-  use sll_general_coordinate_elliptic_solver_module
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
+  use sll_m_parallel_array_initializer
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_gnuplot_parallel
+  use sll_m_general_coordinate_elliptic_solver
   use sll_m_scalar_field_2d_base
   use sll_m_scalar_field_2d
   implicit none
@@ -2653,10 +2653,10 @@ end function func_zero
 
 #if 0
   subroutine plot_fields(itime, sim)
-    use sll_collective
+    use sll_m_collective
     use hdf5
-    use sll_hdf5_io_parallel
-    use sll_xml_io
+    use sll_m_hdf5_io_parallel
+    use sll_m_xml_io
     sll_int32, intent(in) :: itime
     character(len=4)      :: ctime
     sll_int32             :: i_layout
@@ -2813,4 +2813,4 @@ end function func_zero
 
 
 
-end module sll_simulation_4d_qns_mixed_module
+end module sll_m_sim_4d_qns_mixed

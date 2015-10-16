@@ -77,11 +77,11 @@
 !>    -> not finished (Michel)
 !>  
 !>  other modules:
-!>  sll_advection_2d_tri_mesh.F90
+!>  sll_m_advection_2d_tri_mesh.F90
 !>  -> new suggested name: sll_m_advection_2d_tri_mesh.F90
 !>  -> developed by Pierre
 !>  
-!>  lagrange_interpolation.F90
+!>  sll_m_lagrange_interpolation.F90
 !>  -> see redundancy with other such files.
 !>  
 !>  programs:

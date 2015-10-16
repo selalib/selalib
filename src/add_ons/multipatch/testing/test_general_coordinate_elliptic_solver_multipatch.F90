@@ -4,17 +4,17 @@ program test_general_elliptic_solver_multipatch
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
 
-use sll_cartesian_meshes
-use sll_cartesian_meshes_multipatch
+use sll_m_cartesian_meshes
+use sll_m_cartesian_meshes_multipatch
 use sll_m_coordinate_transformations_2d
-use sll_common_coordinate_transformations
-use sll_coordinate_transformation_multipatch_module
+use sll_m_common_coordinate_transformations
+use sll_m_coordinate_transformation_multipatch
 use sll_m_scalar_field_2d
 use sll_m_scalar_field_2d_multipatch
-use sll_constants
+use sll_m_constants
 use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_timer
-use sll_general_coordinate_elliptic_solver_multipatch_module
+use sll_m_timer
+use sll_m_general_coordinate_elliptic_solver_multipatch
 
 implicit none
 

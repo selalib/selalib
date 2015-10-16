@@ -3,15 +3,15 @@
 !> @brief 
 !> 3D poisson solver
 
-module sll_poisson_3d_periodic_seq
+module sll_m_poisson_3d_periodic_seq
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
-  use sll_fft
-  use sll_constants
+  use sll_m_fft
+  use sll_m_constants
 
   implicit none
 
@@ -241,5 +241,5 @@ contains
   end subroutine verify_argument_sizes_seq
 
 
-end module sll_poisson_3d_periodic_seq
+end module sll_m_poisson_3d_periodic_seq
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -5,9 +5,9 @@
 
 program drift_kinetic_polar
 #include "sll_working_precision.h"
-  use sll_simulation_4d_drift_kinetic_polar_module
-  use sll_collective
-  use sll_timer
+  use sll_m_sim_4d_drift_kinetic_polar
+  use sll_m_collective
+  use sll_m_timer
   implicit none
 
   character(len=256) :: filename

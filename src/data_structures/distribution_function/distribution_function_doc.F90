@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup distribution_function sll_distribution_function 
+!> @defgroup sll_m_distribution_function sll_distribution_function 
 !> @brief 
 !> Derived type to describe a distribution function
 !> @author Edwin Chacon-Golcher, Pierre Navaro.

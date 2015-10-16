@@ -74,7 +74,7 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_rhs( self, t, y, ydot )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_ode_base, sll_vector_space_base
     class( sll_ode_base )         , intent( inout ) :: self
     sll_real64                    , intent( in    ) :: t
@@ -99,7 +99,7 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_init( self, ode, t0, y0 )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_ode_integrator_base, sll_ode_base, sll_vector_space_base
     class( sll_ode_integrator_base ), intent(   out ) :: self
     class( sll_ode_base ), pointer  , intent( in    ) :: ode
@@ -120,7 +120,7 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_step( self, t, y, h, ynew )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_ode_integrator_base, sll_ode_base, sll_vector_space_base
     class( sll_ode_integrator_base ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: t

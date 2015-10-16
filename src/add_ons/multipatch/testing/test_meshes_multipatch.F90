@@ -1,5 +1,5 @@
 program unit_test_meshes_multipatch
-  use sll_cartesian_meshes_multipatch
+  use sll_m_cartesian_meshes_multipatch
 #include "sll_working_precision.h"
   implicit none
 

@@ -2,8 +2,8 @@
 !> @brief 
 !> Periodic 3D poisson solver (parallel version)
 !> @details
-!> depends on sll_remapper
-module sll_poisson_3d_periodic_par
+!> depends on sll_m_remapper
+module sll_m_poisson_3d_periodic_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -11,9 +11,9 @@ module sll_poisson_3d_periodic_par
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-  use sll_fft
-  use sll_collective
-  use sll_remapper
+  use sll_m_fft
+  use sll_m_collective
+  use sll_m_remapper
 
   implicit none
 
@@ -394,4 +394,4 @@ contains
   end subroutine verify_argument_sizes_par
 
 
-end module sll_poisson_3d_periodic_par
+end module sll_m_poisson_3d_periodic_par

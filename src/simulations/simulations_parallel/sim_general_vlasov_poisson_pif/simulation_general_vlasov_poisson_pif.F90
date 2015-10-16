@@ -2,35 +2,35 @@
 !  Author: Jakob Ameres, jakob.ameres@tum.de
 !**************************************************************
 
-module sll_general_vlasov_poisson_pif
+module sll_m_general_vlasov_poisson_pif
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
 
-use sll_pif_fieldsolver
-use sll_timer
-use sll_sobol
-use sll_prob
-use sll_collective
-use sll_visu_pic
-use sll_moment_matching
-use sll_pic_utilities
-use sll_particle_method_descriptors
-use sll_simulation_base
-use sll_wedge_product_generaldim
-use sll_descriptors
-use sll_visu_pic
-use sll_visu_pic_coll
-use sll_time_composition
-use sll_hdf5_io_serial
+use sll_m_pif_fieldsolver
+use sll_m_timer
+use sll_m_sobol
+use sll_m_prob
+use sll_m_collective
+use sll_m_visu_pic
+use sll_m_moment_matching
+use sll_m_pic_utilities
+use sll_m_particle_method_descriptors
+use sll_m_sim_base
+use sll_m_wedge_product_generaldim
+use sll_m_descriptors
+use sll_m_visu_pic
+use sll_m_visu_pic_coll
+use sll_m_time_composition
+use sll_m_hdf5_io_serial
 
 implicit none
 
 ! abstract interface
 !         function electric_field_general(x,t) result(E)
-!             use sll_working_precision
+!             use sll_m_working_precision
 !             sll_real64, dimension(:,:),intent(in) :: x 
 !             sll_real64, dimension(:),intent(in) :: t
 !             sll_real64, dimension(size(x,1),size(x,2)) :: E
@@ -738,7 +738,7 @@ subroutine init_particle_prior_maxwellian_generalvp_pif(sim)
     sim%particle(sim%maskx,idx) = sim%boxlen * sim%particle(sim%maskx,idx)
   end do
 
-  !load gaussian profile
+  !load sll_m_gaussian profile
   do idx=1,size(sim%particle,2)
    do jdx=1, size(sim%maskv)
     v_cdf = sim%particle(sim%maskv(jdx),idx)
@@ -1250,4 +1250,4 @@ end subroutine write_result_generalvp_pif
 
 
 
-end module sll_general_vlasov_poisson_pif
+end module sll_m_general_vlasov_poisson_pif

@@ -5,7 +5,7 @@
 !> Low-level mathematical utility 
 !> that applies the 
 !> Gauss-Legendre method to compute numeric integrals.
-module gauss_legendre_integration
+module sll_m_gauss_legendre_integration
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 !  use sll_splines
@@ -28,7 +28,7 @@ module gauss_legendre_integration
   abstract interface
      !> 1d real function
      function function_1D_legendre(x)
-       use sll_working_precision ! can't pass a header file because the
+       use sll_m_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
                                  ! This is very rare.
        sll_real64             :: function_1D_legendre
@@ -39,7 +39,7 @@ module gauss_legendre_integration
 
 !  abstract interface
 !     function interpolated_function_1D(x,spline_obj)
-!       use sll_working_precision
+!       use sll_m_working_precision
 !       use sll_splines
 !       sll_real64                   :: interpolated_function_1D
 !       sll_real64, intent(in)       :: x
@@ -131,7 +131,7 @@ contains
        xk(9)  =  0.865063366688985_f64;   wk(9)  =  0.149451349150581_f64;\
        xk(10) =  0.973906528517172_f64;   wk(10) =  0.066671344308688_f64;\
     case default;\
-       print *, 'gauss_legendre_integration: ';\
+       print *, 'sll_m_gauss_legendre_integration: ';\
        print *, 'degree of integration not implemented. Exiting...';\
        stop;
 
@@ -249,7 +249,7 @@ contains
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return array containing points (1,:) and weights (2,:)
   !> gauss_points(degree) returns a real 2D array with the values of the
-  !> locations of the gaussian points 'x_k' in the [-1,1] interval and
+  !> locations of the sll_m_gaussian points 'x_k' in the [-1,1] interval and
   !> their corresponding weights 'w_k'. Each column of the answer array
   !> contains the pair (x_k, w_k). Optionally, the user may provide the
   !> endpoints for the desired interval [a,b] where the gauss points should
@@ -359,4 +359,4 @@ contains
   end function gauss_legendre_weights
 
 
-end module gauss_legendre_integration
+end module sll_m_gauss_legendre_integration

@@ -4,16 +4,16 @@
 !> @details <DETAILED_DESCRIPTION>
 
 
-module sll_poisson_2d_sparse_grid_fft
+module sll_m_poisson_2d_sparse_grid_fft
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sparse_grid_2d
+  use sll_m_sparse_grid_2d
 
   use, intrinsic :: iso_c_binding
-  use sll_constants, only: sll_pi
+  use sll_m_constants, only: sll_pi
   implicit none
   private
 
@@ -197,4 +197,4 @@ recursive subroutine insert_recursive_fourier_real(sparsegrid,index_sg,ind,level
   end if
 end subroutine insert_recursive_fourier_real
 
-end module sll_poisson_2d_sparse_grid_fft
+end module sll_m_poisson_2d_sparse_grid_fft

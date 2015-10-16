@@ -21,9 +21,9 @@ module sll_m_qn_2d_polar_splines_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_timer
+use sll_m_timer
 use sll_m_qn_2d_base
-use sll_qn_2d_polar
+use sll_m_qn_2d_polar
 implicit none
 
 

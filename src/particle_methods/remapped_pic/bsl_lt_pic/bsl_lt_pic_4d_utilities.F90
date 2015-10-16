@@ -20,16 +20,16 @@ module sll_m_bsl_lt_pic_4d_utilities
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!#include "sll_accumulators.h"
+!#include "sll_m_accumulators.h"
 !#include "particle_representation.h"
 
-  use sll_constants, only: sll_pi
-  use sll_cartesian_meshes
-  use sll_working_precision
+  use sll_m_constants, only: sll_pi
+  use sll_m_cartesian_meshes
+  use sll_m_working_precision
 
-  use sll_timer
-  use sll_utilities, only: sll_new_file_id, int2string
-  use sll_gnuplot
+  use sll_m_timer
+  use sll_m_utilities, only: sll_new_file_id, int2string
+  use sll_m_gnuplot
 
 implicit none 
 
@@ -303,9 +303,9 @@ contains
 
   subroutine apply_periodic_bc_x( mesh, x)
 
-!    use sll_cartesian_meshes
-    ! [[file:../working_precision/sll_working_precision.h]]
-!    use sll_working_precision
+!    use sll_m_cartesian_meshes
+    ! [[file:../working_precision/sll_m_working_precision.h]]
+!    use sll_m_working_precision
 
     type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
@@ -316,9 +316,9 @@ contains
 
   subroutine apply_periodic_bc_y( mesh, y)
 
-!    use sll_cartesian_meshes
-    ! [[file:../working_precision/sll_working_precision.h]]
-!    use sll_working_precision
+!    use sll_m_cartesian_meshes
+    ! [[file:../working_precision/sll_m_working_precision.h]]
+!    use sll_m_working_precision
 
     type(sll_cartesian_mesh_2d), pointer, intent(in) :: mesh
     sll_real64, intent(inout) :: y

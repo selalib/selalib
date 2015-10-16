@@ -11,7 +11,7 @@ module sll_m_gyroaverage_2d_base
   !> Compute Jf = gyroaverage of f with the Larmor radius larmor_rad
   abstract interface
     subroutine signature_compute_gyroaverage_2d( gyroaverage, larmor_rad, f)
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_gyroaverage_2d_base      
       class(sll_gyroaverage_2d_base), target :: gyroaverage
       sll_real64,intent(in) :: larmor_rad

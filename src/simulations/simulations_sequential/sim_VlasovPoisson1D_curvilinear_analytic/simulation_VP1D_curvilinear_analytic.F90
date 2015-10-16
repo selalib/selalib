@@ -1,4 +1,4 @@
-module simulation_VP1D_curvilinear_analytic
+module sll_m_sim_VP1D_curvilinear_analytic
 
 !!!!!!!!!!!!!!!!!!!!!!!
 !  Vlasov-Poisson 1D simulation
@@ -9,10 +9,10 @@ module simulation_VP1D_curvilinear_analytic
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_simulation_base
-  use cubic_non_uniform_splines
-  use sll_constants
-  use sll_boundary_condition_descriptors
+  use sll_m_sim_base
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -74,7 +74,7 @@ contains
     N_x1_poisson=1024
     mesh_case=2 !
     test_case=1 !1: landau damping
-    rho_case=1  !1: trap 2: splines 3: gaussian 4: gaussian sym 
+    rho_case=1  !1: trap 2: splines 3: sll_m_gaussian 4: sll_m_gaussian sym 
                 !5: spline_per
     div_case=1 !            
                 
@@ -230,8 +230,8 @@ contains
 
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use sll_constants
-    use cubic_non_uniform_splines
+    use sll_m_constants
+    use sll_m_cubic_non_uniform_splines
     implicit none
     
     sll_real64,dimension(:),pointer::f,Xstar,node_positions
@@ -331,7 +331,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!
 
 subroutine poisson1dpertrap(E,L,N)
-  use sll_constants
+  use sll_m_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -470,7 +470,7 @@ end subroutine compute_rho_mapped_mesh2
 
 subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use sll_constants
+  use sll_m_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -1097,7 +1097,7 @@ end subroutine advect_classical_csl
    subroutine construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
    &geom_x,geom_eta,alpha_mesh)
-    use sll_constants
+    use sll_m_constants
     implicit none
     sll_int32,intent(in)::nc_eta1,nc_eta2,mesh_case
     sll_real64,intent(in)::geom_x(2,2),geom_eta(2,2),alpha_mesh
@@ -2159,4 +2159,4 @@ end  function compute_non_unif_integral_gaussian_sym
   
 
 
-end module simulation_VP1D_curvilinear_analytic
+end module sll_m_sim_VP1D_curvilinear_analytic

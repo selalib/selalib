@@ -28,22 +28,22 @@ module sll_m_dk_curv_mesh
 #include "sll_errors.h"
 #include "sll_memory.h"
 
-  use sll_utilities, only : &
+  use sll_m_utilities, only : &
     sll_new_file_id
 
-  use sll_cartesian_meshes, only : &
+  use sll_m_cartesian_meshes, only : &
     sll_cartesian_mesh_2d, &
     new_cartesian_mesh_2d, &
     sll_cartesian_mesh_1d, &
     new_cartesian_mesh_1d
 
-  use sll_coordinate_transformation_2d_base_module, only : &
+  use sll_m_coordinate_transformation_2d_base, only : &
     sll_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only : &
     new_coordinate_transformation_2d_analytic
 
-  use sll_common_coordinate_transformations, only : &
+  use sll_m_common_coordinate_transformations, only : &
     polar_x1, &
     polar_x2, &
     polar_jac11, &

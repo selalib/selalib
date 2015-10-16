@@ -20,12 +20,12 @@ module sll_m_remapped_pic_utilities
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!#include "sll_accumulators.h"
+!#include "sll_m_accumulators.h"
 !#include "particle_representation.h"
 
-  use sll_cartesian_meshes
-  use sll_working_precision
-  use sll_timer
+  use sll_m_cartesian_meshes
+  use sll_m_working_precision
+  use sll_m_timer
 
 implicit none
 
@@ -38,7 +38,7 @@ contains
   ! (taken from previous function in_bounds_periodic)
   function x_is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
 
-!    use sll_cartesian_meshes
+!    use sll_m_cartesian_meshes
     sll_real64,                     intent( in )            :: x, y
     type(sll_cartesian_mesh_2d),    intent( in ), pointer   :: mesh
     logical,                        intent( in )            :: x_periodic
@@ -60,9 +60,9 @@ contains
   ! todo: put this in the right module (with the meshes?)
   subroutine apply_periodic_bc_on_cartesian_mesh_2d( mesh, x, y )
 
-!    use sll_cartesian_meshes
-    ! [[file:../working_precision/sll_working_precision.h]]
-!    use sll_working_precision
+!    use sll_m_cartesian_meshes
+    ! [[file:../working_precision/sll_m_working_precision.h]]
+!    use sll_m_working_precision
 
     type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x

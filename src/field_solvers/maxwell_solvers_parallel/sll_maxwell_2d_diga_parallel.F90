@@ -16,11 +16,11 @@ module sll_m_maxwell_2d_diga_parallel
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
-use sll_cartesian_meshes
+use sll_m_cartesian_meshes
 use sll_m_coordinate_transformations_2d
-use sll_common_coordinate_transformations
-use sll_dg_fields
-use sll_boundary_condition_descriptors
+use sll_m_common_coordinate_transformations
+use sll_m_dg_fields
+use sll_m_boundary_condition_descriptors
 use sll_m_maxwell_2d_diga
 
 implicit none

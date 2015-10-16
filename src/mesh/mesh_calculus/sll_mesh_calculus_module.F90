@@ -1,13 +1,13 @@
-module sll_mesh_calculus_2d_module
+module sll_m_mesh_calculus_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_cartesian_meshes
-  use sll_triangular_meshes
-  use sll_coordinate_transformation_2d_base_module
-  use gauss_legendre_integration
+  use sll_m_cartesian_meshes
+  use sll_m_triangular_meshes
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_gauss_legendre_integration
   implicit none
 
   ! --------------------------------------------------------------------------
@@ -641,5 +641,5 @@ contains
   
 
 
-end module sll_mesh_calculus_2d_module
+end module sll_m_mesh_calculus_2d
 
