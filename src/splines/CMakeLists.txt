@@ -8,7 +8,7 @@ ADD_LIBRARY( sll_splines STATIC
   cubic_nonuniform_splines.F90 )
 
 TARGET_LINK_LIBRARIES( sll_splines
-  sll_utilities
+  sll_linear_solvers
   sll_boundary_condition_descriptors
   sll_meshes
   sll_integration
