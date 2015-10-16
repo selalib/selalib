@@ -2,9 +2,9 @@ program test_poisson_2d_dirichlet_cartesian
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_constants
-  use sll_poisson_2d_dirichlet_cartesian
-  use sll_gnuplot
+  use sll_m_constants
+  use sll_m_poisson_2d_dirichlet_cartesian
+  use sll_m_gnuplot
   implicit none
 
   type (poisson_2d_dirichlet_cartesian), pointer :: plan

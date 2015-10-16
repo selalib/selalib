@@ -1,5 +1,5 @@
 program main
-use sll_prob
+use sll_m_prob
 !*****************************************************************************80
 !
 !! MAIN is the main program for PROB_PRB.

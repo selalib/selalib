@@ -1,6 +1,6 @@
 program test_descriptors
 #include "sll_working_precision.h"
-use sll_descriptors
+use sll_m_descriptors
 
 implicit none
 

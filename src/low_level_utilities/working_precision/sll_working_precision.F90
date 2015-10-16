@@ -26,7 +26,7 @@
 !> @details
 !> In future developement we consider to put here some ISO_C bindings
 !> to call selalib from python.
-module sll_working_precision
+module sll_m_working_precision
   implicit none
   intrinsic :: kind, selected_real_kind
 
@@ -39,4 +39,4 @@ module sll_working_precision
   integer, parameter :: f32 = selected_real_kind(1,37)
   !> f64 is the kind type for 64-bit reals (double precision)
   integer, parameter :: f64 = selected_real_kind(1,99)
-end module sll_working_precision
+end module sll_m_working_precision

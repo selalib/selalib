@@ -22,9 +22,9 @@ module sll_m_advection_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
-use periodic_interp_module
+use sll_m_periodic_interp
 
 implicit none
 

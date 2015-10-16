@@ -40,7 +40,7 @@ module sll_m_poisson_2d_polar_wrapper
 #include "sll_assert.h"
 
   use sll_m_poisson_2d_base
-  use sll_poisson_2d_polar
+  use sll_m_poisson_2d_polar
   implicit none
   private
 

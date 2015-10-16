@@ -1,9 +1,9 @@
 program guiding_center_2d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_simulation_2d_guiding_center_polar_module
-  use sll_timer
-  use sll_constants
+  use sll_m_sim_2d_guiding_center_polar
+  use sll_m_timer
+  use sll_m_constants
   implicit none
   class(sll_simulation_base_class), pointer :: sim
   character(len=256) :: filename

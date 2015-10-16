@@ -5,13 +5,13 @@ program landau_4d
 #include "sll_memory.h"
 #include "sll_poisson_solvers.h"
 
-use sll_constants
+use sll_m_constants
 use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
-use sll_utilities, only: int2string
-use sll_cubic_splines
-use sll_boundary_condition_descriptors
-use sll_fft
+use sll_m_utilities, only: int2string
+use sll_m_cubic_splines
+use sll_m_boundary_condition_descriptors
+use sll_m_fft
 
 implicit none
 

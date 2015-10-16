@@ -29,7 +29,7 @@
 !Björn Dahlgren 
 !Ondřej Čertík 
 
-module fornberg
+module sll_m_fornberg
 #include "sll_working_precision.h"
 
 implicit none

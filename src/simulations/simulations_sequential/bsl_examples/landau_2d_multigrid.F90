@@ -5,11 +5,11 @@ program landau_4d_multigrid
 #include "sll_memory.h"
 #include "sll_boundary_condition_descriptors.h"
 
-use sll_constants
+use sll_m_constants
 use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
-use sll_utilities, only: int2string
-use sll_mudpack
+use sll_m_utilities, only: int2string
+use sll_m_mudpack
 
 implicit none
   

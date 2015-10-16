@@ -3,7 +3,7 @@
 ! debugging/understanding the behavior of the QNS one. Once this objective is
 ! fulfilled, this simulation can be deleted.
 
-module sll_simulation_4d_dk_hybrid_module
+module sll_m_sim_4d_dk_hybrid
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -11,20 +11,20 @@ module sll_simulation_4d_dk_hybrid_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_collective
-  use sll_remapper
-  use sll_simulation_base
-  use sll_cartesian_meshes
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  use sll_fdistribu4d_dk
-  use sll_general_coordinate_elliptic_solver_module
+  use sll_m_fdistribu4d_dk
+  use sll_m_general_coordinate_elliptic_solver
   use sll_m_scalar_field_2d_base
   use sll_m_scalar_field_2d
   use sll_m_arbitrary_degree_spline_interpolator_1d
   use sll_m_scalar_field_1d_base
   use sll_m_scalar_field_1d
-  use sll_timer
+  use sll_m_timer
   use sll_m_deboor_splines_1d
 
   implicit none
@@ -921,7 +921,7 @@ contains
   !   drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine initialize_fdistribu4d_DK(sim)
-    use sll_common_coordinate_transformations, only : &
+    use sll_m_common_coordinate_transformations, only : &
       polar_eta2
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
@@ -1645,7 +1645,7 @@ contains
   !  a general elliptic equation solver
   !----------------------------------------------------
   subroutine solve_QN( sim )
-    use sll_common_coordinate_transformations, only : &
+    use sll_m_common_coordinate_transformations, only : &
       polar_eta2
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
@@ -1771,7 +1771,7 @@ contains
   !  3) Solving of the quasi-neutrality equation
   !----------------------------------------------------
   subroutine first_step_4d_DK_hybrid( sim )
-    use sll_timer
+    use sll_m_timer
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     
     sll_int32 :: diag_num
@@ -2039,7 +2039,7 @@ contains
   !------------------------------------------------------------
   subroutine writeHDF5_equilibrium_state( sim )
 
-    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
+    use sll_m_hdf5_io_serial, only: sll_hdf5_file_create, &
         sll_hdf5_write_array_1d, sll_hdf5_file_close
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
@@ -2084,8 +2084,8 @@ contains
   !--------------------------------------------------------------
 
   subroutine writeHDF5_cross_section_diag( sim,diag_num )
-   ! use sll_collective
-    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
+   ! use sll_m_collective
+    use sll_m_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_int32                         , intent(in)    :: diag_num
@@ -2161,7 +2161,7 @@ contains
   !----------------------------------------------------
   subroutine writeHDF5_conservation_laws( sim,nb_diag_tmp )
 
-    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
+    use sll_m_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
 
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
@@ -2586,4 +2586,4 @@ contains
 
   end subroutine compute_norm_L1_L2_Linf
 
-end module sll_simulation_4d_dk_hybrid_module
+end module sll_m_sim_4d_dk_hybrid

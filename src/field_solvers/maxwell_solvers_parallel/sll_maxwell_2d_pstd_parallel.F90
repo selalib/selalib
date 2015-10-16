@@ -38,7 +38,7 @@ plan%d_dy = plan%d_dy / plan%ncy
 !> @brief 
 !> Selalib periodic 2D maxwell solver for cartesian coordinates.
 !>   
-module sll_maxwell_2d_periodic_cartesian_par
+module sll_m_maxwell_2d_periodic_cartesian_par
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -46,9 +46,9 @@ module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
 
-use sll_remapper
-use sll_collective
-use fftw3
+use sll_m_remapper
+use sll_m_collective
+use sll_m_fftw3
 
 implicit none
 
@@ -435,4 +435,4 @@ contains
 
   end subroutine verify_argument_sizes_par
 
-end module sll_maxwell_2d_periodic_cartesian_par
+end module sll_m_maxwell_2d_periodic_cartesian_par

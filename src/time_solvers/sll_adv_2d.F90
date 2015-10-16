@@ -1,17 +1,17 @@
 !> @ingroup operator_splitting
 !> @brief Implements split operators for constant coefficient advection
-module sll_split_advection_2d
+module sll_m_split_advection_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
   use sll_m_characteristics_1d_base
   use sll_m_interpolators_1d_base
-  use sll_operator_splitting
-  use sll_cartesian_meshes  
-  use sll_coordinate_transformation_2d_base_module
-  use cubic_non_uniform_splines
-  use ode_solvers
+  use sll_m_operator_splitting
+  use sll_m_cartesian_meshes  
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_ode_solvers
 
   implicit none
 
@@ -852,4 +852,4 @@ contains
 
 
 
-end module sll_split_advection_2d
+end module sll_m_split_advection_2d

@@ -33,7 +33,7 @@ module sll_m_kernel_smoother_base
 !---------------------------------------------------------------------------!
   abstract interface
      subroutine update_this(this, particle_group)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_particle_group_base
        import sll_kernel_smoother_base
        class( sll_kernel_smoother_base), intent(inout) :: this !< Kernel smoother object.
@@ -44,7 +44,7 @@ module sll_m_kernel_smoother_base
 !---------------------------------------------------------------------------!
   abstract interface
      subroutine update_dofs(this, particle_group, rho_dofs)       
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_particle_group_base
        import sll_kernel_smoother_base
        class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
@@ -59,7 +59,7 @@ module sll_m_kernel_smoother_base
           particle_group, &
           j_dofs, &
           component)       
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_particle_group_base
        import sll_kernel_smoother_base
        class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
@@ -72,7 +72,7 @@ module sll_m_kernel_smoother_base
 !---------------------------------------------------------------------------!
   abstract interface
      subroutine evaluate_particle(this, rho_dofs, i_part, particle_value)       
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_kernel_smoother_base
        class( sll_kernel_smoother_base), intent(in) :: this !< Kernel smoother object.
        sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.

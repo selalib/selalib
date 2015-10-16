@@ -1,4 +1,4 @@
-module sll_meshes_base
+module sll_m_meshes_base
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   implicit none
@@ -62,7 +62,7 @@ module sll_meshes_base
   !Abstract functions for 1d
   abstract interface
      function get_geometry_1d(mesh, i) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_mesh_1d_base
        class(sll_mesh_1d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: i
@@ -87,7 +87,7 @@ module sll_meshes_base
   !Abstract functions for 2d
   abstract interface
      function get_geometry_2d(mesh, i, j) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_mesh_2d_base
        class(sll_mesh_2d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: i
@@ -98,7 +98,7 @@ module sll_meshes_base
 
   abstract interface
      function get_geometry_2d_one_arg(mesh, cell_num) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_mesh_2d_base
        class(sll_mesh_2d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: cell_num
@@ -123,7 +123,7 @@ module sll_meshes_base
   !Abstract functions for 3d
   abstract interface
      function get_geometry_3d(mesh, i1, i2, i3) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_mesh_3d_base
        class(sll_mesh_3d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: i1
@@ -150,7 +150,7 @@ module sll_meshes_base
   !Abstract functions for 4d
   abstract interface
      function get_geometry_4d(mesh, k1, k2, k3, k4) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_mesh_4d_base
        class(sll_mesh_4d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: k1
@@ -175,4 +175,4 @@ module sll_meshes_base
      end subroutine delete_mesh_4d
   end interface
 
-end module sll_meshes_base
+end module sll_m_meshes_base

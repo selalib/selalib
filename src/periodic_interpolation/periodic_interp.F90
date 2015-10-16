@@ -1,10 +1,10 @@
-module periodic_interp_module
+module sll_m_periodic_interp
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_fft.h"
-use sll_arbitrary_degree_splines
-use sll_constants
+use sll_m_arbitrary_degree_splines
+use sll_m_constants
 
   implicit none
 
@@ -114,7 +114,7 @@ contains
        this%pinv => fft_new_plan(N,this%buf,this%buf,FFT_INVERSE)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
-       print*, 'periodic_interp_module:interpolator ',interpolator, ' not implemented'
+       print*, 'sll_m_periodic_interp:interpolator ',interpolator, ' not implemented'
        stop
     end select
 
@@ -254,7 +254,7 @@ contains
 
        call fft_apply_plan(this%pinv,u_out,u_out)        
     case default
-       print*, 'periodic_interp_module:interpolator ',this%interpolator, ' not implemented'
+       print*, 'sll_m_periodic_interp:interpolator ',this%interpolator, ' not implemented'
        stop
     end select
     
@@ -390,4 +390,4 @@ contains
     if(mod(N,2)==0)E(N)=E(N)*tmp*cos(0.5_f64*real(N,f64)*x)
     call dfftb(N,E,coefd)
   end subroutine fourier1dper
-end module periodic_interp_module
+end module sll_m_periodic_interp

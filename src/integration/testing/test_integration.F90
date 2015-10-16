@@ -4,12 +4,12 @@ program test_integration
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
-use rectangle_integration
-use trapz_integration
-use gauss_legendre_integration
-use gauss_lobatto_integration
-use fekete_integration
-use sll_box_splines, only: &
+use sll_m_rectangle_integration
+use sll_m_trapz_integration
+use sll_m_gauss_legendre_integration
+use sll_m_gauss_lobatto_integration
+use sll_m_fekete_integration
+use sll_m_box_splines, only: &
      write_connectivity
 use test_function_module, only: &
      one, &

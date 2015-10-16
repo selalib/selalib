@@ -17,17 +17,17 @@
 
 !> @ingroup poisson_solvers
 !> Module to solve Poisson equation on polar mesh using FFT transform
-module sll_poisson_polar_parallel
+module sll_m_poisson_polar_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-  use sll_fft
-  use sll_tridiagonal
-  use sll_collective
-  use sll_remapper
-  use sll_boundary_condition_descriptors
+  use sll_m_fft
+  use sll_m_tridiagonal
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_boundary_condition_descriptors
 
   implicit none
   !>Class for the Poisson solver in polar coordinate
@@ -422,4 +422,4 @@ contains
 
   end subroutine verify_argument_sizes_par
 
-end module sll_poisson_polar_parallel
+end module sll_m_poisson_polar_parallel

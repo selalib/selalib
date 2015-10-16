@@ -22,7 +22,7 @@
 !> Plotmtv website
 !>
 !> http://www.phy.ornl.gov/csep/CSEP/CORNELL/TUTORIAL/PLOTMTV/OVERVIEW.html
-module sll_plotmtv
+module sll_m_plotmtv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
@@ -121,5 +121,5 @@ close(file_id)
 end subroutine sll_plotmtv_curv_2d
 
 
-end module sll_plotmtv
+end module sll_m_plotmtv
 

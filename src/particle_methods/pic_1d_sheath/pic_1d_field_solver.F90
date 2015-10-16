@@ -5,7 +5,7 @@
   
 
 
-module sll_pic_1d_field_solver
+module sll_m_pic_1d_field_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -13,12 +13,12 @@ module sll_pic_1d_field_solver
 
 
 !    use sll_arbitrary_degree_spline_interpolator_1d_module
-!    use sll_arbitrary_degree_splines
-!    use gauss_lobatto_integration
-!    use sll_fft
-!    use sll_constants
+!    use sll_m_arbitrary_degree_splines
+!    use sll_m_gauss_lobatto_integration
+!    use sll_m_fft
+!    use sll_m_constants
 
-    use sll_collective, only: &
+    use sll_m_collective, only: &
       sll_collective_t, &
       sll_get_collective_size, &
       sll_get_collective_rank, &
@@ -28,17 +28,17 @@ module sll_pic_1d_field_solver
       sll_collective_globalsum_array_real64
 
 !    use sll_m_poisson_1d_periodic_solver
-    use sll_poisson_1d_fem, only: &
+    use sll_m_poisson_1d_fem, only: &
       poisson_1d_fem, &
       poisson_1d_fem_rhs_function ,&
       new_poisson_1d_fem         !Finite Element Bspline
   
-    use sll_cartesian_meshes, only: sll_cartesian_mesh_1d, new_cartesian_mesh_1d 
+    use sll_m_cartesian_meshes, only: sll_cartesian_mesh_1d, new_cartesian_mesh_1d 
 !we work in 1d so all 2d - 3d 4d modules are not used here
-    use sll_poisson_1d_fd!Finite difference solver
-    use sll_poisson_1d_periodic, only: poisson_1d_periodic, new, solve
-    use sll_poisson_1d_fourier,  only: poisson_1d_fourier, new_poisson_1d_fourier
-    use sll_particle_1d_description
+    use sll_m_poisson_1d_fd!Finite difference solver
+    use sll_m_poisson_1d_periodic, only: poisson_1d_periodic, new, solve
+    use sll_m_poisson_1d_fourier,  only: poisson_1d_fourier, new_poisson_1d_fourier
+    use sll_m_particle_1d_description
 
     implicit none
     !initialize
@@ -602,11 +602,11 @@ contains
         endselect
     endsubroutine
 
-    subroutine pic_1d_field_solver_set_ions_constant_function(this,  distribution_function)
+    subroutine pic_1d_field_solver_set_ions_constant_function(this,  sll_m_distribution_function)
         class(pic_1d_field_solver), intent(inout) :: this
-        procedure (poisson_1d_fem_rhs_function) :: distribution_function
+        procedure (poisson_1d_fem_rhs_function) :: sll_m_distribution_function
         this%inhomogenity_steady=&
-            this%femsolver%get_rhs_from_function( distribution_function,10)
+            this%femsolver%get_rhs_from_function( sll_m_distribution_function,10)
     endsubroutine
 
     subroutine pic_1d_field_solver_eval_electricfield(this,eval_points,eval_solution)

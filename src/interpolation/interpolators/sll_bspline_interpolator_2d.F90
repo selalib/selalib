@@ -26,7 +26,7 @@ module sll_m_bspline_interpolator_2d
 #include "sll_memory.h"
 
 use sll_m_interpolators_2d_base
-use sll_bsplines
+use sll_m_bsplines
 implicit none
 private
   

@@ -4,10 +4,10 @@ program test_lobalap_discrete
 #include "sll_interpolators.h"
 #include "sll_coordinate_transformations.h"
 
-  use map_function_module, only: set_map_function
-  use sll_lobatto_poisson
-  use sll_dg_fields
-  use sll_cartesian_meshes
+  use sll_m_map_function, only: set_map_function
+  use sll_m_lobatto_poisson
+  use sll_m_dg_fields
+  use sll_m_cartesian_meshes
   implicit none
 
   type(lobatto_poisson_solver)        :: solver

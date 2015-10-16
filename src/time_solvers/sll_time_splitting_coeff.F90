@@ -22,7 +22,7 @@
 !> @author Michel Mehrenberger (mehrenbe@math.unistra.fr)
 !
 
-module sll_time_splitting_coeff_module
+module sll_m_time_splitting_coeff
 
 
 #include "sll_working_precision.h"
@@ -583,6 +583,6 @@ contains
 
 
 
-end module sll_time_splitting_coeff_module
+end module sll_m_time_splitting_coeff
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

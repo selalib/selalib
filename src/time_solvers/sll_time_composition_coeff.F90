@@ -3,7 +3,7 @@
 !> @author Jakob Ameres (jakob.ameres@tum.de)
 !
 
-module sll_time_composition
+module sll_m_time_composition
 
 
 #include "sll_working_precision.h"
@@ -124,5 +124,5 @@ end do
 end subroutine time_composition_sym_sym
 
 
-end module sll_time_composition
+end module sll_m_time_composition
 

@@ -13,7 +13,7 @@ module sll_m_qn_2d_base
   abstract interface
 
     subroutine signature_precompute_qn_2d( qn, mu_points, mu_weights , N_mu)
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_qn_2d_base      
       class(sll_qn_2d_base), target :: qn
       sll_int32,intent(in) :: N_mu
@@ -22,7 +22,7 @@ module sll_m_qn_2d_base
     end subroutine signature_precompute_qn_2d
   
     subroutine signature_solve_qn_2d( qn, phi)
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_qn_2d_base      
       class(sll_qn_2d_base), target :: qn
       sll_real64,dimension(:,:),intent(inout) :: phi

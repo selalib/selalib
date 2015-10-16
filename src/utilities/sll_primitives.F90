@@ -1,6 +1,6 @@
 !> @ingroup utilities
 !> Functions to compute primitive of 1d function.
-module sll_primitives
+module sll_m_primitives
 #include "sll_working_precision.h"
 
 contains
@@ -76,4 +76,4 @@ f(n+1) = f(1)
 
 end subroutine primitive_to_function
 
-end module sll_primitives
+end module sll_m_primitives

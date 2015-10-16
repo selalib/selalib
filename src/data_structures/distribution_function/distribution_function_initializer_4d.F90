@@ -1,11 +1,11 @@
-module sll_distribution_function_initializer_4d
+module sll_m_distribution_function_initializer_4d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_constants
-  use sll_scalar_field_initializers_base
-  use sll_collective
-  use sll_remapper
+  use sll_m_constants
+  use sll_m_scalar_field_initializers_base
+  use sll_m_collective
+  use sll_m_remapper
   implicit none
 
 
@@ -342,4 +342,4 @@ contains
 
 
 
-end module sll_distribution_function_initializer_4d
+end module sll_m_distribution_function_initializer_4d

@@ -6,12 +6,12 @@ program test_adv_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use sll_split_advection_2d
+  use sll_m_split_advection_2d
   use sll_m_advection_1d_BSL
   use sll_m_characteristics_1d_explicit_euler
   use sll_m_cubic_spline_interpolator_1d
-  use sll_operator_splitting
-  use sll_hdf5_io_serial
+  use sll_m_operator_splitting
+  use sll_m_hdf5_io_serial
   implicit none
   class(split_advection_2d), pointer :: split
   class(sll_interpolator_1d_base), pointer :: interp1

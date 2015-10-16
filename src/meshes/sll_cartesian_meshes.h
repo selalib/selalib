@@ -18,8 +18,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_meshes_base
-use sll_cartesian_meshes
+use sll_m_meshes_base
+use sll_m_cartesian_meshes
 
 #endif
 

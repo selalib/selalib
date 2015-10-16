@@ -9,15 +9,15 @@ program sll_pif_general
 #include "sll_utilities.h"
 
 
-use sll_pif_fieldsolver
-use sll_timer
-use sll_sobol
-use sll_prob
-use sll_collective
-use sll_visu_pic
-use sll_moment_matching
-use sll_pic_utilities
-use sll_particle_method_descriptors
+use sll_m_pif_fieldsolver
+use sll_m_timer
+use sll_m_sobol
+use sll_m_prob
+use sll_m_collective
+use sll_m_visu_pic
+use sll_m_moment_matching
+use sll_m_pic_utilities
+use sll_m_particle_method_descriptors
 
 implicit none
 
@@ -219,7 +219,7 @@ sll_int32 :: idx,jdx
 
 !scale to boxlength
 particle(maskx,:)=particle(maskx,:)*boxlen
-!load gaussian profile
+!load sll_m_gaussian profile
 do idx=1,size(particle,2)
  do jdx=1, size(maskv)
   call normal_cdf_inv( particle(maskv(jdx),idx), 0.0_f64 , 1.0_f64, particle(maskv(jdx),idx))

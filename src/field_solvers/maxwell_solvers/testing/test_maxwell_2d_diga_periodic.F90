@@ -34,9 +34,9 @@ program test_maxwell_2d_diga_periodic
 #include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
-use sll_dg_fields
+use sll_m_dg_fields
 use sll_m_maxwell_2d_diga
-use sll_maxwell_solvers_base
+use sll_m_maxwell_solvers_base
 
 implicit none
 

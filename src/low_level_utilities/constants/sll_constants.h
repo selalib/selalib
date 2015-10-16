@@ -18,7 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_constants
+use sll_m_constants
 
 #endif
  

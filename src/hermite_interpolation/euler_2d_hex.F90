@@ -1,8 +1,8 @@
-module  euler_2d_hex
+module  sll_m_euler_2d_hex
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_constants
+  use sll_m_constants
   !use sll_m_characteristics_2d_base
   implicit none
 
@@ -539,4 +539,4 @@ module  euler_2d_hex
 
   end subroutine compute_characteristic_adams4_2d_hex
 
-end module euler_2d_hex
+end module sll_m_euler_2d_hex

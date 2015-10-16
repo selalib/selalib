@@ -13,11 +13,11 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 #include "sll_constants.h"
 #include "sll_poisson_solvers.h"
 
-  use sll_collective
-  use sll_remapper
-  use sparse_grid_3d
-  use sll_poisson_3d_sparse_grid_fft
-  use sll_simulation_base
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_sparse_grid_3d
+  use sll_m_poisson_3d_sparse_grid_fft
+  use sll_m_sim_base
 
   implicit none
 

@@ -1,4 +1,4 @@
-module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
+module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -7,15 +7,15 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
 #include "sll_interpolators.h"
 
 
-  use sll_collective
-  use sll_remapper
-  use sll_poisson_2d_periodic_cartesian_par
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_poisson_2d_periodic_cartesian_par
 
 
-  use sll_simulation_base
-  use sll_parallel_array_initializer_module
-  use sll_cartesian_meshes
-  use sll_gnuplot_parallel
+  use sll_m_sim_base
+  use sll_m_parallel_array_initializer
+  use sll_m_cartesian_meshes
+  use sll_m_gnuplot_parallel
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -229,9 +229,9 @@ contains
 
     ! the function is passed by the user when the init_dk subroutine is called.
     ! The routine sll_4d_parallel_array_initializer_cartesian is in 
-    ! src/parallal_array_initializers/sll_parallel_array_initializer_module.F90
+    ! src/parallal_array_initializers/sll_m_parallel_array_initializer.F90
     ! the particular initializer is in
-    ! parallel_array_initializers/sll_common_array_initializers_module.F90
+    ! parallel_array_initializers/sll_m_common_array_initializers.F90
 
     call sll_4d_parallel_array_initializer_cartesian( &
          sim%sequential_v3x1x2, &
@@ -406,10 +406,10 @@ contains
 
 
 !!$  subroutine plot_fields(itime, sim)
-!!$    use sll_collective
+!!$    use sll_m_collective
 !!$    use hdf5
-!!$    use sll_hdf5_io_parallel
-!!$    use sll_xml_io
+!!$    use sll_m_hdf5_io_parallel
+!!$    use sll_m_xml_io
 !!$    sll_int32, intent(in) :: itime
 !!$    character(len=4)      :: ctime
 !!$    sll_int32             :: i_layout
@@ -559,4 +559,4 @@ contains
 !!$  
 !!$  end subroutine plot_fields
 
-end module  sll_simulation_4d_drift_kinetic_cartesian_finite_volume
+end module  sll_m_sim_4d_drift_kinetic_cartesian_finite_volume

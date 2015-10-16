@@ -4,8 +4,8 @@ program test_poisson_2d_fem
 #include "sll_memory.h"
 #include "sll_constants.h"
 
-use sll_fem_2d
-use sll_fem_2d_periodic
+use sll_m_fem_2d
+use sll_m_fem_2d_periodic
 implicit none
 
 sll_int32                           :: i

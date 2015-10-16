@@ -3,9 +3,9 @@ program test_poisson
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_boundary_condition_descriptors
-  use sll_poisson_2d_polar
-  use sll_constants
+  use sll_m_boundary_condition_descriptors
+  use sll_m_poisson_2d_polar
+  use sll_m_constants
   implicit none
 
   !this code should become part of the unit_test for the Poisson solver in polar coordinates
@@ -13,15 +13,15 @@ program test_poisson
   !copy it in the CMakeListe.txt :
   !  add_executable(test_poisson
   !  test_poisson.F90
-  !  sll_poisson_2d_polar.F90
+  !  sll_m_poisson_2d_polar.F90
   !  )
   !  target_link_libraries(test_poisson
-  !  sll_fft
-  !  sll_tridiagonal
-  !  sll_constants
-  !  sll_memory
-  !  sll_assert
-  !  sll_utilities
+  !  sll_m_fft
+  !  sll_m_tridiagonal
+  !  sll_m_constants
+  !  sll_m_memory
+  !  sll_m_assert
+  !  sll_m_utilities
   !  #sll_poisson_2d
   !  )
   

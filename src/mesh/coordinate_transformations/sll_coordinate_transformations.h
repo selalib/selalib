@@ -20,8 +20,8 @@
 
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
-use sll_common_coordinate_transformations
-use sll_coordinate_transformation_2d_base_module
+use sll_m_common_coordinate_transformations
+use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_coordinate_transformations_2d_nurbs
 

@@ -26,19 +26,19 @@
 
 program test_bsl_lt_pic_4d
 
-  ! [[file:../working_precision/sll_working_precision.h]]
+  ! [[file:../working_precision/sll_m_working_precision.h]]
 #include "sll_working_precision.h"
 
-  ! [[file:../memory/sll_memory.h]]
+  ! [[file:../memory/sll_m_memory.h]]
 #include "sll_memory.h"
 
-  ! [[file:../assert/sll_assert.h]]
+  ! [[file:../assert/sll_m_assert.h]]
 #include "sll_assert.h"
 
-  use sll_constants, only: sll_pi
+  use sll_m_constants, only: sll_pi
   use sll_m_bsl_lt_pic_4d_group
-  use sll_cartesian_meshes
-  use sll_timer
+  use sll_m_cartesian_meshes
+  use sll_m_timer
   use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
 
 #define SPECIES_CHARGE  1._f64
@@ -376,7 +376,7 @@ program test_bsl_lt_pic_4d
 
   close(80)
 
-  ! uses [[file:~/mcp/selalib/src/fields/sll_array_plotting_module.F90::write_projection_2d]] developed by PN (cf
+  ! uses [[file:~/mcp/selalib/src/fields/sll_m_array_plotting.F90::write_projection_2d]] developed by PN (cf
   ! example in [[file:~/mcp/selalib/src/fields/unit_test_4d.F90::write_projection_2d]])
 
   ! todo: we could plot a slice of f here, but this seems heavy in a unit test...
@@ -451,8 +451,8 @@ contains
 
   subroutine test_forward_push(x,y,vx,vy,new_x,new_y,new_vx,new_vy)
 
-    ! [[file:../working_precision/sll_working_precision.h]]
-    use sll_working_precision
+    ! [[file:../working_precision/sll_m_working_precision.h]]
+    use sll_m_working_precision
 
     sll_real64,intent(in) :: x
     sll_real64,intent(in) :: y
@@ -472,8 +472,8 @@ contains
 
   subroutine test_backward_push(x, y, vx, vy, new_x, new_y, new_vx, new_vy)
 
-    ! [[file:../working_precision/sll_working_precision.h]]
-    use sll_working_precision
+    ! [[file:../working_precision/sll_m_working_precision.h]]
+    use sll_m_working_precision
 
     sll_real64,intent(in) :: x
     sll_real64,intent(in) :: y

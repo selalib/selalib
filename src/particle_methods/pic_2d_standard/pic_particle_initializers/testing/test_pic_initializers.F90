@@ -3,12 +3,12 @@ program test_pic_initializers
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_constants, only: sll_pi
-  use sll_particle_group_4d_module
-  use sll_particle_group_2d_module
-  use sll_particle_initializers_2d
-  use sll_particle_initializers_4d
-  use sll_cartesian_meshes
+  use sll_m_constants, only: sll_pi
+  use sll_m_particle_group_4d
+  use sll_m_particle_group_2d
+  use sll_m_particle_initializers_2d
+  use sll_m_particle_initializers_4d
+  use sll_m_cartesian_meshes
 
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32

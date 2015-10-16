@@ -6,12 +6,12 @@ program unit_test
 #include "sll_constants.h"
 #include "sll_file_io.h"
 
-  use distribution_function
-  use sll_csl
-  use sll_common_coordinate_transformations
-  use sll_cartesian_meshes
+  use sll_m_distribution_function
+  use sll_m_csl
+  use sll_m_common_coordinate_transformations
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_gaussian_2d_initializer
+  use sll_m_gaussian_2d_initializer
   use sll_m_cubic_spline_interpolator_1d
   implicit none
   
@@ -31,7 +31,7 @@ program unit_test
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   type(sll_distribution_function_2D) :: dist_func_fine
   type(sll_distribution_function_2D) :: dist_func_coarse
-  character(32),parameter  :: name = 'distribution_function'
+  character(32),parameter  :: name = 'sll_m_distribution_function'
   type(init_gaussian_2d),target :: pgaussian
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2

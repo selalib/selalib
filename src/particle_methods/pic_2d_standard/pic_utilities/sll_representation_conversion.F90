@@ -16,12 +16,12 @@
 !**************************************************************
 
 
-module sll_representation_conversion_module
+module sll_m_representation_conversion
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
 
   implicit none
   
@@ -185,4 +185,4 @@ contains
   end subroutine get_poisson_cell_index
 
 
-end module sll_representation_conversion_module
+end module sll_m_representation_conversion

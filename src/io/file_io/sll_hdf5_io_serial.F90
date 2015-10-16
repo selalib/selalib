@@ -20,7 +20,7 @@
 !> With HDF5 you can store several datasets in a single file.
 !> @note 
 !> link with sll_file_io
-module sll_hdf5_io_serial
+module sll_m_hdf5_io_serial
 #include "sll_assert.h"
 #include "sll_working_precision.h"
   
@@ -328,4 +328,4 @@ contains
 
 #endif
 
-end module sll_hdf5_io_serial
+end module sll_m_hdf5_io_serial

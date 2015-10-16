@@ -1,32 +1,32 @@
 
-module sll_pic_1d
+module sll_m_pic_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_constants , only : sll_pi
-!   use sll_collective !Parallel operations
-   use sll_collective , only :  sll_collective_globalsum ,&
+  use sll_m_constants , only : sll_pi
+!   use sll_m_collective !Parallel operations
+   use sll_m_collective , only :  sll_collective_globalsum ,&
      sll_world_collective, sll_collective_barrier ,&
      sll_halt_collective
 
     
-!  use sll_arbitrary_degree_splines 
-!  use gauss_legendre_integration 
+!  use sll_m_arbitrary_degree_splines 
+!  use sll_m_gauss_legendre_integration 
 
          
-   use sll_pic_1d_field_solver
+   use sll_m_pic_1d_field_solver
    
    
-!     use sll_visu_pic 
+!     use sll_m_visu_pic 
 
 
-   use sll_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
+   use sll_m_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
    !Visualization with gnuplot
    
 
-    use pic_1d_particle_loading, only : sll_normal_rnd ,& 
+    use sll_m_pic_1d_particle_loading, only : sll_normal_rnd ,& 
          sll_initialize_intrinsic_mpi_random ,&   
          load_particle_species ,&
          sll_pic1d_ensure_boundary_conditions_species  ,&
@@ -46,8 +46,8 @@ module sll_pic_1d
                !should be integrated here
     
     
-    use sll_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
-    use pic_postprocessing , only : det_landau_damping 
+    use sll_m_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
+    use sll_m_pic_postprocessing , only : det_landau_damping 
 
     implicit none
 
@@ -162,7 +162,7 @@ module sll_pic_1d
     !Interface for one dimensional function for right hand side
     abstract interface
         function sll_pic_1d_electric_field_external(x,t) result(E)
-            use sll_working_precision
+            use sll_m_working_precision
             sll_real64, intent(in) :: x(:) !< Position
             sll_real64, intent(in)  :: t  !< Time
             sll_real64, dimension(size(x)) :: E
@@ -1859,5 +1859,5 @@ contains
         enddo
     end function
 
-end module  sll_pic_1d
+end module  sll_m_pic_1d
 

@@ -1,4 +1,4 @@
-module choleski
+module sll_m_choleski
 #include "sll_working_precision.h"
 
 implicit none
@@ -78,7 +78,7 @@ end do
 
 if(ntest==1) then 
   write(6,902) 
-  stop "choleski"
+  stop "sll_m_choleski"
 end if
 
 !--- 9.0 --- Formats ---------------------------------------------------
@@ -149,4 +149,4 @@ end do
 end subroutine desrem
 
 
-end module choleski
+end module sll_m_choleski

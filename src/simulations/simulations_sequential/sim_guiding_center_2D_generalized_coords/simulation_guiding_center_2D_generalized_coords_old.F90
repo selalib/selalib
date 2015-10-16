@@ -1,4 +1,4 @@
-module sll_simulation_2d_guiding_center_generalized_coords_module
+module sll_m_sim_2d_guiding_center_generalized_coords
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -6,18 +6,18 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_constants
+  use sll_m_constants
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_interpolators_2d_base
   use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_simulation_base
-  use sll_cartesian_meshes
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
+  use sll_m_coordinate_transformation_2d_base
   use sll_general_coordinate_qn_solver_module
   use sll_m_scalar_field_2d_base
   use sll_m_scalar_field_2d
-  use sll_parallel_array_initializer_module
+  use sll_m_parallel_array_initializer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_2d_guiding_center_generalized
@@ -1012,8 +1012,8 @@ subroutine calcul_integral(rho_n,phi,&
 
 subroutine plot_f1(rho,sim,itime)!
 
-  use sll_xdmf
-  use sll_hdf5_io_serial
+  use sll_m_xdmf
+  use sll_m_hdf5_io_serial
 
   sll_int32 :: file_id, hfile_id
   sll_int32 :: error
@@ -1059,4 +1059,4 @@ subroutine plot_f1(rho,sim,itime)!
 !
  end subroutine plot_f1
 
-end module sll_simulation_2d_guiding_center_generalized_coords_module
+end module sll_m_sim_2d_guiding_center_generalized_coords

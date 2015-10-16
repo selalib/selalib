@@ -1,5 +1,5 @@
 !> Scalar field on mesh with coordinate transformation
-module sll_scalar_field_2d_old
+module sll_m_scalar_field_2d_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -7,7 +7,7 @@ module sll_scalar_field_2d_old
 #include "sll_utilities.h"
 #include "sll_constants.h"
   use sll_m_interpolators_1d_base
-  use sll_scalar_field_initializers_base
+  use sll_m_scalar_field_initializers_base
 
   implicit none
   private
@@ -27,7 +27,7 @@ module sll_scalar_field_2d_old
 
   abstract interface
      function scalar_function_2D_old( eta1, eta2 )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64 :: scalar_function_2D_old
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
@@ -296,4 +296,4 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE_ARRAY(val,ierr)
   end subroutine write_scalar_field_2d
 
-end module sll_scalar_field_2d_old
+end module sll_m_scalar_field_2d_old

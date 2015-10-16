@@ -20,7 +20,7 @@
 !> Fortran module where set some physical and mathematical constants.
 !> @details
 !> In this module, all variables must be protected
-module sll_constants
+module sll_m_constants
 #include "sll_working_precision.h"
 
 implicit none
@@ -61,4 +61,4 @@ sll_real64, parameter :: sll_kb = 1.3806488D-23
 !> @param Complex number i=sqrt(-1)
 sll_comp64, parameter :: sll_i1 = cmplx(0.0_f64, 1.0_f64, kind=f64)
 
-end module sll_constants
+end module sll_m_constants

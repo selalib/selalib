@@ -3,13 +3,13 @@
   !  Laurent Navoret 2012-10
   !---------------------------------------------------------------------------
 
-module simulation_vp1d_fourier_fem
+module sll_m_sim_vp1d_fourier_fem
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_simulation_base
+  use sll_m_sim_base
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -37,4 +37,4 @@ contains
     class(sll_simulation_vp1d_fourier_fem), intent(inout) :: sim
   end subroutine run_vp1d_fourier_fem
 
-end module simulation_vp1d_fourier_fem
+end module sll_m_sim_vp1d_fourier_fem

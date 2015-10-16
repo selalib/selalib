@@ -21,7 +21,7 @@ module sll_m_advection_2d_CSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_advection_2d_base
 use sll_m_characteristics_2d_base
 use sll_m_interpolators_2d_base

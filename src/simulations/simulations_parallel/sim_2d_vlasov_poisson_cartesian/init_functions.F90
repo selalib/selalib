@@ -1,4 +1,4 @@
-module init_functions
+module sll_m_init_functions
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
@@ -45,4 +45,4 @@ contains
 
   end function tsi
 
-end module init_functions
+end module sll_m_init_functions

@@ -5,7 +5,7 @@
 !> Low-level mathematical utility 
 !> that applies the 
 !> Gauss-Lobatto method to compute numeric integrals.
-module gauss_lobatto_integration
+module sll_m_gauss_lobatto_integration
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
@@ -15,7 +15,7 @@ implicit none
 abstract interface
    !> 1d real function
    function function_1d(x)
-      use sll_working_precision ! can't pass a header file because the
+      use sll_m_working_precision ! can't pass a header file because the
                                 ! preprocessor prevents double inclusion.
                                 ! This is very rare.
       sll_real64             :: function_1d
@@ -480,4 +480,4 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
       return
       end subroutine dgauss
 
-end module gauss_lobatto_integration
+end module sll_m_gauss_lobatto_integration

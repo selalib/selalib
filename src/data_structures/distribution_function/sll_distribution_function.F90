@@ -1,17 +1,17 @@
 !> @brief
 !> Implements the distribution function types
-module distribution_function
+module sll_m_distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 
-use sll_constants
-use sll_utilities   ! for int2string
+use sll_m_constants
+use sll_m_utilities   ! for int2string
 use sll_m_interpolators_1d_base
-use sll_coordinate_transformation_2d_base_module
-use sll_scalar_field_2d_old
-use sll_scalar_field_initializers_base
+use sll_m_coordinate_transformation_2d_base
+use sll_m_scalar_field_2d_old
+use sll_m_scalar_field_initializers_base
 
 implicit none
 
@@ -498,4 +498,4 @@ contains
 !!$    f%plot_counter = f%plot_counter + 1
 !!$  end subroutine write_distribution_function_4D
 
-end module distribution_function
+end module sll_m_distribution_function

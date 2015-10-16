@@ -4,16 +4,16 @@
 !> @todo Implement the optimized interpolation routines for option boundary=1
 !> @details <DETAILED_DESCRIPTION>
 
-module sparse_grid_2d
+module sll_m_sparse_grid_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
 use sll_m_periodic_interpolator_1d
-use sll_arbitrary_degree_splines
+use sll_m_arbitrary_degree_splines
 use sll_m_lagrange_interpolator_1d
-use sll_sparse_grid_interpolator
-use sll_constants, only: sll_pi
+use sll_m_sparse_grid_interpolator
+use sll_m_constants, only: sll_pi
 use, intrinsic :: iso_c_binding
 
 
@@ -1147,4 +1147,4 @@ end subroutine linear_filter
 !------------------------------------------------------------------------------!
 
 
-end module sparse_grid_2d
+end module sll_m_sparse_grid_2d

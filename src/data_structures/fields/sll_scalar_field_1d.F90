@@ -31,14 +31,14 @@ module sll_m_scalar_field_1d
 #include "sll_assert.h"
 #include "sll_file_io.h"
   use sll_m_scalar_field_1d_base
-  use sll_constants
-  use sll_cartesian_meshes
+  use sll_m_constants
+  use sll_m_cartesian_meshes
   use sll_m_interpolators_1d_base
   use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_utilities
-  use sll_boundary_condition_descriptors
-  use sll_gnuplot
-!  use sll_scalar_field_initializers_base
+  use sll_m_utilities
+  use sll_m_boundary_condition_descriptors
+  use sll_m_gnuplot
+!  use sll_m_scalar_field_initializers_base
   implicit none
   
   type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_analytic
@@ -105,7 +105,7 @@ module sll_m_scalar_field_1d
 
   abstract interface
      function one_var_parametrizable_function( eta, params )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64 :: one_var_parametrizable_function
        sll_real64, intent(in) :: eta
        sll_real64, dimension(:), intent(in), optional :: params

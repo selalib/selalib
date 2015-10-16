@@ -31,11 +31,11 @@ program aligned_translation_2d
 #include "sll_memory.h"
 use sll_m_advection_1d_base
 use sll_m_advection_1d_periodic
-use lagrange_interpolation
+use sll_m_lagrange_interpolation
 use sll_m_advection_2d_oblic
-use sll_timer
-use sll_fcisl_toroidal_module
-use sll_constants
+use sll_m_timer
+use sll_m_fcisl_toroidal
+use sll_m_constants
 use sll_m_interpolators_2d_base
 use sll_m_cubic_spline_interpolator_2d
 
@@ -689,8 +689,8 @@ contains
     nnodes_x2, &
     array_name, time)    
     !mesh_2d)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:), intent(in) :: node_positions_x1

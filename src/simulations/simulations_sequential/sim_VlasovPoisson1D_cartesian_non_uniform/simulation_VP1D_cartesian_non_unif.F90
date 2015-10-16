@@ -1,4 +1,4 @@
-module simulation_VP1D_cartesian_non_unif
+module sll_m_sim_VP1D_cartesian_non_unif
 
 
 !> Vlasov-Poisson 1D on uniform or nonuniform cartesian grid
@@ -11,10 +11,10 @@ module simulation_VP1D_cartesian_non_unif
 #include "sll_fields.h"
 
 
-  use sll_simulation_base
-  use cubic_non_uniform_splines
-  use sll_constants
-  use sll_boundary_condition_descriptors
+  use sll_m_sim_base
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -74,7 +74,7 @@ contains
     N_x1_poisson=1024
     mesh_case=2 !1: uniform case 2: non_unif_scale perturbation
     test_case=1 !1: landau damping
-    rho_case=1  !1: trap 2: splines 3: gaussian 4: gaussian sym 
+    rho_case=1  !1: trap 2: splines 3: sll_m_gaussian 4: sll_m_gaussian sym 
                 !5: spline_per
     landau_alpha=1e-3_f64
     dt=0.1_f64
@@ -279,8 +279,8 @@ contains
 
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use sll_constants
-    use cubic_non_uniform_splines
+    use sll_m_constants
+    use sll_m_cubic_non_uniform_splines
     implicit none
     
     sll_real64,dimension(:),pointer::f,Xstar,node_positions
@@ -383,7 +383,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!
 
 subroutine poisson1dpertrap(E,L,N)
-  use sll_constants
+  use sll_m_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -917,4 +917,4 @@ end  function compute_non_unif_integral_gaussian_sym
   
 
 
-end module simulation_VP1D_cartesian_non_unif
+end module sll_m_sim_VP1D_cartesian_non_unif

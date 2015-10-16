@@ -1,4 +1,4 @@
-module pivotbande
+module sll_m_pivotbande
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -361,4 +361,4 @@ contains
 
   end subroutine residue_bande
 
-end module pivotbande
+end module sll_m_pivotbande

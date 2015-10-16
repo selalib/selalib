@@ -18,11 +18,11 @@ program test_qn_solver_2d_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_remapper
-  use sll_constants
-  use sll_collective
-  use sll_qn_solver_2d_parallel
-  use sll_boundary_condition_descriptors
+  use sll_m_remapper
+  use sll_m_constants
+  use sll_m_collective
+  use sll_m_qn_solver_2d_parallel
+  use sll_m_boundary_condition_descriptors
 
 implicit none
 

@@ -21,7 +21,7 @@
 !> @details
 !> With HDF5 you can store several datasets in a single file.
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
-module sll_hdf5_io_parallel
+module sll_m_hdf5_io_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
@@ -583,5 +583,5 @@ contains
 
 #endif
 
-end module sll_hdf5_io_parallel
+end module sll_m_hdf5_io_parallel
 

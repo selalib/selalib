@@ -9,13 +9,13 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup lagrange_interpolation sll_lagrange_interpolation 
+!> @defgroup sll_m_lagrange_interpolation sll_lagrange_interpolation 
 !> @brief 
-!> Description of lagrange_interpolation library (72 characters)
+!> Description of sll_m_lagrange_interpolation library (72 characters)
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  lagrange_interpolation, you can add some references or math equations.
+!> Long description of  sll_m_lagrange_interpolation, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
 !>  - sll_lagrange_interpolation.h

@@ -19,8 +19,8 @@ program test_poisson_3d_periodic_seq
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_poisson_solvers.h"
-  use sll_constants
-  use sll_poisson_3d_periodic_seq
+  use sll_m_constants
+  use sll_m_poisson_3d_periodic_seq
 
   implicit none
 
@@ -103,7 +103,7 @@ program test_poisson_3d_periodic_seq
 
      if ( average_err > dx*dx*dy) then
         print*, ' '
-        print*, 'sll_poisson_3d_periodic_seq test not passed'
+        print*, 'sll_m_poisson_3d_periodic_seq test not passed'
      end if
 
 
@@ -115,7 +115,7 @@ program test_poisson_3d_periodic_seq
   call delete_poisson_3d_periodic_plan_seq(plan)
 
 
-  print*, 'sll_poisson_3d_periodic_seq test: PASSED'
+  print*, 'sll_m_poisson_3d_periodic_seq test: PASSED'
 
   call cpu_time(time_2)
   print*, 'Total CPU time : ', time_2-time_0

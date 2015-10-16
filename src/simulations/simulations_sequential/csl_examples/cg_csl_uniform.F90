@@ -4,9 +4,9 @@ program cg_csl_uniform
 #include "sll_memory.h"
 !contact: mehrenbe@math.unistra.fr for this  program
 
-  use sll_constants
-  use cubic_non_uniform_splines
-  use cg_csl_uniform_module
+  use sll_m_constants
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_cg_csl_uniform
   implicit none
   
   !parameters

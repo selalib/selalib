@@ -3,10 +3,10 @@ program radial_1d_SL
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_cubic_splines
-  use cubic_non_uniform_splines
-  use sll_constants
-  use sll_boundary_condition_descriptors
+  use sll_m_cubic_splines
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
   implicit none
   
   type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
@@ -38,12 +38,12 @@ program radial_1d_SL
   visu_step = 1
   
   ! distribution function
-  ! 1 : gaussian in r
-  ! 2 : gaussian in r
+  ! 1 : sll_m_gaussian in r
+  ! 2 : sll_m_gaussian in r
   ! 3 : cos theta
-  ! 4 : truncated gaussian in theta
+  ! 4 : truncated sll_m_gaussian in theta
   ! 5 : f=1
-  ! 6 : gaussian in r and theta
+  ! 6 : sll_m_gaussian in r and theta
   ! 7 : dirac 
   test_case = 6
   ! field

@@ -8,15 +8,15 @@
 !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_m_remapped_pic_base]] -->. The basis for this development was
 !> ::sll_simulation_4d_vp_lt_pic_cartesian_module <!--
 !> [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]] --> which itself was
-!> based on ::sll_pic_simulation_4d_cartesian_module <!--
-!> [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
+!> based on ::sll_m_sim_pic_4d_cartesian <!--
+!> [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_m_sim_pic_4d_cartesian]]
 !> -->.
 
 ! (The doxygen page for this simulation is
 ! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]]
 ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
-module sll_simulation_4d_vp_generic_pic_cartesian_module
+module sll_m_sim_4d_vp_generic_pic_cartesian
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -26,24 +26,24 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 #include "particle_representation.h"
 
 
-  use sll_constants
-  use sll_simulation_base
-  use sll_cartesian_meshes
-  use sll_timer
+  use sll_m_constants
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
+  use sll_m_timer
   use sll_m_poisson_2d_fft
   use sll_m_poisson_2d_base
-  use sll_gnuplot
-  use sll_collective
-  use sll_ascii_io
+  use sll_m_gnuplot
+  use sll_m_collective
+  use sll_m_ascii_io
 
   use sll_m_remapped_pic_base
   use sll_m_simple_pic_4d_group
   use sll_m_bsl_lt_pic_4d_group
-  ! use sll_particle_initializers_4d
-  ! use sll_particle_sort_module
-  use sll_charge_to_density_module
-  use sll_pic_utilities
-  ! use sll_representation_conversion_module
+  ! use sll_m_particle_initializers_4d
+  ! use sll_m_particle_sort
+  use sll_m_charge_to_density
+  use sll_m_pic_utilities
+  ! use sll_m_representation_conversion
 
   implicit none
 
@@ -95,15 +95,15 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      sll_real64, dimension(1:6) :: elec_params
      !> @}
 
-     !> Underlying 2D cartesian sll_cartesian_meshes::sll_cartesian_mesh_2d
-     ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+     !> Underlying 2D cartesian sll_m_cartesian_meshes::sll_cartesian_mesh_2d
+     ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
      type ( sll_cartesian_mesh_2d ),    pointer :: mesh_2d
 
      !> called q_accumulator in Sever simulation
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
 
-     !> uses sll_accumulators::sll_charge_accumulator_2d
-     ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.F90::sll_charge_accumulator_2d]]
+     !> uses sll_m_accumulators::sll_charge_accumulator_2d
+     ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_charge_accumulator_2d]]
      type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
      type(electric_field_accumulator),                  pointer     :: E_accumulator
      logical :: use_lt_pic_scheme        ! if false then use pic scheme
@@ -152,8 +152,8 @@ contains
 
     write(filename,'(A19,F0.3,A4)') 'particles_snapshot_',time,'.gnu'
 
-    ! Inspired from [[file:~/selalib/src/file_io/sll_gnuplot.F90::subroutine sll_gnuplot_corect_2d]]. Calls
-    ! [[file:~/selalib/src/file_io/sll_ascii_io.F90::sll_ascii_file_create]]
+    ! Inspired from [[file:~/selalib/src/file_io/sll_m_gnuplot.F90::subroutine sll_gnuplot_corect_2d]]. Calls
+    ! [[file:~/selalib/src/file_io/sll_m_ascii_io.F90::sll_ascii_file_create]]
 
     call sll_ascii_file_create(filename,fileid,error)
 
@@ -565,8 +565,8 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
-    ! <<Ex_Ey_output>> using the [[selalib:src/file_io/sll_gnuplot.F90::sll_gnuplot_2d]] interface and most probably the
-    ! [[file:~/selalib/src/file_io/sll_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
+    ! <<Ex_Ey_output>> using the [[selalib:src/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably the
+    ! [[file:~/selalib/src/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
     
     if (sim%my_rank == 0) then
        it = 0
@@ -630,7 +630,7 @@ contains
       call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
       call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
-      ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+      ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
       SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
 
 
@@ -738,7 +738,7 @@ contains
          call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
          call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
-         ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+         ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
 
          ! Set particle speed [[dt_q_over_m]]
@@ -904,13 +904,13 @@ contains
              call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
              call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
-             ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+             ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
              SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
 
 
              ! call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
 
-             ! ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+             ! ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
              ! SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
              ! particle speed
@@ -1047,4 +1047,4 @@ contains
     ee = ee * dx * dy    
   end subroutine electric_energy
 
-end module sll_simulation_4d_vp_generic_pic_cartesian_module
+end module sll_m_sim_4d_vp_generic_pic_cartesian

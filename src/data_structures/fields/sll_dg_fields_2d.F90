@@ -3,7 +3,7 @@
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
-module sll_dg_fields
+module sll_m_dg_fields
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -557,5 +557,5 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
    
 end subroutine plot_dg_field_2d_with_xdmf
 
-end module sll_dg_fields
+end module sll_m_dg_fields
 

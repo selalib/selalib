@@ -18,7 +18,7 @@
 program test_characteristics_2d_explicit_euler_conservative
 #include "sll_working_precision.h"
 use sll_m_characteristics_2d_explicit_euler_conservative
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 
 implicit none
   

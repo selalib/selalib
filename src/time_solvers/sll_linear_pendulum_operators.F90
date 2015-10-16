@@ -6,12 +6,12 @@
 !> \f[ x(t)= x(0)\cos (\omega t) + \frac{v(0)}{\omega}\sin (\omega t), ~~~ 
 !> v(t)= -x(0)\omega\sin (\omega t) + v(0)\cos (\omega t) \f]
 
-module sll_linear_pendulum_operators
+module sll_m_linear_pendulum_operators
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   
-  use sll_operator_splitting
+  use sll_m_operator_splitting
   implicit none 
 
   !> @brief 
@@ -54,7 +54,7 @@ contains
   !> used for unit testing.
   subroutine check_order( method, steps_fine, expected_order, test_passed )
     sll_int32, intent(in)  :: method         !< splitting method to be chosen from those 
-                                             !< implemented in sll_operator_splitting
+                                             !< implemented in sll_m_operator_splitting
     sll_real64, intent(in) :: steps_fine     !< number of steps on fine grid
     sll_int32, intent(in)  :: expected_order !< expected_order of the method 
     logical, intent(inout) :: test_passed    !< check if test successful 
@@ -124,4 +124,4 @@ contains
     endif
   end subroutine check_order
 
-end module sll_linear_pendulum_operators
+end module sll_m_linear_pendulum_operators

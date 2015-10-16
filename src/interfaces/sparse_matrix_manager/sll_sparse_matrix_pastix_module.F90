@@ -15,12 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_sparse_matrix_module
+module sll_m_sparse_matrix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_pastix
-use qsort_partition
+use sll_m_pastix
+use sll_m_qsort_partition
 implicit none
 
 !> @brief type for CSR format
@@ -571,4 +571,4 @@ end subroutine sll_solve_csr_matrix
 
 
 
-end module sll_sparse_matrix_module
+end module sll_m_sparse_matrix

@@ -6,7 +6,7 @@
 
 
 program unit_test_VP1D_cartesian_non_unif
-  use simulation_VP1D_cartesian_non_unif
+  use sll_m_sim_VP1D_cartesian_non_unif
   implicit none
 
   type(sll_simulation_VP1D_cartesian_non_unif) :: simulation

@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module fftw3
+module sll_m_fftw3
 #ifdef FFTW_F2003
   use, intrinsic :: iso_c_binding
   include 'fftw3.f03'
@@ -26,4 +26,4 @@ module fftw3
   include "fftw3.f"
 #endif
 #endif
-end module fftw3
+end module sll_m_fftw3

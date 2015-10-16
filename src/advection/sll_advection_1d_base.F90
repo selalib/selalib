@@ -49,7 +49,7 @@ abstract interface
                                            input, &
                                            output)
 
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_advection_1d_base       
 
     class(sll_advection_1d_base)          :: adv
@@ -70,7 +70,7 @@ abstract interface
                                     input,   &
                                     output)
 
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_advection_1d_base       
 
     class(sll_advection_1d_base)          :: adv

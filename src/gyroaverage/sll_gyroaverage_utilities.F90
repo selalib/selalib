@@ -1,11 +1,11 @@
-module sll_gyroaverage_utilities
+module sll_m_gyroaverage_utilities
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !#include "sll_field_2d.h"
-use sll_constants
-use gauss_lobatto_integration
-use gauss_legendre_integration
+use sll_m_constants
+use sll_m_gauss_lobatto_integration
+use sll_m_gauss_legendre_integration
 
 implicit none
 
@@ -179,4 +179,4 @@ contains
   end subroutine compute_mu
 
 
-end module sll_gyroaverage_utilities
+end module sll_m_gyroaverage_utilities

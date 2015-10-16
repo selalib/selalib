@@ -1,8 +1,8 @@
-!> gaussian random generator
+!> sll_m_gaussian random generator
 !>
 !>\author 
 !>\date created: 
-module gaussian
+module sll_m_gaussian
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -61,4 +61,4 @@ contains
     res(2) = v2*rsq
   end subroutine gaussian_deviate_2D
 
-end module gaussian
+end module sll_m_gaussian

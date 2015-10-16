@@ -21,7 +21,7 @@
 !> @details
 !> This module attempts to replace the functionalities of the arbitrary
 !> degree spline functions by deBoor. 
-module sll_arbitrary_degree_splines
+module sll_m_arbitrary_degree_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -31,7 +31,7 @@ module sll_arbitrary_degree_splines
   ! With these read-only parameters, we mimic the behavior of an enumerator
   ! or object macros. These are the alternatives with a different 
   ! implementation.
-  ! This should be in sll_boundary_condition_descriptors ?
+  ! This should be in sll_m_boundary_condition_descriptors ?
   !> PLEASE ADD DOCUMENTATION
   sll_int32, parameter, public :: PERIODIC_ARBITRARY_DEG_SPLINE = 0
   !> PLEASE ADD DOCUMENTATION
@@ -970,4 +970,4 @@ contains
        sval(i) = val 
     end do
   end function eval_uniform_periodic_spline_curve
-end module sll_arbitrary_degree_splines
+end module sll_m_arbitrary_degree_splines

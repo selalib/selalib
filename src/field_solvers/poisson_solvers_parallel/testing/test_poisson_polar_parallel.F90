@@ -4,9 +4,9 @@ program test_poisson_polar_parallel
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-use sll_collective
-use sll_gnuplot_parallel
-use sll_poisson_polar_parallel
+use sll_m_collective
+use sll_m_gnuplot_parallel
+use sll_m_poisson_polar_parallel
 
 implicit none
 

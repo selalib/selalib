@@ -8,13 +8,13 @@ program test_maxwell_2d_periodic_cart_par
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_remapper
-  use sll_constants
-  use sll_maxwell_2d_periodic_cartesian_par
-  use sll_collective
+  use sll_m_remapper
+  use sll_m_constants
+  use sll_m_maxwell_2d_periodic_cartesian_par
+  use sll_m_collective
   use hdf5
-  use sll_xml_io
-  use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
+  use sll_m_xml_io
+  use sll_m_hdf5_io_parallel, only: sll_hdf5_file_create, &
                                   sll_hdf5_write_array, &
                                   sll_hdf5_file_close
   implicit none

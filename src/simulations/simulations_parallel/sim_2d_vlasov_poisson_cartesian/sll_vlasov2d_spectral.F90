@@ -1,4 +1,4 @@
-module sll_vlasov2d_spectral
+module sll_m_vlasov2d_spectral
 
 #define MPI_MASTER 0
 #include "sll_working_precision.h"
@@ -6,13 +6,13 @@ module sll_vlasov2d_spectral
 #include "sll_constants.h"
 #include "sll_memory.h"
 use sll_m_interpolators_1d_base
-use sll_collective
-use sll_remapper
+use sll_m_collective
+use sll_m_remapper
 #include "sll_fftw.h"
 
 use, intrinsic :: iso_c_binding
-use sll_vlasov2d_base
-use fftw3
+use sll_m_vlasov2d_base
+use sll_m_fftw3
 
 implicit none
 private
@@ -230,4 +230,4 @@ contains
 
  end subroutine advection_v
 
-end module sll_vlasov2d_spectral
+end module sll_m_vlasov2d_spectral

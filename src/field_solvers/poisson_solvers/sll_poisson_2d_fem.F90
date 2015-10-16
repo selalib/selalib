@@ -6,7 +6,7 @@
 !> Solve Poisson equation on cartesian domain with finite elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
-module sll_fem_2d
+module sll_m_fem_2d
 #include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -368,5 +368,5 @@ close(10)
 end subroutine write_mtv_file
 
 
-end module sll_fem_2d
+end module sll_m_fem_2d
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

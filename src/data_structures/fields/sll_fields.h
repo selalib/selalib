@@ -22,7 +22,7 @@ use sll_m_scalar_field_1d_base
 use sll_m_scalar_field_1d
 use sll_m_scalar_field_2d_base
 use sll_m_scalar_field_2d
-use sll_array_plotting_module
+use sll_m_array_plotting
 
 #endif
 

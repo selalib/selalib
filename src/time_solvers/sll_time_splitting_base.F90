@@ -3,7 +3,7 @@
 !> \brief 
 !> The time splitting: Lie splitting and Strang splitting
 !> 
-module sll_time_splitting
+module sll_m_time_splitting
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -21,7 +21,7 @@ module sll_time_splitting
 
   abstract interface
      subroutine time_splitting_operator (this, dt)
-       use sll_working_precision
+       use sll_m_working_precision
        import time_splitting
        class(time_splitting)   :: this
        sll_real64, intent(in)  :: dt
@@ -70,6 +70,6 @@ module sll_time_splitting
       call this%operator1(0.5_f64*dt)
     end subroutine strang_splitting
 
-end module sll_time_splitting
+end module sll_m_time_splitting
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

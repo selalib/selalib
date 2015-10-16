@@ -6,19 +6,19 @@ program vm2d_spectral
 #include "sll_utilities.h"
 #include "sll_constants.h"
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_cubic_spline_interpolator_1d
  
 #include "sll_fftw.h"
 
-use sll_vlasov2d_base
-use sll_vlasov2d_spectral
-use sll_poisson_1d_periodic  
+use sll_m_vlasov2d_base
+use sll_m_vlasov2d_spectral
+use sll_m_poisson_1d_periodic  
 use sll_m_poisson_1d_periodic_solver
 use sll_m_ampere_vlasov_1d
-use sll_collective
-use sll_remapper
-use init_functions, only: landau_1d, tsi, TSI_CASE, LANDAU_X_CASE
+use sll_m_collective
+use sll_m_remapper
+use sll_m_init_functions, only: landau_1d, tsi, TSI_CASE, LANDAU_X_CASE
 
 implicit none
 
@@ -99,7 +99,7 @@ contains
 
 subroutine initlocal()
 
-  use init_functions
+  use sll_m_init_functions
   
   sll_real64 :: x
   sll_real64 :: vx

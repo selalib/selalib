@@ -17,11 +17,11 @@
 
 !> Cartesian mesh basic types
 !> @ingroup meshes
-module sll_cartesian_meshes
+module sll_m_cartesian_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_meshes_base
+use sll_m_meshes_base
 implicit none
 
   !> @brief 1D cartesian mesh
@@ -1170,4 +1170,4 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
 
 
-end module sll_cartesian_meshes
+end module sll_m_cartesian_meshes

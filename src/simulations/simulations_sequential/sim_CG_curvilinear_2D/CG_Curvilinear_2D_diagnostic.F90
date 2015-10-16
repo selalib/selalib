@@ -1,11 +1,11 @@
-module module_diagnostic
+module sll_m_diagnostic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_fft.h"
 
-   use module_cg_curvi_structure
+   use sll_m_cg_curvi_structure
    
 contains
 
@@ -407,4 +407,4 @@ do i = 1,nr+1
 end subroutine diagnostic_2
 !!******************************************************************************
 
-end module module_diagnostic
+end module sll_m_diagnostic

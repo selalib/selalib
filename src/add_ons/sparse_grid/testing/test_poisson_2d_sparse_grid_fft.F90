@@ -8,9 +8,9 @@ program test_poisson_2d_sparse_grid_fft
    !  test 2D Poisson solver based on FFT on sparse grid
    !-------------------------------------------------------------------
 
-   use sll_poisson_2d_sparse_grid_fft
-   use sparse_grid_2d
-   use sll_constants, only : sll_pi
+   use sll_m_poisson_2d_sparse_grid_fft
+   use sll_m_sparse_grid_2d
+   use sll_m_constants, only : sll_pi
 
    implicit none
 

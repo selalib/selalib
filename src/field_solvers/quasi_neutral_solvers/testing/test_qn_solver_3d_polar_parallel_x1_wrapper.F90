@@ -19,11 +19,11 @@ program test_qn_solver_3d_polar_parallel_x1_wrapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_qn_solver_3d_polar_parallel_x1_wrapper_module
-use sll_remapper
-use sll_collective
+use sll_m_qn_solver_3d_polar_parallel_x1_wrapper
+use sll_m_remapper
+use sll_m_collective
 
-!use sll_boundary_condition_descriptors
+!use sll_m_boundary_condition_descriptors
 
 implicit none
   

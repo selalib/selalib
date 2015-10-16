@@ -7,9 +7,9 @@ module sll_m_poisson_2d_periodic_solver
 #include "sll_assert.h"
 use sll_m_poisson_2d_base
 #ifdef FFTW
-use sll_poisson_2d_periodic_fftw
+use sll_m_poisson_2d_periodic_fftw
 #else
-use sll_poisson_2d_periodic_fftpack
+use sll_m_poisson_2d_periodic_fftpack
 #endif
 implicit none
 

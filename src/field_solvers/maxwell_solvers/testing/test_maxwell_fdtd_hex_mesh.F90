@@ -5,8 +5,8 @@ program test_maxwell_fdtd_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
-use sll_maxwell_diga_hex_mesh
+use sll_m_constants
+use sll_m_maxwell_diga_hex_mesh
 
 implicit none
 

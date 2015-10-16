@@ -20,7 +20,7 @@
 !> Module with intern function for fft
 !> @details
 !> This module do not depends on the fft library used.
-module sll_fft_utils
+module sll_m_fft_utils
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
@@ -64,4 +64,4 @@ contains
   ! END "How-to manipulate flags ?" section
   ! ***************************************************************************
 
-end module sll_fft_utils
+end module sll_m_fft_utils

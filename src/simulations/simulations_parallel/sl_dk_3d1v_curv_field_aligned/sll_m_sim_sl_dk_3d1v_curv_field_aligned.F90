@@ -29,23 +29,23 @@ module sll_m_sim_sl_dk_3d1v_curv_field_aligned
 #include "sll_errors.h"
 #include "sll_memory.h"
 !#include "sll_field_2d.h"
-!#include "sll_utilities.h"
+!#include "sll_m_utilities.h"
 
-  use sll_simulation_base, only : &
+  use sll_m_sim_base, only : &
     sll_simulation_base_class
 
-  use sll_utilities, only : &
+  use sll_m_utilities, only : &
     sll_new_file_id
     
-  use sll_collective, only : &
+  use sll_m_collective, only : &
     sll_world_collective, &
     sll_get_collective_rank
 
-  use sll_cartesian_meshes, only : &
+  use sll_m_cartesian_meshes, only : &
     sll_cartesian_mesh_2d, &
     sll_cartesian_mesh_1d
 
-  use sll_coordinate_transformation_2d_base_module, only : &
+  use sll_m_coordinate_transformation_2d_base, only : &
     sll_coordinate_transformation_2d_base
 
   

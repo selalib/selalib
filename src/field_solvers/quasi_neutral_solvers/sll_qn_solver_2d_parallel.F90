@@ -1,17 +1,17 @@
-module sll_qn_solver_2d_parallel
+module sll_m_qn_solver_2d_parallel
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
-  use sll_constants
-  use sll_fft
-  use sll_collective
-  use sll_remapper
-  use sll_boundary_condition_descriptors
-  use sll_qn_solver_2d, only: dirichlet_matrix, neumann_matrix
-  use sll_tridiagonal
+  use sll_m_constants
+  use sll_m_fft
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_boundary_condition_descriptors
+  use sll_m_qn_solver_2d, only: dirichlet_matrix, neumann_matrix
+  use sll_m_tridiagonal
 
   implicit none
 
@@ -248,4 +248,4 @@ contains
   end subroutine delete_qn_solver_2d_parallel
 
 
-end module sll_qn_solver_2d_parallel
+end module sll_m_qn_solver_2d_parallel

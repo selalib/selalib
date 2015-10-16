@@ -1,6 +1,6 @@
 program test_lagrange
 #include "sll_working_precision.h"
-  use lagrange_interpolation
+  use sll_m_lagrange_interpolation
   implicit none
 
 #define NP 20

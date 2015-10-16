@@ -1,4 +1,4 @@
-module sll_simulation_2d_guiding_center_curvilinear_module
+module sll_m_sim_2d_guiding_center_curvilinear
 
 !2d guiding center cartesian simulation
 !contact: Adnane Hamiaz (hamiaz@math.unistra.fr
@@ -11,8 +11,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 #include "sll_utilities.h"
 #include "sll_fft.h"
 #include "sll_poisson_solvers.h"
-!  use sll_constants
-!  use sll_cartesian_meshes  
+!  use sll_m_constants
+!  use sll_m_cartesian_meshes  
 !  use sll_m_advection_1d_periodic
 !  use sll_m_interpolators_1d_base
   use sll_m_advection_2d_base
@@ -29,25 +29,25 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_m_characteristics_1d_trapezoid
   !use sll_m_characteristics_1d_explicit_euler_conservative
   !use sll_m_characteristics_1d_trapezoid_conservative
-  use sll_reduction_module
-  use sll_simulation_base
+  use sll_m_reduction
+  use sll_m_sim_base
  
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_cubic_spline_interpolator_2d
-  use sll_hermite_interpolation_2d_module
+  use sll_m_hermite_interpolation_2d
   use sll_m_hermite_interpolator_2d
-  use sll_hermite_interpolation_1d_module
+  use sll_m_hermite_interpolation_1d
   use sll_m_hermite_interpolator_1d
   use sll_m_arbitrary_degree_spline_interpolator_2d
 
-!  use sll_coordinate_transformation_2d_base_module
+!  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
-  use sll_parallel_array_initializer_module
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
+  use sll_m_parallel_array_initializer
   
 #ifdef MUDPACK
- !use sll_mudpack_curvilinear
+ !use sll_m_mudpack_curvilinear
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
   use sll_m_poisson_2d_base
@@ -2423,8 +2423,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -2490,8 +2490,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
 
 
   subroutine plot_phi_curvilinear(iplot,f,mesh_2d,transf)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -2819,4 +2819,4 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
   end subroutine sll_plot_curvilinear_init
 
 
-end module sll_simulation_2d_guiding_center_curvilinear_module
+end module sll_m_sim_2d_guiding_center_curvilinear

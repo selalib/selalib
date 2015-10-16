@@ -20,7 +20,7 @@
 !> Implements the functions to write xml file to store light data
 !> @details
 !> With XDMF file you can describe data to plot them with VisIt
-module sll_xml_io
+module sll_m_xml_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
@@ -413,5 +413,5 @@ contains
        
      end subroutine sll_xml_grid_geometry_3d_low_level
      
-end module sll_xml_io
+end module sll_m_xml_io
 

@@ -18,7 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 
 #endif
 

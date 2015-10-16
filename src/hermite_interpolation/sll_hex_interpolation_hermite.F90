@@ -1,10 +1,10 @@
-module sll_interpolation_hex_hermite
+module sll_m_interpolation_hex_hermite
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use sll_hexagonal_meshes
-  use sll_hermite_interpolation_2d_module
+  use sll_m_hexagonal_meshes
+  use sll_m_hermite_interpolation_2d
   implicit none
 
 contains
@@ -1980,4 +1980,4 @@ contains
 
 
 
-end module sll_interpolation_hex_hermite
+end module sll_m_interpolation_hex_hermite

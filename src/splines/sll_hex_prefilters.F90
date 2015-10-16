@@ -7,7 +7,7 @@
 module sll_m_hex_pre_filters
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_hexagonal_meshes
+  use sll_m_hexagonal_meshes
 
   implicit none
 

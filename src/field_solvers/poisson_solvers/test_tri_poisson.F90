@@ -1,12 +1,12 @@
 program test_tri_poisson
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_hexagonal_meshes
-use tri_poisson
-use sll_triangular_meshes
-use sll_mesh_calculus_2d_module
-use sll_gnuplot
-use sll_timer
+use sll_m_hexagonal_meshes
+use sll_m_tri_poisson
+use sll_m_triangular_meshes
+use sll_m_mesh_calculus_2d
+use sll_m_gnuplot
+use sll_m_timer
 
 !----------------------------------------------------------------------
 

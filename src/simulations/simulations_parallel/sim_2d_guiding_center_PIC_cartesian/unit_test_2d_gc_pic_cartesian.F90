@@ -1,9 +1,9 @@
 program pic_2d_cartesian
 #include "sll_working_precision.h"
 
-  use sll_pic_simulation_2d_cartesian_module
-  use sll_collective 
-  use sll_timer
+  use sll_m_sim_pic_2d_cartesian
+  use sll_m_collective 
+  use sll_m_timer
 
   type(sll_pic_simulation_2d_gc_cartesian) :: sim
   character(len=256)                       :: filename

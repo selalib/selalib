@@ -24,7 +24,7 @@
 !> express that a derivative is in a particular direction? Why eta???
 module sll_m_interpolators_2d_base
 #include "sll_working_precision.h" 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 implicit none
   
   !*************************************************************************
@@ -89,7 +89,7 @@ implicit none
   abstract interface
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
 
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        sll_real64                                  :: val
        class(sll_interpolator_2d_base), intent(in) :: interpolator
@@ -105,7 +105,7 @@ implicit none
 
      subroutine interpolator_2d_array_msg( interpolator, data_array )
 
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(inout) :: interpolator
        sll_real64, dimension(:,:), intent(in)         :: data_array
@@ -124,7 +124,7 @@ implicit none
                                    eta1,             &
                                    eta2) result(res)
 
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(in)    :: this
        sll_int32, intent(in)                          :: num_points1 
@@ -148,7 +148,7 @@ implicit none
                                         alpha1,      &
                                         alpha2) result(res)
 
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(in)    :: this
        sll_int32, intent(in)                          :: num_points1  
@@ -174,7 +174,7 @@ implicit none
           size_knots1,&
           knots2,&
           size_knots2)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(inout) :: interpolator
        ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
@@ -208,7 +208,7 @@ implicit none
           size_eta1_coords, &
           eta2_coords, &
           size_eta2_coords )
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(inout)  :: interpolator
        sll_real64, dimension(:,:), intent(in)          :: data_array
@@ -222,7 +222,7 @@ implicit none
   !> Get splines coefficients
   abstract interface 
      function get_coeffs_2d(interpolator)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(in) :: interpolator
        sll_real64, dimension(:,:), pointer         :: get_coeffs_2d     

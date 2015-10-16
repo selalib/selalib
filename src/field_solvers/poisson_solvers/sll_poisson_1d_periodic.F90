@@ -19,7 +19,7 @@
 !> @ingroup poisson_solvers
 !> Module to solve Poisson equation on one dimensional mesh using FFT
 !> transform.
-module sll_poisson_1d_periodic
+module sll_m_poisson_1d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -174,5 +174,5 @@ contains
 
 
 
-end module sll_poisson_1d_periodic
+end module sll_m_poisson_1d_periodic
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -23,7 +23,7 @@ program test_poisson_2d_polar
 
 use sll_m_poisson_2d_base
 use sll_m_poisson_2d_polar_wrapper
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 
 implicit none
   

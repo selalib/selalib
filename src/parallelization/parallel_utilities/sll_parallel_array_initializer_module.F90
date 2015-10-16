@@ -1,7 +1,7 @@
-module sll_parallel_array_initializer_module
-  use sll_remapper
-  use sll_cartesian_meshes
-  use sll_coordinate_transformation_2d_base_module
+module sll_m_parallel_array_initializer
+  use sll_m_remapper
+  use sll_m_cartesian_meshes
+  use sll_m_coordinate_transformation_2d_base
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   implicit none
@@ -19,7 +19,7 @@ module sll_parallel_array_initializer_module
 
   abstract interface
     function sll_scalar_initializer_1d( x1,  params )
-      use sll_working_precision
+      use sll_m_working_precision
       sll_real64                                     :: sll_scalar_initializer_1d
       sll_real64, intent(in)                         :: x1
       sll_real64, dimension(:), intent(in), optional :: params
@@ -28,7 +28,7 @@ module sll_parallel_array_initializer_module
 
   abstract interface
      function sll_scalar_initializer_2d( x1, x2, params )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64               :: sll_scalar_initializer_2d
        sll_real64, intent(in)                         :: x1
        sll_real64, intent(in)                         :: x2
@@ -38,7 +38,7 @@ module sll_parallel_array_initializer_module
 
   abstract interface
      function sll_scalar_initializer_4d( x1, x2, x3, x4, params )
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64                                  :: sll_scalar_initializer_4d
        sll_real64, intent(in)                         :: x1
        sll_real64, intent(in)                         :: x2
@@ -679,7 +679,7 @@ contains
 !    end if
 !
 !    if( .not. associated(mesh2d_eta1_eta2) ) then
-!       print *, 'sll_parallel_array_initializer_module.F90_array_initializer error: ', &
+!       print *, 'sll_m_parallel_array_initializer.F90_array_initializer error: ', &
 !            'passed mesh2d_eta1_eta2 argument is uninitialized.'
 !    end if
 !
@@ -1189,4 +1189,4 @@ contains
 
 
 
-end module sll_parallel_array_initializer_module
+end module sll_m_parallel_array_initializer

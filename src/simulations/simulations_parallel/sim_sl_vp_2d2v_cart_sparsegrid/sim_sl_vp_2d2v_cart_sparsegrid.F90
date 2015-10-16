@@ -1,7 +1,7 @@
 program sim_sl_vp_2d2v_cart_sparsegrid
 #include "sll_working_precision.h"
   use sll_m_sim_sl_vp_2d2v_cart_sparsegrid
-  use sll_collective
+  use sll_m_collective
 
   type(sll_t_sim_sl_vp_2d2v_cart_sparsegrid) :: sim
   character(len=256)                         :: filename

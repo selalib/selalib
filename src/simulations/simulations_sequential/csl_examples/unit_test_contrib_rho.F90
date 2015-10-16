@@ -16,8 +16,8 @@ program contrib_rho_tester
 !1._f64-mu*(3._f64-2._f64*xi+2*eta_1)/(3._f64-2._f64*xi)*exp(-eta_1)
 
   use cubic_nonuniform_splines
-  use sll_constants
-  use contrib_rho_module
+  use sll_m_constants
+  use sll_m_contrib_rho
 
   !use init1d_module
   

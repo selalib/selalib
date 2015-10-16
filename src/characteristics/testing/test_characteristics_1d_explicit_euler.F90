@@ -19,7 +19,7 @@ program test_characteristics_1d_explicit_euler
 #include "sll_working_precision.h"
 use sll_m_characteristics_1d_base
 use sll_m_characteristics_1d_explicit_euler
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 
 implicit none
   

@@ -10,7 +10,7 @@
 !>          causes a periodic swirling deformation (see [REF]). The Cartesian
 !>          grid is obtained as a tensor product of two uniform 1D grids.
 !------------------------------------------------------------------------------
-module sll_simulation_2d_analytic_field_cartesian_module
+module sll_m_sim_2d_analytic_field_cartesian
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -18,8 +18,8 @@ module sll_simulation_2d_analytic_field_cartesian_module
 #include "sll_fields.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_constants
-  use sll_cartesian_meshes  
+  use sll_m_constants
+  use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
   use sll_m_advection_2d_bsl
   use sll_m_advection_2d_tensor_product
@@ -32,22 +32,22 @@ module sll_simulation_2d_analytic_field_cartesian_module
   use sll_m_characteristics_1d_trapezoid
   use sll_m_characteristics_1d_explicit_euler_conservative
   use sll_m_characteristics_1d_trapezoid_conservative
-  use sll_reduction_module
-  use sll_simulation_base
+  use sll_m_reduction
+  use sll_m_sim_base
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_cubic_spline_interpolator_1d
-  use sll_coordinate_transformation_2d_base_module
-  use sll_common_array_initializers_module
-  use sll_parallel_array_initializer_module
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_common_array_initializers
+  use sll_m_parallel_array_initializer
   
 #ifdef MUDPACK
-!  use sll_mudpack_curvilinear
+!  use sll_m_mudpack_curvilinear
 !  use sll_m_poisson_2d_mudpack
 !  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 !  use sll_m_poisson_2d_elliptic_solver
-!  use sll_timer
-!  use sll_fft
+!  use sll_m_timer
+!  use sll_m_fft
 !  use sll_m_poisson_2d_periodic_solver
 
   implicit none
@@ -906,8 +906,8 @@ contains
   !> @param[in] mesh_2d  2D cartesian mesh object
   !----------------------------------------------------------------------------
   subroutine plot_f_cartesian( iplot, f, mesh_2d )
-    use sll_xdmf
-    use sll_hdf5_io_serial
+    use sll_m_xdmf
+    use sll_m_hdf5_io_serial
 
     ! Function arguments
     sll_int32,                   intent(in) :: iplot
@@ -974,4 +974,4 @@ contains
 #endif
 !*********************
 
-end module sll_simulation_2d_analytic_field_cartesian_module
+end module sll_m_sim_2d_analytic_field_cartesian

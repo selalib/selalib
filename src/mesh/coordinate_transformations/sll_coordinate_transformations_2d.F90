@@ -35,11 +35,11 @@ module sll_m_coordinate_transformations_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_cubic_splines
-  use sll_xdmf
-  use sll_cartesian_meshes
+  use sll_m_cubic_splines
+  use sll_m_xdmf
+  use sll_m_cartesian_meshes
   use sll_m_interpolators_2d_base
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_deboor_splines_2d
   implicit none
   private
@@ -171,7 +171,7 @@ module sll_m_coordinate_transformations_2d
 
   abstract interface
      function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64, dimension(2,2)   :: val
        sll_real64   :: eta1
        sll_real64   :: eta2
@@ -181,7 +181,7 @@ module sll_m_coordinate_transformations_2d
 
    abstract interface
       function two_arg_message_passing_func_discr( transf, eta1, eta2 )
-        use sll_working_precision
+        use sll_m_working_precision
         import     :: sll_coordinate_transformation_2d_discrete
         sll_real64                      :: two_arg_message_passing_func_discr
         class(sll_coordinate_transformation_2d_discrete)  :: transf
@@ -192,7 +192,7 @@ module sll_m_coordinate_transformations_2d
 
    abstract interface
       function two_arg_message_passing_func_analyt( transf, eta1, eta2 )
-        use sll_working_precision
+        use sll_m_working_precision
         import     :: sll_coordinate_transformation_2d_analytic
         sll_real64                      :: two_arg_message_passing_func_analyt
         class(sll_coordinate_transformation_2d_analytic) :: transf

@@ -21,12 +21,12 @@ program test_qn_2d_polar_precompute
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 use sll_m_qn_2d_polar_precompute
-use sll_timer
-use sll_ascii_io
-use gauss_lobatto_integration
-use gauss_legendre_integration
-use sll_gnuplot
-use sll_qn_2d_polar
+use sll_m_timer
+use sll_m_ascii_io
+use sll_m_gauss_lobatto_integration
+use sll_m_gauss_legendre_integration
+use sll_m_gnuplot
+use sll_m_qn_2d_polar
 use sll_m_gyroaverage_2d_polar_hermite_solver
 
 implicit none

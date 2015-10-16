@@ -13,7 +13,7 @@ implicit none
 real(8) :: gam0
 !> angular velocity of vortex pair
 real(8) :: gomeg
-!> gaussian or constant distribution
+!> sll_m_gaussian or constant distribution
 logical :: gauss = .true.
 
 contains

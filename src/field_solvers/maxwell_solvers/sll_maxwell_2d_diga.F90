@@ -18,9 +18,9 @@ module sll_m_maxwell_2d_diga
 #include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
-use sll_maxwell_solvers_base
-use sll_dg_fields
-use sll_boundary_condition_descriptors
+use sll_m_maxwell_solvers_base
+use sll_m_dg_fields
+use sll_m_boundary_condition_descriptors
 
 implicit none
 

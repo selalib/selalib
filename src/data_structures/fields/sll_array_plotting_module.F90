@@ -1,4 +1,4 @@
-module sll_array_plotting_module
+module sll_m_array_plotting
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_meshes.h"
@@ -111,4 +111,4 @@ end select
 
 end subroutine write_projection_2d
 
-end module sll_array_plotting_module
+end module sll_m_array_plotting

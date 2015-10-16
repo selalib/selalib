@@ -8,7 +8,7 @@
 !> * Peridoci boundary conditions.
 !> * Linear system solve with lapack (Choleski)
 !> This solver is not fully tested, please use it carefully.
-module sll_fem_2d_periodic
+module sll_m_fem_2d_periodic
 #include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -313,5 +313,5 @@ close(10)
 end subroutine write_mtv_periodic
 
 
-end module sll_fem_2d_periodic
+end module sll_m_fem_2d_periodic
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

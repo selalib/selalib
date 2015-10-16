@@ -4,7 +4,7 @@ program unit_test_sll_quadtree
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_quadtree
+  use sll_m_quadtree
 
 
  implicit none

@@ -30,13 +30,13 @@
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
-module sll_general_coordinate_elliptic_solver_module
+module sll_m_general_coordinate_elliptic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
 use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
@@ -45,10 +45,10 @@ use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
-use sll_cubic_splines  
-use gauss_legendre_integration
-use gauss_lobatto_integration
-use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
+use sll_m_cubic_splines  
+use sll_m_gauss_legendre_integration
+use sll_m_gauss_lobatto_integration
+use sll_m_sparse_matrix, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
                                      new_csr_matrix_with_constraint, &
                                      csr_add_one_constraint,         &
@@ -323,7 +323,7 @@ endif
 
 
 ! This should be changed to verify that the passed BC's are part of the
-! recognized list described in sll_boundary_condition_descriptors...
+! recognized list described in sll_m_boundary_condition_descriptors...
 
 es%bc1_min        = bc1_min
 es%bc1_max        = bc1_max
@@ -2918,7 +2918,7 @@ call flush()
 
 
 ! This should be changed to verify that the passed BC's are part of the
-! recognized list described in sll_boundary_condition_descriptors...
+! recognized list described in sll_m_boundary_condition_descriptors...
 
 es%bc1_min        = bc1_min
 es%bc1_max        = bc1_max
@@ -4250,4 +4250,4 @@ end subroutine compute_values_at_knots
 
 
 
-end module sll_general_coordinate_elliptic_solver_module
+end module sll_m_general_coordinate_elliptic_solver

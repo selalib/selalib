@@ -8,23 +8,23 @@ module sll_m_sim_pic_vm_1d2v_cart
 #include "sll_memory.h"
 #include "sll_utilities.h"
 
-  use sll_constants
-  use sll_collective
-  use sll_simulation_base
-  use sll_cartesian_meshes
+  use sll_m_constants
+  use sll_m_collective
+  use sll_m_sim_base
+  use sll_m_cartesian_meshes
   use sll_m_pic_base
   use sll_m_particle_initializer
   use sll_m_particle_group_1d2v
   use sll_m_hamiltonian_splitting_base
   use sll_m_hamiltonian_splitting_pic_vm_1d2v
   use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
-  use sll_ascii_io
+  use sll_m_ascii_io
   
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_1d
   use sll_m_maxwell_1d_base
   use sll_m_maxwell_1d_fem
-  use sll_arbitrary_degree_splines
+  use sll_m_arbitrary_degree_splines
 
   implicit none
 

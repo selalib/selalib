@@ -1,4 +1,4 @@
-module sll_xdmf_io
+module sll_m_xdmf_io
 
 use sll_m_io_utilities, only: &
     sll_s_remove_file,        &  ! delete an existing file
@@ -17,7 +17,7 @@ use sll_m_xdmf_light_serial, only: &
 
 #ifndef NOHDF5
 use sll_m_hdf5_serial, only: &
-    sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_hdf5_io_serial
+    sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_m_hdf5_io_serial
 #endif /* NOHDF5 */
 
-end module sll_xdmf_io
+end module sll_m_xdmf_io

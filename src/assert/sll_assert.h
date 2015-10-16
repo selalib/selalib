@@ -52,7 +52,7 @@
 
 
 
-use sll_assert
+use sll_m_assert
 
 
 #endif

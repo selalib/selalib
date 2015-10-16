@@ -1,8 +1,8 @@
 program vlasov_poisson_2d_no_split
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-  use sll_simulation_2d_vlasov_poisson_no_splitting
-  use sll_timer
+  use sll_m_sim_2d_vlasov_poisson_no_splitting
+  use sll_m_timer
   implicit none
 
   class(sll_simulation_base_class), pointer :: sim

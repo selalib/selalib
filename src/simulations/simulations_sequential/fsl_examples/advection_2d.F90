@@ -8,10 +8,10 @@ program test_deposit_cubic_splines
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-use sll_cubic_splines
-use sll_constants
-use sll_boundary_condition_descriptors
-use sll_fft
+use sll_m_cubic_splines
+use sll_m_constants
+use sll_m_boundary_condition_descriptors
+use sll_m_fft
 
 implicit none
 
@@ -104,7 +104,7 @@ T = .1_f64
 mesh_case = 1
 
 ! -- distribution function --
-! 4 : centered gaussian in eta1 and eta2
+! 4 : centered sll_m_gaussian in eta1 and eta2
 test_case = 4
 
 ! -- advecton field --

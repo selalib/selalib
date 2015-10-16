@@ -6,7 +6,7 @@
 
 
 program unit_test_VP1D_curvilinear_analytic
-  use simulation_VP1D_curvilinear_analytic
+  use sll_m_sim_VP1D_curvilinear_analytic
   implicit none
 
   type(sll_simulation_VP1D_curvilinear_analytic) :: simulation

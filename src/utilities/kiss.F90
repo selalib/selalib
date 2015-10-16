@@ -4,7 +4,7 @@
 ! (3) Two 16-bit multiply-with-carry generators, period 597273182964842497>2^59
 !  Overall period>2^123;  Default seeds x,y,z,w.
 !  Set your own seeds with statement i=kisset(ix,iy,iz,iw).
-module marsaglia
+module sll_m_marsaglia
 implicit none
 private
 public :: kiss, kisset
@@ -35,10 +35,10 @@ contains
      kisset = 1
   end function kisset
 
-end module marsaglia
+end module sll_m_marsaglia
 
 !     PROGRAM test
-!     use marsaglia
+!     use sll_m_marsaglia
 !     PRINT *, kiss ()
 !     PRINT *, kisset (1, 2, 3, 4)
 !     PRINT *, kiss ()

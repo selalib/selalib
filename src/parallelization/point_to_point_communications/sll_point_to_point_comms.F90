@@ -1,8 +1,8 @@
-module sll_point_to_point_comms_module
+module sll_m_point_to_point_comms
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-  use sll_collective
+  use sll_m_collective
   use mpi  !could this be sent back to the collective module?
   implicit none
 
@@ -660,4 +660,4 @@ contains
 #undef BUFFER_PADDING
 #undef GET_MPI_REQUEST
 
-end module sll_point_to_point_comms_module
+end module sll_m_point_to_point_comms

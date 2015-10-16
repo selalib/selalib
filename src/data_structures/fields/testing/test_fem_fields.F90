@@ -7,7 +7,7 @@ program test_fem_fields
 #include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
-use sll_fem_fields
+use sll_m_fem_fields
 
 implicit none
 
@@ -30,7 +30,7 @@ class(sll_coordinate_transformation_2d_base), pointer :: collela
 type(sll_fem_field_2d), pointer :: ex
 type(sll_fem_field_2d), pointer :: bz
 
-sll_real64, external :: gaussian, add
+sll_real64, external :: sll_m_gaussian, add
 
 mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta1_max=1._f64, &
@@ -85,7 +85,7 @@ call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
 
-bz => sll_new( degree, collela, gaussian) 
+bz => sll_new( degree, collela, sll_m_gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
 call bz%write_to_file('bz', SLL_IO_MTV)
 call bz%write_to_file('bz', SLL_IO_XDMF)

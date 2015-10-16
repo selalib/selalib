@@ -9,8 +9,8 @@
 ! ---
 
 program test_decomposition
-  use sll_collective
-  use sll_decomposition
+  use sll_m_collective
+  use sll_m_decomposition
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_working_precision.h"

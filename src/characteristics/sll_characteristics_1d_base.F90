@@ -41,7 +41,7 @@ module sll_m_characteristics_1d_base
         dt, &
         input, &
         output)       
-      use sll_working_precision
+      use sll_m_working_precision
       import sll_characteristics_1d_base       
       class(sll_characteristics_1d_base) :: charac
       sll_real64,dimension(:),intent(in) :: A
@@ -56,7 +56,7 @@ module sll_m_characteristics_1d_base
     ! change the value of eta when eta<=eta_min or eta>=eta_max
     ! depending on boundary conditions
     function signature_process_outside_point_1d( eta, eta_min, eta_max ) result(eta_out)
-      use sll_working_precision
+      use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
@@ -69,7 +69,7 @@ contains
   ! periodic case
   ! called when bc_type = SLL_PERIODIC
   function process_outside_point_periodic( eta, eta_min, eta_max ) result(eta_out)
-      use sll_working_precision
+      use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
@@ -98,7 +98,7 @@ contains
   ! called when bc_type = SLL_SET_TO_LIMIT
   
   function process_outside_point_set_to_limit( eta, eta_min, eta_max ) result(eta_out)
-      use sll_working_precision
+      use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max

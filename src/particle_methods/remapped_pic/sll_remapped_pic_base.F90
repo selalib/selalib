@@ -77,7 +77,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_scalar( self, i ) result( r )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
@@ -88,7 +88,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_coords( self, i ) result( r )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
@@ -99,7 +99,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_integer(self, i ) result( i_out )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ),   intent( in )    ::  self
     sll_int32,                          intent( in )    ::  i
@@ -111,7 +111,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_set_coords( self, i, x )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
@@ -122,7 +122,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_set_scalar( self, i, s )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
@@ -133,7 +133,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine set_scalar( self, s )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: s
@@ -143,7 +143,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine init( self, initial_density_identifier, rand_seed, rank, world_size)
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
@@ -155,7 +155,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine no_arg( self )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
 
@@ -165,7 +165,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine vis( self, array_name, iplot )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     character(len=*),                   intent(in)      :: array_name   !< field name
@@ -177,7 +177,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine set_landau_params( self, thermal_speed, alpha, k_landau )
-    use sll_working_precision
+    use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: thermal_speed
@@ -191,7 +191,7 @@ module sll_m_remapped_pic_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine dep_charge_2d( self, charge_accumulator, target_total_charge )
-    use sll_working_precision
+    use sll_m_working_precision
 #include "sll_accumulators.h"
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ),           intent( inout ) :: self

@@ -16,8 +16,8 @@ program test_maxwell_2d_discrete
 #include "sll_coordinate_transformations.h"
 
 use sll_m_cubic_spline_interpolator_2d
-use sll_dg_fields
-use sll_maxwell_solvers_base
+use sll_m_dg_fields
+use sll_m_maxwell_solvers_base
 use sll_m_maxwell_2d_diga
 
 implicit none

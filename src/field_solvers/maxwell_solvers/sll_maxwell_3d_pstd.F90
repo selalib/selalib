@@ -68,7 +68,7 @@ module sll_m_maxwell_3d_pstd
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
-use fftw3
+use sll_m_fftw3
 
 implicit none
 

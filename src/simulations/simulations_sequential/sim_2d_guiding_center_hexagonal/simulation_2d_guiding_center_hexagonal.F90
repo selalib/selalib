@@ -10,21 +10,21 @@ program sim2d_gc_hex
 #include "sll_errors.h"
 #include "sll_boundary_condition_descriptors.h"
 
-  use sll_ascii_io
-  use sll_utilities, only : &
+  use sll_m_ascii_io
+  use sll_m_utilities, only : &
        int2string
-  use sll_constants, only : &
+  use sll_m_constants, only : &
        sll_sqrt3
-  use euler_2d_hex
-  use sll_hexagonal_meshes, only : &
+  use sll_m_euler_2d_hex
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d
-  use hex_poisson
-  use pivotbande
-  use sll_box_splines, only : &
+  use sll_m_hex_poisson
+  use sll_m_pivotbande
+  use sll_m_box_splines, only : &
        sll_box_spline_2d, &
        new_box_spline_2d, &
        hex_interpolate_value
-  use sll_interpolation_hex_hermite
+  use sll_m_interpolation_hex_hermite
   implicit none
   sll_int32, parameter :: SLL_HEX_SPLINES = 2
   sll_int32, parameter :: SLL_HEX_Z9 = 9

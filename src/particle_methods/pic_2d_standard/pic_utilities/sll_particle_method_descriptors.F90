@@ -1,8 +1,8 @@
  !> @ingroup pic_utilities
  !> @author Jakob Ameres
  !> @brief Descriptors for particle methods
- !> @details Should be replaced by sll_descriptors
-module sll_particle_method_descriptors
+ !> @details Should be replaced by sll_m_descriptors
+module sll_m_particle_method_descriptors
 #include "sll_working_precision.h"
 
   implicit none
@@ -81,5 +81,5 @@ module sll_particle_method_descriptors
            "SLL_COLLISIONS_KROOK      ",&
            "SLL_COLLISIONS_LANDAU     " /) 
   
-end module sll_particle_method_descriptors
+end module sll_m_particle_method_descriptors
  

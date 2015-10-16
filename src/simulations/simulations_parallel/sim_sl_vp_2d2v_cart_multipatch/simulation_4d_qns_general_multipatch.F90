@@ -1,4 +1,4 @@
-module sll_simulation_4d_qns_general_multipatch_module
+module sll_m_sim_4d_qns_general_multipatch
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -6,27 +6,27 @@ module sll_simulation_4d_qns_general_multipatch_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
   use sll_m_scalar_field_2d_multipatch
-  use sll_general_coordinate_elliptic_solver_multipatch_module
-  use sll_coordinate_transformation_multipatch_module
-  use sll_distribution_function_4d_multipatch_module
-!  use sll_collective
-!  use sll_remapper
-!  use sll_constants
+  use sll_m_general_coordinate_elliptic_solver_multipatch
+  use sll_m_coordinate_transformation_multipatch
+  use sll_m_distribution_function_4d_multipatch
+!  use sll_m_collective
+!  use sll_m_remapper
+!  use sll_m_constants
   use sll_m_cubic_spline_interpolator_1d
 !  use sll_m_cubic_spline_interpolator_2d
-  use sll_simulation_base
-!  use sll_cartesian_meshes
-  use sll_parallel_array_initializer_module
-!  use sll_coordinate_transformation_2d_base_module
-  use sll_gnuplot_parallel
-  use sll_general_coordinate_elliptic_solver_module
-  use sll_common_array_initializers_module
+  use sll_m_sim_base
+!  use sll_m_cartesian_meshes
+  use sll_m_parallel_array_initializer
+!  use sll_m_coordinate_transformation_2d_base
+  use sll_m_gnuplot_parallel
+  use sll_m_general_coordinate_elliptic_solver
+  use sll_m_common_array_initializers
 !  use sll_m_scalar_field_2d_base
 !  use sll_m_scalar_field_2d
 !  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_timer
+  use sll_m_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general_multipatch
@@ -1257,8 +1257,8 @@ contains
 
  !----------------------------------------------------
   subroutine writeHDF5_diag_qns( sim )
-   ! use sll_collective
-    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
+   ! use sll_m_collective
+    use sll_m_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
 
@@ -1558,4 +1558,4 @@ contains
   end subroutine compute_norm_L1_L2_Linf_qns
 #endif
  
-end module sll_simulation_4d_qns_general_multipatch_module
+end module sll_m_sim_4d_qns_general_multipatch

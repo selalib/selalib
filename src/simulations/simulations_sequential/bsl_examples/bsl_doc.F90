@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup BSL sll_bsl 
+!> @defgroup BSL sll_m_bsl 
 !> @brief 
 !> Description of bsl library (72 characters)
 !> @author Selalib team 
@@ -18,16 +18,16 @@
 !> Long description of  bsl, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
-!>  - sll_bsl.h
+!>  - sll_m_bsl.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_bsl
+!>  - sll_m_bsl
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_bsl.h' \endcode
+!> - Header file : \code #include 'sll_m_bsl.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_bsl </code>
+!> - Add <code> use sll_m_bsl </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library

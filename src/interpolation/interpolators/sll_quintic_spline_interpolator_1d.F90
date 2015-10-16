@@ -33,7 +33,7 @@ module sll_m_quintic_spline_interpolator_1d
 #include "sll_utilities.h"
 
 use sll_m_interpolators_1d_base
-use sll_quintic_splines
+use sll_m_quintic_splines
 
 implicit none
 private

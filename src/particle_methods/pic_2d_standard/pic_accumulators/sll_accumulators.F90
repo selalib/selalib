@@ -15,11 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_accumulators
+module sll_m_accumulators
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_cartesian_meshes
+  use sll_m_cartesian_meshes
   implicit none
   
   ! The idea of having this data structure is to precompute the values of
@@ -469,4 +469,4 @@ contains
 
 
 
-end module sll_accumulators
+end module sll_m_accumulators

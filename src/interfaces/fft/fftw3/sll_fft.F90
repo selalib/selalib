@@ -15,15 +15,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_fft
+module sll_m_fft
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_fftw.h"
 
-  use fftw3
-  use sll_fft_utils
+  use sll_m_fftw3
+  use sll_m_fft_utils
   use, intrinsic :: iso_c_binding
 
   implicit none 
@@ -437,12 +437,12 @@ contains
     ny = plan%problem_shape(2)
 
     if( (size(array_in,dim=1).ne.nx) .and. (size(array_in,dim=2).ne.ny) ) then
-      print * ,'Error in file sll_fft.F90'
+      print * ,'Error in file sll_m_fft.F90'
       print * ,'      in subroutine fft_apply_r2c_2d'
       print * ,'      array_in size problem'
       stop ''
     else if( size(array_in,dim=1).ne.nx/2+1 .and. size(array_in,dim=2).ne.ny ) then
-      print * ,'Error in file sll_fft.F90'
+      print * ,'Error in file sll_m_fft.F90'
       print * ,'      in subroutine fft_apply_r2c_2d'
       print * ,'      array_out size problem'
       stop ''
@@ -573,4 +573,4 @@ contains
     plan => null()
   end subroutine
 
-end module sll_fft
+end module sll_m_fft

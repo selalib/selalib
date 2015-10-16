@@ -6,7 +6,7 @@ program test_bsplines_1d
 #include "sll_constants.h"
 #include "sll_assert.h"
 #include "sll_boundary_condition_descriptors.h"
-use sll_bsplines
+use sll_m_bsplines
 
 implicit none
 

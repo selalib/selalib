@@ -1,7 +1,7 @@
 module sll_m_scalar_field_2d_base
 #include "sll_working_precision.h"
-  use sll_coordinate_transformation_2d_base_module
-  use sll_cartesian_meshes
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_cartesian_meshes
   implicit none
 
 
@@ -44,7 +44,7 @@ module sll_m_scalar_field_2d_base
   !> Function signatures
   abstract interface
      function function_get_mesh(field) result(res)
-       use sll_cartesian_meshes
+       use sll_m_cartesian_meshes
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        class(sll_cartesian_mesh_2d), pointer :: res
@@ -53,7 +53,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      subroutine set_field_data_subroutine( field, values )
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(inout) :: field
        sll_real64, dimension(:,:), intent(in) :: values
@@ -70,7 +70,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      function function_get_transformation(field) result(res)
-       use sll_coordinate_transformation_2d_base_module
+       use sll_m_coordinate_transformation_2d_base
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        class(sll_coordinate_transformation_2d_base), pointer :: res
@@ -79,7 +79,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      function function_get_jacobian_matrix(field,eta1,eta2 ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_real64, intent(in) :: eta1
@@ -91,7 +91,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      function function_evaluation_real( field, eta1, eta2 ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_real64, intent(in) :: eta1
@@ -102,7 +102,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      function function_evaluation_integer( field, i, j ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)  :: i
@@ -113,7 +113,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface 
      function first_derivative_eta1_evaluation_real( field, eta1, eta2 ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_real64, intent(in) :: eta1
@@ -124,7 +124,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface 
      function first_derivative_eta2_evaluation_real( field, eta1, eta2 ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_real64, intent(in) :: eta1
@@ -135,7 +135,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface 
      function first_derivative_eta1_evaluation_integer( field, i, j ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)  :: i
@@ -146,7 +146,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface 
      function first_derivative_eta2_evaluation_integer( field, i, j ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)  :: i
@@ -157,7 +157,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      function return_integer( field ) result(res)
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32             :: res
@@ -166,7 +166,7 @@ module sll_m_scalar_field_2d_base
 
   abstract interface
      subroutine field_2d_file_output( field, tag )
-       use sll_working_precision
+       use sll_m_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)                       :: tag

@@ -1,4 +1,4 @@
-module sll_prob
+module sll_m_prob
  implicit none
 contains
 subroutine angle_cdf ( x, n, cdf )
@@ -39732,4 +39732,4 @@ subroutine zipf_variance ( a, variance )
 end subroutine
 
 
-end module sll_prob
+end module sll_m_prob

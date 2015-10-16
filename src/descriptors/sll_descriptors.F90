@@ -1,5 +1,5 @@
 !This file was generated using the macro descriptors.m4
-!Usage: m4 descriptors.m4 > sll_descriptors.F90
+!Usage: m4 descriptors.m4 > sll_m_descriptors.F90
 !> @ingroup descriptors
 !> @brief Describes different global flags throughout the library
 !> @details
@@ -15,7 +15,7 @@
 
 
 
-module sll_descriptors
+module sll_m_descriptors
 #include "sll_working_precision.h"
 type sll_vlasovpoisson_sim 
     sll_int32                  :: id
@@ -133,4 +133,4 @@ contains
  !----------------------------------------------------------------------
       
 
-end module sll_descriptors
+end module sll_m_descriptors

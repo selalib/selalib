@@ -1,4 +1,4 @@
-module module_cg_curvi_structure
+module sll_m_cg_curvi_structure
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -37,6 +37,6 @@ module module_cg_curvi_structure
   end type plan_curvilinear_op
 
 
-end module module_cg_curvi_structure
+end module sll_m_cg_curvi_structure
 
 

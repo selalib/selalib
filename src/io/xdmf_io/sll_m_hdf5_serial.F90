@@ -6,7 +6,7 @@
 ! DESCRIPTION:
 !> @ingroup xdmf_io
 !> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
-!> @brief   Simple object-oriented wrapper to Pierre's "sll_hdf5_io_serial".
+!> @brief   Simple object-oriented wrapper to Pierre's "sll_m_hdf5_io_serial".
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
 module sll_m_hdf5_serial
@@ -16,7 +16,7 @@ module sll_m_hdf5_serial
 #include "sll_errors.h"
 #include "sll_working_precision.h"
 
-  use sll_hdf5_io_serial, only: &
+  use sll_m_hdf5_io_serial, only: &
     sll_hdf5_file_create, &
     sll_hdf5_file_open, &
     sll_hdf5_file_close, &

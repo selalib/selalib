@@ -10,9 +10,9 @@ module sll_m_maxwell_1d_fem
 #include "sll_memory.h"
 #include "sll_utilities.h"
 
-  use sll_constants
-  use gauss_legendre_integration
-  use sll_arbitrary_degree_splines
+  use sll_m_constants
+  use sll_m_gauss_legendre_integration
+  use sll_m_arbitrary_degree_splines
   use sll_m_maxwell_1d_base
   
   implicit none

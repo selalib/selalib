@@ -7,13 +7,13 @@
 
 program qns_4d_mixed
 #include "sll_working_precision.h"
-  use sll_simulation_4d_qns_mixed_module
-  use sll_collective
-  use sll_constants
-  use sll_cartesian_meshes
+  use sll_m_sim_4d_qns_mixed
+  use sll_m_collective
+  use sll_m_constants
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
+  use sll_m_common_coordinate_transformations
+  use sll_m_common_array_initializers
   implicit none
 
   character(len=256) :: filename

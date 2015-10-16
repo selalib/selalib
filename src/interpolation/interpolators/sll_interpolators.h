@@ -18,7 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_boundary_condition_descriptors
+use sll_m_boundary_condition_descriptors
 use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
 use sll_m_cubic_spline_interpolator_1d_nonuniform
@@ -30,7 +30,7 @@ use sll_m_arbitrary_degree_spline_interpolator_2d
 !use sll_m_bspline_interpolator_2d
 use sll_m_periodic_interpolator_1d
 use sll_m_lagrange_interpolator_1d
-use periodic_interp_module
+use sll_m_periodic_interp
 use sll_m_lagrange_interpolation_1d
 
 #include "sll_splines.h"

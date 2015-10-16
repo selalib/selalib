@@ -28,7 +28,7 @@
 !>
 !> <b>How to use the Poisson polar solver?</b>
 !>
-!>You must add \code sll_poisson_2d_polar \endcode to the list of linked libraries.
+!>You must add \code sll_m_poisson_2d_polar \endcode to the list of linked libraries.
 !>The Poisson solver uses the FFT, so you also need to link the FFT
 !>
 !>1. Declare a Poisson polar plan
@@ -94,15 +94,15 @@
 !>call sll_delete(plan)
 !>\endcode
 
-module sll_poisson_2d_polar
+module sll_m_poisson_2d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_fft
-  use sll_tridiagonal
-  use sll_constants
-  use sll_boundary_condition_descriptors
+  use sll_m_fft
+  use sll_m_tridiagonal
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
 
   implicit none
   private
@@ -631,5 +631,5 @@ contains
     end if
   end subroutine poisson_solve_polar
 
-end module sll_poisson_2d_polar
+end module sll_m_poisson_2d_polar
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

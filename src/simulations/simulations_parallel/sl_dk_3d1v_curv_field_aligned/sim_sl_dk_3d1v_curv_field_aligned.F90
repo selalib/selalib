@@ -5,13 +5,13 @@ program sim_sl_dk_3d1v_curv_field_aligned
     sll_t_sim_sl_dk_3d1v_curv_field_aligned
     
 
-  use sll_collective, only : &
+  use sll_m_collective, only : &
     sll_world_collective, &
     sll_boot_collective, &
     sll_get_collective_rank, &
     sll_halt_collective
     
-  use sll_timer, only : &
+  use sll_m_timer, only : &
     sll_time_mark, &
     sll_set_time_mark, &
     sll_time_elapsed_since

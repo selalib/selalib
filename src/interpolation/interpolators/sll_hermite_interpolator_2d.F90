@@ -35,7 +35,7 @@ module sll_m_hermite_interpolator_2d
 #include "sll_memory.h"
 
 use sll_m_interpolators_2d_base
-use sll_hermite_interpolation_2d_module
+use sll_m_hermite_interpolation_2d
 implicit none
 private
 

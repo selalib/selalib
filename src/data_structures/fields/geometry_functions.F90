@@ -1,10 +1,10 @@
-module geometry_functions
+module sll_m_geometry_functions
 #include "sll_working_precision.h"
   
 #include "sll_assert.h"
 
 !  use sll_splines
-  use sll_constants
+  use sll_m_constants
   implicit none
   
   sll_real64, parameter :: c1_test = 0.1_f64
@@ -488,5 +488,5 @@ contains
 #undef B
   
 
-end module geometry_functions
+end module sll_m_geometry_functions
 

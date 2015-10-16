@@ -16,16 +16,16 @@
 !**************************************************************
 
 
-module sll_gyroaverage_2d_polar
+module sll_m_gyroaverage_2d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_fft
-  use sll_tridiagonal
-  use sll_constants
-  use sll_boundary_condition_descriptors
-  use sll_gyroaverage_utilities
+  use sll_m_fft
+  use sll_m_tridiagonal
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
+  use sll_m_gyroaverage_utilities
 !  use mod_sparse
 
   implicit none
@@ -2227,4 +2227,4 @@ end subroutine solve_tridiag
 
 
 
-end module sll_gyroaverage_2d_polar
+end module sll_m_gyroaverage_2d_polar

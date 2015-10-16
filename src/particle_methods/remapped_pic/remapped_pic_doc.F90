@@ -23,7 +23,7 @@
   !!   Edwin, but with no optimization
   !! - the other one [named bsl_lt_pic] is a remapped PIC method which follows from the BSL and LT-PIC approach
   !! These classes (and the corresponding deposition and remapping schemes) are used in a simulation
-  !! implemented in the module sll_simulation_4d_vp_generic_pic_cartesian_module
+  !! implemented in the module sll_m_sim_4d_vp_generic_pic_cartesian
 
   ! this is directory [[selalib:src/particle_methods/remapped_pic]]
 

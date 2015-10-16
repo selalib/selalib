@@ -8,14 +8,14 @@
 !>        quadrature rules for the triangle, Int. J.
 !>        Num. Meth. Engng, 21(1985):1129-1148.
 !>  [2] http://math2.uncc.edu/~shaodeng/TEACHING/math5172/Lectures/Lect_15.PDF
-module gauss_triangle_integration
+module sll_m_gauss_triangle_integration
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-  use sll_hexagonal_meshes
+  use sll_m_hexagonal_meshes
 
   implicit none
 
@@ -23,7 +23,7 @@ contains
 
   !---------------------------------------------------------------------------
   !> @brief returns the values of the points and weights on a reference triangle
-  !> @details Returns the coordinates of the gaussian points as well as their
+  !> @details Returns the coordinates of the sll_m_gaussian points as well as their
   !> weights. They are computed in the reference tiangle :
   !>    |
   !>    1  3
@@ -36,7 +36,7 @@ contains
   !>    |
   !>    +--0-----1-->
   !> @param[IN]  order integer the order of the rule
-  !> @param[OUT] points_xyw(order) real gaussian quadrature points and weights
+  !> @param[OUT] points_xyw(order) real sll_m_gaussian quadrature points and weights
   subroutine gaussian_subrule(order, points_xyw)
     sll_int32,  intent(in)  :: order
     sll_real64, intent(out) :: points_xyw(3, order+1)
@@ -114,16 +114,16 @@ contains
 
 
   !---------------------------------------------------------
-  !> @brief Gives the gaussian points coordinates and associated weights
+  !> @brief Gives the sll_m_gaussian points coordinates and associated weights
   !> for a certain order in a given triangle
   !> @details 
   !> @param[IN]  node_xy2 array of dimesion (2,3) containg the coordinates
   !>             of the edges of the triangle
   !> @param[IN] order integer quadrature rule
-  !> @return     xyw array of dimesion (3,n) containg the gaussian points
+  !> @return     xyw array of dimesion (3,n) containg the sll_m_gaussian points
   !>             and weights using the rule number given in parameter.
   !>             xyw(1,:) contains the x coordinates
-  !>             of the gaussian points, xyw(2, :) the y coordinates and
+  !>             of the sll_m_gaussian points, xyw(2, :) the y coordinates and
   !>             xyw(3, :) contains the associated weights.
   function gauss_triangle_points_and_weights(node_xy2, order) result(xyw)
     sll_real64, dimension(2,3), intent(in) :: node_xy2
@@ -146,4 +146,4 @@ contains
     SLL_DEALLOCATE_ARRAY(points_xyw,  ierr)
     SLL_DEALLOCATE_ARRAY(xy2, ierr)
   end function gauss_triangle_points_and_weights
-end module gauss_triangle_integration
+end module sll_m_gauss_triangle_integration

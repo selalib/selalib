@@ -2,15 +2,15 @@
 !> @brief
 !> Dimension-independent functions for sparse grid with polynomial basis functions
 !> @details
-!> Implements the sll_sparse_grid_interpolator interface
-module sll_sparse_grid_interpolator
+!> Implements the sll_m_sparse_grid_interpolator interface
+module sll_m_sparse_grid_interpolator
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_fftw.h" 
 
   use sll_m_interpolators_1d_base
-  use sll_constants
+  use sll_m_constants
   use sll_m_periodic_interpolator_1d
   use sll_m_lagrange_interpolation_1d
   use, intrinsic :: iso_c_binding
@@ -1892,4 +1892,4 @@ end subroutine Displace1D
 
 
 
-end module sll_sparse_grid_interpolator
+end module sll_m_sparse_grid_interpolator

@@ -2,7 +2,7 @@
 !>
 !>\author 
 !>\date created: 
-module hammersley
+module sll_m_hammersley
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -47,4 +47,4 @@ contains
     enddo
   end function vandercorput
 
-end module hammersley
+end module sll_m_hammersley

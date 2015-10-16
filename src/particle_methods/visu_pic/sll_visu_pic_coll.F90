@@ -17,15 +17,15 @@
 
 !> \brief
 !> This module provides some routines for plotting during PIC simulations with MPI.
-!> It extends sll_visu_pic with simple MPI functionality.
+!> It extends sll_m_visu_pic with simple MPI functionality.
 
-module sll_visu_pic_coll
+module sll_m_visu_pic_coll
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-use sll_visu_pic
-use sll_collective
+use sll_m_visu_pic
+use sll_m_collective
 
 
 implicit none
@@ -74,4 +74,4 @@ end subroutine distribution_xdmf_coll
 
 
 
-end module sll_visu_pic_coll
+end module sll_m_visu_pic_coll
