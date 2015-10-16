@@ -5,5 +5,5 @@ if( MPI_ENABLED )
   set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
   add_subdirectory( pic_1d_sheath )
   add_subdirectory( pic_2d_standard )
+  add_subdirectory( pic_basic )
 endif( MPI_ENABLED )
-

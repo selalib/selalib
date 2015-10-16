@@ -4,7 +4,9 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                           sll_maxwell_2d_fdtd.F90
                                           sll_maxwell_2d_pstd.F90
                                           sll_maxwell_2d_diga.F90
-                                          sll_maxwell_3d_pstd.F90)
+                                          sll_maxwell_3d_pstd.F90
+                                          sll_maxwell_1d_base.F90
+                                          sll_maxwell_1d_fem.F90)
 
    TARGET_LINK_LIBRARIES(sll_maxwell_solvers 
                          sll_fft

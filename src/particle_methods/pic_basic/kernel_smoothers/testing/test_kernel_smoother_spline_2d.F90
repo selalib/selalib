@@ -1,0 +1,187 @@
+program test_kernel_smoother_spline_2d
+
+#include "sll_working_precision.h"
+
+  use sll_m_kernel_smoother_base
+  use sll_m_kernel_smoother_spline_2d  
+  use sll_m_pic_base  
+  use sll_m_particle_group_2d2v
+
+  
+  class(sll_kernel_smoother_spline_2d),pointer :: kernel
+  ! Abstract particle group
+  class(sll_particle_group_base), pointer :: particle_group
+  ! Specific particle group
+  class(sll_particle_group_2d2v), pointer :: specific_particle_group 
+  ! Parameters for the test
+  sll_int32 :: n_cells
+  sll_int32 :: n_particles
+  sll_int32 :: spline_degree
+  sll_real64 :: domain(2,2)
+  sll_real64 :: x_vec(4,2)
+  sll_real64 :: v_vec(4,2)
+
+  ! helper variables
+  sll_int32  :: i_part, i, j, i1, i2
+  sll_real64 :: xi(3)
+  logical :: passed
+  sll_real64 :: error
+
+  ! Sparse structure for shape factors (for reference)
+  sll_int32 :: index_grid(2,4)    !< First dof index with contribution from th
+  sll_real64 :: values_grid(4,2,4) !< Values of the space factors in each dimesion.
+
+  ! Rho dofs
+  sll_real64 :: rho_dofs(100)
+  sll_real64 :: rho_dofs_ref(100)
+  ! J dofs
+  sll_real64 :: j_dofs(100)
+  sll_real64 :: j_dofs_ref(100)
+
+  ! For evaluation check
+  sll_real64 :: particle_values(4)
+  sll_real64 :: particle_values_ref(4)
+
+  sll_real64 :: volume
+
+  ! 
+  passed = .TRUE.
+
+  ! This tests the kernel smoother for a fixed particle and grid and spline degree 3.
+  ! Test parameters
+  n_cells = 10; ! Number of cells
+  n_particles = 4 ! Number of particles
+  spline_degree = 3 ! Spline degree
+  domain(1,:) = [0.0_f64, 2.0_f64] ! x1_min, x1_max
+  domain(2,:) = [0.0_f64, 1.0_f64] ! x2_min, x2_max
+  volume = (domain(1,2)-domain(1,1))*(domain(2,2)-domain(2,1))
+  x_vec(:,1) = [0.1_f64, 0.65_f64, 0.7_f64, 1.5_f64] ! Particle positions
+  x_vec(:,2) = [0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64] ! Particle positions
+  v_vec(:,1) = [1.5_f64, 0.0_f64, 0.0_f64, 0.0_f64]
+  v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
+
+  ! We need to initialize the particle group
+  specific_particle_group => sll_new_particle_group_2d2v(n_particles, &
+       n_particles ,1.0_f64, 1.0_f64)
+  
+  do i_part = 1,n_particles
+     xi(1:2) = x_vec(i_part,:)
+     call specific_particle_group%set_x(i_part, xi)
+     call specific_particle_group%set_weights(i_part, [1/real(n_particles,f64)])
+     xi(1:2) = v_vec(i_part,:)
+     call specific_particle_group%set_v(i_part, xi)
+  end do
+  
+  particle_group => specific_particle_group
+
+
+
+  ! Initialize the kernel
+  kernel => sll_new_smoother_spline_2d&
+       (domain, [n_cells, n_cells], n_particles, spline_degree, SLL_COLLOCATION)
+
+  
+  ! Compute the shape factors
+  call kernel%compute_shape_factors(particle_group)
+  ! Reference values of the shape factors
+  index_grid(1,:) = [-2, 1, 1, 5]
+  index_grid(2,:) = [-3, -3, -3, -3]
+  values_grid(:,1,1) = [ 2.0833333333333332E-002_f64,  0.47916666666666663_f64,    &
+       0.47916666666666663_f64,        2.0833333333333332E-002_f64]
+  values_grid(:,1,3) = values_grid(:,1,1)   
+  values_grid(:,1,4) = values_grid(:,1,1) 
+  values_grid(:,1,2) = [7.0312500000000000E-002_f64,  0.61197916666666663_f64, &
+       0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
+  values_grid(1,2,:) = 0.0_f64
+  values_grid(2,2,:) = 1.0_f64/6.0_f64
+  values_grid(3,2,:) = 2.0_f64/3.0_f64
+  values_grid(4,2,:) = 1.0_f64/6.0_f64
+
+  error = maxval(abs(index_grid-kernel%index_grid))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
+
+  error = maxval(abs(values_grid-kernel%values_grid))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
+
+  ! Accumulate rho
+  rho_dofs = 0.0_f64
+
+
+  call kernel%accumulate_rho_from_klimontovich(particle_group, rho_dofs)
+  rho_dofs_ref = 0.0_f64
+  rho_dofs_ref(8:10) = values_grid(1:3,1,1)
+  rho_dofs_ref(1) = values_grid(4,1,1)
+  rho_dofs_ref(1:4) = rho_dofs_ref(1:4) + values_grid(:,1,2) + values_grid(:,1,3)
+  rho_dofs_ref(5:8) = rho_dofs_ref(5:8) + values_grid(:,1,4)
+
+  rho_dofs_ref(71:80) = rho_dofs_ref(1:10)/6.0_f64
+  rho_dofs_ref(81:90) = rho_dofs_ref(1:10)*2.0_f64/3.0_f64
+  rho_dofs_ref(91:100)= rho_dofs_ref(1:10)/6.0_f64
+  rho_dofs_ref(1:10) = 0.0_f64
+
+  rho_dofs_ref = rho_dofs_ref  *&
+       real(n_cells**2,f64)/volume/real(n_particles, f64)
+  error = maxval(abs(rho_dofs-rho_dofs_ref))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
+
+  ! Test j accumulations
+  j_dofs = 0.0_f64
+  call kernel%accumulate_j_from_klimontovich(particle_group, j_dofs, 1)
+  j_dofs_ref = 0.0_f64  
+  j_dofs_ref(8:10) = values_grid(1:3,1,1)*v_vec(1,1)
+  j_dofs_ref(1) = values_grid(4,1,1)*v_vec(1,1)
+  j_dofs_ref(1:4) = j_dofs_ref(1:4) + values_grid(:,1,2)*v_vec(2,1) + &
+       values_grid(:,1,3)*v_vec(3,1)
+  j_dofs_ref(5:8) = j_dofs_ref(5:8) + values_grid(:,1,4)*v_vec(4,1)
+
+  j_dofs_ref(71:80) = j_dofs_ref(1:10)/6.0_f64
+  j_dofs_ref(81:90) = j_dofs_ref(1:10)*2.0_f64/3.0_f64
+  j_dofs_ref(91:100)= j_dofs_ref(1:10)/6.0_f64
+  j_dofs_ref(1:10) = 0.0_f64
+
+  j_dofs_ref = j_dofs_ref * real(n_cells**2,f64)/volume/real(n_particles, f64)
+  error = maxval(abs(j_dofs-j_dofs_ref))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
+  
+
+  ! Test function evaluation
+  call kernel%evaluate_kernel_function_particles(particle_group, rho_dofs, &
+       particle_values)
+  particle_values_ref = [1.1560058593749998_f64,       2.3149278428819446_f64, &
+       2.2656250000000000_f64,        1.1512586805555554_f64]/volume;
+
+  particle_values_ref = 0.0_f64
+  do i_part = 1, n_particles
+     do i=1,4
+        i1 = modulo(index_grid(1,i_part)+i-2, n_cells)
+        do j=1,4
+           i2 = modulo(index_grid(2,i_part)+j-2, n_cells)
+           particle_values_ref(i_part ) = particle_values_ref( i_part) +&
+                values_grid(i,1,i_part)*values_grid(j,2,i_part)*&
+                rho_dofs_ref(i1+i2*n_cells+1)
+        end do
+     end do
+  end do
+
+  error = maxval(abs(particle_values-particle_values_ref))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
+
+  if (passed .EQV. .TRUE.) then
+     print*, 'PASSED'
+  else
+     print*, 'FAILED'
+     stop
+  end if
+
+
+end program test_kernel_smoother_spline_2d
