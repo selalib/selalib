@@ -51,7 +51,6 @@ ENDIF()
 ADD_SUBDIRECTORY(data_structures)
 ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(time_solvers)
-ADD_SUBDIRECTORY(distribution_function)
 ADD_SUBDIRECTORY(ode_solvers)
 ADD_SUBDIRECTORY(mesh_calculus)
 
