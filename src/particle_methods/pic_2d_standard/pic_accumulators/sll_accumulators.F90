@@ -15,7 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
 module sll_accumulators
 #include "sll_working_precision.h"
 #include "sll_memory.h"

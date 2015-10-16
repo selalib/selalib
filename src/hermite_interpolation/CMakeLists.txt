@@ -19,9 +19,8 @@ TARGET_LINK_LIBRARIES( euler_2d_hex sll_utilities)
 # Tests
 IF(BUILD_TESTING)
 
+  # Everything must go inside here!
   ADD_SUBDIRECTORY(testing)
-
-
 
   # 2nd executable
   ADD_EXECUTABLE( test_hex_hermite test_hex_hermite.F90 )
@@ -30,6 +29,7 @@ IF(BUILD_TESTING)
     hex_hermite
     sll_meshes
     sll_constants )
+
   # 2nd bis executable ( circular advection )
   ADD_EXECUTABLE( test_hex_hermite_circ test_hex_hermite_circ.F90 )
   TARGET_LINK_LIBRARIES( test_hex_hermite_circ
@@ -49,18 +49,13 @@ IF(BUILD_TESTING)
   # 5th executable
   ADD_EXECUTABLE( test_hex_center_guide
     test_hex_center_guide.F90
-    euler_2d_hex.F90
-    ../utilities/pivotbande.F90 )
+    euler_2d_hex.F90 )
   TARGET_LINK_LIBRARIES( test_hex_center_guide
     sll_hermite_interpolation
     hex_hermite
     sll_meshes
     hex_poisson
-    sll_constants )
-
-
-
-  
-
+    sll_constants
+    sll_utilities )
 
 ENDIF(BUILD_TESTING)
