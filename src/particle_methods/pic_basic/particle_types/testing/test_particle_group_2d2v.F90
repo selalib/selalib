@@ -46,16 +46,12 @@ program test_particle_group_2d2v
   if ( abs(x(1)- real(i_part,f64)**2)> 1E-15) then
      fail = .TRUE.
   end if
-  x(1:1) = particle_group%get_weights(i_part)
-  if ( abs(x(1)- charge/mass*real(i_part/n_particles, f64))> 1E-15) then
+  x(1:1) = particle_group%get_charge(i_part)
+  if ( abs(x(1)- charge*real(i_part/n_particles, f64))> 1E-15) then
      fail = .TRUE.
   end if
-  x(1) = particle_group%get_mass(i_part)
-  if ( abs(x(1)- mass)>1E-15) then
-     fail = .TRUE.
-  end if
-  x(1) = particle_group%get_charge(i_part)
-  if ( abs(x(1)- charge)>1E-15) then
+  x(1:1) = particle_group%get_mass(i_part)
+  if ( abs(x(1)- mass*real(i_part/n_particles, f64))> 1E-15) then
      fail = .TRUE.
   end if
 
