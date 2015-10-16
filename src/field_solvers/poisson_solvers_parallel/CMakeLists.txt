@@ -1,9 +1,3 @@
-# ****************************************************************************
-#
-#                           PARALLEL POISSON SOLVERS
-#
-# ****************************************************************************
-
 # This test has parallel diagnostics. Maybe these should only be turned on
 # when debugging this specific module.
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
@@ -28,23 +22,8 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
     sll_utilities
     sll_poisson_solvers )
 
-  # Tests
   IF(BUILD_TESTING)
-
-    ADD_EXECUTABLE( test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90 )
-    TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
-
-    ADD_EXECUTABLE( test_poisson_2d_per_cart_par 
-      test_poisson_2d_periodic_cartesian_par.F90 )
-    TARGET_LINK_LIBRARIES( test_poisson_2d_per_cart_par sll_poisson_parallel )
-
-    ADD_EXECUTABLE( test_poisson_polar_parallel test_poisson_polar_parallel.F90 )
-    TARGET_LINK_LIBRARIES( test_poisson_polar_parallel sll_poisson_parallel )
-
-    ADD_EXECUTABLE( test_poisson_polar_parallel_solver 
-      unit_test_poisson_polar_parallel_solver.F90 )
-    TARGET_LINK_LIBRARIES( test_poisson_polar_parallel_solver sll_poisson_parallel )
-
+    ADD_SUBDIRECTORY(testing)
   ENDIF(BUILD_TESTING)
 
 ENDIF()
