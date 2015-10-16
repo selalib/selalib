@@ -27,7 +27,7 @@ contains
     procedure :: get_v  => get_v_1d2v !> Get the values of the velocity of a particle
     procedure :: get_charge => get_charge_1d2v !> Get the charge(s)
     procedure :: get_mass => get_mass_1d2v !> Get the mass(es)
-    procedure :: get_common_weight => get_common_weight_1d2v !> Get the common weight (not used for this particle group)
+    procedure :: get_weights => get_weights_1d2v !> Get the common weight (not used for this particle group)
 
     ! Setters
     procedure :: set_x => set_x_1d2v !> Set the values of the coordinate of a particle
@@ -109,16 +109,15 @@ contains
 
   end function get_mass_1d2v
 
-
   !----------------------------------------------------------------------!
-  pure function get_common_weight_1d2v( self, i) result (r)
+  pure function get_weights_1d2v( self, i) result (r)
         class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
-    sll_real64 :: r !< common weight
+    sll_real64 :: r(self%n_weights) !< weight(s) of particle i
 
-    r = 1.0_f64
+    r = self%particle_array(i, 4:3+self%n_weights)
 
-  end function get_common_weight_1d2v
+  end function get_weights_1d2v
 
   !----------------------------------------------------------------------!
   subroutine set_x_1d2v( self, i, x )
