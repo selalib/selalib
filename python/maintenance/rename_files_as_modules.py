@@ -41,7 +41,7 @@ def is_source( f ):
 # MAIN FUNCTION
 #==============================================================================
 
-def rename_files_as_modules( root, dry_run=True ):
+def rename_files_as_modules( root, dry_run=True, additional=None ):
     """
     Recursively search directory tree for Fortran module definitions,
     change file name to match Fortran module, and make appropriate
@@ -55,9 +55,20 @@ def rename_files_as_modules( root, dry_run=True ):
     dry_run : bool
       If True, do not change Fortran file names and do not modify cmake files
 
+    additional : str
+      Relative path to additional file where substitutions are needed
+
     """
-    import os
+    import os, shutil
     import maintenance_tools as mtools
+
+    # If needed, create temporary for additional file
+    if additional is not None:
+        if dry_run:
+            tmp1 = additional + '.new'
+            shutil.copy( additional, tmp1 )
+        else:
+            tmp1 = additional
 
     for dirpath, dirnames, filenames in os.walk( root ):
         # Give info
@@ -156,6 +167,17 @@ def rename_files_as_modules( root, dry_run=True ):
         if not dry_run:
             os.rename( new_filepath, old_filepath )
 
+        # Update names in additional file, if given
+        if additional is not None:
+            print( "  Processing additional file: " + additional )
+            tmp2 = tmp1 + '.new'
+            with open( tmp1, 'r' ) as f1, \
+                 open( tmp2, 'w' ) as f2:
+                for old_line in f1:
+                    new_line = engine.process( old_line )
+                    print( new_line, file=f2, end='' )
+            os.rename( tmp2, tmp1 )
+
         # Print empty line
         print()
 
@@ -189,6 +211,11 @@ def parse_input():
                        action  = 'store_true',
                        help    = 'do not substitute old files with new ones' )
 
+  parser.add_argument( '-a', '--additional',
+                       metavar = 'FILE',
+                       default = None,
+                       help    = 'change names in additional file' )
+
   return parser.parse_args()
 
 #==============================================================================
@@ -204,7 +231,7 @@ def main():
     print('')
 
     # Walk directory tree and change names of all library modules
-    rename_files_as_modules( args.root, args.dry_run )
+    rename_files_as_modules( args.root, args.dry_run, args.additional )
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
