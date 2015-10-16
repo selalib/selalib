@@ -17,6 +17,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_simple_pic
   sll_bsl_lt_pic
   sll_pic_utilities
+  sll_pic_accumulators
   )
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )

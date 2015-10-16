@@ -41,8 +41,8 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_m_bsl_lt_pic_4d_group
   ! use sll_particle_initializers_4d
   ! use sll_particle_sort_module
-  ! use sll_charge_to_density_module
-  ! use sll_pic_utilities
+  use sll_charge_to_density_module
+  use sll_pic_utilities
   ! use sll_representation_conversion_module
 
   implicit none
