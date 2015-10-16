@@ -1,4 +1,4 @@
-SET(MEMORY_SRC sll_memory.F90)
+SET(MEMORY_SRC sll_m_memory.F90)
 ADD_LIBRARY(sll_memory STATIC ${MEMORY_SRC})
 
 IF(BUILD_TESTING)

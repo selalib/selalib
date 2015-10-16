@@ -1,5 +1,5 @@
 ADD_LIBRARY( sll_remapped_pic STATIC
-  sll_remapped_pic_base.F90
+  sll_m_remapped_pic_base.F90
   )
 
 TARGET_LINK_LIBRARIES( sll_remapped_pic

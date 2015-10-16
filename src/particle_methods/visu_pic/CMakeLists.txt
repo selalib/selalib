@@ -7,7 +7,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
 
-ADD_LIBRARY( sll_visu_pic STATIC sll_visu_pic.F90 )
+ADD_LIBRARY( sll_visu_pic STATIC sll_m_visu_pic.F90 )
 TARGET_LINK_LIBRARIES( sll_visu_pic
   sll_utilities
   sll_file_io
@@ -17,7 +17,7 @@ TARGET_LINK_LIBRARIES( sll_visu_pic
   
 IF (MPI_ENABLED)  
 
-ADD_LIBRARY( sll_visu_pic_coll STATIC sll_visu_pic_coll.F90 )
+ADD_LIBRARY( sll_visu_pic_coll STATIC sll_m_visu_pic_coll.F90 )
 TARGET_LINK_LIBRARIES( sll_visu_pic_coll
   sll_utilities
   sll_file_io

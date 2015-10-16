@@ -1,5 +1,5 @@
 SET( LIB sll_xdmf_io_parallel )
-SET( SRC sll_xdmf_io_parallel.F90 sll_m_xdmf_parallel.F90 )
+SET( SRC sll_m_xdmf_io_parallel.F90 sll_m_xdmf_light_parallel.F90 )
 SET( DEP sll_xdmf_io sll_collective )
 
 ADD_LIBRARY( ${LIB} STATIC ${SRC} )

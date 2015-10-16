@@ -1,6 +1,6 @@
 ADD_LIBRARY( sll_simple_pic STATIC
-  simple_pic_4d_particle.F90
-  simple_pic_4d_group.F90
+  sll_m_simple_pic_4d_particle.F90
+  sll_m_simple_pic_4d_group.F90
   )
 
 TARGET_LINK_LIBRARIES( sll_simple_pic

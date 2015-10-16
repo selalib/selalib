@@ -1,6 +1,6 @@
 ##IF(FFT_LIB MATCHES "SLLFFT")
 #
-#   ADD_LIBRARY( sll_qn_solvers STATIC sll_qn_solver_2d.F90 )
+#   ADD_LIBRARY( sll_qn_solvers STATIC sll_m_qn_solver_2d.F90 )
 #   TARGET_LINK_LIBRARIES( sll_qn_solvers sll_fft sll_utilities sll_timer )
 #
 #   ADD_EXECUTABLE( test_qn_solver_2d test_qn_solver_2d.F90 )
@@ -13,10 +13,10 @@
 #      SET( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 #
 #      SET( QNS_PARALLEL_SRCS
-#        sll_qn_solver_2d.F90
-#        sll_qn_solver_2d_parallel.F90
-#        sll_qn_solver_3d_polar_parallel_x1.F90
-#        sll_qn_solver_3d_polar_parallel_x1_wrapper.F90 )
+#        sll_m_qn_solver_2d.F90
+#        sll_m_qn_solver_2d_parallel.F90
+#        sll_m_qn_solver_3d_polar_parallel_x1.F90
+#        sll_m_qn_solver_3d_polar_parallel_x1_wrapper.F90 )
 #
 #      ADD_LIBRARY( sll_qn_solvers_parallel STATIC ${QNS_PARALLEL_SRCS} )
 #      TARGET_LINK_LIBRARIES( sll_qn_solvers_parallel sll_remap sll_fft sll_poisson_solvers )
@@ -55,7 +55,7 @@
 #ENDIF()
 
 # Sequential library
-ADD_LIBRARY( sll_qn_solvers STATIC sll_qn_solver_2d.F90 )
+ADD_LIBRARY( sll_qn_solvers STATIC sll_m_qn_solver_2d.F90 )
 TARGET_LINK_LIBRARIES( sll_qn_solvers sll_fft sll_linear_solvers sll_timer )
 
 # Parallel library
@@ -64,10 +64,10 @@ IF(MPI_ENABLED)
   SET( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 
   ADD_LIBRARY( sll_qn_solvers_parallel STATIC
-    sll_qn_solver_2d.F90
-    sll_qn_solver_2d_parallel.F90
-    sll_qn_solver_3d_polar_parallel_x1.F90
-    sll_qn_solver_3d_polar_parallel_x1_wrapper.F90 )
+    sll_m_qn_solver_2d.F90
+    sll_m_qn_solver_2d_parallel.F90
+    sll_m_qn_solver_3d_polar_parallel_x1.F90
+    sll_m_qn_solver_3d_polar_parallel_x1_wrapper.F90 )
   
   TARGET_LINK_LIBRARIES( sll_qn_solvers_parallel
     sll_remap sll_fft sll_poisson_solvers )

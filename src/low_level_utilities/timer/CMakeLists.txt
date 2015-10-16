@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_timer STATIC sll_timer.F90 )
+ADD_LIBRARY( sll_timer STATIC sll_m_timer.F90 )
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
 ENDIF(BUILD_TESTING)

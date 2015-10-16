@@ -1,29 +1,29 @@
 ADD_DEFINITIONS(-DMUDPACK)
-SET(POISSON_SRCS sll_poisson_1d_base.F90
-                 sll_poisson_1d_periodic_solver.F90
-                 sll_poisson_1d_polar_solver.F90
-                 sll_poisson_1d_periodic.F90
-                 sll_poisson_2d_polar.F90
-                 sll_poisson_2d_periodic_fftpack.F90
-                 sll_poisson_2d_dirichlet_cartesian.F90
-                 sll_poisson_2d_mudpack_solver.F90
-                 sll_poisson_2d_mudpack_curvilinear_solver_old.F90
-                 sll_poisson_2d_base.F90
-                 sll_poisson_2d_fft.F90
-                 sll_poisson_2d_polar_solver.F90
-                 sll_poisson_2d_periodic_solver.F90
-                 sll_poisson_2d_elliptic_solver.F90
-                 sll_poisson_2d_curvilinear.F90
-                 sll_poisson_3d_base.F90
-                 sll_fishpack.F90
-                 sll_mudpack.F90
-                 sll_mudpack_curvilinear.F90
-                 sll_poisson_1d_fourier.F90
-                 sll_poisson_1d_fem.F90
-                 sll_poisson_1d_fd.F90)
+SET(POISSON_SRCS sll_m_poisson_1d_base.F90
+                 sll_m_poisson_1d_periodic_solver.F90
+                 sll_m_poisson_1d_polar_solver.F90
+                 sll_m_poisson_1d_periodic.F90
+                 sll_m_poisson_2d_polar.F90
+                 sll_m_poisson_2d_periodic_fftpack.F90
+                 sll_m_poisson_2d_dirichlet_cartesian.F90
+                 sll_m_poisson_2d_mudpack.F90
+                 sll_m_poisson_2d_mudpack_curvilinear_solver_old.F90
+                 sll_m_poisson_2d_base.F90
+                 sll_m_poisson_2d_fft.F90
+                 sll_m_poisson_2d_polar_wrapper.F90
+                 sll_m_poisson_2d_periodic_solver.F90
+                 sll_m_poisson_2d_elliptic_solver.F90
+                 sll_m_poisson_2d_curvilinear.F90
+                 sll_m_poisson_3d_base.F90
+                 sll_m_fishpack.F90
+                 sll_m_mudpack.F90
+                 sll_m_mudpack_curvilinear.F90
+                 sll_m_poisson_1d_fourier.F90
+                 sll_m_poisson_1d_fem.F90
+                 sll_m_poisson_1d_fd.F90)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_periodic_fftw.F90)
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_m_poisson_2d_periodic_fftw.F90)
 ENDIF()
 
 ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
@@ -37,10 +37,10 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   dfftpack 
   ${LAPACK_LIBRARIES})
 
-ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
+ADD_LIBRARY( hex_poisson STATIC sll_m_hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( hex_poisson sll_meshes sll_linear_solvers )
 
-ADD_LIBRARY( tri_poisson STATIC tri_poisson.F90 )
+ADD_LIBRARY( tri_poisson STATIC sll_m_tri_poisson.F90 )
 TARGET_LINK_LIBRARIES( tri_poisson sll_meshes )
 
 # Tests
@@ -65,7 +65,7 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_poisson_2d_polar_solver test_poisson_2d_polar.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_2d_polar_solver sll_poisson_solvers )
 
-  ADD_EXECUTABLE( test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90 )
+  ADD_EXECUTABLE( test_poisson_1d test_poisson_1d.F90 sll_m_poisson_1d_periodic.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_1d sll_poisson_solvers )
 
   ADD_EXECUTABLE( test_poisson_2d test_poisson_2d.F90 )
@@ -78,7 +78,7 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_poisson_polar_fft sll_poisson_solvers )
 
   ADD_EXECUTABLE( test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90 
-    sll_poisson_3d_periodic_seq.F90 )
+    sll_m_poisson_3d_periodic_seq.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_seq sll_poisson_solvers sll_fft )
 
 
@@ -117,8 +117,8 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
   TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 
   
-  ADD_EXECUTABLE( test_poisson_2d_fem sll_poisson_2d_fem.F90
-    sll_poisson_2d_periodic_fem.F90 test_poisson_2d_fem.F90 )
+  ADD_EXECUTABLE( test_poisson_2d_fem sll_m_fem_2d.F90
+    sll_m_fem_2d_periodic.F90 test_poisson_2d_fem.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_memory 
                                            sll_utilities
                                            ${LAPACK_LIBRARIES} 

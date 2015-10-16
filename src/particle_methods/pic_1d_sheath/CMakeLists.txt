@@ -1,9 +1,9 @@
 ADD_LIBRARY( sll_pic1d STATIC
-  particle_description.F90
-  particle_loading.F90
-  pic_postprocessing.F90
-  pic_1d_field_solver.F90
-  pic_1d_distribution.F90 )
+  sll_m_particle_1d_description.F90
+  sll_m_pic_1d_particle_loading.F90
+  sll_m_pic_postprocessing.F90
+  sll_m_pic_1d_field_solver.F90
+  sll_m_pic_1d_distribution.F90 )
 
 TARGET_LINK_LIBRARIES( sll_pic1d
   sll_constants
