@@ -5,3 +5,14 @@ target_link_libraries( test_random_deviate_generators
   sll_memory
   sll_working_precision )
 
+
+IF(BUILD_SPRNG)
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  ADD_DEFINITIONS(-DPOINTER_SIZE=8 -DLONG64=long -DINTEGER_STAR_8 -DUSE_MPI)
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/sprng/include)
+  LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/sprng/lib)
+  ADD_EXECUTABLE(test_sprng test_sprng.F90)
+  ADD_EXECUTABLE(test_sprng_mpi 2streamsf_mpi.F90)
+  TARGET_LINK_LIBRARIES(test_sprng sprng stdc++ ${MPI_CXX_LIBRARIES})
+  TARGET_LINK_LIBRARIES(test_sprng_mpi sprng stdc++ ${MPI_CXX_LIBRARIES})
+ENDIF(BUILD_SPRNG)
