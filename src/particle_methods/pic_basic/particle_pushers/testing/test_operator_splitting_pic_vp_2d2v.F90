@@ -65,7 +65,7 @@ program test_operator_splitting_pic_vp_2d2v
   
   ! Initialize
   specific_particle_group => sll_new_particle_group_2d2v(n_particles, &
-       n_particles ,1.0_f64, 1.0_f64)
+       n_particles ,1.0_f64, 1.0_f64, 1)
   particle_group => specific_particle_group
 
   ! Initial particle information   
