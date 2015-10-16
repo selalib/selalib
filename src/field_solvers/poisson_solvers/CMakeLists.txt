@@ -90,7 +90,7 @@ IF(BUILD_TESTING)
   ### BEGIN MACRO ###
   MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
     ADD_EXECUTABLE( test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90 )
-    TARGET_LINK_LIBRARIES( test_mudpack_${TEST_NAME} ${POISSON_LIBS}
+    TARGET_LINK_LIBRARIES( test_mudpack_${TEST_NAME} mudpack
       sll_poisson_solvers sll_file_io )
     ADD_TEST( NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
     SET_TESTS_PROPERTIES( sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

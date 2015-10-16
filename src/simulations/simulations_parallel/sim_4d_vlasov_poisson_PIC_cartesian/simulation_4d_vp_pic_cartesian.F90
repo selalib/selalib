@@ -1,3 +1,4 @@
+!> @brief Earlier PIC implementation
 module sll_pic_simulation_4d_cartesian_module
 
 #include "sll_working_precision.h"
@@ -316,6 +317,7 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
+
 !!$    call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
 !!$         sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
 !!$    bors = 0.0_f64
@@ -381,6 +383,9 @@ contains
 !  ------  TIME LOOP  ------
 !  -------------------------
     do it = 0, sim%num_iterations-1
+
+       print *, "BEGIN one loop in time, it = ", it
+
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64*omega_i*real(it,f64)*sim%dt) * &
              ( 0.5_f64 + 0.5_f64*cos(2._f64*(omega_r*real(it,f64)*sim%dt-psi)) )
@@ -613,6 +618,21 @@ contains
 !
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
+        !! conditional plot added by Martin (to be activated when needed)
+        if( .false. )then
+            if (sim%my_rank == 0) then
+            print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
+            call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin,            &
+                                sim%m2d%eta2_max, ncy+1,                        &
+                                sim%E1, 'Ex', it, ierr )
+
+            call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin,            &
+                                sim%m2d%eta2_max, ncy+1,                        &
+                                sim%E2, 'Ey', it, ierr )
+            endif
+        endif
+
+
        if (sim%use_cubic_splines) then
           call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
           call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
@@ -638,6 +658,9 @@ contains
 !!$               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%parts_number)  &
 !!$               + tot_ee * 0.5_f64
        endif
+
+       print *, "END one loop in time"
+       print *, " "
 
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----

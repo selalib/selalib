@@ -10,7 +10,8 @@ ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 ADD_LIBRARY( sll_pic_initializers STATIC 
   sll_particle_init4D.F90 
-  sll_particle_init2D.F90 )
+  sll_particle_init2D.F90
+  )
 
 TARGET_LINK_LIBRARIES( sll_pic_initializers
   sll_pic_particles
@@ -28,4 +29,5 @@ IF(MPI_ENABLED AND BUILD_TESTING)
     sll_collective )
   ADD_TEST( NAME pic_initializers COMMAND test_pic_initializers )
   SET_TESTS_PROPERTIES( pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
 ENDIF(MPI_ENABLED AND BUILD_TESTING)
