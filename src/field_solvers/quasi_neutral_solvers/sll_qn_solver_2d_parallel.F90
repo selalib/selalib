@@ -11,6 +11,7 @@ module sll_qn_solver_2d_parallel
   use sll_remapper
   use sll_boundary_condition_descriptors
   use sll_qn_solver_2d, only: dirichlet_matrix, neumann_matrix
+  use sll_tridiagonal
 
   implicit none
 
