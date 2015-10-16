@@ -1,7 +1,7 @@
 ADD_LIBRARY( sll_bsl_lt_pic STATIC
-  bsl_lt_pic_4d_particle.F90
-  bsl_lt_pic_4d_group.F90
-  bsl_lt_pic_4d_utilities.F90
+  sll_m_bsl_lt_pic_4d_particle.F90
+  sll_m_bsl_lt_pic_4d_group.F90
+  sll_m_bsl_lt_pic_4d_utilities.F90
   )
 
 TARGET_LINK_LIBRARIES( sll_bsl_lt_pic

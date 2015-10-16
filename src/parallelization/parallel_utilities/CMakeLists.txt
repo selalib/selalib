@@ -1,5 +1,5 @@
 ADD_LIBRARY(sll_common_array_initializers STATIC 
-            sll_common_array_initializers_module.F90 )
+            sll_m_common_array_initializers.F90 )
 
 TARGET_LINK_LIBRARIES(sll_common_array_initializers
                       sll_assert
@@ -8,14 +8,14 @@ TARGET_LINK_LIBRARIES(sll_common_array_initializers
 
 IF(MPI_ENABLED)
 
-  ADD_LIBRARY( sll_parallel_utilities STATIC buffer_loader_utilities.F90 )
+  ADD_LIBRARY( sll_parallel_utilities STATIC sll_m_buffer_loader_utilities.F90 )
   
   TARGET_LINK_LIBRARIES( sll_parallel_utilities sll_remap sll_collective ) 
    
 
   ADD_LIBRARY(sll_parallel_array_utilities STATIC 
-              sll_parallel_array_initializer_module.F90
-              sll_common_array_initializers_module.F90 )
+              sll_m_parallel_array_initializer.F90
+              sll_m_common_array_initializers.F90 )
 
   TARGET_LINK_LIBRARIES(sll_parallel_array_utilities 
                         sll_remap

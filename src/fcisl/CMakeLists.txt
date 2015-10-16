@@ -9,16 +9,16 @@ IF(HDF5_ENABLED)
     SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   ENDIF()
 
-  ADD_LIBRARY( sll_fcisl STATIC fcisl.F90 )
+  ADD_LIBRARY( sll_fcisl STATIC sll_m_fcisl.F90 )
   TARGET_LINK_LIBRARIES( sll_fcisl sll_advection sll_utilities )
 
-  ADD_LIBRARY( sll_derivative STATIC sll_derivative_2d_oblic.F90 )
+  ADD_LIBRARY( sll_derivative STATIC sll_m_derivative_2d_oblic.F90 )
   TARGET_LINK_LIBRARIES( sll_derivative 
     sll_advection
     sll_fcisl
     sll_utilities )
 
-  ADD_LIBRARY( sll_fcisl_toroidal STATIC fcisl_toroidal.F90 )
+  ADD_LIBRARY( sll_fcisl_toroidal STATIC sll_m_fcisl_toroidal.F90 )
   TARGET_LINK_LIBRARIES( sll_fcisl_toroidal
     sll_advection
     sll_interpolators

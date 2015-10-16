@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_collective STATIC sll_collective.F90 )
+ADD_LIBRARY( sll_collective STATIC sll_m_collective.F90 )
 TARGET_LINK_LIBRARIES( sll_collective sll_utilities )
 
 IF(BUILD_TESTING)

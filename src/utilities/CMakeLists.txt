@@ -1,8 +1,8 @@
 SET( SRC_UTILITIES
-  sll_utilities.F90
-  sll_primitives.F90
-  fornberg.F90
-  kiss.F90
+  sll_m_utilities.F90
+  sll_m_primitives.F90
+  sll_m_fornberg.F90
+  sll_m_marsaglia.F90
 )
 
 ADD_LIBRARY( sll_utilities STATIC ${SRC_UTILITIES} )

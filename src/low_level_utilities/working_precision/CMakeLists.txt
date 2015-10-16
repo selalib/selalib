@@ -1,4 +1,4 @@
-SET( PRECISION_SRC sll_working_precision.F90 )
+SET( PRECISION_SRC sll_m_working_precision.F90 )
 ADD_LIBRARY( sll_working_precision STATIC ${PRECISION_SRC} )
 
 IF(BUILD_TESTING)
