@@ -131,7 +131,7 @@ contains
     ! Read parameters from file
     open(unit = input_file, file=trim(filename), IOStat=io_stat)
     if (io_stat /= 0) then
-       print*, 'init_pic_2x2v() failed to open file ', filename
+       print*, 'init_pic_1d2v() failed to open file ', filename
        STOP
     end if
 
@@ -208,7 +208,7 @@ contains
 
     ! Initialize the particles   (mass and charge set to 1.0)
      sim%specific_particle_group => sll_new_particle_group_1d2v(sim%n_particles, &
-         sim%n_total_particles ,1.0_f64, 1.0_f64)
+         sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
     sim%particle_group => sim%specific_particle_group
 
     ! Initialize the field solver
@@ -245,6 +245,7 @@ contains
     elseif (sim%init_case == SLL_INIT_SOBOL) then
        sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
        ! Pseudorandom initialization with sobol numbers
+       !sim%thermal_velocity = 0.1_f64
        call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
             sim%landau_param, sim%domain(1),sim%domain(3), &
             sim%thermal_velocity, sobol_seed)
