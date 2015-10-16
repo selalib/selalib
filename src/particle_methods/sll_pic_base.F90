@@ -40,6 +40,7 @@ module sll_m_pic_base
     procedure( i_get_coords ), deferred :: get_v
     procedure( i_get_array  ), deferred :: get_charge
     procedure( i_get_array  ), deferred :: get_mass
+    procedure( i_get_array  ), deferred :: get_weights
 
     ! Setters
     procedure( i_set_coords ), deferred :: set_x
