@@ -41,5 +41,3 @@ do i = 1, 3
 end do
 
 end subroutine sub1
-
-end program test_sprng
