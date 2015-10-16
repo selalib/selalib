@@ -1,4 +1,4 @@
-program particles_tester
+program test_pic_particles
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -24,4 +24,4 @@ program particles_tester
 !  contains
 
 
-end program particles_tester
+end program test_pic_particles
