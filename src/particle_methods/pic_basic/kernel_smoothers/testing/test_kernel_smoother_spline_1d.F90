@@ -57,7 +57,7 @@ program test_kernel_smoother_spline_1d
 
   ! We need to initialize the particle group
   specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
-       n_particles ,1.0_f64, 1.0_f64)
+       n_particles ,1.0_f64, 1.0_f64, 1)
   
   do i_part = 1,n_particles
      xi(1) = x_vec(i_part)

@@ -15,6 +15,7 @@ program test_particle_group_2d2v
   sll_int32  :: n_total_particles
   sll_real64 :: charge
   sll_real64 :: mass
+  sll_int32  :: n_weights
 
   sll_int32  :: i_part 
   sll_real64 :: x(3)
@@ -25,8 +26,9 @@ program test_particle_group_2d2v
   n_total_particles = n_particles
   charge = -1.0_f64
   mass = 1.0_f64
+  n_weights = 1
 
-  particle_group =>  sll_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass)
+  particle_group =>  sll_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass, n_weights)
 
   do i_part = 1, n_particles
      call particle_group%set_x(i_part, [real(i_part,f64), 0.0_f64, 0.0_f64])
@@ -44,16 +46,12 @@ program test_particle_group_2d2v
   if ( abs(x(1)- real(i_part,f64)**2)> 1E-15) then
      fail = .TRUE.
   end if
-  x(1:1) = particle_group%get_weights(i_part)
-  if ( abs(x(1)- charge/mass*real(i_part/n_particles, f64))> 1E-15) then
+  x(1:1) = particle_group%get_charge(i_part)
+  if ( abs(x(1)- charge*real(i_part/n_particles, f64))> 1E-15) then
      fail = .TRUE.
   end if
-  x(1) = particle_group%get_mass(i_part)
-  if ( abs(x(1)- mass)>1E-15) then
-     fail = .TRUE.
-  end if
-  x(1) = particle_group%get_charge(i_part)
-  if ( abs(x(1)- charge)>1E-15) then
+  x(1:1) = particle_group%get_mass(i_part)
+  if ( abs(x(1)- mass*real(i_part/n_particles, f64))> 1E-15) then
      fail = .TRUE.
   end if
 
