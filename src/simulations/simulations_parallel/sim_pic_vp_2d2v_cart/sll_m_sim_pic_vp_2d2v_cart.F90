@@ -162,7 +162,7 @@ contains
 
     ! Initialize the particles   
      sim%specific_particle_group => sll_new_particle_group_2d2v(sim%n_particles, &
-         sim%n_total_particles ,1.0_f64, 1.0_f64)
+         sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
     
     !print*, 'size', size(sim%specific_particle_group%particle_array,1)
     sim%particle_group => sim%specific_particle_group

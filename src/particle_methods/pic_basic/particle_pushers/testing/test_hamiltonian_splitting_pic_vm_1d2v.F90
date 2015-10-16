@@ -73,7 +73,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   
   ! Initialize
   specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
-       n_particles ,1.0_f64, 1.0_f64)
+       n_particles ,1.0_f64, 1.0_f64, 1)
   particle_group => specific_particle_group
 
   ! Initial particle information   

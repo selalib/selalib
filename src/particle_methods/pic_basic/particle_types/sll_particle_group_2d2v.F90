@@ -45,22 +45,23 @@ contains
 
   !----------------------------------------------------------------------!
   !> Constructor
-  function sll_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass) result(self)
-    class( sll_particle_group_2d2v ),  pointer :: self
+  function sll_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass, n_weights) result(self)
+    class( sll_particle_group_2d2v ),  pointer        :: self
     sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
     sll_int32                       , intent( in )    :: n_total_particles !< number of particles in total simulation
     sll_real64                      , intent( in )    :: charge !< charge of the particle species
     sll_real64                      , intent( in )    :: mass   !< mass of the particle species
+    sll_int32                       , intent(in)      :: n_weights !< number of weights
     
     sll_int32                                         :: ierr
 
     SLL_ALLOCATE(self, ierr)
     self%n_particles = n_particles
     self%n_total_particles = n_total_particles
-    SLL_ALLOCATE(self%particle_array(self%n_particles,5), ierr) 
+    SLL_ALLOCATE(self%particle_array(self%n_particles,4+n_weights), ierr) 
     self%species => species_new( charge, mass)
 
-    self%n_weights = 1
+    self%n_weights = n_weights
 
   end function sll_new_particle_group_2d2v
   
@@ -122,7 +123,7 @@ contains
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(self%n_weights) !< particle weight(s)
 
-    r = self%species%q_over_m() * self%particle_array(i,5)
+    r = self%species%q_over_m() * self%particle_array(i,5:4+self%n_weights)
 
   end function get_weights_2d2v
 
@@ -153,7 +154,7 @@ contains
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(self%n_weights) !< particle weight(s) to be set
 
-    self%particle_array(i, 5) = x(1)
+    self%particle_array(i, 5:4+self%n_weights) = x
     
   end subroutine set_weights_2d2v
 
@@ -166,19 +167,22 @@ contains
   end subroutine set_common_weight_2d2v
 
   !----------------------------------------------------------------------!
-  subroutine initialize_particle_group_2d2v (self, n_particles, n_total_particles, charge, mass)
-    class( sll_particle_group_2d2v ),  intent( inout ) :: self  !< particle group
+  subroutine initialize_particle_group_2d2v (self, n_particles, n_total_particles, charge, mass, n_weights)
+    class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
     sll_int32                       , intent( in )    :: n_total_particles !< number of particles in total simulation
     sll_real64                      , intent( in )    :: charge !< charge of the particle species
     sll_real64                      , intent( in )    :: mass   !< mass of the particle species
+    sll_int32                       , intent( in )    :: n_weights !< number of weights
      
     sll_int32                                         :: ierr
 
     self%n_particles = n_particles
     self%n_total_particles = n_total_particles
-    SLL_ALLOCATE(self%particle_array(self%n_particles,5), ierr) 
+    SLL_ALLOCATE(self%particle_array(self%n_particles,4+n_weights), ierr) 
     self%species => species_new( charge, mass)
+
+    self%n_weights = n_weights
 
   end subroutine initialize_particle_group_2d2v
 

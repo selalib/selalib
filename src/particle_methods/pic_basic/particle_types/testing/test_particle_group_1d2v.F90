@@ -15,6 +15,7 @@ program test_particle_group_1d2v
   sll_int32  :: n_total_particles
   sll_real64 :: charge
   sll_real64 :: mass
+  sll_int32  :: n_weights
 
   sll_int32  :: i_part 
   sll_real64 :: x(3)
@@ -25,8 +26,9 @@ program test_particle_group_1d2v
   n_total_particles = n_particles
   charge = -1.0_f64
   mass = 1.0_f64
+  n_weights = 1
 
-  particle_group =>  sll_new_particle_group_1d2v(n_particles, n_total_particles, charge, mass)
+  particle_group =>  sll_new_particle_group_1d2v(n_particles, n_total_particles, charge, mass, n_weights)
 
   do i_part = 1, n_particles
      call particle_group%set_x(i_part, [real(i_part,f64), 0.0_f64, 0.0_f64])
