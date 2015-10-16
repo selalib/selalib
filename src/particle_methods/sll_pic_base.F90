@@ -38,8 +38,8 @@ module sll_m_pic_base
     ! Getters
     procedure( i_get_coords ), deferred :: get_x
     procedure( i_get_coords ), deferred :: get_v
-    procedure( i_get_array  ), deferred :: get_charge
-    procedure( i_get_array  ), deferred :: get_mass
+    procedure( i_get_scalar ), deferred :: get_charge
+    procedure( i_get_scalar ), deferred :: get_mass
     procedure( i_get_array  ), deferred :: get_weights
 
     ! Setters
@@ -56,11 +56,12 @@ module sll_m_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   pure function i_get_scalar( self, i ) result( r )
+   pure function i_get_scalar( self, i , i_weight) result( r )
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
+    sll_int32, optional             , intent( in ) :: i_weight
     sll_real64 :: r
    end function i_get_scalar
   end interface
