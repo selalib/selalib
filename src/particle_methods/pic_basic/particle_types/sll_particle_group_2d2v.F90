@@ -27,6 +27,7 @@ contains
     procedure :: get_v  => get_v_2d2v !> Get the values of the velocity of a particle
     procedure :: get_charge => get_charge_2d2v !> Get the charge(s)
     procedure :: get_mass => get_mass_2d2v !> Get the mass(es)
+    procedure :: get_weights => get_weights_2d2v !> Get weight(s) of the particle
 
     ! Setters
     procedure :: set_x => set_x_2d2v !> Set the values of the coordinate of a particle
@@ -105,6 +106,16 @@ contains
 
   end function get_mass_2d2v
  
+  !----------------------------------------------------------------------!
+  pure function get_weights_2d2v( self, i) result (r)
+        class( sll_particle_group_2d2v ), intent( in ) :: self  !< particle group
+    sll_int32                       , intent( in ) :: i !< no. of the particle
+    sll_real64 :: r(self%n_weights) !< particle mass(es)
+
+    r = self%species%m * self%particle_array(i,5:4+self%n_weights)
+
+  end function get_weights_2d2v
+
   !----------------------------------------------------------------------!
   subroutine set_x_2d2v( self, i, x )
     class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
