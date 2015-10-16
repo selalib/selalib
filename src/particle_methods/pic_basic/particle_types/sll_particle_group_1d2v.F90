@@ -25,9 +25,8 @@ contains
     ! Getters
     procedure :: get_x  => get_x_1d2v !> Get the values of the coordinate of a particle
     procedure :: get_v  => get_v_1d2v !> Get the values of the velocity of a particle
-    procedure :: get_charge => get_charge_1d2v !> Get the charge
-    procedure :: get_mass => get_mass_1d2v !> Get the mass
-    procedure :: get_weights => get_weight_1d2v !> Get the particle weight(s)
+    procedure :: get_charge => get_charge_1d2v !> Get the charge(s)
+    procedure :: get_mass => get_mass_1d2v !> Get the mass(es)
     procedure :: get_common_weight => get_common_weight_1d2v !> Get the common weight (not used for this particle group)
 
     ! Setters
@@ -93,29 +92,20 @@ contains
   pure function get_charge_1d2v( self, i ) result (r)
         class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
-    sll_real64 :: r !< charge
+    sll_real64 :: r(self%n_weights) !< charges(s) of particle i
 
-    r = self%species%q 
+    r = self%species%q  * self%particle_array(i, 4:3+self%n_weights)
 
   end function get_charge_1d2v
 
-  !----------------------------------------------------------------------!
-  pure function get_weight_1d2v( self, i) result (r)
-        class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
-    sll_int32                       , intent( in ) :: i !< no. of the particle
-    sll_real64 :: r(self%n_weights) !< weight(s) of particle i
-
-    r = self%species%q_over_m() * self%particle_array(i, 4:3+self%n_weights)
-
-  end function get_weight_1d2v
 
   !----------------------------------------------------------------------!
   pure function get_mass_1d2v( self, i) result (r)
         class( sll_particle_group_1d2v ), intent( in ) :: self !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
-    sll_real64 :: r
+    sll_real64 :: r(self%n_weights) !< masses(s) of particle i
 
-    r = self%species%m
+    r = self%species%m * self%particle_array(i, 4:3+self%n_weights)
 
   end function get_mass_1d2v
 

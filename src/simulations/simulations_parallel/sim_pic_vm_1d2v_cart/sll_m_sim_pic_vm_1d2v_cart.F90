@@ -304,7 +304,7 @@ contains
     kinetic_energy = 0.0_f64
     do i_part=1,sim%particle_group%n_particles
        vi = sim%particle_group%get_v(i_part)
-       wi = sim%particle_group%get_weights(i_part)
+       wi = sim%particle_group%get_mass(i_part)
        kinetic_energy = kinetic_energy + &
             (vi(1)**2+vi(2)**2)*wi(1)
     end do
@@ -333,7 +333,7 @@ contains
        kinetic_energy = 0.0_f64
        do i_part=1,sim%particle_group%n_particles
           vi = sim%particle_group%get_v(i_part)
-          wi = sim%particle_group%get_weights(i_part)
+          wi = sim%particle_group%get_mass(i_part)
           kinetic_energy = kinetic_energy + &
                (vi(1)**2+vi(2)**2)*wi(1)
        end do

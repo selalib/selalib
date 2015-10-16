@@ -126,7 +126,7 @@ program test_operator_splitting_pic_vp_2d2v
      elseif (abs(xi(2)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
      end if
-     xi(1:1) = particle_group%get_weights(i_part)
+     xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,5))> 1D-14) then
         passed = .FALSE.
      end if
@@ -150,7 +150,7 @@ program test_operator_splitting_pic_vp_2d2v
      elseif (abs(xi(2)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
      end if
-     xi(1:1) = particle_group%get_weights(i_part)
+     xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,5))> 1D-14) then
         passed = .FALSE.
      end if
