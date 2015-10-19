@@ -11,7 +11,6 @@ ADD_SUBDIRECTORY(hermite_interpolation)
 ADD_SUBDIRECTORY(integration)
 ADD_SUBDIRECTORY(periodic_interpolation)
 #ADD_SUBDIRECTORY(pic_particle_types)
-ADD_SUBDIRECTORY(random_deviate_generators)
 #ADD_SUBDIRECTORY(pic_particle_initializers)
 #ADD_SUBDIRECTORY(pic_accumulators)
 #ADD_SUBDIRECTORY(pic_utilities)
@@ -38,7 +37,6 @@ IF(MPI_ENABLED)
    
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_SUBDIRECTORY(parallelization)
-   ADD_SUBDIRECTORY(pif)
 
 ENDIF()
 
