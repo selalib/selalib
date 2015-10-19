@@ -36,7 +36,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/linear_solvers/sll_m_penta_diagonal.F90
     ${SLL_DIR}/linear_solvers/banfac.f90
     ${SLL_DIR}/linear_solvers/banslv.f90
-    ${SLL_DIR}/lagrange_interpolation/sll_m_lagrange_interpolation_1d.F90
+    ${SLL_DIR}/interpolation/lagrange/sll_m_lagrange_interpolation_1d.F90
     ${SLL_DIR}/io/file_io/sll_m_binary_io.F90
     ${SLL_DIR}/io/file_io/sll_m_gnuplot.F90
     ${SLL_DIR}/io/file_io/sll_m_hdf5_io_serial.F90
@@ -58,7 +58,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_m_cubic_non_uniform_splines.F90
     ${SLL_DIR}/interpolation/deboor_splines/sll_m_deboor_splines_1d.F90
     ${SLL_DIR}/interpolation/deboor_splines/sll_m_deboor_splines_2d.F90
-    ${SLL_DIR}/hermite_interpolation/sll_m_hermite_interpolation_2d.F90
+    ${SLL_DIR}/interpolation/hermite/sll_m_hermite_interpolation_2d.F90
     ${SLL_DIR}/interpolation/interpolators/sll_m_interpolators_1d_base.F90
     ${SLL_DIR}/interpolation/interpolators/sll_m_interpolators_2d_base.F90
     ${SLL_DIR}/interpolation/interpolators/sll_m_cubic_spline_interpolator_1d.F90
@@ -70,7 +70,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolation/interpolators/sll_m_lagrange_interpolator_1d.F90
     ${SLL_DIR}/field_solvers/maxwell_solvers/sll_m_maxwell_solvers_base.F90
     ${SLL_DIR}/field_solvers/maxwell_solvers/sll_m_maxwell_2d_fdtd.F90
-    ${SLL_DIR}/periodic_interpolation/sll_m_periodic_interp.F90
+    ${SLL_DIR}/interpolation/periodic/sll_m_periodic_interp.F90
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_1d_periodic.F90
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_polar.F90
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_periodic_fftpack.F90
