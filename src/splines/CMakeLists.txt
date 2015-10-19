@@ -17,7 +17,7 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
   ${LAPACK_LIBRARIES} )
 
-TARGET_LINK_LIBRARIES( sll_utilities
+TARGET_LINK_LIBRARIES( sll_splines 
                        sll_memory
                        sll_working_precision
                        sll_assert
