@@ -32,13 +32,12 @@ ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 TARGET_LINK_LIBRARIES( sll_advection
                        sll_meshes
                        sll_characteristics
-                       sll_interpolators
+                       sll_quadrature
                        sll_periodic_interpolation
                        sll_splines
                        sll_fft
                        sll_boundary_condition_descriptors
-                       sll_utilities
-                       sll_integration)
+                       sll_utilities)
 
 IF(BUILD_TESTING)
 
