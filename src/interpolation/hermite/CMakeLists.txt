@@ -12,7 +12,6 @@ TARGET_LINK_LIBRARIES( sll_hermite_aligned_interpolation
 ADD_LIBRARY( hex_hermite STATIC sll_m_interpolation_hex_hermite.F90 )
 TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation sll_meshes )
 
-
 ADD_LIBRARY ( euler_2d_hex STATIC sll_m_euler_2d_hex.F90)
 TARGET_LINK_LIBRARIES( euler_2d_hex sll_utilities)
 
