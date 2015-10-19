@@ -1,5 +1,6 @@
+
 ADD_LIBRARY( sll_general_vlasov_poisson_pif STATIC simulation_general_vlasov_poisson_pif.F90 )
-TARGET_LINK_LIBRARIES (sll_general_vlasov_poisson_pif sll_simulations_parallel
+TARGET_LINK_LIBRARIES (sll_general_vlasov_poisson_pif sll_sim_parallel
 					      sll_pif_fieldsolver
 					      sll_timer
 					      sll_memory
