@@ -1,4 +1,5 @@
-ADD_SUBDIRECTORY(quadrature)
+ADD_SUBDIRECTORY( quadrature )
+ADD_SUBDIRECTORY( time_integration )
 
 ADD_SUBDIRECTORY(low_level_utilities)
 ADD_SUBDIRECTORY(interfaces)
@@ -26,7 +27,6 @@ ADD_SUBDIRECTORY(io)
 #Fortran version is checked in CMakeModules/FortranConfig.cmake
 IF(F2008)
   ADD_SUBDIRECTORY( vector_space )
-  ADD_SUBDIRECTORY( ode_integrators )
 ENDIF(F2008)
 
 # Container for all particle methods (mostly PIC)
