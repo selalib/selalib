@@ -13,16 +13,10 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
   sll_boundary_condition_descriptors
   sll_meshes
-  sll_integration
   sll_linear_solvers
+  sll_integration
   ${LAPACK_LIBRARIES} )
 
-TARGET_LINK_LIBRARIES( sll_splines 
-                       sll_memory
-                       sll_working_precision
-                       sll_assert
-                       sll_boundary_condition_descriptors )
-  
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY( testing )
 ENDIF(BUILD_TESTING)
