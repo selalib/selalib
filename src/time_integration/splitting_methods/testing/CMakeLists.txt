@@ -1,4 +1,5 @@
   IF(HDF5_ENABLED)
+    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
     #ADD_EXECUTABLE( vp1d_bsl_operator_split vp1d_bsl_operator_split.F90 )
     #TARGET_LINK_LIBRARIES( vp1d_bsl_operator_split sll_operator_splitting )
     ADD_EXECUTABLE( test_linear_pendulum test_linear_pendulum.F90 )
