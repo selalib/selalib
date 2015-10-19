@@ -6,33 +6,34 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/low_level_utilities/memory/sll_m_memory.F90
     ${SLL_DIR}/low_level_utilities/working_precision/sll_m_working_precision.F90
     ${SLL_DIR}/low_level_utilities/assert/sll_m_assert.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_periodic.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_non_uniform_cubic_splines.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_BSL.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_CSL.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_PSM.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_base.F90
-    ${SLL_DIR}/advection/sll_m_advection_2d_bsl.F90
-    ${SLL_DIR}/advection/sll_m_advection_2d_tensor_product.F90
-    ${SLL_DIR}/advection/sll_m_advection_2d_CSL.F90
-    ${SLL_DIR}/advection/sll_m_advection_2d_base.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_ampere.F90
-    ${SLL_DIR}/advection/sll_m_advection_1d_spectral.F90
-    ${SLL_DIR}/low_level_utilities/constants/sll_m_constants.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_1d_explicit_euler.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_1d_explicit_euler_conservative.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_1d_trapezoid.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_1d_trapezoid_conservative.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_1d_base.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_2d_verlet.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_2d_explicit_euler.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_2d_explicit_euler_conservative.F90
-    ${SLL_DIR}/characteristics/sll_m_characteristics_2d_base.F90
+    ${SLL_DIR}/low_level_utilities/timer/sll_m_timer.F90
     ${SLL_DIR}/low_level_utilities/errors/sll_m_errors.F90
-    ${SLL_DIR}/utilities/sll_m_utilities.F90
-    ${SLL_DIR}/utilities/sll_m_primitives.F90
+    ${SLL_DIR}/low_level_utilities/utilities/sll_m_utilities.F90
+    ${SLL_DIR}/quadrature/sll_m_primitives.F90
+    ${SLL_DIR}/low_level_utilities/utilities/sll_m_fornberg.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_periodic.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_non_uniform_cubic_splines.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_BSL.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_CSL.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_PSM.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_base.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_2d_bsl.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_2d_tensor_product.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_2d_CSL.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_2d_base.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_ampere.F90
+    ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_spectral.F90
+    ${SLL_DIR}/low_level_utilities/constants/sll_m_constants.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_explicit_euler.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_explicit_euler_conservative.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_trapezoid.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_trapezoid_conservative.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_base.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_2d_verlet.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_2d_explicit_euler.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_2d_explicit_euler_conservative.F90
+    ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_2d_base.F90
     ${SLL_DIR}/linear_solvers/sll_m_tridiagonal.F90
-    ${SLL_DIR}/utilities/sll_m_fornberg.F90
     ${SLL_DIR}/linear_solvers/sll_m_penta_diagonal.F90
     ${SLL_DIR}/linear_solvers/banfac.f90
     ${SLL_DIR}/linear_solvers/banslv.f90
@@ -45,8 +46,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/io/file_io/sll_m_xml_io.F90
     ${SLL_DIR}/io/file_io/sll_m_plotmtv.F90
     ${SLL_DIR}/io/file_io/sll_m_tri_mesh_xmf.F90
-    ${SLL_DIR}/particle_methods/visu_pic/sll_m_visu_pic.F90
-    ${SLL_DIR}/low_level_utilities/timer/sll_m_timer.F90
+    ${SLL_DIR}/particle_methods/pic_visu/sll_m_visu_pic.F90
     ${SLL_DIR}/data_structures/fields/sll_m_scalar_field_1d_base.F90
     ${SLL_DIR}/data_structures/fields/sll_m_scalar_field_1d.F90
     ${SLL_DIR}/data_structures/fields/sll_m_scalar_field_2d_base.F90
@@ -88,12 +88,12 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/simulations/serial/sim_CG_polar/sll_advection_polar.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_m_qsort_partition.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_module.F90
-    ${SLL_DIR}/time_solvers/sll_m_time_splitting_coeff.F90
+    ${SLL_DIR}/time_integration/splitting_methods/sll_m_time_splitting_coeff.F90
     ${SLL_DIR}/data_structures/boundary_condition_descriptors/sll_m_boundary_condition_descriptors.F90
-    ${SLL_DIR}/meshes/sll_m_meshes_base.F90
-    ${SLL_DIR}/meshes/sll_m_cartesian_meshes.F90
-    ${SLL_DIR}/meshes/sll_m_triangular_meshes.F90
-    ${SLL_DIR}/meshes/sll_m_hexagonal_meshes.F90
+    ${SLL_DIR}/mesh/meshes/sll_m_meshes_base.F90
+    ${SLL_DIR}/mesh/meshes/sll_m_cartesian_meshes.F90
+    ${SLL_DIR}/mesh/meshes/sll_m_triangular_meshes.F90
+    ${SLL_DIR}/mesh/meshes/sll_m_hexagonal_meshes.F90
     ${SLL_DIR}/data_structures/fields/sll_m_parallel_field_initializers_base.F90
     ${SLL_DIR}/data_structures/distribution_function/sll_m_scalar_field_initializers_base.F90
     ${SLL_DIR}/data_structures/distribution_function/sll_m_scalar_field_2d_old.F90
@@ -109,20 +109,20 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/mesh/mesh_calculus/sll_m_mesh_calculus_2d.F90
     ${SLL_DIR}/data_structures/distribution_function/sll_m_distribution_function_initializer_4d.F90
     ${SLL_DIR}/data_structures/distribution_function/sll_m_fdistribu4d_dk.F90
-    ${SLL_DIR}/reduction/sll_m_reduction.F90
-    ${SLL_DIR}/random_deviate_generators/sll_m_gaussian.F90
-    ${SLL_DIR}/random_deviate_generators/sll_m_hammersley.F90
-    ${SLL_DIR}/random_deviate_generators/sll_m_moment_matching.F90
-    ${SLL_DIR}/random_deviate_generators/sobol/sll_m_sobol.F90
-    ${SLL_DIR}/random_deviate_generators/prob/sll_m_prob.F90
+    ${SLL_DIR}/parallelization/reduction/sll_m_reduction.F90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_gaussian.F90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_hammersley.F90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_moment_matching.F90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/sobol/sll_m_sobol.F90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/prob/sll_m_prob.F90
 )
 
 IF(F2008)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
     ${SLL_DIR}/data_structures/vector_space/sll_m_vector_space_base.F90
     ${SLL_DIR}/data_structures/vector_space/sll_m_vector_space_real_arrays.F90
-    ${SLL_DIR}/ode_integrators/sll_m_ode_integrator_base.F90
-    ${SLL_DIR}/ode_integrators/sll_m_rk_explicit.F90)
+    ${SLL_DIR}/time_integration/ode_integrators/sll_m_ode_integrator_base.F90
+    ${SLL_DIR}/time_integration/ode_integrators/sll_m_rk_explicit.F90)
 ENDIF(F2008)
 
 IF(Fortran_COMPILER MATCHES "IBM")
