@@ -9,7 +9,7 @@ ADD_LIBRARY( sll_splitting_methods STATIC
   sll_m_split_advection_2d.F90
   sll_m_vp_cartesian_2d.F90 )
 
-TARGET_LINK_LIBRARIES( sll_operator_splitting
+TARGET_LINK_LIBRARIES( sll_splitting_methods
   sll_distribution_function
   sll_interpolators
   sll_advection
