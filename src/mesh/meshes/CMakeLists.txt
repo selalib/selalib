@@ -7,7 +7,8 @@ TARGET_LINK_LIBRARIES( sll_meshes sll_working_precision
                                   sll_file_io
                                   sll_constants
                                   sll_memory
-                                  sll_assert )
+                                  sll_assert 
+                                  sll_boundary_condition_descriptors)
 
 # Tests
 IF(BUILD_TESTING)
