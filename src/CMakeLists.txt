@@ -40,7 +40,6 @@ IF(MPI_ENABLED)
 ENDIF()
 
 ADD_SUBDIRECTORY(data_structures)
-ADD_SUBDIRECTORY(ode_solvers)
 
 ADD_SUBDIRECTORY(add_ons)
 
