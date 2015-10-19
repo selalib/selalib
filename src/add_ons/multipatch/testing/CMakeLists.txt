@@ -1,4 +1,6 @@
+IF(HDF5_IS_PARALLEL)
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+ENDIF(HDF5_IS_PARALLEL)
 ADD_SUBDIRECTORY(CAID_coordinate_transformations)
 ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
 
