@@ -52,6 +52,7 @@ use sll_m_poisson_1d_periodic
 use sll_m_poisson_1d_periodic_solver
 use sll_m_poisson_1d_polar_solver
 use sll_m_advection_1d_ampere
+use sll_m_primitives
 !#ifdef _OPENMP
 !use omp_lib
 !#endif
