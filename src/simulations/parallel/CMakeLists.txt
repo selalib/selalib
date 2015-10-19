@@ -43,7 +43,8 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_memory
                          sll_assert 	
                          sll_working_precision
-                        )
+                         sll_integration
+                         )
 
     # Variables passed to simulations' CMakeFiles in subdirectories
     SET( INSTALL_DIR "${INSTALL_DIR}/simulations_parallel" )
