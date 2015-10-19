@@ -1,7 +1,6 @@
 SET( SRC_UTILITIES
   sll_m_utilities.F90
   sll_m_fornberg.F90
-  sll_m_marsaglia.F90
 )
 
 ADD_LIBRARY( sll_utilities STATIC ${SRC_UTILITIES} )
