@@ -1,3 +1,4 @@
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ADD_EXECUTABLE(test_distribution_function test_distribution_function.F90)
 TARGET_LINK_LIBRARIES(test_distribution_function sll_distribution_function)
 ADD_TEST( NAME distribution_function COMMAND test_distribution_function )
