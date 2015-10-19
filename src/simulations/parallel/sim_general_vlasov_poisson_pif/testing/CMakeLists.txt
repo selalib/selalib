@@ -7,9 +7,9 @@ file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
 ADD_EXECUTABLE( ${EXECUTABLE} unit_test_${TEST_NAME}.F90 )
-TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_simulations_parallel 
+TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_simulations_parallel
 					      sll_pif_fieldsolver
-					      sll_timer 
+					      sll_timer
 					      sll_memory
 					      sll_utilities
 					      sll_constants
@@ -19,10 +19,10 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_simulations_parallel
 					      sll_visu_pic_coll
 					      sll_collective
 					      sll_moment_matching
-					      sll_pic_utilities 
+					      sll_pic_utilities
 					      sll_wedge_product_generaldim
 					      sll_descriptors
-					      sll_time_composition
+					      sll_splitting_methods
 					      sll_general_vlasov_poisson_pif)
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
