@@ -57,6 +57,5 @@
 
 use sll_m_utilities
 use sll_m_fornberg
-use sll_m_primitives
 
 #endif
