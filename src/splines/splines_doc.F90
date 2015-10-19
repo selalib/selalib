@@ -30,3 +30,11 @@
 !>
 !> <b> Examples </b>
 !> @snippet see splines/testing directory
+!>
+!> Some fortran modules with deboor prefix are designed to
+!> compute Bsplines of arbitrary degree using deboor algorithm.
+!> @author Aurore Back, Pierre Navaro.
+!> @details
+!> This is a implementation in Fortran 90 of deboor splines. Original F77 files are available
+!> on Carl de Boor webpage http://pages.cs.wisc.edu/~deboor/
+!>
