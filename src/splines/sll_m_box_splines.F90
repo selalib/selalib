@@ -22,8 +22,7 @@ module sll_m_box_splines
 
   use sll_m_hex_pre_filters, only: &
        pre_filter_pfir
-  use sll_m_hexagonal_meshes, only: &
-       sll_hex_mesh_2d
+  use sll_m_hexagonal_meshes
 !  use sll_m_fekete_integration
 !  use sll_m_gauss_triangle_integration
 
