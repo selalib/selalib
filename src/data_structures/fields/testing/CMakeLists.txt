@@ -1,4 +1,5 @@
 # Executables not added to ctest
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ADD_EXECUTABLE(test_dg_fields test_dg_fields.F90)
 TARGET_LINK_LIBRARIES(test_dg_fields sll_dg_fields)
 ADD_EXECUTABLE(test_fem_fields test_fem_fields.F90)
