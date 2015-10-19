@@ -1,10 +1,10 @@
 ##############################################################################
-###      Sequential simulations
+###      Serial simulations
 ##############################################################################
 
-ADD_LIBRARY( sll_sim_sequential STATIC ../simulation_base_class.F90 )
+ADD_LIBRARY( sll_sim_serial STATIC ../simulation_base_class.F90 )
 
-TARGET_LINK_LIBRARIES( sll_sim_sequential
+TARGET_LINK_LIBRARIES( sll_sim_serial
                        sll_interpolators
                        sll_fields
                        sll_poisson_solvers
