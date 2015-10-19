@@ -5,7 +5,7 @@ FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/*.h )
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/low_level_utilities/memory/sll_m_memory.F90
     ${SLL_DIR}/low_level_utilities/working_precision/sll_m_working_precision.F90
-    ${SLL_DIR}/assert/sll_m_assert.F90
+    ${SLL_DIR}/low_level_utilities/assert/sll_m_assert.F90
     ${SLL_DIR}/advection/sll_m_advection_1d_periodic.F90
     ${SLL_DIR}/advection/sll_m_advection_1d_non_uniform_cubic_splines.F90
     ${SLL_DIR}/advection/sll_m_advection_1d_BSL.F90
@@ -28,7 +28,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_m_characteristics_2d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_m_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_m_characteristics_2d_base.F90
-    ${SLL_DIR}/errors/sll_m_errors.F90
+    ${SLL_DIR}/low_level_utilities/errors/sll_m_errors.F90
     ${SLL_DIR}/utilities/sll_m_utilities.F90
     ${SLL_DIR}/utilities/sll_m_primitives.F90
     ${SLL_DIR}/linear_solvers/sll_m_tridiagonal.F90
@@ -56,8 +56,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_m_cubic_splines.F90
     ${SLL_DIR}/splines/sll_m_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/sll_m_cubic_non_uniform_splines.F90
-    ${SLL_DIR}/interpolation/deboor_splines/sll_m_deboor_splines_1d.F90
-    ${SLL_DIR}/interpolation/deboor_splines/sll_m_deboor_splines_2d.F90
+    ${SLL_DIR}/splines/sll_m_deboor_splines_1d.F90
+    ${SLL_DIR}/splines/sll_m_deboor_splines_2d.F90
     ${SLL_DIR}/interpolation/hermite/sll_m_hermite_interpolation_2d.F90
     ${SLL_DIR}/interpolation/interpolators/sll_m_interpolators_1d_base.F90
     ${SLL_DIR}/interpolation/interpolators/sll_m_interpolators_2d_base.F90
@@ -80,12 +80,12 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_polar_wrapper.F90
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_base.F90
     ${SLL_DIR}/interfaces/fft/sll_m_fft_utils.F90
-    ${SLL_DIR}/integration/sll_m_rectangle_integration.F90
-    ${SLL_DIR}/integration/sll_m_trapz_integration.F90
-    ${SLL_DIR}/integration/sll_m_gauss_legendre_integration.F90
-    ${SLL_DIR}/integration/sll_m_gauss_lobatto_integration.F90
-    ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
-    ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
+    ${SLL_DIR}/quadrature/sll_m_rectangle_integration.F90
+    ${SLL_DIR}/quadrature/sll_m_trapz_integration.F90
+    ${SLL_DIR}/quadrature/sll_m_gauss_legendre_integration.F90
+    ${SLL_DIR}/quadrature/sll_m_gauss_lobatto_integration.F90
+    ${SLL_DIR}/simulations/serial/sim_CG_polar/sll_polar_operators.F90
+    ${SLL_DIR}/simulations/serial/sim_CG_polar/sll_advection_polar.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_m_qsort_partition.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_module.F90
     ${SLL_DIR}/time_solvers/sll_m_time_splitting_coeff.F90
@@ -119,8 +119,8 @@ SET(SLL_SOURCE_FILES
 
 IF(F2008)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/vector_space/sll_m_vector_space_base.F90
-    ${SLL_DIR}/vector_space/sll_m_vector_space_real_arrays.F90
+    ${SLL_DIR}/data_structures/vector_space/sll_m_vector_space_base.F90
+    ${SLL_DIR}/data_structures/vector_space/sll_m_vector_space_real_arrays.F90
     ${SLL_DIR}/ode_integrators/sll_m_ode_integrator_base.F90
     ${SLL_DIR}/ode_integrators/sll_m_rk_explicit.F90)
 ENDIF(F2008)

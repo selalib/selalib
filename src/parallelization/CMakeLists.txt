@@ -1,4 +1,5 @@
 ADD_SUBDIRECTORY(collective)
+ADD_SUBDIRECTORY(reduction)
 ADD_SUBDIRECTORY(remap)
 ADD_SUBDIRECTORY(point_to_point_communications)
 ADD_SUBDIRECTORY(parallel_utilities)
