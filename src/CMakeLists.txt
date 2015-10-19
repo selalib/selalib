@@ -18,14 +18,11 @@ ADD_SUBDIRECTORY(interpolation)
 ADD_SUBDIRECTORY(characteristics)
 ADD_SUBDIRECTORY(advection)
 ADD_SUBDIRECTORY(fcisl)
-ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(field_solvers)
-ADD_SUBDIRECTORY(descriptors)
 ADD_SUBDIRECTORY(io)
 
 #Fortran version is checked in CMakeModules/FortranConfig.cmake
 IF(F2008)
-  ADD_SUBDIRECTORY( vector_space )
   ADD_SUBDIRECTORY( ode_integrators )
 ENDIF(F2008)
 
