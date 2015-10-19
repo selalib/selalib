@@ -28,7 +28,6 @@ SET_TESTS_PROPERTIES( hermite_aligned_interpolation_2d PROPERTIES PASS_REGULAR_E
 ADD_EXECUTABLE( test_hex_hermite test_hex_hermite.F90 )
 TARGET_LINK_LIBRARIES( test_hex_hermite
   sll_hermite_interpolation
-  hex_hermite
   sll_meshes
   sll_constants )
 
@@ -36,7 +35,6 @@ TARGET_LINK_LIBRARIES( test_hex_hermite
 ADD_EXECUTABLE( test_hex_hermite_circ test_hex_hermite_circ.F90 )
 TARGET_LINK_LIBRARIES( test_hex_hermite_circ
   sll_hermite_interpolation
-  hex_hermite
   sll_meshes
   sll_constants )
 
@@ -54,9 +52,7 @@ ADD_EXECUTABLE( test_hex_center_guide
 
 TARGET_LINK_LIBRARIES( test_hex_center_guide
   sll_hermite_interpolation
-  hex_hermite
   sll_meshes
   hex_poisson
   sll_constants
-  euler_2d_hex
   sll_utilities )
