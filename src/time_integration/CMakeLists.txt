@@ -5,3 +5,4 @@ endif( F2008 )
 
 add_subdirectory( splitting_methods )
 add_subdirectory( characteristics )
+add_subdirectory( ode_solvers )
