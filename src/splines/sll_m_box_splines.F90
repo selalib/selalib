@@ -1007,8 +1007,8 @@ contains  ! ****************************************************************
 
     call write_caid_files(mesh, deg)
     call write_connectivity(mesh, deg)
-    call write_basis_values(deg, rule)
-    call write_quadrature(rule)
+    !call write_basis_values(deg, rule)
+    !call write_quadrature(rule)
 
   end subroutine write_all_django_files
 
