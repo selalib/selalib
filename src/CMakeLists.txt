@@ -2,17 +2,19 @@ ADD_SUBDIRECTORY(quadrature)
 
 ADD_SUBDIRECTORY(low_level_utilities)
 ADD_SUBDIRECTORY(interfaces)
-ADD_SUBDIRECTORY(assert)
-ADD_SUBDIRECTORY(errors)
 ADD_SUBDIRECTORY(utilities)
 ADD_SUBDIRECTORY(linear_solvers)
 ADD_SUBDIRECTORY(splines)
 ADD_SUBDIRECTORY(mesh)
 ADD_SUBDIRECTORY(meshes)
+<<<<<<< HEAD
 ADD_SUBDIRECTORY(lagrange_interpolation)
 ADD_SUBDIRECTORY(hermite_interpolation)
 #ADD_SUBDIRECTORY(integration)
 ADD_SUBDIRECTORY(periodic_interpolation)
+=======
+ADD_SUBDIRECTORY(integration)
+>>>>>>> c1a3ea3e0677bfdb264591e5f6663f573a191f3e
 ADD_SUBDIRECTORY(reduction)
 #ADD_SUBDIRECTORY(pic_particle_types)
 ADD_SUBDIRECTORY(random_deviate_generators)
