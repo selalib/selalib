@@ -6,8 +6,5 @@ TARGET_LINK_LIBRARIES( sll_lagrange_interpolation sll_utilities
 
 # Ctest
 IF(BUILD_TESTING)
-
   ADD_SUBDIRECTORY(testing)
-
-
 ENDIF(BUILD_TESTING)

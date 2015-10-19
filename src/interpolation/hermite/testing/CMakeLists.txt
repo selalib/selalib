@@ -11,7 +11,7 @@ TARGET_LINK_LIBRARIES( test_hermite_interpolation_2d
 ADD_EXECUTABLE( test_hermite_aligned_interpolation_2d 
   test_hermite_aligned_interpolation_2d.F90 )
 TARGET_LINK_LIBRARIES( test_hermite_aligned_interpolation_2d
-  sll_hermite_aligned_interpolation
+  sll_hermite_interpolation
   sll_constants )
 
 # Ctest
