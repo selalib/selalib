@@ -1,42 +1,32 @@
+ADD_SUBDIRECTORY( add_ons )
+ADD_SUBDIRECTORY( data_structures )
+ADD_SUBDIRECTORY( field_solvers )
+ADD_SUBDIRECTORY( interfaces )
+ADD_SUBDIRECTORY( interpolation )
+ADD_SUBDIRECTORY( io )
+ADD_SUBDIRECTORY( linear_solvers )
+ADD_SUBDIRECTORY( low_level_utilities )
+ADD_SUBDIRECTORY( mesh )
+ADD_SUBDIRECTORY( particle_methods ) # Container for all particle methods (mostly PIC)
 ADD_SUBDIRECTORY( quadrature )
+ADD_SUBDIRECTORY( semi_lagrangian )
 ADD_SUBDIRECTORY( time_integration )
+ADD_SUBDIRECTORY( splines )
 
-ADD_SUBDIRECTORY(low_level_utilities)
-ADD_SUBDIRECTORY(interfaces)
-ADD_SUBDIRECTORY(utilities)
-ADD_SUBDIRECTORY(linear_solvers)
-ADD_SUBDIRECTORY(splines)
-ADD_SUBDIRECTORY(mesh)
-#ADD_SUBDIRECTORY(pic_particle_types)
-#ADD_SUBDIRECTORY(pic_particle_initializers)
-#ADD_SUBDIRECTORY(pic_accumulators)
-#ADD_SUBDIRECTORY(pic_utilities)
-#ADD_SUBDIRECTORY(field_accumulators)
-ADD_SUBDIRECTORY(interpolation)
-ADD_SUBDIRECTORY(field_solvers)
-ADD_SUBDIRECTORY(io)
-
-# Container for all particle methods (mostly PIC)
-ADD_SUBDIRECTORY( particle_methods )
-
-IF(MPI_ENABLED)
-   
+# Parallelization tools
+IF( MPI_ENABLED )
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-   ADD_SUBDIRECTORY(parallelization)
+   ADD_SUBDIRECTORY( parallelization )
+ENDIF( MPI_ENABLED )
 
-ENDIF()
-
-ADD_SUBDIRECTORY(data_structures)
-
-ADD_SUBDIRECTORY(add_ons)
-
-ADD_SUBDIRECTORY(namelist_initialization)    
-
-
-
-IF(BUILD_SIMULATIONS)
+# Simulations
+IF( BUILD_SIMULATIONS )
   GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE )
   SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH 
     "simulations install dir")
-  ADD_SUBDIRECTORY(simulations)
-ENDIF(BUILD_SIMULATIONS)
+  ADD_SUBDIRECTORY( simulations )
+ENDIF( BUILD_SIMULATIONS )
+
+# Other directories
+ADD_SUBDIRECTORY( namelist_initialization ) # A new project. Discussion is needed
+ADD_SUBDIRECTORY( utilities )               # Should be merged into other directories
