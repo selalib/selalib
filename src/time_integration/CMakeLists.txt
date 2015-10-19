@@ -4,3 +4,4 @@ if( F2008 )
 endif( F2008 )
 
 add_subdirectory( splitting_methods )
+add_subdirectory( characteristics )
