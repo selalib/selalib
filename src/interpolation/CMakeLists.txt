@@ -1,5 +1,4 @@
 ADD_SUBDIRECTORY(lagrange)
 ADD_SUBDIRECTORY(hermite)
 ADD_SUBDIRECTORY(periodic)
-ADD_SUBDIRECTORY(deboor_splines)
 ADD_SUBDIRECTORY(interpolators)
