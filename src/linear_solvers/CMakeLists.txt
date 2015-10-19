@@ -3,8 +3,6 @@ ADD_LIBRARY( sll_linear_solvers STATIC
   sll_m_penta_diagonal.F90
   sll_m_choleski.F90
   sol.f muls.f 
-  banfac.f90 
-  banslv.f90  
   sll_m_pivotbande.F90
 )
 
