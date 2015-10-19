@@ -58,4 +58,5 @@ TARGET_LINK_LIBRARIES( test_hex_center_guide
   sll_meshes
   hex_poisson
   sll_constants
+  euler_2d_hex
   sll_utilities )
