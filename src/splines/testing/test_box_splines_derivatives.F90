@@ -112,7 +112,7 @@ program test_box_splines_derivatives
   num_cells = 20
   degree = 1
   rule = 1
-  call write_all_django_files(num_cells, degree, rule)
+  !call write_all_django_files(num_cells, degree, rule)
   print *, ""
   print *, "*********** wrote all django files ***********"
   print *, "   - number of cells    : ", num_cells
