@@ -9,7 +9,7 @@ file( GLOB   POST_PROC "*.dat" "*.gnu" )
 ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
                               unit_test_${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}
-  sll_simulations_parallel
+  sll_sim_parallel
   sll_xdmf_io_parallel )
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )

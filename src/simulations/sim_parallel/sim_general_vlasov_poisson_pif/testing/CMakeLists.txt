@@ -7,7 +7,7 @@ file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
 ADD_EXECUTABLE( ${EXECUTABLE} unit_test_${TEST_NAME}.F90 )
-TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_simulations_parallel
+TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_sim_parallel
 					      sll_pif_fieldsolver
 					      sll_timer
 					      sll_memory
