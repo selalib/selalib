@@ -22,40 +22,5 @@ IF(BUILD_TESTING)
   # Everything must go inside here!
   ADD_SUBDIRECTORY(testing)
 
-  # 2nd executable
-  ADD_EXECUTABLE( test_hex_hermite test_hex_hermite.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_hermite
-    sll_hermite_interpolation
-    hex_hermite
-    sll_meshes
-    sll_constants )
-
-  # 2nd bis executable ( circular advection )
-  ADD_EXECUTABLE( test_hex_hermite_circ test_hex_hermite_circ.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_hermite_circ
-    sll_hermite_interpolation
-    hex_hermite
-    sll_meshes
-    sll_constants )
-
-  # 3rd executable
-  ADD_EXECUTABLE( test_hctc test_hctc.F90 )
-  TARGET_LINK_LIBRARIES( test_hctc sll_constants sll_memory )
-
-  # 4th executable
-  ADD_EXECUTABLE( test_dimitrov test_dimitrov.F90 )
-  TARGET_LINK_LIBRARIES( test_dimitrov sll_constants sll_memory )
-
-  # 5th executable
-  ADD_EXECUTABLE( test_hex_center_guide
-    test_hex_center_guide.F90
-    sll_m_euler_2d_hex.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_center_guide
-    sll_hermite_interpolation
-    hex_hermite
-    sll_meshes
-    hex_poisson
-    sll_constants
-    sll_utilities )
 
 ENDIF(BUILD_TESTING)
