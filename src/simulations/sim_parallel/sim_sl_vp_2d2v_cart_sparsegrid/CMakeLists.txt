@@ -7,7 +7,7 @@ IF (FFTW_FOUND AND FFTW_ENABLED)
   
   ADD_EXECUTABLE( ${EXECUTABLE} sll_m_${SIM_NAME}.F90
     ${SIM_NAME}.F90 )
-  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel sll_sparse_grid )
+  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel sll_sparse_grid )
   
   INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
   INSTALL( FILES                                     DESTINATION ${INSTALL_DIR} )
