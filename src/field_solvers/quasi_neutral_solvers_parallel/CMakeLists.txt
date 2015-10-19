@@ -55,21 +55,21 @@
 #ENDIF()
 
 # Sequential library
-ADD_LIBRARY( sll_qn_solvers STATIC sll_m_qn_solver_2d.F90 )
-TARGET_LINK_LIBRARIES( sll_qn_solvers sll_fft sll_linear_solvers sll_timer )
+ADD_LIBRARY( sll_quasi_neutral_solvers STATIC sll_m_qn_solver_2d.F90 )
+TARGET_LINK_LIBRARIES( sll_quasi_neutral_solvers sll_fft sll_linear_solvers sll_timer )
 
 # Parallel library
 IF(MPI_ENABLED)
 
   SET( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 
-  ADD_LIBRARY( sll_qn_solvers_parallel STATIC
+  ADD_LIBRARY( sll_quasi_neutral_solvers_parallel STATIC
     sll_m_qn_solver_2d.F90
     sll_m_qn_solver_2d_parallel.F90
     sll_m_qn_solver_3d_polar_parallel_x1.F90
     sll_m_qn_solver_3d_polar_parallel_x1_wrapper.F90 )
   
-  TARGET_LINK_LIBRARIES( sll_qn_solvers_parallel
+  TARGET_LINK_LIBRARIES( sll_quasi_neutral_solvers_parallel
     sll_remap sll_fft sll_poisson_solvers )
 
 ENDIF(MPI_ENABLED)
