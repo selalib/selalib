@@ -44,38 +44,6 @@ IF(BUILD_TESTING)
 
   ADD_SUBDIRECTORY(testing)
 
-
-
-  IF(MPI_ENABLED)
-
-     #ADD_EXECUTABLE(
-     #  test_aligned_translation_2d_spaghetti
-     #  aligned_translation_2d_spaghetti.F90)
-
-     #TARGET_LINK_LIBRARIES(
-     #  test_aligned_translation_2d_spaghetti
-     #  sll_file_io_parallel
-     #  sll_advection
-       #sll_fcisl
-     #  sll_utilities)
-
-     ADD_EXECUTABLE(
-       test_aligned_translation_2d
-       aligned_translation_2d.F90)
-
-     TARGET_LINK_LIBRARIES(
-       test_aligned_translation_2d
-       sll_file_io
-       sll_advection
-       sll_utilities
-       sll_fcisl_toroidal)
-
-  ENDIF(MPI_ENABLED)
-
-  ADD_EXECUTABLE( test_rotation_2d rotation_2d.F90)
-  TARGET_LINK_LIBRARIES( test_rotation_2d sll_advection)
-
-
 ENDIF(BUILD_TESTING)
 
 ENDIF(HDF5_ENABLED)
