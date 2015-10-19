@@ -29,4 +29,3 @@ ENDIF( BUILD_SIMULATIONS )
 
 # Other directories
 ADD_SUBDIRECTORY( namelist_initialization ) # A new project. Discussion is needed
-ADD_SUBDIRECTORY( utilities )               # Should be merged into other directories
