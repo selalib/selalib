@@ -23,7 +23,6 @@ TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
                                          sll_fft
                                          sll_utilities 
                                          sll_timer
-                                         deboor_splines
                                          ${LAPACK_LIBRARIES} )
 
 IF(BUILD_TESTING)
