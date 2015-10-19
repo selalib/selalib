@@ -1,3 +1,4 @@
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ADD_SUBDIRECTORY(CAID_coordinate_transformations)
 ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
 
