@@ -3,7 +3,8 @@ ADD_LIBRARY( sll_integration STATIC sll_m_gauss_legendre_integration.F90
                                     sll_m_rectangle_integration.F90
                                     sll_m_trapz_integration.F90
                                     sll_m_gauss_triangle_integration.F90
-                                    sll_m_fekete_integration.F90)
+                                    sll_m_fekete_integration.F90
+                                    sll_m_primitives.F90)
 
 TARGET_LINK_LIBRARIES( sll_integration sll_splines
                                        sll_meshes
