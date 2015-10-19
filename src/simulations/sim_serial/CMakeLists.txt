@@ -2,14 +2,14 @@
 ###      Sequential simulations
 ##############################################################################
 
-ADD_LIBRARY( sll_simulations_sequential STATIC ../simulation_base_class.F90 )
+ADD_LIBRARY( sll_sim_sequential STATIC ../simulation_base_class.F90 )
 
-TARGET_LINK_LIBRARIES( sll_simulations_sequential
+TARGET_LINK_LIBRARIES( sll_sim_sequential
                        sll_interpolators
                        sll_fields
                        sll_poisson_solvers
                        sll_reduction
-                       sll_operator_splitting
+                       sll_splitting_methods
                        sll_common_array_initializers
                        sll_gyroaverage
                      )
