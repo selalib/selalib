@@ -13,7 +13,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED A
                          sll_meshes
                          sll_fields
                          sll_mesh_calculus
-                         sll_integration
+                         sll_quadrature
                          sll_file_io_parallel
                          sll_timer
                          sll_collective)

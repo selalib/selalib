@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES( sll_pic1d
   sll_poisson_solvers 
   sll_fft
   sll_splines
-  sll_integration
+  sll_quadrature
   sll_utilities
   sll_interpolators
   sll_collective

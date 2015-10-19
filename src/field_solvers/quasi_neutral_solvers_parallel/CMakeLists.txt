@@ -6,7 +6,7 @@ ADD_LIBRARY( sll_quasi_neutral_solvers_parallel STATIC
   sll_m_qn_solver_3d_polar_parallel_x1_wrapper.F90 )
   
 TARGET_LINK_LIBRARIES( sll_quasi_neutral_solvers_parallel
-  sll_remap sll_fft sll_poisson_solvers )
+  sll_remap sll_fft sll_poisson_solvers sll_quasi_neutral_solvers)
 
 
 # Ctests
