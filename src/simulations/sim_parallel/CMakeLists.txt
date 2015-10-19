@@ -17,7 +17,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_poisson_parallel
                          sll_fcisl
                          sll_derivative
-                         sll_qn_solvers_parallel
+                         sll_quasi_neutral_solvers_parallel
                          sll_reduction
                          sll_gyroaverage
                          sll_pic_accumulators
