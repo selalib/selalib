@@ -13,7 +13,6 @@
 
 module sll_m_box_splines
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
@@ -22,6 +21,9 @@ module sll_m_box_splines
   use sll_m_hex_pre_filters, only: &
        pre_filter_pfir
   use sll_m_hexagonal_meshes
+  use sll_m_constants, only : &
+       sll_sqrt3, &
+       sll_epsilon_0
 !  use sll_m_fekete_integration
 !  use sll_m_gauss_triangle_integration
 

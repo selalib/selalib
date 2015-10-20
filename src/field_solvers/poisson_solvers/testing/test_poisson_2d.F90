@@ -3,7 +3,9 @@ program test_poisson_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_poisson_solvers.h"
-#include "sll_constants.h"
+
+  use sll_m_constants, only : &
+       sll_pi
 
    implicit none
 

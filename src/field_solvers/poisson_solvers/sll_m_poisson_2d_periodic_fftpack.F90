@@ -10,7 +10,9 @@ module sll_m_poisson_2d_periodic_fftpack
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
+
+  use sll_m_constants, only : &
+       sll_pi
 
 implicit none
 private

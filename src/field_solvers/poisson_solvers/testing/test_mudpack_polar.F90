@@ -2,10 +2,11 @@ program test_mudpack_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_mudpack
+  use sll_m_boundary_condition_descriptors
+  use sll_m_constants, only : &
+       sll_pi
+  use sll_m_mudpack
 
 implicit none
 

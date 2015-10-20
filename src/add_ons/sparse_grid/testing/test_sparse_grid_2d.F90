@@ -1,16 +1,13 @@
-
-   !-------------------------------------------------------------------
-   !  test 2D sparse grid
-   !-------------------------------------------------------------------
-
-
+!-------------------------------------------------------------------
+!  test 2D sparse grid
+!-------------------------------------------------------------------
 program test_interpolation_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
-
+  use sll_m_constants, only : &
+       sll_pi
   use sll_m_sparse_grid_2d
   implicit none
 
