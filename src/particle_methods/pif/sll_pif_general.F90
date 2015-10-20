@@ -14,7 +14,7 @@ use sll_m_timer
 use sll_m_sobol
 use sll_m_prob
 use sll_m_collective
-use sll_m_visu_pic
+use sll_m_pic_visu
 use sll_m_moment_matching
 use sll_m_pic_utilities
 use sll_m_particle_method_descriptors
