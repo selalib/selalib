@@ -1,4 +1,4 @@
-!> @defgroup xdmf_io_parallel sll_m_xdmf_io_parallel
+!> @defgroup xdmf_io_parallel sll_xdmf_io_parallel
 !!
 !! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
