@@ -7,7 +7,9 @@
 
 program qns_4d_general
 #include "sll_working_precision.h"
-#include "sll_coordinate_transformations.h"
+
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_coordinate_transformations_2d_nurbs
   use sll_m_sim_4d_qns_general, only: &
      sll_simulation_4d_qns_general, initialize_4d_qns_general, &
      run_4d_qns_general
