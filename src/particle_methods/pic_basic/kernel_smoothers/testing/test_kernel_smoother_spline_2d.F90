@@ -4,7 +4,7 @@ program test_kernel_smoother_spline_2d
 
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d  
-  use sll_m_pic_base  
+  use sll_m_particle_group_base
   use sll_m_particle_group_2d2v
 
   
