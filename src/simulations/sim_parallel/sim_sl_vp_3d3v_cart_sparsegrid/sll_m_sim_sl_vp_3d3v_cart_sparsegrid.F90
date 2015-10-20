@@ -10,7 +10,6 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_constants.h"
 #include "sll_poisson_solvers.h"
 
   use sll_m_collective
@@ -18,6 +17,8 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
   use sll_m_sparse_grid_3d
   use sll_m_poisson_3d_sparse_grid_fft
   use sll_m_sim_base
+  use sll_m_constants, only : &
+       sll_pi
 
   implicit none
 
@@ -25,7 +26,7 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
   sll_int32, parameter :: SLL_TSI = 1
 
   private
-  
+
   type, public, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_3d3v_cart_sparsegrid
      logical     :: is_mdeltaf
      sll_int32   :: test_case

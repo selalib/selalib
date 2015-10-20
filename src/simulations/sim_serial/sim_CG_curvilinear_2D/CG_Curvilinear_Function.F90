@@ -3,7 +3,6 @@ module sll_m_cg_curvi_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_utilities.h"
 
 
@@ -15,6 +14,8 @@ module sll_m_cg_curvi_function
         interpolate_x1_derivative_2d, &
         interpolate_x2_derivative_2d, &
         sll_delete
+   use sll_m_constants, only : &
+        sll_pi
    !--*Poisson*----
   
 contains

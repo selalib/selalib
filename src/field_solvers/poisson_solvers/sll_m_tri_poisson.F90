@@ -6,7 +6,6 @@
 module sll_m_tri_poisson
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_constants.h"
 #include "sll_utilities.h"
 use sll_m_triangular_meshes
 use sll_m_choleski

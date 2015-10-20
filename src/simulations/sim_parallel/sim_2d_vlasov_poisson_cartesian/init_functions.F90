@@ -1,6 +1,8 @@
 module sll_m_init_functions
 #include "sll_working_precision.h"
-#include "sll_constants.h"
+
+  use sll_m_constants, only : &
+       sll_pi
 
 implicit none
 

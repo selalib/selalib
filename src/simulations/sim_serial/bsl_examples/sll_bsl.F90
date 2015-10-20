@@ -1,9 +1,8 @@
-
 module sll_m_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
+
 
 implicit none
 

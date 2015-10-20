@@ -7,7 +7,6 @@
 
 program vlasov_poisson_4d_polar
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 
   use sll_m_sim_4d_vlasov_poisson_polar
   use sll_m_collective
@@ -15,6 +14,8 @@ program vlasov_poisson_4d_polar
   use sll_m_coordinate_transformations_2d
   use sll_m_common_coordinate_transformations
   use sll_m_common_array_initializers
+  use sll_m_constants, only : &
+       sll_pi
   implicit none
 
   character(len=256)                  :: filename
