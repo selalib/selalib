@@ -78,8 +78,8 @@ module sll_m_sim_4d_drift_kinetic_field_aligned_polar
   use sll_m_hdf5_io_serial
   use sll_m_gnuplot
   
-  use sll_m_xdmf_io         , only: sll_t_hdf5_serial
-  use sll_m_xdmf_io_parallel, only: sll_t_xdmf_parallel_file
+  use sll_xdmf_io         , only: sll_t_hdf5_serial
+  use sll_xdmf_io_parallel, only: sll_t_xdmf_parallel_file
 
   implicit none
 
