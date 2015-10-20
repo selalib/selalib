@@ -4,12 +4,12 @@ program test_fem_fields
 #include "sll_assert.h"
 #include "sll_constants.h"
 #include "sll_file_io.h"
-#include "sll_cartesian_meshes.h"
 
 use sll_m_fem_fields
 use sll_m_coordinate_transformation_2d_base
 use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformations_2d
+use sll_m_cartesian_meshes
 
 implicit none
 
