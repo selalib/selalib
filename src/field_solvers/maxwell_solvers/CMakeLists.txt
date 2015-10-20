@@ -10,7 +10,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 
    TARGET_LINK_LIBRARIES(sll_maxwell_solvers 
                          sll_fft
-                         sll_dg_fields 
+                         sll_fields 
                          sll_boundary_condition_descriptors
                          sll_utilities)
 
@@ -22,7 +22,7 @@ ELSE()
 
    ADD_LIBRARY(sll_maxwell_solvers STATIC ${MAXWELL_SOLVERS_SRCS})
 
-   TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_dg_fields 
+   TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_fields 
                                           sll_boundary_condition_descriptors
                                           sll_utilities )
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)

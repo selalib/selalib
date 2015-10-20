@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_coordinate_transformations
                        sll_meshes
                        sll_boundary_condition_descriptors
-                       sll_dg_fields
+                       sll_fields
                        sll_file_io
                        sll_integration
                        sll_constants
