@@ -13,7 +13,7 @@ module sll_m_sim_pic_vp_2d2v_cart
   use sll_m_collective
   use sll_m_sim_base
   use sll_m_cartesian_meshes
-  use sll_m_pic_base
+  use sll_m_particle_group_base
   use sll_m_particle_initializer
   use sll_m_particle_group_2d2v
   use sll_m_kernel_smoother_base

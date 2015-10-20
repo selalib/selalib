@@ -7,12 +7,14 @@
 program sll_m_polar_advection
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_interpolators.h"
 #include "sll_utilities.h"
 #include "sll_utilities.h"
 #include "sll_meshes.h"
 #include "sll_file_io.h"
 #include "sll_coordinate_transformations.h"
+
+use sll_m_interpolators_2d_base
+use sll_m_arbitrary_degree_spline_interpolator_2d
 
 implicit none
 

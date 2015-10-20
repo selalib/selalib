@@ -4,8 +4,8 @@ module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
 #include "sll_memory.h"
 #include "sll_utilities.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
 
+  
 
   use sll_m_collective
   use sll_m_remapper

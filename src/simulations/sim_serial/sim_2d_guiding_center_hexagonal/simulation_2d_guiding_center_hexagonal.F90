@@ -8,8 +8,8 @@ program sim2d_gc_hex
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-#include "sll_boundary_condition_descriptors.h"
 
+  use sll_m_boundary_condition_descriptors
   use sll_m_ascii_io
   use sll_m_utilities, only : &
        int2string
