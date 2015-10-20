@@ -1,4 +1,4 @@
-!> @defgroup pic1d sll_pic1d
+!> @defgroup pic_1d sll_pic_1d
 !!
 !! @authors Jakob Ameres   - <jakob.ameres@tum.de>
 !! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
@@ -31,11 +31,11 @@
 !! <h4> How to use it </h4>
 !!  + Import Fortran modules:
 !!    \code
-!!      use sll_pic1d
+!!      use sll_pic_1d
 !!    \endcode
 !!  + Add dependency to *CMakeLists.txt*:
 !!    \code
-!!      target_link_libraries( <my_lib/exec> sll_pic1d ... )
+!!      target_link_libraries( <my_lib/exec> sll_pic_1d ... )
 !!    \endcode
 !!
 !! <h4> Examples </h4>

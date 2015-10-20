@@ -3,15 +3,16 @@
 #############################################################################
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
-   ADD_LIBRARY( sll_simulations_parallel STATIC ../simulation_base_class.F90)
+   ADD_LIBRARY( sll_sim_parallel STATIC ../simulation_base_class.F90)
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
-   TARGET_LINK_LIBRARIES(sll_simulations_parallel
+   TARGET_LINK_LIBRARIES(sll_sim_parallel
                          sll_collective
                          sll_parallel_array_utilities
                          sll_advection
                          sll_parallel_utilities
                          sll_poisson_solvers
+                         sll_splitting_methods
                          sll_file_io_parallel
                          sll_poisson_parallel
                          sll_fcisl
@@ -32,7 +33,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_splines
                          sll_remap
                          sll_mesh_calculus
-                         sll_integration
+                         sll_quadrature
                          sll_constants
                          sll_coordinate_transformations
                          sll_meshes
@@ -41,11 +42,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_memory
                          sll_assert
                          sll_working_precision
-                         sll_integration
                          )
 
     # Variables passed to simulations' CMakeFiles in subdirectories
-    SET( INSTALL_DIR "${INSTALL_DIR}/simulations_parallel" )
+    SET( INSTALL_DIR "${INSTALL_DIR}/sim_parallel" )
 
     # Simulations as new subdirectories
     ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear        )
