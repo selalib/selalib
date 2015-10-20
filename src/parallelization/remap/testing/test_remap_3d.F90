@@ -15,7 +15,6 @@
 program remap_test
   use sll_m_collective
   use sll_m_remapper
-!#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
