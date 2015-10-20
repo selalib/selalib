@@ -12,7 +12,7 @@ module sll_m_fem_fields
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_meshes.h"
-#include "sll_coordinate_transformations.h"
+  use sll_m_coordinate_transformation_2d_base
 
 implicit none
 private
