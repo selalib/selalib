@@ -1,15 +1,14 @@
 !> @ingroup splines
-!> @brief  
+!> @brief
 !> Lowlevel module for sll_cubic_spline_1d_nonuniform
 !> @details
-!> The splines module provides capabilities for 1D data interpolation 
-!> with cubic B-splines on non uniform mesh 
-!> 
+!> The splines module provides capabilities for 1D data interpolation
+!> with cubic B-splines on non uniform mesh
+
 module sll_m_cubic_non_uniform_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_splines.h"
 #include "sll_utilities.h"
 use sll_m_tridiagonal
 use sll_m_boundary_condition_descriptors

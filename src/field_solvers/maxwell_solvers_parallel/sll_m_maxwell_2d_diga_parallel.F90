@@ -1,4 +1,3 @@
-
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -12,7 +11,6 @@ module sll_m_maxwell_2d_diga_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
-#include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
@@ -22,6 +20,10 @@ use sll_m_common_coordinate_transformations
 use sll_m_dg_fields
 use sll_m_boundary_condition_descriptors
 use sll_m_maxwell_2d_diga
+use sll_m_gauss_lobatto_integration, only : &
+       gauss_lobatto_points, &
+       gauss_lobatto_weights, &
+       gauss_lobatto_derivative_matrix
 
 implicit none
 private
