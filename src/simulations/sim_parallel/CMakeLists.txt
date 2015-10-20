@@ -61,8 +61,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_multi_mu      )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_field_aligned_polar )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
-    ADD_SUBDIRECTORY( sim_4d_mixed_qns_cartesian               )
-    ADD_SUBDIRECTORY( sim_4d_qns_general                       )
     ADD_SUBDIRECTORY( sim_6d                                   )
 
     ADD_SUBDIRECTORY( sim_sl_va_1d1v_cart_berk_breizman        )
