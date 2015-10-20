@@ -8,7 +8,7 @@ module sll_m_particle_initializer
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_m_pic_base
+  use sll_m_particle_group_base
   use sll_m_gaussian, only: gaussian_deviate_2D
   use sll_m_sobol, only: i8_sobol
   use sll_m_prob, only: normal_cdf_inv
