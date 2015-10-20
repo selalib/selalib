@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES(sll_fields
                       sll_interpolators
                       sll_file_io
                       sll_utilities
-                      sll_integration)
+                      sll_quadrature)
 
 #IF (MPI_ENABLED)
 #   SET(SLL_SCALAR_FIELD_SRCS ${SLL_SCALAR_FIELD_SRCS}

@@ -37,7 +37,7 @@ use sll_m_collective
 use sll_m_remapper
 use sll_m_buffer_loader_utilities
 use sll_m_constants
-use sll_m_cartesian_meshes  
+use sll_m_cartesian_meshes
 use sll_m_gnuplot_parallel
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
@@ -48,8 +48,9 @@ use sll_m_advection_1d_periodic
 use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_m_fft
 use sll_m_sim_base
+use sll_m_time_splitting
 use sll_m_time_splitting_coeff
-use sll_m_poisson_1d_periodic  
+use sll_m_poisson_1d_periodic
 use sll_m_poisson_1d_periodic_solver
 use sll_m_poisson_1d_polar_solver
 use sll_m_advection_1d_ampere

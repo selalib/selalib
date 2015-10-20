@@ -5,7 +5,7 @@ IF(PASTIX_FOUND)
   ADD_LIBRARY(sll_sparse_matrix STATIC 
                 sll_m_pastix.F90
                 sll_m_qsort_partition.F90
-  	        sll_sparse_matrix_pastix_module.F90
+  	        sll_m_sparse_matrix_pastix.F90
 	        sll_m_sparse_matrix_mp.F90)
 
   TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective
@@ -22,15 +22,14 @@ ELSEIF(SUITESPARSE_FOUND)
 
   ADD_LIBRARY(sll_sparse_matrix STATIC 
               sll_m_qsort_partition.F90
-  	        sll_sparse_matrix_umfpack_module.F90
-	        sll_m_sparse_matrix_mp.F90)
-
-  ADD_LIBRARY(sll_umfpack_wrapper STATIC sll_m_umfpack.F90 umf4_f77wrapper.c)
+  	      sll_m_sparse_matrix_umfpack.F90
+	      sll_m_sparse_matrix_mp.F90
+              sll_m_umfpack.F90
+              umf4_f77wrapper.c)
 
   TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision
                                            sll_memory
                                            sll_assert
-                                           sll_umfpack_wrapper 
                                            ${SUITESPARSE_LIBRARIES}
                                            ${BLAS_LIBRARIES})
 
@@ -39,8 +38,8 @@ ELSE()
 
   ADD_LIBRARY(sll_sparse_matrix STATIC 
               sll_m_qsort_partition.F90
- 	        sll_sparse_matrix_module.F90
-	        sll_m_sparse_matrix_mp.F90 )
+ 	      sll_m_sparse_matrix.F90
+	      sll_m_sparse_matrix_mp.F90 )
 
   TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision
                                            sll_memory

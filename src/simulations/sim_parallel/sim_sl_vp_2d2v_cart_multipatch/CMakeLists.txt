@@ -8,7 +8,7 @@ file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
 ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
                               unit_test_${TEST_NAME}.F90 )
-TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel sll_multipatch)
+TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel sll_multipatch)
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
