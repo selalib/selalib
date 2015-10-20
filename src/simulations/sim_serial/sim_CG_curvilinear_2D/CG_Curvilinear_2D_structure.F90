@@ -3,9 +3,10 @@ module sll_m_cg_curvi_structure
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_splines.h"
 #include "sll_poisson_solvers.h"
 
+  use sll_m_cubic_splines, only : &
+       sll_cubic_spline_2D
 
 ! type sll_plan_adv_polar
   ! type for advection with center-guide equations

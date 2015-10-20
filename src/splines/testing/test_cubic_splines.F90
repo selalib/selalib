@@ -2,9 +2,8 @@ program test_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_splines.h"
 #include "sll_constants.h"
-  
+
 #define PRINT_SPLINE_COEFFS 0
 
 use util_constants
@@ -25,30 +24,30 @@ test_passed = .true.
 
 #if 0
 
-  do i_test=1,nbtest     
-     call test_process_1d(i_test, ok)     
+  do i_test=1,nbtest
+     call test_process_1d(i_test, ok)
   enddo
-  
+
   print *, '***************************************************'
   print *, 'Test of the 2D spline: '
   do j_test=1,nbtest
-     do i_test=1,nbtest 
-        call test_process_2d(i_test, j_test, ok)        
+     do i_test=1,nbtest
+        call test_process_2d(i_test, j_test, ok)
      enddo
-  enddo  
+  enddo
   print *, '********************************'
 
 
   ! Test with impulse functions
   print *, '***************************************************'
   print *, 'Test of the 1D spline with impulse functions: '
-  do i_test=13,NP+12     
-     call test_process_1d(i_test, ok)     
+  do i_test=13,NP+12
+     call test_process_1d(i_test, ok)
   enddo
 
   print *, '***************************************************'
   print *, 'Test of the 2D spline with impulse functions: '
-  do j_test=13,NPX2+12     
+  do j_test=13,NPX2+12
      do i_test=13,NPX1+12
         call test_process_2d(i_test, j_test, ok)
      enddo
