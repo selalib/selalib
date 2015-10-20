@@ -105,7 +105,9 @@
 module sll_m_common_coordinate_transformations
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
+
+  use sll_m_constants, only : &
+       sll_pi
 
 implicit none
   

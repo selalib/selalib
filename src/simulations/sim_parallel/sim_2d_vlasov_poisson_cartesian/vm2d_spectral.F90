@@ -4,11 +4,12 @@ program vm2d_spectral
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
-#include "sll_constants.h"
 
 use sll_m_boundary_condition_descriptors
 use sll_m_cubic_spline_interpolator_1d
- 
+use sll_m_constants, only : &
+     sll_pi
+
 #include "sll_fftw.h"
 
 use sll_m_vlasov2d_base

@@ -2,7 +2,6 @@ program test_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_constants.h"
 
 #define PRINT_SPLINE_COEFFS 0
 

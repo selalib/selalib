@@ -9,10 +9,11 @@ module sll_m_poisson_3d_periodic_par
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
   use sll_m_fft
   use sll_m_collective
+  use sll_m_constants, only : &
+       sll_pi
   use sll_m_remapper
 
   implicit none

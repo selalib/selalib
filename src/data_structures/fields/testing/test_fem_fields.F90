@@ -2,7 +2,6 @@ program test_fem_fields
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_file_io.h"
 
 use sll_m_fem_fields

@@ -10,7 +10,6 @@ program VP1d_deltaf
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_constants.h"
 #include "sll_utilities.h"
 
   use sll_m_cubic_splines
@@ -24,6 +23,8 @@ program VP1d_deltaf
   use omp_lib
   use sll_m_hdf5_io_serial
   use sll_m_periodic_interp
+  use sll_m_constants, only: &
+       sll_pi
   implicit none
 
 !  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
