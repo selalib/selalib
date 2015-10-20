@@ -22,7 +22,7 @@ module sll_m_bspline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 
 #define interpo interpolator
 

@@ -8,7 +8,7 @@ module sll_m_sim_2d_guiding_center_curvilinear
 #include "sll_assert.h"
 #include "sll_memory.h"
 !#include "sll_field_2d.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 #include "sll_fft.h"
 #include "sll_poisson_solvers.h"
 !  use sll_m_constants
