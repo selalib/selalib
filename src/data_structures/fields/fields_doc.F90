@@ -15,11 +15,7 @@
 !> @author Edwin Chacon-Golcher and Pierre Navaro.
 !> @details
 !>
-!> <b> Headers file available </b>
-!>  - sll_fields.h
-!>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_fields.h' \endcode
 !> - Link with   <code>-lsll_fields</code>
 !> - Add <code> use sll_fields </code>
 !>
