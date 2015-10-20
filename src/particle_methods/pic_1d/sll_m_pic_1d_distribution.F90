@@ -4,7 +4,7 @@ module sll_m_pic_1d_distribution
 #include "sll_memory.h"
 #include "sll_file_io.h"
 
-  use sll_m_visu_pic, only: compute_df_cic
+  use sll_m_pic_visu, only: compute_df_cic
 
   implicit none
 
