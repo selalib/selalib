@@ -34,7 +34,8 @@ module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_coordinate_transformations.h"
+use sll_m_common_coordinate_transformations
+use sll_m_coordinate_transformation_2d_base
 !use sll_m_boundary_condition_descriptors
 use sll_m_constants
 use sll_m_poisson_2d_base
