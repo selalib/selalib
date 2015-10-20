@@ -25,8 +25,8 @@ module sll_m_maxwell_solvers_base
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
-#include "sll_utilities.h"
 #include "sll_maxwell_solvers_macros.h"
+  use sll_m_utilities, only : int2string
 use sll_m_boundary_condition_descriptors
 
 implicit none
