@@ -24,8 +24,10 @@
 module sll_m_xdmf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
+
+use sll_m_utilities
   
 #ifdef NOHDF5
 use sll_m_binary_io

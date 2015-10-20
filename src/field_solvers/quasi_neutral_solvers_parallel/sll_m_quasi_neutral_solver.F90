@@ -18,8 +18,7 @@
     use sll_m_collective
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-!#include "sll_mesh_types.h"
-#include "sll_remap.h"
+
     use sll_m_constants
     implicit none
     

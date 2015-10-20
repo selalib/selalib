@@ -2,7 +2,7 @@ module sll_m_fcisl_toroidal
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 use sll_m_constants
 use sll_m_parallel_array_initializer
 use sll_m_hermite_interpolation_2d
