@@ -6,11 +6,15 @@ program rotation_2d_hexagonal
 #include "sll_errors.h"
   use sll_m_ascii_io
 
+  use sll_m_box_splines
   use sll_m_constants
   use sll_m_hexagonal_meshes
-  use sll_m_box_splines
   use sll_m_interpolation_hex_hermite
+  use sll_m_utilities, only : &
+       int2string
+
   implicit none
+
   sll_int32, parameter :: SLL_HEX_SPLINES = 2
   sll_int32, parameter :: SLL_HEX_Z9 = 9
   sll_int32, parameter :: SLL_HEX_Z10 = 10
