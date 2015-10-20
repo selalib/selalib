@@ -41,16 +41,15 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE1} sll_sim_serial ${SIM_LIBS}
                                                                 sll_meshes
                                                                 hex_poisson
                                                                 sll_utilities
-                                                                euler_2d_hex)
+                                                                sll_hermite_interpolation)
 
 # Second test :
 ADD_EXECUTABLE( ${EXECUTABLE2} simulation_${SIM_NAME2}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_sim_serial ${SIM_LIBS}
-                                                                hex_hermite
-                                                                sll_meshes
-                                                                hex_poisson
-                                                                sll_utilities
-                                                                euler_2d_hex)
+                                                    sll_hermite_interpolation
+                                                    sll_meshes
+                                                    hex_poisson
+                                                    sll_utilities)
 
 # Third test :
 ADD_EXECUTABLE( ${EXECUTABLE3} simulation_${SIM_NAME3}.F90)
@@ -58,7 +57,7 @@ TARGET_LINK_LIBRARIES(
   ${EXECUTABLE3}
   sll_sim_serial
   ${SIM_LIBS}
-  hex_hermite
+  sll_hermite_interpolation
   sll_splines
   sll_meshes)
 
@@ -68,7 +67,7 @@ TARGET_LINK_LIBRARIES(
   ${EXECUTABLE4}
   sll_sim_serial
   ${SIM_LIBS}
-  hex_hermite
+  sll_hermite_interpolation
   sll_splines
   sll_meshes)
 
@@ -77,10 +76,9 @@ ADD_EXECUTABLE( ${EXECUTABLE5} simulation_${SIM_NAME5}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE5} sll_sim_serial ${SIM_LIBS}
                                                                 sll_splines
                                                                 sll_meshes
-                                                                hex_hermite
+                                                                sll_hermite_interpolation
                                                                 hex_poisson
-                                                                sll_utilities
-                                                                euler_2d_hex)
+                                                                sll_utilities)
 
 
 
