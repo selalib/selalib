@@ -10,6 +10,9 @@ program sim2d_gc_hex_splines
   use sll_m_hex_poisson
   use sll_m_pivotbande
   use sll_m_box_splines
+  use sll_m_utilities, only : &
+       int2string, &
+       sll_new_file_id
   implicit none
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
