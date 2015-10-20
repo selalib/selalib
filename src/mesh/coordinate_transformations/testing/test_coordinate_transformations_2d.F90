@@ -2,7 +2,10 @@ program unit_test_2d
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
 #include "sll_cartesian_meshes.h"
-#include "sll_coordinate_transformations.h"
+  use sll_m_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d_nurbs
+  use sll_m_common_coordinate_transformations
+
   use sll_m_constants
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_boundary_condition_descriptors
