@@ -2,8 +2,10 @@ program unit_test_initializers_4d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
-#include "sll_parallel_utilities.h"
 
+use sll_m_collective
+use sll_m_parallel_array_initializer
+use sll_parallel_array_output_module
 use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
