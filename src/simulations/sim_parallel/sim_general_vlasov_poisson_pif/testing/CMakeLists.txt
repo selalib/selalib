@@ -8,19 +8,12 @@ file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
 ADD_EXECUTABLE( ${EXECUTABLE} unit_test_${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_sim_parallel
-					      sll_pif_fieldsolver
 					      sll_timer
 					      sll_memory
 					      sll_utilities
 					      sll_constants
-					      sll_sobol
-					      sll_prob
-					      sll_visu_pic
-					      sll_visu_pic_coll
 					      sll_collective
-					      sll_moment_matching
 					      sll_pic_utilities
-					      sll_wedge_product_generaldim
 					      sll_descriptors
 					      sll_splitting_methods
 					      sll_general_vlasov_poisson_pif)

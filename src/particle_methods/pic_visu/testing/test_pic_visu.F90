@@ -1,9 +1,9 @@
-program test_visu_pic
+program test_pic_visu
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 use sll_m_constants
-use sll_m_visu_pic
+use sll_m_pic_visu
 use sll_m_utilities
 use biot_savart
 
@@ -121,4 +121,4 @@ write(*,"(5x,' CPU time = ', G15.3)") tcpu
 end subroutine test_animation_2d
 
 
-end program test_visu_pic
+end program test_pic_visu
