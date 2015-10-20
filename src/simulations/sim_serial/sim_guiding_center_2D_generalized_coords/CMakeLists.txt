@@ -7,7 +7,7 @@ set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
 IF(MPI_ENABLED)
 ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
                               unit_test_${TEST_NAME}.F90 )
-TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_sequential ${SIM_LIBS}
+TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_serial ${SIM_LIBS}
                                      sll_parallel_array_utilities )
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )

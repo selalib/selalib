@@ -1,11 +1,11 @@
-ADD_LIBRARY( sll_pic1d STATIC
+ADD_LIBRARY( sll_pic_1d STATIC
   sll_m_particle_1d_description.F90
   sll_m_pic_1d_particle_loading.F90
   sll_m_pic_postprocessing.F90
   sll_m_pic_1d_field_solver.F90
   sll_m_pic_1d_distribution.F90 )
 
-TARGET_LINK_LIBRARIES( sll_pic1d
+TARGET_LINK_LIBRARIES( sll_pic_1d
   sll_constants
   sll_working_precision
   sll_memory
@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES( sll_pic1d
   sll_poisson_solvers 
   sll_fft
   sll_splines
-  sll_integration
+  sll_quadrature
   sll_utilities
   sll_interpolators
   sll_collective
@@ -22,4 +22,3 @@ TARGET_LINK_LIBRARIES( sll_pic1d
   sll_sobol
   sll_visu_pic
   sll_timer )
-

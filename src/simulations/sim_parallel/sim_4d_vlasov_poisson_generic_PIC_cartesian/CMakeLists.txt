@@ -1,4 +1,3 @@
-
 set(   TEST_NAME 4d_vp_generic_pic_cartesian           )
 set(    SIM_NAME 4d_vp_generic_pic_cartesian           )
 set(  EXECUTABLE "test_${TEST_NAME}"           )
@@ -11,7 +10,7 @@ ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
                               unit_test_${TEST_NAME}.F90 )
 
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}
-  sll_simulations_parallel
+  sll_sim_parallel
   sll_working_precision
   sll_pic_interface
   sll_simple_pic
@@ -31,4 +30,3 @@ IF(BUILD_TESTING)
   #SET_TESTS_PROPERTIES( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
   #  TIMEOUT 200 )
 ENDIF(BUILD_TESTING)
-

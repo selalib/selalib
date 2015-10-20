@@ -1,10 +1,10 @@
 ##############################################################################
-###      Sequential simulations
+###      Serial simulations
 ##############################################################################
 
-ADD_LIBRARY( sll_sim_sequential STATIC ../simulation_base_class.F90 )
+ADD_LIBRARY( sll_sim_serial STATIC ../simulation_base_class.F90 )
 
-TARGET_LINK_LIBRARIES( sll_sim_sequential
+TARGET_LINK_LIBRARIES( sll_sim_serial
                        sll_interpolators
                        sll_fields
                        sll_poisson_solvers
@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES( sll_sim_sequential
                        sll_gyroaverage
                      )
 
-SET( INSTALL_DIR "${INSTALL_DIR}/simulations_sequential" )
+SET( INSTALL_DIR "${INSTALL_DIR}/sim_serial" )
 
 ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic  )
 ADD_SUBDIRECTORY( sim_VlasovPoisson1D_fourier_FEM           )
