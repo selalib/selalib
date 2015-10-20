@@ -2,8 +2,9 @@
 program unit_test_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_meshes.h"
 #include "sll_fields.h"
+
+use sll_m_cartesian_meshes
 
 implicit none
 
