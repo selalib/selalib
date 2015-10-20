@@ -1,6 +1,5 @@
 module sll_m_sim_VP1D_cartesian_non_unif
 
-
 !> Vlasov-Poisson 1D on uniform or nonuniform cartesian grid
 !> using the Backward Semi-Lagrangian (BSL) method.
 !> in development
@@ -8,8 +7,6 @@ module sll_m_sim_VP1D_cartesian_non_unif
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_fields.h"
-
 
   use sll_m_sim_base
   use sll_m_cubic_non_uniform_splines
