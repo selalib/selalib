@@ -25,7 +25,6 @@ module sll_m_maxwell_fdtd_hex_mesh
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
-#include "sll_constants.h"
   use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d
 

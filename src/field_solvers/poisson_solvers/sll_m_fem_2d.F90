@@ -10,7 +10,6 @@ module sll_m_fem_2d
 #include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_constants.h"
 #include "sll_utilities.h"
 
 implicit none

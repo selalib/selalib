@@ -3,7 +3,6 @@ module sll_m_vlasov2d_spectral
 #define MPI_MASTER 0
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_memory.h"
 use sll_m_interpolators_1d_base
 use sll_m_collective
@@ -13,6 +12,8 @@ use sll_m_remapper
 use, intrinsic :: iso_c_binding
 use sll_m_vlasov2d_base
 use sll_m_fftw3
+use sll_m_constants, only : &
+     sll_pi
 
 implicit none
 private

@@ -10,7 +10,6 @@ module sll_m_maxwell_2d_diga_parallel
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_constants.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 

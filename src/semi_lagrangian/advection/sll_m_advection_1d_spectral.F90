@@ -23,11 +23,12 @@ module sll_m_advection_1d_spectral
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-#include "sll_constants.h"
 
 use sll_m_boundary_condition_descriptors
 use sll_m_advection_1d_base
 use sll_m_interpolators_1d_base
+use sll_m_constants, only : &
+     sll_pi
 
 #ifdef FFTW_F2003
 #include "sll_fftw.h"

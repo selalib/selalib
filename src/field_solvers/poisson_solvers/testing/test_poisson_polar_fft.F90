@@ -2,10 +2,11 @@ program test_poisson_polar_fft
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_poisson_2d_polar
+  use sll_m_boundary_condition_descriptors
+  use sll_m_constants, only : &
+       sll_pi
+  use sll_m_poisson_2d_polar
 
 implicit none
 
