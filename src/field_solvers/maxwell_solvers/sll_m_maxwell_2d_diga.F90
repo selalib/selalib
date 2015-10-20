@@ -13,13 +13,13 @@ module sll_m_maxwell_2d_diga
 #include "sll_memory.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_cartesian_meshes.h"
 
 use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformation_2d_base
 use sll_m_maxwell_solvers_base
 use sll_m_dg_fields
 use sll_m_boundary_condition_descriptors
+use sll_m_cartesian_meshes
 use sll_m_gauss_lobatto_integration, only : &
        gauss_lobatto_points, &
        gauss_lobatto_weights, &

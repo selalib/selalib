@@ -28,7 +28,7 @@ module sll_m_sim_2d_vlasov_ampere_cartesian
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 #include "sll_poisson_solvers.h"
 
 use sll_m_collective
