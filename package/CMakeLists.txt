@@ -24,6 +24,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_ampere.F90
     ${SLL_DIR}/semi_lagrangian/advection/sll_m_advection_1d_spectral.F90
     ${SLL_DIR}/low_level_utilities/constants/sll_m_constants.F90
+    ${SLL_DIR}/time_integration/splitting_methods/sll_m_time_splitting.F90
     ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_explicit_euler_conservative.F90
     ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_1d_trapezoid.F90
