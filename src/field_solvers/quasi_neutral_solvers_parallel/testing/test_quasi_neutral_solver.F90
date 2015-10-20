@@ -2,9 +2,7 @@
 program test_quasi_neutral
   use sll_m_quasi_neutral_solver
   use sll_m_collective
-#include "sll_remap.h"
 #include "sll_working_precision.h"
-#include "sll_mesh_types.h"
   implicit none
 
   type(quasi_neutral_plan), pointer :: qn_plan
