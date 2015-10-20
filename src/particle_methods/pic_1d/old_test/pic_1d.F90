@@ -18,11 +18,10 @@ module sll_m_pic_1d
          
    use sll_m_pic_1d_field_solver
    
-   
-!     use sll_m_visu_pic 
+  
 
 
-   use sll_m_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
+   use sll_m_pic_visu  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
    !Visualization with gnuplot
    
 
