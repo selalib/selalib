@@ -1,7 +1,9 @@
 program unit_test_2d
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
+
+use sll_m_interpolators_2d_base
+use sll_m_cubic_spline_interpolator_2d
 
 implicit none
 
