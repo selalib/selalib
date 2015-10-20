@@ -22,7 +22,7 @@ module sll_m_advection_1d_ampere
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 #include "sll_constants.h"
 
 use sll_m_boundary_condition_descriptors

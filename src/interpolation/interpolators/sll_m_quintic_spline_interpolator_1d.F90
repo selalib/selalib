@@ -30,7 +30,7 @@ module sll_m_quintic_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 
 use sll_m_interpolators_1d_base
 use sll_m_quintic_splines
