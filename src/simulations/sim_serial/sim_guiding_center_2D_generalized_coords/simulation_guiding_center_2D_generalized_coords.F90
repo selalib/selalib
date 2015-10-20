@@ -3,7 +3,6 @@ module sll_m_sim_2d_guiding_center_generalized_coords
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_fields.h"
 #include "sll_utilities.h"
 
   use sll_m_constants
