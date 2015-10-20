@@ -18,7 +18,6 @@
 !------------------------------------------------------------------------------
 module sll_m_triangular_meshes
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
@@ -26,6 +25,8 @@ module sll_m_triangular_meshes
 use sll_m_boundary_condition_descriptors
 use sll_m_meshes_base
 use sll_m_tri_mesh_xmf
+use sll_m_constants, only : &
+     sll_pi
 
 implicit none
 

@@ -4,7 +4,6 @@ module sll_m_vlasov2d_base
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_utilities.h"
   use sll_m_cartesian_meshes
   use sll_m_collective

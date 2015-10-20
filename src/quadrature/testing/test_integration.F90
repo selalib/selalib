@@ -2,7 +2,6 @@ program test_integration
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 
 use sll_m_rectangle_integration
 use sll_m_trapz_integration
@@ -16,7 +15,8 @@ use test_function_module, only: &
      test_func, &
      one_2D, &
      test_func_2D
-
+use sll_m_constants, only : &
+     sll_pi
 implicit none
 
 integer :: i,j,n

@@ -1,8 +1,10 @@
 module sll_m_common_array_initializers
-#include "sll_assert.h" 
+#include "sll_assert.h"
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 #include "sll_errors.h"
+
+  use sll_m_constants, only : &
+       sll_pi
 
   implicit none
 

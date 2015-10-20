@@ -3,7 +3,7 @@ module sll_m_sim_4d_vp_eulerian_cart_finite_volume
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
-#include "sll_constants.h"
+
   !use 
   use sll_m_collective
   use sll_m_remapper
@@ -15,6 +15,8 @@ module sll_m_sim_4d_vp_eulerian_cart_finite_volume
   use sll_m_gnuplot_parallel
   use sll_m_timer
   use sll_m_point_to_point_comms
+  use sll_m_constants, only : &
+       sll_pi
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
