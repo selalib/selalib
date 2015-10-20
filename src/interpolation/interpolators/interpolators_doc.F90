@@ -42,6 +42,6 @@
 !!  - sll_lagrange_interpolator_1d
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_interpolators.h' \endcode
+!> - Include \code use <name_of_used_modules> \endcode in your file.
 !> - Link with   <code>-lsll_interpolators</code>
 !>

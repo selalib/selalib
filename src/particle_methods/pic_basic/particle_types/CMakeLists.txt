@@ -1,4 +1,4 @@
-ADD_LIBRARY(sll_particle_types STATIC 
+ADD_LIBRARY(sll_particle_types STATIC
   sll_m_particle_group_2d2v.F90 
   sll_m_particle_group_1d2v.F90)
 

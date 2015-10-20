@@ -13,7 +13,7 @@ module sll_m_sim_pic1d1v_vp_periodic
   
   use sll_m_utilities , only : sll_new_file_id
   
-  use sll_m_visu_pic  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
+  use sll_m_pic_visu  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
     
   use sll_m_collective , only :       sll_world_collective , sll_collective_barrier ,&
      sll_boot_collective, sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&

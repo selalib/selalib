@@ -71,15 +71,13 @@ def find_and_replace( root, old_name, new_name ):
                     new_line = engine.process( old_line )
                     if new_line != old_line:
                         print( "  Found match in file '%s', at line %s" \
-                                % (filepath, line_no) )
+                                % (filepath, line_no+1) )
                         replace = True
-                if replace:
-                    text = f.read()
 
             # Make necessary substitutions
             if replace:
-                with open( filepath, 'w' ) as f:
-                    f.write( engine.process( text ) )
+                text = open( filepath, 'r' ).read()
+                open( filepath, 'w' ).write( engine.process( text ) )
 
     # DONE
     print( "DONE" )

@@ -4,7 +4,7 @@ module sll_m_sim_4d_vp_eulerian_cart_finite_volume
 #include "sll_memory.h"
 #include "sll_utilities.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
+  !use 
   use sll_m_collective
   use sll_m_remapper
   use sll_m_poisson_2d_periodic_cartesian_par
