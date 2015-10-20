@@ -27,10 +27,11 @@ module sll_m_poisson_2d_periodic_fftw
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_fftw.h"
 
-use sll_m_fftw3
+  use sll_m_constants, only : &
+       sll_pi
+  use sll_m_fftw3
 
 implicit none
 

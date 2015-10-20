@@ -44,10 +44,11 @@ module sll_m_maxwell_2d_periodic_cartesian_par
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
-#include "sll_constants.h"
 
 use sll_m_remapper
 use sll_m_collective
+use sll_m_constants, only : &
+     sll_pi
 use sll_m_fftw3
 
 implicit none

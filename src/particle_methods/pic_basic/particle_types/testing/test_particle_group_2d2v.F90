@@ -2,7 +2,6 @@ program test_particle_group_2d2v
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
   use sll_m_particle_group_2d2v
 

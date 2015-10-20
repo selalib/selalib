@@ -2,11 +2,12 @@ program test_mudpack_cartesian
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_file_io.h"
-#include "sll_constants.h"
 #include "sll_memory.h"
 
-use sll_m_mudpack
-use sll_m_boundary_condition_descriptors
+  use sll_m_mudpack
+  use sll_m_boundary_condition_descriptors
+  use sll_m_constants, only : &
+       sll_pi
 
 implicit none
 

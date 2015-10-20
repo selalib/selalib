@@ -21,7 +21,6 @@ module sll_m_poisson_polar_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
   use sll_m_fft
   use sll_m_tridiagonal

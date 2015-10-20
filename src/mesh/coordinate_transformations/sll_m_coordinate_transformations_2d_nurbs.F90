@@ -16,7 +16,7 @@ module sll_m_coordinate_transformations_2d_nurbs
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-#include "sll_constants.h"
+
   use sll_m_xdmf
   use sll_m_meshes_base
   use sll_m_cartesian_meshes
@@ -25,6 +25,8 @@ module sll_m_coordinate_transformations_2d_nurbs
   use sll_m_interpolators_2d_base
   use sll_m_coordinate_transformation_2d_base
   use sll_m_deboor_splines_2d
+  use sll_m_constants, only : &
+       sll_epsilon_0
 
   implicit none
   private
