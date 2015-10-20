@@ -20,5 +20,5 @@ TARGET_LINK_LIBRARIES( sll_pic_1d
   sll_collective
   sll_prob
   sll_sobol
-  sll_visu_pic
+  sll_pic_visu
   sll_timer )
