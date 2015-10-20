@@ -6,8 +6,8 @@
 
 module sll_m_maxwell_1d_base
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 
+  use sll_m_utilities, only : int2string
   use sll_m_gauss_legendre_integration, only: function_1d_legendre
 
   implicit none
