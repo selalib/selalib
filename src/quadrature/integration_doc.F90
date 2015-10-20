@@ -22,7 +22,6 @@
 !!   - Gauss-Lobatto points and weights
 !!
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_integration.h' \endcode
 !> - Link with   <code>-lsll_integration</code>
 !> - Add <code> use sll_m_gauss_legendre_integration </code>
 !> - Add <code> use sll_m_gauss_lobatto_integration </code>

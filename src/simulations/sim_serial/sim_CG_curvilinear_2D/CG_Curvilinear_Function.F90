@@ -9,7 +9,13 @@ module sll_m_cg_curvi_function
 
    use sll_m_cg_curvi_structure
    use sll_m_boundary_condition_descriptors
-    !--*Poisson*----
+   use sll_m_cubic_splines, only : &
+        new_cubic_spline_2D, &
+        compute_cubic_spline_2D, &
+        interpolate_x1_derivative_2d, &
+        interpolate_x2_derivative_2d, &
+        sll_delete
+   !--*Poisson*----
   
 contains
 
