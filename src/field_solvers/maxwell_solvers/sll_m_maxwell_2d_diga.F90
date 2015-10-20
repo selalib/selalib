@@ -12,7 +12,6 @@ module sll_m_maxwell_2d_diga
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
-#include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
@@ -22,6 +21,10 @@ use sll_m_maxwell_solvers_base
 use sll_m_dg_fields
 use sll_m_boundary_condition_descriptors
 use sll_m_cartesian_meshes
+use sll_m_gauss_lobatto_integration, only : &
+       gauss_lobatto_points, &
+       gauss_lobatto_weights, &
+       gauss_lobatto_derivative_matrix
 
 implicit none
 
