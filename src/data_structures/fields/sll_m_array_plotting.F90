@@ -1,8 +1,9 @@
 module sll_m_array_plotting
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_meshes.h"
 #include "sll_file_io.h"
+
+use sll_m_cartesian_meshes
 
 sll_int32, parameter :: SLL_X1X2 = 0
 sll_int32, parameter :: SLL_X1X3 = 1
