@@ -9,7 +9,8 @@ module sll_m_curvilinear_2D_advection
   !--*Poisson*----
   !use sll_general_coordinate_qn_solver
    use sll_m_mudpack_colella
-
+   use sll_m_cubic_splines, only : &
+        interpolate_value_2d
   implicit none
 
   

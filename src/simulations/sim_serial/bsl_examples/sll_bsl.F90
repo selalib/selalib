@@ -4,7 +4,6 @@ module sll_m_bsl
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
-#include "sll_splines.h"
 
 implicit none
 
