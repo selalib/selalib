@@ -1139,7 +1139,7 @@ contains
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
     sll_real64,            intent(in)  :: x
     sll_real64,            intent(in)  :: y
-    type(sll_hex_mesh_2d), intent(in)  :: mesh ! Was pointer (YG - 05.10.2015)
+    class(sll_hex_mesh_2d), intent(in)  :: mesh ! Was pointer (YG - 05.10.2015)
     sll_int32,             intent(out) :: s1
     sll_int32,             intent(out) :: s2
     sll_int32,             intent(out) :: s3
@@ -1244,7 +1244,7 @@ contains
   subroutine get_triangle_index( k1, k2, mesh, x, triangle_index )
     sll_int32,             intent(in)  :: k1
     sll_int32,             intent(in)  :: k2
-    type(sll_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
+    class(sll_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
     sll_real64,            intent(in)  :: x   !cartessian_abscisse_other_vertice
     sll_int32,             intent(out) :: triangle_index
 

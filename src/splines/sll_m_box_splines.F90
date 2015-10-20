@@ -100,7 +100,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d( spline, data, deg )
-    class(sll_box_spline_2d),         intent(in) :: spline
+    class(sll_box_spline_2d),         intent(inout) :: spline
     sll_real64, dimension(:), target, intent(in) :: data
     sll_int32,                        intent(in) :: deg
 
@@ -133,7 +133,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_diri(spline, data, deg)
-    class(sll_box_spline_2d), intent(in)          :: spline
+    class(sll_box_spline_2d), intent(inout)          :: spline
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     sll_int32,                intent(in)          :: deg
 
@@ -188,7 +188,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_prdc(spline, data, deg)
-    class(sll_box_spline_2d), intent(in)          :: spline
+    class(sll_box_spline_2d), intent(inout)          :: spline
     sll_int32,                intent(in)          :: deg
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
 
@@ -212,7 +212,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_neum(spline, data, deg)
-    class(sll_box_spline_2d), intent(in)          :: spline
+    class(sll_box_spline_2d), intent(inout)          :: spline
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     sll_int32,                intent(in)          :: deg
 
