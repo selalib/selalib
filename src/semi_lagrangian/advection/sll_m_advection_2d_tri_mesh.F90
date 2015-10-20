@@ -6,8 +6,8 @@ module sll_m_advection_2d_tri_mesh
 #include "sll_memory.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_boundary_condition_descriptors.h"
 
+use sll_m_boundary_condition_descriptors
 use sll_m_meshes_base
 use sll_m_triangular_meshes
 
