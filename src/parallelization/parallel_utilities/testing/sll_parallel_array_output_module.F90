@@ -2,11 +2,11 @@
 module sll_parallel_array_output_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_meshes.h"
 #include "sll_utilities.h"
 use sll_m_collective
 use sll_m_remapper
 use sll_m_xml_io
+use sll_m_cartesian_meshes
 
 #ifndef NOHDF5
 use hdf5, only: hid_t, hssize_t, hsize_t
