@@ -3,9 +3,11 @@ program unit_test_initializers_4d
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_meshes.h"
-#include "sll_coordinate_transformations.h"
 #include "sll_parallel_utilities.h"
 
+use sll_m_common_coordinate_transformations
+use sll_m_coordinate_transformation_2d_base
+use sll_m_coordinate_transformations_2d
 
 #define MPI_MASTER 0
 

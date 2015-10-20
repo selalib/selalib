@@ -5,7 +5,9 @@ program rotation_2d_polar
 #include "sll_assert.h"
 #include "sll_errors.h"
 #include "sll_utilities.h"
-#include "sll_coordinate_transformations.h"
+  use sll_m_common_coordinate_transformations
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_coordinate_transformations_2d
   use sll_m_ascii_io
   use sll_m_boundary_condition_descriptors
   use sll_m_cubic_spline_interpolator_2d
