@@ -6,7 +6,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-  use sll_m_pic_base
+  use sll_m_particle_group_base
   use sll_m_particle_initializer
   use sll_m_particle_group_1d2v
   use sll_m_kernel_smoother_base

@@ -1,4 +1,4 @@
-module sll_m_pic_base
+module sll_m_particle_group_base
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -150,4 +150,4 @@ contains
     res%m = species_mass
 
   end function species_new
-end module sll_m_pic_base
+end module sll_m_particle_group_base

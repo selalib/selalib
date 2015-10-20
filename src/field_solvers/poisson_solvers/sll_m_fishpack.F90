@@ -20,7 +20,8 @@ module sll_m_fishpack
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_boundary_condition_descriptors.h"
+
+  use sll_m_boundary_condition_descriptors
 
 implicit none
 private
