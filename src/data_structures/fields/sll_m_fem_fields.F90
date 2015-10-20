@@ -11,7 +11,8 @@ module sll_m_fem_fields
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_meshes.h"
+
+  use sll_m_cartesian_meshes
   use sll_m_coordinate_transformation_2d_base
 
 implicit none
