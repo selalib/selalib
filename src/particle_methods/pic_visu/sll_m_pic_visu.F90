@@ -18,7 +18,7 @@
 !> \brief
 !> This module provides some routines for plotting during PIC simulations.
 
-module sll_m_visu_pic
+module sll_m_pic_visu
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -724,4 +724,4 @@ end subroutine electricpotential_gnuplot_inline
 
 
 
-end module sll_m_visu_pic
+end module sll_m_pic_visu

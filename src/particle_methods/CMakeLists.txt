@@ -8,6 +8,7 @@ if( MPI_ENABLED )
   add_subdirectory( pic_basic )
   add_subdirectory( pif )
   add_subdirectory( pic_remapped )
+  add_subdirectory( pic_visu_parallel )
 endif( MPI_ENABLED )
 
 ADD_SUBDIRECTORY(random_deviate_generators)
