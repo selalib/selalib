@@ -35,7 +35,8 @@ module sll_m_pic_1d_particle_loading
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-#include "sll_boundary_condition_descriptors.h"
+
+  use sll_m_boundary_condition_descriptors
     use sll_m_constants
     use sll_m_collective
     use sll_m_particle_1d_description

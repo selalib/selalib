@@ -18,8 +18,8 @@ module sll_m_box_splines
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
-#include "sll_boundary_condition_descriptors.h"
 
+  use sll_m_boundary_condition_descriptors
   use sll_m_hex_pre_filters, only: &
        pre_filter_pfir
   use sll_m_hexagonal_meshes

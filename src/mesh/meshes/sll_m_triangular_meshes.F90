@@ -22,8 +22,8 @@ module sll_m_triangular_meshes
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-#include "sll_boundary_condition_descriptors.h"
 
+use sll_m_boundary_condition_descriptors
 use sll_m_meshes_base
 use sll_m_tri_mesh_xmf
 
