@@ -7,7 +7,7 @@ module sll_m_scalar_field_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-#include "sll_utilities.h"
+#include "sll_errors.h"
 
 use sll_m_scalar_field_2d_base
 use sll_m_constants

@@ -69,7 +69,7 @@
   !
   ! *************************************************************************
  
-use sll_m_memory
+use sll_m_memory, only : test_error_code
 
 #define SLL_ALLOCATE(array_name_and_lims, error_var)   \
   allocate(array_name_and_lims, stat=error_var);      \

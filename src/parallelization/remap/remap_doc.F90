@@ -28,10 +28,8 @@
 !> @author 
 !> Selalib team 
 !>
-!> <b> Headers file available </b>
-!> - sll_remap.h
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_remap.h' \endcode
+!> - Include : \code use sll_remapper \endcode
 !> - Link with   <code>-lsll_remap</code>
 !> - Add <code> use sll_remap </code>

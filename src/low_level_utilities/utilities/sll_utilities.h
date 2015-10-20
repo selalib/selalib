@@ -50,12 +50,6 @@
 
 #define SWAP(A,B) A = A + B; B = A - B; A = A - B
 
-!=========================================================================
-! Error handling facilities
-#include "sll_errors.h"
-!=========================================================================
-
 use sll_m_utilities
-use sll_m_fornberg
 
 #endif
