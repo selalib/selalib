@@ -16,8 +16,8 @@ module sll_m_box_splines
 #include "sll_constants.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
 
+  use sll_m_utilities, only : sll_factorial
   use sll_m_boundary_condition_descriptors
   use sll_m_hex_pre_filters, only: &
        pre_filter_pfir
