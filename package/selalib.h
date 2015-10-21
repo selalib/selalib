@@ -23,15 +23,14 @@
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
-#include "sll_constants.h"
 #include "sll_fft.h"
-#include "sll_interpolators.h"
 #include "sll_splines.h"
 #include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
 #include "sll_meshes.h"
 #include "sll_coordinate_transformations.h"
 use sll_m_gnuplot
+use sll_m_constants
 
 
 #endif
