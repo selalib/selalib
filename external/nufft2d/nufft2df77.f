@@ -31,20 +31,20 @@ c
 c  Different applications have different needs, and we have chosen
 c  to provide the simplest code as a reasonable efficient template.
 c
-c**********************************************************************
-      subroutine nufft2d1f90(nj,xj,yj,cj, iflag,eps, ms,mt,fk,ier)
+cc**********************************************************************
+      subroutine nufft2d1(nj,xj,yj,cj,iflag,eps,ms,mt,fk,
+     1           fw,lw,lused,ier)
       implicit none
-      integer ier,iflag,ii,istart,iw10,iw11,iw13,iw14,iw15,iw16,iwtot
-      integer j,jb1,jb2,jb1u,jb1d,k1,k2
+      integer ier,iflag,ii,istart,iw10,iw11,iw13,iw14,iw15,iw16
+      integer j,jb1,jb2,jb1u,jb1d,k1,k2,lw,lused
       integer ms,mt,next235,nf1,nf2,nj,nspread,nw1,nw2,nw3
-      real(8) rat,t1,t2,diff1,diff2,r2lamb,hx,hy
-      real(8) cross,cross1,pi,eps
-      real(8) xj(nj),yj(nj),xc(-48:48),yc(-48:48)
+      real*8 rat,t1,t2,diff1,diff2,r2lamb,hx,hy
+      real*8 cross,cross1,pi,eps
+      real*8 xj(nj),yj(nj),xc(-48:48),yc(-48:48)
+      real*8 fw(0:lw-1)
       parameter (pi=3.141592653589793d0)
-      complex(16) cz,ccj,zz
-      complex(16) cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2)
-c ----------------------------------------------------------------------
-      real(8), allocatable, save :: fw(:)
+      complex*16 cz,ccj,zz
+      complex*16 cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2)
 c ----------------------------------------------------------------------
 c
 c     if (iflag .ge. 0) then
@@ -190,7 +190,7 @@ c
       hy = 2*pi/nf2
 
 c     -------------------------------
-c     Compute workspace size and allocate
+c     Compute needed workspace size 
 c
 c     nw1 for fine grid, nw2 for second index, 
 c     nw3 for max length to hold 1D FFT data.
@@ -205,8 +205,11 @@ c
       iw14 = iw13 + nspread+1
       iw15 = iw14 + nspread+1
       iw16 = iw15 + 4*nf1+15
-      iwtot = iw16 + 4*nf2+15
-      allocate( fw(0:iwtot-1) )
+      lused = iw16 + 4*nf2+15
+      if (lw. lt. lused) then
+         ier = 2
+	 return
+      endif
 c
 c     ---------------------------------------------------------------
 c     Precompute spreading constants and initialize fw
@@ -303,20 +306,20 @@ c ---------------------------------------------------------------
             do k1 = -nspread+1, -jb1d-1
                istart = 2*(k1+nf1+ii)
 	       zz = xc(k1)*cz
-               fw(istart) = fw(istart) + real(zz)
-               fw(istart+1) = fw(istart+1) + imag(zz)
+               fw(istart) = fw(istart) + dreal(zz)
+               fw(istart+1) = fw(istart+1) + dimag(zz)
             enddo
             do k1 = -jb1d, jb1u
                istart = 2*(k1+ii)
 	       zz = xc(k1)*cz
-               fw(istart) = fw(istart) + real(zz)
-               fw(istart+1) = fw(istart+1) + imag(zz)
+               fw(istart) = fw(istart) + dreal(zz)
+               fw(istart+1) = fw(istart+1) + dimag(zz)
             enddo
             do k1 = jb1u+1, nspread
                istart = 2*(k1-nf1+ii)
 	       zz = xc(k1)*cz
-               fw(istart) = fw(istart) + real(zz)
-               fw(istart+1) = fw(istart+1) + imag(zz)
+               fw(istart) = fw(istart) + dreal(zz)
+               fw(istart+1) = fw(istart+1) + dimag(zz)
             enddo
          enddo
       enddo
@@ -350,20 +353,19 @@ c
          endif
 c
          cross = fw(iw10+k1+ms/2)
-	 zz = cmplx(fw(2*nw1),fw(2*nw1+1))
+	 zz = dcmplx(fw(2*nw1),fw(2*nw1+1))
          fk(k1, 0) = (cross*fw(iw11+0))*zz
          do k2 = 1, (mt-1)/2
-	    zz = cmplx(fw(2*(nw1+k2)),fw(2*(nw1+k2)+1))
+	    zz = dcmplx(fw(2*(nw1+k2)),fw(2*(nw1+k2)+1))
             fk(k1,k2) = (cross*fw(iw11+k2))*zz
-	    zz = cmplx(fw(2*(nw1+nf2-k2)),fw(2*(nw1+nf2-k2)+1))
+	    zz = dcmplx(fw(2*(nw1+nf2-k2)),fw(2*(nw1+nf2-k2)+1))
             fk(k1,-k2) = (cross*fw(iw11+k2))*zz
          enddo
          if (mt/2*2.eq.mt) then 
-            zz = cmplx(fw(2*nw1+2*nf2-mt),fw(2*nw1+2*nf2-mt+1))
+            zz = dcmplx(fw(2*nw1+2*nf2-mt),fw(2*nw1+2*nf2-mt+1))
             fk(k1,-mt/2) = (cross*fw(iw11+mt/2))*zz
          endif
       enddo
-      deallocate(fw)
       return
       end
 c
@@ -372,17 +374,17 @@ c
 c
 c
 ************************************************************************
-      subroutine nufft2d2f90(nj,xj,yj,cj, iflag,eps, ms,mt,fk,ier)
+      subroutine nufft2d2(nj,xj,yj,cj,iflag,eps,ms,mt,fk,
+     1           fw,lw,lused,ier)
       implicit none
-      integer iflag,ii,istart,ier,iw10,iw11,iw13,iw14,iw15,iw16,iwtot
-      integer j,jb1,jb2,jb1u,jb1d,k1,k2
+      integer iflag,ii,istart,ier,iw10,iw11,iw13,iw14,iw15,iw16
+      integer j,jb1,jb2,jb1u,jb1d,k1,k2,lused,lw
       integer ms,mt,next235,nf1,nf2,nj,nspread,nw1,nw2,nw3
-      real(8) cross,cross1,diff1,diff2,eps,hx,hy,pi,rat,r2lamb,t1,t2
-      real(8) xj(nj),yj(nj),xc(-47:47),yc(-47:47)
+      real*8 cross,cross1,diff1,diff2,eps,hx,hy,pi,rat,r2lamb,t1,t2
+      real*8 xj(nj),yj(nj),xc(-47:47),yc(-47:47)
+      real*8 fw(0:lw-1)
       parameter (pi=3.141592653589793d0)
-      complex(16) cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2),zz,cz
-c ----------------------------------------------------------------------
-      real(8), allocatable, save :: fw(:)
+      complex*16 cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2),zz,cz
 c ----------------------------------------------------------------------
 c     if (iflag .ge. 0) then
 c
@@ -464,7 +466,7 @@ c     -------------------------------
       hy = 2*pi/nf2
 c
 c     -------------------------------
-c     Compute workspace size and allocate
+c     Compute needed workspace size 
 c
 c     nw1 for fine grid, nw2 for second index, 
 c     nw3 for max length to hold 1D FFT data.
@@ -479,8 +481,11 @@ c
       iw14 = iw13 + nspread+1
       iw15 = iw14 + nspread+1
       iw16 = iw15 + 4*nf1+15
-      iwtot = iw16 + 4*nf2+15
-      allocate( fw(0:iwtot-1) )
+      lused = iw16 + 4*nf2+15
+      if (lw. lt. lused) then
+         ier = 2
+	 return
+      endif
 c
 c     ---------------------------------------------------------------
 c     Precompute spreading constants and initialize ffts
@@ -518,20 +523,20 @@ c     ---------------------------------------------------------------
       do k1 = -ms/2, (ms-1)/2
          cross = fw(iw10+k1+ms/2)
          zz  = (cross*fw(iw11))*fk(k1,0)
-         fw(2*nw1) = real(zz)
-         fw(2*nw1+1) = imag(zz)
+         fw(2*nw1) = dreal(zz)
+         fw(2*nw1+1) = dimag(zz)
          do k2 = 1, (mt-1)/2
             zz = (cross*fw(iw11+k2))*fk(k1,k2)
-            fw(2*(nw1+k2)) = real(zz)
-            fw(2*(nw1+k2)+1) = imag(zz)
+            fw(2*(nw1+k2)) = dreal(zz)
+            fw(2*(nw1+k2)+1) = dimag(zz)
             zz = (cross*fw(iw11+k2))*fk(k1,-k2)
-            fw(2*(nw1+nf2-k2)) = real(zz)
-            fw(2*(nw1+nf2-k2)+1) = imag(zz)
+            fw(2*(nw1+nf2-k2)) = dreal(zz)
+            fw(2*(nw1+nf2-k2)+1) = dimag(zz)
          enddo
          if (mt/2*2.eq.mt) then
             zz = (cross*fw(iw11+mt/2))*fk(k1,-mt/2)
-            fw(2*(nw1+nf2-mt/2)) = real(zz)
-            fw(2*(nw1+nf2-mt/2)+1) = imag(zz)
+            fw(2*(nw1+nf2-mt/2)) = dreal(zz)
+            fw(2*(nw1+nf2-mt/2)+1) = dimag(zz)
 	 endif
          do k2 = (mt+1)/2, nf2-mt/2-1
             fw(2*(nw1+k2)) = 0d0
@@ -542,7 +547,7 @@ c     ---------------------------------------------------------------
          else
             call dcfftf(nf2,fw(2*nw1),fw(iw16))
          endif
-c
+
          ii = k1
          if (ii.lt.0) ii = nf1+k1
          do k2 = 0, nf2-1
@@ -550,7 +555,7 @@ c
             fw(2*(ii+k2*nf1)+1) = fw(2*(nw1+k2)+1)
          enddo
       enddo
-c
+
       do k2 = 0, nf1*nf2-1, nf1
          do k1 = (ms+1)/2, nf1-ms/2-1
             fw(2*(k1+k2)) = 0.0d0
@@ -577,7 +582,7 @@ c     ---------------------------------------------------------------
       t1 = pi/r2lamb
       t2 = pi/r2lamb
       do j = 1, nj
-         cj(j) = cmplx(0d0,0d0)
+         cj(j) = dcmplx(0d0,0d0)
          jb1 = int((xj(j)+pi)/hx)
          diff1 = (xj(j)+pi)/hx - jb1
          jb1 = mod(jb1, nf1)
@@ -618,23 +623,22 @@ c     ---------------------------------------------------------------
                ii = ii - nf2
             endif
             ii = jb1 + ii*nf1
-            cz = cmplx(0d0, 0d0)
+            cz = dcmplx(0d0, 0d0)
             do k1 = -nspread+1, -jb1d-1
-               zz = cmplx(fw(2*(k1+nf1+ii)),fw(2*(k1+nf1+ii)+1))
+               zz = dcmplx(fw(2*(k1+nf1+ii)),fw(2*(k1+nf1+ii)+1))
                cz = cz + xc(k1)*zz
             enddo
             do k1 = -jb1d, jb1u
-               zz = cmplx(fw(2*(k1+ii)),fw(2*(k1+ii)+1))
+               zz = dcmplx(fw(2*(k1+ii)),fw(2*(k1+ii)+1))
                cz = cz + xc(k1)*zz
             enddo
             do k1 = jb1u+1, nspread
-               zz = cmplx(fw(2*(k1-nf1+ii)),fw(2*(k1-nf1+ii)+1))
+               zz = dcmplx(fw(2*(k1-nf1+ii)),fw(2*(k1-nf1+ii)+1))
                cz = cz + xc(k1)*zz
             enddo
             cj(j) = cj(j) + yc(k2)*cz
          enddo
       enddo
-      deallocate(fw)
       return
       end
 c
@@ -643,21 +647,21 @@ c
 c
 c
 c***********************************************************************
-      subroutine nufft2d3f90(nj,xj,yj,cj, iflag,eps, nk,sk,tk,fk,ier)
+      subroutine nufft2d3(nj,xj,yj,cj, iflag,eps, nk,sk,tk,fk,
+     1           fw,lw,lused,ier)
       implicit none
-      integer ier,iflag,ii,istart,iw10,iw11,iw13,iw14,iw15,iw16,iwtot
+      integer ier,iflag,ii,istart,iw10,iw11,iw13,iw14,iw15,iw16
+      integer j,jb1,jb2,k1,k2,kb1,kb2,kmax1,kmax2,lused,lw
       integer next235,nf1,nf2,nj,nk,nspread,nw1,nw2,nw3
-      integer j,jb1,jb2,k1,k2,kb1,kb2,kmax1,kmax2
-      real(8) xj(nj),yj(nj),sk(nk),tk(nk)
-      real(8) eps,pi,rat,t1,t2,diff1,diff2
-      real(8) rat1,rat2,r2lamb1,r2lamb2
-      real(8) xm,ym,sm,tm,hx,hy,hs,ht
-      real(8) ang,xb,yb,sb,tb
-      real(8) cross,cross1,xc(-47:47),yc(-47:47)
+      real*8 xj(nj),yj(nj),sk(nk),tk(nk)
+      real*8 eps,pi,rat,t1,t2,diff1,diff2
+      real*8 rat1,rat2,r2lamb1,r2lamb2
+      real*8 xm,ym,sm,tm,hx,hy,hs,ht
+      real*8 ang,xb,yb,sb,tb
+      real*8 fw(0:lw-1)
+      real*8 cross,cross1,xc(-47:47),yc(-47:47)
       parameter (pi=3.141592653589793d0)
-      complex(16) cj(nj),fk(nk),zz,zz2,zc,zcs
-c ----------------------------------------------------------------------
-      real(8), allocatable, save :: fw(:)
+      complex*16 cj(nj),fk(nk),zz,zz2,zc,zcs
 c ----------------------------------------------------------------------
 c
 c     if (iflag .ge. 0) then
@@ -754,7 +758,7 @@ c
       enddo
       sb = (t1+t2) / 2d0
       sm = max(t2-sb,-t1+sb)
-c
+
       t1 = yj(1)
       t2 = yj(1)
       do j = 2, nj
@@ -766,7 +770,7 @@ c
       enddo
       yb = (t1+t2) / 2d0
       ym = max(t2-yb,-t1+yb)
-c
+
       t1 = tk(1)
       t2 = tk(1)
       do k1 = 2, nk
@@ -814,8 +818,8 @@ c     Compute workspace size
 c     -------------------------------
 c
       nw1 = nf1 * nf2               ! fine grid
-      nw2 = nw1 + nf2 
-      nw3 = nw2 + max(nf1,nf2) 
+      nw2 = nw1 + nf2
+      nw3 = nw2 + max(nf1,nf2)
       kmax1 = int(nf1*(r2lamb1-nspread)/r2lamb1+.1d0)
       kmax2 = int(nf2*(r2lamb2-nspread)/r2lamb2+.1d0)
       iw10 = 2*nw3
@@ -824,8 +828,11 @@ c
       iw14 = iw13 + nspread+1
       iw15 = iw14 + nspread+1
       iw16 = iw15 + 4*nf1+15
-      iwtot = iw16 + 4*nf2+15
-      allocate( fw(0:iwtot-1) )
+      lused = iw16 + 4*nf2+15
+      if (lw. lt. lused) then
+         ier = 2
+	 return
+      endif
 c
 c     ---------------------------------------------------------------
 c     Precompute spreading constants and initialize fw
@@ -881,7 +888,7 @@ c
          jb2 = int(dble(nf2/2) + (yj(j)-yb)/hy)
          diff2 = dble(nf2/2) + (yj(j)-yb)/hy - jb2
          ang = sb*xj(j) + tb*yj(j)
-         zcs = cmplx(cos(ang),sin(ang)) * cj(j)
+         zcs = dcmplx(cos(ang),sin(ang)) * cj(j)
          xc(0) = exp(-t1*diff1**2-t2*diff2**2)
          cross = xc(0)
          cross1 = exp(2d0*t1 * diff1)
@@ -909,8 +916,8 @@ c
             ii = jb1 + (jb2+k2)*nf1
             do k1 = -nspread+1, nspread
 	       zz = xc(k1)*zc
-               fw(2*(ii+k1)) = fw(2*(ii+k1)) + real(zz)
-               fw(2*(ii+k1)+1) = fw(2*(ii+k1)+1)+imag(zz)
+               fw(2*(ii+k1)) = fw(2*(ii+k1)) + dreal(zz)
+               fw(2*(ii+k1)+1) = fw(2*(ii+k1)+1)+dimag(zz)
             enddo
          enddo
       enddo
@@ -927,23 +934,23 @@ c     ---------------------------------------------------------------
       do k1 = -jb1, jb1
          ii = (nf1/2+k1) + (nf2/2)*nf1
          cross = fw(iw10+abs(k1))
-	 zz = cmplx(fw(2*ii),fw(2*ii+1))
+	 zz = dcmplx(fw(2*ii),fw(2*ii+1))
          zz = (cross*fw(iw11))*zz
-         fw(2*nw1) = real(zz)
-         fw(2*nw1+1) = imag(zz)
+         fw(2*nw1) = dreal(zz)
+         fw(2*nw1+1) = dimag(zz)
          do k2 = 1, jb2
-	    zz = cmplx(fw(2*(ii+k2*nf1)),fw(2*(ii+k2*nf1)+1))
+	    zz = dcmplx(fw(2*(ii+k2*nf1)),fw(2*(ii+k2*nf1)+1))
             zz = (cross*fw(iw11+k2))*zz
-            fw(2*(nw1+k2)) = real(zz)
-            fw(2*(nw1+k2)+1) = imag(zz)
-	    zz = cmplx(fw(2*(ii-k2*nf1)),fw(2*(ii-k2*nf1)+1))
+            fw(2*(nw1+k2)) = dreal(zz)
+            fw(2*(nw1+k2)+1) = dimag(zz)
+	    zz = dcmplx(fw(2*(ii-k2*nf1)),fw(2*(ii-k2*nf1)+1))
             zz = (cross*fw(iw11+k2))*zz
-            fw(2*(nw1+nf2-k2)) = real(zz)
-            fw(2*(nw1+nf2-k2)+1) = imag(zz)
+            fw(2*(nw1+nf2-k2)) = dreal(zz)
+            fw(2*(nw1+nf2-k2)+1) = dimag(zz)
          enddo
          do k2 = jb2+1, nf2-jb2-1
-            fw(2*(nw1+k2)) = cmplx(0d0, 0d0)
-            fw(2*(nw1+k2)+1) = cmplx(0d0, 0d0)
+            fw(2*(nw1+k2)) = dcmplx(0d0, 0d0)
+            fw(2*(nw1+k2)+1) = dcmplx(0d0, 0d0)
          enddo
          if (iflag .ge. 0) then
             call dcfftb(nf2,fw(2*nw1),fw(iw16))
@@ -1006,11 +1013,11 @@ c
          enddo
          yc(nspread) = fw(iw14+nspread)*cross
 c
-         fk(j) = cmplx(0d0,0d0)
+         fk(j) = dcmplx(0d0,0d0)
          do k2 = -nspread+1, nspread
             ii = kb1 + (kb2+k2)*nf1
             do k1 = -nspread+1, nspread
-	       zz = cmplx(fw(2*(ii+k1)),fw(2*(ii+k1)+1))
+	       zz = dcmplx(fw(2*(ii+k1)),fw(2*(ii+k1)+1))
                fk(j) = fk(j) + (xc(k1)*yc(k2))*zz
             enddo
          enddo
@@ -1022,8 +1029,7 @@ c
       do j = 1, nk
          fk(j) = (exp(t1*(sk(j)-sb)**2+t2*(tk(j)-tb)**2))*fk(j)
          ang = (sk(j)-sb)*xb + (tk(j)-tb)*yb
-         fk(j) = cmplx(cos(ang),sin(ang)) * fk(j)
+         fk(j) = dcmplx(cos(ang),sin(ang)) * fk(j)
       enddo
-      deallocate(fw)
       return
       end
