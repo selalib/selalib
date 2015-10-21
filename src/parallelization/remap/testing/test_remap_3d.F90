@@ -17,7 +17,10 @@ program remap_test
   use sll_m_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
+
+    use sll_m_utilities, only : &
+         is_power_of_two
+
   implicit none
 
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,

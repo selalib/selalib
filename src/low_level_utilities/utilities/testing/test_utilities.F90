@@ -1,6 +1,8 @@
 program utils_tester
-#include "sll_utilities.h"
 #include "sll_working_precision.h"
+#include "sll_utilities.h"
+
+  use sll_m_utilities
   implicit none
 
   sll_real64 :: re64
