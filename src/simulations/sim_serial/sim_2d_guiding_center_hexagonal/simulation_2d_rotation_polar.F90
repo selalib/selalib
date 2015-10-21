@@ -15,6 +15,7 @@ program rotation_2d_polar
   use sll_m_constants
   use sll_m_hermite_interpolator_2d
   use sll_m_hermite_interpolation_2d
+  use sll_m_xdmf
   implicit none
 
 

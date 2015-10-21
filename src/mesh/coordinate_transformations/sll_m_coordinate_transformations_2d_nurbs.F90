@@ -15,7 +15,7 @@ module sll_m_coordinate_transformations_2d_nurbs
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_file_io.h"
+
 
   use sll_m_xdmf
   use sll_m_meshes_base
@@ -27,11 +27,12 @@ module sll_m_coordinate_transformations_2d_nurbs
   use sll_m_deboor_splines_2d
   use sll_m_constants, only : &
        sll_epsilon_0
+  use sll_m_plotmtv
+  use sll_m_utilities, only: sll_new_file_id
 
   implicit none
   private
   
-
   !> Nurbs-based coordinate transformation 
   type, extends(sll_coordinate_transformation_2d_base), public :: &
        sll_coordinate_transformation_2d_nurbs

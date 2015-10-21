@@ -2,9 +2,10 @@ module sll_m_pic_1d_distribution
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_file_io.h"
 
   use sll_m_pic_visu, only: compute_df_cic
+  use sll_m_utilities, only: int2string
+  use sll_m_xdmf
 
   implicit none
 

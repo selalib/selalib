@@ -4,7 +4,6 @@ module biot_savart
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-#include "sll_file_io.h"
 
   use sll_m_constants, only : &
        sll_pi

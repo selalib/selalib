@@ -18,10 +18,11 @@
 program test_advection_1d_ampere
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_file_io.h"
+
 use sll_m_advection_1d_base
 use sll_m_advection_1d_ampere
 use sll_m_boundary_condition_descriptors
+use sll_m_gnuplot
 
 !$ use omp_lib
 
