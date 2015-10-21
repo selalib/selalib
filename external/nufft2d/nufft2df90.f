@@ -41,8 +41,8 @@ c**********************************************************************
       real(8) cross,cross1,pi,eps
       real(8) xj(nj),yj(nj),xc(-48:48),yc(-48:48)
       parameter (pi=3.141592653589793d0)
-      complex(16) cz,ccj,zz
-      complex(16) cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2)
+      complex(8) cz,ccj,zz
+      complex(8) cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2)
 c ----------------------------------------------------------------------
       real(8), allocatable, save :: fw(:)
 c ----------------------------------------------------------------------
@@ -350,16 +350,16 @@ c
          endif
 c
          cross = fw(iw10+k1+ms/2)
-	 zz = cmplx(fw(2*nw1),fw(2*nw1+1),kind=16)
+	 zz = cmplx(fw(2*nw1),fw(2*nw1+1),kind=8)
          fk(k1, 0) = (cross*fw(iw11+0))*zz
          do k2 = 1, (mt-1)/2
-	    zz = cmplx(fw(2*(nw1+k2)),fw(2*(nw1+k2)+1),kind=16)
+	    zz = cmplx(fw(2*(nw1+k2)),fw(2*(nw1+k2)+1),kind=8)
             fk(k1,k2) = (cross*fw(iw11+k2))*zz
-	    zz = cmplx(fw(2*(nw1+nf2-k2)),fw(2*(nw1+nf2-k2)+1),kind=16)
+	    zz = cmplx(fw(2*(nw1+nf2-k2)),fw(2*(nw1+nf2-k2)+1),kind=8)
             fk(k1,-k2) = (cross*fw(iw11+k2))*zz
          enddo
          if (mt/2*2.eq.mt) then 
-            zz = cmplx(fw(2*nw1+2*nf2-mt),fw(2*nw1+2*nf2-mt+1),kind=16)
+            zz = cmplx(fw(2*nw1+2*nf2-mt),fw(2*nw1+2*nf2-mt+1),kind=8)
             fk(k1,-mt/2) = (cross*fw(iw11+mt/2))*zz
          endif
       enddo
@@ -380,7 +380,7 @@ c
       real(8) cross,cross1,diff1,diff2,eps,hx,hy,pi,rat,r2lamb,t1,t2
       real(8) xj(nj),yj(nj),xc(-47:47),yc(-47:47)
       parameter (pi=3.141592653589793d0)
-      complex(16) cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2),zz,cz
+      complex(8) cj(nj),fk(-ms/2:(ms-1)/2,-mt/2:(mt-1)/2),zz,cz
 c ----------------------------------------------------------------------
       real(8), allocatable, save :: fw(:)
 c ----------------------------------------------------------------------
@@ -577,7 +577,7 @@ c     ---------------------------------------------------------------
       t1 = pi/r2lamb
       t2 = pi/r2lamb
       do j = 1, nj
-         cj(j) = cmplx(0d0,0d0,kind=16)
+         cj(j) = cmplx(0d0,0d0,kind=8)
          jb1 = int((xj(j)+pi)/hx)
          diff1 = (xj(j)+pi)/hx - jb1
          jb1 = mod(jb1, nf1)
@@ -618,17 +618,17 @@ c     ---------------------------------------------------------------
                ii = ii - nf2
             endif
             ii = jb1 + ii*nf1
-            cz = cmplx(0d0, 0d0,kind=16)
+            cz = cmplx(0d0, 0d0,kind=8)
             do k1 = -nspread+1, -jb1d-1
-               zz = cmplx(fw(2*(k1+nf1+ii)),fw(2*(k1+nf1+ii)+1),kind=16)
+               zz = cmplx(fw(2*(k1+nf1+ii)),fw(2*(k1+nf1+ii)+1),kind=8)
                cz = cz + xc(k1)*zz
             enddo
             do k1 = -jb1d, jb1u
-               zz = cmplx(fw(2*(k1+ii)),fw(2*(k1+ii)+1),kind=16)
+               zz = cmplx(fw(2*(k1+ii)),fw(2*(k1+ii)+1),kind=8)
                cz = cz + xc(k1)*zz
             enddo
             do k1 = jb1u+1, nspread
-               zz = cmplx(fw(2*(k1-nf1+ii)),fw(2*(k1-nf1+ii)+1),kind=16)
+               zz = cmplx(fw(2*(k1-nf1+ii)),fw(2*(k1-nf1+ii)+1),kind=8)
                cz = cz + xc(k1)*zz
             enddo
             cj(j) = cj(j) + yc(k2)*cz
@@ -655,7 +655,7 @@ c***********************************************************************
       real(8) ang,xb,yb,sb,tb
       real(8) cross,cross1,xc(-47:47),yc(-47:47)
       parameter (pi=3.141592653589793d0)
-      complex(16) cj(nj),fk(nk),zz,zz2,zc,zcs
+      complex(8) cj(nj),fk(nk),zz,zz2,zc,zcs
 c ----------------------------------------------------------------------
       real(8), allocatable, save :: fw(:)
 c ----------------------------------------------------------------------
@@ -881,7 +881,7 @@ c
          jb2 = int(dble(nf2/2) + (yj(j)-yb)/hy)
          diff2 = dble(nf2/2) + (yj(j)-yb)/hy - jb2
          ang = sb*xj(j) + tb*yj(j)
-         zcs = cmplx(cos(ang),sin(ang),kind=16) * cj(j)
+         zcs = cmplx(cos(ang),sin(ang),kind=8) * cj(j)
          xc(0) = exp(-t1*diff1**2-t2*diff2**2)
          cross = xc(0)
          cross1 = exp(2d0*t1 * diff1)
@@ -927,23 +927,23 @@ c     ---------------------------------------------------------------
       do k1 = -jb1, jb1
          ii = (nf1/2+k1) + (nf2/2)*nf1
          cross = fw(iw10+abs(k1))
-	 zz = cmplx(fw(2*ii),fw(2*ii+1),kind=16)
+	 zz = cmplx(fw(2*ii),fw(2*ii+1),kind=8)
          zz = (cross*fw(iw11))*zz
          fw(2*nw1) = real(zz)
          fw(2*nw1+1) = imag(zz)
          do k2 = 1, jb2
-	    zz = cmplx(fw(2*(ii+k2*nf1)),fw(2*(ii+k2*nf1)+1),kind=16)
+	    zz = cmplx(fw(2*(ii+k2*nf1)),fw(2*(ii+k2*nf1)+1),kind=8)
             zz = (cross*fw(iw11+k2))*zz
             fw(2*(nw1+k2)) = real(zz)
             fw(2*(nw1+k2)+1) = imag(zz)
-	    zz = cmplx(fw(2*(ii-k2*nf1)),fw(2*(ii-k2*nf1)+1),kind=16)
+	    zz = cmplx(fw(2*(ii-k2*nf1)),fw(2*(ii-k2*nf1)+1),kind=8)
             zz = (cross*fw(iw11+k2))*zz
             fw(2*(nw1+nf2-k2)) = real(zz)
             fw(2*(nw1+nf2-k2)+1) = imag(zz)
          enddo
          do k2 = jb2+1, nf2-jb2-1
-            fw(2*(nw1+k2)) = cmplx(0d0, 0d0,kind=16)
-            fw(2*(nw1+k2)+1) = cmplx(0d0, 0d0,kind=16)
+            fw(2*(nw1+k2)) = cmplx(0d0, 0d0,kind=8)
+            fw(2*(nw1+k2)+1) = cmplx(0d0, 0d0,kind=8)
          enddo
          if (iflag .ge. 0) then
             call dcfftb(nf2,fw(2*nw1),fw(iw16))
@@ -1006,11 +1006,11 @@ c
          enddo
          yc(nspread) = fw(iw14+nspread)*cross
 c
-         fk(j) = cmplx(0d0,0d0,kind=16)
+         fk(j) = cmplx(0d0,0d0,kind=8)
          do k2 = -nspread+1, nspread
             ii = kb1 + (kb2+k2)*nf1
             do k1 = -nspread+1, nspread
-	       zz = cmplx(fw(2*(ii+k1)),fw(2*(ii+k1)+1),kind=16)
+	       zz = cmplx(fw(2*(ii+k1)),fw(2*(ii+k1)+1),kind=8)
                fk(j) = fk(j) + (xc(k1)*yc(k2))*zz
             enddo
          enddo
@@ -1022,7 +1022,7 @@ c
       do j = 1, nk
          fk(j) = (exp(t1*(sk(j)-sb)**2+t2*(tk(j)-tb)**2))*fk(j)
          ang = (sk(j)-sb)*xb + (tk(j)-tb)*yb
-         fk(j) = cmplx(cos(ang),sin(ang),kind=16) * fk(j)
+         fk(j) = cmplx(cos(ang),sin(ang),kind=8) * fk(j)
       enddo
       deallocate(fw)
       return

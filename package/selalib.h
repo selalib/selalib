@@ -24,7 +24,6 @@
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_fft.h"
-#include "sll_interpolators.h"
 #include "sll_splines.h"
 #include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
