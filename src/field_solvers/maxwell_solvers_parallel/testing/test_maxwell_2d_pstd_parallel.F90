@@ -17,6 +17,8 @@ program test_maxwell_2d_periodic_cart_par
   use sll_m_hdf5_io_parallel, only: sll_hdf5_file_create, &
                                   sll_hdf5_write_array, &
                                   sll_hdf5_file_close
+  use sll_m_utilities, only : &
+       int2string
   implicit none
 
   sll_int32   :: ncx

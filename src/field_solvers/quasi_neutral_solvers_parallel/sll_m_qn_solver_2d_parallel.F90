@@ -2,7 +2,6 @@ module sll_m_qn_solver_2d_parallel
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
 
   use sll_m_constants
@@ -12,6 +11,8 @@ module sll_m_qn_solver_2d_parallel
   use sll_m_boundary_condition_descriptors
   use sll_m_qn_solver_2d, only: dirichlet_matrix, neumann_matrix
   use sll_m_tridiagonal
+  use sll_m_utilities, only : &
+       is_power_of_two
 
   implicit none
 

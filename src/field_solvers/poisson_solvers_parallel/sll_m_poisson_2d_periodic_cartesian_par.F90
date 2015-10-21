@@ -18,9 +18,9 @@ module sll_m_poisson_2d_periodic_cartesian_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
 
+  use sll_m_utilities,  only : is_power_of_two
   use sll_m_remapper
   use sll_m_fft
   use sll_m_constants
