@@ -2,6 +2,8 @@ module sll_m_parallel_array_initializer
   use sll_m_remapper
   use sll_m_cartesian_meshes
   use sll_m_coordinate_transformation_2d_base
+  use sll_m_common_array_initializers, only : &
+       sll_scalar_initializer_2d, sll_scalar_initializer_4d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   implicit none
@@ -17,36 +19,7 @@ module sll_m_parallel_array_initializer
   ! parameter is a user-provided function with the signature described in
   ! the following abstract type.
 
-  abstract interface
-    function sll_scalar_initializer_1d( x1,  params )
-      use sll_m_working_precision
-      sll_real64                                     :: sll_scalar_initializer_1d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_1d
-  end interface
 
-  abstract interface
-     function sll_scalar_initializer_2d( x1, x2, params )
-       use sll_m_working_precision
-       sll_real64               :: sll_scalar_initializer_2d
-       sll_real64, intent(in)                         :: x1
-       sll_real64, intent(in)                         :: x2
-       sll_real64, dimension(:), intent(in), optional :: params
-     end function sll_scalar_initializer_2d
-  end interface
-
-  abstract interface
-     function sll_scalar_initializer_4d( x1, x2, x3, x4, params )
-       use sll_m_working_precision
-       sll_real64                                  :: sll_scalar_initializer_4d
-       sll_real64, intent(in)                         :: x1
-       sll_real64, intent(in)                         :: x2
-       sll_real64, intent(in)                         :: x3
-       sll_real64, intent(in)                         :: x4
-       sll_real64, dimension(:), intent(in), optional :: params
-     end function sll_scalar_initializer_4d
-  end interface
 
   interface sll_4d_parallel_array_initializer_cartesian
     module procedure sll_4d_parallel_array_initializer_cartesian_aux    

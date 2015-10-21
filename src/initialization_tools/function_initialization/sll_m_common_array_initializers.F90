@@ -12,6 +12,37 @@ module sll_m_common_array_initializers
   ! described in the sll_m_parallel_array_initializer. Else, they could
   ! not be used with this module.
 
+  abstract interface
+    function sll_scalar_initializer_1d( x1,  params )
+      use sll_m_working_precision
+      sll_real64                                     :: sll_scalar_initializer_1d
+      sll_real64, intent(in)                         :: x1
+      sll_real64, dimension(:), intent(in), optional :: params
+    end function sll_scalar_initializer_1d
+  end interface
+
+  abstract interface
+     function sll_scalar_initializer_2d( x1, x2, params )
+       use sll_m_working_precision
+       sll_real64               :: sll_scalar_initializer_2d
+       sll_real64, intent(in)                         :: x1
+       sll_real64, intent(in)                         :: x2
+       sll_real64, dimension(:), intent(in), optional :: params
+     end function sll_scalar_initializer_2d
+  end interface
+
+  abstract interface
+     function sll_scalar_initializer_4d( x1, x2, x3, x4, params )
+       use sll_m_working_precision
+       sll_real64                                  :: sll_scalar_initializer_4d
+       sll_real64, intent(in)                         :: x1
+       sll_real64, intent(in)                         :: x2
+       sll_real64, intent(in)                         :: x3
+       sll_real64, intent(in)                         :: x4
+       sll_real64, dimension(:), intent(in), optional :: params
+     end function sll_scalar_initializer_4d
+  end interface
+
 contains
 
 
