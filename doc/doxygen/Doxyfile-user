@@ -837,8 +837,8 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/src/interfaces \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/package \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/parallel_utilities \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods/pic_1d_sheath \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods/pic_1d \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/periodic_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pic_1d \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/pic_accumulators \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/pic_methods \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/pic_particle_initializers \
