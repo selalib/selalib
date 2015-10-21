@@ -13,7 +13,6 @@ module sll_m_sim_2d_guiding_center_polar
 #include "sll_assert.h"
 #include "sll_memory.h"
 !#include "sll_field_2d.h"
-#include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic

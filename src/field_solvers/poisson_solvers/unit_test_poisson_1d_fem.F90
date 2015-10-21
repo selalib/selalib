@@ -22,7 +22,6 @@ program unit_test_poisson_1d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
     use unit_test_poisson_1d_fem_module
     use sll_m_poisson_1d_fem
     use sll_logical_meshes

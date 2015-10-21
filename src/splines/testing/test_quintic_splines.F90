@@ -1,7 +1,6 @@
 program test_quintic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 
   use sll_m_quintic_splines
 

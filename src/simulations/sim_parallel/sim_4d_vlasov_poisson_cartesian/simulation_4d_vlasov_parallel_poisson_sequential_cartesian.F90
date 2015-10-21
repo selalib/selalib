@@ -29,7 +29,6 @@ module sll_m_sim_4d_vlasov_parallel_poisson_sequential_cartesian
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
   use sll_m_collective
   use sll_m_remapper

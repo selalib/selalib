@@ -6,7 +6,6 @@ program test_bsplines_2d
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 use sll_m_bsplines
 use sll_m_boundary_condition_descriptors
 

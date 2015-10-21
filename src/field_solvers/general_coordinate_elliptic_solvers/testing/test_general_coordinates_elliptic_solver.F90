@@ -1,7 +1,6 @@
 program test_general_elliptic_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 
 use sll_m_cartesian_meshes
 use sll_m_coordinate_transformations_2d

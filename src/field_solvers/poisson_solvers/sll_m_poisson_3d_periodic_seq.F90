@@ -7,7 +7,6 @@ module sll_m_poisson_3d_periodic_seq
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
 
   use sll_m_fft

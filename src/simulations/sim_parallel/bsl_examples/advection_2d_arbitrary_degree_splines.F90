@@ -2,7 +2,6 @@ program sequential_advection
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 use sll_m_gnuplot
 
 use sll_m_interpolators_2d_base

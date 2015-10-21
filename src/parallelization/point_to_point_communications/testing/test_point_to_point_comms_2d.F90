@@ -3,7 +3,6 @@ program comm_unit_test_2d
   use sll_m_point_to_point_comms
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
   implicit none
 
   ! This test takes a 2D array and sends the nodes at the borders to the
