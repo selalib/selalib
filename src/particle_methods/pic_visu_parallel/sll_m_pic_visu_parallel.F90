@@ -23,7 +23,7 @@ module sll_m_pic_visu_parallel
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-#include "sll_file_io.h"
+
 use sll_m_pic_visu
 use sll_m_collective
 

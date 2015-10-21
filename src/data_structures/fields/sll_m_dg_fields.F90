@@ -7,10 +7,10 @@ module sll_m_dg_fields
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_file_io.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
+  use sll_m_ascii_io
   use sll_m_cartesian_meshes
   use sll_m_coordinate_transformation_2d_base
   use sll_m_gauss_lobatto_integration, only : &

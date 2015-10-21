@@ -6,7 +6,6 @@ module sll_m_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_file_io.h"
 #include "sll_errors.h"
 
 use sll_m_scalar_field_2d_base
@@ -15,6 +14,8 @@ use sll_m_interpolators_2d_base
 use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_boundary_condition_descriptors
 use sll_m_gnuplot
+use sll_m_utilities, only: sll_new_file_id, int2string
+use sll_m_xdmf
 
 implicit none
 

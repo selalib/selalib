@@ -21,10 +21,15 @@
 module sll_m_coordinate_transformation_2d_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_file_io.h"
+
   use sll_m_cartesian_meshes
   implicit none
   
+  sll_int32, parameter ::  SLL_IO_XDMF    = 0 
+  sll_int32, parameter ::  SLL_IO_VTK     = 1
+  sll_int32, parameter ::  SLL_IO_GNUPLOT = 2 
+  sll_int32, parameter ::  SLL_IO_MTV     = 3 
+  sll_int32, parameter ::  SLL_IO_GMSH    = 4 
 
   !> @brief
   !> Abstract class for coordinate transformation

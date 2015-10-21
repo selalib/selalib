@@ -32,7 +32,6 @@ module sll_m_scalar_field_1d_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_file_io.h"
 #include "sll_errors.h"
   use sll_m_constants
   use sll_m_scalar_field_initializers_base

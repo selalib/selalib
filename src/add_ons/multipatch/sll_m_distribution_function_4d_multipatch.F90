@@ -24,7 +24,7 @@ module sll_m_distribution_function_4d_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_file_io.h"
+
   use sll_m_coordinate_transformation_multipatch
   use sll_m_constants
   use sll_m_remapper

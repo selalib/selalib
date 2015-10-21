@@ -2,7 +2,6 @@ program test_gces_dirichlet_homogeneous
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
-#include "sll_file_io.h"
 
 use sll_m_cartesian_meshes
 use sll_m_coordinate_transformations_2d

@@ -1,7 +1,6 @@
 program unit_test
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_file_io.h"
 
 use sll_m_boundary_condition_descriptors
 use sll_m_arbitrary_degree_spline_interpolator_2d
