@@ -10,7 +10,7 @@ program test_maxwell_2d_discrete
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
-#include "sll_file_io.h"
+
 
 use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformation_2d_base

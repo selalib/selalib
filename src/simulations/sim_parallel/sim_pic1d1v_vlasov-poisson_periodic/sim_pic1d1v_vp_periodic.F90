@@ -7,11 +7,11 @@ module sll_m_sim_pic1d1v_vp_periodic
 
   use sll_m_boundary_condition_descriptors
 
-  use sll_m_sim_base, only: sll_simulation_base_class
+  use sll_m_sim_base , only: sll_simulation_base_class
     
   use sll_m_constants , only : sll_pi
   
-  use sll_m_utilities , only : sll_new_file_id
+  use sll_m_utilities , only : sll_new_file_id, int2string
   
   use sll_m_pic_visu  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
     
@@ -41,6 +41,8 @@ module sll_m_sim_pic1d1v_vp_periodic
          SLL_PIC1D_TESTCASE_BUMPONTAIL
   use sll_m_pic_1d_distribution 
   
+  use sll_m_xdmf
+
   implicit none
    
 !==============================================================================

@@ -22,7 +22,9 @@ module sll_m_pic_visu
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-#include "sll_file_io.h"
+use sll_m_gnuplot
+use sll_m_utilities, only: sll_new_file_id, int2string
+use sll_m_xdmf
 
 implicit none
 

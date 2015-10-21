@@ -2,11 +2,12 @@ program test_fcisl_toroidal
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_file_io.h"
+
   use sll_m_fcisl_toroidal
   use sll_m_constants
   use sll_m_interpolators_2d_base
   use sll_m_cubic_spline_interpolator_2d
+  use sll_m_ascii_io
 
 implicit none
 

@@ -1,6 +1,12 @@
 !> @ingroup simulations
 !> Parent class module for simulation
 module sll_m_sim_base
+  use sll_m_ascii_io
+  use sll_m_gnuplot
+  use sll_m_xdmf
+  use sll_m_binary_io
+  use sll_m_utilities, only: int2string
+
   implicit none
 
   ! Basic signature for all simulations. These can be declared, initialized,

@@ -1,6 +1,7 @@
 program unit_test_2d
 #include "sll_working_precision.h"
-#include "sll_file_io.h"
+
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
   use sll_m_coordinate_transformations_2d_nurbs
   use sll_m_common_coordinate_transformations
