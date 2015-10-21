@@ -760,7 +760,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/src
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -798,65 +798,22 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/src/interfaces \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/CAID_coordinate_transformations \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/Makefile \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/advection \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/advection_field \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/assert \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/boundary_condition_descriptors \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/characteristics \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/collective \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/coordinate_transformations \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/coordinate_transformations_multipatch \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/data_structures \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/io \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/mesh \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/descriptors \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/distribution_function \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/distribution_function_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/errors \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/eulerian-finite-volume \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/external \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/fcisl \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/fftpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/field_accumulators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/fields \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/fields_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/general_coordinate_elliptic_solvers_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/gyroaverage \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/hermite_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/jorek \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/jorek_poisson_2d \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/lagrange_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/linearly_transformed_pic \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/maxwell_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/maxwell_solvers_parallel \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/mesh_calculus \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/meshes \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/meshes_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/mudpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/multigrid \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/ode_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/package \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/parallel_utilities \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods/pic_1d_sheath \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods/pic_1d \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/periodic_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pic_accumulators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pic_methods \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pic_particle_initializers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pic_particle_types \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pic_utilities \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/pif \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/point_to_point_communications \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/poisson_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/poisson_solvers_parallel \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/python_scripts \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/quasi_neutral_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/random_deviate_generators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/reduction \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/semi_lagrangian \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/add_ons \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/low_level_utilities \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/parallelization \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/interpolation \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/field_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/quadrature \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/splines \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/simulations \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/sparse_matrix_manager \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/time_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/timer \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/visu_pic
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/time_integration
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
