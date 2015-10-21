@@ -361,6 +361,7 @@ real(8)    :: x,y,x_array(Nn),y_array(Nn),L,epsnufft
 integer(4) :: n,m,p,ier,ntrace(Nn),mtrace(Nn)
 epsnufft=1.0d-9
 L=4.0d0
+allocate(ftemp(1:Nn,1:Nn))
 PlnF2= fftw_plan_dft_2d(Nn,Nn,ftemp,ftilde,FFTW_FORWARD,FFTW_ESTIMATE+FFTW_UNALIGNED)
 ftemp=fh_fsl
 call  fftw_execute_dft(PlnF2, ftemp, ftilde)
