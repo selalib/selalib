@@ -15,14 +15,16 @@ cc
       program testfft
       implicit none
 c
-      integer i,ier,iflag,j,k1,k2,mx,ms,mt,n1,n2,nj,nk
+      integer i,ier,iflag,j,k1,k2,lused,lw,mx,ms,mt,n1,n2,nj,nk
       parameter (mx=256*256)
-      real(8) xj(mx),yj(mx)
-      real(8) sk(mx),tk(mx)
-      real(8) err,pi,eps,salg,ealg
+      parameter (lw=1000 000)
+      real*8 xj(mx),yj(mx)
+      real *8 sk(mx),tk(mx)
+      real*8 err,pi,eps,salg,ealg
+      real*8 fw(0:lw-1)
       parameter (pi=3.141592653589793d0)
-      complex(16) cj(mx),cj0(mx),cj1(mx)
-      complex(16) fk0(mx),fk1(mx)
+      complex*16 cj(mx),cj0(mx),cj1(mx)
+      complex*16 fk0(mx),fk1(mx)
 c
 c     --------------------------------------------------
 c     create some test data
@@ -38,7 +40,7 @@ c
             j = (k2+n2/2+1) + (k1+n1/2)*n2
             xj(j) = pi*dcos(-pi*k1/n1)
             yj(j) = pi*dcos(-pi*k2/n2)
-            cj(j) = cmplx(dsin(pi*j/n1),dcos(pi*j/n2))
+            cj(j) = dcmplx(dsin(pi*j/n1),dcos(pi*j/n2))
          enddo
       enddo
 c
@@ -61,9 +63,11 @@ c     call 2D Type 1 method
 c     -----------------------
 c
          call dirft2d1(nj,xj,yj,cj,iflag,ms,mt,fk0)
-         call nufft2d1f90(nj,xj,yj,cj,iflag,eps,ms,mt,fk1,ier)
+         call nufft2d1(nj,xj,yj,cj,iflag,eps,ms,mt,fk1,fw,lw,lused,ier)
          call errcomp(fk0,fk1,ms*mt,err)
+         print *, ' iflag = ',iflag
          print *, ' ier = ',ier
+         print *, ' meomory used = ',lused
          call errcomp(fk0,fk1,ms*mt,err)
          print *, ' type 1 err = ',err
 c
@@ -71,8 +75,10 @@ c     -----------------------
 c      call 2D Type 2 method
 c     -----------------------
          call dirft2d2(nj,xj,yj,cj0,iflag,ms,mt,fk0)
-         call nufft2d2f90(nj,xj,yj,cj1,iflag,eps,ms,mt,fk1,ier)
+         call nufft2d2(nj,xj,yj,cj1,iflag,eps,ms,mt,fk1,
+     1                 fw,lw,lused,ier)
          print *, ' ier = ',ier
+         print *, ' meomory used = ',lused
          call errcomp(cj0,cj1,nj,err)
          print *, ' type 1 err = ',err
 c
@@ -81,14 +87,16 @@ c      call 2D Type3 method
 c     -----------------------
          nk = ms*mt
          do k1 = 1, nk
-            sk(k1) = 48*(dcos(k1*pi/nk))
-            tk(k1) = 32*(dsin(-pi/2+k1*pi/nk))
+            sk(k1) = 64*(dcos(k1*pi/nk))
+            tk(k1) = 48*(dsin(-pi/2+k1*pi/nk))
          enddo
 
-         call dirft2d3(nj,xj,yj,cj,iflag,nk,sk,tk,fk0)
-         call nufft2d3f90(nj,xj,yj,cj,iflag,eps,nk,sk,tk,fk1,ier)
+         call dirft2d3(nj,xj,yj,cj,iflag, nk,sk,tk,fk0)
+         call nufft2d3(nj,xj,yj,cj,iflag,eps,nk,sk,tk,fk1,
+     1                 fw,lw,lused,ier)
 c
          print *, ' ier = ',ier
+         print *, ' meomory used = ',lused
          call errcomp(fk0,fk1,nk,err)
          print *, ' type 1 err = ',err
       enddo 
@@ -102,14 +110,14 @@ c
       subroutine errcomp(fk0,fk1,n,err)
       implicit none
       integer k,n
-      complex(16) fk0(n), fk1(n)
-      real(8) salg,ealg,err
+      complex*16 fk0(n), fk1(n)
+      real *8 salg,ealg,err
 c
       ealg = 0d0
       salg = 0d0
       do k = 1, n
-         ealg = ealg + abs(fk1(k)-fk0(k))**2
-         salg = salg + abs(fk0(k))**2
+         ealg = ealg + cdabs(fk1(k)-fk0(k))**2
+         salg = salg + cdabs(fk0(k))**2
       enddo
       err =sqrt(ealg/salg)
       return
