@@ -50,6 +50,4 @@
 
 #define SWAP(A,B) A = A + B; B = A - B; A = A - B
 
-use sll_m_utilities
-
 #endif

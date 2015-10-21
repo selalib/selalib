@@ -6,11 +6,12 @@ program pif_fieldsolver_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
 
 
 use sll_m_pif_fieldsolver
 use sll_m_timer
+use sll_m_utilities, only : &
+     display_matrix_2d_integer
 implicit none
 
 

@@ -41,10 +41,10 @@ plan%d_dy = plan%d_dy / plan%ncy
 module sll_m_maxwell_2d_periodic_cartesian_par
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
 
+use sll_m_utilities,  only : is_power_of_two
 use sll_m_remapper
 use sll_m_collective
 use sll_m_constants, only : &

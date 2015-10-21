@@ -7,9 +7,11 @@ module sll_m_poisson_3d_periodic_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
 
+  
+  use sll_m_utilities, only : &
+       is_power_of_two, is_even
   use sll_m_fft
   use sll_m_collective
   use sll_m_constants, only : &
