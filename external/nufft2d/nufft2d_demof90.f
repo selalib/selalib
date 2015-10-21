@@ -38,7 +38,7 @@ c
             j = (k2+n2/2+1) + (k1+n1/2)*n2
             xj(j) = pi*dcos(-pi*k1/n1)
             yj(j) = pi*dcos(-pi*k2/n2)
-            cj(j) = cmplx(dsin(pi*j/n1),dcos(pi*j/n2))
+            cj(j) = cmplx(dsin(pi*j/n1),dcos(pi*j/n2),kind=16)
          enddo
       enddo
 c

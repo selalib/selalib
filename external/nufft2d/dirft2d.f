@@ -35,7 +35,7 @@ c***********************************************************************
 c
       do k2 = -mt/2, (mt-1)/2
          do k1 = -ms/2, (ms-1)/2
-            fk(k1,k2) = dcmplx(0d0,0d0)
+            fk(k1,k2) = cmplx(0d0,0d0, kind=16)
          enddo
       enddo
 c
@@ -46,11 +46,11 @@ c     Precompute exponential for exp(+/-i k1 xj)
 c     ----------------------------------------------------------
 c
          if (iflag .ge. 0) then
-            zf = dcmplx(dcos(xj(j)),+dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),+dsin(xj(j)),kind=16)
          else
-            zf = dcmplx(dcos(xj(j)),-dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),-dsin(xj(j)),kind=16)
          endif
-         z1n(0) = (1d0,0d0)
+         z1n(0) = cmplx(1d0,0d0, kind=16)
          do k1 = 1, (ms-1)/2
             z1n(k1) = zf*z1n(k1-1)
             z1n(-k1)= conjg(z1n(k1))
@@ -61,12 +61,12 @@ c     ----------------------------------------------------------
 c     Loop over k2 for yj
 c     ----------------------------------------------------------
          if (iflag .ge. 0) then
-            zf = dcmplx(dcos(yj(j)),+dsin(yj(j)))
+            zf = cmplx(dcos(yj(j)),+dsin(yj(j)),kind=16)
          else
-            zf = dcmplx(dcos(yj(j)),-dsin(yj(j)))
+            zf = cmplx(dcos(yj(j)),-dsin(yj(j)),kind=16)
          endif
 c
-         cm1 = cj(j) / dble(nj)
+         cm1 = cj(j) / cmplx(nj,0.0d0,kind=16)
          do k2 = 0, (mt-1)/2
             do k1 = -ms/2, (ms-1)/2
               fk(k1,k2) = fk(k1,k2) + cm1*z1n(k1)
@@ -75,7 +75,7 @@ c
          enddo
 c
          zf = conjg(zf)
-         cm1 = cj(j) / dble(nj)
+         cm1 = cj(j) / cmplx(nj,0.,kind=16)
          do k2 = -1, -mt/2, -1
             cm1 = cm1*zf
             do k1 = -ms/2, (ms-1)/2
@@ -119,23 +119,23 @@ c     ----------------------------------------------------------
 c     Precompute exponential for exp(+/-i k1 xj)
 c     ----------------------------------------------------------
          if (iflag .ge. 0) then
-            zf = dcmplx(dcos(xj(j)),+dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),+dsin(xj(j)),kind=16)
          else
-            zf = dcmplx(dcos(xj(j)),-dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),-dsin(xj(j)),kind=16)
          endif
-         z1n(0) = (1d0,0d0)
+         z1n(0) = cmplx(1d0,0d0,kind=16)
          do k1 = 1, (ms-1)/2
             z1n(k1) = zf*z1n(k1-1)
             z1n(-k1)= conjg(z1n(k1))
          enddo
          if (ms/2*2.eq.ms) z1n(-ms/2) = conjg(zf*z1n(ms/2-1))
          if (iflag .ge. 0) then
-            zf = dcmplx(dcos(yj(j)),+dsin(yj(j)))
+            zf = cmplx(dcos(yj(j)),+dsin(yj(j)),kind=16)
          else
-            zf = dcmplx(dcos(yj(j)),-dsin(yj(j)))
+            zf = cmplx(dcos(yj(j)),-dsin(yj(j)),kind=16)
          endif
 c
-         cm1 = (0d0, 0d0)
+         cm1 = cmplx(0d0, 0d0,kind=16)
          do k1 = -ms/2, (ms-1)/2
            cm1 = cm1 + z1n(k1) * fk(k1,0)
          enddo
@@ -147,13 +147,13 @@ c     ----------------------------------------------------------
 c
          cm2 = zf
          do k2 = 1, (mt-1)/2
-            cm1 = (0d0, 0d0)
+            cm1 = cmplx(0d0, 0d0,kind=16)
             do k1 = -ms/2, (ms-1)/2
               cm1 = cm1 + z1n(k1) * fk(k1,k2)
             enddo
             cj(j) = cj(j) + cm2 * cm1
 
-            cm1 = (0d0, 0d0)
+            cm1 = cmplx(0d0, 0d0,kind=16)
             do k1 = -ms/2, (ms-1)/2
               cm1 = cm1 + z1n(k1) * fk(k1,-k2)
             enddo
@@ -162,7 +162,7 @@ c
          enddo
 c
          if (mt/2*2.eq.mt) then
-            cm1 = (0d0, 0d0)
+            cm1 = cmplx(0d0, 0d0,kind=16)
             do k1 = -ms/2, (ms-1)/2
               cm1 = cm1 + z1n(k1) * fk(k1,-mt/2)
             enddo
@@ -203,10 +203,11 @@ c
             stk =  -tk(k)
          endif
 c
-         fk(k) = dcmplx(0d0,0d0)
+         fk(k) = cmplx(0d0,0d0,kind=16)
          do j = 1, nj
-            fk(k) = fk(k) + cj(j) * dcmplx
-     &        ( dcos(ssk*xj(j)+stk*yj(j)), dsin(ssk*xj(j)+stk*yj(j)) )
+            fk(k) = fk(k) + cj(j) * cmplx( dcos(ssk*xj(j)+stk*yj(j)), 
+     &                                     dsin(ssk*xj(j)+stk*yj(j)), 
+     &                                     kind=16 )
          enddo
       enddo
       end
