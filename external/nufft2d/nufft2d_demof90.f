@@ -21,8 +21,8 @@ c
       real(8) sk(mx),tk(mx)
       real(8) err,pi,eps,salg,ealg
       parameter (pi=3.141592653589793d0)
-      complex(16) cj(mx),cj0(mx),cj1(mx)
-      complex(16) fk0(mx),fk1(mx)
+      complex(8) cj(mx),cj0(mx),cj1(mx)
+      complex(8) fk0(mx),fk1(mx)
 c
 c     --------------------------------------------------
 c     create some test data
@@ -38,7 +38,7 @@ c
             j = (k2+n2/2+1) + (k1+n1/2)*n2
             xj(j) = pi*dcos(-pi*k1/n1)
             yj(j) = pi*dcos(-pi*k2/n2)
-            cj(j) = cmplx(dsin(pi*j/n1),dcos(pi*j/n2),kind=16)
+            cj(j) = cmplx(dsin(pi*j/n1),dcos(pi*j/n2),kind=8)
          enddo
       enddo
 c
@@ -102,7 +102,7 @@ c
       subroutine errcomp(fk0,fk1,n,err)
       implicit none
       integer k,n
-      complex(16) fk0(n), fk1(n)
+      complex(8) fk0(n), fk1(n)
       real(8) salg,ealg,err
 c
       ealg = 0d0
