@@ -10,7 +10,6 @@ program VP1d_deltaf
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_utilities.h"
 
   use sll_m_cubic_splines
   use sll_m_cubic_spline_interpolator_1d

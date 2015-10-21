@@ -4,7 +4,6 @@ module sll_m_sim_2d_guiding_center_generalized_coords
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_utilities.h"
 
   use sll_m_constants
   use sll_m_cubic_spline_interpolator_2d

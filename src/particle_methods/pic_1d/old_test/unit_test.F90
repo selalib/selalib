@@ -2,7 +2,6 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
 
      use sll_m_collective , only :       sll_world_collective , sll_collective_barrier ,&
      sll_boot_collective

@@ -9,7 +9,6 @@ module sll_m_pic_1d_field_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
 
 
 !    use sll_arbitrary_degree_spline_interpolator_1d_module

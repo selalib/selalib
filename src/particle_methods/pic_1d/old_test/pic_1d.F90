@@ -4,7 +4,6 @@ module sll_m_pic_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
 
   use sll_m_constants , only : sll_pi
 !   use sll_m_collective !Parallel operations

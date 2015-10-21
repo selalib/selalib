@@ -21,7 +21,6 @@ module sll_m_sim_4d_vp_generic_pic_cartesian
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 #include "sll_accumulators.h" 
 #include "particle_representation.h"
 

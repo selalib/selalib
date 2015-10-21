@@ -1,7 +1,6 @@
 program test_gces_full_periodic_prototype
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_errors.h"
 
 use sll_m_cartesian_meshes
