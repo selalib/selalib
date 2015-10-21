@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 module sll_m_pic_1d
 #include "sll_working_precision.h"
@@ -1860,3 +1861,4 @@ contains
 
 end module  sll_m_pic_1d
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
