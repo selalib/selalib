@@ -9,7 +9,6 @@ module sll_m_sim_4d_dk_hybrid
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_utilities.h"
 
   use sll_m_collective
   use sll_m_remapper

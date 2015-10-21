@@ -24,7 +24,6 @@ module sll_m_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
   use sll_m_constants
   use sll_m_fft_utils
   implicit none

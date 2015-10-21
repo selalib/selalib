@@ -4,7 +4,6 @@ module sll_m_sim_4d_qns_general_multipatch
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_utilities.h"
 
   use sll_m_cartesian_meshes
   use sll_m_scalar_field_2d_multipatch

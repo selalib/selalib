@@ -7,7 +7,6 @@ module sll_m_sim_pic_vp_2d2v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_utilities.h"
 
   use sll_m_constants
   use sll_m_collective

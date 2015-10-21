@@ -16,7 +16,6 @@ module sll_m_poisson_2d_dirichlet_cartesian
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 #include "sll_assert.h"
 !  use sll_m_fft
   use sll_m_constants

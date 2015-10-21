@@ -3,7 +3,6 @@ module sll_m_cg_curvi_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
 
 
    use sll_m_cg_curvi_structure

@@ -1,7 +1,6 @@
 program unit_test_initializers_4d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 
 use sll_m_collective
 use sll_m_parallel_array_initializer

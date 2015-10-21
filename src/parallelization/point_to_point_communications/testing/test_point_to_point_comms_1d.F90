@@ -3,7 +3,6 @@ program comm_unit_test
   use sll_m_point_to_point_comms
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
   implicit none
 #define PROBLEM_SIZE 4
 

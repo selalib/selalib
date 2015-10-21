@@ -22,7 +22,6 @@ program unit_test_poisson_1d_fd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
     use test_poisson_1d_fd_module
     use sll_m_poisson_1d_fd
     use sll_m_cartesian_meshes
