@@ -4,16 +4,17 @@ program test_operator_splitting_pic_vp_2d2v
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
-  use sll_m_pic_base
+  use sll_m_particle_group_base
   use sll_m_particle_initializer
   use sll_m_particle_group_2d2v
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d
   use sll_m_operator_splitting_pic_vp_2d2v
-  use sll_m_poisson_2d_fft 
+  use sll_m_poisson_2d_fft
   use sll_m_poisson_2d_base
+  use sll_m_constants, only : &
+       sll_pi
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group

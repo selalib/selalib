@@ -2,8 +2,18 @@
 program unit_test_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_meshes.h"
-#include "sll_fields.h"
+
+use sll_m_constants     , only: sll_pi
+use sll_m_array_plotting, only: &
+  write_projection_2d, &
+  SLL_X1X2, &
+  SLL_X1X3, &
+  SLL_X1X4, &
+  SLL_X2X3, &
+  SLL_X2X4, &
+  SLL_X3X4
+
+use sll_m_cartesian_meshes
 
 implicit none
 

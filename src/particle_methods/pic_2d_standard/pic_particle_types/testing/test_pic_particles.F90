@@ -3,8 +3,8 @@ program test_pic_particles
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_particle_group_4d_module
-  use sll_particle_group_2d_module
+  use sll_m_particle_group_4d
+  use sll_m_particle_group_2d
 
   implicit none
 

@@ -1,19 +1,19 @@
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED AND BUILD_TESTING)
 
-   ADD_EXECUTABLE(test_4d_vp_eulerian_cartesian_finite_volume 
+   ADD_EXECUTABLE(test_4d_vp_eulerian_cartesian_finite_volume
                   simulation_4d_vp_eulerian_cartesian_finite_volume.F90
                   unit_test_4d_vp_eulerian_cartesian_finite_volume.F90)
 
-   TARGET_LINK_LIBRARIES(test_4d_vp_eulerian_cartesian_finite_volume 
-                         sll_simulations_parallel
+   TARGET_LINK_LIBRARIES(test_4d_vp_eulerian_cartesian_finite_volume
+                         sll_sim_parallel
                          sll_parallel_array_utilities
                          sll_coordinate_transformations
                          sll_poisson_parallel
-                         sll_point_to_point_communications 
+                         sll_point_to_point_communications
                          sll_meshes
-                         sll_dg_fields
+                         sll_fields
                          sll_mesh_calculus
-                         sll_integration
+                         sll_quadrature
                          sll_file_io_parallel
                          sll_timer
                          sll_collective)

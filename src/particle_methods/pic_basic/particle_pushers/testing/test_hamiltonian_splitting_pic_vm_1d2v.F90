@@ -4,9 +4,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 
-  use sll_m_pic_base
+  use sll_m_particle_group_base
   use sll_m_particle_initializer
   use sll_m_particle_group_1d2v
   use sll_m_kernel_smoother_base
@@ -14,6 +13,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   use sll_m_hamiltonian_splitting_pic_vm_1d2v
   use sll_m_maxwell_1d_base
   use sll_m_maxwell_1d_fem
+  use sll_m_constants, only : &
+       sll_pi
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group

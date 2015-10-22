@@ -19,7 +19,7 @@
 !**************************************************************
 
   ! For the definition of the kinds, refer to the file 
-  ! sll_working_precision.F90
+  ! sll_m_working_precision.F90
   !
   ! We provide a few aliases for convenience. Whenever multiple precision
   ! representations or computations are needed, these aliases provide a
@@ -53,7 +53,7 @@
 
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
-use sll_working_precision
+use sll_m_working_precision
 
 #define SLL_NULL_INT32  (/0.0_i32/)
 #define SLL_NULL_REAL64 (/0.0_f64/)

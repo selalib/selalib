@@ -17,7 +17,7 @@ use sll_m_xdmf_light_serial, only: &
 
 #ifndef NOHDF5
 use sll_m_hdf5_serial, only: &
-    sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_hdf5_io_serial
+    sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_m_hdf5_io_serial
 #endif /* NOHDF5 */
 
 end module sll_xdmf_io

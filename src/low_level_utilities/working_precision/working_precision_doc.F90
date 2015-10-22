@@ -9,14 +9,14 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup working_precision sll_working_precision 
+!> @defgroup working_precision sll_m_working_precision 
 !> @brief 
 !> Define the kind type parameter for intern type data.
 !> @author Edwin Chacon-Golcher
 !> @details
 !>
 !> <b> Headers file available </b>
-!>  - sll_working_precision.h
+!>  - sll_m_working_precision.h
 !>
 !> <b> How to use this module: </b> \n
 !>
@@ -29,7 +29,7 @@
 !> You can also define the constant like this \a 23.455_n.
 !>
 !> First, call the module \a sll_woring_precision like that
-!> \code #include "sll_working_precision.h" \endcode
+!> \code #include "sll_m_working_precision.h" \endcode
 !> Now, you can use the types :
 !> \code
 !> _sll_int32  :: i        !integer simple precision

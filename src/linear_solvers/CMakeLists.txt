@@ -1,11 +1,9 @@
 ADD_LIBRARY( sll_linear_solvers STATIC 
-  tridiagonal.F90
-  sll_toeplitz_penta_diagonal.F90
-  choleski.F90
+  sll_m_tridiagonal.F90
+  sll_m_penta_diagonal.F90
+  sll_m_choleski.F90
   sol.f muls.f 
-  banfac.f90 
-  banslv.f90  
-  pivotbande.F90
+  sll_m_pivotbande.F90
 )
 
 IF(Fortran_COMPILER MATCHES IBM)

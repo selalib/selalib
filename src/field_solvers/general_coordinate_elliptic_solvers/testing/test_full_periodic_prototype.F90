@@ -1,19 +1,17 @@
 program test_gces_full_periodic_prototype
 #include "sll_memory.h"
-#include "sll_constants.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
-#include "sll_file_io.h"
 #include "sll_errors.h"
 
-use sll_cartesian_meshes
+use sll_m_cartesian_meshes
 use sll_m_coordinate_transformations_2d
-use sll_common_coordinate_transformations
+use sll_m_common_coordinate_transformations
 use sll_m_scalar_field_2d
-use sll_constants
+use sll_m_constants, only : &
+     sll_pi
 use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_deboor_splines_2d
-use sll_general_coordinate_elliptic_solver_module
+use sll_m_general_coordinate_elliptic_solver
 use sll_m_cubic_spline_interpolator_2d
 implicit none
 

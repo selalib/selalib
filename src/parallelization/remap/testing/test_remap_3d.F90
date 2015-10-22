@@ -13,12 +13,14 @@
 !****************************************************************************
 
 program remap_test
-  use sll_collective
-  use sll_remapper
-!#include "sll_remap.h"
+  use sll_m_collective
+  use sll_m_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
+
+    use sll_m_utilities, only : &
+         is_power_of_two
+
   implicit none
 
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
@@ -391,7 +393,7 @@ contains
            loadi = loadi + 2
         else
            ! call random_number(rand)
-           ! decided to use the gaussian because the uniform deviate can give
+           ! decided to use the sll_m_gaussian because the uniform deviate can give
            ! a number very close to the 0 or one and such a small interval is
            ! hard to subdivide. In such case one may end up with less intervals
            ! and this is a problem since the number of processors is fixed from

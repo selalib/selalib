@@ -19,12 +19,13 @@
 program test_layout_output
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
 
-  use sll_remapper
-  use sll_collective
+  use sll_m_remapper
+  use sll_m_collective
   use hdf5
-  use sll_hdf5_io_parallel
+  use sll_m_hdf5_io_parallel
+  use sll_m_utilities, only : &
+       is_power_of_two
 
   implicit none
 

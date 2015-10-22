@@ -19,10 +19,10 @@ program test_poisson_3d_periodic_par
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_poisson_solvers.h"
-  use sll_remapper
-  use sll_constants
-  use sll_poisson_3d_periodic_par
-  use sll_collective
+  use sll_m_remapper
+  use sll_m_constants
+  use sll_m_poisson_3d_periodic_par
+  use sll_m_collective
 
   implicit none
 
@@ -150,7 +150,7 @@ program test_poisson_3d_periodic_par
      call flush(6); print*, ' ------------------'
 
      if (average_err> dx*dy*dz ) then
-        print*, 'Test stopped by "sll_poisson_3d_periodic_par" failure'
+        print*, 'Test stopped by "sll_m_poisson_3d_periodic_par" failure'
         stop
      endif
 
@@ -166,7 +166,7 @@ program test_poisson_3d_periodic_par
            call flush(6)
            print*, ' '
            call flush(6)
-           print*, '"sll_poisson_3d_periodic_par" test: PASSED'
+           print*, '"sll_m_poisson_3d_periodic_par" test: PASSED'
            call flush(6)
            print*, ' '
         endif

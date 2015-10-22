@@ -1,9 +1,10 @@
 program remap_test_6d
-  use sll_collective
-  use sll_remapper
+  use sll_m_collective
+  use sll_m_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
+  use sll_m_utilities, only : &
+       is_power_of_two
   implicit none
 
 #define RANK_TO_PRINT 0

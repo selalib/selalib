@@ -1,8 +1,8 @@
 program unit_test_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_cartesian_meshes
-use sll_constants
+use sll_m_cartesian_meshes
+use sll_m_constants
 use sll_m_scalar_field_1d
 implicit none
   
@@ -270,7 +270,7 @@ end if
 end program unit_test_1d
 
 function test_function_per( eta1) result(res)
-   use sll_constants
+   use sll_m_constants
    real(8) :: res
    real(8), intent(in) :: eta1
   intrinsic :: cos
@@ -278,7 +278,7 @@ function test_function_per( eta1) result(res)
 end function test_function_per
 
 function test_function_per_der1( eta1) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -286,7 +286,7 @@ function test_function_per_der1( eta1) result(res)
 end function test_function_per_der1
 
 function test_function_dir( eta1) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos,sin
   real(8) :: res
   real(8), intent(in) :: eta1
@@ -294,7 +294,7 @@ function test_function_dir( eta1) result(res)
 end function test_function_dir
 
 function test_function_dir_der1( eta1) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos
   real(8) :: res
   real(8), intent(in) :: eta1

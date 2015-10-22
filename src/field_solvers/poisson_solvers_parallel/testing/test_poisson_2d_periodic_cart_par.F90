@@ -2,13 +2,13 @@ program test_poisson_2d_periodic_cart_par
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_remapper
-  use sll_constants
-  use sll_poisson_2d_periodic_cartesian_par
-  use sll_collective
+  use sll_m_remapper
+  use sll_m_constants
+  use sll_m_poisson_2d_periodic_cartesian_par
+  use sll_m_collective
   use hdf5
-  use sll_hdf5_io_parallel
-  use sll_gnuplot_parallel
+  use sll_m_hdf5_io_parallel
+  use sll_m_gnuplot_parallel
 
   implicit none
 

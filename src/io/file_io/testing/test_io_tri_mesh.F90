@@ -1,8 +1,9 @@
 program test_tri_mesh
 
-#include "sll_constants.h"
-use sll_tri_mesh_xmf
+use sll_m_tri_mesh_xmf
 use sll_generate_tri_mesh
+use sll_m_constants, only : &
+     sll_pi
 
 implicit none
 
