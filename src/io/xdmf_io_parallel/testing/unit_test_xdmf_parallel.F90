@@ -2,7 +2,7 @@ program test_xdmf_parallel
 
 #include "sll_working_precision.h"
 
-  use sll_collective, only:  &
+  use sll_m_collective, only:  &
     sll_world_collective,    &
     sll_boot_collective,     &
     sll_halt_collective,     &

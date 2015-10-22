@@ -3,10 +3,12 @@
 program test_bsplines_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 #include "sll_assert.h"
-#include "sll_boundary_condition_descriptors.h"
-use sll_bsplines
+
+use sll_m_boundary_condition_descriptors
+use sll_m_bsplines
+use sll_m_constants, only : &
+     sll_pi
 
 implicit none
 

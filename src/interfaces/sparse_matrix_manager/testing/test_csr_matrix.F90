@@ -1,7 +1,7 @@
 program test_csr_matrix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_sparse_matrix_module
+use sll_m_sparse_matrix
 !
 !  Solves the discrete Laplacian on the unit square by simple call to agmg.
 !  The right-hand-side is such that the exact solution is the vector of all 1.

@@ -1,6 +1,6 @@
 ! Solve Maxwell System without sources using discontinuous
 ! Galerkin numerical method on hexagonal mesh.
-! At t=0 we initialize Bz as a gaussian in the center of the domain
+! At t=0 we initialize Bz as a sll_m_gaussian in the center of the domain
 ! and see what happens.
 ! We still need to find an analytic solution to check precision order.
 !
@@ -10,8 +10,8 @@ program test_maxwell_dg_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
-use sll_maxwell_diga_hex_mesh
+use sll_m_constants
+use sll_m_maxwell_diga_hex_mesh
 
 implicit none
 

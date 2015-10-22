@@ -14,13 +14,13 @@
 !>
 !> <b> Modules available </b>
 !>
-!> - sll_xdmf
-!> - sll_ascii_io
-!> - sll_gnuplot
-!> - sll_binary_io
-!> - sll_xml_io
-!> - sll_hdf5_io_serial
-!> - sll_plotmtv
+!> - sll_m_xdmf
+!> - sll_m_ascii_io
+!> - sll_m_gnuplot
+!> - sll_m_binary_io
+!> - sll_m_xml_io
+!> - sll_m_hdf5_io_serial
+!> - sll_m_plotmtv
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include "sll_file_io.h" \endcode

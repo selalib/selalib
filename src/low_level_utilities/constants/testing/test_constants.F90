@@ -1,5 +1,5 @@
 program unit_test
-use sll_constants
+use sll_m_constants
 
 implicit none
 

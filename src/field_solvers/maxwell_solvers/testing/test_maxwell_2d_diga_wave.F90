@@ -8,15 +8,17 @@ program test_maxwell_2d_diga_wave
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
-#include "sll_file_io.h"
-#include "sll_cartesian_meshes.h"
-#include "sll_coordinate_transformations.h"
 
-    use sll_dg_fields
-    use sll_m_maxwell_2d_diga
-    use sll_maxwell_solvers_base
+  use sll_m_common_coordinate_transformations
+  use sll_m_constants, only : &
+       sll_pi
+  use sll_m_coordinate_transformation_2d_base
+  use sll_m_coordinate_transformations_2d
+  use sll_m_cartesian_meshes
+  use sll_m_dg_fields
+  use sll_m_maxwell_2d_diga
+  use sll_m_maxwell_solvers_base
 
     implicit none
 
@@ -49,7 +51,7 @@ program test_maxwell_2d_diga_wave
     sll_int32   :: itest
     !character(len=4) :: cstep
     !init functions
-    sll_real64, external :: gaussian
+    sll_real64, external :: sll_m_gaussian
 
     mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
@@ -182,7 +184,7 @@ program test_maxwell_2d_diga_wave
    
         ex  => sll_new(degree,tau)
         ey  => sll_new(degree,tau)
-        bz  => sll_new(degree,tau,gaussian)
+        bz  => sll_new(degree,tau,sll_m_gaussian)
    
         ex0 => sll_new(degree,tau)
         ey0 => sll_new(degree,tau)

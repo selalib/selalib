@@ -17,7 +17,7 @@
 !> Low level modules for sll_interpolators.
 !> Library to use splines, contains:
 !>    - cubic_splines            : B-splines of degree 3
-!>    - cubic_non_uniform_splines: non-uniform B-splines of degree 3
+!>    - sll_m_cubic_non_uniform_splines: non-uniform B-splines of degree 3
 !>    - quintic_splines          : B-splines of degree 5
 !>    - bsplines                 : B-splines 1D and 2D
 !>    - arbitrary_degree_splines : De Boor splines of arbitrary degree
@@ -30,3 +30,11 @@
 !>
 !> <b> Examples </b>
 !> @snippet see splines/testing directory
+!>
+!> Some fortran modules with deboor prefix are designed to
+!> compute Bsplines of arbitrary degree using deboor algorithm.
+!> @author Aurore Back, Pierre Navaro.
+!> @details
+!> This is a implementation in Fortran 90 of deboor splines. Original F77 files are available
+!> on Carl de Boor webpage http://pages.cs.wisc.edu/~deboor/
+!>

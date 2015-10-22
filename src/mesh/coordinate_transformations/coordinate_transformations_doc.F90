@@ -16,13 +16,8 @@
 !> @details
 !> If you want to add a analytical coordinate transformation, 
 !> implement it in
-!> module sll_common_coordinate_transformations
+!> module sll_m_common_coordinate_transformations
 !> 
-!> <b> Headers file available </b>
-!>  - sll_coordinate_transformations.h
-!>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_coordinate_transformations.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
 !> - Add <code> use sll_coordinate_transformations </code>
 !>

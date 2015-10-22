@@ -1,6 +1,6 @@
 program unit_test
 #include "sll_working_precision.h"
-  use sll_fft
+  use sll_m_fft
   implicit none
 
 #define SLLFFT_MOD 0

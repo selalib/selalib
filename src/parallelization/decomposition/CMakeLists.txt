@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_decomposition STATIC sll_decomposition.F90 )
+ADD_LIBRARY( sll_decomposition STATIC sll_m_decomposition.F90 )
 TARGET_LINK_LIBRARIES( sll_decomposition sll_collective )
 
 # Ctests

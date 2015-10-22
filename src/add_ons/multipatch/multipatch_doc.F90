@@ -6,7 +6,7 @@
 !> @details
 !> multipatch version of
 !>  - coordinate_transformations
-!>  - distribution_function
+!>  - sll_m_distribution_function
 !>  - fields
 !>  - general_coordinate_elliptic_solvers
 !>  - cartesian_meshes

@@ -17,12 +17,13 @@ program test_maxwell_1d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 
+  use sll_m_constants, only : &
+       sll_pi
   use sll_m_maxwell_1d_base
   use sll_m_maxwell_1d_fem
-  use sll_arbitrary_degree_splines
+  use sll_m_arbitrary_degree_splines
 
   implicit none
 

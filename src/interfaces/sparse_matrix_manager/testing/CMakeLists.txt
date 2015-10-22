@@ -41,8 +41,9 @@ ENDIF(BUILD_PARALUTION)
 
 IF(PASTIX_FOUND)
   
-  ADD_EXECUTABLE(test_pastix sll_pastix.F90 test_pastix.F90)
-  TARGET_LINK_LIBRARIES(test_pastix sll_collective
+  ADD_EXECUTABLE(test_pastix test_pastix.F90)
+  TARGET_LINK_LIBRARIES(test_pastix sll_sparse_matrix
+                                    sll_collective
                                     sll_memory
                                     ${PASTIX_LIBRARIES} 
                                     ${PTSCOTCH_LIBRARIES}

@@ -1,4 +1,4 @@
-!> @defgroup xdmf sll_xdmf
+!> @defgroup xdmf sll_m_xdmf
 !!
 !! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
@@ -19,7 +19,7 @@
 !! <h4> Header files available </h4>
 !!   + No header files.
 !! <!--
-!!   + *sll_xdmf.h*
+!!   + *sll_m_xdmf.h*
 !! -->
 !!
 !! <h4> How to use it </h4>
@@ -33,7 +33,7 @@
 !!    \endcode
 !!  + Add dependency to *CMakeLists.txt*:
 !!    \code
-!!      target_link_libraries( <my_lib/exec> sll_xdmf ... )
+!!      target_link_libraries( <my_lib/exec> sll_m_xdmf ... )
 !!    \endcode
 !!
 !! <h4> Examples </h4>

@@ -2,16 +2,16 @@ module test_processes_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_cubic_splines
-  use sll_constants
+  use sll_m_cubic_splines
+  use sll_m_constants
   use util_constants
   use test_func_module
-  use sll_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors
   implicit none
 
   abstract interface
      function fx(x)
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64 :: fx
        sll_real64, intent(in) :: x
      end function fx
@@ -19,7 +19,7 @@ module test_processes_module
 
   abstract interface
      function fxy (x,y)
-       use sll_working_precision
+       use sll_m_working_precision
        sll_real64 :: fxy
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y
@@ -28,8 +28,8 @@ module test_processes_module
 
   abstract interface
      function spline_interpolator_1d(  x, spline )
-       use sll_working_precision
-       use sll_cubic_splines
+       use sll_m_working_precision
+       use sll_m_cubic_splines
        sll_real64 :: spline_interpolator_1d
        sll_real64, intent(in) :: x
        type(sll_cubic_spline_1D), pointer :: spline
@@ -39,8 +39,8 @@ module test_processes_module
 
   abstract interface
      function spline_interpolator_2d(  x, y, spline )
-       use sll_working_precision
-       use sll_cubic_splines
+       use sll_m_working_precision
+       use sll_m_cubic_splines
        sll_real64 :: spline_interpolator_2d
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y

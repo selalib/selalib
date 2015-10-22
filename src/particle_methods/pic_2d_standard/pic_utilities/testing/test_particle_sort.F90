@@ -4,12 +4,12 @@ program particle_sorter
 #include "sll_assert.h"
 #include "particle_representation.h"
   
-  use sll_constants, only: sll_pi
-  use sll_cartesian_meshes
-  use sll_particle_sort_module
-  use sll_particle_group_4d_module
-  use gaussian
-  use hammersley
+  use sll_m_constants, only: sll_pi
+  use sll_m_cartesian_meshes
+  use sll_m_particle_sort
+  use sll_m_particle_group_4d
+  use sll_m_gaussian
+  use sll_m_hammersley
 
 #define THERM_SPEED 1._f64
 #define num_particles 100000_i32

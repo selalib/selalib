@@ -5,16 +5,15 @@ program test_maxwell_2d_diga_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
 
-use sll_cartesian_meshes
+use sll_m_cartesian_meshes
 use sll_m_coordinate_transformations_2d
-use sll_common_coordinate_transformations
-use sll_dg_fields
+use sll_m_common_coordinate_transformations
+use sll_m_dg_fields
 use sll_maxwell_2d_diga
-use sll_maxwell_solvers_base
+use sll_m_maxwell_solvers_base
 
 implicit none
 

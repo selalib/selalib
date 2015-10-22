@@ -1,7 +1,11 @@
 program arbitrary_degree_splines_1d_periodic
 #include "sll_working_precision.h"
-#include "sll_constants.h"
-#include "sll_interpolators.h"
+
+use sll_m_boundary_condition_descriptors
+use sll_m_arbitrary_degree_spline_interpolator_1d
+use sll_m_constants, only : &
+     sll_pi
+
 implicit none
 
 #define NPTS 65

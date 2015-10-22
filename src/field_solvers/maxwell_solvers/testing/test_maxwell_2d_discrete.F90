@@ -9,15 +9,16 @@ program test_maxwell_2d_discrete
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
-#include "sll_file_io.h"
-#include "sll_cartesian_meshes.h"
-#include "sll_coordinate_transformations.h"
 
+
+use sll_m_common_coordinate_transformations
+use sll_m_coordinate_transformation_2d_base
+use sll_m_coordinate_transformations_2d
+use sll_m_cartesian_meshes
 use sll_m_cubic_spline_interpolator_2d
-use sll_dg_fields
-use sll_maxwell_solvers_base
+use sll_m_dg_fields
+use sll_m_maxwell_solvers_base
 use sll_m_maxwell_2d_diga
 
 implicit none

@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_remap STATIC sll_remap.F90 )
+ADD_LIBRARY( sll_remap STATIC sll_m_remapper.F90 )
 TARGET_LINK_LIBRARIES( sll_remap sll_collective ) 
 
 

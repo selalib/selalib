@@ -22,20 +22,20 @@
   ! Tentative Selalib's basic memory allocator.
   !
   ! This service is provided by two files:
-  ! - sll_memory.h:   the present header file that exposes the allocation,
+  ! - sll_m_memory.h:   the present header file that exposes the allocation,
   !                   initialization and clearing macros, and
-  ! - sll_memory.F90: which implements the error testing function and
+  ! - sll_m_memory.F90: which implements the error testing function and
   !                   other related functionalities.
   ! 
   ! Usage:
   ! The directive
-  ! #include "sll_memory.h" will make available macros:
+  ! #include "sll_m_memory.h" will make available macros:
   ! SLL_ALLOCATE
   ! SLL_DEALLOCATE
   ! SLL_INIT_ARRAY
   ! SLL_CLEAR_ALLOCATE
   ! and will provide any additional functionality included in the 
-  ! sll_memory.F90 module. This directive should be put in the 'use' section 
+  ! sll_m_memory.F90 module. This directive should be put in the 'use' section 
   ! of the subprogram that wants to use the allocator.
   !
   ! Examples: 
@@ -69,7 +69,7 @@
   !
   ! *************************************************************************
  
-use sll_memory
+use sll_m_memory, only : test_error_code
 
 #define SLL_ALLOCATE(array_name_and_lims, error_var)   \
   allocate(array_name_and_lims, stat=error_var);      \
@@ -94,7 +94,7 @@ use sll_memory
   SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
 
   ! **************************************************************************
-  ! IMPLEMENTATION NOTES FOR sll_memory.h:
+  ! IMPLEMENTATION NOTES FOR sll_m_memory.h:
   !
   ! There are only two things that we ask of the memory allocator:
   ! 1. To allocate the memory requested, and
@@ -126,7 +126,7 @@ use sll_memory
   !                   -ffree-line-length-none
   !
   ! In case that this way of allocating memory is found not satisfactory,
-  ! the file sll_memory.F90 has some elements of an alternative implementation,
+  ! the file sll_m_memory.F90 has some elements of an alternative implementation,
   ! which also uses macros to handle most of the redundancies. However, these 
   ! macros, while still manageable by fpp, will also yield very long lines 
   ! that may confuse a Fortran compiler if one does not use flags like:

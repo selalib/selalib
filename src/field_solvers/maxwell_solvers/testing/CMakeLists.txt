@@ -23,11 +23,11 @@ ENDIF(HDF5_IS_PARALLEL)
 ADD_EXECUTABLE(test_maxwell_2d_diga_discrete test_maxwell_2d_discrete.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_discrete sll_maxwell_solvers)
 
-ADD_TEST(NAME maxwell_2d_dg_periodic COMMAND test_maxwell_2d_diga_periodic)
-SET_TESTS_PROPERTIES(maxwell_2d_dg_periodic 
+ADD_TEST(NAME maxwell_2d_diga_periodic COMMAND test_maxwell_2d_diga_periodic)
+SET_TESTS_PROPERTIES(maxwell_2d_diga_periodic 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME maxwell_2d_dg_silver_muller COMMAND test_maxwell_2d_diga_wave)
-SET_TESTS_PROPERTIES(maxwell_2d_dg_silver_muller 
+ADD_TEST(NAME maxwell_2d_diga_wave COMMAND test_maxwell_2d_diga_wave)
+SET_TESTS_PROPERTIES(maxwell_2d_diga_wave
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 IF(FFTW_ENABLED AND FFTW_FOUND)

@@ -4,15 +4,16 @@ program test_io_parallel
 #ifndef NOHDF5
 use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 #endif
-use sll_collective
-use sll_hdf5_io_parallel
-use sll_xdmf_parallel
-use sll_xml_io
-use sll_gnuplot_parallel
-use sll_remapper
+use sll_m_collective
+use sll_m_hdf5_io_parallel
+use sll_m_xdmf_parallel
+use sll_m_xml_io
+use sll_m_gnuplot_parallel
+use sll_m_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
+use sll_m_utilities, only : &
+     is_power_of_two
 
 implicit none
 

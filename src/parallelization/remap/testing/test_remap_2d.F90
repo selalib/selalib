@@ -1,10 +1,10 @@
 program remap_2d_unit_test
-  use sll_collective
-  use sll_remapper
-!#include "sll_remap.h"
+  use sll_m_collective
+  use sll_m_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
+  use sll_m_utilities, only : &
+       is_power_of_two
   implicit none
 
   ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,

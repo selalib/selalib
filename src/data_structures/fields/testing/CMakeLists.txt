@@ -1,8 +1,11 @@
 # Executables not added to ctest
+IF(HDF5_IS_PARALLEL)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+ENDIF(HDF5_IS_PARALLEL)
 ADD_EXECUTABLE(test_dg_fields test_dg_fields.F90)
-TARGET_LINK_LIBRARIES(test_dg_fields sll_dg_fields)
+TARGET_LINK_LIBRARIES(test_dg_fields sll_fields)
 ADD_EXECUTABLE(test_fem_fields test_fem_fields.F90)
-TARGET_LINK_LIBRARIES(test_fem_fields sll_fem_fields)
+TARGET_LINK_LIBRARIES(test_fem_fields sll_fields)
 
 ADD_EXECUTABLE( test_scalar_field_1d test_scalar_field_1d.F90  )
 TARGET_LINK_LIBRARIES( test_scalar_field_1d sll_fields )
