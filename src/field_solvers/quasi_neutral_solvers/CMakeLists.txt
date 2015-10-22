@@ -56,7 +56,7 @@
 
 # Sequential library
 ADD_LIBRARY( sll_qn_solvers STATIC sll_qn_solver_2d.F90 )
-TARGET_LINK_LIBRARIES( sll_qn_solvers sll_fft sll_utilities sll_timer )
+TARGET_LINK_LIBRARIES( sll_qn_solvers sll_fft sll_linear_solvers sll_timer )
 
 # Parallel library
 IF(MPI_ENABLED)
@@ -79,6 +79,5 @@ ENDIF(MPI_ENABLED)
 IF(BUILD_TESTING)
 
   ADD_SUBDIRECTORY(testing)
-
 
 ENDIF(BUILD_TESTING)

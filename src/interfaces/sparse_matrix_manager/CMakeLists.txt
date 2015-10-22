@@ -21,7 +21,7 @@ ELSEIF(SUITESPARSE_FOUND)
   INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
 
   ADD_LIBRARY(sll_sparse_matrix STATIC 
-                partition.F90
+              partition.F90
   	        sll_sparse_matrix_umfpack_module.F90
 	        sll_sparse_matrix_mp_module.F90)
 
@@ -38,8 +38,8 @@ ELSEIF(SUITESPARSE_FOUND)
 ELSE()
 
   ADD_LIBRARY(sll_sparse_matrix STATIC 
-                partition.F90
-  	        sll_sparse_matrix_module.F90
+              partition.F90
+ 	        sll_sparse_matrix_module.F90
 	        sll_sparse_matrix_mp_module.F90 )
 
   TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision

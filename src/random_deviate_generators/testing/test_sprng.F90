@@ -1,4 +1,4 @@
-program sprngf
+program test_sprng
 implicit none
 
 #include "sprng_f.h"
@@ -40,5 +40,6 @@ do i = 1, 3
   write(*, "(i6,2x,f19.16)") i, rn
 end do
 
-end
+end subroutine sub1
 
+end program test_sprng
