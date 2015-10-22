@@ -15,11 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_gyroaverage_2d_polar_computation
+program test_gyroaverage_2d_polar_pade
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_m_gyroaverage_2d_polar_computation
+use sll_m_gyroaverage_2d_polar_pade_solver
 
 implicit none
   
@@ -30,7 +30,6 @@ implicit none
   sll_int32  :: Nc(2)
   sll_real64 :: larmor_rad
   sll_real64,dimension(:,:),allocatable :: f
-  sll_real64,dimension(:,:),allocatable :: Jf
   sll_int32  :: ierr
   
   eta_min(1) = 0.1_f64
@@ -41,24 +40,31 @@ implicit none
   Nc(1)=16
   Nc(2)=16
   
-  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)),ierr)
-  SLL_ALLOCATE(Jf(Nc(1)+1,Nc(2)),ierr)
+  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)+1),ierr)
   
   f = 1._f64
   err = 0._f64
   larmor_rad = 0.01_f64
 
-  gyroaverage => new_gyroaverage_2d_polar_computation( &
+
+!  gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
+!    eta_min, &
+!    eta_max, &
+!    Nc)
+  
+  gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
     eta_min, &
     eta_max, &
-    Nc)
+    Nc, &
+    (/2,4/))  
   
-  call gyroaverage%compute_gyroaverage( larmor_rad, f, Jf )
+  
+  call gyroaverage%compute_gyroaverage( larmor_rad, f)
 
-  print *,maxval(Jf),minval(Jf)
+  print *,minval(f(2:Nc(1),:)),maxval(f(2:Nc(1),:))
 
   if(err==0)then    
     print *, '#PASSED'
   endif
 
-end program
+end program test_gyroaverage_2d_polar_pade

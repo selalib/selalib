@@ -35,7 +35,7 @@ SET_TESTS_PROPERTIES( bsplines_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 # Cubic non uniform splines ............................
 ADD_EXECUTABLE( test_cubic_splines_nonuniform test_cubic_splines_nonuniform.F90)
-TARGET_LINK_LIBRARIES( test_cubic_splines_nonuniform sll_splines )
+TARGET_LINK_LIBRARIES( test_cubic_splines_nonuniform sll_splines sll_linear_solvers )
 
 # Ctests
 ADD_TEST( NAME cubic_splines_nonuniform COMMAND test_cubic_splines_nonuniform )

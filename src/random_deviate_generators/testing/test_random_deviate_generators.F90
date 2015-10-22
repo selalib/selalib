@@ -1,4 +1,4 @@
-program unit_test
+program test_random_deviate_generators
 #include "sll_working_precision.h"
   use gaussian
   use hammersley
@@ -51,4 +51,4 @@ program unit_test
   else
      print *, 'FAILED'
   end if
-end program unit_test
+end program test_random_deviate_generators

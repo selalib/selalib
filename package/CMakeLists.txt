@@ -31,11 +31,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/errors/sll_errors.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/sll_primitives.F90
-    ${SLL_DIR}/utilities/tridiagonal.F90
+    ${SLL_DIR}/linear_solvers/tridiagonal.F90
     ${SLL_DIR}/utilities/fornberg.F90
-    ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
-    ${SLL_DIR}/utilities/banfac.f90
-    ${SLL_DIR}/utilities/banslv.f90
+    ${SLL_DIR}/linear_solvers/sll_toeplitz_penta_diagonal.F90
+    ${SLL_DIR}/linear_solvers/banfac.f90
+    ${SLL_DIR}/linear_solvers/banslv.f90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/io/file_io/sll_binary_io.F90
     ${SLL_DIR}/io/file_io/sll_gnuplot.F90
@@ -128,8 +128,8 @@ ENDIF(F2008)
 IF(Fortran_COMPILER MATCHES "IBM")
 ELSE()
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/utilities/sol.f
-    ${SLL_DIR}/utilities/muls.f)
+    ${SLL_DIR}/linear_solvers/sol.f
+    ${SLL_DIR}/linear_solvers/muls.f)
 ENDIF()
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
