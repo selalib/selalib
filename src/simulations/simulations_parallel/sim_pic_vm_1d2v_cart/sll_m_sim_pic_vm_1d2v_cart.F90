@@ -355,6 +355,21 @@ contains
        end if
     end do
     
+    ! Compute final rho
+    call sim%kernel_smoother_0%compute_shape_factors(sim%particle_group)
+    rho_local = 0.0_f64
+    call sim%kernel_smoother_0%accumulate_rho_from_klimontovich(sim%particle_group, &
+         rho_local)
+    ! MPI to sum up contributions from each processor
+    rho = 0.0_f64
+    call sll_collective_allreduce( sll_world_collective, &
+         rho_local, &
+         sim%n_gcells, MPI_SUM, rho)
+    write(32,*) rho
+    write(33,*) sim%efield_dofs(:,1)
+    write(34,*) sim%efield_dofs(:,2)
+    write(35,*) sim%bfield_dofs
+    
   contains
     function beta_cos_k(x)
       sll_real64             :: beta_cos_k
