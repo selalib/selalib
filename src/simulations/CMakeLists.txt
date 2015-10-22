@@ -3,5 +3,5 @@ SET( INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/simulations" )
 ADD_DEFINITIONS( -DMUDPACK )
 
 ADD_SUBDIRECTORY( sim_serial )
-ADD_SUBDIRECTORY( sim_parallel )
+ADD_SUBDIRECTORY( parallel )
 ADD_SUBDIRECTORY( eulerian-finite-volume )
