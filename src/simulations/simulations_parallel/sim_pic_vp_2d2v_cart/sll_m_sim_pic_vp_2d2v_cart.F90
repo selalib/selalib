@@ -24,6 +24,8 @@ module sll_m_sim_pic_vp_2d2v_cart
   use sll_m_operator_splitting_pic_vp_2d2v
   use sll_ascii_io
 
+  use sll_m_control_variate
+
   sll_int32, parameter :: SLL_INIT_RANDOM=0
   sll_int32, parameter :: SLL_INIT_SOBOL=1
 
@@ -52,6 +54,9 @@ module sll_m_sim_pic_vp_2d2v_cart
      class(operator_splitting), pointer :: propagator
      ! Specific operator splitting
      class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: specific_propagator
+
+     ! Control variate
+     class(sll_t_control_variate), pointer :: control_variate
      
      ! Physical parameters
      sll_real64 :: landau_param(2) ! (1+landau_param(1)*cos(landau_param(2)*x1) 
@@ -240,6 +245,20 @@ contains
 
 !------------------------------------------------------------------------------!
 
+  function control_variate_equi( this, xi, vi, time)
+    class(sll_t_control_variate) :: this
+    sll_real64, intent( in ) :: xi(3) !< particle position
+    sll_real64, intent( in ) :: vi(3) !< particle velocity
+    sll_real64, intent( in ) :: time  !< current time
+    sll_real64               :: sll_f_control_variate
+
+
+    sll_f_control_variate = exp(-0.5_f64*&
+         ((vi(1)/this%control_parameters(1))**2+&
+         (vi(2)/this%control_parameters(2))**2))/&
+         (2.0_f64*sll_pi*)
+
+  end function control_variate_equi
 
 
 
