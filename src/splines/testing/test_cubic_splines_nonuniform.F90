@@ -3,10 +3,10 @@ program test_cubic_splines_nonuniform
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use cubic_non_uniform_splines
-  use sll_constants
-  use sll_boundary_condition_descriptors
-  use sll_tridiagonal
+  use sll_m_cubic_non_uniform_splines
+  use sll_m_constants
+  use sll_m_boundary_condition_descriptors
+  use sll_m_tridiagonal
   !use sort_module
   implicit none
   
@@ -491,11 +491,11 @@ enddo
 
 if (test_passed .eqv. .true.) then
      print *, '#'
-     print *, '# cubic_non_uniform_splines unit test: PASSED'
+     print *, '# sll_m_cubic_non_uniform_splines unit test: PASSED'
      print *, '# '
   else
      print *, ' '
-     print *, 'cubic_non_uniform_splines unit test: FAILED'
+     print *, 'sll_m_cubic_non_uniform_splines unit test: FAILED'
      print *, ' '
   endif
 

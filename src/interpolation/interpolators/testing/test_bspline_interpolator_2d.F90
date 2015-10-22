@@ -1,11 +1,11 @@
 program bspline_2d_dirichlet
 
 #include "sll_working_precision.h"
-#include "sll_constants.h"
 
 use sll_m_bspline_interpolator_2d
-use sll_boundary_condition_descriptors
-
+use sll_m_boundary_condition_descriptors
+use sll_m_constants, only : &
+     sll_pi
 implicit none
 
 #define NPTS1    101

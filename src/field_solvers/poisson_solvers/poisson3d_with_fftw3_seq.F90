@@ -1,6 +1,6 @@
 program poisson3d_with__fftw3_seq
   
-  use fftw3
+  use sll_m_fftw3
   implicit none
   
   integer :: i, j, k, mx, my, mz, ierr

@@ -1,8 +1,8 @@
 program unit_test_sparse_matrix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_sparse_matrix_module
-  use sll_collective
+  use sll_m_sparse_matrix
+  use sll_m_collective
   implicit none
   
   !sll_int32 :: colptr(6)

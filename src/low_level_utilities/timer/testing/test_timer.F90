@@ -1,5 +1,5 @@
 program unit_test
-  use sll_timer
+  use sll_m_timer
   implicit none
 #define MARGIN 0.1
 

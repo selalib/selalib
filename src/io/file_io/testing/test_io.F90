@@ -1,12 +1,12 @@
 module test_io
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_xdmf
+use sll_m_xdmf
 #ifndef NOHDF5
-use sll_hdf5_io_serial
+use sll_m_hdf5_io_serial
 #endif
-use sll_constants
-use sll_utilities, only: int2string
+use sll_m_constants
+use sll_m_utilities, only: int2string
 
 sll_int32, private :: i, j, k !< indices
 sll_int32 :: error            !< error code

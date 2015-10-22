@@ -4,7 +4,7 @@ program test_arbitrary_degree_splines
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_arbitrary_degree_splines
+  use sll_m_arbitrary_degree_splines
 
   implicit none
 

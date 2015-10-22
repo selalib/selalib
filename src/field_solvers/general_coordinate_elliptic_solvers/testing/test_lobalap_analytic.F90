@@ -1,13 +1,13 @@
 program test_lobalap
 #include "sll_working_precision.h"
 
-  use sll_common_coordinate_transformations
-  use sll_coordinate_transformation_2d_base_module
+  use sll_m_common_coordinate_transformations
+  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
-  !use map_function_module, only: set_map_function
-  use sll_lobatto_poisson
-  use sll_dg_fields
-  use sll_cartesian_meshes
+  !use sll_m_map_function, only: set_map_function
+  use sll_m_lobatto_poisson
+  use sll_m_dg_fields
+  use sll_m_cartesian_meshes
   implicit none
 
   type(lobatto_poisson_solver)                          :: solver

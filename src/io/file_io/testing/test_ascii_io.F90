@@ -2,9 +2,9 @@
 program test_ascii_io
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_ascii_io
-use sll_xml_io
-use sll_constants
+use sll_m_ascii_io
+use sll_m_xml_io
+use sll_m_constants
 
 sll_int32 :: i, j             !< indices
 sll_int32 :: error            !< error code

@@ -1,6 +1,6 @@
 !*****************************************************************************
 !> @brief
-!> sll_box_splines unit test
+!> sll_m_box_splines unit test
 !> @author
 !> Laura S. Mendoza
 !*****************************************************************************
@@ -10,12 +10,12 @@ program test_box_splines_derivatives
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-#include "sll_boundary_condition_descriptors.h"
 
-  use sll_hexagonal_meshes, only : &
+  use sll_m_boundary_condition_descriptors
+  use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d, &
        new_hex_mesh_2d
-  use sll_box_splines, only : &
+  use sll_m_box_splines, only : &
        sll_box_spline_2d, &
        new_box_spline_2d, &
        boxspline_x1_derivative, &
@@ -112,7 +112,7 @@ program test_box_splines_derivatives
   num_cells = 20
   degree = 1
   rule = 1
-  call write_all_django_files(num_cells, degree, rule)
+  !call write_all_django_files(num_cells, degree, rule)
   print *, ""
   print *, "*********** wrote all django files ***********"
   print *, "   - number of cells    : ", num_cells

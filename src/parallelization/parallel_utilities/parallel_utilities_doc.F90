@@ -17,15 +17,13 @@
 !> @details
 !> Long description of  parallel_utilities, you can add some references or math equations.
 !>
-!> <b> Headers file available </b>
-!>  - sll_parallel_utilities.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
 !>  - sll_parallel_utilities
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_parallel_utilities.h' \endcode
+!> - Include : \code use <sll_m_<module_name> \endcode
 !> - Link with   <code>-lsll_%s</code>
 !> - Add <code> use sll_parallel_utilities </code>
 !>

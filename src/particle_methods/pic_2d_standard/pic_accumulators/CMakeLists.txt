@@ -8,7 +8,7 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL )
   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 endif( HDF5_ENABLED AND HDF5_IS_PARALLEL )
 
-add_library( sll_pic_accumulators STATIC sll_accumulators.F90 )
+add_library( sll_pic_accumulators STATIC sll_m_accumulators.F90 )
 target_link_libraries( sll_pic_accumulators
   sll_meshes
   sll_memory

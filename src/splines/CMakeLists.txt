@@ -1,21 +1,21 @@
 ADD_LIBRARY( sll_splines STATIC
-  sll_cubic_splines.F90
-  sll_quintic_splines.F90
-  sll_bsplines.F90
-  sll_arbitrary_degree_splines.F90
-  sll_hex_prefilters.F90
-  sll_box_splines.F90
-  cubic_nonuniform_splines.F90 )
+  sll_m_cubic_splines.F90
+  sll_m_quintic_splines.F90
+  sll_m_bsplines.F90
+  sll_m_arbitrary_degree_splines.F90
+  sll_m_hex_pre_filters.F90
+  sll_m_box_splines.F90
+  sll_m_cubic_non_uniform_splines.F90
+  sll_m_deboor_splines_2d.F90
+  sll_m_deboor_splines_1d.F90 )
 
 TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
   sll_boundary_condition_descriptors
   sll_meshes
-  sll_integration
   sll_linear_solvers
+  deboor
   ${LAPACK_LIBRARIES} )
-
-# Tests
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY( testing )

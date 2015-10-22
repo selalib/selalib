@@ -1,4 +1,4 @@
-SET( XDMF_SRC sll_xdmf_io.F90 sll_m_xml.F90 sll_m_xdmf_serial.F90 sll_m_io_utilities.F90 )
+SET( XDMF_SRC sll_xdmf_io.F90 sll_m_xml.F90 sll_m_xdmf_light_serial.F90 sll_m_io_utilities.F90 )
 SET( XDMF_DEP sll_working_precision )
 
 # Object-oriented wrapper around Pierre's "sll_hdf5_io_serial"

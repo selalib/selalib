@@ -31,7 +31,7 @@ end function func_epsi
 !   the scalar c is equal to zero 
 !-------------------------------------------------------------
 function source_term_perper( eta1, eta2) result(res)
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos
 
   real(8), intent(in) :: eta1
@@ -44,7 +44,7 @@ function source_term_perper( eta1, eta2) result(res)
 end function source_term_perper
 
 real(8) function sol_exacte_perper(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   
   !real(8), dimension(:), intent(in), optional :: params
@@ -52,14 +52,14 @@ real(8) function sol_exacte_perper(eta1,eta2)
 end function sol_exacte_perper
 
 real(8) function sol_exacte_perper_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   
   !real(8), dimension(:), intent(in), optional :: params
@@ -75,7 +75,7 @@ end function sol_exacte_perper_der2
 !-------------------------------------------------------------
 
 real(8) function source_term_perdir(eta1,eta2) ! in the path
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos
   intrinsic :: sin 
   real(8),intent(in) :: eta1,eta2
@@ -90,7 +90,7 @@ end function source_term_perdir
 
 
 real(8) function sol_exacte_perdir(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   intrinsic :: cos
   intrinsic :: sin
@@ -103,7 +103,7 @@ end function sol_exacte_perdir
 
 
 real(8) function sol_exacte_perdir_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   intrinsic :: cos
   intrinsic :: sin
@@ -113,7 +113,7 @@ end function sol_exacte_perdir_der1
 
 
 real(8) function sol_exacte_perdir_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   intrinsic :: cos
   intrinsic :: sin
@@ -128,7 +128,7 @@ end function sol_exacte_perdir_der2
 !-------------------------------------------------------------
 
 real(8) function source_term_dirper(eta1,eta2,params) ! in the path
-  use sll_constants
+  use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
 
@@ -140,7 +140,7 @@ end function source_term_dirper
 
 
 real(8) function sol_exacte_dirper(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_dirper = sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
@@ -150,7 +150,7 @@ real(8) function sol_exacte_dirper(eta1,eta2)
 end function sol_exacte_dirper
 
 real(8) function sol_exacte_dirper_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_dirper_der1 = 2*sll_pi*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
@@ -160,7 +160,7 @@ real(8) function sol_exacte_dirper_der1(eta1,eta2)
 end function sol_exacte_dirper_der1
 
 real(8) function sol_exacte_dirper_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_dirper_der2 = -2.0*sll_pi*sin(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
@@ -179,7 +179,7 @@ end function sol_exacte_dirper_der2
 
 
 real(8) function rho_rtheta(eta1,eta2,params) ! in the path
-  use sll_constants
+  use sll_m_constants
   intrinsic :: cos
   intrinsic :: sin
   real(8),intent(in) :: eta1,eta2
@@ -198,7 +198,7 @@ end function rho_rtheta
 
 
 real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
-  use sll_constants
+  use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   intrinsic :: cos
   intrinsic :: sin
@@ -219,7 +219,7 @@ end function sol_exacte_rtheta
 !-------------------------------------------------------------
 
 real(8) function source_term_chgt_perper(eta1,eta2) ! in the path
-  use sll_constants
+  use sll_m_constants
   real(8):: eta1,eta2
   real(8) :: x, y
   ! real(8), dimension(:), intent(in), optional :: params
@@ -232,7 +232,7 @@ real(8) function source_term_chgt_perper(eta1,eta2) ! in the path
 end function source_term_chgt_perper
 
 real(8) function sol_exacte_chgt_perper(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   
@@ -245,7 +245,7 @@ real(8) function sol_exacte_chgt_perper(eta1,eta2)
 end function sol_exacte_chgt_perper
 
 real(8) function sol_exacte_chgt_perper_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   
@@ -260,7 +260,7 @@ real(8) function sol_exacte_chgt_perper_der1(eta1,eta2)
 end function sol_exacte_chgt_perper_der1
 
 real(8) function sol_exacte_chgt_perper_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   
@@ -286,7 +286,7 @@ end function sol_exacte_chgt_perper_der2
 
 
 real(8) function source_term_chgt_perdir(eta1,eta2) ! in the path
-  use sll_constants
+  use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   real(8) :: x, y
     
@@ -299,7 +299,7 @@ real(8) function source_term_chgt_perdir(eta1,eta2) ! in the path
 end function source_term_chgt_perdir
 
 real(8) function sol_exacte_chgt_perdir(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
 
@@ -312,7 +312,7 @@ real(8) function sol_exacte_chgt_perdir(eta1,eta2)
 end function sol_exacte_chgt_perdir
 
 real(8) function sol_exacte_chgt_perdir_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
 
@@ -328,7 +328,7 @@ real(8) function sol_exacte_chgt_perdir_der1(eta1,eta2)
 end function sol_exacte_chgt_perdir_der1
 
 real(8) function sol_exacte_chgt_perdir_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
 
@@ -353,7 +353,7 @@ end function sol_exacte_chgt_perdir_der2
 
 
 real(8) function source_term_chgt_dirdir(eta1,eta2) ! in the path
-  use sll_constants
+  use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   real(8) :: x, y
 
@@ -373,7 +373,7 @@ end function source_term_chgt_dirdir
 
 
 real(8) function sol_exacte_chgt_dirdir(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -389,7 +389,7 @@ end function sol_exacte_chgt_dirdir
 
 
 real(8) function sol_exacte_chgt_dirdir_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -407,7 +407,7 @@ end function sol_exacte_chgt_dirdir_der1
 
 
 real(8) function sol_exacte_chgt_dirdir_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -432,7 +432,7 @@ end function sol_exacte_chgt_dirdir_der2
 !-------------------------------------------------------------
 
 real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
-  use sll_constants
+  use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   real(8) :: x, y
   intrinsic :: cos
@@ -450,7 +450,7 @@ real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
 end function source_term_chgt_dirper
 
 real(8) function sol_exacte_chgt_dirper(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -464,7 +464,7 @@ real(8) function sol_exacte_chgt_dirper(eta1,eta2)
 end function sol_exacte_chgt_dirper
 
 real(8) function sol_exacte_chgt_dirper_der1(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -481,7 +481,7 @@ real(8) function sol_exacte_chgt_dirper_der1(eta1,eta2)
 end function sol_exacte_chgt_dirper_der1
 
 real(8) function sol_exacte_chgt_dirper_der2(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -502,49 +502,49 @@ end function sol_exacte_chgt_dirper_der2
 !!!!!! test case with F(theta,phi) = (2pi theta , 2pi phi)
 
 real(8) function adimension_chgt_x(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
   adimension_chgt_x = 2*sll_pi*eta1 !+ eta2)
 end function adimension_chgt_x
 
 real(8) function adimension_chgt_y(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
   adimension_chgt_y = 2*sll_pi*eta2
 end function adimension_chgt_y
 
 real(8) function jac11_adimension_chgt(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
   jac11_adimension_chgt = 2*sll_pi
 end function jac11_adimension_chgt
 
 real(8) function jac12_adimension_chgt(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
   jac12_adimension_chgt = 0.0!sll_pi
 end function jac12_adimension_chgt
 
 real(8) function jac21_adimension_chgt(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
   jac21_adimension_chgt = 0.0!2*sll_pi!0.0
 end function jac21_adimension_chgt
 
 real(8) function jac22_adimension_chgt(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
   jac22_adimension_chgt = 2*sll_pi
 end function jac22_adimension_chgt
 
 real(8) function sol_exacte_chgt_adim(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos
@@ -558,7 +558,7 @@ real(8) function sol_exacte_chgt_adim(eta1,eta2)
 end function sol_exacte_chgt_adim
 
 real(8) function source_term_chgt_adim(eta1,eta2)
-  use sll_constants
+  use sll_m_constants
   real(8) :: eta1,eta2
   real(8) :: x,y
   intrinsic :: cos

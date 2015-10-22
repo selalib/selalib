@@ -18,7 +18,7 @@
 !**************************************************************
 
 
-use sll_fft
+use sll_m_fft
 
 #define GET_MODE0(mode,data) \
       mode = cmplx(data(1),0.0_f64,kind=f64)

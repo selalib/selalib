@@ -5,7 +5,7 @@
 
 real(8) function sol_bz( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1
@@ -24,7 +24,7 @@ end function sol_bz
 
 real(8) function sol_ex( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1
@@ -40,7 +40,7 @@ end function sol_ex
 
 real(8) function sol_ey( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1
@@ -54,24 +54,24 @@ real(8) function sol_ey( x1, x2, time)
 
 end function sol_ey
 
-real(8) function gaussian( x1, x2, time)
+real(8) function sll_m_gaussian( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   gaussian =   exp(-(x1*x1+x2*x2)) * cos(time)
+   sll_m_gaussian =   exp(-(x1*x1+x2*x2)) * cos(time)
    return
 
-end function gaussian
+end function sll_m_gaussian
 
 
 real(8) function add( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1
@@ -86,7 +86,7 @@ end function add
 
 real(8) function linear_x( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1
@@ -101,7 +101,7 @@ end function linear_x
 
 real(8) function linear_y( x1, x2, time)
 
-   use sll_constants
+   use sll_m_constants
    implicit none
 
    real(8), intent(in) :: x1

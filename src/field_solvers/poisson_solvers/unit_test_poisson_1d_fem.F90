@@ -4,7 +4,7 @@
   module unit_test_poisson_1d_fem_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
+use sll_m_constants
     sll_real64 :: testfunction_test_mode
 
     contains
@@ -22,11 +22,10 @@ program unit_test_poisson_1d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_utilities.h"
     use unit_test_poisson_1d_fem_module
-    use sll_poisson_1d_fem
+    use sll_m_poisson_1d_fem
     use sll_logical_meshes
-    use sll_constants
+    use sll_m_constants
     implicit none
     integer :: ierr
     sll_int :: idx, jdx

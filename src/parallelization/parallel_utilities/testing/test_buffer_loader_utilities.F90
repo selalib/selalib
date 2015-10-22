@@ -2,9 +2,9 @@ program unit_test_buffer_loader_utilities
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_collective
-  use sll_remapper
-  use sll_buffer_loader_utilities_module
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_buffer_loader_utilities
 
 implicit none
 

@@ -31,7 +31,7 @@
   !! - one is a "simple" PIC method based on the one implemented by Sever and Edwin, but with no optimization
   !! - the other one is a remapped PIC method which follows from the BSL and LTPIC approach
   !! These classes (and the corresponding deposition and remapping schemes) are used in a simulation 
-  !! implemented in the module sll_simulation_4d_vp_generic_pic_cartesian_module
+  !! implemented in the module sll_m_sim_4d_vp_generic_pic_cartesian
 
   ! this is directory [[selalib:src/particle_methods]]
   

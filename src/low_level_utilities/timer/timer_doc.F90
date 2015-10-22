@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup timer sll_timer 
+!> @defgroup timer sll_m_timer 
 !> @brief 
 !> Description of timer library (72 characters)
 !> @author Selalib team 
@@ -18,16 +18,16 @@
 !> Long description of  timer, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
-!>  - sll_timer.h
+!>  - sll_m_timer.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_timer
+!>  - sll_m_timer
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_timer.h' \endcode
+!> - Header file : \code #include 'sll_m_timer.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_timer </code>
+!> - Add <code> use sll_m_timer </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library
