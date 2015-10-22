@@ -3,6 +3,49 @@ We put here new and corresponding old names of subdirectories
 author: Michel Mehrenberger
 reviewer: Katharina Kormann
 
+files:
+
+#################################################
+  
+  SIMNAME/sll_m_sim_SIMNAME.F90
+
+<<
+module sll_m_sim_SIMNAME
+
+end module sll_m_sim_SIMNAME
+>>
+#################################################
+  
+  SIMNAME/sim_SIMNAME.F90
+
+<<
+program sim_SIMNAME
+use sll_m_sim_SIMNAME
+end program sim_SIMNAME
+>>
+#################################################
+  
+  SIMNAME/CMakeLists.txt
+
+<<
+set(    SIM_NAME SIMNAME                      )
+set(   TEST_NAME "sim_${SIM_NAME}"            )
+set(  EXECUTABLE "${TEST_NAME}"               )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
+
+file( GLOB INPUT_FILES "*.nml"         )
+file( GLOB   POST_PROC "*.dat" "*.gnu" )
+
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel )
+
+INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
+INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+>>
+#################################################
+
+
+
 PARALLEL:
 
 bsl_gc_2d0v_curv: sim_2d_guiding_center_curvilinear
@@ -45,7 +88,7 @@ bsl_ad_2d_polar_rot: sim_2d_guiding_center_hexagonal
 bsl_gc_2d_polar: sim_2d_guiding_center_polar
 bsl_gc_2d_polar_one_mu: sim_2d_guiding_center_polar_one_mu
 eul_vp_1d1v_cart_fe_ft: sim_VlasovPoisson1D_fourier_FEM
-bsl_vp_1d1v_cart_basic: sim_VlasovPoisson1D_various_programs
+bsl_vp_1d1v_cart_serial: sim_VlasovPoisson1D_various_programs
 bsl_vp_1d1v_cart_deltaf: sim_VlasovPoisson1D_various_programs
 bsl_vp_1d1v_cart_micro_macro: sim_VlasovPoisson1D_various_programs
 fsl_ad_1d1d_curv: sim_curvilinear_SL

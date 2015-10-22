@@ -1,4 +1,4 @@
-module sll_m_sim_2d_guiding_center_curvilinear
+module sll_m_sim_bsl_gc_2d0v_curv
 
 !2d guiding center cartesian simulation
 !contact: Adnane Hamiaz (hamiaz@math.unistra.fr
@@ -2819,4 +2819,4 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
   end subroutine sll_plot_curvilinear_init
 
 
-end module sll_m_sim_2d_guiding_center_curvilinear
+end module sll_m_sim_bsl_gc_2d0v_curv
