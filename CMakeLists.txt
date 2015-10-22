@@ -199,4 +199,8 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
-ADD_PREPROCESSOR_TARGET()
+IF(BUILD_PACKAGE)
+  MESSAGE(STATUS "Type make release to create an archive of selalib")
+ELSEIF(BUILD_PACKAGE)
+  ADD_PREPROCESSOR_TARGET()
+ENDIF()
