@@ -37,7 +37,7 @@
 !> \endcode
 
 
-module sll_m_sim_4d_drift_kinetic_polar_multi_mu
+module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -2818,7 +2818,7 @@ end subroutine solve_bilaplacian_polar
   end function find_color
   
 
-end module sll_m_sim_4d_drift_kinetic_polar_multi_mu
+end module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
 
 
 
