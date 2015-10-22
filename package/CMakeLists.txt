@@ -85,8 +85,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/quadrature/sll_m_trapz_integration.F90
     ${SLL_DIR}/quadrature/sll_m_gauss_legendre_integration.F90
     ${SLL_DIR}/quadrature/sll_m_gauss_lobatto_integration.F90
-    ${SLL_DIR}/simulations/sim_serial/sim_CG_polar/sll_polar_operators.F90
-    ${SLL_DIR}/simulations/sim_serial/sim_CG_polar/sll_advection_polar.F90
+    ${SLL_DIR}/simulations/serial/sim_CG_polar/sll_polar_operators.F90
+    ${SLL_DIR}/simulations/serial/sim_CG_polar/sll_advection_polar.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_m_qsort_partition.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_m_sparse_matrix.F90
     ${SLL_DIR}/time_integration/splitting_methods/sll_m_time_splitting_coeff.F90
