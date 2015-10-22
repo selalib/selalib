@@ -1,7 +1,7 @@
-program guiding_center_2d_curvilinear
+program sim_bsl_gc_2d0v_curv
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_m_sim_2d_guiding_center_curvilinear
+  use sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_collective
   use sll_m_timer
   use sll_m_constants
@@ -70,4 +70,4 @@ program guiding_center_2d_curvilinear
 
 
 
-end program guiding_center_2d_curvilinear
+end program sim_bsl_gc_2d0v_curv

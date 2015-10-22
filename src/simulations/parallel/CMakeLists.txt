@@ -48,7 +48,8 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     SET( INSTALL_DIR "${INSTALL_DIR}/sim_parallel" )
 
     # Simulations as new subdirectories
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear        )
+    ADD_SUBDIRECTORY( bsl_gc_2d0v_curv )
+    
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian          )
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting       )
     ADD_SUBDIRECTORY( sim_4d                                   )
