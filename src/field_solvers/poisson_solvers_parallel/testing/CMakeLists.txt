@@ -1,3 +1,5 @@
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
 ADD_EXECUTABLE( test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
 

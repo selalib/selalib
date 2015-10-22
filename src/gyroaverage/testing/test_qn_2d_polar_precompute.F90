@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_qn_2d_polar_precompute
+program test_qn_2d_polar_precompute
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -478,4 +478,4 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
   print *,'#PASSED'
   
 
-end program
+end program test_qn_2d_polar_precompute

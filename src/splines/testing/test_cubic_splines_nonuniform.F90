@@ -6,6 +6,7 @@ program test_cubic_splines_nonuniform
   use cubic_non_uniform_splines
   use sll_constants
   use sll_boundary_condition_descriptors
+  use sll_tridiagonal
   !use sort_module
   implicit none
   
