@@ -201,6 +201,6 @@ ADD_CUSTOM_TARGET( clean_outputs
 
 IF(BUILD_PACKAGE)
   MESSAGE(STATUS "Type make release to create an archive of selalib")
-ELSEIF(BUILD_PACKAGE)
+ELSE()
   ADD_PREPROCESSOR_TARGET()
 ENDIF()
