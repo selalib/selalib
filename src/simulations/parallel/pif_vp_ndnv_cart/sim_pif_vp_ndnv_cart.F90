@@ -3,8 +3,8 @@
 ! - 6D cartesian: x, y, z, vx, vy, vz (or x1, x2, x3, x4, x5, x6)
 ! - parallel
 
-program general_vlasov_poisson_pif
-   use sll_m_general_vlasov_poisson_pif
+program sim_pif_vp_ndnv_cart
+   use sll_m_sim_pif_vp_ndnv_cart
    use sll_m_collective
    implicit none
 ! 
@@ -48,6 +48,6 @@ program general_vlasov_poisson_pif
    end subroutine run_from_file
    
    
-end program general_vlasov_poisson_pif
+end program sim_pif_vp_ndnv_cart
 
 

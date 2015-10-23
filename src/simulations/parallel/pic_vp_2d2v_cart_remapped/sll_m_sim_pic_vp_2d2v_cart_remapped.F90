@@ -16,7 +16,7 @@
 ! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]]
 ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
-module sll_m_sim_4d_vp_generic_pic_cartesian
+module sll_m_sim_pic_vp_2d2v_cart_remapped
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1046,4 +1046,4 @@ contains
     ee = ee * dx * dy    
   end subroutine electric_energy
 
-end module sll_m_sim_4d_vp_generic_pic_cartesian
+end module sll_m_sim_pic_vp_2d2v_cart_remapped

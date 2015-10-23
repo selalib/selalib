@@ -3,9 +3,9 @@
 ! - 4D: x1,x2,x3,v3 (or v1) with cartesian coordinate 
 ! - parallel
 
-program dk_hybrid_4d
+program sim_bsl_dk_3d1v_curv
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_dk_hybrid
+  use sll_m_sim_bsl_dk_3d1v_curv
   use sll_m_collective
   use sll_m_constants
   use sll_m_cartesian_meshes
@@ -90,5 +90,5 @@ program dk_hybrid_4d
 
   call sll_halt_collective()
 
-end program dk_hybrid_4d
+end program sim_bsl_dk_3d1v_curv
 

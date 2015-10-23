@@ -1,4 +1,4 @@
-module sll_m_sim_4d_vp_eulerian_cart_finite_volume
+module sll_m_sim_eul_vp_2d2v_cart_fv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -3500,4 +3500,4 @@ end do
   end subroutine poisson_dirichlet
 
 
-end module sll_m_sim_4d_vp_eulerian_cart_finite_volume
+end module sll_m_sim_eul_vp_2d2v_cart_fv
