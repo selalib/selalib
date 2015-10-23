@@ -1,4 +1,4 @@
-module sll_m_sim_pic_2d_cartesian
+module sll_m_sim_pic_gc_2d0v_cart_optim
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -889,4 +889,4 @@ contains
     res = log(res)*0.5_f64
   end subroutine lognormL2_field_Ex
   
-end module sll_m_sim_pic_2d_cartesian
+end module sll_m_sim_pic_gc_2d0v_cart_optim
