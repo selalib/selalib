@@ -3,9 +3,9 @@
 ! - 4D: x1,x2,x3,v3 (or v1) with cartesian coordinate 
 ! - parallel
 
-program vp_cartesian_4d
+program sim_eul_vp_2d2v_cart_fv
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_vp_eulerian_cart_finite_volume
+  use sll_m_sim_eul_vp_2d2v_cart_fv
   use sll_m_collective
   use sll_m_constants
   use sll_m_cartesian_meshes
@@ -268,4 +268,4 @@ program vp_cartesian_4d
   call sll_halt_collective()
 
 
-end program vp_cartesian_4d
+end program sim_eul_vp_2d2v_cart_fv
