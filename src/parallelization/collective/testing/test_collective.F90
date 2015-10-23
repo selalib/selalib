@@ -31,7 +31,7 @@ program collective_test
   size = sll_get_collective_size( sll_world_collective )
 
   SLL_ALLOCATE(sendbuf_real(1),ierr)
-  sendbuf_real(:)=rank
+  sendbuf_real(:)=real(rank,f32)
   SLL_ALLOCATE(recvbuf_real(1),ierr)
 
   call sll_collective_reduce_real32( sll_world_collective, sendbuf_real, &
@@ -126,7 +126,7 @@ program collective_test
   call sll_collective_barrier(sll_world_collective)
 
   SLL_ALLOCATE(sendbuf_real(1),ierr)
-  sendbuf_real(:)=rank
+  sendbuf_real(:)=real(rank,f32)
   SLL_ALLOCATE(recvbuf_real(1),ierr)
 
   call sll_collective_allreduce_real32( sll_world_collective,&
@@ -277,7 +277,7 @@ program collective_test
   SLL_ALLOCATE(sendcounts(1),ierr)
   if(rank==0) then
     SLL_ALLOCATE(sendbuf_real(2),ierr)
-    sendbuf_real(:)=rank
+    sendbuf_real(:)=real(rank,f32)
 
     sendcounts(1)=2
 
@@ -298,7 +298,7 @@ program collective_test
     SLL_ALLOCATE(recvbuf_real(size),ierr)
     SLL_ALLOCATE(recvcounts(size),ierr)
     SLL_ALLOCATE(sdispls(size),ierr)
-    sendbuf_real(:)=rank
+    sendbuf_real(:)=real(rank,f32)
     sendcounts(1)=1
   endif
 
@@ -372,7 +372,7 @@ program collective_test
   call sll_collective_allgather( sll_world_collective, sendbuf_int, 2, &
                                   recvbuf_int, 2 )
   SLL_ALLOCATE(somme(1),ierr)
-  somme(1) = SUM(recvbuf_int)
+  somme(1) = SUM(real(recvbuf_int,f32))
   if( somme(1)==size*(2.0*size-1) ) then
    logic(1)=.true.
   else
@@ -402,11 +402,11 @@ program collective_test
 
   if(rank.eq.0) then
     SLL_ALLOCATE(sendbuf_real(2),ierr)
-    sendbuf_real(1)=0
-    sendbuf_real(2)=1
+    sendbuf_real(1)=0.0_f32
+    sendbuf_real(2)=1.0_f32
   else
     SLL_ALLOCATE(sendbuf_real(1),ierr)
-    sendbuf_real(1)=rank+1
+    sendbuf_real(1)=real(rank+1,f32)
   endif
   SLL_ALLOCATE(sendcounts(1),ierr)
   if(rank.eq.0) then
@@ -536,7 +536,7 @@ program collective_test
   call sll_collective_barrier(sll_world_collective)
 
   SLL_ALLOCATE(sendbuf_real(size+1),ierr)
-  sendbuf_real(:)=rank
+  sendbuf_real(:)=real(rank,f32)
 
   SLL_ALLOCATE(sendcounts(size),ierr)
 
@@ -620,10 +620,10 @@ subroutine test_sll_collective_globalsum
   summand_real64=1.0_f64 !or better sll_pi
   call sll_collective_globalsum( sll_world_collective, summand_real64, 0)
 
-  summand_comp64=(1.0, 0.0)
+  summand_comp64=(1.0_f64, 0.0_f64)
   call sll_collective_globalsum( sll_world_collective, summand_comp64, 0)
 
-  summand_comp32=(1.0, 0.0)
+  summand_comp32=(1.0_f32, 0.0_f32)
   call sll_collective_globalsum( sll_world_collective, summand_comp32, 0)
 
   summand_real32=1.0_f32
