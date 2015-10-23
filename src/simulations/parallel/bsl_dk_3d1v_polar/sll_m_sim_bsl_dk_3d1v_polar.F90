@@ -37,7 +37,7 @@
 !> \endcode
 
 
-module sll_m_sim_4d_drift_kinetic_polar
+module sll_m_sim_bsl_dk_3d1v_polar
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -1922,7 +1922,7 @@ contains
 
   
 
-end module sll_m_sim_4d_drift_kinetic_polar
+end module sll_m_sim_bsl_dk_3d1v_polar
 
 
 
