@@ -24,7 +24,7 @@
 !   High order splitting in time
 !   KEEN waves with uniform and non uniform grid in velocity
 
-module sll_m_sim_2d_vlasov_poisson_cartesian_two_species
+module sll_m_sim_bsl_vp_1d1v_cart_two_species
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -2317,4 +2317,4 @@ contains
   end subroutine compute_e_app
 
 
-end module sll_m_sim_2d_vlasov_poisson_cartesian_two_species
+end module sll_m_sim_bsl_vp_1d1v_cart_two_species
