@@ -1,4 +1,4 @@
-module sll_m_sim_4d_qns_general_multipatch
+module sll_m_sim_bsl_vp_2d2v_cart_multipatch
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1557,4 +1557,4 @@ contains
   end subroutine compute_norm_L1_L2_Linf_qns
 #endif
  
-end module sll_m_sim_4d_qns_general_multipatch
+end module sll_m_sim_bsl_vp_2d2v_cart_multipatch

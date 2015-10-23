@@ -61,7 +61,7 @@ DONE bsl_vp_1d1v_cart_two_species: sim_2d_vlasov_poisson_cartesian
 DONE bsl_vp_1d1v_cart_no_split: sim_2d_vlasov_poisson_no_splitting
 DONE bsl_vp_2d2v_cart: sim_4d
 DONE bsl_vp_2d2v_cart_poisson_serial: sim_4d_vlasov_poisson_cartesian
-TO DO bsl_vp_2d2v_cart_multipatch: sim_sl_vp_2d2v_cart_multipatch
+DONE bsl_vp_2d2v_cart_multipatch: sim_sl_vp_2d2v_cart_multipatch
 TO DO bsl_vp_2d2v_cart_sparsegrid: sim_sl_vp_2d2v_cart_sparsegrid
 TO DO bsl_vp_2d2v_curv: sim_sl_vp_2d2v_curv_general_elliptic_solver
 TO DO bsl_vp_2d2v_polar: sim_4d_vlasov_poisson_polar
