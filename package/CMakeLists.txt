@@ -181,7 +181,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   ${SLL_DIR}/io/file_io_parallel/sll_m_xdmf_parallel.F90
   ${SLL_DIR}/add_ons/multipatch/sll_m_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/simulations/parallel/sim_sl_va_1d1v_cart_spectral/simulation_2d_vlasov_ampere_cartesian.F90
+  ${SLL_DIR}/simulations/parallel/bsl_va_1d1v_cart_spectral/sll_m_sim_bsl_va_1d1v_cart_spectral.F90
   ${SLL_DIR}/simulations/parallel/sim_sl_vp_2d2v_cart_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/parallel/bsl_dk_3d1v_polar/sll_m_sim_bsl_dk_3d1v_polar.F90)

@@ -24,7 +24,7 @@
 !   High order splitting in time
 !   KEEN waves with uniform and non uniform grid in velocity
 
-module sll_m_sim_2d_vlasov_ampere_cartesian
+module sll_m_sim_bsl_va_1d1v_cart_spectral
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1955,4 +1955,4 @@ contains
 
   end function f_equilibrium
 
-end module sll_m_sim_2d_vlasov_ampere_cartesian
+end module sll_m_sim_bsl_va_1d1v_cart_spectral
