@@ -45,7 +45,7 @@
 !>  call delete(simulation)
 !> \endcode
 
-module sll_m_sim_4d_drift_kinetic_field_aligned_polar
+module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -2565,7 +2565,7 @@ contains
 
 !==============================================================================
 
-end module sll_m_sim_4d_drift_kinetic_field_aligned_polar
+end module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 
 
 

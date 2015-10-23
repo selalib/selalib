@@ -4,9 +4,9 @@
 ! - parallel
 ! - filed aligned
 
-program drift_kinetic_field_aligned_polar
+program sim_bsl_dk_3d1v_polar_field_aligned
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_drift_kinetic_field_aligned_polar
+  use sll_m_sim_bsl_dk_3d1v_polar_field_aligned
   use sll_m_collective
   use sll_m_timer
   implicit none
@@ -40,4 +40,4 @@ program drift_kinetic_field_aligned_polar
   call sll_halt_collective()
 
 
-end program drift_kinetic_field_aligned_polar
+end program sim_bsl_dk_3d1v_polar_field_aligned
