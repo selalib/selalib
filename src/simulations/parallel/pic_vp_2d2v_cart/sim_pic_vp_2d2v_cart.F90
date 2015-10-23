@@ -1,4 +1,4 @@
-program unit_test_pic_vp_2d2v_cart
+program sim_pic_vp_2d2v_cart
 
 #include "sll_working_precision.h"
   use sll_m_sim_pic_vp_2d2v_cart
@@ -21,4 +21,4 @@ program unit_test_pic_vp_2d2v_cart
   call sll_halt_collective()
 
 
-end program unit_test_pic_vp_2d2v_cart
+end program sim_pic_vp_2d2v_cart
