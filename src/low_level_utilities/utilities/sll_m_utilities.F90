@@ -114,7 +114,7 @@ contains
 
     acc = 1
     if( n >= 1 ) then
-       do i=n,1,-1
+       do i=int(n,kind=i64),1,-1
           acc = acc*i
        end do
     end if
@@ -403,12 +403,12 @@ subroutine PFenvelope(S,               &
      S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
      S = S / (1-epsilon)
   else
-     epsilon = 0.5*(tanh((t0-tL)/twL) + 1)
-     S = 0.5*(tanh((t-tL)/twL) + 1) - epsilon
-     S = S / (1-epsilon)
+     epsilon = 0.5*(tanh((t0-tL)/twL) + 1.0_f64)
+     S = 0.5*(tanh((t-tL)/twL) + 1.0_f64) - epsilon
+     S = S / (1.0_f64-epsilon)
   endif
   if (S<0) then
-     S = 0.
+     S = 0.0_f64
   endif
   S = S + 0.*tflat ! for use of unused
   return
