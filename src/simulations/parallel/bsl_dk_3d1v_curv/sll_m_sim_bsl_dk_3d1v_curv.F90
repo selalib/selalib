@@ -3,7 +3,7 @@
 ! debugging/understanding the behavior of the QNS one. Once this objective is
 ! fulfilled, this simulation can be deleted.
 
-module sll_m_sim_4d_dk_hybrid
+module sll_m_sim_bsl_dk_3d1v_curv
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -2585,4 +2585,4 @@ contains
 
   end subroutine compute_norm_L1_L2_Linf
 
-end module sll_m_sim_4d_dk_hybrid
+end module sll_m_sim_bsl_dk_3d1v_curv
