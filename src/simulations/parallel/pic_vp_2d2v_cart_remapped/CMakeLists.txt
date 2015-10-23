@@ -1,14 +1,12 @@
-set(   TEST_NAME 4d_vp_generic_pic_cartesian           )
-set(    SIM_NAME 4d_vp_generic_pic_cartesian           )
-set(  EXECUTABLE "test_${TEST_NAME}"           )
-set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
+set(    SIM_NAME pic_vp_2d2v_cart_remapped    )
+set(   TEST_NAME "sim_${SIM_NAME}"            )
+set(  EXECUTABLE "${TEST_NAME}"               )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
 
 file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
-                              unit_test_${TEST_NAME}.F90 )
-
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_sim_parallel
   sll_working_precision

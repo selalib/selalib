@@ -10,10 +10,10 @@
 ! Program listed by Doxygen as part of the particle_methods in
 ! [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]]
 
-program unit_test_4d_vp_generic_pic_cartesian
+program sim_pic_vp_2d2v_cart_remapped
 
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_vp_generic_pic_cartesian
+  use sll_m_sim_pic_vp_2d2v_cart_remapped
   use sll_m_collective 
   use sll_m_timer
 
@@ -57,4 +57,4 @@ program unit_test_4d_vp_generic_pic_cartesian
   call sll_halt_collective()
 
   ! call sim%delete()
-end program unit_test_4d_vp_generic_pic_cartesian
+end program sim_pic_vp_2d2v_cart_remapped
