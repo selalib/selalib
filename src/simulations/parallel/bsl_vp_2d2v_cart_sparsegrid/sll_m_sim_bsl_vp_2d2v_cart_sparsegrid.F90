@@ -6,7 +6,7 @@
 ! Author: Katharina Kormann, IPP
 !------------------------------------------------------------------------------
 
-module sll_m_sim_sl_vp_2d2v_cart_sparsegrid
+module sll_m_sim_bsl_vp_2d2v_cart_sparsegrid
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -521,4 +521,4 @@ end function int_f0_alpha
 
 !------------------------------------------------------------------------------!
 
-end module sll_m_sim_sl_vp_2d2v_cart_sparsegrid
+end module sll_m_sim_bsl_vp_2d2v_cart_sparsegrid

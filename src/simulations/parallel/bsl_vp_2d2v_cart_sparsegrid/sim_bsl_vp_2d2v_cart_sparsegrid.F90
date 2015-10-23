@@ -1,6 +1,6 @@
-program sim_sl_vp_2d2v_cart_sparsegrid
+program sim_bsl_vp_2d2v_cart_sparsegrid
 #include "sll_working_precision.h"
-  use sll_m_sim_sl_vp_2d2v_cart_sparsegrid
+  use sll_m_sim_bsl_vp_2d2v_cart_sparsegrid
   use sll_m_collective
 
   type(sll_t_sim_sl_vp_2d2v_cart_sparsegrid) :: sim
@@ -19,4 +19,4 @@ program sim_sl_vp_2d2v_cart_sparsegrid
 
   call sll_halt_collective()
 
-end program sim_sl_vp_2d2v_cart_sparsegrid
+end program sim_bsl_vp_2d2v_cart_sparsegrid
