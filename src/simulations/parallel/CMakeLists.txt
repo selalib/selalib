@@ -52,7 +52,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart                         )
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_two_species             )
-    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting       )
+    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_no_split                )
     ADD_SUBDIRECTORY( sim_4d                                   )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian          )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar              )

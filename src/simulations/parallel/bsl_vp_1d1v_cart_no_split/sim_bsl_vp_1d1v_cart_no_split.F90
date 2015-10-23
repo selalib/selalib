@@ -1,7 +1,7 @@
-program vlasov_poisson_2d_no_split
+program sim_bsl_vp_1d1v_cart_no_split
 #include "sll_working_precision.h"
 
-  use sll_m_sim_2d_vlasov_poisson_no_splitting
+  use sll_m_sim_bsl_vp_1d1v_cart_no_split
   use sll_m_timer
   implicit none
 
@@ -26,4 +26,4 @@ program vlasov_poisson_2d_no_split
   print *, '#time elapsed since t0 : ',time
   print *,'#PASSED'
 
-end program vlasov_poisson_2d_no_split
+end program sim_bsl_vp_1d1v_cart_no_split
