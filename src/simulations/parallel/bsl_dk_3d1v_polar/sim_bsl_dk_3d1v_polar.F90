@@ -3,9 +3,9 @@
 ! - 4D : r,\theta,z and v
 ! - parallel
 
-program drift_kinetic_polar
+program sim_bsl_dk_3d1v_polar
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_drift_kinetic_polar
+  use sll_m_sim_bsl_dk_3d1v_polar
   use sll_m_collective
   use sll_m_timer
   implicit none
@@ -39,4 +39,4 @@ program drift_kinetic_polar
   call sll_halt_collective()
 
 
-end program drift_kinetic_polar
+end program sim_bsl_dk_3d1v_polar
