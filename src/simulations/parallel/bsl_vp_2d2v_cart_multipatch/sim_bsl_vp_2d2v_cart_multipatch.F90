@@ -5,10 +5,10 @@
 ! - parallel
 ! - The coordinate transformation is defined by patches.
 
-program qns_4d_general_multipatch
+program sim_bsl_vp_2d2v_cart_multipatch
 #include "sll_working_precision.h"
   use sll_m_coordinate_transformation_multipatch
-  use sll_m_sim_4d_qns_general_multipatch, only: &
+  use sll_m_sim_bsl_vp_2d2v_cart_multipatch, only: &
      sll_simulation_4d_qns_general_multipatch, &
      initialize_4d_qns_gen_mp, &
      run_4d_qns_general_mp
@@ -159,7 +159,7 @@ program qns_4d_general_multipatch
   !call delete(simulation)
   !call delete(transformation_x)
 
-end program qns_4d_general_multipatch
+end program sim_bsl_vp_2d2v_cart_multipatch
 
 ! External functions used as parameters in the above unit test:
 
