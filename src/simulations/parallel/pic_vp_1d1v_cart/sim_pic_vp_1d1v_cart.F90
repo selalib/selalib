@@ -1,8 +1,8 @@
-program pic1d1v_vp_periodic
+program sim_pic_vp_1d1v_cart
 
 #include "sll_working_precision.h"
     
-    use sll_m_sim_pic1d1v_vp_periodic, only: &
+    use sll_m_sim_pic_vp_1d1v_cart, only: &
       sll_simulation_pic1d1v_vp_periodic, &
       sll_delete
     
@@ -49,4 +49,4 @@ program pic1d1v_vp_periodic
 
   call sll_halt_collective()
 
-end program pic1d1v_vp_periodic
+end program sim_pic_vp_1d1v_cart
