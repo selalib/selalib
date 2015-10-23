@@ -3,7 +3,7 @@
 ! - 1Dx1D cartesian: x1=x, x2=vx
 ! - parallel
 
-program vlasov_ampere_2d
+program sim_bsl_va_1d1v_cart_spectral
 #include "sll_working_precision.h"
 
 use sll_m_gaussian
@@ -11,7 +11,7 @@ use sll_m_collective
 use sll_m_timer
 use sll_m_constants
 use sll_m_parallel_array_initializer
-use sll_m_sim_2d_vlasov_ampere_cartesian
+use sll_m_sim_bsl_va_1d1v_cart_spectral
 implicit none
 
 class(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim
@@ -47,6 +47,6 @@ endif
 
 call sll_halt_collective()
 
-end program vlasov_ampere_2d
+end program sim_bsl_va_1d1v_cart_spectral
 
 
