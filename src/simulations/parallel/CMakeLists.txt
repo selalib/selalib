@@ -63,7 +63,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
     ADD_SUBDIRECTORY( sim_6d                                   )
 
-    ADD_SUBDIRECTORY( sim_sl_va_1d1v_cart_berk_breizman        )
+    ADD_SUBDIRECTORY( bsl_va_1d1v_cart_berk_breizman           )
     ADD_SUBDIRECTORY( bsl_va_1d1v_cart_spectral                )
     ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_sparsegrid           )
     ADD_SUBDIRECTORY( sim_sl_vp_3d3v_cart_sparsegrid           )
