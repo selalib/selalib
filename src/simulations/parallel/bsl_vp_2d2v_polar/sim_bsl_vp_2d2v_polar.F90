@@ -5,10 +5,10 @@
 !   in the x,y variables.
 ! - parallel
 
-program vlasov_poisson_4d_polar
+program sim_bsl_vp_2d2v_polar
 #include "sll_working_precision.h"
 
-  use sll_m_sim_4d_vlasov_poisson_polar
+  use sll_m_sim_bsl_vp_2d2v_polar
   use sll_m_collective
   use sll_m_cartesian_meshes
   use sll_m_coordinate_transformations_2d
@@ -98,4 +98,4 @@ program vlasov_poisson_4d_polar
   call sll_halt_collective()
 
 
-end program vlasov_poisson_4d_polar
+end program sim_bsl_vp_2d2v_polar
