@@ -3,8 +3,8 @@
 ! - 6D cartesian: x, y, z, vx, vy, vz (or x1, x2, x3, x4, x5, x6)
 ! - parallel
 
-program vlasov_poisson_6d
-  use sll_m_sim_6d_vlasov_poisson_cartesian
+program sim_bsl_vp_3d3v_cart
+  use sll_m_sim_bsl_vp_3d3v_cart
   use sll_m_collective
   implicit none
 
@@ -29,6 +29,6 @@ program vlasov_poisson_6d
   print *, 'PASSED'
   call sll_halt_collective()
 
-end program vlasov_poisson_6d
+end program sim_bsl_vp_3d3v_cart
 
 
