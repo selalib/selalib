@@ -71,6 +71,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_multipatch              )
     ADD_SUBDIRECTORY( bsl_dk_3d1v_curv_field_aligned           )
     ADD_SUBDIRECTORY( bsl_vp_2d2v_curv                         )
+    ADD_SUBDIRECTORY( eul_vp_2d2v_cart_fv                      )
  
 
     # Particle simulations (mostly PIC)
