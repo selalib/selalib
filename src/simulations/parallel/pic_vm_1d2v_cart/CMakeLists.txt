@@ -1,12 +1,12 @@
-set ( TEST_NAME pic_vm_1d2v_cart )
-set ( SIM_NAME pic_vm_1d2v_cart )
-set ( EXECUTABLE "sim_${TEST_NAME}")
-set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
+set(    SIM_NAME pic_vm_1d2v_cart             )
+set(   TEST_NAME "sim_${SIM_NAME}"            )
+set(  EXECUTABLE "${TEST_NAME}"               )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
 
 file( GLOB INPUT_FILES "*.nml"         )
+file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90
-                              sim_${TEST_NAME}.F90 )
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_sim_parallel
   sll_working_precision
