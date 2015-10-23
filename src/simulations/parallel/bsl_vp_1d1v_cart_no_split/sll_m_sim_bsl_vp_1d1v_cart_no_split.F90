@@ -22,7 +22,7 @@
 !
 !
 
-module sll_m_sim_2d_vlasov_poisson_no_splitting
+module sll_m_sim_bsl_vp_1d1v_cart_no_split
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1447,4 +1447,4 @@ contains
 
 
 
-end module sll_m_sim_2d_vlasov_poisson_no_splitting
+end module sll_m_sim_bsl_vp_1d1v_cart_no_split
