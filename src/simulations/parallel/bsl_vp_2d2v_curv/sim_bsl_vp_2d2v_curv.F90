@@ -5,9 +5,9 @@
 !   in the x,y variables.
 ! - parallel
 
-program vlasov_poisson_4d_general
+program sim_bsl_vp_2d2v_curv
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_vlasov_poisson_general
+  use sll_m_sim_bsl_vp_2d2v_curv
   use sll_m_collective
   use sll_m_constants
   use sll_m_cartesian_meshes
@@ -141,6 +141,6 @@ program vlasov_poisson_4d_general
   call sll_halt_collective()
 
 
-end program vlasov_poisson_4d_general
+end program sim_bsl_vp_2d2v_curv
 
 
