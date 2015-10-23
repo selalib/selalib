@@ -42,7 +42,7 @@
 
 #define MPI_MASTER 0
 
-module sll_m_sim_4d_vlasov_poisson_polar
+module sll_m_sim_bsl_vp_2d2v_polar
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -624,4 +624,4 @@ contains
   end subroutine compute_electric_fields_eta2
 
 
-end module sll_m_sim_4d_vlasov_poisson_polar
+end module sll_m_sim_bsl_vp_2d2v_polar
