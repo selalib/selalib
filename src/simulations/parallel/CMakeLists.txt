@@ -59,7 +59,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( bsl_dk_3d1v_polar                        )
     ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_one_mu                 )
     ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_multi_mu               )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_field_aligned_polar )
+    ADD_SUBDIRECTORY( bsl_dk_3d1v_polar_field_aligned          )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
     ADD_SUBDIRECTORY( sim_6d                                   )
 
