@@ -4,9 +4,9 @@
 ! - parallel for vlasov
 ! - sequential for poisson 
 
-program vlasov_poisson_4d
+program sim_bsl_vp_2d2v_cart_poisson_serial
 #include "sll_working_precision.h"
-  use sll_m_sim_4d_vlasov_parallel_poisson_sequential_cartesian
+  use sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
   use sll_m_collective
   use sll_m_timer
   implicit none 
@@ -104,4 +104,4 @@ program vlasov_poisson_4d
 !  call sll_halt_collective()
 
 
-end program vlasov_poisson_4d
+end program sim_bsl_vp_2d2v_cart_poisson_serial
