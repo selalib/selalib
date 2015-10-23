@@ -37,7 +37,7 @@
 !> \endcode
 
 
-module sll_m_sim_4d_drift_kinetic_polar_one_mu
+module sll_m_sim_bsl_gk_3d1v_polar_one_mu
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -2716,7 +2716,7 @@ end subroutine solve_bilaplacian_polar
 
   
 
-end module sll_m_sim_4d_drift_kinetic_polar_one_mu
+end module sll_m_sim_bsl_gk_3d1v_polar_one_mu
 
 
 

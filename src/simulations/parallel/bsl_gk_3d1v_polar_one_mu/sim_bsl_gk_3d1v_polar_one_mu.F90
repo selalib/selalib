@@ -4,8 +4,8 @@
 ! - 4D : r,\theta,z and v
 ! - parallel
 
-program drift_kinetic_polar_one_mu
-  use sll_m_sim_4d_drift_kinetic_polar_one_mu
+program sim_bsl_gk_3d1v_polar_one_mu
+  use sll_m_sim_bsl_gk_3d1v_polar_one_mu
   use sll_m_collective
   implicit none
 
@@ -31,4 +31,4 @@ program drift_kinetic_polar_one_mu
   call sll_halt_collective()
 
 
-end program drift_kinetic_polar_one_mu
+end program sim_bsl_gk_3d1v_polar_one_mu
