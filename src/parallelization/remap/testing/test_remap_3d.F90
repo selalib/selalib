@@ -66,7 +66,7 @@ program remap_test
   ! Boot parallel environment
   call sll_boot_collective()
 !  end_result = .true.
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   if( myrank .eq. 0) then
@@ -123,7 +123,7 @@ program remap_test
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
-              local_array1(i,j,k) = gi + (gj-1)*ni + (gk-1)*ni*nj
+              local_array1(i,j,k) = real(gi + (gj-1)*ni + (gk-1)*ni*nj, f64)
            enddo
         enddo
      enddo

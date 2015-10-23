@@ -1,4 +1,4 @@
-module sll_m_sim_pic_4d_cartesian
+module sll_m_sim_pic_vp_2d2v_cart_optim_push
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -786,4 +786,4 @@ contains
     ee = ee * dx * dy    
   end subroutine electric_energy
   
-end module sll_m_sim_pic_4d_cartesian
+end module sll_m_sim_pic_vp_2d2v_cart_optim_push

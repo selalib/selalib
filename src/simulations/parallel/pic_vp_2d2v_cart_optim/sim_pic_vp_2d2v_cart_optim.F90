@@ -1,8 +1,8 @@
-program pic_4d_cartesian
+program sim_pic_vp_2d2v_cart_optim
 
 #include "sll_working_precision.h"
 
-  use sll_m_sim_pic_4d_cartesian
+  use sll_m_sim_pic_vp_2d2v_cart_optim
   use sll_m_collective 
   use sll_m_timer
 
@@ -38,4 +38,4 @@ program pic_4d_cartesian
   call sll_halt_collective()
 
   ! call sim%delete()
-end program pic_4d_cartesian
+end program sim_pic_vp_2d2v_cart_optim
