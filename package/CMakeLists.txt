@@ -183,7 +183,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   ${SLL_DIR}/simulations/parallel/bsl_vp_1d1v_cart/sll_m_sim_bsl_vp_1d1v_cart.F90
   ${SLL_DIR}/simulations/parallel/bsl_va_1d1v_cart_spectral/sll_m_sim_bsl_va_1d1v_cart_spectral.F90
   ${SLL_DIR}/simulations/parallel/bsl_vp_2d2v_cart_multipatch/sll_m_sim_bsl_vp_2d2v_cart_multipatch.F90
-  ${SLL_DIR}/simulations/parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
+  ${SLL_DIR}/simulations/parallel/bsl_dk_3d1v_curv/sll_m_sim_bsl_dk_3d1v_curv.F90
   ${SLL_DIR}/simulations/parallel/bsl_dk_3d1v_polar/sll_m_sim_bsl_dk_3d1v_polar.F90)
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
