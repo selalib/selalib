@@ -5,6 +5,8 @@ function func_one( eta1, eta2) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
   real(8) :: res
+  real(8) :: dummy
+  dummy = eta1+eta2
   res = 1.0_8
 end function func_one
 
@@ -12,6 +14,8 @@ function func_zero( eta1, eta2) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
   real(8) :: res
+  real(8) :: dummy
+  dummy = eta1+eta2
   res = 0.0_8
 end function func_zero
 
@@ -20,6 +24,8 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  real(8) :: dummy
+  dummy = eta1+eta2+params(1)
 
   res = 0.0_8
 end function func_epsi
@@ -38,6 +44,8 @@ function source_term_perper( eta1, eta2) result(res)
   real(8), intent(in) :: eta2
   ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
+  real(8) :: dummy
+  dummy = eta1+eta2
 
   res =  0.001*cos(2*sll_pi*eta1)
   !!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
@@ -45,7 +53,10 @@ end function source_term_perper
 
 real(8) function sol_exacte_perper(eta1,eta2)
   use sll_m_constants
-  real(8) :: eta1,eta2
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8) :: dummy
+  dummy = eta1+eta2
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
@@ -53,14 +64,20 @@ end function sol_exacte_perper
 
 real(8) function sol_exacte_perper_der1(eta1,eta2)
   use sll_m_constants
-  real(8) :: eta1,eta2
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8) :: dummy
+  dummy = eta1+eta2
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
   use sll_m_constants
-  real(8) :: eta1,eta2
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8) :: dummy
+  dummy = eta1+eta2
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
@@ -78,7 +95,8 @@ real(8) function source_term_perdir(eta1,eta2) ! in the path
   use sll_m_constants
   intrinsic :: cos
   intrinsic :: sin 
-  real(8),intent(in) :: eta1,eta2
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
 
   
   source_term_perdir = -2*(0.5*sll_pi)**2* sin(0.5*sll_pi*eta1)*sin(0.5*sll_pi*eta2)
@@ -131,6 +149,8 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+  real(8) :: dummy
+  dummy = params(1)
 
   source_term_dirper = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
      ! -(16.0*sll_pi**2*eta1**4 &
@@ -505,42 +525,42 @@ real(8) function adimension_chgt_x(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  adimension_chgt_x = 2*sll_pi*eta1 !+ eta2)
+  adimension_chgt_x = 2_f64*sll_pi*eta1 !+ eta2)
 end function adimension_chgt_x
 
 real(8) function adimension_chgt_y(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  adimension_chgt_y = 2*sll_pi*eta2
+  adimension_chgt_y = 2_f64*sll_pi*eta2
 end function adimension_chgt_y
 
 real(8) function jac11_adimension_chgt(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac11_adimension_chgt = 2*sll_pi
+  jac11_adimension_chgt = 2_f64*sll_pi
 end function jac11_adimension_chgt
 
 real(8) function jac12_adimension_chgt(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac12_adimension_chgt = 0.0!sll_pi
+  jac12_adimension_chgt = 0.0_f64!sll_pi
 end function jac12_adimension_chgt
 
 real(8) function jac21_adimension_chgt(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac21_adimension_chgt = 0.0!2*sll_pi!0.0
+  jac21_adimension_chgt = 0.0_f64!2*sll_pi!0.0
 end function jac21_adimension_chgt
 
 real(8) function jac22_adimension_chgt(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac22_adimension_chgt = 2*sll_pi
+  jac22_adimension_chgt = 2_f64*sll_pi
 end function jac22_adimension_chgt
 
 real(8) function sol_exacte_chgt_adim(eta1,eta2)
@@ -550,8 +570,8 @@ real(8) function sol_exacte_chgt_adim(eta1,eta2)
   intrinsic :: cos
   intrinsic :: sin
   
-  x =   2*sll_pi*eta1!+eta2)
-  y =   2* sll_pi*eta2
+  x =   2_f64*sll_pi*eta1!+eta2)
+  y =   2_f64* sll_pi*eta2
   
   sol_exacte_chgt_adim = cos(x)*cos(y)
   
@@ -567,6 +587,6 @@ real(8) function source_term_chgt_adim(eta1,eta2)
   x =   2*sll_pi*eta1 !+eta2)
   y =   2* sll_pi*eta2
   
-  source_term_chgt_adim = -2*cos(x)*cos(y)
+  source_term_chgt_adim = -2.0_f64*cos(x)*cos(y)
   
 end function source_term_chgt_adim
