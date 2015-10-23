@@ -68,7 +68,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_sparsegrid           )
     ADD_SUBDIRECTORY( sim_sl_vp_3d3v_cart_sparsegrid           )
     ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_multipatch           )
-    ADD_SUBDIRECTORY( sl_dk_3d1v_curv_field_aligned        )
+    ADD_SUBDIRECTORY( bsl_dk_3d1v_curv_field_aligned           )
     ADD_SUBDIRECTORY( sim_sl_vp_2d2v_curv_general_elliptic_solver)
  
 

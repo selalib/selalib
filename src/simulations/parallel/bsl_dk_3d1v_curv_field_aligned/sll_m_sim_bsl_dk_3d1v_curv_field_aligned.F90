@@ -22,7 +22,7 @@
 !> to curvilinear case
 !> for further comments, see sll_docs/fcisl/fcisl_report.pdf
 
-module sll_m_sim_sl_dk_3d1v_curv_field_aligned
+module sll_m_sim_bsl_dk_3d1v_curv_field_aligned
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -104,4 +104,4 @@ contains
   
   
 
-end module sll_m_sim_sl_dk_3d1v_curv_field_aligned
+end module sll_m_sim_bsl_dk_3d1v_curv_field_aligned
