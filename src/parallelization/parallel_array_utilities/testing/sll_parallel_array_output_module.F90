@@ -39,16 +39,16 @@ subroutine write_mesh_4d(mesh)
   SLL_ALLOCATE(eta4(mesh%num_cells4+1),error)
  
   do i = 1, mesh%num_cells1+1
-     eta1(i) = mesh%eta1_min + (i-1)*mesh%delta_eta1
+     eta1(i) = mesh%eta1_min + real(i-1,f64)*mesh%delta_eta1
   end do
   do j = 1, mesh%num_cells2+1
-     eta2(j) = mesh%eta2_min + (j-1)*mesh%delta_eta2
+     eta2(j) = mesh%eta2_min + real(j-1,f64)*mesh%delta_eta2
   end do
   do k = 1, mesh%num_cells3+1
-     eta3(k) = mesh%eta3_min + (k-1)*mesh%delta_eta3
+     eta3(k) = mesh%eta3_min + real(k-1,f64)*mesh%delta_eta3
   end do
   do l = 1, mesh%num_cells4+1
-     eta4(l) = mesh%eta4_min + (l-1)*mesh%delta_eta4
+     eta4(l) = mesh%eta4_min + real(l-1,f64)*mesh%delta_eta4
   end do
  
 #ifndef NOHDF5
@@ -256,8 +256,8 @@ subroutine write_fx2x4(f, layout, cplot)
   end do
   global_dims(1) = int(get_layout_global_size_j(layout),HSIZE_T)
   global_dims(2) = int(get_layout_global_size_l(layout),HSIZE_T)
-  offset(1) = get_layout_j_min(layout,prank)-1
-  offset(2) = get_layout_l_min(layout,prank)-1
+  offset(1) = int(get_layout_j_min(layout,prank)-1,i64)
+  offset(2) = int(get_layout_l_min(layout,prank)-1,i64)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx2x4_'//cplot//".h5",comm,pfile_id,error)
@@ -294,8 +294,8 @@ subroutine write_fx3x4(f, layout, cplot)
   end do
   global_dims(1) = int(get_layout_global_size_k(layout), HSIZE_T)
   global_dims(2) = int(get_layout_global_size_l(layout), HSIZE_T)
-  offset(1) = get_layout_k_min(layout,prank)-1
-  offset(2) = get_layout_l_min(layout,prank)-1
+  offset(1) = int(get_layout_k_min(layout,prank)-1,i64)
+  offset(2) = int(get_layout_l_min(layout,prank)-1,i64)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx3x4_'//cplot//".h5",comm,pfile_id,error)

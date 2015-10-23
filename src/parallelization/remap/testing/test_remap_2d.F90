@@ -53,7 +53,7 @@ program remap_2d_unit_test
   ! Boot parallel environment
   call sll_boot_collective()
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   if( myrank .eq. 0) then
@@ -79,10 +79,10 @@ program remap_2d_unit_test
      call factorize_in_random_2powers_2d(colsz, npi, npj)
      if(i_test==1)then
         npi = 1
-        npj = colsz
+        npj = int(colsz,i32)
      endif
      if(i_test==2)then
-       npi = colsz
+       npi = int(colsz,i32)
        npj = 1
      endif
 
@@ -109,7 +109,7 @@ program remap_2d_unit_test
            global_indices =  local_to_global( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
-           local_array1(i,j) = gi + (gj-1)*ni
+           local_array1(i,j) = real(gi + (gj-1)*ni,f64)
         enddo
      enddo
      
@@ -272,7 +272,7 @@ print *, 'applied plan'
            global_indices =  local_to_global( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
-           val = gi + (gj-1)*ni
+           val = real(gi + (gj-1)*ni,f64)
            local_array1c(i,j) = cmplx(val, val, f64)
         enddo
      enddo
@@ -319,9 +319,9 @@ print *, 'applied plan'
            global_indices =  local_to_global( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
-           val = gi + (gj-1)*ni
+           val = real(gi + (gj-1)*ni,f64)
            arrays_diffc(i,j) = local_array2c(i,j) - cmplx(val,val,f64)
-           if (arrays_diffc(i,j)/= (0,0)) then
+           if (arrays_diffc(i,j)/= (0.,0.)) then
               test_passed = .false.
               print*, i_test, myrank, '"remap" unit test: FAIL'
               print *, i_test, myrank, 'local indices: ', '(', i, j, ')'
