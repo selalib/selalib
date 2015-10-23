@@ -56,8 +56,8 @@ DONE bsl_dk_3d1v_polar: sim_4d_drift_kinetic_polar
 DONE bsl_dk_3d1v_polar_field_aligned: sim_4d_drift_kinetic_field_aligned_polar
 DONE bsl_va_1d1v_cart_spectral: sim_sl_va_1d1v_cart_spectral
 DONE bsl_va_1d1v_cart_berk_breizman: sim_sl_va_1d1v_cart_berk_breizman
-TO DO bsl_vp_1d1v_cart: sim_2d_vlasov_poisson_cartesian
-TO DO bsl_vp_1d1v_cart_two_species: sim_2d_vlasov_poisson_cartesian
+DONE bsl_vp_1d1v_cart: sim_2d_vlasov_poisson_cartesian
+DONE bsl_vp_1d1v_cart_two_species: sim_2d_vlasov_poisson_cartesian
 TO DO bsl_vp_1d1v_cart_no_split: sim_2d_vlasov_poisson_no_splitting
 TO DO bsl_vp_2d2v_cart: sim_4d
 TO DO bsl_vp_2d2v_cart_poisson_serial: sim_4d_vlasov_poisson_cartesian
