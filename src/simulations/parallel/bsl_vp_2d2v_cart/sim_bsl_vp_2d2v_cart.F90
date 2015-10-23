@@ -3,8 +3,8 @@
 ! - 4D cartesian: x, y, vx, vy (or x1, x2, x3, x4)
 ! - parallel
 
-program vlasov_poisson_4d
-  use sll_m_sim_4d_vlasov_poisson_cartesian
+program sim_bsl_vp_2d2v_cart
+  use sll_m_sim_bsl_vp_2d2v_cart
   use sll_m_collective
   implicit none
 
@@ -28,6 +28,7 @@ program vlasov_poisson_4d
   call sll_halt_collective()
 
 
-end program vlasov_poisson_4d
+end program sim_bsl_vp_2d2v_cart
+
 
 
