@@ -254,10 +254,16 @@ subroutine write_fx2x4(f, layout, cplot)
         fjl(j,l) = sum(f(:,j,:,l))
      end do
   end do
+
+#ifdef NOHDF5
+#define HSIZE_T  i32
+#define HSSIZE_T i32
+#endif
+
   global_dims(1) = int(get_layout_global_size_j(layout),HSIZE_T)
   global_dims(2) = int(get_layout_global_size_l(layout),HSIZE_T)
-  offset(1) = int(get_layout_j_min(layout,prank)-1,i64)
-  offset(2) = int(get_layout_l_min(layout,prank)-1,i64)
+  offset(1) = int(get_layout_j_min(layout,prank)-1,HSSIZE_T)
+  offset(2) = int(get_layout_l_min(layout,prank)-1,HSSIZE_T)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx2x4_'//cplot//".h5",comm,pfile_id,error)

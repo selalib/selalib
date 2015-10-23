@@ -128,10 +128,10 @@ contains
   end do
   
 #ifdef NOHDF5
-#define HSIZE_T i32
+#define HSSIZE_T i32
 #endif
-  offset(1) =  int(get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
-  offset(2) =  int(get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
+  offset(1) =  int(get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(2) =  int(get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
 
   !Gnuplot output
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
@@ -267,12 +267,12 @@ contains
   enddo
 
 #ifdef NOHDF5
-#define HSIZE_T i32
+#define HSSIZE_T i32
 #endif
 
-  offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
-  offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
-  offset(3) = int(get_layout_k_min( layout, myrank ) - 1, HSIZE_T)
+  offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(3) = int(get_layout_k_min( layout, myrank ) - 1, HSSIZE_T)
 
 #ifndef NOHDF5
 
