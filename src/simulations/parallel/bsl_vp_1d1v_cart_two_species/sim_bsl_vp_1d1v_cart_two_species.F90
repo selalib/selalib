@@ -3,12 +3,12 @@
 ! - 1Dx1D cartesian: x1=x, x2=vx
 ! - parallel
 
-program vlasov_poisson_2d_two_species
+program sim_bsl_vp_1d1v_cart_two_species
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-use sll_m_sim_2d_vlasov_poisson_cartesian_two_species
+use sll_m_sim_bsl_vp_1d1v_cart_two_species
 use sll_m_common_array_initializers
 use sll_m_collective
 use sll_m_timer
@@ -115,4 +115,4 @@ endif
 
 call sll_halt_collective()
 
-end program vlasov_poisson_2d_two_species
+end program sim_bsl_vp_1d1v_cart_two_species
