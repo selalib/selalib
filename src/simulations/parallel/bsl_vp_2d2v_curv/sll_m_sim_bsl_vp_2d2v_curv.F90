@@ -1,4 +1,4 @@
-module sll_m_sim_4d_vlasov_poisson_general
+module sll_m_sim_bsl_vp_2d2v_curv
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1509,4 +1509,4 @@ contains
   end subroutine test_4d_array_values
 
 
-end module sll_m_sim_4d_vlasov_poisson_general
+end module sll_m_sim_bsl_vp_2d2v_curv
