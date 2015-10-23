@@ -74,7 +74,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
  
 
     # Particle simulations (mostly PIC)
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_PIC_cartesian      )
+    ADD_SUBDIRECTORY( pic_gc_2d0v_cart_optim                   )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_generic_PIC_cartesian )
     ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
