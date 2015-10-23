@@ -51,34 +51,49 @@ def get_all_used_types( *content ):
 
 #------------------------------------------------------------------------------
 def get_all_calls( *content ):
-    """ Extract ALL calls from items in content.
+    """ Extract all non type-bound calls from items in content.
     """
     import re
-    pattern = r"([A-Za-z]\w*) *\("
+#    pattern = r"([A-Za-z]\w*) *\("
+    pattern = r"(?<![%\s])\s*(\b[A-Za-z]\w*\b) *\("  # discard type-bound call
     regex   = re.compile( pattern )
     for item in content:
-        # TODO: also check subroutine calls
+        # TODO: do not parse strings!!!!!
+        # If assignment, parse r.h.s.
         if isinstance( item, statements.Assignment ):
             for match in regex.findall( item.expr ):
                 yield match
-        elif isinstance( item, namespace_types ):
-            for f in get_all_calls( *item.content ):
-                yield f
+        # If pointer assignment, parse r.h.s.
+        elif isinstance( item, statements.PointerAssignment ):
+            for match in regex.findall( item.expr ):
+                yield match
+        # If subroutine call, parse arguments
+        elif isinstance( item, statements.Call ):
+            for s in item.items:
+                for match in regex.findall( s ):
+                    yield match
+        # If block, search recursively:
+        elif hasattr( item, 'content' ):
+            for c in get_all_calls( *item.content ):
+                yield c
             # In Python3.3+:
-            # yield from get_all_used_types( *item.content )
+            # yield from get_all_calls( *item.content )
 
 #------------------------------------------------------------------------------
 def get_all_subroutine_calls( *content ):
-    """ Extract ALL subroutine calls from items in content.
+    """ Extract all non type-bound subroutine calls from items in content.
     """
     for item in content:
+        # If subroutine call, return its name
         if isinstance( item, statements.Call ):
-            yield item.designator
-        elif isinstance( item, namespace_types ):
-            for f in get_all_subroutine_calls( *item.content ):
-                yield f
+            if '%' not in item.designator: # discard type-bound subroutine call
+                yield item.designator
+        # If this is a block, search recursively:
+        elif hasattr( item, 'content' ):
+            for c in get_all_subroutine_calls( *item.content ):
+                yield c
             # In Python3.3+:
-            # yield from get_all_used_types( *item.content )
+            # yield from get_all_subroutine_calls( *item.content )
 
 #------------------------------------------------------------------------------
 # Extract names of declared variables

@@ -1838,6 +1838,7 @@ contains  !******************************************************************
     sll_int64                       :: acc; \
     if( (.not. associated(initial)) .or. (.not. associated(final)) ) then; \
        print *, 'ERROR: un-initialized arguments given to sll_new_remap_plan'; \
+       print *, size(array); \
        stop; \
     end if; \
     coli => get_layout_collective(initial); \
@@ -2564,18 +2565,18 @@ end subroutine fname
   ! For apply_remap_XD_int(), we use this approach as a test case, even though
   ! it is not necessary since 'integer' is also a native MPI type.
 
-  subroutine convert_into_integer_sizes( sz, ai, n, bi )
-    sll_int32, intent(in)                :: sz   ! in integer-size
-    sll_int32, intent(in), dimension(:)  :: ai   ! array to convert
-    sll_int32, intent(in)                :: n    ! size of array
-    sll_int32, intent(out), dimension(:) :: bi   ! output
-    sll_int32                            :: i
-    SLL_ASSERT( n <= size(ai) )
-    SLL_ASSERT( n <= size(bi) )
-    do i=1,n
-       bi(i) = ai(i)*sz
-    end do
-  end subroutine convert_into_integer_sizes
+  !subroutine convert_into_integer_sizes( sz, ai, n, bi )
+  !  sll_int32, intent(in)                :: sz   ! in integer-size
+  !  sll_int32, intent(in), dimension(:)  :: ai   ! array to convert
+  !  sll_int32, intent(in)                :: n    ! size of array
+  !  sll_int32, intent(out), dimension(:) :: bi   ! output
+  !  sll_int32                            :: i
+  !  SLL_ASSERT( n <= size(ai) )
+  !  SLL_ASSERT( n <= size(bi) )
+  !  do i=1,n
+  !     bi(i) = ai(i)*sz
+  !  end do
+  !end subroutine convert_into_integer_sizes
 
   ! **********************************************************************
   !
