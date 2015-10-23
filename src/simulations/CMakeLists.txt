@@ -4,4 +4,3 @@ ADD_DEFINITIONS( -DMUDPACK )
 
 ADD_SUBDIRECTORY( serial )
 ADD_SUBDIRECTORY( parallel )
-ADD_SUBDIRECTORY( eulerian-finite-volume )

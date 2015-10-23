@@ -75,6 +75,7 @@ DONE pic_vp_2d2v_cart_optim: sim_4d_vlasov_poisson_PIC_cartesian
 DONE pic_vp_2d2v_cart_optim_push: sim_4d_vlasov_poisson_PIC_cartesian
 DONE pic_vp_2d2v_cart_remapped: sim_4d_vlasov_poisson_generic_PIC_cartesian
 DONE pif_vp_ndnv_cart: sim_general_vlasov_poisson_pif
+DONE eul_vp_2d2v_cart_fv: eulerian-finite-volume
 
 SEQUENTIAL:
 
