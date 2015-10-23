@@ -22,7 +22,7 @@
 ! current investigations:
 !   BERK-BREIZMAN test case
 
-module sll_m_sim_2d_vlasov_ampere_cartesian
+module sll_m_sim_bsl_va_1d1v_cart_berk_breizman
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1509,4 +1509,4 @@ endif
       
 end subroutine delete_va2d_par_cart
 
-end module sll_m_sim_2d_vlasov_ampere_cartesian
+end module sll_m_sim_bsl_va_1d1v_cart_berk_breizman
