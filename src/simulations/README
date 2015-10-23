@@ -71,8 +71,8 @@ DONE pic_gc_2d0v_cart_optim: sim_2d_guiding_center_PIC_cartesian
 DONE pic_vm_1d2v_cart: sim_pic_vm_1d2v_cart
 DONE pic_vp_1d1v_cart: sim_pic1d1v_vlasov-poisson_periodic
 DONE pic_vp_2d2v_cart: sim_pic_vp_2d2v_cart
-TO DO pic_vp_2d2v_cart_optim: sim_4d_vlasov_poisson_PIC_cartesian
-TO DO pic_vp_2d2v_cart_optim_push: sim_4d_vlasov_poisson_PIC_cartesian
+DONE pic_vp_2d2v_cart_optim: sim_4d_vlasov_poisson_PIC_cartesian
+DONE pic_vp_2d2v_cart_optim_push: sim_4d_vlasov_poisson_PIC_cartesian
 TO DO pic_vp_2d2v_cart_remapped: sim_4d_vlasov_poisson_generic_PIC_cartesian
 TO DO pif_vp_ndnv_cart: sim_general_vlasov_poisson_pif
 
