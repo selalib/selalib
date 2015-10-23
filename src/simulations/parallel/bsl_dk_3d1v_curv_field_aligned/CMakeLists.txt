@@ -1,12 +1,13 @@
-set( SIM_NAME  sim_sl_dk_3d1v_curv_field_aligned )
-set( EXECUTABLE "${SIM_NAME}" )
-set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
+set(    SIM_NAME bsl_dk_3d1v_curv_field_aligned )
+set(   TEST_NAME "sim_${SIM_NAME}"              )
+set(  EXECUTABLE "${TEST_NAME}"                 )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}"   )
 
-file( GLOB INPUT_FILES "*.nml" )
+file( GLOB INPUT_FILES "*.nml"         )
 # no post proc for the moment 
-#file( GLOB POST_PROC "*.dat" "*.gnu" )
+#file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-ADD_EXECUTABLE( ${EXECUTABLE} sll_m_${SIM_NAME}.F90 ${SIM_NAME}.F90 )
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( 
   ${EXECUTABLE} 
   sll_dk_curv_mesh
