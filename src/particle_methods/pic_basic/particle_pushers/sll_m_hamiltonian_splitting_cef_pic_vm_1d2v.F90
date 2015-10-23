@@ -219,17 +219,19 @@ contains
       ind = ind + 1
    end do
 
-   fy = sign*m*this%delta_x*&
-        (uniform_b_splines_at_x(this%spline_degree, y1) +&
-        uniform_b_splines_at_x(this%spline_degree, y2))
+   if (abs(vi(1)) > 1E16) then
+      fy = sign*m*this%delta_x*&
+           (uniform_b_splines_at_x(this%spline_degree, y1) +&
+           uniform_b_splines_at_x(this%spline_degree, y2))
 
-   ind = 1
-   do i_grid = index - this%spline_degree, index
-      i_mod = modulo(i_grid, n_cells ) + 1
-      this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
-           weight(1)*fy(ind)*vi(2)/vi(1)
-      ind = ind + 1
-   end do
+      ind = 1
+      do i_grid = index - this%spline_degree, index
+         i_mod = modulo(i_grid, n_cells ) + 1
+         this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+              weight(1)*fy(ind)*vi(2)/vi(1)
+         ind = ind + 1
+      end do
+   end if
 
  end subroutine update_jv
 
