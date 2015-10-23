@@ -2,7 +2,7 @@
 !  Author: Jakob Ameres, jakob.ameres@tum.de
 !**************************************************************
 
-module sll_m_general_vlasov_poisson_pif
+module sll_m_sim_pif_vp_ndnv_cart
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -1248,4 +1248,4 @@ end subroutine write_result_generalvp_pif
 
 
 
-end module sll_m_general_vlasov_poisson_pif
+end module sll_m_sim_pif_vp_ndnv_cart
