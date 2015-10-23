@@ -78,7 +78,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_generic_PIC_cartesian )
     ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
-    ADD_SUBDIRECTORY( sim_pic1d1v_vlasov-poisson_periodic      )
+    ADD_SUBDIRECTORY( pic_vp_1d1v_cart                         )
 
     ADD_SUBDIRECTORY( sim_pic_vp_2d2v_cart                     )
     ADD_SUBDIRECTORY( pic_vm_1d2v_cart                         )
