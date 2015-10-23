@@ -1,4 +1,4 @@
-module sll_m_sim_6d_vlasov_poisson_cartesian
+module sll_m_sim_bsl_vp_3d3v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -1513,4 +1513,4 @@ contains
     
   end subroutine plot_fields
   
-end module sll_m_sim_6d_vlasov_poisson_cartesian
+end module sll_m_sim_bsl_vp_3d3v_cart
