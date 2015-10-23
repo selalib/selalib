@@ -78,7 +78,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim                   )
     ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim_push              )
     ADD_SUBDIRECTORY( pic_vp_2d2v_cart_remapped                )
-    ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
+    ADD_SUBDIRECTORY( pif_vp_ndnv_cart                         )
     ADD_SUBDIRECTORY( pic_vp_1d1v_cart                         )
 
     ADD_SUBDIRECTORY( pic_vp_2d2v_cart                         )
