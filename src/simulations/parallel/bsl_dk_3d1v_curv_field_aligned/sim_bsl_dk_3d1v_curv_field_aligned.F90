@@ -1,7 +1,7 @@
-program sim_sl_dk_3d1v_curv_field_aligned
+program sim_bsl_dk_3d1v_curv_field_aligned
 #include "sll_working_precision.h"
 
-  use sll_m_sim_sl_dk_3d1v_curv_field_aligned, only : &
+  use sll_m_sim_bsl_dk_3d1v_curv_field_aligned, only : &
     sll_t_sim_sl_dk_3d1v_curv_field_aligned
     
 
@@ -49,4 +49,4 @@ program sim_sl_dk_3d1v_curv_field_aligned
 
   
 
-end program sim_sl_dk_3d1v_curv_field_aligned
+end program sim_bsl_dk_3d1v_curv_field_aligned
