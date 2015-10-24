@@ -1,5 +1,5 @@
-program analytic_field_2d_cartesian
-  use sll_m_sim_2d_analytic_field_cartesian, only : &
+program sim_bsl_ad_2d0v_cart
+  use sll_m_sim_bsl_ad_2d0v_cart, only : &
               sll_simulation_base_class, new_analytic_field_2d_cartesian
   implicit none
   
@@ -17,5 +17,5 @@ program analytic_field_2d_cartesian
   call sim%run( )
   print *,'#PASSED'
 
-end program analytic_field_2d_cartesian
+end program sim_bsl_ad_2d0v_cart
 

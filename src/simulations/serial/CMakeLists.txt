@@ -30,7 +30,7 @@ ADD_SUBDIRECTORY( sim_2d_guiding_center_hexagonal           )
 
 IF(HDF5_ENABLED)
   SET( SIM_LIBS sll_advection sll_parallel_array_utilities )
-  ADD_SUBDIRECTORY( sim_2d_analytic_field_cartesian )
+  ADD_SUBDIRECTORY( bsl_ad_2d0v_cart )
   ADD_SUBDIRECTORY( sim_2d_analytic_field_curvilinear )
   ADD_SUBDIRECTORY( sim_2d_guiding_center_cartesian )
   ADD_SUBDIRECTORY( sim_2d_guiding_center_polar )
