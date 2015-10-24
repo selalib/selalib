@@ -1,6 +1,6 @@
-program sim_sl_vp_2d2v_cart_fullsparsegrid
+program sim_bsl_vp_2d2d_cart_fullsparsegrid
 #include "sll_working_precision.h"
-  use sll_m_sim_sl_vp_2d2v_cart_fullsparsegrid
+  use sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
 
   type(sll_t_sim_sl_vp_2d2v_cart_fullsparsegrid) :: sim
   character(len=256)                         :: filename
@@ -11,4 +11,4 @@ program sim_sl_vp_2d2v_cart_fullsparsegrid
   
   call sim%run()
 
-end program sim_sl_vp_2d2v_cart_fullsparsegrid
+end program sim_bsl_vp_2d2d_cart_fullsparsegrid

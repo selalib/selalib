@@ -1,16 +1,17 @@
-IF(MPI_ENABLED)
-  set(    SIM_NAME eul_vp_1d1v_cart_fe_ft       )
-  set(   TEST_NAME "sim_${SIM_NAME}"            )
-  set(  EXECUTABLE "${TEST_NAME}"               )
-  set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
+IF (FFTW_FOUND AND FFTW_ENABLED)
+
+  set(    SIM_NAME bsl_vp_2d2v_cart_fullsparsegrid )
+  set(   TEST_NAME "sim_${SIM_NAME}"               )
+  set(  EXECUTABLE "${TEST_NAME}"                  )
+  set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}"    )
 
   file( GLOB INPUT_FILES "*.nml"         )
   file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
   ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
-  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_serial )
-
+  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_serial sll_sparse_grid )
+  
   INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
   INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 
-ENDIF(MPI_ENABLED)
+ENDIF()
