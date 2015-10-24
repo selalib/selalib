@@ -1,4 +1,4 @@
-program radial_1d_SL
+program sim_fsl_ad_2d0v_polar
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -507,4 +507,4 @@ program radial_1d_SL
 	
   
 
-end program
+end program sim_fsl_ad_2d0v_polar
