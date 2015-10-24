@@ -1,5 +1,4 @@
-program sim2d_gc_hex_hermite
-
+program sim_bsl_gc_2d0v_hex_hermite
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -1321,4 +1320,4 @@ contains
 
   end subroutine write_center
 
-end program sim2d_gc_hex_hermite
+end program sim_bsl_gc_2d0v_hex_hermite

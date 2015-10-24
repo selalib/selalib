@@ -1,31 +1,20 @@
-program sim2d_gc_hex
-  ! in this program, we consider
-  ! guiding center simulation
-  ! on hexagonal mesh
-  ! one priority is to test the mitchell
-  ! element which is not tested elsewhere
+program sim_bsl_ad_2d0v_hex_rot
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-
-  use sll_m_boundary_condition_descriptors
   use sll_m_ascii_io
+
+  use sll_m_box_splines
+  use sll_m_constants
+  use sll_m_hexagonal_meshes
+  use sll_m_interpolation_hex_hermite
   use sll_m_utilities, only : &
        int2string
-  use sll_m_constants, only : &
-       sll_sqrt3
-  use sll_m_euler_2d_hex
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d
-  use sll_m_hex_poisson
-  use sll_m_pivotbande
-  use sll_m_box_splines, only : &
-       sll_box_spline_2d, &
-       new_box_spline_2d, &
-       hex_interpolate_value
-  use sll_m_interpolation_hex_hermite
+
   implicit none
+
   sll_int32, parameter :: SLL_HEX_SPLINES = 2
   sll_int32, parameter :: SLL_HEX_Z9 = 9
   sll_int32, parameter :: SLL_HEX_Z10 = 10
@@ -39,81 +28,102 @@ program sim2d_gc_hex
   sll_int32, parameter :: SLL_HEX_MITCHELL_new = 40
   sll_int32, parameter :: SLL_HEX_Z9_new = 90
 
-
-
   type(sll_hex_mesh_2d),   pointer        :: mesh
   type(sll_box_spline_2d), pointer        :: spline
-  sll_real64, dimension(:),   allocatable :: dxuxn, dyuxn
-  sll_real64, dimension(:),   allocatable :: dxuyn, dyuyn
-  sll_real64, dimension(:),   allocatable :: second_term
-  sll_real64, dimension(:),   allocatable :: phi
-  sll_real64, dimension(:),   allocatable :: uxn, uxn_1
-  sll_real64, dimension(:),   allocatable :: uyn, uyn_1
-  sll_real64, dimension(:),   allocatable :: phi_interm
-  sll_real64, dimension(:,:), allocatable :: matrix_poisson, l, u
-  sll_real64, dimension(:),   allocatable :: rho_tn   ! distribution at time n
-  sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n+1
-  sll_real64, allocatable :: positions(:,:)
   sll_real64, allocatable :: deriv(:,:)
-  character(len=256) :: num_method_case
-  sll_int32 :: num_method
-  sll_int32, allocatable :: index1(:,:)
-  sll_int32, allocatable :: hex_stencil(:,:)
-  sll_int32 :: size_hex_stencil
-  sll_real64 :: aire
+  !sll_real64, allocatable :: deriv_new(:,:)
   sll_real64, dimension(:), allocatable :: center_values_tn
   sll_real64, dimension(:), allocatable :: edge_values_tn
+  sll_real64, dimension(:), allocatable :: center_values_tn1
+  sll_real64, dimension(:), allocatable :: edge_values_tn1
+  sll_real64, dimension(:), allocatable :: center_values_exact
+  sll_real64, dimension(:), allocatable :: edge_values_exact
+  sll_int32 :: num_cells
+  sll_real64 :: center_mesh_x1
+  sll_real64 :: center_mesh_x2
+  sll_real64 :: radius
+  sll_real64 :: t_init
+  sll_real64 :: t_end
+  sll_int32 :: spline_degree
+  sll_real64 :: dt
+  sll_int32 :: number_iterations
+  sll_int32 :: freq_diag
+  sll_int32 :: freq_diag_time
+  sll_real64 :: gauss_x1
+  sll_real64 :: gauss_x2
+  sll_real64 :: gauss_sig
+  sll_real64 :: gauss_amp
+  sll_int32 :: p
 
-  sll_int32    :: spline_degree
-  sll_int32    :: hermite_method
-  sll_int32    :: i, k1, k2, index_tab, type
-  sll_int32    :: width_band1,width_band2
-  sll_int32    :: num_cells, n_points
-  sll_int32    :: cells_min, cells_max
-  sll_int32    :: cells_stp
-  sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
-  sll_real64   :: center_mesh_x1, center_mesh_x2, radius
-  sll_real64   :: epsilon
-  sll_real64   :: gauss_x1, gauss_x2
-  sll_real64   :: gauss_sig
-  sll_real64   :: gauss_amp
-  sll_real64   :: dt
-  sll_real64   :: tmax
-  sll_real64   :: t
-  sll_real64   :: t_init, t_end
-  sll_real64   :: t3
-  sll_real64   :: h1, h2, x ,y,xx, yy
-  sll_real64   :: r11,r12,r21,r22,det
-  logical      :: inside
-  sll_int32            :: IO_stat
+
+  sll_int32 :: n_points
+  sll_int32 :: ierr
+  sll_real64, dimension(:), allocatable :: rho_tn
+  sll_real64, dimension(:), allocatable :: rho_tn1
+  sll_real64, dimension(:), allocatable :: rho_exact
+  sll_int32 :: step
+  sll_int32 :: i
+  sll_real64 :: x
+  sll_real64 :: y
+  sll_real64 :: xx
+  sll_real64 :: yy
+  sll_real64 :: r11
+  sll_real64 :: r12
+  sll_real64 :: r21
+  sll_real64 :: r22
+  sll_real64 :: det
+  logical :: inside
+  sll_real64 :: h1
+  sll_real64 :: h2
+  sll_real64 :: t
+  sll_real64 :: linf_err
+  sll_real64 :: linf_err_center
+  sll_real64 :: linf_err_edge
+  character(len=256) :: num_method_case
+  sll_int32 :: num_method
+  sll_real64 :: aire
+  sll_int32 :: EXTRA_TABLES
+  logical :: use_edge
+  logical :: use_center
+  sll_int32 :: IO_stat
   sll_int32, parameter :: input_file = 99
-
   character(len = 256) :: input_filename
   character(len = 256) :: input_filename_loc
-  !sll_int32 :: count
+  sll_int32 :: count
   character(len=256) :: rho_name
-  character(len=256) :: phi_name
+  character(len=256) :: rho_error_name
   character(len=256)  :: filename
   character(len=4)   :: filenum
   logical :: use_num
   sll_int32 :: num_run
   character(len=256)  :: str_num_run
   sll_int32 :: thdiag_1d_id
-  !sll_int32 :: thdiag_0d_id
+  sll_int32 :: thdiag_0d_id
   character(len=256)  :: thdiag_1d_filename
-  !character(len=256)  :: thdiag_0d_filename
-
-
-  !character(len = 256) :: input_filename
-  !character(len = 50)  :: filename
-  !character(len = 4)   :: filenum
-  character(len = 4)   :: degnum
-  sll_int32 :: p
-  sll_int32 :: k_mode
-  sll_int32 :: freq_diag
-  sll_int32 :: freq_diag_time
-  sll_int32 :: step
-
+  character(len=256)  :: thdiag_0d_filename
+  sll_real64 :: linf_err_loc
+  sll_real64 :: linf_err_center_loc
+  sll_real64 :: linf_err_edge_loc
+  sll_real64 :: l1_err
+  sll_real64 :: l2_err
+  sll_real64 :: l1_err_loc
+  sll_real64 :: l2_err_loc
+  sll_real64 :: rho_min
+  sll_real64 :: rho_min_loc
+  sll_real64 :: time_compute_interpolant
+  sll_real64 :: time_interpolate
+  sll_real64 :: time_t0
+  sll_real64 :: time_t1
+  sll_int32 :: total_num_pts
+  sll_real64 :: cosdt
+  sll_real64 :: sindt
+  sll_int32, allocatable :: index1(:,:)
+  sll_int32, allocatable :: bounds1(:,:)
+  sll_int32, allocatable :: bounds2(:,:)
+  sll_real64, allocatable :: positions(:,:)
+  sll_real64 :: r_vec(2,2)
+  sll_int32, allocatable :: hex_stencil(:,:)
+  sll_int32 :: size_hex_stencil
 
   namelist /geometry/ &
        center_mesh_x1, &
@@ -122,53 +132,64 @@ program sim2d_gc_hex
        num_cells
 
   namelist /initial_function/ &
-       epsilon,   &
        gauss_x1,  &
        gauss_x2,  &
        gauss_sig, &
-       gauss_amp, &
-       k_mode
+       gauss_amp
 
   namelist /time_iterations/ &
        dt, &
-       tmax, &
+       number_iterations, &
        freq_diag, &
        freq_diag_time
 
+
   namelist /interpolation/ &
        spline_degree, &
-       hermite_method, &
-       num_method_case, &
-       p
+       p, &
+       num_method_case
+
+
+  call cpu_time(t_init)
+  time_interpolate = 0._f64
+  time_compute_interpolant = 0._f64
+
 
   ! ----------------------------
-  ! Setting default parameters
+  ! Default parameters
   ! ----------------------------
-  ! Test case :
-  ! Mesh :
-  center_mesh_x1 = 0._f64
-  center_mesh_x2 = 0._f64
-  radius = 14._f64
-  num_cells = 40
-  ! Initial function :
-  epsilon = 0.001_f64
+
+  linf_err = 0._f64
+  linf_err_center = 0._f64
+  linf_err_edge = 0._f64
+  linf_err_loc = 0._f64
+  linf_err_center_loc = 0._f64
+  linf_err_edge_loc = 0._f64
+  l1_err = 0._f64
+  l1_err_loc = 0._f64
+  l2_err = 0._f64
+  l2_err_loc = 0._f64
+
+  center_mesh_x1 = 0._F64
+  center_mesh_x2 = 0._F64
+  radius = 8._f64
+  num_cells = 80
+  spline_degree = 2
+  number_iterations = 300
+  dt = 0.1_f64
+  freq_diag = 10
+  freq_diag_time = 1
+  p = 6
+  num_method_case = "SLL_HEX_Z9"
+
   gauss_x1  = 2._f64
   gauss_x2  = 2._f64
   gauss_sig = 1._f64/( 2._f64 * sqrt(2._f64)) 
   gauss_amp = 1.0_f64
-  k_mode = 6
-  ! Time iterations:
-  tmax  = 20._f64
-  dt    = 0.1_f64
-  ! Interpolation
-  spline_degree = 2
-  hermite_method = 9
-  num_method_case = "SLL_HEX_Z9"
-  p = 6
-  freq_diag_time = 1
-  freq_diag = 10
 
-
+  ! ----------------------------
+  ! Reading from file
+  ! ----------------------------
 
   call get_command_argument(1, input_filename)
 
@@ -187,7 +208,7 @@ program sim2d_gc_hex
      endif
      open(unit = input_file, file=trim(input_filename_loc),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
-        SLL_ERROR('simulation_2d_guiding_center_hexagonal, &
+        SLL_ERROR('rotation_2d_hexagonal_hermite, &
              &','can not open file')
      end if
      print *,'#initialization with filename:'
@@ -199,17 +220,47 @@ program sim2d_gc_hex
      close(input_file)
   endif
 
+  print *,'#parameters are'
+  print *,'#geometry:'
+  print *,'  #center_mesh_x1=',center_mesh_x1
+  print *,'  #center_mesh_x2=',center_mesh_x2
+  print *,'  #radius=',radius
+  print *,'  #num_cells=',num_cells
+
+  print *,'#initial_function:'
+  print *,'  #gauss_x1=',gauss_x1
+  print *,'  #gauss_x2=',gauss_x2
+  print *,'  #gauss_sig=',gauss_sig
+  print *,'  #gauss_amp=',gauss_amp
+
+  print *,'#time_iterations:'
+  print *,'  #dt=',dt
+  print *,'  #number_iterations=',number_iterations
+  print *,'  #freq_diag=',freq_diag
+  print *,'  #freq_diag_time=',freq_diag_time
+
+  print *,'#interpolation:'
+  print *,'  #num_method_case=',trim(num_method_case)
+  print *,'  #spline_degree=',spline_degree
+  print *,'  #p=',p
+
+
   if(use_num)then
      rho_name = "rho_"//trim(str_num_run)//"_"
-     phi_name = "phi_"//trim(str_num_run)//"_"
+     rho_error_name = "rho_error_"//trim(str_num_run)//"_"
      thdiag_1d_filename = "thdiag_1d_"//trim(str_num_run)//".dat"
-     !thdiag_0d_filename = "thdiag_0d_"//trim(str_num_run)//".dat"
+     thdiag_0d_filename = "thdiag_0d_"//trim(str_num_run)//".dat"
   else
      rho_name = "rho_"
-     phi_name = "phi_"        
+     rho_error_name = "rho_error_"        
      thdiag_1d_filename = "thdiag_1d.dat"
-     !thdiag_0d_filename = "thdiag_0d.dat"
+     thdiag_0d_filename = "thdiag_0d.dat"
   endif
+
+  ! ----------------------------
+  ! Allocations and initialization of variables
+  ! ----------------------------
+  count = 0
 
   call sll_ascii_file_create(thdiag_1d_filename, thdiag_1d_id, ierr)
 
@@ -240,28 +291,109 @@ program sim2d_gc_hex
   case ("SLL_HEX_MITCHELL_new")
      num_method = SLL_HEX_MITCHELL_new 
   case default    
-     SLL_ERROR("simulation_2d_guiding_center_hexagonal", "bad value of num_method_case")  
+     SLL_ERROR("rotation_2d_hexagonal_hermite", "bad value of num_method_case")  
   end select
 
 
+  if(num_method==SLL_HEX_GANEV_DIMITROV)then
+     EXTRA_TABLES = 1
+  else
+     EXTRA_TABLES = 0  
+  endif
 
-  t = 0._f64
-  nloops = 0
-  count  = 0
-  !*********************************************************
-  !             allocation
-  !*********************************************************
+  use_center = .false.
+  use_edge = .false.
 
-  ! Mesh creation -------------------------
-  mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
-       radius=radius, EXTRA_TABLES = EXTRA_TABLES )
-  call display_hex_mesh_2d(mesh)
-  n_points   = mesh%num_pts_tot
+  if(num_method==SLL_HEX_Z10)then
+     use_center = .true.
+  endif
+  if(num_method==SLL_HEX_GANEV_DIMITROV)then
+     use_edge = .true.
+  endif
 
 
+  mesh => new_hex_mesh_2d( &
+       num_cells, &
+       center_mesh_x1, &
+       center_mesh_x2,&
+       radius=radius, &
+       EXTRA_TABLES = EXTRA_TABLES )
+  !call display_hex_mesh_2d(mesh)
+  r_vec(1,1) = mesh%r1_x1
+  r_vec(1,2) = mesh%r1_x2
+  r_vec(2,1) = mesh%r2_x1
+  r_vec(2,2) = mesh%r2_x2
+  n_points = mesh%num_pts_tot
+  det = (mesh%r1_x1*mesh%r2_x2-mesh%r1_x2*mesh%r2_x1)/mesh%delta
+  r11 = + mesh%r2_x2/det
+  r12 = - mesh%r2_x1/det
+  r21 = - mesh%r1_x2/det
+  r22 = + mesh%r1_x1/det
+  aire = mesh%delta**2*sqrt(3._f64)*0.25_f64
+
+
+  if(num_method==SLL_HEX_SPLINES)then
+     spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+  else if(num_method==SLL_HEX_MITCHELL)then
+     SLL_ALLOCATE(deriv(13,n_points),ierr)  
+  else if(num_method==SLL_HEX_MITCHELL_new)then
+     SLL_ALLOCATE(deriv(13,n_points),ierr)  
+  else if(num_method==SLL_HEX_Z9_new)then
+     SLL_ALLOCATE(deriv(7,n_points),ierr)  
+  else
+     SLL_ALLOCATE(deriv(6,n_points),ierr)  
+  endif
+  SLL_ALLOCATE(rho_tn(n_points),ierr)
+  SLL_ALLOCATE(rho_tn1(n_points),ierr)
+  SLL_ALLOCATE(rho_exact(n_points),ierr)
+  SLL_ALLOCATE(positions(2,n_points),ierr)
+
+
+  if(use_center)then
+     SLL_ALLOCATE(center_values_tn(mesh%num_triangles),ierr)
+     SLL_ALLOCATE(center_values_tn1(mesh%num_triangles),ierr)
+     SLL_ALLOCATE(center_values_exact(mesh%num_triangles),ierr)
+  endif
+  if(use_edge)then
+     SLL_ALLOCATE(edge_values_tn(mesh%num_edges),ierr)
+     SLL_ALLOCATE(edge_values_tn1(mesh%num_edges),ierr)
+     SLL_ALLOCATE(edge_values_exact(mesh%num_edges),ierr)
+  endif
+
+
+  ! ----------------------------
+  ! Initialization of solution
+  ! ----------------------------
+
+  call gaussian_at_t( &
+       rho_tn, &
+       0._f64, &
+       mesh, &
+       gauss_x1, &
+       gauss_x2, &
+       gauss_sig, &
+       gauss_amp, &
+       use_center=use_center, &
+       use_edge=use_edge, &
+       center_values_t=center_values_tn, &
+       edge_values_t=edge_values_tn)
+
+  rho_min_loc = minval(rho_tn)
+  rho_min = rho_min_loc
+
+
+  ! ----------------------------
+  ! Steps concerning the mesh
+  ! ----------------------------
 
   SLL_ALLOCATE(index1(2*num_cells+1,2*num_cells+1),ierr) 
   call get_numerotation_new(mesh,index1)
+  SLL_ALLOCATE(bounds1(2,2*num_cells+1),ierr)
+  call compute_bounds1(index1,bounds1,num_cells) 
+  SLL_ALLOCATE(bounds2(2,2*num_cells+1),ierr)
+  call compute_bounds2(index1,bounds2,num_cells) 
+
+
   select case (num_method)
   case(SLL_HEX_MITCHELL)
      size_hex_stencil = compute_size_hex_stencil( &
@@ -299,116 +431,29 @@ program sim2d_gc_hex
   case default
   end select
 
+  ! ----------------------------
+  ! Time loop
+  ! ----------------------------
+  cosdt = cos(dt)
+  sindt = sin(dt)
 
-
-
-  det = (mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1)/mesh%delta
-
-  r11 = + mesh%r2_x2/det
-  r12 = - mesh%r2_x1/det
-  r21 = - mesh%r1_x2/det
-  r22 = + mesh%r1_x1/det
-  aire = mesh%delta**2*sqrt(3._f64)*0.25_f64
-  ! ---------------------------------------
-
-  width_band1 = 2*num_cells+1
-  width_band2 = width_band1
-
-  SLL_ALLOCATE(rho_tn( n_points),ierr)
-  SLL_ALLOCATE(rho_tn1( n_points ),ierr)
-  SLL_ALLOCATE(positions(2,n_points),ierr)
-
-  SLL_ALLOCATE(uxn( n_points),ierr)
-  SLL_ALLOCATE(uyn( n_points ),ierr)
-
-  SLL_ALLOCATE(dxuxn( n_points),ierr)
-  SLL_ALLOCATE(dxuyn( n_points ),ierr)
-  SLL_ALLOCATE(dyuxn( n_points),ierr)
-  SLL_ALLOCATE(dyuyn( n_points ),ierr)
-
-  ! variables only used in the guiding center model
-  SLL_ALLOCATE(phi( n_points),ierr)
-  SLL_ALLOCATE(phi_interm( n_points),ierr)
-
-  SLL_ALLOCATE(uxn_1( n_points),ierr)
-  SLL_ALLOCATE(uyn_1( n_points ),ierr)
-  SLL_ALLOCATE(second_term( n_points),ierr)
-
-  SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr)
-  SLL_ALLOCATE(l( n_points,1 + 4*num_cells + 2 ) , ierr)
-  SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
-
-
-  call cpu_time(t_init)
-
-  !*********************************************************
-  !  Distribution function & density initialization
-  !*********************************************************
-
-  ! Spline initialization -----------------
-  !spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
-
-  if(num_method==SLL_HEX_SPLINES)then
-     spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
-  else if(num_method==SLL_HEX_MITCHELL)then
-     SLL_ALLOCATE(deriv(13,n_points),ierr)  
-  else if(num_method==SLL_HEX_MITCHELL_new)then
-     SLL_ALLOCATE(deriv(13,n_points),ierr)  
-  else if(num_method==SLL_HEX_Z9_new)then
-     SLL_ALLOCATE(deriv(7,n_points),ierr)  
-  else
-     SLL_ALLOCATE(deriv(6,n_points),ierr)  
-  endif
-
-
-  ! ---------------------------------------
-
-  ! Initial distribution ------------------
-  call init_distr_gc(rho_tn,mesh,epsilon,k_mode)
-  ! ---------------------------------------
-
-  ! Poisson solver ------------------------
-  call hex_matrix_poisson( matrix_poisson, mesh,type=1)
-  call factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
-  call hex_second_terme_poisson( second_term, mesh, rho_tn )
-  call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
-
-  do i = 1, mesh%num_pts_tot
-     k1 = mesh%hex_coord(1, i)
-     k2 = mesh%hex_coord(2, i)
-     call mesh%index_hex_to_global(k1, k2, index_tab)
-     phi(i) = phi_interm(index_tab)
+  do i=1,n_points
+     x = mesh%cartesian_coord(1,i)
+     y = mesh%cartesian_coord(2,i)
+     positions(1,i) = x*cosdt - y*sindt
+     positions(2,i) = x*sindt + y*cosdt                
   enddo
-  call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
-  ! ---------------------------------------
 
-  !call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax)
-  call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,thdiag_1d_id)
-  !	call int2string(nloops,filenum)
-  !     	filename  = "guiding_center_rho"//trim(filenum)
-  !     	call mesh%write_field_hex_mesh_xmf(rho_tn, trim(filename))
-  !     	filename  = "guiding_center_phi"//trim(filenum)
-  !     	call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+  do step=1,number_iterations
 
-  !*********************************************************
-  !                          Time loop
-  !*********************************************************
+     ! ----------------------------
+     ! Compute interpolants
+     ! ----------------------------
 
-  call cpu_time(t3)
+     !rho_tn = 0._f64
+     !rho_tn(n_points/2) = 1._f64
 
-  print*,"fin init",t3 - t_init
-  step = 0
-  do while (t .lt. tmax)
-     step = step+1 
-     t = t + dt
-     nloops = nloops + 1
-     !count = count + 1
-
-     !*********************************************************
-     !                     interpolation
-     !*********************************************************
-
-
+     call cpu_time(time_t0)
      select case (num_method)
      case (SLL_HEX_SPLINES)
         call spline%compute_coeff_box_spline_2d( rho_tn, spline_degree)
@@ -466,39 +511,29 @@ program sim2d_gc_hex
      case default
         call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv) 
      end select
+     !    if(num_method==SLL_HEX_SPLINES)then
+     !      call spline%compute_coeff_box_spline_2d( rho_tn, spline_degree)
+     !    elseif(num_method == SLL_HEX_NOTHING)then
+     !    elseif(num_method == SLL_HEX_P1)then
+     !    else
+     !      call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv)
+     !    endif
+     call cpu_time(time_t1)
+     time_compute_interpolant = time_compute_interpolant+time_t1-time_t0 
 
+     ! ----------------------------
+     ! Interpolation at vertices
+     ! ----------------------------
+     call cpu_time(time_t0)
 
-
-
-
-
-     do i=1, n_points
-
-        x = mesh%cartesian_coord(1,i)
-        y = mesh%cartesian_coord(2,i)
-
-        !*************************************************
-        !       computation of the characteristics
-        !*************************************************
-        ! We use Adams2 for solving ODE except for first step
-        if ( t <= dt + 1e-6 ) then ! first step with euler
-           call compute_characteristic_euler_2d_hex( &
-                x,y,uxn,uyn,i,xx,yy,dt )
-        else !the rest is done with Adams 2
-           call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
-                dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
-        endif
-
-        positions(1,i) = xx
-        positions(2,i) = yy
-
-     enddo
 
      select case (num_method)
      case (SLL_HEX_SPLINES)
         do i=1, n_points
-           xx = positions(1,i)   
-           yy = positions(2,i)   
+           x = mesh%cartesian_coord(1,i)
+           y = mesh%cartesian_coord(2,i)
+           xx = x*cosdt - y*sindt
+           yy = x*sindt + y*cosdt      
            inside = .true.
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
@@ -513,8 +548,10 @@ program sim2d_gc_hex
 
      case (SLL_HEX_NOTHING)
         do i=1, n_points
-           xx = positions(1,i)   
-           yy = positions(2,i)   
+           x = mesh%cartesian_coord(1,i)
+           y = mesh%cartesian_coord(2,i)
+           xx = x*cosdt - y*sindt
+           yy = x*sindt + y*cosdt      
            inside = .true.
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
@@ -530,8 +567,10 @@ program sim2d_gc_hex
 
      case (SLL_HEX_P1)
         do i=1, n_points
-           xx = positions(1,i)   
-           yy = positions(2,i)   
+           x = mesh%cartesian_coord(1,i)
+           y = mesh%cartesian_coord(2,i)
+           xx = x*cosdt - y*sindt
+           yy = x*sindt + y*cosdt      
            inside = .true.
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
@@ -583,8 +622,10 @@ program sim2d_gc_hex
              positions)
      case default
         do i=1, n_points
-           xx = positions(1,i)   
-           yy = positions(2,i)   
+           x = mesh%cartesian_coord(1,i)
+           y = mesh%cartesian_coord(2,i)
+           xx = x*cosdt - y*sindt
+           yy = x*sindt + y*cosdt      
            inside = .true.
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
@@ -609,272 +650,349 @@ program sim2d_gc_hex
         enddo
 
      end select
+     !    do i=1, n_points
+     !      x = mesh%cartesian_coord(1,i)
+     !      y = mesh%cartesian_coord(2,i)
+     !      xx = x*cosdt - y*sindt
+     !      yy = x*sindt + y*cosdt      
+     !      inside = .true.
+     !      h1 =  xx*r11 + yy*r12
+     !      h2 =  xx*r21 + yy*r22
+     !      if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
+     !      if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.      
+     !      if ( inside ) then
+     !        if(num_method==SLL_HEX_SPLINES)then
+     !          rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+     !        elseif(num_method==SLL_HEX_NOTHING)then
+     !          rho_tn1(i) = rho_tn(i)
+     !        elseif(num_method==SLL_HEX_P1)then
+     !          rho_tn1(i) = rho_tn(i)
+     !		  call p1_interpolation( &
+     !		    i, &
+     !		    xx, &
+     !		    yy, &
+     !		    rho_tn, &
+     !		    rho_tn1, &
+     !		    mesh)
+     !        else
+     !		  call hermite_interpolation( &
+     !		    i, &
+     !		    xx, &
+     !		    yy, &
+     !		    rho_tn, &
+     !		    center_values_tn,&
+     !		    edge_values_tn, &
+     !		    rho_tn1, &
+     !		    mesh, &
+     !		    deriv, &
+     !		    aire,& 
+     !		    num_method)
+     !		endif    
+     !      else
+     !        rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+     !      endif
+     !    enddo
 
 
 
-     !        do i=1,n_points
-     !           xx = positions(1,i)   
-     !           yy = positions(2,i)   
-     !           inside = .true.
-     !           h1 =  xx*r11 + yy*r12
-     !           h2 =  xx*r21 + yy*r22
-     !
-     !           if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-     !           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
-     !
-     !           if ( inside ) then
-     !              rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
-     !           else
-     !              rho_tn1(i) = 0._f64 ! dirichlet boundary condition
-     !           endif
-     !
-     !
-     !        end do ! end of the computation of the mesh points
 
-     ! Updating the new field values ............
+
+     ! ----------------------------
+     ! Interpolation at center of triangles
+     ! ----------------------------
+
+
+     if(use_center)then
+        do i=1, mesh%num_triangles
+           x = mesh%center_cartesian_coord(1,i)
+           y = mesh%center_cartesian_coord(2,i)
+           xx = x*cos(dt) - y*sin(dt)
+           yy = x*sin(dt) + y*cos(dt)
+
+           inside = .true.
+           h1 =  xx*r11 + yy*r12
+           h2 =  xx*r21 + yy*r22
+
+           if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
+           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
+
+           if ( inside ) then
+              !rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+
+              call hermite_interpolation( &
+                   i, &
+                   xx, &
+                   yy, &
+                   rho_tn, &
+                   center_values_tn,&
+                   edge_values_tn, &
+                   center_values_tn1, &
+                   mesh, &
+                   deriv, &
+                   aire,& 
+                   num_method)
+           else
+              center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
+           endif
+        enddo
+     endif
+
+     ! ----------------------------
+     ! Interpolation at middle of edges
+     ! ----------------------------
+
+
+     if(use_edge)then
+        do i=1, mesh%num_edges
+           x = mesh%edge_center_cartesian_coord(1,i)
+           y = mesh%edge_center_cartesian_coord(2,i)
+           xx = x*cos(dt) - y*sin(dt)
+           yy = x*sin(dt) + y*cos(dt)
+
+           inside = .true.
+           h1 =  xx*r11 + yy*r12
+           h2 =  xx*r21 + yy*r22
+
+           if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
+           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
+
+           if ( inside ) then
+              call hermite_interpolation( &
+                   i, &
+                   xx, &
+                   yy, &
+                   rho_tn, &
+                   center_values_tn,&
+                   edge_values_tn, &
+                   edge_values_tn1, &
+                   mesh, &
+                   deriv, &
+                   aire,& 
+                   num_method)
+           else
+              edge_values_tn1(i) = 0._f64 ! dirichlet boundary condition
+           endif
+        enddo
+     endif
+     call cpu_time(time_t1)
+
+     ! ----------------------------
+     ! Update solution
+     ! ----------------------------
+
      rho_tn = rho_tn1
-     ! ...........................................
+     if(use_center)then
+        center_values_tn = center_values_tn1
+     endif
+     if(use_edge)then
+        edge_values_tn = edge_values_tn1
+     endif
+     time_interpolate = time_interpolate+time_t1-time_t0 
 
-     !*********************************************************
-     !      computing the solution of the poisson equation 
-     !*********************************************************
-     call hex_second_terme_poisson( second_term, mesh, rho_tn )
 
-     call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
+     ! ----------------------------
+     ! Error computation
+     ! ----------------------------
 
-     do i = 1, mesh%num_pts_tot    ! need to re-index phi :
-        k1 = mesh%hex_coord(1, i)
-        k2 = mesh%hex_coord(2, i)
-        call mesh%index_hex_to_global(k1, k2, index_tab)
-        phi(i) = phi_interm(index_tab)
-     enddo
+     t = real(step,f64)*dt
 
-     call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
-
-     ! Updating the new field values ............
-     uxn_1 = uxn
-     uyn_1 = uyn
-     ! ...........................................
-
-     !*********************************************************
-     !                  writing diagnostics
-     !*********************************************************
      if(modulo(step,freq_diag_time)==0)then
-        call hex_diagnostics_gc( &
-             rho_tn, &
+
+        call gaussian_at_t( &
+             rho_exact, &
              t, &
              mesh, &
-             uxn, &
-             uyn, &
-             thdiag_1d_id)
+             gauss_x1, &
+             gauss_x2, &
+             gauss_sig, &
+             gauss_amp, &
+             use_center=use_center, &
+             use_edge=use_edge, &
+             center_values_t=center_values_exact, &
+             edge_values_t=edge_values_exact)
+        linf_err_loc = maxval(abs(rho_exact-rho_tn))
+        linf_err = max(linf_err,linf_err_loc)
+        rho_min_loc = minval(rho_tn)
+        rho_min = min(rho_min_loc,rho_min)
+        l1_err_loc = sum(abs(rho_exact-rho_tn))*mesh%delta**2
+        l1_err = max(l1_err_loc,l1_err)
+        l2_err_loc = sqrt(sum((rho_exact-rho_tn)**2)*mesh%delta**2)
+        l2_err = max(l2_err_loc,l2_err)
+
+
+        if(use_center)then
+           linf_err_center_loc = &
+                maxval(abs(center_values_exact-center_values_tn))
+           linf_err_center =  max( &
+                linf_err_center, &
+                linf_err_center_loc)
+        endif
+        if(use_edge)then
+           linf_err_edge_loc = & 
+                maxval(abs(edge_values_exact-edge_values_tn))
+           linf_err_edge =  max( &
+                linf_err_edge, &
+                linf_err_edge_loc)
+        endif
+
+        write(thdiag_1d_id,*) &
+             t, &
+             rho_min, &
+             l1_err_loc, &
+             l2_err_loc, &
+             linf_err_loc, &
+             linf_err_center_loc, &
+             linf_err_edge_loc
+
      endif
+
      if(modulo(step,freq_diag)==0)then
-        !if (count == 10.and.nloops<10000) then
         count = count+1
-        print *,"##time,step,count",t,step,count
+        print *,'#time,count,rho_min',t,count,rho_min
+        print *,'#err (l1,l2,linf)', &
+             l1_err_loc, &
+             l2_err_loc, &
+             linf_err_loc
         call int2string(count,filenum)
         filename  = trim(rho_name)//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
-        filename  = trim(phi_name)//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
-
-        !call int2string(nloops,filenum)
-        !filename  = "guiding_center_rho"//trim(filenum)
-        !call mesh%write_field_hex_mesh_xmf( rho_tn1, trim(filename))
-        !   filename  = "guiding_center_phi"//trim(filenum)
-        !   call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
-        !count = 0
+        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
+        filename  = trim(rho_error_name)//trim(filenum)
+        call mesh%write_field_hex_mesh_xmf( rho_exact-rho_tn, trim(filename))
      endif
 
-  enddo ! end of time loop
+
+  enddo
+
+
 
   close(thdiag_1d_id)
 
 
-  SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
-  SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
-  SLL_DEALLOCATE_ARRAY(uxn,ierr)
-  SLL_DEALLOCATE_ARRAY(uyn,ierr)
-  SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
-  SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
-  SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
-  SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
-  SLL_DEALLOCATE_ARRAY(uxn_1,ierr)
-  SLL_DEALLOCATE_ARRAY(uyn_1,ierr)
-  SLL_DEALLOCATE_ARRAY(second_term,ierr)
-  SLL_DEALLOCATE_ARRAY(phi,ierr)
-  SLL_DEALLOCATE_ARRAY(phi_interm,ierr)
-  deallocate(matrix_poisson)
-  deallocate(l)
-  deallocate(u)
-
-  call delete_hex_mesh_2d( mesh )
-
   call cpu_time(t_end)
-  print*, "#time used =", t_end - t_init
+
+  print *, &
+       '#cpu time,interpo-lant/late', &
+       t_end-t_init, &
+       time_compute_interpolant, &
+       time_interpolate
+
+  total_num_pts = compute_num_tot_points( &
+       num_cells, &
+       use_edge=use_edge, &
+       use_center=use_center)
+
+  print *, &
+       '#efficiency', &
+       real(total_num_pts,f64)*real(number_iterations,f64) &
+       /(1.e6_f64*(t_end-t_init)), &
+       real(total_num_pts,f64)*real(number_iterations,f64) &
+       /(1.e6_f64*(time_compute_interpolant+time_interpolate))
 
 
-  ! Some test should probably be put here:
-  print*, 'PASSED'
+
+  !real(use_edge,f64),real(use_tri,f64)   
+  print *, &
+       '#max of err (l1,l2,linf)', &
+       l1_err, &
+       l2_err, &
+       linf_err
+
+  call sll_ascii_file_create(thdiag_0d_filename, thdiag_0d_id, ierr)
+
+  write(thdiag_0d_id,*) &
+       t_end-t_init, &
+       rho_min, &
+       l1_err, &
+       l2_err, &
+       linf_err, &
+       linf_err_center, &
+       linf_err_edge, &
+       time_compute_interpolant, &
+       time_interpolate
+
+  close(thdiag_0d_id)
+
+
+  print *,"#PASSED"
 
 contains
 
-  !*********initialization**************
-
-  subroutine init_distr_gc(f_tn, mesh, epsilon, k_mode)
+  subroutine gaussian_at_t( &
+       f_t, &
+       t, &
+       mesh, &
+       center_x1, &
+       center_x2, &
+       sigma, &
+       amplitude, &
+       use_center, &
+       use_edge, &
+       center_values_t, &
+       edge_values_t)
+    implicit none
     type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64, dimension(:)       :: f_tn
-    sll_real64, intent(in) :: epsilon
-    sll_int32, intent(in) :: k_mode
-    sll_real64 :: x, y
-    sll_real64 :: r
+    sll_real64, intent(inout) :: f_t(:)
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: center_x1
+    sll_real64, intent(in) :: center_x2
+    sll_real64, intent(in) :: sigma
+    sll_real64, intent(in) :: amplitude
+    logical, intent(in), optional :: use_center
+    logical, intent(in), optional :: use_edge
+    sll_real64, intent(inout), optional :: center_values_t(:)
+    sll_real64, intent(inout), optional :: edge_values_t(:)
+
+    sll_real64 :: x
+    sll_real64 :: y
     sll_int32  :: i
+    sll_real64 :: xx
+    sll_real64 :: yy
+    logical :: use_center_loc
+    logical :: use_edge_loc
+
+    use_center_loc = .false.
+    use_edge_loc = .false.
+
+    if(present(use_center))then
+       use_center_loc = use_center
+    endif
+    if(present(use_edge))then
+       use_edge_loc = use_edge
+    endif
 
     do i = 1,mesh%num_pts_tot
        x = mesh%cartesian_coord(1,i)
        y = mesh%cartesian_coord(2,i)
-       r = sqrt( x**2 + y**2 )
-
-       if ( r <= 8._f64  .and. r >= 5._f64 ) then
-          f_tn(i) = (1._f64 + epsilon * cos( real(k_mode,f64) * atan2(y,x)) )*&
-               exp( -4._f64*(r-6.5_f64)**2)
-       else
-          f_tn(i) = 0._f64
-       endif
-    enddo
-  end subroutine init_distr_gc
-
-
-  !-------------------------------------------------------------------------
-  !> @brief Writes diagnostics files
-  !> @details Write two sort of documents: "diag_gc_spline*_*.dat" and 
-  !> "diag_gc_spline*_nc.dat". Where important values (i.e. time of sim, errors, number
-  !> of cells, etc) are written in order to compute diagnostics. The first file is for
-  !> time evolutions, the second one is regarding the space discretization.
-  !> @param rho real: contains the value of the density of the gc at time t
-  !> @param t real: time of the simulation
-  !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
-  !> @param uxn real: equals sum( y_i) where (xi,yi) are the mesh points
-  !> @param uyn real: equals sum(-x_i) where (xi,yi) are the mesh points
-  !> @param nloop int: number of loops done
-  !> @param deg int: degree of the splines used for the interpolation method
-  !> @param tmax: maximum time that the will simulation will run
-  !> @param cells_min int: min number of cells the mesh will have during this simulation
-  !> @param cells_max int: max number of cells the mesh will have during this simulation
-  !> return 
-  !subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,deg,tmax,out_unit)
-  subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,out_unit)
-    type(sll_hex_mesh_2d),  pointer  :: mesh
-    sll_real64, dimension(:) :: rho
-    sll_real64, dimension(:) :: uxn
-    sll_real64, dimension(:) :: uyn
-    sll_real64, intent(in)   :: t
-    !sll_real64, intent(in)   :: tmax
-    !sll_int32 , intent(in)   :: nloop
-    !sll_int32 , intent(in)   :: deg
-    !sll_int32 , intent(in)   :: cells_min, cells_max
-    sll_real64 :: mass
-    sll_real64 :: rho_min
-    sll_real64 :: norm_l1
-    sll_real64 :: norm_l2
-    sll_real64 :: norm_linf
-    sll_real64 :: energy
-    sll_int32  :: i
-    sll_int32,intent(in)  :: out_unit
-    character(len = 50) :: filename
-    character(len =  4) :: filenum
-    character(len =  4) :: splinedeg
-
-    energy    = 0._f64
-    mass      = 0._f64
-    rho_min   = rho(1)
-    norm_l1   = 0._f64
-    norm_l2   = 0._f64
-    norm_linf = 0._f64
-
-    ! --------------------------------------------------
-    ! Writing file in respect to time...................
-
-    !if (mesh%num_cells == cells_max) then
-    !call int2string(mesh%num_cells,filenum)
-    !call int2string(deg,splinedeg)
-    !filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
-
-    !call sll_new_file_id(out_unit, ierr)
-    !if (nloop == 0) then
-    !   open(unit = out_unit, file=filename, action="write", status="replace")
-    !else
-    !   open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-    !endif
-
-    do i = 1,mesh%num_pts_tot
-       mass = mass + rho(i)
-       norm_l1 = norm_l1 + abs(rho(i))
-       norm_l2 = norm_l2 + rho(i)**2
-       energy = energy + uxn(i)**2 + uyn(i)**2
-       if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
-       if ( rho(i) < rho_min  ) rho_min  = rho(i)
+       xx = x*cos(t) - y*sin(t)
+       yy = x*sin(t) + y*cos(t)       
+       f_t(i) = amplitude * exp(-0.5_f64* &
+            ((xx-center_x1)**2 + (yy-center_x2)**2) / sigma**2 )
     enddo
 
-    !print *,"diagnostic for t = ",t
-    energy  = sqrt(energy * mesh%delta**2)
-    mass    = mass * mesh%delta**2
-    norm_l1 = norm_l1 * mesh%delta**2
-    norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-    write(out_unit,"(7(g18.10,1x))") t, &
-         mass, &
-         rho_min, &
-         norm_l1, &
-         norm_l2, &
-         norm_linf, &
-         energy
+    if(use_center_loc)then
+       do i = 1,mesh%num_triangles
+          x = mesh%center_cartesian_coord(1,i)
+          y = mesh%center_cartesian_coord(2,i)
+          xx = x*cos(t) - y*sin(t)
+          yy = x*sin(t) + y*cos(t)       
+          center_values_t(i) = amplitude * exp(-0.5_f64* &
+               ((xx-center_x1)**2 + (yy-center_x2)**2) / sigma**2 )
+       enddo
+    endif
 
-    !close(out_unit)
+    if(use_edge_loc)then
+       do i = 1,mesh%num_edges
+          x = mesh%edge_center_cartesian_coord(1,i)
+          y = mesh%edge_center_cartesian_coord(2,i)
+          xx = x*cos(t) - y*sin(t)
+          yy = x*sin(t) + y*cos(t)       
+          edge_values_t(i) = amplitude * exp(-0.5_f64* &
+               ((xx-center_x1)**2 + (yy-center_x2)**2) / sigma**2 )
+       enddo
+    endif
 
-    !end if
-    ! --------------------------------------------------
-    ! Writing file in respect to num_cells..............
-    !    if (t.gt.tmax) then !We write on this file only if it is the last time step
-    !
-    !       call int2string(deg,splinedeg)
-    !       filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
-    !
-    !       !if ( mesh%num_cells == cells_min ) then
-    !          call sll_new_file_id(out_unit, ierr)
-    !          open(unit = out_unit, file=filename, action="write", status="replace")
-    !       !else
-    !       !   call sll_new_file_id(out_unit, ierr)
-    !       !   open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-    !       !endif
-    !       
-    !       do i = 1,mesh%num_pts_tot
-    !          mass = mass + rho(i)
-    !          norm_l1 = norm_l1 + abs(rho(i))
-    !          norm_l2 = norm_l2 + rho(i)**2
-    !          energy = energy + uxn(i)**2 + uyn(i)**2
-    !          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
-    !          if ( rho(i) < rho_min  ) rho_min  = rho(i)
-    !       enddo
-    !
-    !       energy  = sqrt(energy * mesh%delta**2)
-    !       mass    = mass * mesh%delta**2
-    !       norm_l1 = norm_l1 * mesh%delta**2
-    !       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
-    !
-    !       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
-    !            t, &
-    !            mass, &
-    !            rho_min, &
-    !            norm_l1, &
-    !            norm_l2, &
-    !            norm_linf, &
-    !            energy
-    !
-    !       close(out_unit) 
-    !    end if
-  end subroutine hex_diagnostics_gc
-
+  end subroutine gaussian_at_t
 
   function compute_num_tot_points( &
        num_cells, &
@@ -1615,14 +1733,14 @@ contains
 
     do j=-num_cells,num_cells
        i=-num_cells
-       do while(index(num_cells+1+i,num_cells+1+j)==0)
+       do while(index1(num_cells+1+i,num_cells+1+j)==0)
           i=i+1
        enddo
        bounds1(1,j+num_cells+1) = i
-       do while((i<=num_cells-1).and.(index(num_cells+1+i,num_cells+1+j)/=0))
+       do while((i<=num_cells-1).and.(index1(num_cells+1+i,num_cells+1+j)/=0))
           i=i+1
        enddo
-       if((i==num_cells).and.(index(num_cells+1+i,num_cells+1+j)/=0))then
+       if((i==num_cells).and.(index1(num_cells+1+i,num_cells+1+j)/=0))then
           i=i+1
        endif
        i=i-1
@@ -1646,14 +1764,14 @@ contains
 
     do i=-num_cells,num_cells
        j=-num_cells
-       do while(index(num_cells+1+i,num_cells+1+j)==0)
+       do while(index1(num_cells+1+i,num_cells+1+j)==0)
           j=j+1
        enddo
        bounds2(1,i+num_cells+1) = j
-       do while((j<=num_cells-1).and.(index(num_cells+1+i,num_cells+1+j)/=0))
+       do while((j<=num_cells-1).and.(index1(num_cells+1+i,num_cells+1+j)/=0))
           j=j+1
        enddo
-       if((j==num_cells).and.(index(num_cells+1+i,num_cells+1+j)/=0))then
+       if((j==num_cells).and.(index1(num_cells+1+i,num_cells+1+j)/=0))then
           j=j+1
        endif
        j=j-1
@@ -2279,7 +2397,7 @@ contains
        ii=0
        do i=bounds1(1,j+num_cells+1),bounds1(2,j+num_cells+1)
           ii=ii+1
-          bufin1(ii) = rho_tn(index(num_cells+1+i,num_cells+1+j))  
+          bufin1(ii) = rho_tn(index1(num_cells+1+i,num_cells+1+j))  
        enddo
        do i=r,0
           bufin1(i) = bufin1(1)
@@ -2292,7 +2410,7 @@ contains
           do jj = r_left,s_left
              tmp = tmp+w_left(jj)*bufin1(i+jj)  
           enddo
-          ind = index(num_cells+1+i+bounds1(1,j+num_cells+1)-1,num_cells+1+j)
+          ind = index1(num_cells+1+i+bounds1(1,j+num_cells+1)-1,num_cells+1+j)
           deriv(1,ind) = bufin1(i)
           deriv(2,ind) = tmp
           tmp=0._f64
@@ -2308,7 +2426,7 @@ contains
        ii=0
        do j=bounds2(1,i+num_cells+1),bounds2(2,i+num_cells+1)
           ii=ii+1
-          bufin1(ii) = rho_tn(index(num_cells+1+i,num_cells+1+j))  
+          bufin1(ii) = rho_tn(index1(num_cells+1+i,num_cells+1+j))  
        enddo
        do j=r,0
           bufin1(j) = bufin1(1)
@@ -2321,7 +2439,7 @@ contains
           do jj = r_left,s_left
              tmp = tmp+w_left(jj)*bufin1(j+jj)  
           enddo
-          ind = index(num_cells+1+i,num_cells+1+j+bounds2(1,i+num_cells+1)-1)
+          ind = index1(num_cells+1+i,num_cells+1+j+bounds2(1,i+num_cells+1)-1)
           !deriv(1,ind) = bufin1(j)
           deriv(4,ind) = tmp
           tmp=0._f64
@@ -3778,4 +3896,5 @@ contains
 
 
 
-end program sim2d_gc_hex
+
+end program sim_bsl_ad_2d0v_hex_rot
