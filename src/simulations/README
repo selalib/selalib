@@ -94,8 +94,8 @@ DONE eul_vp_1d1v_cart_fe_ft: sim_VlasovPoisson1D_fourier_FEM
 DONE bsl_vp_1d1v_cart_serial: sim_VlasovPoisson1D_various_programs
 DONE bsl_vp_1d1v_cart_deltaf: sim_VlasovPoisson1D_various_programs
 DONE bsl_vp_1d1v_cart_micro_macro: sim_VlasovPoisson1D_various_programs
-TO DO fsl_ad_1d1d_curv: sim_curvilinear_SL
-TO DO fsl_ad_1d1d_polar: sim_polar_SL
+TO DO fsl_ad_2d0v_curv: sim_curvilinear_SL
+TO DO fsl_ad_2d0v_polar: sim_polar_SL
 TO DO bsl_vp_2d2d_cart_fullsparsegrid: sim_sl_vp_2d2v_cart_fullsparsegrid
 
  
