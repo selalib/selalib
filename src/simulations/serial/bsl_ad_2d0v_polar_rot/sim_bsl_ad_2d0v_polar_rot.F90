@@ -1,4 +1,4 @@
-program rotation_2d_polar
+program sim_bsl_ad_2d0v_polar_rot
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -636,4 +636,4 @@ contains
 
   
   
-end program rotation_2d_polar
+end program sim_bsl_ad_2d0v_polar_rot
