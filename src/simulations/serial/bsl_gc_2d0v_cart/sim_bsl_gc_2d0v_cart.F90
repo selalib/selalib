@@ -1,5 +1,5 @@
-program guiding_center_2d_cartesian
-  use sll_m_sim_2d_guiding_center_cartesian
+program sim_bsl_gc_2d0v_cart
+  use sll_m_sim_bsl_gc_2d0v_cart
   implicit none
   class(sll_simulation_base_class), pointer :: sim
   character(len=256) :: filename
@@ -15,4 +15,4 @@ program guiding_center_2d_cartesian
   call sim%run( )
   print *,'#PASSED'
 
-end program guiding_center_2d_cartesian
+end program sim_bsl_gc_2d0v_cart

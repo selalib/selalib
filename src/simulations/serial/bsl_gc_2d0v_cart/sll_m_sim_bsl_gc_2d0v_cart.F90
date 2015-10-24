@@ -1,4 +1,4 @@
-module sll_m_sim_2d_guiding_center_cartesian
+module sll_m_sim_bsl_gc_2d0v_cart
 
 !2d guiding center cartesian simulation
 !related to simulation_2d_guiding_center_curvilinear.F90
@@ -1381,4 +1381,4 @@ contains
 #endif
 
 
-end module sll_m_sim_2d_guiding_center_cartesian
+end module sll_m_sim_bsl_gc_2d0v_cart
