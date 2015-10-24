@@ -10,7 +10,7 @@
 !>          causes a periodic swirling deformation (see [REF]). The Cartesian
 !>          grid is obtained as a tensor product of two uniform 1D grids.
 !------------------------------------------------------------------------------
-module sll_m_sim_2d_analytic_field_cartesian
+module sll_m_sim_bsl_ad_2d0v_cart
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -972,4 +972,4 @@ contains
 #endif
 !*********************
 
-end module sll_m_sim_2d_analytic_field_cartesian
+end module sll_m_sim_bsl_ad_2d0v_cart

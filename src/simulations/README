@@ -80,7 +80,7 @@ DONE pif_vp_ndnv_cart: sim_general_vlasov_poisson_pif
 
 SEQUENTIAL:
 
-TO DO bsl_ad_2d0v_cart: sim_2d_analytic_field_cartesian
+DONE bsl_ad_2d0v_cart: sim_2d_analytic_field_cartesian
 TO DO bsl_ad_2d0v_curv: sim_2d_analytic_field_curvilinear
 TO DO bsl_gc_2d0v_cart: sim_2d_guiding_center_cartesian
 TO DO bsl_gc_2d_hex_hermite: sim_2d_guiding_center_hexagonal
