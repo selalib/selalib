@@ -1,4 +1,4 @@
-module sll_m_sim_2d_analytic_field_curvilinear
+module sll_m_sim_bsl_ad_2d0v_curv
 
 !2d analytic field curvilinear simulation
 !contact: Adnane Hamiaz (hamiaz@math.unistra.fr
@@ -3628,4 +3628,4 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
 
 
 
-end module sll_m_sim_2d_analytic_field_curvilinear
+end module sll_m_sim_bsl_ad_2d0v_curv

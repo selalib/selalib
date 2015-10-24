@@ -1,6 +1,6 @@
-program analytic_field_2d_curvilinear
+program sim_bsl_ad_2d0v_curv
 #include "sll_working_precision.h"
-  use sll_m_sim_2d_analytic_field_curvilinear
+  use sll_m_sim_bsl_ad_2d0v_curv
   implicit none
   class(sll_simulation_2d_analytic_field_curvilinear), pointer :: sim  
   character(len=256) :: filename
@@ -43,4 +43,4 @@ program analytic_field_2d_curvilinear
 
 
 
-end program analytic_field_2d_curvilinear
+end program sim_bsl_ad_2d0v_curv
