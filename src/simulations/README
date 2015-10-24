@@ -88,7 +88,7 @@ DONE bsl_gc_2d0v_hex_hermite: sim_2d_guiding_center_hexagonal
 DONE bsl_gc_2d0v_hex_splines: sim_2d_guiding_center_hexagonal
 DONE bsl_ad_2d0v_hex_rot: sim_2d_guiding_center_hexagonal
 DONE bsl_ad_2d0v_polar_rot: sim_2d_guiding_center_hexagonal
-TO DO bsl_gc_2d0v_polar: sim_2d_guiding_center_polar
+DONE bsl_gc_2d0v_polar: sim_2d_guiding_center_polar
 TO DO bsl_gc_2d0v_polar_one_mu: sim_2d_guiding_center_polar_one_mu
 TO DO eul_vp_1d1v_cart_fe_ft: sim_VlasovPoisson1D_fourier_FEM
 TO DO bsl_vp_1d1v_cart_serial: sim_VlasovPoisson1D_various_programs

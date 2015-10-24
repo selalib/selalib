@@ -1,7 +1,7 @@
-program guiding_center_2d_polar
+program sim_bsl_gc_2d0v_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_m_sim_2d_guiding_center_polar
+  use sll_m_sim_bsl_gc_2d0v_polar
   use sll_m_timer
   use sll_m_constants
   implicit none
@@ -52,4 +52,4 @@ program guiding_center_2d_polar
     print *, '#time elapsed since t0 : ',time
     print *, '#PASSED'
 
-end program guiding_center_2d_polar
+end program sim_bsl_gc_2d0v_polar
