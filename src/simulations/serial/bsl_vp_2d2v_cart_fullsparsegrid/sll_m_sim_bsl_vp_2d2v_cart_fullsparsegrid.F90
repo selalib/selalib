@@ -6,7 +6,7 @@
 !
 !------------------------------------------------------------------------------
 
-module sll_m_sim_sl_vp_2d2v_cart_fullsparsegrid
+module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -579,4 +579,4 @@ subroutine scale_gaussian(sim, dim,dt,efield,fscale)
    end subroutine dehira_landau_d_dimension
 
 
-end module sll_m_sim_sl_vp_2d2v_cart_fullsparsegrid
+end module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
