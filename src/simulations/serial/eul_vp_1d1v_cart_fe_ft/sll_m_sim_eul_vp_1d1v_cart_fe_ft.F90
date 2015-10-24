@@ -3,7 +3,7 @@
   !  Laurent Navoret 2012-10
   !---------------------------------------------------------------------------
 
-module sll_m_sim_vp1d_fourier_fem
+module sll_m_sim_eul_vp_1d1v_cart_fe_ft
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -37,4 +37,4 @@ contains
     class(sll_simulation_vp1d_fourier_fem), intent(inout) :: sim
   end subroutine run_vp1d_fourier_fem
 
-end module sll_m_sim_vp1d_fourier_fem
+end module sll_m_sim_eul_vp_1d1v_cart_fe_ft

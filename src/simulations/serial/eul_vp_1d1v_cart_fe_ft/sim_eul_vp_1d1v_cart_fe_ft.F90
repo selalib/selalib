@@ -7,12 +7,12 @@
 ! - 1Dx1D cartesian
 
 
-program unit_test_vp1d_fourier_fem
+program sim_eul_vp_1d1v_cart_fe_ft
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_m_sim_vp1d_fourier_fem
+  use sll_m_sim_eul_vp_1d1v_cart_fe_ft
   implicit none
 
     type(sll_simulation_vp1d_fourier_fem) :: simulation
@@ -24,6 +24,6 @@ program unit_test_vp1d_fourier_fem
     print *, 'PASSED'
     !call delete_vp4d_par_cart(simulation)
 
-end program unit_test_vp1d_fourier_fem
+end program sim_eul_vp_1d1v_cart_fe_ft
 
 
