@@ -1,4 +1,4 @@
-module sll_m_sim_2d_guiding_center_polar
+module sll_m_sim_bsl_gc_2d0v_polar
 
 !2d guiding center polar simulation
 !related to simulation_2d_guiding_center_curvilinear.F90
@@ -1184,4 +1184,4 @@ contains
 
 
 
-end module sll_m_sim_2d_guiding_center_polar
+end module sll_m_sim_bsl_gc_2d0v_polar
