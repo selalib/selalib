@@ -1,4 +1,4 @@
-program VP_1d
+program sim_bsl_vp_1d1v_cart_serial
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -221,4 +221,4 @@ program VP_1d
   close(th_diag)
   close(ex_diag)
   print*, 'VP1D_cart has exited normally'
-end program 
+end program sim_bsl_vp_1d1v_cart_serial
