@@ -1,4 +1,4 @@
-program radial_1d_SL
+program sim_fsl_ad_2d0v_curv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -909,7 +909,7 @@ program radial_1d_SL
   enddo
   close(850)
   
-end program
+end program sim_fsl_ad_2d0v_curv
 
 ! conservation de la masse
 !plot 'diag.dat' u 1:3 w lp title 'BSL', 'diag.dat' u 1:7 w lp title 'BSL NC', 'diag.dat' u 1:11 w lp title 'FSL', 'diag.dat' u 1:15 w lp title 'FSL NC'
