@@ -19,9 +19,9 @@ SET( INSTALL_DIR "${INSTALL_DIR}/sim_serial" )
 
 IF(HDF5_ENABLED)
   
-  #Semi Lagrangian method
+  # Semi Lagrangian method
   
-  ##advection
+  ## advection
   ADD_SUBDIRECTORY( bsl_ad_2d0v_cart                          )
   ADD_SUBDIRECTORY( bsl_ad_2d0v_polar_rot                     )
   ADD_SUBDIRECTORY( bsl_ad_2d0v_curv                          )
@@ -29,15 +29,15 @@ IF(HDF5_ENABLED)
   ADD_SUBDIRECTORY( fsl_ad_2d0v_polar                         )
   ADD_SUBDIRECTORY( fsl_ad_2d0v_curv                          )
 
-  ##Vlasov-Poisson 1Dx1D
+  ## Vlasov-Poisson 1Dx1D
   ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_serial                   )
   ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_deltaf                   )
   ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_micro_macro              )
 
-  ##Vlasov-Poisson 2Dx2D
+  ## Vlasov-Poisson 2Dx2D
   ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_fullsparsegrid           )
 
-  ##Guiding-center 2D
+  ## Guiding-center 2D
   ADD_SUBDIRECTORY( bsl_gc_2d0v_cart                          )
   ADD_SUBDIRECTORY( bsl_gc_2d0v_polar                         )
   ADD_SUBDIRECTORY( bsl_gc_2d0v_polar_one_mu                  )
@@ -45,9 +45,9 @@ IF(HDF5_ENABLED)
   ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_splines                   )
   ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_hermite                   )
 
-  #Eulerian method
+  # Eulerian method
 
-  ##Vlasov-Poisson 1Dx1D
+  ## Vlasov-Poisson 1Dx1D
   ADD_SUBDIRECTORY( eul_vp_1d1v_cart_fe_ft                    )
 
 ENDIF(HDF5_ENABLED)
