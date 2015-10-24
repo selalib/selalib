@@ -5,7 +5,7 @@
 !> driven simulations (i.e. with an external force or non driven can
 !> be performed
 
-program VP1d_deltaf
+program sim_bsl_vp_1d1v_cart_deltaf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -433,4 +433,4 @@ contains
   end function f_equilibrium
 
 
-end program VP1d_deltaf
+end program sim_bsl_vp_1d1v_cart_deltaf

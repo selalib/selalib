@@ -5,7 +5,7 @@
 !> driven simulations (i.e. with an external force or non driven can
 !> be performed
 
-program VP1d_deltaf
+program sim_bsl_vp_1d1v_cart_micro_macro
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -678,4 +678,4 @@ contains
     f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
-end program VP1d_deltaf
+end program sim_bsl_vp_1d1v_cart_micro_macro
