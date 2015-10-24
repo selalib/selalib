@@ -1,4 +1,4 @@
-program sim2d_gc_hex_splines
+program sim_bsl_gc_2d0v_hex_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -762,4 +762,4 @@ contains
 
   end subroutine write_center
 
-end program sim2d_gc_hex_splines
+end program sim_bsl_gc_2d0v_hex_splines
