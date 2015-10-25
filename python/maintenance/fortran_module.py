@@ -6,16 +6,18 @@ Fortran module (partially) parsed by the F2Py library.
 Modules required
 ----------------
   * Built-in  : re
+  * Library   : fortran_intrinsics
   * 3rd-party : f2py.fparser
 
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 23 Oct 2015
+# Last revision: 25 Oct 2015
 #
 from __future__ import print_function
-from   fparser  import statements, typedecl_statements, block_statements
+from fparser    import statements, typedecl_statements, block_statements
+from fortran_intrinsics import intrinsic_procedures
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -33,6 +35,16 @@ namespace_types = \
   ( block_statements.Type,
     block_statements.Function,
     block_statements.Subroutine )
+
+#------------------------------------------------------------------------------
+def get_external_symbols( *content ):
+    """ TODO: this should include
+           1) all used variables
+           2) all used types
+           3) all used subroutines (NOT intrinsic)
+           4) all calls (used functions and arrays, NOT intrinsic)
+    """
+    raise NotImplementedError()
 
 #------------------------------------------------------------------------------
 def get_all_used_types( *content ):
@@ -62,16 +74,19 @@ def get_all_calls( *content ):
         # If assignment, parse r.h.s.
         if isinstance( item, statements.Assignment ):
             for match in regex.findall( item.expr ):
-                yield match
+                if match not in intrinsic_procedures:
+                    yield match
         # If pointer assignment, parse r.h.s.
         elif isinstance( item, statements.PointerAssignment ):
             for match in regex.findall( item.expr ):
-                yield match
+                if match not in intrinsic_procedures:
+                    yield match
         # If subroutine call, parse arguments
         elif isinstance( item, statements.Call ):
             for s in item.items:
                 for match in regex.findall( s ):
-                    yield match
+                    if match not in intrinsic_procedures:
+                        yield match
         # If block, search recursively:
         elif hasattr( item, 'content' ):
             for c in get_all_calls( *item.content ):
@@ -86,8 +101,10 @@ def get_all_subroutine_calls( *content ):
     for item in content:
         # If subroutine call, return its name
         if isinstance( item, statements.Call ):
-            if '%' not in item.designator: # discard type-bound subroutine call
-                yield item.designator
+            sub_name = item.designator
+            if '%' not in sub_name: # discard type-bound subroutine call
+                if sub_name not in intrinsic_procedures:
+                    yield sub_name
         # If this is a block, search recursively:
         elif hasattr( item, 'content' ):
             for c in get_all_subroutine_calls( *item.content ):
