@@ -16,29 +16,58 @@ TARGET_LINK_LIBRARIES( sll_sim_serial
 
 SET( INSTALL_DIR "${INSTALL_DIR}/sim_serial" )
 
-ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic  )
-ADD_SUBDIRECTORY( sim_VlasovPoisson1D_fourier_FEM           )
-ADD_SUBDIRECTORY( sim_VlasovPoisson1D_cartesian_non_uniform )
-ADD_SUBDIRECTORY( sim_VlasovPoisson1D_various_programs      )
-ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords  )
-ADD_SUBDIRECTORY( sim_polar_SL                              )
-ADD_SUBDIRECTORY( sim_curvilinear_SL                        )
-ADD_SUBDIRECTORY( sim_CG_polar                              )
-ADD_SUBDIRECTORY( sim_CG_curvilinear_2D                     )
-ADD_SUBDIRECTORY( sim_poisson_polar_test                    )
-ADD_SUBDIRECTORY( sim_2d_guiding_center_hexagonal           )
 
 IF(HDF5_ENABLED)
-  SET( SIM_LIBS sll_advection sll_parallel_array_utilities )
-  ADD_SUBDIRECTORY( sim_2d_analytic_field_cartesian )
-  ADD_SUBDIRECTORY( sim_2d_analytic_field_curvilinear )
-  ADD_SUBDIRECTORY( sim_2d_guiding_center_cartesian )
-  ADD_SUBDIRECTORY( sim_2d_guiding_center_polar )
-  ADD_SUBDIRECTORY( sim_2d_guiding_center_polar_one_mu )
-  ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords_mudpack  )
-  ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_fullsparsegrid )
+  
+  # Semi Lagrangian method
+  
+  ## advection
+  ADD_SUBDIRECTORY( bsl_ad_2d0v_cart                          )
+  ADD_SUBDIRECTORY( bsl_ad_2d0v_polar_rot                     )
+  ADD_SUBDIRECTORY( bsl_ad_2d0v_curv                          )
+  ADD_SUBDIRECTORY( bsl_ad_2d0v_hex_rot                       )
+  ADD_SUBDIRECTORY( fsl_ad_2d0v_polar                         )
+  ADD_SUBDIRECTORY( fsl_ad_2d0v_curv                          )
+
+  ## Vlasov-Poisson 1Dx1D
+  ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_serial                   )
+  ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_deltaf                   )
+  ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_micro_macro              )
+
+  ## Vlasov-Poisson 2Dx2D
+  ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_fullsparsegrid           )
+
+  ## Guiding-center 2D
+  ADD_SUBDIRECTORY( bsl_gc_2d0v_cart                          )
+  ADD_SUBDIRECTORY( bsl_gc_2d0v_polar                         )
+  ADD_SUBDIRECTORY( bsl_gc_2d0v_polar_one_mu                  )
+  ADD_SUBDIRECTORY( bsl_gc_2d0v_hex                           )
+  ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_splines                   )
+  ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_hermite                   )
+
+  # Eulerian method
+
+  ## Vlasov-Poisson 1Dx1D
+  ADD_SUBDIRECTORY( eul_vp_1d1v_cart_fe_ft                    )
+
 ENDIF(HDF5_ENABLED)
 
 ADD_SUBDIRECTORY(bsl_examples)
 ADD_SUBDIRECTORY(csl_examples)
 ADD_SUBDIRECTORY(fsl_examples)
+
+
+
+
+#SET( SIM_LIBS sll_advection sll_parallel_array_utilities )
+#to move elsewhere
+#ADD_SUBDIRECTORY( sim_poisson_polar_test                   )
+#to backup in sll_simulations
+#ADD_SUBDIRECTORY( sim_CG_polar                              )
+#ADD_SUBDIRECTORY( sim_CG_curvilinear_2D                     )
+#ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords  )
+#ADD_SUBDIRECTORY( sim_VlasovPoisson1D_cartesian_non_uniform )
+#ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic  )
+#ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords_mudpack  )
+
+

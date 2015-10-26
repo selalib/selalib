@@ -5,7 +5,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
    ADD_LIBRARY( sll_sim_parallel STATIC ../simulation_base_class.F90)
 
-   #Add new dependencies concerning simulation_MYMETHOD.F90
+   # Add new dependencies concerning SIMNAME/sim_SIMNAME.F90 
+   # and or SIMNAME/sll_m_sim_SIMNAME.F90
+   # refer to the developer guide for choosing the right SIMNAME
+
    TARGET_LINK_LIBRARIES(sll_sim_parallel
                          sll_collective
                          sll_parallel_array_utilities
@@ -47,42 +50,80 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     # Variables passed to simulations' CMakeFiles in subdirectories
     SET( INSTALL_DIR "${INSTALL_DIR}/sim_parallel" )
 
-    # Simulations as new subdirectories
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear        )
-    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian          )
-    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting       )
-    ADD_SUBDIRECTORY( sim_4d                                   )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian          )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar              )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian           )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar               )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_one_mu        )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_multi_mu      )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_field_aligned_polar )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
-    ADD_SUBDIRECTORY( sim_6d                                   )
+    # Semi-Lagrangian simulations
+    
+    ## Vlasov-Poisson 1Dx1D
+    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart                         )
+    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_two_species             )
+    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_no_split                )
 
-    ADD_SUBDIRECTORY( sim_sl_va_1d1v_cart_berk_breizman        )
-    ADD_SUBDIRECTORY( sim_sl_va_1d1v_cart_spectral             )
-    ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_sparsegrid           )
-    ADD_SUBDIRECTORY( sim_sl_vp_3d3v_cart_sparsegrid           )
-    ADD_SUBDIRECTORY( sim_sl_vp_2d2v_cart_multipatch           )
-    ADD_SUBDIRECTORY( sl_dk_3d1v_curv_field_aligned        )
-    ADD_SUBDIRECTORY( sim_sl_vp_2d2v_curv_general_elliptic_solver)
+    ## Vlasov-Ampere 1Dx1D
+    ADD_SUBDIRECTORY( bsl_va_1d1v_cart_berk_breizman           )
+    ADD_SUBDIRECTORY( bsl_va_1d1v_cart_spectral                )
+
+    ## Vlasov-Poisson 2Dx2D
+    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart                         )
+    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_poisson_serial          )
+    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_sparsegrid              )
+    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_multipatch              )
+    ADD_SUBDIRECTORY( bsl_vp_2d2v_polar                        )
+    ADD_SUBDIRECTORY( bsl_vp_2d2v_curv                         )
+
+    ## Vlasov-Poisson 3Dx3D
+    ADD_SUBDIRECTORY( bsl_vp_3d3v_cart                         )
+    ADD_SUBDIRECTORY( bsl_vp_3d3v_cart_sparsegrid              )
+
+    ## Guiding-Center 2D
+    ADD_SUBDIRECTORY( bsl_gc_2d0v_curv )
+
+    ## Drift/gyro-kinetic 3Dx1D
+    ADD_SUBDIRECTORY( bsl_dk_3d1v_polar                        )
+    ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_one_mu                 )
+    ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_multi_mu               )
+    ADD_SUBDIRECTORY( bsl_dk_3d1v_polar_field_aligned          )
+    ADD_SUBDIRECTORY( bsl_dk_3d1v_curv                         )
+    ADD_SUBDIRECTORY( bsl_dk_3d1v_curv_field_aligned           )
+
+    # Eulerian simulations
+
+    ## Vlasov-Poisson 2Dx2D
+    ADD_SUBDIRECTORY( eul_vp_2d2v_cart_fv                      )
+
+    # Particle simulations
+
+    ## Vlasov-Poisson 1Dx1D
+    ADD_SUBDIRECTORY( pic_vp_1d1v_cart                         )
+
+    ## Vlasov-Maxwell 1Dx2D
+    ADD_SUBDIRECTORY( pic_vm_1d2v_cart                         )
+
+    ## Vlasov-Poisson 2Dx2D
+    ADD_SUBDIRECTORY( pic_vp_2d2v_cart                         )
+    ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim                   )
+    ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim_push              )
+    ADD_SUBDIRECTORY( pic_vp_2d2v_cart_remapped                )
+
+    ## Vlasov-Poisson NDxND
+    ADD_SUBDIRECTORY( pif_vp_ndnv_cart                         )
+
+    ## Guiding-Center 2D
+    ADD_SUBDIRECTORY( pic_gc_2d0v_cart_optim                   )
+    
+    
+    #To delete/put somewhere else
+    #as the simulation seems not to do what
+    #is indicated
+    #ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian          )
  
-
-    # Particle simulations (mostly PIC)
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_PIC_cartesian      )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_generic_PIC_cartesian )
-    ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
-    ADD_SUBDIRECTORY( sim_pic1d1v_vlasov-poisson_periodic      )
-
-#    ADD_SUBDIRECTORY( sim_pic_vp_2d2v_cart                     )
-    ADD_SUBDIRECTORY( sim_pic_vm_1d2v_cart                     )
-
 ENDIF()
 
 IF(MPI_ENABLED)
+   # here are some other examples of simulations
+   # they can serve as examples for selalib beginners
+   # you can add some new examples
+   # the interface is more free
+   # requirements of the simulations that are
+   # present in the developer guide are not
+   # mandatory here
    ADD_SUBDIRECTORY(bsl_examples)
 ENDIF(MPI_ENABLED)
