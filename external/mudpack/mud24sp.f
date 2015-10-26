@@ -98,7 +98,7 @@ c
       do j=0,ny+1
       do i=0,nx+1
         ij = j*(nx+2)+i
-        wk(ipf+ij) = 0.0
+        wk(ipf+ij) = 0d0
       end do
       end do
       do kb=2,ngrid
@@ -117,7 +117,7 @@ c
       do jc=0,ncy+1
         do ic=0,ncx+1
           icjc = jc*(ncx+2)+ic
-          wk(ipc+icjc) = 0.0
+          wk(ipc+icjc) = 0d0
         end do
       end do
 c
@@ -191,7 +191,7 @@ c
       real(8) cxx,cx,cyy,cy,tx,ty,ux3,ux4,uy3,uy4
       do j=1,ny
       do i=1,nx
-        rhs(i,j) = 0.0
+        rhs(i,j) = 0d0
       end do
       end do
       dlx = (xb-xa)/(nx-1)
