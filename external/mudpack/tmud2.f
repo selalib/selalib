@@ -183,31 +183,31 @@ c
 c
 c     set end points of solution rectangle in (x,y) space
 c
-      xa = 0.0
-      xb = 1.0
-      yc = 0.0
-      yd = 1.0
+      xa = 0d0
+      xb = 1d0
+      yc = 0d0
+      yd = 1d0
 c
 c     set mesh increments
 c
-      dlx = (xb-xa)/float(nx-1)
-      dly = (yd-yc)/float(ny-1)
+      dlx = (xb-xa)/(nx-1)
+      dly = (yd-yc)/(ny-1)
 c
 c     set for no error control flag
 c
-      tolmax = 0.0
+      tolmax = 0d0
 c
 c     set right hand side in rhs
 c     initialize phi to zero
 c
       do i=1,nx
-      x = xa+float(i-1)*dlx
+      x = xa+(i-1)*dlx
       do j=1,ny
-        y = yc+float(j-1)*dly
+        y = yc+(j-1)*dly
         call cof(x,y,cxx,cyy,cx,cy,ce)
         call exact(x,y,pxx,pyy,px,py,pe)
         rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
-        phi(i,j) = 0.0
+        phi(i,j) = 0d0
       end do
       end do
 c
@@ -215,13 +215,13 @@ c     set specified boundaries in phi
 c
       x = xb
       do j=1,ny
-      y = yc+float(j-1)*dly
+      y = yc+(j-1)*dly
       call exact(x,y,pxx,pyy,px,py,pe)
       phi(nx,j) = pe
       end do
       y = yc
       do i=1,nx
-      x = xa+float(i-1)*dlx
+      x = xa+(i-1)*dlx
       call exact(x,y,pxx,pyy,px,py,pe)
       phi(i,1) = pe
       end do
@@ -270,7 +270,7 @@ c
 c
 c     compute and print maximum norm of error
 c
-      errmax = 0.0
+      errmax = 0d0
       do j=1,ny
       y = yc+(j-1)*dly
       do i=1,nx
@@ -291,7 +291,7 @@ c
       real(8) x,y,cxx,cyy,cx,cy,ce
       cxx = 1.+y*y
       cyy = exp(-(x+y))
-      cx = 0.
+      cx = 0.0d0
       cy = -cyy
       ce = -(x+y)
       return
