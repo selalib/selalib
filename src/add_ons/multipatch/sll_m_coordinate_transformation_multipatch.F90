@@ -619,7 +619,7 @@ contains
 
   subroutine delete_stmp2d_ptr( mp )
     type(sll_coordinate_transformation_multipatch_2d), pointer :: mp
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     call mp%delete()
     !SLL_DEALLOCATE(mp,ierr)
   end subroutine delete_stmp2d_ptr

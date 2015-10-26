@@ -36,7 +36,7 @@ sll_int32  :: global_indices(4)
 call sll_boot_collective()
 
 prank = sll_get_collective_rank(sll_world_collective)
-psize = sll_get_collective_size(sll_world_collective)
+psize = int(sll_get_collective_size(sll_world_collective),i64)
 comm  = sll_world_collective%comm
 
 params_identity(:) = (/0.0_f64, 0.0_f64/) ! for identity this can be whatever
