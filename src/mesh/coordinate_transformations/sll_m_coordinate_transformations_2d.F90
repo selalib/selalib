@@ -810,33 +810,33 @@ contains
     sll_int32 :: ierr
     
     SLL_ALLOCATE(new_coordinate_transformation_2d_discrete, ierr)
-    call initialize_coord_transf_2d_discrete( &
+    call initialize_coord_transf_2d_discrete(       &
          new_coordinate_transformation_2d_discrete, &
-         mesh_2d,           &
-         label,            &
-         x1_interpolator, &
-         x2_interpolator, &
-         jacobians_n_interpolator, &
-         x1_node,        &
-         x2_node,        &
-         jacobians_node, &
-         x1_cell, &
-         x2_cell, &
+         mesh_2d,                                   &
+         label,                                     &
+         x1_interpolator,                           &
+         x2_interpolator,                           &
+         jacobians_n_interpolator,                  &
+         x1_node,                                   &
+         x2_node,                                   &
+         jacobians_node,                            &
+         x1_cell,                                   &
+         x2_cell,                                   &
          jacobians_cell )
   end function new_coordinate_transformation_2d_discrete
 
   subroutine initialize_coord_transf_2d_discrete( &
-    transf,            &
-    mesh_2d,           &
-    label,            &
-    x1_interpolator, &
-    x2_interpolator, &
-    jacobians_n_interpolator, &
-    x1_node,        &
-    x2_node,        &
-    jacobians_node, &
-    x1_cell, &
-    x2_cell, &
+    transf,                                       &
+    mesh_2d,                                      &
+    label,                                        &
+    x1_interpolator,                              &
+    x2_interpolator,                              &
+    jacobians_n_interpolator,                     &
+    x1_node,                                      &
+    x2_node,                                      &
+    jacobians_node,                               &
+    x1_cell,                                      &
+    x2_cell,                                      &
     jacobians_cell )
 
     class(sll_coordinate_transformation_2d_discrete)    :: transf
@@ -904,6 +904,7 @@ contains
 
     if( (      x1n  .and. (.not.x2n) ) .or. &
         ((.not.x1n) .and.       x2n) ) then
+       
        print *,'ERROR, initialize_coordinate_transformation_2d_discrete():', &
             'for the moment, this function does not support specifying ', &
             'transformation only with one of the node arrays x1_node or ', &
@@ -911,6 +912,7 @@ contains
             'corresponding interpolators having their coefficients ', &
             'already set.'
        STOP
+       call jacobians_n_interpolator%delete() !PN added to remove the warning
     end if
 
     if( x1n ) then
@@ -1472,27 +1474,27 @@ contains
 !    SLL_DEALLOCATE_ARRAY(nodes2,ierr)
   end subroutine read_from_file_2d_discrete
 
-     !> PLEASE ADD DOCUMENTATION
-  subroutine delete_multiplicity_in_knots(knots,nodes,sz_nodes)
-    sll_real64, dimension(:), intent(in) :: knots
-    sll_real64, dimension(:), intent(out) :: nodes
-    sll_int32, intent(out) ::  sz_nodes
+!PN commented out because defined but not used.
+! subroutine delete_multiplicity_in_knots(knots,nodes,sz_nodes)
+!   sll_real64, dimension(:), intent(in) :: knots
+!   sll_real64, dimension(:), intent(out) :: nodes
+!   sll_int32, intent(out) ::  sz_nodes
 
-    sll_int32 :: i,j
-    sll_int32 :: sz_knots 
+!   sll_int32 :: i,j
+!   sll_int32 :: sz_knots 
 
-    nodes(1) = knots(1)
-    sz_knots = size(knots)
-    j = 1
-    do i = 2, sz_knots
-       if (knots(i) .ne. nodes(j)) then
-          j = j + 1
-          nodes(j) = knots(i)
-       end if
-    end do
-       
-    sz_nodes = j
-  end subroutine delete_multiplicity_in_knots
+!   nodes(1) = knots(1)
+!   sz_knots = size(knots)
+!   j = 1
+!   do i = 2, sz_knots
+!      if (knots(i) .ne. nodes(j)) then
+!         j = j + 1
+!         nodes(j) = knots(i)
+!      end if
+!   end do
+!      
+!   sz_nodes = j
+! end subroutine delete_multiplicity_in_knots
 
 #if 0
   subroutine delete_coordinate_transformation_2D_general( transf )
