@@ -269,8 +269,8 @@ program unit_test_2d
            eta2 = t_n%mesh%eta2_node(i,j)
            val_approx1 = t_n%x1(eta1,eta2)
            val_approx2 = t_n%x2(eta1,eta2)
-           val_exacte1 = 2*sinprod_x1(eta1,eta2,param1)-1
-           val_exacte2 = 2*sinprod_x2(eta1,eta2,param1)-1
+           val_exacte1 = 2.0_f64*sinprod_x1(eta1,eta2,param1)-1.0_f64
+           val_exacte2 = 2.0_f64*sinprod_x2(eta1,eta2,param1)-1.0_f64
            val_exacte1_bis = sinprod_gen_x1(eta1,eta2,param2)
            val_exacte2_bis = sinprod_gen_x2(eta1,eta2,param2)
 
@@ -279,11 +279,11 @@ program unit_test_2d
 
            val_approx_jac = t_n%jacobian_matrix(eta1,eta2)
            val_jac_approx = t_n%jacobian(eta1,eta2)
-           j11 = 2*sinprod_jac11(eta1,eta2,param1)
-           j12 = 2*sinprod_jac12(eta1,eta2,param1)
-           j21 = 2*sinprod_jac21(eta1,eta2,param1)
-           j22 = 2*sinprod_jac22(eta1,eta2,param1)
-           jac = 2*2*sinprod_jac(eta1,eta2,param1)
+           j11 = 2.0_f64*sinprod_jac11(eta1,eta2,param1)
+           j12 = 2.0_f64*sinprod_jac12(eta1,eta2,param1)
+           j21 = 2.0_f64*sinprod_jac21(eta1,eta2,param1)
+           j22 = 2.0_f64*sinprod_jac22(eta1,eta2,param1)
+           jac = 2.0_f64*2.0_f64*sinprod_jac(eta1,eta2,param1)
            j11_bis = sinprod_gen_jac11(eta1,eta2,param2)
            j12_bis = sinprod_gen_jac12(eta1,eta2,param2)
            j21_bis = sinprod_gen_jac21(eta1,eta2,param2)
