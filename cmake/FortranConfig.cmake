@@ -34,7 +34,7 @@ IF(Fortran_COMPILER_NAME MATCHES gfortran)
 
   ADD_DEFINITIONS(-DGFORTRAN)
   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC")
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries -Werror")
 
   SET(CONVERSION_EXTRA_FLAG_ENABLED ON CACHE BOOL   "Add -Wconversion-extra flag to gfortran")
   IF(CONVERSION_EXTRA_FLAG_ENABLED)
