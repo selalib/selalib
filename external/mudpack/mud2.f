@@ -164,7 +164,7 @@ c       set subgrid sizes
       ierror = 10   ! check solution region
       if (xb.le.xa .or. yd.le.yc) return
       ierror = 11
-      if (tolmax .lt. 0.0) return
+      if (tolmax .lt. 0d0) return
       ierror = 12   ! multigrid parameters
       if (kcycle.lt.0) return
       if (min0(iprer,ipost).lt.1) return
@@ -200,7 +200,7 @@ c         ip = kpbgn(k)
       ny = nfy
       call mud21(nx,ny,rhs,phi,coef,bndyc,work)
       iparm(17) = itero
-      if (tolmax.gt.0.0) then   ! check for convergence
+      if (tolmax.gt.0d0) then   ! check for convergence
       fparm(6) = relmax
       if (relmax.gt.tolmax) ierror = -1   ! flag convergenc failure
       end if
@@ -301,12 +301,12 @@ c
       do iter=1,maxcy
       itero = iter
       call kcymd2(wk)
-      if (tolmax.gt.0.0) then
+      if (tolmax.gt.0d0) then
 c
 c      error control
 c
-        relmax = 0.0
-        phmax = 0.0
+        relmax = 0d0
+        phmax = 0d0
         do j=1,nfy
           jj = j*(nfx+2)
           do i=1,nfx
@@ -319,7 +319,7 @@ c
 c
 c     set maximum relative difference and check for convergence
 c
-        if (phmax.gt.0.0) relmax = relmax/phmax
+        if (phmax.gt.0d0) relmax = relmax/phmax
         if (relmax.le.tolmax) return
       end if
       end do
@@ -521,9 +521,9 @@ c
       dly = (yd-yc)/(ny-1)
       dly2 = dly+dly
       dlyy = dly*dly
-      cmin = 1.0
-      alfmax = 0.0
-      cemax = 0.0
+      cmin = 1d0
+      alfmax = 0d0
+      cemax = 0d0
 c
 c     set x,y subscript limits for calls to coef,bndyc
 c
@@ -550,8 +550,8 @@ c
 c     flag hyperbolic pde
 c
         if (klevel.eq.ngrid) then
-          if (abs(cx)*dlx.gt.2*abs(cxx) .or.
-     +          abs(cy)*dly.gt.2*abs(cyy)) then
+          if (abs(cx)*dlx.gt.2d0*abs(cxx) .or.
+     +          abs(cy)*dly.gt.2d0*abs(cyy)) then
             ier = -4
           end if
         end if
@@ -580,7 +580,7 @@ c
         y = yc+(j-1)*dly
         call bndyc(kbdy,y,alfa,gbdy)
         c1 = cof(i,j,1)
-        cof(i,j,1) = 0.0
+        cof(i,j,1) = 0d0
         cof(i,j,2) = cof(i,j,2)+c1
         cof(i,j,5) = cof(i,j,5)+dlx2*alfa*c1
         alfmax = dmax1(abs(alfa),alfmax)
@@ -595,7 +595,7 @@ c
         call bndyc(kbdy,y,alfa,gbdy)
         c2 = cof(i,j,2)
         cof(i,j,1) = cof(i,j,1)+c2
-        cof(i,j,2) = 0.0
+        cof(i,j,2) = 0d0
         cof(i,j,5) = cof(i,j,5)-dlx2*alfa*c2
         alfmax = dmax1(abs(alfa),alfmax)
       end do
@@ -608,7 +608,7 @@ c
         x = xa+(i-1)*dlx
         call bndyc(kbdy,x,alfa,gbdy)
         c3 = cof(i,j,3)
-        cof(i,j,3) = 0.0
+        cof(i,j,3) = 0d0
         cof(i,j,4) = cof(i,j,4)+c3
         cof(i,j,5) = cof(i,j,5)+dly2*alfa*c3
         alfmax = dmax1(abs(alfa),alfmax)
@@ -623,12 +623,12 @@ c
         call bndyc(kbdy,x,alfa,gbdy)
         c4 = cof(i,j,4)
         cof(i,j,3) = cof(i,j,3)+c4
-        cof(i,j,4) = 0.0
+        cof(i,j,4) = 0d0
         cof(i,j,5) = cof(i,j,5)-dly2*c4*alfa
         alfmax = dmax1(abs(alfa),alfmax)
       end do
       end if
-      if (cemax.eq.0.0.and.alfmax.eq.0.0) then
+      if (cemax.eq.0d0.and.alfmax.eq.0d0) then
         if (nxa.eq.0.or.(nxa.eq.2.and.nxb.eq.2)) then
           if (nyc.eq.0.or.(nyc.eq.2.and.nyd.eq.2)) then
 c
@@ -642,7 +642,7 @@ c
 c
 c     flag non-ellipticity
 c
-      if (cmin.le.0.0) then
+      if (cmin.le.0d0) then
       ier = -2
       end if
 c
@@ -652,36 +652,36 @@ c
       i = 1
       do j=1,ny
         do l=1,5
-          cof(i,j,l) = 0.0
+          cof(i,j,l) = 0d0
         end do
-        cof(i,j,5) = 1.0
+        cof(i,j,5) = 1d0
       end do
       end if
       if (nxb.eq.1) then
       i = nx
       do j=1,ny
         do l=1,5
-          cof(i,j,l) = 0.0
+          cof(i,j,l) = 0d0
         end do
-        cof(i,j,5) = 1.0
+        cof(i,j,5) = 1d0
       end do
       end if
       if (nyc.eq.1) then
       j = 1
       do i=1,nx
         do l=1,5
-          cof(i,j,l) = 0.0
+          cof(i,j,l) = 0d0
         end do
-        cof(i,j,5) = 1.0
+        cof(i,j,5) = 1d0
       end do
       end if
       if (nyd.eq.1) then
       j = ny
       do i=1,nx
         do l=1,5
-          cof(i,j,l) = 0.0
+          cof(i,j,l) = 0d0
         end do
-        cof(i,j,5) = 1.0
+        cof(i,j,5) = 1d0
       end do
       end if
 c
@@ -898,7 +898,7 @@ c     set phic zero
 c
       do jc=0,ncy+1
       do ic=0,ncx+1
-        phic(ic,jc) = 0.0
+        phic(ic,jc) = 0d0
       end do
       end do
 c
@@ -1188,7 +1188,7 @@ c
 c     x direction periodic
 c
       do j=1,ny
-        sum(j) = 0.0
+        sum(j) = 0d0
         phi(0,j) = phi(nx-1,j)
         phi(nx+1,j) = phi(2,j)
       end do
@@ -1365,7 +1365,7 @@ c
 c     y direction periodic
 c
       do i=1,nx
-        sum(i) = 0.0
+        sum(i) = 0d0
         phi(i,0) = phi(i,ny-1)
         phi(i,ny) = phi(i,1)
         phi(i,ny+1) = phi(i,2)
