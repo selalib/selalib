@@ -48,10 +48,11 @@ private
    procedure, pass :: get_coefficients => get_coefficients_li1d
  end type sll_lagrange_interpolator_1d
 
- !> Deallocate the class interpolator
- interface sll_delete
-   module procedure delete_li1d
- end interface
+!PN DEFINED BUT NOT USED
+! !> Deallocate the class interpolator
+! interface sll_delete
+!   module procedure delete_li1d
+! end interface
 
  public new_lagrange_interpolator_1d
 
@@ -131,10 +132,11 @@ data_out=this%lagrange%data_out
 
 end function
 
-subroutine delete_li1d (obj)
-  class(sll_lagrange_interpolator_1d) :: obj
-  call delete(obj%lagrange)
-end subroutine delete_li1d
+!PN DEFINED BUT NOT USED
+!subroutine delete_li1d (obj)
+!  class(sll_lagrange_interpolator_1d) :: obj
+!  call delete(obj%lagrange)
+!end subroutine delete_li1d
 
 
 subroutine interpolate_array_values_li1d( &
@@ -147,7 +149,7 @@ subroutine interpolate_array_values_li1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     !sll_int32 :: ierr
-    output_array = 0.0
+    output_array = 0.0_f64
     print*, 'interpolate_array_values:', &
          ' not implemented for lagrange interpolation'
     print *,num_pts
@@ -168,7 +170,7 @@ subroutine interpolate_array_derivatives_li1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     !sll_int32 :: ierr
-    output_array = 0.0
+    output_array = 0.0_f64
     print*, 'interpolate_array_derivatives: ', &
          'not implemented for lagrange interpolation'
     print *,num_pts
