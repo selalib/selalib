@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 26 Oct 2015
+# Last revision: 27 Oct 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
@@ -29,7 +29,8 @@ __docformat__ = 'reStructuredText'
 variable_declaration_types = \
   ( typedecl_statements.Integer,   typedecl_statements.Real,
     typedecl_statements.Complex,   typedecl_statements.Logical,
-    typedecl_statements.Character, typedecl_statements.Type )
+    typedecl_statements.Character, typedecl_statements.Type,
+    typedecl_statements.Class )
 
 namespace_types = \
   ( block_statements.Type,
