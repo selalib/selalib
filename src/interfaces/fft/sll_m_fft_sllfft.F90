@@ -65,9 +65,9 @@ module sll_m_fft
 
   !> Bit reversing
   interface bit_reverse
-     module procedure &
-          bit_reverse_complex, bit_reverse_integer32, &
-          bit_reverse_integer64
+     module procedure bit_reverse_complex
+          !bit_reverse_integer32, &
+          !bit_reverse_integer64
   end interface bit_reverse
 
   !> Set a forward fft
@@ -136,6 +136,7 @@ contains
     sll_comp64, dimension(0:)   :: array
     sll_int32                   :: k
     sll_comp64                  :: mode
+    SLL_ASSERT(associated(plan))
     mode = array(k)
   end function
 
@@ -144,6 +145,7 @@ contains
     sll_comp64, dimension(0:,0:)  :: array
     sll_int32                     :: k, l
     sll_comp64                    :: mode
+    SLL_ASSERT(associated(plan))
     mode = array(k,l)
   end function
 
@@ -152,6 +154,7 @@ contains
     sll_comp64, dimension(0:,0:,0:) :: array
     sll_int32                       :: k, l, m
     sll_comp64                      :: mode
+    SLL_ASSERT(associated(plan))
     mode = array(k,l,m)
   end function
 
@@ -180,6 +183,7 @@ contains
     sll_comp64, dimension(0:)   :: array
     sll_int32                   :: k
     sll_comp64                  :: new_value
+    SLL_ASSERT(associated(plan))
     array(k) = new_value
   end subroutine
 
@@ -191,6 +195,7 @@ contains
     sll_comp64, dimension(:,:) :: array
    sll_int32                   :: k,l
     sll_comp64                  :: new_value
+    SLL_ASSERT(associated(plan))
     array(k,l) = new_value
   end subroutine
 
@@ -200,6 +205,7 @@ contains
     sll_comp64, dimension(0:,0:,0:)   :: array
     sll_int32                   :: k,l,m
     sll_comp64                  :: new_value
+    SLL_ASSERT(associated(plan))
     array(k,l,m) = new_value
   end subroutine
 
@@ -822,7 +828,7 @@ contains
        ! t(n/4+1) = (0,1)
        ! t(n/2+1) = (0,-1) ... but this one is not stored
        do k = 0,n/2-1
-          t(k+1) = exp((0.0_f64,1.0_f64)*theta*real(k,kind=f64))
+          t(k+1) = exp((0.0_f64,1.0_f64)*theta*cmplx(k,0.0,kind=f64))
        end do
        ! might as well fix this by hand since the result isn't exact otherwise:
        t(n/4+1) = (0.0_f64,1.0_f64)
@@ -910,9 +916,10 @@ contains
   end subroutine function_name
 
   MAKE_BIT_REVERSE_FUNCTION( bit_reverse_complex, sll_comp64 )
-  MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer32, sll_int32 )
-  MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer64, sll_int64 )
-  MAKE_BIT_REVERSE_FUNCTION( bit_reverse_real, sll_real64 )
+!PN DEFINED BUT NOT USED
+! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer32, sll_int32 )
+! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer64, sll_int64 )
+! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_real, sll_real64 )
 
   ! ugly special case to bit-reverse a complex array that is represented
   ! by an array of reals. This is truly awful...
@@ -1047,21 +1054,22 @@ contains
     end if
   end subroutine fft_dit_nr_aux
 
-  subroutine fft_dit_rn( data, sign )
-    sll_comp64, dimension(:), intent(inout) :: data
-    sll_int32, intent(in)                   :: sign
-    sll_comp64, dimension(:), pointer       :: twiddles
-    integer                                 :: n
-    sll_int32                               :: ierr
-    n = size(data) ! bad
-    SLL_ASSERT(is_power_of_two(int(n,i64)))
-    SLL_ALLOCATE(twiddles(n/2),ierr)
-    call compute_twiddles(n,twiddles)
-    ! This algorithm uses the twiddles in natural order. The '1'
-    ! argument is because fft_dit_rn_aux internally 1-indexes its
-    ! arrays, so we are just indicating the first twiddle factor.
-    call fft_dit_rn_aux(data, n, twiddles, 1, sign)
-  end subroutine fft_dit_rn
+!PN DEFINED BUT NOT USED
+!PN  subroutine fft_dit_rn( data, sign )
+!PN    sll_comp64, dimension(:), intent(inout) :: data
+!PN    sll_int32, intent(in)                   :: sign
+!PN    sll_comp64, dimension(:), pointer       :: twiddles
+!PN    integer                                 :: n
+!PN    sll_int32                               :: ierr
+!PN    n = size(data) ! bad
+!PN    SLL_ASSERT(is_power_of_two(int(n,i64)))
+!PN    SLL_ALLOCATE(twiddles(n/2),ierr)
+!PN    call compute_twiddles(n,twiddles)
+!PN    ! This algorithm uses the twiddles in natural order. The '1'
+!PN    ! argument is because fft_dit_rn_aux internally 1-indexes its
+!PN    ! arrays, so we are just indicating the first twiddle factor.
+!PN    call fft_dit_rn_aux(data, n, twiddles, 1, sign)
+!PN  end subroutine fft_dit_rn
 
   recursive subroutine fft_dit_rn_aux( data,           &
                                        data_size,      &
