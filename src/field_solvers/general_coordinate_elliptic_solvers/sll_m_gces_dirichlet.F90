@@ -736,8 +736,8 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4,                     &
 !$OMP v3v4, d3v4, v3d4,                                           &
 !$OMP M_cc,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                    &
-!$OMP i2, i1, i3, i4,                                             &
-!$OMP b1, x, y, col, row, b2,                                     &
+!$OMP i4,                                                         &
+!$OMP b1, x, col, row, b2,                                        &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()
