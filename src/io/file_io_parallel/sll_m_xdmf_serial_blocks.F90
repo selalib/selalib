@@ -161,6 +161,9 @@ contains
     call MPI_SEND(npts_x2, 1, MPI_INTEGER, 0, tag, MPI_COMM_WORLD, error)
   end if
 
+  return
+  SLL_ASSERT(present(center))
+
   end subroutine sll_xdmf_array_2d_serial_blocks
 
 !> Close the XML file and finish to write last lines.
