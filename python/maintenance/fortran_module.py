@@ -50,6 +50,32 @@ def is_fortran_string( text ):
         return False
 
 #------------------------------------------------------------------------------
+def remove_fortran_strings( text ):
+    """ Remove any fortran string from the given text.
+    """
+    in_string = False
+    delimiter = None
+    new_text  = str()
+    # Construct new text
+    for c in text:
+        # Are we in a string?
+        if in_string:
+            if c == delimiter:
+                # Recognize that string has finished
+                in_string = False
+                delimiter = None
+        else:
+            if c in ['"',"'"]:
+                # Recognize that new string has just began, and store delimiter
+                in_string = True
+                delimiter = c
+            else:
+                # Add character to new string
+                new_text += c
+    # Return new string
+    return new_text
+
+#------------------------------------------------------------------------------
 def get_external_symbols( content, fglobals=set() ):
     """ TODO: this should include
            1) all used variables
@@ -165,9 +191,9 @@ def compute_all_used_symbols( content ):
             # l.h.s.
             variables.append( re.findall( pattern_name, item.variable )[0] )
             # r.h.s.
-            if not is_fortran_string( item.expr ):
-                variables.extend( re.findall( pattern_variable, item.expr ) )
-                calls    .extend( re.findall( pattern_call    , item.expr ) )
+            s = remove_fortran_strings( item.expr )
+            variables.extend( re.findall( pattern_variable, s ) )
+            calls    .extend( re.findall( pattern_call    , s ) )
         # Type blocks
         elif isinstance( item, block_statements.Type ):
             if len( item.specs ) > 0:
