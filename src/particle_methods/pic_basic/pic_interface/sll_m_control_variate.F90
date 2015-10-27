@@ -8,11 +8,9 @@ module sll_m_control_variate
 
   public :: sll_f_control_variate, sll_new_control_variate
 
-
-
   type, public :: sll_t_control_variate
 
-     sll_real64, pointer :: control_variate_parameters => null()
+     sll_real64, pointer :: control_variate_parameters(:) => null()
 
      procedure(sll_f_control_variate), pointer :: control_variate => null()
 
@@ -26,7 +24,7 @@ module sll_m_control_variate
   abstract interface
      !> 1d real function
      function sll_f_control_variate(this, xi, vi, time)
-       use sll_working_precision 
+       use sll_m_working_precision 
        import sll_t_control_variate
        class(sll_t_control_variate) :: this
        sll_real64, intent( in ) :: xi(3) !< particle position
@@ -57,11 +55,11 @@ module sll_m_control_variate
     function sll_new_control_variate(control_function, parameters) result(control_variate)
       procedure(sll_f_control_variate) :: control_function
       class(sll_t_control_variate), pointer :: control_variate
-      sll_real64, intent(in) :: parameters(:)
+      sll_real64, pointer, intent(in) :: parameters(:)
 
       control_variate%control_variate => control_function
       
-      control_variate_parameters => parameters
+      control_variate%control_variate_parameters => parameters
 
 
     end function sll_new_control_variate

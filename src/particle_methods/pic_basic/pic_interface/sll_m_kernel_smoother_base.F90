@@ -25,7 +25,7 @@ module sll_m_kernel_smoother_base
    contains
      procedure(update_this), deferred           :: compute_shape_factors !< Prepare for the accumulation by computing the shape factors
      procedure(update_dofs), deferred           :: accumulate_rho_from_klimontovich !< Accumulate the charge density
-     procedure(update_dofs_component), deferred :: accumulate_j_from_klimontovich !< Accumulate the current density
+     procedure(update_dofs_component), deferred :: accumulate_j_from_klimontovich !< Accumulate component the current density
      procedure(evaluate_particle), deferred     :: evaluate_kernel_function_particle !< Evaluate function for a certain particle based on the precomputed shape factors
      procedure    :: evaluate_kernel_function_particles !< Evaluate function for all particle based on the precomputed shape factors
   end type sll_kernel_smoother_base
@@ -43,13 +43,15 @@ module sll_m_kernel_smoother_base
   
 !---------------------------------------------------------------------------!
   abstract interface
-     subroutine update_dofs(this, particle_group, rho_dofs)       
+     subroutine update_dofs(this, particle_group, rho_dofs, i_weight)       
        use sll_m_working_precision
        import sll_particle_group_base
        import sll_kernel_smoother_base
        class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
        class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
        sll_real64, intent(inout)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation (can be point values or weights in a basis function representation).
+       sll_int32, optional             , intent( in ) :: i_weight !< No. of the weight that should be used in the accumulation.
+       
      end subroutine update_dofs
   end interface
 
@@ -58,14 +60,16 @@ module sll_m_kernel_smoother_base
      subroutine update_dofs_component(this, &
           particle_group, &
           j_dofs, &
-          component)       
+          component, &
+          i_weight)       
        use sll_m_working_precision
        import sll_particle_group_base
        import sll_kernel_smoother_base
        class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
        class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
        sll_real64, intent(inout)                       :: j_dofs(:)!< Degrees of freedom in kernel representation (can be point values or weights in a basis function representation).
-       sll_int32, intent (in)                          :: component !< Component of the current density that should be evaluated.
+       sll_int32, intent (in)                          :: component !< Component of the current density that should be evaluated.      
+       sll_int32, optional             , intent( in ) :: i_weight !< No. of the weight that should be used in the accumulation.
      end subroutine update_dofs_component
   end interface
 
