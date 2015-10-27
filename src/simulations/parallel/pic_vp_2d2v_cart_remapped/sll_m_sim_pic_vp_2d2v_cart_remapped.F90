@@ -164,7 +164,7 @@ contains
     write(fileid,*) 'set size ratio -1'
     write(fileid,*) 'plot "-" using 1:2:3:4 with vectors'
 
-    ! Loop over all particles. Do not display all particles for a clearer picture. AAA_ALH_HERE try with less particles.
+    ! Loop over all particles. Do not display all particles for a clearer picture. AAA_ALH_TODO try with less particles.
     
     do k = 1,sim%number_particles,1000
 
@@ -552,10 +552,12 @@ contains
     if (sim%my_rank == 0) then
        it = 0
 
+       ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
+
        ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-            sim%mesh_2d%eta2_max, ncy+1,                        &
-            sim%rho, 'rho_init_standPUSH', it, ierr )
+       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+            sim%mesh_2d%eta2_max, ncy+1,                            &
+            sim%rho, 'rho_init_standPUSH', 1, ierr )
     endif
 
     !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
@@ -564,20 +566,22 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
-    ! <<Ex_Ey_output>> using the [[selalib:src/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably the
-    ! [[file:~/selalib/src/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
+    ! <<Ex_Ey_output>> using the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably
+    ! the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
     
     if (sim%my_rank == 0) then
        it = 0
        
-       print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-            sim%mesh_2d%eta2_max, ncy+1,                        &
-            sim%E1, 'Ex', it, ierr )
+       ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
 
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-            sim%mesh_2d%eta2_max, ncy+1,                        &
-            sim%E2, 'Ey', it, ierr )
+       print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
+       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+            sim%mesh_2d%eta2_max, ncy+1,                            &
+            sim%E1, 'Ex', it+1, ierr )
+
+       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+            sim%mesh_2d%eta2_max, ncy+1,                            &
+            sim%E2, 'Ey', it+1, ierr )
 
     endif
 
@@ -830,8 +834,15 @@ contains
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-        print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
-        call sim%particle_group%visualize_f_slice_x_vx("f_slice", it)
+         print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations," # plot = ",it+1
+
+         ! base class definition of visualize_f_slice_x_vx:
+         !   [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::visualize_f_slice_x_vx]]
+         ! specialized in:
+         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
+         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
+
+         call sim%particle_group%visualize_f_slice_x_vx("f_slice", it+1)
 
       end if
 
@@ -867,7 +878,8 @@ contains
 
        if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
 
-            print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
+          print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
+               " # plot = ",it+1
             call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                                 sim%mesh_2d%eta2_max, ncy+1,                        &
                                 sim%E1, 'Ex', it+1, ierr )

@@ -381,7 +381,7 @@ contains
   end subroutine bsl_lt_pic_4d_deposit_charge_2d
 
 
-    !! bsl_lt_pic_4d_visualize_f_slice_x_vx  plots an approximation of f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
+    !! <<bsl_lt_pic_4d_visualize_f_slice_x_vx>>  plots an approximation of f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
     !todo: update this doc
     !  using a 4d grid:
     !   - the nodes in x and v_x are used to plot the values of f_x_vx
