@@ -114,10 +114,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_gaussian.F90
     ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_hammersley.F90
     ${SLL_DIR}/particle_methods/random_deviate_generators/moment_matching/sll_m_moment_matching.F90
-    ${SLL_DIR}/../external/burkardt/sobol/sll_m_sobol.F90
-    ${SLL_DIR}/../external/burkardt/sobol/sobol.f90
-    ${SLL_DIR}/../external/burkardt/prob/sll_m_prob.F90
-    ${SLL_DIR}/../external/burkardt/prob/prob.f90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/sobol/sll_m_sobol.F90
+    ${SLL_DIR}/particle_methods/random_deviate_generators/prob/sll_m_prob.F90
 )
 
 IF(F2008)
