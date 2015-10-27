@@ -3257,8 +3257,8 @@ sll_real64 :: val
 
 !sll_real64, allocatable :: dense_matrix(:,:)
 
-!$ sll_int32 :: tid=0
-!$ sll_int32 :: nthreads=1
+!!$ sll_int32 :: tid=0
+!!$ sll_int32 :: nthreads=1
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -3675,8 +3675,8 @@ sll_int32, dimension(:), allocatable :: index_coeff2
 
 
 
-!$ sll_int32  :: tid = 0
-!$ sll_int32  :: nthreads = 1
+!!$ sll_int32  :: tid = 0
+!!$ sll_int32  :: nthreads = 1
 
 print *,'#solve begin'
 call flush()
