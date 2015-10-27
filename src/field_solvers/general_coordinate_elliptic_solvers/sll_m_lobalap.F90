@@ -5,7 +5,9 @@
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
 module sll_m_lobalap
+#include "sll_working_precision.h"
   use sll_m_map_function, only : map
+  
   implicit none
   ! ordre de l'interpolation élément fini
   integer :: order
@@ -64,7 +66,7 @@ contains
     real(8),intent(in) :: x,y
     real(8) :: potexact
     !potexact=x*x+y*y
-    potexact=0
+    potexact=0.0_f64+x-x+y-y
   end function potexact
 
   ! fonction donnant le terme source
@@ -72,7 +74,7 @@ contains
     implicit none
     real(8),intent(in) :: x,y
     real(8) :: source
-    source=-4
+    source=-4.0_f64+x-x+y-y
   end function source
 
   ! fonction qui envoie le carré [0,1]x[0,1] sur le vrai domaine de calcul
@@ -121,19 +123,19 @@ contains
 
     select case(order)
     case(1)
-       xpg(1)=0
-       xpg(2)=1
+       xpg(1)=0.0_f64
+       xpg(2)=1.0_f64
        wpg(1)=0.5d0
        wpg(2)=0.5d0
-       dlag(1,1) = -1
-       dlag(1,2) = -1
-       dlag(2,1) = 1
-       dlag(2,2) = 1
+       dlag(1,1) = -1.0_f64
+       dlag(1,2) = -1.0_f64
+       dlag(2,1) = 1.0_f64
+       dlag(2,2) = 1.0_f64
 
     case(2)
-       xpg(1)=0
+       xpg(1)=0.0_f64
        xpg(2)=0.5d0
-       xpg(3)=1
+       xpg(3)=1.0_f64
        wpg(1)=1.d0/6
        wpg(2)=4.d0/6
        wpg(3)=1.d0/6
@@ -146,14 +148,14 @@ contains
        dlag(3,2) = 0.100000000000000000000000000000D1
        dlag(3,3) = 0.300000000000000000000000000000D1
     case(3)
-       xpg(1)=0
-       xpg(2)=(1.d0-sqrt(1.d0/5))/2
-       xpg(3)=(1.d0+sqrt(1.d0/5))/2
-       xpg(4)=1
-       wpg(1)=1.d0/12
-       wpg(2)=5.d0/12
-       wpg(3)=5.d0/12
-       wpg(4)=1.d0/12
+       xpg(1)=0.0_f64
+       xpg(2)=(1.d0-sqrt(1.d0/5))/2.0_f64
+       xpg(3)=(1.d0+sqrt(1.d0/5))/2.0_f64
+       xpg(4)=1.0_f64
+       wpg(1)=1.d0/12.0_f64
+       wpg(2)=5.d0/12.0_f64
+       wpg(3)=5.d0/12.0_f64
+       wpg(4)=1.d0/12.0_f64
        dlag(1,1) = -0.599999999999999999999999999998D1
        dlag(1,2) = -0.161803398874989484820458683436D1
        dlag(1,3) = 0.618033988749894848204586834362D0
@@ -171,16 +173,16 @@ contains
        dlag(4,3) = 0.161803398874989484820458683436D1
        dlag(4,4) = 0.599999999999999999999999999998D1
     case(4)
-       xpg(1)=0
-       xpg(2)=(1.d0-sqrt(3.d0/7))/2
+       xpg(1)=0.0_f64
+       xpg(2)=(1.d0-sqrt(3.d0/7))/2.0_f64
        xpg(3)=0.5d0
-       xpg(4)=(1.d0+sqrt(3.d0/7))/2
-       xpg(5)=1
-       wpg(1)=1.d0/20
-       wpg(2)=49.d0/180
-       wpg(3)=32.d0/90
-       wpg(4)=49.d0/180
-       wpg(5)=1.d0/20
+       xpg(4)=(1.d0+sqrt(3.d0/7))/2.0_f64
+       xpg(5)=1.0_f64
+       wpg(1)=1.d0/20.0_f64
+       wpg(2)=49.d0/180.0_f64
+       wpg(3)=32.d0/90.0_f64
+       wpg(4)=49.d0/180.0_f64
+       wpg(5)=1.d0/20.0_f64
        dlag(1,1) = -0.100000000000000000000000000000D2
        dlag(1,2) = -0.248198050606196571569743868439D1
        dlag(1,3) = 0.750000000000000000000000000000D0
@@ -404,7 +406,7 @@ contains
     end do
 
     ! initialisation du second pour l'assemblage
-    rho=0
+    rho=0.0_f64
 
     write(*,*) 'Calcul structure matrice creuse...'
 
@@ -436,9 +438,9 @@ contains
     allocate(vinf(nsky))
     allocate(vsup(nsky))
 
-    vdiag=0
-    vinf=0
-    vsup=0
+    vdiag=0.0_f64
+    vinf=0.0_f64
+    vsup=0.0_f64
     
 
   end subroutine init
@@ -446,11 +448,12 @@ contains
   ! symbole de kronecker delta
   function delta(i,j)
     implicit none
-    integer :: i,j,delta
+    integer :: i,j
+    real(8) :: delta
     if (i.eq.j) then
-       delta=1
+       delta=1.0_f64
     else
-       delta=0
+       delta=0.0_f64
     end if
   end function delta
 
@@ -499,8 +502,8 @@ contains
 
     write(*,*) 'Calcul champ éléectrique...'
 
-    dg_ex=0
-    dg_ey=0
+    dg_ex=0.0_f64
+    dg_ey=0.0_f64
 
     ! boucle sur les éléments
     do iel=1,nel
@@ -517,7 +520,7 @@ contains
           yg=node(2,ig)
           ! calcul de la jacobienne au pg
           ! on pourra le faire directement avec map plus tard
-          jac=0
+          jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
           ! géométrique
@@ -588,7 +591,7 @@ contains
           vf=source(xg,yg)
           ! calcul de la jacobienne au pg
           ! on pourra le faire directement avec map plus tard
-          jac=0
+          jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
           ! géométrique
@@ -665,7 +668,7 @@ contains
 
     write(*,*) 'Assemblage second membre...'
 
-    rho=0
+    rho=0.0_f64
 
     ! boucle sur les éléments
     do iel=1,nel
@@ -685,7 +688,7 @@ contains
 
           ! calcul de la jacobienne au pg
           ! on pourra le faire directement avec map plus tard
-          jac=0
+          jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
           ! géométrique

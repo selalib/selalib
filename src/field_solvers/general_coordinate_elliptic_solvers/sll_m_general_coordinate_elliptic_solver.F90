@@ -250,7 +250,7 @@ sll_int32  :: left
 sll_int32  :: kk, ll, index_coef1, index_coef2
 sll_int32  :: x, y, nbsp, nbsp1
 sll_int32  :: index1, index2, index3, index4
-sll_int32  :: icell, a, aprime, b, bprime
+sll_int32  :: icell, b, bprime
 
 sll_int32, dimension(:),   allocatable :: tab_index_coeff1
 sll_int32, dimension(:),   allocatable :: tab_index_coeff2
@@ -1020,12 +1020,12 @@ sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: val_jac
 sll_real64 :: B11
@@ -1036,8 +1036,8 @@ sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
 sll_int32  :: index3, index4
-sll_int32  :: index_coef1,index_coef2
-sll_int32  :: b, bprime,x,y
+!sll_int32  :: index_coef2
+sll_int32  :: b, bprime,x
 sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
 sll_int32  :: nspl, nbsp,nbsp1
@@ -1054,8 +1054,8 @@ sll_real64 :: intjac
 
 !sll_real64, allocatable :: dense_matrix(:,:)
 
-sll_int32 :: tid=0
-sll_int32 :: nthreads=1
+!sll_int32 :: tid=0
+!sll_int32 :: nthreads=1
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -2260,23 +2260,24 @@ end subroutine initialize_knots
 
   
   
-!> @details
-!> CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-!> is given in terms of the spline coefficients that represent phi.
-subroutine solve_linear_system( es )
-
-class(general_coordinate_elliptic_solver) :: es
-integer                                   :: elt
-integer                                   :: i,j,k
-character(len=*), parameter               :: as_file  = 'rho'
-character(len=*), parameter               :: as_file1 = 'phi'
-character(len=*), parameter               :: as_file2 = 'mat'
-sll_int32 :: bc1_min
-sll_int32 :: bc1_max
-sll_int32 :: bc2_min
-sll_int32 :: bc2_max
-
-end subroutine
+!!PN DEFINED BUT NOT USED
+!!> @details
+!!> CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
+!!> is given in terms of the spline coefficients that represent phi.
+!subroutine solve_linear_system( es )
+!
+!class(general_coordinate_elliptic_solver) :: es
+!integer                                   :: elt
+!integer                                   :: i,j,k
+!character(len=*), parameter               :: as_file  = 'rho'
+!character(len=*), parameter               :: as_file1 = 'phi'
+!character(len=*), parameter               :: as_file2 = 'mat'
+!sll_int32 :: bc1_min
+!sll_int32 :: bc1_max
+!sll_int32 :: bc2_min
+!sll_int32 :: bc2_max
+!
+!end subroutine
 
 
 subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
@@ -2561,7 +2562,7 @@ subroutine compute_b_spline_at_x( &
   sll_real64 :: tmp2
   sll_int32 :: ell
   sll_int32 :: k
-  sll_real64 :: res
+  !sll_real64 :: res
   
   out(1) = 1._f64
   do ell=1,degree
@@ -2578,74 +2579,75 @@ subroutine compute_b_spline_at_x( &
   
 end subroutine compute_b_spline_at_x
 
-function check_compute_b_spline_at_x( &
-  knots, &
-  cell, &
-  x, &
-  degree &
-  ) result(res)
-  sll_real64, dimension(:), intent(in) :: knots
-  sll_int32, intent(in) :: cell
-  sll_real64, intent(in) :: x
-  sll_int32, intent(in) :: degree
-  sll_real64 :: res
-  type(deboor_type)                       :: db
-  sll_real64, dimension(:), allocatable :: splines1
-  sll_real64, dimension(:), allocatable :: splines2
-  sll_real64, dimension(:,:), allocatable :: work
-  sll_real64, dimension(:,:), allocatable :: dbs1
-  sll_int32 :: ierr
-  sll_int32 :: i
-  sll_real64 :: xx
-  
-  res = 0._f64
-  SLL_ALLOCATE(splines1(degree+1),ierr)
-  SLL_ALLOCATE(splines2(degree+1),ierr)
-  SLL_ALLOCATE(work(degree+1,degree+1),ierr)
-  SLL_ALLOCATE(dbs1(degree+1,2),ierr)
-
-!  call bsplvb_db2( &
-!    knots, &
+!!PN DEFINED BUT NOT USED
+!function check_compute_b_spline_at_x( &
+!  knots, &
+!  cell, &
+!  x, &
+!  degree &
+!  ) result(res)
+!  sll_real64, dimension(:), intent(in) :: knots
+!  sll_int32, intent(in) :: cell
+!  sll_real64, intent(in) :: x
+!  sll_int32, intent(in) :: degree
+!  sll_real64 :: res
+!  type(deboor_type)                       :: db
+!  sll_real64, dimension(:), allocatable :: splines1
+!  sll_real64, dimension(:), allocatable :: splines2
+!  sll_real64, dimension(:,:), allocatable :: work
+!  sll_real64, dimension(:,:), allocatable :: dbs1
+!  sll_int32 :: ierr
+!  sll_int32 :: i
+!  sll_real64 :: xx
+!  
+!  res = 0._f64
+!  SLL_ALLOCATE(splines1(degree+1),ierr)
+!  SLL_ALLOCATE(splines2(degree+1),ierr)
+!  SLL_ALLOCATE(work(degree+1,degree+1),ierr)
+!  SLL_ALLOCATE(dbs1(degree+1,2),ierr)
+!
+!!  call bsplvb_db2( &
+!!    knots, &
+!!    degree+1, &
+!!    cell, &
+!!    x, &
+!!    degree+1, &
+!!    splines2)
+!  xx = x
+!  call bsplvd( &
+!    db, &
+!    knots(1:cell+degree+1), &
 !    degree+1, &
+!    xx, &
 !    cell, &
-!    x, &
-!    degree+1, &
-!    splines2)
-  xx = x
-  call bsplvd( &
-    db, &
-    knots(1:cell+degree+1), &
-    degree+1, &
-    xx, &
-    cell, &
-    work, &
-    dbs1, &
-    2)
-    !call bsplvd(es%db,es%knots1,spline_degree1+1,gspl1,ispl1,work1,dbs1,2)
-  splines2(:) = dbs1(:,1)
-
-  call compute_b_spline_at_x( &
-    knots, &
-    cell, &
-    xx, &
-    degree, &
-    splines1)
-  res=maxval(abs(splines1-splines2))
-  
-  if(res>1.e-14)then
-    print *,'In check_compute_b_spline_at_x:'
-    print *,'#res=',res
-    print *,'#cell=',cell
-    print *,'#degree=',degree
-    print *,'#xx=',xx
-    !print *,'#knots=',knots
-    
-    do i=1,degree+1
-      print *,splines1(i),splines2(i)
-    enddo
-    call flush()
-  endif
-end function check_compute_b_spline_at_x
+!    work, &
+!    dbs1, &
+!    2)
+!    !call bsplvd(es%db,es%knots1,spline_degree1+1,gspl1,ispl1,work1,dbs1,2)
+!  splines2(:) = dbs1(:,1)
+!
+!  call compute_b_spline_at_x( &
+!    knots, &
+!    cell, &
+!    xx, &
+!    degree, &
+!    splines1)
+!  res=maxval(abs(splines1-splines2))
+!  
+!  if(res>1.e-14)then
+!    print *,'In check_compute_b_spline_at_x:'
+!    print *,'#res=',res
+!    print *,'#cell=',cell
+!    print *,'#degree=',degree
+!    print *,'#xx=',xx
+!    !print *,'#knots=',knots
+!    
+!    do i=1,degree+1
+!      print *,splines1(i),splines2(i)
+!    enddo
+!    call flush()
+!  endif
+!end function check_compute_b_spline_at_x
 
 
 !knots(cell+1-degree)<= ..<= knots(cell)<=x <knots(cell+1) <=..<=knots(cell+degree)
@@ -3211,18 +3213,18 @@ sll_int32  :: ig, jg
 sll_real64 :: xg, wxg
 sll_real64 :: yg, wyg
 sll_int32  :: index1
-sll_int32  :: index2
+!sll_int32  :: index2
 sll_real64 :: val_c
 sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: val_jac
 sll_real64 :: B11
@@ -3232,15 +3234,15 @@ sll_real64 :: B22
 sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
-sll_int32  :: index3, index4
-sll_int32  :: index_coef1,index_coef2
-sll_int32  :: b, bprime,x,y
+sll_int32  :: index3!, index4
+!sll_int32  :: index_coef1!,index_coef2
+sll_int32  :: b, bprime,x!,y
 sll_int32  :: a, aprime
-sll_real64 :: elt_mat_global
-sll_int32  :: nspl, nbsp,nbsp1
+!sll_real64 :: elt_mat_global
+sll_int32  :: nspl!, nbsp,nbsp1
 sll_int32  :: spl_deg_1, spl_deg_2, nc_1, nc_2
-sll_int32  :: ideg2,ideg1
-sll_int32  :: jdeg2,jdeg1
+!sll_int32  :: ideg2,ideg1
+!sll_int32  :: jdeg2,jdeg1
 sll_real64 :: v1, v2, v3, v4, d1, d2, d3, d4, r1, r2
 sll_real64 :: wxy
 sll_real64 :: wxy_by_val_jac 
@@ -3639,7 +3641,7 @@ sll_real64, dimension(:,:), intent(out) :: phi
 class(sll_scalar_field_2d_base),           intent(in),target, optional  :: rho_field
 !class(sll_scalar_field_2d_discrete),       intent(inout)      :: phi
 !
-sll_real64, dimension(:,:),      pointer :: coeff_rho
+!sll_real64, dimension(:,:),      pointer :: coeff_rho
 sll_real64, dimension(:), allocatable :: m_rho_loc
 
 sll_int32  :: i
@@ -3650,7 +3652,7 @@ sll_int32  :: num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
 sll_int32  :: bc1_min, bc1_max, bc2_min, bc2_max
-sll_int32  :: index1, index3, nbsp
+sll_int32  :: index1, index3!, nbsp
 
 sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
 sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
@@ -3940,6 +3942,8 @@ function compute_vec_size( &
     res = num_cells+degree
   endif
   
+  if(bc_max==SLL_DIRICHLET)then
+  end if
   
   
 end function compute_vec_size
@@ -3967,6 +3971,8 @@ subroutine compute_index( &
       index(num_cells+i) = index(i)
     enddo
   endif
+  if(bc_max==SLL_DIRICHLET)then
+  end if
 
 end subroutine compute_index
 
@@ -3992,6 +3998,8 @@ subroutine compute_index_sol( &
       index(i) = i+1
     enddo
   endif
+  if(bc_max==SLL_DIRICHLET)then
+  end if
 
 end subroutine compute_index_sol
 
@@ -4058,7 +4066,7 @@ subroutine compute_values_at_knots( &
   sll_int32 :: ierr
   sll_int32 :: i
   sll_int32 :: j
-  sll_real64 :: err
+  !sll_real64 :: err
   
   
   if(num_cells1<1)then
