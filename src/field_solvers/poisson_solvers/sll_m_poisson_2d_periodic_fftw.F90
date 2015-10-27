@@ -248,8 +248,8 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    e_x(1:nc_x,1:nc_y) = rho(1:nc_x,1:nc_y)
    call fftw_execute_dft_r2c(self%fw, e_x(1:nc_x,1:nc_y), self%rht)
 
-   self%ext(1,1) = 0.0_f64
-   self%eyt(1,1) = 0.0_f64
+   self%ext(1,1) = (0.0_f64,0.0_f64)
+   self%eyt(1,1) = (0.0_f64,0.0_f64)
    self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%rht
    self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%rht
 
