@@ -192,8 +192,8 @@ if ( field%present_deriv_eta1_int ) then
        field%first_deriv_eta1(eta1,eta2,field%params)
 else 
   first_deriv_eta1_value_at_pt_analytic = 0.0_f64
-  err_msg = "In field "// field%name // &
-            ": first derivative in eta1 is not given in the initialization."
+  err_msg = "In "// field%name // &
+            ": first derivative in eta1 not given in the initialization."
   SLL_ERROR( this_fun_name, err_msg )
 end if
 
@@ -216,8 +216,9 @@ if ( field%present_deriv_eta2_int ) then
        field%first_deriv_eta2(eta1,eta2,field%params)
 else 
   first_deriv_eta2_value_at_pt_analytic  = 0.0_f64
-  err_msg = "In field "// field%name // &
-            ": first derivative in eta2 is not given in the initialization."
+  err_msg = "In "// field%name // &
+            ": first derivative in eta2 &
+            & not given in the initialization."
   SLL_ERROR( this_fun_name, err_msg )
 end if
     
@@ -320,6 +321,8 @@ sll_real64, dimension(:,:), intent(in) :: values
 
 print *, 'WARNING: set_field_data_analytic_2d(): it is useless to ', &
        'call this function on an analytic scalar field.'
+SLL_ASSERT(associated(field%mesh))
+SLL_ASSERT(size(values,1)>0)
 
 end subroutine set_field_data_analytic_2d
 
@@ -328,6 +331,7 @@ subroutine update_interpolation_coefficients_2d_analytic( field )
 class(sll_scalar_field_2d_analytic), intent(inout) :: field
 print *, 'WARNING: update_interpolation_coefficients_2d_analytic(): ', &
      ' it is useless to call this function on an analytic scalar field.'
+SLL_ASSERT(associated(field%mesh))
 
 end subroutine update_interpolation_coefficients_2d_analytic
 
@@ -582,6 +586,11 @@ field%bc2_max = bc2_max
 ! Allocate internal array to store locally a copy of the data.
 SLL_ALLOCATE(field%values(num_cells1+1,num_cells2+1),ierr)
 
+return
+SLL_ASSERT(present(point1_1d))
+SLL_ASSERT(present(point2_1d))
+SLL_ASSERT(present(sz_point1))
+SLL_ASSERT(present(sz_point2))
 end subroutine initialize_scalar_field_2d_discrete
   
 
