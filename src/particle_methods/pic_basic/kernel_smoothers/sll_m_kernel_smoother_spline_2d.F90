@@ -72,18 +72,23 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine accumulate_rho_from_klimontovich_spline_2d(this, particle_group,&
-       rho_dofs)
+       rho_dofs, i_weight)
     class( sll_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
     class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
     sll_real64, intent(inout)                       :: rho_dofs(:) !< spline coefficient of accumulated density
+    sll_int32, optional             , intent( in ) :: i_weight !< No. of the weight that should be used in the accumulation.
     
     !local variables
     sll_int32 :: i_part, i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_real64 :: wi(1)
+    sll_int32  :: i_wi
+    
+    i_wi = 1
+    if(present(i_weight)) i_wi = i_weight
 
     do i_part = 1, particle_group%n_particles
-       wi = particle_group%get_charge(i_part)
+       wi = particle_group%get_charge(i_part, i_wi)
        do i1 = 1, this%n_span
           index1d(1) = this%index_grid(1,i_part)+i1-2
           do i2 = 1, this%n_span
@@ -105,20 +110,25 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine accumulate_j_from_klimontovich_spline_2d(this, particle_group,&
-       j_dofs, component)
+       j_dofs, component, i_weight)
     class( sll_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
     class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
     sll_real64, intent(inout)                       :: j_dofs(:) !< spline coefficients ofcomponent \a component accumulated current density
     sll_int32, intent(in)                           :: component !< component of \a j_dofs to be accumulated.
-    
+    sll_int32, optional             , intent( in ) :: i_weight !< No. of the weight that should be used in the accumulation.
+
     !local variables
     sll_int32 :: i_part, i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_real64 :: vpart(3)
     sll_real64 :: wi(1)
+    sll_int32  :: i_wi
+    
+    i_wi = 1
+    if(present(i_weight)) i_wi = i_weight
 
     do i_part = 1, particle_group%n_particles
-       wi = particle_group%get_charge(i_part)
+       wi = particle_group%get_charge(i_part, i_wi)
        do i1 = 1, this%n_span
           index1d(1) = this%index_grid(1,i_part)+i1-2
           do i2 = 1, this%n_span
