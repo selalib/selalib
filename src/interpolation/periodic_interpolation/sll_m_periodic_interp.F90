@@ -146,7 +146,8 @@ contains
     sll_int32 :: i, j, k, p, ishift
     !sll_int32 :: j0
     sll_int32 ::  imode,n
-    sll_real64 :: beta, filter
+    sll_real64 :: beta
+    sll_comp64 :: filter
     !sll_real64 :: mode
     sll_comp64 :: tmp,tmp2
     !complex(8) :: int_fact
@@ -166,13 +167,13 @@ contains
          this%ufft(i) = dcmplx(u(i),8)
        end do
        call zfftf(this%N, this%ufft, this%wsave)
-       this%eigenvalues_S(1) = 1.0_8
+       this%eigenvalues_S(1) = cmplx(1.0_8,0.0,f64)
        this%eigenvalues_S(this%N/2+1) = exp(-ii_64*pi*alpha)
        do k=1, this%N/2-1
           !filter = 0.5_8*(1+tanh(100*(.35_8*this%N/2-k)/(this%N/2))) !F1
           !filter = 0.5_8*(1+tanh(100*(.25_8*this%N/2-k)/(this%N/2))) !F2
           !filter = 0.5_8*(1+tanh(50*(.25_8*this%N/2-k)/(this%N/2))) !F3
-          filter = 1.0_8
+          filter = cmplx(1.0_8,0.0,f64)
 
           this%eigenvalues_S(k+1) = exp(-ii_64*twopi*k*alpha/this%N) * filter
           this%eigenvalues_S(this%N-k+1) = exp(ii_64*twopi*k*alpha/this%N) * filter
@@ -181,7 +182,7 @@ contains
        ! Perform inverse FFT and normalized
        call zfftb(this%N, this%ufft, this%wsave)
        do i=1, this%N
-          u_out(i) = real(this%ufft(i),8) / this%N
+          u_out(i) = real(this%ufft(i),8) / real(this%N,f64)
        end do
     case (SPLINE)
        ! Perform FFT of u
@@ -209,7 +210,7 @@ contains
        ! Perform inverse FFT and normalized
        call zfftb(this%N, this%ufft, this%wsave)
        do i=1, this%N
-          u_out(i) = real(this%ufft(i),8) / this%N
+          u_out(i) = real(this%ufft(i),8) / real(this%N,f64)
        end do
     case (LAGRANGE)
        u_out = u
@@ -229,15 +230,15 @@ contains
        tmp2=-ii_64*2._f64*sll_pi/n*alpha
 
          GET_MODE0(tmp,u_out)
-         tmp=tmp*exp(tmp2*real(0,f64))
+         !tmp=tmp*exp(tmp2*real(0,f64))
          SET_MODE0(tmp,u_out)
        do i=1,n/2-1
          GET_MODE_LT_N_2(tmp,u_out,i,n)
-         tmp=tmp*exp(tmp2*real(i,f64))
+         tmp=tmp*exp(tmp2*cmplx(i,0.,f64))
          SET_MODE_LT_N_2(tmp,u_out,i,n)
        enddo
          GET_MODE_N_2(tmp,u_out,n)
-         tmp=tmp*exp(tmp2*real(n/2,f64))
+         tmp=tmp*exp(tmp2*cmplx(.5*n,0.,f64))
          SET_MODE_N_2(tmp,u_out,n)
 
 !*** Without macro
