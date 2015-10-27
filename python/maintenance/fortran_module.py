@@ -17,7 +17,8 @@ Modules required
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
-from fortran_intrinsics import intrinsic_procedures
+from fortran_intrinsics import (intrinsic_procedures, logical_operators,
+                                                      logical_constants)
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -74,6 +75,21 @@ def remove_fortran_strings( text ):
                 new_text += c
     # Return new string
     return new_text
+
+#------------------------------------------------------------------------------
+def remove_fortran_logicals( text ):
+    """
+    Remove any fortran logical operator or constant from the given text.
+
+    NOTE
+    ----
+    First, one should remove all fortran strings!
+
+    """
+    text = text.lower()
+    for s in logical_operators:  text = text.replace( s, '' )
+    for s in logical_constants:  text = text.replace( s, '' )
+    return text
 
 #------------------------------------------------------------------------------
 def get_external_symbols( content, fglobals=set() ):
@@ -179,12 +195,16 @@ def compute_all_used_symbols( content ):
             # arguments
             for s in item.items:
                 if not is_fortran_string( s ):
-                  if '=' in s:                      # Neglect argument keywords!
-                    s = s.partition('=')[2].strip() #
-                    if is_fortran_string( s ):      #
-                      continue                      #
-                  variables.extend( re.findall( pattern_variable, s ) )
-                  calls    .extend( re.findall( pattern_call    , s ) )
+                    # Remove strings
+                    s = remove_fortran_strings( s )
+                    # Remove logicals
+                    s = remove_fortran_logicals( s )
+                    # Neglect argument keywords!
+                    if '=' in s:
+                        s = s.partition('=')[2].strip()
+                    # Search for symbols
+                    variables.extend( re.findall( pattern_variable, s ) )
+                    calls    .extend( re.findall( pattern_call    , s ) )
         # Assignments (both sides)
         elif isinstance( item, (statements.Assignment, 
                                 statements.PointerAssignment) ):
@@ -192,6 +212,7 @@ def compute_all_used_symbols( content ):
             variables.append( re.findall( pattern_name, item.variable )[0] )
             # r.h.s.
             s = remove_fortran_strings( item.expr )
+            s = remove_fortran_logicals( s )
             variables.extend( re.findall( pattern_variable, s ) )
             calls    .extend( re.findall( pattern_call    , s ) )
         # Type blocks
