@@ -98,7 +98,7 @@ contains
      sll_int32, intent(in)                 :: component !< Component of the Efield to be computed
      sll_real64,dimension(:),intent(inout) :: E !< Updated electric field
      ! local variables
-     sll_int32 :: i 
+     !sll_int32 :: i 
 
      ! Multiply by inverse mass matrix  using the eigenvalues of the circulant inverse matrix
      if (component == 1) then
@@ -183,7 +183,7 @@ contains
 
      ! Compute coefs_dofs = int f(x)N_i(x) 
      do i = 1, this%n_dofs
-        coef=0_f64
+        coef=0.0_f64
         ! loop over support of B spline
         do j = 1, degree+1
            ! loop over Gauss points
@@ -205,17 +205,17 @@ contains
      sll_int32, intent(in) :: degree
      sll_real64, intent(out) :: coefs_dofs(:)  ! spline coefficients of projection
      ! local variables
-     sll_int32 :: i,j,k
-     sll_real64 :: coef
-     sll_real64, dimension(2,degree+1) :: xw_gauss
-     sll_real64, dimension(degree+1,degree+1) :: bspl
+     sll_int32 :: i
+     !sll_real64 :: coef
+     !sll_real64, dimension(2,degree+1) :: xw_gauss
+     !sll_real64, dimension(degree+1,degree+1) :: bspl
      sll_real64, dimension(this%n_dofs) :: eigvals
 
      ! Compute right-hand-side
      call compute_fem_rhs(this, func, degree, this%work)
 
      ! Multiply by inverse mass matrix (! complex numbers stored in real array with fftpack ordering)
-     eigvals=0_f64
+     eigvals=0.0_f64
      if (degree == this%s_deg_0) then
         eigvals(1) = 1.0_f64 / this%eig_mass0(1)
         do i=1,this%n_dofs/2
@@ -273,7 +273,7 @@ contains
    function sll_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(this)
      sll_real64 :: domain(2)     ! xmin, xmax
      sll_int32 :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
-     sll_real64 :: delta_x ! cell size
+     !sll_real64 :: delta_x ! cell size
      sll_int32 :: s_deg_0 ! highest spline degree
      type(sll_maxwell_1d_fem), pointer :: this
 
@@ -362,7 +362,7 @@ contains
         this%eig_weak_ampere(2*k+1) =  -(coef1 / coef0) * sin_mode   ! imaginary part
         this%eig_weak_poisson(2*k) = 1.0_f64 / (coef1 * ((1-cos_mode)**2 + &
              sin_mode**2))  ! real part
-        this%eig_weak_poisson(2*k+1) = 0_f64  ! imaginary part
+        this%eig_weak_poisson(2*k+1) = 0.0_f64  ! imaginary part
      enddo
      ! N/2 mode
      coef0 =  this%mass_0(1)

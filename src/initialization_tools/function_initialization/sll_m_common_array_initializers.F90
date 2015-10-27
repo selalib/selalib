@@ -176,6 +176,10 @@ contains
     sll_real64, intent(in) :: x_1
     sll_real64, intent(in) :: x_2 
     sll_real64, dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x_1+x_2
+#endif
 
     if(size(params)>=1)then
       res = params(1)
@@ -207,6 +211,10 @@ contains
     sll_real64, intent(in) :: x_1
     sll_real64, intent(in) :: x_2 
     sll_real64, dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x_1+x_2
+#endif
     if(present(params))then
       if(size(params)>=100)then
         print *,'#params needs not to have size >=100'
@@ -220,6 +228,10 @@ contains
     sll_real64, intent(in) :: x_1
     sll_real64, intent(in) :: x_2 
     sll_real64, dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x_1+x_2
+#endif
     if(present(params))then
       if(size(params)>=100)then
         print *,'#params needs not to have size >=100'
@@ -293,6 +305,10 @@ contains
     sll_real64, intent(in) :: x_2 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A1
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x_1+x_2
+#endif
     if(.not.(present(params)))then
       SLL_ERROR("sll_translation_A1_initializer_2d","params should be present")
     endif
@@ -315,6 +331,10 @@ contains
     sll_real64, intent(in) :: x_2 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A2
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x_1+x_2
+#endif
     if(.not.(present(params)))then
       SLL_ERROR("sll_translation_A2_initializer_2d","params should be present")
     endif
@@ -340,6 +360,10 @@ contains
     sll_real64, intent(in) :: x0_2 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A1
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x0_1+x0_2
+#endif
     if(.not.(present(params)))then
       SLL_ERROR("sll_translation_A1_exact_charac_2d","params should be present")
     endif
@@ -365,6 +389,10 @@ contains
     sll_real64, intent(in) :: x0_2 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A2
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x0_1+x0_2
+#endif
     if(.not.(present(params)))then
       SLL_ERROR("sll_translation_A2_exact_charac_2d","params should be present")
     endif
@@ -389,7 +417,7 @@ contains
     sll_real64, intent(in) :: t
     sll_real64, dimension(:), intent(in), optional :: params
     
-    res = 1._f64    
+    res = 1._f64 + t - t    
     if(present(params))then
       res = params(1)
     endif
@@ -449,6 +477,10 @@ contains
     sll_real64, intent(in) :: x0_1
     sll_real64, intent(in) :: x0_2 
     sll_real64, dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x0_1+x0_2+t+t0
+#endif
     if(.not.(present(params)))then
       SLL_ERROR("sll_SDF_A1_exact_charac_2d","params should be present")
     endif
@@ -468,6 +500,10 @@ contains
     sll_real64, intent(in) :: x0_1
     sll_real64, intent(in) :: x0_2 
     sll_real64, dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x0_1+x0_2+t+t0
+#endif
     if(.not.(present(params)))then
       SLL_ERROR("sll_SDF_A2_exact_charac_2d","params should be present")
     endif
@@ -547,7 +583,7 @@ contains
     endif
 
     !factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
-    factor1 = 1/(sigma*sqrt(2.0_f64*sll_pi))
+    factor1 = 1.0_f64/(sigma*sqrt(2.0_f64*sll_pi))
     sll_landau_initializer_2d = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx-v0)**2/sigma**2)
   end function sll_landau_initializer_2d
@@ -1085,8 +1121,8 @@ contains
 
     !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
     v=vx-t
-    hh=1
-    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    hh=1.0_f64
+    if ((v.gt.1).or.(v.lt.-1)) hh=0.0_f64
     sll_test_vx_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh
     !write(*,*) 'tini=',t
 
@@ -1121,8 +1157,8 @@ contains
        stop
     end if
     v=vy-t
-    hh=1
-    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    hh=1.0_f64
+    if ((v.gt.1).or.(v.lt.-1)) hh=0.0_f64
     sll_test_vy_transport_initializer_v1v2x1x2 =(1+(-3+(3-v**2)*v**2)*v**2)*hh
     !sll_test_vy_transport_initializer_v1v2x1x2 =exp(-4*vy**2)
     !sll_test_vy_transport_initializer_v1v2x1x2 = 2_f64
@@ -1156,8 +1192,8 @@ contains
     !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
     v=vx-t
     xx=x-t*vx+t*t/2
-    hh=1
-    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    hh=1.0_f64
+    if ((v.gt.1).or.(v.lt.-1)) hh=0.0_f64
     sll_test_xvx_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(kx*xx)
 
   end function sll_test_xvx_transport_initializer_v1v2x1x2
@@ -1189,8 +1225,8 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
     v=vy-t
     yy=y-t*vy+t*t/2
-    hh=1
-    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    hh=1.0_f64
+    if ((v.gt.1).or.(v.lt.-1)) hh=0.0_f64
     sll_test_yvy_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(ky*yy)
 
   end function sll_test_yvy_transport_initializer_v1v2x1x2
@@ -1290,6 +1326,10 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64 :: eps
     sll_real64 :: kx
     sll_real64 :: factor1
+#ifdef DEBUG
+    sll_real64 :: dummy 
+    dummy = x+y+vx+vy
+#endif
 
     if( .not. present(params) ) then
        print *, 'sll_twostream_1d_initializer_v1v2x1x2, error: the params array', &
@@ -1416,8 +1456,8 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     end if
     !amas 2
      if ((x.le.a2_xmax).and.(x.ge.a2_xmin).and.(y.le.a2_ymax).and.(y.ge.a2_ymin)) then
-       v0x=0 ! 1.0_f64 !0.3109793990   !0.2433894805
-       v0y=-0 !.5
+       v0x=0.0_f64 ! 1.0_f64 !0.3109793990   !0.2433894805
+       v0y=-0.0_f64 !.5
         sll_galaxy_2d_initializer_v1v2x1x2 =factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-0.5_f64*((x-x2mil)**2+(y+x2mil)**2)*16)
     end if
 !!$ if ((x.le.lmax).and.(x.ge.lmin).and.(y.le.-lmin).and.(y.ge.-lmax)) then
@@ -1706,7 +1746,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     
 
 
-    val = beta*(1 + alpha * cos(kx*x)*cos(ky*y) )&
+    val = beta*(1.0_f64 + alpha * cos(kx*x)*cos(ky*y) )&
          * exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)) &
          / (2*sll_pi)
     
@@ -1782,7 +1822,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     
 
 
-    val = beta*(1 + alpha * (cos(kx*x)+cos(ky*y)) )&
+    val = beta*(1.0_f64 + alpha * (cos(kx*x)+cos(ky*y)) )&
          * exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)) &
          / (2*sll_pi)
     
