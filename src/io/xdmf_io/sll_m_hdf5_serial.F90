@@ -75,16 +75,14 @@ contains
     class(sll_t_hdf5_serial), intent(inout) :: self
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__create"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     !integer                       :: file_id
     integer                       :: error
 
-    err_msg = "OK"
     call sll_hdf5_file_create( self%filename, self%file_id, error )
 
     if (error /= 0) then
-      err_msg = "Cannot create HDF5 file "// trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot create HDF5 file "//trim(self%filename))
     end if
 
     self%is_open = .true.
@@ -96,26 +94,21 @@ contains
     class(sll_t_hdf5_serial), intent(inout) :: self
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__open"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     !integer                       :: file_id
     integer                       :: error
 
     if (self%is_open) then
-      err_msg = "File is already open"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is already open")
     end if
 
     call sll_hdf5_file_open( self%filename, self%file_id, error )
 
     if (error /= 0) then
-      err_msg = "Cannot open HDF5 file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
-    else
-      err_msg = "OK"
+      SLL_ERROR( this_sub_name, "Cannot open HDF5 file " // trim( self%filename ))
     end if
 
     self%is_open = .true.
-    err_msg = "OK"
 
   end subroutine t_hdf5_serial__open
 
@@ -124,23 +117,20 @@ contains
     class(sll_t_hdf5_serial), intent(inout) :: self
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__close"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
     if (.not. self%is_open) then
-      err_msg = "File is already closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is already closed")
     end if
 
     call sll_hdf5_file_close( self%file_id, error )
 
     if (error /= 0) then
-      err_msg = "Cannot close HDF5 file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot close HDF5 file " // trim( self%filename ))
     end if
 
     self%is_open = .false.
-    err_msg = "OK"
 
   end subroutine t_hdf5_serial__close
 
@@ -163,21 +153,18 @@ contains
     character(len=*)        , intent(in   ) :: dsetname
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_1d"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
     if (.not. self%is_open) then
-      err_msg = "File is closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is closed")
     end if
 
     call sll_hdf5_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
-      err_msg = "Cannot write to file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
     end if
-    err_msg = "OK"
 
   end subroutine t_hdf5_serial__write_dble_array_1d
 
@@ -188,22 +175,19 @@ contains
     character(len=*)        , intent(in   ) :: dsetname
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_2d"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
     if (.not. self%is_open) then
-      err_msg = "File is closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is closed")
     end if
 
     call sll_hdf5_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
-      err_msg = "Cannot write to file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
     end if
 
-    err_msg = "OK"
   end subroutine t_hdf5_serial__write_dble_array_2d
 
   !----------------------------------------------------------------------------
@@ -213,22 +197,19 @@ contains
     character(len=*)        , intent(in   ) :: dsetname
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_3d"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
     if (.not. self%is_open) then
-      err_msg = "File is closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is closed")
     end if
 
     call sll_hdf5_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
-      err_msg = "Cannot write to file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
     end if
 
-    err_msg = "OK"
   end subroutine t_hdf5_serial__write_dble_array_3d
 
   !----------------------------------------------------------------------------
@@ -238,22 +219,19 @@ contains
     character(len=*)        , intent(in   ) :: dsetname
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_1d"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
     if (.not. self%is_open) then
-      err_msg = "File is closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is closed")
     end if
 
     call sll_hdf5_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
-      err_msg = "Cannot write to file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
     end if
 
-    err_msg = "OK"
   end subroutine t_hdf5_serial__write_int_array_1d
 
   !----------------------------------------------------------------------------
@@ -263,22 +241,19 @@ contains
     character(len=*)        , intent(in   ) :: dsetname
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_2d"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
     if (.not. self%is_open) then
-      err_msg = "File is closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is closed")
     end if
 
     call sll_hdf5_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
-      err_msg = "Cannot write to file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
     end if
 
-    err_msg = "OK"
   end subroutine t_hdf5_serial__write_int_array_2d
 
   !----------------------------------------------------------------------------
@@ -288,20 +263,17 @@ contains
     character(len=*)        , intent(in   ) :: dsetname
 
     character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_3d"
-    character(len=:), allocatable :: err_msg
+    !character(len=:), allocatable :: err_msg
     integer                       :: error
 
-    err_msg = "OK"
     if (.not. self%is_open) then
-      err_msg = "File is closed"
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "File is closed")
     end if
 
     call sll_hdf5_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
-      err_msg = "Cannot write to file " // trim( self%filename )
-      SLL_ERROR( this_sub_name, err_msg )
+      SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
     end if
 
 
