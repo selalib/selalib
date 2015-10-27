@@ -284,10 +284,10 @@ contains
     sll_real64, dimension (1:ai_ny),target:: apr_ty_bis
     sll_real64, dimension (:),pointer:: apr_ty_bis_ptr
     sll_int32  :: li_i, li_j, li_iflag
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
     
-    lpr_work1(:,:) = 0.0
+    lpr_work1(:,:) = 0.0_f64
     
     ! *** set up knots
     !     interpolate between knots
@@ -418,11 +418,11 @@ contains
     sll_real64, dimension (1:ai_ny,1:ai_nx+ai_nx_der),target:: lpr_work5 !  ai_ny , ai_nx
     sll_real64, dimension (:,:),pointer :: lpr_work5_ptr 
     sll_int32  :: li_iflag
-    sll_int32  :: ierr
+    !sll_int32  :: ierr
    
     
-    lpr_work1(:,:) = 0.0
-    lpr_work5(:,:) = 0.0
+    lpr_work1(:,:) = 0.0_f64
+    lpr_work5(:,:) = 0.0_f64
     
     ! *** set up knots
     !     interpolate between knots
@@ -530,11 +530,11 @@ contains
     sll_real64, dimension (1:ai_ny,1:ai_nx +ai_nx_der),target :: lpr_work5 !  ai_ny , ai_nx 
     sll_real64, dimension (:,:),pointer :: lpr_work5_ptr
     sll_int32  :: li_i, li_iflag
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
     
-    lpr_work1(:,:) = 0.0
-    lpr_work5(:,:) = 0.0
+    lpr_work1(:,:) = 0.0_f64
+    lpr_work5(:,:) = 0.0_f64
     
     ! *** set up knots
     !     interpolate between knots
@@ -644,11 +644,11 @@ contains
     sll_real64, dimension (1:ai_ny,1:ai_nx),target :: lpr_work5 !  ai_ny , ai_nx 
     sll_real64, dimension (:,:),pointer :: lpr_work5_ptr
     sll_int32  :: li_i,li_iflag
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
     
-    lpr_work1(:,:) = 0.0
-    lpr_work5(:,:) = 0.0
+    lpr_work1(:,:) = 0.0_f64
+    lpr_work5(:,:) = 0.0_f64
     
     ! *** set up knots
     !     interpolate between knots

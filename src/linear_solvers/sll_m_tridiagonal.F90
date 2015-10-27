@@ -211,13 +211,13 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
         s21 = aa(2,1); s22 = aa(2,2); s23 = aa(2,3)
         s31 = aa(3,4); s32 = aa(3,2); s33 = aa(3,3)
      case (4) 
-        s11 = aa(1,1); s12 = aa(1,2); s13 = 0.0;     s14 = aa(1,0)
-        s21 = aa(2,1); s22 = aa(2,2); s23 = aa(2,3); s24 = 0.0
-        s31 = aa(4,5); s32 = 0.0;     s33 = aa(4,3); s34 = aa(4,4)
+        s11 = aa(1,1); s12 = aa(1,2); s13 = 0.0_f64; s14 = aa(1,0)
+        s21 = aa(2,1); s22 = aa(2,2); s23 = aa(2,3); s24 = 0.0_f64
+        s31 = aa(4,5); s32 = 0.0_f64; s33 = aa(4,3); s34 = aa(4,4)
      case default
-        s11 = aa(1,1);  s12 = aa(1,2);s13 = 0.0;    s14 = 0.0;     s15 = aa(1,0)
-        s21 = aa(2,1);  s22 = aa(2,2);s23 = aa(2,3);s24 = 0.0;     s25 = 0.0
-        s31 = aa(n,n+1);s32 = 0.0;    s33 = 0.0;    s34 = aa(n,n-1);s35= aa(n,n)
+        s11 = aa(1,1); s12 = aa(1,2); s13 = 0.0_f64; s14 = 0.0_f64; s15 = aa(1,0)
+        s21 = aa(2,1); s22 = aa(2,2);s23 = aa(2,3);s24 = 0.0_f64; s25 = 0.0_f64
+        s31 = aa(n,n+1);s32 = 0.0_f64; s33 = 0.0_f64;    s34 = aa(n,n-1);s35= aa(n,n)
      end select
 
      ! Factor the matrix with row pivoting
@@ -287,12 +287,12 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            ! Advance the scratch space for the next iteration
 
            if( i<(n-4) ) then
-              s11=s22;        s12=s23;        s13=0.0;        s14=s24; s15=s25
-              s21=aa(i+2,i+1);s22=aa(i+2,i+2);s23=aa(i+2,i+3);s24=0.0; s25=0.0
-              s31=s32;        s32=s33;        s33=0.0;        s34=s34; s35=s35
+              s11=s22;        s12=s23;        s13=0.0_f64;        s14=s24; s15=s25
+              s21=aa(i+2,i+1);s22=aa(i+2,i+2);s23=aa(i+2,i+3);s24=0.0_f64; s25=0.0_f64
+              s31=s32;        s32=s33;        s33=0.0_f64;        s34=s34; s35=s35
            else
               s11=s22;        s12=s23;        s13=s24;        s14=s25;
-              s21=aa(i+2,i+1);s22=aa(i+2,i+2);s23=aa(i+2,i+3);s24=0.0
+              s21=aa(i+2,i+1);s22=aa(i+2,i+2);s23=aa(i+2,i+3);s24=0.0_f64
               s31=s32;        s32=s33;        s33=s34;        s34=s35
            end if
         else if( i==(n-3) ) then
@@ -351,7 +351,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            d(i) = s11; u(i) = s12; v(i) = s13; r(i) = s14
            l(i) = s21
            m(i) = s31
-           q(i) = 0.0
+           q(i) = 0.0_f64
            
            ! Advance the scratch space for the next iteration
            s11 = s22;        s12 = s23;         s13 = s24
@@ -408,8 +408,8 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            l(i) = s21
            m(i) = s31
            
-           q(i) = 0.0
-           r(i) = 0.0
+           q(i) = 0.0_f64
+           r(i) = 0.0_f64
            
            ! Advance the scratch space for the next iteration
            s11 = s22;        s12 = s23
@@ -454,10 +454,10 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            d(i) = s11; u(i) = s12
            l(i) = s21
 
-           v(i) = 0.0
-           r(i) = 0.0
-           q(i) = 0.0
-           m(i) = 0.0
+           v(i) = 0.0_f64
+           r(i) = 0.0_f64
+           q(i) = 0.0_f64
+           m(i) = 0.0_f64
 
            ! Advance the scratch space for the next iteration
 
@@ -483,12 +483,12 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            if( s11 == 0.0 ) print *, 'zero determinant' ! FIX THIS
            ipiv(i) = i
            d(i) = s11
-           u(i) = 0.0
-           v(i) = 0.0
-           r(i) = 0.0
-           q(i) = 0.0
-           l(i) = 0.0
-           m(i) = 0.0
+           u(i) = 0.0_f64
+           v(i) = 0.0_f64
+           r(i) = 0.0_f64
+           q(i) = 0.0_f64
+           l(i) = 0.0_f64
+           m(i) = 0.0_f64
         end if
      end do
 
