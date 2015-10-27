@@ -89,6 +89,7 @@ def compute_locals( content, return_dict=False ):
         if isinstance( item, variable_declaration_types ):
             for v in item.entity_decls:
                 v = v.split('(')[0].strip() # drop (:,:) from arrays
+                v = v.split('=')[0].strip() # get parameter name
                 variables.append( v )
         elif isinstance( item, block_statements.Type ):
             if 'abstract' in item.item.get_line(): # TODO: use regex
@@ -151,8 +152,12 @@ def compute_all_used_symbols( content ):
             # arguments
             for s in item.items:
                 if not is_fortran_string( s ):
-                    variables.extend( re.findall( pattern_variable, s ) )
-                    calls    .extend( re.findall( pattern_call    , s ) )
+                  if '=' in s:                      # Neglect argument keywords!
+                    s = s.partition('=')[2].strip() #
+                    if is_fortran_string( s ):      #
+                      continue                      #
+                  variables.extend( re.findall( pattern_variable, s ) )
+                  calls    .extend( re.findall( pattern_call    , s ) )
         # Assignments (both sides)
         elif isinstance( item, (statements.Assignment, 
                                 statements.PointerAssignment) ):
