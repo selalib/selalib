@@ -223,7 +223,7 @@ contains
         class(poisson_1d_fd),intent(in) :: this     !< Solver data structure
         procedure (poisson_1d_fd_rhs_function) :: eval_function
         sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
-        sll_int32 :: ierr=0
+        !sll_int32 :: ierr=0
         sll_real64, dimension(this%num_cells+1) :: evalpoints
         evalpoints=eval_function(this%cartesian_mesh%eta1_nodes())
         !Map to right hand side according to boundary condition
@@ -284,8 +284,8 @@ contains
         class(poisson_1d_fd),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out)                :: ierr    !< error code
 
-        sll_real64, dimension(this%fd_degree*3) :: period
-        sll_int32 :: periodlen
+        !sll_real64, dimension(this%fd_degree*3) :: period
+        !sll_int32 :: periodlen
 
         SLL_CLEAR_ALLOCATE(this%fd_matrix_first_line(1:this%num_cells),ierr)
         this%fd_matrix_first_line=0.0_f64
@@ -490,10 +490,11 @@ contains
         class(poisson_1d_fd),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
-        sll_real64, dimension(this%bspline%degree+1) :: b_contribution
-        sll_real64 :: celldx
-        sll_int :: b_idx, idx
-        sll_int :: b_contrib_idx
+        !sll_real64, dimension(this%bspline%degree+1) :: b_contribution
+        !sll_real64 :: celldx
+        !sll_int :: b_idx
+        !sll_int :: idx
+        !sll_int :: b_contrib_idx
       
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
@@ -598,7 +599,7 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
         sll_real64, dimension(:), intent(in) :: solution
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
         sll_real64 :: celldx
-        sll_int :: b_idx, idx, jdx
+        sll_int :: b_idx, idx!, jdx
         sll_int :: b_contrib_idx
       
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
@@ -644,7 +645,7 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%num_cells) :: rhs
          sll_int32 :: idx
-        sll_int32, dimension( size(ppos) ) :: cell
+        !sll_int32, dimension( size(ppos) ) :: cell
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
         sll_real64 :: celldx
         sll_int :: b_idx
@@ -723,7 +724,7 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
         class(poisson_1d_fd),intent(in) :: this     !< Solver data structure
         procedure (poisson_1d_fd_rhs_function) :: eval_function
         sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
-        sll_int32 :: idx 
+        !sll_int32 :: idx 
         sll_real64, dimension(this%num_cells +1)  :: knots
         
         

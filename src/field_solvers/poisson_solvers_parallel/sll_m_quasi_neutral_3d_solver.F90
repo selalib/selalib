@@ -87,7 +87,7 @@ contains
     type(layout_3D),  pointer           :: start_layout
     !sll_int32, intent(in) :: bc(2)
     !sll_int32 :: ierr
-    sll_int64                        :: colsz ! collective size
+    sll_int32                        :: colsz ! collective size
     type(sll_collective_t), pointer  :: collective
     sll_int32                        :: loc_sz_x1
     sll_int32                        :: loc_sz_x2
