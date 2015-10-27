@@ -1,6 +1,3 @@
-module sll_m_prob
- implicit none
-contains
 subroutine angle_cdf ( x, n, cdf )
 
 !*****************************************************************************80
@@ -42,8 +39,8 @@ subroutine angle_cdf ( x, n, cdf )
   integer ( kind = 4 ) n
   real ( kind = 8 ) n_real
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !!real ( kind = 8 ) r8_gamma
-  !real ( kind = 8 ) sin_power_int
+  real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) sin_power_int
   real ( kind = 8 ) x
   real ( kind = 8 ), parameter :: zero = 0.0D+00
 
@@ -52,7 +49,7 @@ subroutine angle_cdf ( x, n, cdf )
     write ( *, '(a)' ) 'ANGLE_CDF - Fatal error!'
     write ( *, '(a)' ) '  N must be at least 2.'
     write ( *, '(a,i8)' ) '  The input value of N = ', n
-    stop
+    stop 1
   end if
 
   if ( x <= 0.0D+00 ) then
@@ -68,7 +65,7 @@ subroutine angle_cdf ( x, n, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine angle_mean ( n, mean )
 
 !*****************************************************************************80
@@ -103,7 +100,7 @@ subroutine angle_mean ( n, mean )
   mean = pi / 2.0D+00
 
   return
-end subroutine
+end
 subroutine angle_pdf ( x, n, pdf )
 
 !*****************************************************************************80
@@ -159,7 +156,7 @@ subroutine angle_pdf ( x, n, pdf )
   integer ( kind = 4 ) n
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !!real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
 
   if ( n < 2 ) then
@@ -167,7 +164,7 @@ subroutine angle_pdf ( x, n, pdf )
     write ( *, '(a)' ) 'ANGLE_PDF - Fatal error!'
     write ( *, '(a)' ) '  N must be at least 2.'
     write ( *, '(a,i8)' ) '  The input value of N = ', n
-    stop
+    stop 1
   end if
 
   if ( x < 0.0D+00 .or. pi < x ) then
@@ -181,7 +178,7 @@ subroutine angle_pdf ( x, n, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine anglit_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -221,7 +218,7 @@ subroutine anglit_cdf ( x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine anglit_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -257,13 +254,13 @@ subroutine anglit_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ANGLIT_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = 0.5D+00 * ( acos ( 1.0D+00 - 2.0D+00 * cdf ) - pi / 2.0D+00 )
 
   return
-end subroutine
+end
 subroutine anglit_mean ( mean )
 
 !*****************************************************************************80
@@ -293,7 +290,7 @@ subroutine anglit_mean ( mean )
   mean = 0.0D+00
 
   return
-end subroutine
+end
 subroutine anglit_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -335,7 +332,7 @@ subroutine anglit_pdf ( x, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine anglit_sample ( seed, x )
 
 !*****************************************************************************80
@@ -364,7 +361,7 @@ subroutine anglit_sample ( seed, x )
   implicit none
 
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -373,7 +370,7 @@ subroutine anglit_sample ( seed, x )
   call anglit_cdf_inv ( cdf, x )
 
   return
-end subroutine
+end
 subroutine anglit_variance ( variance )
 
 !*****************************************************************************80
@@ -413,7 +410,7 @@ subroutine anglit_variance ( variance )
   variance = 0.0625D+00 * pi * pi - 0.5D+00
 
   return
-end subroutine
+end
 subroutine arcsin_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -457,7 +454,7 @@ subroutine arcsin_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine arcsin_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -497,13 +494,13 @@ subroutine arcsin_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ARCSIN_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a * sin ( pi * ( cdf - 0.5D+00 ) )
 
   return
-end subroutine
+end
 function arcsin_check ( a )
 
 !*****************************************************************************80
@@ -545,7 +542,7 @@ function arcsin_check ( a )
   arcsin_check = .true.
 
   return
-end function
+end
 subroutine arcsin_mean ( a, mean )
 
 !*****************************************************************************80
@@ -579,7 +576,7 @@ subroutine arcsin_mean ( a, mean )
   mean = 0.0D+00
 
   return
-end subroutine
+end
 subroutine arcsin_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -652,7 +649,7 @@ subroutine arcsin_pdf ( x, a, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ARCSIN_PDF - Fatal error!'
     write ( *, '(a)' ) '  Parameter A must be positive.'
-    stop
+    stop 1
   end if
 
   if ( x <= -a .or. a <= x ) then
@@ -662,7 +659,7 @@ subroutine arcsin_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine arcsin_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -695,7 +692,7 @@ subroutine arcsin_sample ( a, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -704,7 +701,7 @@ subroutine arcsin_sample ( a, seed, x )
   call arcsin_cdf_inv ( cdf, a, x )
 
   return
-end subroutine
+end
 subroutine arcsin_variance ( a, variance )
 
 !*****************************************************************************80
@@ -738,7 +735,7 @@ subroutine arcsin_variance ( a, variance )
   variance = a * a / 2.0D+00
 
   return
-end subroutine
+end
 subroutine benford_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -812,7 +809,7 @@ subroutine benford_pdf ( x, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine bessel_ix_values ( n_data, nu, x, fx )
 
 !*****************************************************************************80
@@ -989,7 +986,7 @@ subroutine bessel_ix_values ( n_data, nu, x, fx )
   end if
 
   return
-end subroutine
+end
 subroutine birthday_cdf ( n, cdf )
 
 !*****************************************************************************80
@@ -1045,7 +1042,7 @@ subroutine birthday_cdf ( n, cdf )
   cdf = 1.0D+00 - cdf
 
   return
-end subroutine
+end
 subroutine birthday_cdf_inv ( cdf, n )
 
 !*****************************************************************************80
@@ -1102,7 +1099,7 @@ subroutine birthday_cdf_inv ( cdf, n )
   n = 365
 
   return
-end subroutine
+end
 subroutine birthday_pdf ( n, pdf )
 
 !*****************************************************************************80
@@ -1158,7 +1155,7 @@ subroutine birthday_pdf ( n, pdf )
   pdf = pdf * real ( n - 1, kind = 8 ) / 365.0D+00
 
   return
-end subroutine
+end
 subroutine bernoulli_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -1202,7 +1199,7 @@ subroutine bernoulli_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine bernoulli_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -1241,7 +1238,7 @@ subroutine bernoulli_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BERNOULLI_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf <= 1.0D+00 - a ) then
@@ -1251,7 +1248,7 @@ subroutine bernoulli_cdf_inv ( cdf, a, x )
   end if
 
   return
-end subroutine
+end
 function bernoulli_check ( a )
 
 !*****************************************************************************80
@@ -1293,7 +1290,7 @@ function bernoulli_check ( a )
   bernoulli_check = .true.
 
   return
-end function
+end
 subroutine bernoulli_mean ( a, mean )
 
 !*****************************************************************************80
@@ -1327,7 +1324,7 @@ subroutine bernoulli_mean ( a, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine bernoulli_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -1383,7 +1380,7 @@ subroutine bernoulli_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine bernoulli_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -1416,7 +1413,7 @@ subroutine bernoulli_sample ( a, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -1425,7 +1422,7 @@ subroutine bernoulli_sample ( a, seed, x )
   call bernoulli_cdf_inv ( cdf, a, x )
 
   return
-end subroutine
+end
 subroutine bernoulli_variance ( a, variance )
 
 !*****************************************************************************80
@@ -1459,7 +1456,7 @@ subroutine bernoulli_variance ( a, variance )
   variance = a * ( 1.0D+00 - a )
 
   return
-end subroutine
+end
 function bessel_i0 ( arg )
 
 !*****************************************************************************80
@@ -1651,7 +1648,7 @@ function bessel_i0 ( arg )
   bessel_i0 = value
 
   return
-end function
+end
 subroutine bessel_i0_values ( n_data, x, fx )
 
 !*****************************************************************************80
@@ -1773,7 +1770,7 @@ subroutine bessel_i0_values ( n_data, x, fx )
   end if
 
   return
-end subroutine
+end
 function bessel_i1 ( arg )
 
 !*****************************************************************************80
@@ -1983,7 +1980,7 @@ function bessel_i1 ( arg )
   bessel_i1 = value
 
   return
-end function
+end
 subroutine bessel_i1_values ( n_data, x, fx )
 
 !*****************************************************************************80
@@ -2028,8 +2025,8 @@ subroutine bessel_i1_values ( n_data, x, fx )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0
-!    before the first call.  On each call, the routine increments N_DATA by 1,
+!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0 
+!    before the first call.  On each call, the routine increments N_DATA by 1, 
 !    and returns the corresponding data; when there is no more data, the
 !    output value of N_DATA will be 0 again.
 !
@@ -2103,7 +2100,7 @@ subroutine bessel_i1_values ( n_data, x, fx )
   end if
 
   return
-end subroutine
+end
 function beta ( a, b )
 
 !*****************************************************************************80
@@ -2142,19 +2139,19 @@ function beta ( a, b )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) beta
-  !!real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
 
   if ( a <= 0.0D+00 .or. b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BETA - Fatal error!'
     write ( *, '(a)' ) '  Both A and B must be greater than 0.'
-    stop
+    stop 1
   end if
 
   beta = exp ( gamma_log ( a ) + gamma_log ( b ) - gamma_log ( a + b ) )
 
   return
-end function
+end
 subroutine beta_binomial_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -2194,7 +2191,7 @@ subroutine beta_binomial_cdf ( x, a, b, c, cdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta
+  real ( kind = 8 ) beta
   integer ( kind = 4 ) c
   real ( kind = 8 ) cdf
   real ( kind = 8 ) pdf
@@ -2223,7 +2220,7 @@ subroutine beta_binomial_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine beta_binomial_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -2257,14 +2254,14 @@ subroutine beta_binomial_cdf_inv ( cdf, a, b, c, x )
 !    Input, integer ( kind = 4 ) C, a parameter of the PDF.
 !    0 <= C.
 !
-!    Output, integer ( kind = 4 ) X, the smallest X whose cumulative density
+!    Output, integer ( kind = 4 ) X, the smallest X whose cumulative density 
 !    function is greater than or equal to CDF.
 !
   implicit none
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta
+  real ( kind = 8 ) beta
   integer ( kind = 4 ) c
   real ( kind = 8 ) cdf
   real ( kind = 8 ) cum
@@ -2276,7 +2273,7 @@ subroutine beta_binomial_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BETA_BINOMIAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cum = 0.0D+00
@@ -2300,7 +2297,7 @@ subroutine beta_binomial_cdf_inv ( cdf, a, b, c, x )
   x = c
 
   return
-end subroutine
+end
 function beta_binomial_check ( a, b, c )
 
 !*****************************************************************************80
@@ -2364,7 +2361,7 @@ function beta_binomial_check ( a, b, c )
   beta_binomial_check = .true.
 
   return
-end function
+end
 subroutine beta_binomial_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -2404,7 +2401,7 @@ subroutine beta_binomial_mean ( a, b, c, mean )
   mean = real ( c, kind = 8 ) * a / ( a + b )
 
   return
-end subroutine
+end
 subroutine beta_binomial_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -2482,7 +2479,7 @@ subroutine beta_binomial_pdf ( x, a, b, c, pdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta
+  real ( kind = 8 ) beta
   integer ( kind = 4 ) c
   real ( kind = 8 ) pdf
   integer ( kind = 4 ) x
@@ -2505,7 +2502,7 @@ subroutine beta_binomial_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine beta_binomial_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -2533,7 +2530,7 @@ subroutine beta_binomial_sample ( a, b, c, seed, x )
 !    Input, integer ( kind = 4 ) C, a parameter of the PDF.
 !    0 <= C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -2544,7 +2541,7 @@ subroutine beta_binomial_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b
   integer ( kind = 4 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -2553,7 +2550,7 @@ subroutine beta_binomial_sample ( a, b, c, seed, x )
   call beta_binomial_cdf_inv ( cdf, a, b, c, x )
 
   return
-end subroutine
+end
 subroutine beta_binomial_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -2595,7 +2592,7 @@ subroutine beta_binomial_variance ( a, b, c, variance )
     / ( ( a + b )**2 * ( a + b + 1.0D+00 ) )
 
   return
-end subroutine
+end
 subroutine beta_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -2628,7 +2625,7 @@ subroutine beta_cdf ( x, a, b, cdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta_inc
+  real ( kind = 8 ) beta_inc
   real ( kind = 8 ) cdf
   real ( kind = 8 ) x
 
@@ -2641,7 +2638,7 @@ subroutine beta_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine beta_cdf_inv ( cdf, p, q, x )
 
 !*****************************************************************************80
@@ -2691,12 +2688,12 @@ subroutine beta_cdf_inv ( cdf, p, q, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) acu
   real ( kind = 8 ) adj
-  !real ( kind = 8 ) beta_inc
+  real ( kind = 8 ) beta_inc
   real ( kind = 8 ) beta_log
   real ( kind = 8 ) cdf
   real ( kind = 8 ) fpu
   real ( kind = 8 ) g
-  !!real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
   real ( kind = 8 ) h
   integer ( kind = 4 ) iex
   logical indx
@@ -2743,7 +2740,7 @@ subroutine beta_cdf_inv ( cdf, p, q, x )
     return
   end if
 !
-!  Return immediately if the answer is easy to determine.
+!  Return immediately if the answer is easy to determine.  
 !
   if ( cdf == 0.0D+00  ) then
     x = 0.0D+00
@@ -2898,7 +2895,7 @@ subroutine beta_cdf_inv ( cdf, p, q, x )
   end if
 
   return
-end subroutine
+end
 subroutine beta_cdf_inv_old ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -2967,7 +2964,7 @@ subroutine beta_cdf_inv_old ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BETA_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 !
 !  Estimate the solution.
@@ -3047,7 +3044,7 @@ subroutine beta_cdf_inv_old ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 subroutine beta_cdf_values ( n_data, a, b, x, fx )
 
 !*****************************************************************************80
@@ -3221,7 +3218,7 @@ subroutine beta_cdf_values ( n_data, a, b, x, fx )
      2.0D+00, &
      2.0D+00, &
     11.7562D+00, &
-    11.7562D+00, &
+    11.7562D+00, & 
     11.7562D+00 /)
   real ( kind = 8 ) fx
   real ( kind = 8 ), save, dimension ( n_max ) :: fx_vec = (/ &
@@ -3267,9 +3264,9 @@ subroutine beta_cdf_values ( n_data, a, b, x, fx )
     0.8370000000000000D-01, &
     0.3078000000000000D-01, &
     0.1093500000000000D-01, &
-    0.918885D+00, &
-    0.21053D+00, &
-    0.182413D+00 /)
+    0.918884684620518D+00, &
+    0.21052977489419D+00, &
+    0.1824130512500673D+00 /)
   integer ( kind = 4 ) n_data
   real ( kind = 8 ) x
   real ( kind = 8 ), save, dimension ( n_max ) :: x_vec = (/ &
@@ -3339,7 +3336,7 @@ subroutine beta_cdf_values ( n_data, a, b, x, fx )
   end if
 
   return
-end subroutine
+end
 function beta_check ( a, b )
 
 !*****************************************************************************80
@@ -3391,7 +3388,7 @@ function beta_check ( a, b )
   beta_check = .true.
 
   return
-end function
+end
 function beta_inc ( a, b, x )
 
 !*****************************************************************************80
@@ -3448,7 +3445,7 @@ function beta_inc ( a, b, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta
+  real ( kind = 8 ) beta
   real ( kind = 8 ) beta_inc
   real ( kind = 8 ) cx
   integer ( kind = 4 ) i
@@ -3470,14 +3467,14 @@ function beta_inc ( a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BETA_INC - Fatal error!'
     write ( *, '(a)' ) '  A <= 0.'
-    stop
+    stop 1
   end if
 
   if ( b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BETA_INC - Fatal error!'
     write ( *, '(a)' ) '  B <= 0.'
-    stop
+    stop 1
   end if
 
   if ( x <= 0.0D+00 ) then
@@ -3532,7 +3529,7 @@ function beta_inc ( a, b, x )
       write ( *, '(a)' ) 'BETA_INC - Fatal error!'
       write ( *, '(a)' ) '  Maximum number of iterations exceeded!'
       write ( *, '(a,i8)' ) '  IT_MAX = ', it_max
-      stop
+      stop 1
     end if
 
     term = term * temp * rx / ( pp + real ( i, kind = 8 ) )
@@ -3568,7 +3565,7 @@ function beta_inc ( a, b, x )
   end if
 
   return
-end function
+end
 subroutine beta_inc_values ( n_data, a, b, x, fx )
 
 !*****************************************************************************80
@@ -3742,7 +3739,7 @@ subroutine beta_inc_values ( n_data, a, b, x, fx )
      2.0D+00, &
      2.0D+00, &
     11.7562D+00, &
-    11.7562D+00, &
+    11.7562D+00, & 
     11.7562D+00 /)
   real ( kind = 8 ) fx
   real ( kind = 8 ), save, dimension ( n_max ) :: fx_vec = (/ &
@@ -3788,9 +3785,9 @@ subroutine beta_inc_values ( n_data, a, b, x, fx )
     0.8370000000000000D-01, &
     0.3078000000000000D-01, &
     0.1093500000000000D-01, &
-    0.918885D+00, &
-    0.21053D+00, &
-    0.182413D+00 /)
+    0.918884684620518D+00, &
+    0.21052977489419D+00, &
+    0.1824130512500673D+00 /)
   integer ( kind = 4 ) n_data
   real ( kind = 8 ) x
   real ( kind = 8 ), save, dimension ( n_max ) :: x_vec = (/ &
@@ -3860,7 +3857,7 @@ subroutine beta_inc_values ( n_data, a, b, x, fx )
   end if
 
   return
-end subroutine
+end
 subroutine beta_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -3896,7 +3893,7 @@ subroutine beta_mean ( a, b, mean )
   mean = a / ( a + b )
 
   return
-end subroutine
+end
 subroutine beta_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -3941,7 +3938,7 @@ subroutine beta_pdf ( x, a, b, pdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta
+  real ( kind = 8 ) beta
   real ( kind = 8 ) pdf
   real ( kind = 8 ) x
 
@@ -3952,7 +3949,7 @@ subroutine beta_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine beta_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -3984,7 +3981,7 @@ subroutine beta_sample ( a, b, seed, x )
 !    0.0D+00 < A,
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -3993,7 +3990,7 @@ subroutine beta_sample ( a, b, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) mu
   integer ( kind = 4 ) seed
   real ( kind = 8 ) stdev
@@ -4028,7 +4025,7 @@ subroutine beta_sample ( a, b, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine beta_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -4064,7 +4061,7 @@ subroutine beta_variance ( a, b, variance )
   variance = ( a * b ) / ( ( a + b )**2 * ( 1.0D+00 + a + b ) )
 
   return
-end subroutine
+end
 subroutine binomial_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -4147,7 +4144,7 @@ subroutine binomial_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine binomial_cdf_values ( n_data, a, b, x, fx )
 
 !*****************************************************************************80
@@ -4196,8 +4193,8 @@ subroutine binomial_cdf_values ( n_data, a, b, x, fx )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0
-!    before the first call.  On each call, the routine increments N_DATA by 1,
+!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0 
+!    before the first call.  On each call, the routine increments N_DATA by 1, 
 !    and returns the corresponding data; when there is no more data, the
 !    output value of N_DATA will be 0 again.
 !
@@ -4287,7 +4284,7 @@ subroutine binomial_cdf_values ( n_data, a, b, x, fx )
   end if
 
   return
-end subroutine
+end
 subroutine binomial_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -4333,7 +4330,7 @@ subroutine binomial_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BINOMIAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cdf2 = 0.0D+00
@@ -4352,7 +4349,7 @@ subroutine binomial_cdf_inv ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 function binomial_check ( a, b )
 
 !*****************************************************************************80
@@ -4406,7 +4403,7 @@ function binomial_check ( a, b )
   binomial_check = .true.
 
   return
-end function
+end
 subroutine binomial_coef ( n, k, cnk )
 
 !*****************************************************************************80
@@ -4480,7 +4477,7 @@ subroutine binomial_coef ( n, k, cnk )
   end if
 
   return
-end subroutine
+end
 subroutine binomial_coef_log ( n, k, cnk_log )
 
 !*****************************************************************************80
@@ -4514,14 +4511,14 @@ subroutine binomial_coef_log ( n, k, cnk_log )
   implicit none
 
   real ( kind = 8 ) cnk_log
-  !real ( kind = 8 ) factorial_log
+  real ( kind = 8 ) factorial_log
   integer ( kind = 4 ) k
   integer ( kind = 4 ) n
 
   cnk_log = factorial_log ( n ) - factorial_log ( k ) - factorial_log ( n - k )
 
   return
-end subroutine
+end
 subroutine binomial_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -4560,7 +4557,7 @@ subroutine binomial_mean ( a, b, mean )
   mean = real ( a, kind = 8 ) * b
 
   return
-end subroutine
+end
 subroutine binomial_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -4644,7 +4641,7 @@ subroutine binomial_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine binomial_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -4678,7 +4675,7 @@ subroutine binomial_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) B, the probability of success on one trial.
 !    0.0D+00 <= B <= 1.0.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -4687,7 +4684,7 @@ subroutine binomial_sample ( a, b, seed, x )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) i
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
@@ -4706,7 +4703,7 @@ subroutine binomial_sample ( a, b, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine binomial_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -4744,7 +4741,7 @@ subroutine binomial_variance ( a, b, variance )
   variance = real ( a, kind = 8 ) * b * ( 1.0D+00 - b )
 
   return
-end subroutine
+end
 subroutine bradford_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -4790,7 +4787,7 @@ subroutine bradford_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine bradford_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -4832,7 +4829,7 @@ subroutine bradford_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BRADFORD_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf <= 0.0D+00 ) then
@@ -4844,7 +4841,7 @@ subroutine bradford_cdf_inv ( cdf, a, b, c, x )
   end if
 
   return
-end subroutine
+end
 function bradford_check ( a, b, c )
 
 !*****************************************************************************80
@@ -4897,7 +4894,7 @@ function bradford_check ( a, b, c )
   bradford_check = .true.
 
   return
-end function
+end
 subroutine bradford_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -4935,7 +4932,7 @@ subroutine bradford_mean ( a, b, c, mean )
     / ( c * log ( c + 1.0D+00 ) )
 
   return
-end subroutine
+end
 subroutine bradford_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -4989,7 +4986,7 @@ subroutine bradford_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine bradford_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -5014,7 +5011,7 @@ subroutine bradford_sample ( a, b, c, seed, x )
 !    A < B,
 !    0.0D+00 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -5025,7 +5022,7 @@ subroutine bradford_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -5034,7 +5031,7 @@ subroutine bradford_sample ( a, b, c, seed, x )
   x = a + ( b - a ) * ( ( c + 1.0D+00 )**cdf - 1.0D+00 ) / c
 
   return
-end subroutine
+end
 subroutine bradford_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -5073,7 +5070,7 @@ subroutine bradford_variance ( a, b, c, variance )
     / ( 2.0D+00 * c * ( log ( c + 1.0D+00 ) )**2 )
 
   return
-end subroutine
+end
 subroutine buffon_laplace_pdf ( a, b, l, pdf )
 
 !*****************************************************************************80
@@ -5151,7 +5148,7 @@ subroutine buffon_laplace_pdf ( a, b, l, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_LAPLACE_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input A < 0.'
-    stop
+    stop 1
   else if ( a == 0.0D+00 ) then
     pdf = 1.0D+00
     return
@@ -5161,7 +5158,7 @@ subroutine buffon_laplace_pdf ( a, b, l, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_LAPLACE_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input B < 0.'
-    stop
+    stop 1
   else if ( b == 0.0D+00 ) then
     pdf = 1.0D+00
     return
@@ -5171,7 +5168,7 @@ subroutine buffon_laplace_pdf ( a, b, l, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_LAPLACE_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input L < 0.'
-    stop
+    stop 1
   else if ( l == 0.0D+00 ) then
     pdf = 0.0D+00
     return
@@ -5179,13 +5176,13 @@ subroutine buffon_laplace_pdf ( a, b, l, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_LAPLACE_PDF - Fatal error!'
     write ( *, '(a)' ) '  min ( A, B ) < L.'
-    stop
+    stop 1
   end if
 
   pdf = l * ( 2.0D+00 * ( a + b ) - l ) / ( pi * a * b )
 
   return
-end subroutine
+end
 function buffon_laplace_simulate ( a, b, l, trial_num, seed )
 
 !*****************************************************************************80
@@ -5194,7 +5191,7 @@ function buffon_laplace_simulate ( a, b, l, trial_num, seed )
 !
 !  Discussion:
 !
-!    In the Buffon-Laplace needle experiment, we suppose that the plane has
+!    In the Buffon-Laplace needle experiment, we suppose that the plane has 
 !    been tiled into a grid of rectangles of width A and height B, and that a
 !    needle of length L is dropped "at random" onto this grid.
 !
@@ -5271,7 +5268,7 @@ function buffon_laplace_simulate ( a, b, l, trial_num, seed )
 !    Input, integer ( kind = 4 ) TRIAL_NUM, the number of times the needle is
 !    to be dropped onto the grid.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) BUFFON_LAPLACE_SIMULATE, the number of times
@@ -5340,7 +5337,7 @@ function buffon_laplace_simulate ( a, b, l, trial_num, seed )
   buffon_laplace_simulate = hits
 
   return
-end function
+end
 subroutine buffon_pdf ( a, l, pdf )
 
 !*****************************************************************************80
@@ -5407,7 +5404,7 @@ subroutine buffon_pdf ( a, l, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input A < 0.'
-    stop
+    stop 1
   else if ( a == 0.0D+00 ) then
     pdf = 1.0D+00
     return
@@ -5417,7 +5414,7 @@ subroutine buffon_pdf ( a, l, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input L < 0.'
-    stop
+    stop 1
   else if ( l == 0.0D+00 ) then
     pdf = 0.0D+00
     return
@@ -5426,7 +5423,7 @@ subroutine buffon_pdf ( a, l, pdf )
   pdf = ( 2.0D+00 * l ) / ( pi * a )
 
   return
-end subroutine
+end
 function buffon_simulate ( a, l, trial_num )
 
 !*****************************************************************************80
@@ -5555,7 +5552,7 @@ function buffon_simulate ( a, l, trial_num )
   buffon_simulate = hits
 
   return
-end function
+end
 subroutine burr_cdf ( x, a, b, c, d, cdf )
 
 !*****************************************************************************80
@@ -5604,7 +5601,7 @@ subroutine burr_cdf ( x, a, b, c, d, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine burr_cdf_inv ( cdf, a, b, c, d, x )
 
 !*****************************************************************************80
@@ -5647,13 +5644,13 @@ subroutine burr_cdf_inv ( cdf, a, b, c, d, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BURR_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a + b / ( ( 1.0D+00 / cdf )**(1.0D+00 / d ) - 1.0D+00 )**( 1.0D+00 / c )
 
   return
-end subroutine
+end
 function burr_check ( a, b, c, d )
 
 !*****************************************************************************80
@@ -5707,7 +5704,7 @@ function burr_check ( a, b, c, d )
   burr_check = .true.
 
   return
-end function
+end
 subroutine burr_mean ( a, b, c, d, mean )
 
 !*****************************************************************************80
@@ -5741,13 +5738,13 @@ subroutine burr_mean ( a, b, c, d, mean )
   real ( kind = 8 ) c
   real ( kind = 8 ) d
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
 
   mean = a + b * r8_gamma ( 1.0D+00 - 1.0D+00 / c ) &
     * r8_gamma ( d + 1.0D+00 / c ) / r8_gamma ( d )
 
   return
-end subroutine
+end
 subroutine burr_pdf ( x, a, b, c, d, pdf )
 
 !*****************************************************************************80
@@ -5812,7 +5809,7 @@ subroutine burr_pdf ( x, a, b, c, d, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine burr_sample ( a, b, c, d, seed, x )
 
 !*****************************************************************************80
@@ -5837,7 +5834,7 @@ subroutine burr_sample ( a, b, c, d, seed, x )
 !    0 < B,
 !    0 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -5849,7 +5846,7 @@ subroutine burr_sample ( a, b, c, d, seed, x )
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
   real ( kind = 8 ) d
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -5858,7 +5855,7 @@ subroutine burr_sample ( a, b, c, d, seed, x )
   call burr_cdf_inv ( cdf, a, b, c, d, x )
 
   return
-end subroutine
+end
 subroutine burr_variance ( a, b, c, d, variance )
 
 !*****************************************************************************80
@@ -5892,7 +5889,7 @@ subroutine burr_variance ( a, b, c, d, variance )
   real ( kind = 8 ) c
   real ( kind = 8 ) d
   real ( kind = 8 ) k
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) variance
 
   if ( c <= 2.0D+00 ) then
@@ -5913,7 +5910,7 @@ subroutine burr_variance ( a, b, c, d, variance )
   end if
 
   return
-end subroutine
+end
 subroutine c4_normal_01_sample ( seed, x )
 
 !*****************************************************************************80
@@ -5934,14 +5931,14 @@ subroutine c4_normal_01_sample ( seed, x )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, complex ( kind = 4 ) X, a sample of the PDF.
 !
   implicit none
 
-  !real ( kind = 4 ) r4_uniform_01
+  real ( kind = 4 ) r4_uniform_01
   real ( kind = 4 ), parameter :: pi = 3.141592653589793D+00
   integer ( kind = 4 ) seed
   real ( kind = 4 ) v1
@@ -5959,7 +5956,7 @@ subroutine c4_normal_01_sample ( seed, x )
   x = cmplx ( x_r, x_c, kind = 4 )
 
   return
-end subroutine
+end
 subroutine cardioid_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -6009,7 +6006,7 @@ subroutine cardioid_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine cardioid_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -6070,7 +6067,7 @@ subroutine cardioid_cdf_inv ( cdf, a, b, x )
       end if
 
       if ( 10 < it ) then
-        stop
+        stop 1
       end if
 
       fp = - ( 1.0D+00 + 2.0D+00 * b * cos ( x - a ) ) / ( 2.0D+00 * pi )
@@ -6090,7 +6087,7 @@ subroutine cardioid_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function cardioid_check ( a, b )
 
 !*****************************************************************************80
@@ -6133,7 +6130,7 @@ function cardioid_check ( a, b )
   cardioid_check = .true.
 
   return
-end function
+end
 subroutine cardioid_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -6168,7 +6165,7 @@ subroutine cardioid_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine cardioid_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -6222,7 +6219,7 @@ subroutine cardioid_pdf ( x, a, b, pdf )
   pdf = ( 1.0D+00 + 2.0D+00 * b * cos ( x - a ) ) / ( 2.0D+00 * pi )
 
   return
-end subroutine
+end
 subroutine cardioid_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -6246,7 +6243,7 @@ subroutine cardioid_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    -0.5 <= B <= 0.5.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -6257,7 +6254,7 @@ subroutine cardioid_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -6266,7 +6263,7 @@ subroutine cardioid_sample ( a, b, seed, x )
   call cardioid_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine cardioid_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -6301,7 +6298,7 @@ subroutine cardioid_variance ( a, b, variance )
   variance = 0.0D+00
 
   return
-end subroutine
+end
 subroutine cauchy_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -6341,7 +6338,7 @@ subroutine cauchy_cdf ( x, a, b, cdf )
   cdf = 0.5D+00 + atan2 ( x - a, b ) / PI
 
   return
-end subroutine
+end
 subroutine cauchy_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -6382,13 +6379,13 @@ subroutine cauchy_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'CAUCHY_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a + b * tan ( pi * ( cdf - 0.5D+00 ) )
 
   return
-end subroutine
+end
 subroutine cauchy_cdf_values ( n_data, mu, sigma, x, fx )
 
 !*****************************************************************************80
@@ -6430,8 +6427,8 @@ subroutine cauchy_cdf_values ( n_data, mu, sigma, x, fx )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0
-!    before the first call.  On each call, the routine increments N_DATA by 1,
+!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0 
+!    before the first call.  On each call, the routine increments N_DATA by 1, 
 !    and returns the corresponding data; when there is no more data, the
 !    output value of N_DATA will be 0 again.
 !
@@ -6525,7 +6522,7 @@ subroutine cauchy_cdf_values ( n_data, mu, sigma, x, fx )
   end if
 
   return
-end subroutine
+end
 function cauchy_check ( a, b )
 
 !*****************************************************************************80
@@ -6568,7 +6565,7 @@ function cauchy_check ( a, b )
   cauchy_check = .true.
 
   return
-end function
+end
 subroutine cauchy_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -6603,7 +6600,7 @@ subroutine cauchy_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine cauchy_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -6657,7 +6654,7 @@ subroutine cauchy_pdf ( x, a, b, pdf )
   pdf = 1.0D+00 / ( pi * b * ( 1.0D+00 + y * y ) )
 
   return
-end subroutine
+end
 subroutine cauchy_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -6681,7 +6678,7 @@ subroutine cauchy_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -6691,7 +6688,7 @@ subroutine cauchy_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -6700,7 +6697,7 @@ subroutine cauchy_sample ( a, b, seed, x )
   call cauchy_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine cauchy_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -6741,7 +6738,7 @@ subroutine cauchy_variance ( a, b, variance )
   variance = huge ( variance )
 
   return
-end subroutine
+end
 subroutine chi_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -6776,7 +6773,7 @@ subroutine chi_cdf ( x, a, b, c, cdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) gamma_inc
+  real ( kind = 8 ) gamma_inc
   real ( kind = 8 ) p2
   real ( kind = 8 ) x
   real ( kind = 8 ) x2
@@ -6797,7 +6794,7 @@ subroutine chi_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine chi_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -6851,7 +6848,7 @@ subroutine chi_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'CHI_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -6913,7 +6910,7 @@ subroutine chi_cdf_inv ( cdf, a, b, c, x )
   end do
 
   return
-end subroutine
+end
 function chi_check ( a, b, c )
 
 !*****************************************************************************80
@@ -6966,7 +6963,7 @@ function chi_check ( a, b, c )
   chi_check = .true.
 
   return
-end function
+end
 subroutine chi_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -6999,13 +6996,13 @@ subroutine chi_mean ( a, b, c, mean )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
 
   mean = a + sqrt ( 2.0D+00 ) * b * r8_gamma ( 0.5D+00 * ( c + 1.0D+00 ) ) &
     / r8_gamma ( 0.5D+00 * c )
 
   return
-end subroutine
+end
 subroutine chi_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -7051,7 +7048,7 @@ subroutine chi_pdf ( x, a, b, c, pdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
@@ -7069,7 +7066,7 @@ subroutine chi_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine chi_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -7094,7 +7091,7 @@ subroutine chi_sample ( a, b, c, seed, x )
 !    0 < B,
 !    0 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -7112,7 +7109,7 @@ subroutine chi_sample ( a, b, c, seed, x )
   x = a + b * sqrt ( x )
 
   return
-end subroutine
+end
 subroutine chi_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -7144,14 +7141,14 @@ subroutine chi_variance ( a, b, c, variance )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) c
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) variance
 
   variance = b * b * ( c - 2.0D+00 * &
     ( r8_gamma ( 0.5D+00 * ( c + 1.0D+00 ) ) / r8_gamma ( 0.5D+00 * c ) )**2 )
 
   return
-end subroutine
+end
 subroutine chi_square_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -7198,7 +7195,7 @@ subroutine chi_square_cdf ( x, a, cdf )
   call gamma_cdf ( x2, a2, b2, c2, cdf )
 
   return
-end subroutine
+end
 subroutine chi_square_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -7290,8 +7287,8 @@ subroutine chi_square_cdf_inv ( cdf, a, x )
   real ( kind = 8 ) ch
   real ( kind = 8 ), parameter :: e = 0.0000005D+00
   real ( kind = 8 ) g
-  !real ( kind = 8 ) gamma_inc
-  !real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_inc
+  real ( kind = 8 ) gamma_log
   integer ( kind = 4 ) i
   integer ( kind = 4 ), parameter :: it_max = 20
   real ( kind = 8 ) p1
@@ -7313,7 +7310,7 @@ subroutine chi_square_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) 'CHI_SQUARE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
     write ( *, '(a,g14.6)' ) '  CDF = ', cdf
-    stop
+    stop 1
   end if
 
   if ( cdf < cdf_min ) then
@@ -7457,7 +7454,7 @@ subroutine chi_square_cdf_inv ( cdf, a, x )
   write ( *, '(a)' ) '  Convergence not reached.'
 
   return
-end subroutine
+end
 subroutine chi_square_cdf_values ( n_data, a, x, fx )
 
 !*****************************************************************************80
@@ -7499,8 +7496,8 @@ subroutine chi_square_cdf_values ( n_data, a, x, fx )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0
-!    before the first call.  On each call, the routine increments N_DATA by 1,
+!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0 
+!    before the first call.  On each call, the routine increments N_DATA by 1, 
 !    and returns the corresponding data; when there is no more data, the
 !    output value of N_DATA will be 0 again.
 !
@@ -7588,7 +7585,7 @@ subroutine chi_square_cdf_values ( n_data, a, x, fx )
   end if
 
   return
-end subroutine
+end
 function chi_square_check ( a )
 
 !*****************************************************************************80
@@ -7630,7 +7627,7 @@ function chi_square_check ( a )
   chi_square_check = .true.
 
   return
-end function
+end
 subroutine chi_square_mean ( a, mean )
 
 !*****************************************************************************80
@@ -7664,7 +7661,7 @@ subroutine chi_square_mean ( a, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine chi_square_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -7703,7 +7700,7 @@ subroutine chi_square_pdf ( x, a, pdf )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
 
   if ( x < 0.0D+00 ) then
@@ -7715,7 +7712,7 @@ subroutine chi_square_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine chi_square_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -7739,7 +7736,7 @@ subroutine chi_square_sample ( a, seed, x )
 !    Input, real ( kind = 8 ) A, the parameter of the PDF.
 !    1 <= A.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -7780,7 +7777,7 @@ subroutine chi_square_sample ( a, seed, x )
   end if
 
   return
-end subroutine
+end
 subroutine chi_square_variance ( a, variance )
 
 !*****************************************************************************80
@@ -7814,7 +7811,7 @@ subroutine chi_square_variance ( a, variance )
   variance = 2.0D+00 * a
 
   return
-end subroutine
+end
 function chi_square_noncentral_check ( a, b )
 
 !*****************************************************************************80
@@ -7869,7 +7866,7 @@ function chi_square_noncentral_check ( a, b )
   chi_square_noncentral_check = .true.
 
   return
-end function
+end
 subroutine chi_square_noncentral_cdf_values ( n_data, df, lambda, x, cdf )
 
 !*****************************************************************************80
@@ -7906,7 +7903,7 @@ subroutine chi_square_noncentral_cdf_values ( n_data, df, lambda, x, cdf )
 !  Parameters:
 !
 !    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0
-!    before the first call.  On each call, the routine increments N_DATA by 1,
+!    before the first call.  On each call, the routine increments N_DATA by 1, 
 !    and returns the corresponding data; when there is no more data, the
 !    output value of N_DATA will be 0 again.
 !
@@ -8046,7 +8043,7 @@ subroutine chi_square_noncentral_cdf_values ( n_data, df, lambda, x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine chi_square_noncentral_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -8084,7 +8081,7 @@ subroutine chi_square_noncentral_mean ( a, b, mean )
   mean = a + b
 
   return
-end subroutine
+end
 subroutine chi_square_noncentral_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -8111,7 +8108,7 @@ subroutine chi_square_noncentral_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) B, the noncentrality parameter of the PDF.
 !    0.0D+00 <= B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -8139,7 +8136,7 @@ subroutine chi_square_noncentral_sample ( a, b, seed, x )
   x = x1 + x2 * x2
 
   return
-end subroutine
+end
 subroutine chi_square_noncentral_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -8177,7 +8174,7 @@ subroutine chi_square_noncentral_variance ( a, b, variance )
   variance = 2.0D+00 * ( a + 2.0D+00 * b )
 
   return
-end subroutine
+end
 subroutine circle_sample ( a, b, c, seed, x1, x2 )
 
 !*****************************************************************************80
@@ -8202,7 +8199,7 @@ subroutine circle_sample ( a, b, c, seed, x1, x2 )
 !    The circle is centered at (A,B) and has radius C.
 !    0.0D+00 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X1, X2, a sampled point of the circle.
@@ -8213,7 +8210,7 @@ subroutine circle_sample ( a, b, c, seed, x1, x2 )
   real ( kind = 8 ) angle
   real ( kind = 8 ) b
   real ( kind = 8 ) c
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) radius_frac
   integer ( kind = 4 ) seed
@@ -8229,7 +8226,7 @@ subroutine circle_sample ( a, b, c, seed, x1, x2 )
   x2 = b + c * radius_frac * sin ( angle )
 
   return
-end subroutine
+end
 subroutine circular_normal_01_mean ( mean )
 
 !*****************************************************************************80
@@ -8259,7 +8256,7 @@ subroutine circular_normal_01_mean ( mean )
   mean(1:2) = 0.0D+00
 
   return
-end subroutine
+end
 subroutine circular_normal_01_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -8297,7 +8294,7 @@ subroutine circular_normal_01_pdf ( x, pdf )
   pdf = exp ( - 0.5D+00 * ( x(1)**2 + x(2)**2 ) ) / ( 2.0D+00 * pi )
 
   return
-end subroutine
+end
 subroutine circular_normal_01_sample ( seed, x )
 
 !*****************************************************************************80
@@ -8318,14 +8315,14 @@ subroutine circular_normal_01_sample ( seed, x )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X(2), a sample of the PDF.
 !
   implicit none
 
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   integer ( kind = 4 ) seed
   real ( kind = 8 ) v1
@@ -8339,7 +8336,7 @@ subroutine circular_normal_01_sample ( seed, x )
   x(2) = sqrt ( - 2.0D+00 * log ( v1 ) ) * sin ( 2.0D+00 * pi * v2 )
 
   return
-end subroutine
+end
 subroutine circular_normal_01_variance ( variance )
 
 !*****************************************************************************80
@@ -8370,7 +8367,7 @@ subroutine circular_normal_01_variance ( variance )
   variance(2) = 1.0D+00
 
   return
-end subroutine
+end
 subroutine circular_normal_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -8406,7 +8403,7 @@ subroutine circular_normal_mean ( a, b, mean )
   mean(1:2) = a(1:2)
 
   return
-end subroutine
+end
 subroutine circular_normal_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -8415,7 +8412,7 @@ subroutine circular_normal_pdf ( x, a, b, pdf )
 !
 !  Discussion:
 !
-!    PDF(X) = EXP ( - 0.5D+00 * ( ( (X(1)-A(1))^2 + (X(2)-A(2))^2 ) / B^2 )
+!    PDF(X) = EXP ( - 0.5D+00 * ( ( (X(1)-A(1))^2 + (X(2)-A(2))^2 ) / B^2 ) 
 !      / ( 2 * PI * B^2 )
 !
 !  Licensing:
@@ -8454,7 +8451,7 @@ subroutine circular_normal_pdf ( x, a, b, pdf )
   pdf = exp ( - 0.5D+00 * d ) / ( 2.0D+00 * b**2 * pi )
 
   return
-end subroutine
+end
 subroutine circular_normal_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -8479,7 +8476,7 @@ subroutine circular_normal_sample ( a, b, seed, x )
 !
 !    Input, real ( kind = 8 ) B, a parameter of the PDF, the standard deviation.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X(2), a sample of the PDF.
@@ -8490,7 +8487,7 @@ subroutine circular_normal_sample ( a, b, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) r
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) v1
   real ( kind = 8 ) v2
@@ -8505,7 +8502,7 @@ subroutine circular_normal_sample ( a, b, seed, x )
   x(2) = a(2) + b * r * sin ( 2.0D+00 * pi * v2 )
 
   return
-end subroutine
+end
 subroutine circular_normal_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -8542,7 +8539,7 @@ subroutine circular_normal_variance ( a, b, variance )
   variance(2) = b**2
 
   return
-end subroutine
+end
 function combinatorial ( n, k )
 
 !*****************************************************************************80
@@ -8619,7 +8616,7 @@ function combinatorial ( n, k )
   combinatorial = value
 
   return
-end function
+end
 subroutine cosine_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -8673,7 +8670,7 @@ subroutine cosine_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine cosine_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -8727,7 +8724,7 @@ subroutine cosine_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'COSINE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -8772,8 +8769,8 @@ subroutine cosine_cdf_inv ( cdf, a, b, x )
   write ( *, '(a)' ) 'COSINE_CDF_INV - Fatal error!'
   write ( *, '(a)' ) '  Iteration limit exceeded.'
 
-  stop
-end subroutine
+  stop 1
+end
 function cosine_check ( a, b )
 
 !*****************************************************************************80
@@ -8816,7 +8813,7 @@ function cosine_check ( a, b )
   cosine_check = .true.
 
   return
-end function
+end
 subroutine cosine_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -8851,7 +8848,7 @@ subroutine cosine_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine cosine_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -8912,7 +8909,7 @@ subroutine cosine_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine cosine_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -8936,7 +8933,7 @@ subroutine cosine_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -8946,7 +8943,7 @@ subroutine cosine_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -8955,7 +8952,7 @@ subroutine cosine_sample ( a, b, seed, x )
   call cosine_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine cosine_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -8991,7 +8988,7 @@ subroutine cosine_variance ( a, b, variance )
   variance = ( pi * pi / 3.0D+00 - 2.0D+00 ) * b * b
 
   return
-end subroutine
+end
 subroutine coupon_complete_pdf ( type_num, box_num, pdf )
 
 !*****************************************************************************80
@@ -9042,7 +9039,7 @@ subroutine coupon_complete_pdf ( type_num, box_num, pdf )
   real ( kind = 8 ) factor
   integer ( kind = 4 ) i
   real ( kind = 8 ) pdf
-  !integer ( kind = 4 ) stirling2_value
+  integer ( kind = 4 ) stirling2_value
   integer ( kind = 4 ) type_num
 !
 !  Nonsense cases.
@@ -9089,7 +9086,7 @@ subroutine coupon_complete_pdf ( type_num, box_num, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine coupon_mean ( j, type_num, mean )
 
 !*****************************************************************************80
@@ -9139,7 +9136,7 @@ subroutine coupon_mean ( j, type_num, mean )
     write ( *, '(a)' ) 'COUPON_MEAN - Fatal error!'
     write ( *, '(a)' ) '  Number of distinct coupons desired must be no more'
     write ( *, '(a)' ) '  than the total number of distinct coupons.'
-    stop
+    stop 1
   end if
 
   mean = 0.0D+00
@@ -9149,7 +9146,7 @@ subroutine coupon_mean ( j, type_num, mean )
   mean = mean * real ( type_num, kind = 8 )
 
   return
-end subroutine
+end
 subroutine coupon_simulate ( type_num, seed, coupon, box_num )
 
 !*****************************************************************************80
@@ -9217,7 +9214,7 @@ subroutine coupon_simulate ( type_num, seed, coupon, box_num )
   integer ( kind = 4 ) box_num
   integer ( kind = 4 ) coupon(type_num)
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_uniform_ab
+  integer ( kind = 4 ) i4_uniform_ab
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) straight
 
@@ -9267,8 +9264,8 @@ subroutine coupon_simulate ( type_num, seed, coupon, box_num )
   write ( *, '(a)' ) 'COUPON_SIMULATE - Fatal error!'
   write ( *, '(a)' ) '  Maximum number of coupons drawn without success.'
 
-  stop
-end subroutine
+  stop 1
+end
 subroutine coupon_variance ( j, type_num, variance )
 
 !*****************************************************************************80
@@ -9318,7 +9315,7 @@ subroutine coupon_variance ( j, type_num, variance )
     write ( *, '(a)' ) 'COUPON_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  Number of distinct coupons desired must be no more'
     write ( *, '(a)' ) '  than the total number of distinct coupons.'
-    stop
+    stop 1
   end if
 
   variance = 0.0D+00
@@ -9329,7 +9326,7 @@ subroutine coupon_variance ( j, type_num, variance )
   variance = variance * real ( type_num, kind = 8 )
 
   return
-end subroutine
+end
 subroutine deranged_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -9364,9 +9361,9 @@ subroutine deranged_cdf ( x, a, cdf )
   integer ( kind = 4 ) a
   real ( kind = 8 ) cdf
   integer ( kind = 4 ) cnk
-  !integer ( kind = 4 ) deranged_enum
+  integer ( kind = 4 ) deranged_enum
   integer ( kind = 4 ) dnmk
-  !!real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   integer ( kind = 4 ) sum2
   integer ( kind = 4 ) x
   integer ( kind = 4 ) x2
@@ -9384,7 +9381,7 @@ subroutine deranged_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine deranged_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -9426,7 +9423,7 @@ subroutine deranged_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'DERANGED_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cdf2 = 0.0D+00
@@ -9447,7 +9444,7 @@ subroutine deranged_cdf_inv ( cdf, a, x )
   x = a
 
   return
-end subroutine
+end
 function deranged_check ( a )
 
 !*****************************************************************************80
@@ -9489,7 +9486,7 @@ function deranged_check ( a )
   deranged_check = .true.
 
   return
-end function
+end
 function deranged_enum ( n )
 
 !*****************************************************************************80
@@ -9600,7 +9597,7 @@ function deranged_enum ( n )
   deranged_enum = dn
 
   return
-end function
+end
 subroutine deranged_mean ( a, mean )
 
 !*****************************************************************************80
@@ -9644,7 +9641,7 @@ subroutine deranged_mean ( a, mean )
   end do
 
   return
-end subroutine
+end
 subroutine deranged_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -9682,9 +9679,9 @@ subroutine deranged_pdf ( x, a, pdf )
 
   integer ( kind = 4 ) a
   integer ( kind = 4 ) cnk
-  !integer ( kind = 4 ) deranged_enum
+  integer ( kind = 4 ) deranged_enum
   integer ( kind = 4 ) dnmk
-  !real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   real ( kind = 8 ) pdf
   integer ( kind = 4 ) x
 
@@ -9697,7 +9694,7 @@ subroutine deranged_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine deranged_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -9730,7 +9727,7 @@ subroutine deranged_sample ( a, seed, x )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -9739,7 +9736,7 @@ subroutine deranged_sample ( a, seed, x )
   call deranged_cdf_inv ( cdf, a, x )
 
   return
-end subroutine
+end
 subroutine deranged_variance ( a, variance )
 
 !*****************************************************************************80
@@ -9786,7 +9783,7 @@ subroutine deranged_variance ( a, variance )
   end do
 
   return
-end subroutine
+end
 function digamma ( x )
 
 !*****************************************************************************80
@@ -9846,7 +9843,7 @@ function digamma ( x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'DIGAMMA - Fatal error!'
     write ( *, '(a)' ) '  X <= 0.'
-    stop
+    stop 1
 !
 !  Use approximation if argument <= S.
 !
@@ -9875,7 +9872,7 @@ function digamma ( x )
   end if
 
   return
-end function
+end
 subroutine dipole_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -9917,7 +9914,7 @@ subroutine dipole_cdf ( x, a, b, cdf )
     - sin ( 2.0D+00 * a ) ) / ( pi * ( 1.0D+00 + x * x ) )
 
   return
-end subroutine
+end
 subroutine dipole_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -9969,7 +9966,7 @@ subroutine dipole_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'DIPOLE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -10030,7 +10027,7 @@ subroutine dipole_cdf_inv ( cdf, a, b, x )
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'DIPOLE_CDF_INV - Fatal error!'
       write ( *, '(a)' ) '  Iteration limit exceeded.'
-      stop
+      stop 1
     end if
 
     if ( sign ( 1.0D+00, cdf3 - cdf ) == sign ( 1.0D+00, cdf1 - cdf ) ) then
@@ -10044,7 +10041,7 @@ subroutine dipole_cdf_inv ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 function dipole_check ( a, b )
 
 !*****************************************************************************80
@@ -10089,7 +10086,7 @@ function dipole_check ( a, b )
   dipole_check = .true.
 
   return
-end function
+end
 subroutine dipole_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -10154,7 +10151,7 @@ subroutine dipole_pdf ( x, a, b, pdf )
     + 2.0D+00 * x * sin ( 2.0D+00 * x ) ) / ( pi * ( 1.0D+00 + x * x )**2 )
 
   return
-end subroutine
+end
 subroutine dipole_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -10218,7 +10215,7 @@ subroutine dipole_sample ( a, b, seed, x )
   x = x1 / x2
 
   return
-end subroutine
+end
 function dirichlet_check ( n, a )
 
 !*****************************************************************************80
@@ -10284,7 +10281,7 @@ function dirichlet_check ( n, a )
   dirichlet_check = .true.
 
   return
-end function
+end
 subroutine dirichlet_mean ( n, a, mean )
 
 !*****************************************************************************80
@@ -10324,7 +10321,7 @@ subroutine dirichlet_mean ( n, a, mean )
   call r8vec_unit_sum ( n, mean )
 
   return
-end subroutine
+end
 function dirichlet_mix_check ( comp_num, elem_num, a, comp_weight )
 
 !*****************************************************************************80
@@ -10422,7 +10419,7 @@ function dirichlet_mix_check ( comp_num, elem_num, a, comp_weight )
   dirichlet_mix_check = .true.
 
   return
-end function
+end
 subroutine dirichlet_mix_mean ( comp_num, elem_num, a, comp_weight, &
   mean )
 
@@ -10487,7 +10484,7 @@ subroutine dirichlet_mix_mean ( comp_num, elem_num, a, comp_weight, &
   mean(1:elem_num) = mean(1:elem_num) / comp_weight_sum
 
   return
-end subroutine
+end
 subroutine dirichlet_mix_pdf ( x, comp_num, elem_num, a, &
   comp_weight, pdf )
 
@@ -10559,7 +10556,7 @@ subroutine dirichlet_mix_pdf ( x, comp_num, elem_num, a, &
   end do
 
   return
-end subroutine
+end
 subroutine dirichlet_mix_sample ( comp_num, elem_num, a, &
   comp_weight, seed, comp, x )
 
@@ -10581,11 +10578,11 @@ subroutine dirichlet_mix_sample ( comp_num, elem_num, a, &
 !
 !  Parameters:
 !
-!    Input, integer ( kind = 4 ) COMP_NUM, the number of components in the
+!    Input, integer ( kind = 4 ) COMP_NUM, the number of components in the 
 !    Dirichlet mixture density, that is, the number of distinct Dirichlet PDF's
 !    that are mixed together.
 !
-!    Input, integer ( kind = 4 ) ELEM_NUM, the number of elements of
+!    Input, integer ( kind = 4 ) ELEM_NUM, the number of elements of 
 !    an observation.
 !
 !    Input, real ( kind = 8 ) A(ELEM_NUM,COMP_NUM), the probabilities for
@@ -10597,10 +10594,10 @@ subroutine dirichlet_mix_sample ( comp_num, elem_num, a, &
 !    given component is the relative probability that that component will
 !    be used to generate the sample.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
-!    Output, integer ( kind = 4 ) COMP, the index of the component of the
+!    Output, integer ( kind = 4 ) COMP, the index of the component of the 
 !    Dirichlet mixture that was chosen to generate the sample.
 !
 !    Output, real ( kind = 8 ) X(ELEM_NUM), a sample of the PDF.
@@ -10625,7 +10622,7 @@ subroutine dirichlet_mix_sample ( comp_num, elem_num, a, &
   call dirichlet_sample ( elem_num, a(1,comp), seed, x )
 
   return
-end subroutine
+end
 subroutine dirichlet_moment2 ( n, a, m2 )
 
 !*****************************************************************************80
@@ -10676,7 +10673,7 @@ subroutine dirichlet_moment2 ( n, a, m2 )
   end do
 
   return
-end subroutine
+end
 subroutine dirichlet_multinomial_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -10733,7 +10730,7 @@ subroutine dirichlet_multinomial_pdf ( x, a, b, c, pdf )
   integer ( kind = 4 ) a
   real ( kind = 8 ) c(b)
   real ( kind = 8 ) c_sum
-  !real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
   integer ( kind = 4 ) i
   real ( kind = 8 ) pdf
   real ( kind = 8 ) pdf_log
@@ -10752,7 +10749,7 @@ subroutine dirichlet_multinomial_pdf ( x, a, b, c, pdf )
   pdf = exp ( pdf_log )
 
   return
-end subroutine
+end
 subroutine dirichlet_pdf ( x, n, a, pdf )
 
 !*****************************************************************************80
@@ -10806,7 +10803,7 @@ subroutine dirichlet_pdf ( x, n, a, pdf )
   real ( kind = 8 ) a_sum
   integer ( kind = 4 ) i
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ), parameter :: tol = 0.0001D+00
   real ( kind = 8 ) x(n)
   real ( kind = 8 ) x_sum
@@ -10840,7 +10837,7 @@ subroutine dirichlet_pdf ( x, n, a, pdf )
   end do
 
   return
-end subroutine
+end
 subroutine dirichlet_sample ( n, a, seed, x )
 
 !*****************************************************************************80
@@ -10873,7 +10870,7 @@ subroutine dirichlet_sample ( n, a, seed, x )
 !    Each A(I) should be nonnegative, and at least one should be
 !    positive.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X(N), a sample of the PDF.  The entries
@@ -10904,7 +10901,7 @@ subroutine dirichlet_sample ( n, a, seed, x )
   call r8vec_unit_sum ( n, x )
 
   return
-end subroutine
+end
 subroutine dirichlet_variance ( n, a, variance )
 
 !*****************************************************************************80
@@ -10948,7 +10945,7 @@ subroutine dirichlet_variance ( n, a, variance )
   end do
 
   return
-end subroutine
+end
 subroutine discrete_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -10995,7 +10992,7 @@ subroutine discrete_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine discrete_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -11042,7 +11039,7 @@ subroutine discrete_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'DISCRETE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   b_sum = sum ( b(1:a) )
@@ -11063,7 +11060,7 @@ subroutine discrete_cdf_inv ( cdf, a, b, x )
   x = a
 
   return
-end subroutine
+end
 function discrete_check ( a, b )
 
 !*****************************************************************************80
@@ -11123,7 +11120,7 @@ function discrete_check ( a, b )
   discrete_check = .true.
 
   return
-end function
+end
 subroutine discrete_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -11170,7 +11167,7 @@ subroutine discrete_mean ( a, b, mean )
   mean = mean / b_sum
 
   return
-end subroutine
+end
 subroutine discrete_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -11223,7 +11220,7 @@ subroutine discrete_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine discrete_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -11249,7 +11246,7 @@ subroutine discrete_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) B(A), the relative probabilities of
 !    outcomes 1 through A.  Each entry must be nonnegative.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -11261,7 +11258,7 @@ subroutine discrete_sample ( a, b, seed, x )
   real ( kind = 8 ) b(a)
   real ( kind = 8 ) b_sum
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -11272,7 +11269,7 @@ subroutine discrete_sample ( a, b, seed, x )
   call discrete_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine discrete_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -11327,7 +11324,7 @@ subroutine discrete_variance ( a, b, variance )
   variance = variance / b_sum
 
   return
-end subroutine
+end
 function e_constant ( )
 
 !*****************************************************************************80
@@ -11362,7 +11359,7 @@ function e_constant ( )
   e_constant = 2.71828182845904523536028747135266249775724709369995D+00
 
   return
-end function
+end
 subroutine empirical_discrete_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -11422,7 +11419,7 @@ subroutine empirical_discrete_cdf ( x, a, b, c, cdf )
   end do
 
   return
-end subroutine
+end
 subroutine empirical_discrete_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -11474,7 +11471,7 @@ subroutine empirical_discrete_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'EMPIRICAL_DISCRETE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   bsum = sum ( b(1:a) )
@@ -11494,7 +11491,7 @@ subroutine empirical_discrete_cdf_inv ( cdf, a, b, c, x )
   end do
 
   return
-end subroutine
+end
 function empirical_discrete_check ( a, b, c )
 
 !*****************************************************************************80
@@ -11591,7 +11588,7 @@ function empirical_discrete_check ( a, b, c )
   empirical_discrete_check = .true.
 
   return
-end function
+end
 subroutine empirical_discrete_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -11634,7 +11631,7 @@ subroutine empirical_discrete_mean ( a, b, c, mean )
   mean = dot_product ( b(1:a), c(1:a) ) / sum ( b(1:a) )
 
   return
-end subroutine
+end
 subroutine empirical_discrete_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -11696,7 +11693,7 @@ subroutine empirical_discrete_pdf ( x, a, b, c, pdf )
   pdf = 0.0D+00
 
   return
-end subroutine
+end
 subroutine empirical_discrete_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -11726,7 +11723,7 @@ subroutine empirical_discrete_sample ( a, b, c, seed, x )
 !    Input, real ( kind = 8 ) C(A), the values.
 !    The values must be distinct and in ascending order.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -11738,7 +11735,7 @@ subroutine empirical_discrete_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b(a)
   real ( kind = 8 ) c(a)
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -11747,7 +11744,7 @@ subroutine empirical_discrete_sample ( a, b, c, seed, x )
   call empirical_discrete_cdf_inv ( cdf, a, b, c, x )
 
   return
-end subroutine
+end
 subroutine empirical_discrete_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -11801,7 +11798,7 @@ subroutine empirical_discrete_variance ( a, b, c, variance )
   end do
 
   return
-end subroutine
+end
 subroutine english_sentence_length_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -11929,7 +11926,7 @@ subroutine english_sentence_length_cdf ( x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine english_sentence_length_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -12056,7 +12053,7 @@ subroutine english_sentence_length_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ENGLISH_SENTENCE_LENGTH_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cum = 0.0D+00
@@ -12075,7 +12072,7 @@ subroutine english_sentence_length_cdf_inv ( cdf, x )
   x = sentence_length_max
 
   return
-end subroutine
+end
 subroutine english_sentence_length_mean ( mean )
 
 !*****************************************************************************80
@@ -12200,7 +12197,7 @@ subroutine english_sentence_length_mean ( mean )
   mean = mean / pdf_sum
 
   return
-end subroutine
+end
 subroutine english_sentence_length_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -12232,7 +12229,7 @@ subroutine english_sentence_length_pdf ( x, pdf )
 !
 !  Parameters:
 !
-!    Input, integer ( kind = 4 ) X, the sentence length whose probability
+!    Input, integer ( kind = 4 ) X, the sentence length whose probability 
 !    is desired.
 !
 !    Output, real ( kind = 8 ) PDF, the value of the PDF.
@@ -12332,7 +12329,7 @@ subroutine english_sentence_length_pdf ( x, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine english_sentence_length_sample ( seed, x )
 
 !*****************************************************************************80
@@ -12359,7 +12356,7 @@ subroutine english_sentence_length_sample ( seed, x )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -12367,7 +12364,7 @@ subroutine english_sentence_length_sample ( seed, x )
   implicit none
 
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -12376,7 +12373,7 @@ subroutine english_sentence_length_sample ( seed, x )
   call english_sentence_length_cdf_inv ( cdf, x )
 
   return
-end subroutine
+end
 subroutine english_sentence_length_variance ( variance )
 
 !*****************************************************************************80
@@ -12509,7 +12506,7 @@ subroutine english_sentence_length_variance ( variance )
   variance = variance / pdf_sum
 
   return
-end subroutine
+end
 subroutine english_word_length_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -12585,7 +12582,7 @@ subroutine english_word_length_cdf ( x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine english_word_length_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -12660,7 +12657,7 @@ subroutine english_word_length_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ENGLISH_WORD_LENGTH_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cum = 0.0D+00
@@ -12679,7 +12676,7 @@ subroutine english_word_length_cdf_inv ( cdf, x )
   x = word_length_max
 
   return
-end subroutine
+end
 subroutine english_word_length_mean ( mean )
 
 !*****************************************************************************80
@@ -12752,7 +12749,7 @@ subroutine english_word_length_mean ( mean )
   mean = mean / pdf_sum
 
   return
-end subroutine
+end
 subroutine english_word_length_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -12784,7 +12781,7 @@ subroutine english_word_length_pdf ( x, pdf )
 !
 !  Parameters:
 !
-!    Input, integer ( kind = 4 ) X, the word length whose probability
+!    Input, integer ( kind = 4 ) X, the word length whose probability 
 !    is desired.
 !
 !    Output, real ( kind = 8 ) PDF, the value of the PDF.
@@ -12832,7 +12829,7 @@ subroutine english_word_length_pdf ( x, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine english_word_length_sample ( seed, x )
 
 !*****************************************************************************80
@@ -12859,7 +12856,7 @@ subroutine english_word_length_sample ( seed, x )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -12867,7 +12864,7 @@ subroutine english_word_length_sample ( seed, x )
   implicit none
 
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -12876,7 +12873,7 @@ subroutine english_word_length_sample ( seed, x )
   call english_word_length_cdf_inv ( cdf, x )
 
   return
-end subroutine
+end
 subroutine english_word_length_variance ( variance )
 
 !*****************************************************************************80
@@ -12957,7 +12954,7 @@ subroutine english_word_length_variance ( variance )
   variance = variance / pdf_sum
 
   return
-end subroutine
+end
 function error_f ( x )
 
 !*****************************************************************************80
@@ -13149,7 +13146,7 @@ function error_f ( x )
   end if
 
   return
-end function
+end
 function error_f_inverse ( y )
 
 !*****************************************************************************80
@@ -13189,7 +13186,7 @@ function error_f_inverse ( y )
   error_f_inverse = x / sqrt ( 2.0D+00 )
 
   return
-end function
+end
 subroutine erlang_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -13224,7 +13221,7 @@ subroutine erlang_cdf ( x, a, b, c, cdf )
   real ( kind = 8 ) b
   integer ( kind = 4 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) gamma_inc
+  real ( kind = 8 ) gamma_inc
   real ( kind = 8 ) p2
   real ( kind = 8 ) x
   real ( kind = 8 ) x2
@@ -13243,7 +13240,7 @@ subroutine erlang_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine erlang_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -13297,7 +13294,7 @@ subroutine erlang_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ERLANG_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -13359,7 +13356,7 @@ subroutine erlang_cdf_inv ( cdf, a, b, c, x )
   end do
 
   return
-end subroutine
+end
 function erlang_check ( a, b, c )
 
 !*****************************************************************************80
@@ -13412,7 +13409,7 @@ function erlang_check ( a, b, c )
   erlang_check = .true.
 
   return
-end function
+end
 subroutine erlang_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -13449,7 +13446,7 @@ subroutine erlang_mean ( a, b, c, mean )
   mean =  a + b * real ( c, kind = 8 )
 
   return
-end subroutine
+end
 subroutine erlang_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -13490,7 +13487,7 @@ subroutine erlang_pdf ( x, a, b, c, pdf )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   integer ( kind = 4 ) c
-  !real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   real ( kind = 8 ) pdf
   real ( kind = 8 ) x
   real ( kind = 8 ) y
@@ -13508,7 +13505,7 @@ subroutine erlang_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine erlang_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -13533,7 +13530,7 @@ subroutine erlang_sample ( a, b, c, seed, x )
 !    0.0D+00 < B.
 !    0 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -13559,7 +13556,7 @@ subroutine erlang_sample ( a, b, c, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine erlang_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -13596,7 +13593,7 @@ subroutine erlang_variance ( a, b, c, variance )
   variance =  b * b * real ( c )
 
   return
-end subroutine
+end
 function euler_constant ( )
 
 !*****************************************************************************80
@@ -13635,7 +13632,7 @@ function euler_constant ( )
   euler_constant = 0.577215664901532860606512090082402431042D+00
 
   return
-end function
+end
 subroutine exponential_01_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -13672,7 +13669,7 @@ subroutine exponential_01_cdf ( x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine exponential_01_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -13707,13 +13704,13 @@ subroutine exponential_01_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'EXPONENTIAL_01_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = - log ( 1.0D+00 - cdf )
 
   return
-end subroutine
+end
 subroutine exponential_01_mean ( mean )
 
 !*****************************************************************************80
@@ -13743,7 +13740,7 @@ subroutine exponential_01_mean ( mean )
   mean = 1.0D+00
 
   return
-end subroutine
+end
 subroutine exponential_01_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -13785,7 +13782,7 @@ subroutine exponential_01_pdf ( x, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine exponential_01_sample ( seed, x )
 
 !*****************************************************************************80
@@ -13806,7 +13803,7 @@ subroutine exponential_01_sample ( seed, x )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -13814,7 +13811,7 @@ subroutine exponential_01_sample ( seed, x )
   implicit none
 
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -13823,7 +13820,7 @@ subroutine exponential_01_sample ( seed, x )
   x = - log ( 1.0D+00 - cdf )
 
   return
-end subroutine
+end
 subroutine exponential_01_variance ( variance )
 
 !*****************************************************************************80
@@ -13853,7 +13850,7 @@ subroutine exponential_01_variance ( variance )
   variance = 1.0D+00
 
   return
-end subroutine
+end
 subroutine exponential_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -13895,7 +13892,7 @@ subroutine exponential_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine exponential_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -13935,13 +13932,13 @@ subroutine exponential_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'EXPONENTIAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a - b * log ( 1.0D+00 - cdf )
 
   return
-end subroutine
+end
 subroutine exponential_cdf_values ( n_data, lambda, x, fx )
 
 !*****************************************************************************80
@@ -13983,8 +13980,8 @@ subroutine exponential_cdf_values ( n_data, lambda, x, fx )
 !
 !  Parameters:
 !
-!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0
-!    before the first call.  On each call, the routine increments N_DATA by 1,
+!    Input/output, integer ( kind = 4 ) N_DATA.  The user sets N_DATA to 0 
+!    before the first call.  On each call, the routine increments N_DATA by 1, 
 !    and returns the corresponding data; when there is no more data, the
 !    output value of N_DATA will be 0 again.
 !
@@ -14051,7 +14048,7 @@ subroutine exponential_cdf_values ( n_data, lambda, x, fx )
   end if
 
   return
-end subroutine
+end
 function exponential_check ( a, b )
 
 !*****************************************************************************80
@@ -14094,7 +14091,7 @@ function exponential_check ( a, b )
   exponential_check = .true.
 
   return
-end function
+end
 subroutine exponential_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -14129,7 +14126,7 @@ subroutine exponential_mean ( a, b, mean )
   mean = a + b
 
   return
-end subroutine
+end
 subroutine exponential_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -14195,7 +14192,7 @@ subroutine exponential_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine exponential_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -14219,7 +14216,7 @@ subroutine exponential_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -14229,7 +14226,7 @@ subroutine exponential_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -14238,7 +14235,7 @@ subroutine exponential_sample ( a, b, seed, x )
   call exponential_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine exponential_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -14273,7 +14270,7 @@ subroutine exponential_variance ( a, b, variance )
   variance = b * b
 
   return
-end subroutine
+end
 subroutine extreme_values_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -14314,7 +14311,7 @@ subroutine extreme_values_cdf ( x, a, b, cdf )
   cdf = exp ( - exp ( - y ) )
 
   return
-end subroutine
+end
 subroutine extreme_values_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -14354,13 +14351,13 @@ subroutine extreme_values_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'EXTREME_VALUES_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a - b * log ( - log ( cdf ) )
 
   return
-end subroutine
+end
 subroutine extreme_values_cdf_values ( n_data, alpha, beta, x, fx )
 
 !*****************************************************************************80
@@ -14497,7 +14494,7 @@ subroutine extreme_values_cdf_values ( n_data, alpha, beta, x, fx )
   end if
 
   return
-end subroutine
+end
 function extreme_values_check ( a, b )
 
 !*****************************************************************************80
@@ -14540,7 +14537,7 @@ function extreme_values_check ( a, b )
   extreme_values_check = .true.
 
   return
-end function
+end
 subroutine extreme_values_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -14570,13 +14567,13 @@ subroutine extreme_values_mean ( a, b, mean )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) euler_constant
+  real ( kind = 8 ) euler_constant
   real ( kind = 8 ) mean
 
   mean = a + b * euler_constant ( )
 
   return
-end subroutine
+end
 subroutine extreme_values_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -14634,7 +14631,7 @@ subroutine extreme_values_pdf ( x, a, b, pdf )
   pdf = ( 1.0D+00 / b ) * exp ( ( a - x ) / b - exp ( ( a - x ) / b ) )
 
   return
-end subroutine
+end
 subroutine extreme_values_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -14658,7 +14655,7 @@ subroutine extreme_values_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -14668,7 +14665,7 @@ subroutine extreme_values_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -14677,7 +14674,7 @@ subroutine extreme_values_sample ( a, b, seed, x )
   call extreme_values_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine extreme_values_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -14713,7 +14710,7 @@ subroutine extreme_values_variance ( a, b, variance )
   variance = pi * pi * b * b / 6.0D+00
 
   return
-end subroutine
+end
 subroutine f_cdf ( x, m, n, cdf )
 
 !*****************************************************************************80
@@ -14755,7 +14752,7 @@ subroutine f_cdf ( x, m, n, cdf )
   real ( kind = 8 ) arg1
   real ( kind = 8 ) arg2
   real ( kind = 8 ) arg3
-  !real ( kind = 8 ) beta_inc
+  real ( kind = 8 ) beta_inc
   real ( kind = 8 ) cdf
   integer ( kind = 4 ) m
   integer ( kind = 4 ) n
@@ -14777,7 +14774,7 @@ subroutine f_cdf ( x, m, n, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine f_cdf_values ( n_data, a, b, x, fx )
 
 !*****************************************************************************80
@@ -14944,7 +14941,7 @@ subroutine f_cdf_values ( n_data, a, b, x, fx )
   end if
 
   return
-end subroutine
+end
 function f_check ( m, n )
 
 !*****************************************************************************80
@@ -14996,7 +14993,7 @@ function f_check ( m, n )
   f_check = .true.
 
   return
-end function
+end
 subroutine f_mean ( m, n, mean )
 
 !*****************************************************************************80
@@ -15034,13 +15031,13 @@ subroutine f_mean ( m, n, mean )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'F_MEAN - Fatal error!'
     write ( *, '(a)' ) '  The mean is not defined for N < 3.'
-    stop
+    stop 1
   end if
 
   mean = real ( n, kind = 8 ) / real ( n - 2, kind = 8 )
 
   return
-end subroutine
+end
 subroutine f_pdf ( x, m, n, pdf )
 
 !*****************************************************************************80
@@ -15079,7 +15076,7 @@ subroutine f_pdf ( x, m, n, pdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) beta
+  real ( kind = 8 ) beta
   real ( kind = 8 ) bot1
   real ( kind = 8 ) bot2
   integer ( kind = 4 ) m
@@ -15106,7 +15103,7 @@ subroutine f_pdf ( x, m, n, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine f_sample ( m, n, seed, x )
 
 !*****************************************************************************80
@@ -15131,7 +15128,7 @@ subroutine f_sample ( m, n, seed, x )
 !    1 <= M,
 !    1 <= N.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -15155,7 +15152,7 @@ subroutine f_sample ( m, n, seed, x )
   x = real ( n, kind = 8 ) * xm / ( real ( m, kind = 8 ) * xn )
 
   return
-end subroutine
+end
 subroutine f_variance ( m, n, variance )
 
 !*****************************************************************************80
@@ -15193,14 +15190,14 @@ subroutine f_variance ( m, n, variance )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'F_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  The variance is not defined for N < 5.'
-    stop
+    stop 1
   end if
 
   variance = real ( 2 * n * n * ( m + n - 2 ), kind = 8 ) / &
     real ( m * ( n - 2 )**2 * ( n - 4 ), kind = 8 )
 
   return
-end subroutine
+end
 subroutine f_noncentral_cdf_values ( n_data, n1, n2, lambda, x, fx )
 
 !*****************************************************************************80
@@ -15372,7 +15369,7 @@ subroutine f_noncentral_cdf_values ( n_data, n1, n2, lambda, x, fx )
   end if
 
   return
-end subroutine
+end
 function f_noncentral_check ( a, m, n )
 
 !*****************************************************************************80
@@ -15435,7 +15432,7 @@ function f_noncentral_check ( a, m, n )
   f_noncentral_check = .true.
 
   return
-end function
+end
 subroutine f_noncentral_mean ( a, m, n, mean )
 
 !*****************************************************************************80
@@ -15476,14 +15473,14 @@ subroutine f_noncentral_mean ( a, m, n, mean )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'F_NONCENTRAL_MEAN - Fatal error!'
     write ( *, '(a)' ) '  The mean is not defined for N < 3.'
-    stop
+    stop 1
   end if
 
   mean = ( real ( m, kind = 8 ) + a ) * real ( n, kind = 8 ) &
     / ( real ( m, kind = 8 ) * real ( n - 2, kind = 8 ) )
 
   return
-end subroutine
+end
 subroutine f_noncentral_variance ( a, m, n, variance )
 
 !*****************************************************************************80
@@ -15526,7 +15523,7 @@ subroutine f_noncentral_variance ( a, m, n, variance )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'F_NONCENTRAL_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  The variance is not defined for N < 5.'
-    stop
+    stop 1
   end if
 
   mr = real ( m, kind = 8 )
@@ -15537,7 +15534,7 @@ subroutine f_noncentral_variance ( a, m, n, variance )
     ( mr + a )**2 * nr**2 / ( ( nr - 2.0D+00 )**2 * mr**2 )
 
   return
-end subroutine
+end
 function factorial_log ( n )
 
 !*****************************************************************************80
@@ -15579,7 +15576,7 @@ function factorial_log ( n )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FACTORIAL_LOG - Fatal error!'
     write ( *, '(a)' ) '  N < 0.'
-    stop
+    stop 1
   end if
 
   factorial_log = 0.0D+00
@@ -15589,7 +15586,7 @@ function factorial_log ( n )
   end do
 
   return
-end function
+end
 function factorial_stirling ( n )
 
 !*****************************************************************************80
@@ -15657,7 +15654,7 @@ function factorial_stirling ( n )
   factorial_stirling = value
 
   return
-end function
+end
 subroutine fermi_dirac_sample ( u, v, seed, z )
 
 !*****************************************************************************80
@@ -15708,7 +15705,7 @@ subroutine fermi_dirac_sample ( u, v, seed, z )
   real ( kind = 8 ) b
   integer ( kind = 4 ), parameter :: iter_max = 1000
   integer ( kind = 4 ) iter_num
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
   real ( kind = 8 ) v
@@ -15745,7 +15742,7 @@ subroutine fermi_dirac_sample ( u, v, seed, z )
   z = v * y1 / 4.0D+00
 
   return
-end subroutine
+end
 subroutine fisher_pdf ( x, kappa, mu, pdf )
 
 !*****************************************************************************80
@@ -15838,7 +15835,7 @@ subroutine fisher_pdf ( x, kappa, mu, pdf )
     write ( *, '(a)' ) 'FISHER_PDF - Fatal error!'
     write ( *, '(a)' ) '  KAPPA must be nonnegative.'
     write ( *, '(a,g14.6)' ) '  Input KAPPA = ', kappa
-    stop
+    stop 1
   end if
 
   if ( kappa == 0.0D+00 ) then
@@ -15880,7 +15877,7 @@ subroutine fisher_pdf ( x, kappa, mu, pdf )
   pdf = cf * exp ( arg )
 
   return
-end subroutine
+end
 subroutine fisher_sample ( kappa, mu, n, seed, xyz )
 
 !*****************************************************************************80
@@ -15917,7 +15914,7 @@ subroutine fisher_sample ( kappa, mu, n, seed, xyz )
 !
 !    Input, integer ( kind = 4 ) N, the number of samples to choose.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) XYZ(3,N), a sample of the Fisher distribution.
@@ -15950,7 +15947,7 @@ subroutine fisher_sample ( kappa, mu, n, seed, xyz )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FISHER_SAMPLE - Fatal error!'
     write ( *, '(a)' ) '  MU(1:3) = 0.'
-    stop
+    stop 1
   end if
 
   alpha = - acos ( mu(3) / mu_norm )
@@ -16001,7 +15998,7 @@ subroutine fisher_sample ( kappa, mu, n, seed, xyz )
   xyz(1:3,1:n) = matmul ( a(1:3,1:3), xyz(1:3,1:n) )
 
   return
-end subroutine
+end
 subroutine fisk_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -16045,7 +16042,7 @@ subroutine fisk_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine fisk_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -16087,7 +16084,7 @@ subroutine fisk_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FISK_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf <= 0.0D+00 ) then
@@ -16099,7 +16096,7 @@ subroutine fisk_cdf_inv ( cdf, a, b, c, x )
   end if
 
   return
-end subroutine
+end
 function fisk_check ( a, b, c )
 
 !*****************************************************************************80
@@ -16152,7 +16149,7 @@ function fisk_check ( a, b, c )
   fisk_check = .true.
 
   return
-end function
+end
 subroutine fisk_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -16186,19 +16183,19 @@ subroutine fisk_mean ( a, b, c, mean )
   real ( kind = 8 ) c
   real ( kind = 8 ) mean
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !!real ( kind = 8 ) r8_csc
+  real ( kind = 8 ) r8_csc
 
   if ( c <= 1.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FISK_MEAN - Fatal error!'
     write ( *, '(a)' ) '  No mean defined for C <= 1.0'
-    stop
+    stop 1
   end if
 
   mean = a + pi * ( b / c ) * r8_csc ( pi / c )
 
   return
-end subroutine
+end
 subroutine fisk_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -16260,7 +16257,7 @@ subroutine fisk_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine fisk_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -16285,7 +16282,7 @@ subroutine fisk_sample ( a, b, c, seed, x )
 !    0.0D+00 < B,
 !    0.0D+00 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -16296,7 +16293,7 @@ subroutine fisk_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -16305,7 +16302,7 @@ subroutine fisk_sample ( a, b, c, seed, x )
   call fisk_cdf_inv ( cdf, a, b, c, x )
 
   return
-end subroutine
+end
 subroutine fisk_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -16339,14 +16336,14 @@ subroutine fisk_variance ( a, b, c, variance )
   real ( kind = 8 ) c
   real ( kind = 8 ) g
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !real ( kind = 8 ) r8_csc
+  real ( kind = 8 ) r8_csc
   real ( kind = 8 ) variance
 
   if ( c <= 2.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FISK_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  No variance defined for C <= 2.0'
-    stop
+    stop 1
   end if
 
   g = pi / c
@@ -16355,7 +16352,7 @@ subroutine fisk_variance ( a, b, c, variance )
     * ( 2.0D+00 * g * r8_csc ( 2.0D+00 * g ) - ( g * r8_csc ( g ) )**2 )
 
   return
-end subroutine
+end
 subroutine folded_normal_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -16407,7 +16404,7 @@ subroutine folded_normal_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine folded_normal_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -16459,7 +16456,7 @@ subroutine folded_normal_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FOLDED_NORMAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -16509,7 +16506,7 @@ subroutine folded_normal_cdf_inv ( cdf, a, b, x )
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'FOLDED_NORMAL_CDF_INV - Fatal error!'
       write ( *, '(a)' ) '  Iteration limit exceeded.'
-      stop
+      stop 1
     end if
 
     if ( sign ( 1.0D+00, cdf3 - cdf ) == sign ( 1.0D+00, cdf1 - cdf ) ) then
@@ -16523,7 +16520,7 @@ subroutine folded_normal_cdf_inv ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 function folded_normal_check ( a, b )
 
 !*****************************************************************************80
@@ -16575,7 +16572,7 @@ function folded_normal_check ( a, b )
   folded_normal_check = .true.
 
   return
-end function
+end
 subroutine folded_normal_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -16619,7 +16616,7 @@ subroutine folded_normal_mean ( a, b, mean )
     - a * ( 1.0D+00 - 2.0D+00 * cdf )
 
   return
-end subroutine
+end
 subroutine folded_normal_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -16672,7 +16669,7 @@ subroutine folded_normal_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine folded_normal_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -16697,7 +16694,7 @@ subroutine folded_normal_sample ( a, b, seed, x )
 !    0.0D+00 <= A,
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -16707,7 +16704,7 @@ subroutine folded_normal_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -16716,7 +16713,7 @@ subroutine folded_normal_sample ( a, b, seed, x )
   call folded_normal_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine folded_normal_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -16755,7 +16752,7 @@ subroutine folded_normal_variance ( a, b, variance )
   variance = a * a + b * b - mean * mean
 
   return
-end subroutine
+end
 subroutine frechet_cdf ( x, alpha, cdf )
 
 !*****************************************************************************80
@@ -16793,7 +16790,7 @@ subroutine frechet_cdf ( x, alpha, cdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_CDF - Fatal error!'
     write ( *, '(a)' ) '  ALPHA <= 0.0.'
-    stop
+    stop 1
   end if
 
   if ( x <= 0.0D+00 ) then
@@ -16803,7 +16800,7 @@ subroutine frechet_cdf ( x, alpha, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine frechet_cdf_inv ( cdf, alpha, x )
 
 !*****************************************************************************80
@@ -16842,14 +16839,14 @@ subroutine frechet_cdf_inv ( cdf, alpha, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( alpha <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  ALPHA <= 0.0.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -16859,7 +16856,7 @@ subroutine frechet_cdf_inv ( cdf, alpha, x )
   end if
 
   return
-end subroutine
+end
 subroutine frechet_mean ( alpha, mean )
 
 !*****************************************************************************80
@@ -16893,19 +16890,19 @@ subroutine frechet_mean ( alpha, mean )
 
   real ( kind = 8 ) alpha
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
 
   if ( alpha <= 1.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_MEAN - Fatal error!'
     write ( *, '(a)' ) '  Mean does not exist if ALPHA <= 1.'
-    stop
+    stop 1
   end if
 
   mean = r8_gamma ( ( alpha - 1.0D+00 ) / alpha )
 
   return
-end subroutine
+end
 subroutine frechet_pdf ( x, alpha, pdf )
 
 !*****************************************************************************80
@@ -16947,13 +16944,13 @@ subroutine frechet_pdf ( x, alpha, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_PDF - Fatal error!'
     write ( *, '(a)' ) '  ALPHA <= 0.0.'
-    stop
+    stop 1
   end if
 
   pdf = alpha * exp ( - 1.0D+00 / x**alpha ) / x**( alpha + 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine frechet_sample ( alpha, seed, x )
 
 !*****************************************************************************80
@@ -16977,7 +16974,7 @@ subroutine frechet_sample ( alpha, seed, x )
 !    Input, real ( kind = 8 ) ALPHA, the parameter.
 !    It is required that 0.0 < ALPHA.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -16986,7 +16983,7 @@ subroutine frechet_sample ( alpha, seed, x )
 
   real ( kind = 8 ) alpha
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -16994,7 +16991,7 @@ subroutine frechet_sample ( alpha, seed, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_SAMPLE - Fatal error!'
     write ( *, '(a)' ) '  ALPHA <= 0.0.'
-    stop
+    stop 1
   end if
 
   cdf = r8_uniform_01 ( seed )
@@ -17002,7 +16999,7 @@ subroutine frechet_sample ( alpha, seed, x )
   call frechet_cdf_inv ( cdf, alpha, x )
 
   return
-end subroutine
+end
 subroutine frechet_variance ( alpha, variance )
 
 !*****************************************************************************80
@@ -17036,14 +17033,14 @@ subroutine frechet_variance ( alpha, variance )
 
   real ( kind = 8 ) alpha
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) variance
 
   if ( alpha <= 2.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'FRECHET_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  Variance does not exist if ALPHA <= 2.'
-    stop
+    stop 1
   end if
 
   mean = r8_gamma ( ( alpha - 1.0D+00 ) / alpha )
@@ -17051,7 +17048,7 @@ subroutine frechet_variance ( alpha, variance )
   variance = r8_gamma ( ( alpha - 2.0D+00 ) / alpha ) - mean * mean
 
   return
-end subroutine
+end
 subroutine gamma_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -17087,7 +17084,7 @@ subroutine gamma_cdf ( x, a, b, c, cdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) gamma_inc
+  real ( kind = 8 ) gamma_inc
   real ( kind = 8 ) p2
   real ( kind = 8 ) x
   real ( kind = 8 ) x2
@@ -17098,7 +17095,7 @@ subroutine gamma_cdf ( x, a, b, c, cdf )
   cdf = gamma_inc ( p2, x2 )
 
   return
-end subroutine
+end
 subroutine gamma_cdf_values ( n_data, mu, sigma, x, fx )
 
 !*****************************************************************************80
@@ -17235,7 +17232,7 @@ subroutine gamma_cdf_values ( n_data, mu, sigma, x, fx )
   end if
 
   return
-end subroutine
+end
 function gamma_check ( a, b, c )
 
 !*****************************************************************************80
@@ -17290,7 +17287,7 @@ function gamma_check ( a, b, c )
   gamma_check = .true.
 
   return
-end function
+end
 function gamma_inc ( p, x )
 
 !*****************************************************************************80
@@ -17344,7 +17341,7 @@ function gamma_inc ( p, x )
   real ( kind = 8 ) cdf
   real ( kind = 8 ), parameter :: exp_arg_min = -88.0D+00
   real ( kind = 8 ) gamma_inc
-  !real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
   real ( kind = 8 ), parameter :: overflow = 1.0D+37
   real ( kind = 8 ) p
   real ( kind = 8 ), parameter :: plimit = 1000.0D+00
@@ -17365,7 +17362,7 @@ function gamma_inc ( p, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'GAMMA_INC - Fatal error!'
     write ( *, '(a)' ) '  Parameter P <= 0.'
-    stop
+    stop 1
   end if
 
   if ( x <= 0.0D+00 ) then
@@ -17483,7 +17480,7 @@ function gamma_inc ( p, x )
   end if
 
   return
-end function
+end
 subroutine gamma_inc_values ( n_data, a, x, fx )
 
 !*****************************************************************************80
@@ -17636,7 +17633,7 @@ subroutine gamma_inc_values ( n_data, a, x, fx )
   end if
 
   return
-end subroutine
+end
 function gamma_log ( x )
 
 !*****************************************************************************80
@@ -17898,7 +17895,7 @@ function gamma_log ( x )
   gamma_log = res
 
   return
-end function
+end
 function gamma_log_int ( n )
 
 !*****************************************************************************80
@@ -17927,7 +17924,7 @@ function gamma_log_int ( n )
 !
   implicit none
 
-  !real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
   real ( kind = 8 ) gamma_log_int
   integer ( kind = 4 ) n
 
@@ -17936,13 +17933,13 @@ function gamma_log_int ( n )
     write ( *, '(a)' ) 'GAMMA_LOG_INT - Fatal error!'
     write ( *, '(a,i12)' ) '  Illegal input value of N = ', n
     write ( *, '(a)' ) '  But N must be strictly positive.'
-    stop
+    stop 1
   end if
 
   gamma_log_int = gamma_log ( real ( n, kind = 8 ) )
 
   return
-end function
+end
 subroutine gamma_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -17979,8 +17976,7 @@ subroutine gamma_mean ( a, b, c, mean )
   mean = a + b * c
 
   return
-
-  end subroutine
+end
 subroutine gamma_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -18026,7 +18022,7 @@ subroutine gamma_pdf ( x, a, b, c, pdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
@@ -18043,7 +18039,7 @@ subroutine gamma_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine gamma_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -18107,7 +18103,7 @@ subroutine gamma_sample ( a, b, c, seed, x )
   real ( kind = 8 ) c
   real ( kind = 8 ) co
   real ( kind = 8 ) d
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) e
   real ( kind = 8 ), parameter :: e1 = 1.0D+00
   real ( kind = 8 ), parameter :: e2 = 0.4999897D+00
@@ -18297,7 +18293,7 @@ subroutine gamma_sample ( a, b, c, seed, x )
   end if
 
   return
-end subroutine
+end
 subroutine gamma_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -18334,7 +18330,7 @@ subroutine gamma_variance ( a, b, c, variance )
   variance = b * b * c
 
   return
-end subroutine
+end
 subroutine genlogistic_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -18377,7 +18373,7 @@ subroutine genlogistic_cdf ( x, a, b, c, cdf )
   cdf = 1.0D+00 / ( 1.0D+00 + exp ( - y ) )**c
 
   return
-end subroutine
+end
 subroutine genlogistic_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -18419,7 +18415,7 @@ subroutine genlogistic_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'GENLOGISTIC_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -18431,7 +18427,7 @@ subroutine genlogistic_cdf_inv ( cdf, a, b, c, x )
   end if
 
   return
-end subroutine
+end
 function genlogistic_check ( a, b, c )
 
 !*****************************************************************************80
@@ -18484,7 +18480,7 @@ function genlogistic_check ( a, b, c )
   genlogistic_check = .true.
 
   return
-end function
+end
 subroutine genlogistic_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -18516,14 +18512,14 @@ subroutine genlogistic_mean ( a, b, c, mean )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) c
-  !real ( kind = 8 ) digamma
-  !real ( kind = 8 ) euler_constant
+  real ( kind = 8 ) digamma
+  real ( kind = 8 ) euler_constant
   real ( kind = 8 ) mean
 
   mean = a + b * ( euler_constant ( ) + digamma ( c ) )
 
   return
-end subroutine
+end
 subroutine genlogistic_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -18571,7 +18567,7 @@ subroutine genlogistic_pdf ( x, a, b, c, pdf )
   pdf = ( c / b ) * exp ( - y ) / ( 1.0D+00 + exp ( - y ) )**( c + 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine genlogistic_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -18607,7 +18603,7 @@ subroutine genlogistic_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -18616,7 +18612,7 @@ subroutine genlogistic_sample ( a, b, c, seed, x )
   call genlogistic_cdf_inv ( cdf, a, b, c, x )
 
   return
-end subroutine
+end
 subroutine genlogistic_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -18649,13 +18645,13 @@ subroutine genlogistic_variance ( a, b, c, variance )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !real ( kind = 8 ) trigamma
+  real ( kind = 8 ) trigamma
   real ( kind = 8 ) variance
 
   variance = b * b * ( pi * pi / 6.0D+00 + trigamma ( c ) )
 
   return
-end subroutine
+end
 subroutine geometric_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -18706,7 +18702,7 @@ subroutine geometric_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine geometric_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -18745,7 +18741,7 @@ subroutine geometric_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'GEOMETRIC_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( a == 1.0D+00 ) then
@@ -18757,7 +18753,7 @@ subroutine geometric_cdf_inv ( cdf, a, x )
   end if
 
   return
-end subroutine
+end
 subroutine geometric_cdf_values ( n_data, x, p, cdf )
 
 !*****************************************************************************80
@@ -18877,7 +18873,7 @@ subroutine geometric_cdf_values ( n_data, x, p, cdf )
   end if
 
   return
-end subroutine
+end
 function geometric_check ( a )
 
 !*****************************************************************************80
@@ -18919,7 +18915,7 @@ function geometric_check ( a )
   geometric_check = .true.
 
   return
-end function
+end
 subroutine geometric_mean ( a, mean )
 
 !*****************************************************************************80
@@ -18958,7 +18954,7 @@ subroutine geometric_mean ( a, mean )
   mean = 1.0D+00 / a
 
   return
-end subroutine
+end
 subroutine geometric_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -19026,7 +19022,7 @@ subroutine geometric_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine geometric_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -19059,7 +19055,7 @@ subroutine geometric_sample ( a, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -19068,7 +19064,7 @@ subroutine geometric_sample ( a, seed, x )
   call geometric_cdf_inv ( cdf, a, x )
 
   return
-end subroutine
+end
 subroutine geometric_variance ( a, variance )
 
 !*****************************************************************************80
@@ -19102,7 +19098,7 @@ subroutine geometric_variance ( a, variance )
   variance = ( 1.0D+00 - a ) / ( a * a )
 
   return
-end subroutine
+end
 subroutine gompertz_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -19151,7 +19147,7 @@ subroutine gompertz_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine gompertz_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -19197,7 +19193,7 @@ subroutine gompertz_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'GOMPERTZ_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf < 1.0D+00 ) then
@@ -19207,7 +19203,7 @@ subroutine gompertz_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function gompertz_check ( a, b )
 
 !*****************************************************************************80
@@ -19265,7 +19261,7 @@ function gompertz_check ( a, b )
   gompertz_check = .true.
 
   return
-end function
+end
 subroutine gompertz_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -19329,7 +19325,7 @@ subroutine gompertz_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine gompertz_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -19363,7 +19359,7 @@ subroutine gompertz_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -19372,7 +19368,7 @@ subroutine gompertz_sample ( a, b, seed, x )
   call gompertz_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine gumbel_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -19405,7 +19401,7 @@ subroutine gumbel_cdf ( x, cdf )
   cdf = exp ( - exp ( - x ) )
 
   return
-end subroutine
+end
 subroutine gumbel_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -19440,13 +19436,13 @@ subroutine gumbel_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'GUMBEL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x =  - log ( - log ( cdf ) )
 
   return
-end subroutine
+end
 subroutine gumbel_mean ( mean )
 
 !*****************************************************************************80
@@ -19471,13 +19467,13 @@ subroutine gumbel_mean ( mean )
 !
   implicit none
 
-  !real ( kind = 8 ) euler_constant
+  real ( kind = 8 ) euler_constant
   real ( kind = 8 ) mean
 
   mean = euler_constant ( )
 
   return
-end subroutine
+end
 subroutine gumbel_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -19522,7 +19518,7 @@ subroutine gumbel_pdf ( x, pdf )
   pdf = exp ( - x - exp ( - x ) )
 
   return
-end subroutine
+end
 subroutine gumbel_sample ( seed, x )
 
 !*****************************************************************************80
@@ -19551,7 +19547,7 @@ subroutine gumbel_sample ( seed, x )
   implicit none
 
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -19560,7 +19556,7 @@ subroutine gumbel_sample ( seed, x )
   call gumbel_cdf_inv ( cdf, x )
 
   return
-end subroutine
+end
 subroutine gumbel_variance ( variance )
 
 !*****************************************************************************80
@@ -19591,7 +19587,7 @@ subroutine gumbel_variance ( variance )
   variance = pi * pi / 6.0D+00
 
   return
-end subroutine
+end
 subroutine half_normal_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -19635,7 +19631,7 @@ subroutine half_normal_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine half_normal_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -19676,7 +19672,7 @@ subroutine half_normal_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'HALF_NORMAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cdf2 = 0.5D+00 * ( cdf + 1.0D+00 )
@@ -19684,7 +19680,7 @@ subroutine half_normal_cdf_inv ( cdf, a, b, x )
   call normal_cdf_inv ( cdf2, a, b, x )
 
   return
-end subroutine
+end
 function half_normal_check ( a, b )
 
 !*****************************************************************************80
@@ -19727,7 +19723,7 @@ function half_normal_check ( a, b )
   half_normal_check = .true.
 
   return
-end function
+end
 subroutine half_normal_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -19763,7 +19759,7 @@ subroutine half_normal_mean ( a, b, mean )
   mean = a + b * sqrt ( 2.0D+00 / pi )
 
   return
-end subroutine
+end
 subroutine half_normal_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -19824,7 +19820,7 @@ subroutine half_normal_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine half_normal_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -19858,7 +19854,7 @@ subroutine half_normal_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -19867,7 +19863,7 @@ subroutine half_normal_sample ( a, b, seed, x )
   call half_normal_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine half_normal_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -19903,7 +19899,7 @@ subroutine half_normal_variance ( a, b, variance )
   variance = b * b * ( 1.0D+00 - 2.0D+00 / pi )
 
   return
-end subroutine
+end
 subroutine hypergeometric_cdf ( x, n, m, l, cdf )
 
 !*****************************************************************************80
@@ -19965,7 +19961,7 @@ subroutine hypergeometric_cdf ( x, n, m, l, cdf )
   end do
 
   return
-end subroutine
+end
 subroutine hypergeometric_cdf_values ( n_data, sam, suc, pop, n, fx )
 
 !*****************************************************************************80
@@ -20096,7 +20092,7 @@ subroutine hypergeometric_cdf_values ( n_data, sam, suc, pop, n, fx )
   end if
 
   return
-end subroutine
+end
 function hypergeometric_check ( n, m, l )
 
 !*****************************************************************************80
@@ -20162,7 +20158,7 @@ function hypergeometric_check ( n, m, l )
   hypergeometric_check = .true.
 
   return
-end function
+end
 subroutine hypergeometric_mean ( n, m, l, mean )
 
 !*****************************************************************************80
@@ -20204,7 +20200,7 @@ subroutine hypergeometric_mean ( n, m, l, mean )
   mean = real ( n * m, kind = 8 ) / real ( l, kind = 8 )
 
   return
-end subroutine
+end
 subroutine hypergeometric_pdf ( x, n, m, l, pdf )
 
 !*****************************************************************************80
@@ -20298,7 +20294,7 @@ subroutine hypergeometric_pdf ( x, n, m, l, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine hypergeometric_sample ( n, m, l, seed, x )
 
 !*****************************************************************************80
@@ -20345,7 +20341,7 @@ subroutine hypergeometric_sample ( n, m, l, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) c1_log
   real ( kind = 8 ) c2_log
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) l
   integer ( kind = 4 ) m
   integer ( kind = 4 ) n
@@ -20375,7 +20371,7 @@ subroutine hypergeometric_sample ( n, m, l, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine hypergeometric_variance ( n, m, l, variance )
 
 !*****************************************************************************80
@@ -20418,7 +20414,7 @@ subroutine hypergeometric_variance ( n, m, l, variance )
     / real ( l * l * ( l - 1 ), kind = 8 )
 
   return
-end subroutine
+end
 function i4_factorial ( n )
 
 !*****************************************************************************80
@@ -20458,7 +20454,7 @@ function i4_factorial ( n )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'I4_FACTORIAL - Fatal error!'
     write ( *, '(a)' ) '  N < 0.'
-    stop
+    stop 1
   end if
 
   i4_factorial = 1.0D+00
@@ -20468,7 +20464,7 @@ function i4_factorial ( n )
   end do
 
   return
-end function
+end
 function i4_huge ( )
 
 !*****************************************************************************80
@@ -20524,7 +20520,7 @@ function i4_huge ( )
   i4_huge = 2147483647
 
   return
-end function
+end
 function i4_uniform_ab ( a, b, seed )
 
 !*****************************************************************************80
@@ -20587,7 +20583,7 @@ function i4_uniform_ab ( a, b, seed )
 
   integer ( kind = 4 ) a
   integer ( kind = 4 ) b
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) i4_uniform_ab
   integer ( kind = 4 ) k
   real ( kind = 4 ) r
@@ -20598,7 +20594,7 @@ function i4_uniform_ab ( a, b, seed )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'I4_UNIFORM_AB - Fatal error!'
     write ( *, '(a)' ) '  Input value of SEED = 0.'
-    stop
+    stop 1
   end if
 
   k = seed / 127773
@@ -20626,7 +20622,7 @@ function i4_uniform_ab ( a, b, seed )
   i4_uniform_ab = value
 
   return
-end function
+end
 subroutine i4row_max ( m, n, a, amax )
 
 !*****************************************************************************80
@@ -20681,7 +20677,7 @@ subroutine i4row_max ( m, n, a, amax )
   end do
 
   return
-end subroutine
+end
 subroutine i4row_mean ( m, n, a, mean )
 
 !*****************************************************************************80
@@ -20722,7 +20718,7 @@ subroutine i4row_mean ( m, n, a, mean )
   end do
 
   return
-end subroutine
+end
 subroutine i4row_min ( m, n, a, amin )
 
 !*****************************************************************************80
@@ -20776,7 +20772,7 @@ subroutine i4row_min ( m, n, a, amin )
   end do
 
   return
-end subroutine
+end
 subroutine i4row_variance ( m, n, a, variance )
 
 !*****************************************************************************80
@@ -20832,7 +20828,7 @@ subroutine i4row_variance ( m, n, a, variance )
   end do
 
   return
-end subroutine
+end
 subroutine i4vec_max ( n, a, amax )
 
 !*****************************************************************************80
@@ -20873,7 +20869,7 @@ subroutine i4vec_max ( n, a, amax )
   amax = maxval ( a(1:n) )
 
   return
-end subroutine
+end
 subroutine i4vec_mean ( n, x, mean )
 
 !*****************************************************************************80
@@ -20911,7 +20907,7 @@ subroutine i4vec_mean ( n, x, mean )
   mean = real ( sum ( x(1:n) ), kind = 8 ) / real ( n, kind = 8 )
 
   return
-end subroutine
+end
 subroutine i4vec_min ( n, a, amin )
 
 !*****************************************************************************80
@@ -20952,7 +20948,7 @@ subroutine i4vec_min ( n, a, amin )
   amin = minval ( a(1:n) )
 
   return
-end subroutine
+end
 subroutine i4vec_print ( n, a, title )
 
 !*****************************************************************************80
@@ -21012,7 +21008,7 @@ subroutine i4vec_print ( n, a, title )
   end if
 
   return
-end subroutine
+end
 subroutine i4vec_run_count ( n, a, run_count )
 
 !*****************************************************************************80
@@ -21072,7 +21068,7 @@ subroutine i4vec_run_count ( n, a, run_count )
   end do
 
   return
-end subroutine
+end
 subroutine i4vec_variance ( n, x, variance )
 
 !*****************************************************************************80
@@ -21118,7 +21114,7 @@ subroutine i4vec_variance ( n, x, variance )
   end if
 
   return
-end subroutine
+end
 subroutine inverse_gaussian_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -21176,7 +21172,7 @@ subroutine inverse_gaussian_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 function inverse_gaussian_check ( a, b )
 
 !*****************************************************************************80
@@ -21229,7 +21225,7 @@ function inverse_gaussian_check ( a, b )
   inverse_gaussian_check = .true.
 
   return
-end function
+end
 subroutine inverse_gaussian_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -21265,7 +21261,7 @@ subroutine inverse_gaussian_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine inverse_gaussian_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -21320,7 +21316,7 @@ subroutine inverse_gaussian_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine inverse_gaussian_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -21345,7 +21341,7 @@ subroutine inverse_gaussian_sample ( a, b, seed, x )
 !    0.0D+00 < A,
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -21354,7 +21350,7 @@ subroutine inverse_gaussian_sample ( a, b, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) phi
   integer ( kind = 4 ) seed
   real ( kind = 8 ) t
@@ -21377,7 +21373,7 @@ subroutine inverse_gaussian_sample ( a, b, seed, x )
   end if
 
   return
-end subroutine
+end
 subroutine inverse_gaussian_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -21413,7 +21409,7 @@ subroutine inverse_gaussian_variance ( a, b, variance )
   variance = a**3 / b
 
   return
-end subroutine
+end
 subroutine laplace_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -21458,7 +21454,7 @@ subroutine laplace_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine laplace_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -21498,7 +21494,7 @@ subroutine laplace_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LAPLACE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf <= 0.5D+00 ) then
@@ -21508,7 +21504,7 @@ subroutine laplace_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 subroutine laplace_cdf_values ( n_data, mu, beta, x, fx )
 
 !*****************************************************************************80
@@ -21645,7 +21641,7 @@ subroutine laplace_cdf_values ( n_data, mu, beta, x, fx )
   end if
 
   return
-end subroutine
+end
 function laplace_check ( a, b )
 
 !*****************************************************************************80
@@ -21688,7 +21684,7 @@ function laplace_check ( a, b )
   laplace_check = .true.
 
   return
-end function
+end
 subroutine laplace_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -21723,7 +21719,7 @@ subroutine laplace_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine laplace_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -21767,7 +21763,7 @@ subroutine laplace_pdf ( x, a, b, pdf )
   pdf = exp ( - abs ( x - a ) / b ) / ( 2.0D+00 * b )
 
   return
-end subroutine
+end
 subroutine laplace_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -21791,7 +21787,7 @@ subroutine laplace_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -21801,7 +21797,7 @@ subroutine laplace_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -21810,7 +21806,7 @@ subroutine laplace_sample ( a, b, seed, x )
   call laplace_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine laplace_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -21845,7 +21841,7 @@ subroutine laplace_variance ( a, b, variance )
   variance = 2.0D+00 * b * b
 
   return
-end subroutine
+end
 function lerch ( a, b, c )
 
 !*****************************************************************************80
@@ -21928,7 +21924,7 @@ function lerch ( a, b, c )
   lerch = sum2
 
   return
-end function
+end
 subroutine levy_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -21962,14 +21958,14 @@ subroutine levy_cdf ( x, a, b, cdf )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) error_f
+  real ( kind = 8 ) error_f
   real ( kind = 8 ) x
 
   if ( b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LEVY_CDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter B <= 0.0'
-    stop
+    stop 1
   end if
 
   if ( x <= a ) then
@@ -21979,7 +21975,7 @@ subroutine levy_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine levy_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -22021,14 +22017,14 @@ subroutine levy_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LEVY_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LEVY_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  Input parameter B <= 0.0'
-    stop
+    stop 1
   end if
 
   cdf1 = 1.0D+00 - 0.5D+00 * cdf
@@ -22036,7 +22032,7 @@ subroutine levy_cdf_inv ( cdf, a, b, x )
   x = a + b / ( x1 * x1 )
 
   return
-end subroutine
+end
 subroutine levy_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -22087,7 +22083,7 @@ subroutine levy_pdf ( x, a, b, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LEVY_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter B <= 0.0'
-    stop
+    stop 1
   end if
 
   if ( x <= a ) then
@@ -22099,7 +22095,7 @@ subroutine levy_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine levy_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -22123,7 +22119,7 @@ subroutine levy_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -22133,7 +22129,7 @@ subroutine levy_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -22142,7 +22138,7 @@ subroutine levy_sample ( a, b, seed, x )
   call levy_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine logistic_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -22180,7 +22176,7 @@ subroutine logistic_cdf ( x, a, b, cdf )
   cdf = 1.0D+00 / ( 1.0D+00 + exp ( ( a - x ) / b ) )
 
   return
-end subroutine
+end
 subroutine logistic_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -22220,13 +22216,13 @@ subroutine logistic_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LOGISTIC_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a - b * log ( ( 1.0D+00 - cdf ) / cdf )
 
   return
-end subroutine
+end
 subroutine logistic_cdf_values ( n_data, mu, beta, x, fx )
 
 !*****************************************************************************80
@@ -22363,7 +22359,7 @@ subroutine logistic_cdf_values ( n_data, mu, beta, x, fx )
   end if
 
   return
-end subroutine
+end
 function logistic_check ( a, b )
 
 !*****************************************************************************80
@@ -22406,7 +22402,7 @@ function logistic_check ( a, b )
   logistic_check = .true.
 
   return
-end function
+end
 subroutine logistic_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -22441,7 +22437,7 @@ subroutine logistic_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine logistic_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -22489,7 +22485,7 @@ subroutine logistic_pdf ( x, a, b, pdf )
   pdf = temp / ( b * ( 1.0D+00 + temp )**2 )
 
   return
-end subroutine
+end
 subroutine logistic_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -22513,7 +22509,7 @@ subroutine logistic_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -22523,7 +22519,7 @@ subroutine logistic_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -22532,7 +22528,7 @@ subroutine logistic_sample ( a, b, seed, x )
   call logistic_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine logistic_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -22568,7 +22564,7 @@ subroutine logistic_variance ( a, b, variance )
   variance = pi * pi * b * b / 3.0D+00
 
   return
-end subroutine
+end
 subroutine log_normal_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -22618,7 +22614,7 @@ subroutine log_normal_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine log_normal_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -22659,7 +22655,7 @@ subroutine log_normal_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LOG_NORMAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   call normal_cdf_inv ( cdf, a, b, logx )
@@ -22667,7 +22663,7 @@ subroutine log_normal_cdf_inv ( cdf, a, b, x )
   x = exp ( logx )
 
   return
-end subroutine
+end
 subroutine log_normal_cdf_values ( n_data, mu, sigma, x, fx )
 
 !*****************************************************************************80
@@ -22804,7 +22800,7 @@ subroutine log_normal_cdf_values ( n_data, mu, sigma, x, fx )
   end if
 
   return
-end subroutine
+end
 function log_normal_check ( a, b )
 
 !*****************************************************************************80
@@ -22847,7 +22843,7 @@ function log_normal_check ( a, b )
   log_normal_check = .true.
 
   return
-end function
+end
 subroutine log_normal_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -22882,7 +22878,7 @@ subroutine log_normal_mean ( a, b, mean )
   mean = exp ( a + 0.5D+00 * b * b )
 
   return
-end subroutine
+end
 subroutine log_normal_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -22941,7 +22937,7 @@ subroutine log_normal_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine log_normal_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -22975,7 +22971,7 @@ subroutine log_normal_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -22984,7 +22980,7 @@ subroutine log_normal_sample ( a, b, seed, x )
   call log_normal_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine log_normal_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -23019,7 +23015,7 @@ subroutine log_normal_variance ( a, b, variance )
   variance = exp ( 2.0D+00 * a + b * b ) * ( exp ( b * b ) - 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine log_series_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -23080,7 +23076,7 @@ subroutine log_series_cdf ( x, a, cdf )
   end do
 
   return
-end subroutine
+end
 subroutine log_series_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -23128,7 +23124,7 @@ subroutine log_series_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LOG_SERIES_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   cdf2 = 0.0D+00
@@ -23149,7 +23145,7 @@ subroutine log_series_cdf_inv ( cdf, a, x )
   end do
 
   return
-end subroutine
+end
 subroutine log_series_cdf_values ( n_data, t, n, fx )
 
 !*****************************************************************************80
@@ -23290,7 +23286,7 @@ subroutine log_series_cdf_values ( n_data, t, n, fx )
   end if
 
   return
-end subroutine
+end
 function log_series_check ( a )
 
 !*****************************************************************************80
@@ -23332,7 +23328,7 @@ function log_series_check ( a )
   log_series_check = .true.
 
   return
-end function
+end
 subroutine log_series_mean ( a, mean )
 
 !*****************************************************************************80
@@ -23366,7 +23362,7 @@ subroutine log_series_mean ( a, mean )
   mean = - a / ( ( 1.0D+00 - a ) * log ( 1.0D+00 - a ) )
 
   return
-end subroutine
+end
 subroutine log_series_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -23412,7 +23408,7 @@ subroutine log_series_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine log_series_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -23450,7 +23446,7 @@ subroutine log_series_sample ( a, seed, x )
   implicit none
 
   real ( kind = 8 ) a
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
   real ( kind = 8 ) v
@@ -23462,7 +23458,7 @@ subroutine log_series_sample ( a, seed, x )
   x = int ( 1.0D+00 + log ( v ) / ( log ( 1.0D+00 - ( 1.0D+00 - a )**u ) ) )
 
   return
-end subroutine
+end
 subroutine log_series_variance ( a, variance )
 
 !*****************************************************************************80
@@ -23499,7 +23495,7 @@ subroutine log_series_variance ( a, variance )
   variance = a * alpha * ( 1.0D+00 - alpha * a ) / ( 1.0D+00 - a )**2
 
   return
-end subroutine
+end
 subroutine log_uniform_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -23543,7 +23539,7 @@ subroutine log_uniform_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine log_uniform_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -23583,13 +23579,13 @@ subroutine log_uniform_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LOG_UNIFORM_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a * exp ( ( log ( b ) - log ( a ) ) * cdf )
 
   return
-end subroutine
+end
 function log_uniform_check ( a, b )
 
 !*****************************************************************************80
@@ -23640,7 +23636,7 @@ function log_uniform_check ( a, b )
   log_uniform_check = .true.
 
   return
-end function
+end
 subroutine log_uniform_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -23675,7 +23671,7 @@ subroutine log_uniform_mean ( a, b, mean )
   mean = ( b - a ) / ( log ( b ) - log ( a ) )
 
   return
-end subroutine
+end
 subroutine log_uniform_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -23723,7 +23719,7 @@ subroutine log_uniform_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine log_uniform_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -23757,7 +23753,7 @@ subroutine log_uniform_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -23766,7 +23762,7 @@ subroutine log_uniform_sample ( a, b, seed, x )
   call log_uniform_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine lorentz_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -23800,7 +23796,7 @@ subroutine lorentz_cdf ( x, cdf )
   cdf = 0.5D+00 + atan ( x ) / pi
 
   return
-end subroutine
+end
 subroutine lorentz_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -23836,13 +23832,13 @@ subroutine lorentz_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LORENTZ_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = tan ( pi * ( cdf - 0.5D+00 ) )
 
   return
-end subroutine
+end
 subroutine lorentz_mean ( mean )
 
 !*****************************************************************************80
@@ -23872,7 +23868,7 @@ subroutine lorentz_mean ( mean )
   mean = 0.0D+00
 
   return
-end subroutine
+end
 subroutine lorentz_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -23916,7 +23912,7 @@ subroutine lorentz_pdf ( x, pdf )
   pdf = 1.0D+00 / ( pi * ( 1.0D+00 + x * x ) )
 
   return
-end subroutine
+end
 subroutine lorentz_sample ( seed, x )
 
 !*****************************************************************************80
@@ -23945,7 +23941,7 @@ subroutine lorentz_sample ( seed, x )
   implicit none
 
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -23954,7 +23950,7 @@ subroutine lorentz_sample ( seed, x )
   call lorentz_cdf_inv ( cdf, x )
 
   return
-end subroutine
+end
 subroutine lorentz_variance ( variance )
 
 !*****************************************************************************80
@@ -23990,7 +23986,7 @@ subroutine lorentz_variance ( variance )
   variance = huge ( variance )
 
   return
-end subroutine
+end
 subroutine maxwell_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -24023,7 +24019,7 @@ subroutine maxwell_cdf ( x, a, cdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) gamma_inc
+  real ( kind = 8 ) gamma_inc
   real ( kind = 8 ) p2
   real ( kind = 8 ) x
   real ( kind = 8 ) x2
@@ -24042,7 +24038,7 @@ subroutine maxwell_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine maxwell_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -24082,7 +24078,7 @@ subroutine maxwell_cdf_inv ( cdf, a, x )
   real ( kind = 8 ) cdf2
   real ( kind = 8 ) cdf3
   integer ( kind = 4 ) it
-  integer ( kind = 4 ), parameter :: it_max = 10000
+  integer ( kind = 4 ), parameter :: it_max = 100
   real ( kind = 8 ), parameter :: tol = 0.0001D+00
   real ( kind = 8 ) x
   real ( kind = 8 ) x1
@@ -24093,7 +24089,7 @@ subroutine maxwell_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'MAXWELL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -24119,11 +24115,11 @@ subroutine maxwell_cdf_inv ( cdf, a, x )
 
     x2 = 2.0D+00 * x2
 
-    if ( 10000000000.0D+00 < x2 ) then
+    if ( 1000000.0D+00 < x2 ) then
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'MAXWELL_CDF_INV - Fatal error!'
       write ( *, '(a)' ) '  Initial bracketing effort fails.'
-      stop
+      stop 1
     end if
 
   end do
@@ -24148,7 +24144,7 @@ subroutine maxwell_cdf_inv ( cdf, a, x )
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'MAXWELL_CDF_INV - Fatal error!'
       write ( *, '(a)' ) '  Iteration limit exceeded.'
-      stop
+      stop 1
     end if
 
     if ( sign ( 1.0D+00, cdf3 - cdf ) == sign ( 1.0D+00, cdf1 - cdf ) ) then
@@ -24162,7 +24158,7 @@ subroutine maxwell_cdf_inv ( cdf, a, x )
   end do
 
   return
-end subroutine
+end
 function maxwell_check ( a )
 
 !*****************************************************************************80
@@ -24204,7 +24200,7 @@ function maxwell_check ( a )
   maxwell_check = .true.
 
   return
-end function
+end
 subroutine maxwell_mean ( a, mean )
 
 !*****************************************************************************80
@@ -24234,12 +24230,12 @@ subroutine maxwell_mean ( a, mean )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
 
   mean = sqrt ( 2.0D+00 ) * a * r8_gamma ( 2.0D+00 ) / r8_gamma ( 1.5D+00 )
 
   return
-end subroutine
+end
 subroutine maxwell_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -24279,7 +24275,7 @@ subroutine maxwell_pdf ( x, a, pdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
@@ -24297,7 +24293,7 @@ subroutine maxwell_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine maxwell_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -24339,7 +24335,7 @@ subroutine maxwell_sample ( a, seed, x )
   x = a * sqrt ( x )
 
   return
-end subroutine
+end
 subroutine maxwell_variance ( a, variance )
 
 !*****************************************************************************80
@@ -24368,14 +24364,14 @@ subroutine maxwell_variance ( a, variance )
   implicit none
 
   real ( kind = 8 ) a
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) variance
 
   variance = a * a * ( 3.0D+00 - 2.0D+00 &
     * ( r8_gamma ( 2.0D+00 ) / r8_gamma ( 1.5D+00 ) )**2 )
 
   return
-end subroutine
+end
 function multicoef_check ( nfactor, factor )
 
 !*****************************************************************************80
@@ -24437,7 +24433,7 @@ function multicoef_check ( nfactor, factor )
   multicoef_check = .true.
 
   return
-end function
+end
 subroutine multinomial_coef1 ( nfactor, factor, ncomb )
 
 !*****************************************************************************80
@@ -24486,10 +24482,10 @@ subroutine multinomial_coef1 ( nfactor, factor, ncomb )
   logical check
   real ( kind = 8 ) facn
   integer ( kind = 4 ) factor(nfactor)
-  !real ( kind = 8 ) factorial_log
+  real ( kind = 8 ) factorial_log
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_huge
-  !logical multicoef_check
+  integer ( kind = 4 ) i4_huge
+  logical multicoef_check
   integer ( kind = 4 ) n
   integer ( kind = 4 ) ncomb
 
@@ -24518,7 +24514,7 @@ subroutine multinomial_coef1 ( nfactor, factor, ncomb )
   ncomb = nint ( exp ( facn ) )
 
   return
-end subroutine
+end
 subroutine multinomial_coef2 ( nfactor, factor, ncomb )
 
 !*****************************************************************************80
@@ -24568,10 +24564,10 @@ subroutine multinomial_coef2 ( nfactor, factor, ncomb )
   logical check
   integer ( kind = 4 ) factor(nfactor)
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
-  !logical multicoef_check
+  logical multicoef_check
   integer ( kind = 4 ) ncomb
 
   check = multicoef_check ( nfactor, factor )
@@ -24597,7 +24593,7 @@ subroutine multinomial_coef2 ( nfactor, factor, ncomb )
   end do
 
   return
-end subroutine
+end
 function multinomial_check ( a, b, c )
 
 !*****************************************************************************80
@@ -24673,7 +24669,7 @@ function multinomial_check ( a, b, c )
   multinomial_check = .true.
 
   return
-end function
+end
 subroutine multinomial_covariance ( a, b, c, covariance )
 
 !*****************************************************************************80
@@ -24729,7 +24725,7 @@ subroutine multinomial_covariance ( a, b, c, covariance )
   end do
 
   return
-end subroutine
+end
 subroutine multinomial_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -24774,7 +24770,7 @@ subroutine multinomial_mean ( a, b, c, mean )
   mean(1:b) = real ( a, kind = 8 ) * c(1:b)
 
   return
-end subroutine
+end
 subroutine multinomial_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -24828,7 +24824,7 @@ subroutine multinomial_pdf ( x, a, b, c, pdf )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) c(b)
-  !real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
   integer ( kind = 4 ) i
   real ( kind = 8 ) pdf
   real ( kind = 8 ) pdf_log
@@ -24847,7 +24843,7 @@ subroutine multinomial_pdf ( x, a, b, c, pdf )
   pdf = exp ( pdf_log )
 
   return
-end subroutine
+end
 subroutine multinomial_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -24933,7 +24929,7 @@ subroutine multinomial_sample ( a, b, c, seed, x )
   x(b) = ntot
 
   return
-end subroutine
+end
 subroutine multinomial_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -24981,7 +24977,7 @@ subroutine multinomial_variance ( a, b, c, variance )
   end do
 
   return
-end subroutine
+end
 subroutine multivariate_normal_sample ( n, mean, covar_factor, seed, x )
 
 !*****************************************************************************80
@@ -24990,7 +24986,7 @@ subroutine multivariate_normal_sample ( n, mean, covar_factor, seed, x )
 !
 !  Discussion:
 !
-!    PDF ( Mean(1:N), S(1:N,1:N); X(1:N) ) =
+!    PDF ( Mean(1:N), S(1:N,1:N); X(1:N) ) = 
 !      1 / ( 2 * pi ) ^ ( N / 2 ) * 1 / det ( S )
 !      * exp ( - ( X - Mean )' * inverse ( S ) * ( X - Mean ) / 2 )
 !
@@ -25061,7 +25057,7 @@ subroutine multivariate_normal_sample ( n, mean, covar_factor, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine nakagami_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -25096,7 +25092,7 @@ subroutine nakagami_cdf ( x, a, b, c, cdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) gamma_inc
+  real ( kind = 8 ) gamma_inc
   real ( kind = 8 ) p2
   real ( kind = 8 ) x
   real ( kind = 8 ) x2
@@ -25117,7 +25113,7 @@ subroutine nakagami_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 function nakagami_check ( a, b, c )
 
 !*****************************************************************************80
@@ -25170,7 +25166,7 @@ function nakagami_check ( a, b, c )
   nakagami_check = .true.
 
   return
-end function
+end
 subroutine nakagami_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -25203,12 +25199,12 @@ subroutine nakagami_mean ( a, b, c, mean )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
 
   mean = a + b * r8_gamma ( c + 0.5D+00 ) / ( sqrt ( c ) * r8_gamma ( c ) )
 
   return
-end subroutine
+end
 subroutine nakagami_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -25243,7 +25239,7 @@ subroutine nakagami_pdf ( x, a, b, c, pdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
@@ -25262,7 +25258,7 @@ subroutine nakagami_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine nakagami_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -25294,7 +25290,7 @@ subroutine nakagami_variance ( a, b, c, variance )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) c
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) t1
   real ( kind = 8 ) t2
   real ( kind = 8 ) variance
@@ -25305,7 +25301,7 @@ subroutine nakagami_variance ( a, b, c, variance )
   variance = b * b * ( 1.0D+00 - t1 * t1 / ( c * t2 * t2 ) )
 
   return
-end subroutine
+end
 subroutine negative_binomial_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -25363,7 +25359,7 @@ subroutine negative_binomial_cdf ( x, a, b, cdf )
   end do
 
   return
-end subroutine
+end
 subroutine negative_binomial_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -25413,7 +25409,7 @@ subroutine negative_binomial_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'NEGATIVE_BINOMIAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
 
@@ -25436,7 +25432,7 @@ subroutine negative_binomial_cdf_inv ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 subroutine negative_binomial_cdf_values ( n_data, f, s, p, cdf )
 
 !*****************************************************************************80
@@ -25609,7 +25605,7 @@ subroutine negative_binomial_cdf_values ( n_data, f, s, p, cdf )
   end if
 
   return
-end subroutine
+end
 function negative_binomial_check ( a, b )
 
 !*****************************************************************************80
@@ -25664,7 +25660,7 @@ function negative_binomial_check ( a, b )
   negative_binomial_check = .true.
 
   return
-end function
+end
 subroutine negative_binomial_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -25702,7 +25698,7 @@ subroutine negative_binomial_mean ( a, b, mean )
   mean = real ( a, kind = 8 ) / b
 
   return
-end subroutine
+end
 subroutine negative_binomial_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -25768,7 +25764,7 @@ subroutine negative_binomial_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine negative_binomial_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -25804,10 +25800,10 @@ subroutine negative_binomial_sample ( a, b, seed, x )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) b
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) num_success
   real ( kind = 8 ) r
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -25834,7 +25830,7 @@ subroutine negative_binomial_sample ( a, b, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine negative_binomial_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -25872,7 +25868,7 @@ subroutine negative_binomial_variance ( a, b, variance )
   variance = real ( a, kind = 8 ) * ( 1.0D+00 - b ) / ( b * b )
 
   return
-end subroutine
+end
 subroutine normal_01_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -25970,7 +25966,7 @@ subroutine normal_01_cdf ( x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine normal_01_cdf_inv ( p, x )
 
 !*****************************************************************************80
@@ -26073,7 +26069,7 @@ subroutine normal_01_cdf_inv ( p, x )
   real ( kind = 8 ) p
   real ( kind = 8 ) q
   real ( kind = 8 ) r
-  !real ( kind = 8 ) r8poly_value
+  real ( kind = 8 ) r8poly_value
   real ( kind = 8 ), parameter :: split1 = 0.425D+00
   real ( kind = 8 ), parameter :: split2 = 5.0D+00
   real ( kind = 8 ) x
@@ -26132,7 +26128,7 @@ subroutine normal_01_cdf_inv ( p, x )
   end if
 
   return
-end subroutine
+end
 subroutine normal_01_cdf_values ( n_data, x, fx )
 
 !*****************************************************************************80
@@ -26243,7 +26239,7 @@ subroutine normal_01_cdf_values ( n_data, x, fx )
   end if
 
   return
-end subroutine
+end
 subroutine normal_01_mean ( mean )
 
 !*****************************************************************************80
@@ -26273,7 +26269,7 @@ subroutine normal_01_mean ( mean )
   mean = 0.0D+00
 
   return
-end subroutine
+end
 subroutine normal_01_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -26308,13 +26304,13 @@ subroutine normal_01_pdf ( x, pdf )
   implicit none
 
   real ( kind = 8 ) pdf
-  real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
+  real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) x
 
-  pdf = exp ( -0.5D+00 * x * x ) / sqrt ( 2.0D+00 * pi )
+  pdf = exp ( -0.5D+00 * x * x ) / sqrt ( 2.0D+00 * r8_pi )
 
   return
-end subroutine
+end
 subroutine normal_01_sample ( seed, x )
 
 !*****************************************************************************80
@@ -26350,19 +26346,19 @@ subroutine normal_01_sample ( seed, x )
 !
   implicit none
 
-  real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) r1
   real ( kind = 8 ) r2
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
   r1 = r8_uniform_01 ( seed )
   r2 = r8_uniform_01 ( seed )
-  x = sqrt ( -2.0D+00 * log ( r1 ) ) * cos ( 2.0D+00 * pi * r2 )
+  x = sqrt ( -2.0D+00 * log ( r1 ) ) * cos ( 2.0D+00 * r8_pi * r2 )
 
   return
-end subroutine
+end
 subroutine normal_01_variance ( variance )
 
 !*****************************************************************************80
@@ -26392,7 +26388,7 @@ subroutine normal_01_variance ( variance )
   variance = 1.0D+00
 
   return
-end subroutine
+end
 subroutine normal_01_vector ( n, seed, x )
 
 !*****************************************************************************80
@@ -26450,7 +26446,7 @@ subroutine normal_01_vector ( n, seed, x )
   integer ( kind = 4 ) m
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) r(n+1)
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x(n)
   integer ( kind = 4 ) x_hi_index
@@ -26511,7 +26507,7 @@ subroutine normal_01_vector ( n, seed, x )
   end if
 
   return
-end subroutine
+end
 subroutine normal_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -26552,7 +26548,7 @@ subroutine normal_cdf ( x, a, b, cdf )
   call normal_01_cdf ( y, cdf )
 
   return
-end subroutine
+end
 subroutine normal_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -26583,17 +26579,17 @@ subroutine normal_cdf_inv ( cdf, a, b, x )
 !
   implicit none
 
-  real ( kind = 8 ), intent(in) :: a
-  real ( kind = 8 ), intent(in) :: b
-  real ( kind = 8 ), intent(in) :: cdf
-  real ( kind = 8 ), intent(out) :: x
+  real ( kind = 8 ) a
+  real ( kind = 8 ) b
+  real ( kind = 8 ) cdf
+  real ( kind = 8 ) x
   real ( kind = 8 ) x2
 
   if ( cdf < 0.0D+00 .or. 1.0D+00 < cdf ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'NORMAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   call normal_01_cdf_inv ( cdf, x2 )
@@ -26601,7 +26597,7 @@ subroutine normal_cdf_inv ( cdf, a, b, x )
   x = a + b * x2
 
   return
-end subroutine
+end
 subroutine normal_cdf_values ( n_data, mu, sigma, x, fx )
 
 !*****************************************************************************80
@@ -26738,7 +26734,7 @@ subroutine normal_cdf_values ( n_data, mu, sigma, x, fx )
   end if
 
   return
-end subroutine
+end
 function normal_check ( a, b )
 
 !*****************************************************************************80
@@ -26781,7 +26777,7 @@ function normal_check ( a, b )
   normal_check = .true.
 
   return
-end function
+end
 subroutine normal_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -26816,7 +26812,7 @@ subroutine normal_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine normal_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -26865,7 +26861,7 @@ subroutine normal_pdf ( x, a, b, pdf )
   pdf = exp ( - 0.5D+00 * y * y )  / ( b * sqrt ( 2.0D+00 * pi ) )
 
   return
-end subroutine
+end
 subroutine normal_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -26910,7 +26906,7 @@ subroutine normal_sample ( a, b, seed, x )
   x = a + b * x
 
   return
-end subroutine
+end
 subroutine normal_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -26945,7 +26941,7 @@ subroutine normal_variance ( a, b, variance )
   variance = b * b
 
   return
-end subroutine
+end
 subroutine normal_vector ( n, mean, dev, seed, x )
 
 !*****************************************************************************80
@@ -27005,7 +27001,7 @@ subroutine normal_vector ( n, mean, dev, seed, x )
   x(1:n) = mean + dev * x(1:n)
 
   return
-end subroutine
+end
 subroutine normal_truncated_ab_cdf ( x, mu, s, a, b, cdf )
 
 !*****************************************************************************80
@@ -27061,7 +27057,7 @@ subroutine normal_truncated_ab_cdf ( x, mu, s, a, b, cdf )
   cdf = ( xi_cdf - alpha_cdf ) / ( beta_cdf - alpha_cdf )
 
   return
-end subroutine
+end
 subroutine normal_truncated_ab_cdf_inv ( cdf, mu, s, a, b, x )
 
 !*****************************************************************************80
@@ -27111,7 +27107,7 @@ subroutine normal_truncated_ab_cdf_inv ( cdf, mu, s, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'NORMAL_TRUNCATED_AB_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   alpha = ( a - mu ) / s
@@ -27126,7 +27122,7 @@ subroutine normal_truncated_ab_cdf_inv ( cdf, mu, s, a, b, x )
   x = mu + s * xi
 
   return
-end subroutine
+end
 subroutine normal_truncated_ab_mean ( mu, s, a, b, mean )
 
 !*****************************************************************************80
@@ -27180,7 +27176,7 @@ subroutine normal_truncated_ab_mean ( mu, s, a, b, mean )
   mean = mu + s * ( alpha_pdf - beta_pdf ) / ( beta_cdf - alpha_cdf )
 
   return
-end subroutine
+end
 subroutine normal_truncated_ab_pdf ( x, mu, s, a, b, pdf )
 
 !*****************************************************************************80
@@ -27236,7 +27232,7 @@ subroutine normal_truncated_ab_pdf ( x, mu, s, a, b, pdf )
   pdf = xi_pdf / ( beta_cdf - alpha_cdf ) / s
 
   return
-end subroutine
+end
 subroutine normal_truncated_ab_sample ( mu, s, a, b, seed, x )
 
 !*****************************************************************************80
@@ -27276,7 +27272,7 @@ subroutine normal_truncated_ab_sample ( mu, s, a, b, seed, x )
   real ( kind = 8 ) beta
   real ( kind = 8 ) beta_cdf
   real ( kind = 8 ) mu
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) s
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
@@ -27297,7 +27293,7 @@ subroutine normal_truncated_ab_sample ( mu, s, a, b, seed, x )
   x = mu + s * xi
 
   return
-end subroutine
+end
 subroutine normal_truncated_ab_variance ( mu, s, a, b, variance )
 
 !*****************************************************************************80
@@ -27353,7 +27349,7 @@ subroutine normal_truncated_ab_variance ( mu, s, a, b, variance )
     - ( ( alpha_pdf - beta_pdf ) / ( beta_cdf - alpha_cdf ) ) ** 2 )
 
   return
-end subroutine
+end
 subroutine normal_truncated_a_cdf ( x, mu, s, a, cdf )
 
 !*****************************************************************************80
@@ -27404,7 +27400,7 @@ subroutine normal_truncated_a_cdf ( x, mu, s, a, cdf )
   cdf = ( xi_cdf - alpha_cdf ) / ( 1.0D+00 - alpha_cdf )
 
   return
-end subroutine
+end
 subroutine normal_truncated_a_cdf_inv ( cdf, mu, s, a, x )
 
 !*****************************************************************************80
@@ -27451,7 +27447,7 @@ subroutine normal_truncated_a_cdf_inv ( cdf, mu, s, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'NORMAL_TRUNCATED_A_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   alpha = ( a - mu ) / s
@@ -27464,7 +27460,7 @@ subroutine normal_truncated_a_cdf_inv ( cdf, mu, s, a, x )
   x = mu + s * xi
 
   return
-end subroutine
+end
 subroutine normal_truncated_a_mean ( mu, s, a, mean )
 
 !*****************************************************************************80
@@ -27511,7 +27507,7 @@ subroutine normal_truncated_a_mean ( mu, s, a, mean )
   mean = mu + s * alpha_pdf / ( 1.0D+00 - alpha_cdf )
 
   return
-end subroutine
+end
 subroutine normal_truncated_a_pdf ( x, mu, s, a, pdf )
 
 !*****************************************************************************80
@@ -27562,7 +27558,7 @@ subroutine normal_truncated_a_pdf ( x, mu, s, a, pdf )
   pdf = xi_pdf / ( 1.0D+00 - alpha_cdf ) / s
 
   return
-end subroutine
+end
 subroutine normal_truncated_a_sample ( mu, s, a, seed, x )
 
 !*****************************************************************************80
@@ -27599,7 +27595,7 @@ subroutine normal_truncated_a_sample ( mu, s, a, seed, x )
   real ( kind = 8 ) alpha
   real ( kind = 8 ) alpha_cdf
   real ( kind = 8 ) mu
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) s
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
@@ -27618,7 +27614,7 @@ subroutine normal_truncated_a_sample ( mu, s, a, seed, x )
   x = mu + s * xi
 
   return
-end subroutine
+end
 subroutine normal_truncated_a_variance ( mu, s, a, variance )
 
 !*****************************************************************************80
@@ -27667,7 +27663,7 @@ subroutine normal_truncated_a_variance ( mu, s, a, variance )
     - ( alpha_pdf / ( 1.0D+00 - alpha_cdf ) ) ** 2 )
 
   return
-end subroutine
+end
 subroutine normal_truncated_b_cdf ( x, mu, s, b, cdf )
 
 !*****************************************************************************80
@@ -27718,7 +27714,7 @@ subroutine normal_truncated_b_cdf ( x, mu, s, b, cdf )
   cdf = xi_cdf / beta_cdf
 
   return
-end subroutine
+end
 subroutine normal_truncated_b_cdf_inv ( cdf, mu, s, b, x )
 
 !*****************************************************************************80
@@ -27765,7 +27761,7 @@ subroutine normal_truncated_b_cdf_inv ( cdf, mu, s, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'NORMAL_TRUNCATED_B_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   beta = ( b - mu ) / s
@@ -27778,7 +27774,7 @@ subroutine normal_truncated_b_cdf_inv ( cdf, mu, s, b, x )
   x = mu + s * xi
 
   return
-end subroutine
+end
 subroutine normal_truncated_b_mean ( mu, s, b, mean )
 
 !*****************************************************************************80
@@ -27825,7 +27821,7 @@ subroutine normal_truncated_b_mean ( mu, s, b, mean )
   mean = mu - s * beta_pdf / beta_cdf
 
   return
-end subroutine
+end
 subroutine normal_truncated_b_pdf ( x, mu, s, b, pdf )
 
 !*****************************************************************************80
@@ -27876,7 +27872,7 @@ subroutine normal_truncated_b_pdf ( x, mu, s, b, pdf )
   pdf = xi_pdf / beta_cdf / s
 
   return
-end subroutine
+end
 subroutine normal_truncated_b_sample ( mu, s, b, seed, x )
 
 !*****************************************************************************80
@@ -27913,7 +27909,7 @@ subroutine normal_truncated_b_sample ( mu, s, b, seed, x )
   real ( kind = 8 ) beta
   real ( kind = 8 ) beta_cdf
   real ( kind = 8 ) mu
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) s
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
@@ -27932,7 +27928,7 @@ subroutine normal_truncated_b_sample ( mu, s, b, seed, x )
   x = mu + s * xi
 
   return
-end subroutine
+end
 subroutine normal_truncated_b_variance ( mu, s, b, variance )
 
 !*****************************************************************************80
@@ -27981,7 +27977,7 @@ subroutine normal_truncated_b_variance ( mu, s, b, variance )
     - ( beta_pdf / beta_cdf ) ** 2 )
 
   return
-end subroutine
+end
 subroutine owen_values ( n_data, h, a, t )
 
 !*****************************************************************************80
@@ -28131,7 +28127,7 @@ subroutine owen_values ( n_data, h, a, t )
   end if
 
   return
-end subroutine
+end
 subroutine pareto_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -28174,7 +28170,7 @@ subroutine pareto_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine pareto_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -28215,13 +28211,13 @@ subroutine pareto_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PARETO_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a / ( 1.0D+00 - cdf ) ** ( 1.0D+00 / b )
 
   return
-end subroutine
+end
 function pareto_check ( a, b )
 
 !*****************************************************************************80
@@ -28273,7 +28269,7 @@ function pareto_check ( a, b )
   pareto_check = .true.
 
   return
-end function
+end
 subroutine pareto_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -28317,7 +28313,7 @@ subroutine pareto_mean ( a, b, mean )
   mean = b * a / ( b - 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine pareto_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -28365,7 +28361,7 @@ subroutine pareto_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine pareto_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -28400,7 +28396,7 @@ subroutine pareto_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -28409,7 +28405,7 @@ subroutine pareto_sample ( a, b, seed, x )
   call pareto_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine pareto_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -28453,7 +28449,7 @@ subroutine pareto_variance ( a, b, variance )
   variance = a * a * b / ( ( b - 1.0D+00 ) ** 2 * ( b - 2.0D+00 ) )
 
   return
-end subroutine
+end
 function pearson_05_check ( a, b, c )
 
 !*****************************************************************************80
@@ -28505,7 +28501,7 @@ function pearson_05_check ( a, b, c )
   pearson_05_check = .true.
 
   return
-end function
+end
 subroutine pearson_05_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -28553,7 +28549,7 @@ subroutine pearson_05_mean ( a, b, c, mean )
   mean = c + a / ( b - 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine pearson_05_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -28593,7 +28589,7 @@ subroutine pearson_05_pdf ( x, a, b, c, pdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) pdf
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
 
   if ( x <= c ) then
@@ -28604,7 +28600,7 @@ subroutine pearson_05_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine pearson_05_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -28654,7 +28650,7 @@ subroutine pearson_05_sample ( a, b, c, seed, x )
   x = c + 1.0D+00 / x2
 
   return
-end subroutine
+end
 function planck_check ( a, b )
 
 !*****************************************************************************80
@@ -28706,7 +28702,7 @@ function planck_check ( a, b )
   planck_check = .true.
 
   return
-end function
+end
 subroutine planck_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -28737,12 +28733,12 @@ subroutine planck_mean ( a, b, mean )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) mean
-  !real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   mean = ( b + 1.0D+00 ) * zeta ( b + 2.0D+00 ) / zeta ( b + 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine planck_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -28807,9 +28803,9 @@ subroutine planck_pdf ( x, a, b, pdf )
   real ( kind = 8 ) k
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
-  !real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   if ( x < 0.0D+00 ) then
     pdf = 0.0D+00
@@ -28819,7 +28815,7 @@ subroutine planck_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine planck_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -28883,7 +28879,7 @@ subroutine planck_sample ( a, b, seed, x )
   x = g / ( a * real ( z, kind = 8 ) )
 
   return
-end subroutine
+end
 subroutine planck_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -28915,7 +28911,7 @@ subroutine planck_variance ( a, b, variance )
   real ( kind = 8 ) b
   real ( kind = 8 ) mean
   real ( kind = 8 ) variance
-  !real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   call planck_mean ( a, b, mean )
 
@@ -28923,7 +28919,7 @@ subroutine planck_variance ( a, b, variance )
     * zeta ( b + 3.0D+00 ) / zeta ( b + 1.0D+00 ) - mean * mean
 
   return
-end subroutine
+end
 subroutine point_distance_1d_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -28974,7 +28970,7 @@ subroutine point_distance_1d_pdf ( x, a, b, pdf )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   real ( kind = 8 ) pdf
   real ( kind = 8 ) x
 
@@ -28982,14 +28978,14 @@ subroutine point_distance_1d_pdf ( x, a, b, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POINT_DISTANCE_1D_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter A < 1.'
-    stop
+    stop 1
   end if
 
   if ( b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POINT_DISTANCE_1D_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter B <= 0.0.'
-    stop
+    stop 1
   end if
 
   if ( x < 0.0D+00 ) then
@@ -28999,7 +28995,7 @@ subroutine point_distance_1d_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine point_distance_2d_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -29056,7 +29052,7 @@ subroutine point_distance_2d_pdf ( x, a, b, pdf )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) x
@@ -29065,14 +29061,14 @@ subroutine point_distance_2d_pdf ( x, a, b, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POINT_DISTANCE_2D_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter A < 1.'
-    stop
+    stop 1
   end if
 
   if ( b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POINT_DISTANCE_2D_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter B <= 0.0.'
-    stop
+    stop 1
   end if
 
   if ( x < 0.0D+00 ) then
@@ -29083,7 +29079,7 @@ subroutine point_distance_2d_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine point_distance_3d_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -29140,7 +29136,7 @@ subroutine point_distance_3d_pdf ( x, a, b, pdf )
 
   integer ( kind = 4 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) x
@@ -29149,14 +29145,14 @@ subroutine point_distance_3d_pdf ( x, a, b, pdf )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POINT_DISTANCE_3D_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter A < 1.'
-    stop
+    stop 1
   end if
 
   if ( b <= 0.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POINT_DISTANCE_3D_PDF - Fatal error!'
     write ( *, '(a)' ) '  Input parameter B <= 0.0.'
-    stop
+    stop 1
   end if
 
   if ( x < 0.0D+00 ) then
@@ -29168,7 +29164,7 @@ subroutine point_distance_3d_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine poisson_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -29233,7 +29229,7 @@ subroutine poisson_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine poisson_cdf_values ( n_data, a, x, fx )
 
 !*****************************************************************************80
@@ -29371,7 +29367,7 @@ subroutine poisson_cdf_values ( n_data, a, x, fx )
   end if
 
   return
-end subroutine
+end
 subroutine poisson_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -29416,7 +29412,7 @@ subroutine poisson_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POISSON_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 !
 !  Now simply start at X = 0, and find the first value for which
@@ -29451,7 +29447,7 @@ subroutine poisson_cdf_inv ( cdf, a, x )
   x = xmax
 
   return
-end subroutine
+end
 function poisson_check ( a )
 
 !*****************************************************************************80
@@ -29493,7 +29489,7 @@ function poisson_check ( a )
   poisson_check = .true.
 
   return
-end function
+end
 subroutine poisson_mean ( a, mean )
 
 !*****************************************************************************80
@@ -29527,7 +29523,7 @@ subroutine poisson_mean ( a, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine poisson_kernel ( r, n, c, x, y, p )
 
 !*****************************************************************************80
@@ -29576,8 +29572,8 @@ subroutine poisson_kernel ( r, n, c, x, y, p )
   real ( kind = 8 ) c(n)
   real ( kind = 8 ) p
   real ( kind = 8 ) r
-  !real ( kind = 8 ) r8vec_diff_norm
-  !real ( kind = 8 ) sphere_unit_area_nd
+  real ( kind = 8 ) r8vec_diff_norm
+  real ( kind = 8 ) sphere_unit_area_nd
   real ( kind = 8 ) t
   real ( kind = 8 ) x(n)
   real ( kind = 8 ) xc_diff_norm
@@ -29593,7 +29589,7 @@ subroutine poisson_kernel ( r, n, c, x, y, p )
   p = t / b
 
   return
-end subroutine
+end
 subroutine poisson_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -29640,7 +29636,7 @@ subroutine poisson_pdf ( x, a, pdf )
   implicit none
 
   real ( kind = 8 ) a
-  !real ( kind = 8 ) i4_factorial
+  real ( kind = 8 ) i4_factorial
   real ( kind = 8 ) pdf
   integer ( kind = 4 ) x
 
@@ -29651,7 +29647,7 @@ subroutine poisson_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine poisson_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -29684,7 +29680,7 @@ subroutine poisson_sample ( a, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -29693,7 +29689,7 @@ subroutine poisson_sample ( a, seed, x )
   call poisson_cdf_inv ( cdf, a, x )
 
   return
-end subroutine
+end
 subroutine poisson_variance ( a, variance )
 
 !*****************************************************************************80
@@ -29727,7 +29723,7 @@ subroutine poisson_variance ( a, variance )
   variance = a
 
   return
-end subroutine
+end
 subroutine power_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -29771,7 +29767,7 @@ subroutine power_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine power_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -29811,7 +29807,7 @@ subroutine power_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'POWER_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -29823,7 +29819,7 @@ subroutine power_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function power_check ( a, b )
 
 !*****************************************************************************80
@@ -29874,7 +29870,7 @@ function power_check ( a, b )
   power_check = .true.
 
   return
-end function
+end
 subroutine power_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -29909,7 +29905,7 @@ subroutine power_mean ( a, b, mean )
   mean = a * b / ( a + 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine power_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -29962,7 +29958,7 @@ subroutine power_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine power_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -29996,7 +29992,7 @@ subroutine power_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -30005,7 +30001,7 @@ subroutine power_sample ( a, b, seed, x )
   call power_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine power_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -30040,7 +30036,7 @@ subroutine power_variance ( a, b, variance )
   variance = b * b * a / ( ( a + 1.0D+00 )**2 * ( a + 2.0D+00 ) )
 
   return
-end subroutine
+end
 subroutine psi_values ( n_data, x, fx )
 
 !*****************************************************************************80
@@ -30147,7 +30143,7 @@ subroutine psi_values ( n_data, x, fx )
   end if
 
   return
-end subroutine
+end
 subroutine quasigeometric_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -30196,7 +30192,7 @@ subroutine quasigeometric_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine quasigeometric_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -30239,7 +30235,7 @@ subroutine quasigeometric_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'QUASIGEOMETRIC_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf < a ) then
@@ -30251,7 +30247,7 @@ subroutine quasigeometric_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function quasigeometric_check ( a, b )
 
 !*****************************************************************************80
@@ -30305,7 +30301,7 @@ function quasigeometric_check ( a, b )
   quasigeometric_check = .true.
 
   return
-end function
+end
 subroutine quasigeometric_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -30343,7 +30339,7 @@ subroutine quasigeometric_mean ( a, b, mean )
   mean = ( 1.0D+00 - a  ) / ( 1.0D+00 - b )
 
   return
-end subroutine
+end
 subroutine quasigeometric_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -30423,7 +30419,7 @@ subroutine quasigeometric_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine quasigeometric_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -30460,7 +30456,7 @@ subroutine quasigeometric_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -30469,7 +30465,7 @@ subroutine quasigeometric_sample ( a, b, seed, x )
   call quasigeometric_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine quasigeometric_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -30507,7 +30503,7 @@ subroutine quasigeometric_variance ( a, b, variance )
   variance = ( 1.0D+00 - a ) * ( a + b ) / ( 1.0D+00 - b ) / ( 1.0D+00 - b )
 
   return
-end subroutine
+end
 function r4_uniform_ab ( a, b, seed )
 
 !*****************************************************************************80
@@ -30544,7 +30540,7 @@ function r4_uniform_ab ( a, b, seed )
 
   real ( kind = 4 ) a
   real ( kind = 4 ) b
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) k
   real ( kind = 4 ) r4_uniform_ab
   integer ( kind = 4 ) seed
@@ -30560,7 +30556,7 @@ function r4_uniform_ab ( a, b, seed )
   r4_uniform_ab = a + ( b - a ) * real ( seed, kind = 4 ) * 4.656612875E-10
 
   return
-end function
+end
 function r4_uniform_01 ( seed )
 
 !*****************************************************************************80
@@ -30632,7 +30628,7 @@ function r4_uniform_01 ( seed )
 !
   implicit none
 
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) k
   integer ( kind = 4 ) seed
   real ( kind = 4 ) r4_uniform_01
@@ -30648,7 +30644,7 @@ function r4_uniform_01 ( seed )
   r4_uniform_01 = real ( seed, kind = 4 ) * 4.656612875E-10
 
   return
-end function
+end
 function r8_ceiling ( r )
 
 !*****************************************************************************80
@@ -30700,7 +30696,7 @@ function r8_ceiling ( r )
   r8_ceiling = value
 
   return
-end function
+end
 function r8_csc ( theta )
 
 !*****************************************************************************80
@@ -30741,13 +30737,13 @@ function r8_csc ( theta )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8_CSC - Fatal error!'
     write ( *, '(a,g14.6)' ) '  R8_CSC undefined for THETA = ', theta
-    stop
+    stop 1
   end if
 
   r8_csc = 1.0D+00 / r8_csc
 
   return
-end function
+end
 function r8_gamma ( x )
 
 !*****************************************************************************80
@@ -30985,7 +30981,7 @@ function r8_gamma ( x )
   r8_gamma = res
 
   return
-end function
+end
 function r8_is_int ( r )
 
 !*****************************************************************************80
@@ -31013,7 +31009,7 @@ function r8_is_int ( r )
   implicit none
 
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   real ( kind = 8 ) r
   logical r8_is_int
 
@@ -31028,7 +31024,7 @@ function r8_is_int ( r )
   end if
 
   return
-end function
+end
 function r8_pi ( )
 
 !*****************************************************************************80
@@ -31058,7 +31054,7 @@ function r8_pi ( )
   r8_pi = 3.141592653589793D+00
 
   return
-end function
+end
 function r8_uniform_01 ( seed )
 
 !*****************************************************************************80
@@ -31134,7 +31130,7 @@ function r8_uniform_01 ( seed )
 !
   implicit none
 
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) k
   real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
@@ -31143,7 +31139,7 @@ function r8_uniform_01 ( seed )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8_UNIFORM_01 - Fatal error!'
     write ( *, '(a)' ) '  Input value of SEED = 0.'
-    stop
+    stop 1
   end if
 
   k = seed / 127773
@@ -31160,7 +31156,7 @@ function r8_uniform_01 ( seed )
   r8_uniform_01 = real ( seed, kind = 8 ) * 4.656612875D-10
 
   return
-end function
+end
 function r8_uniform_ab ( a, b, seed )
 
 !*****************************************************************************80
@@ -31199,7 +31195,7 @@ function r8_uniform_ab ( a, b, seed )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) k
   real ( kind = 8 ) r8_uniform_ab
   integer ( kind = 4 )seed
@@ -31208,7 +31204,7 @@ function r8_uniform_ab ( a, b, seed )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8_UNIFORM_AB - Fatal error!'
     write ( *, '(a)' ) '  Input value of SEED = 0.'
-    stop
+    stop 1
   end if
 
   k = seed / 127773
@@ -31222,7 +31218,7 @@ function r8_uniform_ab ( a, b, seed )
   r8_uniform_ab = a + ( b - a ) * real ( seed, kind = 8 ) * 4.656612875D-10
 
   return
-end function
+end
 subroutine r8mat_print ( m, n, a, title )
 
 !*****************************************************************************80
@@ -31262,7 +31258,7 @@ subroutine r8mat_print ( m, n, a, title )
   call r8mat_print_some ( m, n, a, 1, 1, m, n, title )
 
   return
-end subroutine
+end
 subroutine r8mat_print_some ( m, n, a, ilo, jlo, ihi, jhi, title )
 
 !*****************************************************************************80
@@ -31313,7 +31309,7 @@ subroutine r8mat_print_some ( m, n, a, ilo, jlo, ihi, jhi, title )
   integer ( kind = 4 ) j2lo
   integer ( kind = 4 ) jhi
   integer ( kind = 4 ) jlo
-  !logical r8_is_int
+  logical r8_is_int
   character ( len = * ) title
 
   if ( 0 < len_trim ( title ) ) then
@@ -31364,7 +31360,7 @@ subroutine r8mat_print_some ( m, n, a, ilo, jlo, ihi, jhi, title )
   end do
 
   return
-end subroutine
+end
 function r8poly_value ( n, a, x )
 
 !*****************************************************************************80
@@ -31421,7 +31417,7 @@ function r8poly_value ( n, a, x )
   end do
 
   return
-end function
+end
 subroutine r8row_max ( m, n, a, amax )
 
 !*****************************************************************************80
@@ -31486,7 +31482,7 @@ subroutine r8row_max ( m, n, a, amax )
   end do
 
   return
-end subroutine
+end
 subroutine r8row_mean ( m, n, x, mean )
 
 !*****************************************************************************80
@@ -31528,7 +31524,7 @@ subroutine r8row_mean ( m, n, x, mean )
   end do
 
   return
-end subroutine
+end
 subroutine r8row_min ( m, n, a, amin )
 
 !*****************************************************************************80
@@ -31593,7 +31589,7 @@ subroutine r8row_min ( m, n, a, amin )
   end do
 
   return
-end subroutine
+end
 subroutine r8row_variance ( m, n, x, variance )
 
 !*****************************************************************************80
@@ -31645,7 +31641,7 @@ subroutine r8row_variance ( m, n, x, variance )
   end do
 
   return
-end subroutine
+end
 subroutine r8vec_circular_variance ( n, x, circular_variance )
 
 !*****************************************************************************80
@@ -31692,7 +31688,7 @@ subroutine r8vec_circular_variance ( n, x, circular_variance )
   circular_variance = 1.0D+00 - circular_variance
 
   return
-end subroutine
+end
 function r8vec_diff_norm ( n, a, b )
 
 !*****************************************************************************80
@@ -31738,7 +31734,7 @@ function r8vec_diff_norm ( n, a, b )
   r8vec_diff_norm = sqrt ( sum ( ( a(1:n) - b(1:n) )**2 ) )
 
   return
-end function
+end
 subroutine r8vec_max ( n, a, amax )
 
 !*****************************************************************************80
@@ -31779,7 +31775,7 @@ subroutine r8vec_max ( n, a, amax )
   amax = maxval ( a(1:n) )
 
   return
-end subroutine
+end
 subroutine r8vec_mean ( n, x, mean )
 
 !*****************************************************************************80
@@ -31817,7 +31813,7 @@ subroutine r8vec_mean ( n, x, mean )
   mean = sum ( x(1:n) ) / real ( n, kind = 8 )
 
   return
-end subroutine
+end
 subroutine r8vec_min ( n, a, amin )
 
 !*****************************************************************************80
@@ -31858,7 +31854,7 @@ subroutine r8vec_min ( n, a, amin )
   amin = minval ( a(1:n) )
 
   return
-end subroutine
+end
 subroutine r8vec_print ( n, a, title )
 
 !*****************************************************************************80
@@ -31905,7 +31901,7 @@ subroutine r8vec_print ( n, a, title )
   end do
 
   return
-end subroutine
+end
 subroutine r8vec_uniform ( n, a, b, seed, r )
 
 !*****************************************************************************80
@@ -31964,7 +31960,7 @@ subroutine r8vec_uniform ( n, a, b, seed, r )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) k
   integer ( kind = 4 ) seed
   real ( kind = 8 ) r(n)
@@ -31973,7 +31969,7 @@ subroutine r8vec_uniform ( n, a, b, seed, r )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8VEC_UNIFORM - Fatal error!'
     write ( *, '(a)' ) '  Input value of SEED = 0.'
-    stop
+    stop 1
   end if
 
   do i = 1, n
@@ -31991,7 +31987,7 @@ subroutine r8vec_uniform ( n, a, b, seed, r )
   end do
 
   return
-end subroutine
+end
 subroutine r8vec_uniform_01 ( n, seed, r )
 
 !*****************************************************************************80
@@ -32046,7 +32042,7 @@ subroutine r8vec_uniform_01 ( n, seed, r )
   integer ( kind = 4 ) n
 
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_huge
+  integer ( kind = 4 ) i4_huge
   integer ( kind = 4 ) k
   integer ( kind = 4 ) seed
   real ( kind = 8 ) r(n)
@@ -32055,7 +32051,7 @@ subroutine r8vec_uniform_01 ( n, seed, r )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8VEC_UNIFORM_01 - Fatal error!'
     write ( *, '(a)' ) '  Input value of SEED = 0.'
-    stop
+    stop 1
   end if
 
   do i = 1, n
@@ -32073,7 +32069,7 @@ subroutine r8vec_uniform_01 ( n, seed, r )
   end do
 
   return
-end subroutine
+end
 subroutine r8vec_unit_sum ( n, a )
 
 !*****************************************************************************80
@@ -32113,13 +32109,13 @@ subroutine r8vec_unit_sum ( n, a )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8VEC_UNIT_SUM - Fatal error!'
     write ( *, '(a)' ) '  The vector entries sum to 0.'
-    stop
+    stop 1
   end if
 
   a(1:n) = a(1:n) / a_sum
 
   return
-end subroutine
+end
 subroutine r8vec_variance ( n, x, variance )
 
 !*****************************************************************************80
@@ -32165,7 +32161,7 @@ subroutine r8vec_variance ( n, x, variance )
   end if
 
   return
-end subroutine
+end
 subroutine random_initialize ( seed_input )
 
 !*****************************************************************************80
@@ -32324,7 +32320,7 @@ subroutine random_initialize ( seed_input )
   end do
 
   return
-end subroutine
+end
 subroutine rayleigh_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -32366,7 +32362,7 @@ subroutine rayleigh_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine rayleigh_cdf_inv ( cdf, a, x )
 
 !*****************************************************************************80
@@ -32405,13 +32401,13 @@ subroutine rayleigh_cdf_inv ( cdf, a, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'RAYLEIGH_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = sqrt ( - 2.0D+00 * a * a * log ( 1.0D+00 - cdf ) )
 
   return
-end subroutine
+end
 subroutine rayleigh_cdf_values ( n_data, sigma, x, fx )
 
 !*****************************************************************************80
@@ -32521,7 +32517,7 @@ subroutine rayleigh_cdf_values ( n_data, sigma, x, fx )
   end if
 
   return
-end subroutine
+end
 function rayleigh_check ( a )
 
 !*****************************************************************************80
@@ -32563,7 +32559,7 @@ function rayleigh_check ( a )
   rayleigh_check = .true.
 
   return
-end function
+end
 subroutine rayleigh_mean ( a, mean )
 
 !*****************************************************************************80
@@ -32598,7 +32594,7 @@ subroutine rayleigh_mean ( a, mean )
   mean = a * sqrt ( 0.5D+00 * pi )
 
   return
-end subroutine
+end
 subroutine rayleigh_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -32644,7 +32640,7 @@ subroutine rayleigh_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine rayleigh_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -32668,7 +32664,7 @@ subroutine rayleigh_sample ( a, seed, x )
 !    Input, real ( kind = 8 ) A, the parameter of the PDF.
 !    0.0D+00 < A.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -32677,7 +32673,7 @@ subroutine rayleigh_sample ( a, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -32686,7 +32682,7 @@ subroutine rayleigh_sample ( a, seed, x )
   call rayleigh_cdf_inv ( cdf, a, x )
 
   return
-end subroutine
+end
 subroutine rayleigh_variance ( a, variance )
 
 !*****************************************************************************80
@@ -32721,7 +32717,7 @@ subroutine rayleigh_variance ( a, variance )
   variance = 2.0D+00 * a**2 * ( 1.0D+00 - 0.25D+00 * pi )
 
   return
-end subroutine
+end
 subroutine reciprocal_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -32767,7 +32763,7 @@ subroutine reciprocal_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine reciprocal_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -32806,7 +32802,7 @@ subroutine reciprocal_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'RECIPROCAL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -32816,7 +32812,7 @@ subroutine reciprocal_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function reciprocal_check ( a, b )
 
 !*****************************************************************************80
@@ -32867,7 +32863,7 @@ function reciprocal_check ( a, b )
   reciprocal_check = .true.
 
   return
-end function
+end
 subroutine reciprocal_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -32902,7 +32898,7 @@ subroutine reciprocal_mean ( a, b, mean )
   mean = ( a - b ) / log ( a / b )
 
   return
-end subroutine
+end
 subroutine reciprocal_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -32949,7 +32945,7 @@ subroutine reciprocal_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine reciprocal_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -32973,7 +32969,7 @@ subroutine reciprocal_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < A <= B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -32983,7 +32979,7 @@ subroutine reciprocal_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -32992,7 +32988,7 @@ subroutine reciprocal_sample ( a, b, seed, x )
   x = b**cdf / a**( cdf - 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine reciprocal_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -33031,7 +33027,7 @@ subroutine reciprocal_variance ( a, b, variance )
     + b * ( d + 2.0D+00 ) ) / ( 2.0D+00 * d**2 )
 
   return
-end subroutine
+end
 subroutine ribesl ( x, alpha, nb, ize, b, ncalc )
 
 !*****************************************************************************80
@@ -33240,7 +33236,7 @@ subroutine ribesl ( x, alpha, nb, ize, b, ncalc )
   real ( kind = 8 ) pold
   real ( kind = 8 ) psave
   real ( kind = 8 ) psavel
-  !real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ), parameter :: rtnsig = 1.0D-04
   real ( kind = 8 ) tempa
   real ( kind = 8 ) tempb
@@ -33666,7 +33662,7 @@ subroutine ribesl ( x, alpha, nb, ize, b, ncalc )
   end if
 
   return
-end subroutine
+end
 subroutine runs_mean ( m, n, mean )
 
 !*****************************************************************************80
@@ -33701,7 +33697,7 @@ subroutine runs_mean ( m, n, mean )
        / real ( m             + n, kind = 8 )
 
   return
-end subroutine
+end
 subroutine runs_pdf ( m, n, r, pdf )
 
 !*****************************************************************************80
@@ -33771,7 +33767,7 @@ subroutine runs_pdf ( m, n, r, pdf )
 !
   implicit none
 
-  !integer ( kind = 4 ) combinatorial
+  integer ( kind = 4 ) combinatorial
   integer ( kind = 4 ) m
   integer ( kind = 4 ) n
   real ( kind = 8 ) pdf
@@ -33782,7 +33778,7 @@ subroutine runs_pdf ( m, n, r, pdf )
     write ( *, '(a)' ) 'RUN_PDF - Fatal error!'
     write ( *, '(a)' ) '  M must be at least 0.'
     write ( *, '(a,i8)' ) '  The input value of M = ', m
-    stop
+    stop 1
   end if
 
   if ( n < 0 ) then
@@ -33790,7 +33786,7 @@ subroutine runs_pdf ( m, n, r, pdf )
     write ( *, '(a)' ) 'RUN_PDF - Fatal error!'
     write ( *, '(a)' ) '  N must be at least 0.'
     write ( *, '(a,i8)' ) '  The input value of N = ', n
-    stop
+    stop 1
   end if
 
   if ( n + m <= 0 ) then
@@ -33798,7 +33794,7 @@ subroutine runs_pdf ( m, n, r, pdf )
     write ( *, '(a)' ) 'RUN_PDF - Fatal error!'
     write ( *, '(a)' ) '  M+N must be at least 1.'
     write ( *, '(a,i8)' ) '  The input value of M+N = ', m + n
-    stop
+    stop 1
   end if
 !
 !  If all the symbols are of one type, there is always 1 run.
@@ -33838,7 +33834,7 @@ subroutine runs_pdf ( m, n, r, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine runs_sample ( m, n, seed, r )
 
 !*****************************************************************************80
@@ -33861,7 +33857,7 @@ subroutine runs_sample ( m, n, seed, r )
 !
 !    Input, integer ( kind = 4 ) M, N, the parameters of the PDF.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) R, the number of runs.
@@ -33880,7 +33876,7 @@ subroutine runs_sample ( m, n, seed, r )
   call i4vec_run_count ( m+n, a, r )
 
   return
-end subroutine
+end
 subroutine runs_simulate ( m, n, seed, a )
 
 !*****************************************************************************80
@@ -33903,7 +33899,7 @@ subroutine runs_simulate ( m, n, seed, a )
 !
 !    Input, integer ( kind = 4 ) M, N, the parameters of the PDF.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) A(M+N), a sequence of M 0's and N 1's chosen
@@ -33916,7 +33912,7 @@ subroutine runs_simulate ( m, n, seed, a )
 
   integer ( kind = 4 ) a(m+n)
   integer ( kind = 4 ) i
-  !integer ( kind = 4 ) i4_uniform_ab
+  integer ( kind = 4 ) i4_uniform_ab
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
   integer ( kind = 4 ) seed
@@ -33935,7 +33931,7 @@ subroutine runs_simulate ( m, n, seed, a )
   end do
 
   return
-end subroutine
+end
 subroutine runs_variance ( m, n, variance )
 
 !*****************************************************************************80
@@ -33970,7 +33966,7 @@ subroutine runs_variance ( m, n, variance )
            / real ( ( m + n ) * ( m + n ) * ( m + n - 1 ), kind = 8 )
 
   return
-end subroutine
+end
 function sech ( x )
 
 !*****************************************************************************80
@@ -34011,7 +34007,7 @@ function sech ( x )
   sech = 1.0D+00 / cosh ( x )
 
   return
-end function
+end
 subroutine sech_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -34053,7 +34049,7 @@ subroutine sech_cdf ( x, a, b, cdf )
   cdf = 2.0D+00 * atan ( exp ( y ) ) / pi
 
   return
-end subroutine
+end
 subroutine sech_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -34093,7 +34089,7 @@ subroutine sech_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'SECH_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -34105,7 +34101,7 @@ subroutine sech_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function sech_check ( a, b )
 
 !*****************************************************************************80
@@ -34148,7 +34144,7 @@ function sech_check ( a, b )
   sech_check = .true.
 
   return
-end function
+end
 subroutine sech_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -34183,7 +34179,7 @@ subroutine sech_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine sech_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -34221,7 +34217,7 @@ subroutine sech_pdf ( x, a, b, pdf )
   real ( kind = 8 ) b
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !real ( kind = 8 ) sech
+  real ( kind = 8 ) sech
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
@@ -34230,7 +34226,7 @@ subroutine sech_pdf ( x, a, b, pdf )
   pdf = sech ( y ) / ( pi * b )
 
   return
-end subroutine
+end
 subroutine sech_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -34254,7 +34250,7 @@ subroutine sech_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -34264,7 +34260,7 @@ subroutine sech_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
@@ -34274,7 +34270,7 @@ subroutine sech_sample ( a, b, seed, x )
   x = a + b * log ( tan ( 0.5D+00 * pi * cdf ) )
 
   return
-end subroutine
+end
 subroutine sech_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -34310,7 +34306,7 @@ subroutine sech_variance ( a, b, variance )
   variance = 0.25D+00 * ( pi * b )**2
 
   return
-end subroutine
+end
 subroutine semicircular_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -34364,7 +34360,7 @@ subroutine semicircular_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine semicircular_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -34416,7 +34412,7 @@ subroutine semicircular_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'SEMICIRCULAR_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -34453,7 +34449,7 @@ subroutine semicircular_cdf_inv ( cdf, a, b, x )
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'SEMICIRCULAR_CDF_INV - Fatal error!'
       write ( *, '(a)' ) '  Iteration limit exceeded.'
-      stop
+      stop 1
     end if
 
     if ( sign ( 1.0D+00, cdf3 - cdf ) == sign ( 1.0D+00, cdf1 - cdf ) ) then
@@ -34467,7 +34463,7 @@ subroutine semicircular_cdf_inv ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 function semicircular_check ( a, b )
 
 !*****************************************************************************80
@@ -34510,7 +34506,7 @@ function semicircular_check ( a, b )
   semicircular_check = .true.
 
   return
-end function
+end
 subroutine semicircular_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -34545,7 +34541,7 @@ subroutine semicircular_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine semicircular_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -34604,7 +34600,7 @@ subroutine semicircular_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine semicircular_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -34628,7 +34624,7 @@ subroutine semicircular_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -34638,7 +34634,7 @@ subroutine semicircular_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) angle
   real ( kind = 8 ) b
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) radius
   integer ( kind = 4 ) seed
@@ -34650,7 +34646,7 @@ subroutine semicircular_sample ( a, b, seed, x )
   x = a + radius * cos ( angle )
 
   return
-end subroutine
+end
 subroutine semicircular_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -34685,7 +34681,7 @@ subroutine semicircular_variance ( a, b, variance )
   variance = b * b / 4.0D+00
 
   return
-end subroutine
+end
 function sin_power_int ( a, b, n )
 
 !*****************************************************************************80
@@ -34742,7 +34738,7 @@ function sin_power_int ( a, b, n )
     write ( *, '(a)' ) 'SIN_POWER_INT - Fatal error!'
     write ( *, '(a)' ) '  Power N < 0.'
     value = 0.0D+00
-    stop
+    stop 1
   end if
 
   sa = sin ( a )
@@ -34768,7 +34764,7 @@ function sin_power_int ( a, b, n )
   sin_power_int = value
 
   return
-end function
+end
 function sphere_unit_area_nd ( dim_num )
 
 !*****************************************************************************80
@@ -34801,7 +34797,7 @@ function sphere_unit_area_nd ( dim_num )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license.
+!    This code is distributed under the GNU LGPL license. 
 !
 !  Modified:
 !
@@ -34843,7 +34839,7 @@ function sphere_unit_area_nd ( dim_num )
   sphere_unit_area_nd = area
 
   return
-end function
+end
 function stirling2_value ( n, m )
 
 !*****************************************************************************80
@@ -34973,7 +34969,7 @@ function stirling2_value ( n, m )
   stirling2_value = s2(n,m)
 
   return
-end function
+end
 subroutine student_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -35014,7 +35010,7 @@ subroutine student_cdf ( x, a, b, c, cdf )
   real ( kind = 8 ) a2
   real ( kind = 8 ) b
   real ( kind = 8 ) b2
-  !real ( kind = 8 ) beta_inc
+  real ( kind = 8 ) beta_inc
   real ( kind = 8 ) c
   real ( kind = 8 ) c2
   real ( kind = 8 ) cdf
@@ -35034,7 +35030,7 @@ subroutine student_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine student_cdf_values ( n_data, c, x, fx )
 
 !*****************************************************************************80
@@ -35150,7 +35146,7 @@ subroutine student_cdf_values ( n_data, c, x, fx )
   end if
 
   return
-end subroutine
+end
 function student_check ( a, b, c )
 
 !*****************************************************************************80
@@ -35207,7 +35203,7 @@ function student_check ( a, b, c )
   student_check = .true.
 
   return
-end function
+end
 subroutine student_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -35252,7 +35248,7 @@ subroutine student_mean ( a, b, c, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine student_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -35300,7 +35296,7 @@ subroutine student_pdf ( x, a, b, c, pdf )
   real ( kind = 8 ) c
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  !!real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
@@ -35311,7 +35307,7 @@ subroutine student_pdf ( x, a, b, c, pdf )
     * sqrt ( ( 1.0D+00 + y * y / c )**( 2 * c + 1.0D+00 ) ) )
 
   return
-end subroutine
+end
 subroutine student_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -35346,7 +35342,7 @@ subroutine student_sample ( a, b, c, seed, x )
 !    integer, but that is not essential.  It is required that
 !    C be strictly positive.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -35381,7 +35377,7 @@ subroutine student_sample ( a, b, c, seed, x )
   x = a + b * x2 * sqrt ( c ) / x3
 
   return
-end subroutine
+end
 subroutine student_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -35429,13 +35425,13 @@ subroutine student_variance ( a, b, c, variance )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'STUDENT_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  Variance not defined for C <= 2.'
-    stop
+    stop 1
   end if
 
   variance = b * b * c / ( c - 2.0D+00 )
 
   return
-end subroutine
+end
 subroutine student_noncentral_cdf ( x, idf, d, cdf )
 
 !*****************************************************************************80
@@ -35488,13 +35484,13 @@ subroutine student_noncentral_cdf ( x, idf, d, cdf )
   real ( kind = 8 ) fk
   real ( kind = 8 ) fmkm1
   real ( kind = 8 ) fmkm2
-  !!real ( kind = 8 ) gamma_log
+  real ( kind = 8 ) gamma_log
   integer ( kind = 4 ) idf
   integer ( kind = 4 ) k
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) sum2
   real ( kind = 8 ) temp
-  !real ( kind = 8 ) tfn
+  real ( kind = 8 ) tfn
   real ( kind = 8 ) x
 
   f = real ( idf, kind = 8 )
@@ -35577,7 +35573,7 @@ subroutine student_noncentral_cdf ( x, idf, d, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine student_noncentral_cdf_values ( n_data, df, lambda, x, fx )
 
 !*****************************************************************************80
@@ -35768,7 +35764,7 @@ subroutine student_noncentral_cdf_values ( n_data, df, lambda, x, fx )
   end if
 
   return
-end subroutine
+end
 function tfn ( h, a )
 
 !*****************************************************************************80
@@ -35923,7 +35919,7 @@ function tfn ( h, a )
   end if
 
   return
-end function
+end
 subroutine timestamp ( )
 
 !*****************************************************************************80
@@ -36001,7 +35997,7 @@ subroutine timestamp ( )
     d, trim ( month(m) ), y, h, ':', n, ':', s, '.', mm, trim ( ampm )
 
   return
-end subroutine
+end
 subroutine triangle_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -36061,7 +36057,7 @@ subroutine triangle_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine triangle_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -36104,7 +36100,7 @@ subroutine triangle_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'TRIANGLE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   d = 2.0D+00 / ( c - a )
@@ -36117,7 +36113,7 @@ subroutine triangle_cdf_inv ( cdf, a, b, c, x )
   end if
 
   return
-end subroutine
+end
 function triangle_check ( a, b, c )
 
 !*****************************************************************************80
@@ -36177,7 +36173,7 @@ function triangle_check ( a, b, c )
   triangle_check = .true.
 
   return
-end function
+end
 subroutine triangle_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -36213,7 +36209,7 @@ subroutine triangle_mean ( a, b, c, mean )
   mean = a + ( c + b - 2.0D+00 * a ) / 3.0D+00
 
   return
-end subroutine
+end
 subroutine triangle_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -36284,7 +36280,7 @@ subroutine triangle_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine triangle_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -36308,7 +36304,7 @@ subroutine triangle_sample ( a, b, c, seed, x )
 !    Input, real ( kind = 8 ) A, B, C, the parameters of the PDF.
 !    A <= B <= C and A < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -36319,7 +36315,7 @@ subroutine triangle_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -36328,7 +36324,7 @@ subroutine triangle_sample ( a, b, c, seed, x )
   call triangle_cdf_inv ( cdf, a, b, c, x )
 
   return
-end subroutine
+end
 subroutine triangle_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -36366,7 +36362,7 @@ subroutine triangle_variance ( a, b, c, variance )
              + ( b - a ) * ( b - a ) ) / 18.0D+00
 
   return
-end subroutine
+end
 subroutine triangular_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -36413,7 +36409,7 @@ subroutine triangular_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine triangular_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -36453,7 +36449,7 @@ subroutine triangular_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'TRIANGULAR_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf <= 0.5D+00 ) then
@@ -36463,7 +36459,7 @@ subroutine triangular_cdf_inv ( cdf, a, b, x )
   end if
 
   return
-end subroutine
+end
 function triangular_check ( a, b )
 
 !*****************************************************************************80
@@ -36506,7 +36502,7 @@ function triangular_check ( a, b )
   triangular_check = .true.
 
   return
-end function
+end
 subroutine triangular_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -36541,7 +36537,7 @@ subroutine triangular_mean ( a, b, mean )
   mean = 0.5D+00 * ( a + b )
 
   return
-end subroutine
+end
 subroutine triangular_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -36592,7 +36588,7 @@ subroutine triangular_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine triangular_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -36616,7 +36612,7 @@ subroutine triangular_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    A < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -36626,7 +36622,7 @@ subroutine triangular_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -36635,7 +36631,7 @@ subroutine triangular_sample ( a, b, seed, x )
   call triangular_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine triangular_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -36670,7 +36666,7 @@ subroutine triangular_variance ( a, b, variance )
   variance = ( b - a )**2 / 24.0D+00
 
   return
-end subroutine
+end
 function trigamma ( x )
 
 !*****************************************************************************80
@@ -36731,7 +36727,7 @@ function trigamma ( x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'TRIGAMMA - Fatal error!'
     write ( *, '(a)' ) '  X <= 0.'
-    stop
+    stop 1
 !
 !  2): If X is smaller than A, use a small value approximation.
 !
@@ -36765,7 +36761,7 @@ function trigamma ( x )
   end if
 
   return
-end function
+end
 subroutine uniform_01_cdf ( x, cdf )
 
 !*****************************************************************************80
@@ -36804,7 +36800,7 @@ subroutine uniform_01_cdf ( x, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine uniform_01_cdf_inv ( cdf, x )
 
 !*****************************************************************************80
@@ -36839,13 +36835,13 @@ subroutine uniform_01_cdf_inv ( cdf, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'UNIFORM_01_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = cdf
 
   return
-end subroutine
+end
 subroutine uniform_01_mean ( mean )
 
 !*****************************************************************************80
@@ -36875,7 +36871,7 @@ subroutine uniform_01_mean ( mean )
   mean = 0.5D+00
 
   return
-end subroutine
+end
 subroutine uniform_01_order_sample ( n, seed, x )
 
 !*****************************************************************************80
@@ -36916,7 +36912,7 @@ subroutine uniform_01_order_sample ( n, seed, x )
 !
 !    Input, integer ( kind = 4 ) N, the number of elements in the sample.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X(N), N samples of the Uniform 01 PDF, in
@@ -36926,7 +36922,7 @@ subroutine uniform_01_order_sample ( n, seed, x )
 
   integer ( kind = 4 ) n
 
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) i
   integer ( kind = 4 ) seed
   real ( kind = 8 ) u
@@ -36941,7 +36937,7 @@ subroutine uniform_01_order_sample ( n, seed, x )
   end do
 
   return
-end subroutine
+end
 subroutine uniform_01_pdf ( x, pdf )
 
 !*****************************************************************************80
@@ -36984,7 +36980,7 @@ subroutine uniform_01_pdf ( x, pdf )
   end if
 
   return
-end subroutine
+end
 function uniform_01_sample ( seed )
 
 !*****************************************************************************80
@@ -37014,7 +37010,7 @@ function uniform_01_sample ( seed )
 !    generate the output random number, and updated in preparation for the
 !    next one.  SEED should not be zero.
 !
-!    Output, real ( kind = 8 ) UNIFORM_01_SAMPLE, a random value between 0
+!    Output, real ( kind = 8 ) UNIFORM_01_SAMPLE, a random value between 0 
 !    and 1.
 !
 !  Local parameters:
@@ -37080,7 +37076,7 @@ function uniform_01_sample ( seed )
   uniform_01_sample = real ( seed, kind = 8 ) * 4.656612875D-10
 
   return
-end function
+end
 subroutine uniform_01_variance ( variance )
 
 !*****************************************************************************80
@@ -37110,7 +37106,7 @@ subroutine uniform_01_variance ( variance )
   variance = 1.0D+00 / 12.0D+00
 
   return
-end subroutine
+end
 subroutine uniform_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -37154,7 +37150,7 @@ subroutine uniform_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine uniform_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -37194,13 +37190,13 @@ subroutine uniform_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'UNIFORM_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a + ( b - a ) * cdf
 
   return
-end subroutine
+end
 function uniform_check ( a, b )
 
 !*****************************************************************************80
@@ -37243,7 +37239,7 @@ function uniform_check ( a, b )
   uniform_check = .true.
 
   return
-end function
+end
 subroutine uniform_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -37278,7 +37274,7 @@ subroutine uniform_mean ( a, b, mean )
   mean = 0.5D+00 * ( a + b )
 
   return
-end subroutine
+end
 subroutine uniform_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -37327,7 +37323,7 @@ subroutine uniform_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine uniform_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -37351,7 +37347,7 @@ subroutine uniform_sample ( a, b, seed, x )
 !    Input, real ( kind = 8 ) A, B, the parameters of the PDF.
 !    A < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -37361,7 +37357,7 @@ subroutine uniform_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -37370,7 +37366,7 @@ subroutine uniform_sample ( a, b, seed, x )
   call uniform_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine uniform_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -37405,7 +37401,7 @@ subroutine uniform_variance ( a, b, variance )
   variance = ( b - a )**2 / 12.0D+00
 
   return
-end subroutine
+end
 subroutine uniform_discrete_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -37449,7 +37445,7 @@ subroutine uniform_discrete_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine uniform_discrete_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -37493,7 +37489,7 @@ subroutine uniform_discrete_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'UNIFORM_DISCRETE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   a2 = real ( a, kind = 8 ) - 0.5D+00
@@ -37506,7 +37502,7 @@ subroutine uniform_discrete_cdf_inv ( cdf, a, b, x )
   x = min ( x, b )
 
   return
-end subroutine
+end
 function uniform_discrete_check ( a, b )
 
 !*****************************************************************************80
@@ -37550,7 +37546,7 @@ function uniform_discrete_check ( a, b )
   uniform_discrete_check = .true.
 
   return
-end function
+end
 subroutine uniform_discrete_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -37585,7 +37581,7 @@ subroutine uniform_discrete_mean ( a, b, mean )
   mean = 0.5D+00 * real ( a + b, kind = 8 )
 
   return
-end subroutine
+end
 subroutine uniform_discrete_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -37637,7 +37633,7 @@ subroutine uniform_discrete_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine uniform_discrete_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -37661,7 +37657,7 @@ subroutine uniform_discrete_sample ( a, b, seed, x )
 !    Input, integer ( kind = 4 ) A, B, the parameters of the PDF.
 !    A <= B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -37671,7 +37667,7 @@ subroutine uniform_discrete_sample ( a, b, seed, x )
   integer ( kind = 4 ) a
   integer ( kind = 4 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -37680,7 +37676,7 @@ subroutine uniform_discrete_sample ( a, b, seed, x )
   call uniform_discrete_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 subroutine uniform_discrete_variance ( a, b, variance )
 
 !*****************************************************************************80
@@ -37715,7 +37711,7 @@ subroutine uniform_discrete_variance ( a, b, variance )
   variance = real ( ( b + 1 - a )**2 - 1, kind = 8 ) / 12.0D+00
 
   return
-end subroutine
+end
 subroutine uniform_nsphere_sample ( n, seed, x )
 
 !*****************************************************************************80
@@ -37744,7 +37740,7 @@ subroutine uniform_nsphere_sample ( n, seed, x )
 !
 !    Input, integer ( kind = 4 ) N, the dimension of the sphere.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X(N), a point on the unit N sphere, chosen
@@ -37765,7 +37761,7 @@ subroutine uniform_nsphere_sample ( n, seed, x )
   x(1:n) = x(1:n) / sqrt ( sum ( x(1:n)**2 ) )
 
   return
-end subroutine
+end
 subroutine von_mises_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -37830,7 +37826,7 @@ subroutine von_mises_cdf ( x, a, b, cdf )
   real ( kind = 8 ) cdf
   real ( kind = 8 ), parameter :: ck = 10.5D+00
   real ( kind = 8 ) cn
-  !real ( kind = 8 ) error_f
+  real ( kind = 8 ) error_f
   real ( kind = 8 ) erfx
   integer ( kind = 4 ) ip
   integer ( kind = 4 ) n
@@ -37923,7 +37919,7 @@ subroutine von_mises_cdf ( x, a, b, cdf )
   cdf = min ( cdf, 1.0D+00 )
 
   return
-end subroutine
+end
 subroutine von_mises_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -37986,7 +37982,7 @@ subroutine von_mises_cdf_inv ( cdf, a, b, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'VON_MISES_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   if ( cdf == 0.0D+00 ) then
@@ -38023,7 +38019,7 @@ subroutine von_mises_cdf_inv ( cdf, a, b, x )
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'VON_MISES_CDF_INV - Fatal error!'
       write ( *, '(a)' ) '  Iteration limit exceeded.'
-      stop
+      stop 1
     end if
 
     if ( sign ( 1.0D+00, cdf3 - cdf ) == sign ( 1.0D+00, cdf1 - cdf ) ) then
@@ -38037,7 +38033,7 @@ subroutine von_mises_cdf_inv ( cdf, a, b, x )
   end do
 
   return
-end subroutine
+end
 subroutine von_mises_cdf_values ( n_data, a, b, x, fx )
 
 !*****************************************************************************80
@@ -38211,7 +38207,7 @@ subroutine von_mises_cdf_values ( n_data, a, b, x, fx )
   end if
 
   return
-end subroutine
+end
 function von_mises_check ( a, b )
 
 !*****************************************************************************80
@@ -38250,7 +38246,7 @@ function von_mises_check ( a, b )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
-  logical :: von_mises_check
+  logical von_mises_check
 
   if ( a < -pi .or. pi < a ) then
     write ( *, '(a)' ) ' '
@@ -38271,7 +38267,7 @@ function von_mises_check ( a, b )
   von_mises_check = .true.
 
   return
-end function
+end
 subroutine von_mises_circular_variance ( a, b, circular_variance )
 
 !*****************************************************************************80
@@ -38310,14 +38306,14 @@ subroutine von_mises_circular_variance ( a, b, circular_variance )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) bessel_i0
-  !real ( kind = 8 ) bessel_i1
+  real ( kind = 8 ) bessel_i0
+  real ( kind = 8 ) bessel_i1
   real ( kind = 8 ) circular_variance
 
   circular_variance = 1.0D+00 - bessel_i1 ( b ) / bessel_i0 ( b )
 
   return
-end subroutine
+end
 subroutine von_mises_mean ( a, b, mean )
 
 !*****************************************************************************80
@@ -38360,7 +38356,7 @@ subroutine von_mises_mean ( a, b, mean )
   mean = a
 
   return
-end subroutine
+end
 subroutine von_mises_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -38436,7 +38432,7 @@ subroutine von_mises_pdf ( x, a, b, pdf )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !real ( kind = 8 ) bessel_i0
+  real ( kind = 8 ) bessel_i0
   real ( kind = 8 ) pdf
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) x
@@ -38450,7 +38446,7 @@ subroutine von_mises_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine von_mises_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -38489,7 +38485,7 @@ subroutine von_mises_sample ( a, b, seed, x )
 !    of probability near A.
 !    0.0D+00 <= B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -38499,7 +38495,7 @@ subroutine von_mises_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) c
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   real ( kind = 8 ) f
   real ( kind = 8 ), parameter :: pi = 3.141592653589793D+00
   real ( kind = 8 ) r
@@ -38540,7 +38536,7 @@ subroutine von_mises_sample ( a, b, seed, x )
   x = a + sign ( 1.0D+00, u3 - 0.5D+00 ) * acos ( f )
 
   return
-end subroutine
+end
 subroutine weibull_cdf ( x, a, b, c, cdf )
 
 !*****************************************************************************80
@@ -38587,7 +38583,7 @@ subroutine weibull_cdf ( x, a, b, c, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine weibull_cdf_inv ( cdf, a, b, c, x )
 
 !*****************************************************************************80
@@ -38629,13 +38625,13 @@ subroutine weibull_cdf_inv ( cdf, a, b, c, x )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'WEIBULL_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = a + b * ( - log ( 1.0D+00 - cdf ) )**( 1.0D+00 / c )
 
   return
-end subroutine
+end
 subroutine weibull_cdf_values ( n_data, alpha, beta, x, fx )
 
 !*****************************************************************************80
@@ -38772,7 +38768,7 @@ subroutine weibull_cdf_values ( n_data, alpha, beta, x, fx )
   end if
 
   return
-end subroutine
+end
 function weibull_check ( a, b, c )
 
 !*****************************************************************************80
@@ -38825,7 +38821,7 @@ function weibull_check ( a, b, c )
   weibull_check = .true.
 
   return
-end function
+end
 subroutine weibull_mean ( a, b, c, mean )
 
 !*****************************************************************************80
@@ -38858,12 +38854,12 @@ subroutine weibull_mean ( a, b, c, mean )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) mean
-  !!real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
 
   mean = b * r8_gamma ( ( c + 1.0D+00 ) / c ) + a
 
   return
-end subroutine
+end
 subroutine weibull_pdf ( x, a, b, c, pdf )
 
 !*****************************************************************************80
@@ -38926,7 +38922,7 @@ subroutine weibull_pdf ( x, a, b, c, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine weibull_sample ( a, b, c, seed, x )
 
 !*****************************************************************************80
@@ -38951,7 +38947,7 @@ subroutine weibull_sample ( a, b, c, seed, x )
 !    0.0D+00 < B,
 !    0.0D+00 < C.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, real ( kind = 8 ) X, a sample of the PDF.
@@ -38962,7 +38958,7 @@ subroutine weibull_sample ( a, b, c, seed, x )
   real ( kind = 8 ) b
   real ( kind = 8 ) c
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) x
 
@@ -38971,7 +38967,7 @@ subroutine weibull_sample ( a, b, c, seed, x )
   call weibull_cdf_inv ( cdf, a, b, c, x )
 
   return
-end subroutine
+end
 subroutine weibull_variance ( a, b, c, variance )
 
 !*****************************************************************************80
@@ -39005,7 +39001,7 @@ subroutine weibull_variance ( a, b, c, variance )
   real ( kind = 8 ) c
   real ( kind = 8 ) g1
   real ( kind = 8 ) g2
-  !!real ( kind = 8 ) r8_gamma
+  real ( kind = 8 ) r8_gamma
   real ( kind = 8 ) variance
 
   g1 = r8_gamma ( ( c + 2.0D+00 ) / c )
@@ -39014,7 +39010,7 @@ subroutine weibull_variance ( a, b, c, variance )
   variance = b * b * ( g1 - g2 * g2 )
 
   return
-end subroutine
+end
 subroutine weibull_discrete_cdf ( x, a, b, cdf )
 
 !*****************************************************************************80
@@ -39058,7 +39054,7 @@ subroutine weibull_discrete_cdf ( x, a, b, cdf )
   end if
 
   return
-end subroutine
+end
 subroutine weibull_discrete_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
@@ -39093,21 +39089,21 @@ subroutine weibull_discrete_cdf_inv ( cdf, a, b, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !integer ( kind = 4 ) r8_ceiling
+  integer ( kind = 4 ) r8_ceiling
   integer ( kind = 4 ) x
 
   if ( cdf < 0.0D+00 .or. 1.0D+00 < cdf ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'WEIBULL_DISCRETE_CDF_INV - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
-    stop
+    stop 1
   end if
 
   x = r8_ceiling ( &
     ( log ( 1.0D+00 - cdf ) / log ( 1.0D+00 - a ) )**( 1.0D+00 / b ) - 1.0D+00 )
 
   return
-end subroutine
+end
 function weibull_discrete_check ( a, b )
 
 !*****************************************************************************80
@@ -39160,7 +39156,7 @@ function weibull_discrete_check ( a, b )
   weibull_discrete_check = .true.
 
   return
-end function
+end
 subroutine weibull_discrete_pdf ( x, a, b, pdf )
 
 !*****************************************************************************80
@@ -39210,7 +39206,7 @@ subroutine weibull_discrete_pdf ( x, a, b, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine weibull_discrete_sample ( a, b, seed, x )
 
 !*****************************************************************************80
@@ -39235,7 +39231,7 @@ subroutine weibull_discrete_sample ( a, b, seed, x )
 !    0.0D+00 <= A <= 1.0D+00,
 !    0.0D+00 < B.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -39245,7 +39241,7 @@ subroutine weibull_discrete_sample ( a, b, seed, x )
   real ( kind = 8 ) a
   real ( kind = 8 ) b
   real ( kind = 8 ) cdf
-  !real ( kind = 8 ) r8_uniform_01
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   integer ( kind = 4 ) x
 
@@ -39254,7 +39250,7 @@ subroutine weibull_discrete_sample ( a, b, seed, x )
   call weibull_discrete_cdf_inv ( cdf, a, b, x )
 
   return
-end subroutine
+end
 function zeta ( p )
 
 !*****************************************************************************80
@@ -39309,7 +39305,7 @@ function zeta ( p )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ZETA - Fatal error!'
     write ( *, '(a)' ) '  Exponent P <= 1.0.'
-    stop
+    stop 1
   else if ( p == 2.0D+00 ) then
     zeta = pi**2 / 6.0D+00
   else if ( p == 3.0D+00 ) then
@@ -39369,7 +39365,7 @@ function zeta ( p )
   end if
 
   return
-end function
+end
 subroutine zipf_cdf ( x, a, cdf )
 
 !*****************************************************************************80
@@ -39411,7 +39407,7 @@ subroutine zipf_cdf ( x, a, cdf )
   real ( kind = 8 ) pdf
   integer ( kind = 4 ) x
   integer ( kind = 4 ) y
-  !!real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   if ( x < 1 ) then
 
@@ -39435,7 +39431,7 @@ subroutine zipf_cdf ( x, a, cdf )
   end if
 
   return
-end subroutine
+end
 function zipf_check ( a )
 
 !*****************************************************************************80
@@ -39477,7 +39473,7 @@ function zipf_check ( a )
   zipf_check = .true.
 
   return
-end function
+end
 subroutine zipf_mean ( a, mean )
 
 !*****************************************************************************80
@@ -39508,19 +39504,19 @@ subroutine zipf_mean ( a, mean )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) mean
-  !!real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   if ( a <= 2.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ZIPF_MEAN - Fatal error!'
     write ( *, '(a)' ) '  No mean defined for A <= 2.'
-    stop
+    stop 1
   end if
 
   mean = zeta ( a - 1.0D+00 ) / zeta ( a )
 
   return
-end subroutine
+end
 subroutine zipf_pdf ( x, a, pdf )
 
 !*****************************************************************************80
@@ -39581,7 +39577,7 @@ subroutine zipf_pdf ( x, a, pdf )
   real ( kind = 8 ), save :: c = 0.0D+00
   real ( kind = 8 ) pdf
   integer ( kind = 4 ) x
-  !!real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   if ( x < 1 ) then
 
@@ -39601,7 +39597,7 @@ subroutine zipf_pdf ( x, a, pdf )
   end if
 
   return
-end subroutine
+end
 subroutine zipf_sample ( a, seed, x )
 
 !*****************************************************************************80
@@ -39636,7 +39632,7 @@ subroutine zipf_sample ( a, seed, x )
 !    Input, real ( kind = 8 ) A, the parameter of the PDF.
 !    1.0D+00 < A.
 !
-!    Input/output, integer ( kind = 4 ) SEED, a seed for the random
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random 
 !    number generator.
 !
 !    Output, integer ( kind = 4 ) X, a sample of the PDF.
@@ -39645,8 +39641,8 @@ subroutine zipf_sample ( a, seed, x )
 
   real ( kind = 8 ) a
   real ( kind = 8 ) b
-  !!integer ( kind = 4 ) i4_huge
-  !real ( kind = 8 ) r8_uniform_01
+  integer ( kind = 4 ) i4_huge
+  real ( kind = 8 ) r8_uniform_01
   integer ( kind = 4 ) seed
   real ( kind = 8 ) t
   real ( kind = 8 ) test
@@ -39683,7 +39679,7 @@ subroutine zipf_sample ( a, seed, x )
   x = int ( w )
 
   return
-end subroutine
+end
 subroutine zipf_variance ( a, variance )
 
 !*****************************************************************************80
@@ -39715,13 +39711,13 @@ subroutine zipf_variance ( a, variance )
   real ( kind = 8 ) a
   real ( kind = 8 ) mean
   real ( kind = 8 ) variance
-  !!real ( kind = 8 ) zeta
+  real ( kind = 8 ) zeta
 
   if ( a <= 3.0D+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ZIPF_VARIANCE - Fatal error!'
     write ( *, '(a)' ) '  No variance defined for A <= 3.0.'
-    stop
+    stop 1
   end if
 
   call zipf_mean ( a, mean )
@@ -39729,7 +39725,4 @@ subroutine zipf_variance ( a, variance )
   variance = zeta ( a - 2.0D+00 ) / zeta ( a ) - mean * mean
 
   return
-end subroutine
-
-
-end module sll_m_prob
+end
