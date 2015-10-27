@@ -48,12 +48,12 @@ c
 c     set virtual boundaries in phi to zero
 c
       do j=0,nfy+1
-      phi(0,j) = 0.0
-      phi(nfx+1,j) = 0.0
+      phi(0,j) = 0d0
+      phi(nfx+1,j) = 0d0
       end do
       do i=0,nfx+1
-      phi(i,0) = 0.0
-      phi(i,nfy+1) = 0.0
+      phi(i,0) = 0d0
+      phi(i,nfy+1) = 0d0
       end do
       return
       end
@@ -70,12 +70,12 @@ c
 c     set virtual boundaries in phic to zero
 c
       do jc=0,ncy+1
-      phic(0,jc) = 0.0
-      phic(ncx+1,jc) = 0.0
+      phic(0,jc) = 0d0
+      phic(ncx+1,jc) = 0d0
       end do
       do ic=0,ncx+1
-      phic(ic,0) = 0.0
-      phic(ic,ncy+1) = 0.0
+      phic(ic,0) = 0d0
+      phic(ic,ncy+1) = 0d0
       end do
       if (ncx.lt.nx .and. ncy.lt.ny) then
 c
@@ -235,22 +235,22 @@ c     set coarse grid residual zero on specified boundaries
 c
       if (nxa.eq.1) then
       do jc=1,ncy
-        rhsc(1,jc) = 0.0
+        rhsc(1,jc) = 0d0
       end do
       end if
       if (nxb.eq.1) then
       do jc=1,ncy
-        rhsc(ncx,jc) = 0.0
+        rhsc(ncx,jc) = 0d0
       end do
       end if
       if (nyc.eq.1) then
       do ic=1,ncx
-        rhsc(ic,1) = 0.0
+        rhsc(ic,1) = 0d0
       end do
       end if
       if (nyd.eq.1) then
       do ic=1,ncx
-        rhsc(ic,ncy) = 0.0
+        rhsc(ic,ncy) = 0d0
       end do
       end if
       return
@@ -511,7 +511,7 @@ c
       real(8) phcor(0:nx+1,0:ny+1)
       do j=0,ny+1
       do i=0,nx+1
-        phcor(i,j) = 0.0
+        phcor(i,j) = 0d0
       end do
       end do
 c
@@ -699,20 +699,20 @@ c     set virtual boundaries in phi to zero
 c
       do k=0,nfz+1
       do j=0,nfy+1
-        phi(0,j,k) = 0.0
-        phi(nfx+1,j,k) = 0.0
+        phi(0,j,k) = 0d0
+        phi(nfx+1,j,k) = 0d0
       end do
       end do
       do k=0,nfz+1
       do i=0,nfx+1
-        phi(i,0,k) = 0.0
-        phi(i,nfy+1,k) = 0.0
+        phi(i,0,k) = 0d0
+        phi(i,nfy+1,k) = 0d0
       end do
       end do
       do j=0,nfy+1
       do i=0,nfx+1
-        phi(i,j,0) = 0.0
-        phi(i,j,nfz+1) = 0.0
+        phi(i,j,0) = 0d0
+        phi(i,j,nfz+1) = 0d0
       end do
       end do
       return
@@ -731,20 +731,20 @@ c     set virtual boundaries in phic to zero
 c
       do kc=0,ncz+1
       do jc=0,ncy+1
-        phic(0,jc,kc) = 0.0
-        phic(ncx+1,jc,kc) = 0.0
+        phic(0,jc,kc) = 0d0
+        phic(ncx+1,jc,kc) = 0d0
       end do
       end do
       do kc=0,ncz+1
       do ic=0,ncx+1
-        phic(ic,0,kc) = 0.0
-        phic(ic,ncy+1,kc) = 0.0
+        phic(ic,0,kc) = 0d0
+        phic(ic,ncy+1,kc) = 0d0
       end do
       end do
       do jc=0,ncy+1
       do ic=0,ncx+1
-        phic(ic,jc,0) = 0.0
-        phic(ic,jc,ncz+1) = 0.0
+        phic(ic,jc,0) = 0d0
+        phic(ic,jc,ncz+1) = 0d0
       end do
       end do
       if (ncx.lt.nx .and. ncy.lt.ny .and. ncz.lt.nz) then
@@ -1067,7 +1067,7 @@ c
       ic = 1
       do kc=1,ncz
         do jc=1,ncy
-          rhsc(ic,jc,kc) = 0.0
+          rhsc(ic,jc,kc) = 0d0
         end do
       end do
       end if
@@ -1075,7 +1075,7 @@ c
       ic = ncx
       do kc=1,ncz
         do jc=1,ncy
-          rhsc(ic,jc,kc) = 0.0
+          rhsc(ic,jc,kc) = 0d0
         end do
       end do
       end if
@@ -1083,7 +1083,7 @@ c
       jc = 1
       do kc=1,ncz
         do ic=1,ncx
-          rhsc(ic,jc,kc) = 0.0
+          rhsc(ic,jc,kc) = 0d0
         end do
       end do
       end if
@@ -1091,7 +1091,7 @@ c
       jc = ncy
       do kc=1,ncz
         do ic=1,ncx
-          rhsc(ic,jc,kc) = 0.0
+          rhsc(ic,jc,kc) = 0d0
         end do
       end do
       end if
@@ -1099,7 +1099,7 @@ c
       kc = 1
       do jc=1,ncy
         do ic=1,ncx
-          rhsc(ic,jc,kc) = 0.0
+          rhsc(ic,jc,kc) = 0d0
         end do
       end do
       end if
@@ -1107,7 +1107,7 @@ c
       kc = ncz
       do jc=1,ncy
         do ic=1,ncx
-          rhsc(ic,jc,kc) = 0.0
+          rhsc(ic,jc,kc) = 0d0
         end do
       end do
       end if
@@ -1302,7 +1302,7 @@ c
       do k=0,nz+1
       do j=0,ny+1
         do i=0,nx+1
-          phcor(i,j,k) = 0.0
+          phcor(i,j,k) = 0d0
         end do
       end do
       end do
@@ -1975,7 +1975,7 @@ c
 c     compute  inner product (e,d) for each j in sum(j)
 c
       do j=1,m
-      sum(j) = 0.
+      sum(j) = 0.0d0
       end do
       do i=1,n-2
       do j=1,m
@@ -2096,8 +2096,8 @@ c
       real(8) function sdt(n,sx,incx,sy,incy)
       real(8) sx(*),sy(*),stemp                                                    
       integer i,incx,incy,ix,iy,m,mp1,n                                         
-      stemp = 0.0e0                                                             
-      sdt = 0.0e0
+      stemp = 0.0d0                                                             
+      sdt = 0.0d0
       if(n.le.0)return                                                          
       if(incx.eq.1.and.incy.eq.1)go to 20                                       
       ix = 1                                                                    
@@ -2157,7 +2157,7 @@ c
       real(8) sx(*),sy(*),sa                                                       
       integer i,incx,incy,ix,iy,m,mp1,n                                         
       if(n.le.0)return                                                          
-      if (sa .eq. 0.0) return                                                   
+      if (sa .eq. 0d0) return                                                   
       if(incx.eq.1.and.incy.eq.1)go to 20                                       
       ix = 1                                                                    
       iy = 1                                                                    

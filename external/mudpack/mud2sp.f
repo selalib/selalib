@@ -143,7 +143,7 @@ c       set subgrid sizes
       ierror = 10   ! check solution region
       if (xb.le.xa .or. yd.le.yc) return
       ierror = 11
-      if (tolmax .lt. 0.0) return
+      if (tolmax .lt. 0d0) return
       ierror = 12   ! multigrid parameters
       if (kcycle.lt.0) return
       if (min0(iprer,ipost).lt.1) return
@@ -181,7 +181,7 @@ c
       ny = nfy
       call mud2sp1(nx,ny,rhs,phi,cfx,cfy,bndyc,work)
       iparm(17) = itero
-      if (tolmax.gt.0.0) then   ! check for convergence
+      if (tolmax.gt.0d0) then   ! check for convergence
       fparm(6) = relmax
       if (relmax.gt.tolmax) ierror = -1   ! flag convergenc failure
       end if
@@ -280,12 +280,12 @@ c
       do iter=1,maxcy
       itero = iter
       call kcymd2sp(wk)
-      if (tolmax.gt.0.0) then
+      if (tolmax.gt.0d0) then
 c
 c      error control
 c
-        relmax = 0.0
-        phmax = 0.0
+        relmax = 0d0
+        phmax = 0d0
         do j=1,nfy
           jj = j*(nfx+2)
           do i=1,nfx
@@ -298,7 +298,7 @@ c
 c
 c     set maximum relative difference and check for convergence
 c
-        if (phmax.gt.0.0) relmax = relmax/phmax
+        if (phmax.gt.0d0) relmax = relmax/phmax
         if (relmax.le.tolmax) return
       end if
       end do
@@ -517,9 +517,9 @@ c
       dly = (yd-yc)/(ny-1)
       dly2 = dly+dly
       dlyy = dly*dly
-      cmin = 1.0
-      alfmax = 0.0
-      cemax = 0.0
+      cmin = 1d0
+      alfmax = 0d0
+      cemax = 0d0
 c
 c     set x,y subscript limits for calls to cofx,cofy
 c     (avoid specified boundaries)
@@ -545,7 +545,7 @@ c
 c     flag hyperbolic pde if necessary
 c
       if (klevel.eq.ngrid) then
-        if (abs(cy)*dly.gt.2*abs(cyy)) then
+        if (abs(cy)*dly.gt.2d0*abs(cyy)) then
           ier = -4
         end if
       end if
@@ -566,7 +566,7 @@ c
 c      flag hyperbolic pde if necessary
 c
       if (klevel.eq.ngrid) then
-        if (abs(cx)*dlx.gt.2*abs(cxx)) then
+        if (abs(cx)*dlx.gt.2d0*abs(cxx)) then
           ier = -4
         end if
       end if
@@ -585,7 +585,7 @@ c
       kbdy = 1
       i = 1
       c1 = cofx(i,1)
-      cofx(i,1) = 0.0
+      cofx(i,1) = 0d0
       cofx(i,2) = cofx(i,2)+c1
       y = yc+dly
 c
@@ -605,7 +605,7 @@ c
       call bndyc(kbdy,y,alfa,gbdy)
       c2 = cofx(i,2)
       cofx(i,1) = cofx(i,1)+c2
-      cofx(i,2) = 0.0
+      cofx(i,2) = 0d0
       cofx(i,3) = cofx(i,3)-dlx2*alfa*c2
       alfmax = dmax1(abs(alfa),alfmax)
       end if
@@ -618,7 +618,7 @@ c     compute constant coefficient alfa
 c
       call bndyc(kbdy,x,alfa,gbdy)
       c1 = cofy(j,1)
-      cofy(j,1) = 0.0
+      cofy(j,1) = 0d0
       cofy(j,2) = cofy(j,2) + c1
       cofy(j,3) = cofy(j,3) + dly2*alfa*c1
       alfmax = dmax1(abs(alfa),alfmax)
@@ -632,7 +632,7 @@ c     compute constant coefficient alfa
 c
       call bndyc(kbdy,x,alfa,gbdy)
       c2 = cofy(j,2)
-      cofy(j,2) = 0.0
+      cofy(j,2) = 0d0
       cofy(j,1) = cofy(j,1) + c2
       cofy(j,3) = cofy(j,3) - dly2*c2*alfa
       alfmax = dmax1(abs(alfa),alfmax)
@@ -640,7 +640,7 @@ c
 c
 c     if detected then flag singular pde
 c
-      if (cemax.eq.0.0.and.alfmax.eq.0.0) then
+      if (cemax.eq.0d0.and.alfmax.eq.0d0) then
         if (nxa.eq.0.or.(nxa.eq.2.and.nxb.eq.2)) then
           if (nyc.eq.0.or.(nyc.eq.2.and.nyd.eq.2)) then
       	ier = -3
@@ -650,7 +650,7 @@ c
 c
 c     if detected then flag nonellipticity
 c
-      if (cmin.le.0.0) then
+      if (cmin.le.0d0) then
       ier = -2
       end if
 c
@@ -671,14 +671,14 @@ c
         end do
         if (nxa.eq.1) then
           do j=1,ny
-      	tx(1,j,2) = 1.0
-      	tx(1,j,3) = 0.0
+      	tx(1,j,2) = 1d0
+      	tx(1,j,3) = 0d0
           end do
         end if
         if (nxb.eq.1) then
           do j=1,ny
-      	tx(nx-1,j,1) = 0.0
-      	tx(nx,j,2) = 1.0
+      	tx(nx-1,j,1) = 0d0
+      	tx(nx,j,2) = 1d0
           end do
         end if
         call factri(ny,nx,tx(1,1,1),tx(1,1,2),tx(1,1,3))
@@ -718,14 +718,14 @@ c
         end do
         if (nyc.eq.1) then
           do i=1,nx
-      	ty(1,i,2) = 1.0
-      	ty(1,i,3) = 0.0
+      	ty(1,i,2) = 1d0
+      	ty(1,i,3) = 0d0
           end do
         end if
         if (nyd.eq.1) then
           do i=1,nx
-      	ty(ny-1,i,1) = 0.0
-      	ty(ny,i,2) = 1.0
+      	ty(ny-1,i,1) = 0d0
+      	ty(ny,i,2) = 1d0
           end do
         end if
         call factri(nx,ny,ty(1,1,1),ty(1,1,2),ty(1,1,3))
@@ -891,7 +891,7 @@ c     set phic zero
 c
       do jc=0,ncy+1
       do ic=0,ncx+1
-        phic(ic,jc) = 0.0
+        phic(ic,jc) = 0d0
       end do
       end do
 c
@@ -899,7 +899,7 @@ c     intialize residual to zero and set limits
 c
       do j=1,ny
       do i=1,nx
-        resf(i,j) = 0.0
+        resf(i,j) = 0d0
       end do
       end do
       ist = 1
@@ -1247,7 +1247,7 @@ c
 c     line periodic relaxation in x direction
 c
       do j=1,ny
-        sum(j) = 0.0
+        sum(j) = 0d0
       end do
 c
 c     set rhs and solve on lines thru odd y points
@@ -1517,7 +1517,7 @@ c
 c     line periodic relaxation in y direction
 c
       do i=1,nx
-        sum(i) = 0.0
+        sum(i) = 0d0
       end do
 c
 c     set rhs and solve on odd x points

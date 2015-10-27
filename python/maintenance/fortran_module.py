@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 25 Oct 2015
+# Last revision: 26 Oct 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
@@ -27,9 +27,9 @@ __docformat__ = 'reStructuredText'
 #==============================================================================
 
 variable_declaration_types = \
-  ( typedecl_statements.Integer, typedecl_statements.Real,
-    typedecl_statements.Complex, typedecl_statements.Logical,
-    typedecl_statements.Type )
+  ( typedecl_statements.Integer,   typedecl_statements.Real,
+    typedecl_statements.Complex,   typedecl_statements.Logical,
+    typedecl_statements.Character, typedecl_statements.Type )
 
 namespace_types = \
   ( block_statements.Type,
@@ -37,88 +37,139 @@ namespace_types = \
     block_statements.Subroutine )
 
 #------------------------------------------------------------------------------
-def get_external_symbols( *content ):
+def is_fortran_string( text ):
+    text  = text.strip()
+    first = text[ 0]
+    last  = text[-1]
+    if (first == last) and (first in ["'",'"']):
+        return True
+    elif "//" in text:
+        return True
+    else:
+        return False
+
+#------------------------------------------------------------------------------
+def get_external_symbols( content, fglobals=set() ):
     """ TODO: this should include
            1) all used variables
            2) all used types
            3) all used subroutines (NOT intrinsic)
            4) all calls (used functions and arrays, NOT intrinsic)
     """
-    raise NotImplementedError()
-
-#------------------------------------------------------------------------------
-def get_all_used_types( *content ):
-    """ Extract ALL used types from items in content.
-    """
+    # Compute locally defined symbols
+    flocals = compute_locals( content )
+    # Compute all used symbols
+    all_used_symbols = compute_all_used_symbols( content )
+    # Externals symbols at this level (not from blocks)
+    fexternals = all_used_symbols - flocals - fglobals - intrinsic_procedures
+    # Recursion: search for external symbols
     for item in content:
-        if isinstance( item, typedecl_statements.Type ):
-            yield item.name
-        elif isinstance( item, typedecl_statements.Class ):
-            yield item.get_kind() # NOTE: this makes no sense, but...
-        elif isinstance( item, namespace_types ):
-            for t in get_all_used_types( *item.content ):
-                yield t
-            # In Python3.3+:
-            # yield from get_all_used_types( *item.content )
+        if hasattr( item, 'content' ):
+            fexternals.update( get_external_symbols( item.content, \
+                    fglobals = set.union( fglobals, flocals ) ) )
+    # Return all external symbols
+    return fexternals
 
 #------------------------------------------------------------------------------
-def get_all_calls( *content ):
-    """ Extract all non type-bound calls from items in content.
+def compute_locals( content, return_dict=False ):
+    """ Compute local symbols from:
+          1. r.h.s. of type declarations (local variables)
+          2. type definitions (local types)
+          3. procedure definitions (local functions and subroutines)
+          4. interface definitions (TODO)
+    """
+    variables   = []
+    types       = []
+    classes     = []
+    functions   = []
+    subroutines = []
+    interfaces  = []
+    # Search for local definitions and update lists
+    for item in content:
+        if isinstance( item, variable_declaration_types ):
+            for v in item.entity_decls:
+                v = v.split('(')[0].strip() # drop (:,:) from arrays
+                variables.append( v )
+        elif isinstance( item, block_statements.Type ):
+            if 'abstract' in item.item.get_line(): # TODO: use regex
+                classes.append( item.name )
+            else:
+                types.append( item.name )
+        elif isinstance( item, block_statements.Function ):
+            functions.append( item.name )
+        elif isinstance( item, block_statements.Subroutine ):
+            subroutines.append( item.name )
+        else:
+            # TODO: get interfaces
+            pass
+    # If required return a dictionary of sets, otherwise just one set
+    if return_dict:
+        return dict( variables   = set( variables   ),
+                     types       = set( types       ),
+                     classes     = set( classes     ),
+                     functions   = set( functions   ),
+                     subroutines = set( subroutines ),
+                     interfaces  = set( interfaces  ), )
+    else:
+        return set( variables + types + classes + functions + \
+                subroutines + interfaces )
+
+#------------------------------------------------------------------------------
+def compute_all_used_symbols( content ):
+    """ Compute all used symbols from:
+          1. l.h.s. of type declarations (used types)
+          2. subroutine calls (used subroutines)
+          3. r.h.s. of assignments (used functions and variables)
+          4. l.h.s. of assignments (used variables)
+          5. type blocks (entends...)
     """
     import re
-#    pattern = r"([A-Za-z]\w*) *\("
-    pattern = r"(?<![%\s])\s*(\b[A-Za-z]\w*\b) *\("  # discard type-bound call
-    regex   = re.compile( pattern )
+    pattern_name     = r"\b([a-zA-Z]\w*)\b"
+    pattern_variable = r"(?<![%\s])\s*" + pattern_name + r"\s*(?![\s\(])"
+    pattern_call     = r"(?<![%\s])\s*" + pattern_name + r"\s*\("
+    pattern_extends  = r"extends\s*\("  + pattern_name + r"\s*\)"
+
+    types       = []
+    subroutines = []
+    variables   = []
+    calls       = []
+
     for item in content:
-        # TODO: do not parse strings!!!!!
-        # If assignment, parse r.h.s.
-        if isinstance( item, statements.Assignment ):
-            for match in regex.findall( item.expr ):
-                if match not in intrinsic_procedures:
-                    yield match
-        # If pointer assignment, parse r.h.s.
-        elif isinstance( item, statements.PointerAssignment ):
-            for match in regex.findall( item.expr ):
-                if match not in intrinsic_procedures:
-                    yield match
-        # If subroutine call, parse arguments
+        # l.h.s. of type declarations
+        if isinstance( item, typedecl_statements.Type ):
+            types.append( item.name )
+        elif isinstance( item, typedecl_statements.Class ):
+            types.append( item.get_kind() ) # NOTE: this makes no sense, but...
+        # Subroutine calls (both caller and arguments)
         elif isinstance( item, statements.Call ):
-            for s in item.items:
-                for match in regex.findall( s ):
-                    if match not in intrinsic_procedures:
-                        yield match
-        # If block, search recursively:
-        elif hasattr( item, 'content' ):
-            for c in get_all_calls( *item.content ):
-                yield c
-            # In Python3.3+:
-            # yield from get_all_calls( *item.content )
-
-#------------------------------------------------------------------------------
-def get_all_subroutine_calls( *content ):
-    """ Extract all non type-bound subroutine calls from items in content.
-    """
-    for item in content:
-        # If subroutine call, return its name
-        if isinstance( item, statements.Call ):
+            # caller
             sub_name = item.designator
-            if '%' not in sub_name: # discard type-bound subroutine call
-                if sub_name not in intrinsic_procedures:
-                    yield sub_name
-        # If this is a block, search recursively:
-        elif hasattr( item, 'content' ):
-            for c in get_all_subroutine_calls( *item.content ):
-                yield c
-            # In Python3.3+:
-            # yield from get_all_subroutine_calls( *item.content )
+            if '%' in sub_name:
+                variables.append( sub_name.split('%')[0].strip() )
+            else:
+                subroutines.append( sub_name )
+            # arguments
+            for s in item.items:
+                if not is_fortran_string( s ):
+                    variables.extend( re.findall( pattern_variable, s ) )
+                    calls    .extend( re.findall( pattern_call    , s ) )
+        # Assignments (both sides)
+        elif isinstance( item, (statements.Assignment, 
+                                statements.PointerAssignment) ):
+            # l.h.s.
+            variables.append( re.findall( pattern_name, item.variable )[0] )
+            # r.h.s.
+            if not is_fortran_string( item.expr ):
+                variables.extend( re.findall( pattern_variable, item.expr ) )
+                calls    .extend( re.findall( pattern_call    , item.expr ) )
+        # Type blocks
+        elif isinstance( item, block_statements.Type ):
+            if len( item.specs ) > 0:
+                for s in item.specs:
+                    if not is_fortran_string( s ):
+                        types.extend( re.findall( pattern_extends, s, re.I ) )
 
-#------------------------------------------------------------------------------
-# Extract names of declared variables
-def get_declared_variables_names( *content ):
-    for item in content:
-        if is_variable_typedecl( item ):
-            for var in item.entity_decls:
-                yield var
+    return set( types + subroutines + variables + calls )
 
 #==============================================================================
 # CLASSES
@@ -134,49 +185,10 @@ class FortranModule( object ):
         self._name    = module.name
 
         # Extract module entities
-        self._variables   = []
-        self._types       = []
-        self._classes     = []
-        self._functions   = []
-        self._subroutines = []
-        self._interfaces  = []
-        for item in module.content:
-            if isinstance( item, variable_declaration_types ):
-                self._variables.extend( item.entity_decls )
-            elif isinstance( item, block_statements.Type ):
-                if 'abstract' in item.item.get_line(): # TODO: use regex
-                    self._classes.append( item.name )
-                else:
-                    self._types.append( item.name )
-            elif isinstance( item, block_statements.Function ):
-                self._functions.append( item.name )
-            elif isinstance( item, block_statements.Subroutine ):
-                self._subroutines.append( item.name )
-            else:
-                # TODO: get interfaces
-                pass
-        # Create tuples, sorted
-        self._variables   = tuple( sorted( self._variables   ) )
-        self._types       = tuple( sorted( self._types       ) )
-        self._classes     = tuple( sorted( self._classes     ) )
-        self._functions   = tuple( sorted( self._functions   ) )
-        self._subroutines = tuple( sorted( self._subroutines ) )
-        self._interfaces  = tuple( sorted( self._interfaces  ) )
+        self._flocals = compute_locals( module.content, return_dict=True )
 
-        # Extract external types (also abstract)
-        ext_types = set( get_all_used_types( *module.content ) ) - \
-                    set( self._types ) - set( self._classes )
-        # Extract external calls (functions and arrays)
-        ext_calls = set( get_all_calls( *module.content ) ) - \
-                    set( self._functions )
-        # Extract external subroutine calls
-        ext_sub_calls = set( get_all_subroutine_calls( *module.content ) ) - \
-                        set( self._subroutines )
-        # TODO: extract external module variables
-
-        # Get a list of all imported symbols
-        self._imported_symbols = tuple( sorted( ext_types ) + \
-                sorted( ext_calls ) + sorted( ext_sub_calls ) )
+        # Extract external symbols (not declared anywhere in module)
+        self._imported_symbols = get_external_symbols( module.content )
 
         # Set: exported symbols (empty for now)
         self._exported_symbols = set()
@@ -211,12 +223,12 @@ class FortranModule( object ):
         """ Return True if the symbol is defined in the module.
         """
         assert( isinstance( symbol, str ) )
-        if   symbol in self._variables  :  return True
-        elif symbol in self._types      :  return True
-        elif symbol in self._classes    :  return True
-        elif symbol in self._functions  :  return True
-        elif symbol in self._subroutines:  return True
-        elif symbol in self._interfaces :  return True
+        if   symbol in self.variables  :  return True
+        elif symbol in self.types      :  return True
+        elif symbol in self.classes    :  return True
+        elif symbol in self.functions  :  return True
+        elif symbol in self.subroutines:  return True
+        elif symbol in self.interfaces :  return True
         else:
             return False
 
@@ -321,17 +333,19 @@ class FortranModule( object ):
     def name( self ): return self._name
 
     @property
-    def   variables( self ): return self._variables
+    def      locals( self ): return self._flocals
     @property
-    def       types( self ): return self._types
+    def   variables( self ): return self._flocals['variables']
     @property
-    def     classes( self ): return self._classes
+    def       types( self ): return self._flocals['types']
     @property
-    def   functions( self ): return self._functions
+    def     classes( self ): return self._flocals['classes']
     @property
-    def subroutines( self ): return self._subroutines
+    def   functions( self ): return self._flocals['functions']
     @property
-    def  interfaces( self ): return self._interfaces
+    def subroutines( self ): return self._flocals['subroutines']
+    @property
+    def  interfaces( self ): return self._flocals['interfaces']
     
     @property
     def imported_symbols( self ): return self._imported_symbols
@@ -351,27 +365,27 @@ class FortranModule( object ):
         print()
         print( "VARIABLES" )
         print( "---------" )
-        map( printer, self._variables )
+        map( printer, self.variables )
         print()
         print( "TYPES" )
         print( "-----" )
-        map( printer, self._types )
+        map( printer, self.types )
         print()
         print( "ABSTRACT TYPES" )
         print( "--------------" )
-        map( printer, self._classes )
+        map( printer, self.classes )
         print()
         print( "SUBROUTINES" )
         print( "-----------" )
-        map( printer, self._subroutines )
+        map( printer, self.subroutines )
         print()
         print( "FUNCTIONS" )
         print( "---------" )
-        map( printer, self._functions )
+        map( printer, self.functions )
         print()
         print( "INTERFACES" )
         print( "----------" )
-        map( printer, self._interfaces )
+        map( printer, self.interfaces )
         print()
 
         print( "================" )
