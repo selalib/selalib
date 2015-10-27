@@ -642,10 +642,10 @@ sll_int32  :: g2
 sll_int32  :: ii,kk,mm
 sll_int32  :: jj,ll,nn
 sll_int32  :: ig, jg
-sll_int32  :: i3, i4
-sll_int32  :: i1,i2
+sll_int32  :: i4
+!sll_int32  :: i1,i2, i3
 sll_int32  :: col, row
-sll_int32  :: b1, b2, x, y
+sll_int32  :: b1, b2, x!, y
 sll_int32  :: k1, k2, n1, n2
 sll_int32  :: ideg2,ideg1
 sll_int32  :: jdeg2,jdeg1
@@ -663,12 +663,12 @@ sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: val_jac
 sll_real64 :: B11
@@ -1030,7 +1030,7 @@ sll_real64, dimension(:), allocatable    :: m_rho_loc
 
 sll_int32  :: i
 sll_int32  :: j
-sll_int32  :: k
+!sll_int32  :: k
 sll_int32  :: g1
 sll_int32  :: g2
 sll_int32  :: x, n, b

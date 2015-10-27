@@ -654,12 +654,12 @@ sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: val_jac
 sll_real64 :: B11
@@ -670,8 +670,7 @@ sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
 sll_int32  :: index3, index4
-sll_int32  :: index_coef1,index_coef2
-sll_int32  :: b, bprime,x,y
+sll_int32  :: b, bprime,x
 sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
 sll_int32  :: nspl
