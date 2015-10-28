@@ -254,6 +254,10 @@ contains
     sll_int32 :: i
     sll_real64 :: delta_x1
     print *,'#not implemented for the moment'
+
+    SLL_ASSERT(size(input,1)>0)
+    SLL_ASSERT(size(input,2)>0)
+    output = 0.0_f64 + dt-dt
     
     Npts1 = adv%Npts1
     Npts2 = adv%Npts2
