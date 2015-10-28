@@ -148,7 +148,7 @@ contains
     sll_int32 :: Nc_x2
     sll_real64 :: length
     sll_int32 :: i1
-    sll_int32 :: ind
+    !sll_int32 :: ind
     sll_real64 :: tmp
     
     
