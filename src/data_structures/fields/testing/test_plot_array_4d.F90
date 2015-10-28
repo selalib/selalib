@@ -42,7 +42,7 @@ n4 = mv%num_cells2+1
 
 SLL_CLEAR_ALLOCATE(f(1:n1,1:n2,1:n3,1:n4),error)
 
-eps = 1.0
+eps = 1.0_f64
 
 kx = 2.0_f64 * sll_pi / (mx%num_cells1*mx%delta_eta1)
 ky = 2.0_f64 * sll_pi / (mx%num_cells2*mx%delta_eta2)
