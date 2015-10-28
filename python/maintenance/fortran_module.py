@@ -1,7 +1,7 @@
 # coding: utf8
 """
-Module exposing the FortranModule class, which extracts information from a
-Fortran module (partially) parsed by the F2Py library.
+Python 2 module exposing the FortranModule class, which extracts information
+from a Fortran module (partially) parsed by the F2Py library.
 
 Modules required
 ----------------
@@ -9,11 +9,17 @@ Modules required
   * Library   : fortran_intrinsics
   * 3rd-party : f2py.fparser
 
+TODO
+----
+  * Extract type parameters from type declaration statements
+  * Extract variables from array dimensions (2 different declarations exist)
+  * Collect abstract interfaces
+
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 27 Oct 2015
+# Last revision: 28 Oct 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
@@ -32,11 +38,6 @@ variable_declaration_types = \
     typedecl_statements.Complex,   typedecl_statements.Logical,
     typedecl_statements.Character, typedecl_statements.Type,
     typedecl_statements.Class )
-
-namespace_types = \
-  ( block_statements.Type,
-    block_statements.Function,
-    block_statements.Subroutine )
 
 #------------------------------------------------------------------------------
 def is_fortran_string( text ):
@@ -143,9 +144,9 @@ def compute_locals( content, return_dict=False ):
             functions.append( item.name )
         elif isinstance( item, block_statements.Subroutine ):
             subroutines.append( item.name )
-        else:
-            # TODO: get interfaces
-            pass
+        elif isinstance( item, block_statements.Interface ):
+            interfaces.append( item.name )
+
     # If required return a dictionary of sets, otherwise just one set
     if return_dict:
         return dict( variables   = set( variables   ),
