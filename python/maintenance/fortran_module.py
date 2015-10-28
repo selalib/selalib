@@ -11,7 +11,6 @@ Modules required
 
 TODO
 ----
-  * Extract type parameters from type declaration statements
   * Extract variables from array dimensions (2 different declarations exist)
   * Collect abstract interfaces
 
@@ -180,6 +179,18 @@ def compute_all_used_symbols( content ):
     calls       = []
 
     for item in content:
+        # kind parameter in numerical type declarations
+        if isinstance( item, (typedecl_statements.Integer,
+                              typedecl_statements.Real,
+                              typedecl_statements.Complex) ):
+            kind_param = str( item.get_kind() )
+            if not kind_param.isdigit():
+                variables.append( kind_param )
+        # len parameter in character type declarations
+        elif isinstance( item, typedecl_statements.Character ):
+            len_param = str( item.get_length() )
+            if not len_param.isdigit():
+                variables.append( len_param )
         # l.h.s. of type declarations
         if isinstance( item, typedecl_statements.Type ):
             types.append( item.name )
