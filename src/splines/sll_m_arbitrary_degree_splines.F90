@@ -950,7 +950,7 @@ contains
     sll_int32  :: degree   ! spline degree
     !sll_int32  :: npoints  ! number of points where spline is evaluated
     sll_real64 :: scoef(:) 
-    sll_real64, pointer :: sval(:) 
+    sll_real64, allocatable :: sval(:) 
     ! local variables
     sll_real64 :: bspl(degree+1)
     sll_real64 :: val 

@@ -77,7 +77,7 @@ sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
 sll_int32  :: npts1,npts2
-sll_int32  :: ierr
+!sll_int32  :: ierr
 
 real(8), external :: sol_exacte_perper
 real(8), external :: sol_exacte_perper_der1
@@ -116,7 +116,7 @@ CHARACTER(len=10) :: cmd
 integer           :: itest1
 integer           :: itest2
 character(len=4)  :: ccase
-sll_int32         :: file_id
+!sll_int32         :: file_id
 
 
 sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
@@ -701,7 +701,7 @@ do k = itest1, itest2
     grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
     grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
     reference(i,j) = ref
-    val_jac = 1.0
+    val_jac = 1.0_f64
     if(PRINT_COMPARISON) call printout_comparison()
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val * h1*h2
@@ -746,7 +746,7 @@ do k = itest1, itest2
   end do
   
   rhs_interp => interp_2d_rhs
-  tab_rho(:,:) = tab_rho - sum(tab_rho)/(NUM_CELLS1*NUM_CELLS2)
+  tab_rho(:,:) = tab_rho - sum(tab_rho)/real(NUM_CELLS1*NUM_CELLS2,f64)
 
   rho => new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
@@ -1507,7 +1507,7 @@ subroutine check_error(icase)
 integer, intent(in) :: icase
 print"('integral solution       =',g15.3)", integral_solution
 print"('integral exact solution =',g15.3)", integral_exact_solution
-acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
+acc(icase) = sum(abs(calculated-reference))/real(npts1*npts2,f64)
 if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
     (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-2))) then     
    print"('test:',i2,4x,'error=',g15.3, 4x, 'OK' )", icase, acc(icase)
