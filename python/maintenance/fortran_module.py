@@ -11,7 +11,6 @@ Modules required
 
 TODO
 ----
-  * Extract variables from array dimensions (2 different declarations exist)
   * Collect abstract interfaces
 
 """
@@ -172,6 +171,7 @@ def compute_all_used_symbols( content ):
     pattern_variable = r"(?<![%\s])\s*" + pattern_name + r"\s*(?![\s\(])"
     pattern_call     = r"(?<![%\s])\s*" + pattern_name + r"\s*\("
     pattern_extends  = r"extends\s*\("  + pattern_name + r"\s*\)"
+    pattern_dimension= r"dimension\s*\("+ pattern_name + r"\s*\)"
 
     types       = []
     subroutines = []
@@ -179,21 +179,33 @@ def compute_all_used_symbols( content ):
     calls       = []
 
     for item in content:
-        # kind parameter in numerical type declarations
-        if isinstance( item, (typedecl_statements.Integer,
-                              typedecl_statements.Real,
-                              typedecl_statements.Complex) ):
-            kind_param = str( item.get_kind() )
-            if not kind_param.isdigit():
-                variables.append( kind_param )
-        # len parameter in character type declarations
-        elif isinstance( item, typedecl_statements.Character ):
-            len_param = str( item.get_length() )
-            if not len_param.isdigit():
-                variables.append( len_param )
-        # l.h.s. of type declarations
-        if isinstance( item, typedecl_statements.Type ):
+        # Intrinsic type declarations
+        if isinstance( item, variable_declaration_types ):
+            # Array dimensions on l.h.s.
+            for s in item.attrspec:
+                variables.extend( re.findall( pattern_dimension, s ) )
+            # Array dimensions on r.h.s.
+            for v in item.entity_decls:
+                varname  = v.split('(')[0].strip()
+                allnames = re.findall( pattern_name, v )
+                allnames.remove( varname )
+                variables.extend( allnames )
+            # kind parameter in numerical type declarations
+            if isinstance( item, (typedecl_statements.Integer,
+                                  typedecl_statements.Real,
+                                  typedecl_statements.Complex) ):
+                kind_param = str( item.get_kind() )
+                if not kind_param.isdigit():
+                    variables.append( kind_param )
+            # len parameter in character type declarations
+            elif isinstance( item, typedecl_statements.Character ):
+                len_param = str( item.get_length() )
+                if not len_param.isdigit():
+                    variables.append( len_param )
+        # Extended type declarations
+        elif isinstance( item, typedecl_statements.Type ):
             types.append( item.name )
+        # Polymorphic extended type declarations
         elif isinstance( item, typedecl_statements.Class ):
             types.append( item.get_kind() ) # NOTE: this makes no sense, but...
         # Subroutine calls (both caller and arguments)
