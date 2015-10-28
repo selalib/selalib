@@ -4,6 +4,10 @@ function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2+params(1)
+#endif
   res = 1.0_8
 end function func_one
 
@@ -12,6 +16,10 @@ function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2+params(1)
+#endif
   res = 0.0_8
 end function func_zero
 
@@ -20,6 +28,10 @@ function func_four( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2+params(1)
+#endif
   res = 4.0_8
 end function func_four
 
@@ -28,6 +40,10 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2+params(1)
+#endif
 
   res = 0.0_8
 end function func_epsi
@@ -47,6 +63,10 @@ function source_term_perper( eta1, eta2) result(res)
   real(8), intent(in) :: eta2
   ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2
+#endif
 
   res =  cos(2*sll_pi*eta1)
   !!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
@@ -55,6 +75,10 @@ end function source_term_perper
 real(8) function sol_exacte_perper(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2
+#endif
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper = -1.0_8/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
@@ -63,6 +87,10 @@ end function sol_exacte_perper
 real(8) function sol_exacte_perper_der1(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2
+#endif
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der1 = 1.0_8/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
@@ -70,6 +98,10 @@ end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2
+#endif
   
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
@@ -89,6 +121,10 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   intrinsic :: sin 
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+  real(8) :: dummy
+  dummy = eta1+eta2+params(1)
+#endif
 
   
   source_term_perdir = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
@@ -141,6 +177,10 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   use sll_m_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+#ifdef DEBUG
+  real(8) :: dummy
+  if (present(params)) dummy = params(1)
+#endif
 
   source_term_dirper = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
      ! -(16.0*sll_pi**2*eta1**4 &
@@ -551,14 +591,14 @@ real(8) function jac12_adimension_chgt(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac12_adimension_chgt = 0.0!sll_pi
+  jac12_adimension_chgt = 0.0_f64!sll_pi
 end function jac12_adimension_chgt
 
 real(8) function jac21_adimension_chgt(eta1,eta2)
   use sll_m_constants
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac21_adimension_chgt = 0.0!2*sll_pi!0.0
+  jac21_adimension_chgt = 0.0_f64!2*sll_pi!0.0
 end function jac21_adimension_chgt
 
 real(8) function jac22_adimension_chgt(eta1,eta2)
@@ -589,10 +629,10 @@ real(8) function source_term_chgt_adim(eta1,eta2)
   intrinsic :: cos
   intrinsic :: sin
   
-  x =   2*sll_pi*eta1 !+eta2)
-  y =   2* sll_pi*eta2
+  x =   2d0*sll_pi*eta1 !+eta2)
+  y =   2d0*sll_pi*eta2
   
-  source_term_chgt_adim = -2*cos(x)*cos(y)
+  source_term_chgt_adim = -2d0*cos(x)*cos(y)
   
 end function source_term_chgt_adim
 
@@ -611,15 +651,15 @@ real(8) function f_cos( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD 
+   integer :: n = N_MOD 
 
    r = eta1 * (R_MAX-R_MIN) + R_MIN
-   theta = eta2 * 2 * sll_pi
+   theta = eta2 * 2d0 * sll_pi
 
    f_cos = -(r-R_MAX)*(r-R_MIN)*n*n*cos(n*theta)/r &
            + ((r-R_MAX)*(r-R_MIN)*cos(n*theta)  &
            + (r-R_MAX)*r*cos(n*theta) + (r-R_MIN)*r*cos(n*theta) &
-           + 2*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
+           + 2d0*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
            + r*cos(n*theta))*r)/r
 
 end function f_cos
@@ -643,7 +683,7 @@ real(8) function f_sin( eta1, eta2)
    f_sin = -(r-R_MAX)*(r-R_MIN)*n*n*sin(n*theta)/r &
          + ((r-R_MAX)*(r-R_MIN)*sin(n*theta) &
          + (r-R_MAX)*r*sin(n*theta) + (r-R_MIN)*r*sin(n*theta) &
-         + 2*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
+         + 2d0*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
          + r*sin(n*theta))*r)/r
 
 end function f_sin
@@ -659,7 +699,7 @@ real(8) function u_sin_der1( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD 
+   integer :: n = N_MOD 
    
    r = eta1 * (R_MAX-R_MIN) + R_MIN
    theta = eta2 * 2 * sll_pi
@@ -681,10 +721,10 @@ real(8) function u_sin_der2( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD 
+   integer :: n = N_MOD 
    
    r = eta1 + R_MIN
-   theta = eta2 * 2 * sll_pi
+   theta = eta2 * 2d0 * sll_pi
 
    u_sin_der2 = n*(r - R_MAX)*(r - R_MIN)*r*cos(n*theta)
 
@@ -701,7 +741,7 @@ real(8) function u_sin( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD 
+   integer :: n = N_MOD 
    
    r = eta1 * (R_MAX-R_MIN) + R_MIN
    theta = eta2 * 2 * sll_pi
@@ -721,7 +761,7 @@ real(8) function u_cos( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD
+   integer :: n = N_MOD
    
    r = eta1 * (R_MAX-R_MIN) + R_MIN
    theta = eta2 * 2 * sll_pi
@@ -741,7 +781,7 @@ real(8) function u_cos_der1( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD
+   integer :: n = N_MOD
    
    r = eta1 * (R_MAX-R_MIN) + R_MIN
    theta = eta2 * 2 * sll_pi
@@ -762,7 +802,7 @@ real(8) function u_cos_der2( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: n = N_MOD
+   integer :: n = N_MOD
    
    r = eta1 * (R_MAX-R_MIN) + R_MIN
    theta = eta2 * 2 * sll_pi

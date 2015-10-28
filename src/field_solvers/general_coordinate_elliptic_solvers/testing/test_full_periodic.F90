@@ -46,22 +46,15 @@ sll_real64 :: acc
 sll_real64 :: normL2
 sll_real64 :: normH1
 
-sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: reference
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: tab_rho
-
-sll_real64, dimension(NUM_CELLS2+1) :: v1_min
-sll_real64, dimension(NUM_CELLS2+1) :: v1_max
-sll_real64, dimension(NUM_CELLS1+1) :: v2_min
-sll_real64, dimension(NUM_CELLS1+1) :: v2_max
 
 sll_int32  :: i, j, k
 sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
 sll_int32  :: npts1,npts2
-sll_int32  :: cell
 sll_real64 :: x1 
 sll_real64 :: x2 
 
@@ -359,7 +352,7 @@ print*, ' L2 norm :', sqrt(normL2), h1**(SPLINE_DEG1-1)
 print*, ' H1 norm :', sqrt(normH1), h1**(SPLINE_DEG1-2)
 if (sqrt(normL2) <= h1**(SPLINE_DEG1-1)  .and. &
     sqrt(normH1) <= h1**(SPLINE_DEG1-2)) then     
-   acc = sum(abs(calculated-reference))/(npts1*npts2)
+   acc = sum(abs(calculated-reference))/real(npts1*npts2,f64)
    print"('L_oo =',g15.3, 4x, 'OK' )", acc
 else
   stop 'FAILED'
@@ -373,6 +366,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 1.0_f64
 end function one
 
@@ -381,6 +378,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 0.0_f64
 end function zero
 
@@ -392,6 +393,10 @@ real(8) :: res
 real(8) :: pi
 real(8) :: x1
 real(8) :: x2
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 x1 = sinprod_x1(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
 x2 = sinprod_x2(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
 pi = 4d0*atan(1d0)
@@ -406,6 +411,10 @@ real(8) :: res
 real(8) :: pi
 real(8) :: x1
 real(8) :: x2
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 x1 = sinprod_x1(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
 x2 = sinprod_x2(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
 pi = 4d0*atan(1d0)
