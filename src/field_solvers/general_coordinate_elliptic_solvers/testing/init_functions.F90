@@ -6,7 +6,7 @@ function func_one( eta1, eta2, params ) result(res)
   real(8) :: res
 #ifdef DEBUG
   real(8) :: dummy
-  dummy = eta1+eta2+params(1)
+  if(size(params)>0) dummy = eta1+eta2
 #endif
   res = 1.0_8
 end function func_one
@@ -18,7 +18,7 @@ function func_zero( eta1, eta2, params ) result(res)
   real(8) :: res
 #ifdef DEBUG
   real(8) :: dummy
-  dummy = eta1+eta2+params(1)
+  if(size(params)>0) dummy = eta1+eta2
 #endif
   res = 0.0_8
 end function func_zero
@@ -30,7 +30,7 @@ function func_four( eta1, eta2, params ) result(res)
   real(8) :: res
 #ifdef DEBUG
   real(8) :: dummy
-  dummy = eta1+eta2+params(1)
+  if (size(params)>0) dummy = eta1+eta2
 #endif
   res = 4.0_8
 end function func_four
@@ -42,7 +42,7 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8) :: res
 #ifdef DEBUG
   real(8) :: dummy
-  dummy = eta1+eta2+params(1)
+  if (size(params)>0) dummy = eta1+eta2
 #endif
 
   res = 0.0_8
@@ -123,7 +123,7 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   real(8), dimension(:), intent(in), optional :: params
 #ifdef DEBUG
   real(8) :: dummy
-  dummy = eta1+eta2+params(1)
+  if (present(params)) dummy = eta1+eta2
 #endif
 
   
@@ -236,7 +236,9 @@ real(8) function rho_rtheta(eta1,eta2,params) ! in the path
   real(8) :: x, y
   real(8), dimension(:), intent(in), optional :: params
   
+#ifdef DEBUG
   if (present(params)) print*, params
+#endif
 
   x = eta2*cos(2*sll_pi*eta1)
   y = eta2*sin(2*sll_pi*eta1)
@@ -253,7 +255,9 @@ real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
   intrinsic :: sin
   real(8), dimension(:), intent(in), optional :: params
   
+#ifdef DEBUG
   if (present(params)) print*, params
+#endif
   
   sol_exacte_rtheta = ( eta2**2-1)*(eta2**2-0.5**2)*eta2**2&
        *cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
