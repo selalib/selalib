@@ -19,8 +19,9 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_simple_pic_4d_particle <!--
-!> [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
+!> @brief Module for groups of particles of type sll_simple_pic_4d_particle
+
+! [[file:sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
 
 module sll_m_simple_pic_4d_group
 
@@ -41,7 +42,7 @@ module sll_m_simple_pic_4d_group
 
   !> Group of sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle
 
-  ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
+  ! <<sll_simple_pic_4d_group>> [[file:sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
   
   type, extends(sll_c_remapped_particle_group) :: sll_simple_pic_4d_group
 

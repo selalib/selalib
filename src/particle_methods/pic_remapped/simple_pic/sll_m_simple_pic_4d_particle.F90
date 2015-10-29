@@ -27,7 +27,7 @@
 !> is a @ref sll_simple_pic_4d_group
 
 ! [[sll_simple_pic_4d_particle]]
-! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
+! [[file:sll_m_simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
 
 module sll_m_simple_pic_4d_particle
 

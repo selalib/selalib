@@ -1,5 +1,5 @@
 ! Main test program for
-! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_m_sim_4d_vp_generic_pic_cartesian]]
+! [[file:sll_m_sim_pic_vp_2d2v_cart_remapped.F90::sll_m_sim_pic_vp_2d2v_cart_remapped]]
 
 !> @ingroup particle_methods
 
