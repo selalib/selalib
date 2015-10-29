@@ -1933,6 +1933,7 @@ sll_real64, intent(out) :: y(:,:)
 SLL_ASSERT(this%bs1%n>0)
 SLL_ASSERT(n1 == size(x,1))
 SLL_ASSERT(n2 == size(y,2))
+y = 0.0_f64
 !call interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
 
 end subroutine interpolate_array_x1_derivatives_2d
@@ -1948,7 +1949,7 @@ sll_real64, intent(out) :: y(:,:)
 SLL_ASSERT(this%bs1%n>0)
 SLL_ASSERT(n1 == size(x,1))
 SLL_ASSERT(n2 == size(y,2))
-
+y = 0.0_f64
 !call interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
 
 end subroutine interpolate_array_x2_derivatives_2d
