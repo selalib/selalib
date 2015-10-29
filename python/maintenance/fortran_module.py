@@ -232,7 +232,7 @@ def compute_all_used_symbols( content ):
             # len parameter in character type declarations
             elif isinstance( item, typedecl_statements.Character ):
                 len_param = str( item.get_length() )
-                if not len_param.isdigit():
+                if (not len_param.isdigit()) and (len_param not in ['*',':']):
                     variables.append( len_param )
         # Extended type declarations
         elif isinstance( item, typedecl_statements.Type ):
