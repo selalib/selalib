@@ -112,7 +112,7 @@ real(8), external :: source_term_chgt_adim
 real(8) :: integral_solution
 real(8) :: integral_exact_solution
 
-CHARACTER(len=10) :: cmd
+character(len=10) :: cmd
 integer           :: itest1
 integer           :: itest2
 character(len=4)  :: ccase
