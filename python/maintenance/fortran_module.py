@@ -314,6 +314,7 @@ class FortranModule( object ):
         elif symbol in self.functions  :  return True
         elif symbol in self.subroutines:  return True
         elif symbol in self.interfaces :  return True
+        elif symbol in self.abstract_i :  return True
         else:
             return False
 
