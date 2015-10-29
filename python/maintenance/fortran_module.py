@@ -91,6 +91,19 @@ def remove_fortran_logicals( text ):
     return text
 
 #------------------------------------------------------------------------------
+def extract_associated_symbols( text ):
+    """
+    Extract new (local) symbols defined by an 'associate' declaration.
+
+    """
+    text = remove_fortran_strings( text ).replace( 'associate','')[1:-1]
+    symbols = []
+    for s in text.split( ',' ):
+        v = s.partition( '=>' )[0].strip()
+        symbols.append( v )
+    return symbols
+
+#------------------------------------------------------------------------------
 def get_external_symbols( content, fglobals=set() ):
     """ TODO: this should include
            1) all used variables
@@ -104,11 +117,22 @@ def get_external_symbols( content, fglobals=set() ):
     all_used_symbols = compute_all_used_symbols( content )
     # Externals symbols at this level (not from blocks)
     fexternals = all_used_symbols - flocals - fglobals - intrinsic_procedures
-    # Recursion: search for external symbols
+    # Create new set of globals by adding the locals
+    fglobals = set.union( fglobals, flocals )
+    # Search inside blocks for additional external symbols
     for item in content:
         if hasattr( item, 'content' ):
-            fexternals.update( get_external_symbols( item.content, \
-                    fglobals = set.union( fglobals, flocals ) ) )
+            # Get associated symbols from 'associate' block
+            if isinstance( item, block_statements.Associate ):
+                fassociations  = extract_associated_symbols( item.item.line )
+                fglobals_block = set.union( fglobals, fassociations )
+            else:
+                fglobals_block = fglobals
+            # Recursion: find external symbols in block contents
+            fexternals_block = get_external_symbols( item.content, \
+                    fglobals_block )
+            # Update set of all external symbols
+            fexternals.update( fexternals_block )
     # Return all external symbols
     return fexternals
 
