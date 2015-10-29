@@ -126,6 +126,7 @@ def compute_locals( content, return_dict=False ):
     functions   = []
     subroutines = []
     interfaces  = []
+    abstract_i  = []
     # Search for local definitions and update lists
     for item in content:
         if isinstance( item, variable_declaration_types ):
@@ -143,7 +144,12 @@ def compute_locals( content, return_dict=False ):
         elif isinstance( item, block_statements.Subroutine ):
             subroutines.append( item.name )
         elif isinstance( item, block_statements.Interface ):
-            interfaces.append( item.name )
+            if item.isabstract:
+                # Abstract interface
+                abstract_i.extend( c.name for c in item.content[:-1] )
+            else:
+                # Non-abstract interface
+                interfaces.append( item.name )
 
     # If required return a dictionary of sets, otherwise just one set
     if return_dict:
@@ -152,10 +158,11 @@ def compute_locals( content, return_dict=False ):
                      classes     = set( classes     ),
                      functions   = set( functions   ),
                      subroutines = set( subroutines ),
-                     interfaces  = set( interfaces  ), )
+                     interfaces  = set( interfaces  ),
+                     abstract_i  = set( abstract_i  ), )
     else:
         return set( variables + types + classes + functions + \
-                subroutines + interfaces )
+                subroutines + interfaces + abstract_i )
 
 #------------------------------------------------------------------------------
 def compute_all_used_symbols( content ):
@@ -424,6 +431,8 @@ class FortranModule( object ):
     def subroutines( self ): return self._flocals['subroutines']
     @property
     def  interfaces( self ): return self._flocals['interfaces']
+    @property
+    def  abstract_i( self ): return self._flocals['abstract_i']
     
     @property
     def imported_symbols( self ): return self._imported_symbols
@@ -464,6 +473,10 @@ class FortranModule( object ):
         print( "INTERFACES" )
         print( "----------" )
         map( printer, self.interfaces )
+        print()
+        print( "ABSTRACT INTERFACES" )
+        print( "-------------------" )
+        map( printer, self.abstract_i )
         print()
 
         print( "================" )
