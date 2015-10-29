@@ -236,12 +236,12 @@ program test_bsl_lt_pic_4d
      ! -- --  push the k-th particle [begin]  -- --
 
      ! get particle position
-     coords = particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
+     coords = particle_group%get_x(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      x_k = coords(1)
      y_k = coords(2)
 
      ! get particle speed
-     coords = particle_group%get_v(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
+     coords = particle_group%get_v(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      vx_k = coords(1)
      vy_k = coords(2)
 
@@ -276,7 +276,6 @@ program test_bsl_lt_pic_4d
 
   call sll_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
-    ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
     stop
     print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
@@ -376,17 +375,15 @@ program test_bsl_lt_pic_4d
 
   close(80)
 
-  ! uses [[file:~/mcp/selalib/src/fields/sll_m_array_plotting.F90::write_projection_2d]] developed by PN (cf
-  ! example in [[file:~/mcp/selalib/src/fields/unit_test_4d.F90::write_projection_2d]])
-
-  ! todo: we could plot a slice of f here, but this seems heavy in a unit test...
+  ! uses [[selalib:src/data_structures/fields/sll_m_array_plotting.F90::write_projection_2d]] developed by PN (cf
+  ! example in [[selalib:src/data_structures/fields/testing/test_plot_array_4d.F90::write_projection_2d]]) todo: we
+  ! could plot a slice of f here, but this seems heavy in a unit test...
 
     !  plotting_mesh_2d =>  new_cartesian_mesh_2d( NC_X1_PLOT, NC_X2_PLOT, &
     !         X1_MIN_PLOT, X1_MAX_PLOT, X2_MIN_PLOT, X2_MAX_PLOT )
     !
     !  file_name = "lt_pic_density_test_init4D.dat"
     !
-    !  ! [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_plot_f_on_2d_grid]]
     !  call sll_lt_pic_4d_plot_f_on_2d_grid( &
     !    file_name,        &
     !    PLOT_DIM1,        &
@@ -449,6 +446,7 @@ contains
 !#define COEFF_X_VX 0.0
 !#define COEFF_Y_VY 0.0
 
+  ! <<test_forward_push>>
   subroutine test_forward_push(x,y,vx,vy,new_x,new_y,new_vx,new_vy)
 
     ! [[file:../working_precision/sll_m_working_precision.h]]
