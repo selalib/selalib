@@ -17,7 +17,7 @@ TODO
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 28 Oct 2015
+# Last revision: 29 Oct 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
@@ -186,10 +186,11 @@ def compute_all_used_symbols( content ):
                 variables.extend( re.findall( pattern_dimension, s ) )
             # Array dimensions on r.h.s.
             for v in item.entity_decls:
-                varname  = v.split('(')[0].strip()
-                allnames = re.findall( pattern_name, v )
-                allnames.remove( varname )
-                variables.extend( allnames )
+                v = remove_fortran_strings ( v )  # remove strings
+                v = remove_fortran_logicals( v )  # remove logicals
+                syms = re.findall( pattern_name, v )
+                syms = (s for s in syms[1:] if s not in intrinsic_procedures)
+                variables.extend( syms )
             # kind parameter in numerical type declarations
             if isinstance( item, (typedecl_statements.Integer,
                                   typedecl_statements.Real,
