@@ -1,7 +1,7 @@
 # coding: utf8
 """
-Module exposing the FortranModule class, which extracts information from a
-Fortran module (partially) parsed by the F2Py library.
+Python 2 module exposing the FortranModule class, which extracts information
+from a Fortran module (partially) parsed by the F2Py library.
 
 Modules required
 ----------------
@@ -9,15 +9,20 @@ Modules required
   * Library   : fortran_intrinsics
   * 3rd-party : f2py.fparser
 
+TODO
+----
+  * Collect abstract interfaces
+
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 26 Oct 2015
+# Last revision: 29 Oct 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
-from fortran_intrinsics import intrinsic_procedures
+from fortran_intrinsics import (intrinsic_procedures, logical_operators,
+                                                      logical_constants)
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -29,12 +34,8 @@ __docformat__ = 'reStructuredText'
 variable_declaration_types = \
   ( typedecl_statements.Integer,   typedecl_statements.Real,
     typedecl_statements.Complex,   typedecl_statements.Logical,
-    typedecl_statements.Character, typedecl_statements.Type )
-
-namespace_types = \
-  ( block_statements.Type,
-    block_statements.Function,
-    block_statements.Subroutine )
+    typedecl_statements.Character, typedecl_statements.Type,
+    typedecl_statements.Class )
 
 #------------------------------------------------------------------------------
 def is_fortran_string( text ):
@@ -47,6 +48,60 @@ def is_fortran_string( text ):
         return True
     else:
         return False
+
+#------------------------------------------------------------------------------
+def remove_fortran_strings( text ):
+    """ Remove any fortran string from the given text.
+    """
+    in_string = False
+    delimiter = None
+    new_text  = str()
+    # Construct new text
+    for c in text:
+        # Are we in a string?
+        if in_string:
+            if c == delimiter:
+                # Recognize that string has finished
+                in_string = False
+                delimiter = None
+        else:
+            if c in ['"',"'"]:
+                # Recognize that new string has just began, and store delimiter
+                in_string = True
+                delimiter = c
+            else:
+                # Add character to new string
+                new_text += c
+    # Return new string
+    return new_text
+
+#------------------------------------------------------------------------------
+def remove_fortran_logicals( text ):
+    """
+    Remove any fortran logical operator or constant from the given text.
+
+    NOTE
+    ----
+    First, one should remove all fortran strings!
+
+    """
+    text = text.lower()
+    for s in logical_operators:  text = text.replace( s, '' )
+    for s in logical_constants:  text = text.replace( s, '' )
+    return text
+
+#------------------------------------------------------------------------------
+def extract_associated_symbols( text ):
+    """
+    Extract new (local) symbols defined by an 'associate' declaration.
+
+    """
+    text = remove_fortran_strings( text ).replace( 'associate','')[1:-1]
+    symbols = []
+    for s in text.split( ',' ):
+        v = s.partition( '=>' )[0].strip()
+        symbols.append( v )
+    return symbols
 
 #------------------------------------------------------------------------------
 def get_external_symbols( content, fglobals=set() ):
@@ -62,11 +117,22 @@ def get_external_symbols( content, fglobals=set() ):
     all_used_symbols = compute_all_used_symbols( content )
     # Externals symbols at this level (not from blocks)
     fexternals = all_used_symbols - flocals - fglobals - intrinsic_procedures
-    # Recursion: search for external symbols
+    # Create new set of globals by adding the locals
+    fglobals = set.union( fglobals, flocals )
+    # Search inside blocks for additional external symbols
     for item in content:
         if hasattr( item, 'content' ):
-            fexternals.update( get_external_symbols( item.content, \
-                    fglobals = set.union( fglobals, flocals ) ) )
+            # Get associated symbols from 'associate' block
+            if isinstance( item, block_statements.Associate ):
+                fassociations  = extract_associated_symbols( item.item.line )
+                fglobals_block = set.union( fglobals, fassociations )
+            else:
+                fglobals_block = fglobals
+            # Recursion: find external symbols in block contents
+            fexternals_block = get_external_symbols( item.content, \
+                    fglobals_block )
+            # Update set of all external symbols
+            fexternals.update( fexternals_block )
     # Return all external symbols
     return fexternals
 
@@ -84,11 +150,13 @@ def compute_locals( content, return_dict=False ):
     functions   = []
     subroutines = []
     interfaces  = []
+    abstract_i  = []
     # Search for local definitions and update lists
     for item in content:
         if isinstance( item, variable_declaration_types ):
             for v in item.entity_decls:
                 v = v.split('(')[0].strip() # drop (:,:) from arrays
+                v = v.split('=')[0].strip() # get parameter name
                 variables.append( v )
         elif isinstance( item, block_statements.Type ):
             if 'abstract' in item.item.get_line(): # TODO: use regex
@@ -99,9 +167,14 @@ def compute_locals( content, return_dict=False ):
             functions.append( item.name )
         elif isinstance( item, block_statements.Subroutine ):
             subroutines.append( item.name )
-        else:
-            # TODO: get interfaces
-            pass
+        elif isinstance( item, block_statements.Interface ):
+            if item.isabstract:
+                # Abstract interface
+                abstract_i.extend( c.name for c in item.content[:-1] )
+            else:
+                # Non-abstract interface
+                interfaces.append( item.name )
+
     # If required return a dictionary of sets, otherwise just one set
     if return_dict:
         return dict( variables   = set( variables   ),
@@ -109,10 +182,11 @@ def compute_locals( content, return_dict=False ):
                      classes     = set( classes     ),
                      functions   = set( functions   ),
                      subroutines = set( subroutines ),
-                     interfaces  = set( interfaces  ), )
+                     interfaces  = set( interfaces  ),
+                     abstract_i  = set( abstract_i  ), )
     else:
         return set( variables + types + classes + functions + \
-                subroutines + interfaces )
+                subroutines + interfaces + abstract_i )
 
 #------------------------------------------------------------------------------
 def compute_all_used_symbols( content ):
@@ -128,6 +202,7 @@ def compute_all_used_symbols( content ):
     pattern_variable = r"(?<![%\s])\s*" + pattern_name + r"\s*(?![\s\(])"
     pattern_call     = r"(?<![%\s])\s*" + pattern_name + r"\s*\("
     pattern_extends  = r"extends\s*\("  + pattern_name + r"\s*\)"
+    pattern_dimension= r"dimension\s*\("+ pattern_name + r"\s*\)"
 
     types       = []
     subroutines = []
@@ -135,9 +210,34 @@ def compute_all_used_symbols( content ):
     calls       = []
 
     for item in content:
-        # l.h.s. of type declarations
-        if isinstance( item, typedecl_statements.Type ):
+        # Intrinsic type declarations
+        if isinstance( item, variable_declaration_types ):
+            # Array dimensions on l.h.s.
+            for s in item.attrspec:
+                variables.extend( re.findall( pattern_dimension, s ) )
+            # Array dimensions on r.h.s.
+            for v in item.entity_decls:
+                v = remove_fortran_strings ( v )  # remove strings
+                v = remove_fortran_logicals( v )  # remove logicals
+                syms = re.findall( pattern_name, v )
+                syms = (s for s in syms[1:] if s not in intrinsic_procedures)
+                variables.extend( syms )
+            # kind parameter in numerical type declarations
+            if isinstance( item, (typedecl_statements.Integer,
+                                  typedecl_statements.Real,
+                                  typedecl_statements.Complex) ):
+                kind_param = str( item.get_kind() )
+                if not kind_param.isdigit():
+                    variables.append( kind_param )
+            # len parameter in character type declarations
+            elif isinstance( item, typedecl_statements.Character ):
+                len_param = str( item.get_length() )
+                if (not len_param.isdigit()) and (len_param not in ['*',':']):
+                    variables.append( len_param )
+        # Extended type declarations
+        elif isinstance( item, typedecl_statements.Type ):
             types.append( item.name )
+        # Polymorphic extended type declarations
         elif isinstance( item, typedecl_statements.Class ):
             types.append( item.get_kind() ) # NOTE: this makes no sense, but...
         # Subroutine calls (both caller and arguments)
@@ -151,6 +251,14 @@ def compute_all_used_symbols( content ):
             # arguments
             for s in item.items:
                 if not is_fortran_string( s ):
+                    # Remove strings
+                    s = remove_fortran_strings( s )
+                    # Remove logicals
+                    s = remove_fortran_logicals( s )
+                    # Neglect argument keywords!
+                    if '=' in s:
+                        s = s.partition('=')[2].strip()
+                    # Search for symbols
                     variables.extend( re.findall( pattern_variable, s ) )
                     calls    .extend( re.findall( pattern_call    , s ) )
         # Assignments (both sides)
@@ -159,9 +267,10 @@ def compute_all_used_symbols( content ):
             # l.h.s.
             variables.append( re.findall( pattern_name, item.variable )[0] )
             # r.h.s.
-            if not is_fortran_string( item.expr ):
-                variables.extend( re.findall( pattern_variable, item.expr ) )
-                calls    .extend( re.findall( pattern_call    , item.expr ) )
+            s = remove_fortran_strings( item.expr )
+            s = remove_fortran_logicals( s )
+            variables.extend( re.findall( pattern_variable, s ) )
+            calls    .extend( re.findall( pattern_call    , s ) )
         # Type blocks
         elif isinstance( item, block_statements.Type ):
             if len( item.specs ) > 0:
@@ -229,6 +338,7 @@ class FortranModule( object ):
         elif symbol in self.functions  :  return True
         elif symbol in self.subroutines:  return True
         elif symbol in self.interfaces :  return True
+        elif symbol in self.abstract_i :  return True
         else:
             return False
 
@@ -346,6 +456,8 @@ class FortranModule( object ):
     def subroutines( self ): return self._flocals['subroutines']
     @property
     def  interfaces( self ): return self._flocals['interfaces']
+    @property
+    def  abstract_i( self ): return self._flocals['abstract_i']
     
     @property
     def imported_symbols( self ): return self._imported_symbols
@@ -386,6 +498,10 @@ class FortranModule( object ):
         print( "INTERFACES" )
         print( "----------" )
         map( printer, self.interfaces )
+        print()
+        print( "ABSTRACT INTERFACES" )
+        print( "-------------------" )
+        map( printer, self.abstract_i )
         print()
 
         print( "================" )

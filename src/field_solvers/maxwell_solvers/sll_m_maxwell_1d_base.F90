@@ -104,7 +104,7 @@ contains
     sll_int32,                    intent(in) :: iplot !< plot counter
     sll_real64,                   intent(in) :: time  !< step time
 
-    integer          :: i, j
+    integer          :: i
     character(len=4) :: cplot
 
     call int2string(iplot, cplot)

@@ -654,12 +654,12 @@ sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: val_jac
 sll_real64 :: B11
@@ -670,8 +670,7 @@ sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
 sll_int32  :: index3, index4
-sll_int32  :: index_coef1,index_coef2
-sll_int32  :: b, bprime,x,y
+sll_int32  :: b, bprime,x
 sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
 sll_int32  :: nspl
@@ -744,9 +743,8 @@ csr_mat => new_csr_matrix( es%num_cells1*es%num_cells2,               &
 !$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4, &
 !$OMP v3v4, d3v4, v3d4, &
 !$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
-!$OMP index_coef2, index_coef1, &
 !$OMP index1, index2, index3, index4, &
-!$OMP a, b, x, y, aprime, bprime, &
+!$OMP a, b, x, aprime, bprime, &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()

@@ -18,6 +18,7 @@
 module sll_m_fdistribu4d_dk
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
 
   use sll_m_constants
   use sll_m_boundary_condition_descriptors
@@ -241,8 +242,9 @@ module sll_m_fdistribu4d_dk
     sll_real64, intent(in) :: n0_r
     sll_real64, intent(in) :: Ti_r
 
+    SLL_ASSERT(r >= 0.0)
     val = n0_r/sqrt(2._f64*sll_pi*Ti_r) * &
-      exp(-0.5_f64*vpar**2/Ti_r)
+      exp(-0.5_f64*vpar**2/Ti_r) 
   end function compute_feq_val
 
 
@@ -386,7 +388,7 @@ module sll_m_fdistribu4d_dk
     sll_int32 :: ix, iy, ivpar
 
     Npt1  = size(xgrid_2d,1)
-    Npt2  = size(xgrid_2d,2)
+    Npt2  = size(ygrid_2d,2)
     Nvpar = size(vpar_grid,1)
 
     do ivpar = 1,Nvpar

@@ -9,15 +9,15 @@ program particle_fourier_modes_test
 
 
     
-sll_real64 ::time
+!sll_real64 ::time
 sll_int32 :: ierr
 sll_int32 :: npart !number of particles
 sll_real64, dimension(:), allocatable :: x !particle coordinate
 type(sll_time_mark)  :: tstart, tstop
 sll_int32 :: maxmode=10
 sll_comp64, dimension(:), allocatable :: fmodes
-sll_comp64, dimension(:), allocatable :: modeone
-sll_int32 :: idx
+!sll_comp64, dimension(:), allocatable :: modeone
+!sll_int32 :: idx
 
 !Load some particles
 
@@ -25,13 +25,14 @@ sll_int32 :: idx
 
 
 print *,"Test for small number of particles"
-npart=1e5
+npart=10**5
 SLL_CLEAR_ALLOCATE(x(1:npart), ierr)
 call random_number(x);
 x=x*2*sll_pi
 
 do maxmode=20,22
-SLL_CLEAR_ALLOCATE(fmodes(1:maxmode), ierr)
+SLL_ALLOCATE(fmodes(1:maxmode), ierr)
+fmodes = (0.0_f64,0.0_f64)
 
 
 call sll_set_time_mark(tstart)
