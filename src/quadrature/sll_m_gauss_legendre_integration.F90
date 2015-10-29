@@ -171,7 +171,7 @@ contains
     select case(n)
        SELECT_CASES
     end select
-    ans = 0.0
+    ans = 0.0_f64
     ! need to map the interval [-1,1] into the interval [a,b]
     c1 = 0.5_f64*(b-a)
     c2 = 0.5_f64*(b+a)

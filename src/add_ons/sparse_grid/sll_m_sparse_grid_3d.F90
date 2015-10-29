@@ -57,7 +57,7 @@ contains
 
 
 !> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
-  subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)	
+  subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
     class(sparse_grid_interpolator_3d), intent(inout) :: interpolator !< sparse grid object
   sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus
   sll_real64, dimension(:), intent(out) :: data_out !< Value of the function or the hierarchical surplus (depending on value of \a hiera) for the displaced data points.

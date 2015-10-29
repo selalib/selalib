@@ -70,12 +70,13 @@ interface delete
    module procedure free_poisson_2d_periodic_fftpack
 end interface
 
-interface fft
-   module procedure doubfft, doubcfft
-end interface
-interface fftinv
-   module procedure doubfftinv,  doubcfftinv
-end interface
+!PN DEFINED BUT NOT USED
+!PN interface fft
+!PN    module procedure doubfft, doubcfft
+!PN end interface
+!PN interface fftinv
+!PN    module procedure doubfftinv,  doubcfftinv
+!PN end interface
 
 public :: initialize, new, solve, delete
 
@@ -241,9 +242,9 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
    nc_x = this%nc_x
    nc_y = this%nc_y
 
-   this%rhst = 0.0_f64
-   this%ext  = 0.0_f64
-   this%eyt  = 0.0_f64
+   this%rhst = cmplx(0.0_f64,0.0,kind=f64)
+   this%ext  = cmplx(0.0_f64,0.0,kind=f64)
+   this%eyt  = cmplx(0.0_f64,0.0,kind=f64)
    field_x   = 0.0_f64
    field_y   = 0.0_f64
 
@@ -257,8 +258,8 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
       call zfftf( nc_y, this%rhst(:,i), this%ffty%coefcd)
    end do
 
-   this%ext(1,1) = 0.0_f64
-   this%eyt(1,1) = 0.0_f64
+   this%ext(1,1) = (0.0_f64,0.0_f64)
+   this%eyt(1,1) = (0.0_f64,0.0_f64)
    this%ext = -cmplx(0.0_f64,this%kx/this%k2,kind=f64)*this%rhst
    this%eyt = -cmplx(0.0_f64,this%ky/this%k2,kind=f64)*this%rhst
 
@@ -389,57 +390,58 @@ subroutine initcfft(this,l)
 
 end subroutine initcfft
 
-subroutine doubfft(this,array)
-
-   type(fftclass) :: this
-   sll_real64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call dfftf( this%n, array(:,i), this%coefd)
-   end do
-
-   array = array /this%n      ! normalize FFT
-
-end subroutine doubfft
-
-subroutine doubcfft(this,array)
-
-   type(fftclass) :: this
-   sll_comp64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call zfftf( this%n, array(:,i), this%coefcd)
-   end do
-
-   array = array /this%n      ! normalize FFT
-
-end subroutine doubcfft
-
-subroutine doubfftinv(this,array)
-
-   type(fftclass) :: this
-   sll_real64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call dfftb( this%n, array(:,i),  this%coefd )
-   end do
-
-end subroutine doubfftinv
-
-subroutine doubcfftinv(this,array)
-
-   type(fftclass) :: this
-   sll_comp64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call zfftb( this%n, array(:,i),  this%coefcd )
-   end do
-
-end subroutine doubcfftinv
+!PN DEFINED BUT NOT USED
+!PN subroutine doubfft(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_real64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call dfftf( this%n, array(:,i), this%coefd)
+!PN    end do
+!PN 
+!PN    array = array /this%n      ! normalize FFT
+!PN 
+!PN end subroutine doubfft
+!PN 
+!PN subroutine doubcfft(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_comp64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call zfftf( this%n, array(:,i), this%coefcd)
+!PN    end do
+!PN 
+!PN    array = array /this%n      ! normalize FFT
+!PN 
+!PN end subroutine doubcfft
+!PN 
+!PN subroutine doubfftinv(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_real64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call dfftb( this%n, array(:,i),  this%coefd )
+!PN    end do
+!PN 
+!PN end subroutine doubfftinv
+!PN 
+!PN subroutine doubcfftinv(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_comp64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call zfftb( this%n, array(:,i),  this%coefcd )
+!PN    end do
+!PN 
+!PN end subroutine doubcfftinv
 
 end module sll_m_poisson_2d_periodic_fftpack
 

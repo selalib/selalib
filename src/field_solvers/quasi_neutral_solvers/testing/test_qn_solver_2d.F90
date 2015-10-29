@@ -87,7 +87,7 @@ contains
        do j=1,NP_theta
 
           theta = (j-1)*dtheta
-          Mr = 4*abs(cos(theta))
+          Mr = 4.0_f64*abs(cos(theta))
 
           if (BC==SLL_NEUMANN) then
              if (i_test==1) then
@@ -110,21 +110,21 @@ contains
 
                 phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*cos(theta)
 
-                rho(i,j) = cos(theta) * ( 2*cos(rmin+rmax-2*r) - &
+                rho(i,j) = cos(theta) * ( 2d0*cos(rmin+rmax-2*r) - &
                                       c(i)* sin(rmin+rmax-2*r) + &
                     (1/r**2+1/(Zi*Te(i)))*sin(rmax-r)*sin(r-rmin))
              else
                phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r) * &
                    exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi)
 
-               rho(i,j) = ( 2*cos(rmax+rmin-2*r) - c(i)*sin(rmax+rmin-2*r) ) * &
+               rho(i,j) = ( 2d0*cos(rmax+rmin-2*r) - c(i)*sin(rmax+rmin-2*r) ) * &
                           exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi) + phi_exact(i,j) &
                                        * ( 1/(Zi*Te(i)) - ((theta-sll_pi)**2-1)/r**2 )
              endif
 
              Mtheta = abs(sin(r-rmin)*sin(rmax-r))
              average_err_bound = average_err_bound + &
-             Mr*dr**2/12 + abs(c(i))*Mr*dr**2/6 + Mtheta*dtheta**2/(r**2*12)
+             Mr*dr**2/12d0 + abs(c(i))*Mr*dr**2/6d0 + Mtheta*dtheta**2/(r**2*12)
           enddo
 
        enddo
@@ -133,8 +133,8 @@ contains
 
        call solve(plan, rho, c, Te, f, g, Zi, phi)
 
-       average_err = sum(abs(phi_exact-phi))/(NP_r*NP_theta)
-       average_err_bound = average_err_bound/(NP_r*NP_theta)
+       average_err = sum(abs(phi_exact-phi))/real(NP_r*NP_theta,f64)
+       average_err_bound = average_err_bound/real(NP_r*NP_theta,f64)
 
        print*, 'Error =', average_err
        print*, 'Boundary error =', average_err_bound

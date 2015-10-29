@@ -167,6 +167,7 @@ contains
 
   subroutine delete_periodic_1d_advector( adv )
     class(periodic_1d_advector), intent(inout) :: adv
+    SLL_ASSERT(storage_size(adv)>0)
   end subroutine delete_periodic_1d_advector
 
 

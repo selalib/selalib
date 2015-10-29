@@ -59,15 +59,15 @@ contains
         SLL_ASSERT(confidence< 1.0_f64)
         if (N>1) then
 
-            meanx=sum(x)/N    !Sample mean x
-            meany=sum(y)/N    !Sample mean y
+            meanx=sum(x)/real(N,f64)    !Sample mean x
+            meany=sum(y)/real(N,f64)    !Sample mean y
 
             !cov_xy=dot_product(x,y) - sum(x)*sum(y)/N
             !cov_xx= (sum(x**2) - sum(x)**2/N)
             !cov_yy= (sum(y**2) - sum(y)**2/N)
-            cov_xx= sum((x-meanx)**2)/(N-1)  !Sample Variance x
-            cov_yy= sum((y-meany)**2)/(N-1)  !Sample Variance y
-            cov_xy= sum((y-meany)*(x-meanx))/(N-1)  !Sample Covariance x,y
+            cov_xx= sum((x-meanx)**2)/real(N-1,f64)  !Sample Variance x
+            cov_yy= sum((y-meany)**2)/real(N-1,f64)  !Sample Variance y
+            cov_xy= sum((y-meany)*(x-meanx))/real(N-1,f64)  !Sample Covariance x,y
 
 
             slope_x= cov_xy/cov_xx
@@ -79,8 +79,8 @@ contains
             results(1)=off_set
 
         else
-            results(2)=0
-            results(1)=0
+            results(2)=0.0_f64
+            results(1)=0.0_f64
         end if
 
         if (N>2) then
@@ -100,7 +100,7 @@ contains
             slope_x_max=slope_x-slope_x_error
         else
             !Could not estimate variance
-            results(3)=0
+            results(3)=0.0_f64
         endif
 
     endfunction
@@ -159,7 +159,7 @@ contains
         !NaN=ieee_value(a, ieee_quiet_nan)
         !Pinf=ieee_value(a, ieee_positive_inf)
         !Minf=ieee_value(a, ieee_negative_inf)
-        NaN=-1
+        NaN=-1.0_f64
         Pinf=huge(a)
         Minf=tiny(a)
 

@@ -578,7 +578,7 @@ adv%f_out = 0.0_f64
 
 do it = 1 , adv%mesh%num_triangles
       
-   xm11 = 0.; xm12 = 0.; xm13 = 0.
+   xm11 = 0.0_f64; xm12 = 0.0_f64; xm13 = 0.0_f64
 
    !nbpama(it)  !Nombre de particules dans la maille numero it
             

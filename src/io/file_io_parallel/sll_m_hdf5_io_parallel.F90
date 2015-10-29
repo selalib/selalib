@@ -221,7 +221,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -290,7 +290,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -359,7 +359,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -430,7 +430,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -498,7 +498,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)

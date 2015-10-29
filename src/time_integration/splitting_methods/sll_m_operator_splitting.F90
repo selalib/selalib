@@ -73,10 +73,14 @@ contains
     sll_real64, intent(in)  :: dt !< time increment on which operator is applied
 
     print*, 'This is a dummy implementation for providint the interface  &
-         in sll_operator_splitting_base.F90.                             &
-         The class operator_splitting needs to be extended               &
-         providing the data to be evolved by the operator for an actual  &
-         implementation.'
+    &    in sll_operator_splitting_base.F90.                             &
+    &    The class operator_splitting needs to be extended               &
+    &    providing the data to be evolved by the operator for an actual  &
+    &    implementation.'
+
+    return
+    SLL_ASSERT(storage_size(this)>0)
+    SLL_ASSERT(dt>0.0_f64)
   end subroutine operator
 
   !> @brief Returns a pointer to a heap-allocated operator_splitting object.

@@ -32,7 +32,6 @@ class(sll_scalar_field_2d_base), pointer                  :: rho
 
 sll_real64 :: acc
 sll_real64 :: normL2
-sll_real64 :: normH1
 
 sll_real64, dimension(:,:), allocatable :: values
 sll_real64, dimension(:,:), allocatable :: calculated
@@ -44,7 +43,6 @@ sll_real64 :: h1,h2,node_val,ref
 sll_real64, dimension(:), allocatable  :: eta1
 sll_real64, dimension(:), allocatable  :: eta2
 sll_int32  :: npts1,npts2
-sll_int32  :: cell 
 
 real(8) :: integral_solution
 real(8) :: integral_exact_solution
@@ -410,7 +408,7 @@ print*, ' L2 norm :', sqrt(normL2), &
   sqrt(normL2)/h1**(spline_degree1+1), &
   sqrt(normL2)/h1**(spline_degree1+2)
 if (sqrt(normL2) <= h1**(spline_degree1-1) ) then     
-   acc = sum(abs(calculated-reference))/(npts1*npts2)
+   acc = sum(abs(calculated-reference))/real(npts1*npts2,f64)
    print"('L_oo =',g15.3, 4x, 'OK' )", acc
 else
   stop 'FAILED'
@@ -424,6 +422,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 1.0_f64
 end function one
 
@@ -432,6 +434,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 0.0_f64
 end function zero
 

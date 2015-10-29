@@ -92,18 +92,18 @@ contains
        p=p+1
        plan%indi(p)=k
        plan%indj(p)=k
-       plan%val(p)=4
+       plan%val(p)=4.0_f64
     end do
     do ii=1,nn-1
        do jj=1,nn
           p=p+1
           i=ii+(jj-1)*nn
           j=ii+1+(jj-1)*nn
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=i
           plan%indj(p)=j
           p=p+1
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=j
           plan%indj(p)=i
        end do
@@ -113,11 +113,11 @@ contains
           i=ii+(jj-1)*nn
           j=ii+jj*nn
           p=p+1
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=i
           plan%indj(p)=j
           p=p+1
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=j
           plan%indj(p)=i
        end do
