@@ -1395,6 +1395,8 @@ sll_real64, dimension(:), intent(in) :: data
 sll_real64, dimension(num_points)    :: res
 sll_int32                            :: i
 
+SLL_ASSERT(size(data) == num_points)
+SLL_ASSERT(size(coordinates) == num_points)
 do i = 1, num_points
 
   res(i) = bvalue( this%deboor,          &

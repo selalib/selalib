@@ -40,7 +40,6 @@ sll_real64 :: acc
 sll_real64 :: normL2
 sll_real64 :: normH1
 
-sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: reference
 
@@ -49,7 +48,6 @@ sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
 sll_int32  :: npts1,npts2
-sll_int32  :: cell 
 
 real(8) :: integral_solution
 real(8) :: integral_exact_solution
@@ -284,7 +282,7 @@ print*, ' L2 norm :', sqrt(normL2), h1**(SPLINE_DEG1-1)
 print*, ' H1 norm :', sqrt(normH1), h1**(SPLINE_DEG1-2)
 if (sqrt(normL2) <= h1**(SPLINE_DEG1-1)  .and. &
     sqrt(normH1) <= h1**(SPLINE_DEG1-2)) then     
-   acc = sum(abs(calculated-reference))/(npts1*npts2)
+   acc = sum(abs(calculated-reference))/real(npts1*npts2,f64)
    print"('L_oo =',g15.3, 4x, 'OK' )", acc
 else
   stop 'FAILED'
@@ -297,7 +295,11 @@ function four( eta1, eta2, params ) result(res)
 real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
-real(8) :: res, pi
+real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 4.0_f64
 end function four
 
@@ -306,6 +308,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 1.0_f64
 end function one
 
@@ -314,6 +320,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 0.0_f64
 end function zero
 
@@ -323,6 +333,10 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 
 pi = 4d0*atan(1d0)
 res = -8*pi*pi*sin(2*pi*eta1)*sin(2*pi*eta2)
@@ -335,6 +349,10 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 
 pi = 4d0*atan(1d0)
 res = sin(2*pi*eta1)*sin(2*pi*eta2)

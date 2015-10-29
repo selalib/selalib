@@ -168,3 +168,16 @@ intrinsic_procedures = { \
 'unpack', # Store the elements of a vector in an array of higher rank
 'verify', # Scan a string for the absence of a set of characters
 }
+
+logical_operators = { \
+'.not.',
+'.and.',
+'.or.',
+'.eqv.',
+'.neqv.',
+}
+
+logical_constants = { \
+'.true.',
+'.false.',
+}
