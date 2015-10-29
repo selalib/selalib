@@ -1,6 +1,7 @@
   ! [[shell:header\alh 'remapped_pic_doc.F90']] (cf [[file:~/alh/bin/headeralh]])
   ! headeralh authors=- default=0 f90 start=25/06/15
 
+  ! <<<<pic_remapped_documentation>>>>
   ! To rebuild the documentation: [[elisp:(compile "cd ${SELALIB}/build && make doc")]].
 
   ! This file creates the page [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]]. ???

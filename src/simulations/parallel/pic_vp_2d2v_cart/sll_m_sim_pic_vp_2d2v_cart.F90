@@ -37,7 +37,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      sll_real64, pointer :: efield(:,:)
 
      ! Cartesian mesh
-     type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+     type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/mesh/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 
      ! Abstract kernel smoother
      class(sll_kernel_smoother_base), pointer :: kernel_smoother

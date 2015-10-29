@@ -19,8 +19,7 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle <!--
-!> [[file:bsl_lt_pic_4d_particle.F90::sll_bsl_lt_pic_4d_particle]] -->
+!> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle
 
 module sll_m_bsl_lt_pic_4d_group
 
@@ -72,7 +71,7 @@ module sll_m_bsl_lt_pic_4d_group
     !> @name The remapping grid in phase space and quasi-interpolation coefficients (for cubic spline particle shapes)
     !> @{
     type(sll_cartesian_mesh_4d),                pointer         :: remapping_grid
-    sll_real64, dimension(:,:,:,:),             pointer         :: target_values
+    sll_real64, dimension(:,:,:,:),             pointer         :: target_values ! <<target_values>>
     sll_real64, dimension(:),                   pointer         :: lt_pic_interpolation_coefs
     sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_x
     sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_y
@@ -842,9 +841,9 @@ contains
   end subroutine bsl_lt_pic_4d_write_hat_density_on_remap_grid
 
 
-  ! position the particle on the cartesian remapping grid
-  ! and compute new weights in order to approximate the point values stored in the remapping grid
-  !  subroutine sll_compute_new_lt_particles_4d( &        ! old name
+  ! <<bsl_lt_pic_4d_compute_new_particles>> position the particle on the cartesian remapping grid and compute new
+  ! weights in order to approximate the point values stored in the remapping grid
+
   subroutine bsl_lt_pic_4d_compute_new_particles( &
               p_group )
 
@@ -1117,12 +1116,9 @@ contains
   ! <<bsl_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
   !  - 1.  the "write f" scenario:
   !        write the density on the (phase-space) remapping grid, using the method described
-  !        in the "BSL-remapping" notes (version of december 2, 2014) cf
-  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping]] and more precisely
-  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_step_1]].  Algorithm from
-  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr]] (but without the deposition step)
+  !        in the "BSL-remapping" notes (version of december 2, 2014)
   !
-  !        -- this function should be a faster alternative to [[sll_lt_pic_4d_write_f_on_remap_grid]] --
+  !        -- this function should be a faster alternative to [[bsl_lt_pic_4d_write_f_on_remapping_grid]] --
   !
   !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
   !        particle group (in particular if the (x,y) domain is not periodic)
@@ -1195,8 +1191,6 @@ contains
     sll_real64 :: deposited_charge
     sll_real64 :: charge_correction_factor
 
-    ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
-
     sll_int32 :: num_virtual_cells_x
     sll_int32 :: num_virtual_cells_y
     sll_int32 :: num_virtual_cells_vx
@@ -1206,8 +1200,6 @@ contains
     sll_int32 :: number_virtual_particles_y
     sll_int32 :: number_virtual_particles_vx
     sll_int32 :: number_virtual_particles_vy
-
-    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy
 
     sll_real64 :: h_parts_x
     sll_real64 :: h_parts_y
@@ -1255,7 +1247,6 @@ contains
     sll_real64 :: virtual_grid_vy_min
     sll_real64 :: virtual_grid_vy_max
 
-    ! same as \delta{x,y,vx,vy} in [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
     sll_real64 :: h_virtual_cell_x
     sll_real64 :: h_virtual_cell_y
     sll_real64 :: h_virtual_cell_vx
@@ -1275,7 +1266,7 @@ contains
     sll_real32 :: tmp_offset_x, tmp_offset_y
 
 
-    ! index of particle closest to the center of each virtual cell.
+    ! <<closest_particle>> index of particle closest to the center of each virtual cell.
     ! Array dimensions defined by the contents of the remapping_grid.
     ! If n_virtual is greater than 1, the size of this array is smaller than the number of real remapping_grid cells.
 
@@ -1481,7 +1472,7 @@ contains
             num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
 
 
-            ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+            ! initialize [[target_values]]
             p_group%target_values(:,:,:,:) = 0
 
             !print *, "6453 before remap -> DEBUG: ", p_group%number_parts_x/2,    &
@@ -1539,7 +1530,7 @@ contains
     SLL_ALLOCATE(closest_particle_distance(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
     closest_particle_distance(:,:,:,:) = 0
 
-    ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
+    ! remapping grid cell size
 
     h_parts_x    = p_group%remapping_grid%delta_eta1
     h_parts_y    = p_group%remapping_grid%delta_eta2
@@ -1596,7 +1587,7 @@ contains
     closest_particle_distance_to_first_corner = 1e30
     k_particle_closest_to_first_corner = 0
 
-    do k=1, p_group%number_particles ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
+    do k=1, p_group%number_particles
 
        ! print *, "WRITE F CC "
        ! find absolute (x,y,vx,vy) coordinates for k-th particle.
@@ -1608,7 +1599,8 @@ contains
        vy = coords(2)
 
        ! which _virtual_ cell is this particle in? uses
-       ! [[file:sll_representation_conversion.F90::compute_cell_and_offset]] and [[g]]
+       ! [[selalib:src/particle_methods/pic_2d_standard/pic_utilities/sll_m_representation_conversion.F90::compute_cell_and_offset]]
+       ! and [[g]]
 
        x_aux = x - virtual_cells_x_min
        i = int( x_aux / h_virtual_cell_x ) + 1
@@ -1646,7 +1638,6 @@ contains
 
     closest_particle(1,1,1,1) = k_particle_closest_to_first_corner
 
-    ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
     if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(1) ) )then
         print*, "WARNING -- STOP -- verify that the non-periodic case is well implemented"
         stop
@@ -1670,8 +1661,7 @@ contains
       inv_period_y = 0
     end if
 
-    ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
-    ! Loop over all cells of indices i,j,l,m which contain at least one particle
+    ! <<loop_on_virtual_cells>> Loop over all cells of indices i,j,l,m which contain at least one particle
 
     do i = 1, num_virtual_cells_x
        do j = 1, num_virtual_cells_y
@@ -1690,17 +1680,15 @@ contains
 
                 ! print *, "WRITE F DDF"
 
-                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
-                ! virtual particles inside the cell.
-                ! Note: as written above in the remapping scenario the virtual particles coincide with the existing
-                ! remapping_grid defined in p_group.
-                ! In the deposition scenario the virtual particles are used to deposit the charge and they are not stored.
-                ! So nothing more to do.
+                ! Create a temporary set of virtual particles inside the cell.  Note: as written above in the remapping
+                ! scenario the virtual particles coincide with the existing remapping_grid defined in p_group.  In the
+                ! deposition scenario the virtual particles are used to deposit the charge and they are not stored.  So
+                ! nothing more to do.
 
-                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the real particle
-                ! which is closest to the cell center.  Note: speed-wise, it may be necessary to find a way not to scan
-                ! all the particles for every cell.  We avoid scanning all the particles for each cell by using the
-                ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
+                ! Find the real particle which is closest to the cell center.  Note: speed-wise, it may be necessary to
+                ! find a way not to scan all the particles for every cell.  We avoid scanning all the particles for each
+                ! cell by using the precomputed array [[closest_particle]]. Virtual cells which do not contain any
+                ! particle are skipped.
 
                 k = closest_particle(i,j,l,m)
 
@@ -1770,10 +1758,9 @@ contains
                 k = closest_particle(i,j,l,m)
                 SLL_ASSERT(k /= 0)
 
-               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
-               ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
-               ! [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
-               ! with parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
+               ! Compute backward image of l-th virtual node by the k-th backward flow. MCP -> oui, avec la matrice de
+               ! deformation calculée avec la fonction [[get_ltp_deformation_matrix]] pour la particule k. Calling
+               ! [[get_ltp_deformation_matrix]]
 
                call p_group%get_ltp_deformation_matrix (       &
                     k,                                         &
@@ -1800,8 +1787,7 @@ contains
                     )
 
                ! Find position of particle k at time 0
-               ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
-
+               ! [[file:sll_m_bsl_lt_pic_4d_utilities.F90::get_initial_position_on_cartesian_grid_from_particle_index]]
                call get_initial_position_on_cartesian_grid_from_particle_index(k,   &
                     p_group%number_parts_x, p_group%number_parts_y,                 &
                     p_group%number_parts_vx, p_group%number_parts_vy,               &
@@ -1811,15 +1797,10 @@ contains
                vx_k_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
                vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
-               ! <<loop_on_virtual_particles_in_one_virtual_cell>>
-               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
-               ! virtual particles in the cell to compute the value of f0 at that point (Following
-               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
+               ! <<loop_on_virtual_particles_in_one_virtual_cell>> Loop over all virtual particles in the cell to
+               ! compute the value of f0 at that point
 
-
-
-               ! i_x, i_y, i_vx, i_vy: real index of the virtual particle in
-               ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+               ! i_x, i_y, i_vx, i_vy: real index of the virtual particle in [[target_values]]
 
                ! x, y, vx, vy = will be the location of the virtual particle at time n
                ! x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
@@ -1951,17 +1932,16 @@ contains
                                   end if
 
 
-                                  ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
-                                  ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
-                                  ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
-                                  ! the closest neighbour which has lower coordinates in all directions. The particle
-                                  ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
-                                  ! with) gets progressively closer to kprime step by step (ie from neighbour to
-                                  ! neighbour).
+                                  ! Find the neighbours of the virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0
+                                  ! through the "logical neighbours" pointers of particle k. To reduce the amount of
+                                  ! code, start with finding the closest neighbour which has lower coordinates in all
+                                  ! directions. The particle located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to
+                                  ! particle k to start with) gets progressively closer to kprime step by step (ie from
+                                  ! neighbour to neighbour).
 
                                   kprime = k
 
-                                  ! Calls [[onestep]]. "dim" can be x,y,vx,vy.
+                                  ! <<ONESTEPMACRO>> Calls [[onestep]]. "dim" can be x,y,vx,vy.
 #define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%particle_list,h_parts_/**/dimname)
 ! same macros as in bsl_lt_pic_4d_utilities.F90
 #define ALONG_X 1
@@ -2077,9 +2057,8 @@ contains
 
                               if (kprime /= 0) then
 
-                                 ! kprime is the left-most vertex of the hypercube. find all the other vertices
-                                 ! through the neighbour pointers in
-                                 ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
+                                 ! kprime is the left-most vertex of the hypercube. find all the other vertices through
+                                 ! the neighbour pointers.
 
                                  hcube(1,1,1,1) = kprime
 
@@ -2089,10 +2068,9 @@ contains
                                  hcube(1,1,1,2) = p_group%particle_list(kprime)%ngb_vyright_index
 
                                  ! if any of the first four vertices is undefined (the convention in
-                                 ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
-                                 ! is that the neighbour index is then equal to the particle index), it means that
-                                 ! we reached the mesh border. just set the value of f for that particle as zero as
-                                 ! before.
+                                 ! [[bsl_lt_pic_4d_compute_new_particles]] is that the neighbour index is then equal to
+                                 ! the particle index), it means that we reached the mesh border. just set the value of
+                                 ! f for that particle as zero as before.
 
                                  if (hcube(2,1,1,1) /= kprime        &
                                       .and. hcube(1,2,1,1) /= kprime &
@@ -2135,7 +2113,6 @@ contains
                                     hcube(2,2,2,2) = p_group%particle_list(hcube(2,2,2,1))%ngb_vyright_index
 
                                       ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
-                                      ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
                                         !   call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
                                         !        p_group%number_parts_x, p_group%number_parts_y,     &
                                         !        p_group%number_parts_vx, p_group%number_parts_vy,   &
@@ -2154,13 +2131,12 @@ contains
 
                                       ! MCP [END-DEBUG]
 
-                                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
-                                    ! neighbours to interpolate the value of f0 at
-                                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
-                                    ! des particules affines (part_deg = 1) la valeur de f0 se déduit de celle du
-                                    ! poids de la particule.  En fait tu peux utiliser une formule semblable à celle
-                                    ! qui est utilisée dans la fonction sll_lt_pic_4d_write_f_on_remap_grid, mais
-                                    ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
+                                    ! Use the values of f0 at these neighbours to interpolate the value of f0. MCP ->
+                                    ! oui. Ici si tu utilises des particules affines (part_deg = 1) la valeur de f0 se
+                                    ! déduit de celle du poids de la particule.  En fait tu peux utiliser une formule
+                                    ! semblable à celle qui est utilisée dans la fonction
+                                    ! sll_lt_pic_4d_write_f_on_remap_grid, mais sans faire intervenir la matrice de
+                                    ! déformation à l'intérieur des splines.
 
                                     ! place the resulting value of f on the virtual particle in
                                     ! p_group%target_values
@@ -2190,7 +2166,7 @@ contains
                                                    vy_aux = h_parts_vy - vy_t0_to_vykprime_t0
                                                 end if
 
-                                                ! uses [[sll_pic_shape]]
+                                                ! uses [[file:sll_m_bsl_lt_pic_4d_utilities.F90::sll_pic_shape]]
                                                 f_value_on_virtual_particle = f_value_on_virtual_particle                      &
                                                       + p_group%particle_list(hcube(side_x,side_y,side_vx,side_vy))%weight     &
                                                         * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,                 &
@@ -2308,7 +2284,6 @@ contains
     sll_real64 :: dim_t0
     sll_int32 :: neighbour
 
-    ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-p_list]]
     type(sll_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
 
     sll_int32 :: ngb_dim_right_index
@@ -2354,7 +2329,6 @@ contains
     do while(j<=jumps .and. kprime/=0)
 
        ! going through neighbours
-       ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
 
        select case (dim)
 #define ALONG_X 1
@@ -2389,9 +2363,8 @@ contains
           SLL_ASSERT(.false.)
        end select
 
-       ! The convention in
-       ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]] is
-       ! that if there is no neighbour then a neighbour index is equal to the particle index
+       ! The convention in [[bsl_lt_pic_4d_compute_new_particles]] is that if there is no neighbour then a neighbour
+       ! index is equal to the particle index
 
        if(neighbour/=kprime) then
           kprime = neighbour
