@@ -2,9 +2,6 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              sll_m_lobatto_poisson.F90 
              sll_m_map_function.F90
              sll_m_lobalap.F90
-             sll_m_gces_dirichlet.F90
-             sll_m_gces_dirichlet_homogeneous.F90
-             sll_m_gces_full_periodic.F90
              sll_m_general_coordinate_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers

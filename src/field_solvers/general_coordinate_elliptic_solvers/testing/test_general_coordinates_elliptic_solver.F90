@@ -1,3 +1,4 @@
+!Old test for general elliptic solver made by Aurore
 program test_general_elliptic_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
