@@ -822,7 +822,6 @@ call sll_create( es,               &
 end function new_general_elliptic_solver
 
 
-
 function new_general_elliptic_solver_prototype( spline_degree1,   &
                                       spline_degree2,   &
                                       num_cells1,       &
@@ -875,28 +874,28 @@ sll_int32 :: ierr
 
 SLL_ALLOCATE(es,ierr)
 
-call initialize_general_elliptic_solver_prototype( es,               &
-&                spline_degree1,   &
-&                spline_degree2,   &
-&                num_cells1,       &
-&                num_cells2,       &
-&                quadrature_type1, &
-&                quadrature_type2, &
-&                bc1_min,          &
-&                bc1_max,          &
-&                bc2_min,          &
-&                bc2_max,          &
-&                eta1_min,         &
-&                eta1_max,         &
-&                eta2_min,         &
-&                eta2_max,         &
-&                precompute_rhs,   &
-&                rhs_bc1,          &
-&                rhs_bc2,          &
-&                use_cubic_splines,&
-&                rho_degree1,      &
-&                rho_degree2,      &
-&                with_constraint,  &
+call initialize_general_elliptic_solver_prototype( es, &
+&                spline_degree1,                       &
+&                spline_degree2,                       &
+&                num_cells1,                           &
+&                num_cells2,                           &
+&                quadrature_type1,                     &
+&                quadrature_type2,                     &
+&                bc1_min,                              &
+&                bc1_max,                              &
+&                bc2_min,                              &
+&                bc2_max,                              &
+&                eta1_min,                             &
+&                eta1_max,                             &
+&                eta2_min,                             &
+&                eta2_max,                             &
+&                precompute_rhs,                       &
+&                rhs_bc1,                              &
+&                rhs_bc2,                              &
+&                use_cubic_splines,                    &
+&                rho_degree1,                          &
+&                rho_degree2,                          &
+&                with_constraint,                      &
 &                zero_mean )
    
 end function new_general_elliptic_solver_prototype
