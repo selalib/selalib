@@ -218,7 +218,7 @@ def compute_all_used_symbols( content ):
     interfaces  = []
 
     for item in content:
-        # Intrinsic type declarations
+        # Type declaration statements
         if isinstance( item, variable_declaration_types ):
             # Array dimensions on l.h.s.
             for s in item.attrspec:
@@ -242,16 +242,16 @@ def compute_all_used_symbols( content ):
                 len_param = str( item.get_length() )
                 if (not len_param.isdigit()) and (len_param not in ['*',':']):
                     variables.append( len_param )
+            # Type name in extended type declarations
+            elif isinstance( item, typedecl_statements.Type ):
+                types.append( item.name )
+            # Type name in polymorphic extended type declarations
+            elif isinstance( item, typedecl_statements.Class ):
+                types.append( item.get_kind() ) # NOTE: this makes no sense, but...
         # Procedure declaration statements or bindings
         elif isinstance( item, has_interface_types ):
             if item.iname:
                 interfaces.append( item.iname )
-        # Extended type declarations
-        elif isinstance( item, typedecl_statements.Type ):
-            types.append( item.name )
-        # Polymorphic extended type declarations
-        elif isinstance( item, typedecl_statements.Class ):
-            types.append( item.get_kind() ) # NOTE: this makes no sense, but...
         # Subroutine calls (both caller and arguments)
         elif isinstance( item, statements.Call ):
             # caller
