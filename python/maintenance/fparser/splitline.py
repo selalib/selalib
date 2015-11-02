@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf8
 """
 Defines LineSplitter and helper functions.
 
@@ -9,6 +10,9 @@ terms of the NumPy License. See http://scipy.org.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
+
+Modifications:
+  - Nov 2015: bugfix in 'string_replace_map' (Yaman Güçlü - IPP Garching)
 -----
 """
 
@@ -68,7 +72,25 @@ def string_replace_map(line, lower=False,
     newline = ''.join(items)
     items = []
     expr_keys = []
-    for item in splitparen(newline):
+    #===========================================================================
+    # 02 Nov 2015: BUGFIX (Yaman Güçlü - IPP Garching)
+    #===========================================================================
+    #
+    # OLD VERSION: Only splits round brackets => issue with array constants
+    #-------------
+#    for item in splitparen(newline):
+    #
+    # NEW VERSION: First split round brackets, then square brackets if needed
+    #-------------
+    split_line = []
+    for s in splitparen( newline, paren='()' ):
+        if s.startswith('(') and s.endswith(')'):
+            split_line.append( s )
+        else:
+            split_line.extend( splitparen( s, paren='[]') )
+    for item in split_line:
+    #
+    #===========================================================================
         if isinstance(item, ParenString) and not _is_name(item[1:-1].strip()):
             key = rev_string_map.get(item)
             if key is None:
