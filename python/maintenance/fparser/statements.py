@@ -1,3 +1,4 @@
+# coding: utf8
 """
 Fortran single line statements.
 
@@ -8,6 +9,9 @@ terms of the NumPy License. See http://scipy.org.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
+
+Modifications:
+  - Nov 2015: added 'ProcedureDeclaration' (Yaman Güçlü - IPP Garching)
 -----
 """
 
@@ -23,7 +27,7 @@ __all__ = ['GeneralAssignment',
            'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
            'Case','WhereStmt','ElseWhere','Enumerator','FortranName','Threadsafe',
            'Depend','Check','CallStatement','CallProtoArgument','Pause',
-           'Comment']
+           'Comment', 'ProcedureDeclaration']
 
 import re
 import sys
@@ -1560,6 +1564,98 @@ class FinalBinding(StatementWithNamelist):
     """
     stmtname = 'final'
     match = re.compile(r'final\b', re.I).match
+
+#===============================================================================
+class ProcedureDeclaration( Statement ):
+    """
+    Procedure declaration statement (see R1211 in J3/04-007).
+
+    Author: Yaman Güçlü, Nov 2015 - IPP Garching
+    Last revision: 2 Nov 2015
+
+    Description
+    -----------
+
+    PROCEDURE [(<proc-interface>)] [[,<proc-attr-spec>]... ::] <proc-decl-list>
+
+    <proc-interface> = <interface-name> | <declaration-type-spec>
+    <proc-attr-spec> = <access-spec>
+                       | <proc-language-binding-spec>
+                       | INTENT ( <intent-spec> )
+                       | OPTIONAL
+                       | POINTER
+                       | SAVE
+
+    <proc-decl>                  = <procedure-entity-name> [ => <null-init> ]
+    <access-spec>                = PUBLIC | PRIVATE
+    <proc-language-binding-spec> = <language-binding-spec>
+    <intent-spec>                = IN | OUT | INOUT
+
+    <null-init>             = NULL()
+    <language-binding-spec> = BIND(C[,NAME = <scalar-char-initialization-expr>])
+
+    """
+    _repr_attr_names = ['selector','attrspec','proc_decls'] + Statement._repr_attr_names
+    match = re.compile( r'procedure\b', re.I ).match
+
+    #---------------------------------------------------------------------------
+    def process_item( self ):
+        # Remove 'procedure' string and empty spaces that follow it
+        line = self.item.get_line()[9:].lstrip()
+
+        # Store interface name (empty string if not given) as 'self.iname'
+        if line.startswith('('):
+            i = line.index(')')
+            name = line[1:i].strip()
+            line = line[i+1:].lstrip()
+        else:
+            name = ''
+        self.iname = name
+
+        # Remove comma and following empty spaces
+        if line.startswith(','):
+            line = line[1:].lstrip()
+
+        # Search for double columns
+        i = line.find('::')
+
+        # If '::' was found, extract list of attributes and remove line head
+        if i != -1:
+            attrs = split_comma( line[:i], self.item )
+            line = line[i+2:].lstrip()
+        else:
+            attrs = []
+
+        # Give uniform format to all attributes, and store them in 'self.attrs'
+        attrs1 = []
+        for attr in attrs:
+            if is_name( attr ):
+                attr = attr.upper()
+            else:
+                i = attr.find('(')
+                assert i!=-1 and attr.endswith(')'),`attr`
+                attr = '%s (%s)' % (attr[:i].rstrip().upper(), attr[i+1:-1].strip())
+            attrs1.append( attr )
+        self.attrs = attrs1
+
+        # Extract list of procedure declarations
+        self.proc_decls = split_comma( line, self.item )
+
+        return
+
+    #---------------------------------------------------------------------------
+    def tofortran( self, isfix=None ):
+        tab = self.get_indent_tab( isfix=isfix )
+        s = 'PROCEDURE '
+        if self.iname:
+            s += '(' + self.iname + ') '
+        if self.attrs:
+            s += ', ' + ', '.join( self.attrs ) + ' :: '
+        if self.proc_decls:
+            s += ' ' + ', '.join( self.proc_decls )
+        return tab + s
+
+#===============================================================================
 
 class Allocatable(Statement):
     """
