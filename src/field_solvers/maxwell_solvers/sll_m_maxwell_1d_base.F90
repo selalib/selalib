@@ -64,10 +64,10 @@ module sll_m_maxwell_1d_base
        use sll_m_working_precision
        import sll_maxwell_1d_base
        import function_1d_real64
-       class( sll_maxwell_1d_base), intent(in) :: this !< Maxwell solver object.
-       procedure(function_1d_real64)           :: func !< Function to be projected.
-       sll_int32, intent(in)                   :: degree !< Degree of the basis function that should be used for projection.
-       sll_real64, intent(out)                 :: coefs_dofs(:) !< Coefficients of the projection.
+       class( sll_maxwell_1d_base)    :: this !< Maxwell solver object.
+       procedure(function_1d_real64)  :: func !< Function to be projected.
+       sll_int32, intent(in)          :: degree !< Degree of the basis function that should be used for projection.
+       sll_real64, intent(out)        :: coefs_dofs(:) !< Coefficients of the projection.
      end subroutine update_dofs_function
   end interface
   
