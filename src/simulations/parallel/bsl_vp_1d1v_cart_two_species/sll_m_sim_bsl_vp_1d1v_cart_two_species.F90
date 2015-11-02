@@ -37,7 +37,7 @@ use sll_m_remapper
 use sll_m_buffer_loader_utilities
 use sll_m_constants
 use sll_m_cartesian_meshes  
-use sll_m_gnuplot_parallel
+use sll_m_gnuplot
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_common_coordinate_transformations
