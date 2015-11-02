@@ -165,7 +165,7 @@ contains
    !> Compute the FEM right-hand-side for a given function f and periodic splines of given degree
    !> Its components are $\int f N_i dx$ where $N_i$ is the B-spline starting at $x_i$ 
    subroutine compute_fem_rhs(this, func, degree, coefs_dofs)
-     class(sll_maxwell_1d_fem), intent(in) :: this
+     class(sll_maxwell_1d_fem)             :: this
      procedure(function_1d_real64) :: func
      sll_int32, intent(in) :: degree
      sll_real64, intent(out) :: coefs_dofs(:)  ! Finite Element right-hand-side
