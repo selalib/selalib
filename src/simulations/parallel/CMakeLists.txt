@@ -55,6 +55,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ## Vlasov-Poisson 1Dx1D
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart                         )
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_two_species             )
+    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_multi_species           )
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_no_split                )
 
     ## Vlasov-Ampere 1Dx1D
