@@ -14,10 +14,9 @@ module sll_m_sparse_grid_interpolator
   use sll_m_periodic_interpolator_1d
   use sll_m_lagrange_interpolation_1d
   use, intrinsic :: iso_c_binding
+  use sll_m_fftw3
   implicit none
   private
-
-  include 'fftw3.f03'
 
   !> class to hold values for hierarchical fft computations
   type, public :: fft_hierarchical
