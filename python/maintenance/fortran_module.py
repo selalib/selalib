@@ -17,7 +17,7 @@ TODO
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 29 Oct 2015
+# Last revision: 02 Nov 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
@@ -36,6 +36,9 @@ variable_declaration_types = \
     typedecl_statements.Complex,   typedecl_statements.Logical,
     typedecl_statements.Character, typedecl_statements.Type,
     typedecl_statements.Class )
+
+has_interface_types = \
+( statements.ProcedureDeclaration, statements.SpecificBinding )
 
 #------------------------------------------------------------------------------
 def is_fortran_string( text ):
@@ -158,6 +161,10 @@ def compute_locals( content, return_dict=False ):
                 v = v.split('(')[0].strip() # drop (:,:) from arrays
                 v = v.split('=')[0].strip() # get parameter name
                 variables.append( v )
+        elif isinstance( item, statements.ProcedureDeclaration ):
+            for v in item.proc_decls:
+                v = v.split('=>')[0].strip() # drop '=> null()' from pointers
+                variables.append( v )
         elif isinstance( item, block_statements.Type ):
             if 'abstract' in item.item.get_line(): # TODO: use regex
                 classes.append( item.name )
@@ -208,6 +215,7 @@ def compute_all_used_symbols( content ):
     subroutines = []
     variables   = []
     calls       = []
+    interfaces  = []
 
     for item in content:
         # Intrinsic type declarations
@@ -234,6 +242,10 @@ def compute_all_used_symbols( content ):
                 len_param = str( item.get_length() )
                 if (not len_param.isdigit()) and (len_param not in ['*',':']):
                     variables.append( len_param )
+        # Procedure declaration statements or bindings
+        elif isinstance( item, has_interface_types ):
+            if item.iname:
+                interfaces.append( item.iname )
         # Extended type declarations
         elif isinstance( item, typedecl_statements.Type ):
             types.append( item.name )
@@ -278,7 +290,7 @@ def compute_all_used_symbols( content ):
                     if not is_fortran_string( s ):
                         types.extend( re.findall( pattern_extends, s, re.I ) )
 
-    return set( types + subroutines + variables + calls )
+    return set( types + subroutines + variables + calls + interfaces )
 
 #==============================================================================
 # CLASSES
