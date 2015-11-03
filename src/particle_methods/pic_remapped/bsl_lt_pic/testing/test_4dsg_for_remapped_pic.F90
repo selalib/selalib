@@ -61,7 +61,7 @@ program test_4dsg_for_remapped_pic
   sll_real64, dimension(:), allocatable :: f
 
   ! Function values
-  sll_real64 :: finterp,fref,ferr.ferrmax
+  sll_real64 :: finterp,fref,ferr,ferrmax
   
   sll_int32 :: i,j,ierr
   
@@ -106,7 +106,7 @@ program test_4dsg_for_remapped_pic
 
   ! Evaluate a few random points
 
-  ferrmax = 0
+  ferrmax = 0._f64
   call interp%compute_hierarchical_surplus(f)
   do i = 1,10
      dx(1) = randompoint(eta_min(1),eta_max(1));
