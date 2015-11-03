@@ -37,8 +37,6 @@ module sll_m_sim_pic_vm_1d2v_cart
 
      ! Abstract particle group
      class(sll_particle_group_base), pointer :: particle_group
-     ! Specific particle group
-     class(sll_particle_group_1d2v), pointer :: specific_particle_group 
 
      ! 
      sll_real64, pointer :: efield_dofs(:,:)
@@ -50,21 +48,14 @@ module sll_m_sim_pic_vm_1d2v_cart
      ! Maxwell solver 
      ! Abstract 
      class(sll_maxwell_1d_base), pointer :: maxwell_solver
-     ! Specific
-     class(sll_maxwell_1d_fem), pointer :: specific_maxwell_solver
 
      ! Abstract kernel smoothers
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_0     
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_1
-     ! Specific kernel smoother
-     class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_0
-     class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_1
 
 
      ! Specific operator splitting
      class(sll_t_hamiltonian_splitting_base), pointer :: propagator
-     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), pointer :: propagator_symplectic
-     class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), pointer :: propagator_cef
      sll_int32 :: splitting_case
 
      ! Fields on the grid
@@ -206,24 +197,20 @@ contains
     end if
 
     ! Initialize the particles   (mass and charge set to 1.0)
-     sim%specific_particle_group => sll_new_particle_group_1d2v(sim%n_particles, &
+     sim%particle_group => sll_new_particle_group_1d2v(sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
-    sim%particle_group => sim%specific_particle_group
 
     ! Initialize the field solver
-    sim%specific_maxwell_solver => sll_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
+    sim%maxwell_solver => sll_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
          sim%degree_smoother)
-    sim%maxwell_solver => sim%specific_maxwell_solver
 
     ! Initialize kernel smoother    
-    sim%specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
+    sim%kernel_smoother_1 => sll_new_smoother_spline_1d(&
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother-1, SLL_GALERKIN) 
-    sim%kernel_smoother_1 => sim%specific_kernel_smoother_1
-    sim%specific_kernel_smoother_0 => &
+    sim%kernel_smoother_0 => &
          sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother, SLL_GALERKIN) 
-    sim%kernel_smoother_0 => sim%specific_kernel_smoother_0
     
 
     if (sim%init_case == SLL_INIT_RANDOM) then
@@ -256,17 +243,15 @@ contains
 
     ! Initialize the time-splitting propagator
     if (sim%splitting_case == SLL_SPLITTING_SYMPLECTIC) then
-       sim%propagator_symplectic => sll_new_hamiltonian_splitting_pic_vm_1d2v(sim%maxwell_solver, &
+       sim%propagator => sll_new_hamiltonian_splitting_pic_vm_1d2v(sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
-       sim%propagator => sim%propagator_symplectic
     elseif (sim%splitting_case == SLL_SPLITTING_CEF) then
-       sim%propagator_cef =>  sll_new_hamiltonian_splitting_cef_pic_vm_1d2v(sim%maxwell_solver, &
+       sim%propagator =>  sll_new_hamiltonian_splitting_cef_pic_vm_1d2v(sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
-       sim%propagator => sim%propagator_cef
     end if
 
     ! Set the initial fields
