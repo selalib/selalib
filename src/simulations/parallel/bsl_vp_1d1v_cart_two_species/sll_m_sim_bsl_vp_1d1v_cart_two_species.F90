@@ -2202,6 +2202,8 @@ contains
     endif
 
 
+    print*, 176.00010668708197, 820.34117552361215 
+    print*, sum(f_x1_sp1), sum(f_x1_sp2)
     
     
   end subroutine run_vp2d_cartesian_two_species
