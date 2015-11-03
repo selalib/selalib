@@ -21,7 +21,10 @@
 # 
 # Author of ForcheckTargets.cmake: Tamas Feher <tamas.bela.feher@ipp.mpg.de>
 #
-# Modified to only preprocess files on 22 Oct 2015 (Yaman Güçlü).
+# Modifications
+# -------------
+#   - 22 Oct 2015: only preprocess files (Yaman Güçlü [YG], IPP Garching).
+#   - 02 Nov 2015: also preprocess executable sources (YG).
 
 if(__add_all_preproc)
    return()
@@ -45,17 +48,12 @@ else()
   message(SEND_ERROR "Unknown preprocessor flags for current compiler")
 endif()
 
+#==============================================================================
+# FUNCTION: collect_source_info
+#==============================================================================
+# Create a list of source files, to be later used to run the preprocessor
+function( collect_source_info _name )
 
-#==============================================================================
-# FUNCTION: add_library
-#==============================================================================
-# We override the add_library built in function.
-# The new function does the same job as the original, plus we create a list of
-# source files, and that list is used to run the preprocessor
-function(add_library _name)
-  # Call the original add_library function
-  _add_library(${_name} ${ARGN})
- 
   # The include directories will be added to the global list
   get_property(_cpp_includes GLOBAL PROPERTY CPP_INCLUDES)
   get_target_property(_dirs ${_name} INCLUDE_DIRECTORIES)
@@ -97,6 +95,23 @@ function(add_library _name)
 
 endfunction()
 
+#==============================================================================
+# FUNCTION: add_library
+#==============================================================================
+# We override the add_library built in function.
+function( add_library _name )
+  _add_library( ${_name} ${ARGN} ) # Call the original function
+  collect_source_info( ${_name} )  # Create a list of source files
+endfunction()
+
+#==============================================================================
+# FUNCTION: add_executable
+#==============================================================================
+# We override the add_executable built in function.
+function( add_executable _name )
+  _add_executable( ${_name} ${ARGN} ) # Call the original function
+  collect_source_info( ${_name} )     # Create a list of source files
+endfunction()
 
 #==============================================================================
 # FUNCTION: add_preprocessor_target
