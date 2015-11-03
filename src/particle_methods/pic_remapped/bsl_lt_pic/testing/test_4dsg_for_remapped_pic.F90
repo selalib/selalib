@@ -143,7 +143,7 @@ contains
     implicit none
     sll_real64 :: f
     sll_real64,intent(in) :: x,y,vx,vy
-    f = sin(0.5_f64*x) * cos(0.5_f64*y) * sin(0.5_f64*vx) * cos(0.5_f64*vy);
+    f = sin(x) * cos(y) * sin(vx) * cos(vy);
   end function testfunction
 
   ! <<randompoint>> Returns a random point in a [min,max] interval

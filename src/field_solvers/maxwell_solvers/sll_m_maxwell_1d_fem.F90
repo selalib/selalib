@@ -17,8 +17,11 @@ module sll_m_maxwell_1d_fem
   implicit none
   private
   
-  public :: sll_new_maxwell_1d_fem, solve_circulant, compute_E_from_B_1d_fem, &
-       compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection_1d_fem, compute_fem_rhs, L2norm_squarred_1d_fem
+  public :: sll_new_maxwell_1d_fem,  &
+            solve_circulant,         &
+            compute_E_from_B_1d_fem, &
+            compute_fem_rhs,         &
+            compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection_1d_fem, L2norm_squarred_1d_fem
 
   type, public, extends(sll_maxwell_1d_base) :: sll_maxwell_1d_fem
 
@@ -162,8 +165,8 @@ contains
    !> Compute the FEM right-hand-side for a given function f and periodic splines of given degree
    !> Its components are $\int f N_i dx$ where $N_i$ is the B-spline starting at $x_i$ 
    subroutine compute_fem_rhs(this, func, degree, coefs_dofs)
-     class(sll_maxwell_1d_fem) :: this
-     procedure(function_1d_legendre) :: func
+     class(sll_maxwell_1d_fem)             :: this
+     procedure(function_1d_real64) :: func
      sll_int32, intent(in) :: degree
      sll_real64, intent(out) :: coefs_dofs(:)  ! Finite Element right-hand-side
      ! local variables
@@ -201,7 +204,7 @@ contains
    !> Compute the L2 projection of a given function f on periodic splines of given degree
    subroutine L2projection_1d_fem(this, func, degree, coefs_dofs)
      class(sll_maxwell_1d_fem) :: this
-     procedure(function_1d_legendre) :: func
+     procedure(function_1d_real64) :: func
      sll_int32, intent(in) :: degree
      sll_real64, intent(out) :: coefs_dofs(:)  ! spline coefficients of projection
      ! local variables
