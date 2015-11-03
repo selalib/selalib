@@ -52,7 +52,7 @@ program test_4dsg_for_remapped_pic
 
   ! <<interp>> Interpolation object of type
   ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::sparse_grid_interpolator_4d]]
-  ! extends
+  ! which extends
   ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::type,%20public%20::%20sparse_grid_interpolator]]
   
   type(sparse_grid_interpolator_4d), target   :: interp
@@ -61,7 +61,7 @@ program test_4dsg_for_remapped_pic
   sll_real64, dimension(:), allocatable :: f
 
   ! Function values
-  sll_real64 :: finterp,fref,ferr
+  sll_real64 :: finterp,fref,ferr.ferrmax
   
   sll_int32 :: i,j,ierr
   
@@ -73,7 +73,7 @@ program test_4dsg_for_remapped_pic
   eta_min(3) = 0.0_f64; eta_max(3) = 2.0_f64*sll_pi;
   eta_min(4) = 0.0_f64; eta_max(4) = 2.0_f64*sll_pi;
 
-  ! [[levels]]
+  ! [[levels]] AAA_ALH_TODO Select right value
   levels = 8;
   levelsini(1)=levels;
   levelsini(2)=levels;
@@ -106,6 +106,7 @@ program test_4dsg_for_remapped_pic
 
   ! Evaluate a few random points
 
+  ferrmax = 0
   call interp%compute_hierarchical_surplus(f)
   do i = 1,10
      dx(1) = randompoint(eta_min(1),eta_max(1));
@@ -115,18 +116,22 @@ program test_4dsg_for_remapped_pic
      finterp = interp%interpolate_value(f,dx);
      fref = testfunction(dx(1),dx(2),dx(3),dx(4));
      ferr = abs(finterp-fref)
-
+     ferrmax = max(ferr,ferrmax)
+     
      ! [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
      write(*,"(A,I3,A,G12.5,G12.5,G12.5,G12.5,G12.5)") "point",i," ",dx(1),dx(2),dx(3),dx(4),ferr
   end do
 
   ! AAA_ALH_TODO Which accuracy do we need?
   
-  if (ferr <= 1e-6) then
+  write(*,"(A,G12.5)") "maximum error = ",ferrmax
+  if (ferrmax <= 1e-6) then
      print *,'PASSED'
   else
      print *,'FAILED'
   end if
+
+  DEALLOCATE(f);
 
   ! ------------ end of program
 
