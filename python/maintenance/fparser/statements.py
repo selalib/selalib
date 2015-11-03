@@ -11,7 +11,8 @@ Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
 
 Modifications:
-  - Nov 2015: added 'ProcedureDeclaration' (Yaman Güçlü - IPP Garching)
+  - Nov 2015: added 'ProcedureDeclaration' (Yaman Güçlü [YG] - IPP Garching)
+            : modify regex pattern in 'Forall' to avoid false matches (YG)
 -----
 """
 
@@ -1415,7 +1416,7 @@ class Forall(Statement):
     <subscript|stride> = <scalar-int-expr>
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
-    match = re.compile(r'forall\s*\(.*\).*=', re.I).match
+    match = re.compile(r'forall\s*\(\w+\).*=', re.I).match
     def process_item(self):
         line = self.item.get_line()[6:].lstrip()
         i = line.index(')')
