@@ -289,12 +289,13 @@ end if
 
 if ( t(left+1) <= t(left) ) then
   print*,'x=',x
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-  write ( *, '(a,i8)' ) '  But LEFT = ', left
-  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
+  write ( *, '(a)'       ) ' '
+  write ( *, '(a)'       ) 'BSPLVB - Fatal error!'
+  write ( *, '(a)'       ) '  It is required that T(LEFT) < T(LEFT+1).'
+  write ( *, '(a,i8)'    ) '  But LEFT  = ', left
+  write ( *, '(a,g14.6)' ) '  T(LEFT)   = ', t(left)
   write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
+  write ( *, '(a)'       ) ' '
   stop
 end if
 
@@ -993,109 +994,105 @@ l = 1 ! index for the derivative
 !
 do i = 1, n-1
    
-   taui = tau(i)
-   
-   !
-   !  Find LEFT in the closed interval (I,I+K-1) such that
-   !
-   !    T(LEFT) <= TAU(I) < T(LEFT+1)
-   !
-   !  The matrix is singular if this is not possible.
-   !  With help of the Schoenberg-Whitney theorem 
-   !  we can prove that if the diagonal of the 
-   !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
+  taui = tau(i)
+  
+  !
+  !  Find LEFT in the closed interval (I,I+K-1) such that
+  !
+  !    T(LEFT) <= TAU(I) < T(LEFT+1)
+  !
+  !  The matrix is singular if this is not possible.
+  !  With help of the Schoenberg-Whitney theorem 
+  !  we can prove that if the diagonal of the 
+  !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
 
-   call interv( t, n+m+k, taui, left, mflag )
+  call interv( t, n+m+k, taui, left, mflag )
 
-   !
+  !
 
-   !
-   !  The I-th equation enforces interpolation at TAUI, hence for all J,
-   !
-   !    A(I,J) = B(J,K,T)(TAUI).
-   !
-   !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-   !
-   !These K numbers are returned, in BCOEF 
-   ! (used for temporary storage here),
-   !  by the following.
-   !
-   
-   call bsplvb ( t, k, 1, taui, left, bcoef )
-   
-      
-   !
-   !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-   !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-   !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-   !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-   !  BANFAC.
-   !
-   !  In the present program, we treat Q as an equivalent
-   !  one-dimensional array, because of fortran restrictions on
-   !  dimension statements.
-   !
-   !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-   !
-   !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-   !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
-   !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-   !
-   jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
-   do j = 1, k
+  !
+  !  The I-th equation enforces interpolation at TAUI, hence for all J,
+  !
+  !    A(I,J) = B(J,K,T)(TAUI).
+  !
+  !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
+  !
+  !These K numbers are returned, in BCOEF 
+  ! (used for temporary storage here),
+  !  by the following.
+  !
+  
+  call bsplvb ( t, k, 1, taui, left, bcoef )
+  
+  !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
+  !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
+  !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
+  !  as a two-dimensional array, with  2*K-1 rows.  See comments in
+  !  BANFAC.
+  !
+  !  In the present program, we treat Q as an equivalent
+  !  one-dimensional array, because of fortran restrictions on
+  !  dimension statements.
+  !
+  !  We therefore want  BCOEF(J) to go into the entry of Q with index:
+  !
+  !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
+  !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
+  !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
+  !
+  jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+  
+  do j = 1, k
+    jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+    q(jj) = bcoef(j)
+  end do
+
+  bcoef_spline(i+ l-1) = gtau(i)
+  if ( tau_der(l) == i ) then   
+    taui_der = taui
+    
+    call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
+
+    l = l + 1
+    jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+  
+    do j = 1, k
       jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      q(jj) = bcoef(j)
-   end do
+      q(jj) = bcoef_der(j,2)
+    end do
 
-   bcoef_spline(i+ l-1) = gtau(i)
-   if ( tau_der(l) == i ) then   
-      taui_der = taui
-      
-      call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
+    bcoef_spline(i+l-1) = gtau_der(l-1)
 
-      l = l + 1
-      jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
-      do j = 1, k
-         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-         q(jj) = bcoef_der(j,2)
-      end do
-   bcoef_spline(i+ l-1) = gtau_der(l-1)
-   end if
-   
-
+  end if
+  
 end do
-
 
 taui = tau(n)
 call interv( t, n+m+k, taui, left, mflag )
 if ( tau_der(l)== n ) then   
-      taui_der = taui
-      
-      call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
+  taui_der = taui
+  
+  call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
 
-      
-      jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
-      do j = 1, k
-         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-         q(jj) = bcoef_der(j,2)
-      end do
-      bcoef_spline(n+ l-1) = gtau_der(l)
-      l = l + 1
-      
-   end if
-   
+  jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
 
- call bsplvb ( t, k, 1, taui, left, bcoef )
- jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
- do j = 1, k
+  do j = 1, k
     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-    q(jj) = bcoef(j)
- end do
- bcoef_spline(n+l-1) = gtau(n)
+    q(jj) = bcoef_der(j,2)
+  end do
+  bcoef_spline(n+ l-1) = gtau_der(l)
+  l = l + 1
+   
+end if
+   
+call bsplvb ( t, k, 1, taui, left, bcoef )
+jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+   
+do j = 1, k
+  jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+  q(jj) = bcoef(j)
+end do
+bcoef_spline(n+l-1) = gtau(n)
 
 !
 !  Obtain factorization of A, stored again in Q.
@@ -1103,10 +1100,10 @@ if ( tau_der(l)== n ) then
 call banfac ( q, k+k-1, n+m, k-1, k-1, iflag )
 
 if ( iflag == 2 ) then
-   write ( *, '(a)' ) ' '
-   write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-   write ( *, '(a)' ) '  The linear system is not invertible!'
-   return
+  write ( *, '(a)' ) ' '
+  write ( *, '(a)' ) 'SPLINT - Fatal Error!'
+  write ( *, '(a)' ) '  The linear system is not invertible!'
+  return
 end if
 !
 !  Solve 

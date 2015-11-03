@@ -1,3 +1,4 @@
+# coding: utf8
 """
 Fortran block statements.
 
@@ -8,6 +9,10 @@ terms of the NumPy License. See http://scipy.org.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
+
+Modifications:
+  - Nov 2015: 'ProcedureDeclaration' added to 'declaration_construct' list
+              (Yaman Güçlü - IPP Garching)
 -----
 """
 
@@ -1267,7 +1272,7 @@ internal_subprogram = [Function, Subroutine]
 internal_subprogram_part = [ Contains, ] + internal_subprogram
 
 declaration_construct = [ TypeDecl, Entry, Enum, Format, Interface,
-    Parameter, ModuleProcedure, ] + specification_stmt + \
+    Parameter, ModuleProcedure, ProcedureDeclaration ] + specification_stmt + \
     type_declaration_stmt
 # stmt-function-stmt
 
