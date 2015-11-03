@@ -22,6 +22,8 @@
 !> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle <!--
 !> [[file:bsl_lt_pic_4d_particle.F90::sll_bsl_lt_pic_4d_particle]] -->
 
+!todo: rename the method and the module according to the new naming conventions
+
 module sll_m_bsl_lt_pic_4d_group
 
 #include "sll_working_precision.h"
@@ -30,11 +32,10 @@ module sll_m_bsl_lt_pic_4d_group
 #include "sll_accumulators.h"
 #include "sll_errors.h"
 
-! #include "particle_representation.h"   NEEDED?
-
   use sll_m_constants, only: sll_pi
   use sll_m_working_precision
   use sll_m_cartesian_meshes
+  use sll_m_sparse_grid_4d, only: sparse_grid_interpolator_4d
   use sll_m_remapped_pic_base
   use sll_m_bsl_lt_pic_4d_particle
   use sll_m_bsl_lt_pic_4d_utilities
@@ -45,7 +46,7 @@ module sll_m_bsl_lt_pic_4d_group
   !> Group of @ref sll_bsl_lt_pic_4d_particle
   type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group
 
-    !> @name The particles
+    !> @name The markers (particles)
     !> @{
     sll_int32                                                   :: spline_degree
     sll_int32                                                   :: number_parts_x
@@ -69,11 +70,30 @@ module sll_m_bsl_lt_pic_4d_group
     sll_int32                                                   :: N_virtual_particles_per_deposition_cell_vy
     !> @}
 
-    !> @name The remapping grid in phase space and quasi-interpolation coefficients (for cubic spline particle shapes)
+    !> @name The type of interpolation structure for the remapped density f
+    !> @{
+    sll_int32                                                   :: remapped_f_interpolation_type  !> 0 = splines, 1 = sparse grid
+    sll_int32                                                   :: remapped_f_interpolation_degree
+    !> @}
+
+    !> @name The sparse grid object used for the interpolation of the remapped density f, if needed
+    !> @{
+    type(sparse_grid_interpolator_4d),                 target   :: sparse_grid_interpolator          ! 'target' needed here?
+    sll_int32                                                   :: sparse_grid_max_level
+    sll_real64, dimension(:), allocatable                       :: remapped_f_sparse_grid_coefficients
+    ! maybe more stuff is needed here
+    !> @}
+
+    !> @name The splines used to interpolate the remapping grid in phase space
     !> @{
     type(sll_cartesian_mesh_4d),                pointer         :: remapping_grid
     sll_real64, dimension(:,:,:,:),             pointer         :: target_values
+
+    !> quasi-interpolation coefs are needed for cubic (or higher degree) spline interpolation
     sll_real64, dimension(:),                   pointer         :: lt_pic_interpolation_coefs
+
+    !> here we should rather define the interpolation grid and resolution,
+    !> independently of the virtual cells which have nothing to do with interpolation:
     sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_x
     sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_y
     sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_vx
@@ -2301,6 +2321,822 @@ contains
     end if
 
   end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit
+
+
+  !> separate interpolation routine for the remapped f
+  function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
+    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
+    sll_real64,                     intent(out) :: val
+
+    if( p_group%remapped_f_interpolation_type == 0 )then
+        ! spline interpolation
+        ! todo: write it here the spline interpolation -- btw, should we use existing modules in Selalib?
+
+    else if( p_group%remapped_f_interpolation_type == 1 )then
+        val = sparse_grid_interpolator%interpolate_value(remapped_f_sparse_grid_coefficients, eta)
+    end if
+  end function
+
+
+  !> new version of the write_f_on_grid_or_deposit routine, with call to separate interpolation routine for the remapped f
+
+  ! todo: il reste des choses à modifier:
+  !     1. si on remappe en sparse grids, les particules virtuelles doivent être des noeuds de sparse grid,
+  !     2. et il faut mettre les valeurs calculees dans le bon tableau (attention ordre)
+  !     3. pour le remapping en splines, ecrire la fonction d'interpolation
+
+  subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_new_version (p_group, q_accumulator,      &   ! todo remove temp flag in name
+                                                       scenario_is_deposition,      &
+                                                       use_remapping_grid,          &
+                                                       given_grid_4d,               &
+                                                       given_array_2d,              &
+                                                       n_virtual_x,                 &
+                                                       n_virtual_y,                 &
+                                                       n_virtual_vx,                &
+                                                       n_virtual_vy,                &
+                                                       target_total_charge)
+
+    ! p_group contains both the existing particles and the virtual remapping grid
+    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
+    logical, intent(in) :: scenario_is_deposition            ! if false, then scenario is "write on grid"
+    logical, intent(in) :: use_remapping_grid                ! if false, then grid must be given
+    type(sll_cartesian_mesh_4d), pointer, intent(in)        :: given_grid_4d
+    sll_real64, dimension(:,:),     pointer, intent(inout)  :: given_array_2d   ! assumed in x, vx for now
+    ! <<n_virtual>>      ! see comments above for the meaning
+    sll_int32, intent(in) :: n_virtual_x
+    sll_int32, intent(in) :: n_virtual_y
+    sll_int32, intent(in) :: n_virtual_vx
+    sll_int32, intent(in) :: n_virtual_vy
+
+    sll_real64, intent(in), optional :: target_total_charge
+
+    type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
+
+    sll_real64 :: deposited_charge
+    sll_real64 :: charge_correction_factor
+
+    ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
+
+    sll_int32 :: num_virtual_cells_x
+    sll_int32 :: num_virtual_cells_y
+    sll_int32 :: num_virtual_cells_vx
+    sll_int32 :: num_virtual_cells_vy
+
+    sll_int32 :: number_virtual_particles_x
+    sll_int32 :: number_virtual_particles_y
+    sll_int32 :: number_virtual_particles_vx
+    sll_int32 :: number_virtual_particles_vy
+
+    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy
+
+    sll_real64 :: h_parts_x
+    sll_real64 :: h_parts_y
+    sll_real64 :: h_parts_vx
+    sll_real64 :: h_parts_vy
+
+    sll_real64 :: inv_h_parts_x
+    sll_real64 :: inv_h_parts_y
+    sll_real64 :: inv_h_parts_vx
+    sll_real64 :: inv_h_parts_vy
+
+    sll_real64 :: h_virtual_parts_x
+    sll_real64 :: h_virtual_parts_y
+    sll_real64 :: h_virtual_parts_vx
+    sll_real64 :: h_virtual_parts_vy
+
+    sll_real64 :: inv_h_virtual_parts_x
+    sll_real64 :: inv_h_virtual_parts_y
+    sll_real64 :: inv_h_virtual_parts_vx
+    sll_real64 :: inv_h_virtual_parts_vy
+
+    sll_real64 :: phase_space_virtual_dvol
+
+    sll_real64 :: parts_x_min
+    sll_real64 :: parts_y_min
+    sll_real64 :: parts_vx_min
+    sll_real64 :: parts_vy_min
+
+    sll_real64 :: virtual_parts_x_min
+    sll_real64 :: virtual_parts_y_min
+    sll_real64 :: virtual_parts_vx_min
+    sll_real64 :: virtual_parts_vy_min
+
+    sll_real64 :: virtual_cells_x_min
+    sll_real64 :: virtual_cells_y_min
+    sll_real64 :: virtual_cells_vx_min
+    sll_real64 :: virtual_cells_vy_min
+
+    sll_real64 :: virtual_grid_x_min  ! do we need this? should be = virtual_parts_x_min...
+    sll_real64 :: virtual_grid_x_max
+    sll_real64 :: virtual_grid_y_min
+    sll_real64 :: virtual_grid_y_max
+    sll_real64 :: virtual_grid_vx_min
+    sll_real64 :: virtual_grid_vx_max
+    sll_real64 :: virtual_grid_vy_min
+    sll_real64 :: virtual_grid_vy_max
+
+    ! same as \delta{x,y,vx,vy} in [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
+    sll_real64 :: h_virtual_cell_x
+    sll_real64 :: h_virtual_cell_y
+    sll_real64 :: h_virtual_cell_vx
+    sll_real64 :: h_virtual_cell_vy
+
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_real64 :: vx
+    sll_real64 :: vy
+
+    sll_real64 :: closest_particle_distance_to_first_corner
+    sll_real64 :: particle_distance_to_first_corner
+
+    ! working space
+
+    sll_real64 :: tmp, tmp1, tmp2
+    !sll_real32 :: tmp_offset_x, tmp_offset_y
+
+
+    ! index of particle closest to the center of each virtual cell.
+    ! Array dimensions defined by the contents of the remapping_grid.
+    ! If n_virtual is greater than 1, the size of this array is smaller than the number of real remapping_grid cells.
+
+    sll_int32,dimension(:,:,:,:),allocatable :: closest_particle
+    sll_real64,dimension(:,:,:,:),allocatable :: closest_particle_distance
+
+    sll_int32 :: i ! x dimension
+    sll_int32 :: j ! y dimension
+    sll_int32 :: k ! particle index
+    sll_int32 :: l ! vx dimension
+    sll_int32 :: m ! vy dimension
+
+    sll_int32 :: k_neighbor
+    sll_int32 :: k_particle_closest_to_first_corner
+
+    ! indices in a virtual cell (go from 1 to [[n_virtual]])
+
+    sll_int :: ivirt ! x dimension
+    sll_int :: jvirt ! y dimension
+    sll_int :: lvirt ! vx dimension
+    sll_int :: mvirt ! vy dimension
+
+    sll_int :: i_x,i_y,i_vx,i_vy
+
+    ! <<g>> cartesian grid pointer to the remapping grid
+
+    type(sll_cartesian_mesh_4d),pointer :: g
+
+    sll_real64 :: mesh_period_x
+    sll_real64 :: mesh_period_y
+    sll_real64 :: inv_period_x
+    sll_real64 :: inv_period_y
+
+    ! results from [[get_ltp_deformation_matrix]]
+
+    sll_real64 :: d11,d12,d13,d14 ! coefs of matrix D (backward Jacobian)
+    sll_real64 :: d21,d22,d23,d24
+    sll_real64 :: d31,d32,d33,d34
+    sll_real64 :: d41,d42,d43,d44
+
+    sll_real64, dimension(3)  :: coords
+    sll_real64, dimension(4)  :: eta        !> coordinates in the logical (cartesian) 4d space
+
+    ! coordinates of particle k at time n and time 0
+    sll_real64 :: x_k,y_k,vx_k,vy_k
+    sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
+
+    sll_real64 :: x_to_xk, y_to_yk, vx_to_vxk, vy_to_vyk
+
+    sll_real64 :: d1_x, d1_y, d1_vx, d1_vy
+    sll_real64 :: d2_x, d2_y, d2_vx, d2_vy
+    sll_real64 :: d3_x, d3_y, d3_vx, d3_vy
+    sll_real64 :: d4_x, d4_y, d4_vx, d4_vy
+
+    sll_real64 :: part_radius_x
+    sll_real64 :: part_radius_y
+    sll_real64 :: part_radius_vx
+    sll_real64 :: part_radius_vy
+
+    sll_real64 :: offset_x_in_virtual_cell
+    sll_real64 :: offset_y_in_virtual_cell
+
+    !sll_real64 :: x_center_virtual_cell
+    !sll_real64 :: y_center_virtual_cell
+
+    sll_real64 :: f_value_on_virtual_particle
+    sll_real64 :: virtual_charge
+
+    ! coordinates of a virtual particle at time 0 relative to the coordinates of one real particle
+
+    sll_real64 :: x_t0,y_t0,vx_t0,vy_t0
+
+    sll_real64 :: x_t0_to_xk_t0
+    sll_real64 :: y_t0_to_yk_t0
+    sll_real64 :: vx_t0_to_vxk_t0
+    sll_real64 :: vy_t0_to_vyk_t0
+
+    sll_int32 :: part_degree
+
+    sll_int32 :: ierr
+    sll_int32 :: i_cell
+
+    ! temporary workspace
+    sll_real64 :: x_aux
+    sll_real64 :: y_aux
+    sll_real64 :: vx_aux
+    sll_real64 :: vy_aux
+
+    sll_int32 :: j_x,j_y,j_vx,j_vy
+
+    ! --- end of declarations
+
+    ! -- creating g the virtual grid [begin] --
+    if( scenario_is_deposition )then
+
+      ! todo: modify the code with offset virtual particles to deposit the charge on the Poisson cells
+
+      if( p_group%domain_is_periodic(1) )then
+        num_virtual_cells_x = p_group%space_mesh_2d%num_cells1
+        virtual_grid_x_min = p_group%space_mesh_2d%eta1_min
+        virtual_grid_x_max = p_group%space_mesh_2d%eta1_max
+      else
+        print *, "error (87585758769753486576676543): change code here, place the virtual nodes inside virtual (Poisson) cells"
+        print *, "error (87585758769753486576676543): so that the virtual cells can be just the Poisson cells -- "
+        stop
+
+        ! an extra cell is needed outside (in every direction) so that the approximation of f(t_n) by regular
+        ! splines located at the virtual nodes is accurate close to the domain boundaries
+        num_virtual_cells_x = p_group%space_mesh_2d%num_cells1 + 2
+        virtual_grid_x_min = p_group%space_mesh_2d%eta1_min - p_group%space_mesh_2d%delta_eta1
+        virtual_grid_x_max = p_group%space_mesh_2d%eta1_max + p_group%space_mesh_2d%delta_eta1
+      end if
+
+      if( p_group%domain_is_periodic(2) )then
+        num_virtual_cells_y = p_group%space_mesh_2d%num_cells2
+        virtual_grid_y_min = p_group%space_mesh_2d%eta2_min
+        virtual_grid_y_max = p_group%space_mesh_2d%eta2_max
+      else
+        ! same reason than for num_virtual_cells_x
+        num_virtual_cells_y = p_group%space_mesh_2d%num_cells2 + 2
+        virtual_grid_y_min = p_group%space_mesh_2d%eta2_min - p_group%space_mesh_2d%delta_eta2
+        virtual_grid_y_max = p_group%space_mesh_2d%eta2_max + p_group%space_mesh_2d%delta_eta2
+      end if
+
+      ! Because the Poisson mesh does not prescribe any resolution in velocity
+      ! the resolution of the 'virtual' cells in the velocity dimensions is inferred from the remapping (or initial) grid
+      num_virtual_cells_vx = p_group%number_parts_vx
+      virtual_grid_vx_min = p_group%remapping_grid%eta3_min
+      virtual_grid_vx_max = p_group%remapping_grid%eta3_max
+
+      num_virtual_cells_vy = p_group%number_parts_vy
+      virtual_grid_vy_min = p_group%remapping_grid%eta4_min
+      virtual_grid_vy_max = p_group%remapping_grid%eta4_max
+
+      number_virtual_particles_x =  n_virtual_x  * num_virtual_cells_x
+      number_virtual_particles_y =  n_virtual_y  * num_virtual_cells_y
+      number_virtual_particles_vx = n_virtual_vx * num_virtual_cells_vx
+      number_virtual_particles_vy = n_virtual_vy * num_virtual_cells_vy
+
+      g => new_cartesian_mesh_4d( number_virtual_particles_x,        &
+                                  number_virtual_particles_y,        &
+                                  number_virtual_particles_vx,       &
+                                  number_virtual_particles_vy,       &
+                                  virtual_grid_x_min,   &
+                                  virtual_grid_x_max,   &
+                                  virtual_grid_y_min,   &
+                                  virtual_grid_y_max,   &
+                                  virtual_grid_vx_min,  &
+                                  virtual_grid_vx_max,  &
+                                  virtual_grid_vy_min,  &
+                                  virtual_grid_vy_max   &
+                                 )
+
+      if( present(target_total_charge) )then
+          deposited_charge = 0.0_f64
+      end if
+
+    else ! test scenario_is_deposition
+
+      if( use_remapping_grid )then
+
+        g => p_group%remapping_grid
+
+        number_virtual_particles_x = p_group%number_parts_x
+        number_virtual_particles_y = p_group%number_parts_y
+        number_virtual_particles_vx = p_group%number_parts_vx
+        number_virtual_particles_vy = p_group%number_parts_vy
+
+        num_virtual_cells_x =  int(ceiling(number_virtual_particles_x * 1. / n_virtual_x) )
+        num_virtual_cells_y =  int(ceiling(number_virtual_particles_y * 1. / n_virtual_y) )
+        num_virtual_cells_vx = int(ceiling(number_virtual_particles_vx * 1. / n_virtual_vx))
+        num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
+
+
+        ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+        p_group%target_values(:,:,:,:) = 0.0_f64
+
+      else
+
+        ! then use the given 4d grid and write values in given (x, vx for now) array given_array_2d
+        g => given_grid_4d
+
+        number_virtual_particles_x = given_grid_4d%num_cells1 + 1
+        number_virtual_particles_y = given_grid_4d%num_cells2 + 1
+        number_virtual_particles_vx = given_grid_4d%num_cells3 + 1
+        number_virtual_particles_vy = given_grid_4d%num_cells4 + 1
+
+        SLL_ASSERT( mod(number_virtual_particles_x,  n_virtual_x)  == 0 )
+        SLL_ASSERT( mod(number_virtual_particles_y,  n_virtual_y)  == 0 )
+        SLL_ASSERT( mod(number_virtual_particles_vx, n_virtual_vx) == 0 )
+        SLL_ASSERT( mod(number_virtual_particles_vy, n_virtual_vy) == 0 )
+
+        num_virtual_cells_x = number_virtual_particles_x / n_virtual_x
+        num_virtual_cells_y = number_virtual_particles_y / n_virtual_y
+        num_virtual_cells_vx = number_virtual_particles_vx / n_virtual_vx
+        num_virtual_cells_vy = number_virtual_particles_vy / n_virtual_vy
+
+        ! for now we assume that given_array_2d is in (x, vx) space
+        SLL_ASSERT(size(given_array_2d,1) == number_virtual_particles_x)
+        SLL_ASSERT(size(given_array_2d,2) == number_virtual_particles_vx)
+        given_array_2d(:,:) = 0.0_f64
+
+      end if
+
+    end if
+
+    ! -- creating g the virtual grid [end] --
+
+    part_degree = p_group%spline_degree
+
+    ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
+    ! noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be complete.
+
+    SLL_ALLOCATE(closest_particle(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
+    closest_particle(:,:,:,:) = 0
+
+    SLL_ALLOCATE(closest_particle_distance(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
+    closest_particle_distance(:,:,:,:) = 0.0_f64
+
+    ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
+
+    h_parts_x    = p_group%remapping_grid%delta_eta1
+    h_parts_y    = p_group%remapping_grid%delta_eta2
+    h_parts_vx   = p_group%remapping_grid%delta_eta3
+    h_parts_vy   = p_group%remapping_grid%delta_eta4
+
+    inv_h_parts_x  = 1./h_parts_x
+    inv_h_parts_y  = 1./h_parts_y
+    inv_h_parts_vx = 1./h_parts_vx
+    inv_h_parts_vy = 1./h_parts_vy
+
+    h_virtual_parts_x    = g%delta_eta1
+    h_virtual_parts_y    = g%delta_eta2
+    h_virtual_parts_vx   = g%delta_eta3
+    h_virtual_parts_vy   = g%delta_eta4
+
+    inv_h_virtual_parts_x  = 1./h_virtual_parts_x
+    inv_h_virtual_parts_y  = 1./h_virtual_parts_y
+    inv_h_virtual_parts_vx = 1./h_virtual_parts_vx
+    inv_h_virtual_parts_vy = 1./h_virtual_parts_vy
+
+    phase_space_virtual_dvol = h_virtual_parts_x * h_virtual_parts_y * h_virtual_parts_vx * h_virtual_parts_vy
+
+    parts_x_min    = p_group%remapping_grid%eta1_min
+    parts_y_min    = p_group%remapping_grid%eta2_min
+    parts_vx_min   = p_group%remapping_grid%eta3_min
+    parts_vy_min   = p_group%remapping_grid%eta4_min
+
+    virtual_parts_x_min    = g%eta1_min
+    virtual_parts_y_min    = g%eta2_min
+    virtual_parts_vx_min   = g%eta3_min
+    virtual_parts_vy_min   = g%eta4_min
+
+    ! offset: the first virtual particles are not on the left boundary of the first virtual cells
+    virtual_cells_x_min    = g%eta1_min - 0.5 * g%delta_eta1
+    virtual_cells_y_min    = g%eta2_min - 0.5 * g%delta_eta2
+    virtual_cells_vx_min   = g%eta3_min - 0.5 * g%delta_eta3
+    virtual_cells_vy_min   = g%eta4_min - 0.5 * g%delta_eta4
+
+    ! virtual cell size
+    h_virtual_cell_x  = n_virtual_x * h_virtual_parts_x
+    h_virtual_cell_y  = n_virtual_y * h_virtual_parts_y
+    h_virtual_cell_vx = n_virtual_vx * h_virtual_parts_vx
+    h_virtual_cell_vy = n_virtual_vy * h_virtual_parts_vy
+
+    if( scenario_is_deposition )then
+        SLL_ASSERT( h_virtual_cell_x == p_group%space_mesh_2d%delta_eta1)
+        SLL_ASSERT( h_virtual_cell_y == p_group%space_mesh_2d%delta_eta2)
+    end if
+
+    ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
+    ! virtual cell
+
+    closest_particle_distance_to_first_corner = 1d30
+    k_particle_closest_to_first_corner = 0
+
+    do k=1, p_group%number_particles ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
+
+      ! print *, "WRITE F CC "
+      ! find absolute (x,y,vx,vy) coordinates for k-th particle.
+      coords = p_group%get_x(k)
+      x = coords(1)
+      y = coords(2)
+      coords = p_group%get_v(k)
+      vx = coords(1)
+      vy = coords(2)
+
+      ! which _virtual_ cell is this particle in? uses
+      ! [[file:sll_representation_conversion.F90::compute_cell_and_offset]] and [[g]]
+
+      x_aux = x - virtual_cells_x_min
+      i = int( x_aux / h_virtual_cell_x ) + 1
+
+      y_aux = y - virtual_cells_y_min
+      j = int( y_aux / h_virtual_cell_y ) + 1
+
+      vx_aux = vx - virtual_cells_vx_min
+      l = int( vx_aux / h_virtual_cell_vx ) + 1
+
+      vy_aux = vy - virtual_cells_vy_min
+      m = int( vy_aux / h_virtual_cell_vy ) + 1
+
+      ! discard particles in virtual cells off-bounds
+      if(  i >= 1 .and. i <= num_virtual_cells_x .and. &
+           j >= 1 .and. j <= num_virtual_cells_y .and. &
+           l >= 1 .and. l <= num_virtual_cells_vx .and. &
+           m >= 1 .and. m <= num_virtual_cells_vy  )then
+
+        call update_closest_particle_arrays(k,                              &
+                                            x_aux, y_aux, vx_aux, vy_aux,   &
+                                            i, j, l, m,                     &
+                                            h_virtual_cell_x,               &
+                                            h_virtual_cell_y,               &
+                                            h_virtual_cell_vx,              &
+                                            h_virtual_cell_vy,              &
+                                            closest_particle,               &
+                                            closest_particle_distance)
+      end if
+
+      particle_distance_to_first_corner = abs(x_aux) + abs(y_aux) + abs(vx_aux) + abs(vy_aux)      !  (why not L1 after all)
+      if( particle_distance_to_first_corner < closest_particle_distance_to_first_corner )then
+        closest_particle_distance_to_first_corner = particle_distance_to_first_corner
+        k_particle_closest_to_first_corner = k
+      end if
+    end do
+
+    closest_particle(1,1,1,1) = k_particle_closest_to_first_corner
+
+    ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
+    if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(1) ) )then
+      print*, "WARNING -- STOP -- verify that the non-periodic case is well implemented"
+      stop
+    end if
+
+    if(p_group%domain_is_periodic(1)) then
+      ! here the domain corresponds to the Poisson mesh
+      mesh_period_x = p_group%space_mesh_2d%eta1_max - p_group%space_mesh_2d%eta1_min
+      inv_period_x = 1./mesh_period_x
+    else
+      mesh_period_x = 0.0_f64
+      inv_period_x = 0.0_f64
+    end if
+
+    if(p_group%domain_is_periodic(2)) then
+      ! here the domain corresponds to the Poisson mesh
+      mesh_period_y = p_group%space_mesh_2d%eta2_max - p_group%space_mesh_2d%eta2_min
+      inv_period_y = 1./mesh_period_y
+    else
+      mesh_period_y = 0.0_f64
+      inv_period_y = 0.0_f64
+    end if
+
+    ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
+    ! Loop over all cells of indices i,j,l,m which contain at least one particle
+
+    do i = 1, num_virtual_cells_x
+      do j = 1, num_virtual_cells_y
+
+        if( scenario_is_deposition )then
+          ! index of the Poisson cell from i and j (see global_to_cell_offset)
+          i_cell = i + (j-1) * p_group%space_mesh_2d%num_cells1
+          charge_accumulator_cell => q_accumulator%q_acc(i_cell)
+        end if
+
+        do l = 1,num_virtual_cells_vx
+          do m = 1,num_virtual_cells_vy
+
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
+            ! virtual particles inside the cell.
+            ! Note: as written above in the remapping scenario the virtual particles coincide with the existing
+            ! remapping_grid defined in p_group.
+            ! In the deposition scenario the virtual particles are used to deposit the charge and they are not stored.
+            ! So nothing more to do.
+
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the real particle
+            ! which is closest to the cell center.  Note: speed-wise, it may be necessary to find a way not to scan
+            ! all the particles for every cell.  We avoid scanning all the particles for each cell by using the
+            ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
+
+            k = closest_particle(i,j,l,m)
+
+!todo: can we define this macro elsewhere (it does not help with the indents...)
+#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                                                \
+    do;                                                                                                                 \
+        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm));                                                  \
+;                                                                                                                       \
+        if(k_neighbor /= 0) then;  do          ;                                                                        \
+            coords = p_group%get_x(k_neighbor) ;                                                                        \
+            x = coords(1) ;                                                                                             \
+            y = coords(2) ;                                                                                             \
+            coords = p_group%get_v(k_neighbor) ;                                                                        \
+            vx = coords(1) ;                                                                                            \
+            vy = coords(2) ;                                                                                            \
+            call periodic_correction(p_group,x,y) ;                                                                     \
+            x_aux = x - g%eta1_min;                                                                                     \
+            y_aux = y - g%eta2_min;                                                                                     \
+            vx_aux = vx - g%eta3_min;                                                                                   \
+            vy_aux = vy - g%eta4_min;                                                                                   \
+            call update_closest_particle_arrays(k_neighbor,                                                             \
+                                                x_aux, y_aux, vx_aux, vy_aux,                                           \
+                                                i, j, l, m,                                                             \
+                                                h_virtual_cell_x, h_virtual_cell_y,                                     \
+                                                h_virtual_cell_vx, h_virtual_cell_vy,                                   \
+                                                closest_particle,                                                       \
+                                                closest_particle_distance) ;                                            \
+        exit;                                                                                                           \
+        end do;                                                                                                         \
+        end if;                                                                                                         \
+    exit;                                                                                                               \
+    end do
+
+            if(k == 0) then
+              if( i > 1 )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(-1,0,0,0)
+              end if
+              if( i < num_virtual_cells_x )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS( 1,0,0,0)
+              end if
+
+              if( j > 1 )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(0,-1,0,0)
+              end if
+              if( j < num_virtual_cells_y )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(0, 1,0,0)
+              end if
+
+              if( l > 1 )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(0,0,-1,0)
+              end if
+              if( l < num_virtual_cells_vx )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(0,0, 1,0)
+              end if
+
+              if( m > 1 )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(0,0,0,-1)
+              end if
+              if( m < num_virtual_cells_vy )then
+                UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(0,0,0, 1)
+              end if
+            end if
+
+            k = closest_particle(i,j,l,m)
+            SLL_ASSERT(k /= 0)
+
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
+            ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
+            ! [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
+            ! with parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
+
+            call p_group%get_ltp_deformation_matrix (       &
+                 k,                                         &
+                 mesh_period_x,                             &
+                 mesh_period_y,                             &
+                 h_parts_x,                                 &
+                 h_parts_y,                                 &
+                 h_parts_vx,                                &
+                 h_parts_vy,                                &
+                 inv_h_parts_x,                             &
+                 inv_h_parts_y,                             &
+                 inv_h_parts_vx,                            &
+                 inv_h_parts_vy,                            &
+                 0.5_f64*(part_degree+1),                   &
+                 x_k,y_k,vx_k,vy_k,                         &
+                 d11,d12,d13,d14,                           &
+                 d21,d22,d23,d24,                           &
+                 d31,d32,d33,d34,                           &
+                 d41,d42,d43,d44,                           &
+                 part_radius_x,                             &
+                 part_radius_y,                             &
+                 part_radius_vx,                            &
+                 part_radius_vy                             &
+                 )
+
+            ! Find position of particle k at time 0
+            ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
+
+            call get_initial_position_on_cartesian_grid_from_particle_index(k,   &
+                 p_group%number_parts_x, p_group%number_parts_y,                 &
+                 p_group%number_parts_vx, p_group%number_parts_vy,               &
+                 j_x,j_y,j_vx,j_vy)
+
+            x_k_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+            y_k_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+            vx_k_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+            vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
+
+
+            ! <<loop_on_virtual_particles_in_one_virtual_cell>>
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
+            ! virtual particles in the cell to compute the value of f0 at that point (Following
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
+
+
+            ! i_x, i_y, i_vx, i_vy: real index of the virtual particle in
+            ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+
+            ! x, y, vx, vy = will be the location of the virtual particle at time n: we will have
+            ! x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
+            ! y =  virtual_parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_virtual_parts_y
+            ! vx = virtual_parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_virtual_parts_vx
+            ! vy = virtual_parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_virtual_parts_vy
+
+            ! todo: why not set directly the values above?
+
+            i_x = (i-1) * n_virtual_x    ! this index is needed in the "write f on grid" scenario
+            x =  virtual_parts_x_min  + (i_x-1) * h_virtual_parts_x
+            offset_x_in_virtual_cell = - 0.5 * h_virtual_parts_x
+            x_to_xk = x - x_k
+
+            do ivirt = 1, n_virtual_x
+              i_x = i_x + 1
+              SLL_ASSERT( i_x == (i-1)*n_virtual_x + ivirt )
+
+              x =       x       + h_virtual_parts_x
+              x_to_xk = x_to_xk + h_virtual_parts_x
+
+              offset_x_in_virtual_cell = offset_x_in_virtual_cell + h_virtual_parts_x       ! for the deposition scenario
+
+              d1_x = d11 * x_to_xk
+              d2_x = d21 * x_to_xk
+              d3_x = d31 * x_to_xk
+              d4_x = d41 * x_to_xk
+
+              i_y = (j-1) * n_virtual_y     ! this index is needed in the "write f on grid" scenario
+              y =  virtual_parts_y_min + (i_y-1)*h_virtual_parts_y
+              offset_y_in_virtual_cell = - 0.5 * h_virtual_parts_y
+              y_to_yk = y - y_k
+
+              do jvirt = 1, n_virtual_y
+                i_y = i_y + 1
+                SLL_ASSERT( i_y == (j-1)*n_virtual_y + jvirt )
+                y =       y       + h_virtual_parts_y
+                y_to_yk = y_to_yk + h_virtual_parts_y
+
+                offset_y_in_virtual_cell = offset_y_in_virtual_cell + h_virtual_parts_y        ! for the deposition scenario
+
+                d1_y = d12 * y_to_yk
+                d2_y = d22 * y_to_yk
+                d3_y = d32 * y_to_yk
+                d4_y = d42 * y_to_yk
+
+                i_vx = (l-1) * n_virtual_vx     ! this index is needed in the "write f on grid" scenario
+                vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
+                vx_to_vxk = vx - vx_k
+
+                do lvirt = 1, n_virtual_vx
+                  i_vx = i_vx + 1
+                  SLL_ASSERT( i_vx == (l-1)*n_virtual_vx + lvirt )
+
+                  vx =        vx        + h_virtual_parts_vx
+                  vx_to_vxk = vx_to_vxk + h_virtual_parts_vx
+
+                  d1_vx = d13 * vx_to_vxk
+                  d2_vx = d23 * vx_to_vxk
+                  d3_vx = d33 * vx_to_vxk
+                  d4_vx = d43 * vx_to_vxk
+
+                  i_vy = (m-1) * n_virtual_vy      ! this index is needed in the "write f on grid" scenario
+                  vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
+                  vy_to_vyk = vy - vy_k
+
+                  do mvirt = 1, n_virtual_vy
+                    i_vy = i_vy + 1
+                    SLL_ASSERT( i_vy == (m-1)*n_virtual_vy + mvirt )
+
+                    vy =        vy        + h_virtual_parts_vy
+                    vy_to_vyk = vy_to_vyk + h_virtual_parts_vy
+
+                    d1_vy = d14 * vy_to_vyk
+                    d2_vy = d24 * vy_to_vyk
+                    d3_vy = d34 * vy_to_vyk
+                    d4_vy = d44 * vy_to_vyk
+
+                    ! The virtual particle may go out of the domain for high values of x,y,vx,vy in each dimension
+                    ! (because the corners of the corresponding virtual cell do not correspond to existing
+                    ! real particles). If that happens and if we are writing on a given grid, just ignore that value
+                    if( scenario_is_deposition                              &
+                         .or. (      i_x  <= number_virtual_particles_x     &
+                               .and. i_y  <= number_virtual_particles_y     &
+                               .and. i_vx <= number_virtual_particles_vx    &
+                               .and. i_vy <= number_virtual_particles_vy) ) then
+
+                      ! now find directly z_t0, the position of the virtual particle at time = 0, using the affine backward flow
+                      x_t0_to_xk_t0   = d1_x + d1_y + d1_vx + d1_vy
+                      y_t0_to_yk_t0   = d2_x + d2_y + d2_vx + d2_vy
+                      vx_t0_to_vxk_t0 = d3_x + d3_y + d3_vx + d3_vy
+                      vy_t0_to_vyk_t0 = d4_x + d4_y + d4_vx + d4_vy
+
+                      x_t0 = x_t0_to_xk_t0 + x_k_t0
+                      y_t0 = y_t0_to_yk_t0 + y_k_t0
+                      vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
+                      vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
+
+                      ! put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
+                      call periodic_correction(p_group,x_t0,y_t0)
+
+                      ! now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
+                      eta(1) = x_t0
+                      eta(2) = y_t0
+                      eta(3) = vx_t0
+                      eta(4) = vy_t0
+
+                      ! interpolation here may use sparse grid or splines, depending on the method chosen for p_group
+                      f_value_on_virtual_particle = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+
+                      if( f_value_on_virtual_particle /= 0 )then
+
+                        if( scenario_is_deposition )then
+
+                          virtual_charge = f_value_on_virtual_particle * phase_space_virtual_dvol * p_group%species%q
+
+                          tmp1 = (1.0_f64 - offset_x_in_virtual_cell)
+                          tmp2 = (1.0_f64 - offset_y_in_virtual_cell)
+
+                          charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw             &
+                                  + virtual_charge * tmp1 * tmp2
+
+                          charge_accumulator_cell%q_se = charge_accumulator_cell%q_se             &
+                                  + virtual_charge *  offset_x_in_virtual_cell * tmp2
+
+                          charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw             &
+                                  + virtual_charge * tmp1 *  offset_y_in_virtual_cell
+
+                          charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
+                                  + virtual_charge *  offset_x_in_virtual_cell *  offset_y_in_virtual_cell
+
+                          if( present(target_total_charge) )then
+                            deposited_charge = deposited_charge + virtual_charge
+                          end if
+
+                        else
+
+                          if( use_remapping_grid )then
+                            p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
+                          else
+                            given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
+                                    + f_value_on_virtual_particle * h_virtual_parts_y * h_virtual_parts_vy
+                          end if
+                        end if
+
+                      end if
+                    end if
+                  end do
+                end do
+              end do
+            end do
+          end do
+        end do
+      end do
+    end do
+
+    if( scenario_is_deposition .and. present(target_total_charge) )then
+
+      if( deposited_charge == 0 )then
+        print *, "WARNING (76576537475) -- total deposited charge is zero, which is strange..."
+        print *, "                      -- (no charge correction in this case) "
+      else
+        charge_correction_factor = target_total_charge / deposited_charge
+        do i = 1,num_virtual_cells_x
+          do j = 1,num_virtual_cells_y
+            ! determining the index of the Poisson cell from i and j
+            i_cell = i + (j-1) * p_group%space_mesh_2d%num_cells1
+            charge_accumulator_cell => q_accumulator%q_acc(i_cell)
+            charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
+            charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
+            charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
+            charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
+          end do
+        end do
+      end if
+    end if
+
+  end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_new_version
+
+
+
+
+
+
 
 
   ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
