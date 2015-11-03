@@ -19,9 +19,9 @@
 ! [[shell:header\alh 'test_4dsg_for_remapped_pic.F90']] (cf [[file:~/alh/bin/headeralh]])
 ! emacs-keywords authors="MCP and ALH" brief="Testing the sparse interpolation algorithm from [[selalib:src/add_ons/sparse_grid]]" default=0 dox f90 selalib start=02/11/15
 
-! The goal of this test is to reproduce the same function interpolations as in
-! [[file:~/selalib/src/add_ons/sparse_grid/testing/test_sparse_grid_4d.F90::test_interpolation_4d]]
-! (from directory [[file:~/selalib/src/add_ons/sparse_grid/testing]])
+! <<ALH>> The goal of this test is to reproduce the same function interpolations as in
+! [[selalib:src/add_ons/sparse_grid/testing/test_sparse_grid_4d.F90::test_interpolation_4d]]
+! (from directory [[selalib:src/add_ons/sparse_grid/testing]])
 
 ! Compilation commands in [[file:CMakeLists.txt::test_4dsg_for_remapped_pic]]
 
@@ -51,9 +51,9 @@ program test_4dsg_for_remapped_pic
   sll_real64,dimension(4) :: dx
 
   ! <<interp>> Interpolation object of type
-  ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::sparse_grid_interpolator_4d]]
+  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::sparse_grid_interpolator_4d]]
   ! which extends
-  ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::type,%20public%20::%20sparse_grid_interpolator]]
+  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::type,%20public%20::%20sparse_grid_interpolator]]
   
   type(sparse_grid_interpolator_4d), target   :: interp
 
@@ -84,12 +84,12 @@ program test_4dsg_for_remapped_pic
   order = 1;
   
   ! Initialize sparse grid
-  ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::subroutine%20initialize_sg4d]]
+  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::subroutine%20initialize_sg4d]]
   
   call interp%initialize(levelsini,order,order+1,0,eta_min,eta_max);
 
   ! Initialize [[f]].
-  ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::size_basis]]
+  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::size_basis]]
   ! is the number of grid points.
 
   SLL_ALLOCATE(f(interp%size_basis),ierr);
