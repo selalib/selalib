@@ -12,7 +12,8 @@ Created: May 2006
 
 Modifications:
   - Nov 2015: 'ProcedureDeclaration' added to 'declaration_construct' list
-              (Yaman Güçlü - IPP Garching)
+              (Yaman Güçlü [YG] - IPP Garching)
+            : modify regex pattern in 'Forall' to avoid false matches (YG)
 -----
 """
 
@@ -846,7 +847,7 @@ class Forall(BeginStatement):
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
     end_stmt_cls = EndForall
-    match = re.compile(r'forall\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'forall\s*\(\w+\)\Z',re.I).match
     name = ''
     def process_item(self):
         self.specs = self.item.get_line()[6:].lstrip()[1:-1].strip()
