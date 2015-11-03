@@ -32,7 +32,7 @@ ADD_TEST( NAME bsl_lt_pic_4d COMMAND test_bsl_lt_pic_4d )
 SET_TESTS_PROPERTIES( bsl_lt_pic_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 # <<<<test_4dsg_for_remapped_pic>>>> [[file:test_4dsg_for_remapped_pic.F90]]
-# Configuration from [[file:~/selalib/src/simulations/parallel/pic_vp_2d2v_cart_remapped/README]]
+# Configuration from [[selalib:src/simulations/parallel/pic_vp_2d2v_cart_remapped/README]]
 # [[elisp:(compile "cd ${SELALIB}/build && make test_4dsg_for_remapped_pic && ${SELALIB}/build/bin/test_4dsg_for_remapped_pic")]]
 
 ADD_EXECUTABLE(test_4dsg_for_remapped_pic test_4dsg_for_remapped_pic.F90)

@@ -2353,8 +2353,6 @@ contains
     sll_real64 :: deposited_charge
     sll_real64 :: charge_correction_factor
 
-    ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
-
     sll_int32 :: num_virtual_cells_x
     sll_int32 :: num_virtual_cells_y
     sll_int32 :: num_virtual_cells_vx
@@ -2365,7 +2363,7 @@ contains
     sll_int32 :: number_virtual_particles_vx
     sll_int32 :: number_virtual_particles_vy
 
-    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy
+    ! h_parts_x, h_parts_y, h_parts_vx, h_parts_vy
 
     sll_real64 :: h_parts_x
     sll_real64 :: h_parts_y
@@ -2413,7 +2411,6 @@ contains
     sll_real64 :: virtual_grid_vy_min
     sll_real64 :: virtual_grid_vy_max
 
-    ! same as \delta{x,y,vx,vy} in [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
     sll_real64 :: h_virtual_cell_x
     sll_real64 :: h_virtual_cell_y
     sll_real64 :: h_virtual_cell_vx
@@ -2608,7 +2605,6 @@ contains
         num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
 
 
-        ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
         p_group%target_values(:,:,:,:) = 0.0_f64
 
       else
@@ -2653,7 +2649,7 @@ contains
     SLL_ALLOCATE(closest_particle_distance(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
     closest_particle_distance(:,:,:,:) = 0.0_f64
 
-    ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
+    ! remapping grid cell size
 
     h_parts_x    = p_group%remapping_grid%delta_eta1
     h_parts_y    = p_group%remapping_grid%delta_eta2
@@ -2710,7 +2706,7 @@ contains
     closest_particle_distance_to_first_corner = 1d30
     k_particle_closest_to_first_corner = 0
 
-    do k=1, p_group%number_particles ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
+    do k=1, p_group%number_particles
 
       ! print *, "WRITE F CC "
       ! find absolute (x,y,vx,vy) coordinates for k-th particle.
@@ -2721,8 +2717,7 @@ contains
       vx = coords(1)
       vy = coords(2)
 
-      ! which _virtual_ cell is this particle in? uses
-      ! [[file:sll_representation_conversion.F90::compute_cell_and_offset]] and [[g]]
+      ! which _virtual_ cell is this particle in?
 
       x_aux = x - virtual_cells_x_min
       i = int( x_aux / h_virtual_cell_x ) + 1
@@ -2762,7 +2757,6 @@ contains
 
     closest_particle(1,1,1,1) = k_particle_closest_to_first_corner
 
-    ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
     if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(1) ) )then
       print*, "WARNING -- STOP -- verify that the non-periodic case is well implemented"
       stop
@@ -2786,8 +2780,7 @@ contains
       inv_period_y = 0.0_f64
     end if
 
-    ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
-    ! Loop over all cells of indices i,j,l,m which contain at least one particle
+    ! <<loop_on_virtual_cells>> Loop over all cells of indices i,j,l,m which contain at least one particle
 
     do i = 1, num_virtual_cells_x
       do j = 1, num_virtual_cells_y
@@ -2801,17 +2794,17 @@ contains
         do l = 1,num_virtual_cells_vx
           do m = 1,num_virtual_cells_vy
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
+            ! Create a temporary set of
             ! virtual particles inside the cell.
             ! Note: as written above in the remapping scenario the virtual particles coincide with the existing
             ! remapping_grid defined in p_group.
             ! In the deposition scenario the virtual particles are used to deposit the charge and they are not stored.
             ! So nothing more to do.
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the real particle
-            ! which is closest to the cell center.  Note: speed-wise, it may be necessary to find a way not to scan
-            ! all the particles for every cell.  We avoid scanning all the particles for each cell by using the
-            ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
+            ! Find the real particle which is closest to the cell center.  Note: speed-wise, it may be necessary to find
+            ! a way not to scan all the particles for every cell.  We avoid scanning all the particles for each cell by
+            ! using the precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are
+            ! skipped.
 
             k = closest_particle(i,j,l,m)
 
@@ -2878,10 +2871,9 @@ contains
             k = closest_particle(i,j,l,m)
             SLL_ASSERT(k /= 0)
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
+            ! Compute backward image of l-th virtual node by the
             ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
             ! [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
-            ! with parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
 
             call p_group%get_ltp_deformation_matrix (       &
                  k,                                         &
@@ -2921,14 +2913,11 @@ contains
             vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
 
-            ! <<loop_on_virtual_particles_in_one_virtual_cell>>
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
-            ! virtual particles in the cell to compute the value of f0 at that point (Following
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
+            ! <<loop_on_virtual_particles_in_one_virtual_cell>> Loop over all virtual particles in the cell to compute
+            ! the value of f0 at that point
 
 
-            ! i_x, i_y, i_vx, i_vy: real index of the virtual particle in
-            ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+            ! i_x, i_y, i_vx, i_vy: real index of the virtual particle
 
             ! x, y, vx, vy = will be the location of the virtual particle at time n: we will have
             ! x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
