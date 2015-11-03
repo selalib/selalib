@@ -13,6 +13,7 @@ Created: May 2006
 Modifications:
   - Nov 2015: added 'ProcedureDeclaration' (Yaman Güçlü [YG] - IPP Garching)
             : modify regex pattern in 'Forall' to avoid false matches (YG)
+            : modify 'process_item' in 'Call' to avoid failing on arrays (YG)
 -----
 """
 
@@ -178,12 +179,12 @@ class Call(Statement):
         item = self.item
         apply_map = item.apply_map
         line = item.get_line()[4:].strip()
-        i = line.find('(')
+        i = line.rfind('(')      # 'rfind' needed for "call array(i)%sub(...)"
         items = []
         if i==-1:
             self.designator = apply_map(line).strip()
         else:
-            j = line.find(')')
+            j = line.rfind(')')  # 'rfind' needed for "call array(i)%sub(...)"
             if j == -1 or len(line)-1 != j:
                 self.isvalid = False
                 return
