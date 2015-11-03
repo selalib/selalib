@@ -1,7 +1,8 @@
 ! Sample computation with the following characteristics:
-! - vlasov-poisson
-! - 1Dx1D cartesian: x1=x, x2=vx
-! - parallel
+!   - Vlasov-Poisson
+!   - 1Dx1D cartesian: x1=x, x2=vx
+!   - Parallel
+!   - Two species
 
 program sim_bsl_vp_1d1v_cart_multi_species
 
@@ -13,6 +14,7 @@ use sll_m_common_array_initializers
 use sll_m_collective
 use sll_m_timer
 use sll_m_constants
+
 implicit none
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), pointer :: sim
@@ -34,7 +36,6 @@ sll_int32                         :: num_params
 logical                           :: init_from_unit_test  
 
 
-
 init_from_unit_test = .false.
 
 call sll_boot_collective()
@@ -48,65 +49,71 @@ if(sll_get_collective_rank(sll_world_collective)==0)then
 endif
 
 
-  call get_command_argument(1, filename)
-  if (len_trim(filename) == 0)then
-    sim => new_vp2d_par_cart_multi_species( )
+call get_command_argument(1, filename)
+
+if (len_trim(filename) == 0)then
+
+  sim => new_vp2d_par_cart_multi_species( )
+  call sim%run( )
+
+else
+
+  filename_local = trim(filename)
+  call get_command_argument(2, str)
+
+  if(len_trim(str) == 0)then
+
+    sim => new_vp2d_par_cart_multi_species( filename_local )
+    
+    if (init_from_unit_test) then
+
+      print *,'#Warning: init_function is redefined form unit_test'
+      init_func => sll_landau_initializer_2d
+      num_params = 2
+      SLL_ALLOCATE(params(num_params),ierr)  
+      params(1) = 0.26_f64
+      params(2) = 100._f64  
+
+      call change_initial_function_vp2d_par_cart_multi_species( &
+                      sim,                                      &
+                      init_func,                                &
+                      params,                                   &
+                      num_params,                               &
+                      init_func,                                &
+                      params,                                   &
+                      num_params)
+      
+    endif
+
     call sim%run( )
+
   else
-    filename_local = trim(filename)
-    call get_command_argument(2, str)
-    if(len_trim(str) == 0)then
-      sim => new_vp2d_par_cart_multi_species( filename_local )
-      
-      if (init_from_unit_test) then
 
-        print *,'#Warning: init_function is redefined form unit_test'
-        init_func => sll_landau_initializer_2d
-        num_params = 2
-        SLL_ALLOCATE(params(num_params),ierr)  
-        params(1) = 0.26_f64
-        params(2) = 100._f64  
+    read(str , *) num_max
+    num_min = 0
+    call get_command_argument(3, str)
 
-        call change_initial_function_vp2d_par_cart_multi_species( &
-          sim,                                      &
-          init_func,                                &
-          params,                                   &
-          num_params,                               &
-          init_func,                                &
-          params,                                   &
-          num_params)
-        
-      endif
+    if(len_trim(str) .ne. 0)then
 
-      
-      
-      
-      call sim%run( )
-    else
+      num_min = num_max
       read(str , *) num_max
-      num_min = 0
-      call get_command_argument(3, str)
-      if(len_trim(str) .ne. 0)then
-        num_min = num_max
-        read(str , *) num_max
-      endif
-      !print *,'#num=',num_min,num_max
-      do i=num_min,num_max
-        sim => new_vp2d_par_cart_multi_species( filename_local, i)
-        call sim%run( )
-        call delete_vp2d_par_cart_multi_species( sim )
-        nullify( sim )
-      enddo  
-    endif    
-  endif
 
+    endif
 
+    do i=num_min,num_max
+      sim => new_vp2d_par_cart_multi_species( filename_local, i)
+      call sim%run( )
+      call delete_vp2d_par_cart_multi_species( sim )
+      nullify( sim )
+    enddo  
 
+  endif    
 
+endif
 
 if(sll_get_collective_rank(sll_world_collective)==0)then
 
-  print *, '#reached end of vp2d test'
+  print *, '#reached end of vp1d1v multi species test'
   time = sll_time_elapsed_since(t0)
   print *, '#time elapsed since t0 : ',time
   print *, '#PASSED'
