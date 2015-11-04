@@ -9,7 +9,7 @@
 # [[shell:header\alh 'README']] (cf [[file:~/alh/bin/headeralh]])
 # emacs-keywords authors="MCP and ALH" brief="Summary of commands for BSL-LT-PIC compilation" default=0 org start=26/10/15
 
-# <<<<BSL-LT-PIC-Simulation>>>>	[[file:.]]
+# <<<<BSL-LT-PIC_Simulation>>>>	[[file:.]] uses [[[file:../../../../../mcp/../selalib/src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::BSL-LT-PIC_Library]]]
 
 * Doxygen
   building: [[elisp:(compile "cd ${SELALIB}/build && make doc")]]
