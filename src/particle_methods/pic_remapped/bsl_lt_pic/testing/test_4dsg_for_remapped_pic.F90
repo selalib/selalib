@@ -74,12 +74,13 @@ program test_4dsg_for_remapped_pic
   eta_min(4) = 0.0_f64; eta_max(4) = 2.0_f64*sll_pi;
 
   ! [[levels]] AAA_ALH_TODO Select right value
-  levels = 8;
+  levels = 12;
   levelsini(1)=levels;
   levelsini(2)=levels;
   levelsini(3)=levels;
   levelsini(4)=levels;
 
+  ! [[elisp:(compile "cd ${SELALIB}/build && make test_4dsg_for_remapped_pic && ${SELALIB}/build/bin/test_4dsg_for_remapped_pic")]]
   ! [[order]] AAA_ALH_TODO Which is best?
   order = 1;
   
@@ -125,7 +126,7 @@ program test_4dsg_for_remapped_pic
   ! AAA_ALH_TODO Which accuracy do we need?
   
   write(*,"(A,G12.5)") "maximum error = ",ferrmax
-  if (ferrmax <= 1e-6) then
+  if (ferrmax <= 1e-2) then
      print *,'PASSED'
   else
      print *,'FAILED'
