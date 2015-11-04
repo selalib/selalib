@@ -14,6 +14,7 @@ Modifications:
   - Nov 2015: added 'ProcedureDeclaration' (Yaman Güçlü [YG] - IPP Garching)
             : modify regex pattern in 'Forall' to avoid false matches (YG)
             : modify 'process_item' in 'Call' to avoid failing on arrays (YG)
+            : add 'TypeGuard' statement for 'select type' constructs (YG)
 -----
 """
 
@@ -29,7 +30,7 @@ __all__ = ['GeneralAssignment',
            'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
            'Case','WhereStmt','ElseWhere','Enumerator','FortranName','Threadsafe',
            'Depend','Check','CallStatement','CallProtoArgument','Pause',
-           'Comment', 'ProcedureDeclaration']
+           'Comment', 'ProcedureDeclaration', 'TypeGuard']
 
 import re
 import sys
@@ -1832,6 +1833,84 @@ class Case(Statement):
         return s
     def analyze(self): return
 
+#==============================================================================
+# SelectType construct statements
+#==============================================================================
+
+class TypeGuard( Statement ):
+    """ R823
+    <type-guard-stmt> = TYPE  IS ( <type-spec> ) [ <select-construct-name> ]
+                      | CLASS IS ( <type-spec> ) [ <select-construct-name> ]
+                      | CLASS DEFAULT
+
+    <type-spec> = <intrinsic-type-spec> | <derived-type-spec>
+    <derived-type-spec> = <type-name> [ (<type-param-spec-list>) ]
+    <type-param-spec> = [ <keyword> ] <type-param-value>
+
+    """
+    opt1 = r"TYPE\s*IS\s*\(.*\)"
+    opt2 = r"CLASS\s*IS\s*\(.*\)"
+    opt3 = r"CLASS\s*DEFAULT"
+    pattern = r"({}|{}|{})\s*\w*\Z".format( opt1, opt2, opt3 )
+
+    # Match function is static method that is used to identify statement type
+    match = re.compile( pattern, re.I ).match
+
+    #--------------------------------------------------------------------------
+    def process_item( self ):
+        # Get line string, remove all blank spaces, and use lowercase
+        line = self.item.get_line().replace(' ','').lower()
+
+        # "Type is" statement
+        if line.startswith( 'typeis(' ) and line.count(')') == 1:
+            i              = line.rfind(')')
+            self.type_spec = line[7:i]
+            self.name      = line[i+1:]
+            self._case     = 'type'
+        # "Class is" statement
+        elif line.startswith( 'classis(' ) and line.count(')') == 1:
+            i              = line.rfind(')')
+            self.type_spec = line[8:i]
+            self.name      = line[i+1:]
+            self._case     = 'class'
+        # "Class default" statement
+        elif line == 'classdefault':
+            self.type_spec = None
+            self.name      = line[12:]
+            self._case     = 'default'
+        # Error
+        else:
+            raise SystemExit( "Could not process line: %s" % self.get_item() )
+
+        # Compare <select-construct-name>, if any, with parent name
+        parent_name = getattr( self.parent, 'name', '' )
+        if self.name and self.name != parent_name:
+            self.warning( 'expected select-type-construct-name %r but got %r, skipping.'\
+                         % (parent_name, self.name) )
+            self.isvalid = False
+
+        self.items = []
+        return
+
+    #--------------------------------------------------------------------------
+    def tofortran( self, isfix=None ):
+        tab = self.get_indent_tab( isfix=isfix )
+
+        if   self._case == 'type'   :  s =  'TYPE IS ( %s )' % self.type_spec
+        elif self._case == 'class'  :  s = 'CLASS IS ( %s )' % self.type_spec
+        elif self._case == 'default':  s = 'CLASS DEFAULT'
+        else:
+            raise SystemExit( "'self._case' attribute not correctly set." )
+
+        if self.name:
+            s += ' %s' % self.name
+
+        return s
+
+    #--------------------------------------------------------------------------
+    def analyze( self ): return
+
+#==============================================================================
 # Where construct statements
 
 class Where(Statement):
