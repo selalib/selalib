@@ -594,50 +594,50 @@ subroutine init_vp2d_par_cart_multi_species( sim, filename, num_run )
   sim%sp1%eps  = eps_sp1
   select case (initial_function_case_sp1)
   case ("SLL_LANDAU")
-     sim%sp1%init_func => sll_landau_initializer_2d
-     SLL_ALLOCATE(sim%sp1%params(4),ierr)
-     sim%sp1%params(1) = kmode_sp1
-     sim%sp1%params(2) = eps_sp1
-     sim%sp1%params(3) = v0_sp1
-     sim%sp1%params(4) = sigma_sp1
-     sim%sp1%nrj0 = 0._f64  !compute the right value
-     !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-     !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-     !for the moment
-     sim%sp1%kx  = kmode_sp1
-     sim%sp1%eps = eps_sp1
+    sim%sp1%init_func => sll_landau_initializer_2d
+    SLL_ALLOCATE(sim%sp1%params(4),ierr)
+    sim%sp1%params(1) = kmode_sp1
+    sim%sp1%params(2) = eps_sp1
+    sim%sp1%params(3) = v0_sp1
+    sim%sp1%params(4) = sigma_sp1
+    sim%sp1%nrj0 = 0._f64  !compute the right value
+    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+    !for the moment
+    sim%sp1%kx  = kmode_sp1
+    sim%sp1%eps = eps_sp1
   case ("SLL_BUMP_ON_TAIL")
-     sim%sp1%init_func => sll_bump_on_tail_initializer_2d
-     SLL_ALLOCATE(sim%sp1%params(2),ierr)
-     sim%sp1%params(1) = kmode_sp1
-     sim%sp1%params(2) = eps_sp1
-     sim%sp1%nrj0 = 0._f64  !compute the right value
-     !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-     !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-     !for the moment
-     sim%sp1%kx = kmode_sp1
-     sim%sp1%eps = eps_sp1
+    sim%sp1%init_func => sll_bump_on_tail_initializer_2d
+    SLL_ALLOCATE(sim%sp1%params(2),ierr)
+    sim%sp1%params(1) = kmode_sp1
+    sim%sp1%params(2) = eps_sp1
+    sim%sp1%nrj0 = 0._f64  !compute the right value
+    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+    !for the moment
+    sim%sp1%kx = kmode_sp1
+    sim%sp1%eps = eps_sp1
   case ("SLL_TWO_STREAM_INSTABILITY")
-     sim%sp1%init_func => sll_two_stream_instability_initializer_2d
-     SLL_ALLOCATE(sim%sp1%params(4),ierr)
-     sim%sp1%params(1) = kmode_sp1
-     sim%sp1%params(2) = eps_sp1
-     sim%sp1%params(3) = sigma_sp1
-     sim%sp1%params(4) = factor1_sp1
-     sim%sp1%nrj0 = 0._f64  !compute the right value
-     !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-     !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-     !for the moment
-     sim%sp1%kx  = kmode_sp1
-     sim%sp1%eps = eps_sp1
+    sim%sp1%init_func => sll_two_stream_instability_initializer_2d
+    SLL_ALLOCATE(sim%sp1%params(4),ierr)
+    sim%sp1%params(1) = kmode_sp1
+    sim%sp1%params(2) = eps_sp1
+    sim%sp1%params(3) = sigma_sp1
+    sim%sp1%params(4) = factor1_sp1
+    sim%sp1%nrj0 = 0._f64  !compute the right value
+    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+    !for the moment
+    sim%sp1%kx  = kmode_sp1
+    sim%sp1%eps = eps_sp1
   case ("SLL_BEAM")  
-     sim%sp1%init_func => sll_beam_initializer_2d
-     SLL_ALLOCATE(sim%sp1%params(1),ierr)
-     sim%sp1%params(1) = alpha_gaussian_sp1
+    sim%sp1%init_func => sll_beam_initializer_2d
+    SLL_ALLOCATE(sim%sp1%params(1),ierr)
+    sim%sp1%params(1) = alpha_gaussian_sp1
   case default
-      print *,'#init_func_case not implemented'
-      print *,'#in init_vp2d_par_cart'  
-      stop
+    print *,'#init_func_case not implemented'
+    print *,'#in init_vp2d_par_cart'  
+    stop
   end select
 
   !initial function
@@ -646,50 +646,50 @@ subroutine init_vp2d_par_cart_multi_species( sim, filename, num_run )
   sim%sp2%eps  = eps_sp2
   select case (initial_function_case_sp2)
   case ("SLL_LANDAU")
-     sim%sp2%init_func => sll_landau_initializer_2d
-     SLL_ALLOCATE(sim%sp2%params(4),ierr)
-     sim%sp2%params(1) = kmode_sp2
-     sim%sp2%params(2) = eps_sp2
-     sim%sp2%params(3) = v0_sp2
-     sim%sp2%params(4) = sigma_sp2
-     sim%sp2%nrj0 = 0._f64  !compute the right value
-     !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-     !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-     !for the moment
-     sim%sp2%kx  = kmode_sp2
-     sim%sp2%eps = eps_sp2
+    sim%sp2%init_func => sll_landau_initializer_2d
+    SLL_ALLOCATE(sim%sp2%params(4),ierr)
+    sim%sp2%params(1) = kmode_sp2
+    sim%sp2%params(2) = eps_sp2
+    sim%sp2%params(3) = v0_sp2
+    sim%sp2%params(4) = sigma_sp2
+    sim%sp2%nrj0 = 0._f64  !compute the right value
+    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+    !for the moment
+    sim%sp2%kx  = kmode_sp2
+    sim%sp2%eps = eps_sp2
   case ("SLL_BUMP_ON_TAIL")
-     sim%sp2%init_func => sll_bump_on_tail_initializer_2d
-     SLL_ALLOCATE(sim%sp2%params(2),ierr)
-     sim%sp2%params(1) = kmode_sp2
-     sim%sp2%params(2) = eps_sp2
-     sim%sp2%nrj0 = 0._f64  !compute the right value
-     !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-     !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-     !for the moment
-     sim%sp2%kx  = kmode_sp2
-     sim%sp2%eps = eps_sp2
+    sim%sp2%init_func => sll_bump_on_tail_initializer_2d
+    SLL_ALLOCATE(sim%sp2%params(2),ierr)
+    sim%sp2%params(1) = kmode_sp2
+    sim%sp2%params(2) = eps_sp2
+    sim%sp2%nrj0 = 0._f64  !compute the right value
+    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+    !for the moment
+    sim%sp2%kx  = kmode_sp2
+    sim%sp2%eps = eps_sp2
   case ("SLL_TWO_STREAM_INSTABILITY")
-     sim%sp2%init_func => sll_two_stream_instability_initializer_2d
-     SLL_ALLOCATE(sim%sp2%params(4),ierr)
-     sim%sp2%params(1) = kmode_sp2
-     sim%sp2%params(2) = eps_sp2
-     sim%sp2%params(3) = sigma_sp2
-     sim%sp2%params(4) = factor1_sp2
-     sim%sp2%nrj0 = 0._f64  !compute the right value
-     !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-     !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-     !for the moment
-     sim%sp2%kx  = kmode_sp2
-     sim%sp2%eps = eps_sp2
+    sim%sp2%init_func => sll_two_stream_instability_initializer_2d
+    SLL_ALLOCATE(sim%sp2%params(4),ierr)
+    sim%sp2%params(1) = kmode_sp2
+    sim%sp2%params(2) = eps_sp2
+    sim%sp2%params(3) = sigma_sp2
+    sim%sp2%params(4) = factor1_sp2
+    sim%sp2%nrj0 = 0._f64  !compute the right value
+    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+    !for the moment
+    sim%sp2%kx  = kmode_sp2
+    sim%sp2%eps = eps_sp2
   case ("SLL_BEAM")  
-     sim%sp2%init_func => sll_beam_initializer_2d
-     SLL_ALLOCATE(sim%sp2%params(1),ierr)
-     sim%sp2%params(1) = alpha_gaussian_sp2
+    sim%sp2%init_func => sll_beam_initializer_2d
+    SLL_ALLOCATE(sim%sp2%params(1),ierr)
+    sim%sp2%params(1) = alpha_gaussian_sp2
   case default
-     print *,'#init_func_case not implemented'
-     print *,'#in init_vp2d_par_cart'  
-     stop
+    print *,'#init_func_case not implemented'
+    print *,'#in init_vp2d_par_cart'  
+    stop
   end select
 
   sim%time_init_from_restart_file = time_init_from_restart_file
@@ -754,363 +754,288 @@ subroutine init_vp2d_par_cart_multi_species( sim, filename, num_run )
 !!$OMP PRIVATE(tid)
 !    tid = omp_get_thread_num()+1
 !#endif
-    select case (advector_x1_sp1)
-      case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x1, &
-          x1_min, &
-          x1_max, &
-          SPLINE, & 
-          order_x1_sp1) 
+  select case (advector_x1_sp1)
+    case ("SLL_SPLINES") ! arbitrary order periodic splines
+      sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+        num_cells_x1, &
+        x1_min, &
+        x1_max, &
+        SPLINE, & 
+        order_x1_sp1) 
 
-     case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x1, &
-          x1_min, &
-          x1_max, &
-          LAGRANGE, & 
-          order_x1_sp1)
+   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+      sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+        num_cells_x1, &
+        x1_min, &
+        x1_max, &
+        LAGRANGE, & 
+        order_x1_sp1)
 
-!     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
-!        sim%sp1%advect_x1(tid)%ptr => new_BSL_1d_advector_0inflow(&
-!             num_cells_x1+1, &
-!             x1_min, &
-!             x1_max, &
-!             SLL_HERMITE, &
-!             SLL_SET_TO_LIMIT)
-!
-!     case("SLL_SOURCE_COLLECTOR") !BSL advection with collector at xmin and source at xmax
-!        sim%sp1%advect_x1(tid)%ptr => new_BSL_1d_advector_sc(&
-!             num_cells_x1+1, &
-!             x1_min, &
-!             x1_max, &
-!             SLL_HERMITE, &
-!             SLL_SET_TO_LIMIT, &
-!             vd, &
-!             1._f64)
-        
-     case default
-        print*,'#advector in x1 for species 1 ', advector_x1_sp1, ' not implemented'
-        stop 
-     end select
+   case default
+     print*,'#advector in x1 for species 1 ', advector_x1_sp1, ' not implemented'
+     stop 
+   end select
      
-     select case (advector_x1_sp2)
-      case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x1, &
-          x1_min, &
-          x1_max, &
-          SPLINE, & 
-          order_x1_sp2) 
+   select case (advector_x1_sp2)
+   case ("SLL_SPLINES") ! arbitrary order periodic splines
+     sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+        num_cells_x1, &
+        x1_min, &
+        x1_max, &
+        SPLINE, & 
+        order_x1_sp2) 
 
-     case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x1, &
-          x1_min, &
-          x1_max, &
-          LAGRANGE, & 
-          order_x1_sp2)
+   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+     sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+        num_cells_x1, &
+        x1_min, &
+        x1_max, &
+        LAGRANGE, & 
+        order_x1_sp2)
 
-!     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
-!        sim%sp2%advect_x1(tid)%ptr => new_BSL_1d_advector_0inflow(&
-!             num_cells_x1+1, &
-!             x1_min, &
-!             x1_max, &
-!             SLL_HERMITE, &
-!             SLL_SET_TO_LIMIT)
-!
-!     case("SLL_SOURCE_COLLECTOR") !BSL advection with collector at xmin and source at xmax
-!        sim%sp2%advect_x1(tid)%ptr => new_BSL_1d_advector_sc(&
-!             num_cells_x1+1, &
-!             x1_min, &
-!             x1_max, &
-!             SLL_HERMITE, &
-!             SLL_SET_TO_LIMIT, &
-!             vd, &
-!             mass_ratio)
-!
-      case default
-        print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
-        stop 
-    end select    
+   case default
+     print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
+     stop 
+   end select    
 
-    select case (advector_x2_sp2)
-      case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x2_sp2, &
-          x2_min_sp2, &
-          x2_max_sp2, &
-          SPLINE, & 
-          order_x2_sp2) 
-      case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x2_sp2, &
-          x2_min_sp2, &
-          x2_max_sp2, &
-          LAGRANGE, & 
-          order_x2_sp2)
-      case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-        sim%sp2%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
-          num_cells_x2_sp2, &
-          x2_min_sp2, &
-          x2_max_sp2, &
-          order_x2_sp2, &
-          sim%sp2%x2_array)           
-          !sim%x2_array_omp(:,tid))           
+   select case (advector_x2_sp2)
 
-     case default
-        print*,'#advector in x2 for species 2', advector_x2_sp2, ' not implemented'
-        stop 
-     end select
+   case ("SLL_SPLINES") ! arbitrary order periodic splines
+     sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+        num_cells_x2_sp2, &
+        x2_min_sp2, &
+        x2_max_sp2, &
+        SPLINE, & 
+        order_x2_sp2) 
+   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+     sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+        num_cells_x2_sp2, &
+        x2_min_sp2, &
+        x2_max_sp2, &
+        LAGRANGE, & 
+        order_x2_sp2)
+   case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
+     sim%sp2%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
+        num_cells_x2_sp2, &
+        x2_min_sp2, &
+        x2_max_sp2, &
+        order_x2_sp2, &
+        sim%sp2%x2_array)           
+        !sim%x2_array_omp(:,tid))           
+
+   case default
+       print*,'#advector in x2 for species 2', advector_x2_sp2, ' not implemented'
+       stop 
+   end select
      
-     select case (advector_x2_sp1)
-      case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x2_sp1, &
-          x2_min_sp1, &
-          x2_max_sp1, &
-          SPLINE, & 
-          order_x2_sp1) 
-      case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-          num_cells_x2_sp1, &
-          x2_min_sp1, &
-          x2_max_sp1, &
-          LAGRANGE, & 
-          order_x2_sp1)
-      case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-        sim%sp1%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
-          num_cells_x2_sp1, &
-          x2_min_sp1, &
-          x2_max_sp1, &
-          order_x2_sp1, &
-          sim%sp1%x2_array)           
-          !sim%x2_array_omp(:,tid))           
-
-     case default
-        print*,'#advector in x2 for species 1', advector_x2_sp1, ' not implemented'
-        stop 
-    end select
+   select case (advector_x2_sp1)
+   case ("SLL_SPLINES") ! arbitrary order periodic splines
+     sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+       num_cells_x2_sp1, &
+       x2_min_sp1, &
+       x2_max_sp1, &
+       SPLINE, & 
+       order_x2_sp1) 
+   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+     sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+       num_cells_x2_sp1, &
+       x2_min_sp1, &
+       x2_max_sp1, &
+       LAGRANGE, & 
+       order_x2_sp1)
+   case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
+     sim%sp1%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
+      num_cells_x2_sp1, &
+      x2_min_sp1, &
+      x2_max_sp1, &
+      order_x2_sp1, &
+      sim%sp1%x2_array)           
+   case default
+     print*,'#advector in x2 for species 1', advector_x2_sp1, ' not implemented'
+     stop 
+   end select
 
 !#ifdef _OPENMP
 !!$OMP END PARALLEL
 !#endif
-    select case (advection_form_x2_sp1)
-      case ("SLL_ADVECTIVE")
-        sim%sp1%advection_form_x2 = SLL_ADVECTIVE
-        sim%sp1%num_dof_x2 = num_cells_x2_sp1+1
-      case ("SLL_CONSERVATIVE")
-        sim%sp1%advection_form_x2 = SLL_CONSERVATIVE
-        sim%sp1%num_dof_x2 = num_cells_x2_sp1
-      case default
-        print*,'#advection_form_x2_sp1', advection_form_x2_sp1, ' not implemented'
-        print *,'#in init_vp2d_par_cart'
-        stop 
-    end select  
+   select case (advection_form_x2_sp1)
+   case ("SLL_ADVECTIVE")
+     sim%sp1%advection_form_x2 = SLL_ADVECTIVE
+     sim%sp1%num_dof_x2 = num_cells_x2_sp1+1
+   case ("SLL_CONSERVATIVE")
+     sim%sp1%advection_form_x2 = SLL_CONSERVATIVE
+     sim%sp1%num_dof_x2 = num_cells_x2_sp1
+   case default
+     print*,'#advection_form_x2_sp1', advection_form_x2_sp1, ' not implemented'
+     print *,'#in init_vp2d_par_cart'
+     stop 
+   end select  
 
-    select case (advection_form_x2_sp2)
-      case ("SLL_ADVECTIVE")
-        sim%sp2%advection_form_x2 = SLL_ADVECTIVE
-        sim%sp2%num_dof_x2 = num_cells_x2_sp2+1
-      case ("SLL_CONSERVATIVE")
-        sim%sp2%advection_form_x2 = SLL_CONSERVATIVE
-        sim%sp2%num_dof_x2 = num_cells_x2_sp2
-      case default
-        print*,'#advection_form_x2', advection_form_x2_sp2, ' not implemented'
-        print *,'#in init_vp2d_par_cart'
-        stop 
-    end select  
+   select case (advection_form_x2_sp2)
+   case ("SLL_ADVECTIVE")
+     sim%sp2%advection_form_x2 = SLL_ADVECTIVE
+     sim%sp2%num_dof_x2 = num_cells_x2_sp2+1
+   case ("SLL_CONSERVATIVE")
+     sim%sp2%advection_form_x2 = SLL_CONSERVATIVE
+     sim%sp2%num_dof_x2 = num_cells_x2_sp2
+   case default
+     print*,'#advection_form_x2', advection_form_x2_sp2, ' not implemented'
+     print *,'#in init_vp2d_par_cart'
+     stop 
+   end select  
 
-    sim%factor_x1 = factor_x1
-    sim%factor_x2_rho = factor_x2_rho
-    sim%factor_x2_1 = factor_x2_1
+   sim%factor_x1 = factor_x1
+   sim%factor_x2_rho = factor_x2_rho
+   sim%factor_x2_1 = factor_x2_1
+   
+   SLL_ALLOCATE(sim%sp1%integration_weight(sim%sp1%num_dof_x2),ierr)
+   SLL_ALLOCATE(sim%sp2%integration_weight(sim%sp2%num_dof_x2),ierr)
+
+   select case (integration_case)
+
+   case ("SLL_RECTANGLE")
+
+     do i=1,num_cells_x2_sp1
+       sim%sp1%integration_weight(i) = sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
+     enddo
+     sim%sp1%integration_weight(num_cells_x2_sp1+1) = 0._f64   
+
+     do i=1,num_cells_x2_sp2
+       sim%sp2%integration_weight(i) = sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i)
+     enddo
+     sim%sp2%integration_weight(num_cells_x2_sp2+1) = 0._f64
+
+   case ("SLL_TRAPEZOID")
+
+     sim%sp1%integration_weight(1)=0.5_f64*(sim%sp1%x2_array(2)-sim%sp1%x2_array(1))
+     do i=2,num_cells_x2_sp1
+       sim%sp1%integration_weight(i) = 0.5_f64*(sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i-1))
+     enddo  
+     sim%sp1%integration_weight(num_cells_x2_sp1+1) = &
+       0.5_f64*(sim%sp1%x2_array(num_cells_x2_sp1+1)-sim%sp1%x2_array(num_cells_x2_sp1))
+
+     sim%sp2%integration_weight(1)=0.5_f64*(sim%sp2%x2_array(2)-sim%sp2%x2_array(1))
+     do i=2,num_cells_x2_sp2
+       sim%sp2%integration_weight(i) = 0.5_f64*(sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i-1))
+     enddo  
+     sim%sp2%integration_weight(num_cells_x2_sp2+1) = &
+       0.5_f64*(sim%sp2%x2_array(num_cells_x2_sp2+1)-sim%sp2%x2_array(num_cells_x2_sp2))
+
+   case ("SLL_CONSERVATIVE")
+
+     do i=1,num_cells_x2_sp1
+       sim%sp1%integration_weight(i)=sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
+     enddo  
+
+     do i=1,num_cells_x2_sp2
+       sim%sp2%integration_weight(i)=sim%sp2%x2_array(i+10)-sim%sp2%x2_array(i)
+     enddo  
+
+   case default
+
+     print *,'#integration_case not implemented'
+     print *,'#in init_vp2d_par_cart'  
+     stop      
+
+   end select  
+
+   sim%mass_ratio = mass_ratio
+   sim%sp1%alpha = alpha_sp1    
+   sim%sp2%alpha = alpha_sp2
+       
+   !poisson
+   !SLL_ALLOCATE(sim%mixt_bc(2),ierr)
+   select case (poisson_solver)
+   case ("SLL_FFT")
+     sim%poisson => new_poisson_1d_periodic_solver( &
+           x1_min, &
+           x1_max, &
+           num_cells_x1)
+   case ("SLL_POLAR")
+     sim%poisson => new_poisson_1d_polar_solver( &
+           x1_min, &
+           x1_max, &
+           num_cells_x1)
+   case default
+     print*,'#poisson_solver', poisson_solver, ' not implemented'
+     print *,'#in init_vp2d_par_cart'
+     stop 
+   end select
     
-    
-    
-    SLL_ALLOCATE(sim%sp1%integration_weight(sim%sp1%num_dof_x2),ierr)
-    SLL_ALLOCATE(sim%sp2%integration_weight(sim%sp2%num_dof_x2),ierr)
-    select case (integration_case)
-      case ("SLL_RECTANGLE")
-        do i=1,num_cells_x2_sp1
-          sim%sp1%integration_weight(i) = sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
-        enddo
-        sim%sp1%integration_weight(num_cells_x2_sp1+1) = 0._f64   
+   !drive
+   select case (drive_type)
+   case ("SLL_NO_DRIVE")
+     sim%driven = .false.
+   case("SLL_KEEN_DRIVE")
+     sim%driven = .true.
+     sim%t0=keen_t0
+     sim%twL=keen_twL
+     sim%twR=keen_twR
+     sim%tflat=keen_tflat
+     sim%tL=keen_tL
+     sim%tR=keen_tR
+     sim%turn_drive_off=keen_turn_drive_off
+     sim%Edrmax=keen_Edrmax
+     sim%omegadr=keen_omegadr        
+   case default
+     print*,'#drive_type', drive_type, ' not implemented'
+     stop 
+   end select
 
-        do i=1,num_cells_x2_sp2
-          sim%sp2%integration_weight(i) = sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i)
-        enddo
-        sim%sp2%integration_weight(num_cells_x2_sp2+1) = 0._f64
-        
-      case ("SLL_TRAPEZOID")
-        sim%sp1%integration_weight(1)=0.5_f64*(sim%sp1%x2_array(2)-sim%sp1%x2_array(1))
-        do i=2,num_cells_x2_sp1
-          sim%sp1%integration_weight(i) = 0.5_f64*(sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i-1))
-        enddo  
-        sim%sp1%integration_weight(num_cells_x2_sp1+1) = &
-          0.5_f64*(sim%sp1%x2_array(num_cells_x2_sp1+1)-sim%sp1%x2_array(num_cells_x2_sp1))
-
-        sim%sp2%integration_weight(1)=0.5_f64*(sim%sp2%x2_array(2)-sim%sp2%x2_array(1))
-        do i=2,num_cells_x2_sp2
-          sim%sp2%integration_weight(i) = 0.5_f64*(sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i-1))
-        enddo  
-        sim%sp2%integration_weight(num_cells_x2_sp2+1) = &
-          0.5_f64*(sim%sp2%x2_array(num_cells_x2_sp2+1)-sim%sp2%x2_array(num_cells_x2_sp2))
-
-      case ("SLL_CONSERVATIVE")
-        do i=1,num_cells_x2_sp1
-          sim%sp1%integration_weight(i)=sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
-        enddo  
-
-        do i=1,num_cells_x2_sp2
-          sim%sp2%integration_weight(i)=sim%sp2%x2_array(i+10)-sim%sp2%x2_array(i)
-        enddo  
-
-      case default
-        print *,'#integration_case not implemented'
-        print *,'#in init_vp2d_par_cart'  
-        stop      
-    end select  
-
-    sim%mass_ratio = mass_ratio
-    sim%sp1%alpha = alpha_sp1    
-    sim%sp2%alpha = alpha_sp2
-        
-    !poisson
-    !SLL_ALLOCATE(sim%mixt_bc(2),ierr)
-    select case (poisson_solver)
-    case ("SLL_FFT")
-       sim%poisson => new_poisson_1d_periodic_solver( &
-            x1_min, &
-            x1_max, &
-            num_cells_x1)
-    case ("SLL_POLAR")
-       sim%poisson => new_poisson_1d_polar_solver( &
-            x1_min, &
-            x1_max, &
-            num_cells_x1)
-!    case ("SLL_DIRICHLET")
-!       sim%poisson => new_poisson_1d_dirichlet_solver( &
-!            x1_min, &
-!            x1_max, &
-!            num_cells_x1)
-!    case ("SLL_MIXT")
-!       sim%poisson => new_poisson_1d_mixt_solver( &
-!            x1_min, &
-!            x1_max, &
-!            num_cells_x1, &
-!            sim%mixt_bc)
-!#ifdef PASTIX
-!    case ("SLL_FML_DIRICHLET")
-!       sim%poisson => new_poisson_1d_fml_solver( &
-!            x1_min, &
-!            x1_max, &
-!            num_cells_x1, &
-!            'dirichlet')
-!    case ("SLL_FML_MIXT")
-!       sim%poisson => new_poisson_1d_fml_solver( &
-!            x1_min, &
-!            x1_max, &
-!            num_cells_x1, &
-!            'mixt', &
-!            sim%mixt_bc)
-!#endif
-    case default
-       print*,'#poisson_solver', poisson_solver, ' not implemented'
-       print *,'#in init_vp2d_par_cart'
-       stop 
-    end select
-    
-    
-
-    !drive
-    select case (drive_type)
-      case ("SLL_NO_DRIVE")
-        sim%driven = .false.
-      case("SLL_KEEN_DRIVE")
-        sim%driven = .true.
-        sim%t0=keen_t0
-        sim%twL=keen_twL
-        sim%twR=keen_twR
-        !sim%tstart=keen_tstart
-        sim%tflat=keen_tflat
-        sim%tL=keen_tL
-        sim%tR=keen_tR
-        sim%turn_drive_off=keen_turn_drive_off
-        sim%Edrmax=keen_Edrmax
-        sim%omegadr=keen_omegadr        
-      case default
-        print*,'#drive_type', drive_type, ' not implemented'
-        stop 
-    end select
-
-
-
-
-    
-
-
-    
-     
-!!!--- ### ---!!!    
-    if(sll_get_collective_rank(sll_world_collective)==0)then
+   if(sll_get_collective_rank(sll_world_collective)==0)then
             
-      !to be compatible with VPpostprocessing_drive_KEEN.f
-      if(sim%driven) then     
-      open(unit = param_out, file = 'parameters.dat')
-      
-      
-        write(param_out, *) real(number_iterations,f64)*dt !Tmax
-        write(param_out, *) dt                  !dt
-        write(param_out, *) number_iterations              !Nt
-        write(param_out, *) kmode_sp1               !k0
-        write(param_out, *) sim%omegadr             !omega0
-        write(param_out, *) x1_max-x1_min           !L
-        write(param_out, *) nbox_x1                !mbox
-        write(param_out, *) sim%Edrmax              !Edrmax
-        write(param_out, *) freq_diag_time       !nsave
-        write(param_out, *) freq_diag            !nsavef1
-        write(param_out, *) freq_diag            !nsavef2
-        write(param_out, *) sim%tR+sim%tflat            !Tsetup
-        write(param_out, *) x2_max_sp1                !vxmax (sp1)
-        write(param_out, *) x2_min_sp1                !vxmin (sp1)
-        write(param_out, *) x2_max_sp2                !vxmax (sp2)
-        write(param_out, *) x2_min_sp2                !vxmin (sp2)
-        write(param_out, *) num_cells_x1                 !N
-        write(param_out, *) num_cells_x2_sp1                 !Nv
-        write(param_out, *) num_cells_x2_sp2                 !Nv
-        ! added ES
-        write(param_out, *) sim%tL                  !tL
-        write(param_out, *) sim%tR                  !tR
-        write(param_out, *) sim%twL                 !twL
-        write(param_out, *) sim%twR                 !twR
-        write(param_out, *) sim%tflat               !tflat
-      
-      
-      close(param_out)
-      endif  
-      
+     !to be compatible with VPpostprocessing_drive_KEEN.f
+     if(sim%driven) then     
 
-    endif
-  end subroutine init_vp2d_par_cart_multi_species
+       open(unit = param_out, file = 'parameters.dat')
+       write(param_out, *) real(number_iterations,f64)*dt !Tmax
+       write(param_out, *) dt                             !dt
+       write(param_out, *) number_iterations              !Nt
+       write(param_out, *) kmode_sp1                      !k0
+       write(param_out, *) sim%omegadr                    !omega0
+       write(param_out, *) x1_max-x1_min                  !L
+       write(param_out, *) nbox_x1                        !mbox
+       write(param_out, *) sim%Edrmax                     !Edrmax
+       write(param_out, *) freq_diag_time                 !nsave
+       write(param_out, *) freq_diag                      !nsavef1
+       write(param_out, *) freq_diag                      !nsavef2
+       write(param_out, *) sim%tR+sim%tflat               !Tsetup
+       write(param_out, *) x2_max_sp1                     !vxmax (sp1)
+       write(param_out, *) x2_min_sp1                     !vxmin (sp1)
+       write(param_out, *) x2_max_sp2                     !vxmax (sp2)
+       write(param_out, *) x2_min_sp2                     !vxmin (sp2)
+       write(param_out, *) num_cells_x1                   !N
+       write(param_out, *) num_cells_x2_sp1               !Nv
+       write(param_out, *) num_cells_x2_sp2               !Nv
+       write(param_out, *) sim%tL                         !tL
+       write(param_out, *) sim%tR                         !tR
+       write(param_out, *) sim%twL                        !twL
+       write(param_out, *) sim%twR                        !twR
+       write(param_out, *) sim%tflat                      !tflat
+       close(param_out)
 
+     endif  
 
-  subroutine init_vp2d_fake(sim, filename)
-    class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
-    character(len=*), intent(in)                                :: filename
-  
-    print *,'# Do not use the routine init_vp2d_fake'
-    print *,'#use instead init_vp2d_par_cart'
-    print *,sim%dt
-    print *,filename
-    stop
-  
-  end subroutine init_vp2d_fake
+  endif
 
+end subroutine init_vp2d_par_cart_multi_species
 
+subroutine init_vp2d_fake(sim, filename)
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+character(len=*), intent(in)                                :: filename
+
+print *,'# Do not use the routine init_vp2d_fake'
+print *,'#use instead init_vp2d_par_cart'
+print *,sim%dt
+print *,filename
+stop
+
+end subroutine init_vp2d_fake
 
 subroutine run_vp2d_cartesian_multi_species(sim)
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+
 sll_real64,dimension(:,:),pointer :: f_x1_sp1,f_x2_sp1,f_x1_init_sp1
 sll_real64,dimension(:,:),pointer :: f_x1_sp2,f_x2_sp2,f_x1_init_sp2
 sll_real64,dimension(:),  pointer :: rho_sp1,rho_sp2,efield,e_app,rho_loc_sp1,rho_loc_sp2
@@ -1145,7 +1070,8 @@ sll_int32   :: global_indices_sp1(2)
 sll_int32   :: global_indices_sp2(2)
 sll_int32   :: ierr
 sll_int32   :: local_size_x1_sp1,local_size_x1_sp2,local_size_x2_sp1,local_size_x2_sp2
-sll_int32   :: i,istep,ig,k
+sll_int32   :: i,ig,k
+sll_int32   :: istep
 
 sll_real64  :: tmp_loc(10),tmp(10)
 sll_real64  :: time
@@ -1161,9 +1087,9 @@ sll_real64, dimension(:), allocatable :: node_positions_x2_sp1
 sll_real64, dimension(:), allocatable :: node_positions_x2_sp2
 sll_int32                             :: file_id
 
-type(sll_fft_plan), pointer         :: pfwd
+type(sll_fft_plan),       pointer     :: pfwd
 sll_real64, dimension(:), allocatable :: buf_fft
-sll_comp64,dimension(:),allocatable :: rho_mode
+sll_comp64, dimension(:), allocatable :: rho_mode
 
 sll_int32  :: nb_mode 
 sll_int32  :: split_istep
@@ -1176,7 +1102,6 @@ logical :: split_T
 
 sll_int32 :: collective_size
 
-! for parallelization (output of distribution function in one single file)
 sll_int32, dimension(:),   allocatable :: collective_displs_sp1
 sll_int32, dimension(:),   allocatable :: collective_displs_sp2
 sll_int32, dimension(:),   allocatable :: collective_recvcnts_sp1
@@ -1203,6 +1128,7 @@ sll_int32        :: ig_omp
 sll_real64       :: alpha_omp
 sll_real64       :: mean_omp
     
+
 iplot = 1
 
 nb_mode = sim%nb_mode
@@ -1314,15 +1240,15 @@ end do
 x2_array_middle_sp1(np_x2_sp1) = x2_array_middle_sp1(1)+sim%sp1%x2_array(np_x2_sp1)-sim%sp1%x2_array(1)
 
 select case (sim%sp1%advection_form_x2)
-  case (SLL_ADVECTIVE)
-    node_positions_x2_sp1(1:num_dof_x2_sp1) = sim%sp1%x2_array(1:num_dof_x2_sp1)
-  case (SLL_CONSERVATIVE)
-    node_positions_x2_sp1(1:num_dof_x2_sp1) = x2_array_middle_sp1(1:num_dof_x2_sp1)
-  case default
-    print *,'#sim%sp1%advection_form_x2=',sim%sp1%advection_form_x2
-    print *,'#not implemented'
-    print *,'#in run_vp2d_cartesian_multi_species'
-    stop
+case (SLL_ADVECTIVE)
+  node_positions_x2_sp1(1:num_dof_x2_sp1) = sim%sp1%x2_array(1:num_dof_x2_sp1)
+case (SLL_CONSERVATIVE)
+  node_positions_x2_sp1(1:num_dof_x2_sp1) = x2_array_middle_sp1(1:num_dof_x2_sp1)
+case default
+  print *,'#sim%sp1%advection_form_x2=',sim%sp1%advection_form_x2
+  print *,'#not implemented'
+  print *,'#in run_vp2d_cartesian_multi_species'
+  stop
 end select  
 
 x2_array_unit_sp2(1:np_x2_sp2) = &
@@ -1333,31 +1259,31 @@ end do
 x2_array_middle_sp2(np_x2_sp2) = x2_array_middle_sp2(1)+sim%sp2%x2_array(np_x2_sp2)-sim%sp2%x2_array(1)
 
 select case (sim%sp2%advection_form_x2)
-  case (SLL_ADVECTIVE)
-    node_positions_x2_sp2(1:num_dof_x2_sp2) = sim%sp2%x2_array(1:num_dof_x2_sp2)
-  case (SLL_CONSERVATIVE)
-    node_positions_x2_sp2(1:num_dof_x2_sp2) = x2_array_middle_sp2(1:num_dof_x2_sp2)
-  case default
-    print *,'#sim%sp2%advection_form_x2=',sim%sp2%advection_form_x2
-    print *,'#not implemented'
-    print *,'#in run_vp2d_cartesian_multi_species'
-    stop
+case (SLL_ADVECTIVE)
+  node_positions_x2_sp2(1:num_dof_x2_sp2) = sim%sp2%x2_array(1:num_dof_x2_sp2)
+case (SLL_CONSERVATIVE)
+  node_positions_x2_sp2(1:num_dof_x2_sp2) = x2_array_middle_sp2(1:num_dof_x2_sp2)
+case default
+  print *,'#sim%sp2%advection_form_x2=',sim%sp2%advection_form_x2
+  print *,'#not implemented'
+  print *,'#in run_vp2d_cartesian_multi_species'
+  stop
 end select  
     
 call sll_2d_parallel_array_initializer_cartesian( &
-   layout_x1_sp1, &
-   sim%x1_array, &
-   node_positions_x2_sp1, &
-   f_x1_sp1, &
-   sim%sp1%init_func, &
+   layout_x1_sp1,                                 &
+   sim%x1_array,                                  &
+   node_positions_x2_sp1,                         &
+   f_x1_sp1,                                      &
+   sim%sp1%init_func,                             &
    sim%sp1%params)
 
 call sll_2d_parallel_array_initializer_cartesian( &
-   layout_x1_sp2, &
-   sim%x1_array, &
-   node_positions_x2_sp2, &
-   f_x1_sp2, &
-   sim%sp2%init_func, &
+   layout_x1_sp2,                                 &
+   sim%x1_array,                                  &
+   node_positions_x2_sp2,                         &
+   f_x1_sp2,                                      &
+   sim%sp2%init_func,                             &
    sim%sp2%params)
 
 iproc = sll_get_collective_rank(sll_world_collective)
@@ -1392,102 +1318,100 @@ endif
 time_init = sim%time_init
 
 call sll_2d_parallel_array_initializer_cartesian( &
-   layout_x1_sp1, &
-   sim%x1_array, &
-   node_positions_x2_sp1, &
-   f_x1_init_sp1, &
-   sll_landau_initializer_2d, &
+   layout_x1_sp1,                                 &
+   sim%x1_array,                                  &
+   node_positions_x2_sp1,                         &
+   f_x1_init_sp1,                                 &
+   sll_landau_initializer_2d,                     &
    (/ sim%sp1%params(1),0._f64,sim%sp1%params(3),sim%sp1%params(4) /))
 
 call sll_2d_parallel_array_initializer_cartesian( &
-   layout_x1_sp2, &
-   sim%x1_array, &
-   node_positions_x2_sp2, &
-   f_x1_init_sp2, &
-   sll_landau_initializer_2d, &
+   layout_x1_sp2,                                 &
+   sim%x1_array,                                  &
+   node_positions_x2_sp2,                         &
+   f_x1_init_sp2,                                 &
+   sll_landau_initializer_2d,                     &
    (/ sim%sp2%params(1),0._f64,sim%sp2%params(3),sim%sp2%params(4) /))
 
-call compute_displacements_array_2d( &
-  layout_x1_sp1, &
-  collective_size, &
+call compute_displacements_array_2d(              &
+  layout_x1_sp1,                                  &
+  collective_size,                                &
   collective_displs_sp1 )
-  collective_recvcnts_sp1 = receive_counts_array_2d( &
-  layout_x1_sp1, &
-  collective_size )
 
-call compute_displacements_array_2d( &
-  layout_x1_sp2, &
-  collective_size, &
+collective_recvcnts_sp1 = receive_counts_array_2d( layout_x1_sp1, collective_size )
+
+call compute_displacements_array_2d(              &
+  layout_x1_sp2,                                  &
+  collective_size,                                &
   collective_displs_sp2 )
-  collective_recvcnts_sp2 = receive_counts_array_2d( &
-  layout_x1_sp2, &
-  collective_size )
+
+collective_recvcnts_sp2 = receive_counts_array_2d( layout_x1_sp2, collective_size )
 
 call load_buffer_2d( layout_x1_sp1, f_x1_sp1, f_x1_buf1d_sp1 )
 call load_buffer_2d( layout_x1_sp2, f_x1_sp2, f_x1_buf1d_sp2 )
 
-call sll_collective_gatherv_real64( &
-  sll_world_collective, &
-  f_x1_buf1d_sp1, &
-  local_size_x1_sp1*local_size_x2_sp1, &
-  collective_recvcnts_sp1, &
-  collective_displs_sp1, &
-  0, &
+call sll_collective_gatherv_real64(               &
+  sll_world_collective,                           &
+  f_x1_buf1d_sp1,                                 &
+  local_size_x1_sp1*local_size_x2_sp1,            &
+  collective_recvcnts_sp1,                        &
+  collective_displs_sp1,                          &
+  0,                                              &
   f_visu_buf1d_sp1 )
 
-call sll_collective_gatherv_real64( &
-  sll_world_collective, &
-  f_x1_buf1d_sp2, &
-  local_size_x1_sp2*local_size_x2_sp2, &
-  collective_recvcnts_sp2, &
-  collective_displs_sp2, &
-  0, &
+call sll_collective_gatherv_real64(               &
+  sll_world_collective,                           &
+  f_x1_buf1d_sp2,                                 &
+  local_size_x1_sp2*local_size_x2_sp2,            &
+  collective_recvcnts_sp2,                        &
+  collective_displs_sp2,                          &
+  0,                                              &
   f_visu_buf1d_sp2 )
 
 f_visu_sp1 = reshape(f_visu_buf1d_sp1, shape(f_visu_sp1))
-if(sll_get_collective_rank(sll_world_collective)==0)then
+
+if (sll_get_collective_rank(sll_world_collective)==0) then
+
   call sll_binary_file_create('f0.bdat', file_id, ierr)
   call sll_binary_write_array_2d(file_id,f_visu_sp1(1:np_x1-1,1:np_x2_sp1-1),ierr)
   call sll_binary_file_close(file_id,ierr)
-
-#ifndef NOHDF5
-  call plot_f_cartesian( &
-    iplot, &
-    f_visu_sp1, &
-    sim%x1_array, &
-    np_x1, &
-    node_positions_x2_sp1, &
-    sim%sp1%num_dof_x2, &
-    'fe', 'e', &
-    time_init )        
-#endif
+  
+  call plot_f_cartesian(       &
+      iplot,                   &
+      f_visu_sp1,              &
+      sim%x1_array,            &
+      np_x1,                   &
+      node_positions_x2_sp1,   &
+      sim%sp1%num_dof_x2,      &
+      'fe', 'e',               &
+      time_init )        
 
   print *,'#maxfe = maxf_sp1',maxval(f_visu_sp1), minval(f_visu_sp1) 
 
 endif
 
 f_visu_sp2 = reshape(f_visu_buf1d_sp2, shape(f_visu_sp2))
-if(sll_get_collective_rank(sll_world_collective)==0)then
+
+if(sll_get_collective_rank(sll_world_collective)==0) then
 
   call sll_binary_file_create('f0.bdat', file_id, ierr)
   call sll_binary_write_array_2d(file_id,f_visu_sp2(1:np_x1-1,1:np_x2_sp2-1),ierr)
   call sll_binary_file_close(file_id,ierr)
 
-  call plot_f_cartesian( &
-        iplot, &
-        f_visu_sp2, &
-        sim%x1_array, &
-        np_x1, &
+  call plot_f_cartesian(       &
+        iplot,                 &
+        f_visu_sp2,            &
+        sim%x1_array,          &
+        np_x1,                 &
         node_positions_x2_sp2, &
-        sim%sp2%num_dof_x2, &
-        'fi', 'i', &
+        sim%sp2%num_dof_x2,    &
+        'fi', 'i',             &
         time_init )
 
   print *,'#maxfi = maxf_sp2',maxval(f_visu_sp2), minval(f_visu_sp2) 
 
 endif
     
-!computation of electric field
 rho_loc_sp1 = 0._f64
 rho_loc_sp2 = 0._f64
 ig = global_indices_sp1(2)-1
@@ -1501,19 +1425,17 @@ do i = 1,np_x1
     +sum(f_x1_sp2(i,1:local_size_x2_sp2)*sim%sp2%integration_weight(1+ig:local_size_x2_sp2+ig))
 end do
 
-call sll_collective_allreduce( &
-  sll_world_collective, &
-  rho_loc_sp1, &
-  np_x1, &
-  MPI_SUM, &
-  rho_sp1 )
+call sll_collective_allreduce( sll_world_collective, &
+                               rho_loc_sp1,          &
+                               np_x1,                &
+                               MPI_SUM,              &
+                               rho_sp1 )
 
-call sll_collective_allreduce( &
-  sll_world_collective, &
-  rho_loc_sp2, &
-  np_x1, &
-  MPI_SUM, &
-  rho_sp2 )
+call sll_collective_allreduce( sll_world_collective, &
+                               rho_loc_sp2,          &
+                               np_x1,                &
+                               MPI_SUM,              &
+                               rho_sp2 )
 
 call sim%poisson%compute_E_from_rho( efield, rho_sp2-rho_sp1 )
 
@@ -1522,40 +1444,43 @@ if(sim%driven)then
   call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
 endif
 
-! write initial fields
 if(sll_get_collective_rank(sll_world_collective)==0)then
-  call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+
+  call sll_ascii_file_create('thdiag.dat' , th_diag_id, ierr)
   call sll_ascii_file_create('rhotote.dat', rhotote_id, ierr)
   call sll_ascii_file_create('rhototi.dat', rhototi_id, ierr)
-  call sll_ascii_file_create('efield.dat', efield_id, ierr)
+  call sll_ascii_file_create('efield.dat' , efield_id , ierr)
 
   write(rhototi_id,*) sim%x1_array
   write(rhotote_id,*) sim%x1_array
-  write(efield_id,*) sim%x1_array
+  write(efield_id,*)  sim%x1_array
+
 endif
 
 
 !write also initial deltaf function
 call load_buffer_2d( layout_x1_sp1, f_x1_sp1-f_x1_init_sp1, f_x1_buf1d_sp1 )
-call sll_collective_gatherv_real64( &
-  sll_world_collective, &
-  f_x1_buf1d_sp1, &
+
+call sll_collective_gatherv_real64(    &
+  sll_world_collective,                &
+  f_x1_buf1d_sp1,                      &
   local_size_x1_sp1*local_size_x2_sp1, &
-  collective_recvcnts_sp1, &
-  collective_displs_sp1, &
-  0, &
+  collective_recvcnts_sp1,             &
+  collective_displs_sp1,               &
+  0,                                   &
   f_visu_buf1d_sp1 )
 
 f_visu_sp1 = reshape(f_visu_buf1d_sp1, shape(f_visu_sp1))
 
 call load_buffer_2d( layout_x1_sp2, f_x1_sp2-f_x1_init_sp2, f_x1_buf1d_sp2 )
-call sll_collective_gatherv_real64( &
-  sll_world_collective, &
-  f_x1_buf1d_sp2, &
+
+call sll_collective_gatherv_real64(    &
+  sll_world_collective,                &
+  f_x1_buf1d_sp2,                      &
   local_size_x1_sp2*local_size_x2_sp2, &
-  collective_recvcnts_sp2, &
-  collective_displs_sp2, &
-  0, &
+  collective_recvcnts_sp2,             &
+  collective_displs_sp2,               &
+  0,                                   &
   f_visu_buf1d_sp2 )
 
 f_visu_sp2 = reshape(f_visu_buf1d_sp2, shape(f_visu_sp2))
@@ -1566,7 +1491,8 @@ endif
 
 iplot = iplot+1  
 
-do istep = 1, sim%num_iterations !Loop over time
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Loop over time !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+do istep = 1, sim%num_iterations
 
   if (mod(istep,sim%freq_diag)==0) then
     if(sll_get_collective_rank(sll_world_collective)==0) then        
@@ -2009,131 +1935,125 @@ do istep = 1, sim%num_iterations !Loop over time
 
      end if
 
+end do
     
-    enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Next time step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
-    ! close files
-    if(sll_get_collective_rank(sll_world_collective)==0)then
-      call sll_ascii_file_close(th_diag_id,ierr) 
-      call sll_ascii_file_close(efield_id,ierr)
-      call sll_ascii_file_close(rhotote_id,ierr)
-      call sll_ascii_file_close(rhototi_id,ierr)
-    endif
 
-    print*, " 176.00010668708197, 820.34117552361215 "
-    print"(2f20.14)", sum(f_x1_sp1), sum(f_x1_sp2)
+if(sll_get_collective_rank(sll_world_collective)==0)then
+  call sll_ascii_file_close(th_diag_id,ierr) 
+  call sll_ascii_file_close(efield_id,ierr)
+  call sll_ascii_file_close(rhotote_id,ierr)
+  call sll_ascii_file_close(rhototi_id,ierr)
+endif
+
+print*, " 176.00010668708197, 820.34117552361215 "
+print"(2f20.14)", sum(f_x1_sp1), sum(f_x1_sp2)
+
+end subroutine run_vp2d_cartesian_multi_species
+
+subroutine delete_vp2d_par_cart_multi_species( sim )
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species) :: sim
+  
+print *,'#delete_vp2d_par_cart not implemented'
+print *,sim%dt
     
-  end subroutine run_vp2d_cartesian_multi_species
+end subroutine delete_vp2d_par_cart_multi_species
 
-  subroutine delete_vp2d_par_cart_multi_species( sim )
-    class(sll_simulation_2d_vlasov_poisson_cart_multi_species) :: sim
-    !sll_int32 :: ierr
-    
-    print *,'#delete_vp2d_par_cart not implemented'
-    print *,sim%dt
-    
-    
-  end subroutine delete_vp2d_par_cart_multi_species
+elemental function f_equilibrium(v)
+  sll_real64, intent(in) :: v
+  sll_real64 :: f_equilibrium
 
+  f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+end function f_equilibrium
 
+subroutine plot_f_cartesian( &
+  iplot, &
+  f, &
+  node_positions_x1, &
+  nnodes_x1, &
+  node_positions_x2, &
+  nnodes_x2, &
+  array_name, &
+  spec_name, &
+  time)
 
+use sll_m_xdmf
+use sll_m_hdf5_io_serial
+sll_int32 :: file_id
+sll_int32 :: error
+sll_real64, dimension(:), intent(in) :: node_positions_x1
+sll_real64, dimension(:), intent(in) :: node_positions_x2    
+character(len=*), intent(in) :: array_name !< field name
+character(len=*), intent(in) :: spec_name !< name of the species
+sll_real64, dimension(:,:), allocatable :: x1
+sll_real64, dimension(:,:), allocatable :: x2
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+sll_int32 :: i, j
+sll_int32, intent(in) :: iplot
+character(len=4)      :: cplot
+sll_real64, dimension(:,:), intent(in) :: f
+sll_real64 :: time
 
+if (iplot == 1) then
 
+  SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+  SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+  do j = 1,nnodes_x2
+    do i = 1,nnodes_x1
+      x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
+      x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
+    end do
+ end do
+  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5",file_id,error)
+  call sll_hdf5_write_array(file_id,x1,"/x1",error)
+  call sll_hdf5_file_close(file_id, error)
+  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5",file_id,error)
+  call sll_hdf5_write_array(file_id,x2,"/x2",error)
+  call sll_hdf5_file_close(file_id, error)
+  deallocate(x1)
+  deallocate(x2)
 
+end if
 
+call int2string(iplot,cplot)
+call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh_"//trim(spec_name), &
+  nnodes_x1,nnodes_x2,file_id,error)
+write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
+call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
+  error,file_id,"Node")
+call sll_xdmf_close(file_id,error)
 
-  elemental function f_equilibrium(v)
-    sll_real64, intent(in) :: v
-    sll_real64 :: f_equilibrium
+end subroutine plot_f_cartesian
 
-    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
-  end function f_equilibrium
+subroutine compute_e_app(sim,e_app,t)
+  class(sll_simulation_2d_vlasov_poisson_cart_multi_species) :: sim
+  sll_real64, dimension(:), intent(inout) :: e_app
+  sll_real64, intent(in) :: t
+  sll_real64 :: adr
+  sll_int32 :: i
+  sll_int32 :: np_x1
 
-  subroutine plot_f_cartesian( &
-    iplot, &
-    f, &
-    node_positions_x1, &
-    nnodes_x1, &
-    node_positions_x2, &
-    nnodes_x2, &
-    array_name, &
-    spec_name, &
-    time)
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
-    sll_int32 :: file_id
-    sll_int32 :: error
-    sll_real64, dimension(:), intent(in) :: node_positions_x1
-    sll_real64, dimension(:), intent(in) :: node_positions_x2    
-    character(len=*), intent(in) :: array_name !< field name
-    character(len=*), intent(in) :: spec_name !< name of the species
-    sll_real64, dimension(:,:), allocatable :: x1
-    sll_real64, dimension(:,:), allocatable :: x2
-    sll_int32, intent(in) :: nnodes_x1
-    sll_int32, intent(in) :: nnodes_x2
-    sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
-    character(len=4)      :: cplot
-    sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: time
-    
-    if (iplot == 1) then
+  e_app = 0._f64
+  np_x1 = sim%sp1%mesh2d%num_cells1+1      
+  call PFenvelope(adr, &
+    t, &
+    sim%tflat, &
+    sim%tL, &
+    sim%tR, &
+    sim%twL, &
+    sim%twR, &
+    sim%t0, &
+    sim%turn_drive_off)
 
-      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-      do j = 1,nnodes_x2
-        do i = 1,nnodes_x1
-          x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
-          x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
-        end do
-     end do
-      call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
-      deallocate(x1)
-      deallocate(x2)
+  do i = 1, np_x1
+   e_app(i) = sim%Edrmax*adr*sim%sp1%kx &
+     * sin(sim%sp1%kx*real(i-1,f64)*sim%sp1%mesh2d%delta_eta1 &
+     - sim%omegadr*t)
+  enddo
 
-    end if
-
-    call int2string(iplot,cplot)
-    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh_"//trim(spec_name), &
-      nnodes_x1,nnodes_x2,file_id,error)
-    write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
-    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
-      error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
-  end subroutine plot_f_cartesian
-
-  subroutine compute_e_app(sim,e_app,t)
-    class(sll_simulation_2d_vlasov_poisson_cart_multi_species) :: sim
-    sll_real64, dimension(:), intent(inout) :: e_app
-    sll_real64, intent(in) :: t
-    sll_real64 :: adr
-    sll_int32 :: i
-    sll_int32 :: np_x1
-    !t = time_init+istep*sim%dt
-    e_app = 0._f64
-    np_x1 = sim%sp1%mesh2d%num_cells1+1      
-    call PFenvelope(adr, &
-      t, &
-      sim%tflat, &
-      sim%tL, &
-      sim%tR, &
-      sim%twL, &
-      sim%twR, &
-      sim%t0, &
-      sim%turn_drive_off)
-
-    do i = 1, np_x1
-     e_app(i) = sim%Edrmax*adr*sim%sp1%kx &
-       * sin(sim%sp1%kx*real(i-1,f64)*sim%sp1%mesh2d%delta_eta1 &
-       - sim%omegadr*t)
-    enddo
-
-  end subroutine compute_e_app
+end subroutine compute_e_app
 
 
 end module sll_m_sim_bsl_vp_1d1v_cart_multi_species
