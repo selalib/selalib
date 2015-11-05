@@ -9,10 +9,6 @@ Modules required
   * Library   : fortran_intrinsics
   * 3rd-party : f2py.fparser
 
-TODO
-----
-  * Collect abstract interfaces
-
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
@@ -20,6 +16,7 @@ TODO
 # Last revision: 05 Nov 2015
 #
 from __future__ import print_function
+import re
 from fparser    import statements, typedecl_statements, block_statements
 from fortran_intrinsics import (intrinsic_procedures, logical_operators,
                                                       logical_constants)
@@ -188,6 +185,18 @@ def compute_locals( content, return_dict=False ):
                 subroutines + interfaces + abstract_i )
 
 #------------------------------------------------------------------------------
+patterns = {}
+patterns['name']      = r"\b([a-zA-Z]\w*)\b"
+patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"\s*(?![\s\(])"
+patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"\s*\("
+patterns['extends']   = r"extends\s*\("  + patterns['name'] + r"\s*\)"
+patterns['dimension'] = r"dimension\s*\("+ patterns['name'] + r"\s*\)"
+
+re_engines = {}
+for key,val in patterns.items():
+    re_engines[key] = re.compile( val, re.I )
+
+#------------------------------------------------------------------------------
 def compute_all_used_symbols( content ):
     """ Compute all used symbols from:
           1. l.h.s. of type declarations (used types)
@@ -196,13 +205,6 @@ def compute_all_used_symbols( content ):
           4. l.h.s. of assignments (used variables)
           5. type blocks (entends...)
     """
-    import re
-    pattern_name     = r"\b([a-zA-Z]\w*)\b"
-    pattern_variable = r"(?<![%\s])\s*" + pattern_name + r"\s*(?![\s\(])"
-    pattern_call     = r"(?<![%\s])\s*" + pattern_name + r"\s*\("
-    pattern_extends  = r"extends\s*\("  + pattern_name + r"\s*\)"
-    pattern_dimension= r"dimension\s*\("+ pattern_name + r"\s*\)"
-
     types       = []
     subroutines = []
     variables   = []
@@ -214,12 +216,12 @@ def compute_all_used_symbols( content ):
         if isinstance( item, variable_declaration_types ):
             # Array dimensions on l.h.s.
             for s in item.attrspec:
-                variables.extend( re.findall( pattern_dimension, s ) )
+                variables.extend( re_engines['dimension'].findall( s ) )
             # Array dimensions on r.h.s.
             for v in item.entity_decls:
                 v = remove_fortran_strings ( v )  # remove strings
                 v = remove_fortran_logicals( v )  # remove logicals
-                syms = re.findall( pattern_name, v )
+                syms = re_engines['name'].findall( v )
                 syms = (s for s in syms[1:] if s not in intrinsic_procedures)
                 variables.extend( syms )
             # kind parameter in numerical type declarations
@@ -244,6 +246,13 @@ def compute_all_used_symbols( content ):
         elif isinstance( item, has_interface_types ):
             if item.iname:
                 interfaces.append( item.iname )
+        # ALLOCATE statement
+        elif isinstance( item, statements.Allocate ):
+            pass # TODO
+        # TYPE GUARD statement
+        elif isinstance( item, statements.TypeGuard ):
+            if item.type_spec:
+                types.append( item.type_spec )
         # Subroutine calls (both caller and arguments)
         elif isinstance( item, statements.Call ):
             # caller
@@ -263,24 +272,65 @@ def compute_all_used_symbols( content ):
                     if '=' in s:
                         s = s.partition('=')[2].strip()
                     # Search for symbols
-                    variables.extend( re.findall( pattern_variable, s ) )
-                    calls    .extend( re.findall( pattern_call    , s ) )
+                    variables.extend( re_engines['variable'].findall( s ) )
+                    calls    .extend( re_engines['call'    ].findall( s ) )
         # Assignments (both sides)
         elif isinstance( item, (statements.Assignment, 
                                 statements.PointerAssignment) ):
             # l.h.s.
-            variables.append( re.findall( pattern_name, item.variable )[0] )
+            variables.append( re_engines['name'].findall( item.variable )[0] )
             # r.h.s.
             s = remove_fortran_strings( item.expr )
             s = remove_fortran_logicals( s )
-            variables.extend( re.findall( pattern_variable, s ) )
-            calls    .extend( re.findall( pattern_call    , s ) )
+            variables.extend( re_engines['variable'].findall( s ) )
+            calls    .extend( re_engines['call'    ].findall( s ) )
         # Type blocks
         elif isinstance( item, block_statements.Type ):
             if len( item.specs ) > 0:
                 for s in item.specs:
                     if not is_fortran_string( s ):
-                        types.extend( re.findall( pattern_extends, s, re.I ) )
+                        types.extend( re_engines['extends'].findall( s ) )
+        # Extract symbols from all sorts of expressions
+        else:
+            # IF-THEN-ELSE block
+            if isinstance( item, (block_statements.If, \
+                    block_statements.IfThen, statements.ElseIf) ):
+                text = item.expr
+            # DO loop
+            elif isinstance( item, block_statements.Do ):
+                text = item.loopcontrol
+            # PRINT or WRITE statement
+            elif isinstance( item, (statements.Print, statements.Write) ):
+                text = ','.join( item.items )
+            # FORALL statement
+            elif isinstance( item, statements.Forall ):
+                text = ','.join( item.specs[0] )
+            # FORALL block
+            elif isinstance( item, block_statements.Forall ):
+                text = item.item.apply_map( item.specs )
+            # WHERE statement
+            elif isinstance( item, statements.Where ):
+                text = item.expr
+            # WHERE block
+            elif isinstance( item, block_statements.Where ):
+                text = item.item.apply_map( item.expr )
+            # SELECT TYPE block
+            elif isinstance( item, block_statements.SelectType ):
+                text = item.item.apply_map( item.expr )
+            # ASSOCIATE block
+            elif isinstance( item, block_statements.Associate ):
+                text = ','.join( a.selector for a in item.association_list )
+            # Nothing of the above
+            else:
+                text = ''
+            # Remove Fortran strings and logical intrinsics from expression
+            if text:
+                text = remove_fortran_strings ( text )
+                text = remove_fortran_logicals( text )
+            # Extract variables and calls from expression
+            if text:
+                variables.extend( re_engines['variable'].findall( text ) )
+                calls    .extend( re_engines['call'    ].findall( text ) )
 
     return set( types + subroutines + variables + calls + interfaces )
 
@@ -481,37 +531,37 @@ class FortranModule( object ):
         print()
         print( "VARIABLES" )
         print( "---------" )
-        map( printer, self.variables )
+        map( printer, sorted( self.variables ) )
         print()
         print( "TYPES" )
         print( "-----" )
-        map( printer, self.types )
+        map( printer, sorted( self.types ) )
         print()
         print( "ABSTRACT TYPES" )
         print( "--------------" )
-        map( printer, self.classes )
+        map( printer, sorted( self.classes ) )
         print()
         print( "SUBROUTINES" )
         print( "-----------" )
-        map( printer, self.subroutines )
+        map( printer, sorted( self.subroutines ) )
         print()
         print( "FUNCTIONS" )
         print( "---------" )
-        map( printer, self.functions )
+        map( printer, sorted( self.functions ) )
         print()
         print( "INTERFACES" )
         print( "----------" )
-        map( printer, self.interfaces )
+        map( printer, sorted( self.interfaces ) )
         print()
         print( "ABSTRACT INTERFACES" )
         print( "-------------------" )
-        map( printer, self.abstract_i )
+        map( printer, sorted( self.abstract_i ) )
         print()
 
         print( "================" )
         print( "IMPORTED SYMBOLS" )
         print( "================" )
-        map( printer, self._imported_symbols )
+        map( printer, sorted( self._imported_symbols ) )
         print()
 
         print( "============" )
