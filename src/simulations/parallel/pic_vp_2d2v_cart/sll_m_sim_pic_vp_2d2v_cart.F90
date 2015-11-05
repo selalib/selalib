@@ -22,6 +22,10 @@ module sll_m_sim_pic_vp_2d2v_cart
   use sll_m_operator_splitting
   use sll_m_operator_splitting_pic_vp_2d2v
   use sll_m_ascii_io
+  use sll_m_pic_poisson_base, only : &
+       sll_c_pic_poisson
+  use sll_m_pic_poisson_2d, only : &
+       sll_f_new_pic_poisson_2d
 
   use sll_m_control_variate
 
@@ -32,27 +36,25 @@ module sll_m_sim_pic_vp_2d2v_cart
 
      ! Abstract particle group
      class(sll_particle_group_base), pointer :: particle_group
-     ! Specific particle group
-     class(sll_particle_group_2d2v), pointer :: specific_particle_group 
 
      ! Array for efield
-     sll_real64, pointer :: efield(:,:)
+     !sll_real64, pointer :: efield(:,:)
 
      ! Cartesian mesh
      type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 
      ! Abstract kernel smoother
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother
-     ! Specific kernel smoother
-     class(sll_kernel_smoother_spline_2d), pointer :: specific_kernel_smoother
+     class(sll_c_kernel_smoother), pointer :: kernel_smoother
 
      ! Poisson solver
-     class(poisson_2d_fft_solver), pointer :: poisson_solver 
+     class(sll_poisson_2d_base), pointer :: poisson_solver 
+
+     ! PIC Poisson solver
+     class(sll_c_pic_poisson), pointer :: solver
 
      ! Abstract operator splitting
-     class(operator_splitting), pointer :: propagator
-     ! Specific operator splitting
-     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: specific_propagator
+     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
+     !class(operator_splitting), pointer :: propagator
 
      ! Control variate
      class(sll_t_control_variate), pointer :: control_variate
@@ -158,6 +160,7 @@ contains
     sll_int64 :: sobol_seed
     sll_real64 :: eenergy
     sll_int32 :: th_diag_id
+    sll_real64, pointer :: control_variate_parameter(:)
 
 
     if (sim%rank == 0) then
@@ -165,12 +168,18 @@ contains
     end if
 
     ! Initialize the particles   
-     sim%specific_particle_group => sll_new_particle_group_2d2v(sim%n_particles, &
-         sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
+     sim%particle_group => sll_new_particle_group_2d2v&
+          (sim%n_particles, &
+          sim%n_total_particles ,1.0_f64, 1.0_f64, 3)
     
-    !print*, 'size', size(sim%specific_particle_group%particle_array,1)
-    sim%particle_group => sim%specific_particle_group
     
+    ! Initialize control variate
+    SLL_ALLOCATE(control_variate_parameter(2), ierr)
+    control_variate_parameter = sim%thermal_velocity
+    sim%control_variate => sll_new_control_variate(control_variate_equi, &
+         control_variate_parameter)
+    !sim%control_variate%control_variate => control_variate_equi
+
 
     if (sim%init_case == SLL_INIT_RANDOM) then
        ! Set the seed for the random initialization
@@ -188,11 +197,12 @@ contains
             [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
+       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
        ! Pseudorandom initialization with sobol numbers
        call sll_particle_initialize_sobol_landau_2d2v(sim%particle_group, &
             sim%landau_param,  [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
-            [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
+            [sim%mesh%eta1_max - sim%mesh%eta1_min, &
+            sim%mesh%eta2_max -sim%mesh%eta2_min], &
             sim%thermal_velocity, sobol_seed)
     end if
 
@@ -207,28 +217,32 @@ contains
     ! Initialize the kernel smoother
     domain(:,1) = [sim%mesh%eta1_min, sim%mesh%eta2_min]
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
-    sim%specific_kernel_smoother => sll_new_smoother_spline_2d(&
+    sim%kernel_smoother => sll_new_smoother_spline_2d(&
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
          sim%degree_smoother, SLL_COLLOCATION)
-    sim%kernel_smoother => sim%specific_kernel_smoother
+
+    ! Initialize the PIC field solver
+    sim%solver => sll_f_new_pic_poisson_2d([sim%mesh%num_cells1, sim%mesh%num_cells2], &
+         sim%poisson_solver, sim%kernel_smoother)
 
 
     ! Initialize the time-splitting propagator
-    SLL_ALLOCATE(sim%efield(sim%kernel_smoother%n_dofs,2),ierr)
-    sim%specific_propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(sim%poisson_solver, sim%kernel_smoother, sim%particle_group, sim%efield)
-    sim%propagator => sim%specific_propagator
+    !SLL_ALLOCATE(sim%efield(sim%kernel_smoother%n_dofs,2),ierr)
+    sim%propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(sim%solver, &
+         sim%particle_group)
 
 
     print*, 'Time loop'
     ! Time loop
     do j=1, sim%n_time_steps
 
-       call sim%specific_propagator%strang_splitting(sim%delta_t)
+       call sim%propagator%strang_splitting(sim%delta_t)
 
        ! Diagnostics
        if (sim%rank == 0) then
-          eenergy = sum(sim%efield(:,1)**2)*&
-               sim%mesh%delta_eta1*sim%mesh%delta_eta2
+          !eenergy = sim%solver%compute_field_energy()
+          !eenergy = sum(sim%efield(:,1)**2)*&
+          !     sim%mesh%delta_eta1*sim%mesh%delta_eta2
           write(th_diag_id,'(f12.5,2g20.12)' ) real(j,f64)*sim%delta_t,  eenergy
        end if
     end do
@@ -244,18 +258,18 @@ contains
 
 !------------------------------------------------------------------------------!
 
-  function control_variate_equi( this, xi, vi, time)
+  function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
     class(sll_t_control_variate) :: this
-    sll_real64, intent( in ) :: xi(3) !< particle position
-    sll_real64, intent( in ) :: vi(3) !< particle velocity
-    sll_real64, intent( in ) :: time  !< current time
+    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
+    sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional, intent( in ) :: time  !< current time
     sll_real64               :: sll_f_control_variate
 
 
     sll_f_control_variate = exp(-0.5_f64*&
-         ((vi(1)/this%control_parameters(1))**2+&
-         (vi(2)/this%control_parameters(2))**2))/&
-         (2.0_f64*sll_pi*)
+         ((vi(1)/this%control_variate_parameters(1))**2+&
+         (vi(2)/this%control_variate_parameters(2))**2))/&
+         (2.0_f64*sll_pi*product(this%control_variate_parameters))
 
   end function control_variate_equi
 
