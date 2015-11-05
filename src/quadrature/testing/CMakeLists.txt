@@ -3,7 +3,8 @@ IF(BUILD_TESTING)
                                    test_func_module.F90 )
   TARGET_LINK_LIBRARIES( test_integration sll_integration )
 
-  ADD_EXECUTABLE( test_fekete_integration test_fekete_integration.F90 )
+  ADD_EXECUTABLE( test_fekete_integration test_fekete_integration.F90
+                                   test_func_module.F90 )
   TARGET_LINK_LIBRARIES( test_integration sll_integration )
 
   # Ctest

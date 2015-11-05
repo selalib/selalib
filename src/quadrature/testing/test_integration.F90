@@ -10,7 +10,6 @@ use sll_m_gauss_lobatto_integration
 use test_function_module, only: &
      one, &
      test_func, &
-     one_2D, &
      test_func_2D
 use sll_m_constants, only : &
      sll_pi

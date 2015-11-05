@@ -1,19 +1,25 @@
 program test_fekete_integration
 
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use sll_m_fekete_integration
+  use test_function_module, only: &
+      one_2D
+
   implicit none
 
-  ! integer :: i,j,n
-  ! sll_int32 :: ierr
-  ! sll_int32 :: degree
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_int32 :: n
+  sll_int32 :: ierr
+  sll_int32 :: degree
 
   ! sll_real64, dimension(10) :: x, w
   ! sll_real64, dimension(:,:), allocatable :: d
   ! sll_real64, dimension(:,:), allocatable :: dlag
 
-  ! character(len=18) :: string
+  character(len=18) :: string
 
   ! For the fekete quadrature:
   sll_real64, dimension(2, 3) :: pxy1
