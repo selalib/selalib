@@ -61,8 +61,8 @@ program test_hexagonal_meshes
      ! call mesh%cell_type(i, type)
      !     print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
      print *, "element =", i
-     call mesh%hex_to_circ_elmt(1, transf_matA, transf_vecB)
-     print *, transf_matA(:, :)
+     call mesh%hex_to_circ_elmt(i, transf_matA, transf_vecB)
+     print *, transf_matA(1, :), transf_matA(2, :)
      print *, transf_vecB(:)
      print *, "---------------------------------"
   end do
