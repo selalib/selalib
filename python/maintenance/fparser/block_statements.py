@@ -811,9 +811,15 @@ class SelectType( BeginStatement ):
         return 'SELECT TYPE ( %s )' % self.expr
 
     def process_item( self ):
-        # TODO: "<associate-name> =>" should be properly parsed
+        # Get expression within parentheses
         self.expr = self.item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
+        # Parse "<associate-name> => <selector>"
+        left, sym, right = self.item.apply_map( self.expr ).partition( '=>' )
+        self.associate_name =  left.strip()
+        self.selector       = right.strip()
+        # Get construct name, if any
         self.construct_name = self.item.name
+        # Call parent class method
         return BeginStatement.process_item( self )
 
     def get_classes( self ):
