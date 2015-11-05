@@ -7,9 +7,6 @@ use sll_m_rectangle_integration
 use sll_m_trapz_integration
 use sll_m_gauss_legendre_integration
 use sll_m_gauss_lobatto_integration
-use sll_m_fekete_integration
-use sll_m_box_splines, only: &
-     write_connectivity
 use test_function_module, only: &
      one, &
      test_func, &
@@ -28,17 +25,6 @@ sll_real64, dimension(:,:), allocatable :: d
 sll_real64, dimension(:,:), allocatable :: dlag
 
 character(len=18) :: string
-
-! For the fekete quadrature:
-sll_real64, dimension(2, 3) :: pxy1
-sll_real64, dimension(2, 3) :: pxy2
-sll_real64, dimension(:,:), allocatable :: xyw
-sll_real64 :: app_res
-sll_int32  :: rule
-sll_int32  :: num_cells
-type(sll_hex_mesh_2d), pointer :: mesh
-sll_real64, dimension(:,:), allocatable     :: knots
-sll_int32,  dimension(:,:), allocatable     :: LM
 
 
 write (*,'(5x, 5a16 )') &
@@ -137,41 +123,6 @@ write(*,"(/,a,/)") " Exact values with maple "
 do i = 1, n
    write(*,string) ( dlag(i,j), j = 1, n)
 end do
-
-write(*,"(/,a)") "*********************************** "
-write(*,"(a)") "       FEKETE QUAD TEST       "
-write(*,"(a)") "*********************************** "
-
-!Definition of first triangle
-pxy1(:,1) = (/ 0._f64, 0._f64 /)
-pxy1(:,2) = (/ 1._f64, 0._f64 /)
-pxy1(:,3) = (/ 0._f64, 1._f64 /)
-
-!Definition of first triangle
-pxy2(:,1) = (/ 1._f64, 0._f64 /)
-pxy2(:,2) = (/ 1._f64, 1._f64 /)
-pxy2(:,3) = (/ 0._f64, 1._f64 /)
-
-rule = 2
-call fekete_order_num ( rule, n )
-SLL_ALLOCATE(xyw(1:3, 1:n), ierr)
-
-write(*,"(a)") " Computing Fekete points and weights on reference triangle "
-write(*,"(/,a)") "           x                   y                    w"
-xyw = fekete_points_and_weights(pxy1, rule)
-
-do j = 1, n
-   write(*, string) (xyw(i,j), i = 1, 3)
-end do
-
-print *, "sum weights = ", SUM(xyw(3,:))
-! write(*,"(/,a)") " --Test for a constant real function (=1) "
-! write(*,"(a)") "    on the squared domain [0,1]^2 divided on 2 triangles "
-
-! app_res = fekete_integral(one_2D, pxy1) + fekete_integral(one_2D, pxy2)
-
-! write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
-
 
 print*, 'PASSED'
 
