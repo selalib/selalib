@@ -1863,8 +1863,7 @@ contains
        end if
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
        !... we write the coordinate transformation (*)
-       ! Transformation
-       call mesh%ref_to_hex_elmt(i, matA, vecB)
+       call mesh%ref_to_circ_elmt(i, matA, vecB)
 
        write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
             matA(1,1), ",", matA(1,2), ",", matA(2,1), ",", matA(2,2), ",", &
