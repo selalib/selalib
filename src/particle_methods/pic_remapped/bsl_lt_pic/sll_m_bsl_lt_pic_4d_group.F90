@@ -2298,6 +2298,206 @@ contains
 
   end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit
 
+  !> separate fully affine interpolation routine for the remapped f
+  
+  ! <<ALH>> this was the original algorithm for [[bsl_lt_pic_4d_interpolate_value_of_remapped_f]]
+
+#define ALH_AFFINE_DEVELOPMENT 0
+#ifdef ALH_AFFINE_DEVELOPMENT ! <<<<ALH_AFFINE_DEVELOPMENT>>>>
+
+  ! AAA_ALH_TODO also needs to be called from [[bsl_lt_pic_4d_interpolate_value_of_remapped_f]]
+  
+  function bsl_lt_pic_full_affine_f ( p_group, eta ) result(val)
+    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
+    sll_real64,                     intent(out) :: val
+
+#define FIND_K_PRIME_STEP_BY_STEP 1 ! <<FIND_K_PRIME_STEP_BY_STEP>>
+#ifdef FIND_K_PRIME_STEP_BY_STEP
+
+    ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0,
+    ! RELATIVE to the k-th particle (marker) position at time t=0
+
+    print *,"ERROR 876549 -- here x_t0 and the other variables should be recalled -- as RELATIVE"
+    stop
+    x_t0  = d1_x + d1_y + d1_vx + d1_vy
+    y_t0  = d1_x + d1_y + d1_vx + d1_vy
+    vx_t0 = d1_x + d1_y + d1_vx + d1_vy
+    vy_t0 = d1_x + d1_y + d1_vx + d1_vy
+
+    ! Minimize the path to take along periodic boundaries
+
+    if(p_group%domain_is_periodic(1)) then
+       if(x_t0 > mesh_period_x/2) then
+          x_t0 = x_t0 - mesh_period_x
+       else
+          if(x_t0 < -mesh_period_x/2) then
+             x_t0 = x_t0 + mesh_period_x
+          end if
+       end if
+    end if
+
+    if(p_group%domain_is_periodic(2)) then
+       if(y_t0 > mesh_period_y/2) then
+          y_t0 = y_t0 - mesh_period_y
+       else
+          if(y_t0 < -mesh_period_y/2) then
+             y_t0 = y_t0 + mesh_period_y
+          end if
+       end if
+    end if
+
+    ! Find the neighbours of the virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
+    ! neighbours" pointers of particle k. To reduce the amount of code, start with finding the closest neighbour
+    ! which has lower coordinates in all directions. The particle located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates
+    ! relative to particle k to start with) gets progressively closer to kprime step by step (ie from neighbour to
+    ! neighbour).
+
+    kprime = k
+
+    ! <<ONESTEPMACRO>> Calls [[onestep]]. "dim" can be x,y,vx,vy.
+#define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname##_t0,kprime,p_group%particle_list,h_parts_##dimname)
+    ! same macros as in bsl_lt_pic_4d_utilities.F90
+#define ALONG_X 1
+#define ALONG_Y 2
+#define ALONG_VX 3
+#define ALONG_VY 4
+
+    ONESTEPMACRO(ALONG_X,x)
+    ONESTEPMACRO(ALONG_Y,y)
+    ONESTEPMACRO(ALONG_VX,vx)
+    ONESTEPMACRO(ALONG_VY,vy)
+
+#else
+    tmp = (x_t0 - parts_x_min) / h_parts_x
+    j_x  = 1 + int(floor(tmp))
+    x_t0_to_xkprime_t0 = x_t0 - (parts_x_min + (j_x-1)*h_parts_x)
+
+    tmp = (y_t0 - parts_y_min) / h_parts_y
+    j_y  = 1 + int(floor(tmp))
+    y_t0_to_ykprime_t0 = y_t0 - (parts_y_min + (j_y-1) * h_parts_y)
+
+    tmp = (vx_t0 - parts_vx_min) / h_parts_vx
+    j_vx  = 1 + int(floor(tmp))
+    vx_t0_to_vxkprime_t0 = vx_t0 - (parts_vx_min + (j_vx-1) * h_parts_vx)
+
+    tmp = (vy_t0 - parts_vy_min) / h_parts_vy
+    j_vy  = 1 + int(floor(tmp))
+    vy_t0_to_vykprime_t0 = vy_t0 - (parts_vy_min + (j_vy-1) * h_parts_vy)
+
+    call get_particle_index_from_initial_position_on_cartesian_grid (               &
+         j_x, j_y, j_vx, j_vy,                                   &
+         p_group%number_parts_x, p_group%number_parts_y,         &
+         p_group%number_parts_vx, p_group%number_parts_vy,       &
+         kprime )
+
+
+    if( kprime <= 0 .or. kprime > p_group%number_particles )then
+       ! this means we are outside of the domain defined by the initial particle grid
+       kprime = 0
+    end if
+#endif ! [[FIND_K_PRIME_STEP_BY_STEP]]
+
+    SLL_ASSERT(kprime >= 0)
+
+    ! If we end up with kprime == 0, it means that we have not found a cell that contains
+    ! the particle so we just set that (virtual) particle value to zero
+
+    val = 0.0_f64
+
+    if (kprime /= 0) then
+
+       ! kprime is the left-most vertex of the hypercube. find all the other vertices through
+       ! the neighbour pointers.
+
+       hcube(1,1,1,1) = kprime
+
+       hcube(2,1,1,1) = p_group%particle_list(kprime)%ngb_xright_index ! 1 step
+       hcube(1,2,1,1) = p_group%particle_list(kprime)%ngb_yright_index
+       hcube(1,1,2,1) = p_group%particle_list(kprime)%ngb_vxright_index
+       hcube(1,1,1,2) = p_group%particle_list(kprime)%ngb_vyright_index
+
+       ! if any of the first four vertices is undefined (the convention in
+       ! [[bsl_lt_pic_4d_compute_new_particles]] is that the neighbour index is then equal to
+       ! the particle index), it means that we reached the mesh border. just set the value of
+       ! f for that particle as zero as before.
+
+       if (hcube(2,1,1,1) /= kprime        &
+            .and. hcube(1,2,1,1) /= kprime &
+            .and. hcube(1,1,2,1) /= kprime &
+            .and. hcube(1,1,1,2) /= kprime) then
+
+          ! remaining vertices of the hypercube. they should all exist now that the first 4 vertices are checked.
+
+          ! 1 step in x + 1 other step
+          hcube(2,2,1,1) = p_group%particle_list(hcube(2,1,1,1))%ngb_yright_index
+          hcube(2,1,2,1) = p_group%particle_list(hcube(2,1,1,1))%ngb_vxright_index
+          hcube(2,1,1,2) = p_group%particle_list(hcube(2,1,1,1))%ngb_vyright_index
+
+          ! 1 step in y + 1 other step
+          hcube(1,2,2,1) = p_group%particle_list(hcube(1,2,1,1))%ngb_vxright_index
+          hcube(1,2,1,2) = p_group%particle_list(hcube(1,2,1,1))%ngb_vyright_index
+
+          ! 1 step in vx + 1 other step
+          hcube(1,1,2,2) = p_group%particle_list(hcube(1,1,2,1))%ngb_vyright_index
+
+          ! all combinations of 3 steps
+          hcube(1,2,2,2) = p_group%particle_list(hcube(1,2,2,1))%ngb_vyright_index
+          hcube(2,1,2,2) = p_group%particle_list(hcube(2,1,2,1))%ngb_vyright_index
+          hcube(2,2,1,2) = p_group%particle_list(hcube(2,2,1,1))%ngb_vyright_index
+          hcube(2,2,2,1) = p_group%particle_list(hcube(2,2,1,1))%ngb_vxright_index
+
+          ! 4 steps
+          hcube(2,2,2,2) = p_group%particle_list(hcube(2,2,2,1))%ngb_vyright_index
+
+          ! Use the values of f0 at these neighbours to interpolate the value of f0. MCP -> oui. Ici si tu utilises des
+          ! particules affines (part_deg = 1) la valeur de f0 se déduit de celle du poids de la particule.  En fait tu
+          ! peux utiliser une formule semblable à celle qui est utilisée dans la fonction
+          ! sll_lt_pic_4d_write_f_on_remap_grid, mais sans faire intervenir la matrice de déformation à l'intérieur des
+          ! splines.
+
+          ! place the resulting value of f on the virtual particle in p_group%target_values
+
+          do side_x = 1,2
+             if(side_x == 1)then
+                x_aux = x_t0_to_xkprime_t0
+             else
+                x_aux = h_parts_x - x_t0_to_xkprime_t0
+             end if
+             do side_y = 1,2
+                if(side_y == 1)then
+                   y_aux = y_t0_to_ykprime_t0
+                else
+                   y_aux = h_parts_y - y_t0_to_ykprime_t0
+                end if
+                do side_vx = 1,2
+                   if(side_vx == 1)then
+                      vx_aux = vx_t0_to_vxkprime_t0
+                   else
+                      vx_aux = h_parts_vx - vx_t0_to_vxkprime_t0
+                   end if
+                   do side_vy = 1,2
+                      if(side_vy == 1)then
+                         vy_aux = vy_t0_to_vykprime_t0
+                      else
+                         vy_aux = h_parts_vy - vy_t0_to_vykprime_t0
+                      end if
+
+                      ! uses [[file:sll_m_bsl_lt_pic_4d_utilities.F90::sll_pic_shape]]
+                      
+                      val = val                                                                 &
+                           + p_group%particle_list(hcube(side_x,side_y,side_vx,side_vy))%weight &
+                           * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,               &
+                           inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
+
+                   end do
+                end do
+             end do
+          end do
+       end if     ! test to see whether the hyper cube was inside initial particle grid
+    end if     ! test on (k_prime \=0 )
+
+  end function bsl_lt_pic_interpolate_f_through_neighbors
 
   !> separate interpolation routine for the remapped f
   function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
@@ -2306,14 +2506,14 @@ contains
     sll_real64,                     intent(out) :: val
 
     if( p_group%remapped_f_interpolation_type == 0 )then
-        ! spline interpolation
-        ! todo: write it here the spline interpolation -- btw, should we use existing modules in Selalib?
+       ! spline interpolation
+       ! todo: write it here the spline interpolation -- btw, should we use existing modules in Selalib?
 
     else if( p_group%remapped_f_interpolation_type == 1 )then
-        val = sparse_grid_interpolator%interpolate_value(remapped_f_sparse_grid_coefficients, eta)
+       val = sparse_grid_interpolator%interpolate_value(remapped_f_sparse_grid_coefficients, eta)
     end if
   end function
-
+#endif ! [[ALH_AFFINE_DEVELOPMENT]]
 
   !> new version of the write_f_on_grid_or_deposit routine, with call to separate interpolation routine for the remapped f
 
