@@ -20,8 +20,7 @@ program test_box_splines_derivatives
        new_box_spline_2d, &
        boxspline_x1_derivative, &
        boxspline_x2_derivative, &
-       compute_box_spline, &
-       write_all_django_files
+       compute_box_spline
   use sll_m_hex_pre_filters, only : &
        pre_filter_pfir
   implicit none
@@ -108,17 +107,6 @@ program test_box_splines_derivatives
   ! SLL_DEALLOCATE_ARRAY(splines_on_support, ierr)
   ! call sll_delete(spline) !also deletes the mesh
 
-  ! Writing all django files
-  num_cells = 20
-  degree = 1
-  rule = 1
-  !call write_all_django_files(num_cells, degree, rule)
-  print *, ""
-  print *, "*********** wrote all django files ***********"
-  print *, "   - number of cells    : ", num_cells
-  print *, "   - degree of splines  :", degree
-  print *, "   - rule of quadrature :", rule
-  print *, ""
 
   ! Testing degree 3 boxsplines:
   ! print *, ""
