@@ -126,7 +126,7 @@ common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
-sll_int32  :: i,j,ierror
+sll_int32  :: i,ierror
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 sll_real64,dimension(:,:),allocatable :: cxx_array
@@ -313,7 +313,7 @@ yc = eta2_min
 yd = eta2_max
 
 ! set for no error control flag
-tolmax = 0.0
+tolmax = 0.0_8
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
@@ -387,9 +387,9 @@ external coefcr,bndcr,cofx,cofy
 allocate(rhs(nx,ny))
 rhs=0._f64
     do i2=1,ny
-      eta2=yc+real(i2-1,f64)*(yd-yc)/(ny-1)
+      eta2=yc+real(i2-1,f64)*(yd-yc)/real(ny-1,8)
       do i1=1,nx
-        eta1=xa+real(i1-1,f64)*(xb-xa)/(nx-1)
+        eta1=xa+real(i1-1,f64)*(xb-xa)/real(nx-1,8)
         rhs(i1,i2)=-rho(i1,i2)*transformation%jacobian(eta1,eta2)
       end do
     end do
@@ -589,9 +589,9 @@ end subroutine
 subroutine cofx(x,cxx,cx,cex)
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0  !cxx_interp%interpolate_value(x)
-cx  = 0.0
-cex = 0.0
+cxx = 1.0_8  !cxx_interp%interpolate_value(x)
+cx  = 0.0_8 + x - x
+cex = 0.0_8
 return
 end
 
@@ -599,9 +599,9 @@ end
 subroutine cofy(y,cyy,cy,cey)
 implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0
-cy  = 0.0
-cey = 0.0
+cyy = 1.0_8
+cy  = 0.0_8 + y - y
+cey = 0.0_8
 return
 end
 !> input mixed "oblique" derivative b.c. to mud2cr
@@ -618,10 +618,10 @@ if (kbdy.eq.2) then
    ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxb(y),
    ! betxb(y),gamxb(y),gbdxb(y) must be output.
 
-   alfa = 0.0+0*xory
-   beta = 0.0
-   gama = 1.0
-   gbdy = 0.0
+   alfa = 0.0_8+0_8*xory
+   beta = 0.0_8
+   gama = 1.0_8
+   gbdy = 0.0_8
 
 end if
 
@@ -632,10 +632,10 @@ if (kbdy.eq.1) then
    ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxa(y),
    ! betxa(y),gamxa(y),gbdxa(y) must be output.
 
-   alfa = 0.0
-   beta = 0.0
-   gama = 1.0
-   gbdy = 0.0
+   alfa = 0.0_8
+   beta = 0.0_8
+   gama = 1.0_8
+   gbdy = 0.0_8
 
 end if
 

@@ -158,7 +158,7 @@ contains
        call fft_apply_plan( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
-    phi = real(hat_phi, f64)/NP_theta
+    phi = real(hat_phi, f64)/real(NP_theta,f64)
 
   end subroutine solve_qn_solver_2d
 

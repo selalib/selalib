@@ -4,8 +4,6 @@ add_library( sll_random_deviate_generators STATIC sll_m_gaussian.F90
 target_link_libraries( sll_random_deviate_generators
 sll_assert sll_memory sll_working_precision )
 
-ADD_SUBDIRECTORY(sobol) #sobol sequence
-ADD_SUBDIRECTORY(prob) #Probability density functions
 ADD_SUBDIRECTORY(moment_matching)
 
 

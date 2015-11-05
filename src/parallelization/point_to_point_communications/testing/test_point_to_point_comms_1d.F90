@@ -44,9 +44,9 @@ program comm_unit_test
   SLL_ALLOCATE(array_right(PROBLEM_SIZE),ierr) 
 
   do i=1,PROBLEM_SIZE
-     array1(i)      = rank*PROBLEM_SIZE+i
-     array_left(i)  = mod(rank+size-1,size)*PROBLEM_SIZE+i
-     array_right(i) = mod(rank+size+1,size)*PROBLEM_SIZE+i
+     array1(i)      = real(rank*PROBLEM_SIZE+i,f64)
+     array_left(i)  = real(mod(rank+size-1,size)*PROBLEM_SIZE+i,f64)
+     array_right(i) = real(mod(rank+size+1,size)*PROBLEM_SIZE+i,f64)
   end do
 
   print *, 'rank: ', rank, 'problem size: ', PROBLEM_SIZE, 'array = ', &

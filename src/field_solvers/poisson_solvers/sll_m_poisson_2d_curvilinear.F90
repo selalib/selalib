@@ -326,10 +326,10 @@ subroutine initialize_poisson_2d_curvilinear( &
   sll_int32 :: total_num_splines_loc
   
   !temporary
-  sll_real64, dimension(:,:), allocatable :: rhs_at_points
-  sll_real64, dimension(:,:), allocatable :: splines_at_points1
-  sll_real64, dimension(:,:), allocatable :: splines_at_points2
-  sll_real64, dimension(:,:), allocatable :: output
+  !sll_real64, dimension(:,:), allocatable :: rhs_at_points
+  !sll_real64, dimension(:,:), allocatable :: splines_at_points1
+  !sll_real64, dimension(:,:), allocatable :: splines_at_points2
+  !sll_real64, dimension(:,:), allocatable :: output
   
   sll_int32 :: num_nz
   
@@ -395,11 +395,14 @@ subroutine initialize_poisson_2d_curvilinear( &
 
   dim1 = (spline_degree1+1)*(spline_degree2+1)
   dim2 = num_cells1*num_cells2
-  SLL_CLEAR_ALLOCATE(poisson%local_spline_indices(1:dim1,1:dim2),ierr)
-  SLL_CLEAR_ALLOCATE(poisson%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
+  SLL_ALLOCATE(poisson%local_spline_indices(1:dim1,1:dim2),ierr)
+  poisson%local_spline_indices=0
+  SLL_ALLOCATE(poisson%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
+  poisson%local_to_global_spline_indices=0
   num_spl1=num_cells1+spline_degree1
   num_spl2=num_cells2+spline_degree2
-  SLL_CLEAR_ALLOCATE(poisson%global_spline_indices(num_spl1*num_spl2),ierr)
+  SLL_ALLOCATE(poisson%global_spline_indices(num_spl1*num_spl2),ierr)
+  poisson%global_spline_indices=0
 
   call compute_local_splines_indices( &
     num_cells1, &
@@ -667,16 +670,16 @@ subroutine new_quadrature( &
     endif
     SLL_ALLOCATE(pts_and_weights(2,num_quadrature_points_out),ierr)
     select case(quadrature_type_value)
-	  case (POISSON_GAUSS_LEGENDRE)
-	    pts_and_weights(1:2,1:num_quadrature_points_out) = &
-		  gauss_legendre_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
-	  case (POISSON_GAUSS_LOBATTO)
-	    pts_and_weights(1:2,1:num_quadrature_points_out) = &
-	      gauss_lobatto_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
-	  case default
-	    print *, '#bad choice for quadrature_type'
-	    print *,'#error at line',__LINE__,'in file',__FILE__
-	    stop       
+      case (POISSON_GAUSS_LEGENDRE)
+        pts_and_weights(1:2,1:num_quadrature_points_out) = &
+          gauss_legendre_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
+      case (POISSON_GAUSS_LOBATTO)
+        pts_and_weights(1:2,1:num_quadrature_points_out) = &
+          gauss_lobatto_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
+      case default
+        print *, '#bad choice for quadrature_type'
+        print *,'#error at line',__LINE__,'in file',__FILE__
+        stop       
     end select
     quadrature_points_out(1:num_quadrature_points_out) &
       = pts_and_weights(1,1:num_quadrature_points_out)
@@ -708,7 +711,7 @@ function new_knots( &
   sll_real64, dimension(:), intent(in), optional :: knots_max
   sll_real64, dimension(:), pointer :: knots
 
-  sll_real64 :: delta
+  !sll_real64 :: delta
   sll_int32 :: i
   sll_int32 :: ierr
   sll_real64 :: L
@@ -766,14 +769,14 @@ function new_knots( &
       bc_min_value = bc_min
     endif
     select case (bc_min_value)
-	  case (SLL_POISSON_OPEN_KNOTS)
-	    knots(1:spline_degree) = knots(spline_degree+1)
-	  case (SLL_POISSON_PERIODIC_KNOTS)
-	    knots(1:spline_degree) = knots(num_cells+1:num_cells+spline_degree)-L
-	  case default
-	    print *, '#bad choice for bc_min'
-	    print *,'#error at line',__LINE__,'in file',__FILE__
-	    stop       
+      case (SLL_POISSON_OPEN_KNOTS)
+        knots(1:spline_degree) = knots(spline_degree+1)
+      case (SLL_POISSON_PERIODIC_KNOTS)
+        knots(1:spline_degree) = knots(num_cells+1:num_cells+spline_degree)-L
+      case default
+        print *, '#bad choice for bc_min'
+        print *,'#error at line',__LINE__,'in file',__FILE__
+        stop       
     end select  
   endif
   
@@ -797,16 +800,16 @@ function new_knots( &
       bc_max_value = bc_max
     endif
     select case (bc_max_value)
-	  case (SLL_POISSON_OPEN_KNOTS)
-	    knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
-	      = knots(num_cells+spline_degree+1)
-	  case (SLL_POISSON_PERIODIC_KNOTS)
-	    knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
-	      = knots(spline_degree+2:2*spline_degree+1)+L
-	  case default
-	    print *, '#bad choice for bc_max'
-	    print *,'#error at line',__LINE__,'in file',__FILE__
-	    stop       
+      case (SLL_POISSON_OPEN_KNOTS)
+        knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
+          = knots(num_cells+spline_degree+1)
+      case (SLL_POISSON_PERIODIC_KNOTS)
+        knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
+          = knots(spline_degree+2:2*spline_degree+1)+L
+      case default
+        print *, '#bad choice for bc_max'
+        print *,'#error at line',__LINE__,'in file',__FILE__
+        stop       
     end select  
   endif
 
@@ -984,8 +987,8 @@ function compute_nz( &
   sll_int32 :: j_glob
   sll_int32 :: num_spl1
   sll_int32 :: num_spl2
-  sll_int32 :: index1
-  sll_int32 :: index2
+  !sll_int32 :: index1
+  !sll_int32 :: index2
   sll_int32 :: li_A
   sll_int32 :: li_B
   !sll_int32, dimension(:,:,:), allocatable :: work
@@ -997,7 +1000,8 @@ function compute_nz( &
   num_spl2 = num_cells2+spline_degree2
 
   !SLL_CLEAR_ALLOCATE(work(-degree_spline1:degree_spline1,-degree_spline2:degree_spline2,num_spl1*num_spl2),ierr)
-  SLL_CLEAR_ALLOCATE(flag(0:num_spl1*num_spl2),ierr)
+  SLL_ALLOCATE(flag(0:num_spl1*num_spl2),ierr)
+  flag=0
 
   count = 0
   do j_glob=1,num_spl2
@@ -1057,291 +1061,295 @@ end function compute_solution_size
 
 
 !knots(cell+1-degree)<= ..<= knots(cell)<=x <knots(cell+1) <=..<=knots(cell+degree)
-subroutine compute_b_spline_at_x( &
-  knots, &
-  cell, &
-  x, &
-  degree, &
-  out)
-  sll_real64, dimension(:), intent(in) :: knots
-  sll_int32, intent(in) :: cell
-  sll_real64, intent(in) :: x
-  sll_int32, intent(in) :: degree
-  sll_real64, dimension(:), intent(out) :: out
-  
-  sll_real64 :: tmp1
-  sll_real64 :: tmp2
-  sll_int32 :: ell
-  sll_int32 :: k
-  
-  out(1) = 1._f64
-  do ell=1,degree
-    tmp1 = (x-knots(cell+1-degree))/(knots(cell+1)-knots(cell+1-degree))*out(1)
-    out(1) = out(1) -tmp1
-    do k=2,ell
-      tmp2 = (x-knots(cell+k-degree))/(knots(cell+k)-knots(cell+k-degree))*out(k)
-      out(k) = out(k)+tmp1-tmp2
-      tmp1 = tmp2
-    enddo
-    out(ell+1) = tmp1
-  enddo
-  
-  
-  
-  
-end subroutine compute_b_spline_at_x
-
-function check_compute_b_spline_at_x( &
-  knots, &
-  cell, &
-  x, &
-  degree &
-  ) result(res)
-  sll_real64, dimension(:), intent(in) :: knots
-  sll_int32, intent(in) :: cell
-  sll_real64, intent(in) :: x
-  sll_int32, intent(in) :: degree
-  sll_real64 :: res
-  
-  sll_real64, dimension(:), allocatable :: splines1
-  sll_real64, dimension(:), allocatable :: splines2
-  sll_int32 :: ierr
-  
-  res = 0._f64
-  SLL_ALLOCATE(splines1(degree+1),ierr)
-  SLL_ALLOCATE(splines2(degree+1),ierr)
-
-  call bsplvb(knots,degree+1,cell,x,degree+1,splines2)
-  call compute_b_spline_at_x( &
-    knots, &
-    cell, &
-    x, &
-    degree, &
-    splines1)
-  res=maxval(abs(splines1-splines2))
-
-end function check_compute_b_spline_at_x
-
-
-
-
-
-subroutine compute_dbiatx( &
-  knots, &
-  knot_size, &
-  node_positions, &
-  num_points, &  
-  spline_degree, &
-  bc, &
-  dbiatx, &
-  dbiatx_indices, &
-  num_deriv)
-  sll_real64, dimension(:), intent(in) :: knots
-  sll_int32, intent(in) :: knot_size
-  sll_real64, dimension(:), intent(in) :: node_positions
-  sll_int32, intent(in) :: num_points
-  sll_int32, intent(in) :: spline_degree
-  sll_int32, intent(in) :: bc
-  sll_real64, dimension(:,:,:), intent(out) :: dbiatx
-  sll_int32, dimension(:), intent(out) :: dbiatx_indices
-  sll_int32, intent(in), optional :: num_deriv 
-  
-  sll_int32 :: i
-  sll_int32 :: iflag
-  sll_real64 :: x
-  sll_int32 :: n_deriv
-  sll_real64, dimension(:,:), allocatable :: work
-  sll_real64, dimension(:,:), allocatable :: dbiatx_loc
-  sll_int32 :: ierr
-  
-  SLL_ALLOCATE(work(spline_degree+1,spline_degree+1),ierr)
-  
-  
-  n_deriv = 2
-  if(present(num_deriv)) then
-    n_deriv = num_deriv
-  endif
-
-  SLL_ALLOCATE(dbiatx_loc(spline_degree+1,n_deriv),ierr)
-
-  do i=1,num_points
-    call interv( &
-      knots, &
-      knot_size,  &
-      node_positions(i), &
-      dbiatx_indices(i), &
-      iflag)
-    call bsplvd( &
-      knots, &
-      spline_degree+1, &
-      node_positions(i), &
-      dbiatx_indices(i), &
-      work, &
-      dbiatx_loc, &
-      n_deriv)
-    dbiatx(1:spline_degree+1,1:n_deriv,i) = dbiatx_loc(1:spline_degree+1,1:n_deriv)   
-  enddo
-  
-end subroutine compute_dbiatx
-
-subroutine compute_composite_quadrature_points( &
-  eta_min, &
-  eta_max, &
-  num_cells, &
-  quadrature_points, &
-  num_quadrature_points, &
-  eta_loc_min, &
-  eta_loc_max, &
-  node_positions)
-  sll_real64, intent(in) :: eta_min
-  sll_real64, intent(in) :: eta_max
-  sll_int32, intent(in) :: num_cells
-  sll_real64, dimension(:), intent(in) :: quadrature_points
-  sll_int32, intent(in) :: num_quadrature_points
-  sll_real64, intent(in) :: eta_loc_min
-  sll_real64, intent(in) :: eta_loc_max
-  sll_real64, dimension(:), intent(out) :: node_positions
-  
-  sll_int32 :: i
-  sll_int32 :: j
-  sll_real64 :: eta
-  sll_real64 :: delta
-  sll_real64, dimension(:), allocatable :: loc_points
-  sll_int32 :: ierr
-  
-  SLL_ALLOCATE(loc_points(num_quadrature_points),ierr)
-  
-  delta = (eta_max-eta_min)/real(num_cells,f64)
-  loc_points(1:num_quadrature_points) = &
-    (quadrature_points(1:num_quadrature_points) - eta_loc_min) &
-    /(eta_loc_max-eta_loc_min)
-  
-  
-  do i=1,num_cells
-    eta = eta_min+real(i-1,f64)*delta
-    do j=1,num_quadrature_points
-      node_positions(j+num_quadrature_points*(i-1)) = eta+loc_points(i)*delta
-    enddo
-  enddo
-  
-  
-end subroutine compute_composite_quadrature_points
-
-subroutine compute_global_knots( &
-  bc_left, &
-  bc_right, &
-  num_cells, &
-  eta_min, &
-  eta_max, &
-  spline_degree, &
-  knots)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: num_cells
-  sll_real64, intent(in) :: eta_min
-  sll_real64, intent(in) :: eta_max
-  sll_int32, intent(in) :: spline_degree
-  sll_real64, dimension(:), intent(out) :: knots
-  sll_real64 :: delta
-  sll_int32 :: i
-  
-  delta = (eta_max - eta_min)/real(num_cells,f64)
-  
-  
-  !repeated left point
-  do i = 1, spline_degree + 1
-    knots(i) = eta_min
-  enddo
-  !interior points
-  do i = spline_degree+2, num_cells+spline_degree
-    knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
-  enddo
-  !repeated right point
-  do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
-    knots(i) = eta_max
-  enddo
-
-
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-    do i = 1, spline_degree+num_cells+1+2*spline_degree
-      knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
-    enddo
-  endif
-
-end subroutine compute_global_knots
-
-subroutine compute_source_at_points( &
-  rhs_at_points, &
-  splines_at_points1, &
-  splines_at_points2, &
-  num_cells1, &
-  num_cells2, &
-  num_loc_points1, &
-  num_loc_points2, &
-  spline_degree1, &
-  spline_degree2, &
-  output)
-  
-  sll_real64, dimension(:,:), intent(in) :: rhs_at_points
-  sll_real64, dimension(:,:), intent(in) :: splines_at_points1
-  sll_real64, dimension(:,:), intent(in) :: splines_at_points2
-  sll_int32, intent(in) :: num_cells1
-  sll_int32, intent(in) :: num_cells2
-  sll_int32, intent(in) :: num_loc_points1
-  sll_int32, intent(in) :: num_loc_points2
-  sll_int32, intent(in) :: spline_degree1
-  sll_int32, intent(in) :: spline_degree2
-  sll_real64, dimension(:,:), intent(out) :: output
-  
-  sll_int32 :: num_spl1
-  sll_int32 :: num_spl2
-  sll_int32 :: i
-  sll_int32 :: j
-  sll_int32 :: iloc
-  sll_int32 :: jloc
-  sll_int32 :: ii
-  sll_int32 :: jj
-  
-  num_spl1 = num_cells1+spline_degree1+1
-  num_spl2 = num_cells2+spline_degree2+1
-  
-  output(1:num_spl1,1:num_spl2) = 0._f64
-  
-  do j=1,num_cells2
-    do i=1,num_cells1
-      do ii = 1,spline_degree1+1
-        do iloc = 1,num_loc_points1
-          do jj = 1,spline_degree2+1
-            do jloc = 1,num_loc_points2
-            output(i+ii,j+jj) = &
-              output(i+ii,j+jj) &
-              +splines_at_points1(ii,iloc+num_loc_points1*(i-1)) &
-              *rhs_at_points(iloc+num_loc_points1*(i-1),jloc+num_loc_points2*(j-1)) &
-              *splines_at_points2(jj,jloc+num_loc_points2*(j-1))
-            enddo
-          enddo    
-        enddo    
-      enddo  
-    enddo
-  enddo  
-
-!  do j=1,num_cells2+spline_degree2+1
-!    do i=1,num_cells1+spline_degree1+1
-!      do ii = 1,spline_degree1+1 !iold+ii=i i-ii>=1 i-ii<=num_cells1
-!        if((ii<=1-i).and.(ii>=i-num_cells1))
-!        do iloc = 1,num_loc_points1
-!          output(i,j) = &
-!            output(i,j) &
-!            +spline_at_points1(ii,iloc+num_cells1*(i-ii-1)) &
-!            *rhs(iloc+num_cells1*(i-ii-1),jloc+num_cells2*(j-jj-1)) &
-!            *spline_at_points2(jj,jloc+num_cells2*(j-jj-1))
-!        enddo    
-!      enddo  
+!!PN DEFINED BUT NOT USED
+!subroutine compute_b_spline_at_x( &
+!  knots, &
+!  cell, &
+!  x, &
+!  degree, &
+!  out)
+!  sll_real64, dimension(:), intent(in) :: knots
+!  sll_int32, intent(in) :: cell
+!  sll_real64, intent(in) :: x
+!  sll_int32, intent(in) :: degree
+!  sll_real64, dimension(:), intent(out) :: out
+!  
+!  sll_real64 :: tmp1
+!  sll_real64 :: tmp2
+!  sll_int32 :: ell
+!  sll_int32 :: k
+!  
+!  out(1) = 1._f64
+!  do ell=1,degree
+!    tmp1 = (x-knots(cell+1-degree))/(knots(cell+1)-knots(cell+1-degree))*out(1)
+!    out(1) = out(1) -tmp1
+!    do k=2,ell
+!      tmp2 = (x-knots(cell+k-degree))/(knots(cell+k)-knots(cell+k-degree))*out(k)
+!      out(k) = out(k)+tmp1-tmp2
+!      tmp1 = tmp2
 !    enddo
-!  enddo  
-
-  
-end subroutine compute_source_at_points
+!    out(ell+1) = tmp1
+!  enddo
+!  
+!  
+!  
+!  
+!end subroutine compute_b_spline_at_x
+!
+!PN function check_compute_b_spline_at_x( &
+!PN   knots, &
+!PN   cell, &
+!PN   x, &
+!PN   degree &
+!PN   ) result(res)
+!PN   sll_real64, dimension(:), intent(in) :: knots
+!PN   sll_int32, intent(in) :: cell
+!PN   sll_real64, intent(in) :: x
+!PN   sll_int32, intent(in) :: degree
+!PN   sll_real64 :: res
+!PN   
+!PN   sll_real64, dimension(:), allocatable :: splines1
+!PN   sll_real64, dimension(:), allocatable :: splines2
+!PN   sll_int32 :: ierr
+!PN   
+!PN   res = 0._f64
+!PN   SLL_ALLOCATE(splines1(degree+1),ierr)
+!PN   SLL_ALLOCATE(splines2(degree+1),ierr)
+!PN 
+!PN   call bsplvb(knots,degree+1,cell,x,degree+1,splines2)
+!PN   call compute_b_spline_at_x( &
+!PN     knots, &
+!PN     cell, &
+!PN     x, &
+!PN     degree, &
+!PN     splines1)
+!PN   res=maxval(abs(splines1-splines2))
+!PN 
+!PN end function check_compute_b_spline_at_x
+!PN 
+!PN 
+!PN 
+!PN 
+!PN 
+!PN subroutine compute_dbiatx( &
+!PN   knots, &
+!PN   knot_size, &
+!PN   node_positions, &
+!PN   num_points, &  
+!PN   spline_degree, &
+!PN   bc, &
+!PN   dbiatx, &
+!PN   dbiatx_indices, &
+!PN   num_deriv)
+!PN   sll_real64, dimension(:), intent(in) :: knots
+!PN   sll_int32, intent(in) :: knot_size
+!PN   sll_real64, dimension(:), intent(in) :: node_positions
+!PN   sll_int32, intent(in) :: num_points
+!PN   sll_int32, intent(in) :: spline_degree
+!PN   sll_int32, intent(in) :: bc
+!PN   sll_real64, dimension(:,:,:), intent(out) :: dbiatx
+!PN   sll_int32, dimension(:), intent(out) :: dbiatx_indices
+!PN   sll_int32, intent(in), optional :: num_deriv 
+!PN   
+!PN   sll_int32 :: i
+!PN   sll_int32 :: iflag
+!PN   !sll_real64 :: x
+!PN   sll_int32 :: n_deriv
+!PN   sll_real64, dimension(:,:), allocatable :: work
+!PN   sll_real64, dimension(:,:), allocatable :: dbiatx_loc
+!PN   sll_int32 :: ierr
+!PN   
+!PN   SLL_ALLOCATE(work(spline_degree+1,spline_degree+1),ierr)
+!PN   
+!PN   
+!PN   n_deriv = 2
+!PN   if(present(num_deriv)) then
+!PN     n_deriv = num_deriv
+!PN   endif
+!PN 
+!PN   SLL_ALLOCATE(dbiatx_loc(spline_degree+1,n_deriv),ierr)
+!PN 
+!PN   do i=1,num_points
+!PN     call interv( &
+!PN       knots, &
+!PN       knot_size,  &
+!PN       node_positions(i), &
+!PN       dbiatx_indices(i), &
+!PN       iflag)
+!PN     call bsplvd( &
+!PN       knots, &
+!PN       spline_degree+1, &
+!PN       node_positions(i), &
+!PN       dbiatx_indices(i), &
+!PN       work, &
+!PN       dbiatx_loc, &
+!PN       n_deriv)
+!PN     dbiatx(1:spline_degree+1,1:n_deriv,i) = dbiatx_loc(1:spline_degree+1,1:n_deriv)   
+!PN   enddo
+!PN 
+!PN   return
+!PN   print*,bc
+!PN   
+!PN end subroutine compute_dbiatx
+!PN 
+!PN subroutine compute_composite_quadrature_points( &
+!PN   eta_min, &
+!PN   eta_max, &
+!PN   num_cells, &
+!PN   quadrature_points, &
+!PN   num_quadrature_points, &
+!PN   eta_loc_min, &
+!PN   eta_loc_max, &
+!PN   node_positions)
+!PN   sll_real64, intent(in) :: eta_min
+!PN   sll_real64, intent(in) :: eta_max
+!PN   sll_int32, intent(in) :: num_cells
+!PN   sll_real64, dimension(:), intent(in) :: quadrature_points
+!PN   sll_int32, intent(in) :: num_quadrature_points
+!PN   sll_real64, intent(in) :: eta_loc_min
+!PN   sll_real64, intent(in) :: eta_loc_max
+!PN   sll_real64, dimension(:), intent(out) :: node_positions
+!PN   
+!PN   sll_int32 :: i
+!PN   sll_int32 :: j
+!PN   sll_real64 :: eta
+!PN   sll_real64 :: delta
+!PN   sll_real64, dimension(:), allocatable :: loc_points
+!PN   sll_int32 :: ierr
+!PN   
+!PN   SLL_ALLOCATE(loc_points(num_quadrature_points),ierr)
+!PN   
+!PN   delta = (eta_max-eta_min)/real(num_cells,f64)
+!PN   loc_points(1:num_quadrature_points) = &
+!PN     (quadrature_points(1:num_quadrature_points) - eta_loc_min) &
+!PN     /(eta_loc_max-eta_loc_min)
+!PN   
+!PN   
+!PN   do i=1,num_cells
+!PN     eta = eta_min+real(i-1,f64)*delta
+!PN     do j=1,num_quadrature_points
+!PN       node_positions(j+num_quadrature_points*(i-1)) = eta+loc_points(i)*delta
+!PN     enddo
+!PN   enddo
+!PN   
+!PN   
+!PN end subroutine compute_composite_quadrature_points
+!PN 
+!PN subroutine compute_global_knots( &
+!PN   bc_left, &
+!PN   bc_right, &
+!PN   num_cells, &
+!PN   eta_min, &
+!PN   eta_max, &
+!PN   spline_degree, &
+!PN   knots)
+!PN   sll_int32, intent(in) :: bc_left
+!PN   sll_int32, intent(in) :: bc_right
+!PN   sll_int32, intent(in) :: num_cells
+!PN   sll_real64, intent(in) :: eta_min
+!PN   sll_real64, intent(in) :: eta_max
+!PN   sll_int32, intent(in) :: spline_degree
+!PN   sll_real64, dimension(:), intent(out) :: knots
+!PN   sll_real64 :: delta
+!PN   sll_int32 :: i
+!PN   
+!PN   delta = (eta_max - eta_min)/real(num_cells,f64)
+!PN   
+!PN   
+!PN   !repeated left point
+!PN   do i = 1, spline_degree + 1
+!PN     knots(i) = eta_min
+!PN   enddo
+!PN   !interior points
+!PN   do i = spline_degree+2, num_cells+spline_degree
+!PN     knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
+!PN   enddo
+!PN   !repeated right point
+!PN   do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
+!PN     knots(i) = eta_max
+!PN   enddo
+!PN 
+!PN 
+!PN   if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+!PN     do i = 1, spline_degree+num_cells+1+2*spline_degree
+!PN       knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
+!PN     enddo
+!PN   endif
+!PN 
+!PN end subroutine compute_global_knots
+!PN 
+!PN subroutine compute_source_at_points( &
+!PN   rhs_at_points, &
+!PN   splines_at_points1, &
+!PN   splines_at_points2, &
+!PN   num_cells1, &
+!PN   num_cells2, &
+!PN   num_loc_points1, &
+!PN   num_loc_points2, &
+!PN   spline_degree1, &
+!PN   spline_degree2, &
+!PN   output)
+!PN   
+!PN   sll_real64, dimension(:,:), intent(in) :: rhs_at_points
+!PN   sll_real64, dimension(:,:), intent(in) :: splines_at_points1
+!PN   sll_real64, dimension(:,:), intent(in) :: splines_at_points2
+!PN   sll_int32, intent(in) :: num_cells1
+!PN   sll_int32, intent(in) :: num_cells2
+!PN   sll_int32, intent(in) :: num_loc_points1
+!PN   sll_int32, intent(in) :: num_loc_points2
+!PN   sll_int32, intent(in) :: spline_degree1
+!PN   sll_int32, intent(in) :: spline_degree2
+!PN   sll_real64, dimension(:,:), intent(out) :: output
+!PN   
+!PN   sll_int32 :: num_spl1
+!PN   sll_int32 :: num_spl2
+!PN   sll_int32 :: i
+!PN   sll_int32 :: j
+!PN   sll_int32 :: iloc
+!PN   sll_int32 :: jloc
+!PN   sll_int32 :: ii
+!PN   sll_int32 :: jj
+!PN   
+!PN   num_spl1 = num_cells1+spline_degree1+1
+!PN   num_spl2 = num_cells2+spline_degree2+1
+!PN   
+!PN   output(1:num_spl1,1:num_spl2) = 0._f64
+!PN   
+!PN   do j=1,num_cells2
+!PN     do i=1,num_cells1
+!PN       do ii = 1,spline_degree1+1
+!PN         do iloc = 1,num_loc_points1
+!PN           do jj = 1,spline_degree2+1
+!PN             do jloc = 1,num_loc_points2
+!PN             output(i+ii,j+jj) = &
+!PN               output(i+ii,j+jj) &
+!PN               +splines_at_points1(ii,iloc+num_loc_points1*(i-1)) &
+!PN               *rhs_at_points(iloc+num_loc_points1*(i-1),jloc+num_loc_points2*(j-1)) &
+!PN               *splines_at_points2(jj,jloc+num_loc_points2*(j-1))
+!PN             enddo
+!PN           enddo    
+!PN         enddo    
+!PN       enddo  
+!PN     enddo
+!PN   enddo  
+!PN 
+!PN !  do j=1,num_cells2+spline_degree2+1
+!PN !    do i=1,num_cells1+spline_degree1+1
+!PN !      do ii = 1,spline_degree1+1 !iold+ii=i i-ii>=1 i-ii<=num_cells1
+!PN !        if((ii<=1-i).and.(ii>=i-num_cells1))
+!PN !        do iloc = 1,num_loc_points1
+!PN !          output(i,j) = &
+!PN !            output(i,j) &
+!PN !            +spline_at_points1(ii,iloc+num_cells1*(i-ii-1)) &
+!PN !            *rhs(iloc+num_cells1*(i-ii-1),jloc+num_cells2*(j-jj-1)) &
+!PN !            *spline_at_points2(jj,jloc+num_cells2*(j-jj-1))
+!PN !        enddo    
+!PN !      enddo  
+!PN !    enddo
+!PN !  enddo  
+!PN 
+!PN   
+!PN end subroutine compute_source_at_points
 
 
 end module sll_m_poisson_2d_curvilinear

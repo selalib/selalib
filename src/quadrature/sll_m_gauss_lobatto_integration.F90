@@ -64,7 +64,7 @@ contains
     sll_real64                :: alpha(0:n-1), beta(0:n-1)
     sll_real64                :: de(n), da(n), db(n)
     sll_real64                :: ans
-    sll_real64                :: x
+    !sll_real64                :: x
     sll_real64                :: c1
     sll_real64                :: c2
 
@@ -73,7 +73,8 @@ contains
 
     alpha = 0.0_f64
     do k = 0, n-1
-       beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+       !beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+       beta(k)=real(k,f64)**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
 
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
@@ -91,7 +92,7 @@ contains
     xk = c1*xk + c2
     wk = c1*wk
 
-    ans = 0.0
+    ans = 0.0_f64
     do k=1,n
        ans = ans + f(xk(k))*wk(k)
     end do
@@ -138,9 +139,10 @@ contains
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
     
-    alpha = 0
+    alpha = 0.0_f64
     do k = 0, n-1
-       beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+       !beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+       beta(k)=real(k,f64)**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
     
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
@@ -185,9 +187,10 @@ contains
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
     
-    alpha = 0
+    alpha = 0.0_f64
     do k = 0, n-1
-       beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+       !beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+       beta(k)=real(k,f64)**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
     
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)

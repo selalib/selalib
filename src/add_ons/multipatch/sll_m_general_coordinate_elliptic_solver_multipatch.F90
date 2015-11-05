@@ -422,12 +422,12 @@ sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 
 sll_real64, dimension(2,2) :: jac_mat
 sll_real64, allocatable    :: work1(:,:)
@@ -785,14 +785,11 @@ type(sll_cartesian_mesh_2d), pointer                         :: lm
 sll_int32 :: i,k
 sll_int32 :: j,ierr
 sll_int32 :: patch,sz_coef2,sz_coef1
-type(sll_time_mark)  :: t0 
-double precision :: time
 sll_int32 :: num_pts_g1, num_pts_g2
 class(sll_scalar_field_multipatch_2d),pointer  :: base_field_pointer
 sll_real64, dimension(:,:), pointer :: coeff_rho
 sll_real64, dimension(:), pointer :: rho_coeff_1d
 sll_real64, dimension(:), pointer :: tmp_phi_vec
-sll_int32, dimension(2) :: connectivity
 sll_int32 :: num_coef,i_spline_tot,index
 
 num_pts_g1 = size(es_mp%gauss_pts1,2)
@@ -855,7 +852,7 @@ do patch = 1,es_mp%T%number_patches
       index = es_mp%T%get_spline_global_index(i_spline_tot)
 
       if ( index == 0) then 
-         tmp_phi_vec(num_coef) = 0
+         tmp_phi_vec(num_coef) = 0.0_f64
       else 
          tmp_phi_vec(num_coef) = es_mp%phi_vec(index)
       end if

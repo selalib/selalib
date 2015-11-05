@@ -19,8 +19,8 @@ contains
     sll_int32  :: u
     sll_real64 :: h,k
     
-    k=0
-    h=0
+    k=0.0_f64
+    h=0.0_f64
     m=n
     do while (m>0)
        k = k+1
@@ -39,10 +39,10 @@ contains
 
     m=n
     vandercorput = 0.d0
-    s=1
+    s=1.0_f64
     do while (m>0)
        s=s/p1
-       vandercorput=vandercorput+s*mod(p2*mod(m,p1),p1)
+       vandercorput=vandercorput+s*real(mod(p2*mod(m,p1),p1),f64)
        m=int(m/p1)
     enddo
   end function vandercorput

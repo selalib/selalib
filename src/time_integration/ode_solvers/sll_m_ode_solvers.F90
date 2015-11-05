@@ -23,7 +23,8 @@ contains
     sll_real64 :: f_one
     sll_real64, intent(in)  :: eta
 
-    f_one = 1.0_f64
+    f_one = 1.0_f64 + eta - eta
+
   end function f_one
 
 
@@ -194,7 +195,7 @@ contains
     sll_real64 :: period ! period of periodic domain
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
     sll_real64, dimension(:), pointer        :: b
-    sll_real64, parameter                    :: eps = 1.0e-14  ! small real number
+    sll_real64, parameter                    :: eps = 1.0d-14  ! small real number
     sll_real64 :: tmp
     ! initialize zeros
     zeros(:) = 0.0_f64
@@ -417,7 +418,7 @@ contains
     sll_real64 :: period ! period of periodic domain
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
     sll_real64, dimension(:), pointer        :: b
-    sll_real64, parameter                    :: eps = 1.0e-14  ! small real number
+    sll_real64, parameter                    :: eps = 1.0d-14  ! small real number
     sll_real64 :: tmp
     ! initialize zeros
     zeros(:) = 0.0_f64
@@ -1101,6 +1102,9 @@ contains
 
        SLL_ASSERT((eta_out(i) >= eta_min ) .and. (eta_out(i) <= eta_max)) 
     end do
+
+   return
+   print*, xin !PN ADDED TO AVOID WARNING
   end subroutine rk4_non_unif
 
 

@@ -46,7 +46,7 @@ c
 c-------  pour chaque colonne ik a modifier
 c
       jhk=1
-      do 100 ik=2,neq
+      do ik=2,neq
 c
 c-------  pointeur du haut de la colonne suivante ik+1
 c
@@ -77,7 +77,7 @@ c
 c
 c-------  pour chaque terme place en jck, correspondant a la colonne ij
 c
-      do 30 ij=imin,imax
+      do ij=imin,imax
       jhj1=kld(ij+1)
 c
 c-------  nombre de termes modificatifs du terme place en jck
@@ -95,13 +95,14 @@ c
       c1=scal(vkgs(j1),vkgi(j2),ic)
 17    vkgi(jck)=(vkgi(jck)-c1)/vkgd(ij)
 20    jck=jck+1
-30    jhj=jhj1
+      jhj=jhj1
+      end do
 c
 c-------  modifier le terme diagonal
 c
 40    jck=jhk
       cdiag=vzero
-      do 70 ij=imin1,imax
+      do ij=imin1,imax
       c1=vkgs(jck)
       if(nsym.eq.1) goto 50
       c2=c1/vkgd(ij)
@@ -109,7 +110,8 @@ c
       goto 60
 50    c2=vkgi(jck)
 60    cdiag=cdiag+c1*c2
-70    jck=jck+1
+      jck=jck+1
+      end do
       vkgd(ik)=vkgd(ik)-cdiag
       if (vkgd(ik).eq.0.) goto 800
 c
@@ -119,17 +121,19 @@ c
       if(nsym.ne.1) vu(ik)=vfg(ik)-scal(vkgs(jhk),vu(imin1),lhk)
       if(nsym.eq.1) vu(ik)=vfg(ik)-scal(vkgi(jhk),vu(imin1),lhk)
 100   jhk=jhk1
+      end do
       if(isol.ne.1) goto 9999
 c
 c-------  resolution du systeme diagonal :
 c
       if(nsym.eq.1) goto 120
-      do 110 ik=1,neq
+      do ik=1,neq
       c1=vkgd(ik)
       if (c1.eq.vzero) goto 800
       c2=vu(ik)/c1
       vu(ik)=c2
-110   energ=energ+c1*c2*c2
+      energ=energ+c1*c2*c2
+      end do
 c
 c-------  resolution du systeme triangulaire superieur
 c
@@ -143,9 +147,10 @@ c
       jbk=jhk1-1
       if(jhk.gt.jbk)goto 150
       ij=ik-jbk+jhk-1
-      do 140 jck=jhk,jbk
-      vu(ij)=vu(ij)-vkgs(jck)*c1
-140   ij=ij+1
+      do jck=jhk,jbk
+        vu(ij)=vu(ij)-vkgs(jck)*c1
+        ij=ij+1
+      end do
 150   jhk1=jhk
       goto 130
 c

@@ -137,7 +137,8 @@ contains
     endif
 
     SLL_CLEAR_ALLOCATE(adv%buf(10*num_cells),ierr)
-    SLL_CLEAR_ALLOCATE(adv%ibuf(num_cells),ierr)
+    SLL_ALLOCATE(adv%ibuf(num_cells),ierr)
+    adv%ibuf = 0
     SLL_CLEAR_ALLOCATE(adv%node_pos(-2:num_cells+2),ierr)
     SLL_CLEAR_ALLOCATE(adv%coeffs(-1:num_cells+1),ierr)
     !SLL_CLEAR_ALLOCATE(adv%coeffs(-2:num_cells+2),ierr)

@@ -76,7 +76,7 @@ contains
       sll_real64 :: eta_out
 
       eta_out = (eta-eta_min)/(eta_max-eta_min)      
-      eta_out = eta_out-floor(eta_out)
+      eta_out = eta_out-real(floor(eta_out),kind=f64)
       if(eta_out==1._f64)then
         eta_out = 0._f64
       endif      

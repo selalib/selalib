@@ -44,7 +44,7 @@ ii    = mudl(1)
 
 do  i=2,size(mudl)
 
-  xii = 0
+  xii = 0d0
   imi = ii+1
   ii  = mudl(i)
   id  = i - ii
@@ -55,7 +55,7 @@ do  i=2,size(mudl)
     jmi = jj+1
     jj  = mudl(j)
     jid = j - jj -id
-    s   = 0
+    s   = 0d0
 
     do  kj = max( jmi , imi-jid )  ,  jj-1
       s = s + as( kj ) * as( kj + jid )
@@ -125,7 +125,7 @@ do i=1,ntdl
    ij = ii + 1
    ii = mudl(i)
    kj = i  - ii
-   y  = 0
+   y  = 0d0
    do  il=ij,ii-1
       y = y +  a(il) * bs(il+kj)
    end do
