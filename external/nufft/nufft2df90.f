@@ -174,8 +174,8 @@ c     -------------------------------
          rat = 2.0d0
       endif
       nspread = int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0) + 1
-      nf1 = int(rat*ms)
-      nf2 = int(rat*mt)
+      nf1 = rat*ms
+      nf2 = rat*mt
       if (2*nspread.gt.min(nf1,nf2)) then
          ii = next235(2d0*nspread)
          nf1 = max(nf1, ii) 
@@ -532,7 +532,7 @@ c     ---------------------------------------------------------------
             zz = (cross*fw(iw11+mt/2))*fk(k1,-mt/2)
             fw(2*(nw1+nf2-mt/2)) = real(zz)
             fw(2*(nw1+nf2-mt/2)+1) = imag(zz)
-         endif
+               endif
          do k2 = (mt+1)/2, nf2-mt/2-1
             fw(2*(nw1+k2)) = 0d0
             fw(2*(nw1+k2)+1) = 0d0
@@ -927,16 +927,16 @@ c     ---------------------------------------------------------------
       do k1 = -jb1, jb1
          ii = (nf1/2+k1) + (nf2/2)*nf1
          cross = fw(iw10+abs(k1))
-         zz = cmplx(fw(2*ii),fw(2*ii+1),kind=8)
+               zz = cmplx(fw(2*ii),fw(2*ii+1),kind=8)
          zz = (cross*fw(iw11))*zz
          fw(2*nw1) = real(zz)
          fw(2*nw1+1) = imag(zz)
          do k2 = 1, jb2
-            zz = cmplx(fw(2*(ii+k2*nf1)),fw(2*(ii+k2*nf1)+1),kind=8)
+               zz = cmplx(fw(2*(ii+k2*nf1)),fw(2*(ii+k2*nf1)+1),kind=8)
             zz = (cross*fw(iw11+k2))*zz
             fw(2*(nw1+k2)) = real(zz)
             fw(2*(nw1+k2)+1) = imag(zz)
-            zz = cmplx(fw(2*(ii-k2*nf1)),fw(2*(ii-k2*nf1)+1),kind=8)
+               zz = cmplx(fw(2*(ii-k2*nf1)),fw(2*(ii-k2*nf1)+1),kind=8)
             zz = (cross*fw(iw11+k2))*zz
             fw(2*(nw1+nf2-k2)) = real(zz)
             fw(2*(nw1+nf2-k2)+1) = imag(zz)

@@ -19,7 +19,7 @@ c
       parameter (mx=256*256)
       real(8) xj(mx),yj(mx)
       real(8) sk(mx),tk(mx)
-      real(8) err,pi,eps,salg,ealg
+      real(8) err,pi,eps!,salg,ealg
       parameter (pi=3.141592653589793d0)
       complex(8) cj(mx),cj0(mx),cj1(mx)
       complex(8) fk0(mx),fk1(mx)
@@ -52,9 +52,9 @@ c
          if (i.eq.1) eps=1d-4
          if (i.eq.2) eps=1d-8
          if (i.eq.3) eps=1d-12
-	 print*,' '
-	 print*,' Requested precision eps =',eps
-	 print*,' '
+         print*,' '
+         print*,' Requested precision eps =',eps
+         print*,' '
 c
 c     -----------------------
 c     call 2D Type 1 method
@@ -81,8 +81,8 @@ c      call 2D Type3 method
 c     -----------------------
          nk = ms*mt
          do k1 = 1, nk
-            sk(k1) = 48*(dcos(k1*pi/nk))
-            tk(k1) = 32*(dsin(-pi/2+k1*pi/nk))
+            sk(k1) = 48D0*(dcos(k1*pi/nk))
+            tk(k1) = 32D0*(dsin(-pi/2+k1*pi/nk))
          enddo
 
          call dirft2d3(nj,xj,yj,cj,iflag,nk,sk,tk,fk0)
