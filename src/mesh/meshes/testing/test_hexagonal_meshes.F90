@@ -17,12 +17,16 @@ program test_hexagonal_meshes
   sll_int32                   :: error
   sll_real64                  :: x1
   sll_real64                  :: x2
+  sll_real64                  :: x1_new
+  sll_real64                  :: x2_new
   sll_int32                   :: i
   sll_int32                   :: nei1
   sll_int32                   :: nei2
   sll_int32                   :: nei3
   sll_int32                   :: type
   sll_int32                   :: spline_degree
+  sll_real64,  dimension(2,2) :: transf_matA
+  sll_real64,  dimension(2)   :: transf_vecB
 
   num_cells = 4
   spline_degree = 1
@@ -53,11 +57,19 @@ program test_hexagonal_meshes
   mesh => new_hex_mesh_2d(num_cells)
 
   do i = 1, mesh%num_triangles
-     call mesh%get_neighbours(i, nei1, nei2, nei3)
-     call mesh%cell_type(i, type)
-     print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
+     ! call mesh%get_neighbours(i, nei1, nei2, nei3)
+     ! call mesh%cell_type(i, type)
+     !     print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
+     print *, "element =", i
+     call mesh%hex_to_circ_elmt(i, transf_matA, transf_vecB)
+     print *, transf_matA(:, :)
+     print *, transf_vecB(:)
+     print *, "---------------------------------"
   end do
 
+
+  print *, transf_matA(:, :)
+  print *, transf_vecB(:)
   call delete(mesh)
 
   print *, 'PASSED'
