@@ -11,27 +11,33 @@ program test_operator_splitting_pic_vp_2d2v
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d
   use sll_m_operator_splitting_pic_vp_2d2v
+  use sll_m_poisson_2d_base
   use sll_m_poisson_2d_fft
   use sll_m_poisson_2d_base
   use sll_m_constants, only : &
        sll_pi
+  use sll_m_pic_poisson_base, only : &
+       sll_c_pic_poisson
+  use sll_m_pic_poisson_2d, only : &
+       sll_f_new_pic_poisson_2d
+  use sll_m_collective, only : &
+       sll_boot_collective, sll_halt_collective
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
-  ! Specific particle group
-  class(sll_particle_group_2d2v), pointer :: specific_particle_group 
 
   ! Array for efield
-  sll_real64, pointer :: efield(:,:)
+  !sll_real64, pointer :: efield(:,:)
 
 
   ! Abstract kernel smoother
-  class(sll_kernel_smoother_base), pointer :: kernel_smoother
-  ! Specific kernel smoother
-  class(sll_kernel_smoother_spline_2d), pointer :: specific_kernel_smoother
+  class(sll_c_kernel_smoother), pointer :: kernel_smoother
   
   ! Poisson solver
-  class(poisson_2d_fft_solver), pointer :: poisson_solver 
+  class(sll_poisson_2d_base), pointer :: poisson_solver 
+
+  ! PIC Poisson solver
+  class(sll_c_pic_poisson), pointer :: solver
   
   ! Specific operator splitting
   class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
@@ -52,7 +58,7 @@ program test_operator_splitting_pic_vp_2d2v
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
    
-  !call sll_boot_collective()
+  call sll_boot_collective()
 
   ! Set parameters
   n_particles = 2!10
@@ -65,9 +71,8 @@ program test_operator_splitting_pic_vp_2d2v
   rnd_seed = 10
   
   ! Initialize
-  specific_particle_group => sll_new_particle_group_2d2v(n_particles, &
+  particle_group => sll_new_particle_group_2d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
-  particle_group => specific_particle_group
 
   ! Initial particle information   
   ! Data produce with following call
@@ -95,17 +100,19 @@ program test_operator_splitting_pic_vp_2d2v
 
   domain(:,1) = eta_min
   domain(:,2) = eta_max
-  specific_kernel_smoother => sll_new_smoother_spline_2d(&
+  kernel_smoother => sll_new_smoother_spline_2d(&
          domain, num_cells, n_particles, &
          degree_smoother, SLL_COLLOCATION)
-  kernel_smoother => specific_kernel_smoother
   
   poisson_solver => new_poisson_2d_fft_solver( &
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
-  SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
-  propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, &
-       particle_group, efield)
+
+  solver => sll_f_new_pic_poisson_2d(num_cells, poisson_solver, kernel_smoother)
+
+  !SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
+  propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(solver, &
+       particle_group)
 
 
   call propagator%operatorT(delta_t)
@@ -132,6 +139,9 @@ program test_operator_splitting_pic_vp_2d2v
         passed = .FALSE.
      end if
   end do
+  if (passed .EQV. .FALSE.) then
+     print*, 'Error in operatorT.'
+  end if
 
   call propagator%operatorV(delta_t)
   ! Compare to reference
@@ -157,6 +167,10 @@ program test_operator_splitting_pic_vp_2d2v
      end if
   end do
 
+    if (passed .EQV. .FALSE.) then
+     print*, 'Error in operatorV.'
+  end if
+
   if (passed .EQV. .TRUE.) then
      print*, 'PASSED'
   else
@@ -164,5 +178,5 @@ program test_operator_splitting_pic_vp_2d2v
      stop
   end if
   
-  !call sll_halt_collective()
+  call sll_halt_collective()
 end program test_operator_splitting_pic_vp_2d2v
