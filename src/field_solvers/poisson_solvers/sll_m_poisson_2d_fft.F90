@@ -166,7 +166,7 @@ contains
     sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
     sll_real64                                     :: r
     
-    print*, 'l2norm_squarred not implemented for poisson_2d_fft.'
+    r = sum(coefs_dofs**2)*poisson%solver%dx* poisson%solver%dy
     
   end function l2norm_squarred_2d_fft
   
