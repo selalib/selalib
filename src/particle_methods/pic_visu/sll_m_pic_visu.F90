@@ -332,7 +332,7 @@ sll_int32 :: nbpart
 nbpart = size(xp)
 SLL_ASSERT(nbpart == size(yp))
 SLL_ASSERT(nbpart == size(wp))
-df = 0.0
+df = 0.0_f64
 
 do kp = 1,nbpart
 
@@ -364,7 +364,7 @@ sll_int32 :: nbpart
 nbpart = size(xp)
 SLL_ASSERT(nbpart == size(yp))
 SLL_ASSERT(nbpart == size(wp))
-df = 0.0
+df = 0.0_f64
 
 do kp = 1,nbpart
 
@@ -488,7 +488,7 @@ end subroutine compute_df_m4
 sll_real64 function f_m4( x )
 sll_real64, intent(in) :: x
 if( x .gt. 2. ) then
-   f_m4 = 0.
+   f_m4 = 0._f64
 else if ( x .ge. 1. .and. x .le. 2. ) then
    f_m4 = 0.5 * (2.-x)**2 * (1.-x)
 else if ( x .le. 1. ) then
@@ -632,13 +632,13 @@ print*, "set term x11 3"
 print*, "set logscale y"
 print*, "set title 'Relative Energies'"
 print*, "plot '-'  title 'kinetic' with lines,\"
-if (maxval(electrostatic_energy)/=0) print*, "'-'  title 'electrostatic' with lines,\"
+if (maxval(electrostatic_energy)/=0.0_f64) print*, "'-'  title 'electrostatic' with lines,\"
 print*, "'-'   title 'total' with lines;"
 do k = 2, timesteps
    print*, (k-1)*timestepwidth, kinetic_energy(k)/maxval(kinetic_energy)
 enddo
 print*, "e"
-if (maxval(electrostatic_energy)/=0) then
+if (maxval(electrostatic_energy)/=0.0_f64) then
 do k = 2, timesteps
    print*, (k-1)*timestepwidth, electrostatic_energy(k)/maxval(electrostatic_energy)
 enddo
@@ -675,7 +675,7 @@ print*, "plot '-' using 1:2 title 'Relative Impulse Error' with lines"
 do k = 2, timesteps
     if (impulse(1)/=0) then
     print*,  (k-1)*timestepwidth,  abs(impulse(k)-impulse(1))/abs(impulse(1))
-   else if (maxval(abs(impulse))/=0) then
+   else if (maxval(abs(impulse))/=0.0_f64) then
     print*,  (k-1)*timestepwidth,  abs(impulse(k)-impulse(1))/maxval(abs(impulse))
     else
     print*,  (k-1)*timestepwidth,  abs(impulse(k)-impulse(1))

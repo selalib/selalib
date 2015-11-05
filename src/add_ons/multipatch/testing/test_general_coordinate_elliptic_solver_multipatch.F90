@@ -116,7 +116,7 @@ do ipatch= 0,num_patches-1
        val_b1   = func_zero( x1, x2)
        val_b2   = func_zero( x1, x2)
        val_c    = func_zero( x1, x2)
-       val_rho  = -4*9*exp(-9*(x1**2+x2**2))+(2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))
+       val_rho  = -4d0*9d0*exp(-9*(x1**2+x2**2))+(2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))
        val_phi  = 0.0_f64
        val_phi_exacte = exp(-9*(x1**2+x2**2))
        call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 

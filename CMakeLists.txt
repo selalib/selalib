@@ -81,6 +81,7 @@ INCLUDE(FFTConfig)
 INCLUDE(HDF5Config)
 INCLUDE(DoxygenConfig)
 INCLUDE(CTest)
+INCLUDE(PreprocessorTarget)
 
 IF(MPI_ENABLED)
   INCLUDE(MPIConfig)
@@ -127,12 +128,14 @@ FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
 
-ADD_SUBDIRECTORY(external)
 
 IF(BUILD_PACKAGE)
+  ADD_SUBDIRECTORY(external/fftpack)
+  ADD_SUBDIRECTORY(external/mudpack)
   ADD_SUBDIRECTORY(package)
   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 ELSE()
+  ADD_SUBDIRECTORY(external)
   ADD_SUBDIRECTORY(src)
 ENDIF(BUILD_PACKAGE)
 
@@ -197,3 +200,9 @@ ADD_CUSTOM_TARGET( clean_outputs
    COMMAND find . -name *.h5  -delete
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
+
+IF(BUILD_PACKAGE)
+  MESSAGE(STATUS "Type make release to create an archive of selalib")
+ELSE()
+  ADD_PREPROCESSOR_TARGET()
+ENDIF()

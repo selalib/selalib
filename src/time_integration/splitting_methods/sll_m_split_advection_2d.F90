@@ -341,13 +341,13 @@ contains
     sll_real64 :: eta1_min
     sll_real64 :: eta1_max
     sll_real64 :: mean
-    sll_real64 :: eta1
-    sll_real64 :: eta2
-    sll_real64 :: xi_max
+    !sll_real64 :: eta1
+    !sll_real64 :: eta2
+    !sll_real64 :: xi_max
     sll_real64 :: delta_eta1
-    sll_real64 :: lperiod
-    sll_real64 :: xi_new
-    sll_real64 :: mean_init
+    !sll_real64 :: lperiod
+    !sll_real64 :: xi_new
+    !sll_real64 :: mean_init
     
     n1 = this%mesh_2d%num_cells1+1
     n2 = this%mesh_2d%num_cells2+1
@@ -664,9 +664,9 @@ contains
     sll_real64 :: eta2_min
     sll_real64 :: eta2_max
     sll_real64 :: mean
-    sll_real64 :: mean_init
-    sll_real64 :: eta1
-    sll_real64 :: eta2
+    !sll_real64 :: mean_init
+    !sll_real64 :: eta1
+    !sll_real64 :: eta2
 
     n1 = this%mesh_2d%num_cells1+1
     n2 = this%mesh_2d%num_cells2+1

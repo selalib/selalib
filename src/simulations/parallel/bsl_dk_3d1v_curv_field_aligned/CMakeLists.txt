@@ -1,0 +1,28 @@
+set(    SIM_NAME bsl_dk_3d1v_curv_field_aligned )
+set(   TEST_NAME "sim_${SIM_NAME}"              )
+set(  EXECUTABLE "${TEST_NAME}"                 )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}"   )
+
+file( GLOB INPUT_FILES "*.nml"         )
+# no post proc for the moment 
+#file( GLOB   POST_PROC "*.dat" "*.gnu" )
+
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+TARGET_LINK_LIBRARIES( 
+  ${EXECUTABLE} 
+  sll_dk_curv_mesh
+  sll_sim_parallel )
+
+INSTALL( TARGETS ${EXECUTABLE} DESTINATION ${INSTALL_DIR} )
+INSTALL( FILES  ${INPUT_FILES} DESTINATION ${INSTALL_DIR} )
+#INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+
+# no ctest for the moment
+# Ctest
+#IF(BUILD_TESTING)
+#  FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+#  SET( ARGS ${CMAKE_CURRENT_BINARY_DIR}/dksim4d_field_aligned_polar.nml )
+#  ADD_MPI_TEST( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
+#  SET_TESTS_PROPERTIES( ${TEST_NAME} PROPERTIES 
+#    PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
+#ENDIF(BUILD_TESTING)
