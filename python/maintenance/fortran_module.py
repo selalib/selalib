@@ -17,7 +17,7 @@ TODO
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 02 Nov 2015
+# Last revision: 05 Nov 2015
 #
 from __future__ import print_function
 from fparser    import statements, typedecl_statements, block_statements
@@ -94,19 +94,6 @@ def remove_fortran_logicals( text ):
     return text
 
 #------------------------------------------------------------------------------
-def extract_associated_symbols( text ):
-    """
-    Extract new (local) symbols defined by an 'associate' declaration.
-
-    """
-    text = remove_fortran_strings( text ).replace( 'associate','')[1:-1]
-    symbols = []
-    for s in text.split( ',' ):
-        v = s.partition( '=>' )[0].strip()
-        symbols.append( v )
-    return symbols
-
-#------------------------------------------------------------------------------
 def get_external_symbols( content, fglobals=set() ):
     """ TODO: this should include
            1) all used variables
@@ -127,8 +114,13 @@ def get_external_symbols( content, fglobals=set() ):
         if hasattr( item, 'content' ):
             # Get associated symbols from 'associate' block
             if isinstance( item, block_statements.Associate ):
-                fassociations  = extract_associated_symbols( item.item.line )
-                fglobals_block = set.union( fglobals, fassociations )
+                assoc_syms = [a.associate_name for a in item.association_list]
+                fglobals_block = set.union( fglobals, assoc_syms )
+            # Get associated symbol (if any) from 'select type' block
+            elif isinstance( item, block_statements.SelectType ):
+                if item.associate_name:
+                    assoc_syms = [item.associate_name]
+                    fglobals_block = set.union( fglobals, assoc_syms )
             else:
                 fglobals_block = fglobals
             # Recursion: find external symbols in block contents
