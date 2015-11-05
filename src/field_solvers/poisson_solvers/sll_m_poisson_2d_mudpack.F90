@@ -136,6 +136,13 @@ private
     !> PLEASE ADD DOCUMENTATION
     procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_mudpack
       
+    !> Compute the squarred L_2 for given coefficients
+    procedure :: &
+         l2norm_squarred => l2norm_squarred_2d_mudpack
+    !> Compute the right hand side from a given function
+    procedure :: &
+         compute_rhs_from_function => compute_rhs_from_function_2d_mudpack
+
   end type poisson_2d_mudpack
 
   !> PLEASE ADD DOCUMENTATION
@@ -1230,6 +1237,27 @@ contains
     !call solve( poisson%poiss, E1, E2, rho)
       
   end subroutine compute_E_from_rho_2d_mudpack
+
+
+  function l2norm_squarred_2d_mudpack(poisson, coefs_dofs) result(r)
+    class( poisson_2d_mudpack), intent(in)         :: poisson !< Poisson solver object.
+    sll_real64 , intent(in)                                    :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    print*, 'l2norm_squarred not implemented for poisson_2d_mudpack.'
+    
+  end function l2norm_squarred_2d_mudpack
+  
+  subroutine compute_rhs_from_function_2d_mudpack(poisson, func, coefs_dofs)
+    class( poisson_2d_mudpack)                    :: poisson !< Maxwell solver object.
+    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for poisson_2d_mudpack.'
+    
+  end subroutine compute_rhs_from_function_2d_mudpack
+
+
   
 end module sll_m_poisson_2d_mudpack
 

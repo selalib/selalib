@@ -54,6 +54,14 @@ private
     procedure, public, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_fft
     !> Compute electric fields solving the Poisson equation
     procedure, public, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_fft
+
+    !> Compute the squarred L_2 for given coefficients
+    procedure :: &
+         l2norm_squarred => l2norm_squarred_2d_fft
+    !> Compute the right hand side from a given function
+    procedure :: &
+         compute_rhs_from_function => compute_rhs_from_function_2d_fft
+    
       
   end type poisson_2d_fft_solver
 
@@ -151,5 +159,27 @@ contains
     call solve( poisson%solver, E1, E2, rho)
       
   end subroutine compute_E_from_rho_2d_fft
+
+
+  function l2norm_squarred_2d_fft(poisson, coefs_dofs) result(r)
+    class( poisson_2d_fft_solver) , intent(in)        :: poisson !< Poisson solver object.
+    sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    print*, 'l2norm_squarred not implemented for poisson_2d_fft.'
+    
+  end function l2norm_squarred_2d_fft
+  
+  subroutine compute_rhs_from_function_2d_fft(poisson, func, coefs_dofs)
+    class( poisson_2d_fft_solver)                    :: poisson !< Maxwell solver object.
+    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for poisson_2d_fft.'
+    
+  end subroutine compute_rhs_from_function_2d_fft
+
+
+
   
 end module sll_m_poisson_2d_fft
