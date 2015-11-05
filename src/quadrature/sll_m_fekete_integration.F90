@@ -32,10 +32,7 @@ module sll_m_fekete_integration
   end interface
 #endif
 
-  !> Integrate numerically with Fekete quadrature formula
-  interface fekete_integrate
-     module procedure fekete_integral
-  end interface fekete_integrate
+
 contains
 
 

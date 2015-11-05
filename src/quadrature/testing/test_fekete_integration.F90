@@ -3,7 +3,12 @@ program test_fekete_integration
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_fekete_integration
+  use sll_m_fekete_integration, only: &
+       fekete_integral, &
+       write_all_django_files, &
+       fekete_points_and_weights, &
+       fekete_order_num, &
+       sll_hex_mesh_2d
   use test_function_module, only: &
       one_2D
 
@@ -14,10 +19,6 @@ program test_fekete_integration
   sll_int32 :: n
   sll_int32 :: ierr
   sll_int32 :: degree
-
-  ! sll_real64, dimension(10) :: x, w
-  ! sll_real64, dimension(:,:), allocatable :: d
-  ! sll_real64, dimension(:,:), allocatable :: dlag
 
   character(len=18) :: string
 
@@ -54,6 +55,7 @@ program test_fekete_integration
   write(*,"(/,a)") "           x                   y                    w"
   xyw = fekete_points_and_weights(pxy1, rule)
 
+  write (string, '( "(",I2,"f20.15)" )' )  n
   do j = 1, n
      write(*, string) (xyw(i,j), i = 1, 3)
   end do
