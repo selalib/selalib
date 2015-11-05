@@ -19,10 +19,10 @@ program memory_tester
   print *, 'array just after allocation: '
   print *, b(:,:,:)
   print *, 'change the values of the elements...'
-  forall(i=1:4, j=1:3, k=1:2) b(i,j,k) = 7 ! initialize manually...
+  forall(i=1:4, j=1:3, k=1:2) b(i,j,k) = 7. ! initialize manually...
   print *, b(:,:,:)
   print *,'clear the array with SLL_INIT_ARRAY():'
-  SLL_INIT_ARRAY(b,0)
+  SLL_INIT_ARRAY(b,0.)
   print *, 'array after clearing:'
   print *, b(:,:,:)
   print *, 'allocate and initialize to zero a large array'

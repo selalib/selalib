@@ -97,8 +97,8 @@ contains
     sll_int32                :: ncy      !< y cell number
     sll_real64               :: Lx       !< Domain x length
     sll_real64               :: Ly       !< Domain y length
-    sll_int64                :: prank    !< processor rank
-    sll_int64                :: psize    !< processor size
+    sll_int32                :: prank    !< processor rank
+    sll_int32                :: psize    !< processor size
     sll_int32                :: error    !< error code
     sll_int32                :: nx_loc   !< x local points
     sll_int32                :: ny_loc   !< y local points
@@ -182,7 +182,7 @@ contains
     sll_int32                  :: nx_loc   !< local  x cell number
     sll_int32                  :: ny_loc   !< local  y cell number
     sll_int32                  :: prank
-    sll_int64                  :: psize
+    sll_int32                  :: psize
     sll_real64, intent(in)     :: dt       !< time step
 
     sll_real64                 :: dt_mu
@@ -230,7 +230,7 @@ contains
     sll_int32                                 :: nx_loc !< local  x cell number
     sll_int32                                 :: ny_loc !< local  y cell number
     sll_int32                                 :: prank
-    sll_int64                                 :: psize
+    sll_int32                                 :: psize
 
     sll_real64                                :: dt_e
     sll_int32                                 :: i, j
@@ -292,7 +292,7 @@ contains
     sll_int32                  :: nx_loc       !< local  x cell number
     sll_int32                  :: ny_loc       !< local  y cell number
     sll_int32                  :: prank
-    sll_int64                  :: psize
+    sll_int32                  :: psize
     sll_real64, intent(in)     :: dt           !< time step
 
     sll_real64                 :: dt_e
@@ -345,7 +345,7 @@ contains
     sll_int32                                 :: nx_loc !< local  x cell number
     sll_int32                                 :: ny_loc !< local  y cell number
     sll_int32                                 :: prank
-    sll_int64                                 :: psize
+    sll_int32                                 :: psize
 
     sll_real64                                :: dt_mu
     sll_int32                                 :: i, j

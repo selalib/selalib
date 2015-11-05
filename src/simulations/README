@@ -1,0 +1,101 @@
+We put here new and corresponding old names of subdirectories
+[C10 task] of bootcamp 19-23.10.2015
+author: Michel Mehrenberger
+reviewer: Katharina Kormann
+
+files:
+
+#################################################
+  
+  SIMNAME/sll_m_sim_SIMNAME.F90
+
+<<
+module sll_m_sim_SIMNAME
+
+end module sll_m_sim_SIMNAME
+>>
+#################################################
+  
+  SIMNAME/sim_SIMNAME.F90
+
+<<
+program sim_SIMNAME
+use sll_m_sim_SIMNAME
+end program sim_SIMNAME
+>>
+#################################################
+  
+  SIMNAME/CMakeLists.txt
+
+<<
+set(    SIM_NAME SIMNAME                      )
+set(   TEST_NAME "sim_${SIM_NAME}"            )
+set(  EXECUTABLE "${TEST_NAME}"               )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
+
+file( GLOB INPUT_FILES "*.nml"         )
+file( GLOB   POST_PROC "*.dat" "*.gnu" )
+
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel )
+
+INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
+INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+>>
+#################################################
+
+
+
+PARALLEL:
+
+DONE bsl_gc_2d0v_curv: sim_2d_guiding_center_curvilinear 
+DONE bsl_gk_3d1v_polar_multi_mu: sim_4d_drift_kinetic_polar_multi_mu
+DONE bsl_gk_3d1v_polar_one_mu: sim_4d_drift_kinetic_polar_one_mu
+DONE bsl_dk_3d1v_curv: sim_4d_drift_kinetic_hybrid
+DONE bsl_dk_3d1v_curv_field_aligned: sl_dk_3d1v_curv_field_aligned
+DONE bsl_dk_3d1v_polar: sim_4d_drift_kinetic_polar
+DONE bsl_dk_3d1v_polar_field_aligned: sim_4d_drift_kinetic_field_aligned_polar
+DONE bsl_va_1d1v_cart_spectral: sim_sl_va_1d1v_cart_spectral
+DONE bsl_va_1d1v_cart_berk_breizman: sim_sl_va_1d1v_cart_berk_breizman
+DONE bsl_vp_1d1v_cart: sim_2d_vlasov_poisson_cartesian
+DONE bsl_vp_1d1v_cart_two_species: sim_2d_vlasov_poisson_cartesian
+DONE bsl_vp_1d1v_cart_no_split: sim_2d_vlasov_poisson_no_splitting
+DONE bsl_vp_2d2v_cart: sim_4d
+DONE bsl_vp_2d2v_cart_poisson_serial: sim_4d_vlasov_poisson_cartesian
+DONE bsl_vp_2d2v_cart_multipatch: sim_sl_vp_2d2v_cart_multipatch
+DONE bsl_vp_2d2v_cart_sparsegrid: sim_sl_vp_2d2v_cart_sparsegrid
+DONE bsl_vp_2d2v_curv: sim_sl_vp_2d2v_curv_general_elliptic_solver
+DONE bsl_vp_2d2v_polar: sim_4d_vlasov_poisson_polar
+DONE bsl_vp_3d3v_cart: sim_6d
+DONE bsl_vp_3d3v_cart_sparsegrid: sim_sl_vp_3d3v_cart_sparsegrid
+DONE eul_vp_2d2v_cart_fv: eulerian-finite-volume
+DONE pic_gc_2d0v_cart_optim: sim_2d_guiding_center_PIC_cartesian
+DONE pic_vm_1d2v_cart: sim_pic_vm_1d2v_cart
+DONE pic_vp_1d1v_cart: sim_pic1d1v_vlasov-poisson_periodic
+DONE pic_vp_2d2v_cart: sim_pic_vp_2d2v_cart
+DONE pic_vp_2d2v_cart_optim: sim_4d_vlasov_poisson_PIC_cartesian
+DONE pic_vp_2d2v_cart_optim_push: sim_4d_vlasov_poisson_PIC_cartesian
+DONE pic_vp_2d2v_cart_remapped: sim_4d_vlasov_poisson_generic_PIC_cartesian
+DONE pif_vp_ndnv_cart: sim_general_vlasov_poisson_pif
+
+SEQUENTIAL:
+
+DONE bsl_ad_2d0v_cart: sim_2d_analytic_field_cartesian
+DONE bsl_ad_2d0v_curv: sim_2d_analytic_field_curvilinear
+DONE bsl_gc_2d0v_cart: sim_2d_guiding_center_cartesian
+DONE bsl_gc_2d0v_hex: sim_2d_guiding_center_hexagonal
+DONE bsl_gc_2d0v_hex_hermite: sim_2d_guiding_center_hexagonal
+DONE bsl_gc_2d0v_hex_splines: sim_2d_guiding_center_hexagonal
+DONE bsl_ad_2d0v_hex_rot: sim_2d_guiding_center_hexagonal
+DONE bsl_ad_2d0v_polar_rot: sim_2d_guiding_center_hexagonal
+DONE bsl_gc_2d0v_polar: sim_2d_guiding_center_polar
+DONE bsl_gc_2d0v_polar_one_mu: sim_2d_guiding_center_polar_one_mu
+DONE eul_vp_1d1v_cart_fe_ft: sim_VlasovPoisson1D_fourier_FEM
+DONE bsl_vp_1d1v_cart_serial: sim_VlasovPoisson1D_various_programs
+DONE bsl_vp_1d1v_cart_deltaf: sim_VlasovPoisson1D_various_programs
+DONE bsl_vp_1d1v_cart_micro_macro: sim_VlasovPoisson1D_various_programs
+DONE fsl_ad_2d0v_curv: sim_curvilinear_SL
+DONE fsl_ad_2d0v_polar: sim_polar_SL
+DONE bsl_vp_2d2v_cart_fullsparsegrid: sim_sl_vp_2d2v_cart_fullsparsegrid
+
+ 

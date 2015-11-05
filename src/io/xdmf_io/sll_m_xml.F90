@@ -514,6 +514,8 @@ contains
   subroutine default_delete( self )
     class(t_default_text_data_printer), intent(inout) :: self
 
+    return
+    print*, storage_size(self)
     ! Do nothing for now
   end subroutine
 

@@ -304,7 +304,7 @@ contains
     yd = eta2_max
 
     !set for no error control flag
-    tolmax = 0.0
+    tolmax = 0.0_f64
 
 !    write(*,101) (iprm(i),i=1,15)
 !    write(*,102) (poisson%mgopt(i),i=1,4)
@@ -831,7 +831,7 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0
+   alfa = -1.0d0
    gbdy = px + alfa*pe
    return
 end if
@@ -839,7 +839,7 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0
+   alfa = 1.0d0
    gbdy = py + alfa*pe
    return
 end if

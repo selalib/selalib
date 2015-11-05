@@ -93,7 +93,7 @@ contains
     sll_real64                              :: d, d1, d2
     sll_int32                               :: n, i, sign_of_a=0
 
-    if ( abs(a) <= 2*(abs(b)+abs(c)) ) then   
+    if ( abs(a) <= 2d0*(abs(b)+abs(c)) ) then   
       print*, 'a, b, and c must be such that: |a| > 2(|b|+|c|)'
       print*, a, b, c
       print*, 'Exiting...'
@@ -109,8 +109,8 @@ contains
        sign_of_a = int(a/abs(a))
     endif
 
-    p = (a-2*c)/4 + sign_of_a*sqrt(sign_of_a*(a-2*c)* &
-                     sqrt(s)+t)/2 + sign_of_a*sqrt(s)/2
+    p = (a-2*c)/4 + real(sign_of_a,f64)*sqrt(sign_of_a*(a-2*c)* &
+                     sqrt(s)+t)/2d0 + real(sign_of_a,f64)*sqrt(s)/2d0
     l1 = b/(p+c)
     l2 = c/p
 
