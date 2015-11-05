@@ -217,7 +217,7 @@ c
       i = 2
       l1 = 1
       do 110 k1=1,nf
-         ip = int(ifac(k1+2))
+         ip = ifac(k1+2)
          ld = 0
          l2 = l1*ip
          ido = n/l2
