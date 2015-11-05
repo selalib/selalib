@@ -120,6 +120,8 @@ module sll_m_hexagonal_meshes
      procedure, pass(mesh) :: get_neighbours
      procedure, pass(mesh) :: hex_to_circ_pt
      procedure, pass(mesh) :: hex_to_circ_elmt
+     procedure, pass(mesh) :: ref_to_hex_elmt
+     procedure, pass(mesh) :: ref_to_circ_elmt
      procedure, pass(mesh) :: display => display_hex_mesh_2d
      procedure, pass(mesh) :: write_field_hex_mesh_xmf
      procedure, pass(mesh) :: delete => delete_hex_mesh_2d
@@ -1661,6 +1663,7 @@ contains
     Bp1(1, 1) = xp_ver1
     Bp1(2, 1) = xp_ver2
     Bp1(3, 1) = xp_ver3
+    ! ... 2nd RHS vector:
     Bp2(1, 1) = yp_ver1
     Bp2(2, 1) = yp_ver2
     Bp2(3, 1) = yp_ver3
@@ -1668,6 +1671,11 @@ contains
     ! Now we solve the system :
     error_flag = 0
     call DGESV( 3, 1, P, 3, pivot, Bp1, 3, error_flag )
+    pivot(:) = 0
+    P(1, 1:2) = (/ x_ver1, y_ver1 /)
+    P(2, 1:2) = (/ x_ver2, y_ver2 /)
+    P(3, 1:2) = (/ x_ver3, y_ver3 /)
+    P(:, 3)   = 1._f64
     call DGESV( 3, 1, P, 3, pivot, Bp2, 3, error_flag2 )
     if ((error_flag .ne. 0).or.(error_flag2 .ne. 0)) then
        print *, "LAPACK error flag for 1st sys = ", error_flag
@@ -1682,8 +1690,89 @@ contains
 
     transf_vecB(1) = Bp1(3, 1)
     transf_vecB(2) = Bp2(3, 1)
-    print *, "Error flag =", error_flag
+
   end subroutine hex_to_circ_elmt
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation ref->hex for an element.
+  !> @details Given an element in the hexagonal mesh, this subroutine computes
+  !> the affine transformation that maps the reference triangle to the element
+  !> in the hexmesh. This transformation can be written in the form AX + B = X'.
+  !> Reference triangle vertices: (0,0) (0, 1) (1,0)
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+  !> @param[OUT] transf_matA real matrix that contains the A matrix.
+  !> @param[OUT] transf_vecB real vector that contains the B vector.
+  subroutine ref_to_hex_elmt(mesh, i_elmt, transf_matA, transf_vecB)
+    class(sll_hex_mesh_2d),     intent(in)  :: mesh
+    sll_int32,                  intent(in)  :: i_elmt
+    sll_real64, dimension(2,2), intent(out) :: transf_matA
+    sll_real64, dimension(2),   intent(out) :: transf_vecB
+    ! Local
+    sll_int32  :: e1
+    sll_int32  :: e2
+    sll_int32  :: e3
+    sll_real64 :: x1, y1
+    sll_real64 :: x_ver1, y_ver1
+    sll_real64 :: x_ver2, y_ver2
+    sll_real64 :: x_ver3, y_ver3
+
+    ! We get the cells center coordinates in order to get its vertices
+    x1 = mesh%center_cartesian_coord(1, i_elmt)
+    y1 = mesh%center_cartesian_coord(2, i_elmt)
+    call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+
+    ! We get the vertices coordinates
+    x_ver1 = mesh%cartesian_coord(1, e1)
+    y_ver1 = mesh%cartesian_coord(2, e1)
+    x_ver2 = mesh%cartesian_coord(1, e2)
+    y_ver2 = mesh%cartesian_coord(2, e2)
+    x_ver3 = mesh%cartesian_coord(1, e3)
+    y_ver3 = mesh%cartesian_coord(2, e3)
+
+    ! We fill the matrices A and B:
+    transf_vecB(1:2) = (/ x_ver1, y_ver1 /)
+    transf_matA(1,1) = x_ver2 - x_ver1
+    transf_matA(1,2) = x_ver3 - x_ver1
+    transf_matA(2,1) = y_ver2 - y_ver1
+    transf_matA(2,2) = y_ver3 - y_ver1
+
+  end subroutine ref_to_hex_elmt
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation ref->circ for an element.
+  !> @details Given an element in the hexagonal mesh, this subroutine computes
+  !> the affine transformation that maps the reference triangle to the element
+  !> after mapping the hexagon circumscribed circle. This transformation can be
+  !> written in the form AX + B = X', as it is a combination of ref_to_hex_elmt
+  !> and hex_to_circ_elmt.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+  !> @param[OUT] transf_matA real matrix that contains the A matrix.
+  !> @param[OUT] transf_vecB real vector that contains the B vector.
+  subroutine ref_to_circ_elmt(mesh, i_elmt, transf_matA, transf_vecB)
+    class(sll_hex_mesh_2d),     intent(in)  :: mesh
+    sll_int32,                  intent(in)  :: i_elmt
+    sll_real64, dimension(2,2), intent(out) :: transf_matA
+    sll_real64, dimension(2),   intent(out) :: transf_vecB
+    ! Local
+    sll_real64, dimension(2,2) :: transf_matA1
+    sll_real64, dimension(2)   :: transf_vecB1
+    sll_real64, dimension(2,2) :: transf_matA2
+    sll_real64, dimension(2)   :: transf_vecB2
+
+    ! To compute the transformation ref->circ we compute first the
+    ! transformations ref->hex then hex->circ:
+    call mesh%ref_to_hex_elmt(i_elmt, transf_matA1, transf_vecB1)
+    call mesh%hex_to_circ_elmt(i_elmt, transf_matA2, transf_vecB2)
+
+    ! To get the composition of two linear combinations, we know that:
+    ! A = A2*A1 B=A2*B1+B2
+    transf_matA = MATMUL(transf_matA2, transf_matA1)
+    transf_vecB = MATMUL(transf_matA2, transf_vecB1) + transf_vecB2
+
+  end subroutine ref_to_circ_elmt
+
 
   !-----------------------------------------------------------------------------
   !> @brief Displays hexagonal mesh in terminal
@@ -1716,11 +1805,6 @@ contains
     character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
     character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
     sll_real64 :: x1, y1
-    sll_real64 :: x_ver1, y_ver1
-    sll_real64 :: x_ver2, y_ver2
-    sll_real64 :: x_ver3, y_ver3
-    sll_real64 :: a11, a12, a21, a22
-    sll_real64 :: b1, b2
     sll_real64 :: scale
     sll_int32  :: e1, e2, e3
     sll_int32  :: temp_e
@@ -1736,6 +1820,8 @@ contains
     sll_int32  :: dirichlet
     sll_int32  :: type
     sll_int32,  parameter :: out_unit=20
+    sll_real64, dimension(2,2) :: matA
+    sll_real64, dimension(2)   :: vecB
 
     ! Writing the nodes file....................
     open (unit=out_unit,file=name_nodes,action="write",status="replace")
@@ -1803,20 +1889,12 @@ contains
        end if
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
        !... we write the coordinate transformation (*)
-       x_ver1 = mesh%cartesian_coord(1, e1)
-       y_ver1 = mesh%cartesian_coord(2, e1)
-       x_ver2 = mesh%cartesian_coord(1, e2)
-       y_ver2 = mesh%cartesian_coord(2, e2)
-       x_ver3 = mesh%cartesian_coord(1, e3)
-       y_ver3 = mesh%cartesian_coord(2, e3)
-       b1  = x_ver1
-       b2  = y_ver1
-       a11 = x_ver2 - x_ver1
-       a12 = x_ver3 - x_ver1
-       a21 = y_ver2 - y_ver1
-       a22 = y_ver3 - y_ver1
+       ! Transformation
+       call mesh%ref_to_hex_elmt(i, matA, vecB)
+
        write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
-            a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
+            matA(1,1), ",", matA(1,2), ",", matA(2,1), ",", matA(2,2), ",", &
+            vecB(1), ",", vecB(2)
     end do
     print *, ""
     close(out_unit)
