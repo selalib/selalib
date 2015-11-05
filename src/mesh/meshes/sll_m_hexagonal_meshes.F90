@@ -23,9 +23,11 @@
 module sll_m_hexagonal_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_errors.h"
 
   use sll_m_constants, only : &
-       sll_sqrt3
+       sll_sqrt3, &
+       sll_epsilon_0
   use sll_m_meshes_base, only : &
        sll_mesh_2d_base
   use sll_m_tri_mesh_xmf, only : &
@@ -116,6 +118,8 @@ module sll_m_hexagonal_meshes
      procedure, pass(mesh) :: write_hex_mesh_2d
      procedure, pass(mesh) :: write_hex_mesh_mtv
      procedure, pass(mesh) :: get_neighbours
+     procedure, pass(mesh) :: hex_to_circ_pt
+     procedure, pass(mesh) :: hex_to_circ_elmt
      procedure, pass(mesh) :: display => display_hex_mesh_2d
      procedure, pass(mesh) :: write_field_hex_mesh_xmf
      procedure, pass(mesh) :: delete => delete_hex_mesh_2d
@@ -1550,8 +1554,138 @@ contains
     end if
   end function change_elements_notation
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation hex->circ for a point.
+  !> @details Given a point in the hexagonal mesh, this subroutine computes the
+  !> coordinates it would have if mapped to the circle circumscribed to the hex.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] x real the x-coordinate of point to be mapped
+  !> @param[IN] y real the y-coordinate of point to be mapped
+  !> @param[OUT] x_new real the x-coordinate of mapped point
+  !> @param[OUT] y_new real the y-coordinate of mapped point
+  subroutine hex_to_circ_pt(mesh, x, y, x_new, y_new)
+    class(sll_hex_mesh_2d), intent(in)  :: mesh
+    sll_real64,             intent(in)  :: x
+    sll_real64,             intent(in)  :: y
+    sll_real64,             intent(out) :: x_new
+    sll_real64,             intent(out) :: y_new
+    ! Local
+    sll_real64 :: radius
+    sll_real64 :: dist_to_origin
+
+    dist_to_origin = SQRT(x**2 + y**2)
+
+    if ((x .eq. 0._f64).or.(ABS(y)/ABS(x) .gt. 1./sll_sqrt3)) then
+       radius = ABS(y) + 1._f64/sll_sqrt3*ABS(x)
+    else
+       radius = 2.*sll_sqrt3/3.*ABS(x)
+    end if
+    if (dist_to_origin .le. sll_epsilon_0) then
+       x_new = 0._f64
+       y_new = 0._f64
+    else
+       x_new = x * radius/dist_to_origin
+       y_new = y * radius/dist_to_origin
+    end if
+  end subroutine hex_to_circ_pt
+
 
   !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation hex->circ for an element.
+  !> @details Given an element in the hexagonal mesh, this subroutine computes
+  !> the affine transformation that maps the element to the circle circumscribed
+  !> to the hex. This transformation can be written in the form AX + B = X'.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+  !> @param[OUT] transf_matA real matrix that contains the A matrix.
+  !> @param[OUT] transf_vecB real vector that contains the B vector.
+  subroutine hex_to_circ_elmt(mesh, i_elmt, transf_matA, transf_vecB)
+    class(sll_hex_mesh_2d),     intent(in)  :: mesh
+    sll_int32,                  intent(in)  :: i_elmt
+    sll_real64, dimension(2,2), intent(out) :: transf_matA
+    sll_real64, dimension(2),   intent(out) :: transf_vecB
+    ! Local
+    sll_real64 :: x_ver1, y_ver1
+    sll_real64 :: x_ver2, y_ver2
+    sll_real64 :: x_ver3, y_ver3
+    sll_real64 :: xp_ver1, yp_ver1
+    sll_real64 :: xp_ver2, yp_ver2
+    sll_real64 :: xp_ver3, yp_ver3
+    sll_real64 :: ccx,  ccy
+    sll_int32  :: e1
+    sll_int32  :: e2
+    sll_int32  :: e3
+    sll_int32  :: error_flag
+    sll_int32  :: error_flag2
+    sll_real64, dimension(3, 3) :: P
+    sll_real64, dimension(3, 1) :: Bp1
+    sll_real64, dimension(3, 1) :: Bp2
+    sll_int32,  dimension(3)    :: pivot
+
+    ! Getting the indices of the vertices, have to compute first the center coos
+    ccx = mesh%center_cartesian_coord(1, i_elmt)
+    ccy = mesh%center_cartesian_coord(2, i_elmt)
+    call get_cell_vertices_index(ccx, ccy, mesh, e1, e2, e3)
+
+    ! Getting the coordinates of the vertices of the element (in the hexmesh)
+    x_ver1 = mesh%cartesian_coord(1, e1)
+    y_ver1 = mesh%cartesian_coord(2, e1)
+    x_ver2 = mesh%cartesian_coord(1, e2)
+    y_ver2 = mesh%cartesian_coord(2, e2)
+    x_ver3 = mesh%cartesian_coord(1, e3)
+    y_ver3 = mesh%cartesian_coord(2, e3)
+
+    ! Getting the coordinates of the mapped triangle
+    call mesh%hex_to_circ_pt(x_ver1, y_ver1, xp_ver1, yp_ver1)
+    call mesh%hex_to_circ_pt(x_ver2, y_ver2, xp_ver2, yp_ver2)
+    call mesh%hex_to_circ_pt(x_ver3, y_ver3, xp_ver3, yp_ver3)
+
+    ! We now want to get A and B in AX + B = X', where X contains the values of
+    ! the vertices in the hexmesh and X' the values of the mapped vertices,
+    ! A = ( a11 a12, a21 a22) a 2x2 matrix et B=(b1 b2).
+    ! For this we can solve two indepent linear systems of the form:
+    ! P * A1 = Bp1, where the i-th line of 3x3 matrix P = (x_veri, y_veri, 1),
+    ! A1 = (a11, a12, b1) and Bp1 = (xp_ver1, xp_ver2, xp_ver3).
+    ! The second linear system is P * A2 = Bp2. where P is the same matrix as
+    ! in the previous system, A2 = (a21, a22, b2) and Bp2 is like Bp1 but
+    ! using the y coordinates of the mapped points.
+    ! We use LAPACK for the resolution.
+
+    ! We first create the P matrices:
+    P(1, 1:2) = (/ x_ver1, y_ver1 /)
+    P(2, 1:2) = (/ x_ver2, y_ver2 /)
+    P(3, 1:2) = (/ x_ver3, y_ver3 /)
+    P(:, 3)   = 1._f64
+
+    ! Then the RHS vectors:
+    Bp1(1, 1) = xp_ver1
+    Bp1(2, 1) = xp_ver2
+    Bp1(3, 1) = xp_ver3
+    Bp2(1, 1) = yp_ver1
+    Bp2(2, 1) = yp_ver2
+    Bp2(3, 1) = yp_ver3
+
+    ! Now we solve the system :
+    error_flag = 0
+    call DGESV( 3, 1, P, 3, pivot, Bp1, 3, error_flag )
+    call DGESV( 3, 1, P, 3, pivot, Bp2, 3, error_flag2 )
+    if ((error_flag .ne. 0).or.(error_flag2 .ne. 0)) then
+       print *, "LAPACK error flag for 1st sys = ", error_flag
+       print *, "LAPACK error flag for 2nd sys = ", error_flag2
+       SLL_ERROR('hex_to_circ_elmt', "Error while calling DGESV from Lapack")
+    end if
+
+    transf_matA(1, 1) = Bp1(1, 1)
+    transf_matA(1, 2) = Bp1(2, 1)
+    transf_matA(2, 1) = Bp2(1, 1)
+    transf_matA(2, 2) = Bp2(2, 1)
+
+    transf_vecB(1) = Bp1(3, 1)
+    transf_vecB(2) = Bp2(3, 1)
+    print *, "Error flag =", error_flag
+  end subroutine hex_to_circ_elmt
+
+  !-----------------------------------------------------------------------------
   !> @brief Displays hexagonal mesh in terminal
   !> @details Displays a simple text describing the mesh to the terminal
   !> @param[IN] mesh hexagonal mesh
