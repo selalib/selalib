@@ -281,16 +281,18 @@ contains
     sll_real64, intent(in)                                      :: Lx(2) !< length of the domain.
     sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
     sll_int64,  intent(inout)                                   :: rnd_seed !< Random seed.
+    
 
     sll_real64                                                  :: x(3),v(3)
     sll_int32                                                   :: i_part
     sll_int32                                                   :: i_v
     sll_real64                                                  :: rdn(4)
-    sll_real64                                                  :: wi
-    
+    sll_real64                                                  :: wi(3)
 
     x = 0.0_f64
     v = 0.0_f64
+
+    ! TODO: 1/Np in common weight?
 
 
     do i_part = 1, particle_group%n_particles
@@ -300,8 +302,9 @@ contains
        ! Transform rdn to the interval
        x(1:2) = xmin + Lx * rdn(1:2)
        ! Landau perturbation for position 
-       wi = (1.0_f64 + landau_param(1)*cos(landau_param(2)*x(1)))*Lx(1)*Lx(2)
-
+       wi(1) = (1.0_f64 + landau_param(1)*cos(landau_param(2)*x(1)))*Lx(1)*Lx(2)
+       wi(1) = wi(1)/real(particle_group%n_total_particles, f64)
+          
 
        ! Maxwellian distribution of the temperature
        do i_v = 1,2
@@ -309,13 +312,22 @@ contains
                v(i_v))
           v(i_v) = v(i_v)*(thermal_velocity(i_v))
        end do
+       
+       ! If control variate, set also g0 and df weight
+       if (particle_group%n_weights == 3) then
+          wi(2) = 1/product(Lx)*&
+               exp(-0.5_f64*((v(1)/thermal_velocity(1))**2+&
+               (v(2)/thermal_velocity(2))**2))
+          wi(3) = wi(1) - exp(-0.5_f64*((v(1)/thermal_velocity(1))**2+&
+               (v(2)/thermal_velocity(2))**2))/wi(2)
+       end if
 
        ! Copy the generated numbers to the particle
        call particle_group%set_x(i_part, x)
        call particle_group%set_v(i_part, v)
        ! Set weights.
        call particle_group%set_weights(i_part, &
-            [wi/real(particle_group%n_total_particles, f64)])
+            wi(1:particle_group%n_weights))
     end do
 
 
