@@ -58,6 +58,7 @@ module sll_m_sim_pic_vp_2d2v_cart
 
      ! Control variate
      class(sll_t_control_variate), pointer :: control_variate
+     sll_int32  :: no_weights
      
      ! Physical parameters
      sll_real64 :: landau_param(2) ! (1+landau_param(1)*cos(landau_param(2)*x1) 
@@ -99,6 +100,7 @@ contains
     sll_real64  :: x1_min, x1_max, x2_min, x2_max
     sll_int32   :: n_particles, degree_smoother
     character(len=256) :: init_case
+    logical     :: with_control_variate
 
     sll_int32, parameter :: input_file = 99
     
@@ -107,7 +109,7 @@ contains
     
     namelist /grid_dims/          ng_x1, ng_x2, x1_min, x2_min, x1_max, x2_max
 
-    namelist /pic_params/         init_case, n_particles, degree_smoother
+    namelist /pic_params/         init_case, n_particles, degree_smoother, with_control_variate
 
     ! Read parameters from file
     open(unit = input_file, file=trim(filename), IOStat=io_stat)
@@ -145,6 +147,12 @@ contains
        print*, '#init case ', init_case, ' not implemented.'
     end select
 
+    if (with_control_variate .EQV. .TRUE.) then
+       sim%no_weights = 3
+    else
+       sim%no_weights = 1
+    end if
+
   end subroutine init_pic_2d2v
 
 !------------------------------------------------------------------------------!
@@ -170,7 +178,7 @@ contains
     ! Initialize the particles   
      sim%particle_group => sll_new_particle_group_2d2v&
           (sim%n_particles, &
-          sim%n_total_particles ,1.0_f64, 1.0_f64, 3)
+          sim%n_total_particles ,1.0_f64, 1.0_f64, sim%no_weights)
     
     
     ! Initialize control variate
@@ -228,8 +236,13 @@ contains
 
     ! Initialize the time-splitting propagator
     !SLL_ALLOCATE(sim%efield(sim%kernel_smoother%n_dofs,2),ierr)
-    sim%propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(sim%solver, &
-         sim%particle_group)
+    if (sim%no_weights == 1) then
+       sim%propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(sim%solver, &
+            sim%particle_group)
+    elseif (sim%no_weights == 3) then
+       sim%propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(sim%solver, &
+            sim%particle_group, sim%control_variate, 3)
+    end if
 
 
     print*, 'Time loop'
@@ -243,6 +256,7 @@ contains
           !eenergy = sim%solver%compute_field_energy()
           !eenergy = sum(sim%efield(:,1)**2)*&
           !     sim%mesh%delta_eta1*sim%mesh%delta_eta2
+          eenergy = sim%solver%compute_field_energy(1)
           write(th_diag_id,'(f12.5,2g20.12)' ) real(j,f64)*sim%delta_t,  eenergy
        end if
     end do

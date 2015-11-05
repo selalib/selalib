@@ -27,9 +27,9 @@ module sll_m_control_variate
        use sll_m_working_precision 
        import sll_t_control_variate
        class(sll_t_control_variate) :: this
-       sll_real64, intent( in ) :: xi(3) !< particle position
-       sll_real64, intent( in ) :: vi(3) !< particle velocity
-       sll_real64, intent( in ) :: time  !< current time
+       sll_real64, optional, intent( in ) :: xi(:) !< particle position
+       sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
+       sll_real64, optional, intent( in ) :: time  !< current time
        sll_real64               :: sll_f_control_variate
 
      end function sll_f_control_variate
@@ -40,8 +40,8 @@ module sll_m_control_variate
     
     function update_df_weight(this, xi, vi, time, weight_ff, g0) result(weight_df)
       class(sll_t_control_variate) :: this
-      sll_real64, intent( in ) :: xi(3) !< particle position
-      sll_real64, intent( in ) :: vi(3) !< particle velocity
+      sll_real64, intent( in ) :: xi(:) !< particle position
+      sll_real64, intent( in ) :: vi(:) !< particle velocity
       sll_real64, intent( in ) :: time  !< current time
       sll_real64, intent( in ) :: weight_ff !< particle weight for full f
       sll_real64, intent( in ) :: g0 !< initial sampling distribution at particle coordinates at time zero
@@ -57,6 +57,9 @@ module sll_m_control_variate
       class(sll_t_control_variate), pointer :: control_variate
       sll_real64, pointer, intent(in) :: parameters(:)
 
+      sll_int32 :: ierr
+
+      SLL_ALLOCATE(control_variate,ierr)
       control_variate%control_variate => control_function
       
       control_variate%control_variate_parameters => parameters
