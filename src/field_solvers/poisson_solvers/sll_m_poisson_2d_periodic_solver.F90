@@ -31,6 +31,14 @@ implicit none
       compute_E_from_rho_2d_periodic
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
+
+    
+    !> Compute the squarred L_2 for given coefficients
+    procedure :: &
+         l2norm_squarred => l2norm_squarred_2d_periodic
+    !> Compute the right hand side from a given function
+    procedure :: &
+         compute_rhs_from_function => compute_rhs_from_function_2d_periodic
       
   end type poisson_2d_periodic_solver
 
@@ -128,7 +136,23 @@ contains
            
   end subroutine compute_E_from_rho_2d_periodic
   
+  function l2norm_squarred_2d_periodic(poisson, coefs_dofs) result(r)
+    class( poisson_2d_periodic_solver) , intent(in)        :: poisson !< Poisson solver object.
+    sll_real64   , intent(in)                                  :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    print*, 'l2norm_squarred not implemented for poisson_2d_periodic_solver.'
+    
+  end function l2norm_squarred_2d_periodic
   
+  subroutine compute_rhs_from_function_2d_periodic(poisson, func, coefs_dofs)
+    class( poisson_2d_periodic_solver)                    :: poisson !< Maxwell solver object.
+    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for poisson_2d_periodic_solver.'
+    
+  end subroutine compute_rhs_from_function_2d_periodic
   
   
 end module sll_m_poisson_2d_periodic_solver
