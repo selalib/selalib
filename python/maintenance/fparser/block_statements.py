@@ -12,7 +12,9 @@ Created: May 2006
 
 Modifications:
   - Nov 2015: 'ProcedureDeclaration' added to 'declaration_construct' list
-              (Yaman Güçlü - IPP Garching)
+              (Yaman Güçlü [YG] - IPP Garching)
+            : modify regex pattern in 'Forall' to avoid false matches (YG)
+            : add 'SelectType' block statement (YG)
 -----
 """
 
@@ -22,6 +24,7 @@ __all__ = ['BeginSource','Module','PythonModule','Program','BlockData','Interfac
            'EndSource','EndModule','EndPythonModule','EndProgram','EndBlockData','EndInterface',
            'EndSubroutine','EndFunction','EndSelect','EndWhere','EndForall',
            'EndIfThen','EndDo','EndAssociate','EndType','EndEnum',
+           'SelectType',
            ]
 
 import re
@@ -792,6 +795,31 @@ class Select(BeginStatement):
     def get_classes(self):
         return [Case] + execution_part_construct
 
+#==============================================================================
+# SelectType
+#==============================================================================
+class SelectType( BeginStatement ):
+    """
+    [ <select-construct-name> : ] SELECT TYPE ( [ <associate-name> => ] <selector> )
+
+    """
+    match = re.compile( r'select\s*type\s*\(.*\)\Z', re.I ).match
+    end_stmt_cls = EndSelect  # same as SELECT CASE
+    name = ''
+
+    def tostr( self ):
+        return 'SELECT TYPE ( %s )' % self.expr
+
+    def process_item( self ):
+        # TODO: "<associate-name> =>" should be properly parsed
+        self.expr = self.item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
+        self.construct_name = self.item.name
+        return BeginStatement.process_item( self )
+
+    def get_classes( self ):
+        return [TypeGuard] + execution_part_construct
+
+#==============================================================================
 # Where
 
 class EndWhere(EndStatement):
@@ -846,7 +874,7 @@ class Forall(BeginStatement):
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
     end_stmt_cls = EndForall
-    match = re.compile(r'forall\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'forall\s*\(\w+\)\Z',re.I).match
     name = ''
     def process_item(self):
         self.specs = self.item.get_line()[6:].lstrip()[1:-1].strip()
@@ -1254,7 +1282,7 @@ action_stmt = [ Allocate, GeneralAssignment, Assign, Backspace, Call, Close,
 # EndFunction, EndProgram, EndSubroutine - part of the corresponding blocks
 
 executable_construct = [ Associate, Do, ForallConstruct, IfThen,
-    Select, WhereConstruct ] + action_stmt
+    Select, SelectType, WhereConstruct ] + action_stmt
 #Case, see Select
 
 execution_part_construct = executable_construct + [ Format, Entry,
