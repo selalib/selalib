@@ -11,11 +11,10 @@ module sll_m_operator_splitting_pic_vp_2d2v
 
  
   use sll_m_particle_group_base
-  use sll_m_kernel_smoother_base
+  use sll_m_pic_poisson_base
   use sll_m_operator_splitting
   use sll_m_collective
-  
-  use sll_m_poisson_2d_fft
+  use sll_m_control_variate
 
   implicit none
   private
@@ -24,16 +23,21 @@ module sll_m_operator_splitting_pic_vp_2d2v
 
   !> Operator splitting type for 2d2v Vlasov-Poisson
   type, public, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
-     class(poisson_2d_fft_solver), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
+     class(sll_c_pic_poisson), pointer :: solver
+!     class(poisson_2d_fft_solver), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
+!     class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
      class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
+!!$
+!!$     sll_real64, allocatable :: rho_dofs(:)                      !< Degrees of freedom for kernel respresentation of the charge density. 
+!!$     sll_real64, allocatable :: rho_dofs_local(:)                !< Processor local part of \a rho_dofs 
+!!$     sll_real64, allocatable :: rho_2d(:,:)                      !< 2d representation of \a rho_dofs for use in Poisson solver.
+!!$     sll_real64, allocatable :: efield1(:,:) !< 2d representation of electric field, first component for use in Poisson solver. 
+!!$     sll_real64, allocatable :: efield2(:,:) !< 2d representation of electric field, second component for use in Poisson solver. 
+!!$     sll_real64, pointer     :: efield_dofs(:,:)  !< Values of the electric field at grid points (1d representation).
 
-     sll_real64, allocatable :: rho_dofs(:)                      !< Degrees of freedom for kernel respresentation of the charge density. 
-     sll_real64, allocatable :: rho_dofs_local(:)                !< Processor local part of \a rho_dofs 
-     sll_real64, allocatable :: rho_2d(:,:)                      !< 2d representation of \a rho_dofs for use in Poisson solver.
-     sll_real64, allocatable :: efield1(:,:) !< 2d representation of electric field, first component for use in Poisson solver. 
-     sll_real64, allocatable :: efield2(:,:) !< 2d representation of electric field, second component for use in Poisson solver. 
-     sll_real64, pointer     :: efield_dofs(:,:)  !< Values of the electric field at grid points (1d representation).
+     ! For version with control variate
+     class(sll_t_control_variate), pointer :: control_variate => null()
+     sll_int32 :: i_weight
 
    contains
      procedure :: operatorT => advection_x_pic_vp_2d2v  !< Operator for x advection
@@ -68,18 +72,26 @@ contains
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
+
     !local variables
     sll_int32 :: i_part
-    sll_real64 :: x_new(3)
+    sll_real64 :: x_new(3), vi(3)
+    sll_real64 :: wi(this%particle_group%n_weights)
 
     ! X_new = X_old + dt * V
     do i_part=1,this%particle_group%n_particles
        x_new = this%particle_group%get_x(i_part) + dt * this%particle_group%get_v(i_part) 
        call this%particle_group%set_x(i_part, x_new)
+
+       if (this%particle_group%n_weights == 3) then
+          vi = this%particle_group%get_v(i_part)
+          ! Update weights if control variate
+          wi = this%particle_group%get_weights(i_part)
+          wi(3) = this%control_variate%update_df_weight( x_new, vi, 0.0_f64, wi(1), wi(2))
+          call this%particle_group%set_weights(i_part, wi)
+       end if
     end do
-    
-    ! Update shape factors since position is changed
-    call this%kernel_smoother%compute_shape_factors(this%particle_group)
+
 
   end subroutine advection_x_pic_vp_2d2v
   
@@ -94,50 +106,31 @@ contains
     sll_real64 :: v_new(3)
     sll_real64 :: efield(2)
     sll_real64 :: qm
+    sll_real64 :: xi(3)
+    sll_real64 :: wi
 
 
     ! Assemble right-hand-side
-    !call this%kernel_smoother%compute_shape_factors(this%particle_group)
-    this%rho_dofs_local = 0.0_f64
-    call this%kernel_smoother%accumulate_rho_from_klimontovich(this%particle_group, &
-         this%rho_dofs_local)
+    call this%solver%reset()
+    do i_part = 1, this%particle_group%n_particles
+       xi = this%particle_group%get_x(i_part)
+       wi = this%particle_group%get_charge(i_part, this%i_weight)
+       call this%solver%add_charge(xi(1:2), wi)
+    end do
 
-    ! MPI to sum up contributions from each processor
-    this%rho_dofs = 0.0_f64
-    call sll_collective_allreduce( sll_world_collective, this%rho_dofs_local, &
-         this%kernel_smoother%n_dofs, MPI_SUM, this%rho_dofs)
-
-    ! Bring to right shape for Poisson solver
-    this%rho_2d(1:this%kernel_smoother%n_grid(1),1:this%kernel_smoother%n_grid(2)) = &
-         -1.0_f64 +&
-         reshape(this%rho_dofs, this%kernel_smoother%n_grid(1:2) )
-    this%rho_2d(this%kernel_smoother%n_grid(1)+1,:) = this%rho_2d(1,:)
-    this%rho_2d(:,this%kernel_smoother%n_grid(2)+1) = this%rho_2d(:,1)
-    ! Solve Poisson problem
-    call this%poisson_solver%compute_E_from_rho(this%efield1, this%efield2, this%rho_2d)
-
-    ! Evaluate efield1 at particle positions
-    this%efield_dofs(:,1) = reshape(this%efield1(1:this%kernel_smoother%n_grid(1),1:this%kernel_smoother%n_grid(2)), [this%kernel_smoother%n_dofs])
-    !call this%kernel_smoother%evaluate_kernel_function_particles(this%particle_group, &
-    !     this%rho_dofs, this%efield(:,1))
-    
-    ! Evaluate efield2 at particle positions
-    this%efield_dofs(:,2) = reshape(this%efield2(1:this%kernel_smoother%n_grid(1),1:this%kernel_smoother%n_grid(2)), [this%kernel_smoother%n_dofs])
-    !call this%kernel_smoother%evaluate_kernel_function_particles(this%particle_group, &
-    !     this%rho_dofs, this%efield(:,2))
-
+    call this%solver%solve_fields()
 
     ! V_new = V_old + dt *q/m* E
     qm = this%particle_group%species%q_over_m();
     do i_part=1,this%particle_group%n_particles
        ! Evaluate efields at particle position
-       call this%kernel_smoother%evaluate_kernel_function_particle&
-            (this%efield_dofs(:,1), i_part, efield(1))
-       call this%kernel_smoother%evaluate_kernel_function_particle&
-            (this%efield_dofs(:,2), i_part, efield(2))
+       xi = this%particle_group%get_x(i_part)
+       call this%solver%evaluate_field_single(xi(1:2), [1,2], efield)
        v_new = this%particle_group%get_v(i_part)
        v_new(1:2) = v_new(1:2) + dt * qm * efield
        call this%particle_group%set_v(i_part, v_new)
+
+       ! Update particle weights
     end do
     
 
@@ -145,52 +138,61 @@ contains
   
   !---------------------------------------------------------------------------!
   !> Initialization function
-  subroutine initialize_operator_splitting_pic_vp_2d2v(this, poisson_solver, kernel_smoother, particle_group)
+  subroutine initialize_operator_splitting_pic_vp_2d2v(this, solver, particle_group)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< object 
-    class(poisson_2d_fft_solver),pointer, intent(in) :: poisson_solver !< poisson solver
-    class(sll_kernel_smoother_base),pointer, intent(in) :: kernel_smoother !< kernel smoother
+    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< poisson solver
     class(sll_particle_group_base),pointer, intent(in) :: particle_group !< particle group
 
     !local variables
     sll_int32 :: ierr
 
-    this%poisson_solver => poisson_solver
-    this%kernel_smoother => kernel_smoother
+    this%solver => this%solver
+    !this%poisson_solver => poisson_solver
+    !this%kernel_smoother => kernel_smoother
     this%particle_group => particle_group
 
-    SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
-    SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
-    SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
-    SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
-    SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother%n_dofs, 2), ierr)
+!!$    SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
+!!$    SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
+!!$    SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
+!!$    SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
+!!$    SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother%n_dofs, 2), ierr)
 
   end subroutine initialize_operator_splitting_pic_vp_2d2v
 
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_hamiltonian_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, particle_group, efield_dofs) result(this)
+  function sll_new_hamiltonian_splitting_pic_vp_2d2v &
+       (solver, &
+       particle_group, &
+       control_variate, &
+       i_weight) result(this)
     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: this !< time splitting object 
-    class(poisson_2d_fft_solver),pointer, intent(in) :: poisson_solver !< Poisson solver
-    class(sll_kernel_smoother_base),pointer, intent(in) :: kernel_smoother !< Kernel smoother
+    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
     class(sll_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
-    sll_real64, pointer  :: efield_dofs(:,:)  !< Values of the electric field at grid points
+    class(sll_t_control_variate), optional, pointer, intent(in) :: control_variate
+    sll_int32, optional, intent(in) :: i_weight
  
     !local variables
     sll_int32 :: ierr
 
     SLL_ALLOCATE(this, ierr)
 
-    this%poisson_solver => poisson_solver
-    this%kernel_smoother => kernel_smoother
+    this%solver => solver
+    !this%poisson_solver => poisson_solver
+    !this%kernel_smoother => kernel_smoother
     this%particle_group => particle_group
-    this%efield_dofs => efield_dofs
+!    this%efield_dofs => efield_dofs
 
-    SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
-    SLL_ALLOCATE(this%rho_dofs_local(this%kernel_smoother%n_dofs), ierr)
-    SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
-    SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
-    SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
+!!$    SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
+!!$    SLL_ALLOCATE(this%rho_dofs_local(this%kernel_smoother%n_dofs), ierr)
+!!$    SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
+!!$    SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
+!!$    SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
+
+    this%i_weight = 1
+    if(present(i_weight)) this%i_weight = i_weight
+    if(present(control_variate)) this%control_variate => control_variate
 
   end function sll_new_hamiltonian_splitting_pic_vp_2d2v
 
