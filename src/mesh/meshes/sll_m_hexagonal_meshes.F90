@@ -517,8 +517,8 @@ contains
 
        inside = .true.
 
-       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
-       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
+       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
 
        if ( k1c >  mesh%num_cells ) inside = .false.
        if ( k2c >  mesh%num_cells ) inside = .false.
@@ -548,8 +548,8 @@ contains
        inside = .true.
 
 
-       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
-       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
+       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
 
        if ( k1c >  mesh%num_cells ) inside = .false.
        if ( k2c >  mesh%num_cells ) inside = .false.
@@ -1196,43 +1196,6 @@ contains
 
   end subroutine get_cell_vertices_index
 
-!PN function defined but not used
-!  !---------------------------------------------------------
-!  !> @brief Returns index of lowest point in cell
-!  !> @details Returns index of lowest point in a given cell.
-!  !> This means the point with the lowest y-coordinate
-!  !> @param[IN] mesh hexagonal mesh
-!  !> @param[IN] cell_index index of cell we wish to know the lowest point
-!  !> @param[OUT] lowest_index index of point with lowest y-coordinate
-!  function get_cell_lowest_point(mesh, cell_index) result(lowest_index)
-!    type(sll_hex_mesh_2d), pointer :: mesh
-!    sll_int32, intent(in) :: cell_index
-!    sll_int32  :: edge1, edge2, edge3
-!    sll_int32  :: lowest_index
-!    sll_real64 :: y_lowest
-!
-!    ! initialization ...
-!    lowest_index = -1
-!
-!    call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
-!         mesh%center_cartesian_coord(2,cell_index),&
-!         mesh, &
-!         edge1, edge2, edge3)
-!
-!    lowest_index = edge1
-!
-!    ! we compare the ordinates of edge2 and edge1
-!    y_lowest = mesh%cartesian_coord(2, lowest_index)
-!    if (mesh%cartesian_coord(2, edge2) < y_lowest) then
-!       lowest_index = edge2
-!    end if
-!    ! we compare the ordinates of lowest_point and edge3
-!    if (mesh%cartesian_coord(2, edge3) < y_lowest) then
-!       lowest_index = edge3
-!    end if
-!
-!  end function get_cell_lowest_point
-
   !---------------------------------------------------------------------------
   !> @brief Given a mesh point and the first cartesian coordinate of a point
   !> (that is not on the mesh) we return the given cell index
@@ -1695,10 +1658,14 @@ contains
 
   !---------------------------------------------------------------------------
   !> @brief Computes the coordinate transformation ref->hex for an element.
-  !> @details Given an element in the hexagonal mesh, this subroutine computes
-  !> the affine transformation that maps the reference triangle to the element
-  !> in the hexmesh. This transformation can be written in the form AX + B = X'.
-  !> Reference triangle vertices: (0,0) (0, 1) (1,0)
+  !> @details The coordinate transformation is the transformation from the
+  !> reference element to the current cell. As the reference element is the 1st
+  !> cell of an hexagonal mesh of radius 1 the transformation is only a rotation
+  !> followed by a translation. Thus we only need 6 values to stock the
+  !> transformation. 4 values for the matrix A and 2 for the vector v, where:
+  !> Ax + b = x'. x being the reference coordinates and x' the coordinates of
+  !> the current mesh.
+  !> Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
   !> @param[IN] mesh hexagonal mesh
   !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
   !> @param[OUT] transf_matA real matrix that contains the A matrix.
@@ -1712,30 +1679,37 @@ contains
     sll_int32  :: e1
     sll_int32  :: e2
     sll_int32  :: e3
+    sll_int32  :: type
     sll_real64 :: x1, y1
-    sll_real64 :: x_ver1, y_ver1
-    sll_real64 :: x_ver2, y_ver2
-    sll_real64 :: x_ver3, y_ver3
+    sll_real64 :: x_ver1
+    sll_real64 :: y_ver1
 
     ! We get the cells center coordinates in order to get its vertices
     x1 = mesh%center_cartesian_coord(1, i_elmt)
     y1 = mesh%center_cartesian_coord(2, i_elmt)
     call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
 
-    ! We get the vertices coordinates
+    ! We get the lowest vertex coordinates (by default: e1's coordinates)
     x_ver1 = mesh%cartesian_coord(1, e1)
     y_ver1 = mesh%cartesian_coord(2, e1)
-    x_ver2 = mesh%cartesian_coord(1, e2)
-    y_ver2 = mesh%cartesian_coord(2, e2)
-    x_ver3 = mesh%cartesian_coord(1, e3)
-    y_ver3 = mesh%cartesian_coord(2, e3)
+
+    ! Getting the cell type:
+    call mesh%cell_type(i_elmt, type)
 
     ! We fill the matrices A and B:
     transf_vecB(1:2) = (/ x_ver1, y_ver1 /)
-    transf_matA(1,1) = x_ver2 - x_ver1
-    transf_matA(1,2) = x_ver3 - x_ver1
-    transf_matA(2,1) = y_ver2 - y_ver1
-    transf_matA(2,2) = y_ver3 - y_ver1
+
+    if (type == 1) then
+       transf_matA(1,1) = 0.5_f64 / mesh%num_cells
+       transf_matA(1,2) = -sll_sqrt3/2._f64 / mesh%num_cells
+       transf_matA(2,1) =  sll_sqrt3/2._f64 / mesh%num_cells
+       transf_matA(2,2) = 0.5_f64 / mesh%num_cells
+    else
+       transf_matA(1,1) = 1._f64 / mesh%num_cells
+       transf_matA(1,2) = 0._f64 / mesh%num_cells
+       transf_matA(2,1) = 0._f64 / mesh%num_cells
+       transf_matA(2,2) = 1._f64 / mesh%num_cells
+    end if
 
   end subroutine ref_to_hex_elmt
 
@@ -2023,7 +1997,6 @@ contains
     sll_int32  :: i
     sll_int32  :: num_triangles
     sll_int32  :: num_pts_tot
-    !sll_int32  :: out_unit
     sll_real64, allocatable :: coor(:,:)
     sll_int32,  allocatable :: ntri(:,:)
     sll_int32  :: error
