@@ -84,6 +84,10 @@ type species
   sll_real64, dimension(:,:),                    pointer :: f_x2
   sll_real64, dimension(:,:),                    pointer :: f_x1_init
   sll_real64, dimension(:),                      pointer :: rho
+  sll_real64, dimension(:),                      pointer :: rho_loc
+  sll_real64, dimension(:),                  allocatable :: x2_array_unit
+  sll_real64, dimension(:),                  allocatable :: x2_array_middle
+  sll_real64, dimension(:),                  allocatable :: node_positions_x2
 end type species
 
 type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_cart_multi_species
@@ -1053,8 +1057,6 @@ class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
 
 sll_real64, dimension(:),   pointer :: efield
 sll_real64, dimension(:),   pointer :: e_app
-sll_real64, dimension(:),   pointer :: rho_loc_sp1
-sll_real64, dimension(:),   pointer :: rho_loc_sp2
 
 sll_int32 :: rhotote_id,rhototi_id
 sll_int32 :: efield_id     
@@ -1073,7 +1075,6 @@ sll_real64, dimension(:,:), pointer :: f1d_omp_in_sp2
 sll_real64, dimension(:,:), pointer :: f1d_omp_out_sp2
 
 sll_int32   :: np_x1
-sll_int32   :: np_x2
 sll_int32   :: np_x2_sp1
 sll_int32   :: np_x2_sp2
 sll_int32   :: nproc_x1
@@ -1094,12 +1095,6 @@ sll_real64  :: mass_sp1, momentum_sp1, l1norm_sp1, l2norm_sp1
 sll_real64  :: mass_sp2, momentum_sp2, l1norm_sp2, l2norm_sp2
 sll_real64  :: kinetic_energy_sp1,kinetic_energy_sp2,potential_energy
 
-sll_real64, dimension(:), allocatable :: x2_array_unit_sp1
-sll_real64, dimension(:), allocatable :: x2_array_unit_sp2
-sll_real64, dimension(:), allocatable :: x2_array_middle_sp1
-sll_real64, dimension(:), allocatable :: x2_array_middle_sp2
-sll_real64, dimension(:), allocatable :: node_positions_x2_sp1
-sll_real64, dimension(:), allocatable :: node_positions_x2_sp2
 sll_int32                             :: file_id
 
 type(sll_fft_plan),       pointer     :: pfwd
@@ -1224,8 +1219,8 @@ sim%sp2%remap_plan_x2_x1 => NEW_REMAP_PLAN(sim%sp2%layout_x2, sim%sp2%layout_x1,
 
 SLL_ALLOCATE(sim%sp1%rho(np_x1),ierr)
 SLL_ALLOCATE(sim%sp2%rho(np_x1),ierr)
-SLL_ALLOCATE(rho_loc_sp1(np_x1),ierr)
-SLL_ALLOCATE(rho_loc_sp2(np_x1),ierr)
+SLL_ALLOCATE(sim%sp1%rho_loc(np_x1),ierr)
+SLL_ALLOCATE(sim%sp2%rho_loc(np_x1),ierr)
 SLL_ALLOCATE(efield(np_x1),ierr)
 SLL_ALLOCATE(e_app(np_x1),ierr)
 e_app = 0._f64
@@ -1234,9 +1229,9 @@ SLL_ALLOCATE(f1d_sp1(max(np_x1,np_x2_sp1)),ierr)
 SLL_ALLOCATE(f1d_omp_sp1(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
 SLL_ALLOCATE(f1d_omp_in_sp1(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
 SLL_ALLOCATE(f1d_omp_out_sp1(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
-SLL_ALLOCATE(x2_array_unit_sp1(np_x2_sp1),ierr)
-SLL_ALLOCATE(x2_array_middle_sp1(np_x2_sp1),ierr)
-SLL_ALLOCATE(node_positions_x2_sp1(num_dof_x2_sp1),ierr)
+SLL_ALLOCATE(sim%sp1%x2_array_unit(np_x2_sp1),ierr)
+SLL_ALLOCATE(sim%sp1%x2_array_middle(np_x2_sp1),ierr)
+SLL_ALLOCATE(sim%sp1%node_positions_x2(num_dof_x2_sp1),ierr)
 SLL_ALLOCATE(f_hat_x2_sp1_loc(nb_mode+1),ierr)
 SLL_ALLOCATE(f_hat_x2_sp1(nb_mode+1),ierr)
 
@@ -1244,24 +1239,24 @@ SLL_ALLOCATE(f1d_sp2(max(np_x1,np_x2_sp2)),ierr)
 SLL_ALLOCATE(f1d_omp_sp2(max(np_x1,np_x2_sp2),sim%num_threads),ierr)
 SLL_ALLOCATE(f1d_omp_in_sp2(max(np_x1,np_x2_sp2),sim%num_threads),ierr)
 SLL_ALLOCATE(f1d_omp_out_sp2(max(np_x1,np_x2_sp2),sim%num_threads),ierr)
-SLL_ALLOCATE(x2_array_unit_sp2(np_x2_sp2),ierr)
-SLL_ALLOCATE(x2_array_middle_sp2(np_x2_sp2),ierr)
-SLL_ALLOCATE(node_positions_x2_sp2(num_dof_x2_sp2),ierr)
+SLL_ALLOCATE(sim%sp2%x2_array_unit(np_x2_sp2),ierr)
+SLL_ALLOCATE(sim%sp2%x2_array_middle(np_x2_sp2),ierr)
+SLL_ALLOCATE(sim%sp2%node_positions_x2(num_dof_x2_sp2),ierr)
 SLL_ALLOCATE(f_hat_x2_sp2_loc(nb_mode+1),ierr)
 SLL_ALLOCATE(f_hat_x2_sp2(nb_mode+1),ierr)
 
-x2_array_unit_sp1(1:np_x2_sp1) = &
+sim%sp1%x2_array_unit(1:np_x2_sp1) = &
   (sim%sp1%x2_array(1:np_x2_sp1)-sim%sp1%x2_array(1))/(sim%sp1%x2_array(np_x2_sp1)-sim%sp1%x2_array(1))
 do i = 1, np_x2_sp1-1
-   x2_array_middle_sp1(i) = 0.5_f64*(sim%sp1%x2_array(i)+sim%sp1%x2_array(i+1))
+   sim%sp1%x2_array_middle(i) = 0.5_f64*(sim%sp1%x2_array(i)+sim%sp1%x2_array(i+1))
 end do
-x2_array_middle_sp1(np_x2_sp1) = x2_array_middle_sp1(1)+sim%sp1%x2_array(np_x2_sp1)-sim%sp1%x2_array(1)
+sim%sp1%x2_array_middle(np_x2_sp1) = sim%sp1%x2_array_middle(1)+sim%sp1%x2_array(np_x2_sp1)-sim%sp1%x2_array(1)
 
 select case (sim%sp1%advection_form_x2)
 case (SLL_ADVECTIVE)
-  node_positions_x2_sp1(1:num_dof_x2_sp1) = sim%sp1%x2_array(1:num_dof_x2_sp1)
+  sim%sp1%node_positions_x2(1:num_dof_x2_sp1) = sim%sp1%x2_array(1:num_dof_x2_sp1)
 case (SLL_CONSERVATIVE)
-  node_positions_x2_sp1(1:num_dof_x2_sp1) = x2_array_middle_sp1(1:num_dof_x2_sp1)
+  sim%sp1%node_positions_x2(1:num_dof_x2_sp1) = sim%sp1%x2_array_middle(1:num_dof_x2_sp1)
 case default
   print *,'#sim%sp1%advection_form_x2=',sim%sp1%advection_form_x2
   print *,'#not implemented'
@@ -1269,18 +1264,18 @@ case default
   stop
 end select  
 
-x2_array_unit_sp2(1:np_x2_sp2) = &
+sim%sp2%x2_array_unit(1:np_x2_sp2) = &
      (sim%sp2%x2_array(1:np_x2_sp2)-sim%sp2%x2_array(1))/(sim%sp2%x2_array(np_x2_sp2)-sim%sp2%x2_array(1))
 do i = 1, np_x2_sp2-1
-   x2_array_middle_sp2(i) = 0.5_f64*(sim%sp2%x2_array(i)+sim%sp2%x2_array(i+1))
+   sim%sp2%x2_array_middle(i) = 0.5_f64*(sim%sp2%x2_array(i)+sim%sp2%x2_array(i+1))
 end do
-x2_array_middle_sp2(np_x2_sp2) = x2_array_middle_sp2(1)+sim%sp2%x2_array(np_x2_sp2)-sim%sp2%x2_array(1)
+sim%sp2%x2_array_middle(np_x2_sp2) = sim%sp2%x2_array_middle(1)+sim%sp2%x2_array(np_x2_sp2)-sim%sp2%x2_array(1)
 
 select case (sim%sp2%advection_form_x2)
 case (SLL_ADVECTIVE)
-  node_positions_x2_sp2(1:num_dof_x2_sp2) = sim%sp2%x2_array(1:num_dof_x2_sp2)
+  sim%sp2%node_positions_x2(1:num_dof_x2_sp2) = sim%sp2%x2_array(1:num_dof_x2_sp2)
 case (SLL_CONSERVATIVE)
-  node_positions_x2_sp2(1:num_dof_x2_sp2) = x2_array_middle_sp2(1:num_dof_x2_sp2)
+  sim%sp2%node_positions_x2(1:num_dof_x2_sp2) = sim%sp2%x2_array_middle(1:num_dof_x2_sp2)
 case default
   print *,'#sim%sp2%advection_form_x2=',sim%sp2%advection_form_x2
   print *,'#not implemented'
@@ -1291,7 +1286,7 @@ end select
 call sll_2d_parallel_array_initializer_cartesian( &
    sim%sp1%layout_x1,                                 &
    sim%x1_array,                                  &
-   node_positions_x2_sp1,                         &
+   sim%sp1%node_positions_x2,                         &
    sim%sp1%f_x1,                                      &
    sim%sp1%init_func,                             &
    sim%sp1%params)
@@ -1299,7 +1294,7 @@ call sll_2d_parallel_array_initializer_cartesian( &
 call sll_2d_parallel_array_initializer_cartesian( &
    sim%sp2%layout_x1,                                 &
    sim%x1_array,                                  &
-   node_positions_x2_sp2,                         &
+   sim%sp2%node_positions_x2,                         &
    sim%sp2%f_x1,                                      &
    sim%sp2%init_func,                             &
    sim%sp2%params)
@@ -1337,7 +1332,7 @@ time_init = sim%time_init
 call sll_2d_parallel_array_initializer_cartesian( &
    sim%sp1%layout_x1,                                 &
    sim%x1_array,                                  &
-   node_positions_x2_sp1,                         &
+   sim%sp1%node_positions_x2,                         &
    sim%sp1%f_x1_init,                                 &
    sll_landau_initializer_2d,                     &
    (/ sim%sp1%params(1),0._f64,sim%sp1%params(3),sim%sp1%params(4) /))
@@ -1345,7 +1340,7 @@ call sll_2d_parallel_array_initializer_cartesian( &
 call sll_2d_parallel_array_initializer_cartesian( &
    sim%sp2%layout_x1,                                 &
    sim%x1_array,                                  &
-   node_positions_x2_sp2,                         &
+   sim%sp2%node_positions_x2,                         &
    sim%sp2%f_x1_init,                                 &
    sll_landau_initializer_2d,                     &
    (/ sim%sp2%params(1),0._f64,sim%sp2%params(3),sim%sp2%params(4) /))
@@ -1398,7 +1393,7 @@ if (mpi_master) then
       f_visu_sp1,              &
       sim%x1_array,            &
       np_x1,                   &
-      node_positions_x2_sp1,   &
+      sim%sp1%node_positions_x2,   &
       sim%sp1%num_dof_x2,      &
       'fe', 'e',               &
       time_init )        
@@ -1420,7 +1415,7 @@ if (mpi_master) then
         f_visu_sp2,            &
         sim%x1_array,          &
         np_x1,                 &
-        node_positions_x2_sp2, &
+        sim%sp2%node_positions_x2, &
         sim%sp2%num_dof_x2,    &
         'fi', 'i',             &
         time_init )
@@ -1429,27 +1424,27 @@ if (mpi_master) then
 
 endif
     
-rho_loc_sp1 = 0._f64
-rho_loc_sp2 = 0._f64
+sim%sp1%rho_loc = 0._f64
+sim%sp2%rho_loc = 0._f64
 ig = global_indices_sp1(2)-1
 do i=1,np_x1
-  rho_loc_sp1(i)=rho_loc_sp1(i)&
+  sim%sp1%rho_loc(i)=sim%sp1%rho_loc(i)&
     +sum(sim%sp1%f_x1(i,1:local_size_x2_sp1)*sim%sp1%integration_weight(1+ig:local_size_x2_sp1+ig))
 end do
 ig = global_indices_sp2(2)-1
 do i = 1,np_x1
-  rho_loc_sp2(i)=rho_loc_sp2(i)&
+  sim%sp2%rho_loc(i)=sim%sp2%rho_loc(i)&
     +sum(sim%sp2%f_x1(i,1:local_size_x2_sp2)*sim%sp2%integration_weight(1+ig:local_size_x2_sp2+ig))
 end do
 
 call sll_collective_allreduce( sll_world_collective, &
-                               rho_loc_sp1,          &
+                               sim%sp1%rho_loc,          &
                                np_x1,                &
                                MPI_SUM,              &
                                sim%sp1%rho )
 
 call sll_collective_allreduce( sll_world_collective, &
-                               rho_loc_sp2,          &
+                               sim%sp2%rho_loc,          &
                                np_x1,                &
                                MPI_SUM,              &
                                sim%sp2%rho )
@@ -1524,7 +1519,7 @@ do istep = 1, sim%num_iterations
       tid=1          
       do i_omp = 1, local_size_x2_sp1
          ig_omp = i_omp+global_indices_sp1(2)-1
-         alpha_omp = sim%factor_x1*node_positions_x2_sp1(ig_omp) * sim%split%split_step(split_istep) 
+         alpha_omp = sim%factor_x1*sim%sp1%node_positions_x2(ig_omp) * sim%split%split_step(split_istep) 
          f1d_omp_in_sp1(1:np_x1,tid) = sim%sp1%f_x1(1:np_x1,i_omp)
          call sim%sp1%advect_x1(tid)%ptr%advect_1d_constant(&
               alpha_omp, &
@@ -1537,7 +1532,7 @@ do istep = 1, sim%num_iterations
       
       do i_omp = 1,local_size_x2_sp2
          ig_omp = i_omp+global_indices_sp2(2)-1   
-         alpha_omp = sim%factor_x1*node_positions_x2_sp2(ig_omp) * sim%split%split_step(split_istep) 
+         alpha_omp = sim%factor_x1*sim%sp2%node_positions_x2(ig_omp) * sim%split%split_step(split_istep) 
          f1d_omp_in_sp2(1:np_x1,tid) = sim%sp2%f_x1(1:np_x1,i_omp)
          call sim%sp2%advect_x1(tid)%ptr%advect_1d_constant(&
               alpha_omp, &
@@ -1551,24 +1546,24 @@ do istep = 1, sim%num_iterations
 
       t_step = t_step+sim%split%split_step(split_istep)
       !computation of electric field
-      rho_loc_sp1 = 0._f64
-      rho_loc_sp2 = 0._f64
+      sim%sp1%rho_loc = 0._f64
+      sim%sp2%rho_loc = 0._f64
       !qel_loc(1) = 0._f64
       ig = global_indices_sp1(2)-1
       do i=1,np_x1
-         rho_loc_sp1(i)=rho_loc_sp1(i)&
+         sim%sp1%rho_loc(i)=sim%sp1%rho_loc(i)&
               +sum(sim%sp1%f_x1(i,1:local_size_x2_sp1)*sim%sp1%integration_weight(1+ig:local_size_x2_sp1+ig))
       end do
 
       ig = global_indices_sp2(2)-1
       do i = 1,np_x1
-         rho_loc_sp2(i)=rho_loc_sp2(i)&
+         sim%sp2%rho_loc(i)=sim%sp2%rho_loc(i)&
               +sum(sim%sp2%f_x1(i,1:local_size_x2_sp2)*sim%sp2%integration_weight(1+ig:local_size_x2_sp2+ig))
       end do
 
-      call sll_collective_allreduce( sll_world_collective, rho_loc_sp1, np_x1, MPI_SUM, sim%sp1%rho )
+      call sll_collective_allreduce( sll_world_collective, sim%sp1%rho_loc, np_x1, MPI_SUM, sim%sp1%rho )
 
-      call sll_collective_allreduce( sll_world_collective, rho_loc_sp2, np_x1, MPI_SUM, sim%sp2%rho )
+      call sll_collective_allreduce( sll_world_collective, sim%sp2%rho_loc, np_x1, MPI_SUM, sim%sp2%rho )
 
       call sim%poisson%compute_E_from_rho( efield, sim%sp2%rho-sim%sp1%rho )
       
@@ -1596,7 +1591,7 @@ do istep = 1, sim%num_iterations
         alpha_omp = -(efield(ig_omp)+sim%sp1%alpha*e_app(ig_omp)) * sim%split%split_step(split_istep)
         f1d_omp_in_sp1(1:num_dof_x2_sp1,tid) = sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1)
         if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
-           call function_to_primitive(f1d_omp_in_sp1(:,tid),x2_array_unit_sp1,np_x2_sp1-1,mean_omp)
+           call function_to_primitive(f1d_omp_in_sp1(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
         endif
         call sim%sp1%advect_x2(tid)%ptr%advect_1d_constant(&
              alpha_omp, &
@@ -1604,7 +1599,7 @@ do istep = 1, sim%num_iterations
              f1d_omp_in_sp1(1:num_dof_x2_sp1,tid), &
              f1d_omp_out_sp1(1:num_dof_x2_sp1,tid))
         if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
-           call primitive_to_function(f1d_omp_out_sp1(:,tid),x2_array_unit_sp1,np_x2_sp1-1,mean_omp)
+           call primitive_to_function(f1d_omp_out_sp1(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
         endif
         sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1) = f1d_omp_out_sp1(1:num_dof_x2_sp1,tid)
       end do
@@ -1614,7 +1609,7 @@ do istep = 1, sim%num_iterations
         alpha_omp = sim%mass_ratio*(efield(ig_omp)-sim%sp2%alpha*e_app(ig_omp)) * sim%split%split_step(split_istep)
         f1d_omp_in_sp2(1:num_dof_x2_sp2,tid) = sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2)
         if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
-           call function_to_primitive(f1d_omp_in_sp2(:,tid),x2_array_unit_sp2,np_x2_sp2-1,mean_omp)
+           call function_to_primitive(f1d_omp_in_sp2(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
         endif
         
         call sim%sp2%advect_x2(tid)%ptr%advect_1d_constant(&
@@ -1624,7 +1619,7 @@ do istep = 1, sim%num_iterations
              f1d_omp_out_sp2(1:num_dof_x2_sp2,tid))
         
         if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
-           call primitive_to_function(f1d_omp_out_sp2(:,tid),x2_array_unit_sp2,np_x2_sp2-1,mean_omp)
+           call primitive_to_function(f1d_omp_out_sp2(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
         endif
         sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2) = f1d_omp_out_sp2(1:num_dof_x2_sp2,tid)
       end do
@@ -1806,7 +1801,7 @@ do istep = 1, sim%num_iterations
         enddo
         call sll_gnuplot_1d( &
           f_visu_buf1d_sp1(1:num_dof_x2_sp1), &
-          node_positions_x2_sp1(1:num_dof_x2_sp1), &
+          sim%sp1%node_positions_x2(1:num_dof_x2_sp1), &
           'intdeltafedx', &
           iplot )
 
@@ -1815,7 +1810,7 @@ do istep = 1, sim%num_iterations
           f_visu_sp1, &
           sim%x1_array, &
           np_x1, &
-          node_positions_x2_sp1, &
+          sim%sp1%node_positions_x2, &
           sim%sp1%num_dof_x2, &
           'deltafe', 'e', &
           time)                    
@@ -1838,7 +1833,7 @@ do istep = 1, sim%num_iterations
         enddo
         call sll_gnuplot_1d( &
           f_visu_buf1d_sp1(1:num_dof_x2_sp1), &
-          node_positions_x2_sp1(1:num_dof_x2_sp1), &
+          sim%sp1%node_positions_x2(1:num_dof_x2_sp1), &
           'intfedx', &
           iplot )
     call plot_f_cartesian( &
@@ -1846,7 +1841,7 @@ do istep = 1, sim%num_iterations
       f_visu_sp1, &
       sim%x1_array, &
       np_x1, &
-      node_positions_x2_sp1, &
+      sim%sp1%node_positions_x2, &
       sim%sp1%num_dof_x2, &
       'fe', 'e', &
       time)                    
@@ -1870,7 +1865,7 @@ do istep = 1, sim%num_iterations
         enddo
         call sll_gnuplot_1d( &
           f_visu_buf1d_sp2(1:num_dof_x2_sp2), &
-          node_positions_x2_sp2(1:num_dof_x2_sp2), &
+          sim%sp2%node_positions_x2(1:num_dof_x2_sp2), &
           'intdeltafedx', &
           iplot )
 
@@ -1880,7 +1875,7 @@ do istep = 1, sim%num_iterations
               f_visu_sp2, &
               sim%x1_array, &
               np_x1, &
-              node_positions_x2_sp2, &
+              sim%sp2%node_positions_x2, &
               sim%sp2%num_dof_x2, &
               'deltafi', 'i', &
               time)                    
@@ -1904,7 +1899,7 @@ do istep = 1, sim%num_iterations
             enddo
             call sll_gnuplot_1d( &
               f_visu_buf1d_sp2(1:num_dof_x2_sp2), &
-              node_positions_x2_sp2(1:num_dof_x2_sp2), &
+              sim%sp2%node_positions_x2(1:num_dof_x2_sp2), &
               'intfedx', &
               iplot )
 
@@ -1913,7 +1908,7 @@ do istep = 1, sim%num_iterations
           f_visu_sp2, &
           sim%x1_array, &
           np_x1, &
-          node_positions_x2_sp2, &
+          sim%sp2%node_positions_x2, &
           sim%sp2%num_dof_x2, &
           'fi','i', &
           time)                    
