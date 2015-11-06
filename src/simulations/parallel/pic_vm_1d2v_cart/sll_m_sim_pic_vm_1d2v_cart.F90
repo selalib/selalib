@@ -50,8 +50,8 @@ module sll_m_sim_pic_vm_1d2v_cart
      class(sll_maxwell_1d_base), pointer :: maxwell_solver
 
      ! Abstract kernel smoothers
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother_0     
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother_1
+     class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
+     class(sll_c_kernel_smoother), pointer :: kernel_smoother_1
 
 
      ! Specific operator splitting
@@ -180,7 +180,6 @@ contains
     sll_int32 :: rnd_seed_size
     sll_int64 :: sobol_seed
     sll_int32 :: j, ierr, i_part
-    sll_real64 :: eenergy
     sll_real64, allocatable :: rho(:), rho_local(:)
     sll_int32 :: th_diag_id
 
@@ -190,6 +189,7 @@ contains
     sll_real64 :: potential_energy(3)
     sll_real64 :: vi(3)
     sll_real64 :: wi(1)
+    sll_real64 :: xi(3)
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
@@ -229,7 +229,7 @@ contains
             sim%domain(3), &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
+       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
        ! Pseudorandom initialization with sobol numbers
        !sim%thermal_velocity = 0.1_f64
        call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
@@ -258,10 +258,12 @@ contains
     SLL_ALLOCATE(rho_local(sim%n_gcells), ierr)
     SLL_ALLOCATE(rho(sim%n_gcells), ierr)
     ! Efield 1 by Poisson
-    call sim%kernel_smoother_0%compute_shape_factors(sim%particle_group)
     rho_local = 0.0_f64
-    call sim%kernel_smoother_0%accumulate_rho_from_klimontovich(sim%particle_group, &
-         rho_local)
+    do i_part = 1, sim%particle_group%n_particles
+       xi = sim%particle_group%get_x(i_part)
+       wi(1) = sim%particle_group%get_charge( i_part)
+       call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
+    end do
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
     call sll_collective_allreduce( sll_world_collective, &
@@ -340,10 +342,12 @@ contains
     end do
     
     ! Compute final rho
-    call sim%kernel_smoother_0%compute_shape_factors(sim%particle_group)
     rho_local = 0.0_f64
-    call sim%kernel_smoother_0%accumulate_rho_from_klimontovich(sim%particle_group, &
-         rho_local)
+    do i_part = 1, sim%particle_group%n_particles
+       xi = sim%particle_group%get_x(i_part)
+       wi(1) = sim%particle_group%get_charge( i_part)
+       call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
+    end do
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
     call sll_collective_allreduce( sll_world_collective, &

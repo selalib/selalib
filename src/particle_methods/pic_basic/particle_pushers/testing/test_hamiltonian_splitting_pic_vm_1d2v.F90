@@ -15,28 +15,23 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   use sll_m_maxwell_1d_fem
   use sll_m_constants, only : &
        sll_pi
+  use sll_m_collective, only : &
+       sll_boot_collective, sll_halt_collective
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
-  ! Specific particle group
-  class(sll_particle_group_1d2v), pointer :: specific_particle_group 
 
   ! Arrays for the fields
   sll_real64, pointer :: efield(:,:), efield_ref(:,:)
   sll_real64, pointer :: bfield(:), bfield_ref(:)
 
   ! Abstract kernel smoothers
-  class(sll_kernel_smoother_base), pointer :: kernel_smoother_0     
-  class(sll_kernel_smoother_base), pointer :: kernel_smoother_1
-  ! Specific kernel smoother
-  class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_0
-  class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_1
+  class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
+  class(sll_c_kernel_smoother), pointer :: kernel_smoother_1
   
   ! Maxwell solver 
   ! Abstract 
   class(sll_maxwell_1d_base), pointer :: maxwell_solver
-  ! Specific
-  class(sll_maxwell_1d_fem), pointer :: specific_maxwell_solver
   
   ! Specific Hamiltonian splitting
   class(sll_t_hamiltonian_splitting_pic_vm_1d2v), pointer :: propagator
@@ -58,7 +53,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
    
-!  call sll_boot_collective()
+  call sll_boot_collective()
 
   ! Set parameters
   n_particles = 2!10
@@ -71,11 +66,13 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   rnd_seed = 10
 
   domain = [eta_min, eta_max, eta_max - eta_min]
-  
+
   ! Initialize
-  specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
+  particle_group => sll_new_particle_group_1d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
-  particle_group => specific_particle_group
+
+  call particle_group%set_common_weight (1.0_f64)
+
 
   ! Initial particle information   
   ! Data produce with following call
@@ -86,9 +83,9 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   !     eta_max-eta_min, &
   !     [1.0_f64, 1.0_f64], &
   !     rnd_seed)
-  call sll_particle_initialize_sobol_landau_1d2v(particle_group, &
-       [0.1_f64, 0.5_f64], domain(1),domain(3), &
-       [1.0_f64, 1.0_f64] , rnd_seed)
+  !call sll_particle_initialize_sobol_landau_1d2v(particle_group, &
+  !     [0.1_f64, 0.5_f64], domain(1),domain(3), &
+  !     [1.0_f64, 1.0_f64] , rnd_seed)
   
 
   SLL_ALLOCATE(particle_info_ref(n_particles,4), i_part)
@@ -106,20 +103,20 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      call particle_group%set_weights(i_part, xi(1))
   end do
 
+  call particle_group%set_common_weight (1.0_f64)
+
   ! Initialize kernel smoother    
-  specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
+  kernel_smoother_1 => sll_new_smoother_spline_1d(&
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, SLL_GALERKIN) 
-  kernel_smoother_1 => specific_kernel_smoother_1
-  specific_kernel_smoother_0 => &
+  kernel_smoother_0 => &
        sll_new_smoother_spline_1d(domain(1:2), [num_cells], &
        n_particles, degree_smoother, SLL_GALERKIN) 
-  kernel_smoother_0 => specific_kernel_smoother_0
   
   ! Initialize Maxwell solver
-  specific_maxwell_solver => sll_new_maxwell_1d_fem([eta_min, eta_max], num_cells, &
+  maxwell_solver => sll_new_maxwell_1d_fem([eta_min, eta_max], num_cells, &
        degree_smoother)
-  maxwell_solver => specific_maxwell_solver
+
 
   SLL_ALLOCATE(efield(kernel_smoother_0%n_dofs,2),ierr)
   SLL_ALLOCATE(bfield(kernel_smoother_0%n_dofs),ierr)
@@ -135,6 +132,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
             eta_min, eta_max-eta_min)
 
   call propagator%operatorHp1(delta_t)
+
 
   ! Compare to reference
   ! Particle information after operatorV application 
@@ -154,9 +152,13 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
         passed = .FALSE.
+        print*, xi(1), particle_info_ref(i_part,4)
      end if
   end do
-
+  
+  if (passed .EQV. .FALSE.) then
+     print*, 'Error in operatorHp1.'
+  end if
   
   call propagator%operatorHp2(delta_t)
 
@@ -181,6 +183,10 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      end if
   end do
 
+  if (passed .EQV. .FALSE.) then
+     print*, 'Error in operatorHp2.'
+  end if
+
   call propagator%operatorHE(delta_t)
 
   ! Compare to reference
@@ -204,6 +210,9 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      end if
   end do
 
+  if (passed .EQV. .FALSE.) then
+     print*, 'Error in operatorE'
+  end if
 
   call propagator%operatorHB(delta_t)
 
@@ -227,6 +236,10 @@ program test_hamiltonian_splitting_pic_1d2v_vm
         passed = .FALSE.
      end if
   end do
+
+  if (passed .EQV. .FALSE.) then
+     print*, 'Error in operatorHB.'
+  end if
 
 
   bfield_ref = [  0.99770541216286657D0,       0.99234240623721359D0,       0.98825065652414523D0,        1.0022336143723096D0,        1.0119601928906674D0,        1.0060821139662497D0,        1.0027406207578249D0,        1.0027048521768871D0,       0.99884366018700488D0,       0.99713647072483091D0]
@@ -254,5 +267,5 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      stop
   end if
   
- ! call sll_halt_collective()
+  call sll_halt_collective()
 end program test_hamiltonian_splitting_pic_1d2v_vm
