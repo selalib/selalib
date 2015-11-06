@@ -187,20 +187,20 @@ case default
 end select  
 
 call sll_2d_parallel_array_initializer_cartesian( &
-        sp%layout_x1,                             &
-        sp%x1_array,                              &
-        sp%node_positions_x2,                     &
-        sp%f_x1,                                  &
-        sp%init_func,                             &
-        sp%params)
+  sp%layout_x1,                                   &
+  sp%x1_array,                                    &
+  sp%node_positions_x2,                           &
+  sp%f_x1,                                        &
+  sp%init_func,                                   &
+  sp%params)
 
 call sll_2d_parallel_array_initializer_cartesian( &
-   sp%layout_x1,                                  &
-   sp%x1_array,                                   &
-   sp%node_positions_x2,                          &
-   sp%f_x1_init,                                  &
-   sll_landau_initializer_2d,                     &
-   [sp%params(1),0._f64,sp%params(3),sp%params(4)])
+  sp%layout_x1,                                   &
+  sp%x1_array,                                    &
+  sp%node_positions_x2,                           &
+  sp%f_x1_init,                                   &
+  sll_landau_initializer_2d,                      &
+  [sp%params(1),0._f64,sp%params(3),sp%params(4)])
 
 
 end subroutine initialize_species
