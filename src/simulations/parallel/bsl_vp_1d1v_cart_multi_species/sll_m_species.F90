@@ -18,14 +18,13 @@ use sll_m_hdf5_io_serial
 use sll_m_binary_io
 use sll_m_common_array_initializers
 use sll_m_buffer_loader_utilities
+use sll_m_gnuplot
 
 !use sll_m_constants
-!use sll_m_gnuplot_parallel
 !use sll_m_coordinate_transformation_2d_base
 !use sll_m_coordinate_transformations_2d
 !use sll_m_common_coordinate_transformations
 !use sll_m_advection_1d_non_uniform_cubic_splines
-!use sll_m_sim_base
 !use sll_m_time_splitting_coeff
 !use sll_m_poisson_1d_periodic  
 !use sll_m_poisson_1d_periodic_solver
@@ -408,7 +407,6 @@ subroutine write_f( sp, iplot, array_name, time)
   sll_int32,        intent(in) :: iplot
   character(len=*), intent(in) :: array_name
   sll_real64,       intent(in) :: time
-  sll_int32                    :: file_id
   sll_int32                    :: i
   sll_int32                    :: ierr
   sll_int32                    :: nc_x1
@@ -455,7 +453,7 @@ subroutine write_f( sp, iplot, array_name, time)
     call sll_gnuplot_1d(                     &
       sp%f_visu_buf1d(1:sp%num_dof_x2),      &
       sp%node_positions_x2(1:sp%num_dof_x2), &
-      'int_'//arraY_name,                    &
+      'int_'//array_name,                    &
       iplot )
 
     call plot_f_cartesian(       &
@@ -512,5 +510,76 @@ subroutine write_f( sp, iplot, array_name, time)
 
 end subroutine write_f
 
+subroutine write_restart_file(sp, iplot, time)
+
+  type(species),    intent(in) :: sp
+  sll_int32,        intent(in) :: iplot
+  sll_real64,       intent(in) :: time
+  character(len=4)             :: cplot
+  character(len=4)             :: cproc
+  sll_int32                    :: prank
+  sll_int32                    :: ierr
+  sll_int32                    :: restart_id
+  sll_int32                    :: local_size_x1
+  sll_int32                    :: local_size_x2
+
+  prank = sll_get_collective_rank( sll_world_collective )
+  call int2string(prank,cproc)
+  call int2string(iplot,cplot) 
+  call sll_binary_file_create('f'//'_plot_'//cplot//'_proc_'//cproc//sp%label//'.rst', restart_id, ierr )
+  call sll_binary_write_array_0d(restart_id,time,ierr)
+  call compute_local_sizes(sp%layout_x1, local_size_x1, local_size_x2)
+  call sll_binary_write_array_2d(restart_id,sp%f_x1(1:local_size_x1,1:local_size_x2),ierr)
+  call sll_binary_file_close(restart_id,ierr)    
+
+end subroutine write_restart_file
+
+subroutine read_restart_file(restart_file, sp, time)
+
+  character(len=*), intent(in)    :: restart_file
+  type(species),    intent(in)    :: sp
+  sll_real64,       intent(inout) :: time
+  character(len=4)                :: cproc
+  sll_int32                       :: prank
+  sll_int32                       :: ierr
+  sll_int32                       :: restart_id
+  sll_int32                       :: local_size_x1
+  sll_int32                       :: local_size_x2
+  logical                         :: file_exists
+
+  prank = sll_get_collective_rank( sll_world_collective )
+  call int2string(prank,cproc)
+  call compute_local_sizes(sp%layout_x1, local_size_x1, local_size_x2)
+
+  print*, restart_file
+
+  if (restart_file == "no_restart_file") return
+
+  inquire(file=restart_file//'_proc_'//cproc//sp%label//'.rst', exist=file_exists)
+
+  if(.not.(file_exists))then
+    print *,'#file ',restart_file//sp%label//'_proc_'//cproc//sp%label//'.rst'
+    print *,'does not exist'
+    stop
+  end if
+
+  open(unit=restart_id, &
+       file=restart_file//'_proc_'//cproc//sp%label//'.rst', &
+       access="stream", &
+       form='unformatted', &
+       iostat=ierr)      
+
+  if( ierr /= 0 ) then
+    print *, 'ERROR while opening file ', &
+    restart_file//'_proc_'//cproc//sp%label//'.rst', &
+   '. Called from run_vp2d_cartesian().'
+    stop
+  end if
+  print *,'#read restart file '//restart_file//sp%label//'_proc_'//cproc//'.rst'      
+  call sll_binary_read_array_0d(restart_id,time,ierr)
+  call sll_binary_read_array_2d(restart_id,sp%f_x1(1:local_size_x1,1:local_size_x2),ierr)
+  call sll_binary_file_close(restart_id,ierr)
+
+end subroutine read_restart_file
 
 end module sll_m_species
