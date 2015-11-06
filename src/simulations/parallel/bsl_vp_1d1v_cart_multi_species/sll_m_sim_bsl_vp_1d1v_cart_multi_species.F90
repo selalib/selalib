@@ -147,6 +147,8 @@ type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_car
   !poisson solver
   class(sll_poisson_1d_base), pointer   :: poisson
   sll_real64 :: mass_ratio
+  sll_real64, dimension(:),   pointer :: efield
+  sll_real64, dimension(:),   pointer :: e_app
    
 contains
 
@@ -179,7 +181,9 @@ function new_vp2d_par_cart_multi_species( &
     num_run)
        
 end function new_vp2d_par_cart_multi_species
-  
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+
 subroutine change_initial_function_vp2d_par_cart_multi_species( &
   sim,                                                          &
   init_func_sp1,                                                &
@@ -189,869 +193,872 @@ subroutine change_initial_function_vp2d_par_cart_multi_species( &
   params_sp2,                                                   &
   num_params_sp2)
 
-  class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
 
-  procedure(sll_scalar_initializer_2d),  pointer    :: init_func_sp1
-  sll_int32,                             intent(in) :: num_params_sp1
-  sll_real64, dimension(num_params_sp1), intent(in) :: params_sp1
-  procedure(sll_scalar_initializer_2d),  pointer    :: init_func_sp2
-  sll_int32,                             intent(in) :: num_params_sp2
-  sll_real64, dimension(num_params_sp2), intent(in) :: params_sp2
+procedure(sll_scalar_initializer_2d),  pointer    :: init_func_sp1
+sll_int32,                             intent(in) :: num_params_sp1
+sll_real64, dimension(num_params_sp1), intent(in) :: params_sp1
+procedure(sll_scalar_initializer_2d),  pointer    :: init_func_sp2
+sll_int32,                             intent(in) :: num_params_sp2
+sll_real64, dimension(num_params_sp2), intent(in) :: params_sp2
 
-  !local variables
-  sll_int32 :: ierr
-  sll_int32 :: i
-  
-  sim%sp1%init_func => init_func_sp1
+!local variables
+sll_int32 :: ierr
+sll_int32 :: i
 
-  if(associated(sim%sp1%params))then
-    SLL_DEALLOCATE(sim%sp1%params,ierr)
-  endif
+sim%sp1%init_func => init_func_sp1
 
-  if(num_params_sp1<1)then
-    print *,'#num_params should be >=1 in change_initial_function_vp2d_par_cart'
-    stop
-  endif
-  SLL_ALLOCATE(sim%sp1%params(num_params_sp1),ierr)
-  if(size(params_sp1)<num_params_sp1)then
-    print *,'#size of params is not good in change_initial_function_vp2d_par_cart'
-    stop
-  endif
-  do i=1,num_params_sp1
-    sim%sp1%params(i) = params_sp1(i)
-  enddo
+if(associated(sim%sp1%params))then
+  SLL_DEALLOCATE(sim%sp1%params,ierr)
+endif
 
-  sim%sp2%init_func => init_func_sp2
-  if(associated(sim%sp2%params))then
-    SLL_DEALLOCATE(sim%sp2%params,ierr)
-  endif
-  if(num_params_sp2<1)then
-    print *,'#num_params should be >=1 in change_initial_function_vp2d_par_cart'
-    stop
-  endif
-  SLL_ALLOCATE(sim%sp2%params(num_params_sp2),ierr)
-  if(size(params_sp2)<num_params_sp2)then
-    print *,'#size of params is not good in change_initial_function_vp2d_par_cart'
-    stop
-  endif
-  do i=1,num_params_sp2
-    sim%sp2%params(i) = params_sp2(i)
-  enddo
+if(num_params_sp1<1)then
+  print *,'#num_params should be >=1 in change_initial_function_vp2d_par_cart'
+  stop
+endif
+SLL_ALLOCATE(sim%sp1%params(num_params_sp1),ierr)
+if(size(params_sp1)<num_params_sp1)then
+  print *,'#size of params is not good in change_initial_function_vp2d_par_cart'
+  stop
+endif
+do i=1,num_params_sp1
+  sim%sp1%params(i) = params_sp1(i)
+enddo
+
+sim%sp2%init_func => init_func_sp2
+if(associated(sim%sp2%params))then
+  SLL_DEALLOCATE(sim%sp2%params,ierr)
+endif
+if(num_params_sp2<1)then
+  print *,'#num_params should be >=1 in change_initial_function_vp2d_par_cart'
+  stop
+endif
+SLL_ALLOCATE(sim%sp2%params(num_params_sp2),ierr)
+if(size(params_sp2)<num_params_sp2)then
+  print *,'#size of params is not good in change_initial_function_vp2d_par_cart'
+  stop
+endif
+do i=1,num_params_sp2
+  sim%sp2%params(i) = params_sp2(i)
+enddo
 
 end subroutine change_initial_function_vp2d_par_cart_multi_species
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine init_vp2d_par_cart_multi_species( sim, filename, num_run )
 
-  class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
-  character(len=*), intent(in), optional :: filename
-  sll_int32, intent(in), optional :: num_run
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+character(len=*), intent(in), optional :: filename
+sll_int32, intent(in), optional :: num_run
 
-  character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart_multi_species'
-  character(len=128)          :: err_msg
+character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart_multi_species'
+character(len=128)          :: err_msg
 
-  !geometry
-  character(len=256) :: mesh_case_x1
-  sll_int32 :: num_cells_x1
-  sll_real64 :: x1_min
-  sll_real64 :: x1_max
-  sll_int32 :: nbox_x1
-  character(len=256) :: mesh_case_x2_sp1
-  character(len=256) :: mesh_case_x2_sp2
-  sll_int32 :: num_cells_x2_sp1
-  sll_int32 :: num_cells_x2_sp2
-  sll_real64 :: x2_min_sp1
-  sll_real64 :: x2_max_sp1
-  sll_real64 :: x2_min_sp2
-  sll_real64 :: x2_max_sp2
+!geometry
+character(len=256) :: mesh_case_x1
+sll_int32 :: num_cells_x1
+sll_real64 :: x1_min
+sll_real64 :: x1_max
+sll_int32 :: nbox_x1
+character(len=256) :: mesh_case_x2_sp1
+character(len=256) :: mesh_case_x2_sp2
+sll_int32 :: num_cells_x2_sp1
+sll_int32 :: num_cells_x2_sp2
+sll_real64 :: x2_min_sp1
+sll_real64 :: x2_max_sp1
+sll_real64 :: x2_min_sp2
+sll_real64 :: x2_max_sp2
 
-  !physical_params
-  sll_real64 :: mass_ratio
-  sll_real64 :: vd
-  sll_real64 :: alpha_sp1
-  sll_real64 :: alpha_sp2
+!physical_params
+sll_real64 :: mass_ratio
+sll_real64 :: vd
+sll_real64 :: alpha_sp1
+sll_real64 :: alpha_sp2
+
+!initial_function
+character(len=256) :: initial_function_case_sp1
+sll_real64 :: kmode_sp1
+sll_real64 :: eps_sp1
+sll_real64 :: sigma_sp1
+sll_real64 :: v0_sp1
+sll_real64 :: factor1_sp1
+sll_real64 :: alpha_gaussian_sp1
+character(len=256) :: initial_function_case_sp2
+sll_real64 :: kmode_sp2
+sll_real64 :: eps_sp2
+sll_real64 :: sigma_sp2
+sll_real64 :: v0_sp2
+sll_real64 :: factor1_sp2
+sll_real64 :: alpha_gaussian_sp2
+character(len=256) :: restart_file
+logical :: time_init_from_restart_file
+
+!time_iterations
+sll_real64 :: dt
+sll_int32 :: number_iterations
+sll_int32 :: freq_diag
+sll_int32 :: freq_diag_restart
+sll_int32 :: freq_diag_time
+sll_int32 :: nb_mode
+sll_real64 :: time_init
+character(len=256) :: split_case
+
+!advector
+character(len=256) :: advector_x1_sp1
+sll_int32 :: order_x1_sp1
+character(len=256) :: advector_x1_sp2
+sll_int32 :: order_x1_sp2
+character(len=256) :: advector_x2_sp1
+sll_int32 :: order_x2_sp1
+character(len=256) :: advector_x2_sp2
+sll_int32 :: order_x2_sp2
+character(len=256) :: advection_form_x2_sp1
+character(len=256) :: advection_form_x2_sp2
+character(len=256) :: integration_case
+sll_real64 :: factor_x1
+sll_real64 :: factor_x2_rho
+sll_real64 :: factor_x2_1
+
+!poisson
+character(len=256) :: poisson_solver
+
+!drive
+character(len=256) :: drive_type
+sll_real64 :: keen_t0
+sll_real64 :: keen_tL
+sll_real64 :: keen_tR
+sll_real64 :: keen_twL
+sll_real64 :: keen_twR
+sll_real64 :: keen_tflat
+logical :: keen_turn_drive_off
+sll_real64 :: keen_Edrmax
+sll_real64 :: keen_omegadr
+
+!local variables
+intrinsic :: trim
+sll_int32             :: IO_stat
+sll_int32                            :: input_file
+type(sll_cartesian_mesh_1d), pointer :: mesh_x1
+type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp1
+type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp2
+sll_int32 :: ierr
+sll_int32, parameter  :: param_out = 37, param_out_drive = 40
+sll_int32 :: i
+sll_int32 :: num_threads
+sll_int32 :: tid
+character(len=256) :: str_num_run
+character(len=256) :: filename_loc
+sll_int32          :: psize
+sll_int32          :: prank
+logical            :: mpi_master
+sll_int32          :: np_x1
+sll_int32          :: np_x2_sp1
+sll_int32          :: np_x2_sp2
+sll_int32          :: num_dof_x2_sp1
+sll_int32          :: num_dof_x2_sp2
+sll_int32          :: nproc_x1
+sll_int32          :: nproc_x2
+sll_int32          :: global_indices_sp1(2)
+sll_int32          :: global_indices_sp2(2)
+sll_int32          :: local_size_x1_sp1
+sll_int32          :: local_size_x1_sp2
+sll_int32          :: local_size_x2_sp1
+sll_int32          :: local_size_x2_sp2
   
-  !initial_function
-  character(len=256) :: initial_function_case_sp1
-  sll_real64 :: kmode_sp1
-  sll_real64 :: eps_sp1
-  sll_real64 :: sigma_sp1
-  sll_real64 :: v0_sp1
-  sll_real64 :: factor1_sp1
-  sll_real64 :: alpha_gaussian_sp1
-  character(len=256) :: initial_function_case_sp2
-  sll_real64 :: kmode_sp2
-  sll_real64 :: eps_sp2
-  sll_real64 :: sigma_sp2
-  sll_real64 :: v0_sp2
-  sll_real64 :: factor1_sp2
-  sll_real64 :: alpha_gaussian_sp2
-  character(len=256) :: restart_file
-  logical :: time_init_from_restart_file
-  
-  !time_iterations
-  sll_real64 :: dt
-  sll_int32 :: number_iterations
-  sll_int32 :: freq_diag
-  sll_int32 :: freq_diag_restart
-  sll_int32 :: freq_diag_time
-  sll_int32 :: nb_mode
-  sll_real64 :: time_init
-  character(len=256) :: split_case
+! namelists for data input
+namelist /geometry/ &
+  mesh_case_x1, &
+  num_cells_x1, &
+  x1_min, &
+  x1_max, &
+  nbox_x1, &
+  mesh_case_x2_sp1, &
+  mesh_case_x2_sp2, &
+  num_cells_x2_sp1, &
+  num_cells_x2_sp2, &
+  x2_min_sp1, &
+  x2_max_sp1, &
+  x2_min_sp2, &
+  x2_max_sp2
 
-  !advector
-  character(len=256) :: advector_x1_sp1
-  sll_int32 :: order_x1_sp1
-  character(len=256) :: advector_x1_sp2
-  sll_int32 :: order_x1_sp2
-  character(len=256) :: advector_x2_sp1
-  sll_int32 :: order_x2_sp1
-  character(len=256) :: advector_x2_sp2
-  sll_int32 :: order_x2_sp2
-  character(len=256) :: advection_form_x2_sp1
-  character(len=256) :: advection_form_x2_sp2
-  character(len=256) :: integration_case
-  sll_real64 :: factor_x1
-  sll_real64 :: factor_x2_rho
-  sll_real64 :: factor_x2_1
+namelist /physical_params/ &
+     mass_ratio, &
+     vd, &
+     alpha_sp1, &
+     alpha_sp2
 
-  !poisson
-  character(len=256) :: poisson_solver
-  
-  !drive
-  character(len=256) :: drive_type
-  sll_real64 :: keen_t0
-  sll_real64 :: keen_tL
-  sll_real64 :: keen_tR
-  sll_real64 :: keen_twL
-  sll_real64 :: keen_twR
-  sll_real64 :: keen_tflat
-  logical :: keen_turn_drive_off
-  sll_real64 :: keen_Edrmax
-  sll_real64 :: keen_omegadr
-  
-  !local variables
-  intrinsic :: trim
-  sll_int32             :: IO_stat
-  sll_int32                            :: input_file
-  type(sll_cartesian_mesh_1d), pointer :: mesh_x1
-  type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp1
-  type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp2
-  sll_int32 :: ierr
-  sll_int32, parameter  :: param_out = 37, param_out_drive = 40
-  sll_int32 :: i
-  sll_int32 :: num_threads
-  sll_int32 :: tid
-  character(len=256) :: str_num_run
-  character(len=256) :: filename_loc
-  sll_int32          :: psize
-  sll_int32          :: prank
-  logical            :: mpi_master
-  sll_int32          :: np_x1
-  sll_int32          :: np_x2_sp1
-  sll_int32          :: np_x2_sp2
-  sll_int32          :: num_dof_x2_sp1
-  sll_int32          :: num_dof_x2_sp2
-  sll_int32          :: nproc_x1
-  sll_int32          :: nproc_x2
-  
-  ! namelists for data input
-  namelist /geometry/ &
-    mesh_case_x1, &
-    num_cells_x1, &
-    x1_min, &
-    x1_max, &
-    nbox_x1, &
-    mesh_case_x2_sp1, &
-    mesh_case_x2_sp2, &
-    num_cells_x2_sp1, &
-    num_cells_x2_sp2, &
-    x2_min_sp1, &
-    x2_max_sp1, &
-    x2_min_sp2, &
-    x2_max_sp2
+namelist /initial_function/ &
+  initial_function_case_sp1, &
+  kmode_sp1, &
+  eps_sp1, &
+  sigma_sp1, &
+  v0_sp1, &
+  factor1_sp1, &
+  alpha_gaussian_sp1, &
+  initial_function_case_sp2, &
+  kmode_sp2, &
+  eps_sp2, &
+  sigma_sp2, &
+  v0_sp2, &
+  factor1_sp2, &
+  alpha_gaussian_sp2, &
+  restart_file, &
+  time_init_from_restart_file
 
-  namelist /physical_params/ &
-       mass_ratio, &
-       vd, &
-       alpha_sp1, &
-       alpha_sp2
-  
-  namelist /initial_function/ &
-    initial_function_case_sp1, &
-    kmode_sp1, &
-    eps_sp1, &
-    sigma_sp1, &
-    v0_sp1, &
-    factor1_sp1, &
-    alpha_gaussian_sp1, &
-    initial_function_case_sp2, &
-    kmode_sp2, &
-    eps_sp2, &
-    sigma_sp2, &
-    v0_sp2, &
-    factor1_sp2, &
-    alpha_gaussian_sp2, &
-    restart_file, &
-    time_init_from_restart_file
+namelist /time_iterations/ &
+  dt, &
+  number_iterations, &
+  freq_diag, &
+  freq_diag_time, &
+  freq_diag_restart, &
+  nb_mode, &
+  time_init, &
+  split_case
 
-  namelist /time_iterations/ &
-    dt, &
-    number_iterations, &
-    freq_diag, &
-    freq_diag_time, &
-    freq_diag_restart, &
-    nb_mode, &
-    time_init, &
-    split_case
+namelist /advector/ &
+  advector_x1_sp1, &
+  order_x1_sp1, &
+  advector_x1_sp2, &
+  order_x1_sp2, &
+  advector_x2_sp1, &
+  order_x2_sp1, &
+  advector_x2_sp2, &
+  order_x2_sp2, &
+  advection_form_x2_sp1, &
+  advection_form_x2_sp2, &
+  factor_x1, &
+  factor_x2_rho, &
+  factor_x2_1, &
+  integration_case
 
-  namelist /advector/ &
-    advector_x1_sp1, &
-    order_x1_sp1, &
-    advector_x1_sp2, &
-    order_x1_sp2, &
-    advector_x2_sp1, &
-    order_x2_sp1, &
-    advector_x2_sp2, &
-    order_x2_sp2, &
-    advection_form_x2_sp1, &
-    advection_form_x2_sp2, &
-    factor_x1, &
-    factor_x2_rho, &
-    factor_x2_1, &
-    integration_case
+namelist /poisson/ &
+  poisson_solver
 
-  namelist /poisson/ &
-    poisson_solver
+namelist /drive/ &
+  drive_type, &
+  keen_t0, &
+  keen_twL, &
+  keen_twR, &
+  !keen_tstart, &
+  keen_tflat, &
+  keen_tL, &
+  keen_tR, &
+  keen_turn_drive_off, &
+  keen_Edrmax, &
+  keen_omegadr
 
-  namelist /drive/ &
-    drive_type, &
-    keen_t0, &
-    keen_twL, &
-    keen_twR, &
-    !keen_tstart, &
-    keen_tflat, &
-    keen_tL, &
-    keen_tR, &
-    keen_turn_drive_off, &
-    keen_Edrmax, &
-    keen_omegadr
+num_threads = 1
 
-  num_threads = 1
+sim%num_threads = num_threads
+print *,'#num_threads=',num_threads
 
-  sim%num_threads = num_threads
-  print *,'#num_threads=',num_threads
+prank = sll_get_collective_rank( sll_world_collective )
+psize = sll_get_collective_size( sll_world_collective )
+mpi_master = merge(.true., .false., prank == 0)
 
-  prank = sll_get_collective_rank( sll_world_collective )
-  psize = sll_get_collective_size( sll_world_collective )
-  mpi_master = merge(.true., .false., prank == 0)
+!set default parameters
+!geometry
+mesh_case_x1 = "SLL_LANDAU_MESH"
+num_cells_x1 = 32
+x1_min = 0.0_f64
+nbox_x1 = 1
+mesh_case_x2_sp1 = "SLL_CARTESIAN_MESH"
+num_cells_x2_sp1 = 64
+x2_min_sp1 = -6._f64
+x2_max_sp1 = 6._f64
+mesh_case_x2_sp2 = "SLL_CARTESIAN_MESH"
+num_cells_x2_sp2 = 64
+x2_min_sp2 = -0.5_f64
+x2_max_sp2 = 0.5_f64
 
-  !set default parameters
-  !geometry
-  mesh_case_x1 = "SLL_LANDAU_MESH"
-  num_cells_x1 = 32
-  x1_min = 0.0_f64
-  nbox_x1 = 1
-  mesh_case_x2_sp1 = "SLL_CARTESIAN_MESH"
-  num_cells_x2_sp1 = 64
-  x2_min_sp1 = -6._f64
-  x2_max_sp1 = 6._f64
-  mesh_case_x2_sp2 = "SLL_CARTESIAN_MESH"
-  num_cells_x2_sp2 = 64
-  x2_min_sp2 = -0.5_f64
-  x2_max_sp2 = 0.5_f64
-
-  !physical_params
-  mass_ratio = 0.0005_f64
-  vd = 0._f64
-  alpha_sp1 = 1._f64
-  alpha_sp2 = 1._f64
-      
-  !initial_function
-  initial_function_case_sp1 = "SLL_LANDAU"
-  kmode_sp1 = 0.5_f64
-  eps_sp1 = 0.001_f64
-  sigma_sp1 = 1._f64
-  v0_sp1 = 0._f64
-  factor1_sp1 = 1._f64/sqrt(2._f64*sll_pi)
-  alpha_gaussian_sp1 = 0.2_f64
-  
-  initial_function_case_sp2 = "SLL_LANDAU"
-  kmode_sp2 = 0.5_f64
-  eps_sp2 = 0.001_f64
-  sigma_sp2 = 1._f64
-  v0_sp2 = 0._f64
-  factor1_sp2 = 1._f64/sqrt(2._f64*sll_pi)
-  alpha_gaussian_sp2 = 0.2_f64
-  
-  restart_file = "no_restart_file"
-  time_init_from_restart_file = .false.
-  
-  !time_iterations
-  dt = 0.1_f64
-  number_iterations = 600
-  freq_diag = 100
-  freq_diag_time = 1
-  freq_diag_restart = 5000
-  nb_mode = 5
-  time_init = 0._f64
-  split_case = "SLL_STRANG_VTV" 
-  !split_case = "SLL_STRANG_TVT" 
-  !split_case = "SLL_ORDER6VPnew1_VTV" 
-  !split_case = "SLL_ORDER6VPnew2_VTV" 
-  !split_case = "SLL_ORDER6_VTV"
-  !split_case = "SLL_LIE_TV"
-
-  !advector
-  advector_x1_sp1 = "SLL_LAGRANGE"
-  order_x1_sp1 = 4
-  advector_x1_sp2 = "SLL_LAGRANGE"
-  order_x1_sp2 = 4
-  advector_x2_sp1 = "SLL_LAGRANGE"
-  order_x2_sp1 = 4
-  advector_x2_sp2 = "SLL_LAGRANGE"
-  order_x2_sp2 = 4
-  advection_form_x2_sp1 = "SLL_ADVECTIVE"
-  advection_form_x2_sp2 = "SLL_ADVECTIVE"
-  factor_x1 = 1._f64
-  factor_x2_rho = 1._f64
-  factor_x2_1 = 1._f64
-
-  integration_case = "SLL_TRAPEZOID"
-  
-  !poisson
-  poisson_solver = "SLL_FFT"
-  
-  !drive
-  drive_type = "SLL_NO_DRIVE"
-  !drive_type = "SLL_KEEN_DRIVE"  
-    !keen_t0 = 0.
-    !keen_tL = 69.
-    !keen_tR = 307.
-    !keen_twL = 20.
-    !keen_twR = 20.
-    !keen_tflat = 100.
-    !keen_turn_drive_off = .true.
-    !keen_Edrmax = 0.2
-    !keen_omegadr = 0.37	
-
-  if(present(num_run))then
-    write(str_num_run, *) num_run
-    str_num_run = adjustl(str_num_run) 
-    sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
-  else      
-    sim%thdiag_filename = "thdiag.dat"
-  endif
-
-  if(present(filename))then
-
-    filename_loc = filename
-    filename_loc = adjustl(filename_loc)
+!physical_params
+mass_ratio = 0.0005_f64
+vd = 0._f64
+alpha_sp1 = 1._f64
+alpha_sp2 = 1._f64
     
-    if(present(num_run)) then
-      filename_loc = trim(filename)//"_"//trim(str_num_run)
-    endif
+!initial_function
+initial_function_case_sp1 = "SLL_LANDAU"
+kmode_sp1 = 0.5_f64
+eps_sp1 = 0.001_f64
+sigma_sp1 = 1._f64
+v0_sp1 = 0._f64
+factor1_sp1 = 1._f64/sqrt(2._f64*sll_pi)
+alpha_gaussian_sp1 = 0.2_f64
 
-    call sll_new_file_id(input_file, ierr)
+initial_function_case_sp2 = "SLL_LANDAU"
+kmode_sp2 = 0.5_f64
+eps_sp2 = 0.001_f64
+sigma_sp2 = 1._f64
+v0_sp2 = 0._f64
+factor1_sp2 = 1._f64/sqrt(2._f64*sll_pi)
+alpha_gaussian_sp2 = 0.2_f64
 
-    open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
-    if ( IO_stat /= 0 ) then
-      err_msg = 'failed to open file '//trim(filename_loc)//'.nml'
-      SLL_ERROR( this_sub_name, err_msg )
-    end if
+restart_file = "no_restart_file"
+time_init_from_restart_file = .false.
 
-    if(mpi_master)then
-      print *,'#initialization with filename:'
-      print *,'#',trim(filename_loc)//'.nml'
-    endif
+!time_iterations
+dt = 0.1_f64
+number_iterations = 600
+freq_diag = 100
+freq_diag_time = 1
+freq_diag_restart = 5000
+nb_mode = 5
+time_init = 0._f64
+split_case = "SLL_STRANG_VTV" 
+!split_case = "SLL_STRANG_TVT" 
+!split_case = "SLL_ORDER6VPnew1_VTV" 
+!split_case = "SLL_ORDER6VPnew2_VTV" 
+!split_case = "SLL_ORDER6_VTV"
+!split_case = "SLL_LIE_TV"
 
-    read(input_file, geometry)
-    read(input_file, physical_params)
-    read(input_file, initial_function)
-    read(input_file, time_iterations)
-    read(input_file, advector)
-    read(input_file, poisson)
-    read(input_file, drive)
-    close(input_file)
-  else
-    if(mpi_master)then
-      print *,'#initialization with default parameters'
-    endif      
+!advector
+advector_x1_sp1 = "SLL_LAGRANGE"
+order_x1_sp1 = 4
+advector_x1_sp2 = "SLL_LAGRANGE"
+order_x1_sp2 = 4
+advector_x2_sp1 = "SLL_LAGRANGE"
+order_x2_sp1 = 4
+advector_x2_sp2 = "SLL_LAGRANGE"
+order_x2_sp2 = 4
+advection_form_x2_sp1 = "SLL_ADVECTIVE"
+advection_form_x2_sp2 = "SLL_ADVECTIVE"
+factor_x1 = 1._f64
+factor_x2_rho = 1._f64
+factor_x2_1 = 1._f64
+
+integration_case = "SLL_TRAPEZOID"
+
+!poisson
+poisson_solver = "SLL_FFT"
+
+!drive
+drive_type = "SLL_NO_DRIVE"
+!drive_type = "SLL_KEEN_DRIVE"  
+  !keen_t0 = 0.
+  !keen_tL = 69.
+  !keen_tR = 307.
+  !keen_twL = 20.
+  !keen_twR = 20.
+  !keen_tflat = 100.
+  !keen_turn_drive_off = .true.
+  !keen_Edrmax = 0.2
+  !keen_omegadr = 0.37	
+
+if(present(num_run))then
+  write(str_num_run, *) num_run
+  str_num_run = adjustl(str_num_run) 
+  sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
+else      
+  sim%thdiag_filename = "thdiag.dat"
+endif
+
+if(present(filename))then
+
+  filename_loc = filename
+  filename_loc = adjustl(filename_loc)
+  
+  if(present(num_run)) then
+    filename_loc = trim(filename)//"_"//trim(str_num_run)
   endif
 
-  !geometry
-  select case (mesh_case_x1)
-    case ("SLL_LANDAU_MESH")
-      x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_sp1
-      mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
-      call get_node_positions( mesh_x1, sim%x1_array )
-    case ("SLL_CARTESIAN_MESH")
-      mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
-      call get_node_positions( mesh_x1, sim%x1_array )
-    case default
-      print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
-      print*,'#in init_vp2d_par_cart'
-      stop 
-  end select
-  
-  select case (mesh_case_x2_sp1)
-    case ("SLL_CARTESIAN_MESH")
-      mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,eta_min=x2_min_sp1, eta_max=x2_max_sp1)
-      call get_node_positions( mesh_x2_sp1, sim%sp1%x2_array )
-      SLL_ALLOCATE(sim%sp1%x2_array_omp(num_cells_x2_sp1+1,0:sim%num_threads-1),ierr)
-      do i=0,sim%num_threads-1
-        sim%sp1%x2_array_omp(:,i) = sim%sp1%x2_array(:)
-      enddo
-    case default
-      print*,'#mesh_case_x2', mesh_case_x2_sp1, ' not implemented'
-      print*,'#in init_vp2d_par_cart'
-      stop 
-  end select
-  sim%sp1%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp1)
+  call sll_new_file_id(input_file, ierr)
 
-  select case (mesh_case_x2_sp2)
-    case ("SLL_CARTESIAN_MESH")
-      mesh_x2_sp2 => new_cartesian_mesh_1d(num_cells_x2_sp2,eta_min=x2_min_sp2, eta_max=x2_max_sp2)
-      call get_node_positions( mesh_x2_sp2, sim%sp2%x2_array )
-      SLL_ALLOCATE(sim%sp2%x2_array_omp(num_cells_x2_sp2+1,0:sim%num_threads-1),ierr)
-      do i=0,sim%num_threads-1
-        sim%sp2%x2_array_omp(:,i) = sim%sp2%x2_array(:)
-      enddo
-    case default
-      print*,'#mesh_case_x2', mesh_case_x2_sp2, ' not implemented'
-      print*,'#in init_vp2d_par_cart'
-      stop 
-  end select
-  sim%sp2%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp2)
+  open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
+  if ( IO_stat /= 0 ) then
+    err_msg = 'failed to open file '//trim(filename_loc)//'.nml'
+    SLL_ERROR( this_sub_name, err_msg )
+  end if
 
-  !initial function
-  sim%sp1%nrj0 = 0._f64
-  sim%sp1%kx   = kmode_sp1
-  sim%sp1%eps  = eps_sp1
-  select case (initial_function_case_sp1)
-  case ("SLL_LANDAU")
-    sim%sp1%init_func => sll_landau_initializer_2d
-    SLL_ALLOCATE(sim%sp1%params(4),ierr)
-    sim%sp1%params(1) = kmode_sp1
-    sim%sp1%params(2) = eps_sp1
-    sim%sp1%params(3) = v0_sp1
-    sim%sp1%params(4) = sigma_sp1
-    sim%sp1%nrj0 = 0._f64  !compute the right value
-    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-    !for the moment
-    sim%sp1%kx  = kmode_sp1
-    sim%sp1%eps = eps_sp1
-  case ("SLL_BUMP_ON_TAIL")
-    sim%sp1%init_func => sll_bump_on_tail_initializer_2d
-    SLL_ALLOCATE(sim%sp1%params(2),ierr)
-    sim%sp1%params(1) = kmode_sp1
-    sim%sp1%params(2) = eps_sp1
-    sim%sp1%nrj0 = 0._f64  !compute the right value
-    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-    !for the moment
-    sim%sp1%kx = kmode_sp1
-    sim%sp1%eps = eps_sp1
-  case ("SLL_TWO_STREAM_INSTABILITY")
-    sim%sp1%init_func => sll_two_stream_instability_initializer_2d
-    SLL_ALLOCATE(sim%sp1%params(4),ierr)
-    sim%sp1%params(1) = kmode_sp1
-    sim%sp1%params(2) = eps_sp1
-    sim%sp1%params(3) = sigma_sp1
-    sim%sp1%params(4) = factor1_sp1
-    sim%sp1%nrj0 = 0._f64  !compute the right value
-    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-    !for the moment
-    sim%sp1%kx  = kmode_sp1
-    sim%sp1%eps = eps_sp1
-  case ("SLL_BEAM")  
-    sim%sp1%init_func => sll_beam_initializer_2d
-    SLL_ALLOCATE(sim%sp1%params(1),ierr)
-    sim%sp1%params(1) = alpha_gaussian_sp1
-  case default
-    print *,'#init_func_case not implemented'
-    print *,'#in init_vp2d_par_cart'  
-    stop
-  end select
-
-  !initial function
-  sim%sp2%nrj0 = 0._f64
-  sim%sp2%kx   = kmode_sp2
-  sim%sp2%eps  = eps_sp2
-  select case (initial_function_case_sp2)
-  case ("SLL_LANDAU")
-    sim%sp2%init_func => sll_landau_initializer_2d
-    SLL_ALLOCATE(sim%sp2%params(4),ierr)
-    sim%sp2%params(1) = kmode_sp2
-    sim%sp2%params(2) = eps_sp2
-    sim%sp2%params(3) = v0_sp2
-    sim%sp2%params(4) = sigma_sp2
-    sim%sp2%nrj0 = 0._f64  !compute the right value
-    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-    !for the moment
-    sim%sp2%kx  = kmode_sp2
-    sim%sp2%eps = eps_sp2
-  case ("SLL_BUMP_ON_TAIL")
-    sim%sp2%init_func => sll_bump_on_tail_initializer_2d
-    SLL_ALLOCATE(sim%sp2%params(2),ierr)
-    sim%sp2%params(1) = kmode_sp2
-    sim%sp2%params(2) = eps_sp2
-    sim%sp2%nrj0 = 0._f64  !compute the right value
-    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-    !for the moment
-    sim%sp2%kx  = kmode_sp2
-    sim%sp2%eps = eps_sp2
-  case ("SLL_TWO_STREAM_INSTABILITY")
-    sim%sp2%init_func => sll_two_stream_instability_initializer_2d
-    SLL_ALLOCATE(sim%sp2%params(4),ierr)
-    sim%sp2%params(1) = kmode_sp2
-    sim%sp2%params(2) = eps_sp2
-    sim%sp2%params(3) = sigma_sp2
-    sim%sp2%params(4) = factor1_sp2
-    sim%sp2%nrj0 = 0._f64  !compute the right value
-    !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-    !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-    !for the moment
-    sim%sp2%kx  = kmode_sp2
-    sim%sp2%eps = eps_sp2
-  case ("SLL_BEAM")  
-    sim%sp2%init_func => sll_beam_initializer_2d
-    SLL_ALLOCATE(sim%sp2%params(1),ierr)
-    sim%sp2%params(1) = alpha_gaussian_sp2
-  case default
-    print *,'#init_func_case not implemented'
-    print *,'#in init_vp2d_par_cart'  
-    stop
-  end select
-
-  sim%time_init_from_restart_file = time_init_from_restart_file
-  sim%restart_file = restart_file
-  
-  !time iterations
-  sim%dt=dt
-  sim%num_iterations=number_iterations
-  sim%freq_diag=freq_diag
-  sim%freq_diag_restart=freq_diag_restart
-  sim%freq_diag_time=freq_diag_time
-  sim%nb_mode = nb_mode
-  sim%time_init = time_init
-  
-  if(sim%nb_mode<0)then
-    print *,'#bad value of nb_mode=',nb_mode      
-    print *,'#should be >=0'
-    print *,'#in init_vp2d_par_cart'
-    stop      
+  if(mpi_master)then
+    print *,'#initialization with filename:'
+    print *,'#',trim(filename_loc)//'.nml'
   endif
-  
-  select case (split_case)    
-    case ("SLL_LIE_TV")
-      sim%split => new_time_splitting_coeff(SLL_LIE_TV)
-    case ("SLL_LIE_VT") 
-      sim%split => new_time_splitting_coeff(SLL_LIE_VT)
-    case ("SLL_STRANG_TVT") 
-      sim%split => new_time_splitting_coeff(SLL_STRANG_TVT)
-    case ("SLL_STRANG_VTV") 
-      sim%split => new_time_splitting_coeff(SLL_STRANG_VTV)
-    case ("SLL_TRIPLE_JUMP_TVT") 
-      sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_TVT)
-    case ("SLL_TRIPLE_JUMP_VTV") 
-      sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
-    case ("SLL_ORDER6_VTV") 
-      sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
-    case ("SLL_ORDER6VP_TVT") 
-      sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
-    case ("SLL_ORDER6VP_VTV") 
-      sim%split => new_time_splitting_coeff(SLL_ORDER6VP_VTV,dt=dt)
-    case ("SLL_ORDER6VPnew_TVT") 
-      sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew_TVT,dt=dt)
-    case ("SLL_ORDER6VPnew1_VTV") 
-      sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew1_VTV,dt=dt)
-    case ("SLL_ORDER6VPnew2_VTV") 
-      sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
-    case default
-      print *,'#split_case not defined'
-      print *,'#in initialize_vlasov_par_poisson_seq_cart'
-      stop       
-  end select
 
-  !advector
-  SLL_ALLOCATE(sim%sp1%advect_x1(num_threads),ierr)
-  SLL_ALLOCATE(sim%sp1%advect_x2(num_threads),ierr)
-  SLL_ALLOCATE(sim%sp2%advect_x1(num_threads),ierr)
-  SLL_ALLOCATE(sim%sp2%advect_x2(num_threads),ierr)
+  read(input_file, geometry)
+  read(input_file, physical_params)
+  read(input_file, initial_function)
+  read(input_file, time_iterations)
+  read(input_file, advector)
+  read(input_file, poisson)
+  read(input_file, drive)
+  close(input_file)
+else
+  if(mpi_master)then
+    print *,'#initialization with default parameters'
+  endif      
+endif
 
-  tid = 1
+!geometry
+select case (mesh_case_x1)
+  case ("SLL_LANDAU_MESH")
+    x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_sp1
+    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
+    call get_node_positions( mesh_x1, sim%x1_array )
+  case ("SLL_CARTESIAN_MESH")
+    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
+    call get_node_positions( mesh_x1, sim%x1_array )
+  case default
+    print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
+    print*,'#in init_vp2d_par_cart'
+    stop 
+end select
+
+select case (mesh_case_x2_sp1)
+  case ("SLL_CARTESIAN_MESH")
+    mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,eta_min=x2_min_sp1, eta_max=x2_max_sp1)
+    call get_node_positions( mesh_x2_sp1, sim%sp1%x2_array )
+    SLL_ALLOCATE(sim%sp1%x2_array_omp(num_cells_x2_sp1+1,0:sim%num_threads-1),ierr)
+    do i=0,sim%num_threads-1
+      sim%sp1%x2_array_omp(:,i) = sim%sp1%x2_array(:)
+    enddo
+  case default
+    print*,'#mesh_case_x2', mesh_case_x2_sp1, ' not implemented'
+    print*,'#in init_vp2d_par_cart'
+    stop 
+end select
+sim%sp1%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp1)
+
+select case (mesh_case_x2_sp2)
+  case ("SLL_CARTESIAN_MESH")
+    mesh_x2_sp2 => new_cartesian_mesh_1d(num_cells_x2_sp2,eta_min=x2_min_sp2, eta_max=x2_max_sp2)
+    call get_node_positions( mesh_x2_sp2, sim%sp2%x2_array )
+    SLL_ALLOCATE(sim%sp2%x2_array_omp(num_cells_x2_sp2+1,0:sim%num_threads-1),ierr)
+    do i=0,sim%num_threads-1
+      sim%sp2%x2_array_omp(:,i) = sim%sp2%x2_array(:)
+    enddo
+  case default
+    print*,'#mesh_case_x2', mesh_case_x2_sp2, ' not implemented'
+    print*,'#in init_vp2d_par_cart'
+    stop 
+end select
+sim%sp2%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp2)
+
+!initial function
+sim%sp1%nrj0 = 0._f64
+sim%sp1%kx   = kmode_sp1
+sim%sp1%eps  = eps_sp1
+select case (initial_function_case_sp1)
+case ("SLL_LANDAU")
+  sim%sp1%init_func => sll_landau_initializer_2d
+  SLL_ALLOCATE(sim%sp1%params(4),ierr)
+  sim%sp1%params(1) = kmode_sp1
+  sim%sp1%params(2) = eps_sp1
+  sim%sp1%params(3) = v0_sp1
+  sim%sp1%params(4) = sigma_sp1
+  sim%sp1%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sim%sp1%kx  = kmode_sp1
+  sim%sp1%eps = eps_sp1
+case ("SLL_BUMP_ON_TAIL")
+  sim%sp1%init_func => sll_bump_on_tail_initializer_2d
+  SLL_ALLOCATE(sim%sp1%params(2),ierr)
+  sim%sp1%params(1) = kmode_sp1
+  sim%sp1%params(2) = eps_sp1
+  sim%sp1%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sim%sp1%kx = kmode_sp1
+  sim%sp1%eps = eps_sp1
+case ("SLL_TWO_STREAM_INSTABILITY")
+  sim%sp1%init_func => sll_two_stream_instability_initializer_2d
+  SLL_ALLOCATE(sim%sp1%params(4),ierr)
+  sim%sp1%params(1) = kmode_sp1
+  sim%sp1%params(2) = eps_sp1
+  sim%sp1%params(3) = sigma_sp1
+  sim%sp1%params(4) = factor1_sp1
+  sim%sp1%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sim%sp1%kx  = kmode_sp1
+  sim%sp1%eps = eps_sp1
+case ("SLL_BEAM")  
+  sim%sp1%init_func => sll_beam_initializer_2d
+  SLL_ALLOCATE(sim%sp1%params(1),ierr)
+  sim%sp1%params(1) = alpha_gaussian_sp1
+case default
+  print *,'#init_func_case not implemented'
+  print *,'#in init_vp2d_par_cart'  
+  stop
+end select
+
+!initial function
+sim%sp2%nrj0 = 0._f64
+sim%sp2%kx   = kmode_sp2
+sim%sp2%eps  = eps_sp2
+select case (initial_function_case_sp2)
+case ("SLL_LANDAU")
+  sim%sp2%init_func => sll_landau_initializer_2d
+  SLL_ALLOCATE(sim%sp2%params(4),ierr)
+  sim%sp2%params(1) = kmode_sp2
+  sim%sp2%params(2) = eps_sp2
+  sim%sp2%params(3) = v0_sp2
+  sim%sp2%params(4) = sigma_sp2
+  sim%sp2%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sim%sp2%kx  = kmode_sp2
+  sim%sp2%eps = eps_sp2
+case ("SLL_BUMP_ON_TAIL")
+  sim%sp2%init_func => sll_bump_on_tail_initializer_2d
+  SLL_ALLOCATE(sim%sp2%params(2),ierr)
+  sim%sp2%params(1) = kmode_sp2
+  sim%sp2%params(2) = eps_sp2
+  sim%sp2%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sim%sp2%kx  = kmode_sp2
+  sim%sp2%eps = eps_sp2
+case ("SLL_TWO_STREAM_INSTABILITY")
+  sim%sp2%init_func => sll_two_stream_instability_initializer_2d
+  SLL_ALLOCATE(sim%sp2%params(4),ierr)
+  sim%sp2%params(1) = kmode_sp2
+  sim%sp2%params(2) = eps_sp2
+  sim%sp2%params(3) = sigma_sp2
+  sim%sp2%params(4) = factor1_sp2
+  sim%sp2%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sim%sp2%kx  = kmode_sp2
+  sim%sp2%eps = eps_sp2
+case ("SLL_BEAM")  
+  sim%sp2%init_func => sll_beam_initializer_2d
+  SLL_ALLOCATE(sim%sp2%params(1),ierr)
+  sim%sp2%params(1) = alpha_gaussian_sp2
+case default
+  print *,'#init_func_case not implemented'
+  print *,'#in init_vp2d_par_cart'  
+  stop
+end select
+
+sim%time_init_from_restart_file = time_init_from_restart_file
+sim%restart_file = restart_file
+
+!time iterations
+sim%dt=dt
+sim%num_iterations=number_iterations
+sim%freq_diag=freq_diag
+sim%freq_diag_restart=freq_diag_restart
+sim%freq_diag_time=freq_diag_time
+sim%nb_mode = nb_mode
+sim%time_init = time_init
+
+if(sim%nb_mode<0)then
+  print *,'#bad value of nb_mode=',nb_mode      
+  print *,'#should be >=0'
+  print *,'#in init_vp2d_par_cart'
+  stop      
+endif
+
+select case (split_case)    
+  case ("SLL_LIE_TV")
+    sim%split => new_time_splitting_coeff(SLL_LIE_TV)
+  case ("SLL_LIE_VT") 
+    sim%split => new_time_splitting_coeff(SLL_LIE_VT)
+  case ("SLL_STRANG_TVT") 
+    sim%split => new_time_splitting_coeff(SLL_STRANG_TVT)
+  case ("SLL_STRANG_VTV") 
+    sim%split => new_time_splitting_coeff(SLL_STRANG_VTV)
+  case ("SLL_TRIPLE_JUMP_TVT") 
+    sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_TVT)
+  case ("SLL_TRIPLE_JUMP_VTV") 
+    sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
+  case ("SLL_ORDER6_VTV") 
+    sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
+  case ("SLL_ORDER6VP_TVT") 
+    sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
+  case ("SLL_ORDER6VP_VTV") 
+    sim%split => new_time_splitting_coeff(SLL_ORDER6VP_VTV,dt=dt)
+  case ("SLL_ORDER6VPnew_TVT") 
+    sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew_TVT,dt=dt)
+  case ("SLL_ORDER6VPnew1_VTV") 
+    sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew1_VTV,dt=dt)
+  case ("SLL_ORDER6VPnew2_VTV") 
+    sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
+  case default
+    print *,'#split_case not defined'
+    print *,'#in initialize_vlasov_par_poisson_seq_cart'
+    stop       
+end select
+
+!advector
+SLL_ALLOCATE(sim%sp1%advect_x1(num_threads),ierr)
+SLL_ALLOCATE(sim%sp1%advect_x2(num_threads),ierr)
+SLL_ALLOCATE(sim%sp2%advect_x1(num_threads),ierr)
+SLL_ALLOCATE(sim%sp2%advect_x2(num_threads),ierr)
+
+tid = 1
 !#ifdef _OPENMP
 !!$OMP PARALLEL DEFAULT(SHARED) &
 !!$OMP PRIVATE(tid)
 !    tid = omp_get_thread_num()+1
 !#endif
-  select case (advector_x1_sp1)
-    case ("SLL_SPLINES") ! arbitrary order periodic splines
-      sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-        num_cells_x1, &
-        x1_min, &
-        x1_max, &
-        SPLINE, & 
-        order_x1_sp1) 
+select case (advector_x1_sp1)
+case ("SLL_SPLINES") ! arbitrary order periodic splines
+   sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+     num_cells_x1, &
+     x1_min, &
+     x1_max, &
+     SPLINE, & 
+     order_x1_sp1) 
 
-   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-      sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-        num_cells_x1, &
-        x1_min, &
-        x1_max, &
-        LAGRANGE, & 
-        order_x1_sp1)
+case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+    sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+      num_cells_x1, &
+      x1_min, &
+      x1_max, &
+      LAGRANGE, & 
+      order_x1_sp1)
 
-   case default
-     print*,'#advector in x1 for species 1 ', advector_x1_sp1, ' not implemented'
-     stop 
-   end select
-     
-   select case (advector_x1_sp2)
-   case ("SLL_SPLINES") ! arbitrary order periodic splines
-     sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-        num_cells_x1, &
-        x1_min, &
-        x1_max, &
-        SPLINE, & 
-        order_x1_sp2) 
+case default
+  print*,'#advector in x1 for species 1 ', advector_x1_sp1, ' not implemented'
+  stop 
+end select
+   
+select case (advector_x1_sp2)
+case ("SLL_SPLINES") ! arbitrary order periodic splines
+  sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+     num_cells_x1, &
+     x1_min, &
+     x1_max, &
+     SPLINE, & 
+     order_x1_sp2) 
 
-   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-     sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-        num_cells_x1, &
-        x1_min, &
-        x1_max, &
-        LAGRANGE, & 
-        order_x1_sp2)
+case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+  sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+     num_cells_x1, &
+     x1_min, &
+     x1_max, &
+     LAGRANGE, & 
+     order_x1_sp2)
 
-   case default
-     print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
-     stop 
-   end select    
+case default
+  print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
+  stop 
+end select    
 
-   select case (advector_x2_sp2)
+select case (advector_x2_sp2)
 
-   case ("SLL_SPLINES") ! arbitrary order periodic splines
-     sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-        num_cells_x2_sp2, &
-        x2_min_sp2, &
-        x2_max_sp2, &
-        SPLINE, & 
-        order_x2_sp2) 
-   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-     sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-        num_cells_x2_sp2, &
-        x2_min_sp2, &
-        x2_max_sp2, &
-        LAGRANGE, & 
-        order_x2_sp2)
-   case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-     sim%sp2%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
-        num_cells_x2_sp2, &
-        x2_min_sp2, &
-        x2_max_sp2, &
-        order_x2_sp2, &
-        sim%sp2%x2_array)           
-        !sim%x2_array_omp(:,tid))           
+case ("SLL_SPLINES") ! arbitrary order periodic splines
+  sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+     num_cells_x2_sp2, &
+     x2_min_sp2, &
+     x2_max_sp2, &
+     SPLINE, & 
+     order_x2_sp2) 
+case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+  sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+     num_cells_x2_sp2, &
+     x2_min_sp2, &
+     x2_max_sp2, &
+     LAGRANGE, & 
+     order_x2_sp2)
+case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
+  sim%sp2%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
+     num_cells_x2_sp2, &
+     x2_min_sp2, &
+     x2_max_sp2, &
+     order_x2_sp2, &
+     sim%sp2%x2_array)           
+     !sim%x2_array_omp(:,tid))           
 
-   case default
-       print*,'#advector in x2 for species 2', advector_x2_sp2, ' not implemented'
-       stop 
-   end select
-     
-   select case (advector_x2_sp1)
-   case ("SLL_SPLINES") ! arbitrary order periodic splines
-     sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-       num_cells_x2_sp1, &
-       x2_min_sp1, &
-       x2_max_sp1, &
-       SPLINE, & 
-       order_x2_sp1) 
-   case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-     sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
-       num_cells_x2_sp1, &
-       x2_min_sp1, &
-       x2_max_sp1, &
-       LAGRANGE, & 
-       order_x2_sp1)
-   case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-     sim%sp1%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
-      num_cells_x2_sp1, &
-      x2_min_sp1, &
-      x2_max_sp1, &
-      order_x2_sp1, &
-      sim%sp1%x2_array)           
-   case default
-     print*,'#advector in x2 for species 1', advector_x2_sp1, ' not implemented'
-     stop 
-   end select
+case default
+    print*,'#advector in x2 for species 2', advector_x2_sp2, ' not implemented'
+    stop 
+end select
+  
+select case (advector_x2_sp1)
+case ("SLL_SPLINES") ! arbitrary order periodic splines
+  sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+    num_cells_x2_sp1, &
+    x2_min_sp1, &
+    x2_max_sp1, &
+    SPLINE, & 
+    order_x2_sp1) 
+case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+  sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+    num_cells_x2_sp1, &
+    x2_min_sp1, &
+    x2_max_sp1, &
+    LAGRANGE, & 
+    order_x2_sp1)
+case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
+  sim%sp1%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
+   num_cells_x2_sp1, &
+   x2_min_sp1, &
+   x2_max_sp1, &
+   order_x2_sp1, &
+   sim%sp1%x2_array)           
+case default
+  print*,'#advector in x2 for species 1', advector_x2_sp1, ' not implemented'
+  stop 
+end select
 
 !#ifdef _OPENMP
 !!$OMP END PARALLEL
 !#endif
-   select case (advection_form_x2_sp1)
-   case ("SLL_ADVECTIVE")
-     sim%sp1%advection_form_x2 = SLL_ADVECTIVE
-     sim%sp1%num_dof_x2 = num_cells_x2_sp1+1
-   case ("SLL_CONSERVATIVE")
-     sim%sp1%advection_form_x2 = SLL_CONSERVATIVE
-     sim%sp1%num_dof_x2 = num_cells_x2_sp1
-   case default
-     print*,'#advection_form_x2_sp1', advection_form_x2_sp1, ' not implemented'
-     print *,'#in init_vp2d_par_cart'
-     stop 
-   end select  
+select case (advection_form_x2_sp1)
+case ("SLL_ADVECTIVE")
+  sim%sp1%advection_form_x2 = SLL_ADVECTIVE
+  sim%sp1%num_dof_x2 = num_cells_x2_sp1+1
+case ("SLL_CONSERVATIVE")
+  sim%sp1%advection_form_x2 = SLL_CONSERVATIVE
+  sim%sp1%num_dof_x2 = num_cells_x2_sp1
+case default
+  print*,'#advection_form_x2_sp1', advection_form_x2_sp1, ' not implemented'
+  print *,'#in init_vp2d_par_cart'
+  stop 
+end select  
 
-   select case (advection_form_x2_sp2)
-   case ("SLL_ADVECTIVE")
-     sim%sp2%advection_form_x2 = SLL_ADVECTIVE
-     sim%sp2%num_dof_x2 = num_cells_x2_sp2+1
-   case ("SLL_CONSERVATIVE")
-     sim%sp2%advection_form_x2 = SLL_CONSERVATIVE
-     sim%sp2%num_dof_x2 = num_cells_x2_sp2
-   case default
-     print*,'#advection_form_x2', advection_form_x2_sp2, ' not implemented'
-     print *,'#in init_vp2d_par_cart'
-     stop 
-   end select  
+select case (advection_form_x2_sp2)
+case ("SLL_ADVECTIVE")
+  sim%sp2%advection_form_x2 = SLL_ADVECTIVE
+  sim%sp2%num_dof_x2 = num_cells_x2_sp2+1
+case ("SLL_CONSERVATIVE")
+  sim%sp2%advection_form_x2 = SLL_CONSERVATIVE
+  sim%sp2%num_dof_x2 = num_cells_x2_sp2
+case default
+  print*,'#advection_form_x2', advection_form_x2_sp2, ' not implemented'
+  print *,'#in init_vp2d_par_cart'
+  stop 
+end select  
 
-   sim%factor_x1 = factor_x1
-   sim%factor_x2_rho = factor_x2_rho
-   sim%factor_x2_1 = factor_x2_1
-   
-   SLL_ALLOCATE(sim%sp1%integration_weight(sim%sp1%num_dof_x2),ierr)
-   SLL_ALLOCATE(sim%sp2%integration_weight(sim%sp2%num_dof_x2),ierr)
+sim%factor_x1 = factor_x1
+sim%factor_x2_rho = factor_x2_rho
+sim%factor_x2_1 = factor_x2_1
 
-   select case (integration_case)
+SLL_ALLOCATE(sim%sp1%integration_weight(sim%sp1%num_dof_x2),ierr)
+SLL_ALLOCATE(sim%sp2%integration_weight(sim%sp2%num_dof_x2),ierr)
 
-   case ("SLL_RECTANGLE")
+select case (integration_case)
 
-     do i=1,num_cells_x2_sp1
-       sim%sp1%integration_weight(i) = sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
-     enddo
-     sim%sp1%integration_weight(num_cells_x2_sp1+1) = 0._f64   
+case ("SLL_RECTANGLE")
 
-     do i=1,num_cells_x2_sp2
-       sim%sp2%integration_weight(i) = sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i)
-     enddo
-     sim%sp2%integration_weight(num_cells_x2_sp2+1) = 0._f64
+  do i=1,num_cells_x2_sp1
+    sim%sp1%integration_weight(i) = sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
+  enddo
+  sim%sp1%integration_weight(num_cells_x2_sp1+1) = 0._f64   
 
-   case ("SLL_TRAPEZOID")
+  do i=1,num_cells_x2_sp2
+    sim%sp2%integration_weight(i) = sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i)
+  enddo
+  sim%sp2%integration_weight(num_cells_x2_sp2+1) = 0._f64
 
-     sim%sp1%integration_weight(1)=0.5_f64*(sim%sp1%x2_array(2)-sim%sp1%x2_array(1))
-     do i=2,num_cells_x2_sp1
-       sim%sp1%integration_weight(i) = 0.5_f64*(sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i-1))
-     enddo  
-     sim%sp1%integration_weight(num_cells_x2_sp1+1) = &
-       0.5_f64*(sim%sp1%x2_array(num_cells_x2_sp1+1)-sim%sp1%x2_array(num_cells_x2_sp1))
+case ("SLL_TRAPEZOID")
 
-     sim%sp2%integration_weight(1)=0.5_f64*(sim%sp2%x2_array(2)-sim%sp2%x2_array(1))
-     do i=2,num_cells_x2_sp2
-       sim%sp2%integration_weight(i) = 0.5_f64*(sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i-1))
-     enddo  
-     sim%sp2%integration_weight(num_cells_x2_sp2+1) = &
-       0.5_f64*(sim%sp2%x2_array(num_cells_x2_sp2+1)-sim%sp2%x2_array(num_cells_x2_sp2))
+  sim%sp1%integration_weight(1)=0.5_f64*(sim%sp1%x2_array(2)-sim%sp1%x2_array(1))
+  do i=2,num_cells_x2_sp1
+    sim%sp1%integration_weight(i) = 0.5_f64*(sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i-1))
+  enddo  
+  sim%sp1%integration_weight(num_cells_x2_sp1+1) = &
+    0.5_f64*(sim%sp1%x2_array(num_cells_x2_sp1+1)-sim%sp1%x2_array(num_cells_x2_sp1))
 
-   case ("SLL_CONSERVATIVE")
+  sim%sp2%integration_weight(1)=0.5_f64*(sim%sp2%x2_array(2)-sim%sp2%x2_array(1))
+  do i=2,num_cells_x2_sp2
+    sim%sp2%integration_weight(i) = 0.5_f64*(sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i-1))
+  enddo  
+  sim%sp2%integration_weight(num_cells_x2_sp2+1) = &
+    0.5_f64*(sim%sp2%x2_array(num_cells_x2_sp2+1)-sim%sp2%x2_array(num_cells_x2_sp2))
 
-     do i=1,num_cells_x2_sp1
-       sim%sp1%integration_weight(i)=sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
-     enddo  
+case ("SLL_CONSERVATIVE")
 
-     do i=1,num_cells_x2_sp2
-       sim%sp2%integration_weight(i)=sim%sp2%x2_array(i+10)-sim%sp2%x2_array(i)
-     enddo  
+  do i=1,num_cells_x2_sp1
+    sim%sp1%integration_weight(i)=sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
+  enddo  
 
-   case default
+  do i=1,num_cells_x2_sp2
+    sim%sp2%integration_weight(i)=sim%sp2%x2_array(i+10)-sim%sp2%x2_array(i)
+  enddo  
 
-     print *,'#integration_case not implemented'
-     print *,'#in init_vp2d_par_cart'  
-     stop      
+case default
 
-   end select  
+  print *,'#integration_case not implemented'
+  print *,'#in init_vp2d_par_cart'  
+  stop      
 
-   sim%mass_ratio = mass_ratio
-   sim%sp1%alpha = alpha_sp1    
-   sim%sp2%alpha = alpha_sp2
-       
-   !poisson
-   !SLL_ALLOCATE(sim%mixt_bc(2),ierr)
-   select case (poisson_solver)
-   case ("SLL_FFT")
-     sim%poisson => new_poisson_1d_periodic_solver( &
-           x1_min, &
-           x1_max, &
-           num_cells_x1)
-   case ("SLL_POLAR")
-     sim%poisson => new_poisson_1d_polar_solver( &
-           x1_min, &
-           x1_max, &
-           num_cells_x1)
-   case default
-     print*,'#poisson_solver', poisson_solver, ' not implemented'
-     print *,'#in init_vp2d_par_cart'
-     stop 
-   end select
+end select  
+
+sim%mass_ratio = mass_ratio
+sim%sp1%alpha = alpha_sp1    
+sim%sp2%alpha = alpha_sp2
     
-   !drive
-   select case (drive_type)
-   case ("SLL_NO_DRIVE")
-     sim%driven = .false.
-   case("SLL_KEEN_DRIVE")
-     sim%driven = .true.
-     sim%t0=keen_t0
-     sim%twL=keen_twL
-     sim%twR=keen_twR
-     sim%tflat=keen_tflat
-     sim%tL=keen_tL
-     sim%tR=keen_tR
-     sim%turn_drive_off=keen_turn_drive_off
-     sim%Edrmax=keen_Edrmax
-     sim%omegadr=keen_omegadr        
-   case default
-     print*,'#drive_type', drive_type, ' not implemented'
-     stop 
-   end select
+!poisson
+!SLL_ALLOCATE(sim%mixt_bc(2),ierr)
+select case (poisson_solver)
+case ("SLL_FFT")
+  sim%poisson => new_poisson_1d_periodic_solver( &
+        x1_min, &
+        x1_max, &
+        num_cells_x1)
+case ("SLL_POLAR")
+  sim%poisson => new_poisson_1d_polar_solver( &
+        x1_min, &
+        x1_max, &
+        num_cells_x1)
+case default
+  print*,'#poisson_solver', poisson_solver, ' not implemented'
+  print *,'#in init_vp2d_par_cart'
+  stop 
+end select
+ 
+!drive
+select case (drive_type)
+case ("SLL_NO_DRIVE")
+  sim%driven = .false.
+case("SLL_KEEN_DRIVE")
+  sim%driven = .true.
+  sim%t0=keen_t0
+  sim%twL=keen_twL
+  sim%twR=keen_twR
+  sim%tflat=keen_tflat
+  sim%tL=keen_tL
+  sim%tR=keen_tR
+  sim%turn_drive_off=keen_turn_drive_off
+  sim%Edrmax=keen_Edrmax
+  sim%omegadr=keen_omegadr        
+case default
+  print*,'#drive_type', drive_type, ' not implemented'
+  stop 
+end select
 
-   if(mpi_master)then
-            
-     !to be compatible with VPpostprocessing_drive_KEEN.f
-     if(sim%driven) then     
+if(mpi_master .and. sim%driven) then     
 
-       open(unit = param_out, file = 'parameters.dat')
-       write(param_out, *) real(number_iterations,f64)*dt !Tmax
-       write(param_out, *) dt                             !dt
-       write(param_out, *) number_iterations              !Nt
-       write(param_out, *) kmode_sp1                      !k0
-       write(param_out, *) sim%omegadr                    !omega0
-       write(param_out, *) x1_max-x1_min                  !L
-       write(param_out, *) nbox_x1                        !mbox
-       write(param_out, *) sim%Edrmax                     !Edrmax
-       write(param_out, *) freq_diag_time                 !nsave
-       write(param_out, *) freq_diag                      !nsavef1
-       write(param_out, *) freq_diag                      !nsavef2
-       write(param_out, *) sim%tR+sim%tflat               !Tsetup
-       write(param_out, *) x2_max_sp1                     !vxmax (sp1)
-       write(param_out, *) x2_min_sp1                     !vxmin (sp1)
-       write(param_out, *) x2_max_sp2                     !vxmax (sp2)
-       write(param_out, *) x2_min_sp2                     !vxmin (sp2)
-       write(param_out, *) num_cells_x1                   !N
-       write(param_out, *) num_cells_x2_sp1               !Nv
-       write(param_out, *) num_cells_x2_sp2               !Nv
-       write(param_out, *) sim%tL                         !tL
-       write(param_out, *) sim%tR                         !tR
-       write(param_out, *) sim%twL                        !twL
-       write(param_out, *) sim%twR                        !twR
-       write(param_out, *) sim%tflat                      !tflat
-       close(param_out)
+  open(unit = param_out, file = 'parameters.dat')
+  write(param_out, *) real(number_iterations,f64)*dt !Tmax
+  write(param_out, *) dt                             !dt
+  write(param_out, *) number_iterations              !Nt
+  write(param_out, *) kmode_sp1                      !k0
+  write(param_out, *) sim%omegadr                    !omega0
+  write(param_out, *) x1_max-x1_min                  !L
+  write(param_out, *) nbox_x1                        !mbox
+  write(param_out, *) sim%Edrmax                     !Edrmax
+  write(param_out, *) freq_diag_time                 !nsave
+  write(param_out, *) freq_diag                      !nsavef1
+  write(param_out, *) freq_diag                      !nsavef2
+  write(param_out, *) sim%tR+sim%tflat               !Tsetup
+  write(param_out, *) x2_max_sp1                     !vxmax (sp1)
+  write(param_out, *) x2_min_sp1                     !vxmin (sp1)
+  write(param_out, *) x2_max_sp2                     !vxmax (sp2)
+  write(param_out, *) x2_min_sp2                     !vxmin (sp2)
+  write(param_out, *) num_cells_x1                   !N
+  write(param_out, *) num_cells_x2_sp1               !Nv
+  write(param_out, *) num_cells_x2_sp2               !Nv
+  write(param_out, *) sim%tL                         !tL
+  write(param_out, *) sim%tR                         !tR
+  write(param_out, *) sim%twL                        !twL
+  write(param_out, *) sim%twR                        !twR
+  write(param_out, *) sim%tflat                      !tflat
+  close(param_out)
 
-     endif  
-
-  endif
+endif
 
 np_x1          = sim%sp1%mesh2d%num_cells1+1
 np_x2_sp1      = sim%sp1%mesh2d%num_cells2+1
@@ -1094,102 +1101,6 @@ call initialize_layout_with_distributed_array( &
 call initialize_layout_with_distributed_array( &
      np_x1, num_dof_x2_sp2, nproc_x2, nproc_x1, sim%sp2%layout_x1 )
 
-end subroutine init_vp2d_par_cart_multi_species
-
-subroutine init_vp2d_fake(sim, filename)
-class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
-character(len=*), intent(in)                                :: filename
-
-print *,'# Do not use the routine init_vp2d_fake'
-print *,'#use instead init_vp2d_par_cart'
-print *,sim%dt
-print *,filename
-stop
-
-end subroutine init_vp2d_fake
-
-subroutine run_vp2d_cartesian_multi_species(sim)
-
-class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
-
-sll_real64, dimension(:),   pointer :: efield
-sll_real64, dimension(:),   pointer :: e_app
-
-sll_int32 :: rhotote_id,rhototi_id
-sll_int32 :: efield_id     
-sll_int32 :: th_diag_id
-sll_int32 :: restart_id
-
-sll_int32   :: np_x1
-sll_int32   :: np_x2_sp1
-sll_int32   :: np_x2_sp2
-sll_int32   :: global_indices_sp1(2)
-sll_int32   :: global_indices_sp2(2)
-sll_int32   :: ierr
-sll_int32   :: local_size_x1_sp1
-sll_int32   :: local_size_x1_sp2
-sll_int32   :: local_size_x2_sp1
-sll_int32   :: local_size_x2_sp2
-sll_int32   :: i,ig,k
-sll_int32   :: istep
-
-sll_real64  :: tmp_loc(10),tmp(10)
-sll_real64  :: time
-sll_real64  :: mass_sp1, momentum_sp1, l1norm_sp1, l2norm_sp1
-sll_real64  :: mass_sp2, momentum_sp2, l1norm_sp2, l2norm_sp2
-sll_real64  :: kinetic_energy_sp1,kinetic_energy_sp2,potential_energy
-
-sll_int32                             :: file_id
-
-type(sll_fft_plan),       pointer     :: pfwd
-sll_real64, dimension(:), allocatable :: buf_fft
-sll_comp64, dimension(:), allocatable :: rho_mode
-
-sll_int32  :: nb_mode 
-sll_int32  :: split_istep
-sll_int32  :: num_dof_x2_sp1
-sll_int32  :: num_dof_x2_sp2
-sll_real64 :: t_step
-sll_real64 :: time_init
- 
-logical :: split_T
-
-
-sll_int32              :: iplot
-character(len=4)       :: cproc
-character(len=4)       :: cplot
-logical                :: file_exists
-sll_int32              :: tid
-sll_int32              :: i_omp
-sll_int32              :: ig_omp
-sll_real64             :: alpha_omp
-sll_real64             :: mean_omp
-sll_int32              :: psize
-sll_int32              :: prank
-logical                :: mpi_master
-
-prank = sll_get_collective_rank( sll_world_collective )
-psize = sll_get_collective_size( sll_world_collective )
-mpi_master = merge(.true., .false., prank == 0)
-
-
-iplot = 1
-
-nb_mode = sim%nb_mode
-time_init = sim%time_init
-np_x1 = sim%sp1%mesh2d%num_cells1+1
-np_x2_sp1 = sim%sp1%mesh2d%num_cells2+1
-num_dof_x2_sp1 = sim%sp1%num_dof_x2
-np_x2_sp2 = sim%sp2%mesh2d%num_cells2+1
-num_dof_x2_sp2 = sim%sp2%num_dof_x2
-
-!qel(1) = 0._f64
-
-
-SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
-SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
-
 call compute_local_sizes( sim%sp1%layout_x2, local_size_x1_sp1, local_size_x2_sp1 )
 call compute_local_sizes( sim%sp2%layout_x2, local_size_x1_sp2, local_size_x2_sp2 )
 
@@ -1218,9 +1129,9 @@ SLL_ALLOCATE(sim%sp1%rho(np_x1),ierr)
 SLL_ALLOCATE(sim%sp2%rho(np_x1),ierr)
 SLL_ALLOCATE(sim%sp1%rho_loc(np_x1),ierr)
 SLL_ALLOCATE(sim%sp2%rho_loc(np_x1),ierr)
-SLL_ALLOCATE(efield(np_x1),ierr)
-SLL_ALLOCATE(e_app(np_x1),ierr)
-e_app = 0._f64
+SLL_ALLOCATE(sim%efield(np_x1),ierr)
+SLL_ALLOCATE(sim%e_app(np_x1),ierr)
+sim%e_app = 0._f64
 
 SLL_ALLOCATE(sim%sp1%f1d_omp_in(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
 SLL_ALLOCATE(sim%sp1%f1d_omp_out(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
@@ -1275,26 +1186,144 @@ case default
   print *,'#in run_vp2d_cartesian_multi_species'
   stop
 end select  
-    
+
 call sll_2d_parallel_array_initializer_cartesian( &
-   sim%sp1%layout_x1,                                 &
+   sim%sp1%layout_x1,                             &
    sim%x1_array,                                  &
-   sim%sp1%node_positions_x2,                         &
-   sim%sp1%f_x1,                                      &
+   sim%sp1%node_positions_x2,                     &
+   sim%sp1%f_x1,                                  &
    sim%sp1%init_func,                             &
    sim%sp1%params)
 
 call sll_2d_parallel_array_initializer_cartesian( &
-   sim%sp2%layout_x1,                                 &
+   sim%sp2%layout_x1,                             &
    sim%x1_array,                                  &
-   sim%sp2%node_positions_x2,                         &
-   sim%sp2%f_x1,                                      &
+   sim%sp2%node_positions_x2,                     &
+   sim%sp2%f_x1,                                  &
    sim%sp2%init_func,                             &
    sim%sp2%params)
 
-call int2string(prank,cproc)
+call sll_2d_parallel_array_initializer_cartesian( &
+   sim%sp1%layout_x1,                             &
+   sim%x1_array,                                  &
+   sim%sp1%node_positions_x2,                     &
+   sim%sp1%f_x1_init,                             &
+   sll_landau_initializer_2d,                     &
+   [sim%sp1%params(1),0._f64,sim%sp1%params(3),sim%sp1%params(4)])
+
+call sll_2d_parallel_array_initializer_cartesian( &
+   sim%sp2%layout_x1,                             &
+   sim%x1_array,                                  &
+   sim%sp2%node_positions_x2,                     &
+   sim%sp2%f_x1_init,                             &
+   sll_landau_initializer_2d,                     &
+   [sim%sp2%params(1),0._f64,sim%sp2%params(3),sim%sp2%params(4)])
+
+end subroutine init_vp2d_par_cart_multi_species
+
+subroutine init_vp2d_fake(sim, filename)
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+character(len=*), intent(in)                                :: filename
+
+print *,'# Do not use the routine init_vp2d_fake'
+print *,'#use instead init_vp2d_par_cart'
+print *,sim%dt
+print *,filename
+stop
+
+end subroutine init_vp2d_fake
+
+subroutine run_vp2d_cartesian_multi_species(sim)
+
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+
+
+sll_int32 :: rhotote_id,rhototi_id
+sll_int32 :: efield_id     
+sll_int32 :: th_diag_id
+sll_int32 :: restart_id
+
+sll_int32   :: np_x1
+sll_int32   :: np_x2_sp1
+sll_int32   :: np_x2_sp2
+sll_int32   :: ierr
+sll_int32   :: i,ig,k
+sll_int32   :: istep
+
+sll_real64  :: tmp_loc(10),tmp(10)
+sll_real64  :: time
+sll_real64  :: mass_sp1, momentum_sp1, l1norm_sp1, l2norm_sp1
+sll_real64  :: mass_sp2, momentum_sp2, l1norm_sp2, l2norm_sp2
+sll_real64  :: kinetic_energy_sp1,kinetic_energy_sp2,potential_energy
+
+sll_int32                             :: file_id
+
+type(sll_fft_plan),       pointer     :: pfwd
+sll_real64, dimension(:), allocatable :: buf_fft
+sll_comp64, dimension(:), allocatable :: rho_mode
+
+sll_int32  :: nb_mode 
+sll_int32  :: split_istep
+sll_int32  :: num_dof_x2_sp1
+sll_int32  :: num_dof_x2_sp2
+sll_real64 :: t_step
+sll_real64 :: time_init
+ 
+logical :: split_T
+
+
+sll_int32          :: iplot
+character(len=4)   :: cproc
+character(len=4)   :: cplot
+logical            :: file_exists
+sll_int32          :: tid
+sll_int32          :: i_omp
+sll_int32          :: ig_omp
+sll_real64         :: alpha_omp
+sll_real64         :: mean_omp
+sll_int32          :: psize
+sll_int32          :: prank
+logical            :: mpi_master
+
+sll_int32          :: global_indices_sp1(2)
+sll_int32          :: global_indices_sp2(2)
+sll_int32          :: local_size_x1_sp1
+sll_int32          :: local_size_x1_sp2
+sll_int32          :: local_size_x2_sp1
+sll_int32          :: local_size_x2_sp2
+
+prank = sll_get_collective_rank( sll_world_collective )
+psize = sll_get_collective_size( sll_world_collective )
+mpi_master = merge(.true., .false., prank == 0)
+
+
+iplot = 1
+
+nb_mode = sim%nb_mode
+time_init = sim%time_init
+np_x1 = sim%sp1%mesh2d%num_cells1+1
+np_x2_sp1 = sim%sp1%mesh2d%num_cells2+1
+num_dof_x2_sp1 = sim%sp1%num_dof_x2
+np_x2_sp2 = sim%sp2%mesh2d%num_cells2+1
+num_dof_x2_sp2 = sim%sp2%num_dof_x2
+
+!qel(1) = 0._f64
+
+
+SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
+pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
+
+call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
+call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
+global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
+global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
+
+    
+
 call int2string(iplot,cplot)    
 
+call int2string(prank,cproc)
 if(sim%restart_file/="no_restart_file")then
   INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
   if(.not.(file_exists))then
@@ -1322,21 +1351,6 @@ if(sim%time_init_from_restart_file .eqv. .true.) then
 endif
 time_init = sim%time_init
 
-call sll_2d_parallel_array_initializer_cartesian( &
-   sim%sp1%layout_x1,                                 &
-   sim%x1_array,                                  &
-   sim%sp1%node_positions_x2,                         &
-   sim%sp1%f_x1_init,                                 &
-   sll_landau_initializer_2d,                     &
-   (/ sim%sp1%params(1),0._f64,sim%sp1%params(3),sim%sp1%params(4) /))
-
-call sll_2d_parallel_array_initializer_cartesian( &
-   sim%sp2%layout_x1,                                 &
-   sim%x1_array,                                  &
-   sim%sp2%node_positions_x2,                         &
-   sim%sp2%f_x1_init,                                 &
-   sll_landau_initializer_2d,                     &
-   (/ sim%sp2%params(1),0._f64,sim%sp2%params(3),sim%sp2%params(4) /))
 
 call compute_displacements_array_2d(              &
   sim%sp1%layout_x1,                                  &
@@ -1442,11 +1456,11 @@ call sll_collective_allreduce( sll_world_collective, &
                                MPI_SUM,              &
                                sim%sp2%rho )
 
-call sim%poisson%compute_E_from_rho( efield, sim%sp2%rho-sim%sp1%rho )
+call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
 
 istep = 0
 if (sim%driven) then
-  call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
+  call compute_e_app(sim,time_init+real(istep,f64)*sim%dt)
 endif
 
 if (mpi_master) then
@@ -1557,12 +1571,12 @@ do istep = 1, sim%num_iterations
 
       call sll_collective_allreduce( sll_world_collective, sim%sp2%rho_loc, np_x1, MPI_SUM, sim%sp2%rho )
 
-      call sim%poisson%compute_E_from_rho( efield, sim%sp2%rho-sim%sp1%rho )
+      call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
       
       t_step = t_step+sim%split%split_step(split_istep)
       
       if(sim%driven)then
-        call compute_e_app(sim,e_app,time_init+t_step*sim%dt)
+        call compute_e_app(sim,time_init+t_step*sim%dt)
       endif
           
     else
@@ -1580,7 +1594,7 @@ do istep = 1, sim%num_iterations
       !advection in v
       do i_omp = 1,local_size_x1_sp1
         ig_omp=i_omp+global_indices_sp1(1)-1
-        alpha_omp = -(efield(ig_omp)+sim%sp1%alpha*e_app(ig_omp)) * sim%split%split_step(split_istep)
+        alpha_omp = -(sim%efield(ig_omp)+sim%sp1%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
         sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid) = sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1)
         if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
            call function_to_primitive(sim%sp1%f1d_omp_in(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
@@ -1598,7 +1612,7 @@ do istep = 1, sim%num_iterations
 
       do i_omp = 1,local_size_x1_sp2
         ig_omp=i_omp+global_indices_sp2(1)-1
-        alpha_omp = sim%mass_ratio*(efield(ig_omp)-sim%sp2%alpha*e_app(ig_omp)) * sim%split%split_step(split_istep)
+        alpha_omp = sim%mass_ratio*(sim%efield(ig_omp)-sim%sp2%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
         sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid) = sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2)
         if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
            call function_to_primitive(sim%sp2%f1d_omp_in(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
@@ -1695,7 +1709,7 @@ do istep = 1, sim%num_iterations
 
     potential_energy = 0._f64
     do i=1, np_x1-1
-      potential_energy = potential_energy+(efield(i)+e_app(i))**2
+      potential_energy = potential_energy+(sim%efield(i)+sim%e_app(i))**2
     enddo
     potential_energy = 0.5_f64*potential_energy* sim%sp1%mesh2d%delta_eta1
     
@@ -1767,7 +1781,7 @@ do istep = 1, sim%num_iterations
            sim%sp1%f_hat_x2(nb_mode+1), &
            sim%sp2%f_hat_x2(nb_mode+1)
 
-      write(efield_id,*) efield
+      write(efield_id,*) sim%efield
       write(rhotote_id,*) sim%sp1%rho
       write(rhototi_id,*) sim%sp2%rho
     endif
@@ -2011,17 +2025,16 @@ call sll_xdmf_close(file_id,error)
 
 end subroutine plot_f_cartesian
 
-subroutine compute_e_app(sim,e_app,t)
+subroutine compute_e_app(sim,t)
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(in)  :: sim
-sll_real64, dimension(:),                                   intent(out) :: e_app
 sll_real64,                                                 intent(in)  :: t
 
 sll_int32  :: i
 sll_int32  :: np_x1
 sll_real64 :: adr
 
-e_app = 0._f64
+sim%e_app = 0._f64
 np_x1 = sim%sp1%mesh2d%num_cells1+1      
 call PFenvelope(adr, &
   t,                 &
@@ -2034,7 +2047,7 @@ call PFenvelope(adr, &
   sim%turn_drive_off)
 
 do i = 1, np_x1
- e_app(i) = sim%Edrmax*adr*sim%sp1%kx &
+ sim%e_app(i) = sim%Edrmax*adr*sim%sp1%kx &
    * sin(sim%sp1%kx*real(i-1,f64)*sim%sp1%mesh2d%delta_eta1 - sim%omegadr*t)
 enddo
 
