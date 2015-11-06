@@ -334,8 +334,8 @@ contains
     type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp2
     sll_int32 :: ierr
     sll_int32, parameter  :: param_out = 37, param_out_drive = 40
-    sll_real64 :: bloc_coord(2)
-    sll_int32 :: bloc_index(3)
+    !sll_real64 :: bloc_coord(2)
+    !sll_int32 :: bloc_index(3)
     sll_int32 :: i
     sll_int32 :: num_threads
     sll_int32 :: tid
@@ -1205,7 +1205,7 @@ contains
     sll_int32 :: global_indices_sp2(2)
     sll_int32 :: ierr
     sll_int32 :: local_size_x1_sp1,local_size_x1_sp2,local_size_x2_sp1,local_size_x2_sp2
-    sll_real64 :: adr
+    !sll_real64 :: adr
     sll_real64 :: tmp_loc(10),tmp(10)
     sll_int32 :: i,istep,ig,k
     
