@@ -5,6 +5,8 @@ module sll_m_species
 #include "sll_memory.h"
 #include "sll_errors.h"
 
+!$ use omp_lib
+
 use sll_m_collective
 use sll_m_remapper
 use sll_m_cartesian_meshes  
@@ -14,15 +16,14 @@ use sll_m_fft
 use sll_m_xdmf
 use sll_m_hdf5_io_serial
 use sll_m_binary_io
-!$ use omp_lib
+use sll_m_common_array_initializers
+use sll_m_buffer_loader_utilities
 
-!use sll_m_buffer_loader_utilities
 !use sll_m_constants
 !use sll_m_gnuplot_parallel
 !use sll_m_coordinate_transformation_2d_base
 !use sll_m_coordinate_transformations_2d
 !use sll_m_common_coordinate_transformations
-!use sll_m_common_array_initializers
 !use sll_m_advection_1d_non_uniform_cubic_splines
 !use sll_m_sim_base
 !use sll_m_time_splitting_coeff
@@ -65,8 +66,6 @@ type species
   sll_real64, dimension(:),                  allocatable :: x2_array_unit
   sll_real64, dimension(:),                  allocatable :: x2_array_middle
   sll_real64, dimension(:),                  allocatable :: node_positions_x2
-  sll_int32,  dimension(:),                  allocatable :: collective_displs
-  sll_int32,  dimension(:),                  allocatable :: collective_recvcnts
   sll_real64, dimension(:,:),                    pointer :: f_visu 
   sll_real64, dimension(:),                      pointer :: f_visu_buf1d
   sll_real64, dimension(:),                      pointer :: f_x1_buf1d
@@ -83,13 +82,17 @@ type species
 
 end type species
 
+integer, parameter :: SLL_ADVECTIVE = 0
+integer, parameter :: SLL_CONSERVATIVE = 1
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine initialize_species(sp, nb_mode)
+subroutine initialize_species(sp, label, nb_mode)
 type(species), intent(inout) :: sp
+character,     intent(in)    :: label
 sll_int32,     intent(in)    :: nb_mode
 
 sll_int32                  :: nc_x1, nc_x2
@@ -105,7 +108,9 @@ sll_int32                  :: local_size_x1
 sll_int32                  :: local_size_x2
 sll_int32                  :: thread_id
 sll_int32                  :: n_threads
+sll_int32                  :: i
 
+sp%label = label
 prank = sll_get_collective_rank( sll_world_collective )
 psize = sll_get_collective_size( sll_world_collective )
 mpi_master = merge(.true., .false., prank == 0)
@@ -123,8 +128,6 @@ else
   SLL_ALLOCATE(sp%f_visu_buf1d(1:1),ierr)
 endif
 
-SLL_ALLOCATE(sp%collective_displs(psize),ierr)
-SLL_ALLOCATE(sp%collective_recvcnts(psize),ierr)
 sp%layout_x1 => new_layout_2D( sll_world_collective )
 sp%layout_x2 => new_layout_2D( sll_world_collective )
 
@@ -166,6 +169,40 @@ SLL_ALLOCATE(sp%x2_array_middle(np_x2),ierr)
 SLL_ALLOCATE(sp%node_positions_x2(sp%num_dof_x2),ierr)
 SLL_ALLOCATE(sp%f_hat_x2_loc(nb_mode+1),ierr)
 SLL_ALLOCATE(sp%f_hat_x2(nb_mode+1),ierr)
+
+sp%x2_array_unit(1:np_x2) = (sp%x2_array(1:np_x2)-sp%x2_array(1))/(sp%x2_array(np_x2)-sp%x2_array(1))
+do i = 1, np_x2-1
+   sp%x2_array_middle(i) = 0.5_f64*(sp%x2_array(i)+sp%x2_array(i+1))
+end do
+sp%x2_array_middle(np_x2) = sp%x2_array_middle(1)+sp%x2_array(np_x2)-sp%x2_array(1)
+
+select case (sp%advection_form_x2)
+case (SLL_ADVECTIVE)
+  sp%node_positions_x2(1:sp%num_dof_x2) = sp%x2_array(1:sp%num_dof_x2)
+case (SLL_CONSERVATIVE)
+  sp%node_positions_x2(1:sp%num_dof_x2) = sp%x2_array_middle(1:sp%num_dof_x2)
+case default
+  print *,'#advection_form_x2=',sp%advection_form_x2
+  print *,'#not implemented'
+  stop
+end select  
+
+call sll_2d_parallel_array_initializer_cartesian( &
+        sp%layout_x1,                             &
+        sp%x1_array,                              &
+        sp%node_positions_x2,                     &
+        sp%f_x1,                                  &
+        sp%init_func,                             &
+        sp%params)
+
+call sll_2d_parallel_array_initializer_cartesian( &
+   sp%layout_x1,                                  &
+   sp%x1_array,                                   &
+   sp%node_positions_x2,                          &
+   sp%f_x1_init,                                  &
+   sll_landau_initializer_2d,                     &
+   [sp%params(1),0._f64,sp%params(3),sp%params(4)])
+
 
 end subroutine initialize_species
 
@@ -376,26 +413,85 @@ subroutine write_f0( sp, iplot, filename, array_name, time)
   sll_int32                    :: ierr
   sll_int32                    :: nc_x1
   sll_int32                    :: nc_x2
+  sll_int32                    :: psize
+  sll_int32                    :: prank
+  logical                      :: mpi_master
+  sll_int32                    :: local_size_x1
+  sll_int32                    :: local_size_x2
+  sll_int32,       allocatable :: collective_displs(:)
+  sll_int32,       allocatable :: collective_recvcnts(:)
 
   nc_x1 = sp%mesh2d%num_cells1
   nc_x2 = sp%mesh2d%num_cells2
 
-  call sll_binary_file_create(filename, file_id, ierr)
-  call sll_binary_write_array_2d(file_id,sp%f_visu(1:nc_x1,1:nc_x2),ierr)
-  call sll_binary_file_close(file_id,ierr)
-  
-  call plot_f_cartesian(       &
-      iplot,                   &
-      sp%f_visu,               &
-      sp%x1_array,             &
-      nc_x1+1,                 &
-      sp%node_positions_x2,    &
-      sp%num_dof_x2,           &
-      array_name, sp%label,    &
-      time )        
+  prank = sll_get_collective_rank( sll_world_collective )
+  psize = sll_get_collective_size( sll_world_collective )
+  mpi_master = merge(.true., .false., prank == 0)
+
+  SLL_ALLOCATE(sp%collective_displs(psize),ierr)
+  SLL_ALLOCATE(sp%collective_recvcnts(psize),ierr)
+
+  call compute_local_sizes(sp%layout_x1, local_size_x1, local_size_x2)
+  call compute_displacements_array_2d(sp%layout_x1, psize, sp%collective_displs )
+  sp%collective_recvcnts = receive_counts_array_2d(sp%layout_x1, psize )
+
+  call load_buffer_2d( sp%layout_x1, sp%f_x1-sp%f_x1_init, sp%f_x1_buf1d )
+  call sll_collective_gatherv_real64(    &
+    sll_world_collective,                &
+    sp%f_x1_buf1d,                       &
+    local_size_x1*local_size_x2,         &
+    sp%collective_recvcnts,              &
+    sp%collective_displs,                &
+    0,                                   &
+    sp%f_visu_buf1d )
+
+  sp%f_visu = reshape(sp%f_visu_buf1d, shape(sp%f_visu))
+
+  if (mpi_master) then
+    call plot_f_cartesian(       &
+        iplot,                   &
+        sp%f_visu,               &
+        sp%x1_array,             &
+        nc_x1+1,                 &
+        sp%node_positions_x2,    &
+        sp%num_dof_x2,           &
+        "delta"//array_name,     &
+        sp%label,                &
+        time )        
+  end if
+
+  call load_buffer_2d( sp%layout_x1, sp%f_x1, sp%f_x1_buf1d )
+  call sll_collective_gatherv_real64(   &
+    sll_world_collective,               &
+    sp%f_x1_buf1d,                      &
+    local_size_x1*local_size_x2,        &
+    sp%collective_recvcnts,             &
+    sp%collective_displs,               &
+    0,                                  &
+    sp%f_visu_buf1d )
+
+  sp%f_visu = reshape(sp%f_visu_buf1d, shape(sp%f_visu))
+
+
+  if (mpi_master) then
+    call plot_f_cartesian(       &
+        iplot,                   &
+        sp%f_visu,               &
+        sp%x1_array,             &
+        nc_x1+1,                 &
+        sp%node_positions_x2,    &
+        sp%num_dof_x2,           &
+        array_name,              &
+        sp%label,                &
+        time )        
+  end if
 
   print *,'#max'//array_name//" = ",maxval(sp%f_visu), minval(sp%f_visu)
 
+  !call sll_binary_file_create(filename, file_id, ierr)
+  !call sll_binary_write_array_2d(file_id,sp%f_visu(1:nc_x1,1:nc_x2),ierr)
+  !call sll_binary_file_close(file_id,ierr)
+  
 end subroutine write_f0
 
 
