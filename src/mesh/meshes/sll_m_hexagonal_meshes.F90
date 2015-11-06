@@ -1524,12 +1524,14 @@ contains
   !> @details Given a point in the hexagonal mesh, this subroutine computes the
   !> coordinates it would have if mapped to the circle circumscribed to the hex.
   !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] ind integer index of the point to be mapped.
   !> @param[IN] x real the x-coordinate of point to be mapped
   !> @param[IN] y real the y-coordinate of point to be mapped
   !> @param[OUT] x_new real the x-coordinate of mapped point
   !> @param[OUT] y_new real the y-coordinate of mapped point
-  subroutine hex_to_circ_pt(mesh, x, y, x_new, y_new)
+  subroutine hex_to_circ_pt(mesh, ind, x, y, x_new, y_new)
     class(sll_hex_mesh_2d), intent(in)  :: mesh
+    sll_int32,              intent(in)  :: ind
     sll_real64,             intent(in)  :: x
     sll_real64,             intent(in)  :: y
     sll_real64,             intent(out) :: x_new
@@ -1537,14 +1539,20 @@ contains
     ! Local
     sll_real64 :: radius
     sll_real64 :: dist_to_origin
+    sll_int32  :: k1
+    sll_int32  :: k2
+    sll_int32  :: cells_dist
 
+    ! Computing current radius from point to origin
     dist_to_origin = SQRT(x**2 + y**2)
 
-    if ((x .eq. 0._f64).or.(ABS(y)/ABS(x) .gt. 1./sll_sqrt3)) then
-       radius = ABS(y) + 1._f64/sll_sqrt3*ABS(x)
-    else
-       radius = 2.*sll_sqrt3/3.*ABS(x)
-    end if
+    ! Computing the actual radius if the point was on a circle:
+    ! First we get the hexagonal coordinates
+    k1 = mesh%hex_coord(1, ind)
+    k2 = mesh%hex_coord(2, ind)
+    cells_dist = cells_to_origin(k1, k2)
+    radius = mesh%radius / mesh%num_cells * cells_dist
+
     if (dist_to_origin .le. sll_epsilon_0) then
        x_new = 0._f64
        y_new = 0._f64
@@ -1552,6 +1560,7 @@ contains
        x_new = x * radius/dist_to_origin
        y_new = y * radius/dist_to_origin
     end if
+
   end subroutine hex_to_circ_pt
 
 
@@ -1601,9 +1610,9 @@ contains
     y_ver3 = mesh%cartesian_coord(2, e3)
 
     ! Getting the coordinates of the mapped triangle
-    call mesh%hex_to_circ_pt(x_ver1, y_ver1, xp_ver1, yp_ver1)
-    call mesh%hex_to_circ_pt(x_ver2, y_ver2, xp_ver2, yp_ver2)
-    call mesh%hex_to_circ_pt(x_ver3, y_ver3, xp_ver3, yp_ver3)
+    call mesh%hex_to_circ_pt(e1, x_ver1, y_ver1, xp_ver1, yp_ver1)
+    call mesh%hex_to_circ_pt(e2, x_ver2, y_ver2, xp_ver2, yp_ver2)
+    call mesh%hex_to_circ_pt(e3, x_ver3, y_ver3, xp_ver3, yp_ver3)
 
     ! We now want to get A and B in AX + B = X', where X contains the values of
     ! the vertices in the hexmesh and X' the values of the mapped vertices,
@@ -1812,12 +1821,15 @@ contains
        if (num_cells_to_origin.eq.mesh%num_cells) then
           boundary = 1
        end if
+       ! Mapping to circle:
+       call mesh%hex_to_circ_pt(i, mesh%global_to_x1(i), mesh%global_to_x2(i), &
+            x1, y1)
        !... we write the coordinates
        write (out_unit, "((i6),(a,1x),(g25.17),(a,1x),(g25.17))") boundary, &
             ",", &
-            mesh%global_to_x1(i), &
+            x1, &
             ",", &
-            mesh%global_to_x2(i)
+            y1
     end do
 
     close(out_unit)
