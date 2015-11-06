@@ -13,6 +13,7 @@ module sll_m_rk_explicit
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
+#include "sll_assert.h"
 
   use sll_m_vector_space_base, only: &
     sll_vector_space_base
@@ -111,6 +112,8 @@ contains
     class( sll_vector_space_base ), intent( inout ) :: y0
 
     self%ode => ode
+    SLL_ASSERT(t0>=0.0)
+    SLL_ASSERT(storage_size(y0)>0)
 
   end subroutine init__rk1e_fwd_euler
 
@@ -133,6 +136,7 @@ contains
   subroutine clean__rk1e_fwd_euler( self )
     class( sll_rk1e_fwd_euler ), intent( inout ) :: self
     ! Do nothing, because method does not require local storage
+    SLL_ASSERT(storage_size(self)>0)
   end subroutine clean__rk1e_fwd_euler
 
   !----------------------------------------------------------------------------
@@ -146,6 +150,7 @@ contains
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 1 )  ! Allocate temporary storage
+    SLL_ASSERT(t0>=0.0)
 
   end subroutine init__rk2e_midpoint
 
@@ -195,6 +200,7 @@ contains
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
+    SLL_ASSERT(t0>=0.0)
 
   end subroutine init__rk2e_heun
 
@@ -242,6 +248,7 @@ contains
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
 
+    SLL_ASSERT(t0>=0.0)
   end subroutine init__rk2e_ralston
 
   !----------------------------------------------------------------------------
@@ -289,6 +296,8 @@ contains
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
+
+    SLL_ASSERT(t0>=0.0)
 
   end subroutine init__rk3e_heun3
 
@@ -341,6 +350,7 @@ contains
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
+    SLL_ASSERT(t0>=0.0)
 
   end subroutine init__rk4e_classic
 

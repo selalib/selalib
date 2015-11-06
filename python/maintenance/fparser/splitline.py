@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf8
 """
 Defines LineSplitter and helper functions.
 
@@ -9,6 +10,10 @@ terms of the NumPy License. See http://scipy.org.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
+
+Modifications:
+  - Nov 2015: bugfix in 'string_replace_map' (Yaman Güçlü - IPP Garching)
+            : new 'splitquote', which does not crash on trailing backslash (YG)
 -----
 """
 
@@ -68,7 +73,25 @@ def string_replace_map(line, lower=False,
     newline = ''.join(items)
     items = []
     expr_keys = []
-    for item in splitparen(newline):
+    #===========================================================================
+    # 02 Nov 2015: BUGFIX (Yaman Güçlü - IPP Garching)
+    #===========================================================================
+    #
+    # OLD VERSION: Only splits round brackets => issue with array constants
+    #-------------
+#    for item in splitparen(newline):
+    #
+    # NEW VERSION: First split round brackets, then square brackets if needed
+    #-------------
+    split_line = []
+    for s in splitparen( newline, paren='()' ):
+        if s.startswith('(') and s.endswith(')'):
+            split_line.append( s )
+        else:
+            split_line.extend( splitparen( s, paren='[]') )
+    for item in split_line:
+    #
+    #===========================================================================
         if isinstance(item, ParenString) and not _is_name(item[1:-1].strip()):
             key = rev_string_map.get(item)
             if key is None:
@@ -95,7 +118,72 @@ def string_replace_map(line, lower=False,
         del string_map[k]
     return ''.join(items), string_map
 
-def splitquote(line, stopchar=None, lower=False, quotechars = '"\''):
+#------------------------------------------------------------------------------
+def splitquote( text, quotechar=None, lower=False ):
+    """
+    Split text into a list of strings, which are of class 'str' if not quoted,
+    and of class 'String' if quoted.
+
+    Parameters
+    ----------
+    text : str
+      String containing a line of Fortran code
+
+    quotechar : {None or str}
+      Quotation mark, given if previous line ends with open quoted string
+
+    lower : bool
+      If True, all output strings should be converted to lower case
+
+    Returns
+    -------
+    split_text : list of {str or String}
+      Line decomposed into smaller pieces
+
+    quotechar : {None or str}
+      Quotation mark, given if current line ends with open quoted string
+
+    """
+    split_text = []
+    new_string = ''
+
+    # Construct new text
+    for c in text:
+        # Are we in a string?
+        if quotechar:
+            # Add character to old string
+            new_string += c
+            # If quoted string has finished, store it into list and reset it
+            if c == quotechar:
+                # Recognize that string has finished
+                split_text.append( String( new_string ))
+                quotechar  = None
+                new_string = ''
+        else:
+            # If quoted string has just began, store previous string in list
+            if c in ['"',"'"]:
+                if new_string:
+                    if lower:
+                        new_string = new_string.lower()
+                    split_text.append( new_string )
+                quotechar  = c
+                new_string = ''
+            # Add character to new string
+            new_string += c
+
+    # If last string is not empty, store it as well
+    if new_string:
+        if quotechar:
+            new_string = String( new_string )
+        elif lower:
+            new_string = new_string.lower()
+        split_text.append( new_string )
+
+    # Return split text and quotechar
+    return split_text, quotechar
+
+#------------------------------------------------------------------------------
+def splitquote_ORIGINAL(line, stopchar=None, lower=False, quotechars = '"\''):
     """
     Fast LineSplitter
     """

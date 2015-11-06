@@ -177,6 +177,15 @@ contains  !*********************************************************************
           print *,'#bad value for hermite_continuity',interp%continuity
           print *,'#in initialize_hermite_interpolation_2d'
           stop       
+          SLL_ASSERT(present(const_eta1_min_slope))
+          SLL_ASSERT(present(const_eta1_max_slope))
+          SLL_ASSERT(present(const_eta2_min_slope))
+          SLL_ASSERT(present(const_eta2_max_slope))
+          SLL_ASSERT(present(eta1_min_slopes))
+          SLL_ASSERT(present(eta1_max_slopes))
+          SLL_ASSERT(present(eta2_min_slopes))
+          SLL_ASSERT(present(eta2_max_slopes))
+          
       end select
       deriv_size = deriv_size*interp%deriv_size(i)
     enddo  

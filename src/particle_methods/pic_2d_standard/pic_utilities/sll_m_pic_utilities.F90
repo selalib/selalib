@@ -48,7 +48,7 @@ contains
     sll_int32  :: thread_id
     
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
-    num_particles =  p_group%number_particles
+    num_particles =  int(p_group%number_particles,i64)
     p             => p_group%p_list
 
     !$omp parallel PRIVATE(thread_id, tmp1, tmp2, q_accum)
@@ -76,11 +76,11 @@ contains
     type(sll_charge_accumulator_2d_CS), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
-    sll_real64 :: tmp(1:4,1:2), temp
+    sll_real32 :: tmp(1:4,1:2), temp
     sll_int32  :: thread_id
 
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
-    num_particles =  p_group%number_particles
+    num_particles =  int(p_group%number_particles,i64)
     p             => p_group%p_list
     
     !$omp parallel default(SHARED) PRIVATE(thread_id, tmp, temp, q_accum)
@@ -113,7 +113,7 @@ contains
     sll_int32  :: thread_id
     
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
-    num_particles =  p_group%number_particles
+    num_particles =  int(p_group%number_particles,i64)
     p             => p_group%p_list
 
     !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
@@ -139,11 +139,11 @@ contains
     type(sll_charge_accumulator_2d_CS), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
-    sll_real64 :: tmp(1:4,1:2), temp
+    sll_real32 :: tmp(1:4,1:2), temp
     sll_int32  :: thread_id
 
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
-    num_particles =  p_group%number_particles
+    num_particles =  int(p_group%number_particles,i64)
     p             => p_group%p_list
     
     !$omp parallel default(SHARED) PRIVATE(thread_id, tmp, temp, q_accum)

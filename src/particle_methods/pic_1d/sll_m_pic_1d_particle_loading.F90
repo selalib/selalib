@@ -87,7 +87,7 @@ module sll_m_pic_1d_particle_loading
     sll_real64 :: bumpontail_v0=4.0_f64
     sll_real64 :: bumpontail_sigma=0.5_f64
     sll_real64 :: plasma_size=0.25_f64 !Relative size of plasma
-    sll_real64 :: sll_pic_boundary_condition=SLL_PERIODIC
+    sll_real64 :: sll_pic_boundary_condition=real(SLL_PERIODIC,f64)
 
     sll_int32,private :: numberof_streams=1
     logical  :: enable_deltaf=.FALSE.
@@ -168,6 +168,10 @@ contains
     sll_real64 :: mu    !< mean
     sll_real64 :: sigma !< standard deviation
     sll_real64 :: U1, U2,R,PHI,X ,Y
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = sigma+mu
+#endif
 
     call random_number(U1)
     call random_number(U2)
@@ -239,12 +243,16 @@ function gaussian_from_rnd( mu , sigma , uniform_random_numbers  ) RESULT(gaussi
     !! SLL_ASSERT( mod(size(uniform_random_numbers),2)==0)
 
     ! Box Muller Wiener
-    sll_real :: R1, R2, X ,Y
+    sll_real :: R1, R2!, X ,Y
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = sigma+mu
+#endif
     do idx=1,size(uniform_random_numbers)/2
         R1=uniform_random_numbers(2*idx-1)
         R2=uniform_random_numbers(2*idx)
         R1= 1.0_f64-R1
-        R1 = -ALOG(real(R1))
+        R1 = -DLOG(real(R1,f64))
         R1 = SQRT(2.0*R1)
         R2 = 2.0*sll_pi*R2
         gaussian_random_numbers(2*idx-1)= R1*COS(R2)- mu
@@ -257,7 +265,7 @@ function sll_normal_prb_kernel( mu , sigma , x  ) RESULT(fx)
     sll_real, intent(in) :: sigma !< standard deviation
     sll_real64, dimension(:), intent(in) :: x
     sll_real64, dimension(size(x)) :: fx
-    integer :: idx
+    !integer :: idx
 
 
     fx=(1.0_f64/(sqrt(2.0_f64*sll_pi)*sigma))*exp( -(x-mu)**2/(2.0_f64*sigma**2))
@@ -331,7 +339,7 @@ function sll_normal_landaudamp_prb_kernel(mu, sigma, alpha, k, x) result(fx)
 
     sll_real64, dimension(:), intent(in) :: x
     sll_real64, dimension(size(x)) :: fx
-    integer :: idx
+    !integer :: idx
     fx= (1.0_f64/(sqrt(2.0_f64*sll_pi)*sigma))*exp( (x-mu)/(2.0_f64*sigma**2))*(1.0_f64 + alpha*cos(k*x))
 endfunction
 
@@ -347,14 +355,15 @@ function sll_maxwellboltzmann1d (m ,T, velocity) &
     sll_real64, dimension(:), intent(in) :: velocity !< velocity in m/s
     sll_real64 , dimension(:):: prob(size(velocity))
     !> @param Boltzmann constant (def) J/K
-    sll_int64 :: idx
+    sll_int64 :: idx, ndx
     sll_real64 :: scale_par
 
     scale_par=sqrt(sll_kb*T/m)
 
-    forall (idx=1:size(velocity))
+    ndx = int(size(velocity),i64)
+    forall (idx=1:ndx)
         prob(idx)=(sqrt(2*sll_pi )*scale_par) *  &
-            4*sll_pi* velocity(idx)**2 &
+            4.0_f64*sll_pi* velocity(idx)**2 &
             *exp(-  velocity(idx)**2 /(2*scale_par**2))
     endforall
 endfunction
@@ -414,7 +423,7 @@ subroutine sll_pic1d_load_stream(uniform_random_numbers, particlespeed, numberof
             stream_widths=(1.0_f64)/(numberofstreams**2)
         else
             stream_offsets(1)=0.0_f64
-            stream_widths(1)=1.0
+            stream_widths(1)=1.0_f64
         endif
     endif
 
@@ -450,7 +459,7 @@ subroutine sll_pic1d_load_bumpontail_velocity(uniform_random_numbers, particlesp
     np=size(particlespeed)
 
     SLL_ASSERT(size(uniform_random_numbers)==np)
-    particlespeed=0
+    particlespeed=0.0_f64
     percentage=1.0_f64/(1.0_f64+a)
     do i=1,floor(percentage*np*1.0_f64  )
         if (uniform_random_numbers(i)==0.0_f64) uniform_random_numbers(i)=0.00001_f64
@@ -470,7 +479,7 @@ endsubroutine
 function ionbeam(x) result(y)
     sll_real64, dimension(:),intent(in) :: x
     sll_real64, dimension(size(x)) :: y
-    y=0
+    y=0.0_f64
     where (x>=interval_a .and. x-interval_a<=(interval_b-interval_a)/3.0_f64) y=3.0_f64
 end function ionbeam
 
@@ -879,7 +888,7 @@ sll_int32 :: coll_rank
 call random_seed(size=seed_size)  ! output: the size of the seed array
 allocate(seed(seed_size))
 do idx=1, seed_size
-  seed(idx) = 1e9*coll_rank
+  seed(idx) = 10**9*coll_rank
 end do
 call random_seed(put=seed)
 
@@ -906,7 +915,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
     sll_int32, intent(in) :: pic1d_testcase
     type(sll_particle_1d_group), dimension(10) ::   particle_species
     sll_int32 :: idx
-    sll_real64 :: funlandau,x
+    !sll_real64 :: x !funlandau,x
 
     !Ionbeam scenario
     sll_real64 :: electron_ratio, hplus_ratio, hminus_ratio
@@ -915,9 +924,9 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
 
     integer :: ierr
     sll_real64 :: mu, sigma
-    integer :: i
-    real ( kind = 8 ) :: tmp
-    sll_real64 :: maxwellian_a=1.0_f64
+    !integer :: i
+    !real ( kind = 8 ) :: tmp
+    !sll_real64 :: maxwellian_a=1.0_f64
     sll_real64, DIMENSION(:,:), allocatable :: phasespace
 
     !!sll_real64 :: landau_damping=0.01_f64
@@ -954,7 +963,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
             particle_species(1)%qm=-1.0_f64 !Electrons
             particle_species(2)%qm=1.0_f64 !Ions
 
-            particle_species(1)%particle%weight_const=0
+            particle_species(1)%particle%weight_const=0.0_f64
             if (enable_deltaf .eqv. .TRUE.) then
                 !Landau damping
                 !Load deltaf and set weights
@@ -1024,7 +1033,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
             call i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
 
 
-            particle_species(1)%particle%weight_const=0
+            particle_species(1)%particle%weight_const=0.0_f64
             if (enable_deltaf .eqv. .TRUE.) then
 
                 call sll_pic1d_load_bumpontail_velocity(phasespace(1,:)  , particle_species(1)%particle%vx, &
@@ -1133,7 +1142,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
                 !particleposition(idx_low:idx_up)=interval_a + (phasespace(6,idx_low:idx_up)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
                 particle_species(3)%qm=-sll_e_mass/sll_proton_mass
                 particle_species(3)%particle%dx=interval_b
-                particle_species(3)%particle%weight=0
+                particle_species(3)%particle%weight=0.0_f64
 
                 do idx=1,num_species
                     call sll_pic1d_ensure_boundary_conditions(  particle_species(idx)%particle%dx, particle_species(idx)%particle%vx,pic1d_testcase)
@@ -1272,7 +1281,7 @@ subroutine sll_pic1d_load_landau(landau_alpha,landau_mode, interval_a,interval_b
     sll_real64, dimension(:) :: uniform_random
     sll_int32 :: nparticles
     sll_real64 :: interval_length
-    sll_int32 :: i
+    !sll_int32 :: i
     nparticles=size(uniform_random)
     SLL_ASSERT(size(particleposition)==nparticles)
 
@@ -1319,7 +1328,7 @@ endsubroutine
 
 subroutine sll_pic1d_ensure_boundary_conditions_species(particle_species ,pic1d_testcase)
     type(sll_particle_1d_group), dimension(:), intent(inout)::   particle_species
-    sll_int32 :: num_species, numpart, jdx
+    sll_int32 :: num_species, jdx
     sll_int32, intent(in) :: pic1d_testcase
     num_species=size(particle_species)
     SLL_ASSERT(num_species==size(particle_species))
@@ -1343,7 +1352,7 @@ subroutine sll_pic1d_ensure_boundary_conditions( particle_position, particlespee
             where (particle_position>interval_b)
                 !particle_position=particle_position -2.0_f64*(particle_position- interval_b)
                 particle_position=interval_b
-                particlespeed=0
+                particlespeed=0.0_f64
             endwhere
             where (particle_position<=interval_a)
                 particle_position=particle_position -2.0_f64*(particle_position- interval_a)
@@ -1364,7 +1373,7 @@ function sll_pic1d_ensure_periodicity( particle_position, &
     sll_real64, dimension(:) ,intent(in) :: particle_position
     sll_real64 :: interval_length
     sll_real64, dimension(:) :: particle_position_out(size(particle_position))
-    sll_int32 :: idx
+    !sll_int32 :: idx
 
     SLL_ASSERT(interval_a < interval_b)
     interval_length=interval_b - interval_a
@@ -1410,7 +1419,7 @@ function sll_pic_1d_landaudamp_CDF( alpha, mode, interval_length, uniform_random
     sll_real64, intent(in) :: mode
     sll_real64, dimension(:), intent(in) :: uniform_random
     sll_real64, dimension(size(uniform_random)):: inverseCDF, inverseCDF_new
-    sll_real  :: newtonstep
+    !sll_real  :: newtonstep
     sll_real64 :: numerror=1.0_f64
     sll_real64 ,intent(in)::interval_length
     integer :: idx
@@ -1526,7 +1535,7 @@ function sll_pic1d_abscosiCDF(L,k,x) result(y)
     where ( mod(x*k*(L/sll_kx),0.5_f64)>0.25_f64) &
         y=acos((0.5_f64-mod(2.0_f64*x*(L/sll_kx),1.0_f64/k)/2.0_f64*k )*4.0_f64)/k  + sll_pi/2.0_f64/k
 
-    y= y+floor( x*k*(L/sll_kx)/0.5_f64)*sll_pi/k
+    y= y+real(floor( x*k*(L/sll_kx)/0.5_f64),f64)*sll_pi/k
 
 
     !Matlab Code
@@ -1613,7 +1622,7 @@ function sll_rejection_sampling( probability_density, reject_const, nmark) &
     procedure (sll_pdf_1d) :: probability_density
     sll_real64,dimension(nmark) :: sample
     sll_real64, intent(in) :: reject_const
-    sll_int32 :: idx,jdx
+    sll_int32 :: idx!,jdx
     sll_real64 :: rndu
     sll_real64, dimension(1) ::rndg  ,f_rndg
     idx=1

@@ -48,27 +48,27 @@ contains
     type(sll_particle_group_4d), pointer, intent(inout) :: p_group
     sll_int32  :: j, ii
     sll_int32  :: ncx, ic_x,ic_y
-    sll_real64 :: x, y, vx, vy, nu
+    sll_real64 :: x, y, vx, vy
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_real32 :: weight!  sll_real64 :: weight!
     sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
     sll_int32, optional  :: rank, worldsize
-    character(len=8)  :: rank_name
-    character(len=40) :: nomfile
-    sll_real64 :: yo, val(1:2)
+    !character(len=8)  :: rank_name
+    !character(len=40) :: nomfile
+    sll_real64 :: val(1:2)
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
     endif
 
     if( present(worldsize) ) then
-       weight = (m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
+       weight = real((m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min),f32)/real(worldsize*num_particles,f32)
     else
-       weight = (m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
+       weight = real((m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
     endif
 
     rdx = 1._f64/m2d%delta_eta1
@@ -117,6 +117,9 @@ contains
        endif
     end do
     !close(90)
+
+    return
+    SLL_ASSERT(present(rank))
   end subroutine sll_initial_particles_4d
 
   subroutine sll_initial_particles_4d_L2d( &
@@ -132,27 +135,27 @@ contains
     type(sll_particle_group_4d), pointer, intent(inout) :: p_group
     sll_int32  :: j, ii, ll
     sll_int32  :: ncx, ic_x,ic_y
-    sll_real64 :: x, y, vx, vy, nu, z
+    sll_real64 :: x, y, vx, vy,  z
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_real32 :: weight!  sll_real64 :: weight!
     sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
     sll_int32, optional  :: rank, worldsize
-    character(len=8)  :: rank_name
-    character(len=40) :: nomfile
-    sll_real64 :: yo, val(1:2)
+    !character(len=8)  :: rank_name
+    !character(len=40) :: nomfile
+    sll_real64 :: val(1:2)
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
     endif
 
     if( present(worldsize) ) then
-       weight = (m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
+       weight = real((m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min),f32)/real(worldsize*num_particles,f32)
     else
-       weight = (m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
+       weight = real((m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
     endif
 
     rdx = 1._f64/m2d%delta_eta1
@@ -195,6 +198,10 @@ contains
     end do
     print*, 'nb d echecs', ll
     !close(90)
+
+   return
+   SLL_ASSERT(present(rank))
+
   end subroutine sll_initial_particles_4d_L2d
 
 

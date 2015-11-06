@@ -1,4 +1,4 @@
-intrinsic_procedures = [ \
+intrinsic_procedures = { \
 'abs', # Absolute value
 'achar', # Character in ASCII collating sequence
 'acos', # Arccosine function
@@ -167,4 +167,17 @@ intrinsic_procedures = [ \
 'ubound', # Upper dimension bounds of an array
 'unpack', # Store the elements of a vector in an array of higher rank
 'verify', # Scan a string for the absence of a set of characters
-]
+}
+
+logical_operators = { \
+'.not.',
+'.and.',
+'.or.',
+'.eqv.',
+'.neqv.',
+}
+
+logical_constants = { \
+'.true.',
+'.false.',
+}

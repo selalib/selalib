@@ -1,3 +1,4 @@
+# coding: utf8
 """
 Fortran block statements.
 
@@ -8,6 +9,13 @@ terms of the NumPy License. See http://scipy.org.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
+
+Modifications:
+  - Nov 2015: 'ProcedureDeclaration' added to 'declaration_construct' list
+              (Yaman Güçlü [YG] - IPP Garching)
+            : modify regex pattern in 'Forall' to avoid false matches (YG)
+            : add 'SelectType' block statement (YG)
+            : extracting association info from 'Associate' block (YG)
 -----
 """
 
@@ -17,6 +25,7 @@ __all__ = ['BeginSource','Module','PythonModule','Program','BlockData','Interfac
            'EndSource','EndModule','EndPythonModule','EndProgram','EndBlockData','EndInterface',
            'EndSubroutine','EndFunction','EndSelect','EndWhere','EndForall',
            'EndIfThen','EndDo','EndAssociate','EndType','EndEnum',
+           'SelectType',
            ]
 
 import re
@@ -787,6 +796,37 @@ class Select(BeginStatement):
     def get_classes(self):
         return [Case] + execution_part_construct
 
+#==============================================================================
+# SelectType
+#==============================================================================
+class SelectType( BeginStatement ):
+    """
+    [ <select-construct-name> : ] SELECT TYPE ( [ <associate-name> => ] <selector> )
+
+    """
+    match = re.compile( r'select\s*type\s*\(.*\)\Z', re.I ).match
+    end_stmt_cls = EndSelect  # same as SELECT CASE
+    name = ''
+
+    def tostr( self ):
+        return 'SELECT TYPE ( %s )' % self.expr
+
+    def process_item( self ):
+        # Get expression within parentheses
+        self.expr = self.item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
+        # Parse "<associate-name> => <selector>"
+        left, sym, right = self.item.apply_map( self.expr ).partition( '=>' )
+        self.associate_name =  left.strip()
+        self.selector       = right.strip()
+        # Get construct name, if any
+        self.construct_name = self.item.name
+        # Call parent class method
+        return BeginStatement.process_item( self )
+
+    def get_classes( self ):
+        return [TypeGuard] + execution_part_construct
+
+#==============================================================================
 # Where
 
 class EndWhere(EndStatement):
@@ -841,7 +881,7 @@ class Forall(BeginStatement):
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
     end_stmt_cls = EndForall
-    match = re.compile(r'forall\s*\(.*\)\Z',re.I).match
+    match = re.compile(r'forall\s*\(\w+\)\Z',re.I).match
     name = ''
     def process_item(self):
         self.specs = self.item.get_line()[6:].lstrip()[1:-1].strip()
@@ -991,7 +1031,20 @@ class Do(BeginStatement):
     def get_classes(self):
         return execution_part_construct
 
+#==============================================================================
 # Associate
+#==============================================================================
+
+class Association( object ):
+    """
+    <association> = <associate-name> => <selector>
+    <selector> = <expr> | <variable>
+
+    """
+    def __init__( self, text ):
+        left, sym, right = text.partition( '=>' )
+        self.associate_name =  left.strip()
+        self.selector       = right.strip()
 
 class EndAssociate(EndStatement):
     """
@@ -1010,15 +1063,24 @@ class Associate(BeginStatement):
     match = re.compile(r'associate\s*\(.*\)\Z',re.I).match
     end_stmt_cls = EndAssociate
 
-    def process_item(self):
+    def process_item( self ):
+        # Store associations as a unique F2Py string
         line = self.item.get_line()[9:].lstrip()
         self.associations = line[1:-1].strip()
+        # Store a list of Association objects
+        arg = self.item.apply_map( self.associations )
+        self.association_list = \
+                [Association( s ) for s in split_comma( arg, self.item )]
+        # Call parent class method
         return BeginStatement.process_item(self)
+
     def tostr(self):
         return 'ASSOCIATE (%s)' % (self.associations)
+
     def get_classes(self):
         return execution_part_construct
 
+#==============================================================================
 # Type
 
 class EndType(EndStatement):
@@ -1249,7 +1311,7 @@ action_stmt = [ Allocate, GeneralAssignment, Assign, Backspace, Call, Close,
 # EndFunction, EndProgram, EndSubroutine - part of the corresponding blocks
 
 executable_construct = [ Associate, Do, ForallConstruct, IfThen,
-    Select, WhereConstruct ] + action_stmt
+    Select, SelectType, WhereConstruct ] + action_stmt
 #Case, see Select
 
 execution_part_construct = executable_construct + [ Format, Entry,
@@ -1267,7 +1329,7 @@ internal_subprogram = [Function, Subroutine]
 internal_subprogram_part = [ Contains, ] + internal_subprogram
 
 declaration_construct = [ TypeDecl, Entry, Enum, Format, Interface,
-    Parameter, ModuleProcedure, ] + specification_stmt + \
+    Parameter, ModuleProcedure, ProcedureDeclaration ] + specification_stmt + \
     type_declaration_stmt
 # stmt-function-stmt
 

@@ -2334,7 +2334,7 @@ case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
 case (585) ! 4. dirichlet in all sides
 case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
 
-  interpolator%slope_min1 = 0.0
+  interpolator%slope_min1 = 0.0_f64
   interpolator%compute_slope_min1= .FALSE.
   if ( present( slope_max1)) then 
      interpolator%slope_max1 = slope_max1
@@ -3244,8 +3244,7 @@ sll_real64, dimension(ny)                 :: work_y
 sll_real64, dimension(ny,nx),     target  :: bwork
 sll_real64, dimension(:,:),       pointer :: pwork
 
-sll_int32 :: i, j, flag
-sll_int32 :: ierr
+sll_int32 :: i, flag
 
 ! *** set up knots and interpolate between knots
 

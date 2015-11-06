@@ -38,8 +38,8 @@ SLL_ALLOCATE(v(nbpart),error)
 SLL_ALLOCATE(w(nbpart),error)
 
 do i = 1, nbpart 
-   t = float(i) / float(nbpart-1)
-   angle = t * (sll_pi * 2.) * 50.
+   t = real(i,f64) / real(nbpart-1,f64)
+   angle = t * (sll_pi * 2.) * 50._f64
    r = t * 2.
    x(i) = r * cos(angle)
    v(i) = r * sin(angle)
@@ -47,8 +47,8 @@ end do
 
 w = sqrt(x*x+v*v)
 
-xmin = -4; xmax = 4
-vmin = -4; vmax = 4
+xmin = -4.0_f64; xmax = 4.0_f64
+vmin = -4.0_f64; vmax = 4.0_f64
 nx = 64
 nv = 64
 SLL_ALLOCATE(density(nx,nv), error)
@@ -90,10 +90,10 @@ call initialize( nstep, imov, xp, yp, op, delta, dt, nbpart )
 SLL_ALLOCATE(up(nbpart), error)
 SLL_ALLOCATE(vp(nbpart), error)
 iplot   = 0
-time = 0.0
+time = 0.0_f64
 
-xmin = -3; xmax = 3.
-ymin = -2; ymax = 2.
+xmin = -3.0_f64; xmax = 3.0_f64
+ymin = -2.0_f64; ymax = 2.0_f64
 
 do istep = 1, nstep       !loop over time
    
