@@ -21,7 +21,7 @@ implicit none
 
 integer :: i,j,n
 sll_int32 :: ierr
-sll_int32 :: degree
+!sll_int32 :: degree
 
 sll_real64, dimension(10) :: x, w
 sll_real64, dimension(:,:), allocatable :: d
@@ -33,12 +33,12 @@ character(len=18) :: string
 sll_real64, dimension(2, 3) :: pxy1
 sll_real64, dimension(2, 3) :: pxy2
 sll_real64, dimension(:,:), allocatable :: xyw
-sll_real64 :: app_res
+!sll_real64 :: app_res
 sll_int32  :: rule
-sll_int32  :: num_cells
-type(sll_hex_mesh_2d), pointer :: mesh
-sll_real64, dimension(:,:), allocatable     :: knots
-sll_int32,  dimension(:,:), allocatable     :: LM
+!sll_int32  :: num_cells
+!type(sll_hex_mesh_2d), pointer :: mesh
+!sll_real64, dimension(:,:), allocatable     :: knots
+!sll_int32,  dimension(:,:), allocatable     :: LM
 
 
 write (*,'(5x, 5a16 )') &

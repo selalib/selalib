@@ -45,14 +45,14 @@ c
             zf = dcmplx(dcos(xj(j)),-dsin(xj(j)))
          endif
 c
-         cm1 = cj(j) / dble(nj)
+         cm1 = cj(j) / cmplx(nj,0,kind=8)
          do k1 = 0, (ms-1)/2
             fk(k1) = fk(k1) + cm1
             cm1 = cm1 * zf
          enddo
 c
          zf = dconjg(zf)
-         cm1 = cj(j) / dble(nj)
+         cm1 = cj(j) / cmplx(nj,0,kind=8)
          do k1 = -1, -ms/2, -1
             cm1 = cm1 * zf
             fk(k1) = fk(k1) + cm1
