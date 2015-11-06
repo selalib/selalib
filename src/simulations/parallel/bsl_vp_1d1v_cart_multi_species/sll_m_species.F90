@@ -1,0 +1,328 @@
+module sll_m_species
+
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_errors.h"
+
+use sll_m_collective
+use sll_m_remapper
+use sll_m_cartesian_meshes  
+use sll_m_parallel_array_initializer
+use sll_m_advection_1d_periodic
+use sll_m_fft
+use sll_m_xdmf
+use sll_m_hdf5_io_serial
+use sll_m_binary_io
+
+!use sll_m_buffer_loader_utilities
+!use sll_m_constants
+!use sll_m_gnuplot_parallel
+!use sll_m_coordinate_transformation_2d_base
+!use sll_m_coordinate_transformations_2d
+!use sll_m_common_coordinate_transformations
+!use sll_m_common_array_initializers
+!use sll_m_advection_1d_non_uniform_cubic_splines
+!use sll_m_sim_base
+!use sll_m_time_splitting_coeff
+!use sll_m_poisson_1d_periodic  
+!use sll_m_poisson_1d_periodic_solver
+!use sll_m_poisson_1d_polar_solver
+!use sll_m_advection_1d_ampere
+!use sll_m_primitives
+
+implicit none
+
+type species
+  character                                              :: label
+  sll_int32                                              :: num_bloc_x2
+  sll_int32                                              :: num_dof_x2
+  type(sll_cartesian_mesh_2d),                   pointer :: mesh2d
+  procedure(sll_scalar_initializer_2d), nopass,  pointer :: init_func
+  sll_real64, dimension(:),                      pointer :: params
+  sll_real64                                             :: nrj0
+  sll_real64, dimension(:),                      pointer :: x1_array
+  sll_real64, dimension(:),                      pointer :: x2_array
+  sll_real64, dimension(:,:),                    pointer :: x2_array_omp
+  sll_int32,  dimension(:),                      pointer :: bloc_index_x2
+  sll_real64                                             :: kx
+  sll_real64                                             :: eps
+  sll_real64, dimension(:),                      pointer :: integration_weight
+  type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x1
+  type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
+  sll_int32                                              :: advection_form_x2
+  sll_real64                                             :: alpha
+  type(remap_plan_2D_real64),                    pointer :: remap_plan_x1_x2
+  type(remap_plan_2D_real64),                    pointer :: remap_plan_x2_x1
+  type(layout_2D),                               pointer :: layout_x1
+  type(layout_2D),                               pointer :: layout_x2
+  sll_real64, dimension(:,:),                    pointer :: f_x1
+  sll_real64, dimension(:,:),                    pointer :: f_x2
+  sll_real64, dimension(:,:),                    pointer :: f_x1_init
+  sll_real64, dimension(:),                      pointer :: rho
+  sll_real64, dimension(:),                      pointer :: rho_loc
+  sll_real64, dimension(:),                  allocatable :: x2_array_unit
+  sll_real64, dimension(:),                  allocatable :: x2_array_middle
+  sll_real64, dimension(:),                  allocatable :: node_positions_x2
+  sll_int32,  dimension(:),                  allocatable :: collective_displs
+  sll_int32,  dimension(:),                  allocatable :: collective_recvcnts
+  sll_real64, dimension(:,:),                    pointer :: f_visu 
+  sll_real64, dimension(:),                      pointer :: f_visu_buf1d
+  sll_real64, dimension(:),                      pointer :: f_x1_buf1d
+  sll_real64, dimension(:),                      pointer :: f_hat_x2_loc
+  sll_real64, dimension(:),                      pointer :: f_hat_x2
+  sll_real64, dimension(:,:),                    pointer :: f1d_omp_in
+  sll_real64, dimension(:,:),                    pointer :: f1d_omp_out
+
+  sll_real64                                             :: mass           
+  sll_real64                                             :: momentum       
+  sll_real64                                             :: l1norm         
+  sll_real64                                             :: l2norm         
+  sll_real64                                             :: kinetic_energy 
+
+end type species
+
+contains
+
+subroutine initialize_species(sp)
+type(species), intent(inout) :: sp
+
+sll_int32                  :: nc_x1
+sll_int32                  :: ierr
+
+nc_x1 = sp%mesh2d%num_cells1
+
+
+end subroutine initialize_species
+
+subroutine change_initial_function_species( &
+  sp,                                       &
+  init_func,                                &
+  params,                                   &
+  num_params)
+
+type(species), intent(inout) :: sp
+
+procedure(sll_scalar_initializer_2d), pointer    :: init_func
+sll_int32,                            intent(in) :: num_params
+sll_real64, dimension(num_params),    intent(in) :: params
+
+sll_int32 :: ierr
+sll_int32 :: i
+
+sp%init_func => init_func
+
+if(associated(sp%params))then
+  SLL_DEALLOCATE(sp%params,ierr)
+endif
+
+if(num_params<1)then
+  print *,'#num_params should be >=1 in change_initial_function_species'
+  stop
+endif
+SLL_ALLOCATE(sp%params(num_params),ierr)
+if(size(params)<num_params)then
+  print *,'#size of params is not good in change_initial_function_species'
+  stop
+endif
+
+do i=1,num_params
+  sp%params(i) = params(i)
+enddo
+
+end subroutine change_initial_function_species
+
+
+
+subroutine compute_rho(sp)
+type(species), intent(inout) :: sp
+
+sll_int32 :: np_x1
+sll_int32 :: np_x2
+sll_int32 :: global_indices(2)
+sll_int32 :: local_size_x1
+sll_int32 :: local_size_x2
+sll_int32 :: i, ig
+
+np_x1 = sp%mesh2d%num_cells1+1
+np_x2 = sp%mesh2d%num_cells2+1
+
+call compute_local_sizes(sp%layout_x1,local_size_x1,local_size_x2)
+global_indices = local_to_global( sp%layout_x1, (/1, 1/) )
+
+sp%rho_loc = 0.0_f64
+ig = global_indices(2)-1
+do i=1,np_x1
+  sp%rho_loc(i)=sp%rho_loc(i) &
+    +sum(sp%f_x1(i,1:local_size_x2)*sp%integration_weight(1+ig:local_size_x2+ig))
+end do
+
+call sll_collective_allreduce( sll_world_collective, &
+                               sp%rho_loc,           &
+                               np_x1,                &
+                               MPI_SUM,              &
+                               sp%rho )
+
+end subroutine compute_rho
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine diagnostics(sp, pfwd, buf_fft, nb_mode)
+type(species), intent(inout) :: sp
+sll_int32,     intent(in)    :: nb_mode
+type(sll_fft_plan), pointer  :: pfwd
+sll_real64                   :: buf_fft(:)
+
+sll_real64  :: tmp(5), tmp_loc(5)
+sll_int32   :: global_indices(2)
+sll_int32   :: local_size_x1, local_size_x2   
+sll_int32   :: i, ig, k
+
+sp%mass            = 0._f64
+sp%momentum        = 0._f64
+sp%l1norm          = 0._f64
+sp%l2norm          = 0._f64
+sp%kinetic_energy  = 0._f64
+
+tmp_loc            = 0._f64
+
+call compute_local_sizes(sp%layout_x1, local_size_x1, local_size_x2)
+global_indices = local_to_global( sp%layout_x1, (/1, 1/) )
+ig = global_indices(2)-1               
+
+do i = 1, sp%mesh2d%num_cells1
+  tmp_loc(1)= tmp_loc(1)+sum(sp%f_x1(i,1:local_size_x2) &
+       *sp%integration_weight(1+ig:local_size_x2+ig))
+  tmp_loc(2)= tmp_loc(2)+sum(abs(sp%f_x1(i,1:local_size_x2)) &
+       *sp%integration_weight(1+ig:local_size_x2+ig))
+  tmp_loc(3)= tmp_loc(3)+sum((sp%f_x1(i,1:local_size_x2))**2 &
+       *sp%integration_weight(1+ig:local_size_x2+ig))
+  tmp_loc(4)= tmp_loc(4) +sum(sp%f_x1(i,1:local_size_x2) &
+       *sp%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2) &
+       *sp%integration_weight(1+ig:local_size_x2+ig))          
+  tmp_loc(5)= tmp_loc(5)+sum(sp%f_x1(i,1:local_size_x2) &
+       *sp%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2)**2 &
+       *sp%integration_weight(1+ig:local_size_x2+ig) )          
+end do
+
+call sll_collective_allreduce( sll_world_collective, tmp_loc, 5, MPI_SUM, tmp )
+
+sp%mass           = tmp(1)  * sp%mesh2d%delta_eta1 
+sp%l1norm         = tmp(2)  * sp%mesh2d%delta_eta1 
+sp%l2norm         = tmp(3)  * sp%mesh2d%delta_eta1 
+sp%momentum       = tmp(4)  * sp%mesh2d%delta_eta1 
+sp%kinetic_energy = 0.5_f64 * tmp(5) * sp%mesh2d%delta_eta1 
+
+sp%f_hat_x2_loc(1:nb_mode+1) = 0._f64
+do i=1,local_size_x2
+  buf_fft = sp%f_x1(1:sp%mesh2d%num_cells1,i)
+  call fft_apply_plan(pfwd,buf_fft,buf_fft)
+  do k=0,nb_mode
+     sp%f_hat_x2_loc(k+1) = sp%f_hat_x2_loc(k+1)   &
+       +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+       *sp%integration_weight(ig+i)
+  enddo
+enddo
+
+call sll_collective_allreduce( sll_world_collective, sp%f_hat_x2_loc, nb_mode+1, MPI_SUM, sp%f_hat_x2 )
+
+end subroutine diagnostics
+
+subroutine plot_f_cartesian( iplot,             &
+                             f,                 &
+                             node_positions_x1, &
+                             nnodes_x1,         &
+                             node_positions_x2, &
+                             nnodes_x2,         &
+                             array_name,        &
+                             spec_name,         &
+                             time)
+
+
+sll_real64, dimension(:),   intent(in) :: node_positions_x1
+sll_real64, dimension(:),   intent(in) :: node_positions_x2    
+character(len=*),           intent(in) :: array_name !< field name
+character(len=*),           intent(in) :: spec_name !< name of the species
+sll_int32,                  intent(in) :: nnodes_x1
+sll_int32,                  intent(in) :: nnodes_x2
+sll_int32,                  intent(in) :: iplot
+sll_real64, dimension(:,:), intent(in) :: f
+
+sll_int32                               :: file_id
+sll_int32                               :: error
+sll_real64, dimension(:,:), allocatable :: x1
+sll_real64, dimension(:,:), allocatable :: x2
+sll_int32                               :: i
+sll_int32                               :: j
+character(len=4)                        :: cplot
+sll_real64                              :: time
+
+if (iplot == 1) then
+
+  SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+  SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+  do j = 1,nnodes_x2
+    do i = 1,nnodes_x1
+      x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
+      x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
+    end do
+  end do
+#ifndef NOHDF5
+  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5",file_id,error)
+  call sll_hdf5_write_array(file_id,x1,"/x1",error)
+  call sll_hdf5_file_close(file_id, error)
+  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5",file_id,error)
+  call sll_hdf5_write_array(file_id,x2,"/x2",error)
+  call sll_hdf5_file_close(file_id, error)
+#endif
+
+  deallocate(x1)
+  deallocate(x2)
+
+end if
+
+call int2string(iplot,cplot)
+call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh_"//trim(spec_name), &
+  nnodes_x1,nnodes_x2,file_id,error)
+write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
+call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
+  error,file_id,"Node")
+call sll_xdmf_close(file_id,error)
+
+end subroutine plot_f_cartesian
+
+subroutine write_f0( sp, iplot, filename, array_name, time)
+
+  type(species),    intent(in) :: sp
+  sll_int32,        intent(in) :: iplot
+  character(len=*), intent(in) :: filename
+  character(len=*), intent(in) :: array_name
+  sll_real64,       intent(in) :: time
+  sll_int32                    :: file_id
+  sll_int32                    :: ierr
+  sll_int32                    :: nc_x1
+  sll_int32                    :: nc_x2
+
+  nc_x1 = sp%mesh2d%num_cells1
+  nc_x2 = sp%mesh2d%num_cells2
+
+  call sll_binary_file_create(filename, file_id, ierr)
+  call sll_binary_write_array_2d(file_id,sp%f_visu(1:nc_x1,1:nc_x2),ierr)
+  call sll_binary_file_close(file_id,ierr)
+  
+  call plot_f_cartesian(       &
+      iplot,                   &
+      sp%f_visu,               &
+      sp%x1_array,             &
+      nc_x1+1,                 &
+      sp%node_positions_x2,    &
+      sp%num_dof_x2,           &
+      array_name, sp%label,    &
+      time )        
+
+  print *,'#max'//array_name//" = ",maxval(sp%f_visu), minval(sp%f_visu)
+
+end subroutine write_f0
+
+
+end module sll_m_species
