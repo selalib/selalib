@@ -14,6 +14,7 @@ use sll_m_fft
 use sll_m_xdmf
 use sll_m_hdf5_io_serial
 use sll_m_binary_io
+!$ use omp_lib
 
 !use sll_m_buffer_loader_utilities
 !use sll_m_constants
@@ -82,16 +83,89 @@ type species
 
 end type species
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 contains
 
-subroutine initialize_species(sp)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine initialize_species(sp, nb_mode)
 type(species), intent(inout) :: sp
+sll_int32,     intent(in)    :: nb_mode
 
-sll_int32                  :: nc_x1
+sll_int32                  :: nc_x1, nc_x2
+sll_int32                  :: np_x1, np_x2
 sll_int32                  :: ierr
+sll_int32                  :: psize
+sll_int32                  :: prank
+sll_int32                  :: nproc_x1
+sll_int32                  :: nproc_x2
+logical                    :: mpi_master
+sll_int32                  :: global_indices(2)
+sll_int32                  :: local_size_x1
+sll_int32                  :: local_size_x2
+sll_int32                  :: thread_id
+sll_int32                  :: n_threads
+
+prank = sll_get_collective_rank( sll_world_collective )
+psize = sll_get_collective_size( sll_world_collective )
+mpi_master = merge(.true., .false., prank == 0)
 
 nc_x1 = sp%mesh2d%num_cells1
+np_x1 = sp%mesh2d%num_cells1+1
+nc_x2 = sp%mesh2d%num_cells2
+np_x2 = sp%mesh2d%num_cells2+1
 
+if(mpi_master) then
+  SLL_ALLOCATE(sp%f_visu(np_x1,sp%num_dof_x2),ierr)
+  SLL_ALLOCATE(sp%f_visu_buf1d(np_x1*sp%num_dof_x2),ierr)
+else
+  SLL_ALLOCATE(sp%f_visu(1:1,1:1),ierr)
+  SLL_ALLOCATE(sp%f_visu_buf1d(1:1),ierr)
+endif
+
+SLL_ALLOCATE(sp%collective_displs(psize),ierr)
+SLL_ALLOCATE(sp%collective_recvcnts(psize),ierr)
+sp%layout_x1 => new_layout_2D( sll_world_collective )
+sp%layout_x2 => new_layout_2D( sll_world_collective )
+
+nproc_x1 = psize
+nproc_x2 = 1
+call initialize_layout_with_distributed_array( &
+     np_x1, sp%num_dof_x2, nproc_x1, nproc_x2, sp%layout_x2 )
+call initialize_layout_with_distributed_array( &
+     np_x1, sp%num_dof_x2, nproc_x2, nproc_x1, sp%layout_x1 )
+
+call compute_local_sizes( sp%layout_x2, local_size_x1, local_size_x2 )
+
+SLL_ALLOCATE(sp%f_x2(local_size_x1,local_size_x2),ierr)
+
+call compute_local_sizes( sp%layout_x1, local_size_x1, local_size_x2 )
+
+global_indices(1:2) = local_to_global( sp%layout_x1, (/1, 1/) )
+SLL_ALLOCATE(sp%f_x1(local_size_x1,local_size_x2),ierr)    
+SLL_ALLOCATE(sp%f_x1_init(local_size_x1,local_size_x2),ierr)    
+SLL_ALLOCATE(sp%f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
+
+sp%remap_plan_x1_x2 => NEW_REMAP_PLAN(sp%layout_x1, sp%layout_x2, sp%f_x1)
+sp%remap_plan_x2_x1 => NEW_REMAP_PLAN(sp%layout_x2, sp%layout_x1, sp%f_x2)
+
+SLL_ALLOCATE(sp%rho(np_x1),ierr)
+SLL_ALLOCATE(sp%rho_loc(np_x1),ierr)
+
+thread_id = 1
+n_threads = 1
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(tid)
+!$ thread_id = omp_get_thread_num()+1
+!$ n_threads = omp_get_num_threads()
+
+SLL_ALLOCATE(sp%f1d_omp_in(max(np_x1,np_x2),n_threads),ierr)
+SLL_ALLOCATE(sp%f1d_omp_out(max(np_x1,np_x2),n_threads),ierr)
+SLL_ALLOCATE(sp%x2_array_unit(np_x2),ierr)
+SLL_ALLOCATE(sp%x2_array_middle(np_x2),ierr)
+SLL_ALLOCATE(sp%node_positions_x2(sp%num_dof_x2),ierr)
+SLL_ALLOCATE(sp%f_hat_x2_loc(nb_mode+1),ierr)
+SLL_ALLOCATE(sp%f_hat_x2(nb_mode+1),ierr)
 
 end subroutine initialize_species
 
