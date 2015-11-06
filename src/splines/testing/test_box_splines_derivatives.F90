@@ -45,6 +45,9 @@ program test_box_splines_derivatives
   sll_real64, dimension(:), allocatable :: f
   sll_real64, dimension(:), allocatable :: dxf
   sll_real64, dimension(:), allocatable :: dyf
+  sll_real64, dimension(:), allocatable :: f2
+  sll_real64, dimension(:), allocatable :: dxf2
+  sll_real64, dimension(:), allocatable :: dyf2
   sll_real64, dimension(:), allocatable :: splines_on_support
 
   print *, " ************************************************** "
@@ -65,6 +68,10 @@ program test_box_splines_derivatives
   SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
   SLL_ALLOCATE(dxf(mesh%num_pts_tot),ierr)
   SLL_ALLOCATE(dyf(mesh%num_pts_tot),ierr)
+  ! Allocation for degree 2 splines:
+  SLL_ALLOCATE(f2(mesh%num_pts_tot),ierr)
+  SLL_ALLOCATE(dxf2(mesh%num_pts_tot),ierr)
+  SLL_ALLOCATE(dyf2(mesh%num_pts_tot),ierr)
 
   do degree=1,max_deg
      do i=1, mesh%num_pts_tot
@@ -74,25 +81,34 @@ program test_box_splines_derivatives
         dxf(i) = boxspline_x1_derivative(x1, x2, degree)
         dyf(i) = boxspline_x2_derivative(x1, x2, degree)
      end do
+     if (degree .eq. 2) then
+        f2(:) = f(:)
+        dxf2(:) = dxf(:)
+        dyf2(:) = dyf(:)
+     end if
      print *, " * Degree =", degree
      print *, "    --> sum boxspline      = ", sum(f)
      print *, "    --> sum 1st derivative = ", sum(dxf)
      print *, "    --> sum 2nd derivative = ", sum(dyf)
      if (abs(sum(f)-1.0_f64).gt.criterion) then
         passed_test = .false.
-        print *, "    --------------> FAILED"
+        print *, " Test FAILED for box-spline of degree = ", degree
         STOP
      end if
   end do
 
-  ! !Wrtting on docs:
-  ! call write_field_hex_mesh_xmf(mesh,   f, "boxspline2")
-  ! call write_field_hex_mesh_xmf(mesh, dxf, "der1_boxspline2")
-  ! call write_field_hex_mesh_xmf(mesh, dyf, "der2_boxspline2")
+  !Wrtting on docs:
+  call write_field_hex_mesh_xmf(mesh,   f2, "boxspline2")
+  call write_field_hex_mesh_xmf(mesh, dxf2, "der1_boxspline2")
+  call write_field_hex_mesh_xmf(mesh, dyf2, "der2_boxspline2")
 
   SLL_DEALLOCATE_ARRAY(f, ierr)
   SLL_DEALLOCATE_ARRAY(dxf, ierr)
   SLL_DEALLOCATE_ARRAY(dyf, ierr)
+
+  SLL_DEALLOCATE_ARRAY(f2, ierr)
+  SLL_DEALLOCATE_ARRAY(dxf2, ierr)
+  SLL_DEALLOCATE_ARRAY(dyf2, ierr)
 
 
   ! ! Computing non null splines on one cell:
