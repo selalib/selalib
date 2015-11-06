@@ -248,7 +248,14 @@ def compute_all_used_symbols( content ):
                 interfaces.append( item.iname )
         # ALLOCATE statement
         elif isinstance( item, statements.Allocate ):
-            pass # TODO
+            if item.type_spec:
+                types.append( item.type_spec )
+            alloc_opt_rhs = [a.partition('=')[2] for a in item.alloc_opt_list]
+            s = ','.join( item.allocation_list + alloc_opt_rhs )
+            s = remove_fortran_strings ( s )
+            s = remove_fortran_logicals( s )
+            variables.extend( re_engines['variable'].findall( s ) )
+            calls    .extend( re_engines['call'    ].findall( s ) )
         # TYPE GUARD statement
         elif isinstance( item, statements.TypeGuard ):
             if item.type_spec:
