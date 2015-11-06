@@ -402,14 +402,14 @@ call sll_xdmf_close(file_id,error)
 
 end subroutine plot_f_cartesian
 
-subroutine write_f0( sp, iplot, filename, array_name, time)
+subroutine write_f( sp, iplot, array_name, time)
 
   type(species),    intent(in) :: sp
   sll_int32,        intent(in) :: iplot
-  character(len=*), intent(in) :: filename
   character(len=*), intent(in) :: array_name
   sll_real64,       intent(in) :: time
   sll_int32                    :: file_id
+  sll_int32                    :: i
   sll_int32                    :: ierr
   sll_int32                    :: nc_x1
   sll_int32                    :: nc_x2
@@ -428,26 +428,36 @@ subroutine write_f0( sp, iplot, filename, array_name, time)
   psize = sll_get_collective_size( sll_world_collective )
   mpi_master = merge(.true., .false., prank == 0)
 
-  SLL_ALLOCATE(sp%collective_displs(psize),ierr)
-  SLL_ALLOCATE(sp%collective_recvcnts(psize),ierr)
+  SLL_ALLOCATE(collective_displs(psize),ierr)
+  SLL_ALLOCATE(collective_recvcnts(psize),ierr)
 
   call compute_local_sizes(sp%layout_x1, local_size_x1, local_size_x2)
-  call compute_displacements_array_2d(sp%layout_x1, psize, sp%collective_displs )
-  sp%collective_recvcnts = receive_counts_array_2d(sp%layout_x1, psize )
+  call compute_displacements_array_2d(sp%layout_x1, psize, collective_displs )
+  collective_recvcnts = receive_counts_array_2d(sp%layout_x1, psize )
 
   call load_buffer_2d( sp%layout_x1, sp%f_x1-sp%f_x1_init, sp%f_x1_buf1d )
   call sll_collective_gatherv_real64(    &
     sll_world_collective,                &
     sp%f_x1_buf1d,                       &
     local_size_x1*local_size_x2,         &
-    sp%collective_recvcnts,              &
-    sp%collective_displs,                &
+    collective_recvcnts,                 &
+    collective_displs,                   &
     0,                                   &
     sp%f_visu_buf1d )
 
   sp%f_visu = reshape(sp%f_visu_buf1d, shape(sp%f_visu))
 
   if (mpi_master) then
+    do i=1,sp%num_dof_x2
+      sp%f_visu_buf1d(i) = sum(sp%f_visu(1:nc_x1,i))*sp%mesh2d%delta_eta1
+    enddo
+
+    call sll_gnuplot_1d(                     &
+      sp%f_visu_buf1d(1:sp%num_dof_x2),      &
+      sp%node_positions_x2(1:sp%num_dof_x2), &
+      'int_'//arraY_name,                    &
+      iplot )
+
     call plot_f_cartesian(       &
         iplot,                   &
         sp%f_visu,               &
@@ -465,8 +475,8 @@ subroutine write_f0( sp, iplot, filename, array_name, time)
     sll_world_collective,               &
     sp%f_x1_buf1d,                      &
     local_size_x1*local_size_x2,        &
-    sp%collective_recvcnts,             &
-    sp%collective_displs,               &
+    collective_recvcnts,                &
+    collective_displs,                  &
     0,                                  &
     sp%f_visu_buf1d )
 
@@ -474,6 +484,17 @@ subroutine write_f0( sp, iplot, filename, array_name, time)
 
 
   if (mpi_master) then
+
+    do i=1,sp%num_dof_x2
+      sp%f_visu_buf1d(i) = sum(sp%f_visu(1:nc_x1,i))*sp%mesh2d%delta_eta1
+    enddo
+
+    call sll_gnuplot_1d( &
+      sp%f_visu_buf1d(1:sp%num_dof_x2),      &
+      sp%node_positions_x2(1:sp%num_dof_x2), &
+      'int'//array_name//'dx',                    &
+      iplot )
+
     call plot_f_cartesian(       &
         iplot,                   &
         sp%f_visu,               &
@@ -484,15 +505,12 @@ subroutine write_f0( sp, iplot, filename, array_name, time)
         array_name,              &
         sp%label,                &
         time )        
+
   end if
 
-  print *,'#max'//array_name//" = ",maxval(sp%f_visu), minval(sp%f_visu)
+  print *,prank,'#max'//array_name//" = ",maxval(sp%f_visu), minval(sp%f_visu)
 
-  !call sll_binary_file_create(filename, file_id, ierr)
-  !call sll_binary_write_array_2d(file_id,sp%f_visu(1:nc_x1,1:nc_x2),ierr)
-  !call sll_binary_file_close(file_id,ierr)
-  
-end subroutine write_f0
+end subroutine write_f
 
 
 end module sll_m_species

@@ -1052,7 +1052,6 @@ psize = sll_get_collective_size( sll_world_collective )
 mpi_master = merge(.true., .false., prank == 0)
 
 
-iplot = 1
 
 nb_mode = sim%nb_mode
 time_init = sim%time_init
@@ -1069,7 +1068,6 @@ global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
 global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
 
     
-call int2string(iplot,cplot)    
 
 call int2string(prank,cproc)
 if(sim%restart_file/="no_restart_file")then
@@ -1097,12 +1095,14 @@ endif
 if(sim%time_init_from_restart_file) sim%time_init = time_init  
 time_init = sim%time_init
 
+iplot = 1
+
 if (mpi_master) then
-  call write_f0(sim%sp1, iplot, "f0_sp1.bdat", "fe", time_init)
+  call write_f(sim%sp1, iplot, "fe", time_init)
 endif
 
 if (mpi_master) then
-  call write_f0(sim%sp2, iplot, "f0_sp2.bdat", "fi", time_init)
+  call write_f(sim%sp2, iplot, "fi", time_init)
 endif
     
 call compute_rho(sim%sp1)
@@ -1262,15 +1262,9 @@ do istep = 1, sim%num_iterations
 
 
     if (mod(istep,sim%freq_diag_restart)==0) then          
-      call int2string(iplot,cplot) 
-      call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
-      call sll_binary_write_array_0d(restart_id,time,ierr)
-      call sll_binary_write_array_2d(restart_id,sim%sp1%f_x1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
-      call sll_binary_write_array_2d(restart_id,sim%sp2%f_x1(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
-      call sll_binary_file_close(restart_id,ierr)    
     endif 
 
-    if(prank==0)then                  
+    if (mpi_master) then                  
       sim%buf_fft = sim%sp1%rho(1:np_x1-1)-sim%sp2%rho(1:np_x1-1)
       call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
       do k=0,nb_mode
@@ -1310,146 +1304,16 @@ do istep = 1, sim%num_iterations
     endif
       
     if (mod(istep,sim%freq_diag)==0) then          
-      !we substract f0
-      !we gather in one file
 
-      !sp1
-      call load_buffer_2d( sim%sp1%layout_x1, sim%sp1%f_x1-sim%sp1%f_x1_init, sim%sp1%f_x1_buf1d )
-      call sll_collective_gatherv_real64(    &
-        sll_world_collective,                &
-        sim%sp1%f_x1_buf1d,                      &
-        local_size_x1_sp1*local_size_x2_sp1, &
-        sim%sp1%collective_recvcnts,         &
-        sim%sp1%collective_displs,           &
-        0, &
-        sim%sp1%f_visu_buf1d )
-      sim%sp1%f_visu = reshape(sim%sp1%f_visu_buf1d, shape(sim%sp1%f_visu))
-      if(prank==0) then
-        do i=1,num_dof_x2_sp1
-          sim%sp1%f_visu_buf1d(i) = sum(sim%sp1%f_visu(1:np_x1-1,i))*sim%sp1%mesh2d%delta_eta1
-        enddo
-        call sll_gnuplot_1d( &
-          sim%sp1%f_visu_buf1d(1:num_dof_x2_sp1), &
-          sim%sp1%node_positions_x2(1:num_dof_x2_sp1), &
-          'intdeltafedx', &
-          iplot )
+      call write_f( sim%sp1, iplot, "fe", time)
+      call write_f( sim%sp2, iplot, "fi", time)
 
-        call plot_f_cartesian( &
-          iplot, &
-          sim%sp1%f_visu, &
-          sim%sp1%x1_array, &
-          np_x1, &
-          sim%sp1%node_positions_x2, &
-          sim%sp1%num_dof_x2, &
-          'deltafe', 'e', &
-          time)                    
-      
-      endif
-      !we store f for visu
-      call load_buffer_2d( sim%sp1%layout_x1, sim%sp1%f_x1, sim%sp1%f_x1_buf1d )
-      call sll_collective_gatherv_real64( &
-        sll_world_collective, &
-        sim%sp1%f_x1_buf1d, &
-        local_size_x1_sp1*local_size_x2_sp1, &
-        sim%sp1%collective_recvcnts, &
-        sim%sp1%collective_displs, &
-        0, &
-        sim%sp1%f_visu_buf1d )
-      sim%sp1%f_visu = reshape(sim%sp1%f_visu_buf1d, shape(sim%sp1%f_visu))
-      if(mpi_master) then
-        do i=1,num_dof_x2_sp1
-          sim%sp1%f_visu_buf1d(i) = sum(sim%sp1%f_visu(1:np_x1-1,i))*sim%sp1%mesh2d%delta_eta1
-        enddo
-        call sll_gnuplot_1d( &
-          sim%sp1%f_visu_buf1d(1:num_dof_x2_sp1), &
-          sim%sp1%node_positions_x2(1:num_dof_x2_sp1), &
-          'intfedx', &
-          iplot )
-    call plot_f_cartesian( &
-      iplot, &
-      sim%sp1%f_visu, &
-      sim%sp1%x1_array, &
-      np_x1, &
-      sim%sp1%node_positions_x2, &
-      sim%sp1%num_dof_x2, &
-      'fe', 'e', &
-      time)                    
-      endif
-
-      
-      !sp2
-      call load_buffer_2d( sim%sp2%layout_x1, sim%sp2%f_x1-sim%sp2%f_x1_init, sim%sp2%f_x1_buf1d )
-      call sll_collective_gatherv_real64( &
-        sll_world_collective, &
-        sim%sp2%f_x1_buf1d, &
-        local_size_x1_sp2*local_size_x2_sp2, &
-        sim%sp2%collective_recvcnts, &
-        sim%sp2%collective_displs, &
-        0, &
-        sim%sp2%f_visu_buf1d )
-      sim%sp2%f_visu = reshape(sim%sp2%f_visu_buf1d, shape(sim%sp2%f_visu))
-      if(mpi_master) then
-        do i=1,num_dof_x2_sp2
-          sim%sp2%f_visu_buf1d(i) = sum(sim%sp2%f_visu(1:np_x1-1,i))*sim%sp2%mesh2d%delta_eta1
-        enddo
-        call sll_gnuplot_1d( &
-          sim%sp2%f_visu_buf1d(1:num_dof_x2_sp2), &
-          sim%sp2%node_positions_x2(1:num_dof_x2_sp2), &
-          'intdeltafedx', &
-          iplot )
-
-
-            call plot_f_cartesian( &
-              iplot, &
-              sim%sp2%f_visu, &
-              sim%sp1%x1_array, &
-              np_x1, &
-              sim%sp2%node_positions_x2, &
-              sim%sp2%num_dof_x2, &
-              'deltafi', 'i', &
-              time)                    
-
-          
-          endif
-          !we store f for visu
-          call load_buffer_2d( sim%sp2%layout_x1, sim%sp2%f_x1, sim%sp2%f_x1_buf1d )
-          call sll_collective_gatherv_real64( &
-            sll_world_collective, &
-            sim%sp2%f_x1_buf1d, &
-            local_size_x1_sp2*local_size_x2_sp2, &
-            sim%sp2%collective_recvcnts, &
-            sim%sp2%collective_displs, &
-            0, &
-            sim%sp2%f_visu_buf1d )
-          sim%sp2%f_visu = reshape(sim%sp2%f_visu_buf1d, shape(sim%sp2%f_visu))
-          if(mpi_master) then
-            do i=1,num_dof_x2_sp2
-              sim%sp2%f_visu_buf1d(i) = sum(sim%sp2%f_visu(1:np_x1-1,i))*sim%sp2%mesh2d%delta_eta1
-            enddo
-            call sll_gnuplot_1d( &
-              sim%sp2%f_visu_buf1d(1:num_dof_x2_sp2), &
-              sim%sp2%node_positions_x2(1:num_dof_x2_sp2), &
-              'intfedx', &
-              iplot )
-
-        call plot_f_cartesian( &
-          iplot, &
-          sim%sp2%f_visu, &
-          sim%sp1%x1_array, &
-          np_x1, &
-          sim%sp2%node_positions_x2, &
-          sim%sp2%num_dof_x2, &
-          'fi','i', &
-          time)                    
-
-          endif
-     
-          iplot = iplot+1  
+      iplot = iplot+1  
                     
-        endif
+    endif
           
 
-     end if
+  end if
 
 end do
     
