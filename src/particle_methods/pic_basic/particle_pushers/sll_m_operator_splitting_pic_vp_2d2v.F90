@@ -24,16 +24,8 @@ module sll_m_operator_splitting_pic_vp_2d2v
   !> Operator splitting type for 2d2v Vlasov-Poisson
   type, public, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
      class(sll_c_pic_poisson), pointer :: solver
-!     class(poisson_2d_fft_solver), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
-!     class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
      class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
-!!$
-!!$     sll_real64, allocatable :: rho_dofs(:)                      !< Degrees of freedom for kernel respresentation of the charge density. 
-!!$     sll_real64, allocatable :: rho_dofs_local(:)                !< Processor local part of \a rho_dofs 
-!!$     sll_real64, allocatable :: rho_2d(:,:)                      !< 2d representation of \a rho_dofs for use in Poisson solver.
-!!$     sll_real64, allocatable :: efield1(:,:) !< 2d representation of electric field, first component for use in Poisson solver. 
-!!$     sll_real64, allocatable :: efield2(:,:) !< 2d representation of electric field, second component for use in Poisson solver. 
-!!$     sll_real64, pointer     :: efield_dofs(:,:)  !< Values of the electric field at grid points (1d representation).
+
 
      ! For version with control variate
      class(sll_t_control_variate), pointer :: control_variate => null()
@@ -86,8 +78,8 @@ contains
        if (this%particle_group%n_weights == 3) then
           vi = this%particle_group%get_v(i_part)
           ! Update weights if control variate
-          wi = this%particle_group%get_weights(i_part)
-          wi(3) = this%control_variate%update_df_weight( x_new, vi, 0.0_f64, wi(1), wi(2))
+          wi = this%particle_group%get_weights(i_part)          
+          wi(3) = this%control_variate%update_df_weight( x_new(1:2), vi(1:2), 0.0_f64, wi(1), wi(2))
           call this%particle_group%set_weights(i_part, wi)
        end if
     end do
@@ -107,7 +99,7 @@ contains
     sll_real64 :: efield(2)
     sll_real64 :: qm
     sll_real64 :: xi(3)
-    sll_real64 :: wi
+    sll_real64 :: wi, wall(3)
 
 
     ! Assemble right-hand-side
@@ -131,6 +123,12 @@ contains
        call this%particle_group%set_v(i_part, v_new)
 
        ! Update particle weights
+       if (this%particle_group%n_weights == 3) then
+          ! Update weights if control variate
+          wall = this%particle_group%get_weights(i_part)          
+          wall(3) = this%control_variate%update_df_weight( xi(1:2), v_new(1:2), 0.0_f64, wall(1), wall(2))
+          call this%particle_group%set_weights(i_part, wall)
+       end if
     end do
     
 
@@ -147,15 +145,7 @@ contains
     sll_int32 :: ierr
 
     this%solver => this%solver
-    !this%poisson_solver => poisson_solver
-    !this%kernel_smoother => kernel_smoother
     this%particle_group => particle_group
-
-!!$    SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
-!!$    SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
-!!$    SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
-!!$    SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
-!!$    SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother%n_dofs, 2), ierr)
 
   end subroutine initialize_operator_splitting_pic_vp_2d2v
 
@@ -179,16 +169,7 @@ contains
     SLL_ALLOCATE(this, ierr)
 
     this%solver => solver
-    !this%poisson_solver => poisson_solver
-    !this%kernel_smoother => kernel_smoother
     this%particle_group => particle_group
-!    this%efield_dofs => efield_dofs
-
-!!$    SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
-!!$    SLL_ALLOCATE(this%rho_dofs_local(this%kernel_smoother%n_dofs), ierr)
-!!$    SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
-!!$    SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
-!!$    SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
 
     this%i_weight = 1
     if(present(i_weight)) this%i_weight = i_weight
