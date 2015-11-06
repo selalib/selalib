@@ -9,4 +9,12 @@ TARGET_LINK_LIBRARIES( sll_pic_interface
   sll_working_precision 
   sll_collective
   sll_poisson_solvers
-  sll_maxwell_solvers)
+  sll_maxwell_solvers
+  sll_sobol
+  sll_prob)
+
+
+# Tests
+IF(BUILD_TESTING)
+  ADD_SUBDIRECTORY(testing)
+ENDIF(BUILD_TESTING)
