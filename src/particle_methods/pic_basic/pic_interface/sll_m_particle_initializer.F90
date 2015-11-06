@@ -182,6 +182,9 @@ contains
     !call normal_cdf_inv(rdn(1), 0.0_f64, 1.0_f64, v(1))
     !print*, 'cdf', v(1)
 
+    ! 1/Np in common weight
+    call particle_group%set_common_weight &
+         (1.0_f64/real(particle_group%n_total_particles, f64))
 
     do i_part = 1, particle_group%n_particles
        ! Generate Sobol numbers on [0,1]
@@ -204,7 +207,7 @@ contains
        call particle_group%set_v(i_part, v)
        ! Set weights.
        call particle_group%set_weights(i_part, &
-            [wi/real(particle_group%n_total_particles, f64)])
+            [wi])
     end do
 
 
@@ -237,6 +240,9 @@ contains
     x = 0.0_f64
     v = 0.0_f64
 
+    ! 1/Np in common weight
+    call particle_group%set_common_weight &
+         (1.0_f64/real(particle_group%n_total_particles, f64))
 
     do i_part = 1, particle_group%n_particles
        ! Generate Sobol numbers on [0,1]
@@ -259,7 +265,7 @@ contains
        call particle_group%set_v(i_part, v)
        ! Set weights.
        call particle_group%set_weights(i_part, &
-            [wi/real(particle_group%n_total_particles, f64)])
+            [wi])
     end do
 
 
@@ -292,7 +298,9 @@ contains
     x = 0.0_f64
     v = 0.0_f64
 
-    ! TODO: 1/Np in common weight?
+    ! 1/Np in common weight
+    call particle_group%set_common_weight &
+         (1.0_f64/real(particle_group%n_total_particles, f64))
 
 
     do i_part = 1, particle_group%n_particles
@@ -303,7 +311,6 @@ contains
        x(1:2) = xmin + Lx * rdn(1:2)
        ! Landau perturbation for position 
        wi(1) = (1.0_f64 + landau_param(1)*cos(landau_param(2)*x(1)))*Lx(1)*Lx(2)
-       wi(1) = wi(1)/real(particle_group%n_total_particles, f64)
           
 
        ! Maxwellian distribution of the temperature
@@ -315,7 +322,7 @@ contains
        
        ! If control variate, set also g0 and df weight
        if (particle_group%n_weights == 3) then
-          wi(2) = 1/product(Lx)*&
+          wi(2) = 1.0_f64/product(Lx)*&
                exp(-0.5_f64*((v(1)/thermal_velocity(1))**2+&
                (v(2)/thermal_velocity(2))**2))
           wi(3) = wi(1) - exp(-0.5_f64*((v(1)/thermal_velocity(1))**2+&
@@ -362,6 +369,10 @@ contains
     v = 0.0_f64
 
 
+    ! 1/Np in common weight
+    call particle_group%set_common_weight &
+         (1.0_f64/real(particle_group%n_total_particles, f64))
+
     do i_part = 1, particle_group%n_particles
        ! Generate Sobol numbers on [0,1]
        call random_number(rnd_no)
@@ -386,7 +397,7 @@ contains
        call particle_group%set_v(i_part, v)
        ! Set weights.
        call particle_group%set_weights(i_part, &
-            [wi/real(particle_group%n_total_particles, f64)])
+            [wi])
     end do
 
 
