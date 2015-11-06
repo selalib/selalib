@@ -15,28 +15,23 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   use sll_m_maxwell_1d_fem
   use sll_m_constants, only : &
        sll_pi
+  use sll_m_collective, only : &
+       sll_boot_collective, sll_halt_collective
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
-  ! Specific particle group
-  class(sll_particle_group_1d2v), pointer :: specific_particle_group 
 
   ! Arrays for the fields
   sll_real64, pointer :: efield(:,:), efield_ref(:,:)
   sll_real64, pointer :: bfield(:), bfield_ref(:)
 
   ! Abstract kernel smoothers
-  class(sll_kernel_smoother_base), pointer :: kernel_smoother_0     
-  class(sll_kernel_smoother_base), pointer :: kernel_smoother_1
-  ! Specific kernel smoother
-  class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_0
-  class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_1
+  class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
+  class(sll_c_kernel_smoother), pointer :: kernel_smoother_1
   
   ! Maxwell solver 
   ! Abstract 
   class(sll_maxwell_1d_base), pointer :: maxwell_solver
-  ! Specific
-  class(sll_maxwell_1d_fem), pointer :: specific_maxwell_solver
   
   ! Specific operator splitting
   class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), pointer :: propagator
@@ -58,7 +53,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
    
-!  call sll_boot_collective()
+  call sll_boot_collective()
 
   ! Set parameters
   n_particles = 2!10
@@ -73,9 +68,8 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   domain = [eta_min, eta_max, eta_max - eta_min]
   
   ! Initialize
-  specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
+  particle_group => sll_new_particle_group_1d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
-  particle_group => specific_particle_group
 
   ! Initial particle information   
   ! Data produce with following call
@@ -100,19 +94,16 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   end do
 
   ! Initialize kernel smoother    
-  specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
+  kernel_smoother_1 => sll_new_smoother_spline_1d(&
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, SLL_GALERKIN) 
-  kernel_smoother_1 => specific_kernel_smoother_1
-  specific_kernel_smoother_0 => &
+  kernel_smoother_0 => &
        sll_new_smoother_spline_1d(domain(1:2), [num_cells], &
        n_particles, degree_smoother, SLL_GALERKIN) 
-  kernel_smoother_0 => specific_kernel_smoother_0
   
   ! Initialize Maxwell solver
-  specific_maxwell_solver => sll_new_maxwell_1d_fem([eta_min, eta_max], num_cells, &
+  maxwell_solver => sll_new_maxwell_1d_fem([eta_min, eta_max], num_cells, &
        degree_smoother)
-  maxwell_solver => specific_maxwell_solver
 
   SLL_ALLOCATE(efield(kernel_smoother_0%n_dofs,2),ierr)
   SLL_ALLOCATE(bfield(kernel_smoother_0%n_dofs),ierr)
@@ -224,5 +215,5 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
      stop
   end if
   
- ! call sll_halt_collective()
+  call sll_halt_collective()
 end program test_hamiltonian_splitting_cef_pic_vm_1d2v

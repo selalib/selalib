@@ -26,8 +26,8 @@ module sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
   !> Operator splitting type for Vlasov-Maxwell 1d2v
   type, public, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
      class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
+     class(sll_c_kernel_smoother), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
+     class(sll_c_kernel_smoother), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
      class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
 
      sll_int32 :: spline_degree !< Degree of the spline for j,B. Here 3.
@@ -179,9 +179,6 @@ contains
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,2), 2, this%efield_dofs(:,2))
 
-    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
-   call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
-   call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
 
  end subroutine operatorHp1_pic_vm_1d2v
 
@@ -219,7 +216,7 @@ contains
       ind = ind + 1
    end do
 
-   if (abs(vi(1)) > 1E16) then
+   if (abs(vi(1)) > 1D-14) then
       fy = sign*m*this%delta_x*&
            (uniform_b_splines_at_x(this%spline_degree, y1) +&
            uniform_b_splines_at_x(this%spline_degree, y2))
@@ -355,9 +352,6 @@ contains
     this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
 
-    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
-   call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
-   call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
 
  end subroutine operatorHp1_pic_vm_1d2v_prim
 
@@ -384,10 +378,11 @@ contains
     ! V_new = V_old + dt * E
     do i_part=1,this%particle_group%n_particles
        ! Evaluate efields at particle position
-       call this%kernel_smoother_1%evaluate_kernel_function_particle&
-            (this%efield_dofs(:,1), i_part, efield(1))
-       call this%kernel_smoother_0%evaluate_kernel_function_particle&
-            (this%efield_dofs(:,2), i_part, efield(2))
+       v_new = this%particle_group%get_x(i_part)
+       call this%kernel_smoother_1%evaluate &
+            (v_new(1), this%efield_dofs(:,1), efield(1))
+       call this%kernel_smoother_0%evaluate &
+            (v_new(1), this%efield_dofs(:,2), efield(2))
        v_new = this%particle_group%get_v(i_part)
        v_new(1:2) = v_new(1:2) + dt* qm* efield 
        call this%particle_group%set_v(i_part, v_new)
@@ -420,8 +415,9 @@ contains
     ! V_new = V_old + dt * (cos(B dt)  sin(B dt) \\ -sin(B dt) cos(B dt)) * V_old
     do i_part=1,this%particle_group%n_particles       
        ! Evaluate bfield at particle position (splines of order p)
-       call this%kernel_smoother_1%evaluate_kernel_function_particle&
-            (this%bfield_dofs, i_part, bfield)
+       v_old = this%particle_group%get_x(i_part)
+       call this%kernel_smoother_1%evaluate &
+            (v_old(1), this%bfield_dofs, bfield)
        v_old = this%particle_group%get_v(i_part)
        v_new(1) = v_old(1) * cos(bfield*dt) + &
             v_old(2) * sin(bfield*dt)
@@ -452,8 +448,8 @@ contains
        Lx) result(this)
     class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), pointer :: this !< time splitting object 
     class(sll_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
-    class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
     class(sll_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
     sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
