@@ -13,13 +13,13 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 05 Nov 2015
+# Last revision: 06 Nov 2015
 #
 from __future__ import print_function
 import re
 from fparser    import statements, typedecl_statements, block_statements
-from fortran_intrinsics import (intrinsic_procedures, logical_operators,
-                                                      logical_constants)
+from fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
+                                logical_operators, logical_constants)
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -248,10 +248,19 @@ def compute_all_used_symbols( content ):
                 interfaces.append( item.iname )
         # ALLOCATE statement
         elif isinstance( item, statements.Allocate ):
+            # Type name and type parameters
+            type_params_rhs = []
             if item.type_spec:
-                types.append( item.type_spec )
+                type_name, type_params_dict = item.parse_type_spec()
+                if type_name not in intrinsic_types:
+                    types.append( type_name )
+                for key,val in type_params_dict.items():
+                    type_params_rhs.append( val )
+            # Optional arguments
             alloc_opt_rhs = [a.partition('=')[2] for a in item.alloc_opt_list]
-            s = ','.join( item.allocation_list + alloc_opt_rhs )
+            # Create unique string together with allocation list
+            s = ','.join( type_params_rhs + item.allocation_list + alloc_opt_rhs )
+            # Find all symbols in string
             s = remove_fortran_strings ( s )
             s = remove_fortran_logicals( s )
             variables.extend( re_engines['variable'].findall( s ) )
@@ -305,7 +314,9 @@ def compute_all_used_symbols( content ):
                 text = item.expr
             # DO loop
             elif isinstance( item, block_statements.Do ):
-                text = item.loopcontrol
+                text = item.item.apply_map( item.loopcontrol )
+                if text.startswith( 'while' ): # DO WHILE
+                    text = text[6:-1]
             # PRINT or WRITE statement
             elif isinstance( item, (statements.Print, statements.Write) ):
                 text = ','.join( item.items )
@@ -323,7 +334,7 @@ def compute_all_used_symbols( content ):
                 text = item.item.apply_map( item.expr )
             # SELECT TYPE block
             elif isinstance( item, block_statements.SelectType ):
-                text = item.item.apply_map( item.expr )
+                text = item.selector
             # ASSOCIATE block
             elif isinstance( item, block_statements.Associate ):
                 text = ','.join( a.selector for a in item.association_list )
@@ -338,6 +349,10 @@ def compute_all_used_symbols( content ):
             if text:
                 variables.extend( re_engines['variable'].findall( text ) )
                 calls    .extend( re_engines['call'    ].findall( text ) )
+            # Double-check that we do not have F2Py strings
+            if ('f2py' in text) or ('F2PY' in text):
+                print('ERROR: ', text )
+                raise SystemExit()
 
     return set( types + subroutines + variables + calls + interfaces )
 
