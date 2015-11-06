@@ -20,6 +20,7 @@ module sll_m_particle_group_1d2v
 type, public, extends(sll_particle_group_base) :: sll_particle_group_1d2v
    !sll_int32               :: n_particles !< number of particle
    sll_real64, pointer :: particle_array(:,:) !< array of particles
+   sll_real64 :: common_weight
 
 contains
     ! Getters
@@ -121,7 +122,7 @@ contains
 
     i_wi = 1
     if(present(i_weight)) i_wi = i_weight
-    r = self%species%q  * self%particle_array(i, 3+i_wi)
+    r = self%species%q  * self%particle_array(i, 3+i_wi) * self%common_weight
 
   end function get_charge_1d2v
 
@@ -137,7 +138,7 @@ contains
 
     i_wi = 1
     if(present(i_weight)) i_wi = i_weight
-    r = self%species%m * self%particle_array(i, 3+i_wi)
+    r = self%species%m * self%particle_array(i, 3+i_wi) * self%common_weight
 
   end function get_mass_1d2v
 
@@ -182,10 +183,11 @@ contains
 
   
   !----------------------------------------------------------------------!
-  subroutine set_common_weight_1d2v( self, i, x )
+  subroutine set_common_weight_1d2v( self, x )
     class( sll_particle_group_1d2v ), intent( inout ) :: self !< particle group
-    sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x !< common weight
+
+    self%common_weight = x
     
   end subroutine set_common_weight_1d2v
 
