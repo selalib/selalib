@@ -693,7 +693,7 @@ contains  ! ****************************************************************
     fp2h = chi_gen_val(x1+2.0_f64*h, x2, deg)
     fp1h = chi_gen_val(x1 + h,       x2, deg)
 
-    val = 0.25_f64/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+    val = ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h) / 12._f64 / h
 
   end function boxspline_x1_derivative
 
