@@ -27,6 +27,7 @@ sll_int32           :: ierr
 sll_int32           :: i
 sll_int32           :: num_min
 sll_int32           :: num_max
+sll_int32           :: istep
 character(len=256)  :: str
 
 procedure(sll_scalar_initializer_2d), pointer :: init_func
@@ -55,7 +56,10 @@ call get_command_argument(1, filename)
 if (len_trim(filename) == 0)then
 
   sim => new_vp2d_par_cart_multi_species( )
-  call sim%run( )
+  do istep = 1, sim%num_iterations
+    sim%istep = istep
+    call sim%run( )
+  end do
 
 else
 
@@ -80,7 +84,10 @@ else
       
     endif
 
-    call sim%run( )
+    do istep = 1, sim%num_iterations
+      sim%istep = istep
+      call sim%run( )
+    end do
 
   else
 
@@ -97,7 +104,10 @@ else
 
     do i=num_min,num_max
       sim => new_vp2d_par_cart_multi_species( filename_local, i)
-      call sim%run( )
+      do istep = 1, sim%num_iterations
+        sim%istep = istep
+        call sim%run( )
+      end do
       call delete_vp2d_par_cart_multi_species( sim )
       nullify( sim )
     enddo  
