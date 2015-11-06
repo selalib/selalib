@@ -6,7 +6,7 @@ set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}"   )
 file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.ref" "*.gnu" )
 
-ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+ADD_EXECUTABLE( ${EXECUTABLE} sll_m_species.F90 sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel )
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )

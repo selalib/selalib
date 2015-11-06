@@ -48,6 +48,7 @@ if(sll_get_collective_rank(sll_world_collective)==0)then
 
 endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 call get_command_argument(1, filename)
 
@@ -74,14 +75,8 @@ else
       params(1) = 0.26_f64
       params(2) = 100._f64  
 
-      call change_initial_function_vp2d_par_cart_multi_species( &
-                      sim,                                      &
-                      init_func,                                &
-                      params,                                   &
-                      num_params,                               &
-                      init_func,                                &
-                      params,                                   &
-                      num_params)
+      call change_initial_function_species(sim%sp1,init_func,params,num_params)
+      call change_initial_function_species(sim%sp2,init_func,params,num_params)
       
     endif
 
