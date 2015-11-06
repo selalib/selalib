@@ -255,8 +255,6 @@ sll_int32          :: np_x2_sp1
 sll_int32          :: np_x2_sp2
 sll_int32          :: num_dof_x2_sp1
 sll_int32          :: num_dof_x2_sp2
-sll_int32          :: nproc_x1
-sll_int32          :: nproc_x2
 sll_int32          :: global_indices_sp1(2)
 sll_int32          :: global_indices_sp2(2)
 sll_int32          :: local_size_x1_sp1
@@ -967,96 +965,26 @@ num_dof_x2_sp1 = sim%sp1%num_dof_x2
 np_x2_sp2      = sim%sp2%mesh2d%num_cells2+1
 num_dof_x2_sp2 = sim%sp2%num_dof_x2
 
-call initialize_species(sim%sp1)
-call initialize_species(sim%sp2)
+call initialize_species(sim%sp1, nb_mode)
+call initialize_species(sim%sp2, nb_mode)
 
 print*, '#nb_mode =', nb_mode
 SLL_ALLOCATE(sim%buf_fft(nc_x1),ierr)
 sim%pfwd => fft_new_plan(nc_x1,sim%buf_fft,sim%buf_fft,FFT_FORWARD,FFT_NORMALIZE)
 SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)      
 
-if(prank==0)then
-  mpi_master = .true.
-  print *,'#psize=',psize
-  SLL_ALLOCATE(sim%sp1%f_visu(np_x1,num_dof_x2_sp1),ierr)
-  SLL_ALLOCATE(sim%sp2%f_visu(np_x1,num_dof_x2_sp2),ierr)
-  SLL_ALLOCATE(sim%sp1%f_visu_buf1d(np_x1*num_dof_x2_sp1),ierr)
-  SLL_ALLOCATE(sim%sp2%f_visu_buf1d(np_x1*num_dof_x2_sp2),ierr)
-else
-  mpi_master = .false.
-  SLL_ALLOCATE(sim%sp1%f_visu(1:1,1:1),ierr)
-  SLL_ALLOCATE(sim%sp2%f_visu(1:1,1:1),ierr)
-  SLL_ALLOCATE(sim%sp1%f_visu_buf1d(1:1),ierr)
-  SLL_ALLOCATE(sim%sp2%f_visu_buf1d(1:1),ierr)
-endif
 
-SLL_ALLOCATE(sim%sp1%collective_displs(psize),ierr)
-SLL_ALLOCATE(sim%sp2%collective_displs(psize),ierr)
-SLL_ALLOCATE(sim%sp1%collective_recvcnts(psize),ierr)
-SLL_ALLOCATE(sim%sp2%collective_recvcnts(psize),ierr)
-sim%sp1%layout_x1 => new_layout_2D( sll_world_collective )
-sim%sp2%layout_x1 => new_layout_2D( sll_world_collective )
-sim%sp1%layout_x2 => new_layout_2D( sll_world_collective )
-sim%sp2%layout_x2 => new_layout_2D( sll_world_collective )    
-
-nproc_x1 = psize
-nproc_x2 = 1
-call initialize_layout_with_distributed_array( &
-     np_x1, num_dof_x2_sp1, nproc_x1, nproc_x2, sim%sp1%layout_x2 )
-call initialize_layout_with_distributed_array( &
-     np_x1, num_dof_x2_sp2, nproc_x1, nproc_x2, sim%sp2%layout_x2 )
-call initialize_layout_with_distributed_array( &
-     np_x1, num_dof_x2_sp1, nproc_x2, nproc_x1, sim%sp1%layout_x1 )
-call initialize_layout_with_distributed_array( &
-     np_x1, num_dof_x2_sp2, nproc_x2, nproc_x1, sim%sp2%layout_x1 )
-
-call compute_local_sizes( sim%sp1%layout_x2, local_size_x1_sp1, local_size_x2_sp1 )
-call compute_local_sizes( sim%sp2%layout_x2, local_size_x1_sp2, local_size_x2_sp2 )
-
-SLL_ALLOCATE(sim%sp1%f_x2(local_size_x1_sp1,local_size_x2_sp1),ierr)
-SLL_ALLOCATE(sim%sp2%f_x2(local_size_x1_sp2,local_size_x2_sp2),ierr)
 
 call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
 call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
 
 global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
-SLL_ALLOCATE(sim%sp1%f_x1(local_size_x1_sp1,local_size_x2_sp1),ierr)    
-SLL_ALLOCATE(sim%sp1%f_x1_init(local_size_x1_sp1,local_size_x2_sp1),ierr)    
-SLL_ALLOCATE(sim%sp1%f_x1_buf1d(local_size_x1_sp1*local_size_x2_sp1),ierr)    
-
 global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
-SLL_ALLOCATE(sim%sp2%f_x1(local_size_x1_sp2,local_size_x2_sp2),ierr)    
-SLL_ALLOCATE(sim%sp2%f_x1_init(local_size_x1_sp2,local_size_x2_sp2),ierr)    
-SLL_ALLOCATE(sim%sp2%f_x1_buf1d(local_size_x1_sp2*local_size_x2_sp2),ierr)    
 
-sim%sp1%remap_plan_x1_x2 => NEW_REMAP_PLAN(sim%sp1%layout_x1, sim%sp1%layout_x2, sim%sp1%f_x1)
-sim%sp1%remap_plan_x2_x1 => NEW_REMAP_PLAN(sim%sp1%layout_x2, sim%sp1%layout_x1, sim%sp1%f_x2)
-sim%sp2%remap_plan_x1_x2 => NEW_REMAP_PLAN(sim%sp2%layout_x1, sim%sp2%layout_x2, sim%sp2%f_x1)
-sim%sp2%remap_plan_x2_x1 => NEW_REMAP_PLAN(sim%sp2%layout_x2, sim%sp2%layout_x1, sim%sp2%f_x2)
-
-SLL_ALLOCATE(sim%sp1%rho(np_x1),ierr)
-SLL_ALLOCATE(sim%sp2%rho(np_x1),ierr)
-SLL_ALLOCATE(sim%sp1%rho_loc(np_x1),ierr)
-SLL_ALLOCATE(sim%sp2%rho_loc(np_x1),ierr)
 SLL_ALLOCATE(sim%efield(np_x1),ierr)
 SLL_ALLOCATE(sim%e_app(np_x1),ierr)
 sim%e_app = 0._f64
 
-SLL_ALLOCATE(sim%sp1%f1d_omp_in(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
-SLL_ALLOCATE(sim%sp1%f1d_omp_out(max(np_x1,np_x2_sp1),sim%num_threads),ierr)
-SLL_ALLOCATE(sim%sp1%x2_array_unit(np_x2_sp1),ierr)
-SLL_ALLOCATE(sim%sp1%x2_array_middle(np_x2_sp1),ierr)
-SLL_ALLOCATE(sim%sp1%node_positions_x2(num_dof_x2_sp1),ierr)
-SLL_ALLOCATE(sim%sp1%f_hat_x2_loc(nb_mode+1),ierr)
-SLL_ALLOCATE(sim%sp1%f_hat_x2(nb_mode+1),ierr)
-
-SLL_ALLOCATE(sim%sp2%f1d_omp_in(max(np_x1,np_x2_sp2),sim%num_threads),ierr)
-SLL_ALLOCATE(sim%sp2%f1d_omp_out(max(np_x1,np_x2_sp2),sim%num_threads),ierr)
-SLL_ALLOCATE(sim%sp2%x2_array_unit(np_x2_sp2),ierr)
-SLL_ALLOCATE(sim%sp2%x2_array_middle(np_x2_sp2),ierr)
-SLL_ALLOCATE(sim%sp2%node_positions_x2(num_dof_x2_sp2),ierr)
-SLL_ALLOCATE(sim%sp2%f_hat_x2_loc(nb_mode+1),ierr)
-SLL_ALLOCATE(sim%sp2%f_hat_x2(nb_mode+1),ierr)
 
 sim%sp1%x2_array_unit(1:np_x2_sp1) = &
   (sim%sp1%x2_array(1:np_x2_sp1)-sim%sp1%x2_array(1))/(sim%sp1%x2_array(np_x2_sp1)-sim%sp1%x2_array(1))
@@ -1184,7 +1112,7 @@ sll_int32   :: np_x1
 sll_int32   :: np_x2_sp1
 sll_int32   :: np_x2_sp2
 sll_int32   :: ierr
-sll_int32   :: i,ig,k
+sll_int32   :: i,k
 sll_int32   :: istep
 
 sll_real64  :: time
