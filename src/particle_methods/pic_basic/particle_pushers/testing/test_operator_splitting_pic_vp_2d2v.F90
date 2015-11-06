@@ -167,7 +167,7 @@ program test_operator_splitting_pic_vp_2d2v
      end if
   end do
 
-    if (passed .EQV. .FALSE.) then
+  if (passed .EQV. .FALSE.) then
      print*, 'Error in operatorV.'
   end if
 
