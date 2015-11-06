@@ -61,6 +61,8 @@ implicit none
 
 type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_cart_multi_species
    
+  sll_int32 :: istep
+  sll_int32 :: iplot
   sll_int32 :: num_threads
   sll_int32 :: num_bloc_x1
 
@@ -76,11 +78,11 @@ type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_car
   
   !time_iterations
   sll_real64 :: dt
-  sll_int32 :: num_iterations
-  sll_int32 :: freq_diag
-  sll_int32 :: freq_diag_time
-  sll_int32 :: freq_diag_restart
-  sll_int32 :: nb_mode
+  sll_int32  :: num_iterations
+  sll_int32  :: freq_diag
+  sll_int32  :: freq_diag_time
+  sll_int32  :: freq_diag_restart
+  sll_int32  :: nb_mode
   sll_real64 :: time_init
   type(splitting_coeff), pointer :: split
   character(len=256)      :: thdiag_filename
@@ -110,6 +112,10 @@ type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_car
   type(sll_fft_plan),         pointer     :: pfwd
   sll_real64, dimension(:),   allocatable :: buf_fft
   sll_comp64, dimension(:),   allocatable :: rho_mode
+  sll_int32                               :: rhotote_id
+  sll_int32                               :: rhototi_id
+  sll_int32                               :: efield_id     
+  sll_int32                               :: th_diag_id
    
 contains
 
@@ -944,9 +950,6 @@ subroutine run_vp2d_cartesian_multi_species(sim)
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
 
-sll_int32 :: rhotote_id,rhototi_id
-sll_int32 :: efield_id     
-sll_int32 :: th_diag_id
 
 sll_int32   :: np_x1
 sll_int32   :: np_x2_sp1
@@ -967,8 +970,6 @@ sll_real64 :: time_init
  
 logical :: split_T
 
-
-sll_int32          :: iplot
 character(len=4)   :: cproc
 sll_int32          :: tid
 sll_int32          :: i_omp
@@ -986,254 +987,221 @@ sll_int32          :: local_size_x1_sp2
 sll_int32          :: local_size_x2_sp1
 sll_int32          :: local_size_x2_sp2
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Loop over time !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-do istep = 1, sim%num_iterations
+prank = sll_get_collective_rank( sll_world_collective )
+call int2string(prank,cproc)
+psize = sll_get_collective_size( sll_world_collective )
+mpi_master = merge(.true., .false., prank == 0)
 
-  prank = sll_get_collective_rank( sll_world_collective )
-  call int2string(prank,cproc)
-  psize = sll_get_collective_size( sll_world_collective )
-  mpi_master = merge(.true., .false., prank == 0)
-  
-  nb_mode = sim%nb_mode
-  time_init = sim%time_init
-  np_x1 = sim%sp1%mesh2d%num_cells1+1
-  np_x2_sp1 = sim%sp1%mesh2d%num_cells2+1
-  num_dof_x2_sp1 = sim%sp1%num_dof_x2
-  np_x2_sp2 = sim%sp2%mesh2d%num_cells2+1
-  num_dof_x2_sp2 = sim%sp2%num_dof_x2
-  
-  if (istep == 1) then
+istep          = sim%istep
+nb_mode        = sim%nb_mode
+time_init      = sim%time_init
+np_x1          = sim%sp1%mesh2d%num_cells1+1
+np_x2_sp1      = sim%sp1%mesh2d%num_cells2+1
+num_dof_x2_sp1 = sim%sp1%num_dof_x2
+np_x2_sp2      = sim%sp2%mesh2d%num_cells2+1
+num_dof_x2_sp2 = sim%sp2%num_dof_x2
 
-    call read_restart_file(sim%restart_file, sim%sp1, time_init)
-    call read_restart_file(sim%restart_file, sim%sp2, time_init)
-    
-    if(sim%time_init_from_restart_file) sim%time_init = time_init  
-    time_init = sim%time_init
-    
-    iplot = 1
-    
-    call write_f(sim%sp1, iplot, "fe", time_init)
-    call write_f(sim%sp2, iplot, "fi", time_init)
-        
-    call compute_rho(sim%sp1)
-    call compute_rho(sim%sp2)
-    
-    call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
-  
-    if (sim%driven) call compute_e_app(sim,time_init)
-  
-    if (mpi_master) then
-  
-      call sll_ascii_file_create('thdiag.dat' , th_diag_id, ierr)
-      call sll_ascii_file_create('rhotote.dat', rhotote_id, ierr)
-      call sll_ascii_file_create('rhototi.dat', rhototi_id, ierr)
-      call sll_ascii_file_create('efield.dat' , efield_id , ierr)
-  
-      write(rhototi_id,*) sim%sp1%x1_array
-      write(rhotote_id,*) sim%sp1%x1_array
-      write(efield_id,*)  sim%sp1%x1_array
-  
-      print *,'#step=',0,time_init,'iplot=',iplot
+if (istep == 1) then
 
-    endif
+  call read_restart_file(sim%restart_file, sim%sp1, time_init)
+  call read_restart_file(sim%restart_file, sim%sp2, time_init)
+  
+  if(sim%time_init_from_restart_file) sim%time_init = time_init  
+  
+  sim%iplot = 1
+  
+  call write_f(sim%sp1, sim%iplot, "fe", time_init)
+  call write_f(sim%sp2, sim%iplot, "fi", time_init)
+      
+  call compute_rho(sim%sp1)
+  call compute_rho(sim%sp2)
+  
+  call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
 
-    call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
-    call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
-    global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
-    global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
+  if (sim%driven) call compute_e_app(sim,time_init)
+
+  if (mpi_master) then
+
+    call sll_ascii_file_create('thdiag.dat' , sim%th_diag_id, ierr)
+    call sll_ascii_file_create('rhotote.dat', sim%rhotote_id, ierr)
+    call sll_ascii_file_create('rhototi.dat', sim%rhototi_id, ierr)
+    call sll_ascii_file_create('efield.dat' , sim%efield_id , ierr)
+
+    write(sim%rhototi_id,*) sim%sp1%x1_array
+    write(sim%rhotote_id,*) sim%sp1%x1_array
+    write(sim%efield_id,*)  sim%sp1%x1_array
+
+    print *,'#step=',0,time_init,'iplot=',sim%iplot
 
   endif
+
+endif
+
+sim%iplot = sim%iplot+1  
+
+if (mod(istep,sim%freq_diag)==0) then
+  if (mpi_master) then        
+    print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',sim%iplot
+  endif
+endif  
+
+time_init = sim%time_init
+
+split_T = sim%split%split_begin_T
+t_step = real(istep-1,f64)
+do split_istep=1,sim%split%nb_split_step
+
+  if(split_T) then
+
+    call advection_x1(sim%sp1,                           &
+                      sim%factor_x1,                     &
+                      sim%split%split_step(split_istep), & 
+                      sim%dt)
+
+    call advection_x1(sim%sp2,                           &
+                      sim%factor_x1,                     &
+                      sim%split%split_step(split_istep), & 
+                      sim%dt)
+
+    t_step = t_step+sim%split%split_step(split_istep)
+
+    call compute_rho(sim%sp1)
+    call compute_rho(sim%sp2)
+    call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
+    
+    t_step = t_step+sim%split%split_step(split_istep)
+    
+    if (sim%driven) call compute_e_app(sim,time_init+t_step*sim%dt)
+        
+  else
+
+    call apply_remap_2D( sim%sp1%remap_plan_x1_x2, sim%sp1%f_x1, sim%sp1%f_x2 )
+    call compute_local_sizes( sim%sp1%layout_x2, local_size_x1_sp1, local_size_x2_sp1 )
+    global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x2, (/1, 1/) )
+    tid = 1
+    do i_omp = 1,local_size_x1_sp1
+      ig_omp=i_omp+global_indices_sp1(1)-1
+      alpha_omp = -(sim%efield(ig_omp)+sim%sp1%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
+      sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid) = sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1)
+      if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
+         call function_to_primitive(sim%sp1%f1d_omp_in(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
+      endif
+      call sim%sp1%advect_x2(tid)%ptr%advect_1d_constant(&
+           alpha_omp, &
+           sim%dt, &
+           sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid), &
+           sim%sp1%f1d_omp_out(1:num_dof_x2_sp1,tid))
+      if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
+         call primitive_to_function(sim%sp1%f1d_omp_out(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
+      endif
+      sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1) = sim%sp1%f1d_omp_out(1:num_dof_x2_sp1,tid)
+    end do
+    call apply_remap_2D( sim%sp1%remap_plan_x2_x1, sim%sp1%f_x2, sim%sp1%f_x1 )
+
+    call apply_remap_2D( sim%sp2%remap_plan_x1_x2, sim%sp2%f_x1, sim%sp2%f_x2 )
+    call compute_local_sizes( sim%sp2%layout_x2, local_size_x1_sp2, local_size_x2_sp2 )
+    global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x2, (/1, 1/) )
+    do i_omp = 1,local_size_x1_sp2
+      ig_omp=i_omp+global_indices_sp2(1)-1
+      alpha_omp = sim%mass_ratio*(sim%efield(ig_omp)-sim%sp2%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
+      sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid) = sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2)
+      if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
+         call function_to_primitive(sim%sp2%f1d_omp_in(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
+      endif
+      call sim%sp2%advect_x2(tid)%ptr%advect_1d_constant(&
+           alpha_omp,                                    &
+           sim%dt,                                       &
+           sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid),     &
+           sim%sp2%f1d_omp_out(1:num_dof_x2_sp2,tid))
+      if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
+         call primitive_to_function(sim%sp2%f1d_omp_out(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
+      endif
+      sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2) = sim%sp2%f1d_omp_out(1:num_dof_x2_sp2,tid)
+    end do
+
+    call apply_remap_2D( sim%sp2%remap_plan_x2_x1, sim%sp2%f_x2, sim%sp2%f_x1 )
+
+  endif
+  split_T = .not.(split_T)
+enddo
+    
+if (mod(istep,sim%freq_diag_time)==0) then
+
+  time = time_init+real(istep,f64)*sim%dt
+
+  call diagnostics(sim%sp1, sim%pfwd, sim%buf_fft, nb_mode)
+  call diagnostics(sim%sp2, sim%pfwd, sim%buf_fft, nb_mode)
   
-  iplot = iplot+1  
-
-  if (mod(istep,sim%freq_diag)==0) then
-    if (mpi_master) then        
-      print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
-    endif
-  endif  
-
-  split_T = sim%split%split_begin_T
-  t_step = real(istep-1,f64)
-  do split_istep=1,sim%split%nb_split_step
-    if(split_T) then
-      tid=1          
-      do i_omp = 1, local_size_x2_sp1
-         ig_omp = i_omp+global_indices_sp1(2)-1
-         alpha_omp = sim%factor_x1*sim%sp1%node_positions_x2(ig_omp) * sim%split%split_step(split_istep) 
-         sim%sp1%f1d_omp_in(1:np_x1,tid) = sim%sp1%f_x1(1:np_x1,i_omp)
-         call sim%sp1%advect_x1(tid)%ptr%advect_1d_constant(&
-              alpha_omp, &
-              sim%dt, &
-              sim%sp1%f1d_omp_in(1:np_x1,tid), &
-              sim%sp1%f1d_omp_out(1:np_x1,tid))
-         
-         sim%sp1%f_x1(1:np_x1,i_omp)=sim%sp1%f1d_omp_out(1:np_x1,tid)
-      end do
-      
-      do i_omp = 1,local_size_x2_sp2
-         ig_omp = i_omp+global_indices_sp2(2)-1   
-         alpha_omp = sim%factor_x1*sim%sp2%node_positions_x2(ig_omp) * sim%split%split_step(split_istep) 
-         sim%sp2%f1d_omp_in(1:np_x1,tid) = sim%sp2%f_x1(1:np_x1,i_omp)
-         call sim%sp2%advect_x1(tid)%ptr%advect_1d_constant(&
-              alpha_omp, &
-              sim%dt, &
-              sim%sp2%f1d_omp_in(1:np_x1,tid), &
-              sim%sp2%f1d_omp_out(1:np_x1,tid))
-         
-         sim%sp2%f_x1(1:np_x1,i_omp)=sim%sp2%f1d_omp_out(1:np_x1,tid)
-         
-      end do
-
-      t_step = t_step+sim%split%split_step(split_istep)
-
-      call compute_rho(sim%sp1)
-      call compute_rho(sim%sp2)
-      call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
-      
-      t_step = t_step+sim%split%split_step(split_istep)
-      
-      if (sim%driven) call compute_e_app(sim,time_init+t_step*sim%dt)
-          
-    else
-
-      call apply_remap_2D( sim%sp1%remap_plan_x1_x2, sim%sp1%f_x1, sim%sp1%f_x2 )
-      call apply_remap_2D( sim%sp2%remap_plan_x1_x2, sim%sp2%f_x1, sim%sp2%f_x2 )
-      call compute_local_sizes( sim%sp1%layout_x2, local_size_x1_sp1, local_size_x2_sp1 )
-      call compute_local_sizes( sim%sp2%layout_x2, local_size_x1_sp2, local_size_x2_sp2 )
-      global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x2, (/1, 1/) )
-      global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x2, (/1, 1/) )
-      tid = 1
-           
-      do i_omp = 1,local_size_x1_sp1
-        ig_omp=i_omp+global_indices_sp1(1)-1
-        alpha_omp = -(sim%efield(ig_omp)+sim%sp1%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
-        sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid) = sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1)
-        if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
-           call function_to_primitive(sim%sp1%f1d_omp_in(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
-        endif
-        call sim%sp1%advect_x2(tid)%ptr%advect_1d_constant(&
-             alpha_omp, &
-             sim%dt, &
-             sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid), &
-             sim%sp1%f1d_omp_out(1:num_dof_x2_sp1,tid))
-        if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
-           call primitive_to_function(sim%sp1%f1d_omp_out(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
-        endif
-        sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1) = sim%sp1%f1d_omp_out(1:num_dof_x2_sp1,tid)
-      end do
-
-      do i_omp = 1,local_size_x1_sp2
-        ig_omp=i_omp+global_indices_sp2(1)-1
-        alpha_omp = sim%mass_ratio*(sim%efield(ig_omp)-sim%sp2%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
-        sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid) = sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2)
-        if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
-           call function_to_primitive(sim%sp2%f1d_omp_in(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
-        endif
-        
-        call sim%sp2%advect_x2(tid)%ptr%advect_1d_constant(&
-             alpha_omp,                                    &
-             sim%dt,                                       &
-             sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid),         &
-             sim%sp2%f1d_omp_out(1:num_dof_x2_sp2,tid))
-        
-        if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
-           call primitive_to_function(sim%sp2%f1d_omp_out(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
-        endif
-        sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2) = sim%sp2%f1d_omp_out(1:num_dof_x2_sp2,tid)
-      end do
-
-      !transposition
-      call apply_remap_2D( sim%sp1%remap_plan_x2_x1, sim%sp1%f_x2, sim%sp1%f_x1 )
-      call apply_remap_2D( sim%sp2%remap_plan_x2_x1, sim%sp2%f_x2, sim%sp2%f_x1 )
-      call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
-      call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
-      global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
-      global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
-
-    endif
-    split_T = .not.(split_T)
+  potential_energy = 0._f64
+  do i=1, np_x1-1
+    potential_energy = potential_energy+(sim%efield(i)+sim%e_app(i))**2
   enddo
-      
-  if (mod(istep,sim%freq_diag_time)==0) then
+  potential_energy = 0.5_f64*potential_energy* sim%sp1%mesh2d%delta_eta1
 
-    time               = time_init+real(istep,f64)*sim%dt
 
-    call diagnostics(sim%sp1, sim%pfwd, sim%buf_fft, nb_mode)
-    call diagnostics(sim%sp2, sim%pfwd, sim%buf_fft, nb_mode)
-    
-    potential_energy = 0._f64
-    do i=1, np_x1-1
-      potential_energy = potential_energy+(sim%efield(i)+sim%e_app(i))**2
+  if (mod(istep,sim%freq_diag_restart)==0) then          
+    call write_restart_file(sim%sp1, sim%iplot, time)
+    call write_restart_file(sim%sp2, sim%iplot, time)
+  endif 
+
+  if (mpi_master) then                  
+    sim%buf_fft = sim%sp1%rho(1:np_x1-1)-sim%sp2%rho(1:np_x1-1)
+    call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
+    do k=0,nb_mode
+      sim%rho_mode(k)=fft_get_mode(sim%pfwd,sim%buf_fft,k)
+    enddo  
+    write(sim%th_diag_id,'(f12.5,12g20.12)',advance='no') &
+      time,                                               &
+      sim%sp1%mass,                                       &
+      sim%sp1%l1norm,                                     &
+      sim%sp1%momentum,                                   &
+      sim%sp1%l2norm,                                     &
+      sim%sp1%kinetic_energy,                             &
+      sim%sp2%mass,                                       &
+      sim%sp2%l1norm,                                     &
+      sim%sp2%momentum,                                   &
+      sim%sp2%l2norm,                                     &
+      sim%sp2%kinetic_energy,                             &
+      potential_energy,                                   &
+      sim%sp1%kinetic_energy+sim%sp2%kinetic_energy+potential_energy
+
+    do k=0,nb_mode
+      write(sim%th_diag_id,'(g20.12)',advance='no') abs(sim%rho_mode(k))
     enddo
-    potential_energy = 0.5_f64*potential_energy* sim%sp1%mesh2d%delta_eta1
+    do k=0,nb_mode-1
+      write(sim%th_diag_id,'(2g20.12)',advance='no') &
+           sim%sp1%f_hat_x2(k+1), &
+           sim%sp2%f_hat_x2(k+1)
+    enddo
+    write(sim%th_diag_id,'(2g20.12)') &
+         sim%sp1%f_hat_x2(nb_mode+1), &
+         sim%sp2%f_hat_x2(nb_mode+1)
 
+    write(sim%efield_id,*)  sim%efield
+    write(sim%rhotote_id,*) sim%sp1%rho
+    write(sim%rhototi_id,*) sim%sp2%rho
 
-    if (mod(istep,sim%freq_diag_restart)==0) then          
-      call write_restart_file(sim%sp1, iplot, time)
-      call write_restart_file(sim%sp2, iplot, time)
-    endif 
-
-    if (mpi_master) then                  
-      sim%buf_fft = sim%sp1%rho(1:np_x1-1)-sim%sp2%rho(1:np_x1-1)
-      call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
-      do k=0,nb_mode
-        sim%rho_mode(k)=fft_get_mode(sim%pfwd,sim%buf_fft,k)
-      enddo  
-      write(th_diag_id,'(f12.5,12g20.12)',advance='no') &
-        time, &
-        sim%sp1%mass, &
-        sim%sp1%l1norm, &
-        sim%sp1%momentum, &
-        sim%sp1%l2norm, &
-        sim%sp1%kinetic_energy, &
-        sim%sp2%mass, &
-        sim%sp2%l1norm, &
-        sim%sp2%momentum, &
-        sim%sp2%l2norm, &
-        sim%sp2%kinetic_energy, &
-        potential_energy, &
-        sim%sp1%kinetic_energy + sim%sp2%kinetic_energy + potential_energy
-
-      do k=0,nb_mode
-        write(th_diag_id,'(g20.12)',advance='no') abs(sim%rho_mode(k))
-      enddo
-      do k=0,nb_mode-1
-        write(th_diag_id,'(2g20.12)',advance='no') &
-             sim%sp1%f_hat_x2(k+1), &
-             sim%sp2%f_hat_x2(k+1)
-      enddo
-      write(th_diag_id,'(2g20.12)') &
-           sim%sp1%f_hat_x2(nb_mode+1), &
-           sim%sp2%f_hat_x2(nb_mode+1)
-
-      write(efield_id,*)  sim%efield
-      write(rhotote_id,*) sim%sp1%rho
-      write(rhototi_id,*) sim%sp2%rho
-
-    endif
-      
-    if (mod(istep,sim%freq_diag)==0) then          
-
-      call write_f( sim%sp1, iplot, "fe", time)
-      call write_f( sim%sp2, iplot, "fi", time)
-
-      iplot = iplot+1  
-                    
-    endif
-          
-
-  end if
-
-end do
+  endif
     
+  if (mod(istep,sim%freq_diag)==0) then          
+
+    call write_f( sim%sp1, sim%iplot, "fe", time)
+    call write_f( sim%sp2, sim%iplot, "fi", time)
+
+    sim%iplot = sim%iplot+1  
+                  
+  endif
+
+end if
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Next time step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if (istep == sim%num_iterations) then
   if(mpi_master)then
-    call sll_ascii_file_close(th_diag_id,ierr) 
-    call sll_ascii_file_close(efield_id,ierr)
-    call sll_ascii_file_close(rhotote_id,ierr)
-    call sll_ascii_file_close(rhototi_id,ierr)
+    call sll_ascii_file_close(sim%th_diag_id,ierr) 
+    call sll_ascii_file_close(sim%efield_id,ierr)
+    call sll_ascii_file_close(sim%rhotote_id,ierr)
+    call sll_ascii_file_close(sim%rhototi_id,ierr)
   endif
   print*, " 176.00010668708197, 820.34117552361215 "
   print"(2f20.14)", sum(sim%sp1%f_x1), sum(sim%sp2%f_x1)
@@ -1285,5 +1253,40 @@ do i = 1, np_x1
 enddo
 
 end subroutine compute_e_app
+
+subroutine advection_x1(sp, factor_x1, split_step, dt)
+type(species) , intent(inout) :: sp
+sll_real64    , intent(in)    :: factor_x1
+sll_real64    , intent(in)    :: split_step
+sll_real64    , intent(in)    :: dt
+
+sll_real64    :: alpha_omp
+sll_int32     :: local_size_x1
+sll_int32     :: local_size_x2
+sll_int32     :: np_x1
+sll_int32     :: i_omp
+sll_int32     :: ig_omp
+sll_int32     :: tid
+sll_int32     :: global_indices(2)
+
+np_x1 = sp%mesh2d%num_cells1+1
+call compute_local_sizes( sp%layout_x1, local_size_x1, local_size_x2 )
+global_indices(1:2) = local_to_global(sp%layout_x1, (/1, 1/) )
+tid=1          
+do i_omp = 1, local_size_x2
+  ig_omp = i_omp+global_indices(2)-1
+  alpha_omp = factor_x1*sp%node_positions_x2(ig_omp) * split_step
+  sp%f1d_omp_in(1:np_x1,tid) = sp%f_x1(1:np_x1,i_omp)
+  call sp%advect_x1(tid)%ptr%advect_1d_constant(&
+       alpha_omp, &
+       dt, &
+       sp%f1d_omp_in(1:np_x1,tid), &
+       sp%f1d_omp_out(1:np_x1,tid))
+   
+  sp%f_x1(1:np_x1,i_omp)=sp%f1d_omp_out(1:np_x1,tid)
+
+end do
+    
+end subroutine advection_x1
 
 end module sll_m_sim_bsl_vp_1d1v_cart_multi_species
