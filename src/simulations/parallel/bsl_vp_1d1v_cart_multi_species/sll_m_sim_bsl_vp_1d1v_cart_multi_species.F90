@@ -253,12 +253,6 @@ sll_int32          :: np_x2_sp1
 sll_int32          :: np_x2_sp2
 sll_int32          :: num_dof_x2_sp1
 sll_int32          :: num_dof_x2_sp2
-sll_int32          :: global_indices_sp1(2)
-sll_int32          :: global_indices_sp2(2)
-sll_int32          :: local_size_x1_sp1
-sll_int32          :: local_size_x1_sp2
-sll_int32          :: local_size_x2_sp1
-sll_int32          :: local_size_x2_sp2
   
 ! namelists for data input
 namelist /geometry/ &
@@ -1001,11 +995,9 @@ subroutine run_vp2d_cartesian_multi_species(sim)
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
 
-
 sll_int32 :: rhotote_id,rhototi_id
 sll_int32 :: efield_id     
 sll_int32 :: th_diag_id
-sll_int32 :: restart_id
 
 sll_int32   :: np_x1
 sll_int32   :: np_x2_sp1
@@ -1029,8 +1021,6 @@ logical :: split_T
 
 sll_int32          :: iplot
 character(len=4)   :: cproc
-character(len=4)   :: cplot
-logical            :: file_exists
 sll_int32          :: tid
 sll_int32          :: i_omp
 sll_int32          :: ig_omp
@@ -1047,94 +1037,65 @@ sll_int32          :: local_size_x1_sp2
 sll_int32          :: local_size_x2_sp1
 sll_int32          :: local_size_x2_sp2
 
-prank = sll_get_collective_rank( sll_world_collective )
-psize = sll_get_collective_size( sll_world_collective )
-mpi_master = merge(.true., .false., prank == 0)
-
-
-
-nb_mode = sim%nb_mode
-time_init = sim%time_init
-np_x1 = sim%sp1%mesh2d%num_cells1+1
-np_x2_sp1 = sim%sp1%mesh2d%num_cells2+1
-num_dof_x2_sp1 = sim%sp1%num_dof_x2
-np_x2_sp2 = sim%sp2%mesh2d%num_cells2+1
-num_dof_x2_sp2 = sim%sp2%num_dof_x2
-
-
-call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
-call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
-global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
-global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
-
-    
-
-call int2string(prank,cproc)
-if(sim%restart_file/="no_restart_file")then
-  INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
-  if(.not.(file_exists))then
-    print *,'#file ',trim(sim%restart_file)//'_proc_'//cproc//'.rst'
-    print *,'does not exist'
-    stop
-  endif
-  open(unit=restart_id, &
-    file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
-    form='unformatted', IOStat=ierr)      
-  if( ierr .ne. 0 ) then
-    print *, 'ERROR while opening file ', &
-      trim(sim%restart_file)//'_proc_'//cproc//'.rst', &
-       '. Called from run_vp2d_cartesian().'
-   stop
-  end if
-  print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
-  call sll_binary_read_array_0d(restart_id,time_init,ierr)
-  call sll_binary_read_array_2d(restart_id,sim%sp1%f_x1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
-  call sll_binary_file_close(restart_id,ierr)
-endif      
-
-if(sim%time_init_from_restart_file) sim%time_init = time_init  
-time_init = sim%time_init
-
-iplot = 1
-
-if (mpi_master) then
-  call write_f(sim%sp1, iplot, "fe", time_init)
-endif
-
-if (mpi_master) then
-  call write_f(sim%sp2, iplot, "fi", time_init)
-endif
-    
-call compute_rho(sim%sp1)
-call compute_rho(sim%sp2)
-
-call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
-
-istep = 0
-if (sim%driven) call compute_e_app(sim,time_init+real(istep,f64)*sim%dt)
-
-if (mpi_master) then
-
-  call sll_ascii_file_create('thdiag.dat' , th_diag_id, ierr)
-  call sll_ascii_file_create('rhotote.dat', rhotote_id, ierr)
-  call sll_ascii_file_create('rhototi.dat', rhototi_id, ierr)
-  call sll_ascii_file_create('efield.dat' , efield_id , ierr)
-
-  write(rhototi_id,*) sim%sp1%x1_array
-  write(rhotote_id,*) sim%sp1%x1_array
-  write(efield_id,*)  sim%sp1%x1_array
-
-endif
-
-
-if (mpi_master) then        
-  print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
-endif
-
-iplot = iplot+1  
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Loop over time !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 do istep = 1, sim%num_iterations
+
+  prank = sll_get_collective_rank( sll_world_collective )
+  call int2string(prank,cproc)
+  psize = sll_get_collective_size( sll_world_collective )
+  mpi_master = merge(.true., .false., prank == 0)
+  
+  nb_mode = sim%nb_mode
+  time_init = sim%time_init
+  np_x1 = sim%sp1%mesh2d%num_cells1+1
+  np_x2_sp1 = sim%sp1%mesh2d%num_cells2+1
+  num_dof_x2_sp1 = sim%sp1%num_dof_x2
+  np_x2_sp2 = sim%sp2%mesh2d%num_cells2+1
+  num_dof_x2_sp2 = sim%sp2%num_dof_x2
+  
+  if (istep == 1) then
+
+    call read_restart_file(sim%restart_file, sim%sp1, time_init)
+    call read_restart_file(sim%restart_file, sim%sp2, time_init)
+    
+    if(sim%time_init_from_restart_file) sim%time_init = time_init  
+    time_init = sim%time_init
+    
+    iplot = 1
+    
+    call write_f(sim%sp1, iplot, "fe", time_init)
+    call write_f(sim%sp2, iplot, "fi", time_init)
+        
+    call compute_rho(sim%sp1)
+    call compute_rho(sim%sp2)
+    
+    call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
+  
+    if (sim%driven) call compute_e_app(sim,time_init)
+  
+    if (mpi_master) then
+  
+      call sll_ascii_file_create('thdiag.dat' , th_diag_id, ierr)
+      call sll_ascii_file_create('rhotote.dat', rhotote_id, ierr)
+      call sll_ascii_file_create('rhototi.dat', rhototi_id, ierr)
+      call sll_ascii_file_create('efield.dat' , efield_id , ierr)
+  
+      write(rhototi_id,*) sim%sp1%x1_array
+      write(rhotote_id,*) sim%sp1%x1_array
+      write(efield_id,*)  sim%sp1%x1_array
+  
+      print *,'#step=',0,time_init,'iplot=',iplot
+
+    endif
+
+    call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
+    call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
+    global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
+    global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
+
+  endif
+  
+  iplot = iplot+1  
 
   if (mod(istep,sim%freq_diag)==0) then
     if (mpi_master) then        
@@ -1186,8 +1147,6 @@ do istep = 1, sim%num_iterations
           
     else
 
-      !! V ADVECTION 
-      !transposition
       call apply_remap_2D( sim%sp1%remap_plan_x1_x2, sim%sp1%f_x1, sim%sp1%f_x2 )
       call apply_remap_2D( sim%sp2%remap_plan_x1_x2, sim%sp2%f_x1, sim%sp2%f_x2 )
       call compute_local_sizes( sim%sp1%layout_x2, local_size_x1_sp1, local_size_x2_sp1 )
@@ -1196,7 +1155,6 @@ do istep = 1, sim%num_iterations
       global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x2, (/1, 1/) )
       tid = 1
            
-      !advection in v
       do i_omp = 1,local_size_x1_sp1
         ig_omp=i_omp+global_indices_sp1(1)-1
         alpha_omp = -(sim%efield(ig_omp)+sim%sp1%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
@@ -1262,6 +1220,8 @@ do istep = 1, sim%num_iterations
 
 
     if (mod(istep,sim%freq_diag_restart)==0) then          
+      call write_restart_file(sim%sp1, iplot, time)
+      call write_restart_file(sim%sp2, iplot, time)
     endif 
 
     if (mpi_master) then                  
@@ -1286,8 +1246,7 @@ do istep = 1, sim%num_iterations
         sim%sp1%kinetic_energy + sim%sp2%kinetic_energy + potential_energy
 
       do k=0,nb_mode
-        write(th_diag_id,'(g20.12)',advance='no') &
-          abs(sim%rho_mode(k))
+        write(th_diag_id,'(g20.12)',advance='no') abs(sim%rho_mode(k))
       enddo
       do k=0,nb_mode-1
         write(th_diag_id,'(2g20.12)',advance='no') &
@@ -1298,9 +1257,10 @@ do istep = 1, sim%num_iterations
            sim%sp1%f_hat_x2(nb_mode+1), &
            sim%sp2%f_hat_x2(nb_mode+1)
 
-      write(efield_id,*) sim%efield
+      write(efield_id,*)  sim%efield
       write(rhotote_id,*) sim%sp1%rho
       write(rhototi_id,*) sim%sp2%rho
+
     endif
       
     if (mod(istep,sim%freq_diag)==0) then          
@@ -1318,17 +1278,18 @@ do istep = 1, sim%num_iterations
 end do
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Next time step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
 
-if(mpi_master)then
-  call sll_ascii_file_close(th_diag_id,ierr) 
-  call sll_ascii_file_close(efield_id,ierr)
-  call sll_ascii_file_close(rhotote_id,ierr)
-  call sll_ascii_file_close(rhototi_id,ierr)
-endif
+if (istep == sim%num_iterations) then
+  if(mpi_master)then
+    call sll_ascii_file_close(th_diag_id,ierr) 
+    call sll_ascii_file_close(efield_id,ierr)
+    call sll_ascii_file_close(rhotote_id,ierr)
+    call sll_ascii_file_close(rhototi_id,ierr)
+  endif
+  print*, " 176.00010668708197, 820.34117552361215 "
+  print"(2f20.14)", sum(sim%sp1%f_x1), sum(sim%sp2%f_x1)
+end if
 
-print*, " 176.00010668708197, 820.34117552361215 "
-print"(2f20.14)", sum(sim%sp1%f_x1), sum(sim%sp2%f_x1)
 
 end subroutine run_vp2d_cartesian_multi_species
 
