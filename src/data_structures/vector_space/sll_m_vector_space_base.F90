@@ -307,6 +307,10 @@ module sll_m_vector_space_base
     sll_real64                                   :: res
 
     SLL_ERROR( "inner", "Function not implemented." )
+#ifdef DEBUG
+    print*, storage_size(self), storage_size(x)
+#endif
+    res = 0.0_f64
 
   end function inner__base
 
@@ -318,6 +322,7 @@ module sll_m_vector_space_base
     class( sll_vector_space_base ), intent( in ) :: self
 
     SLL_WARNING( "show", "Overload this subroutine if you need it." )
+    print*, storage_size(self)
 
   end subroutine show__base
 
@@ -329,6 +334,9 @@ module sll_m_vector_space_base
     class( sll_vector_space_base ), intent( inout ) :: self
 
     SLL_ERROR( "delete", "Subroutine not implemented." )
+#ifdef DEBUG
+    print*, storage_size(self)
+#endif
 
   end subroutine delete__base
 
@@ -361,6 +369,9 @@ module sll_m_vector_space_base
   subroutine initialize_copy__base( self )
     class( sll_vector_space_base ), intent( inout ) :: self
     ! Do nothing for now
+#ifdef DEBUG
+    print*, storage_size(self)
+#endif
 
   end subroutine initialize_copy__base
 

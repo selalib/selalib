@@ -473,6 +473,10 @@ end if
     sll_real64            :: res
     sll_real64            :: eta1_min
     sll_real64            :: delta_eta1
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i+j
+#endif
 
     eta1_min   = mesh%eta1_min
     delta_eta1 = mesh%delta_eta1
@@ -486,6 +490,10 @@ end if
     sll_real64            :: res
     sll_real64            :: eta2_min
     sll_real64            :: delta_eta2
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i+j
+#endif
 
     eta2_min   = mesh%eta2_min
     delta_eta2 = mesh%delta_eta2
@@ -499,6 +507,10 @@ end if
     sll_real64            :: res
     sll_real64            :: eta1_min
     sll_real64            :: delta_eta1
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i+j
+#endif
 
     eta1_min   = mesh%eta1_min
     delta_eta1 = mesh%delta_eta1
@@ -512,6 +524,10 @@ end if
     sll_real64            :: res
     sll_real64            :: eta2_min
     sll_real64            :: delta_eta2
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i+j
+#endif
 
     eta2_min   = mesh%eta2_min
     delta_eta2 = mesh%delta_eta2
@@ -628,6 +644,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta1_min
     sll_real64            :: delta_eta1
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3
+#endif
 
     eta1_min   = mesh%eta1_min
     delta_eta1 = mesh%delta_eta1
@@ -642,6 +662,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta2_min
     sll_real64            :: delta_eta2
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3
+#endif
 
     eta2_min   = mesh%eta2_min
     delta_eta2 = mesh%delta_eta2
@@ -656,6 +680,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta3_min
     sll_real64            :: delta_eta3
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3
+#endif
 
     eta3_min   = mesh%eta3_min
     delta_eta3 = mesh%delta_eta3
@@ -671,6 +699,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta1_min
     sll_real64            :: delta_eta1
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3
+#endif
 
     eta1_min   = mesh%eta1_min
     delta_eta1 = mesh%delta_eta1
@@ -685,6 +717,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta2_min
     sll_real64            :: delta_eta2
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3
+#endif
 
     eta2_min   = mesh%eta2_min
     delta_eta2 = mesh%delta_eta2
@@ -699,6 +735,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta3_min
     sll_real64            :: delta_eta3
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3
+#endif
 
     eta3_min   = mesh%eta3_min
     delta_eta3 = mesh%delta_eta3
@@ -808,6 +848,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta1_min
     sll_real64            :: delta_eta1
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta1_min   = mesh%eta1_min
     delta_eta1 = mesh%delta_eta1
@@ -823,6 +867,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta2_min
     sll_real64            :: delta_eta2
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta2_min   = mesh%eta2_min
     delta_eta2 = mesh%delta_eta2
@@ -838,6 +886,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta3_min
     sll_real64            :: delta_eta3
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta3_min   = mesh%eta3_min
     delta_eta3 = mesh%delta_eta3
@@ -853,6 +905,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta4_min
     sll_real64            :: delta_eta4
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta4_min   = mesh%eta4_min
     delta_eta4 = mesh%delta_eta4
@@ -868,6 +924,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta1_min
     sll_real64            :: delta_eta1
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta1_min   = mesh%eta1_min
     delta_eta1 = mesh%delta_eta1
@@ -883,6 +943,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta2_min
     sll_real64            :: delta_eta2
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta2_min   = mesh%eta2_min
     delta_eta2 = mesh%delta_eta2
@@ -898,6 +962,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta3_min
     sll_real64            :: delta_eta3
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta3_min   = mesh%eta3_min
     delta_eta3 = mesh%delta_eta3
@@ -913,6 +981,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64            :: res
     sll_real64            :: eta4_min
     sll_real64            :: delta_eta4
+#ifdef DEBUG
+    sll_int32             :: dummy
+    dummy = i1+i2+i3+i4
+#endif
 
     eta4_min   = mesh%eta4_min
     delta_eta4 = mesh%delta_eta4
@@ -1008,6 +1080,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
+    SLL_ASSERT(mesh%num_cells>0)
   end subroutine delete_cartesian_mesh_1d
 
   !> @brief deallocates memory for the 2D cartesian mesh. Recommended access 
@@ -1021,6 +1094,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
+    SLL_ASSERT(mesh%num_cells1>0)
   end subroutine delete_cartesian_mesh_2d
 
   !> @brief deallocates memory for the 3D cartesian mesh. Recommended access 
@@ -1034,6 +1108,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
+    SLL_ASSERT(mesh%num_cells1>0)
   end subroutine delete_cartesian_mesh_3d
 
   !> @brief deallocates memory for the 4D cartesian mesh. Recommended access 
@@ -1047,6 +1122,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
+    SLL_ASSERT(mesh%num_cells1>0)
   end subroutine delete_cartesian_mesh_4d
 
   

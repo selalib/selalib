@@ -511,10 +511,10 @@ contains
     sll_int32, intent(in) :: j
     sll_real64  :: eta1
     sll_real64  :: eta2
-    sll_real64  :: delta1
-    sll_real64  :: delta2
-    sll_real64  :: eta1_min
-    sll_real64  :: eta2_min
+    !sll_real64  :: delta1
+    !sll_real64  :: delta2
+    !sll_real64  :: eta1_min
+    !sll_real64  :: eta2_min
     
     lm => transf%get_cartesian_mesh()
     SLL_ASSERT( i <= lm%num_cells1 )

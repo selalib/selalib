@@ -154,7 +154,7 @@ yc = eta2_min
 yd = eta2_max
 
 !set for no error control flag
-tolmax = 0.0
+tolmax = 0.0_f64
 
 #ifdef DEBUG
 write(*,101) (iprm(i),i=1,15)
@@ -237,7 +237,7 @@ write(*,106) intl,method,iguess
 #endif
 
 if ( nxa == 0 .and. nyc == 0 ) &
-   rhs = rhs - sum(rhs) / (nx*ny)
+   rhs = rhs - sum(rhs) / real(nx*ny,f64)
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
@@ -247,7 +247,7 @@ if (error > 0) call exit(0)
 #endif
 
 if ( nxa == 0 .and. nyc == 0 ) &
-   phi = phi - sum(phi) / (nx*ny)
+   phi = phi - sum(phi) / real(nx*ny,f64)
 
 iguess = 1
 ! attempt to improve approximation to fourth order
@@ -409,7 +409,7 @@ yc = theta_min
 yd = theta_max
 
 ! set for no error control flag
-tolmax = 0.0
+tolmax = 0.0_f64
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
@@ -499,12 +499,12 @@ end module sll_m_mudpack
 subroutine coef_polar(x,y,cxx,cxy,cyy,cx,cy,ce)
 implicit none
 real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
-cxx = 1.0 +0.0*y
-cxy = 0.0 
-cyy = 1.0 / (x*x) 
-cx  = 1.0 / x 
-cy  = 0.0 
-ce  = 0.0 
+cxx = 1.0_8 +0.0_8*y
+cxy = 0.0_8 
+cyy = 1.0_8 / (x*x) 
+cx  = 1.0_8 / x 
+cy  = 0.0_8 
+ce  = 0.0_8 
 return
 end subroutine
 
@@ -522,10 +522,10 @@ if (kbdy.eq.2) then
    ! where x = yorx.   alfa,beta,gama,gbdy corresponding to alfyd(x),
    ! betyd(x),gamyd(x),gbdyd(y) must be output.
 
-   alfa = 1.0+0.0*xory
-   beta = 0.0
-   gama = 0.0
-   gbdy = 0.0
+   alfa = 1.0_8+0.0_8*xory
+   beta = 0.0_8
+   gama = 0.0_8
+   gbdy = 0.0_8
 
 end if
 
@@ -552,9 +552,9 @@ end subroutine
 subroutine cofx(x,cxx,cx,cex)
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0 +0.0*x 
-cx  = 0.0
-cex = 0.0
+cxx = 1.0_8 +0.0_8*x 
+cx  = 0.0_8
+cex = 0.0_8
 return
 end
 
@@ -562,9 +562,9 @@ end
 subroutine cofy(y,cyy,cy,cey)
 implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0 +0.0*y
-cy  = 0.0
-cey = 0.0
+cyy = 1.0_8 +0.0_8*y
+cy  = 0.0_8
+cey = 0.0_8
 return
 end
 
@@ -580,7 +580,7 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0
+   alfa = -1.0_8
    gbdy = px + alfa*pe
    return
 end if
@@ -588,7 +588,7 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0
+   alfa = 1.0_8
    gbdy = py + alfa*pe
    return
 end if

@@ -1527,48 +1527,50 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
 
 end subroutine interv
 
-!> @brief Returns the interpolated value of the derivative in the x1 
-!> direction at the point
-!> (x1,x2) using the spline decomposition stored in the spline object.
-!> @param[in] x1 first coordinate.
-!> @param[in] x2 second coordinate.
-!> @param[in] spline pointer to spline object.
-!> @returns the interpolated value of the derivative in the x1 
-function interpolate_x1_derivative_2d( x1, x2, spline )
-  sll_real64                          :: interpolate_x1_derivative_2D
-  sll_real64, intent(in)              :: x1
-  sll_real64, intent(in)              :: x2
-  type(sll_bspline_2D), pointer       :: spline
-
-  !interpolate_x1_derivative_2d = interpolate_value_2d(spline, x1, x2, 1, 0) 
-
-end function interpolate_x1_derivative_2D
-
-!> @brief 
-!> Returns the interpolated value of the derivative 
-!> @details
-!> in the x2 direction at the point(x1,x2) using the spline 
-!> decomposition stored in the spline object.
-!> @param[in] x1 first coordinate.
-!> @param[in] x2 second coordinate.
-!> @param[in] spline pointer to spline object.
-!> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
-function interpolate_x2_derivative_2d( x1, x2, spline )
-  sll_real64                     :: interpolate_x2_derivative_2d
-  sll_real64, intent(in)         :: x1
-  sll_real64, intent(in)         :: x2
-  type(sll_bspline_2D), pointer  :: spline
-
-  !interpolate_x2_derivative_2d = interpolate_value_2d(spline, x1, x2, 0, 1) 
-
-end function interpolate_x2_derivative_2D
+!!> @brief Returns the interpolated value of the derivative in the x1 
+!!> direction at the point
+!!> (x1,x2) using the spline decomposition stored in the spline object.
+!!> @param[in] x1 first coordinate.
+!!> @param[in] x2 second coordinate.
+!!> @param[in] spline pointer to spline object.
+!!> @returns the interpolated value of the derivative in the x1 
+!function interpolate_x1_derivative_2d( x1, x2, spline )
+!  sll_real64                          :: interpolate_x1_derivative_2D
+!  sll_real64, intent(in)              :: x1
+!  sll_real64, intent(in)              :: x2
+!  type(sll_bspline_2D), pointer       :: spline
+!
+!  !interpolate_x1_derivative_2d = interpolate_value_2d(spline, x1, x2, 1, 0) 
+!
+!end function interpolate_x1_derivative_2D
+!
+!!> @brief 
+!!> Returns the interpolated value of the derivative 
+!!> @details
+!!> in the x2 direction at the point(x1,x2) using the spline 
+!!> decomposition stored in the spline object.
+!!> @param[in] x1 first coordinate.
+!!> @param[in] x2 second coordinate.
+!!> @param[in] spline pointer to spline object.
+!!> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
+!function interpolate_x2_derivative_2d( x1, x2, spline )
+!  sll_real64                     :: interpolate_x2_derivative_2d
+!  sll_real64, intent(in)         :: x1
+!  sll_real64, intent(in)         :: x2
+!  type(sll_bspline_2D), pointer  :: spline
+!
+!  !interpolate_x2_derivative_2d = interpolate_value_2d(spline, x1, x2, 0, 1) 
+!
+!end function interpolate_x2_derivative_2D
 
 
 subroutine delete_bspline_1d( spline )
   type(sll_bspline_1d), pointer :: spline
+  print*, associated(spline)
 end subroutine delete_bspline_1d 
 subroutine delete_bspline_2D( spline )
   type(sll_bspline_2D), pointer :: spline
+  print*, associated(spline)
 end subroutine delete_bspline_2D 
 
 subroutine interpolate_array_values_2d(this, n1, n2, x, y, ideriv, jderiv)
@@ -1583,8 +1585,8 @@ sll_int32               :: jderiv
 
 sll_int32               :: i
 sll_int32               :: j, jj
-sll_int32               :: i1, i2
-sll_int32               :: k1, k2
+!sll_int32               :: i1, i2
+!sll_int32               :: k1, k2
 sll_int32               :: jc, jcmin, jcmax
 
 sll_real64, allocatable :: ajx(:), ajy(:)
@@ -1612,6 +1614,10 @@ sll_real64, pointer     :: ty(:)
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
+SLL_ASSERT(n1 <= nx)
+SLL_ASSERT(n2 <= ny)
+SLL_ASSERT(n1 == size(x,1))
+SLL_ASSERT(n2 == size(x,2))
 kx   =  this%bs1%k
 ky   =  this%bs2%k
 tx   => this%bs1%t
@@ -1924,6 +1930,10 @@ sll_int32,  intent(in)  :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
 
+SLL_ASSERT(this%bs1%n>0)
+SLL_ASSERT(n1 == size(x,1))
+SLL_ASSERT(n2 == size(y,2))
+y = 0.0_f64
 !call interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
 
 end subroutine interpolate_array_x1_derivatives_2d
@@ -1936,6 +1946,10 @@ sll_int32,  intent(in)  :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
 
+SLL_ASSERT(this%bs1%n>0)
+SLL_ASSERT(n1 == size(x,1))
+SLL_ASSERT(n2 == size(y,2))
+y = 0.0_f64
 !call interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
 
 end subroutine interpolate_array_x2_derivatives_2d

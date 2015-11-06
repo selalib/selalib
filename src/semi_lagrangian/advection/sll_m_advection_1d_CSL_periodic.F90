@@ -387,7 +387,7 @@ contains
     sll_real64 :: length
     sll_real64 :: gap_min
     sll_real64 :: gap_max
-    sll_int32 :: i
+    !sll_int32 :: i
     sll_real64 :: eps
     
     if(size(origin)<Npts)then
@@ -476,7 +476,7 @@ contains
     sll_real64, dimension(:), intent(out) :: output
     sll_real64 :: w_left(-d/2:(d+1)/2)
     sll_real64 :: w_right((-d+1)/2:d/2+1)
-    sll_real64 :: tmp
+    !sll_real64 :: tmp
     sll_int32 :: r_left
     sll_int32 :: r_right
     sll_int32 :: s_left
@@ -717,7 +717,7 @@ contains
     sll_int32, intent(in) :: Npts
     sll_real64, dimension(:), intent(out) :: output
     sll_int32 :: i
-    sll_int32 :: j
+    !sll_int32 :: j
     sll_real64, dimension(:), allocatable :: f
     sll_int32 :: ierr
     sll_real64 :: a    
@@ -784,7 +784,7 @@ contains
     
     res = 0._f64
     do i=1,4
-      eta = a+(real(i-1)/3._f64)*(b-a)
+      eta = a+(real(i-1,f64)/3._f64)*(b-a)
       res = res+ w(i)*interp%interpolate_value(eta)
     enddo
       
@@ -957,7 +957,7 @@ contains
     sll_int32 :: s1
     sll_int32 :: num_gauss_points
     sll_real64, dimension(:,:), allocatable :: xw
-    sll_real64 :: val
+    !sll_real64 :: val
     
     
     
@@ -1594,7 +1594,7 @@ contains
     sll_real64, intent(in) :: a
     sll_real64, intent(in) :: b
     sll_real64, dimension(:), intent(in) :: dof
-    sll_real64 :: eta
+    !sll_real64 :: eta
     sll_real64 :: res
     sll_real64 :: nodes(3,2)
     sll_int32 :: j
@@ -1708,7 +1708,7 @@ contains
     sll_int32 :: i
     sll_int32 :: d
     sll_real64 :: x
-    sll_real64 :: nodes(3)
+    !sll_real64 :: nodes(3)
     
     !print *,'a=',a,b
     !print *,'xval=',xval(r:s)

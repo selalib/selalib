@@ -29,12 +29,12 @@ program test_vector_space
   !----------------------------------------------------------------------------
   ! Fill in arrays and print them to standard output
   do i=1,m
-    a1(i) = i
+    a1(i) = real(i,f64)
   end do
 
   do i=1,n
     do j=1,m
-      a2(i,j) = i*10 + j
+      a2(i,j) = real(i*10 + j,f64)
     end do
   end do
 

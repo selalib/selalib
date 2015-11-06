@@ -117,7 +117,7 @@ contains
     integer(hid_t)               :: dataspace_id
     rank = 1      
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),hsize_t)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
     SLL_ASSERT(error==0)
@@ -148,7 +148,7 @@ contains
     integer(hid_t)               :: dataspace_id
     rank = 2
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),hsize_t)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
     SLL_ASSERT(error==0)
@@ -179,7 +179,7 @@ contains
     integer(hid_t)               :: dataspace_id
     rank = 3
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),hsize_t)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
     SLL_ASSERT(error==0)
@@ -210,7 +210,7 @@ contains
     integer(hid_t)               :: dataspace_id
     rank = 1      
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),hsize_t)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
     SLL_ASSERT(error==0)
@@ -241,7 +241,7 @@ contains
     integer(hid_t)               :: dataspace_id
     rank = 2
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),hsize_t)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
     SLL_ASSERT(error==0)
@@ -272,7 +272,7 @@ contains
     integer(hid_t)               :: dataspace_id
     rank = 3
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),hsize_t)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
     SLL_ASSERT(error==0)

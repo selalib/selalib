@@ -831,6 +831,7 @@ subroutine delete_triangular_mesh_2d( mesh )
 
 class(sll_triangular_mesh_2d), intent(inout) :: mesh
 
+SLL_ASSERT(mesh%num_nodes>0)
 print*, 'delete mesh'
 
 end subroutine delete_triangular_mesh_2d
@@ -995,7 +996,7 @@ xlmu = maxval(mesh%coord(1,:))
 ylml = minval(mesh%coord(2,:))
 ylmu = maxval(mesh%coord(2,:))
 
-mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(float(mesh%num_nodes))
+mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(real(mesh%num_nodes,8))
 mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 
 !*** Calcul des aires des triangles
@@ -1003,9 +1004,9 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 write(6,*)"*** Calcul des aires des triangles ***"
 #endif /* DEBUG */
 
-allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0d0
 
-airtot = 0.
+airtot = 0.d0
 
 do it = 1, mesh%num_triangles
 
@@ -1595,7 +1596,7 @@ end do
 !end if
 
 allocate(mesh%vtaux(mesh%nbtcot),mesh%vtauy(mesh%nbtcot))
-mesh%vtaux = 0.; mesh%vtauy = 0.
+mesh%vtaux = 0.d0; mesh%vtauy = 0.d0
 
 !==============================================================!
 !--- Calcul complementaires relatifs au lissage des champs ----!
@@ -1606,12 +1607,12 @@ mesh%vtaux = 0.; mesh%vtauy = 0.
 allocate(mesh%nuvac(2,mesh%nbtcot)); mesh%nuvac = 0
 
 !tableau des longueurs des cotes 
-allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0
+allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0d0
 
 !tableaux de lissage et des cotes tangeants 
-allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0.
-allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0.
-allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0.
+allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0.d0
+allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0.d0
+allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0.d0
 
 allocate(mesh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
 allocate(mesh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes

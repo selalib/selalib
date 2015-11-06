@@ -153,12 +153,12 @@ contains
        S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
        S = S / (1-epsilon)
     else
-       epsilon = 0.5*(tanh((t0-tL)/twL) + 1)
-       S = 0.5*(tanh((t-tL)/twL) + 1) - epsilon
-       S = S / (1-epsilon)
+       epsilon = 0.5*(tanh((t0-tL)/twL) + 1.0_f64)
+       S = 0.5*(tanh((t-tL)/twL) + 1.0_f64) - epsilon
+       S = S / (1.0_f64-epsilon)
     endif
     if(S<0) then
-       S = 0.
+       S = 0.0_f64
     endif
     return
   end subroutine PF_envelope

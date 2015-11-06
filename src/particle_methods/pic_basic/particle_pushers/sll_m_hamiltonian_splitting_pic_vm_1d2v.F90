@@ -52,6 +52,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
      procedure :: update_jv !> Helper function to compute the integral of j using Gauss quadrature
+     procedure :: operatorHp1_pic_vm_1d2v_prim
 
   end type sll_t_hamiltonian_splitting_pic_vm_1d2v
 
@@ -104,12 +105,12 @@ contains
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
-    sll_int32 :: i_part, i_grid, i_mod, ind, j
+    sll_int32 :: i_part, ind
     sll_real64 :: xi, x_new(3), vi(3), wi(1)
     sll_int32  :: n_cells
     sll_real64 :: r_new, r_old
     sll_int32 :: index_new, index_old
-    sll_real64 :: primitive_1(3)
+    !sll_real64 :: primitive_1(3)
 
     this%j_dofs_local = 0.0_f64
     n_cells = this%kernel_smoother_0%n_dofs
@@ -353,6 +354,7 @@ contains
 
 
 
+
  !---------------------------------------------------------------------------!
   !> Push Hp2: Equations to solve are
   !> X_new = X_old
@@ -475,8 +477,8 @@ contains
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
-    sll_int32 :: i_part
-    sll_real64 :: v_old(3), v_new(3)
+    !sll_int32 :: i_part
+    !sll_real64 :: v_old(3), v_new(3)
 
     
     ! Update efield2
@@ -539,42 +541,42 @@ contains
 
   end function sll_new_hamiltonian_splitting_pic_vm_1d2v
 
-
-  !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
-  function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
-    sll_real64, intent(in)  :: x !< position where to evaluate the primitive
-    sll_real64 :: primitive(4) !< value of the primitive for each of the four intervals.
-
-    sll_real64 :: xx(3)
-
-    xx(1) = x**2
-    xx(2) = x*xx(1)
-    xx(3) = x*xx(2)
-
-    primitive(4) = xx(3)/24.0_f64
-    primitive(3) = (x + 1.5_f64*xx(1) + xx(2) - 0.75_f64* xx(3))/6.0_f64
-    primitive(2) = (4.0_f64*x - 2.0_f64* xx(2) + 0.75_f64* xx(3))/6.0_f64
-    primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
-
-  end function primitive_uniform_cubic_b_spline_at_x
-
-  !> Compute the primitive of the quadratic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for quadratic.
-  function primitive_uniform_quadratic_b_spline_at_x( x) result(primitive)
-    sll_real64, intent(in)  :: x !< position where to evaluate the primitive
-    sll_real64 :: primitive(3) !< value of the primitive for each of the three intervals.
-
-    sll_real64 :: xx(2)
-
-    xx(1) = x**2
-    xx(2) = x*xx(1)
-
-    primitive(3) = xx(2)/6.0_f64
-    primitive(2) = (x + xx(1))*0.5_f64-xx(2)/3.0_f64
-    primitive(1) = (1.0_f64 - (1.0_f64-x)**3)/6.0_f64
-
-  end function primitive_uniform_quadratic_b_spline_at_x
-
-
-
+!PN DEFINED BUT NOT USED
+!PN   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
+!PN   function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
+!PN     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
+!PN     sll_real64 :: primitive(4) !< value of the primitive for each of the four intervals.
+!PN 
+!PN     sll_real64 :: xx(3)
+!PN 
+!PN     xx(1) = x**2
+!PN     xx(2) = x*xx(1)
+!PN     xx(3) = x*xx(2)
+!PN 
+!PN     primitive(4) = xx(3)/24.0_f64
+!PN     primitive(3) = (x + 1.5_f64*xx(1) + xx(2) - 0.75_f64* xx(3))/6.0_f64
+!PN     primitive(2) = (4.0_f64*x - 2.0_f64* xx(2) + 0.75_f64* xx(3))/6.0_f64
+!PN     primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
+!PN 
+!PN   end function primitive_uniform_cubic_b_spline_at_x
+!PN 
+!PN   !> Compute the primitive of the quadratic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for quadratic.
+!PN   function primitive_uniform_quadratic_b_spline_at_x( x) result(primitive)
+!PN     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
+!PN     sll_real64 :: primitive(3) !< value of the primitive for each of the three intervals.
+!PN 
+!PN     sll_real64 :: xx(2)
+!PN 
+!PN     xx(1) = x**2
+!PN     xx(2) = x*xx(1)
+!PN 
+!PN     primitive(3) = xx(2)/6.0_f64
+!PN     primitive(2) = (x + xx(1))*0.5_f64-xx(2)/3.0_f64
+!PN     primitive(1) = (1.0_f64 - (1.0_f64-x)**3)/6.0_f64
+!PN 
+!PN   end function primitive_uniform_quadratic_b_spline_at_x
+!PN 
+!PN 
+!PN 
 
 end module sll_m_hamiltonian_splitting_pic_vm_1d2v

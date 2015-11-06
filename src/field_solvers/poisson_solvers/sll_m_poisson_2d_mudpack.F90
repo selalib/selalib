@@ -403,7 +403,7 @@ contains
     yd = eta2_max
 
     !set for no error control flag
-    tolmax = 0.0
+    tolmax = 0.0_f64
 
 !    write(*,101) (iprm(i),i=1,15)
 !    write(*,102) (poisson%mgopt(i),i=1,4)
@@ -1318,12 +1318,12 @@ real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
-pe = 0.0
+pe = 0.0d0
 !subroutine not used in periodic case
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0
+   alfa = -1.0d0
    gbdy = px + alfa*pe
    return
 end if
@@ -1331,7 +1331,7 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0
+   alfa = 1.0d0
    gbdy = py + alfa*pe
    return
 end if

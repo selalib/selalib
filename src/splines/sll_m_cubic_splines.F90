@@ -219,7 +219,7 @@ MAKE_GET_SLOT_FUNCTION(get_delta_cs1d,   sll_cubic_spline_1d, delta,sll_real64)
 
 MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d,  sll_cubic_spline_2d, x1_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_cubic_spline_2d, x1_max, sll_real64)
-MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_cubic_spline_2d, x2_min, sll_real64)
+!MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_cubic_spline_2d, x2_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d,  sll_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_cubic_spline_2d,x1_delta,sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64)
@@ -296,8 +296,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        else
           ! Assign some value, but this value should never be used in the
           ! periodic case anyway.
-          new_cubic_spline_1D%slope_L = 0.0
-          new_cubic_spline_1D%slope_R = 0.0
+          new_cubic_spline_1D%slope_L = 0.0_f64
+          new_cubic_spline_1D%slope_R = 0.0_f64
        end if
        if( new_cubic_spline_1D%use_fast_algorithm .eqv. .false. ) then
           SLL_ALLOCATE(new_cubic_spline_1D%a(3*num_points),ierr)
@@ -333,14 +333,14 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
           new_cubic_spline_1D%slope_L = sl
           new_cubic_spline_1D%compute_slope_L = .false.
        else
-          new_cubic_spline_1D%slope_L = 0.0           ! just a filler value
+          new_cubic_spline_1D%slope_L = 0.0_f64           ! just a filler value
           new_cubic_spline_1D%compute_slope_L = .true.
        end if
        if( present(sr) ) then
           new_cubic_spline_1D%slope_R = sr
           new_cubic_spline_1D%compute_slope_R = .false.
        else
-          new_cubic_spline_1D%slope_R = 0.0           ! just a filler value
+          new_cubic_spline_1D%slope_R = 0.0_f64           ! just a filler value
           new_cubic_spline_1D%compute_slope_R = .true.
        end if
        if( new_cubic_spline_1D%use_fast_algorithm .eqv. .false. ) then
@@ -658,7 +658,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     end do
     coeffs(1)    = coeffs(3)  - 2.0 * delta * slope_l
     coeffs(np+2) = coeffs(np) + 2.0 * delta * slope_r
-    coeffs(np+3) = 0.0 !coeffs(np-2)  ! not used
+    coeffs(np+3) = 0.0_f64 !coeffs(np-2)  ! not used
   end subroutine compute_spline_1D_hermite_aux
 
 
@@ -870,7 +870,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x
     t0        = (x-xmin)*rh
     cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
+    dx        = t0 - real(cell-1,f64)
     cdx       = 1.0_f64 - dx
     cim1      = coeffs(cell)
     ci        = coeffs(cell+1)
@@ -963,7 +963,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh
        cell     = int(t0) + 1
-       dx       = t0 - real(cell-1)
+       dx       = t0 - real(cell-1,f64)
        cdx      = 1.0_f64 - dx
        !  write (*,'(a,i15, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
        cim1     = coeffs(cell-1)
@@ -1032,7 +1032,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh
        cell     = int(t0) + 1
-       dx       = t0 - real(cell-1)
+       dx       = t0 - real(cell-1,f64)
        cdx      = 1.0_f64 - dx
        !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
        cim1     = coeffs(cell-1)
@@ -1071,7 +1071,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x
     t0        = (x-xmin)*rh
     cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
+    dx        = t0 - real(cell-1,f64)
     ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     cim1      = coeffs(cell)
     ci        = coeffs(cell+1)
@@ -2187,13 +2187,13 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
         ! find the cell and offset for x1
         t1          = (x1(i1,i2)-x1_min)*rh1
         cell1       = floor(t1) + 1
-        dx1         = t1- real(cell1-1)
+        dx1         = t1- real(cell1-1,f64)
         cdx1        = 1.0_f64 - dx1
 		
         ! find the cell and offset for x2
         t2         = (x2(i1,i2)-x2_min)*rh2
         cell2      = floor(t2) + 1
-        dx2        = t2 - real(cell2-1)
+        dx2        = t2 - real(cell2-1,f64)
         cdx2       = 1.0_f64 - dx2
       
         ! checking if the particle is well localized
@@ -2419,7 +2419,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x2
     t0         = (x2-x2_min)*rh2
     cell       = int(t0) + 1
-    dx         = t0 - real(cell-1)
+    dx         = t0 - real(cell-1,f64)
     cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     ! interpolate the coefficients along the line of constant x1. These 
@@ -2503,7 +2503,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x2
     t0         = (x2-x2_min)*rh2
     cell       = int(t0) + 1
-    dx         = t0 - real(cell-1)
+    dx         = t0 - real(cell-1,f64)
     cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     ! interpolate the coefficients along the line of constant x1. These 
@@ -2588,7 +2588,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x2
     t0         = (x2-x2_min)*rh2
     cell       = int(t0) + 1
-    dx         = t0 - real(cell-1)
+    dx         = t0 - real(cell-1,f64)
     cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     ! interpolate the coefficients along the line of constant x1. These 

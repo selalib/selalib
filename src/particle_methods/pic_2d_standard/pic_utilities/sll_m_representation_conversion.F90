@@ -115,8 +115,8 @@ contains
     sll_int32,  intent(in) :: i_cell
     sll_real32, intent(in) :: offset_x, offset_y
 
-    x = m2d%eta1_min + m2d%delta_eta1*( offset_x + real( mod(i_cell-1,m2d%num_cells1), f64) )
-    y = m2d%eta2_min + m2d%delta_eta2*( offset_y + real( int( (i_cell-1)/m2d%num_cells1 ), f64))
+    x = m2d%eta1_min+m2d%delta_eta1*(real(offset_x,f64)+real(mod(i_cell-1,m2d%num_cells1), f64) )
+    y = m2d%eta2_min+m2d%delta_eta2*(real(offset_y,f64)+real(int( (i_cell-1)/m2d%num_cells1 ), f64))
 
   end subroutine cell_offset_to_global
 
@@ -165,8 +165,8 @@ contains
     sll_int32,  intent(in) :: i_cell_x, i_cell_y
     sll_real32, intent(in) :: offset_x, offset_y
 
-    x = m2d%eta1_min + m2d%delta_eta1*( offset_x + real(i_cell_x-1, f64) )
-    y = m2d%eta2_min + m2d%delta_eta2*( offset_y + real(i_cell_y-1, f64) )
+    x = m2d%eta1_min + m2d%delta_eta1*( real(offset_x + i_cell_x-1, f64) )
+    y = m2d%eta2_min + m2d%delta_eta2*( real(offset_y + i_cell_y-1, f64) )
 
   end subroutine cell_offset_to_global_extended
 

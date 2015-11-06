@@ -71,7 +71,7 @@ module sll_m_sim_pic_vp_1d1v_cart
   type, extends( sll_simulation_base_class ) :: &
       sll_simulation_pic1d1v_vp_periodic
 
-    CHARACTER(LEN=256) :: root_path
+    character(len=256) :: root_path
 
     
     character(len=32) ::  ppusher    , psolver    , scenario
@@ -268,12 +268,12 @@ contains
 !    SLL_WARNING( this_sub_name, "'init_from_file' method not implemented" )
     character( len=256 )                                         :: arg_filename
      
-    CHARACTER(LEN=256) :: path
+    character(len=256) :: path
 
-    CHARACTER(LEN=32) ::  testcase
-    CHARACTER(LEN=32) ::  ppusher
-    CHARACTER(LEN=32) ::  psolver
-    CHARACTER(LEN=32) :: scenario
+    character(len=32) ::  testcase
+    character(len=32) ::  ppusher
+    character(len=32) ::  psolver
+    character(len=32) :: scenario
 
     sll_int32 ::  tsteps
     sll_int32 ::  sdeg
