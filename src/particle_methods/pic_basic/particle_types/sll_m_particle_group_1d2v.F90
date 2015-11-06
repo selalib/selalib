@@ -20,7 +20,7 @@ module sll_m_particle_group_1d2v
 type, public, extends(sll_particle_group_base) :: sll_particle_group_1d2v
    !sll_int32               :: n_particles !< number of particle
    sll_real64, pointer :: particle_array(:,:) !< array of particles
-   sll_real64 :: common_weight
+   sll_real64 :: common_weight = 1.0_f64
 
 contains
     ! Getters
@@ -60,7 +60,7 @@ contains
     SLL_ALLOCATE(self, ierr)
     self%n_particles = n_particles
     self%n_total_particles = n_total_particles
-    SLL_ALLOCATE(self%particle_array(self%n_particles,3+n_weights), ierr) 
+    SLL_ALLOCATE(self%particle_array(3+n_weights, self%n_particles), ierr) 
     self%species => species_new( charge, mass)
 
     self%n_weights = n_weights
@@ -74,7 +74,7 @@ contains
     sll_real64 :: r(3) !< position of particle i
 
     r = 1.0_f64
-    r(1) = self%particle_array(i, 1)
+    r(1) = self%particle_array(1, i)
     
   end function get_x_1d2v
 
@@ -85,7 +85,7 @@ contains
     sll_real64 :: r(3)
 
     r = 1.0_f64
-    r(1:2) = self%particle_array(i, 2:3)
+    r(1:2) = self%particle_array( 2:3, i )
     
   end function get_v_1d2v
 
@@ -122,7 +122,7 @@ contains
 
     i_wi = 1
     if(present(i_weight)) i_wi = i_weight
-    r = self%species%q  * self%particle_array(i, 3+i_wi) * self%common_weight
+    r = self%species%q  * self%particle_array(3+i_wi, i) * self%common_weight
 
   end function get_charge_1d2v
 
@@ -138,7 +138,7 @@ contains
 
     i_wi = 1
     if(present(i_weight)) i_wi = i_weight
-    r = self%species%m * self%particle_array(i, 3+i_wi) * self%common_weight
+    r = self%species%m * self%particle_array( 3+i_wi, i) * self%common_weight
 
   end function get_mass_1d2v
 
@@ -148,7 +148,7 @@ contains
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(self%n_weights) !< weight(s) of particle i
 
-    r = self%particle_array(i, 4:3+self%n_weights)
+    r = self%particle_array(4:3+self%n_weights, i)
 
   end function get_weights_1d2v
 
@@ -158,7 +158,7 @@ contains
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(3) !< first component holds the value of the position to be set
 
-    self%particle_array(i, 1) = x(1)
+    self%particle_array(1, i) = x(1)
     
   end subroutine set_x_1d2v
 
@@ -167,7 +167,7 @@ contains
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(3) !< first two components hold the values of the velocity to be set
 
-    self%particle_array(i, 2:3) = x(1:2)
+    self%particle_array(2:3, i) = x(1:2)
     
   end subroutine set_v_1d2v
   
@@ -177,7 +177,7 @@ contains
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(self%n_weights) !< particle weight(s)
 
-    self%particle_array(i, 4:3+self%n_weights) = x
+    self%particle_array(4:3+self%n_weights, i) = x
     
   end subroutine set_weight_1d2v
 
@@ -204,7 +204,7 @@ contains
 
     self%n_particles = n_particles
     self%n_total_particles = n_total_particles
-    SLL_ALLOCATE(self%particle_array(n_particles,3+n_weights), ierr) 
+    SLL_ALLOCATE(self%particle_array(3+n_weights, n_particles), ierr) 
     self%species%q = charge
     self%species%m = mass
     self%n_weights = n_weights
