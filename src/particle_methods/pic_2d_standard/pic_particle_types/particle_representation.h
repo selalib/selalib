@@ -9,7 +9,7 @@
   do; \
     tmp = (x - xmin)*rdelta; \
     icell  = int(tmp); \
-    offset = tmp - real(icell,f64); \
+    offset = real(tmp - icell,f32); \
     exit; \
  end do
 

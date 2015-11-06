@@ -147,7 +147,7 @@ contains
     class( pic1d_eulerian_distribution ), intent( in ) :: self
     character( len=* )                  , intent( in ) :: plot_name
     sll_int32                           , intent( in ) :: iplot
-    CHARACTER(LEN=256)                  , intent( in ) :: root_path
+    character(len=256)                  , intent( in ) :: root_path
     character(len=4)     :: fin
     integer , parameter  :: file_id=20 
     sll_int32            :: i   

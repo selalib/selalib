@@ -66,7 +66,7 @@ contains
     sll_real64 :: error0, error1, error2, order1, order2
     type(linear_pendulum_operators), target :: my_pendulum
     class(operator_splitting), pointer :: split
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
     ! initialise my_pendulum
     split => my_pendulum
@@ -83,7 +83,7 @@ contains
     my_pendulum%x = x0
     my_pendulum%v = v0  
     dt = t_final/steps_fine
-    number_time_steps = steps_fine
+    number_time_steps = int(steps_fine,i32)
 
     call do_split_steps(split, dt, number_time_steps)
   

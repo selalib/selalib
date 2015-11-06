@@ -47,7 +47,7 @@ program test_maxwell_2d_diga_wave
     sll_real64  :: time
     sll_int32   :: istep
     sll_real64  :: dt
-    sll_real64  :: cfl = 0.5
+    sll_real64  :: cfl = 0.5_f64
     sll_int32   :: itest
     !character(len=4) :: cstep
     !init functions
@@ -245,7 +245,7 @@ program test_maxwell_2d_diga_wave
         end do ! next time step
    
         if (sqrt(sum(bz%array*bz%array)) &
-            / (nc_eta1*nc_eta2*(degree+1)*(degree+1)) < 0.001) then
+            / real(nc_eta1*nc_eta2*(degree+1)*(degree+1),f64) < 0.001) then
         print"(a)", 'PASSED'
     else
     stop 'FAILED'

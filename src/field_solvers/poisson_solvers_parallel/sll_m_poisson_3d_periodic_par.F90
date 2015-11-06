@@ -84,9 +84,9 @@ contains
     sll_int32, dimension(3,3)                    :: loc_sizes
 
     collective => get_layout_collective(start_layout)
-    colsz      = sll_get_collective_size(collective)
+    colsz      = int(sll_get_collective_size(collective),i64)
 
-    if ( colsz > min(ncx,ncy,ncz) ) then     
+    if ( int(colsz,i32) > min(ncx,ncy,ncz) ) then     
        print *, 'This test needs to run in a number of processes which',  &
                 ' is less than or equal', min(ncx,ncy,ncz), ' in order to ', &
                 'be able properly split the arrays.'

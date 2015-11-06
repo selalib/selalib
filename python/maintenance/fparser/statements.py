@@ -1,3 +1,4 @@
+# coding: utf8
 """
 Fortran single line statements.
 
@@ -8,6 +9,12 @@ terms of the NumPy License. See http://scipy.org.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 Author: Pearu Peterson <pearu@cens.ioc.ee>
 Created: May 2006
+
+Modifications:
+  - Nov 2015: added 'ProcedureDeclaration' (Yaman Güçlü [YG] - IPP Garching)
+            : modify regex pattern in 'Forall' to avoid false matches (YG)
+            : modify 'process_item' in 'Call' to avoid failing on arrays (YG)
+            : add 'TypeGuard' statement for 'select type' constructs (YG)
 -----
 """
 
@@ -23,7 +30,7 @@ __all__ = ['GeneralAssignment',
            'FinalBinding','Allocatable','Asynchronous','Bind','Else','ElseIf',
            'Case','WhereStmt','ElseWhere','Enumerator','FortranName','Threadsafe',
            'Depend','Check','CallStatement','CallProtoArgument','Pause',
-           'Comment']
+           'Comment', 'ProcedureDeclaration', 'TypeGuard']
 
 import re
 import sys
@@ -173,12 +180,12 @@ class Call(Statement):
         item = self.item
         apply_map = item.apply_map
         line = item.get_line()[4:].strip()
-        i = line.find('(')
+        i = line.rfind('(')      # 'rfind' needed for "call array(i)%sub(...)"
         items = []
         if i==-1:
             self.designator = apply_map(line).strip()
         else:
-            j = line.find(')')
+            j = line.rfind(')')  # 'rfind' needed for "call array(i)%sub(...)"
             if j == -1 or len(line)-1 != j:
                 self.isvalid = False
                 return
@@ -1411,7 +1418,7 @@ class Forall(Statement):
     <subscript|stride> = <scalar-int-expr>
     <forall-assignment-stmt> = <assignment-stmt> | <pointer-assignment-stmt>
     """
-    match = re.compile(r'forall\s*\(.*\).*=', re.I).match
+    match = re.compile(r'forall\s*\(\w+\).*=', re.I).match
     def process_item(self):
         line = self.item.get_line()[6:].lstrip()
         i = line.index(')')
@@ -1560,6 +1567,98 @@ class FinalBinding(StatementWithNamelist):
     """
     stmtname = 'final'
     match = re.compile(r'final\b', re.I).match
+
+#===============================================================================
+class ProcedureDeclaration( Statement ):
+    """
+    Procedure declaration statement (see R1211 in J3/04-007).
+
+    Author: Yaman Güçlü, Nov 2015 - IPP Garching
+    Last revision: 2 Nov 2015
+
+    Description
+    -----------
+
+    PROCEDURE [(<proc-interface>)] [[,<proc-attr-spec>]... ::] <proc-decl-list>
+
+    <proc-interface> = <interface-name> | <declaration-type-spec>
+    <proc-attr-spec> = <access-spec>
+                       | <proc-language-binding-spec>
+                       | INTENT ( <intent-spec> )
+                       | OPTIONAL
+                       | POINTER
+                       | SAVE
+
+    <proc-decl>                  = <procedure-entity-name> [ => <null-init> ]
+    <access-spec>                = PUBLIC | PRIVATE
+    <proc-language-binding-spec> = <language-binding-spec>
+    <intent-spec>                = IN | OUT | INOUT
+
+    <null-init>             = NULL()
+    <language-binding-spec> = BIND(C[,NAME = <scalar-char-initialization-expr>])
+
+    """
+    _repr_attr_names = ['selector','attrspec','proc_decls'] + Statement._repr_attr_names
+    match = re.compile( r'procedure\b', re.I ).match
+
+    #---------------------------------------------------------------------------
+    def process_item( self ):
+        # Remove 'procedure' string and empty spaces that follow it
+        line = self.item.get_line()[9:].lstrip()
+
+        # Store interface name (empty string if not given) as 'self.iname'
+        if line.startswith('('):
+            i = line.index(')')
+            name = line[1:i].strip()
+            line = line[i+1:].lstrip()
+        else:
+            name = ''
+        self.iname = name
+
+        # Remove comma and following empty spaces
+        if line.startswith(','):
+            line = line[1:].lstrip()
+
+        # Search for double columns
+        i = line.find('::')
+
+        # If '::' was found, extract list of attributes and remove line head
+        if i != -1:
+            attrs = split_comma( line[:i], self.item )
+            line = line[i+2:].lstrip()
+        else:
+            attrs = []
+
+        # Give uniform format to all attributes, and store them in 'self.attrs'
+        attrs1 = []
+        for attr in attrs:
+            if is_name( attr ):
+                attr = attr.upper()
+            else:
+                i = attr.find('(')
+                assert i!=-1 and attr.endswith(')'),`attr`
+                attr = '%s (%s)' % (attr[:i].rstrip().upper(), attr[i+1:-1].strip())
+            attrs1.append( attr )
+        self.attrs = attrs1
+
+        # Extract list of procedure declarations
+        self.proc_decls = split_comma( line, self.item )
+
+        return
+
+    #---------------------------------------------------------------------------
+    def tofortran( self, isfix=None ):
+        tab = self.get_indent_tab( isfix=isfix )
+        s = 'PROCEDURE '
+        if self.iname:
+            s += '(' + self.iname + ') '
+        if self.attrs:
+            s += ', ' + ', '.join( self.attrs ) + ' :: '
+        if self.proc_decls:
+            s += ' ' + ', '.join( self.proc_decls )
+        return tab + s
+
+#===============================================================================
 
 class Allocatable(Statement):
     """
@@ -1734,6 +1833,84 @@ class Case(Statement):
         return s
     def analyze(self): return
 
+#==============================================================================
+# SelectType construct statements
+#==============================================================================
+
+class TypeGuard( Statement ):
+    """ R823
+    <type-guard-stmt> = TYPE  IS ( <type-spec> ) [ <select-construct-name> ]
+                      | CLASS IS ( <type-spec> ) [ <select-construct-name> ]
+                      | CLASS DEFAULT
+
+    <type-spec> = <intrinsic-type-spec> | <derived-type-spec>
+    <derived-type-spec> = <type-name> [ (<type-param-spec-list>) ]
+    <type-param-spec> = [ <keyword> ] <type-param-value>
+
+    """
+    opt1 = r"TYPE\s*IS\s*\(.*\)"
+    opt2 = r"CLASS\s*IS\s*\(.*\)"
+    opt3 = r"CLASS\s*DEFAULT"
+    pattern = r"({}|{}|{})\s*\w*\Z".format( opt1, opt2, opt3 )
+
+    # Match function is static method that is used to identify statement type
+    match = re.compile( pattern, re.I ).match
+
+    #--------------------------------------------------------------------------
+    def process_item( self ):
+        # Get line string, remove all blank spaces, and use lowercase
+        line = self.item.get_line().replace(' ','').lower()
+
+        # "Type is" statement
+        if line.startswith( 'typeis(' ) and line.count(')') == 1:
+            i              = line.rfind(')')
+            self.type_spec = line[7:i]
+            self.name      = line[i+1:]
+            self._case     = 'type'
+        # "Class is" statement
+        elif line.startswith( 'classis(' ) and line.count(')') == 1:
+            i              = line.rfind(')')
+            self.type_spec = line[8:i]
+            self.name      = line[i+1:]
+            self._case     = 'class'
+        # "Class default" statement
+        elif line == 'classdefault':
+            self.type_spec = None
+            self.name      = line[12:]
+            self._case     = 'default'
+        # Error
+        else:
+            raise SystemExit( "Could not process line: %s" % self.get_item() )
+
+        # Compare <select-construct-name>, if any, with parent name
+        parent_name = getattr( self.parent, 'name', '' )
+        if self.name and self.name != parent_name:
+            self.warning( 'expected select-type-construct-name %r but got %r, skipping.'\
+                         % (parent_name, self.name) )
+            self.isvalid = False
+
+        self.items = []
+        return
+
+    #--------------------------------------------------------------------------
+    def tofortran( self, isfix=None ):
+        tab = self.get_indent_tab( isfix=isfix )
+
+        if   self._case == 'type'   :  s =  'TYPE IS ( %s )' % self.type_spec
+        elif self._case == 'class'  :  s = 'CLASS IS ( %s )' % self.type_spec
+        elif self._case == 'default':  s = 'CLASS DEFAULT'
+        else:
+            raise SystemExit( "'self._case' attribute not correctly set." )
+
+        if self.name:
+            s += ' %s' % self.name
+
+        return s
+
+    #--------------------------------------------------------------------------
+    def analyze( self ): return
+
+#==============================================================================
 # Where construct statements
 
 class Where(Statement):

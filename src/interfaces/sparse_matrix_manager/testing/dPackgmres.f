@@ -447,7 +447,7 @@ C*
            endif
            write(ihist,'(A30,I5)') 'Maximum number of iterations: ',
      &                              icntl(7)
-           write(ihist,'(A27,E8.2)') 'Tolerance for convergence: ', 
+           write(ihist,'(A27,E9.2)') 'Tolerance for convergence: ', 
      &                                cntl(1) 
 * 
            write(ihist,'(A53)') 
@@ -459,8 +459,8 @@ C*
      &       '    the residual is normalised by ||b||'
            else
              write(ihist,1) sA,sb
-1     format('    the residual is normalised by         ',E8.2,
-     &       ' * ||x|| + ',E8.2)
+1     format('    the residual is normalised by         ',E9.2,
+     &       ' * ||x|| + ',E9.2)
            endif
            sPA      = cntl(4)
            sPb      = cntl(5)
@@ -473,8 +473,8 @@ C*
      &       'by ||(P1)b||')
            else
              write(ihist,4) sPA, sPb
-4     format('    the preconditioned residual is normalised by ', E8.2,
-     &        ' * ||(P2)y|| + ',E8.2)
+4     format('    the preconditioned residual is normalised by ', E9.2,
+     &        ' * ||(P2)y|| + ',E9.2)
            endif
 *
            write(ihist,5) info(3)
@@ -869,8 +869,8 @@ C*
         jH = 0
         bea = DZRO
         be  = DZRO
-        write(ihist,'(I5,11x,E8.2)',advance='no') jH,bea
-        write(ihist,'(7x,E8.2)') be
+        write(ihist,'(I5,11x,E9.2)',advance='no') jH,bea
+        write(ihist,'(7x,E9.2)') be
         info(1)  = 0
         info(2)  = 0
         rinfo(1) = DZRO
@@ -988,8 +988,8 @@ C*
          jH = 0
          bea = DZRO
          be  = DZRO
-         write(ihist,'(I5,11x,E8.2)',advance='no') jH,bea
-         write(ihist,'(7x,E8.2)') be
+         write(ihist,'(I5,11x,E9.2)',advance='no') jH,bea
+         write(ihist,'(7x,E9.2)') be
          if (iwarn.ne.0) then
           write(iwarn,*)
           write(iwarn,*) ' WARNING GMRES : '
@@ -1347,7 +1347,7 @@ C*
 * Save the backward error on a file if convergence history requested
          if (ihist.ne.0) then
            write(ihist,1000)iterOut*m+jH,bea,be
-1000  format(I5,11x,E8.2,7x,E8.2)
+1000  format(I5,11x,E9.2,7x,E9.2)
          endif
 *
        endif
@@ -1412,8 +1412,8 @@ C*
            if (ihist.ne.0) then
              write(ihist,1010) rinfo(1)
              write(ihist,1011) rinfo(2)
-1010  format('B.E. on the preconditioned system:   ',E8.2)
-1011  format('B.E. on the unpreconditioned system: ',E8.2)
+1010  format('B.E. on the preconditioned system:   ',E9.2)
+1011  format('B.E. on the unpreconditioned system: ',E9.2)
            endif
            info(2) = iterOut*m+jH
            if (ihist.ne.0) then
@@ -1429,7 +1429,7 @@ C*
 * Save the backward error on a file if convergence history requested
          if (ihist.ne.0) then
            write(ihist,1001)iterOut*m+jH,bea
-1001  format(I5,11x,E8.2,7x,'--')
+1001  format(I5,11x,E9.2,7x,'--')
          endif
 *
        endif  

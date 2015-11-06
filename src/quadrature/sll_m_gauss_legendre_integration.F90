@@ -20,36 +20,36 @@ module sll_m_gauss_legendre_integration
   ! generic interface.
   ! 
   ! The ugly aspect of this approach is that it loses modularity: for 
-  ! example, to specialize the integrator on the 'interpolated_function_1D'
+  ! example, to specialize the integrator on the 'interpolated_function_1d'
   ! requires use of the spline module. 
 
 ! Doxygen do not manage abstract interface
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
   abstract interface
      !> 1d real function
-     function function_1D_legendre(x)
+     function function_1d_legendre(x)
        use sll_m_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
                                  ! This is very rare.
-       sll_real64             :: function_1D_legendre
+       sll_real64             :: function_1d_legendre
        sll_real64, intent(in) :: x
-     end function function_1D_legendre
+     end function function_1d_legendre
   end interface
 #endif
 
 !  abstract interface
-!     function interpolated_function_1D(x,spline_obj)
+!     function interpolated_function_1d(x,spline_obj)
 !       use sll_m_working_precision
 !       use sll_splines
-!       sll_real64                   :: interpolated_function_1D
+!       sll_real64                   :: interpolated_function_1d
 !       sll_real64, intent(in)       :: x
-!       type(sll_spline_1D), pointer :: spline_obj
-!     end function interpolated_function_1D
+!       type(sll_spline_1d), pointer :: spline_obj
+!     end function interpolated_function_1d
 !  end interface
 
   !> Compute numerical integration with Gauss-Legendre formula
-  interface gauss_legendre_integrate_1D
-     module procedure gauss_legendre_integral_1D !,gauss_legendre_integral_interpolated_1D
+  interface gauss_legendre_integrate_1d
+     module procedure gauss_legendre_integral_1d !,gauss_legendre_integral_interpolated_1d
   end interface
 
 contains
@@ -152,9 +152,9 @@ contains
   !> @param[in] b right-bound of the definition interval of f 
   !> @param[in] n the desired number of Gauss points
   !> @return The value of the integral
-  function gauss_legendre_integral_1D( f, a, b, n )
+  function gauss_legendre_integral_1d( f, a, b, n )
     intrinsic                       :: sqrt
-    sll_real64                      :: gauss_legendre_integral_1D
+    sll_real64                      :: gauss_legendre_integral_1d
     procedure(function_1d_legendre) :: f
     sll_real64, intent(in)          :: a
     sll_real64, intent(in)          :: b
@@ -171,7 +171,7 @@ contains
     select case(n)
        SELECT_CASES
     end select
-    ans = 0.0
+    ans = 0.0_f64
     ! need to map the interval [-1,1] into the interval [a,b]
     c1 = 0.5_f64*(b-a)
     c2 = 0.5_f64*(b+a)
@@ -179,11 +179,11 @@ contains
        x = c1*xk(k) + c2
        ans = ans + f(x)*wk(k)
     end do
-    gauss_legendre_integral_1D = c1*ans
-  end function gauss_legendre_integral_1D
+    gauss_legendre_integral_1d = c1*ans
+  end function gauss_legendre_integral_1d
 
   ! Consider changing this into a function that simply receives as an
-  ! argument the spline_1D object and internally calls the interpolate_value()
+  ! argument the spline_1d object and internally calls the interpolate_value()
   ! function. This would have a simpler interface. Although, there could be
   ! some advantages to have the interpolating function parametrized also, like
   ! in this case.
@@ -209,11 +209,11 @@ contains
   ! @param[in] n the desired number of Gauss points
   ! @return The value of the integral
   !---------------------------------------------------------------------------
-!!$  function gauss_legendre_integral_interpolated_1D( f, spline, a, b, n )
+!!$  function gauss_legendre_integral_interpolated_1d( f, spline, a, b, n )
 !!$    intrinsic                        :: sqrt
-!!$    sll_real64                       :: gauss_legendre_integral_interpolated_1D
-!!$    procedure(interpolated_function_1D) :: f
-!!$    type(sll_spline_1D), pointer        :: spline
+!!$    sll_real64                       :: gauss_legendre_integral_interpolated_1d
+!!$    procedure(interpolated_function_1d) :: f
+!!$    type(sll_spline_1d), pointer        :: spline
 !!$    sll_real64, intent(in)              :: a
 !!$    sll_real64, intent(in)              :: b
 !!$    sll_int32,  intent(in)              :: n ! needs better name
@@ -237,8 +237,8 @@ contains
 !!$       x = c1*xk(k) + c2
 !!$       ans = ans + f(x,spline)*wk(k)
 !!$    end do
-!!$    gauss_legendre_integral_interpolated_1D = c1*ans
-!!$  end function gauss_legendre_integral_interpolated_1D
+!!$    gauss_legendre_integral_interpolated_1d = c1*ans
+!!$  end function gauss_legendre_integral_interpolated_1d
 
 
 

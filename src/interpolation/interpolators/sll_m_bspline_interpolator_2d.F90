@@ -94,6 +94,8 @@ contains
   subroutine delete_bspline_interpolator_2d( interpolator )
     class(sll_bspline_interpolator_2d), intent(inout) :: interpolator
 !PN    call sll_delete(interpolator%spline)
+    
+    SLL_ASSERT(interpolator%npts1>0)
   end subroutine delete_bspline_interpolator_2d
   
   !> Create a pointer to a 2d interpolator using bsplines.
@@ -226,6 +228,11 @@ contains
          const_eta2_max_slope              &
     )
 
+    return
+    SLL_ASSERT(present(eta1_min_slopes))
+    SLL_ASSERT(present(eta1_max_slopes))
+    SLL_ASSERT(present(eta2_min_slopes))
+    SLL_ASSERT(present(eta2_max_slopes))
 
   end subroutine initialize_bs2d_interpolator
 

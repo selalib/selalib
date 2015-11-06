@@ -238,12 +238,13 @@ contains  ! ****************************************************************
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_deriv1_cs1d
 
-  function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(sll_cubic_spline_interpolator_1d), intent(in) :: interpolator
-    sll_real64 :: val
-    sll_real64, intent(in) :: eta1
-    val = interpolate_derivative(eta1,interpolator%spline)
-  end function interpolate_derivative_f95
+!PN DEFINED BUT NOT USED
+! function interpolate_derivative_f95( interpolator, eta1 ) result(val)
+!   class(sll_cubic_spline_interpolator_1d), intent(in) :: interpolator
+!   sll_real64 :: val
+!   sll_real64, intent(in) :: eta1
+!   val = interpolate_derivative(eta1,interpolator%spline)
+! end function interpolate_derivative_f95
 
     !> PLEASE ADD DOCUMENTATION
   function new_cubic_spline_interpolator_1d( &

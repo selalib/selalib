@@ -511,11 +511,11 @@ contains
 
        inside = .true.
 
-       k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
-       k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
+       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
-       if ( abs(k1c) >  mesh%num_cells ) inside = .false.
-       if ( abs(k2c) >  mesh%num_cells ) inside = .false.
+       if ( k1c >  mesh%num_cells ) inside = .false.
+       if ( k2c >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
 
        if ( inside ) then
@@ -542,11 +542,11 @@ contains
        inside = .true.
 
 
-       k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
-       k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
+       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
-       if ( abs(k1c) >  mesh%num_cells ) inside = .false.
-       if ( abs(k2c) >  mesh%num_cells ) inside = .false.
+       if ( k1c >  mesh%num_cells ) inside = .false.
+       if ( k2c >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
 
        if ( inside ) then
@@ -789,7 +789,7 @@ contains
     sll_int32, intent(in)      :: i, j
     sll_real64 :: res
 
-    res = 0.0_f64
+    res = 0.0_f64+i+j+mesh%num_cells
     print *, "Error in eta1_cell() :"
     print *, "   function only works with ONE parameter (num_cell)"
     STOP
@@ -805,7 +805,7 @@ contains
     sll_int32, intent(in)      :: i, j
     sll_real64 :: res
 
-    res = 0.0_f64
+    res = 0.0_f64+i+j+mesh%num_cells
     print *, "Error in eta2_cell() :"
     print *, "   function only works with ONE parameter (num_cell)"
     STOP
@@ -1190,42 +1190,42 @@ contains
 
   end subroutine get_cell_vertices_index
 
-
-  !---------------------------------------------------------
-  !> @brief Returns index of lowest point in cell
-  !> @details Returns index of lowest point in a given cell.
-  !> This means the point with the lowest y-coordinate
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] cell_index index of cell we wish to know the lowest point
-  !> @param[OUT] lowest_index index of point with lowest y-coordinate
-  function get_cell_lowest_point(mesh, cell_index) result(lowest_index)
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_int32, intent(in) :: cell_index
-    sll_int32  :: edge1, edge2, edge3
-    sll_int32  :: lowest_index
-    sll_real64 :: y_lowest
-
-    ! initialization ...
-    lowest_index = -1
-
-    call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
-         mesh%center_cartesian_coord(2,cell_index),&
-         mesh, &
-         edge1, edge2, edge3)
-
-    lowest_index = edge1
-
-    ! we compare the ordinates of edge2 and edge1
-    y_lowest = mesh%cartesian_coord(2, lowest_index)
-    if (mesh%cartesian_coord(2, edge2) < y_lowest) then
-       lowest_index = edge2
-    end if
-    ! we compare the ordinates of lowest_point and edge3
-    if (mesh%cartesian_coord(2, edge3) < y_lowest) then
-       lowest_index = edge3
-    end if
-
-  end function get_cell_lowest_point
+!PN function defined but not used
+!  !---------------------------------------------------------
+!  !> @brief Returns index of lowest point in cell
+!  !> @details Returns index of lowest point in a given cell.
+!  !> This means the point with the lowest y-coordinate
+!  !> @param[IN] mesh hexagonal mesh
+!  !> @param[IN] cell_index index of cell we wish to know the lowest point
+!  !> @param[OUT] lowest_index index of point with lowest y-coordinate
+!  function get_cell_lowest_point(mesh, cell_index) result(lowest_index)
+!    type(sll_hex_mesh_2d), pointer :: mesh
+!    sll_int32, intent(in) :: cell_index
+!    sll_int32  :: edge1, edge2, edge3
+!    sll_int32  :: lowest_index
+!    sll_real64 :: y_lowest
+!
+!    ! initialization ...
+!    lowest_index = -1
+!
+!    call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
+!         mesh%center_cartesian_coord(2,cell_index),&
+!         mesh, &
+!         edge1, edge2, edge3)
+!
+!    lowest_index = edge1
+!
+!    ! we compare the ordinates of edge2 and edge1
+!    y_lowest = mesh%cartesian_coord(2, lowest_index)
+!    if (mesh%cartesian_coord(2, edge2) < y_lowest) then
+!       lowest_index = edge2
+!    end if
+!    ! we compare the ordinates of lowest_point and edge3
+!    if (mesh%cartesian_coord(2, edge3) < y_lowest) then
+!       lowest_index = edge3
+!    end if
+!
+!  end function get_cell_lowest_point
 
   !---------------------------------------------------------------------------
   !> @brief Given a mesh point and the first cartesian coordinate of a point
@@ -1759,39 +1759,39 @@ contains
     close(out_unit)
   end subroutine write_hex_mesh_2d
 
-
-  !---------------------------------------------------------------------------
-  !> @brief Writes the info of a given field in a hex-mesh into a given file
-  !> @details This function writes for every point of the hex mesh its cartesian
-  !> coordinate as well as the value of a given field(vector) at that point
-  !> @param[IN] mesh the hexagonal mesh
-  !> @param[IN] field a vector of size=(number of pts of the mesh) containg the
-  !> values of a field on every mesh point.
-  !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_field_hex_mesh(mesh, field, name)
-    ! Writes the points cartesian coordinates and
-    ! field(vector) values in a file named "name"
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64,dimension(:) :: field
-    character(len=*) :: name
-    sll_int32  :: i
-    sll_int32  :: num_pts_tot
-    sll_real64 :: x1, x2
-    sll_int32, parameter :: out_unit=20
-
-    open (unit=out_unit,file=name,action="write",status="replace")
-
-    num_pts_tot = mesh%num_pts_tot
-    do i=1, num_pts_tot
-       x1 = mesh%global_to_x1(i)
-       x2 = mesh%global_to_x2(i)
-       write (out_unit, "(3(g13.3,1x))") x1, &
-            x2, &
-            field(i)
-    end do
-
-    close(out_unit)
-  end subroutine write_field_hex_mesh
+!PN function defined but not used
+!  !---------------------------------------------------------------------------
+!  !> @brief Writes the info of a given field in a hex-mesh into a given file
+!  !> @details This function writes for every point of the hex mesh its cartesian
+!  !> coordinate as well as the value of a given field(vector) at that point
+!  !> @param[IN] mesh the hexagonal mesh
+!  !> @param[IN] field a vector of size=(number of pts of the mesh) containg the
+!  !> values of a field on every mesh point.
+!  !> @param[IN] name the name of the file where the info will be written into.
+!  subroutine write_field_hex_mesh(mesh, field, name)
+!    ! Writes the points cartesian coordinates and
+!    ! field(vector) values in a file named "name"
+!    type(sll_hex_mesh_2d), pointer :: mesh
+!    sll_real64,dimension(:) :: field
+!    character(len=*) :: name
+!    sll_int32  :: i
+!    sll_int32  :: num_pts_tot
+!    sll_real64 :: x1, x2
+!    sll_int32, parameter :: out_unit=20
+!
+!    open (unit=out_unit,file=name,action="write",status="replace")
+!
+!    num_pts_tot = mesh%num_pts_tot
+!    do i=1, num_pts_tot
+!       x1 = mesh%global_to_x1(i)
+!       x2 = mesh%global_to_x2(i)
+!       write (out_unit, "(3(g13.3,1x))") x1, &
+!            x2, &
+!            field(i)
+!    end do
+!
+!    close(out_unit)
+!  end subroutine write_field_hex_mesh
 
 
   !---------------------------------------------------------------------------
@@ -1811,7 +1811,7 @@ contains
     sll_int32  :: i
     sll_int32  :: num_triangles
     sll_int32  :: num_pts_tot
-    sll_int32  :: out_unit
+    !sll_int32  :: out_unit
     sll_real64, allocatable :: coor(:,:)
     sll_int32,  allocatable :: ntri(:,:)
     sll_int32  :: error
