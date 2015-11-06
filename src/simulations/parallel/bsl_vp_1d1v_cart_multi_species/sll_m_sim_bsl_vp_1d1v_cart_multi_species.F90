@@ -68,7 +68,6 @@ type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_car
   sll_int32,  dimension(:), pointer :: every_x1
   sll_int32,  dimension(:), pointer :: every_x2
      
-
   character(len=256) :: restart_file
   logical :: time_init_from_restart_file
   
@@ -108,9 +107,9 @@ type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_car
   sll_real64                              :: mass_ratio
   sll_real64, dimension(:),   pointer     :: efield
   sll_real64, dimension(:),   pointer     :: e_app
-  type(sll_fft_plan),                        pointer     :: pfwd
-  sll_real64, dimension(:),                  allocatable :: buf_fft
-  sll_comp64, dimension(:),                  allocatable :: rho_mode
+  type(sll_fft_plan),         pointer     :: pfwd
+  sll_real64, dimension(:),   allocatable :: buf_fft
+  sll_comp64, dimension(:),   allocatable :: rho_mode
    
 contains
 
@@ -137,8 +136,6 @@ function new_vp2d_par_cart_multi_species( filename, num_run) result(sim)
   call init_vp2d_par_cart_multi_species( sim, filename, num_run)
        
 end function new_vp2d_par_cart_multi_species
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -232,8 +229,7 @@ sll_real64 :: keen_Edrmax
 sll_real64 :: keen_omegadr
 
 !local variables
-intrinsic :: trim
-sll_int32             :: IO_stat
+sll_int32             :: io_stat
 sll_int32                            :: input_file
 type(sll_cartesian_mesh_1d), pointer :: mesh_x1
 type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp1
@@ -249,10 +245,6 @@ sll_int32          :: psize
 sll_int32          :: prank
 logical            :: mpi_master
 sll_int32          :: np_x1, nc_x1
-sll_int32          :: np_x2_sp1
-sll_int32          :: np_x2_sp2
-sll_int32          :: num_dof_x2_sp1
-sll_int32          :: num_dof_x2_sp2
   
 ! namelists for data input
 namelist /geometry/ &
@@ -366,7 +358,19 @@ vd = 0._f64
 alpha_sp1 = 1._f64
 alpha_sp2 = 1._f64
     
-!initial_function
+restart_file = "no_restart_file"
+time_init_from_restart_file = .false.
+
+!time_iterations
+dt = 0.1_f64
+number_iterations = 600
+freq_diag = 100
+freq_diag_time = 1
+freq_diag_restart = 5000
+nb_mode = 5
+time_init = 0._f64
+split_case = "SLL_STRANG_VTV" 
+
 initial_function_case_sp1 = "SLL_LANDAU"
 kmode_sp1 = 0.5_f64
 eps_sp1 = 0.001_f64
@@ -381,58 +385,28 @@ eps_sp2 = 0.001_f64
 sigma_sp2 = 1._f64
 v0_sp2 = 0._f64
 factor1_sp2 = 1._f64/sqrt(2._f64*sll_pi)
-alpha_gaussian_sp2 = 0.2_f64
 
-restart_file = "no_restart_file"
-time_init_from_restart_file = .false.
-
-!time_iterations
-dt = 0.1_f64
-number_iterations = 600
-freq_diag = 100
-freq_diag_time = 1
-freq_diag_restart = 5000
-nb_mode = 5
-time_init = 0._f64
-split_case = "SLL_STRANG_VTV" 
-!split_case = "SLL_STRANG_TVT" 
-!split_case = "SLL_ORDER6VPnew1_VTV" 
-!split_case = "SLL_ORDER6VPnew2_VTV" 
-!split_case = "SLL_ORDER6_VTV"
-!split_case = "SLL_LIE_TV"
 
 !advector
-advector_x1_sp1 = "SLL_LAGRANGE"
-order_x1_sp1 = 4
-advector_x1_sp2 = "SLL_LAGRANGE"
-order_x1_sp2 = 4
-advector_x2_sp1 = "SLL_LAGRANGE"
-order_x2_sp1 = 4
-advector_x2_sp2 = "SLL_LAGRANGE"
-order_x2_sp2 = 4
+advector_x1_sp1       = "SLL_LAGRANGE"
+order_x1_sp1          = 4
+advector_x2_sp1       = "SLL_LAGRANGE"
+order_x2_sp1          = 4
 advection_form_x2_sp1 = "SLL_ADVECTIVE"
+
+advector_x1_sp2       = "SLL_LAGRANGE"
+order_x1_sp2          = 4
+advector_x2_sp2       = "SLL_LAGRANGE"
+order_x2_sp2          = 4
 advection_form_x2_sp2 = "SLL_ADVECTIVE"
+
 factor_x1 = 1._f64
 factor_x2_rho = 1._f64
 factor_x2_1 = 1._f64
 
 integration_case = "SLL_TRAPEZOID"
-
-!poisson
 poisson_solver = "SLL_FFT"
-
-!drive
 drive_type = "SLL_NO_DRIVE"
-!drive_type = "SLL_KEEN_DRIVE"  
-  !keen_t0 = 0.
-  !keen_tL = 69.
-  !keen_tR = 307.
-  !keen_twL = 20.
-  !keen_twR = 20.
-  !keen_tflat = 100.
-  !keen_turn_drive_off = .true.
-  !keen_Edrmax = 0.2
-  !keen_omegadr = 0.37	
 
 if(present(num_run))then
   write(str_num_run, *) num_run
@@ -633,13 +607,13 @@ sim%time_init_from_restart_file = time_init_from_restart_file
 sim%restart_file = restart_file
 
 !time iterations
-sim%dt=dt
-sim%num_iterations=number_iterations
-sim%freq_diag=freq_diag
-sim%freq_diag_restart=freq_diag_restart
-sim%freq_diag_time=freq_diag_time
-sim%nb_mode = nb_mode
-sim%time_init = time_init
+sim%dt                = dt
+sim%num_iterations    = number_iterations
+sim%freq_diag         = freq_diag
+sim%freq_diag_restart = freq_diag_restart
+sim%freq_diag_time    = freq_diag_time
+sim%nb_mode           = nb_mode
+sim%time_init         = time_init
 
 if(sim%nb_mode<0)then
   print *,'#bad value of nb_mode=',nb_mode      
@@ -716,19 +690,11 @@ end select
 select case (advector_x1_sp2)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
   sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-     num_cells_x1, &
-     x1_min, &
-     x1_max, &
-     SPLINE, & 
-     order_x1_sp2) 
+    num_cells_x1, x1_min, x1_max, SPLINE, order_x1_sp2) 
 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
   sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-     num_cells_x1, &
-     x1_min, &
-     x1_max, &
-     LAGRANGE, & 
-     order_x1_sp2)
+    num_cells_x1, x1_min, x1_max, LAGRANGE, order_x1_sp2)
 
 case default
   print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
@@ -879,20 +845,17 @@ end select
 sim%mass_ratio = mass_ratio
 sim%sp1%alpha = alpha_sp1    
 sim%sp2%alpha = alpha_sp2
+
+nc_x1 = sim%sp1%mesh2d%num_cells1
+np_x1 = sim%sp1%mesh2d%num_cells1+1
     
 !poisson
 !SLL_ALLOCATE(sim%mixt_bc(2),ierr)
 select case (poisson_solver)
 case ("SLL_FFT")
-  sim%poisson => new_poisson_1d_periodic_solver( &
-        x1_min, &
-        x1_max, &
-        num_cells_x1)
+  sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,num_cells_x1)
 case ("SLL_POLAR")
-  sim%poisson => new_poisson_1d_polar_solver( &
-        x1_min, &
-        x1_max, &
-        num_cells_x1)
+  sim%poisson => new_poisson_1d_polar_solver(x1_min,x1_max,num_cells_x1)
 case default
   print*,'#poisson_solver', poisson_solver, ' not implemented'
   print *,'#in init_vp2d_par_cart'
@@ -950,27 +913,13 @@ if(mpi_master .and. sim%driven) then
 
 endif
 
-nc_x1          = sim%sp1%mesh2d%num_cells1
-np_x1          = sim%sp1%mesh2d%num_cells1+1
-np_x2_sp1      = sim%sp1%mesh2d%num_cells2+1
-num_dof_x2_sp1 = sim%sp1%num_dof_x2
-np_x2_sp2      = sim%sp2%mesh2d%num_cells2+1
-num_dof_x2_sp2 = sim%sp2%num_dof_x2
 
 call initialize_species(sim%sp1, "e", nb_mode)
 call initialize_species(sim%sp2, "i", nb_mode)
 
-print*, '#nb_mode =', nb_mode
 SLL_ALLOCATE(sim%buf_fft(nc_x1),ierr)
 sim%pfwd => fft_new_plan(nc_x1,sim%buf_fft,sim%buf_fft,FFT_FORWARD,FFT_NORMALIZE)
 SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)      
-
-
-!call compute_local_sizes( sim%sp1%layout_x1, local_size_x1_sp1, local_size_x2_sp1 )
-!global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x1, (/1, 1/) )
-!call compute_local_sizes( sim%sp2%layout_x1, local_size_x1_sp2, local_size_x2_sp2 )
-!global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x1, (/1, 1/) )
-
 SLL_ALLOCATE(sim%efield(np_x1),ierr)
 SLL_ALLOCATE(sim%e_app(np_x1),ierr)
 sim%e_app = 0._f64
