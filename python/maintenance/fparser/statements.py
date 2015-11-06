@@ -43,6 +43,7 @@ from base_classes import Statement, Variable
 from utils import split_comma, specs_split_comma, AnalyzeError, ParseError,\
      get_module_file, parse_bind, parse_result, is_name
 from utils import classes
+from splitline import string_replace_map
 
 class StatementWithNamelist(Statement):
     """
@@ -543,6 +544,9 @@ class Allocate( Statement ):
                 self.alloc_opt_list.append( item )
             else:
                 self.allocation_list.append( item )
+
+        # Parse <type-spec>, and store info in object
+        self.type_name, self.type_params_dict = self.parse_type_spec()
         return
 
     #--------------------------------------------------------------------------
@@ -555,6 +559,39 @@ class Allocate( Statement ):
 
     #--------------------------------------------------------------------------
     def analyze(self): return
+
+    #--------------------------------------------------------------------------
+    def parse_type_spec( self ):
+        type_spec = self.type_spec
+
+        if not type_spec:
+            return ['',{}]
+
+        # Extract type name
+        if type_spec.endswith(')'):
+            i = type_spec.find('(')
+            type_name   = type_spec[:i].rstrip()
+            type_params = type_spec[i+1:-1].strip()
+        else:
+            type_name   = type_spec
+            type_params = ''
+
+        # Extract type parameters, and put them in a dictionary
+        type_params_dict = {}
+        if type_params:
+            type_params_list = specs_split_comma( type_params, self.item )
+            for i,s in enumerate( type_params_list ):
+                t,m = string_replace_map( s )
+                if '=' in t:
+                    key, eq, val = s.partition( '=' )
+                    key = key.rstrip()
+                    val = val.lstrip()
+                else:
+                    key = "param%d" % i
+                    val = s
+                type_params_dict[key] = val
+
+        return (type_name, type_params_dict)
 
 #==============================================================================
 class Deallocate(Statement):
