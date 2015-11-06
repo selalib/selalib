@@ -57,10 +57,13 @@ program test_kernel_smoother_spline_1d
   particle_group => sll_new_particle_group_1d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
+  
+  call particle_group%set_common_weight(1.0_f64/real(n_particles,f64))
+
   do i_part = 1,n_particles
      xi(1) = x_vec(i_part)
      call particle_group%set_x(i_part, xi)
-     call particle_group%set_weights(i_part, [1/real(n_particles,f64)])
+     call particle_group%set_weights(i_part, [1.0_f64])
      xi(1:2) = v_vec(i_part,:)
      call particle_group%set_v(i_part, xi)
   end do
