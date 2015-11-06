@@ -11,7 +11,6 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_sim_parallel
   sll_working_precision
   sll_pic_interface
-  sll_particle_initializers
   sll_particle_types
   sll_kernel_smoothers
   sll_particle_pushers
