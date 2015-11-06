@@ -46,7 +46,7 @@ module sll_m_particle_group_base
     procedure( i_set_coords ), deferred :: set_x
     procedure( i_set_coords ), deferred :: set_v
     procedure( i_set_array  ), deferred :: set_weights
-    procedure( i_set_scalar ), deferred :: set_common_weight
+    procedure( set_scalar ), deferred :: set_common_weight
 
 !    ! Getters for the whole group
 !    procedure( get_all_coords), deferred :: get_all_x
@@ -108,6 +108,16 @@ module sll_m_particle_group_base
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x
   end subroutine i_set_scalar
+  end interface
+
+!----------------------------------------------------------------------------
+  abstract interface
+   subroutine set_scalar( self, x )
+    use sll_m_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_real64                      , intent( in    ) :: x
+  end subroutine set_scalar
   end interface
 
   !----------------------------------------------------------------------------
