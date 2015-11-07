@@ -33,10 +33,29 @@ module sll_m_bsl_lt_pic_4d_utilities
 
 implicit none 
 
+  ! linked lists of integers
+  type int_list_element
+    sll_int32 :: value
+    type(int_list_element), pointer :: next
+  end type int_list_element
+
+  type int_list_element_ptr ! we need this type for arrays of lists
+    type(int_list_element), pointer :: pointed_element
+  end type int_list_element_ptr
+
+
 contains
 
-! <<get_particle_index_from_initial_position_on_cartesian_grid>>
+  function add_element_in_list(head, new_element)
+    type( int_list_element ), pointer :: head, new_element
+    type( int_list_element ), pointer :: add_element_in_list
 
+    new_element%next => head
+    add_element_in_list => new_element
+  end function
+
+
+! <<get_particle_index_from_initial_position_on_cartesian_grid>>
 
   !! transforms a standard particle position (x,y) in (i_cell_x, i_cell_y, dx, dy)
   !! -> here the indices i_cell_x and i_cell_y do not need to be within [1, m2d%num_cells1] or [1, m2d%num_cells2]
