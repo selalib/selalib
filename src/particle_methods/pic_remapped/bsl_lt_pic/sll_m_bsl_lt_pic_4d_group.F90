@@ -38,7 +38,7 @@ module sll_m_bsl_lt_pic_4d_group
   use sll_m_sparse_grid_4d, only: sparse_grid_interpolator_4d
   use sll_m_remapped_pic_base
   use sll_m_bsl_lt_pic_4d_particle
-  use sll_m_bsl_lt_pic_4d_utilities
+  use sll_m_bsl_lt_pic_4d_utilities !, only: int_list_element, int_list_element_ptr, add_element_in_list
   use sll_m_gnuplot
 
   implicit none
@@ -78,7 +78,7 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The sparse grid object used for the interpolation of the remapped density f, if needed
     !> @{
-    type(sparse_grid_interpolator_4d),                 target   :: sparse_grid_interpolator          ! 'target' needed here?
+    type(sparse_grid_interpolator_4d),          pointer         :: sparse_grid_interpolator
     sll_int32                                                   :: sparse_grid_max_level
     sll_real64, dimension(:), allocatable                       :: remapped_f_sparse_grid_coefficients
     ! maybe more stuff is needed here
@@ -86,6 +86,10 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The splines used to interpolate the remapping grid in phase space
     !> @{
+
+    !! note: after we have tested the sparse grid interpolation, we should rewrite the data structure for spline interpolations
+    !! in a simpler way...
+
     type(sll_cartesian_mesh_4d),                pointer         :: remapping_grid
     sll_real64, dimension(:,:,:,:),             pointer         :: target_values
 
@@ -142,9 +146,11 @@ module sll_m_bsl_lt_pic_4d_group
     procedure :: bsl_lt_pic_4d_initializer_hat_f0
     procedure :: bsl_lt_pic_4d_write_hat_density_on_remap_grid
     procedure :: bsl_lt_pic_4d_write_landau_density_on_remap_grid
+    procedure :: bsl_lt_pic_4d_write_landau_density_on_sparse_grid
     procedure :: bsl_lt_pic_4d_write_f_on_remapping_grid
     procedure :: bsl_lt_pic_4d_compute_new_particles
     procedure :: bsl_lt_pic_4d_write_f_on_grid_or_deposit
+    procedure :: bsl_lt_pic_4d_interpolate_value_of_remapped_f
     procedure :: get_ltp_deformation_matrix
     procedure :: periodic_correction
 
@@ -693,9 +699,23 @@ contains
     class(sll_bsl_lt_pic_4d_group), intent(inout)       :: p_group
     sll_real64, intent(in)                              :: thermal_speed, alpha, k_landau
 
+    if( p_group%remapped_f_interpolation_type == 1 )then
+      ! interpolation of the remapped f uses a sparse grid
 
-    call p_group%bsl_lt_pic_4d_write_landau_density_on_remap_grid( thermal_speed, alpha, k_landau )
-    call p_group%bsl_lt_pic_4d_compute_new_particles()
+      call p_group%bsl_lt_pic_4d_write_landau_density_on_sparse_grid( thermal_speed, alpha, k_landau )
+      ! now the array remapped_f_sparse_grid_coefficients stores the point values of the remapped f on the sparse grid
+      call p_group%sparse_grid_interpolator%compute_hierarchical_surplus(   &
+                p_group%remapped_f_sparse_grid_coefficients                 &
+           )
+      ! now the array remapped_f_sparse_grid_coefficients stores the sparse grid (hierarchical) coefficients of the remapped f
+
+    else
+
+      ! interpolation of the remapped f uses splines on a cartesian grid
+      call p_group%bsl_lt_pic_4d_write_landau_density_on_remap_grid( thermal_speed, alpha, k_landau )
+      call p_group%bsl_lt_pic_4d_compute_new_particles()
+
+    end if
 
   end subroutine bsl_lt_pic_4d_initializer_landau_f0
 
@@ -787,6 +807,41 @@ contains
     end do
 
   end subroutine bsl_lt_pic_4d_write_landau_density_on_remap_grid
+
+  subroutine bsl_lt_pic_4d_write_landau_density_on_sparse_grid(    &
+              p_group,                              &
+              thermal_speed, alpha, k_landau        &
+              )
+
+    class(sll_bsl_lt_pic_4d_group), intent(inout)   :: p_group
+    sll_real64, intent(in)                          :: thermal_speed, alpha, k_landau
+
+    sll_int32 :: j
+    sll_real64 :: one_over_thermal_velocity
+    sll_real64 :: one_over_two_pi
+    sll_real64 :: x_j
+    sll_real64 :: vx_j
+    sll_real64 :: vy_j
+    sll_real64 :: f_x
+    sll_real64 :: f_vx
+    sll_real64 :: f_vy
+
+    one_over_thermal_velocity = 1./thermal_speed
+    one_over_two_pi = 1./(2*sll_pi)
+
+    do j=1, p_group%sparse_grid_interpolator%size_basis
+        x_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+        vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+        vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+
+        f_x = eval_landau_fx(alpha, k_landau, x_j)
+        f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j * one_over_thermal_velocity)**2)
+        f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j * one_over_thermal_velocity)**2)
+
+        p_group%remapped_f_sparse_grid_coefficients(j) = one_over_two_pi * f_x * f_vx * f_vy
+    end do
+
+  end subroutine bsl_lt_pic_4d_write_landau_density_on_sparse_grid
 
 
   ! <<bsl_lt_pic_4d_write_hat_density_on_remap_grid>>
@@ -1099,8 +1154,23 @@ contains
   subroutine bsl_lt_pic_4d_remap ( self )
     class(sll_bsl_lt_pic_4d_group),intent(inout) :: self
 
-    call self%bsl_lt_pic_4d_write_f_on_remapping_grid()
-    call self%bsl_lt_pic_4d_compute_new_particles()
+    if( self%remapped_f_interpolation_type == 1 )then
+
+      ! interpolation of the remapped f uses a sparse grid
+      call self%bsl_lt_pic_4d_write_f_on_remapping_grid()  ! todo: check that this works properly with a sparse grid
+      ! now the array remapped_f_sparse_grid_coefficients stores the point values of the remapped f on the sparse grid
+      call self%sparse_grid_interpolator%compute_hierarchical_surplus(   &
+                self%remapped_f_sparse_grid_coefficients                 &
+           )
+      ! now the array remapped_f_sparse_grid_coefficients stores the sparse grid (hierarchical) coefficients of the remapped f
+
+    else
+
+      ! interpolation of the remapped f uses splines on a cartesian grid
+      call self%bsl_lt_pic_4d_write_f_on_remapping_grid()
+      call self%bsl_lt_pic_4d_compute_new_particles()
+
+    end if
 
   end subroutine bsl_lt_pic_4d_remap
 
@@ -1109,9 +1179,9 @@ contains
   ! <<bsl_lt_pic_4d_write_f_on_remapping_grid>> <<ALH>> reconstructs f (with the bsl_lt_pic approach) on the remapping grid,
   ! and write the computed values there so that new particles can be initialized based on these node values.
 
-  subroutine bsl_lt_pic_4d_write_f_on_remapping_grid( self )
+  subroutine bsl_lt_pic_4d_write_f_on_remapping_grid( p_group )
 
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: self
+    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
     type(sll_charge_accumulator_2d),pointer :: dummy_q_accumulator
     type(sll_cartesian_mesh_4d),    pointer :: dummy_grid_4d
     sll_real64, dimension(:,:),     pointer :: dummy_array_2d
@@ -1125,15 +1195,15 @@ contains
     scenario_is_deposition = .false.
     use_remapping_grid = .true.
 
-    call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit( dummy_q_accumulator,                            &
+    call p_group%bsl_lt_pic_4d_write_f_on_grid_or_deposit( dummy_q_accumulator,                         &
                                                         scenario_is_deposition,                         &
                                                         use_remapping_grid,                             &
                                                         dummy_grid_4d,                                  &
                                                         dummy_array_2d,                                 &
-                                                        self%N_remapping_nodes_per_virtual_cell_x,      &
-                                                        self%N_remapping_nodes_per_virtual_cell_y,      &
-                                                        self%N_remapping_nodes_per_virtual_cell_vx,     &
-                                                        self%N_remapping_nodes_per_virtual_cell_vy)
+                                                        p_group%N_remapping_nodes_per_virtual_cell_x,   &
+                                                        p_group%N_remapping_nodes_per_virtual_cell_y,   &
+                                                        p_group%N_remapping_nodes_per_virtual_cell_vx,  &
+                                                        p_group%N_remapping_nodes_per_virtual_cell_vy)
 
   end subroutine bsl_lt_pic_4d_write_f_on_remapping_grid
 
@@ -1187,7 +1257,7 @@ contains
   ! todo: Treat the non-periodic case. In this case we can place the virtual particles slightly off the boundaries of the
   ! todo: virtual cells, so that we do not need a special treatment for the particles on the right (x and y) domain boundaries
 
-  subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator,      &
+  subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_old (p_group, q_accumulator,      &
                                                        scenario_is_deposition,      &
                                                        use_remapping_grid,          &
                                                        given_grid_4d,               &
@@ -2320,21 +2390,21 @@ contains
         end if
     end if
 
-  end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit
+  end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_old
 
 
   !> separate interpolation routine for the remapped f
   function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
     class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
     sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
-    sll_real64,                     intent(out) :: val
+    sll_real64                                  :: val
 
     if( p_group%remapped_f_interpolation_type == 0 )then
         ! spline interpolation
         ! todo: write it here the spline interpolation -- btw, should we use existing modules in Selalib?
 
     else if( p_group%remapped_f_interpolation_type == 1 )then
-        val = sparse_grid_interpolator%interpolate_value(remapped_f_sparse_grid_coefficients, eta)
+        val = p_group%sparse_grid_interpolator%interpolate_value(p_group%remapped_f_sparse_grid_coefficients, eta)
     end if
   end function
 
@@ -2346,7 +2416,7 @@ contains
   !     2. et il faut mettre les valeurs calculees dans le bon tableau (attention ordre)
   !     3. pour le remapping en splines, ecrire la fonction d'interpolation
 
-  subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_new_version (p_group, q_accumulator,      &   ! todo remove temp flag in name
+  subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator,      &
                                                        scenario_is_deposition,      &
                                                        use_remapping_grid,          &
                                                        given_grid_4d,               &
@@ -2452,23 +2522,30 @@ contains
     sll_real64 :: particle_distance_to_first_corner
 
     ! working space
-
     sll_real64 :: tmp, tmp1, tmp2
-    !sll_real32 :: tmp_offset_x, tmp_offset_y
 
 
-    ! index of particle closest to the center of each virtual cell.
+    ! index of particle closest to the center of each virtual cell (phase space cells where the flow is linearized).
     ! Array dimensions defined by the contents of the remapping_grid.
     ! If n_virtual is greater than 1, the size of this array is smaller than the number of real remapping_grid cells.
 
-    sll_int32,dimension(:,:,:,:),allocatable :: closest_particle
-    sll_real64,dimension(:,:,:,:),allocatable :: closest_particle_distance
+    sll_int32,          dimension(:,:,:,:), allocatable     :: closest_particle
+    sll_real64,         dimension(:,:,:,:), allocatable     :: closest_particle_distance
+
+    ! array of integer linked lists (declared below) is very useful when remapping on sparse grids, but can also simplify the
+    ! code when remapping on standard cartesian grids which do not match with the virtual cells
+    ! (be careful, the word 'node' may also refer to the elements of the linked lists)
+    type(int_list_element_ptr), dimension(:,:,:,:), allocatable     :: nodes_in_virtual_cell
+    type(int_list_element),     pointer                             :: new_int_list_element, head
 
     sll_int32 :: i ! x dimension
     sll_int32 :: j ! y dimension
-    sll_int32 :: k ! particle index
+    sll_int32 :: k, kprime ! particle index
+    !sll_int32 :: neighbour ! particle index for local use
     sll_int32 :: l ! vx dimension
     sll_int32 :: m ! vy dimension
+
+    sll_int32 :: node_index
 
     sll_int32 :: k_neighbor
     sll_int32 :: k_particle_closest_to_first_corner
@@ -2553,7 +2630,7 @@ contains
     ! -- creating g the virtual grid [begin] --
     if( scenario_is_deposition )then
 
-      ! todo: modify the code with offset virtual particles to deposit the charge on the Poisson cells
+      ! todo: modify the code with offset virtual particles to deposit the charge on the Poisson cells (see error below)
 
       if( p_group%domain_is_periodic(1) )then
         num_virtual_cells_x = p_group%space_mesh_2d%num_cells1
@@ -2677,6 +2754,19 @@ contains
     SLL_ALLOCATE(closest_particle_distance(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
     closest_particle_distance(:,:,:,:) = 0.0_f64
 
+    ! prepare the array of linked lists that will store the node indices contained in the virtual cells (one list per cell)
+    SLL_ALLOCATE(nodes_in_virtual_cell(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),  ierr)
+
+    do i = 1, num_virtual_cells_x
+      do j = 1, num_virtual_cells_y
+        do l = 1, num_virtual_cells_vx
+          do m = 1, num_virtual_cells_vy
+            nullify(nodes_in_virtual_cell(i,j,l,m)%pointed_element)
+          end do
+        end do
+      end do
+    end do
+
     ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
 
     h_parts_x    = p_group%remapping_grid%delta_eta1
@@ -2726,6 +2816,55 @@ contains
     if( scenario_is_deposition )then
         SLL_ASSERT( h_virtual_cell_x == p_group%space_mesh_2d%delta_eta1)
         SLL_ASSERT( h_virtual_cell_y == p_group%space_mesh_2d%delta_eta2)
+    end if
+
+    ! preparatory loop to store the "virtual" node indices in linked lists corresponding to the virtual cells that contain them
+    if( .not. scenario_is_deposition )then
+      ! (there is no specified grid to write on in the deposition scenario, so need to do something else)
+      if( p_group%remapped_f_interpolation_type == 1 )then
+        ! interpolation of remapped f is done on a sparse grid, so that is where we need to evaluate f
+        do node_index = 1, p_group%sparse_grid_interpolator%size_basis
+
+          ! get node coordinates
+          x = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
+          y = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
+          vx = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
+          vy = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
+
+          ! find the index (i,j,l,m) of the virtual cell containing this node (same piece of code as below)
+          x_aux = x - virtual_cells_x_min
+          i = int( x_aux / h_virtual_cell_x ) + 1
+
+          y_aux = y - virtual_cells_y_min
+          j = int( y_aux / h_virtual_cell_y ) + 1
+
+          vx_aux = vx - virtual_cells_vx_min
+          l = int( vx_aux / h_virtual_cell_vx ) + 1
+
+          vy_aux = vy - virtual_cells_vy_min
+          m = int( vy_aux / h_virtual_cell_vy ) + 1
+
+          ! discard if virtual cell is off-bounds
+          if(  i >= 1 .and. i <= num_virtual_cells_x .and. &
+               j >= 1 .and. j <= num_virtual_cells_y .and. &
+               l >= 1 .and. l <= num_virtual_cells_vx .and. &
+               m >= 1 .and. m <= num_virtual_cells_vy  )then
+
+            ! increment the proper linked list
+            SLL_ALLOCATE( new_int_list_element, ierr )
+            new_int_list_element%value = node_index
+            head => nodes_in_virtual_cell(i,j,l,m)%pointed_element
+            nodes_in_virtual_cell(i,j,l,m)%pointed_element => add_element_in_list(head, new_int_list_element)
+
+          end if
+
+        end do
+      else if( p_group%remapped_f_interpolation_type == 0 )then
+        ! interpolation of remapped f is done on a cartesian grid of splines, so that is where we need to evaluate f
+        ! todo: write the loop here
+      else
+        ! todo: raise an error
+      end if
     end if
 
     ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
@@ -2787,7 +2926,7 @@ contains
     closest_particle(1,1,1,1) = k_particle_closest_to_first_corner
 
     ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
-    if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(1) ) )then
+    if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(2) ) )then
       print*, "WARNING -- STOP -- verify that the non-periodic case is well implemented"
       stop
     end if
@@ -2960,150 +3099,198 @@ contains
             ! vx = virtual_parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_virtual_parts_vx
             ! vy = virtual_parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_virtual_parts_vy
 
-            ! todo: why not set directly the values above?
+            ! first we treat the case of remappings with a sparse grid, nodes are stored in the linked lists
+            ! todo: decide whether we should treat the other cases with linked lists to simplify the code
 
-            i_x = (i-1) * n_virtual_x    ! this index is needed in the "write f on grid" scenario
-            x =  virtual_parts_x_min  + (i_x-1) * h_virtual_parts_x
-            offset_x_in_virtual_cell = - 0.5 * h_virtual_parts_x
-            x_to_xk = x - x_k
+            if( (.not. scenario_is_deposition) .and. (p_group%remapped_f_interpolation_type == 1) )then
+              new_int_list_element => nodes_in_virtual_cell(i,j,l,m)%pointed_element
+              do while( associated(new_int_list_element) )
+                node_index = new_int_list_element%value
 
-            do ivirt = 1, n_virtual_x
-              i_x = i_x + 1
-              SLL_ASSERT( i_x == (i-1)*n_virtual_x + ivirt )
+                ! here the "virtual particle" is a sparse grid node
+                x = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
+                y = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
+                vx = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
+                vy = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
 
-              x =       x       + h_virtual_parts_x
-              x_to_xk = x_to_xk + h_virtual_parts_x
-
-              offset_x_in_virtual_cell = offset_x_in_virtual_cell + h_virtual_parts_x       ! for the deposition scenario
-
-              d1_x = d11 * x_to_xk
-              d2_x = d21 * x_to_xk
-              d3_x = d31 * x_to_xk
-              d4_x = d41 * x_to_xk
-
-              i_y = (j-1) * n_virtual_y     ! this index is needed in the "write f on grid" scenario
-              y =  virtual_parts_y_min + (i_y-1)*h_virtual_parts_y
-              offset_y_in_virtual_cell = - 0.5 * h_virtual_parts_y
-              y_to_yk = y - y_k
-
-              do jvirt = 1, n_virtual_y
-                i_y = i_y + 1
-                SLL_ASSERT( i_y == (j-1)*n_virtual_y + jvirt )
-                y =       y       + h_virtual_parts_y
-                y_to_yk = y_to_yk + h_virtual_parts_y
-
-                offset_y_in_virtual_cell = offset_y_in_virtual_cell + h_virtual_parts_y        ! for the deposition scenario
-
-                d1_y = d12 * y_to_yk
-                d2_y = d22 * y_to_yk
-                d3_y = d32 * y_to_yk
-                d4_y = d42 * y_to_yk
-
-                i_vx = (l-1) * n_virtual_vx     ! this index is needed in the "write f on grid" scenario
-                vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
+                x_to_xk = x - x_k
+                y_to_yk = y - y_k
                 vx_to_vxk = vx - vx_k
+                vy_to_vyk = vy - vy_k
 
-                do lvirt = 1, n_virtual_vx
-                  i_vx = i_vx + 1
-                  SLL_ASSERT( i_vx == (l-1)*n_virtual_vx + lvirt )
+                ! find z_t0 = (x_t0, y_t0, vx_t0, vy_t0), the position of the virtual particle at time = 0, using the affine backward flow
+                x_t0_to_xk_t0   = d11 * x_to_xk + d12 * y_to_yk + d13 * vx_to_vxk + d14 * vy_to_vyk
+                y_t0_to_yk_t0   = d21 * x_to_xk + d22 * y_to_yk + d23 * vx_to_vxk + d24 * vy_to_vyk
+                vx_t0_to_vxk_t0 = d31 * x_to_xk + d32 * y_to_yk + d33 * vx_to_vxk + d34 * vy_to_vyk
+                vy_t0_to_vyk_t0 = d41 * x_to_xk + d42 * y_to_yk + d43 * vx_to_vxk + d44 * vy_to_vyk
 
-                  vx =        vx        + h_virtual_parts_vx
-                  vx_to_vxk = vx_to_vxk + h_virtual_parts_vx
+                x_t0 = x_t0_to_xk_t0 + x_k_t0
+                y_t0 = y_t0_to_yk_t0 + y_k_t0
+                vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
+                vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
 
-                  d1_vx = d13 * vx_to_vxk
-                  d2_vx = d23 * vx_to_vxk
-                  d3_vx = d33 * vx_to_vxk
-                  d4_vx = d43 * vx_to_vxk
+                ! put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
+                call periodic_correction(p_group,x_t0,y_t0)
 
-                  i_vy = (m-1) * n_virtual_vy      ! this index is needed in the "write f on grid" scenario
-                  vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
-                  vy_to_vyk = vy - vy_k
+                ! now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
+                eta(1) = x_t0
+                eta(2) = y_t0
+                eta(3) = vx_t0
+                eta(4) = vy_t0
 
-                  do mvirt = 1, n_virtual_vy
-                    i_vy = i_vy + 1
-                    SLL_ASSERT( i_vy == (m-1)*n_virtual_vy + mvirt )
+                ! interpolation here may use sparse grid or splines, depending on the method chosen for p_group
+                f_value_on_virtual_particle = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+                p_group%remapped_f_sparse_grid_coefficients(node_index) = f_value_on_virtual_particle
 
-                    vy =        vy        + h_virtual_parts_vy
-                    vy_to_vyk = vy_to_vyk + h_virtual_parts_vy
+                new_int_list_element => new_int_list_element%next
 
-                    d1_vy = d14 * vy_to_vyk
-                    d2_vy = d24 * vy_to_vyk
-                    d3_vy = d34 * vy_to_vyk
-                    d4_vy = d44 * vy_to_vyk
+              end do
 
-                    ! The virtual particle may go out of the domain for high values of x,y,vx,vy in each dimension
-                    ! (because the corners of the corresponding virtual cell do not correspond to existing
-                    ! real particles). If that happens and if we are writing on a given grid, just ignore that value
-                    if( scenario_is_deposition                              &
-                         .or. (      i_x  <= number_virtual_particles_x     &
-                               .and. i_y  <= number_virtual_particles_y     &
-                               .and. i_vx <= number_virtual_particles_vx    &
-                               .and. i_vy <= number_virtual_particles_vy) ) then
+            else
 
-                      ! now find directly z_t0, the position of the virtual particle at time = 0, using the affine backward flow
-                      x_t0_to_xk_t0   = d1_x + d1_y + d1_vx + d1_vy
-                      y_t0_to_yk_t0   = d2_x + d2_y + d2_vx + d2_vy
-                      vx_t0_to_vxk_t0 = d3_x + d3_y + d3_vx + d3_vy
-                      vy_t0_to_vyk_t0 = d4_x + d4_y + d4_vx + d4_vy
+                i_x = (i-1) * n_virtual_x    ! this index is needed in the "write f on grid" scenario
+                x =  virtual_parts_x_min  + (i_x-1) * h_virtual_parts_x
+                offset_x_in_virtual_cell = - 0.5 * h_virtual_parts_x
+                x_to_xk = x - x_k
 
-                      x_t0 = x_t0_to_xk_t0 + x_k_t0
-                      y_t0 = y_t0_to_yk_t0 + y_k_t0
-                      vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
-                      vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
+                do ivirt = 1, n_virtual_x
+                  i_x = i_x + 1
+                  SLL_ASSERT( i_x == (i-1)*n_virtual_x + ivirt )
 
-                      ! put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
-                      call periodic_correction(p_group,x_t0,y_t0)
+                  x =       x       + h_virtual_parts_x
+                  x_to_xk = x_to_xk + h_virtual_parts_x
 
-                      ! now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
-                      eta(1) = x_t0
-                      eta(2) = y_t0
-                      eta(3) = vx_t0
-                      eta(4) = vy_t0
+                  offset_x_in_virtual_cell = offset_x_in_virtual_cell + h_virtual_parts_x       ! for the deposition scenario
 
-                      ! interpolation here may use sparse grid or splines, depending on the method chosen for p_group
-                      f_value_on_virtual_particle = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+                  d1_x = d11 * x_to_xk
+                  d2_x = d21 * x_to_xk
+                  d3_x = d31 * x_to_xk
+                  d4_x = d41 * x_to_xk
 
-                      if( f_value_on_virtual_particle /= 0 )then
+                  i_y = (j-1) * n_virtual_y     ! this index is needed in the "write f on grid" scenario
+                  y =  virtual_parts_y_min + (i_y-1)*h_virtual_parts_y
+                  offset_y_in_virtual_cell = - 0.5 * h_virtual_parts_y
+                  y_to_yk = y - y_k
 
-                        if( scenario_is_deposition )then
+                  do jvirt = 1, n_virtual_y
+                    i_y = i_y + 1
+                    SLL_ASSERT( i_y == (j-1)*n_virtual_y + jvirt )
+                    y =       y       + h_virtual_parts_y
+                    y_to_yk = y_to_yk + h_virtual_parts_y
 
-                          virtual_charge = f_value_on_virtual_particle * phase_space_virtual_dvol * p_group%species%q
+                    offset_y_in_virtual_cell = offset_y_in_virtual_cell + h_virtual_parts_y        ! for the deposition scenario
 
-                          tmp1 = (1.0_f64 - offset_x_in_virtual_cell)
-                          tmp2 = (1.0_f64 - offset_y_in_virtual_cell)
+                    d1_y = d12 * y_to_yk
+                    d2_y = d22 * y_to_yk
+                    d3_y = d32 * y_to_yk
+                    d4_y = d42 * y_to_yk
 
-                          charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw             &
-                                  + virtual_charge * tmp1 * tmp2
+                    i_vx = (l-1) * n_virtual_vx     ! this index is needed in the "write f on grid" scenario
+                    vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
+                    vx_to_vxk = vx - vx_k
 
-                          charge_accumulator_cell%q_se = charge_accumulator_cell%q_se             &
-                                  + virtual_charge *  offset_x_in_virtual_cell * tmp2
+                    do lvirt = 1, n_virtual_vx
+                      i_vx = i_vx + 1
+                      SLL_ASSERT( i_vx == (l-1)*n_virtual_vx + lvirt )
 
-                          charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw             &
-                                  + virtual_charge * tmp1 *  offset_y_in_virtual_cell
+                      vx =        vx        + h_virtual_parts_vx
+                      vx_to_vxk = vx_to_vxk + h_virtual_parts_vx
 
-                          charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
-                                  + virtual_charge *  offset_x_in_virtual_cell *  offset_y_in_virtual_cell
+                      d1_vx = d13 * vx_to_vxk
+                      d2_vx = d23 * vx_to_vxk
+                      d3_vx = d33 * vx_to_vxk
+                      d4_vx = d43 * vx_to_vxk
 
-                          if( present(target_total_charge) )then
-                            deposited_charge = deposited_charge + virtual_charge
-                          end if
+                      i_vy = (m-1) * n_virtual_vy      ! this index is needed in the "write f on grid" scenario
+                      vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
+                      vy_to_vyk = vy - vy_k
 
-                        else
+                      do mvirt = 1, n_virtual_vy
+                        i_vy = i_vy + 1
+                        SLL_ASSERT( i_vy == (m-1)*n_virtual_vy + mvirt )
 
-                          if( use_remapping_grid )then
-                            p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
-                          else
-                            given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
-                                    + f_value_on_virtual_particle * h_virtual_parts_y * h_virtual_parts_vy
+                        vy =        vy        + h_virtual_parts_vy
+                        vy_to_vyk = vy_to_vyk + h_virtual_parts_vy
+
+                        d1_vy = d14 * vy_to_vyk
+                        d2_vy = d24 * vy_to_vyk
+                        d3_vy = d34 * vy_to_vyk
+                        d4_vy = d44 * vy_to_vyk
+
+                        ! The virtual particle may go out of the domain for high values of x,y,vx,vy in each dimension
+                        ! (because the corners of the corresponding virtual cell do not correspond to existing
+                        ! real particles). If that happens and if we are writing on a given grid, just ignore that value
+                        if( scenario_is_deposition                              &
+                             .or. (      i_x  <= number_virtual_particles_x     &
+                                   .and. i_y  <= number_virtual_particles_y     &
+                                   .and. i_vx <= number_virtual_particles_vx    &
+                                   .and. i_vy <= number_virtual_particles_vy) ) then
+
+                          ! now find directly z_t0, the position of the virtual particle at time = 0, using the affine backward flow
+                          x_t0_to_xk_t0   = d1_x + d1_y + d1_vx + d1_vy
+                          y_t0_to_yk_t0   = d2_x + d2_y + d2_vx + d2_vy
+                          vx_t0_to_vxk_t0 = d3_x + d3_y + d3_vx + d3_vy
+                          vy_t0_to_vyk_t0 = d4_x + d4_y + d4_vx + d4_vy
+
+                          x_t0 = x_t0_to_xk_t0 + x_k_t0
+                          y_t0 = y_t0_to_yk_t0 + y_k_t0
+                          vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
+                          vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
+
+                          ! put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
+                          call periodic_correction(p_group,x_t0,y_t0)
+
+                          ! now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
+                          eta(1) = x_t0
+                          eta(2) = y_t0
+                          eta(3) = vx_t0
+                          eta(4) = vy_t0
+
+                          ! interpolation here may use sparse grid or splines, depending on the method chosen for p_group
+                          f_value_on_virtual_particle = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+
+                          if( f_value_on_virtual_particle /= 0 )then
+
+                            if( scenario_is_deposition )then
+
+                              virtual_charge = f_value_on_virtual_particle * phase_space_virtual_dvol * p_group%species%q
+
+                              tmp1 = (1.0_f64 - offset_x_in_virtual_cell)
+                              tmp2 = (1.0_f64 - offset_y_in_virtual_cell)
+
+                              charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw             &
+                                      + virtual_charge * tmp1 * tmp2
+
+                              charge_accumulator_cell%q_se = charge_accumulator_cell%q_se             &
+                                      + virtual_charge *  offset_x_in_virtual_cell * tmp2
+
+                              charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw             &
+                                      + virtual_charge * tmp1 *  offset_y_in_virtual_cell
+
+                              charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
+                                      + virtual_charge *  offset_x_in_virtual_cell *  offset_y_in_virtual_cell
+
+                              if( present(target_total_charge) )then
+                                deposited_charge = deposited_charge + virtual_charge
+                              end if
+
+                            else
+
+                              if( use_remapping_grid )then
+                                p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
+                              else
+                                given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
+                                        + f_value_on_virtual_particle * h_virtual_parts_y * h_virtual_parts_vy
+                              end if
+                            end if
+
                           end if
                         end if
-
-                      end if
-                    end if
+                      end do
+                    end do
                   end do
                 end do
-              end do
-            end do
+            end if
           end do
         end do
       end do
@@ -3130,12 +3317,7 @@ contains
       end if
     end if
 
-  end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_new_version
-
-
-
-
-
+  end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit
 
 
 
