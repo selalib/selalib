@@ -19,6 +19,7 @@ use sll_m_binary_io
 use sll_m_common_array_initializers
 use sll_m_buffer_loader_utilities
 use sll_m_gnuplot
+use sll_m_primitives
 
 !use sll_m_constants
 !use sll_m_coordinate_transformation_2d_base
@@ -30,7 +31,6 @@ use sll_m_gnuplot
 !use sll_m_poisson_1d_periodic_solver
 !use sll_m_poisson_1d_polar_solver
 !use sll_m_advection_1d_ampere
-!use sll_m_primitives
 
 implicit none
 
@@ -581,5 +581,92 @@ subroutine read_restart_file(restart_file, sp, time)
   call sll_binary_file_close(restart_id,ierr)
 
 end subroutine read_restart_file
+
+subroutine advection_x1(sp, factor, split_step, dt)
+type(species) , intent(inout) :: sp
+sll_real64    , intent(in)    :: factor
+sll_real64    , intent(in)    :: split_step
+sll_real64    , intent(in)    :: dt
+
+sll_real64    :: alpha_omp
+sll_int32     :: local_size_x1
+sll_int32     :: local_size_x2
+sll_int32     :: np_x1
+sll_int32     :: i_omp
+sll_int32     :: ig_omp
+sll_int32     :: tid
+sll_int32     :: global_indices(2)
+
+np_x1 = sp%mesh2d%num_cells1+1
+call compute_local_sizes( sp%layout_x1, local_size_x1, local_size_x2 )
+global_indices(1:2) = local_to_global(sp%layout_x1, (/1, 1/) )
+tid=1          
+do i_omp = 1, local_size_x2
+  ig_omp = i_omp+global_indices(2)-1
+  alpha_omp = factor*sp%node_positions_x2(ig_omp) * split_step
+  sp%f1d_omp_in(1:np_x1,tid) = sp%f_x1(1:np_x1,i_omp)
+  call sp%advect_x1(tid)%ptr%advect_1d_constant(&
+       alpha_omp, &
+       dt, &
+       sp%f1d_omp_in(1:np_x1,tid), &
+       sp%f1d_omp_out(1:np_x1,tid))
+   
+  sp%f_x1(1:np_x1,i_omp)=sp%f1d_omp_out(1:np_x1,tid)
+
+end do
+    
+end subroutine advection_x1
+
+subroutine advection_x2(sp, factor, efield, split_step, dt)
+type(species) , intent(inout) :: sp
+sll_real64    , intent(in)    :: factor
+sll_real64    , intent(in)    :: efield(:)
+sll_real64    , intent(in)    :: split_step
+sll_real64    , intent(in)    :: dt
+
+sll_real64    :: alpha_omp
+sll_int32     :: local_size_x1
+sll_int32     :: local_size_x2
+sll_int32     :: nc_x2
+sll_int32     :: i_omp
+sll_int32     :: ig_omp
+sll_int32     :: tid
+sll_int32     :: global_indices(2)
+sll_real64    :: mean_omp
+
+call apply_remap_2D( sp%remap_plan_x1_x2, sp%f_x1, sp%f_x2 )
+
+nc_x2 = sp%mesh2d%num_cells2
+call compute_local_sizes(sp%layout_x2, local_size_x1, local_size_x2)
+global_indices(1:2) = local_to_global( sp%layout_x2, (/1, 1/) )
+
+tid=1
+do i_omp = 1,local_size_x1
+
+  ig_omp=i_omp+global_indices(1)-1
+  alpha_omp = factor * efield(ig_omp) * split_step
+  sp%f1d_omp_in(1:sp%num_dof_x2,tid) = sp%f_x2(i_omp,1:sp%num_dof_x2)
+
+  if (sp%advection_form_x2==SLL_CONSERVATIVE) then
+    call function_to_primitive(sp%f1d_omp_in(:,tid),sp%x2_array_unit,nc_x2,mean_omp)
+  endif
+
+  call sp%advect_x2(tid)%ptr%advect_1d_constant(&
+           alpha_omp,                           &
+           dt,                                  &
+           sp%f1d_omp_in(1:sp%num_dof_x2,tid),  &
+           sp%f1d_omp_out(1:sp%num_dof_x2,tid))
+
+  if(sp%advection_form_x2==SLL_CONSERVATIVE)then
+    call primitive_to_function(sp%f1d_omp_out(:,tid),sp%x2_array_unit,nc_x2,mean_omp)
+   endif
+
+   sp%f_x2(i_omp,1:sp%num_dof_x2) = sp%f1d_omp_out(1:sp%num_dof_x2,tid)
+
+end do
+
+call apply_remap_2D( sp%remap_plan_x2_x1, sp%f_x2, sp%f_x1 )
+    
+end subroutine advection_x2
 
 end module sll_m_species

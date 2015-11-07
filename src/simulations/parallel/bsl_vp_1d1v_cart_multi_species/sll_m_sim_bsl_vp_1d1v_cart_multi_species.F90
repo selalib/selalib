@@ -972,20 +972,9 @@ logical :: split_T
 
 character(len=4)   :: cproc
 sll_int32          :: tid
-sll_int32          :: i_omp
-sll_int32          :: ig_omp
-sll_real64         :: alpha_omp
-sll_real64         :: mean_omp
 sll_int32          :: psize
 sll_int32          :: prank
 logical            :: mpi_master
-
-sll_int32          :: global_indices_sp1(2)
-sll_int32          :: global_indices_sp2(2)
-sll_int32          :: local_size_x1_sp1
-sll_int32          :: local_size_x1_sp2
-sll_int32          :: local_size_x2_sp1
-sll_int32          :: local_size_x2_sp2
 
 prank = sll_get_collective_rank( sll_world_collective )
 call int2string(prank,cproc)
@@ -1049,6 +1038,8 @@ time_init = sim%time_init
 
 split_T = sim%split%split_begin_T
 t_step = real(istep-1,f64)
+
+tid = 1
 do split_istep=1,sim%split%nb_split_step
 
   if(split_T) then
@@ -1075,54 +1066,21 @@ do split_istep=1,sim%split%nb_split_step
         
   else
 
-    call apply_remap_2D( sim%sp1%remap_plan_x1_x2, sim%sp1%f_x1, sim%sp1%f_x2 )
-    call compute_local_sizes( sim%sp1%layout_x2, local_size_x1_sp1, local_size_x2_sp1 )
-    global_indices_sp1(1:2) = local_to_global( sim%sp1%layout_x2, (/1, 1/) )
-    tid = 1
-    do i_omp = 1,local_size_x1_sp1
-      ig_omp=i_omp+global_indices_sp1(1)-1
-      alpha_omp = -(sim%efield(ig_omp)+sim%sp1%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
-      sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid) = sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1)
-      if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
-         call function_to_primitive(sim%sp1%f1d_omp_in(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
-      endif
-      call sim%sp1%advect_x2(tid)%ptr%advect_1d_constant(&
-           alpha_omp, &
-           sim%dt, &
-           sim%sp1%f1d_omp_in(1:num_dof_x2_sp1,tid), &
-           sim%sp1%f1d_omp_out(1:num_dof_x2_sp1,tid))
-      if(sim%sp1%advection_form_x2==SLL_CONSERVATIVE)then
-         call primitive_to_function(sim%sp1%f1d_omp_out(:,tid),sim%sp1%x2_array_unit,np_x2_sp1-1,mean_omp)
-      endif
-      sim%sp1%f_x2(i_omp,1:num_dof_x2_sp1) = sim%sp1%f1d_omp_out(1:num_dof_x2_sp1,tid)
-    end do
-    call apply_remap_2D( sim%sp1%remap_plan_x2_x1, sim%sp1%f_x2, sim%sp1%f_x1 )
+    call advection_x2(sim%sp1,                            &
+                      -1.0_f64,                           &
+                      sim%efield+sim%sp1%alpha*sim%e_app, &
+                      sim%split%split_step(split_istep),  &
+                      sim%dt)
 
-    call apply_remap_2D( sim%sp2%remap_plan_x1_x2, sim%sp2%f_x1, sim%sp2%f_x2 )
-    call compute_local_sizes( sim%sp2%layout_x2, local_size_x1_sp2, local_size_x2_sp2 )
-    global_indices_sp2(1:2) = local_to_global( sim%sp2%layout_x2, (/1, 1/) )
-    do i_omp = 1,local_size_x1_sp2
-      ig_omp=i_omp+global_indices_sp2(1)-1
-      alpha_omp = sim%mass_ratio*(sim%efield(ig_omp)-sim%sp2%alpha*sim%e_app(ig_omp)) * sim%split%split_step(split_istep)
-      sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid) = sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2)
-      if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
-         call function_to_primitive(sim%sp2%f1d_omp_in(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
-      endif
-      call sim%sp2%advect_x2(tid)%ptr%advect_1d_constant(&
-           alpha_omp,                                    &
-           sim%dt,                                       &
-           sim%sp2%f1d_omp_in(1:num_dof_x2_sp2,tid),     &
-           sim%sp2%f1d_omp_out(1:num_dof_x2_sp2,tid))
-      if(sim%sp2%advection_form_x2==SLL_CONSERVATIVE)then
-         call primitive_to_function(sim%sp2%f1d_omp_out(:,tid),sim%sp2%x2_array_unit,np_x2_sp2-1,mean_omp)
-      endif
-      sim%sp2%f_x2(i_omp,1:num_dof_x2_sp2) = sim%sp2%f1d_omp_out(1:num_dof_x2_sp2,tid)
-    end do
-
-    call apply_remap_2D( sim%sp2%remap_plan_x2_x1, sim%sp2%f_x2, sim%sp2%f_x1 )
-
+    call advection_x2(sim%sp2,                            &
+                      sim%mass_ratio,                     &
+                      sim%efield-sim%sp2%alpha*sim%e_app, &
+                      sim%split%split_step(split_istep),  &
+                      sim%dt)
   endif
+
   split_T = .not.(split_T)
+
 enddo
     
 if (mod(istep,sim%freq_diag_time)==0) then
@@ -1254,39 +1212,5 @@ enddo
 
 end subroutine compute_e_app
 
-subroutine advection_x1(sp, factor_x1, split_step, dt)
-type(species) , intent(inout) :: sp
-sll_real64    , intent(in)    :: factor_x1
-sll_real64    , intent(in)    :: split_step
-sll_real64    , intent(in)    :: dt
-
-sll_real64    :: alpha_omp
-sll_int32     :: local_size_x1
-sll_int32     :: local_size_x2
-sll_int32     :: np_x1
-sll_int32     :: i_omp
-sll_int32     :: ig_omp
-sll_int32     :: tid
-sll_int32     :: global_indices(2)
-
-np_x1 = sp%mesh2d%num_cells1+1
-call compute_local_sizes( sp%layout_x1, local_size_x1, local_size_x2 )
-global_indices(1:2) = local_to_global(sp%layout_x1, (/1, 1/) )
-tid=1          
-do i_omp = 1, local_size_x2
-  ig_omp = i_omp+global_indices(2)-1
-  alpha_omp = factor_x1*sp%node_positions_x2(ig_omp) * split_step
-  sp%f1d_omp_in(1:np_x1,tid) = sp%f_x1(1:np_x1,i_omp)
-  call sp%advect_x1(tid)%ptr%advect_1d_constant(&
-       alpha_omp, &
-       dt, &
-       sp%f1d_omp_in(1:np_x1,tid), &
-       sp%f1d_omp_out(1:np_x1,tid))
-   
-  sp%f_x1(1:np_x1,i_omp)=sp%f1d_omp_out(1:np_x1,tid)
-
-end do
-    
-end subroutine advection_x1
 
 end module sll_m_sim_bsl_vp_1d1v_cart_multi_species
