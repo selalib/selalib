@@ -154,20 +154,21 @@ sll_int32, intent(in), optional :: num_run
 character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart_multi_species'
 character(len=128)          :: err_msg
 
-!geometry
 character(len=256) :: mesh_case_x1
-sll_int32 :: num_cells_x1
-sll_real64 :: x1_min
-sll_real64 :: x1_max
-sll_int32 :: nbox_x1
+sll_int32          :: num_cells_x1
+sll_real64         :: x1_min
+sll_real64         :: x1_max
+sll_int32          :: nbox_x1
+
 character(len=256) :: mesh_case_x2_sp1
+sll_int32          :: num_cells_x2_sp1
+sll_real64         :: x2_min_sp1
+sll_real64         :: x2_max_sp1
+
 character(len=256) :: mesh_case_x2_sp2
-sll_int32 :: num_cells_x2_sp1
-sll_int32 :: num_cells_x2_sp2
-sll_real64 :: x2_min_sp1
-sll_real64 :: x2_max_sp1
-sll_real64 :: x2_min_sp2
-sll_real64 :: x2_max_sp2
+sll_int32          :: num_cells_x2_sp2
+sll_real64         :: x2_min_sp2
+sll_real64         :: x2_max_sp2
 
 !physical_params
 sll_real64 :: mass_ratio
@@ -177,80 +178,82 @@ sll_real64 :: alpha_sp2
 
 !initial_function
 character(len=256) :: initial_function_case_sp1
-sll_real64 :: kmode_sp1
-sll_real64 :: eps_sp1
-sll_real64 :: sigma_sp1
-sll_real64 :: v0_sp1
-sll_real64 :: factor1_sp1
-sll_real64 :: alpha_gaussian_sp1
+sll_real64         :: kmode_sp1
+sll_real64         :: eps_sp1
+sll_real64         :: sigma_sp1
+sll_real64         :: v0_sp1
+sll_real64         :: factor1_sp1
+sll_real64         :: alpha_gaussian_sp1
+
 character(len=256) :: initial_function_case_sp2
-sll_real64 :: kmode_sp2
-sll_real64 :: eps_sp2
-sll_real64 :: sigma_sp2
-sll_real64 :: v0_sp2
-sll_real64 :: factor1_sp2
-sll_real64 :: alpha_gaussian_sp2
-character(len=256) :: restart_file
-logical :: time_init_from_restart_file
+sll_real64         :: kmode_sp2
+sll_real64         :: eps_sp2
+sll_real64         :: sigma_sp2
+sll_real64         :: v0_sp2
+sll_real64         :: factor1_sp2
+sll_real64         :: alpha_gaussian_sp2
 
 !time_iterations
-sll_real64 :: dt
-sll_int32 :: number_iterations
-sll_int32 :: freq_diag
-sll_int32 :: freq_diag_restart
-sll_int32 :: freq_diag_time
-sll_int32 :: nb_mode
-sll_real64 :: time_init
+character(len=256) :: restart_file
+logical            :: time_init_from_restart_file
+sll_real64         :: dt
+sll_int32          :: number_iterations
+sll_int32          :: freq_diag
+sll_int32          :: freq_diag_restart
+sll_int32          :: freq_diag_time
+sll_int32          :: nb_mode
+sll_real64         :: time_init
 character(len=256) :: split_case
 
 !advector
 character(len=256) :: advector_x1_sp1
-sll_int32 :: order_x1_sp1
+sll_int32          :: order_x1_sp1
 character(len=256) :: advector_x1_sp2
-sll_int32 :: order_x1_sp2
+sll_int32          :: order_x1_sp2
 character(len=256) :: advector_x2_sp1
-sll_int32 :: order_x2_sp1
+sll_int32          :: order_x2_sp1
 character(len=256) :: advector_x2_sp2
-sll_int32 :: order_x2_sp2
+sll_int32          :: order_x2_sp2
 character(len=256) :: advection_form_x2_sp1
 character(len=256) :: advection_form_x2_sp2
 character(len=256) :: integration_case
-sll_real64 :: factor_x1
-sll_real64 :: factor_x2_rho
-sll_real64 :: factor_x2_1
+sll_real64         :: factor_x1
+sll_real64         :: factor_x2_rho
+sll_real64         :: factor_x2_1
 
 !poisson
 character(len=256) :: poisson_solver
 
 !drive
 character(len=256) :: drive_type
-sll_real64 :: keen_t0
-sll_real64 :: keen_tL
-sll_real64 :: keen_tR
-sll_real64 :: keen_twL
-sll_real64 :: keen_twR
-sll_real64 :: keen_tflat
-logical :: keen_turn_drive_off
-sll_real64 :: keen_Edrmax
-sll_real64 :: keen_omegadr
+sll_real64         :: keen_t0
+sll_real64         :: keen_tL
+sll_real64         :: keen_tR
+sll_real64         :: keen_twL
+sll_real64         :: keen_twR
+sll_real64         :: keen_tflat
+logical            :: keen_turn_drive_off
+sll_real64         :: keen_Edrmax
+sll_real64         :: keen_omegadr
 
 !local variables
-sll_int32             :: io_stat
+sll_int32                            :: io_stat
 sll_int32                            :: input_file
 type(sll_cartesian_mesh_1d), pointer :: mesh_x1
 type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp1
 type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp2
-sll_int32 :: ierr
-sll_int32, parameter  :: param_out = 37, param_out_drive = 40
-sll_int32 :: i
-sll_int32 :: num_threads
-sll_int32 :: tid
-character(len=256) :: str_num_run
-character(len=256) :: filename_loc
-sll_int32          :: psize
-sll_int32          :: prank
-logical            :: mpi_master
-sll_int32          :: np_x1, nc_x1
+sll_int32                            :: ierr
+sll_int32, parameter                 :: param_out = 37
+sll_int32, parameter                 :: param_out_drive = 40
+sll_int32                            :: i
+sll_int32                            :: num_threads
+sll_int32                            :: tid
+character(len=256)                   :: str_num_run
+character(len=256)                   :: filename_loc
+sll_int32                            :: psize
+sll_int32                            :: prank
+logical                              :: mpi_master
+sll_int32                            :: np_x1, nc_x1
   
 ! namelists for data input
 namelist /geometry/ &
@@ -326,7 +329,6 @@ namelist /drive/ &
   keen_t0, &
   keen_twL, &
   keen_twR, &
-  !keen_tstart, &
   keen_tflat, &
   keen_tL, &
   keen_tR, &
@@ -335,6 +337,9 @@ namelist /drive/ &
   keen_omegadr
 
 num_threads = 1
+!$OMP PARALLEL
+!$ num_threads = omp_get_num_threads()
+!$OMP END PARALLEL
 
 sim%num_threads = num_threads
 print *,'#num_threads=',num_threads
@@ -345,53 +350,52 @@ mpi_master = merge(.true., .false., prank == 0)
 
 !set default parameters
 !geometry
-mesh_case_x1 = "SLL_LANDAU_MESH"
-num_cells_x1 = 32
-x1_min = 0.0_f64
-nbox_x1 = 1
+mesh_case_x1     = "SLL_LANDAU_MESH"
+num_cells_x1     = 32
+x1_min           = 0.0_f64
+nbox_x1          = 1
 mesh_case_x2_sp1 = "SLL_CARTESIAN_MESH"
 num_cells_x2_sp1 = 64
-x2_min_sp1 = -6._f64
-x2_max_sp1 = 6._f64
+x2_min_sp1       = -6._f64
+x2_max_sp1       = 6._f64
 mesh_case_x2_sp2 = "SLL_CARTESIAN_MESH"
 num_cells_x2_sp2 = 64
-x2_min_sp2 = -0.5_f64
-x2_max_sp2 = 0.5_f64
+x2_min_sp2       = -0.5_f64
+x2_max_sp2       = 0.5_f64
 
 !physical_params
 mass_ratio = 0.0005_f64
-vd = 0._f64
-alpha_sp1 = 1._f64
-alpha_sp2 = 1._f64
+vd         = 0._f64
+alpha_sp1  = 1._f64
+alpha_sp2  = 1._f64
     
 restart_file = "no_restart_file"
 time_init_from_restart_file = .false.
 
 !time_iterations
-dt = 0.1_f64
+dt                = 0.1_f64
 number_iterations = 600
-freq_diag = 100
-freq_diag_time = 1
+freq_diag         = 100
+freq_diag_time    = 1
 freq_diag_restart = 5000
-nb_mode = 5
-time_init = 0._f64
-split_case = "SLL_STRANG_VTV" 
+nb_mode           = 5
+time_init         = 0._f64
+split_case        = "SLL_STRANG_VTV" 
 
 initial_function_case_sp1 = "SLL_LANDAU"
-kmode_sp1 = 0.5_f64
-eps_sp1 = 0.001_f64
-sigma_sp1 = 1._f64
-v0_sp1 = 0._f64
-factor1_sp1 = 1._f64/sqrt(2._f64*sll_pi)
-alpha_gaussian_sp1 = 0.2_f64
+kmode_sp1                 = 0.5_f64
+eps_sp1                   = 0.001_f64
+sigma_sp1                 = 1._f64
+v0_sp1                    = 0._f64
+factor1_sp1               = 1._f64/sqrt(2._f64*sll_pi)
+alpha_gaussian_sp1        = 0.2_f64
 
 initial_function_case_sp2 = "SLL_LANDAU"
-kmode_sp2 = 0.5_f64
-eps_sp2 = 0.001_f64
-sigma_sp2 = 1._f64
-v0_sp2 = 0._f64
-factor1_sp2 = 1._f64/sqrt(2._f64*sll_pi)
-
+kmode_sp2                 = 0.5_f64
+eps_sp2                   = 0.001_f64
+sigma_sp2                 = 1._f64
+v0_sp2                    = 0._f64
+factor1_sp2               = 1._f64/sqrt(2._f64*sll_pi)
 
 !advector
 advector_x1_sp1       = "SLL_LAGRANGE"
@@ -406,13 +410,13 @@ advector_x2_sp2       = "SLL_LAGRANGE"
 order_x2_sp2          = 4
 advection_form_x2_sp2 = "SLL_ADVECTIVE"
 
-factor_x1 = 1._f64
+factor_x1     = 1._f64
 factor_x2_rho = 1._f64
-factor_x2_1 = 1._f64
+factor_x2_1   = 1._f64
 
 integration_case = "SLL_TRAPEZOID"
-poisson_solver = "SLL_FFT"
-drive_type = "SLL_NO_DRIVE"
+poisson_solver   = "SLL_FFT"
+drive_type       = "SLL_NO_DRIVE"
 
 if(present(num_run))then
   write(str_num_run, *) num_run
@@ -452,10 +456,13 @@ if(present(filename))then
   read(input_file, poisson)
   read(input_file, drive)
   close(input_file)
+
 else
+
   if(mpi_master)then
     print *,'#initialization with default parameters'
   endif      
+
 endif
 
 !geometry
@@ -666,11 +673,10 @@ SLL_ALLOCATE(sim%sp2%advect_x1(num_threads),ierr)
 SLL_ALLOCATE(sim%sp2%advect_x2(num_threads),ierr)
 
 tid = 1
-!#ifdef _OPENMP
-!!$OMP PARALLEL DEFAULT(SHARED) &
-!!$OMP PRIVATE(tid)
-!    tid = omp_get_thread_num()+1
-!#endif
+!$OMP PARALLEL DEFAULT(SHARED)
+!$OMP PRIVATE(tid)
+!$ tid = omp_get_thread_num()+1
+
 select case (advector_x1_sp1)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
    sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
@@ -730,8 +736,6 @@ case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interp
      x2_max_sp2, &
      order_x2_sp2, &
      sim%sp2%x2_array)           
-     !sim%x2_array_omp(:,tid))           
-
 case default
     print*,'#advector in x2 for species 2', advector_x2_sp2, ' not implemented'
     stop 
@@ -764,9 +768,8 @@ case default
   stop 
 end select
 
-!#ifdef _OPENMP
-!!$OMP END PARALLEL
-!#endif
+!$OMP END PARALLEL
+
 select case (advection_form_x2_sp1)
 case ("SLL_ADVECTIVE")
   sim%sp1%advection_form_x2 = SLL_ADVECTIVE
@@ -855,8 +858,6 @@ sim%sp2%alpha = alpha_sp2
 nc_x1 = sim%sp1%mesh2d%num_cells1
 np_x1 = sim%sp1%mesh2d%num_cells1+1
     
-!poisson
-!SLL_ALLOCATE(sim%mixt_bc(2),ierr)
 select case (poisson_solver)
 case ("SLL_FFT")
   sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,num_cells_x1)
@@ -868,7 +869,6 @@ case default
   stop 
 end select
  
-!drive
 select case (drive_type)
 case ("SLL_NO_DRIVE")
   sim%driven = .false.
@@ -919,7 +919,6 @@ if(mpi_master .and. sim%driven) then
 
 endif
 
-
 call initialize_species(sim%sp1, "e", nb_mode)
 call initialize_species(sim%sp2, "i", nb_mode)
 
@@ -929,8 +928,6 @@ SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)
 SLL_ALLOCATE(sim%efield(np_x1),ierr)
 SLL_ALLOCATE(sim%e_app(np_x1),ierr)
 sim%e_app = 0._f64
-
-
 
 end subroutine init_vp2d_par_cart_multi_species
 
@@ -946,25 +943,23 @@ stop
 
 end subroutine init_vp2d_fake
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine run_vp2d_cartesian_multi_species(sim)
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
 
 
-sll_int32   :: np_x1
-sll_int32   :: np_x2_sp1
-sll_int32   :: np_x2_sp2
-sll_int32   :: ierr
-sll_int32   :: i,k
-sll_int32   :: istep
-
-sll_real64  :: time
-sll_real64  :: potential_energy
-
+sll_int32  :: np_x2_sp1
+sll_int32  :: np_x2_sp2
+sll_int32  :: ierr
+sll_int32  :: istep
 sll_int32  :: nb_mode 
 sll_int32  :: split_istep
 sll_int32  :: num_dof_x2_sp1
 sll_int32  :: num_dof_x2_sp2
+
+sll_real64 :: time
 sll_real64 :: t_step
 sll_real64 :: time_init
  
@@ -984,7 +979,6 @@ mpi_master = merge(.true., .false., prank == 0)
 istep          = sim%istep
 nb_mode        = sim%nb_mode
 time_init      = sim%time_init
-np_x1          = sim%sp1%mesh2d%num_cells1+1
 np_x2_sp1      = sim%sp1%mesh2d%num_cells2+1
 num_dof_x2_sp1 = sim%sp1%num_dof_x2
 np_x2_sp2      = sim%sp2%mesh2d%num_cells2+1
@@ -1005,7 +999,8 @@ if (istep == 1) then
   call compute_rho(sim%sp1)
   call compute_rho(sim%sp2)
   
-  call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
+  call sim%poisson%compute_E_from_rho( sim%efield, &
+                                       sim%sp2%rho-sim%sp1%rho )
 
   if (sim%driven) call compute_e_app(sim,time_init)
 
@@ -1025,8 +1020,6 @@ if (istep == 1) then
   endif
 
 endif
-
-sim%iplot = sim%iplot+1  
 
 if (mod(istep,sim%freq_diag)==0) then
   if (mpi_master) then        
@@ -1089,70 +1082,26 @@ if (mod(istep,sim%freq_diag_time)==0) then
 
   call diagnostics(sim%sp1, sim%pfwd, sim%buf_fft, nb_mode)
   call diagnostics(sim%sp2, sim%pfwd, sim%buf_fft, nb_mode)
-  
-  potential_energy = 0._f64
-  do i=1, np_x1-1
-    potential_energy = potential_energy+(sim%efield(i)+sim%e_app(i))**2
-  enddo
-  potential_energy = 0.5_f64*potential_energy* sim%sp1%mesh2d%delta_eta1
-
 
   if (mod(istep,sim%freq_diag_restart)==0) then          
-    call write_restart_file(sim%sp1, sim%iplot, time)
-    call write_restart_file(sim%sp2, sim%iplot, time)
+    call write_restart_file(sim%sp1, istep, time)
+    call write_restart_file(sim%sp2, istep, time)
   endif 
 
-  if (mpi_master) then                  
-    sim%buf_fft = sim%sp1%rho(1:np_x1-1)-sim%sp2%rho(1:np_x1-1)
-    call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
-    do k=0,nb_mode
-      sim%rho_mode(k)=fft_get_mode(sim%pfwd,sim%buf_fft,k)
-    enddo  
-    write(sim%th_diag_id,'(f12.5,12g20.12)',advance='no') &
-      time,                                               &
-      sim%sp1%mass,                                       &
-      sim%sp1%l1norm,                                     &
-      sim%sp1%momentum,                                   &
-      sim%sp1%l2norm,                                     &
-      sim%sp1%kinetic_energy,                             &
-      sim%sp2%mass,                                       &
-      sim%sp2%l1norm,                                     &
-      sim%sp2%momentum,                                   &
-      sim%sp2%l2norm,                                     &
-      sim%sp2%kinetic_energy,                             &
-      potential_energy,                                   &
-      sim%sp1%kinetic_energy+sim%sp2%kinetic_energy+potential_energy
-
-    do k=0,nb_mode
-      write(sim%th_diag_id,'(g20.12)',advance='no') abs(sim%rho_mode(k))
-    enddo
-    do k=0,nb_mode-1
-      write(sim%th_diag_id,'(2g20.12)',advance='no') &
-           sim%sp1%f_hat_x2(k+1), &
-           sim%sp2%f_hat_x2(k+1)
-    enddo
-    write(sim%th_diag_id,'(2g20.12)') &
-         sim%sp1%f_hat_x2(nb_mode+1), &
-         sim%sp2%f_hat_x2(nb_mode+1)
-
-    write(sim%efield_id,*)  sim%efield
-    write(sim%rhotote_id,*) sim%sp1%rho
-    write(sim%rhototi_id,*) sim%sp2%rho
-
-  endif
+  if (mpi_master) then
+    call write_time_history(sim, nb_mode, time)
+  end if
     
   if (mod(istep,sim%freq_diag)==0) then          
 
+    sim%iplot = sim%iplot+1  
     call write_f( sim%sp1, sim%iplot, "fe", time)
     call write_f( sim%sp2, sim%iplot, "fi", time)
 
-    sim%iplot = sim%iplot+1  
                   
   endif
 
 end if
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Next time step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if (istep == sim%num_iterations) then
   if(mpi_master)then
@@ -1164,7 +1113,6 @@ if (istep == sim%num_iterations) then
   print*, " 176.00010668708197, 820.34117552361215 "
   print"(2f20.14)", sum(sim%sp1%f_x1), sum(sim%sp2%f_x1)
 end if
-
 
 end subroutine run_vp2d_cartesian_multi_species
 
@@ -1212,5 +1160,58 @@ enddo
 
 end subroutine compute_e_app
 
+subroutine write_time_history(sim, nb_mode, time)
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species) :: sim
+sll_int32  :: nb_mode
+sll_real64 :: time
+sll_real64 :: potential_energy
+sll_int32  :: i, k
+sll_int32  :: nc_x1
+
+nc_x1 = sim%sp1%mesh2d%num_cells1
+
+potential_energy = 0._f64
+do i=1, nc_x1
+  potential_energy = potential_energy+(sim%efield(i)+sim%e_app(i))**2
+enddo
+potential_energy = 0.5_f64*potential_energy* sim%sp1%mesh2d%delta_eta1
+
+sim%buf_fft = sim%sp1%rho(1:nc_x1)-sim%sp2%rho(1:nc_x1)
+call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
+do k=0,nb_mode
+  sim%rho_mode(k)=fft_get_mode(sim%pfwd,sim%buf_fft,k)
+enddo  
+write(sim%th_diag_id,'(f12.5,12g20.12)',advance='no') &
+  time,                                               &
+  sim%sp1%mass,                                       &
+  sim%sp1%l1norm,                                     &
+  sim%sp1%momentum,                                   &
+  sim%sp1%l2norm,                                     &
+  sim%sp1%kinetic_energy,                             &
+  sim%sp2%mass,                                       &
+  sim%sp2%l1norm,                                     &
+  sim%sp2%momentum,                                   &
+  sim%sp2%l2norm,                                     &
+  sim%sp2%kinetic_energy,                             &
+  potential_energy,                                   &
+  sim%sp1%kinetic_energy+sim%sp2%kinetic_energy+potential_energy
+
+do k=0,nb_mode
+  write(sim%th_diag_id,'(g20.12)',advance='no') abs(sim%rho_mode(k))
+enddo
+do k=0,nb_mode-1
+  write(sim%th_diag_id,'(2g20.12)',advance='no') &
+       sim%sp1%f_hat_x2(k+1), &
+       sim%sp2%f_hat_x2(k+1)
+enddo
+write(sim%th_diag_id,'(2g20.12)') &
+     sim%sp1%f_hat_x2(nb_mode+1), &
+     sim%sp2%f_hat_x2(nb_mode+1)
+
+write(sim%efield_id,*)  sim%efield
+write(sim%rhotote_id,*) sim%sp1%rho
+write(sim%rhototi_id,*) sim%sp2%rho
+
+end subroutine write_time_history
 
 end module sll_m_sim_bsl_vp_1d1v_cart_multi_species
