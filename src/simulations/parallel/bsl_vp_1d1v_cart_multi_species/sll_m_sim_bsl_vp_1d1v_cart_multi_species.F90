@@ -370,14 +370,14 @@ restart_file = "no_restart_file"
 time_init_from_restart_file = .false.
 
 !time_iterations
-dt                = 0.1_f64
-number_iterations = 600
-freq_diag         = 100
-freq_diag_time    = 1
-freq_diag_restart = 5000
-nb_mode           = 5
-time_init         = 0._f64
-split_case        = "SLL_STRANG_VTV" 
+dt                        = 0.1_f64
+number_iterations         = 600
+freq_diag                 = 100
+freq_diag_time            = 1
+freq_diag_restart         = 5000
+nb_mode                   = 5
+time_init                 = 0._f64
+split_case                = "SLL_STRANG_VTV" 
 
 initial_function_case_sp1 = "SLL_LANDAU"
 kmode_sp1                 = 0.5_f64
@@ -462,175 +462,6 @@ else
 
 endif
 
-!geometry
-select case (mesh_case_x1)
-  case ("SLL_LANDAU_MESH")
-    x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_sp1
-    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
-     eta_min=x1_min, eta_max=x1_max)
-    call get_node_positions( mesh_x1, sim%sp1%x1_array )
-    call get_node_positions( mesh_x1, sim%sp2%x1_array )
-  case ("SLL_CARTESIAN_MESH")
-    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
-     eta_min=x1_min, eta_max=x1_max)  
-    call get_node_positions( mesh_x1, sim%sp1%x1_array )
-    call get_node_positions( mesh_x1, sim%sp2%x1_array )
-  case default
-    print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
-    print*,'#in init_vp2d_par_cart'
-    stop 
-end select
-
-num_threads = 1
-tid = 1
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(tid)
-!$ tid = omp_get_thread_num()+1
-!$ num_threads = omp_get_num_threads()
-sim%num_threads = num_threads
-!$OMP MASTER
-print *,'#num_threads=',num_threads
-!$OMP END MASTER
-
-select case (mesh_case_x2_sp1)
-  case ("SLL_CARTESIAN_MESH")
-    mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,  &
-     eta_min=x2_min_sp1, eta_max=x2_max_sp1)
-    call get_node_positions( mesh_x2_sp1, sim%sp1%x2_array )
-  case default
-    print*,'#mesh_case_x2', mesh_case_x2_sp1, ' not implemented'
-    print*,'#in init_vp2d_par_cart'
-    stop 
-end select
-sim%sp1%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp1)
-
-select case (mesh_case_x2_sp2)
-  case ("SLL_CARTESIAN_MESH")
-    mesh_x2_sp2 => new_cartesian_mesh_1d(num_cells_x2_sp2,eta_min=x2_min_sp2, eta_max=x2_max_sp2)
-    call get_node_positions( mesh_x2_sp2, sim%sp2%x2_array )
-  case default
-    print*,'#mesh_case_x2', mesh_case_x2_sp2, ' not implemented'
-    print*,'#in init_vp2d_par_cart'
-    stop 
-end select
-sim%sp2%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp2)
-
-!initial function
-sim%sp1%nrj0 = 0._f64
-sim%sp1%kx   = kmode_sp1
-sim%sp1%eps  = eps_sp1
-select case (initial_function_case_sp1)
-case ("SLL_LANDAU")
-  sim%sp1%init_func => sll_landau_initializer_2d
-  SLL_ALLOCATE(sim%sp1%params(4),ierr)
-  sim%sp1%params(1) = kmode_sp1
-  sim%sp1%params(2) = eps_sp1
-  sim%sp1%params(3) = v0_sp1
-  sim%sp1%params(4) = sigma_sp1
-  sim%sp1%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-  !for the moment
-  sim%sp1%kx  = kmode_sp1
-  sim%sp1%eps = eps_sp1
-case ("SLL_BUMP_ON_TAIL")
-  sim%sp1%init_func => sll_bump_on_tail_initializer_2d
-  SLL_ALLOCATE(sim%sp1%params(2),ierr)
-  sim%sp1%params(1) = kmode_sp1
-  sim%sp1%params(2) = eps_sp1
-  sim%sp1%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-  !for the moment
-  sim%sp1%kx = kmode_sp1
-  sim%sp1%eps = eps_sp1
-case ("SLL_TWO_STREAM_INSTABILITY")
-  sim%sp1%init_func => sll_two_stream_instability_initializer_2d
-  SLL_ALLOCATE(sim%sp1%params(4),ierr)
-  sim%sp1%params(1) = kmode_sp1
-  sim%sp1%params(2) = eps_sp1
-  sim%sp1%params(3) = sigma_sp1
-  sim%sp1%params(4) = factor1_sp1
-  sim%sp1%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-  !for the moment
-  sim%sp1%kx  = kmode_sp1
-  sim%sp1%eps = eps_sp1
-case ("SLL_BEAM")  
-  sim%sp1%init_func => sll_beam_initializer_2d
-  SLL_ALLOCATE(sim%sp1%params(1),ierr)
-  sim%sp1%params(1) = alpha_gaussian_sp1
-case default
-  print *,'#init_func_case not implemented'
-  print *,'#in init_vp2d_par_cart'  
-  stop
-end select
-
-!initial function
-sim%sp2%nrj0 = 0._f64
-sim%sp2%kx   = kmode_sp2
-sim%sp2%eps  = eps_sp2
-select case (initial_function_case_sp2)
-case ("SLL_LANDAU")
-  sim%sp2%init_func => sll_landau_initializer_2d
-  SLL_ALLOCATE(sim%sp2%params(4),ierr)
-  sim%sp2%params(1) = kmode_sp2
-  sim%sp2%params(2) = eps_sp2
-  sim%sp2%params(3) = v0_sp2
-  sim%sp2%params(4) = sigma_sp2
-  sim%sp2%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-  !for the moment
-  sim%sp2%kx  = kmode_sp2
-  sim%sp2%eps = eps_sp2
-case ("SLL_BUMP_ON_TAIL")
-  sim%sp2%init_func => sll_bump_on_tail_initializer_2d
-  SLL_ALLOCATE(sim%sp2%params(2),ierr)
-  sim%sp2%params(1) = kmode_sp2
-  sim%sp2%params(2) = eps_sp2
-  sim%sp2%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-  !for the moment
-  sim%sp2%kx  = kmode_sp2
-  sim%sp2%eps = eps_sp2
-case ("SLL_TWO_STREAM_INSTABILITY")
-  sim%sp2%init_func => sll_two_stream_instability_initializer_2d
-  SLL_ALLOCATE(sim%sp2%params(4),ierr)
-  sim%sp2%params(1) = kmode_sp2
-  sim%sp2%params(2) = eps_sp2
-  sim%sp2%params(3) = sigma_sp2
-  sim%sp2%params(4) = factor1_sp2
-  sim%sp2%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
-  !for the moment
-  sim%sp2%kx  = kmode_sp2
-  sim%sp2%eps = eps_sp2
-case ("SLL_BEAM")  
-  sim%sp2%init_func => sll_beam_initializer_2d
-  SLL_ALLOCATE(sim%sp2%params(1),ierr)
-  sim%sp2%params(1) = alpha_gaussian_sp2
-case default
-  print *,'#init_func_case not implemented'
-  print *,'#in init_vp2d_par_cart'  
-  stop
-end select
-
-sim%time_init_from_restart_file = time_init_from_restart_file
-sim%restart_file = restart_file
-
-!time iterations
-sim%dt                = dt
-sim%num_iterations    = number_iterations
-sim%freq_diag         = freq_diag
-sim%freq_diag_restart = freq_diag_restart
-sim%freq_diag_time    = freq_diag_time
-sim%nb_mode           = nb_mode
-sim%time_init         = time_init
-
 if(sim%nb_mode<0)then
   print *,'#bad value of nb_mode=',nb_mode      
   print *,'#should be >=0'
@@ -669,29 +500,112 @@ select case (split_case)
     stop       
 end select
 
+!geometry
+select case (mesh_case_x1)
+  case ("SLL_LANDAU_MESH")
+    x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_sp1
+    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
+     eta_min=x1_min, eta_max=x1_max)
+    call get_node_positions( mesh_x1, sim%sp1%x1_array )
+    call get_node_positions( mesh_x1, sim%sp2%x1_array )
+  case ("SLL_CARTESIAN_MESH")
+    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
+     eta_min=x1_min, eta_max=x1_max)  
+    call get_node_positions( mesh_x1, sim%sp1%x1_array )
+    call get_node_positions( mesh_x1, sim%sp2%x1_array )
+  case default
+    print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
+    print*,'#in init_vp2d_par_cart'
+    stop 
+end select
+
+
+num_threads = 1
+tid = 1
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(tid)
+!$ tid = omp_get_thread_num()+1
+!$ num_threads = omp_get_num_threads()
+sim%num_threads = num_threads
+!$OMP MASTER
+print *,'#num_threads=',num_threads
+!$OMP END MASTER
+
+SLL_ASSERT(mesh_case_x2_sp1 == "SLL_CARTESIAN_MESH")
+SLL_ASSERT(mesh_case_x2_sp2 == "SLL_CARTESIAN_MESH")
+
+mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,  &
+  eta_min=x2_min_sp1, eta_max=x2_max_sp1)
+call get_node_positions( mesh_x2_sp1, sim%sp1%x2_array )
+sim%sp1%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp1)
+mesh_x2_sp2 => new_cartesian_mesh_1d(num_cells_x2_sp2, &
+  eta_min=x2_min_sp2, eta_max=x2_max_sp2)
+call get_node_positions( mesh_x2_sp2, sim%sp2%x2_array )
+sim%sp2%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp2)
+
+nc_x1 = sim%sp1%mesh2d%num_cells1
+np_x1 = sim%sp1%mesh2d%num_cells1+1
+select case (poisson_solver)
+case ("SLL_FFT")
+  sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,nc_x1)
+case ("SLL_POLAR")
+  sim%poisson => new_poisson_1d_polar_solver(x1_min,x1_max,nc_x1)
+case default
+  print*,'#poisson_solver', poisson_solver, ' not implemented'
+  print *,'#in init_vp2d_par_cart'
+  stop 
+end select
+
+call set_initial_function(sim%sp1  &
+, initial_function_case_sp1        & 
+, kmode_sp1                        &
+, eps_sp1                          &
+, sigma_sp1                        &
+, v0_sp1                           &
+, factor1_sp1                      &
+, alpha_gaussian_sp1)       
+
+call set_initial_function(sim%sp2  &
+, initial_function_case_sp2        & 
+, kmode_sp2                        &
+, eps_sp2                          &
+, sigma_sp2                        &
+, v0_sp2                           &
+, factor1_sp2                      &
+, alpha_gaussian_sp2)       
+
+sim%time_init_from_restart_file = time_init_from_restart_file
+sim%restart_file = restart_file
+
+!time iterations
+sim%dt                = dt
+sim%num_iterations    = number_iterations
+sim%freq_diag         = freq_diag
+sim%freq_diag_restart = freq_diag_restart
+sim%freq_diag_time    = freq_diag_time
+sim%nb_mode           = nb_mode
+sim%time_init         = time_init
+
 SLL_ALLOCATE(sim%sp1%advect_x1(num_threads),ierr)
 SLL_ALLOCATE(sim%sp1%advect_x2(num_threads),ierr)
 SLL_ALLOCATE(sim%sp2%advect_x1(num_threads),ierr)
 SLL_ALLOCATE(sim%sp2%advect_x2(num_threads),ierr)
 
-
 select case (advector_x1_sp1)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
-   sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-     num_cells_x1,                                         &
-     x1_min,                                               &
-     x1_max,                                               &
-     SPLINE,                                               & 
-     order_x1_sp1) 
-
+  sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+    num_cells_x1,                                         &
+    x1_min,                                               &
+    x1_max,                                               &
+    SPLINE,                                               & 
+    order_x1_sp1) 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-   sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-     num_cells_x1,                                         &
-     x1_min,                                               &
-     x1_max,                                               &
-     LAGRANGE,                                             & 
-     order_x1_sp1)
-
+  sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+    num_cells_x1,                                         &
+    x1_min,                                               &
+    x1_max,                                               &
+    LAGRANGE,                                             & 
+    order_x1_sp1)
 case default
   print*,'#advector in x1 for species 1 ', advector_x1_sp1, ' not implemented'
   stop 
@@ -701,18 +615,15 @@ select case (advector_x1_sp2)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
   sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x1, x1_min, x1_max, SPLINE, order_x1_sp2) 
-
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
   sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x1, x1_min, x1_max, LAGRANGE, order_x1_sp2)
-
 case default
   print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
   stop 
 end select    
 
 select case (advector_x2_sp2)
-
 case ("SLL_SPLINES") ! arbitrary order periodic splines
   sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
      num_cells_x2_sp2, &
@@ -852,19 +763,6 @@ sim%mass_ratio = mass_ratio
 sim%sp1%alpha = alpha_sp1    
 sim%sp2%alpha = alpha_sp2
 
-nc_x1 = sim%sp1%mesh2d%num_cells1
-np_x1 = sim%sp1%mesh2d%num_cells1+1
-    
-select case (poisson_solver)
-case ("SLL_FFT")
-  sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,num_cells_x1)
-case ("SLL_POLAR")
-  sim%poisson => new_poisson_1d_polar_solver(x1_min,x1_max,num_cells_x1)
-case default
-  print*,'#poisson_solver', poisson_solver, ' not implemented'
-  print *,'#in init_vp2d_par_cart'
-  stop 
-end select
  
 select case (drive_type)
 case ("SLL_NO_DRIVE")
