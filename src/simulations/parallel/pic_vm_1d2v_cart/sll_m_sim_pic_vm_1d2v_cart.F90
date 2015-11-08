@@ -81,7 +81,7 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_int32  :: world_size
      
      ! Case definitions
-     sll_int32 :: init_case
+     sll_int32  :: init_case
      
    contains
      procedure :: init_from_file => init_pic_vm_1d2v
@@ -190,6 +190,10 @@ contains
     sll_real64 :: vi(3)
     sll_real64 :: wi(1)
     sll_real64 :: xi(3)
+   
+    ! For testing
+    sll_int32  :: reffile_id 
+    sll_real64 :: error
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
@@ -353,10 +357,32 @@ contains
     call sll_collective_allreduce( sll_world_collective, &
          rho_local, &
          sim%n_gcells, MPI_SUM, rho)
-    write(32,*) rho
+    write(32,'(D16.25)') rho
     write(33,*) sim%efield_dofs(:,1)
     write(34,*) sim%efield_dofs(:,2)
     write(35,*) sim%bfield_dofs
+    close(32)
+    close(33)
+    close(34)
+    close(35)
+
+    if (sim%rank == 0) then
+       reffile_id = 21
+       rho_local = 0.0_f64
+       open(unit=reffile_id, &
+            file='reffile_pic_vm_1d2v_cart.dat', &
+            IOStat=ierr)
+       read(reffile_id,*,IOSTAT=ierr) rho_local
+       !call sll_binary_read_array_1d(reffile_id, rho_local, ierr)
+       rho_local = rho_local -  rho
+       error = maxval(rho_local)
+       print*, error
+       if (abs(error)> 1E-14) then
+          print*, 'FAILED'
+       else
+          print*, 'PASSED'
+       end if
+    end if
     
   contains
     function beta_cos_k(x)
