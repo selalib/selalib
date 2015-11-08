@@ -87,6 +87,79 @@ integer, parameter :: SLL_CONSERVATIVE = 1
 
 contains
 
+subroutine set_initial_function(sp &
+, initial_function_case            & 
+, kmode                            &
+, eps                              &
+, sigma                            &
+, v0                               &
+, factor1                          &
+, alpha_gaussian)       
+
+type(species),   intent(inout) :: sp
+
+character(len=256), intent(in) :: initial_function_case
+sll_real64        , intent(in) :: kmode
+sll_real64        , intent(in) :: eps
+sll_real64        , intent(in) :: sigma
+sll_real64        , intent(in) :: v0
+sll_real64        , intent(in) :: factor1
+sll_real64        , intent(in) :: alpha_gaussian
+
+sll_int32 :: ierr
+
+sp%nrj0 = 0._f64
+sp%kx   = kmode
+sp%eps  = eps
+select case (initial_function_case)
+case ("SLL_LANDAU")
+  sp%init_func => sll_landau_initializer_2d
+  SLL_ALLOCATE(sp%params(4),ierr)
+  sp%params(1) = kmode
+  sp%params(2) = eps
+  sp%params(3) = v0
+  sp%params(4) = sigma
+  sp%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sp%kx  = kmode
+  sp%eps = eps
+case ("SLL_BUMP_ON_TAIL")
+  sp%init_func => sll_bump_on_tail_initializer_2d
+  SLL_ALLOCATE(sp%params(2),ierr)
+  sp%params(1) = kmode
+  sp%params(2) = eps
+  sp%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sp%kx = kmode
+  sp%eps = eps
+case ("SLL_TWO_STREAM_INSTABILITY")
+  sp%init_func => sll_two_stream_instability_initializer_2d
+  SLL_ALLOCATE(sp%params(4),ierr)
+  sp%params(1) = kmode
+  sp%params(2) = eps
+  sp%params(3) = sigma
+  sp%params(4) = factor1
+  sp%nrj0 = 0._f64  !compute the right value
+  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+  !for the moment
+  sp%kx  = kmode
+  sp%eps = eps
+case ("SLL_BEAM")  
+  sp%init_func => sll_beam_initializer_2d
+  SLL_ALLOCATE(sp%params(1),ierr)
+  sp%params(1) = alpha_gaussian
+case default
+  print *,'#init_func_case not implemented'
+  stop
+end select
+
+end subroutine set_initial_function
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine initialize_species(sp, label, nb_mode)
 
