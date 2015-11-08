@@ -59,7 +59,8 @@ use sll_m_species
 implicit none
 
 
-type, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_poisson_cart_multi_species
+type, extends(sll_simulation_base_class) :: &
+  sll_simulation_2d_vlasov_poisson_cart_multi_species
    
   sll_int32 :: istep
   sll_int32 :: iplot
@@ -134,7 +135,7 @@ contains
 function new_vp2d_par_cart_multi_species( filename, num_run) result(sim)    
 
   type(sll_simulation_2d_vlasov_poisson_cart_multi_species), pointer :: sim    
-  character(len=*), intent(in), optional                                :: filename
+  character(len=*), intent(in), optional               :: filename
   sll_int32, intent(in), optional                      :: num_run
   sll_int32 :: ierr   
 
@@ -147,11 +148,13 @@ end function new_vp2d_par_cart_multi_species
 
 subroutine init_vp2d_par_cart_multi_species( sim, filename, num_run )
 
-class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
+class(sll_simulation_2d_vlasov_poisson_cart_multi_species), &
+  intent(inout) :: sim
 character(len=*), intent(in), optional :: filename
 sll_int32, intent(in), optional :: num_run
 
-character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart_multi_species'
+character(len=*), parameter :: this_sub_name &
+  = 'init_vp2d_par_cart_multi_species'
 character(len=128)          :: err_msg
 
 character(len=256) :: mesh_case_x1
@@ -257,8 +260,8 @@ sll_int32                            :: np_x1, nc_x1
   
 ! namelists for data input
 namelist /geometry/ &
-  mesh_case_x1, &
-  num_cells_x1, &
+  mesh_case_x1,     &
+  num_cells_x1,     &
   x1_min, &
   x1_max, &
   nbox_x1, &
@@ -336,17 +339,11 @@ namelist /drive/ &
   keen_Edrmax, &
   keen_omegadr
 
-num_threads = 1
-!$OMP PARALLEL
-!$ num_threads = omp_get_num_threads()
-!$OMP END PARALLEL
-
-sim%num_threads = num_threads
-print *,'#num_threads=',num_threads
-
 prank = sll_get_collective_rank( sll_world_collective )
 psize = sll_get_collective_size( sll_world_collective )
 mpi_master = merge(.true., .false., prank == 0)
+
+
 
 !set default parameters
 !geometry
@@ -469,11 +466,13 @@ endif
 select case (mesh_case_x1)
   case ("SLL_LANDAU_MESH")
     x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_sp1
-    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
+    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
+     eta_min=x1_min, eta_max=x1_max)
     call get_node_positions( mesh_x1, sim%sp1%x1_array )
     call get_node_positions( mesh_x1, sim%sp2%x1_array )
   case ("SLL_CARTESIAN_MESH")
-    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
+    mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
+     eta_min=x1_min, eta_max=x1_max)  
     call get_node_positions( mesh_x1, sim%sp1%x1_array )
     call get_node_positions( mesh_x1, sim%sp2%x1_array )
   case default
@@ -482,14 +481,22 @@ select case (mesh_case_x1)
     stop 
 end select
 
+num_threads = 1
+tid = 1
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(tid)
+!$ tid = omp_get_thread_num()+1
+!$ num_threads = omp_get_num_threads()
+sim%num_threads = num_threads
+!$OMP MASTER
+print *,'#num_threads=',num_threads
+!$OMP END MASTER
+
 select case (mesh_case_x2_sp1)
   case ("SLL_CARTESIAN_MESH")
-    mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,eta_min=x2_min_sp1, eta_max=x2_max_sp1)
+    mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,  &
+     eta_min=x2_min_sp1, eta_max=x2_max_sp1)
     call get_node_positions( mesh_x2_sp1, sim%sp1%x2_array )
-    SLL_ALLOCATE(sim%sp1%x2_array_omp(num_cells_x2_sp1+1,0:sim%num_threads-1),ierr)
-    do i=0,sim%num_threads-1
-      sim%sp1%x2_array_omp(:,i) = sim%sp1%x2_array(:)
-    enddo
   case default
     print*,'#mesh_case_x2', mesh_case_x2_sp1, ' not implemented'
     print*,'#in init_vp2d_par_cart'
@@ -501,10 +508,6 @@ select case (mesh_case_x2_sp2)
   case ("SLL_CARTESIAN_MESH")
     mesh_x2_sp2 => new_cartesian_mesh_1d(num_cells_x2_sp2,eta_min=x2_min_sp2, eta_max=x2_max_sp2)
     call get_node_positions( mesh_x2_sp2, sim%sp2%x2_array )
-    SLL_ALLOCATE(sim%sp2%x2_array_omp(num_cells_x2_sp2+1,0:sim%num_threads-1),ierr)
-    do i=0,sim%num_threads-1
-      sim%sp2%x2_array_omp(:,i) = sim%sp2%x2_array(:)
-    enddo
   case default
     print*,'#mesh_case_x2', mesh_case_x2_sp2, ' not implemented'
     print*,'#in init_vp2d_par_cart'
@@ -666,33 +669,28 @@ select case (split_case)
     stop       
 end select
 
-!advector
 SLL_ALLOCATE(sim%sp1%advect_x1(num_threads),ierr)
 SLL_ALLOCATE(sim%sp1%advect_x2(num_threads),ierr)
 SLL_ALLOCATE(sim%sp2%advect_x1(num_threads),ierr)
 SLL_ALLOCATE(sim%sp2%advect_x2(num_threads),ierr)
 
-tid = 1
-!$OMP PARALLEL DEFAULT(SHARED)
-!$OMP PRIVATE(tid)
-!$ tid = omp_get_thread_num()+1
 
 select case (advector_x1_sp1)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
    sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-     num_cells_x1, &
-     x1_min, &
-     x1_max, &
-     SPLINE, & 
+     num_cells_x1,                                         &
+     x1_min,                                               &
+     x1_max,                                               &
+     SPLINE,                                               & 
      order_x1_sp1) 
 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-    sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
-      num_cells_x1, &
-      x1_min, &
-      x1_max, &
-      LAGRANGE, & 
-      order_x1_sp1)
+   sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+     num_cells_x1,                                         &
+     x1_min,                                               &
+     x1_max,                                               &
+     LAGRANGE,                                             & 
+     order_x1_sp1)
 
 case default
   print*,'#advector in x1 for species 1 ', advector_x1_sp1, ' not implemented'
@@ -767,7 +765,6 @@ case default
   print*,'#advector in x2 for species 1', advector_x2_sp1, ' not implemented'
   stop 
 end select
-
 !$OMP END PARALLEL
 
 select case (advection_form_x2_sp1)
@@ -949,7 +946,6 @@ subroutine run_vp2d_cartesian_multi_species(sim)
 
 class(sll_simulation_2d_vlasov_poisson_cart_multi_species), intent(inout) :: sim
 
-
 sll_int32  :: np_x2_sp1
 sll_int32  :: np_x2_sp2
 sll_int32  :: ierr
@@ -966,7 +962,6 @@ sll_real64 :: time_init
 logical :: split_T
 
 character(len=4)   :: cproc
-sll_int32          :: tid
 sll_int32          :: psize
 sll_int32          :: prank
 logical            :: mpi_master
@@ -1028,11 +1023,9 @@ if (mod(istep,sim%freq_diag)==0) then
 endif  
 
 time_init = sim%time_init
+split_T   = sim%split%split_begin_T
+t_step    = real(istep-1,f64)
 
-split_T = sim%split%split_begin_T
-t_step = real(istep-1,f64)
-
-tid = 1
 do split_istep=1,sim%split%nb_split_step
 
   if(split_T) then
