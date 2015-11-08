@@ -857,7 +857,7 @@ contains
     theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
     ! By whatever means we use to compute the twiddles, some sanity
     ! checks are in order:
-    ! t(0)   = 1; t(1)      = 0
+    ! t(0)   = 1, t(1)      = 0
     ! t(n/8) = (sqrt(2)/2, sqrt(2)/2)
     ! t(n/4) = (0,1)
     ! t(n/2) = (0,-1) ... but this one is not stored
@@ -968,7 +968,7 @@ contains
   ! Decimation in time FFT, natural order input, bit-reversed output (=NR).
   ! Size of the data must be a power of 2. Twiddle array must be in
   ! bit-reversed order. This implementation is 'cache-oblivious'. This is
-  ! only a placeholder for an FFT really; it is not very efficient since it:
+  ! only a placeholder for an FFT really, it is not very efficient since it:
   ! - is just a simple radix-2
   ! - is not parallelized
   ! - no hardware acceleration
@@ -987,7 +987,7 @@ contains
   ! Z_r^(n-1)  ---------------> Y_(r+N/2)^(n-1) - omega_N^r*Z_r^(n-1)=X_(r+N/2)
   !
   ! In terms of the twiddles used at each level, the size two problems use only
-  ! the omega_2^1 twiddle; the size-4 problems use omega_4^1 and omega_4^2;
+  ! the omega_2^1 twiddle, the size-4 problems use omega_4^1 and omega_4^2,
   ! the size-8 problems use omega_8^1, omega_8^2, omega_8^3 and omega_8^4. This
   ! is the expected progression of the twiddle indices as we move deeper into
   ! the recursions.
@@ -1311,7 +1311,7 @@ contains
   !   very problematic, as it requires, from the moment of the allocation,
   !   some foresight that a given array will be the subject of an FFT
   !   operation. This may not be so bad... In any case, it seems that
-  !   special logic will be required to deliver a requested Fourier mode;
+  !   special logic will be required to deliver a requested Fourier mode,
   !   since in some cases one could read a value from an array but in other
   !   cases one needs the conjugate... For now, the present implementation
   !   chooses to pack the data in the minimum space possible, to the 'weird'
@@ -1403,7 +1403,7 @@ contains
        ! Compute tmp =  1/2*(H_i + H_(N/2-i)^*)
        tmp_re             =  0.5_f64*(hi_re + hn_2mi_re)
        tmp_im             =  0.5_f64*(hi_im + hn_2mi_im)
-       ! Compute tmp2 = i/2*(H_n - H_(N/2-n)^*); the sign depends on the
+       ! Compute tmp2 = i/2*(H_n - H_(N/2-n)^*), the sign depends on the
        ! direction of the FFT.
        tmp2_re            =  s*0.5_f64*(hi_im - hn_2mi_im)
        tmp2_im            = -s*0.5_f64*(hi_re - hn_2mi_re)

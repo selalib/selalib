@@ -2121,7 +2121,7 @@ contains  !******************************************************************
   ! about the layouts, since the global_to_local function only has meaning 
   ! in the context of the global layout. I find this 'mixing' very unpleasant, 
   ! and it might invite confusing those two collectives (the parent and the
-  ! reduced); for now see no clean & easy way to fix this. Fortunately, at 
+  ! reduced), for now see no clean & easy way to fix this. Fortunately, at 
   ! least, the reference to the larger collective is hidden inside the 'layout' 
   ! information and used only by 'global_to_local()'.
 #define MAKE_REMAP_OPTIMIZER( fname, remap_type, box_type ) \
