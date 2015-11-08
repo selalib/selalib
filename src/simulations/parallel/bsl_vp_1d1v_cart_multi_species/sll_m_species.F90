@@ -44,7 +44,6 @@ type species
   sll_real64                                             :: nrj0
   sll_real64, dimension(:),                      pointer :: x1_array
   sll_real64, dimension(:),                      pointer :: x2_array
-  sll_real64, dimension(:,:),                    pointer :: x2_array_omp
   sll_int32,  dimension(:),                      pointer :: bloc_index_x2
   sll_real64                                             :: kx
   sll_real64                                             :: eps
@@ -90,24 +89,24 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine initialize_species(sp, label, nb_mode)
+
 type(species), intent(inout) :: sp
 character,     intent(in)    :: label
 sll_int32,     intent(in)    :: nb_mode
 
-sll_int32                  :: nc_x1, nc_x2
-sll_int32                  :: np_x1, np_x2
-sll_int32                  :: ierr
-sll_int32                  :: psize
-sll_int32                  :: prank
-sll_int32                  :: nproc_x1
-sll_int32                  :: nproc_x2
-logical                    :: mpi_master
-sll_int32                  :: global_indices(2)
-sll_int32                  :: local_size_x1
-sll_int32                  :: local_size_x2
-sll_int32                  :: thread_id
-sll_int32                  :: n_threads
-sll_int32                  :: i
+sll_int32  :: nc_x1, nc_x2
+sll_int32  :: np_x1, np_x2
+sll_int32  :: ierr
+sll_int32  :: psize
+sll_int32  :: prank
+sll_int32  :: nproc_x1
+sll_int32  :: nproc_x2
+logical    :: mpi_master
+sll_int32  :: global_indices(2)
+sll_int32  :: local_size_x1
+sll_int32  :: local_size_x2
+sll_int32  :: n_threads
+sll_int32  :: i
 
 sp%label = label
 prank = sll_get_collective_rank( sll_world_collective )
@@ -154,12 +153,11 @@ sp%remap_plan_x2_x1 => NEW_REMAP_PLAN(sp%layout_x2, sp%layout_x1, sp%f_x2)
 SLL_ALLOCATE(sp%rho(np_x1),ierr)
 SLL_ALLOCATE(sp%rho_loc(np_x1),ierr)
 
-thread_id = 1
 n_threads = 1
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(tid)
-!$ thread_id = omp_get_thread_num()+1
+!$OMP PARALLEL
 !$ n_threads = omp_get_num_threads()
+!$OMP END PARALLEL
+print*,' n_threads =', n_threads
 
 SLL_ALLOCATE(sp%f1d_omp_in(max(np_x1,np_x2),n_threads),ierr)
 SLL_ALLOCATE(sp%f1d_omp_out(max(np_x1,np_x2),n_threads),ierr)
@@ -169,11 +167,13 @@ SLL_ALLOCATE(sp%node_positions_x2(sp%num_dof_x2),ierr)
 SLL_ALLOCATE(sp%f_hat_x2_loc(nb_mode+1),ierr)
 SLL_ALLOCATE(sp%f_hat_x2(nb_mode+1),ierr)
 
-sp%x2_array_unit(1:np_x2) = (sp%x2_array(1:np_x2)-sp%x2_array(1))/(sp%x2_array(np_x2)-sp%x2_array(1))
+sp%x2_array_unit(1:np_x2) = &
+  (sp%x2_array(1:np_x2)-sp%x2_array(1))/(sp%x2_array(np_x2)-sp%x2_array(1))
 do i = 1, np_x2-1
    sp%x2_array_middle(i) = 0.5_f64*(sp%x2_array(i)+sp%x2_array(i+1))
 end do
-sp%x2_array_middle(np_x2) = sp%x2_array_middle(1)+sp%x2_array(np_x2)-sp%x2_array(1)
+sp%x2_array_middle(np_x2) = &
+  sp%x2_array_middle(1)+sp%x2_array(np_x2)-sp%x2_array(1)
 
 select case (sp%advection_form_x2)
 case (SLL_ADVECTIVE)
@@ -264,7 +264,8 @@ sp%rho_loc = 0.0_f64
 ig = global_indices(2)-1
 do i=1,np_x1
   sp%rho_loc(i)=sp%rho_loc(i) &
-    +sum(sp%f_x1(i,1:local_size_x2)*sp%integration_weight(1+ig:local_size_x2+ig))
+    +sum(sp%f_x1(i,1:local_size_x2) &
+    *sp%integration_weight(1+ig:local_size_x2+ig))
 end do
 
 call sll_collective_allreduce( sll_world_collective, &
@@ -302,20 +303,20 @@ ig = global_indices(2)-1
 
 do i = 1, sp%mesh2d%num_cells1
   tmp_loc(1)= tmp_loc(1)+sum(sp%f_x1(i,1:local_size_x2) &
-       *sp%integration_weight(1+ig:local_size_x2+ig))
+    *sp%integration_weight(1+ig:local_size_x2+ig))
   tmp_loc(2)= tmp_loc(2)+sum(abs(sp%f_x1(i,1:local_size_x2)) &
-       *sp%integration_weight(1+ig:local_size_x2+ig))
+    *sp%integration_weight(1+ig:local_size_x2+ig))
   tmp_loc(3)= tmp_loc(3)+sum((sp%f_x1(i,1:local_size_x2))**2 &
-       *sp%integration_weight(1+ig:local_size_x2+ig))
+    *sp%integration_weight(1+ig:local_size_x2+ig))
   tmp_loc(4)= tmp_loc(4) +sum(sp%f_x1(i,1:local_size_x2) &
-       *sp%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2) &
-       *sp%integration_weight(1+ig:local_size_x2+ig))          
+    *sp%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2) &
+    *sp%integration_weight(1+ig:local_size_x2+ig))          
   tmp_loc(5)= tmp_loc(5)+sum(sp%f_x1(i,1:local_size_x2) &
-       *sp%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2)**2 &
-       *sp%integration_weight(1+ig:local_size_x2+ig) )          
+    *sp%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2)**2 &
+    *sp%integration_weight(1+ig:local_size_x2+ig) )          
 end do
 
-call sll_collective_allreduce( sll_world_collective, tmp_loc, 5, MPI_SUM, tmp )
+call sll_collective_allreduce(sll_world_collective, tmp_loc, 5, MPI_SUM, tmp)
 
 sp%mass           = tmp(1)  * sp%mesh2d%delta_eta1 
 sp%l1norm         = tmp(2)  * sp%mesh2d%delta_eta1 
@@ -334,7 +335,8 @@ do i=1,local_size_x2
   enddo
 enddo
 
-call sll_collective_allreduce( sll_world_collective, sp%f_hat_x2_loc, nb_mode+1, MPI_SUM, sp%f_hat_x2 )
+call sll_collective_allreduce( sll_world_collective, sp%f_hat_x2_loc, &
+  nb_mode+1, MPI_SUM, sp%f_hat_x2 )
 
 end subroutine diagnostics
 
@@ -378,10 +380,12 @@ if (iplot == 1) then
     end do
   end do
 #ifndef NOHDF5
-  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5",file_id,error)
+  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5", &
+    file_id,error)
   call sll_hdf5_write_array(file_id,x1,"/x1",error)
   call sll_hdf5_file_close(file_id, error)
-  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5",file_id,error)
+  call sll_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5", &
+    file_id,error)
   call sll_hdf5_write_array(file_id,x2,"/x2",error)
   call sll_hdf5_file_close(file_id, error)
 #endif
@@ -392,7 +396,8 @@ if (iplot == 1) then
 end if
 
 call int2string(iplot,cplot)
-call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh_"//trim(spec_name), &
+call sll_xdmf_open(trim(array_name)//cplot//".xmf", &
+  "cartesian_mesh_"//trim(spec_name), &
   nnodes_x1,nnodes_x2,file_id,error)
 write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
 call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
@@ -490,7 +495,7 @@ subroutine write_f( sp, iplot, array_name, time)
     call sll_gnuplot_1d( &
       sp%f_visu_buf1d(1:sp%num_dof_x2),      &
       sp%node_positions_x2(1:sp%num_dof_x2), &
-      'int'//array_name//'dx',                    &
+      'int'//array_name//'dx',               &
       iplot )
 
     call plot_f_cartesian(       &
@@ -526,10 +531,12 @@ subroutine write_restart_file(sp, iplot, time)
   prank = sll_get_collective_rank( sll_world_collective )
   call int2string(prank,cproc)
   call int2string(iplot,cplot) 
-  call sll_binary_file_create('f'//'_plot_'//cplot//'_proc_'//cproc//sp%label//'.rst', restart_id, ierr )
+  call sll_binary_file_create( &
+    'f'//'_plot_'//cplot//'_proc_'//cproc//sp%label//'.rst', restart_id, ierr )
   call sll_binary_write_array_0d(restart_id,time,ierr)
   call compute_local_sizes(sp%layout_x1, local_size_x1, local_size_x2)
-  call sll_binary_write_array_2d(restart_id,sp%f_x1(1:local_size_x1,1:local_size_x2),ierr)
+  call sll_binary_write_array_2d(restart_id, &
+    sp%f_x1(1:local_size_x1,1:local_size_x2),ierr)
   call sll_binary_file_close(restart_id,ierr)    
 
 end subroutine write_restart_file
@@ -555,7 +562,8 @@ subroutine read_restart_file(restart_file, sp, time)
 
   if (restart_file == "no_restart_file") return
 
-  inquire(file=restart_file//'_proc_'//cproc//sp%label//'.rst', exist=file_exists)
+  inquire(file=restart_file//'_proc_'//cproc//sp%label//'.rst', &
+          exist=file_exists)
 
   if(.not.(file_exists))then
     print *,'#file ',restart_file//sp%label//'_proc_'//cproc//sp%label//'.rst'
@@ -575,9 +583,11 @@ subroutine read_restart_file(restart_file, sp, time)
    '. Called from run_vp2d_cartesian().'
     stop
   end if
-  print *,'#read restart file '//restart_file//sp%label//'_proc_'//cproc//'.rst'      
+  print *, &
+    '#read restart file '//restart_file//sp%label//'_proc_'//cproc//'.rst'      
   call sll_binary_read_array_0d(restart_id,time,ierr)
-  call sll_binary_read_array_2d(restart_id,sp%f_x1(1:local_size_x1,1:local_size_x2),ierr)
+  call sll_binary_read_array_2d(restart_id, &
+    sp%f_x1(1:local_size_x1,1:local_size_x2),ierr)
   call sll_binary_file_close(restart_id,ierr)
 
 end subroutine read_restart_file
@@ -600,20 +610,26 @@ sll_int32     :: global_indices(2)
 np_x1 = sp%mesh2d%num_cells1+1
 call compute_local_sizes( sp%layout_x1, local_size_x1, local_size_x2 )
 global_indices(1:2) = local_to_global(sp%layout_x1, (/1, 1/) )
-tid=1          
+tid = 1          
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(tid,i_omp,ig_omp,alpha_omp) 
+!$ tid = omp_get_thread_num()+1
+!$OMP DO
 do i_omp = 1, local_size_x2
   ig_omp = i_omp+global_indices(2)-1
   alpha_omp = factor*sp%node_positions_x2(ig_omp) * split_step
   sp%f1d_omp_in(1:np_x1,tid) = sp%f_x1(1:np_x1,i_omp)
   call sp%advect_x1(tid)%ptr%advect_1d_constant(&
-       alpha_omp, &
-       dt, &
-       sp%f1d_omp_in(1:np_x1,tid), &
+       alpha_omp,                               &
+       dt,                                      &
+       sp%f1d_omp_in(1:np_x1,tid),              &
        sp%f1d_omp_out(1:np_x1,tid))
    
   sp%f_x1(1:np_x1,i_omp)=sp%f1d_omp_out(1:np_x1,tid)
 
 end do
+!$OMP END DO
+!$OMP END PARALLEL 
     
 end subroutine advection_x1
 
@@ -640,7 +656,13 @@ nc_x2 = sp%mesh2d%num_cells2
 call compute_local_sizes(sp%layout_x2, local_size_x1, local_size_x2)
 global_indices(1:2) = local_to_global( sp%layout_x2, (/1, 1/) )
 
-tid=1
+tid         = 1
+
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(tid,ig_omp,i_omp,alpha_omp,mean_omp) &
+!$OMP FIRSTPRIVATE(dt, split_step,nc_x2)
+!$ tid = omp_get_thread_num()+1
+!$OMP DO
 do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
@@ -648,22 +670,26 @@ do i_omp = 1,local_size_x1
   sp%f1d_omp_in(1:sp%num_dof_x2,tid) = sp%f_x2(i_omp,1:sp%num_dof_x2)
 
   if (sp%advection_form_x2==SLL_CONSERVATIVE) then
-    call function_to_primitive(sp%f1d_omp_in(:,tid),sp%x2_array_unit,nc_x2,mean_omp)
+    call function_to_primitive(sp%f1d_omp_in(:,tid),sp%x2_array_unit, &
+      nc_x2,mean_omp)
   endif
 
-  call sp%advect_x2(tid)%ptr%advect_1d_constant(&
-           alpha_omp,                           &
-           dt,                                  &
-           sp%f1d_omp_in(1:sp%num_dof_x2,tid),  &
+  call sp%advect_x2(tid)%ptr%advect_1d_constant(  &
+           alpha_omp,                             &
+           dt,                                    &
+           sp%f1d_omp_in(1:sp%num_dof_x2,tid),    &
            sp%f1d_omp_out(1:sp%num_dof_x2,tid))
 
-  if(sp%advection_form_x2==SLL_CONSERVATIVE)then
-    call primitive_to_function(sp%f1d_omp_out(:,tid),sp%x2_array_unit,nc_x2,mean_omp)
-   endif
+  if (sp%advection_form_x2==SLL_CONSERVATIVE) then
+    call primitive_to_function(sp%f1d_omp_out(:,tid),sp%x2_array_unit, &
+      nc_x2,mean_omp)
+  endif
 
-   sp%f_x2(i_omp,1:sp%num_dof_x2) = sp%f1d_omp_out(1:sp%num_dof_x2,tid)
+  sp%f_x2(i_omp,1:sp%num_dof_x2) = sp%f1d_omp_out(1:sp%num_dof_x2,tid)
 
 end do
+!$OMP END DO
+!$OMP END PARALLEL
 
 call apply_remap_2D( sp%remap_plan_x2_x1, sp%f_x2, sp%f_x1 )
     
