@@ -48,6 +48,7 @@ type species
   sll_real64                                             :: kx
   sll_real64                                             :: eps
   sll_real64, dimension(:),                      pointer :: integration_weight
+  sll_real64                                             :: factor_x1
   type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x1
   type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
   sll_int32                                              :: advection_form_x2
@@ -178,7 +179,6 @@ logical    :: mpi_master
 sll_int32  :: global_indices(2)
 sll_int32  :: local_size_x1
 sll_int32  :: local_size_x2
-sll_int32  :: n_threads
 sll_int32  :: i
 
 sp%label = label
@@ -226,14 +226,7 @@ sp%remap_plan_x2_x1 => NEW_REMAP_PLAN(sp%layout_x2, sp%layout_x1, sp%f_x2)
 SLL_ALLOCATE(sp%rho(np_x1),ierr)
 SLL_ALLOCATE(sp%rho_loc(np_x1),ierr)
 
-n_threads = 1
-!$OMP PARALLEL
-!$ n_threads = omp_get_num_threads()
-!$OMP END PARALLEL
-print*,' n_threads =', n_threads
 
-SLL_ALLOCATE(sp%f1d_omp_in(max(np_x1,np_x2),n_threads),ierr)
-SLL_ALLOCATE(sp%f1d_omp_out(max(np_x1,np_x2),n_threads),ierr)
 SLL_ALLOCATE(sp%x2_array_unit(np_x2),ierr)
 SLL_ALLOCATE(sp%x2_array_middle(np_x2),ierr)
 SLL_ALLOCATE(sp%node_positions_x2(sp%num_dof_x2),ierr)
@@ -274,7 +267,6 @@ call sll_2d_parallel_array_initializer_cartesian( &
   sp%f_x1_init,                                   &
   sll_landau_initializer_2d,                      &
   [sp%params(1),0._f64,sp%params(3),sp%params(4)])
-
 
 end subroutine initialize_species
 
@@ -665,9 +657,8 @@ subroutine read_restart_file(restart_file, sp, time)
 
 end subroutine read_restart_file
 
-subroutine advection_x1(sp, factor, split_step, dt)
+subroutine advection_x1(sp, split_step, dt)
 type(species) , intent(inout) :: sp
-sll_real64    , intent(in)    :: factor
 sll_real64    , intent(in)    :: split_step
 sll_real64    , intent(in)    :: dt
 
@@ -684,25 +675,26 @@ np_x1 = sp%mesh2d%num_cells1+1
 call compute_local_sizes( sp%layout_x1, local_size_x1, local_size_x2 )
 global_indices(1:2) = local_to_global(sp%layout_x1, (/1, 1/) )
 tid = 1          
-!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PARALLEL &
+!$OMP DEFAULT(SHARED) &
 !$OMP PRIVATE(tid,i_omp,ig_omp,alpha_omp) 
 !$ tid = omp_get_thread_num()+1
 !$OMP DO
 do i_omp = 1, local_size_x2
   ig_omp = i_omp+global_indices(2)-1
-  alpha_omp = factor*sp%node_positions_x2(ig_omp) * split_step
+  alpha_omp = sp%factor_x1*sp%node_positions_x2(ig_omp) * split_step
   sp%f1d_omp_in(1:np_x1,tid) = sp%f_x1(1:np_x1,i_omp)
   call sp%advect_x1(tid)%ptr%advect_1d_constant(&
        alpha_omp,                               &
        dt,                                      &
        sp%f1d_omp_in(1:np_x1,tid),              &
        sp%f1d_omp_out(1:np_x1,tid))
-   
+  
   sp%f_x1(1:np_x1,i_omp)=sp%f1d_omp_out(1:np_x1,tid)
 
 end do
 !$OMP END DO
-!$OMP END PARALLEL 
+!$OMP END PARALLEL
     
 end subroutine advection_x1
 
@@ -731,11 +723,11 @@ global_indices(1:2) = local_to_global( sp%layout_x2, (/1, 1/) )
 
 tid         = 1
 
-!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PARALLEL &
 !$OMP PRIVATE(tid,ig_omp,i_omp,alpha_omp,mean_omp) &
 !$OMP FIRSTPRIVATE(dt, split_step,nc_x2)
 !$ tid = omp_get_thread_num()+1
-!$OMP DO
+!$OMP DO 
 do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
