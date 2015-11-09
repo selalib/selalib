@@ -26,12 +26,12 @@ module sll_m_pic_poisson_base
    contains
      procedure(add_single), deferred            :: add_charge_single !< Add the contribution of one particle to the charge density
      procedure                                  :: add_charge_vector !< Add the contribution of a number of particles to the charge density
-     procedure(eval_component_single), deferred :: evaluate_field_single
-     procedure                                  :: evaluate_field_vector
-     procedure(eval_single), deferred           :: evaluate_rho_single
-     procedure                                  :: evaluate_rho_vector
-     procedure(eval_single), deferred           :: evaluate_phi_single
-     procedure                                  :: evaluate_phi_vector
+     procedure(eval_component_single), deferred :: evaluate_field_single !< Evaluate given components of the field at a given position.
+     procedure                                  :: evaluate_field_vector !< Evaluate given components of the field at given positions.
+     procedure(eval_single), deferred           :: evaluate_rho_single !< Evaluate charge density at given position.
+     procedure                                  :: evaluate_rho_vector !< Evaluate charge density at given positions.
+     procedure(eval_single), deferred           :: evaluate_phi_single !< Evaluate potential at given position.
+     procedure                                  :: evaluate_phi_vector !< Evaluate potential at given positions.
      procedure(empty), deferred                 :: reset !< Reset the accumulated charge to zero
      procedure(empty), deferred                 :: solve !< Solve for the electric potential and field
      procedure(empty), deferred                 :: solve_phi !< Solve for phi
@@ -39,8 +39,8 @@ module sll_m_pic_poisson_base
      procedure(compute_energy), deferred        :: compute_field_energy !< Compute the L2 norm of one field component
      !procedure(update_dofs_function), deferred  :: compute_rhs_from_function
      !procedure(update_dofs_function), deferred  :: l2projection
-     procedure(linear_combination), deferred    :: add_analytic_charge
-     procedure(update_dofs_function), deferred  :: set_analytic_charge
+     procedure(linear_combination), deferred    :: add_analytic_charge !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
+     procedure(update_dofs_function), deferred  :: set_analytic_charge !< Set the value of the analytic charge contribution from a given function.
 
 
      generic :: add_charge => add_charge_single, add_charge_vector
@@ -139,7 +139,7 @@ module sll_m_pic_poisson_base
      function compute_energy(this, component) result(energy)
        use sll_m_working_precision
        import sll_c_pic_poisson
-       class (sll_c_pic_poisson), intent( in ) :: this
+       class (sll_c_pic_poisson), intent( in ) :: this !< PIC Poisson solver object
        sll_int32, intent( in ) :: component !< Component of the electric field for which the energy should be computed
        sll_real64 :: energy !< L2 norm squarred of 
      end function compute_energy
@@ -172,6 +172,7 @@ module sll_m_pic_poisson_base
 contains
 
     !---------------------------------------------------------------------------!
+    !< Add the contribution of \a n_part particles to the charge density. Per default it is implemented as a loop over the implementation for a single particle but can be overwritten if necessary.
   subroutine add_charge_vector(this,n_part, position, weight) 
     class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
     sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
