@@ -51,7 +51,6 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: operatorHB => operatorHB_pic_vm_1d2v  !> Operator for H_B part
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
-     procedure :: update_jv !> Helper function to compute the integral of j using Gauss quadrature
      procedure :: operatorHp1_pic_vm_1d2v_prim
 
   end type sll_t_hamiltonian_splitting_pic_vm_1d2v
@@ -106,9 +105,9 @@ contains
 
     !local variables
     sll_int32 :: i_part, ind
-    sll_real64 :: xi, x_new(3), vi(3), wi(1)
+    sll_real64 :: xi, x_new(3), vi(3), wi(1), x_old(3)
     sll_int32  :: n_cells
-    sll_real64 :: r_new, r_old
+    sll_real64 :: r_new, r_old, qoverm
     sll_int32 :: index_new, index_old
     !sll_real64 :: primitive_1(3)
 
@@ -129,47 +128,21 @@ contains
     ! Then update particle position:  X_new = X_old + dt * V
     do i_part=1,this%particle_group%n_particles  
        ! Read out particle position and velocity
-       x_new = this%particle_group%get_x(i_part)
+       x_old = this%particle_group%get_x(i_part)
        vi = this%particle_group%get_v(i_part)
-       ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
-       index_old = floor(xi)
-       r_old = xi - real(index_old,f64)
+
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
+       x_new = modulo(x_old + dt * vi, this%Lx)
        call this%particle_group%set_x(i_part, x_new)
 
-       ! Compute the new box index index_new and normalized position r_old.
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
-       index_new = floor(xi)
-       r_new = xi - real(index_new ,f64) 
-
-       ! Scale vi by weight to combine both factors for accumulation of integral over j
+       ! Get charge for accumulation of j
        wi = this%particle_group%get_charge(i_part)
+       qoverm = this%particle_group%species%q_over_m();
 
-       if (index_old == index_new) then
-          if (r_old < r_new) then
-             call this%update_jv(r_old, r_new, index_old, wi, 1.0_f64, vi(2))
-          else
-             call this%update_jv(r_new, r_old, index_old, wi, -1.0_f64, vi(2))
-          end if
-       elseif (index_old < index_new) then
-          call this%update_jv (r_old, 1.0_f64, index_old, wi, 1.0_f64, vi(2))
-          call this%update_jv (0.0_f64, r_new, index_new, wi, 1.0_f64, vi(2))
-          do ind = index_old+1, index_new-1
-             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, 1.0_f64, vi(2))
-          end do
-       else
-          call this%update_jv (r_new, 1.0_f64, index_new, wi, -1.0_f64, vi(2))
-          call this%update_jv (0.0_f64, r_old, index_old, wi, -1.0_f64, vi(2))
-          do ind = index_new+1, index_old-1
-             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, -1.0_f64, vi(2))
-          end do
-       end if
-             
+
+       call this%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
+            this%bfield_dofs, vi, this%j_dofs_local(:,1))
 
        call this%particle_group%set_v(i_part, vi)
 
@@ -187,45 +160,46 @@ contains
 
  end subroutine operatorHp1_pic_vm_1d2v
 
- ! TODO: This is hard coded for quadratic, cubic splines. Make general.
- subroutine update_jv(this, lower, upper, index, weight, sign, vi)
-   class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
-   sll_real64, intent(in) :: lower
-   sll_real64, intent(in) :: upper
-   sll_int32,  intent(in) :: index
-   sll_real64, intent(in) :: weight(1)
-   sll_real64, intent(in) :: sign
-   sll_real64, intent(inout) :: vi
-
-   !Local variables
-   sll_real64 :: m, c, y1, y2, fy(this%spline_degree+1)
-   sll_int32  :: ind, i_grid, i_mod, n_cells
-   sll_real64 :: qm
-
-
-   qm = this%particle_group%species%q_over_m();
-   n_cells = this%kernel_smoother_0%n_dofs
-
-
-   m = 0.5_f64*(upper-lower)
-   c = 0.5_f64*(upper+lower)
-   y1 = -m/sqrt(3.0_f64)+c
-   y2 = m/sqrt(3.0_f64) +c
-   fy = sign*m*this%delta_x*&
-        (uniform_b_splines_at_x(this%spline_degree-1, y1) +&
-        uniform_b_splines_at_x(this%spline_degree-1, y2))
-
-   ind = 1
-   do i_grid = index - this%spline_degree + 1, index
-      i_mod = modulo(i_grid, n_cells ) + 1
-      this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-           weight(1)*fy(ind)
-      vi = vi - qm* fy(ind)*this%bfield_dofs(i_mod)
-      ind = ind + 1
-   end do
-
-
- end subroutine update_jv
+!!$ ! TODO: This is hard coded for quadratic, cubic splines. Make general.
+!!$ subroutine update_jv(this, lower, upper, index, weight, sign, vi)
+!!$   class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+!!$   sll_real64, intent(in) :: lower
+!!$   sll_real64, intent(in) :: upper
+!!$   sll_int32,  intent(in) :: index
+!!$   sll_real64, intent(in) :: weight(1)
+!!$   sll_real64, intent(in) :: sign
+!!$   sll_real64, intent(inout) :: vi
+!!$
+!!$   !Local variables
+!!$   sll_real64 :: m, c, y1, y2, fy(this%spline_degree+1)
+!!$   sll_int32  :: ind, i_grid, i_mod, n_cells
+!!$   sll_real64 :: qm
+!!$
+!!$
+!!$   qm = this%particle_group%species%q_over_m();
+!!$   n_cells = this%kernel_smoother_0%n_dofs
+!!$
+!!$
+!!$   m = 0.5_f64*(upper-lower)
+!!$   c = 0.5_f64*(upper+lower)
+!!$   y1 = -m/sqrt(3.0_f64)+c
+!!$   y2 = m/sqrt(3.0_f64) +c
+!!$   fy = sign*m*this%delta_x*&
+!!$        (uniform_b_splines_at_x(this%spline_degree-1, y1) +&
+!!$        uniform_b_splines_at_x(this%spline_degree-1, y2))
+!!$
+!!$
+!!$   ind = 1
+!!$   do i_grid = index - this%spline_degree + 1, index
+!!$      i_mod = modulo(i_grid, n_cells ) + 1
+!!$      this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+!!$           weight(1)*fy(ind)
+!!$      vi = vi - qm* fy(ind)*this%bfield_dofs(i_mod)
+!!$      ind = ind + 1
+!!$   end do
+!!$
+!!$
+!!$ end subroutine update_jv
 
  !> Alternative implementation of the Hp1 operator based on the primal function of the spline
  subroutine operatorHp1_pic_vm_1d2v_prim(this, dt)

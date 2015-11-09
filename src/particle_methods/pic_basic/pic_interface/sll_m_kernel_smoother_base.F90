@@ -24,6 +24,7 @@ module sll_m_kernel_smoother_base
    contains
 
      procedure(add_single), deferred        :: add_charge !> Add the contribution of one particle to the charge density
+     procedure(add_update) , deferred       :: add_current_update_v !> Add contribution of pne particle to the current density and update velocity 
 !     procedure(add_single), deferred        :: add_current_single !> Add the contribution of one particle to the charge density
      procedure(eval_single), deferred       :: evaluate
      procedure(eval_multiple), deferred     :: evaluate_multiple
@@ -43,6 +44,23 @@ module sll_m_kernel_smoother_base
        sll_real64,                    intent( inout ) :: rho_dofs(this%n_dofs) !< Coefficient vector of the charge distribution
 
      end subroutine add_single
+  end interface
+  
+  !---------------------------------------------------------------------------!
+  abstract interface
+     subroutine add_update (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+       use sll_m_working_precision
+       import sll_c_kernel_smoother
+       class(sll_c_kernel_smoother), intent(in) :: this !< kernel smoother object
+       sll_real64, intent(in) :: position_old(this%dim)
+       sll_real64, intent(in) :: position_new(this%dim)
+       sll_real64, intent(in) :: weight
+       sll_real64, intent(in) :: qoverm
+       sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
+       sll_real64, intent(inout) :: vi(this%dim)
+       sll_real64, intent(inout) :: j_dofs(this%n_dofs)
+
+     end subroutine add_update
   end interface
 
 

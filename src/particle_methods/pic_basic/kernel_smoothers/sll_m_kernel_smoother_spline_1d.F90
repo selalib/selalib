@@ -11,6 +11,8 @@ module sll_m_kernel_smoother_spline_1d
        sll_c_kernel_smoother, SLL_GALERKIN, SLL_COLLOCATION
   use sll_m_arbitrary_degree_splines, only : &
        uniform_b_splines_at_x
+  use sll_m_gauss_legendre_integration, only : &
+       gauss_legendre_points_and_weights
   
   implicit none
   private
@@ -32,12 +34,15 @@ module sll_m_kernel_smoother_spline_1d
      sll_int32 :: n_span !< Number of intervals where spline non zero (spline_degree + 1)
 !     sll_int32 :: smoothing_type !< Defines whether we use Galerkin or collocation in order to decide on scaling when accumulating
      sll_real64 :: scaling
+     sll_int32  :: n_quad_points
 
      
    contains
      procedure :: add_charge => add_charge_single_spline_1d !> 
+     procedure :: add_current_update_v => add_current_update_v_spline_1d
      procedure :: evaluate => evaluate_field_single_spline_1d !> Evaluate spline function with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_1d !> Evaluate multiple spline functions with given coefficients
+     procedure :: update_jv !> Helper function to compute the integral of j using Gauss quadrature
 
   end type sll_t_kernel_smoother_spline_1d
   
@@ -71,7 +76,106 @@ contains
   end subroutine add_charge_single_spline_1d
 
 
+  subroutine add_current_update_v_spline_1d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+    class(sll_t_kernel_smoother_spline_1d), intent(in) :: this !< kernel smoother object
+    sll_real64, intent(in) :: position_old(this%dim)
+    sll_real64, intent(in) :: position_new(this%dim)
+    sll_real64, intent(in) :: weight
+    sll_real64, intent(in) :: qoverm
+    sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
+    sll_real64, intent(inout) :: vi(this%dim)
+    sll_real64, intent(inout) :: j_dofs(this%n_dofs)
 
+    ! local variables
+    sll_real64 :: xi
+    sll_int32  :: index_old, index_new, ind
+    sll_real64 :: r_old, r_new
+
+    ! Read out particle position and velocity
+    ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
+       xi = (position_old(1) - this%domain(1,1)) /&
+            this%delta_x(1)
+       index_old = floor(xi)
+       r_old = xi - real(index_old,f64)
+
+       ! Compute the new box index index_new and normalized position r_old.
+       xi = (position_new(1) - this%domain(1,1)) /&
+            this%delta_x(1)
+       index_new = floor(xi)
+       r_new = xi - real(index_new ,f64) 
+       !print*, r_old, index_old, r_new, index_new
+
+       if (index_old == index_new) then
+          if (r_old < r_new) then
+             call this%update_jv(r_old, r_new, index_old, weight, &
+                  qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+          else
+             call this%update_jv(r_new, r_old, index_old, weight, qoverm, &
+                  -1.0_f64, vi(2), j_dofs, bfield_dofs)
+          end if
+       elseif (index_old < index_new) then
+          call this%update_jv (r_old, 1.0_f64, index_old, weight, &
+               qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+          call this%update_jv (0.0_f64, r_new, index_new, weight, &
+               qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+          do ind = index_old+1, index_new-1
+             call this%update_jv (0.0_f64, 1.0_f64, ind, weight, &
+                  qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+          end do
+       else
+          call this%update_jv (r_new, 1.0_f64, index_new, weight, qoverm, &
+               -1.0_f64, vi(2), j_dofs, bfield_dofs)
+          call this%update_jv (0.0_f64, r_old, index_old, weight, qoverm, &
+               -1.0_f64, vi(2), j_dofs, bfield_dofs)
+          do ind = index_new+1, index_old-1
+             call this%update_jv (0.0_f64, 1.0_f64, ind, weight, qoverm, &
+                  -1.0_f64, vi(2), j_dofs, bfield_dofs)
+          end do
+       end if    
+
+
+     end subroutine add_current_update_v_spline_1d
+
+ ! TODO: This is hard coded for quadratic, cubic splines. Make general.
+ subroutine update_jv(this, lower, upper, index, weight, qoverm, sign, vi, j_dofs, bfield_dofs)
+   class(sll_t_kernel_smoother_spline_1d), intent(in) :: this !< time splitting object 
+   sll_real64, intent(in) :: lower
+   sll_real64, intent(in) :: upper
+   sll_int32,  intent(in) :: index
+   sll_real64, intent(in) :: weight
+   sll_real64, intent(in) :: qoverm
+   sll_real64, intent(in) :: sign
+   sll_real64, intent(inout) :: vi
+   sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
+   sll_real64, intent(inout) :: j_dofs(this%n_dofs)
+
+   !Local variables
+   sll_real64 :: fy(this%spline_degree+1)
+   sll_int32  :: ind, i_grid, i_mod, n_cells, j
+   sll_real64 :: quad_xw(2, this%n_quad_points)
+
+
+   n_cells = this%n_dofs
+
+   quad_xw = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
+
+   fy = quad_xw(2,1) * uniform_b_splines_at_x(this%spline_degree, quad_xw(1,1))
+   do j=2,this%n_quad_points
+      fy = fy + quad_xw(2,j) *  uniform_b_splines_at_x(this%spline_degree, quad_xw(1,j))
+   end do
+   fy = fy * sign*this%delta_x(1)
+
+   ind = 1
+   do i_grid = index - this%spline_degree , index
+      i_mod = modulo(i_grid, n_cells ) + 1
+      j_dofs(i_mod) = j_dofs(i_mod) + &
+           weight*fy(ind)
+      vi = vi - qoverm* fy(ind)*bfield_dofs(i_mod)
+      ind = ind + 1
+   end do
+
+
+ end subroutine update_jv
 
 !!$  !---------------------------------------------------------------------------!
 !!$  subroutine add_shape_factor_single_spline_1d(this, position, i_part)
@@ -200,6 +304,8 @@ contains
     else
        print*, 'Smoothing Type ', smoothing_type, ' not implemented for kernel_smoother_spline_1d.'
     end if
+    
+    this%n_quad_points = (this%spline_degree+2)/2
 
   end function sll_new_smoother_spline_1d
 
