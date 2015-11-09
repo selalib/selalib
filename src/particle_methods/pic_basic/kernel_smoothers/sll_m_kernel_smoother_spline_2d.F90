@@ -39,7 +39,8 @@ module sll_m_kernel_smoother_spline_2d
      !procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_2d !> Accumulate a component of the current density
      procedure :: evaluate => evaluate_field_single_spline_2d !> Evaluate the spline with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_2d
-
+     procedure :: add_current_update_v => add_current_update_v_spline_2d
+ 
 
   end type sll_t_kernel_smoother_spline_2d
   
@@ -93,6 +94,22 @@ contains
     end do
 
   end subroutine add_charge_single_spline_2d
+
+
+
+  subroutine add_current_update_v_spline_2d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+    class(sll_t_kernel_smoother_spline_2d), intent(in) :: this !< kernel smoother object
+    sll_real64, intent(in) :: position_old(this%dim)
+    sll_real64, intent(in) :: position_new(this%dim)
+    sll_real64, intent(in) :: weight
+    sll_real64, intent(in) :: qoverm
+    sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
+    sll_real64, intent(inout) :: vi(this%dim)
+    sll_real64, intent(inout) :: j_dofs(this%n_dofs)
+
+    print*, 'add_current_update_v_spline_2d not implemented.'
+
+  end subroutine add_current_update_v_spline_2d
 
 !!$  !---------------------------------------------------------------------------!
 !!$  subroutine accumulate_j_from_klimontovich_spline_2d(this, particle_group,&
