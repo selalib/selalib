@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 06 Nov 2015
+# Last revision: 09 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -91,12 +91,29 @@ def remove_fortran_logicals( text ):
     return text
 
 #------------------------------------------------------------------------------
-def get_external_symbols( content, fglobals=set() ):
-    """ TODO: this should include
-           1) all used variables
-           2) all used types
-           3) all used subroutines (NOT intrinsic)
-           4) all calls (used functions and arrays, NOT intrinsic)
+def compute_external_symbols( content, fglobals=set() ):
+    """
+    Compute all external symbols in a 'content' list of items (usually a
+    Fortran block), which represent a certain scope. This is done by searching
+    all used symbols in the current scope, and substracting the globals symbols
+    inherited from the parent scope. When one of the items is itself a block,
+    this function is recursively called in the block, once the global variables
+    of the child scope are updated with the local symbols at the current scope,
+    as well as the 'associated' variables.
+
+    Parameters
+    ----------
+    content : list of 'fparser' objects
+      List of items (Fortran statements), usually representing a Fortran block
+
+    fglobals : set
+      Global symbols in the parent scope, which the current scope inherits
+
+    Returns
+    -------
+    fexternals : set
+      External symbols in the current scope (child blocks included)
+
     """
     # Compute locally defined symbols
     flocals = compute_locals( content )
@@ -121,7 +138,7 @@ def get_external_symbols( content, fglobals=set() ):
             else:
                 fglobals_block = fglobals
             # Recursion: find external symbols in block contents
-            fexternals_block = get_external_symbols( item.content, \
+            fexternals_block = compute_external_symbols( item.content, \
                     fglobals_block )
             # Update set of all external symbols
             fexternals.update( fexternals_block )
@@ -130,11 +147,27 @@ def get_external_symbols( content, fglobals=set() ):
 
 #------------------------------------------------------------------------------
 def compute_locals( content, return_dict=False ):
-    """ Compute local symbols from:
-          1. r.h.s. of type declarations (local variables)
-          2. type definitions (local types)
-          3. procedure definitions (local functions and subroutines)
-          4. interface definitions (TODO)
+    """
+    Compute local symbols from:
+      1. r.h.s. of type declarations (local variables)
+      2. type definitions (local types)
+      3. procedure definitions (local functions and subroutines)
+      4. interface definitions
+      5. abstract interfaces
+
+    Parameters
+    ----------
+    content : list of 'fparser' objects
+      List of items (Fortran statements), usually representing a Fortran block
+
+    return_dict : bool
+      If True, a dictionary with 7 separate entries is returned
+
+    Returns
+    -------
+    flocals : set | dict
+      Local symbols (divided into 7 cathegories if return_dict is True)
+
     """
     variables   = []
     types       = []
@@ -198,12 +231,20 @@ for key,val in patterns.items():
 
 #------------------------------------------------------------------------------
 def compute_all_used_symbols( content ):
-    """ Compute all used symbols from:
-          1. l.h.s. of type declarations (used types)
-          2. subroutine calls (used subroutines)
-          3. r.h.s. of assignments (used functions and variables)
-          4. l.h.s. of assignments (used variables)
-          5. type blocks (entends...)
+    """
+    Compute all used symbols in a certain scope level, without searching any
+    child scopes.
+
+    Parameters
+    ----------
+    content : list of 'fparser' objects
+      List of items (Fortran statements), usually representing a Fortran block
+
+    Returns
+    -------
+    used_symbols : set
+      All symbols used in the current scope level
+
     """
     types       = []
     subroutines = []
@@ -241,7 +282,9 @@ def compute_all_used_symbols( content ):
                 types.append( item.name )
             # Type name in polymorphic extended type declarations
             elif isinstance( item, typedecl_statements.Class ):
-                types.append( item.get_kind() ) # NOTE: this makes no sense, but...
+                type_name = item.get_kind() # NOTE: this makes no sense, but...
+                if type_name != '*':
+                    types.append( type_name )
         # Procedure declaration statements or bindings
         elif isinstance( item, has_interface_types ):
             if item.iname:
@@ -373,7 +416,7 @@ class FortranModule( object ):
         self._flocals = compute_locals( module.content, return_dict=True )
 
         # Extract external symbols (not declared anywhere in module)
-        self._imported_symbols = get_external_symbols( module.content )
+        self._imported_symbols = compute_external_symbols( module.content )
 
         # Set: exported symbols (empty for now)
         self._exported_symbols = set()
