@@ -74,8 +74,7 @@ type, extends(sll_simulation_base_class) :: &
   character(len=256) :: restart_file
   logical :: time_init_from_restart_file
   
-  type(species) :: sp1
-  type(species) :: sp2
+  type(species) :: sp(2)
   
   !time_iterations
   sll_real64 :: dt
@@ -497,13 +496,13 @@ select case (mesh_case_x1)
     x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_sp1
     mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
      eta_min=x1_min, eta_max=x1_max)
-    call get_node_positions( mesh_x1, sim%sp1%x1_array )
-    call get_node_positions( mesh_x1, sim%sp2%x1_array )
+    call get_node_positions( mesh_x1, sim%sp(1)%x1_array )
+    call get_node_positions( mesh_x1, sim%sp(2)%x1_array )
   case ("SLL_CARTESIAN_MESH")
     mesh_x1 => new_cartesian_mesh_1d(num_cells_x1, &
      eta_min=x1_min, eta_max=x1_max)  
-    call get_node_positions( mesh_x1, sim%sp1%x1_array )
-    call get_node_positions( mesh_x1, sim%sp2%x1_array )
+    call get_node_positions( mesh_x1, sim%sp(1)%x1_array )
+    call get_node_positions( mesh_x1, sim%sp(2)%x1_array )
   case default
     print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
     print*,'#in init_vp2d_par_cart'
@@ -512,15 +511,15 @@ end select
 
 mesh_x2_sp1 => new_cartesian_mesh_1d(num_cells_x2_sp1,  &
   eta_min=x2_min_sp1, eta_max=x2_max_sp1)
-call get_node_positions( mesh_x2_sp1, sim%sp1%x2_array )
-sim%sp1%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp1)
+call get_node_positions( mesh_x2_sp1, sim%sp(1)%x2_array )
+sim%sp(1)%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp1)
 mesh_x2_sp2 => new_cartesian_mesh_1d(num_cells_x2_sp2, &
   eta_min=x2_min_sp2, eta_max=x2_max_sp2)
-call get_node_positions( mesh_x2_sp2, sim%sp2%x2_array )
-sim%sp2%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp2)
+call get_node_positions( mesh_x2_sp2, sim%sp(2)%x2_array )
+sim%sp(2)%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2_sp2)
 
-nc_x1 = sim%sp1%mesh2d%num_cells1
-np_x1 = sim%sp1%mesh2d%num_cells1+1
+nc_x1 = sim%sp(1)%mesh2d%num_cells1
+np_x1 = sim%sp(1)%mesh2d%num_cells1+1
 select case (poisson_solver)
 case ("SLL_FFT")
   sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,nc_x1)
@@ -532,7 +531,7 @@ case default
   stop 
 end select
 
-call set_initial_function(sim%sp1  &
+call set_initial_function(sim%sp(1)  &
 , initial_function_case_sp1        & 
 , kmode_sp1                        &
 , eps_sp1                          &
@@ -541,7 +540,7 @@ call set_initial_function(sim%sp1  &
 , factor1_sp1                      &
 , alpha_gaussian_sp1)       
 
-call set_initial_function(sim%sp2  &
+call set_initial_function(sim%sp(2)  &
 , initial_function_case_sp2        & 
 , kmode_sp2                        &
 , eps_sp2                          &
@@ -564,18 +563,18 @@ print *,'#num_threads=',num_threads
 
 sim%num_threads = num_threads
 
-SLL_ALLOCATE(sim%sp1%advect_x1(num_threads),ierr)
-SLL_ALLOCATE(sim%sp1%advect_x2(num_threads),ierr)
-SLL_ALLOCATE(sim%sp2%advect_x1(num_threads),ierr)
-SLL_ALLOCATE(sim%sp2%advect_x2(num_threads),ierr)
-np_x1 = sim%sp1%mesh2d%num_cells1+1
-np_x2 = sim%sp1%mesh2d%num_cells2+1
-SLL_ALLOCATE(sim%sp1%f1d_omp_in (max(np_x1,np_x2),num_threads),ierr)
-SLL_ALLOCATE(sim%sp1%f1d_omp_out(max(np_x1,np_x2),num_threads),ierr)
-np_x1 = sim%sp2%mesh2d%num_cells1+1
-np_x2 = sim%sp2%mesh2d%num_cells2+1
-SLL_ALLOCATE(sim%sp2%f1d_omp_in (max(np_x1,np_x2),num_threads),ierr)
-SLL_ALLOCATE(sim%sp2%f1d_omp_out(max(np_x1,np_x2),num_threads),ierr)
+SLL_ALLOCATE(sim%sp(1)%advect_x1(num_threads),ierr)
+SLL_ALLOCATE(sim%sp(1)%advect_x2(num_threads),ierr)
+SLL_ALLOCATE(sim%sp(2)%advect_x1(num_threads),ierr)
+SLL_ALLOCATE(sim%sp(2)%advect_x2(num_threads),ierr)
+np_x1 = sim%sp(1)%mesh2d%num_cells1+1
+np_x2 = sim%sp(1)%mesh2d%num_cells2+1
+SLL_ALLOCATE(sim%sp(1)%f1d_omp_in (max(np_x1,np_x2),num_threads),ierr)
+SLL_ALLOCATE(sim%sp(1)%f1d_omp_out(max(np_x1,np_x2),num_threads),ierr)
+np_x1 = sim%sp(2)%mesh2d%num_cells1+1
+np_x2 = sim%sp(2)%mesh2d%num_cells2+1
+SLL_ALLOCATE(sim%sp(2)%f1d_omp_in (max(np_x1,np_x2),num_threads),ierr)
+SLL_ALLOCATE(sim%sp(2)%f1d_omp_out(max(np_x1,np_x2),num_threads),ierr)
 
 
 !$OMP PARALLEL DEFAULT(SHARED) &
@@ -583,14 +582,14 @@ SLL_ALLOCATE(sim%sp2%f1d_omp_out(max(np_x1,np_x2),num_threads),ierr)
 !$ tid = omp_get_thread_num()+1
 select case (advector_x1_sp1)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
-  sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(1)%advect_x1(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x1,                                         &
     x1_min,                                               &
     x1_max,                                               &
     SPLINE,                                               & 
     order_x1_sp1) 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-  sim%sp1%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(1)%advect_x1(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x1,                                         &
     x1_min,                                               &
     x1_max,                                               &
@@ -603,10 +602,10 @@ end select
    
 select case (advector_x1_sp2)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
-  sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(2)%advect_x1(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x1, x1_min, x1_max, SPLINE, order_x1_sp2) 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-  sim%sp2%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(2)%advect_x1(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x1, x1_min, x1_max, LAGRANGE, order_x1_sp2)
 case default
   print*,'#advector in x1 for species 2 ', advector_x1_sp2, ' not implemented'
@@ -615,26 +614,26 @@ end select
 
 select case (advector_x2_sp2)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
-  sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(2)%advect_x2(tid)%ptr => new_periodic_1d_advector( &
      num_cells_x2_sp2,                                    &
      x2_min_sp2,                                          &
      x2_max_sp2,                                          &
      SPLINE,                                              &  
      order_x2_sp2) 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-  sim%sp2%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(2)%advect_x2(tid)%ptr => new_periodic_1d_advector( &
      num_cells_x2_sp2,                                    &
      x2_min_sp2,                                          &
      x2_max_sp2,                                          &
      LAGRANGE,                                            & 
      order_x2_sp2)
 case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-  sim%sp2%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
+  sim%sp(2)%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
      num_cells_x2_sp2,                                                     &
      x2_min_sp2,                                                           &
      x2_max_sp2,                                                           &
      order_x2_sp2,                                                         &
-     sim%sp2%x2_array)           
+     sim%sp(2)%x2_array)           
 case default
     print*,'#advector in x2 for species 2', advector_x2_sp2, ' not implemented'
     stop 
@@ -642,26 +641,26 @@ end select
   
 select case (advector_x2_sp1)
 case ("SLL_SPLINES") ! arbitrary order periodic splines
-  sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(1)%advect_x2(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x2_sp1,                                     &
     x2_min_sp1,                                           &
     x2_max_sp1,                                           &
     SPLINE,                                               & 
     order_x2_sp1) 
 case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-  sim%sp1%advect_x2(tid)%ptr => new_periodic_1d_advector( &
+  sim%sp(1)%advect_x2(tid)%ptr => new_periodic_1d_advector( &
     num_cells_x2_sp1,                                     &
     x2_min_sp1,                                           &
     x2_max_sp1,                                           &
     LAGRANGE,                                             & 
     order_x2_sp1)
 case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-  sim%sp1%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
+  sim%sp(1)%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
    num_cells_x2_sp1,                                                       &
    x2_min_sp1,                                                             &
    x2_max_sp1,                                                             &
    order_x2_sp1,                                                           &
-   sim%sp1%x2_array)           
+   sim%sp(1)%x2_array)           
 case default
   print*,'#advector in x2 for species 1', advector_x2_sp1, ' not implemented'
   stop 
@@ -671,11 +670,11 @@ end select
 
 select case (advection_form_x2_sp1)
 case ("SLL_ADVECTIVE")
-  sim%sp1%advection_form_x2 = SLL_ADVECTIVE
-  sim%sp1%num_dof_x2 = num_cells_x2_sp1+1
+  sim%sp(1)%advection_form_x2 = SLL_ADVECTIVE
+  sim%sp(1)%num_dof_x2 = num_cells_x2_sp1+1
 case ("SLL_CONSERVATIVE")
-  sim%sp1%advection_form_x2 = SLL_CONSERVATIVE
-  sim%sp1%num_dof_x2 = num_cells_x2_sp1
+  sim%sp(1)%advection_form_x2 = SLL_CONSERVATIVE
+  sim%sp(1)%num_dof_x2 = num_cells_x2_sp1
 case default
   print*,'#advection_form_x2_sp1', advection_form_x2_sp1, ' not implemented'
   print *,'#in init_vp2d_par_cart'
@@ -684,61 +683,61 @@ end select
 
 select case (advection_form_x2_sp2)
 case ("SLL_ADVECTIVE")
-  sim%sp2%advection_form_x2 = SLL_ADVECTIVE
-  sim%sp2%num_dof_x2 = num_cells_x2_sp2+1
+  sim%sp(2)%advection_form_x2 = SLL_ADVECTIVE
+  sim%sp(2)%num_dof_x2 = num_cells_x2_sp2+1
 case ("SLL_CONSERVATIVE")
-  sim%sp2%advection_form_x2 = SLL_CONSERVATIVE
-  sim%sp2%num_dof_x2 = num_cells_x2_sp2
+  sim%sp(2)%advection_form_x2 = SLL_CONSERVATIVE
+  sim%sp(2)%num_dof_x2 = num_cells_x2_sp2
 case default
   print*,'#advection_form_x2', advection_form_x2_sp2, ' not implemented'
   print *,'#in init_vp2d_par_cart'
   stop 
 end select  
 
-sim%sp1%factor_x1     = factor_x1
-sim%sp2%factor_x1     = factor_x1
+sim%sp(1)%factor_x1     = factor_x1
+sim%sp(2)%factor_x1     = factor_x1
 
-SLL_ALLOCATE(sim%sp1%integration_weight(sim%sp1%num_dof_x2),ierr)
-SLL_ALLOCATE(sim%sp2%integration_weight(sim%sp2%num_dof_x2),ierr)
+SLL_ALLOCATE(sim%sp(1)%integration_weight(sim%sp(1)%num_dof_x2),ierr)
+SLL_ALLOCATE(sim%sp(2)%integration_weight(sim%sp(2)%num_dof_x2),ierr)
 
 select case (integration_case)
 
 case ("SLL_RECTANGLE")
 
   do i=1,num_cells_x2_sp1
-    sim%sp1%integration_weight(i) = sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
+    sim%sp(1)%integration_weight(i) = sim%sp(1)%x2_array(i+1)-sim%sp(1)%x2_array(i)
   enddo
-  sim%sp1%integration_weight(num_cells_x2_sp1+1) = 0._f64   
+  sim%sp(1)%integration_weight(num_cells_x2_sp1+1) = 0._f64   
 
   do i=1,num_cells_x2_sp2
-    sim%sp2%integration_weight(i) = sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i)
+    sim%sp(2)%integration_weight(i) = sim%sp(2)%x2_array(i+1)-sim%sp(2)%x2_array(i)
   enddo
-  sim%sp2%integration_weight(num_cells_x2_sp2+1) = 0._f64
+  sim%sp(2)%integration_weight(num_cells_x2_sp2+1) = 0._f64
 
 case ("SLL_TRAPEZOID")
 
-  sim%sp1%integration_weight(1)=0.5_f64*(sim%sp1%x2_array(2)-sim%sp1%x2_array(1))
+  sim%sp(1)%integration_weight(1)=0.5_f64*(sim%sp(1)%x2_array(2)-sim%sp(1)%x2_array(1))
   do i=2,num_cells_x2_sp1
-    sim%sp1%integration_weight(i) = 0.5_f64*(sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i-1))
+    sim%sp(1)%integration_weight(i) = 0.5_f64*(sim%sp(1)%x2_array(i+1)-sim%sp(1)%x2_array(i-1))
   enddo  
-  sim%sp1%integration_weight(num_cells_x2_sp1+1) = &
-    0.5_f64*(sim%sp1%x2_array(num_cells_x2_sp1+1)-sim%sp1%x2_array(num_cells_x2_sp1))
+  sim%sp(1)%integration_weight(num_cells_x2_sp1+1) = &
+    0.5_f64*(sim%sp(1)%x2_array(num_cells_x2_sp1+1)-sim%sp(1)%x2_array(num_cells_x2_sp1))
 
-  sim%sp2%integration_weight(1)=0.5_f64*(sim%sp2%x2_array(2)-sim%sp2%x2_array(1))
+  sim%sp(2)%integration_weight(1)=0.5_f64*(sim%sp(2)%x2_array(2)-sim%sp(2)%x2_array(1))
   do i=2,num_cells_x2_sp2
-    sim%sp2%integration_weight(i) = 0.5_f64*(sim%sp2%x2_array(i+1)-sim%sp2%x2_array(i-1))
+    sim%sp(2)%integration_weight(i) = 0.5_f64*(sim%sp(2)%x2_array(i+1)-sim%sp(2)%x2_array(i-1))
   enddo  
-  sim%sp2%integration_weight(num_cells_x2_sp2+1) = &
-    0.5_f64*(sim%sp2%x2_array(num_cells_x2_sp2+1)-sim%sp2%x2_array(num_cells_x2_sp2))
+  sim%sp(2)%integration_weight(num_cells_x2_sp2+1) = &
+    0.5_f64*(sim%sp(2)%x2_array(num_cells_x2_sp2+1)-sim%sp(2)%x2_array(num_cells_x2_sp2))
 
 case ("SLL_CONSERVATIVE")
 
   do i=1,num_cells_x2_sp1
-    sim%sp1%integration_weight(i)=sim%sp1%x2_array(i+1)-sim%sp1%x2_array(i)
+    sim%sp(1)%integration_weight(i)=sim%sp(1)%x2_array(i+1)-sim%sp(1)%x2_array(i)
   enddo  
 
   do i=1,num_cells_x2_sp2
-    sim%sp2%integration_weight(i)=sim%sp2%x2_array(i+10)-sim%sp2%x2_array(i)
+    sim%sp(2)%integration_weight(i)=sim%sp(2)%x2_array(i+10)-sim%sp(2)%x2_array(i)
   enddo  
 
 case default
@@ -750,8 +749,8 @@ case default
 end select  
 
 sim%mass_ratio = mass_ratio
-sim%sp1%alpha = alpha_sp1    
-sim%sp2%alpha = alpha_sp2
+sim%sp(1)%alpha = alpha_sp1    
+sim%sp(2)%alpha = alpha_sp2
 
  
 select case (drive_type)
@@ -773,8 +772,8 @@ case default
   stop 
 end select
 
-call initialize_species(sim%sp1, "e", nb_mode)
-call initialize_species(sim%sp2, "i", nb_mode)
+call initialize_species(sim%sp(1), "e", nb_mode)
+call initialize_species(sim%sp(2), "i", nb_mode)
 
 
 if(mpi_master .and. sim%driven) then     
@@ -863,21 +862,21 @@ time_init      = sim%time_init
 
 if (istep == 1) then
 
-  call read_restart_file(sim%restart_file, sim%sp1, time_init)
-  call read_restart_file(sim%restart_file, sim%sp2, time_init)
+  call read_restart_file(sim%restart_file, sim%sp(1), time_init)
+  call read_restart_file(sim%restart_file, sim%sp(2), time_init)
   
   if(sim%time_init_from_restart_file) sim%time_init = time_init  
   
   sim%iplot = 1
   
-  call write_f(sim%sp1, sim%iplot, "fe", time_init)
-  call write_f(sim%sp2, sim%iplot, "fi", time_init)
+  call write_f(sim%sp(1), sim%iplot, "fe", time_init)
+  call write_f(sim%sp(2), sim%iplot, "fi", time_init)
       
-  call compute_rho(sim%sp1)
-  call compute_rho(sim%sp2)
+  call compute_rho(sim%sp(1))
+  call compute_rho(sim%sp(2))
   
   call sim%poisson%compute_E_from_rho( sim%efield, &
-                                       sim%sp2%rho-sim%sp1%rho )
+                                       sim%sp(2)%rho-sim%sp(1)%rho )
 
   if (sim%driven) call compute_e_app(sim,time_init)
 
@@ -888,9 +887,9 @@ if (istep == 1) then
     call sll_ascii_file_create('rhototi.dat', sim%rhototi_id, ierr)
     call sll_ascii_file_create('efield.dat' , sim%efield_id , ierr)
 
-    write(sim%rhototi_id,*) sim%sp1%x1_array
-    write(sim%rhotote_id,*) sim%sp1%x1_array
-    write(sim%efield_id,*)  sim%sp1%x1_array
+    write(sim%rhototi_id,*) sim%sp(1)%x1_array
+    write(sim%rhotote_id,*) sim%sp(1)%x1_array
+    write(sim%efield_id,*)  sim%sp(1)%x1_array
 
     print *,'#step=',0,time_init,'iplot=',sim%iplot
 
@@ -912,19 +911,19 @@ do split_istep=1,sim%split%nb_split_step
 
   if(split_T) then
 
-    call advection_x1(sim%sp1,                           &
+    call advection_x1(sim%sp(1),                           &
                       sim%split%split_step(split_istep), & 
                       sim%dt)
 
-    call advection_x1(sim%sp2,                           &
+    call advection_x1(sim%sp(2),                           &
                       sim%split%split_step(split_istep), & 
                       sim%dt)
 
     t_step = t_step+sim%split%split_step(split_istep)
 
-    call compute_rho(sim%sp1)
-    call compute_rho(sim%sp2)
-    call sim%poisson%compute_E_from_rho( sim%efield, sim%sp2%rho-sim%sp1%rho )
+    call compute_rho(sim%sp(1))
+    call compute_rho(sim%sp(2))
+    call sim%poisson%compute_E_from_rho( sim%efield, sim%sp(2)%rho-sim%sp(1)%rho )
     
     t_step = t_step+sim%split%split_step(split_istep)
     
@@ -932,15 +931,15 @@ do split_istep=1,sim%split%nb_split_step
         
   else
 
-    call advection_x2(sim%sp1,                            &
+    call advection_x2(sim%sp(1),                            &
                       -1.0_f64,                           &
-                      sim%efield+sim%sp1%alpha*sim%e_app, &
+                      sim%efield+sim%sp(1)%alpha*sim%e_app, &
                       sim%split%split_step(split_istep),  &
                       sim%dt)
 
-    call advection_x2(sim%sp2,                            &
+    call advection_x2(sim%sp(2),                            &
                       sim%mass_ratio,                     &
-                      sim%efield-sim%sp2%alpha*sim%e_app, &
+                      sim%efield-sim%sp(2)%alpha*sim%e_app, &
                       sim%split%split_step(split_istep),  &
                       sim%dt)
   endif
@@ -953,12 +952,12 @@ if (mod(istep,sim%freq_diag_time)==0) then
 
   time = time_init+real(istep,f64)*sim%dt
 
-  call diagnostics(sim%sp1, sim%pfwd, sim%buf_fft, nb_mode)
-  call diagnostics(sim%sp2, sim%pfwd, sim%buf_fft, nb_mode)
+  call diagnostics(sim%sp(1), sim%pfwd, sim%buf_fft, nb_mode)
+  call diagnostics(sim%sp(2), sim%pfwd, sim%buf_fft, nb_mode)
 
   if (mod(istep,sim%freq_diag_restart)==0) then          
-    call write_restart_file(sim%sp1, istep, time)
-    call write_restart_file(sim%sp2, istep, time)
+    call write_restart_file(sim%sp(1), istep, time)
+    call write_restart_file(sim%sp(2), istep, time)
   endif 
 
   if (mpi_master) then
@@ -968,8 +967,8 @@ if (mod(istep,sim%freq_diag_time)==0) then
   if (mod(istep,sim%freq_diag)==0) then          
 
     sim%iplot = sim%iplot+1  
-    call write_f( sim%sp1, sim%iplot, "fe", time)
-    call write_f( sim%sp2, sim%iplot, "fi", time)
+    call write_f( sim%sp(1), sim%iplot, "fe", time)
+    call write_f( sim%sp(2), sim%iplot, "fi", time)
 
   endif
 
@@ -983,7 +982,7 @@ if (istep == sim%num_iterations) then
     call sll_ascii_file_close(sim%rhototi_id,ierr)
   endif
   print*, " 176.00010668708197, 820.34117552361215 "
-  print"(2f20.14)", sum(sim%sp1%f_x1), sum(sim%sp2%f_x1)
+  print"(2f20.14)", sum(sim%sp(1)%f_x1), sum(sim%sp(2)%f_x1)
 end if
 
 end subroutine run_vp2d_cartesian_multi_species
@@ -1014,7 +1013,7 @@ sll_int32  :: np_x1
 sll_real64 :: adr
 
 sim%e_app = 0._f64
-np_x1 = sim%sp1%mesh2d%num_cells1+1      
+np_x1 = sim%sp(1)%mesh2d%num_cells1+1      
 call PFenvelope(adr, &
   t,                 &
   sim%tflat,         &
@@ -1026,8 +1025,8 @@ call PFenvelope(adr, &
   sim%turn_drive_off)
 
 do i = 1, np_x1
- sim%e_app(i) = sim%Edrmax*adr*sim%sp1%kx &
-   * sin(sim%sp1%kx*real(i-1,f64)*sim%sp1%mesh2d%delta_eta1 - sim%omegadr*t)
+ sim%e_app(i) = sim%Edrmax*adr*sim%sp(1)%kx &
+   * sin(sim%sp(1)%kx*real(i-1,f64)*sim%sp(1)%mesh2d%delta_eta1 - sim%omegadr*t)
 enddo
 
 end subroutine compute_e_app
@@ -1041,49 +1040,49 @@ sll_int32  :: i, k
 sll_int32  :: nc_x1
 
 nb_mode = sim%nb_mode
-nc_x1 = sim%sp1%mesh2d%num_cells1
+nc_x1 = sim%sp(1)%mesh2d%num_cells1
 
 potential_energy = 0._f64
 do i=1, nc_x1
   potential_energy = potential_energy+(sim%efield(i)+sim%e_app(i))**2
 enddo
-potential_energy = 0.5_f64*potential_energy* sim%sp1%mesh2d%delta_eta1
+potential_energy = 0.5_f64*potential_energy* sim%sp(1)%mesh2d%delta_eta1
 
-sim%buf_fft = sim%sp1%rho(1:nc_x1)-sim%sp2%rho(1:nc_x1)
+sim%buf_fft = sim%sp(1)%rho(1:nc_x1)-sim%sp(2)%rho(1:nc_x1)
 call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
 do k=0,nb_mode
   sim%rho_mode(k)=fft_get_mode(sim%pfwd,sim%buf_fft,k)
 enddo  
 write(sim%th_diag_id,'(f12.5,12g20.12)',advance='no') &
   time,                                               &
-  sim%sp1%mass,                                       &
-  sim%sp1%l1norm,                                     &
-  sim%sp1%momentum,                                   &
-  sim%sp1%l2norm,                                     &
-  sim%sp1%kinetic_energy,                             &
-  sim%sp2%mass,                                       &
-  sim%sp2%l1norm,                                     &
-  sim%sp2%momentum,                                   &
-  sim%sp2%l2norm,                                     &
-  sim%sp2%kinetic_energy,                             &
+  sim%sp(1)%mass,                                       &
+  sim%sp(1)%l1norm,                                     &
+  sim%sp(1)%momentum,                                   &
+  sim%sp(1)%l2norm,                                     &
+  sim%sp(1)%kinetic_energy,                             &
+  sim%sp(2)%mass,                                       &
+  sim%sp(2)%l1norm,                                     &
+  sim%sp(2)%momentum,                                   &
+  sim%sp(2)%l2norm,                                     &
+  sim%sp(2)%kinetic_energy,                             &
   potential_energy,                                   &
-  sim%sp1%kinetic_energy+sim%sp2%kinetic_energy+potential_energy
+  sim%sp(1)%kinetic_energy+sim%sp(2)%kinetic_energy+potential_energy
 
 do k=0,nb_mode
   write(sim%th_diag_id,'(g20.12)',advance='no') abs(sim%rho_mode(k))
 enddo
 do k=0,nb_mode-1
   write(sim%th_diag_id,'(2g20.12)',advance='no') &
-       sim%sp1%f_hat_x2(k+1), &
-       sim%sp2%f_hat_x2(k+1)
+       sim%sp(1)%f_hat_x2(k+1), &
+       sim%sp(2)%f_hat_x2(k+1)
 enddo
 write(sim%th_diag_id,'(2g20.12)') &
-     sim%sp1%f_hat_x2(nb_mode+1), &
-     sim%sp2%f_hat_x2(nb_mode+1)
+     sim%sp(1)%f_hat_x2(nb_mode+1), &
+     sim%sp(2)%f_hat_x2(nb_mode+1)
 
 write(sim%efield_id,*)  sim%efield
-write(sim%rhotote_id,*) sim%sp1%rho
-write(sim%rhototi_id,*) sim%sp2%rho
+write(sim%rhotote_id,*) sim%sp(1)%rho
+write(sim%rhototi_id,*) sim%sp(2)%rho
 
 end subroutine write_time_history
 

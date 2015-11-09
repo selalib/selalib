@@ -47,8 +47,8 @@ program bsl_1d_cubic_periodic
      end do
   end do
 
-  advfield_x = 1_f64 
-  advfield_v = 0.0 
+  advfield_x = 1.0_f64 
+  advfield_v = 0.0_f64
 
   print*, 'initialize 2d distribution function f(x,v) sll_m_gaussian'
 
@@ -73,7 +73,7 @@ program bsl_1d_cubic_periodic
   end do
 
   ! compute error when Gaussian arrives at center (t=1)
-  error = 0.0
+  error = 0.0_f64
   do j = 1, nc_v+1
      do i = 1, nc_x+1
         x = x_min + (i-1)*(x_max-x_min)/nc_x
