@@ -24,7 +24,7 @@ module sll_m_pic_poisson_2d
 
   private
 
-
+  !> PIC Poisson solver 2d 
   type, public, extends(sll_c_pic_poisson) :: sll_t_pic_poisson_2d
      
      sll_int32 :: no_gridpts(2)
@@ -45,17 +45,17 @@ module sll_m_pic_poisson_2d
      logical                               :: rho_collected
 
      contains
-       procedure :: add_charge_single => add_charge_single_2d
-       procedure :: reset => reset_2d
-       procedure :: evaluate_rho_single => evaluate_rho_single_2d
-       procedure :: evaluate_phi_single => evaluate_phi_single_2d
-       procedure :: evaluate_field_single => evaluate_field_single_2d
-       procedure :: solve => solve_2d
-       procedure :: solve_phi => solve_phi_2d
-       procedure :: solve_fields => solve_fields_2d
-       procedure :: add_analytic_charge => add_analytic_charge_2d
-       procedure :: set_analytic_charge => set_analytic_charge_2d
-       procedure :: compute_field_energy => compute_field_energy_2d
+       procedure :: add_charge_single => add_charge_single_2d !< Add contribution of one particle to the charge density.
+       procedure :: reset => reset_2d !< Reset accumulated charge density to zero.
+       procedure :: evaluate_rho_single => evaluate_rho_single_2d !< Evaluate charge density at given position.
+       procedure :: evaluate_phi_single => evaluate_phi_single_2d !< Evaluate potential at given position.
+       procedure :: evaluate_field_single => evaluate_field_single_2d !< Evaluate field components at given positions.
+       procedure :: solve => solve_2d !< Solve Poisson's equation for potential and E-fields
+       procedure :: solve_phi => solve_phi_2d !< Solve Poisson's equation for potential.
+       procedure :: solve_fields => solve_fields_2d !< Solve for the electric field.
+       procedure :: add_analytic_charge => add_analytic_charge_2d !< !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
+       procedure :: set_analytic_charge => set_analytic_charge_2d  !< Set the value of the analytic charge contribution from a given function.
+       procedure :: compute_field_energy => compute_field_energy_2d !< Compute the field energy.
 
 
     end type sll_t_pic_poisson_2d
