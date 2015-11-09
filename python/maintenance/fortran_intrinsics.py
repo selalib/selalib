@@ -1,3 +1,12 @@
+intrinsic_types = { \
+'integer',
+'real',
+'double precision',
+'complex',
+'character',
+'logical',
+}
+
 intrinsic_procedures = { \
 'abs', # Absolute value
 'achar', # Character in ASCII collating sequence
@@ -155,6 +164,7 @@ intrinsic_procedures = { \
 'spacing', # Smallest distance between two numbers of a given type
 'spread', # Add a dimension to an array
 'sqrt', # Square-root function
+'storage_size', # Storage size of argument A in bits (Fortran 2008 and later)
 'sum', # Sum of array elements
 'system_clock', # Time function
 'tan', # Tangent function
