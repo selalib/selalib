@@ -60,7 +60,7 @@ sll_int32  :: i, j
 call sll_boot_collective()
 
 prank = sll_get_collective_rank(sll_world_collective)
-psize = sll_get_collective_size(sll_world_collective)
+psize = int(sll_get_collective_size(sll_world_collective),kind=i64)
 comm  = sll_world_collective%comm
 
 tcpu1 = MPI_WTIME()

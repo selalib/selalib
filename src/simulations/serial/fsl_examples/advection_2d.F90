@@ -19,14 +19,14 @@ type(sll_cubic_spline_2D), pointer :: spl_bsl
 type(sll_cubic_spline_2D), pointer :: spl_fsl
 
 sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
-sll_int32  :: i,j,bc1_type,bc2_type,err,it
+sll_int32  :: i,j,bc1_type,bc2_type,err
 sll_int32  :: i1,i2,i3
 sll_real64 :: eta1,delta_eta1,eta1_min,eta1_max,eta2,delta_eta2,eta2_min,eta2_max
-sll_real64 :: x1,x2,x1_min,x2_min,x1_max,x2_max,x1c,x2c,x1t,x2t,dt
-sll_real64 :: T,alpha_mesh, errN
-sll_real64 :: val,val_bsl,val_fsl,tmp1,tmp2
+sll_real64 :: x1,x2,x1_min,x2_min,x1_max,x2_max,x1c,x2c,dt
+sll_real64 :: T
+sll_real64 :: val,val_bsl,val_fsl,tmp1
 sll_real64 :: val_spe 
-sll_real64 :: a1,a2,eta1t,eta2t,eta1c,eta2c,k1eta1,k2eta1,k3eta1,k4eta1,k1eta2,k2eta2,k3eta2,k4eta2
+sll_real64 :: a1,a2,eta1c,eta2c
 sll_real64,dimension(:,:), pointer :: f
 sll_real64,dimension(:,:), pointer :: fh_bsl
 sll_real64,dimension(:,:), pointer :: fh_fsl
@@ -65,8 +65,10 @@ nc_eta2    = Neta2
 
 SLL_CLEAR_ALLOCATE(d_dx1(1:nc_eta1), error)
 SLL_CLEAR_ALLOCATE(d_dx2(1:nc_eta2), error)
-SLL_CLEAR_ALLOCATE(fk1(1:nc_eta1/2+1), error)
-SLL_CLEAR_ALLOCATE(fk2(1:nc_eta2/2+1), error)
+SLL_ALLOCATE(fk1(1:nc_eta1/2+1), error)
+fk1 = cmplx(0.0,0.0, kind=f64)
+SLL_ALLOCATE(fk2(1:nc_eta2/2+1), error)
+fk2 = cmplx(0.0,0.0, kind=f64)
 
 fwx1 => fft_new_plan(nc_eta1, d_dx1, fk1)
 bwx1 => fft_new_plan(nc_eta1,   fk1, d_dx1)

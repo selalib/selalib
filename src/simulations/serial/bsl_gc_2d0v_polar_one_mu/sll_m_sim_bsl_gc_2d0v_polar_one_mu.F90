@@ -202,8 +202,8 @@ contains
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
     sll_real64, dimension(:,:), pointer :: b22
-    sll_real64, dimension(:,:), pointer :: b1
-    sll_real64, dimension(:,:), pointer :: b2
+    !sll_real64, dimension(:,:), pointer :: b1
+    !sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
 !    sll_real64, dimension(:,:), allocatable :: cxx_2d
@@ -300,7 +300,7 @@ contains
     gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
     !gyroaverage_case = "SPLINES"
     !gyroaverage_case = "PADE"
-    mu = 1.0e-0
+    mu = 1.0_f64
     gyroaverage_N_points = 16
     gyroaverage_interp_degree_x1 = 3
     gyroaverage_interp_degree_x2 = 3     
@@ -1147,8 +1147,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          r       = rmin+real(i-1,f32)*dr
-          theta   = real(j-1,f32)*dtheta
+          r       = rmin+real(i-1,f64)*dr
+          theta   = real(j-1,f64)*dtheta
           x1(i,j) = r*cos(theta)
           x2(i,j) = r*sin(theta)
         end do

@@ -46,7 +46,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_int32, parameter  :: param_out_drive = 40
-  sll_real64 :: kmode, omegadr, omegadr0
+  sll_real64 :: kmode, omegadr!, omegadr0
   sll_int32  :: is_delta_f
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
@@ -92,7 +92,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        eps = 0.0  ! no initial perturbation for driven simulation
+        eps = 0.0_f64  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else if (case == "tsi") then
@@ -383,12 +383,12 @@ program sim_bsl_vp_1d1v_cart_deltaf
      ! diagnostics
      if (mod(istep,freqdiag)==0) then
         time = istep*dt
-        mass = 0.
-        momentum = 0.
-        l1norm = 0.
-        l2norm = 0.
-        kinetic_energy = 0.
-        potential_energy = 0.
+        mass = 0.0_f64
+        momentum = 0.0_f64
+        l1norm = 0.0_f64
+        l2norm = 0.0_f64
+        kinetic_energy = 0.0_f64
+        potential_energy = 0.0_f64
         do i = 1, Ncx 
            mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
            l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))

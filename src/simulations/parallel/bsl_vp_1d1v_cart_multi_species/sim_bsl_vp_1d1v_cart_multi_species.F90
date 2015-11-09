@@ -79,8 +79,8 @@ else
       params(1) = 0.26_f64
       params(2) = 100._f64  
 
-      call change_initial_function_species(sim%sp1,init_func,params,num_params)
-      call change_initial_function_species(sim%sp2,init_func,params,num_params)
+      call change_initial_function_species(sim%sp(1),init_func,params,num_params)
+      call change_initial_function_species(sim%sp(2),init_func,params,num_params)
       
     endif
 

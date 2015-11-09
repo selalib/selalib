@@ -42,15 +42,15 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64, allocatable :: charac_feet2(:,:)
   sll_int32 :: step
   sll_int32 :: i
-  sll_real64 :: x
-  sll_real64 :: y
-  sll_real64 :: xx
-  sll_real64 :: yy
-  logical :: inside
+  !sll_real64 :: x
+  !sll_real64 :: y
+  !sll_real64 :: xx
+  !sll_real64 :: yy
+  !logical :: inside
   sll_real64 :: t
   sll_real64 :: linf_err
   character(len=256) :: num_method_case
-  sll_int32 :: num_method
+  !sll_int32 :: num_method
   sll_int32 :: IO_stat
   sll_int32, parameter :: input_file = 99
   character(len = 256) :: input_filename
@@ -58,8 +58,8 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_int32 :: count
   character(len=256) :: rho_name
   character(len=256) :: rho_error_name
-  character(len=256)  :: filename
-  character(len=4)   :: filenum
+  !character(len=256)  :: filename
+  !character(len=4)   :: filenum
   logical :: use_num
   sll_int32 :: num_run
   character(len=256)  :: str_num_run
@@ -79,8 +79,8 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64 :: time_interpolate
   sll_real64 :: time_t0
   sll_real64 :: time_t1
-  sll_real64 :: cosdt
-  sll_real64 :: sindt
+  !sll_real64 :: cosdt
+  !sll_real64 :: sindt
   sll_real64 :: delta1
   sll_real64 :: delta2
   sll_real64 :: rmin

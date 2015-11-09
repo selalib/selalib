@@ -38,7 +38,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
   sll_real64, dimension(:), allocatable :: fx
-  sll_real64, dimension(:), pointer     :: f1d
+  !sll_real64, dimension(:), pointer     :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array, vg_array, vh_array, vhg_array 
   sll_real64, dimension(:), allocatable :: x_array, xg_array
@@ -47,7 +47,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_int32, parameter  :: param_out_drive = 40
-  sll_real64 :: kmode, omegadr, omegadr0
+  sll_real64 :: kmode, omegadr!, omegadr0
   sll_int32  :: is_delta_f
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
@@ -60,8 +60,8 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_int32  :: freqdiag = 1
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
   sll_real64 :: l1norm, l2norm
-  sll_real64 :: equilibrium_contrib
-  character(len=32) :: fname, case
+  !sll_real64 :: equilibrium_contrib
+  character(len=32) :: case
   sll_int32  :: istep
   sll_int32  :: nbox
   sll_real64 :: eps
@@ -71,14 +71,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
   sll_real64 :: adr, Edrmax
   logical    :: turn_drive_off
-  sll_int32  :: istartx, iendx, jstartv, jendv
-  sll_int32  :: num_threads, my_num
-  sll_int32  :: ipiece_size_x, ipiece_size_v
-  type(sll_time_mark) :: time0 
-  sll_real64 :: time1
+  !sll_int32  :: istartx, jstartv, jendv
+  !sll_int32  :: num_threads, my_num
+  !sll_int32  :: ipiece_size_x, ipiece_size_v
+  !type(sll_time_mark) :: time0 
+  !sll_real64 :: time1
   sll_int32  :: error, file_id
   character(len=4) :: cstep
-  character(len=32) :: dsetname
+  !character(len=32) :: dsetname
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
@@ -99,7 +99,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        eps = 0.0  ! no initial perturbation for driven simulation
+        eps = 0.0_f64  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else if (case == "tsi") then
@@ -117,7 +117,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        eps = 0.0  ! no initial perturbation for driven simulation
+        eps = 0.0_f64  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else
@@ -582,12 +582,12 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      if (mod(istep,freqdiag)==0) then
         time = istep*dt
         print *,'time',time
-        mass = 0.
-        momentum = 0.
-        l1norm = 0.
-        l2norm = 0.
-        kinetic_energy = 0.
-        potential_energy = 0.
+        mass = 0.0_f64
+        momentum = 0.0_f64
+        l1norm = 0.0_f64
+        l2norm = 0.0_f64
+        kinetic_energy = 0.0_f64
+        potential_energy = 0.0_f64
         do i = 1, Ncx 
            mass = mass + sum(fg(i,:))
            l1norm = l1norm + sum(abs(fg(i,:)))
