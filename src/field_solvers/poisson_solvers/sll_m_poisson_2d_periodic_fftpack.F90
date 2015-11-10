@@ -363,7 +363,7 @@ subroutine transpose_c2r(comp_array, real_array)
       real_array(1,j) = real(comp_array(j,1),kind=f64)
       do i=2,n1/2
          real_array(2*i-2,j) = real(comp_array(j,i),kind=f64)
-         real_array(2*i-1,j) = dimag(comp_array(j,i))
+         real_array(2*i-1,j) = aimag(comp_array(j,i))
       end do
       real_array(n1,j) = real(comp_array(j,n1/2+1),kind=f64)
    end do
