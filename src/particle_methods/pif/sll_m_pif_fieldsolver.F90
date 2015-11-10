@@ -342,7 +342,7 @@ function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradie
 !    do idx=1,this%problemsize()
 !        partmode=sll_i1*exp(sll_i1*(dot_product(this%allmodes(:,idx)*this%unitmode(:),pos(1:this%dimx,jdx))  ))
 !  
-!        gradient(:,jdx)=gradient(:,jdx)+(real(partmode)*real(fouriermodes(idx))-imag(partmode)*imag(fouriermodes(idx)))*&
+!        gradient(:,jdx)=gradient(:,jdx)+(real(partmode)*real(fouriermodes(idx))-aimag(partmode)*aimag(fouriermodes(idx)))*&
 !                               (this%allmodes(:,idx)*this%unitmode(:))
 !    end do
 !  end do
@@ -350,7 +350,7 @@ function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradie
  do idx=1,this%problemsize()
  partmode=sll_i1*exp(cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)),f64))
  do jdx=1,size(partmode)
-      gradient(:,jdx)=gradient(:,jdx)+(real(partmode(jdx))*real(fouriermodes(idx))-imag(partmode(jdx))*imag(fouriermodes(idx)))*&
+      gradient(:,jdx)=gradient(:,jdx)+(real(partmode(jdx))*real(fouriermodes(idx))-aimag(partmode(jdx))*aimag(fouriermodes(idx)))*&
                              (this%allmodes(:,idx)*this%unitmode(:))
   end do
  end do
@@ -367,7 +367,7 @@ function sll_pif_fieldsolver_eval_solution(this, pos,fouriermodes) result(fun)
  fun=0.0_f64
  do idx=1,this%problemsize()
    partmode=exp(cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)),f64))
-   fun(:)=fun(:)+(real(partmode(:))*real(fouriermodes(idx))-imag(partmode(:))*imag(fouriermodes(idx)))
+   fun(:)=fun(:)+(real(partmode(:))*real(fouriermodes(idx))-aimag(partmode(:))*aimag(fouriermodes(idx)))
  end do
 end function sll_pif_fieldsolver_eval_solution
 
