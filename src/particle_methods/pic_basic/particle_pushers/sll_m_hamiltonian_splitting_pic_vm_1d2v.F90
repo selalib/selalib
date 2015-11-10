@@ -133,27 +133,31 @@ contains
 
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = modulo(x_old + dt * vi, this%Lx)
-       call this%particle_group%set_x(i_part, x_new)
+       x_new = x_old + dt * vi!modulo(x_old + dt * vi, this%Lx)
+       !call this%particle_group%set_x(i_part, x_new)
 
        ! Get charge for accumulation of j
        wi = this%particle_group%get_charge(i_part)
        qoverm = this%particle_group%species%q_over_m();
+       !print*, dt, vi(1)
 
-
-       !call this%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
-       !     this%bfield_dofs, vi, this%j_dofs_local(:,1))
-       call this%kernel_smoother_1%add_current_update_v( x_old, x_old, wi(1), qoverm, &
+       call this%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
             this%bfield_dofs, vi, this%j_dofs_local(:,1))
+       !call this%kernel_smoother_1%add_current_update_v( x_old, x_old, wi(1), qoverm, &
+       !     this%bfield_dofs, vi, this%j_dofs_local(:,1))
        !call this%kernel_smoother_1%evaluate &
        !     (x_old(1), this%bfield_dofs, bfield)
        !vi(2) = vi(2) - dt*qoverm*vi(1)*bfield
        !wi = wi*vi(1)
        !call this%kernel_smoother_1%add_charge(x_old(1:1), wi(1), this%j_dofs_local(:,1))
+       !call this%kernel_smoother_1%add_charge(x_new(1:1), wi(1), this%j_dofs_local(:,1))
 
+       x_new(1) = modulo(x_new(1), this%Lx)
+       call this%particle_group%set_x(i_part, x_new)
        call this%particle_group%set_v(i_part, vi)
 
     end do
+
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
@@ -161,7 +165,7 @@ contains
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
-    this%j_dofs(:,1) = this%j_dofs(:,1)*dt!this%delta_x!/this%Lx
+    !this%j_dofs(:,1) = this%j_dofs(:,1)*dt/2!this%delta_x!/this%Lx
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
 
 

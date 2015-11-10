@@ -57,7 +57,7 @@ module sll_m_kernel_smoother_base
        sll_real64, intent(in) :: weight
        sll_real64, intent(in) :: qoverm
        sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
-       sll_real64, intent(inout) :: vi(this%dim)
+       sll_real64, intent(inout) :: vi(:)
        sll_real64, intent(inout) :: j_dofs(this%n_dofs)
 
      end subroutine add_update

@@ -133,8 +133,8 @@ contains
        r_old = xi - real(index_old,f64)
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
-       call this%particle_group%set_x(i_part, x_new)
+       x_new =x_new + dt*vi! modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
+
 
        ! Compute the new box index index_new and normalized position r_old.
        xi = (x_new(1) - this%x_min) /&
@@ -164,7 +164,9 @@ contains
              call this%update_jv (0.0_f64, 1.0_f64, ind, wi, -1.0_f64, vi)
           end do
        end if
-             
+
+       x_new(1) = modulo(x_new(1),this%Lx)
+       call this%particle_group%set_x(i_part, x_new)
 
     end do
 
