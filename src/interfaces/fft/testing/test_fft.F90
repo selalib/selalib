@@ -449,7 +449,7 @@ contains
     sll_comp64, DIMENSION(:) :: tab
     sll_real64 :: error
 
-    error = MAX( MAXVAL(ABS(REAL(tab))) , MAXVAL(ABS(DIMAG(tab))) )
+    error = MAX( MAXVAL(ABS(REAL(tab))) , MAXVAL(ABS(aimag(tab))) )
   END FUNCTION
 
   SUBROUTINE init_random_seed()

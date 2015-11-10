@@ -224,10 +224,10 @@ contains
         data(1) = real(new_value,kind=f64)
       else if( k .gt. n_2 ) then
         data(2*(n-k)) = real(new_value,kind=f64)
-        data(2*(n-k)+1) = -dimag(new_value)
+        data(2*(n-k)+1) = -aimag(new_value)
       else
         data(2*k) = real(new_value,kind=f64)
-        data(2*k+1) = dimag(new_value)
+        data(2*k+1) = aimag(new_value)
       endif
   end subroutine
 
@@ -604,7 +604,7 @@ contains
     !mode k=1 to k= n-2
     do i=1,nx/2-1
       array_out(2*i) = real(array_in(i),kind=f64)
-      array_out(2*i+1) = dimag(array_in(i))
+      array_out(2*i+1) = aimag(array_in(i))
     enddo
     call real_data_fft_dit( array_out, nx , plan%twiddles, plan%twiddles_n, plan%direction )
 
@@ -740,7 +740,7 @@ contains
       array_out(1,i) = real(array_in(nx/2,i),kind=f64)
       do k=1,nx/2-1
         array_out(2*k,i) = real(array_in(k,i),kind=f64)
-        array_out(2*k+1,i) = dimag(array_in(k,i))
+        array_out(2*k+1,i) = aimag(array_in(k,i))
       enddo
       call real_data_fft_dit( array_out(0:nx-1,i), nx , plan%twiddles, plan%twiddles_n, plan%direction )
     enddo

@@ -53,11 +53,11 @@ use sll_m_fft
 
 #define SET_MODE_GT_N_2(new_value,data,k,n) \
         data(2*(n-k)+1) = real(new_value,kind=f64); \
-        data(2*(n-k)+2) = -dimag(new_value)
+        data(2*(n-k)+2) = -aimag(new_value)
 
 #define SET_MODE_LT_N_2(new_value,data,k,n) \
         data(2*k+1) = real(new_value,kind=f64); \
-        data(2*k+2) = dimag(new_value)
+        data(2*k+2) = aimag(new_value)
 
 #endif
 
@@ -73,10 +73,10 @@ use sll_m_fft
         data(n) = real(new_value,kind=f64)
 #define SET_MODE_GT_N_2(new_value,data,k,n) \
         data(2*(n-k)) = real(new_value,kind=f64); \
-        data(2*(n-k)+1) = -dimag(new_value)
+        data(2*(n-k)+1) = -aimag(new_value)
 #define SET_MODE_LT_N_2(new_value,data,k,n) \
         data(2*k) = real(new_value,kind=f64); \
-        data(2*k+1) = dimag(new_value)
+        data(2*k+1) = aimag(new_value)
 
 #endif
 
@@ -91,10 +91,10 @@ use sll_m_fft
         data(n/2+1) = real(new_value,kind=f64)
 #define SET_MODE_GT_N_2(new_value,data,k,n) \
         data(n-k+1) = real(new_value,kind=f64); \
-        data(k+1) = -dimag(new_value)
+        data(k+1) = -aimag(new_value)
 #define SET_MODE_LT_N_2(new_value,data,k,n) \
         data(k+1) = real(new_value,kind=f64); \
-        data(n-k+1) = dimag(new_value)
+        data(n-k+1) = aimag(new_value)
 #endif
 
 #endif
