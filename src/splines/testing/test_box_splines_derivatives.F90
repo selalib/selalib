@@ -14,7 +14,8 @@ program test_box_splines_derivatives
   use sll_m_boundary_condition_descriptors
   use sll_m_hexagonal_meshes, only : &
        sll_hex_mesh_2d, &
-       new_hex_mesh_2d
+       new_hex_mesh_2d, &
+       write_field_hex_mesh_xmf
   use sll_m_box_splines, only : &
        sll_box_spline_2d, &
        new_box_spline_2d, &
