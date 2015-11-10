@@ -47,6 +47,7 @@ module sll_m_hexagonal_meshes
     get_cell_vertices_index,  &
     change_elements_notation, &
     write_caid_files,         &
+    write_field_hex_mesh_xmf, &
     display_hex_mesh_2d,      &
     delete_hex_mesh_2d,       &
     delete
@@ -1955,40 +1956,6 @@ contains
 
     close(out_unit)
   end subroutine write_hex_mesh_2d
-
-!PN function defined but not used
-!  !---------------------------------------------------------------------------
-!  !> @brief Writes the info of a given field in a hex-mesh into a given file
-!  !> @details This function writes for every point of the hex mesh its cartesian
-!  !> coordinate as well as the value of a given field(vector) at that point
-!  !> @param[IN] mesh the hexagonal mesh
-!  !> @param[IN] field a vector of size=(number of pts of the mesh) containg the
-!  !> values of a field on every mesh point.
-!  !> @param[IN] name the name of the file where the info will be written into.
-!  subroutine write_field_hex_mesh(mesh, field, name)
-!    ! Writes the points cartesian coordinates and
-!    ! field(vector) values in a file named "name"
-!    type(sll_hex_mesh_2d), pointer :: mesh
-!    sll_real64,dimension(:) :: field
-!    character(len=*) :: name
-!    sll_int32  :: i
-!    sll_int32  :: num_pts_tot
-!    sll_real64 :: x1, x2
-!    sll_int32, parameter :: out_unit=20
-!
-!    open (unit=out_unit,file=name,action="write",status="replace")
-!
-!    num_pts_tot = mesh%num_pts_tot
-!    do i=1, num_pts_tot
-!       x1 = mesh%global_to_x1(i)
-!       x2 = mesh%global_to_x2(i)
-!       write (out_unit, "(3(g13.3,1x))") x1, &
-!            x2, &
-!            field(i)
-!    end do
-!
-!    close(out_unit)
-!  end subroutine write_field_hex_mesh
 
 
   !---------------------------------------------------------------------------
