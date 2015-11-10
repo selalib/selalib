@@ -199,8 +199,8 @@ contains
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, KX_LANDAU, XMAX, YMIN, YMAX
     sll_int32   :: number_parts_x, number_parts_y, number_parts_vx, number_parts_vy
-    sll_real64  :: remap_grid_vx_min, remap_grid_vx_max
-    sll_real64  :: remap_grid_vy_min, remap_grid_vy_max
+    sll_real64  :: remapping_grid_vx_min, remapping_grid_vx_max
+    sll_real64  :: remapping_grid_vy_min, remapping_grid_vy_max
     sll_real64  :: target_charge
     sll_int32   :: spline_degree
     sll_int32   :: particle_group_id
@@ -240,27 +240,77 @@ contains
 
     namelist /elec_params/          er, psi, omega_r, omega_i
 
-    namelist /grid_dims/            NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
+    ! cartesian grid for the Poisson solver      [previous name was grid_dims]
+    namelist /poisson_grid_params/  NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                                     DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
 
-    namelist /lt_pic_params/        spline_degree,              &
-                                    number_parts_x,             &
-                                    number_parts_y,             &
-                                    number_parts_vx,            &
-                                    number_parts_vy,            &
-                                    remap_grid_vx_min,          &
-                                    remap_grid_vx_max,          &
-                                    remap_grid_vy_min,          &
-                                    remap_grid_vy_max,          &
-                                    N_virtual_particles_per_deposition_cell_x,      &
-                                    N_virtual_particles_per_deposition_cell_y,      &
-                                    N_virtual_particles_per_deposition_cell_vx,     &
-                                    N_virtual_particles_per_deposition_cell_vy,     &
-                                    N_remapping_nodes_per_virtual_cell_x,           &
-                                    N_remapping_nodes_per_virtual_cell_y,           &
-                                    N_remapping_nodes_per_virtual_cell_vx,          &
-                                    N_remapping_nodes_per_virtual_cell_vy,          &
-                                    remap_period
+    ! MCP put new parameters here on monday nov 9 -- todo: remove this line once the new parameters are used consistently
+
+    ! there are 3 sets of parameters:
+    !   - one for the discretization of the remapped f,
+    !   - one for the discretization of the deposited f
+    !   - one for the discretization of the flow
+
+    ! discretization of the remapped f
+    !   -> remapping period, type of interpolation structure and polynomial degree
+    !   -> size of the remapping grid / sparse grid
+    namelist /lt_pic_remap_params/
+                                    remap_period,                       &
+                                    remap_f_type,                       &   ! 0 for splines, 1 for sparse grids
+                                    remap_degree,                       &
+                                    remapping_grid_vx_min,              &   ! note: the x-y domain is given by the Poisson grid
+                                    remapping_grid_vx_max,              &
+                                    remapping_grid_vy_min,              &
+                                    remapping_grid_vy_max,              &
+                                    remapping_cart_grid_number_cells_x,          &   ! for splines
+                                    remapping_cart_grid_number_cells_y,          &   ! for splines
+                                    remapping_cart_grid_number_cells_vx,         &   ! for splines
+                                    remapping_cart_grid_number_cells_vy,         &   ! for splines
+                                    remapping_sparse_grid_max_level          ! for the sparse grid (same level in each dim for now)
+
+
+    ! discretization of the deposited f
+    !   -> number of virtual particles created for the deposition
+    !
+    ! note: the number and size of the "virtual cells" previously used are now specified in the flow parameters
+    namelist /lt_pic_deposition_params/
+                                    number_virtual_particles
+
+    ! discretization of the flow:
+    !   -> number of markers to be pushed forward
+    !   -> size of the cells where the flow is linearized (the flow grid)
+    !      note: the bounds of the flow grid are the same as those of the remap grid
+    namelist /lt_pic_markers_params/
+                                    number_markers_x,             &
+                                    number_markers_y,             &
+                                    number_markers_vx,            &
+                                    number_markers_vy,            &
+                                    flow_grid_number_cells_x,     &
+                                    flow_grid_number_cells_y,     &
+                                    flow_grid_number_cells_vx,    &
+                                    flow_grid_number_cells_vy
+
+
+                                    ! previous parameters were:
+
+!                                    spline_degree,              &
+!                                    number_parts_x,             &
+!                                    number_parts_y,             &
+!                                    number_parts_vx,            &
+!                                    number_parts_vy,            &
+!                                    remap_grid_vx_min,          &
+!                                    remap_grid_vx_max,          &
+!                                    remap_grid_vy_min,          &
+!                                    remap_grid_vy_max,          &
+!                                    N_virtual_particles_per_deposition_cell_x,      &
+!                                    N_virtual_particles_per_deposition_cell_y,      &
+!                                    N_virtual_particles_per_deposition_cell_vx,     &
+!                                    N_virtual_particles_per_deposition_cell_vy,     &
+!                                    N_remapping_nodes_per_virtual_cell_x,           &
+!                                    N_remapping_nodes_per_virtual_cell_y,           &
+!                                    N_remapping_nodes_per_virtual_cell_vx,          &
+!                                    N_remapping_nodes_per_virtual_cell_vy,          &
+!                                    remap_period
     namelist /simple_pic_params/    NUM_PARTICLES
 
     print *, "AA0"
@@ -318,28 +368,48 @@ contains
       ! construct [[bsl_lt_particle_group]]
       particle_group_id = 1
       bsl_lt_pic_particle_group => sll_bsl_lt_pic_4d_group_new( &
-        SPECIES_CHARGE,                                 &
-        SPECIES_MASS,                                   &
-        particle_group_id,                              &
-        DOMAIN_IS_X_PERIODIC,                           &
-        DOMAIN_IS_Y_PERIODIC,                           &
-        spline_degree,                                  &
-        number_parts_x,                                 &
-        number_parts_y,                                 &
-        number_parts_vx,                                &
-        number_parts_vy,                                &
-        remap_grid_vx_min,                              &
-        remap_grid_vx_max,                              &
-        remap_grid_vy_min,                              &
-        remap_grid_vy_max,                              &
-        N_virtual_particles_per_deposition_cell_x,      &
-        N_virtual_particles_per_deposition_cell_y,      &
-        N_virtual_particles_per_deposition_cell_vx,     &
-        N_virtual_particles_per_deposition_cell_vy,     &
-        N_remapping_nodes_per_virtual_cell_x,           &
-        N_remapping_nodes_per_virtual_cell_y,           &
-        N_remapping_nodes_per_virtual_cell_vx,          &
-        N_remapping_nodes_per_virtual_cell_vy,          &
+        SPECIES_CHARGE,                             &
+        SPECIES_MASS,                               &
+        particle_group_id,                          &
+        DOMAIN_IS_X_PERIODIC,                       &
+        DOMAIN_IS_Y_PERIODIC,                       &
+        remap_f_type,                               &   ! 0 for splines, 1 for sparse grids
+        remap_degree,                               &
+        remapping_grid_vx_min,                          &
+        remapping_grid_vx_max,                          &
+        remapping_grid_vy_min,                          &
+        remapping_grid_vy_max,                          &
+        remapping_cart_grid_number_cells_x,                  &   ! for splines
+        remapping_cart_grid_number_cells_y,                  &   ! for splines
+        remapping_cart_grid_number_cells_vx,                 &   ! for splines
+        remapping_cart_grid_number_cells_vy,                 &   ! for splines
+        remapping_sparse_grid_max_level,                     &   ! for the sparse grid: for now, same level in each dimension
+        number_virtual_particles,                   &
+        number_markers_x,                           &
+        number_markers_y,                           &
+        number_markers_vx,                          &
+        number_markers_vy,                          &
+        flow_grid_number_cells_x,                   &
+        flow_grid_number_cells_y,                   &
+        flow_grid_number_cells_vx,                  &
+        flow_grid_number_cells_vy,                  &
+!        spline_degree,                                  &
+!        number_parts_x,                                 &
+!        number_parts_y,                                 &
+!        number_parts_vx,                                &
+!        number_parts_vy,                                &
+!        remap_grid_vx_min,                              &
+!        remap_grid_vx_max,                              &
+!        remap_grid_vy_min,                              &
+!        remap_grid_vy_max,                              &
+!        N_virtual_particles_per_deposition_cell_x,      &
+!        N_virtual_particles_per_deposition_cell_y,      &
+!        N_virtual_particles_per_deposition_cell_vx,     &
+!        N_virtual_particles_per_deposition_cell_vy,     &
+!        N_remapping_nodes_per_virtual_cell_x,           &
+!        N_remapping_nodes_per_virtual_cell_y,           &
+!        N_remapping_nodes_per_virtual_cell_vx,          &
+!        N_remapping_nodes_per_virtual_cell_vy,          &
         sim%mesh_2d )
 
       ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group

@@ -46,15 +46,20 @@ module sll_m_bsl_lt_pic_4d_group
   !> Group of @ref sll_bsl_lt_pic_4d_particle
   type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group
 
-    !> @name The markers (particles)
+    !> @name The markers (particles pushed forward, carry no weights)
     !> @{
-    sll_int32                                                   :: spline_degree
-    sll_int32                                                   :: number_parts_x
-    sll_int32                                                   :: number_parts_y
-    sll_int32                                                   :: number_parts_vx
-    sll_int32                                                   :: number_parts_vy
-    ! sll_int32                                                   :: number_particles
-    type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: particle_list
+    sll_int32                                                   :: number_markers_x
+    sll_int32                                                   :: number_markers_y
+    sll_int32                                                   :: number_markers_vx
+    sll_int32                                                   :: number_markers_vy
+    sll_int32                                                   :: number_markers
+    type(sll_cartesian_mesh_4d), pointer                        :: initial_markers_grid
+    type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: markers_list
+    !> @}
+
+    !> @name The flow grid (4d cartesian cells where the flow is linearized)
+    !> @{
+    type(sll_cartesian_mesh_4d), pointer    :: flow_grid
     !> @}
 
     !> @name The physical mesh used eg in the Poisson solver
@@ -62,47 +67,33 @@ module sll_m_bsl_lt_pic_4d_group
     type(sll_cartesian_mesh_2d), pointer    :: space_mesh_2d
     !> @}
 
-    !> @name The parameters for the BSL-LTPIC charge deposition (! number of virtual particles per deposition cell, per dimension)
+    !> @name The virtual particles (will be created on the fly in each cell of the flow_grid, when depositing the charge)
     !> @{
-    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_x
-    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_y
-    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_vx
-    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_vy
+    sll_int32                               :: number_virtual_particles
     !> @}
 
-    !> @name The type of interpolation structure for the remapped density f
+    !> @name General parameters for the interpolation of the remapped density f
     !> @{
     sll_int32                                                   :: remapped_f_interpolation_type  !> 0 = splines, 1 = sparse grid
     sll_int32                                                   :: remapped_f_interpolation_degree
+    sll_real64, dimension(4)                                    :: remapping_grid_eta_min   ! x-y domain: same as for Poisson grid
+    sll_real64, dimension(4)                                    :: remapping_grid_eta_max   ! vx-vy domain specified in addition
     !> @}
 
-    !> @name The sparse grid object used for the interpolation of the remapped density f, if needed
+    !> @name The sparse grid object used for the interpolation of the remapped density f, if remapping with sparse grid
     !> @{
     type(sparse_grid_interpolator_4d),          pointer         :: sparse_grid_interpolator
-    sll_int32                                                   :: sparse_grid_max_level
+    sll_int32, dimension(4)                                     :: sparse_grid_max_levels
     sll_real64, dimension(:), allocatable                       :: remapped_f_sparse_grid_coefficients
     ! maybe more stuff is needed here
     !> @}
 
-    !> @name The splines used to interpolate the remapping grid in phase space
+    !> @name The cartesian grid used for the interpolation of the remapped density f, if remapping with splines
     !> @{
-
-    !! note: after we have tested the sparse grid interpolation, we should rewrite the data structure for spline interpolations
-    !! in a simpler way...
-
-    type(sll_cartesian_mesh_4d),                pointer         :: remapping_grid
-    sll_real64, dimension(:,:,:,:),             pointer         :: target_values
-
+    type(sll_cartesian_mesh_4d),                pointer         :: remapping_cart_grid
+    sll_real64, dimension(:,:,:,:),             pointer         :: remapped_f_cart_grid_values
     !> quasi-interpolation coefs are needed for cubic (or higher degree) spline interpolation
     sll_real64, dimension(:),                   pointer         :: lt_pic_interpolation_coefs
-
-    !> here we should rather define the interpolation grid and resolution,
-    !> independently of the virtual cells which have nothing to do with interpolation:
-    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_x
-    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_y
-    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_vx
-    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_vy
-    !> @}
 
     !> @name The initial density (at some point this should be put in a separate initializer object)
     !> @{
@@ -186,7 +177,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%q * self%particle_list(i)%weight
+    r = self%species%q * self%markers_list(i)%weight
 
   end function bsl_lt_pic_4d_get_charge
 
@@ -197,7 +188,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%m * self%particle_list(i)%weight
+    r = self%species%m * self%markers_list(i)%weight
 
   end function bsl_lt_pic_4d_get_mass
 
@@ -211,10 +202,10 @@ contains
     ! get x
     r(1) = self%space_mesh_2d%eta1_min + &
            self%space_mesh_2d%delta_eta1*(                            &
-           real(self%particle_list(i)%offset_x + self%particle_list(i)%i_cell_x - 1, f64)      )
+           real(self%markers_list(i)%offset_x + self%markers_list(i)%i_cell_x - 1, f64)      )
     ! get y
     r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*( &
-           real(self%particle_list(i)%offset_y + self%particle_list(i)%i_cell_y - 1, f64)      )
+           real(self%markers_list(i)%offset_y + self%markers_list(i)%i_cell_y - 1, f64)      )
 
   end function bsl_lt_pic_4d_get_x
 
@@ -226,9 +217,9 @@ contains
     sll_real64 :: r(3)
 
     ! get vx
-    r(1) = self%particle_list(i)%vx
+    r(1) = self%markers_list(i)%vx
     ! get vy
-    r(2) = self%particle_list(i)%vy
+    r(2) = self%markers_list(i)%vy
 
   end function bsl_lt_pic_4d_get_v
 
@@ -244,8 +235,8 @@ contains
     sll_int32 ::  i_cell_x, i_cell_y
     sll_int32 ::  num_cells_x, num_cells_y
 
-    i_cell_x    = self%particle_list(i)%i_cell_x
-    i_cell_y    = self%particle_list(i)%i_cell_y
+    i_cell_x    = self%markers_list(i)%i_cell_x
+    i_cell_y    = self%markers_list(i)%i_cell_y
     num_cells_x = self%space_mesh_2d%num_cells1
     num_cells_y = self%space_mesh_2d%num_cells2
 
@@ -277,7 +268,7 @@ contains
     sll_real64              :: temp
 
     space_mesh_2d => self%space_mesh_2d
-    particle => self%particle_list(i)
+    particle => self%markers_list(i)
 
     temp = (x(1) - space_mesh_2d%eta1_min) / space_mesh_2d%delta_eta1
     i_cell_x  = 1 + int(floor(temp))
@@ -308,7 +299,7 @@ contains
 
     type(sll_bsl_lt_pic_4d_particle), pointer :: particle
 
-    particle => self%particle_list(i)
+    particle => self%markers_list(i)
     particle%vx = x(1)
     particle%vy = x(2)
 
@@ -332,7 +323,7 @@ contains
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: s
 
-    self%particle_list(i)%weight = s
+    self%markers_list(i)%weight = s
 
   end subroutine bsl_lt_pic_4d_set_particle_weight
 
@@ -522,32 +513,38 @@ contains
 
   end subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx
 
+
+
+
   !----------------------------------------------------------------------------
   ! Constructor
   !> @brief Constructor for a group of bsl_lt_pic_4d particles
-  function sll_bsl_lt_pic_4d_group_new( &
-        species_charge,         &
-        species_mass,           &
-        particle_group_id,      &
-        domain_is_x_periodic,   &
-        domain_is_y_periodic,   &
-        spline_degree,          &
-        number_parts_x,         &
-        number_parts_y,         &
-        number_parts_vx,        &
-        number_parts_vy,        &
-        remap_grid_vx_min,      &
-        remap_grid_vx_max,      &
-        remap_grid_vy_min,      &
-        remap_grid_vy_max,      &
-        N_virtual_particles_per_deposition_cell_x,   &
-        N_virtual_particles_per_deposition_cell_y,   &
-        N_virtual_particles_per_deposition_cell_vx,  &
-        N_virtual_particles_per_deposition_cell_vy,  &
-        N_remapping_nodes_per_virtual_cell_x,        &
-        N_remapping_nodes_per_virtual_cell_y,        &
-        N_remapping_nodes_per_virtual_cell_vx,        &
-        N_remapping_nodes_per_virtual_cell_vy,        &
+  function sll_bsl_lt_pic_4d_group_new(             &
+        species_charge,                             &
+        species_mass,                               &
+        particle_group_id,                          &
+        domain_is_x_periodic,                       &
+        domain_is_y_periodic,                       &
+        remap_f_type,                               &   ! 0 for splines, 1 for sparse grids
+        remap_degree,                               &
+        remapping_grid_vx_min,                      &
+        remapping_grid_vx_max,                      &
+        remapping_grid_vy_min,                      &
+        remapping_grid_vy_max,                      &
+        remapping_cart_grid_number_cells_x,         &   ! for splines
+        remapping_cart_grid_number_cells_y,         &   ! for splines
+        remapping_cart_grid_number_cells_vx,        &   ! for splines
+        remapping_cart_grid_number_cells_vy,        &   ! for splines
+        remapping_sparse_grid_max_level,            &   ! for the sparse grid: for now, same level in each dimension
+        number_virtual_particles,                   &
+        number_markers_x,                           &
+        number_markers_y,                           &
+        number_markers_vx,                          &
+        number_markers_vy,                          &
+        flow_grid_number_cells_x,                   &
+        flow_grid_number_cells_y,                   &
+        flow_grid_number_cells_vx,                  &
+        flow_grid_number_cells_vy,                  &
         space_mesh_2d ) result(res)
 
     type( sll_bsl_lt_pic_4d_group ), pointer :: res
@@ -557,19 +554,19 @@ contains
     sll_int32, intent(in)   :: particle_group_id
     logical, intent(in)     :: domain_is_x_periodic
     logical, intent(in)     :: domain_is_y_periodic
+
+
+
     sll_int32, intent(in)   :: spline_degree
-    sll_int32, intent(in)   :: number_parts_x
-    sll_int32, intent(in)   :: number_parts_y
-    sll_int32, intent(in)   :: number_parts_vx
-    sll_int32, intent(in)   :: number_parts_vy
-    sll_real64, intent(in)  :: remap_grid_vx_min
-    sll_real64, intent(in)  :: remap_grid_vx_max
-    sll_real64, intent(in)  :: remap_grid_vy_min
-    sll_real64, intent(in)  :: remap_grid_vy_max
-    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_x
-    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_y
-    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_vx
-    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_vy
+    sll_int32, intent(in)   :: number_markers_x
+    sll_int32, intent(in)   :: number_markers_y
+    sll_int32, intent(in)   :: number_markers_vx
+    sll_int32, intent(in)   :: number_markers_vy
+    sll_real64, intent(in)  :: remapping_grid_vx_min
+    sll_real64, intent(in)  :: remapping_grid_vx_max
+    sll_real64, intent(in)  :: remapping_grid_vy_min
+    sll_real64, intent(in)  :: remapping_grid_vy_max
+    sll_int32, intent(in)   :: number_virtual_particles
     sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_x
     sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_y
     sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_vx
@@ -585,9 +582,15 @@ contains
     sll_real64              :: remap_grid_y_min
     sll_real64              :: remap_grid_y_max
 
+
     sll_int32               :: ierr
     character(len=*), parameter :: this_fun_name = "sll_bsl_lt_pic_4d_group_new"
     character(len=128)       :: err_msg
+
+    if (.not.associated(space_mesh_2d) ) then
+       err_msg = 'Error: given space_mesh_2d is not associated'
+       SLL_ERROR( this_fun_name, err_msg )
+    end if
 
     SLL_ALLOCATE( res, ierr )
 
@@ -598,79 +601,176 @@ contains
     res%dimension_x = 2
     res%dimension_v = 2
 
-    !> create the particle list
-    res%spline_degree = spline_degree
-    res%number_parts_x   = number_parts_x
-    res%number_parts_y   = number_parts_y
-    res%number_parts_vx  = number_parts_vx
-    res%number_parts_vy  = number_parts_vy
-    res%number_particles = number_parts_x * number_parts_y * number_parts_vx * number_parts_vy
+    !> A. discretization of the flow:
+    !>    - A.1 list of marker coordinates (pushed forward)
+    !>    - A.2 cartesian grid of initial markers
+    !>    - A.3 flow grid: 4d cartesian cells where the flow is linearized
 
-    SLL_ALLOCATE( res%particle_list(res%number_particles), ierr )
+    !> A.1 list of marker coordinates
+    res%number_markers_x = number_markers_x
+    res%number_markers_y = number_markers_y
+    res%number_markers_vx = number_markers_vx
+    res%number_markers_vy = number_markers_vy
+    res%number_markers   = res%number_markers_x * res%number_markers_y * res%number_markers_vx * res%number_markers_vy    
+    res%number_particles = res%number_markers     !< res%number_particles is a parameter of the parent class
 
-    !> assign the physical 2d mesh (used eg in the Poisson solver)
-    if (.not.associated(space_mesh_2d) ) then
-       err_msg = 'Error: given space_mesh_2d is not associated'
-       SLL_ERROR( this_fun_name, err_msg )
+    SLL_ALLOCATE( res%markers_list(res%number_markers), ierr )
+
+    !> A.2 cartesian grid of initial markers
+    if( domain_is_x_periodic )then
+        number_cells_initial_markers_grid_x = number_markers_x
+    else
+        number_cells_initial_markers_grid_x = number_markers_x - 1
     end if
+    if( domain_is_y_periodic )then
+        number_cells_initial_markers_grid_y = number_markers_y
+    else
+        number_cells_initial_markers_grid_y = number_markers_y - 1
+    end if
+    number_cells_initial_markers_grid_vx = number_markers_vx - 1
+    number_cells_initial_markers_grid_vy = number_markers_vy - 1
+
+    res%initial_markers_grid => new_cartesian_mesh_4d( &
+      number_cells_initial_markers_grid_x, &
+      number_cells_initial_markers_grid_y, &
+      number_cells_initial_markers_grid_vx, &
+      number_cells_initial_markers_grid_vy, &
+      space_mesh_2d%eta1_min, &
+      space_mesh_2d%eta1_max, &
+      space_mesh_2d%eta2_min, &
+      space_mesh_2d%eta2_max, &
+      remapping_grid_vx_min, &
+      remapping_grid_vx_max, &
+      remapping_grid_vy_min, &
+      remapping_grid_vy_max )
+
+
+    !> A.2 flow grid
+    res%flow_grid => new_cartesian_mesh_4d( &
+      flow_grid_number_cells_x, &
+      flow_grid_number_cells_y, &
+      flow_grid_number_cells_vx, &
+      flow_grid_number_cells_vy, &
+      space_mesh_2d%eta1_min, &
+      space_mesh_2d%eta1_max, &
+      space_mesh_2d%eta2_min, &
+      space_mesh_2d%eta2_max, &
+      remapping_grid_vx_min, &
+      remapping_grid_vx_max, &
+      remapping_grid_vy_min, &
+      remapping_grid_vy_max )
+
+
+    !> B. discretization of the deposited f and the field:
+    !>    - B.1 Poisson grid
+    !>    - B.2 number of virtual particles (will be created on the fly in each cell of the flow_grid, when depositing the charge)
+
+    !> B.1 physical 2d mesh (used eg in the Poisson solver)
     res%space_mesh_2d => space_mesh_2d
     res%domain_is_periodic(1) = domain_is_x_periodic
     res%domain_is_periodic(2) = domain_is_y_periodic
 
-    res%N_virtual_particles_per_deposition_cell_x = N_virtual_particles_per_deposition_cell_x
-    res%N_virtual_particles_per_deposition_cell_y = N_virtual_particles_per_deposition_cell_y
-    res%N_virtual_particles_per_deposition_cell_vx = N_virtual_particles_per_deposition_cell_vx
-    res%N_virtual_particles_per_deposition_cell_vy = N_virtual_particles_per_deposition_cell_vy
+    !> B.2 number of virtual particles
+    res%number_virtual_particles = number_virtual_particles
 
-    res%N_remapping_nodes_per_virtual_cell_x = N_remapping_nodes_per_virtual_cell_x
-    res%N_remapping_nodes_per_virtual_cell_y = N_remapping_nodes_per_virtual_cell_y
-    res%N_remapping_nodes_per_virtual_cell_vx = N_remapping_nodes_per_virtual_cell_vx
-    res%N_remapping_nodes_per_virtual_cell_vy = N_remapping_nodes_per_virtual_cell_vy
 
-    !> create the particle list and the array of target values
-    SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
+    !> C. discretization of the remapped f:
+    !>    - C.0 size of the remapping grid used in the interpolator for the remapped_f (for splines or sparse grid)
+    !>    - C.1 interpolator for splines
+    !>      C.1.a  cartesian remapping grid
+    !>      C.1.b  array of nodal values for remapped_f
+    !>    - C.2 interpolator for sparse grids
+    !>      C.2.a  sparse remapping grid
+    !>      C.2.b  array of nodal values for remapped_f
 
-    !> create the ''remapping grid'', a cartesian phase space grid used to initialize and remap the particles
-    remap_grid_x_min = space_mesh_2d%eta1_min
-    remap_grid_x_max = space_mesh_2d%eta1_max
-    remap_grid_y_min = space_mesh_2d%eta2_min
-    remap_grid_y_max = space_mesh_2d%eta2_max
+    !> C.0 size of the remapping grid
+    res%remapping_grid_eta_min(1) = space_mesh_2d%eta1_min
+    res%remapping_grid_eta_max(1) = space_mesh_2d%eta1_max
+    res%remapping_grid_eta_min(2) = space_mesh_2d%eta2_min
+    res%remapping_grid_eta_max(2) = space_mesh_2d%eta2_max
+    res%remapping_grid_eta_min(3) = remapping_grid_vx_min
+    res%remapping_grid_eta_max(3) = remapping_grid_vx_max
+    res%remapping_grid_eta_min(4) = remapping_grid_vy_min
+    res%remapping_grid_eta_max(4) = remapping_grid_vy_max
 
-    if( domain_is_x_periodic )then
-        remap_grid_number_cells_x = number_parts_x
-    else
-        remap_grid_number_cells_x = number_parts_x - 1
+
+    ! todo:  change   remap_f_type == 0  ->  remap_f_type == REMAP_WITH_SPLINES    et idem pour sparse grids
+    if( remap_f_type == 0 )then
+
+      ! C.1 interpolator for splines
+
+      SLL_ASSERT( remap_degree==1 )
+      res%spline_degree = remap_degree
+
+      ! C.1.a  cartesian remapping grid
+      if( domain_is_x_periodic )then
+          number_remapping_nodes_x = remapping_cart_grid_number_cells_x
+      else
+          number_remapping_nodes_x = remapping_cart_grid_number_cells_x + 1
+          !          remap_grid_number_cells_x = number_parts_x - 1
+      end if
+      if( domain_is_y_periodic )then
+          number_remapping_nodes_y = remapping_cart_grid_number_cells_y
+        !          remap_grid_number_cells_y = number_parts_y
+      else
+          number_remapping_nodes_y = remapping_cart_grid_number_cells_y + 1
+        !          remap_grid_number_cells_y = number_parts_y - 1
+      end if
+      number_remapping_nodes_vx = remapping_cart_grid_number_cells_vx + 1
+      number_remapping_nodes_vy = remapping_cart_grid_number_cells_vy + 1
+
+      res%remapping_cart_grid => new_cartesian_mesh_4d(       &
+                                                  remapping_cart_grid_number_cells_x,        &
+                                                  remapping_cart_grid_number_cells_y,        &
+                                                  remapping_cart_grid_number_cells_vx,       &
+                                                  remapping_cart_grid_number_cells_vy,       &
+                                                  res%remapping_grid_eta_min(1),   &
+                                                  res%remapping_grid_eta_max(1),   &
+                                                  res%remapping_grid_eta_min(2),   &
+                                                  res%remapping_grid_eta_max(2),   &
+                                                  res%remapping_grid_eta_min(3),  &
+                                                  res%remapping_grid_eta_max(3),  &
+                                                  res%remapping_grid_eta_min(4),  &
+                                                  res%remapping_grid_eta_max(4)   &
+                                                )
+
+      !> store the quasi-interpolation coefficients used in the remappings and initialisation, in the case of cubic spline particles
+      if( res%spline_degree == 3) then
+          SLL_ALLOCATE( res%lt_pic_interpolation_coefs(-1:1), ierr )
+             res%lt_pic_interpolation_coefs(-1) = -1.0_f64/6.0_f64
+             res%lt_pic_interpolation_coefs(0)  =  8.0_f64/6.0_f64
+             res%lt_pic_interpolation_coefs(1)  = -1.0_f64/6.0_f64
+      end if
+
+
+      ! C.1.b  array of nodal values for remapped_f
+      SLL_ALLOCATE(res%remapped_f_cart_grid_values(nb_remap_nodes_x, nb_remap_nodes_y, nb_remap_nodes_vx, nb_remap_nodes_vy), ierr)
+
+    else if( remap_f_type == 1 )then
+      ! C.2 interpolator for sparse grids
+
+      ! C.2.a  sparse remapping grid
+      res%remapped_f_interpolation_degree = remap_degree
+      res%sparse_grid_max_levels(1) = remap_sparse_grid_max_level
+      res%sparse_grid_max_levels(2) = remap_sparse_grid_max_level
+      res%sparse_grid_max_levels(3) = remap_sparse_grid_max_level
+      res%sparse_grid_max_levels(4) = remap_sparse_grid_max_level
+      call res%sparse_grid_interpolator%initialize(         &
+                  res%sparse_grid_max_levels,               &
+                  res%remapped_f_interpolation_degree,      &
+                  res%remapped_f_interpolation_degree+1,    &
+                  0,                                        &  ! interpolation_type for the sparse grid (splines or Lagrange)
+                  res%remapping_grid_eta_min,               &
+                  res%remapping_grid_eta_max                &
+                  )
+
+      ! C.2.b  array of nodal values for remapped_f
+      SLL_ALLOCATE( res%remapped_f_sparse_grid_coefficients(res%sparse_grid_interpolator%size_basis), ierr )
+      res%remapped_f_sparse_grid_coefficients = 0.0_f64
+
     end if
-    if( domain_is_y_periodic )then
-        remap_grid_number_cells_y = number_parts_y
-    else
-        remap_grid_number_cells_y = number_parts_y - 1
-    end if
-    remap_grid_number_cells_vx = number_parts_vx - 1
-    remap_grid_number_cells_vy = number_parts_vy - 1
-    res%remapping_grid => new_cartesian_mesh_4d(remap_grid_number_cells_x,        &
-                                                remap_grid_number_cells_y,        &
-                                                remap_grid_number_cells_vx,       &
-                                                remap_grid_number_cells_vy,       &
-                                                remap_grid_x_min,   &
-                                                remap_grid_x_max,   &
-                                                remap_grid_y_min,   &
-                                                remap_grid_y_max,   &
-                                                remap_grid_vx_min,  &
-                                                remap_grid_vx_max,  &
-                                                remap_grid_vy_min,  &
-                                                remap_grid_vy_max   &
-                                              )
 
-    !> store the quasi-interpolation coefficients used in the remappings and initialisation, in the case of cubic spline particles
-    if( spline_degree == 3) then
-        SLL_ALLOCATE( res%lt_pic_interpolation_coefs(-1:1), ierr )
-           res%lt_pic_interpolation_coefs(-1) = -1.0_f64/6.0_f64
-           res%lt_pic_interpolation_coefs(0)  =  8.0_f64/6.0_f64
-           res%lt_pic_interpolation_coefs(1)  = -1.0_f64/6.0_f64
-    end if
-
-    end function sll_bsl_lt_pic_4d_group_new
+  end function sll_bsl_lt_pic_4d_group_new
 
 
   subroutine bsl_lt_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
@@ -731,7 +831,7 @@ contains
 
   end subroutine bsl_lt_pic_4d_initializer_hat_f0
 
-
+  ! todo: maybe rename remap_grid -> remapping_cart_grid
   subroutine bsl_lt_pic_4d_write_landau_density_on_remap_grid(    &
               p_group,                              &
               thermal_speed, alpha, k_landau        &
@@ -765,6 +865,8 @@ contains
     sll_real64 :: vy_j
     sll_real64 :: f_x, f_vx, f_vy
 
+    SLL_ASSERT( p_group%remapped_f_interpolation_type == 0 )     !todo: mettre aussi ailleurs qd on utilise des splines
+
     number_particles = p_group%number_particles
     one_over_thermal_velocity = 1./thermal_speed
     one_over_two_pi = 1./(2*sll_pi)
@@ -774,15 +876,16 @@ contains
     number_parts_vx = p_group%number_parts_vx
     number_parts_vy = p_group%number_parts_vy
 
-    h_parts_x    = p_group%remapping_grid%delta_eta1
-    h_parts_y    = p_group%remapping_grid%delta_eta2
-    h_parts_vx   = p_group%remapping_grid%delta_eta3
-    h_parts_vy   = p_group%remapping_grid%delta_eta4
+    !todo rename h_parts, not "particles" anymore
+    h_parts_x    = p_group%remapping_cart_grid%delta_eta1
+    h_parts_y    = p_group%remapping_cart_grid%delta_eta2
+    h_parts_vx   = p_group%remapping_cart_grid%delta_eta3
+    h_parts_vy   = p_group%remapping_cart_grid%delta_eta4
 
-    parts_x_min    = p_group%remapping_grid%eta1_min
-    parts_y_min    = p_group%remapping_grid%eta2_min
-    parts_vx_min   = p_group%remapping_grid%eta3_min
-    parts_vy_min   = p_group%remapping_grid%eta4_min
+    parts_x_min    = p_group%remapping_cart_grid%eta1_min
+    parts_y_min    = p_group%remapping_cart_grid%eta2_min
+    parts_vx_min   = p_group%remapping_cart_grid%eta3_min
+    parts_vy_min   = p_group%remapping_cart_grid%eta4_min
 
     ! compute the values of f0 on the (cartesian, phase-space) remapping grid
     x_j = parts_x_min
@@ -796,7 +899,7 @@ contains
           vy_j = parts_vy_min
           do j_vy = 1, number_parts_vy
             f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j*one_over_thermal_velocity)**2)
-            p_group%target_values(j_x,j_y,j_vx,j_vy) = one_over_two_pi * f_x * f_vx * f_vy
+            p_group%remapped_f_cart_grid_values(j_x,j_y,j_vx,j_vy) = one_over_two_pi * f_x * f_vx * f_vy
             vy_j = vy_j + h_parts_vy
           end do
           vx_j = vx_j + h_parts_vx
@@ -887,15 +990,15 @@ contains
     number_parts_vx = p_group%number_parts_vx
     number_parts_vy = p_group%number_parts_vy
 
-    h_parts_x    = p_group%remapping_grid%delta_eta1
-    h_parts_y    = p_group%remapping_grid%delta_eta2
-    h_parts_vx   = p_group%remapping_grid%delta_eta3
-    h_parts_vy   = p_group%remapping_grid%delta_eta4
+    h_parts_x    = p_group%remapping_cart_grid%delta_eta1
+    h_parts_y    = p_group%remapping_cart_grid%delta_eta2
+    h_parts_vx   = p_group%remapping_cart_grid%delta_eta3
+    h_parts_vy   = p_group%remapping_cart_grid%delta_eta4
 
-    parts_x_min    = p_group%remapping_grid%eta1_min
-    parts_y_min    = p_group%remapping_grid%eta2_min
-    parts_vx_min   = p_group%remapping_grid%eta3_min
-    parts_vy_min   = p_group%remapping_grid%eta4_min
+    parts_x_min    = p_group%remapping_cart_grid%eta1_min
+    parts_y_min    = p_group%remapping_cart_grid%eta2_min
+    parts_vx_min   = p_group%remapping_cart_grid%eta3_min
+    parts_vy_min   = p_group%remapping_cart_grid%eta4_min
 
     ! compute the values of f0 on the (cartesian, phase-space) remapping grid
     x_j = parts_x_min
@@ -906,7 +1009,7 @@ contains
         do j_vx = 1, number_parts_vx
           vy_j = parts_vy_min
           do j_vy = 1, number_parts_vy
-            p_group%target_values(j_x,j_y,j_vx,j_vy) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, &
+            p_group%remapped_f_cart_grid_values(j_x,j_y,j_vx,j_vy) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, &
                                                                          basis_height, hat_shift,         &
                                                                          x_j, y_j, vx_j, vy_j)
             vy_j = vy_j + h_parts_vy
@@ -924,6 +1027,7 @@ contains
   ! position the particle on the cartesian remapping grid
   ! and compute new weights in order to approximate the point values stored in the remapping grid
   !  subroutine sll_compute_new_lt_particles_4d( &        ! old name
+  ! todo: rename -> compute_new_spline_coefs
   subroutine bsl_lt_pic_4d_compute_new_particles( &
               p_group )
 
@@ -947,7 +1051,7 @@ contains
     sll_int32 :: number_parts_y
     sll_int32 :: number_parts_vx
     sll_int32 :: number_parts_vy
-    sll_real64 :: h_parts_x
+    sll_real64 :: h_parts_x                 ! todo : rename, not particles anymore
     sll_real64 :: h_parts_y
     sll_real64 :: h_parts_vx
     sll_real64 :: h_parts_vy
@@ -969,17 +1073,17 @@ contains
     number_parts_vx = p_group%number_parts_vx
     number_parts_vy = p_group%number_parts_vy
 
-    h_parts_x    = p_group%remapping_grid%delta_eta1
-    h_parts_y    = p_group%remapping_grid%delta_eta2
-    h_parts_vx   = p_group%remapping_grid%delta_eta3
-    h_parts_vy   = p_group%remapping_grid%delta_eta4
+    h_parts_x    = p_group%remapping_cart_grid%delta_eta1
+    h_parts_y    = p_group%remapping_cart_grid%delta_eta2
+    h_parts_vx   = p_group%remapping_cart_grid%delta_eta3
+    h_parts_vy   = p_group%remapping_cart_grid%delta_eta4
 
     d_vol = real( h_parts_x*h_parts_y*h_parts_vx*h_parts_vy,f32)
 
-    parts_x_min    = p_group%remapping_grid%eta1_min
-    parts_y_min    = p_group%remapping_grid%eta2_min
-    parts_vx_min   = p_group%remapping_grid%eta3_min
-    parts_vy_min   = p_group%remapping_grid%eta4_min
+    parts_x_min    = p_group%remapping_cart_grid%eta1_min
+    parts_y_min    = p_group%remapping_cart_grid%eta2_min
+    parts_vx_min   = p_group%remapping_cart_grid%eta3_min
+    parts_vy_min   = p_group%remapping_cart_grid%eta4_min
 
     SLL_ALLOCATE( particle_indices(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
     particle_indices(:,:,:,:) = 0
@@ -1006,7 +1110,7 @@ contains
             SLL_ASSERT(k == k_temp_debug)
 
             if( p_group%spline_degree == 1 )then
-                w_k = real(d_vol * p_group%target_values(j_x,j_y,j_vx,j_vy) ,f64)
+                w_k = real(d_vol * p_group%remapped_f_cart_grid_values(j_x,j_y,j_vx,j_vy) ,f64)
             else if( p_group%spline_degree == 3 )then
                 w_k = 0.0_f64
                 do l_x = -1, 1
@@ -1039,7 +1143,7 @@ contains
                                                     p_group%lt_pic_interpolation_coefs(l_y )  *  &
                                                     p_group%lt_pic_interpolation_coefs(l_vx)  *  &
                                                     p_group%lt_pic_interpolation_coefs(l_vy)  *  &
-                                                    p_group%target_values(j_aux_x,j_aux_y,j_aux_vx,j_aux_vy) ,f64)
+                                                    p_group%remapped_f_cart_grid_values(j_aux_x,j_aux_y,j_aux_vx,j_aux_vy) ,f64)
                                             end if
                                         end do
                                     end if
@@ -1072,69 +1176,69 @@ contains
             if(j_x == 1)then
                 ! [neighbor index = own index] means: no neighbor
                 ! in the x-periodic case this will be changed when dealing the last particle in the x dimension
-                p_group%particle_list(k)%ngb_xleft_index = k
+                p_group%markers_list(k)%ngb_xleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x-1,j_y,j_vx,j_vy)
-                p_group%particle_list(k)%ngb_xleft_index = k_ngb
-                p_group%particle_list(k_ngb)%ngb_xright_index = k
+                p_group%markers_list(k)%ngb_xleft_index = k_ngb
+                p_group%markers_list(k_ngb)%ngb_xright_index = k
                 if(j_x == number_parts_x)then
                     if( p_group%domain_is_periodic(1) )then
                         ! set the connectivity (in both directions) with right neighbor
                         k_ngb = particle_indices(1,j_y,j_vx,j_vy)
-                        p_group%particle_list(k)%ngb_xright_index = k_ngb
-                        p_group%particle_list(k_ngb)%ngb_xleft_index = k
+                        p_group%markers_list(k)%ngb_xright_index = k_ngb
+                        p_group%markers_list(k_ngb)%ngb_xleft_index = k
                     else
                         ! [neighbor index = own index] means: no neighbor
-                        p_group%particle_list(k)%ngb_xright_index = k
+                        p_group%markers_list(k)%ngb_xright_index = k
                     end if
                 end if
             end if
             if(j_y == 1)then
                 ! [neighbor index = own index] means: no neighbor
                 ! in the y-periodic case this will be changed when dealing the last particle in the y dimension
-                p_group%particle_list(k)%ngb_yleft_index = k
+                p_group%markers_list(k)%ngb_yleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x,j_y-1,j_vx,j_vy)
-                p_group%particle_list(k)%ngb_yleft_index = k_ngb
-                p_group%particle_list(k_ngb)%ngb_yright_index = k
+                p_group%markers_list(k)%ngb_yleft_index = k_ngb
+                p_group%markers_list(k_ngb)%ngb_yright_index = k
                 if(j_y == number_parts_y)then
                     if( p_group%domain_is_periodic(2) )then
                         ! set the connectivity (in both directions) with right neighbor
                         k_ngb = particle_indices(j_x,1,j_vx,j_vy)
-                        p_group%particle_list(k)%ngb_yright_index = k_ngb
-                        p_group%particle_list(k_ngb)%ngb_yleft_index = k
+                        p_group%markers_list(k)%ngb_yright_index = k_ngb
+                        p_group%markers_list(k_ngb)%ngb_yleft_index = k
                     else
                         ! [neighbor index = own index] means: no neighbor
-                        p_group%particle_list(k)%ngb_yright_index = k
+                        p_group%markers_list(k)%ngb_yright_index = k
                     end if
                 end if
             end if
             if(j_vx == 1)then
                 ! [neighbor index = own index] means: no neighbor
-                p_group%particle_list(k)%ngb_vxleft_index = k
+                p_group%markers_list(k)%ngb_vxleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x,j_y,j_vx-1,j_vy)
-                p_group%particle_list(k)%ngb_vxleft_index = k_ngb
-                p_group%particle_list(k_ngb)%ngb_vxright_index = k
+                p_group%markers_list(k)%ngb_vxleft_index = k_ngb
+                p_group%markers_list(k_ngb)%ngb_vxright_index = k
                 if(j_vx == number_parts_vx)then
                     ! [neighbor index = own index] means: no neighbor
-                    p_group%particle_list(k)%ngb_vxright_index = k
+                    p_group%markers_list(k)%ngb_vxright_index = k
                 end if
             end if
             if(j_vy == 1)then
                 ! [neighbor index = own index] means: no neighbor
-                p_group%particle_list(k)%ngb_vyleft_index = k
+                p_group%markers_list(k)%ngb_vyleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x,j_y,j_vx,j_vy-1)
-                p_group%particle_list(k)%ngb_vyleft_index = k_ngb
-                p_group%particle_list(k_ngb)%ngb_vyright_index = k
+                p_group%markers_list(k)%ngb_vyleft_index = k_ngb
+                p_group%markers_list(k_ngb)%ngb_vyright_index = k
                 if(j_vy == number_parts_vy)then
                     ! [neighbor index = own index] means: no neighbor
-                    p_group%particle_list(k)%ngb_vyright_index = k
+                    p_group%markers_list(k)%ngb_vyright_index = k
                 end if
             end if
 
@@ -1575,17 +1679,8 @@ contains
             num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
 
 
-            ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
-            p_group%target_values(:,:,:,:) = 0.0_f64
-
-            !print *, "6453 before remap -> DEBUG: ", p_group%number_parts_x/2,    &
-            !                               p_group%number_parts_y/2,    &
-            !                               p_group%number_parts_vx/2,   &
-            !                               p_group%number_parts_vy/2
-            !print *, "6454 before remap -> DEBUG: ", p_group%target_values(p_group%number_parts_x/2,  p_group%number_parts_y/2, &
-            !                                                     p_group%number_parts_vx/2, p_group%number_parts_vy/2)
-
-
+            ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::remapped_f_cart_grid_values]]
+            p_group%remapped_f_cart_grid_values(:,:,:,:) = 0.0_f64
 
         else
 
@@ -1913,7 +2008,7 @@ contains
 
 
                ! i_x, i_y, i_vx, i_vy: real index of the virtual particle in
-               ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+               ! [[file:../pic_particle_types/lt_pic_4d_group.F90::remapped_f_cart_grid_values]]
 
                ! x, y, vx, vy = will be the location of the virtual particle at time n
                ! x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
@@ -2056,7 +2151,7 @@ contains
                                   kprime = k
 
                                   ! Calls [[onestep]]. "dim" can be x,y,vx,vy.
-#define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%particle_list,h_parts_/**/dimname)
+#define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%markers_list,h_parts_/**/dimname)
 ! same macros as in bsl_lt_pic_4d_utilities.F90
 #define ALONG_X 1
 #define ALONG_Y 2
@@ -2177,10 +2272,10 @@ contains
 
                                  hcube(1,1,1,1) = kprime
 
-                                 hcube(2,1,1,1) = p_group%particle_list(kprime)%ngb_xright_index ! 1 step
-                                 hcube(1,2,1,1) = p_group%particle_list(kprime)%ngb_yright_index
-                                 hcube(1,1,2,1) = p_group%particle_list(kprime)%ngb_vxright_index
-                                 hcube(1,1,1,2) = p_group%particle_list(kprime)%ngb_vyright_index
+                                 hcube(2,1,1,1) = p_group%markers_list(kprime)%ngb_xright_index ! 1 step
+                                 hcube(1,2,1,1) = p_group%markers_list(kprime)%ngb_yright_index
+                                 hcube(1,1,2,1) = p_group%markers_list(kprime)%ngb_vxright_index
+                                 hcube(1,1,1,2) = p_group%markers_list(kprime)%ngb_vyright_index
 
                                  ! if any of the first four vertices is undefined (the convention in
                                  ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
@@ -2208,25 +2303,25 @@ contains
                                     ! 4 vertices are checked.
 
                                     ! 1 step in x + 1 other step
-                                    hcube(2,2,1,1) = p_group%particle_list(hcube(2,1,1,1))%ngb_yright_index
-                                    hcube(2,1,2,1) = p_group%particle_list(hcube(2,1,1,1))%ngb_vxright_index
-                                    hcube(2,1,1,2) = p_group%particle_list(hcube(2,1,1,1))%ngb_vyright_index
+                                    hcube(2,2,1,1) = p_group%markers_list(hcube(2,1,1,1))%ngb_yright_index
+                                    hcube(2,1,2,1) = p_group%markers_list(hcube(2,1,1,1))%ngb_vxright_index
+                                    hcube(2,1,1,2) = p_group%markers_list(hcube(2,1,1,1))%ngb_vyright_index
 
                                     ! 1 step in y + 1 other step
-                                    hcube(1,2,2,1) = p_group%particle_list(hcube(1,2,1,1))%ngb_vxright_index
-                                    hcube(1,2,1,2) = p_group%particle_list(hcube(1,2,1,1))%ngb_vyright_index
+                                    hcube(1,2,2,1) = p_group%markers_list(hcube(1,2,1,1))%ngb_vxright_index
+                                    hcube(1,2,1,2) = p_group%markers_list(hcube(1,2,1,1))%ngb_vyright_index
 
                                     ! 1 step in vx + 1 other step
-                                    hcube(1,1,2,2) = p_group%particle_list(hcube(1,1,2,1))%ngb_vyright_index
+                                    hcube(1,1,2,2) = p_group%markers_list(hcube(1,1,2,1))%ngb_vyright_index
 
                                     ! all combinations of 3 steps
-                                    hcube(1,2,2,2) = p_group%particle_list(hcube(1,2,2,1))%ngb_vyright_index
-                                    hcube(2,1,2,2) = p_group%particle_list(hcube(2,1,2,1))%ngb_vyright_index
-                                    hcube(2,2,1,2) = p_group%particle_list(hcube(2,2,1,1))%ngb_vyright_index
-                                    hcube(2,2,2,1) = p_group%particle_list(hcube(2,2,1,1))%ngb_vxright_index
+                                    hcube(1,2,2,2) = p_group%markers_list(hcube(1,2,2,1))%ngb_vyright_index
+                                    hcube(2,1,2,2) = p_group%markers_list(hcube(2,1,2,1))%ngb_vyright_index
+                                    hcube(2,2,1,2) = p_group%markers_list(hcube(2,2,1,1))%ngb_vyright_index
+                                    hcube(2,2,2,1) = p_group%markers_list(hcube(2,2,1,1))%ngb_vxright_index
 
                                     ! 4 steps
-                                    hcube(2,2,2,2) = p_group%particle_list(hcube(2,2,2,1))%ngb_vyright_index
+                                    hcube(2,2,2,2) = p_group%markers_list(hcube(2,2,2,1))%ngb_vyright_index
 
                                       ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
                                       ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
@@ -2257,7 +2352,7 @@ contains
                                     ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
 
                                     ! place the resulting value of f on the virtual particle in
-                                    ! p_group%target_values
+                                    ! p_group%remapped_f_cart_grid_values
 
                                     do side_x = 1,2
                                        if(side_x == 1)then
@@ -2286,7 +2381,7 @@ contains
 
                                                 ! uses [[sll_pic_shape]]
                                                 f_value_on_virtual_particle = f_value_on_virtual_particle                      &
-                                                      + p_group%particle_list(hcube(side_x,side_y,side_vx,side_vy))%weight     &
+                                                      + p_group%markers_list(hcube(side_x,side_y,side_vx,side_vy))%weight     &
                                                         * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,                 &
                                                                         inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
 
@@ -2342,7 +2437,7 @@ contains
                                     else
                                         ! print *, "WRITE F RTRT "
                                         if( use_remapping_grid )then
-                                            p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
+                                            p_group%remapped_f_cart_grid_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
                                         else
                                             given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
                                                     + f_value_on_virtual_particle * h_virtual_parts_y * h_virtual_parts_vy
@@ -2391,6 +2486,10 @@ contains
     end if
 
   end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit_old
+
+
+
+
 
 
   !> separate interpolation routine for the remapped f
@@ -2459,17 +2558,13 @@ contains
     sll_int32 :: number_virtual_particles_vx
     sll_int32 :: number_virtual_particles_vy
 
-    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy
+    ! was [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy,
+    ! now h_markers_***
 
-    sll_real64 :: h_parts_x
-    sll_real64 :: h_parts_y
-    sll_real64 :: h_parts_vx
-    sll_real64 :: h_parts_vy
-
-    sll_real64 :: inv_h_parts_x
-    sll_real64 :: inv_h_parts_y
-    sll_real64 :: inv_h_parts_vx
-    sll_real64 :: inv_h_parts_vy
+    sll_real64 :: h_markers_x
+    sll_real64 :: h_markers_y
+    sll_real64 :: h_markers_vx
+    sll_real64 :: h_markers_vy
 
     sll_real64 :: h_virtual_parts_x
     sll_real64 :: h_virtual_parts_y
@@ -2525,11 +2620,9 @@ contains
     sll_real64 :: tmp, tmp1, tmp2
 
 
-    ! index of particle closest to the center of each virtual cell (phase space cells where the flow is linearized).
-    ! Array dimensions defined by the contents of the remapping_grid.
-    ! If n_virtual is greater than 1, the size of this array is smaller than the number of real remapping_grid cells.
+    ! index of marker closest to the center of each virtual cell (phase space cells where the flow is linearized).
 
-    sll_int32,          dimension(:,:,:,:), allocatable     :: closest_particle
+    sll_int32,          dimension(:,:,:,:), allocatable     :: closest_particle    ! todo: rename particles -> markers
     sll_real64,         dimension(:,:,:,:), allocatable     :: closest_particle_distance
 
     ! array of integer linked lists (declared below) is very useful when remapping on sparse grids, but can also simplify the
@@ -2588,11 +2681,6 @@ contains
     sll_real64 :: d2_x, d2_y, d2_vx, d2_vy
     sll_real64 :: d3_x, d3_y, d3_vx, d3_vy
     sll_real64 :: d4_x, d4_y, d4_vx, d4_vy
-
-    sll_real64 :: part_radius_x
-    sll_real64 :: part_radius_y
-    sll_real64 :: part_radius_vx
-    sll_real64 :: part_radius_vy
 
     sll_real64 :: offset_x_in_virtual_cell
     sll_real64 :: offset_y_in_virtual_cell
@@ -2662,12 +2750,12 @@ contains
       ! Because the Poisson mesh does not prescribe any resolution in velocity
       ! the resolution of the 'virtual' cells in the velocity dimensions is inferred from the remapping (or initial) grid
       num_virtual_cells_vx = p_group%number_parts_vx
-      virtual_grid_vx_min = p_group%remapping_grid%eta3_min
-      virtual_grid_vx_max = p_group%remapping_grid%eta3_max
+      virtual_grid_vx_min = ...
+      virtual_grid_vx_max = ...
 
       num_virtual_cells_vy = p_group%number_parts_vy
-      virtual_grid_vy_min = p_group%remapping_grid%eta4_min
-      virtual_grid_vy_max = p_group%remapping_grid%eta4_max
+      virtual_grid_vy_min = ...
+      virtual_grid_vy_max = ...
 
       number_virtual_particles_x =  n_virtual_x  * num_virtual_cells_x
       number_virtual_particles_y =  n_virtual_y  * num_virtual_cells_y
@@ -2688,29 +2776,41 @@ contains
                                   virtual_grid_vy_max   &
                                  )
 
+      ! todo: on utilise vraiment g pour la deposition ??
+
       if( present(target_total_charge) )then
           deposited_charge = 0.0_f64
       end if
 
-    else ! test scenario_is_deposition
+    else
+
+      ! here the scenario is write f on grid
 
       if( use_remapping_grid )then
 
-        g => p_group%remapping_grid
+        if( p_group%remapped_f_interpolation_type == 0 )then
+          ! remapping grid is cartesian (splines)
+          g => p_group%remapping_cart_grid
 
-        number_virtual_particles_x = p_group%number_parts_x
-        number_virtual_particles_y = p_group%number_parts_y
-        number_virtual_particles_vx = p_group%number_parts_vx
-        number_virtual_particles_vy = p_group%number_parts_vy
+          number_virtual_particles_x = p_group%number_parts_x
+          number_virtual_particles_y = p_group%number_parts_y
+          number_virtual_particles_vx = p_group%number_parts_vx
+          number_virtual_particles_vy = p_group%number_parts_vy
 
-        num_virtual_cells_x =  int(ceiling(number_virtual_particles_x * 1. / n_virtual_x) )
-        num_virtual_cells_y =  int(ceiling(number_virtual_particles_y * 1. / n_virtual_y) )
-        num_virtual_cells_vx = int(ceiling(number_virtual_particles_vx * 1. / n_virtual_vx))
-        num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
+          num_virtual_cells_x =  int(ceiling(number_virtual_particles_x * 1. / n_virtual_x) )
+          num_virtual_cells_y =  int(ceiling(number_virtual_particles_y * 1. / n_virtual_y) )
+          num_virtual_cells_vx = int(ceiling(number_virtual_particles_vx * 1. / n_virtual_vx))
+          num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
 
+          ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::remapped_f_cart_grid_values]]
+          p_group%remapped_f_cart_grid_values(:,:,:,:) = 0.0_f64
 
-        ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
-        p_group%target_values(:,:,:,:) = 0.0_f64
+        else
+          ! remapping grid is a sparse grid
+
+          que doit on faire ?  (pas de besoin de g a priori)
+
+        end if
 
       else
 
@@ -2767,19 +2867,26 @@ contains
       end do
     end do
 
-    ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
+    ! cell size of the initial_markers_grid, for finite differencing of the flow  - same as in [[write_f_on_remap_grid-h_parts_x]]
 
-    h_parts_x    = p_group%remapping_grid%delta_eta1
-    h_parts_y    = p_group%remapping_grid%delta_eta2
-    h_parts_vx   = p_group%remapping_grid%delta_eta3
-    h_parts_vy   = p_group%remapping_grid%delta_eta4
+    ! todo: rename h_parts -> h_markers
+    h_markers_x    = p_group%initial_markers_grid%delta_eta1
+    h_markers_y    = p_group%initial_markers_grid%delta_eta2
+    h_markers_vx   = p_group%initial_markers_grid%delta_eta3
+    h_markers_vy   = p_group%initial_markers_grid%delta_eta4
 
-    inv_h_parts_x  = 1./h_parts_x
-    inv_h_parts_y  = 1./h_parts_y
-    inv_h_parts_vx = 1./h_parts_vx
-    inv_h_parts_vy = 1./h_parts_vy
+    markers_x_min    = p_group%initial_markers_grid%eta1_min
+    markers_y_min    = p_group%initial_markers_grid%eta2_min
+    markers_vx_min   = p_group%initial_markers_grid%eta3_min
+    markers_vy_min   = p_group%initial_markers_grid%eta4_min
 
-    h_virtual_parts_x    = g%delta_eta1
+
+
+
+
+
+
+    h_virtual_parts_x    = g%delta_eta1   que fait on de ça?
     h_virtual_parts_y    = g%delta_eta2
     h_virtual_parts_vx   = g%delta_eta3
     h_virtual_parts_vy   = g%delta_eta4
@@ -2791,10 +2898,6 @@ contains
 
     phase_space_virtual_dvol = h_virtual_parts_x * h_virtual_parts_y * h_virtual_parts_vx * h_virtual_parts_vy
 
-    parts_x_min    = p_group%remapping_grid%eta1_min
-    parts_y_min    = p_group%remapping_grid%eta2_min
-    parts_vx_min   = p_group%remapping_grid%eta3_min
-    parts_vy_min   = p_group%remapping_grid%eta4_min
 
     virtual_parts_x_min    = g%eta1_min
     virtual_parts_y_min    = g%eta2_min
@@ -2964,17 +3067,10 @@ contains
         do l = 1,num_virtual_cells_vx
           do m = 1,num_virtual_cells_vy
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
-            ! virtual particles inside the cell.
-            ! Note: as written above in the remapping scenario the virtual particles coincide with the existing
-            ! remapping_grid defined in p_group.
-            ! In the deposition scenario the virtual particles are used to deposit the charge and they are not stored.
-            ! So nothing more to do.
-
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the real particle
-            ! which is closest to the cell center.  Note: speed-wise, it may be necessary to find a way not to scan
-            ! all the particles for every cell.  We avoid scanning all the particles for each cell by using the
-            ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
+            ! which is closest to the flow (=virtual) cell center.  Note: speed-wise, it may be necessary to find a way not to scan
+            ! all the markers for every cell.  We avoid scanning all the markers for each cell by using the
+            ! precomputed array [[closest_particle]]. Virtual cells which do not contain any marker are skipped.
 
             k = closest_particle(i,j,l,m)
 
@@ -3050,27 +3146,18 @@ contains
                  k,                                         &
                  mesh_period_x,                             &
                  mesh_period_y,                             &
-                 h_parts_x,                                 &
-                 h_parts_y,                                 &
-                 h_parts_vx,                                &
-                 h_parts_vy,                                &
-                 inv_h_parts_x,                             &
-                 inv_h_parts_y,                             &
-                 inv_h_parts_vx,                            &
-                 inv_h_parts_vy,                            &
-                 0.5_f64*(part_degree+1),                   &
+                 h_markers_x,                               &
+                 h_markers_y,                               &
+                 h_markers_vx,                              &
+                 h_markers_vy,                              &
                  x_k,y_k,vx_k,vy_k,                         &
                  d11,d12,d13,d14,                           &
                  d21,d22,d23,d24,                           &
                  d31,d32,d33,d34,                           &
-                 d41,d42,d43,d44,                           &
-                 part_radius_x,                             &
-                 part_radius_y,                             &
-                 part_radius_vx,                            &
-                 part_radius_vy                             &
+                 d41,d42,d43,d44                            &
                  )
 
-            ! Find position of particle k at time 0
+            ! Find position of marker k at time 0
             ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
 
             call get_initial_position_on_cartesian_grid_from_particle_index(k,   &
@@ -3078,10 +3165,10 @@ contains
                  p_group%number_parts_vx, p_group%number_parts_vy,               &
                  j_x,j_y,j_vx,j_vy)
 
-            x_k_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
-            y_k_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
-            vx_k_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
-            vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
+            x_k_t0 =  markers_x_min  + (j_x-1)  * h_markers_x
+            y_k_t0 =  markers_y_min  + (j_y-1)  * h_markers_y
+            vx_k_t0 = markers_vx_min + (j_vx-1) * h_markers_vx
+            vy_k_t0 = markers_vy_min + (j_vy-1) * h_markers_vy
 
 
             ! <<loop_on_virtual_particles_in_one_virtual_cell>>
@@ -3091,7 +3178,7 @@ contains
 
 
             ! i_x, i_y, i_vx, i_vy: real index of the virtual particle in
-            ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+            ! [[file:../pic_particle_types/lt_pic_4d_group.F90::remapped_f_cart_grid_values]]
 
             ! x, y, vx, vy = will be the location of the virtual particle at time n: we will have
             ! x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
@@ -3102,8 +3189,22 @@ contains
             ! first we treat the case of remappings with a sparse grid, nodes are stored in the linked lists
             ! todo: decide whether we should treat the other cases with linked lists to simplify the code
 
+            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
+            ! virtual particles inside the cell.
+            !
+            ! In the "write f" scenario:
+            !   - if writing on a cartesian grid, the virtual particles coincide with the given grid
+            !   - if given grid is a remapping grid, then may be cartesian or sparse grid
+            !
+            ! In the "deposition" scenario:
+            !   - the virtual particles are used to deposit the charge and they are not stored.
+            ! So nothing more to do.
+
+            ! todo: change (.not. scenario_is_deposition)  ->  scenario == WRITE_F
+            !  todo         and     scenario_is_deposition  ->  scenario == DEPOSIT_F
             if( (.not. scenario_is_deposition) .and. (p_group%remapped_f_interpolation_type == 1) )then
               new_int_list_element => nodes_in_virtual_cell(i,j,l,m)%pointed_element
+
               do while( associated(new_int_list_element) )
                 node_index = new_int_list_element%value
 
@@ -3146,7 +3247,17 @@ contains
 
               end do
 
+            else if DEPOSIT_F then
+
+                creer un paquet aleatoire local de particules virtuelles et les donner a l accumulateur
+
             else
+
+                SLL_ASSERT(  WRITE_F et pas remapping sur sparse grid )
+
+
+                ! todo:  check this loop which should be ok for given cartesian grids (WRITE_F)
+
 
                 i_x = (i-1) * n_virtual_x    ! this index is needed in the "write f on grid" scenario
                 x =  virtual_parts_x_min  + (i_x-1) * h_virtual_parts_x
@@ -3277,7 +3388,7 @@ contains
                             else
 
                               if( use_remapping_grid )then
-                                p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
+                                p_group%remapped_f_cart_grid_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
                               else
                                 given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
                                         + f_value_on_virtual_particle * h_virtual_parts_y * h_virtual_parts_vy
@@ -3324,7 +3435,7 @@ contains
   ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
   ! corresponds to one of x,y,vx,vy.
 
-  subroutine onestep(dim,dim_t0,kprime,p_list,h_parts_dim)
+  subroutine onestep(dim,dim_t0,kprime,p_list,h_markers_dim)
 
     sll_int :: dim
     sll_real64 :: dim_t0
@@ -3335,7 +3446,7 @@ contains
 
     !sll_int32 :: ngb_dim_right_index
     !sll_int32 :: ngb_dim_left_index
-    sll_real64 :: h_parts_dim
+    sll_real64 :: h_markers_dim
     sll_int32 :: kprime
     sll_int32 :: j,jumps
 
@@ -3343,14 +3454,14 @@ contains
 
     logical :: up
 
-    ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
+    ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_markers_dim and with a left bound of
     ! dim_t0
 
     if(kprime == 0)return
 
     ! How many jumps do we need to do in that direction to reduce the distance 'dim_t0' to a minimum?
 
-    jumps = int(abs(dim_t0/h_parts_dim))
+    jumps = int(abs(dim_t0/h_markers_dim))
 
     ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate). If dim_t0
     ! is negative, add one step to move to a positive relative signed distance between dim_t0 and kprime.
@@ -3364,9 +3475,9 @@ contains
     ! resulting signed distance between marker at t0 and kprime
 
     if(up) then
-       dim_t0 = dim_t0 - jumps * h_parts_dim
+       dim_t0 = dim_t0 - jumps * h_markers_dim
     else
-       dim_t0 = dim_t0 + jumps * h_parts_dim
+       dim_t0 = dim_t0 + jumps * h_markers_dim
     endif
 
     ! do as many jumps as required through the neighbour pointers in the given dimension (1:x, 2:y, 3:vx, 4:vy). kprime
@@ -3453,25 +3564,16 @@ contains
                         k,                      &
                         mesh_period_x,          &
                         mesh_period_y,          &
-                        h_parts_x,              &
-                        h_parts_y,              &
-                        h_parts_vx,             &
-                        h_parts_vy,             &
-                        inv_h_parts_x,          &
-                        inv_h_parts_y,          &
-                        inv_h_parts_vx,         &
-                        inv_h_parts_vy,         &
-                        ref_radius,             &
+                        h_markers_x,              &
+                        h_markers_y,              &
+                        h_markers_vx,             &
+                        h_markers_vy,             &
                         x_k, y_k,               &
                         vx_k, vy_k,             &
                         d11,d12,d13,d14,        &
                         d21,d22,d23,d24,        &
                         d31,d32,d33,d34,        &
-                        d41,d42,d43,d44,        &
-                        part_radius_x,          &
-                        part_radius_y,          &
-                        part_radius_vx,         &
-                        part_radius_vy          &
+                        d41,d42,d43,d44         &
                         )
 
         class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
@@ -3481,15 +3583,10 @@ contains
         sll_real64, intent(in)  :: mesh_period_x
         sll_real64, intent(in)  :: mesh_period_y
 
-        sll_real64, intent(in)  :: h_parts_x
-        sll_real64, intent(in)  :: h_parts_y
-        sll_real64, intent(in)  :: h_parts_vx
-        sll_real64, intent(in)  :: h_parts_vy
-        sll_real64, intent(in)  :: inv_h_parts_x
-        sll_real64, intent(in)  :: inv_h_parts_y
-        sll_real64, intent(in)  :: inv_h_parts_vx
-        sll_real64, intent(in)  :: inv_h_parts_vy
-        sll_real64, intent(in)  :: ref_radius
+        sll_real64, intent(in)  :: h_markers_x
+        sll_real64, intent(in)  :: h_markers_y
+        sll_real64, intent(in)  :: h_markers_vx
+        sll_real64, intent(in)  :: h_markers_vy
 
         sll_real64, intent(out) :: x_k, y_k         ! particle center in physical space
         sll_real64, intent(out) :: vx_k, vy_k       ! particle center in velocity space
@@ -3497,10 +3594,6 @@ contains
         sll_real64, intent(out) :: d21,d22,d23,d24
         sll_real64, intent(out) :: d31,d32,d33,d34
         sll_real64, intent(out) :: d41,d42,d43,d44
-        sll_real64, intent(out) :: part_radius_x    ! radius of particle support, in x dimension
-        sll_real64, intent(out) :: part_radius_y    ! radius of particle support, in y dimension
-        sll_real64, intent(out) :: part_radius_vx   ! radius of particle support, in vx dimension
-        sll_real64, intent(out) :: part_radius_vy   ! radius of particle support, in vy dimension
 
         sll_int32   :: k_ngb
         sll_real64  :: x_k_left,  x_k_right
@@ -3534,9 +3627,9 @@ contains
         ! Compute the forward Jacobian matrix J_k
 
         ! ------   d/d_x terms
-        factor = 0.5*inv_h_parts_x
+        factor = 1./(2*h_markers_x)
 
-        k_ngb  = p_group%particle_list(k)%ngb_xright_index
+        k_ngb  = p_group%markers_list(k)%ngb_xright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3559,7 +3652,7 @@ contains
         end if
 
 
-        k_ngb  = p_group%particle_list(k)%ngb_xleft_index
+        k_ngb  = p_group%markers_list(k)%ngb_xleft_index
         if( k_ngb == k )then
            ! no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3587,9 +3680,9 @@ contains
            j41 = factor * ( vy_k_right - vy_k_left )
 
         ! ------   d/d_y terms
-        factor = 0.5*inv_h_parts_y
+        factor = 1./(2*h_markers_y)
 
-        k_ngb  = p_group%particle_list(k)%ngb_yright_index
+        k_ngb  = p_group%markers_list(k)%ngb_yright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3611,7 +3704,7 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = p_group%particle_list(k)%ngb_yleft_index
+        k_ngb  = p_group%markers_list(k)%ngb_yleft_index
         if( k_ngb == k )then
            ! no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3640,9 +3733,9 @@ contains
 
 
         ! ------   d/d_vx terms
-        factor = 0.5*inv_h_parts_vx
+        factor = 1./(2*h_markers_vx)
 
-        k_ngb  = p_group%particle_list(k)%ngb_vxright_index
+        k_ngb  = p_group%markers_list(k)%ngb_vxright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3664,7 +3757,7 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = p_group%particle_list(k)%ngb_vxleft_index
+        k_ngb  = p_group%markers_list(k)%ngb_vxleft_index
         if( k_ngb == k )then
             ! no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
@@ -3693,9 +3786,9 @@ contains
 
 
         ! ------   d/d_vy terms
-        factor = 0.5*inv_h_parts_vy
+        factor = 1./(2*h_markers_vy)
 
-        k_ngb  = p_group%particle_list(k)%ngb_vyright_index
+        k_ngb  = p_group%markers_list(k)%ngb_vyright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3717,7 +3810,7 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = p_group%particle_list(k)%ngb_vyleft_index
+        k_ngb  = p_group%markers_list(k)%ngb_vyleft_index
         if( k_ngb == k )then
             ! no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
@@ -3902,17 +3995,6 @@ contains
             - j13 * j22 * j31
         d44 = inv_det_J * d44
 
-        !Compute an approximation of the support
-!        ref_radius = 0.5*(part_degree+1)
-        part_radius_x  =  ref_radius *( abs(j11) *h_parts_x + abs(j12) * h_parts_y + abs(j13) * h_parts_vx + abs(j14) * h_parts_vy )
-        part_radius_y  =  ref_radius *( abs(j21) *h_parts_x + abs(j22) * h_parts_y + abs(j23) * h_parts_vx + abs(j24) * h_parts_vy )
-        part_radius_vx =  ref_radius *( abs(j31) *h_parts_x + abs(j32) * h_parts_y + abs(j33) * h_parts_vx + abs(j34) * h_parts_vy )
-        part_radius_vy =  ref_radius *( abs(j41) *h_parts_x + abs(j42) * h_parts_y + abs(j43) * h_parts_vx + abs(j44) * h_parts_vy )
-
-
-!        print *, "*    -- det_J = ", det_J
-!        print *, "**** -- part_radius_x = ", part_radius_x
-
 end subroutine get_ltp_deformation_matrix
 
 
@@ -3950,7 +4032,7 @@ subroutine periodic_correction(p_group, x, y)
     if(.not. associated(particle_group) ) then
        print *, 'sll_bsl_lt_pic_4d_group_delete(): ERROR (9087987578996), passed group was not associated.'
     end if
-    SLL_DEALLOCATE(particle_group%particle_list, ierr)
+    SLL_DEALLOCATE(particle_group%markers_list, ierr)
     SLL_DEALLOCATE(particle_group%space_mesh_2d, ierr)
     SLL_DEALLOCATE(particle_group, ierr)
 
