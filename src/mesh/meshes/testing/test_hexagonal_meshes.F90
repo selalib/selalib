@@ -57,9 +57,9 @@ program test_hexagonal_meshes
   mesh => new_hex_mesh_2d(num_cells)
 
   do i = 1, mesh%num_triangles
-     ! call mesh%get_neighbours(i, nei1, nei2, nei3)
-     ! call mesh%cell_type(i, type)
-     !     print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
+     call mesh%get_neighbours(i, nei1, nei2, nei3)
+     call mesh%cell_type(i, type)
+     print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
      print *, "element =", i
      call mesh%hex_to_circ_elmt(i, transf_matA, transf_vecB)
      print *, transf_matA(1, :), transf_matA(2, :)
