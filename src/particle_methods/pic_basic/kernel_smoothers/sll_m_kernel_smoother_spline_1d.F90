@@ -233,9 +233,10 @@ contains
 
 
   !---------------------------------------------------------------------------!
-  subroutine evaluate_multiple_spline_1d(this, position, field_dofs, field_value)
+  subroutine evaluate_multiple_spline_1d(this, position, components, field_dofs, field_value)
     class (sll_t_kernel_smoother_spline_1d), intent( in ) :: this !< Kernel smoother object 
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+    sll_int32, intent(in) :: components(:)
     sll_real64,                    intent( in ) :: field_dofs(:,:) !< Coefficient vector for the field DoFs
     sll_real64, intent(out)                              :: field_value(:) !< Value(s) of the electric fields at given position
     
@@ -257,7 +258,7 @@ contains
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2, this%n_grid(1))+1
        field_value = field_value + &
-            field_dofs(index1d,:) *  &
+            field_dofs(index1d,components) *  &
             spline_val(i1)
     end do
 

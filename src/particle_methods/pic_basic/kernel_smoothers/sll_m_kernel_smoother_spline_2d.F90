@@ -187,9 +187,10 @@ contains
   end subroutine evaluate_field_single_spline_2d
 
   !---------------------------------------------------------------------------!
-  subroutine evaluate_multiple_spline_2d(this, position, field_dofs, field_value)
+  subroutine evaluate_multiple_spline_2d(this, position, components, field_dofs, field_value)
     class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object    
     sll_real64, intent( in ) :: position(this%dim)
+    sll_int32, intent(in) :: components(:)
     sll_real64, intent(in)                               :: field_dofs(:,:) !< Degrees of freedom in kernel representation.
     sll_real64, intent(out) :: field_value(:)
     
@@ -210,7 +211,7 @@ contains
           index1d(2) = indices(2)+i2-2
           index2d = index_1dto2d_column_major(this,index1d)
           field_value = field_value + &
-               field_dofs(index2d,:) *  &
+               field_dofs(index2d,components) *  &
                spline_val(i1,1) *&
                spline_val(i2,2)
        end do
