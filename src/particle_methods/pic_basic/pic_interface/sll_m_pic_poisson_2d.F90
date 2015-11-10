@@ -105,7 +105,8 @@ contains
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
     sll_real64, intent(out) :: func_value(:)
 
-    call this%kernel%evaluate_multiple( position, this%efield_dofs(:,components), func_value)
+    call this%kernel%evaluate_multiple( position, components, this%efield_dofs, &
+         func_value)
 
   end subroutine evaluate_field_single_2d
 

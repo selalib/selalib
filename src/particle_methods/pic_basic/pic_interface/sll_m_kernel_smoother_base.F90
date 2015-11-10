@@ -79,11 +79,12 @@ module sll_m_kernel_smoother_base
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine eval_multiple(this, position, field_dofs, field_value)
+     subroutine eval_multiple(this, position, components, field_dofs, field_value)
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class (sll_c_kernel_smoother), intent( in ) :: this !< Kernel smoother object 
        sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+       sll_int32, intent(in) :: components(:)
        sll_real64,                    intent( in ) :: field_dofs(:,:) !< Coefficient vector for the field DoFs
        sll_real64, intent(out)                             :: field_value(:) !< Value(s) of the electric fields at given position
      end subroutine eval_multiple
