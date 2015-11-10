@@ -236,7 +236,7 @@ contains
         do idx=1, size(knots_eval)
                 eval_solution(idx)= -2.0_f64* sum( &
                     real(  this%fourier_fmode/(coeff*fmode)**2 )*cos(knots_eval(idx)*fmode*coeff) &
-                     -imag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
+                     -aimag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
 
         enddo
 
@@ -261,7 +261,7 @@ contains
         do idx=1, size(knots_eval)
                 eval_solution(idx)= -2.0_f64* sum( &
                     real(   this%fourier_fmode/(coeff*fmode*sll_i1) )*cos(knots_eval(idx)*fmode*coeff) &
-                    - imag( this%fourier_fmode/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))
+                    - aimag( this%fourier_fmode/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))
 
         enddo
 
@@ -284,10 +284,10 @@ contains
 
 
             !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)/this%Ilength
-!            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -imag(this%fourier_fmode(fmode_a))**2) &
+!            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -aimag(this%fourier_fmode(fmode_a))**2) &
 !                                  *(1.0_f64/fmode_a)**2/coeff**2/this%Ilength*2
 !            seminorm=seminorm=
-            !seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +imag(this%fourier_fmode(fmode_a))**2)
+            !seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +aimag(this%fourier_fmode(fmode_a))**2)
             !seminorm=seminorm+  2.0_f64*real(this%fourier_fmode(fmode_a)*conjg(this%fourier_fmode(fmode_a)))
         enddo
     endfunction
