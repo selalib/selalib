@@ -83,7 +83,7 @@ contains
     sll_real64, intent(in) :: weight
     sll_real64, intent(in) :: qoverm
     sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
-    sll_real64, intent(inout) :: vi(this%dim)
+    sll_real64, intent(inout) :: vi(:)
     sll_real64, intent(inout) :: j_dofs(this%n_dofs)
 
     ! local variables
@@ -103,7 +103,6 @@ contains
             this%delta_x(1)
        index_new = floor(xi)
        r_new = xi - real(index_new ,f64) 
-       !print*, r_old, index_old, r_new, index_new
 
        if (index_old == index_new) then
           if (r_old < r_new) then
@@ -155,7 +154,7 @@ contains
    sll_real64 :: quad_xw(2, this%n_quad_points)
 
 
-   n_cells = this%n_dofs
+   n_cells = this%n_grid(1)
 
    quad_xw = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
 
@@ -169,11 +168,10 @@ contains
    do i_grid = index - this%spline_degree , index
       i_mod = modulo(i_grid, n_cells ) + 1
       j_dofs(i_mod) = j_dofs(i_mod) + &
-           weight*fy(ind)
+           (weight*fy(ind)* this%scaling)
       vi = vi - qoverm* fy(ind)*bfield_dofs(i_mod)
       ind = ind + 1
    end do
-
 
  end subroutine update_jv
 
