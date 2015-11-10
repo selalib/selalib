@@ -128,8 +128,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         do m=0,ntau-1
         Etemp=En(m,:)
         gn=g(tau(m)+t,xi1_0,xi2_0,Etemp,lx,Nn)
-        F1(m)=-dcos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*xi1_0+dsin(tau(m)+t)**2*xi2_0)-dsin(tau(m)+t)*gn  !g(tau,xi_1,xi_2) should be a function with the inputs
-        F2(m)=dcos(2.0d0*tau(m)+2.0d0*t)**2*(dcos(tau(m)+t)**2*xi1_0+0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*xi2_0)+dcos(tau(m)+t)*gn
+        F1(m)=-cos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*xi1_0+sin(tau(m)+t)**2*xi2_0)-sin(tau(m)+t)*gn  !g(tau,xi_1,xi_2) should be a function with the inputs
+        F2(m)=cos(2.0d0*tau(m)+2.0d0*t)**2*(cos(tau(m)+t)**2*xi1_0+0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*xi2_0)+cos(tau(m)+t)*gn
         enddo
         call fftw_execute_dft(PlnFwd, F1, Ftilde1)
         call fftw_execute_dft(PlnFwd, F2, Ftilde2)
@@ -149,14 +149,14 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         do m=0,ntau-1
         Etemp=En(m,:)
         gn=g(tau(m)+t,w1_0(m),w2_0(m),Etemp,lx,Nn)
-        F1s(m)=-dcos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*w1_0(m)+dsin(tau(m)+t)**2*w2_0(m))-dsin(tau(m)+t)*gn
-        F2s(m)=dcos(2.0d0*tau(m)+2.0d0*t)**2*(dcos(tau(m)+t)**2*w1_0(m)+0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*w2_0(m))+dcos(tau(m)+t)*gn
+        F1s(m)=-cos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*w1_0(m)+sin(tau(m)+t)**2*w2_0(m))-sin(tau(m)+t)*gn
+        F2s(m)=cos(2.0d0*tau(m)+2.0d0*t)**2*(cos(tau(m)+t)**2*w1_0(m)+0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*w2_0(m))+cos(tau(m)+t)*gn
         Etemp=Ent(m,:)
         dtgn=g(tau(m)+t,w1_0(m),w2_0(m),Etemp,lx,Nn)
         Etemp=Enr(m,:)
-        dtgn=dtgn+g(tau(m)+t,w1_0(m),w2_0(m),Etemp,lx,Nn)*(dcos(tau(m)+t)*Ftilde1(0)+dsin(tau(m)+t)*Ftilde2(0))
-        dtF1(m)=-dcos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*Ftilde1(0)+dsin(tau(m)+t)**2*Ftilde2(0))-dsin(tau(m)+t)*dtgn
-        dtF2(m)=dcos(2.0d0*tau(m)+2.0d0*t)**2*(dcos(tau(m)+t)**2*Ftilde1(0)+0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*Ftilde2(0))+dcos(tau(m)+t)*dtgn
+        dtgn=dtgn+g(tau(m)+t,w1_0(m),w2_0(m),Etemp,lx,Nn)*(cos(tau(m)+t)*Ftilde1(0)+sin(tau(m)+t)*Ftilde2(0))
+        dtF1(m)=-cos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*Ftilde1(0)+sin(tau(m)+t)**2*Ftilde2(0))-sin(tau(m)+t)*dtgn
+        dtF2(m)=cos(2.0d0*tau(m)+2.0d0*t)**2*(cos(tau(m)+t)**2*Ftilde1(0)+0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*Ftilde2(0))+cos(tau(m)+t)*dtgn
         enddo
         call fftw_execute_dft(PlnFwd,dtF1,dtF1_F)
         call fftw_execute_dft(PlnFwd,dtF2,dtF2_F)
@@ -197,8 +197,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
 !        do m=0,ntau-1
 !        Etemp=En(m,:)
 !        gn=g(tau(m)+t,w1_0(m),w2_0(m),Etemp,lx,Nn)
-!        F1(m)=-dcos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*w1_0(m)+dsin(tau(m)+t)**2*w2_0(m))-dsin(tau(m)+t)*gn
-!        F2(m)=dcos(2.0d0*tau(m)+2.0d0*t)**2*(dcos(tau(m)+t)**2*w1_0(m)+0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*w2_0(m))+dcos(tau(m)+t)*gn
+!        F1(m)=-cos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*w1_0(m)+sin(tau(m)+t)**2*w2_0(m))-sin(tau(m)+t)*gn
+!        F2(m)=cos(2.0d0*tau(m)+2.0d0*t)**2*(cos(tau(m)+t)**2*w1_0(m)+0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*w2_0(m))+cos(tau(m)+t)*gn
 !        enddo
 !        temp1=w1_0+k*F1
 !        temp2=w2_0+k*F2
@@ -218,8 +218,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         do m=0,ntau-1
             Etemp=En(m,:)
             gn=g(tau(m)+t,w1_0(m),w2_0(m),Etemp,lx,Nn)
-            F1(m)=-dcos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*w1_0(m)+dsin(tau(m)+t)**2*w2_0(m))-dsin(tau(m)+t)*gn
-            F2(m)=dcos(2.0d0*tau(m)+2.0d0*t)**2*(dcos(tau(m)+t)**2*w1_0(m)+0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*w2_0(m))+dcos(tau(m)+t)*gn
+            F1(m)=-cos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*w1_0(m)+sin(tau(m)+t)**2*w2_0(m))-sin(tau(m)+t)*gn
+            F2(m)=cos(2.0d0*tau(m)+2.0d0*t)**2*(cos(tau(m)+t)**2*w1_0(m)+0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*w2_0(m))+cos(tau(m)+t)*gn
         enddo
         temp1=w1_0+k/2.0d0*F1
         temp2=w2_0+k/2.0d0*F2
@@ -236,8 +236,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         do m=0,ntau-1
         Etemp=En(m,:)
         gn=g(tau(m)+t,dreal(AF1(m)),dreal(AF2(m)),Etemp,lx,Nn)
-        F1(m)=-dcos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*AF1(m)+dsin(tau(m)+t)**2*AF2(m))-dsin(tau(m)+t)*gn
-        F2(m)=dcos(2.0d0*tau(m)+2.0d0*t)**2*(dcos(tau(m)+t)**2*AF1(m)+0.5d0*dsin(2.0d0*tau(m)+2.0d0*t)*AF2(m))+dcos(tau(m)+t)*gn
+        F1(m)=-cos(2.0d0*tau(m)+2.0d0*t)**2*(0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*AF1(m)+sin(tau(m)+t)**2*AF2(m))-sin(tau(m)+t)*gn
+        F2(m)=cos(2.0d0*tau(m)+2.0d0*t)**2*(cos(tau(m)+t)**2*AF1(m)+0.5d0*sin(2.0d0*tau(m)+2.0d0*t)*AF2(m))+cos(tau(m)+t)*gn
         enddo
         call fftw_execute_dft(PlnFwd, F1,  Ftilde1)
         call fftw_execute_dft(PlnFwd, F2,  Ftilde2)
@@ -328,8 +328,8 @@ end program
 !ftilde=ftilde/dble(Nn**2)
 !do n=1,Nn
 !    do m=1,Nn
-!    x=dcos(t)*r(n)-dsin(t)*v(m)
-!    y=dsin(t)*r(n)+dcos(t)*v(m)
+!    x=cos(t)*r(n)-sin(t)*v(m)
+!    y=sin(t)*r(n)+cos(t)*v(m)
 !    sum0=cmplx(0.0d0,0.0d0,kind=f64)
 !        if (dabs(x)<L .and. dabs(y)<L) then
 !            do p=1,Nn
@@ -378,8 +378,8 @@ enddo
 p=0
 do n=1,Nn
     do m=1,Nn
-    x=dcos(t)*r(n)-dsin(t)*v(m)
-    y=dsin(t)*r(n)+dcos(t)*v(m)
+    x=cos(t)*r(n)-sin(t)*v(m)
+    y=sin(t)*r(n)+cos(t)*v(m)
         if (dabs(x)<L .and. dabs(y)<L) then
             p=p+1
             ntrace(p)=n
@@ -464,9 +464,9 @@ do i=0,Ntau-1
     do n=1,Nn
         do m=1,Nn
         uctmp=En(i,:)
-        xi1=r(n)*dcos(tau(i))-v(m)*dsin(tau(i))
-        xi2=r(n)*dsin(tau(i))+v(m)*dcos(tau(i))
-        vctmp(m)=(dcos(2.0d0*tau(i))**2*(xi1*dcos(tau(i))+xi2*dsin(tau(i)))+g(tau(i),xi1,xi2,dreal(uctmp),lx,Nn))*(-dsin(tau(i))*ftemp1(n,m)+dcos(tau(i))*ftemp2(n,m))!partial_t f_tilde(xi1,xi2)
+        xi1=r(n)*cos(tau(i))-v(m)*sin(tau(i))
+        xi2=r(n)*sin(tau(i))+v(m)*cos(tau(i))
+        vctmp(m)=(cos(2.0d0*tau(i))**2*(xi1*cos(tau(i))+xi2*sin(tau(i)))+g(tau(i),xi1,xi2,dreal(uctmp),lx,Nn))*(-sin(tau(i))*ftemp1(n,m)+cos(tau(i))*ftemp2(n,m))!partial_t f_tilde(xi1,xi2)
         enddo
         call fftw_execute_dft(PlnF, vctmp, fvptilde)
         sum0(n)=fvptilde(1)/dble(Nn)*(2.0d0*L)*r(n)
@@ -502,7 +502,7 @@ PlnF = fftw_plan_dft_1d(Nn,Etilde2,Etilde1,FFTW_FORWARD, FFTW_ESTIMATE+FFTW_UNAL
 E0=E
 call fftw_execute_dft(PlnF,E0,Etilde1)
 Etilde1=Etilde1/dble(Nn)
-x=dcos(ta)*x1+dsin(ta)*x2
+x=cos(ta)*x1+sin(ta)*x2
 sum0=cmplx(0.0d0,0.0d0,kind=f64)
 if (dabs(x)<L) then
     do n=1,Nn
