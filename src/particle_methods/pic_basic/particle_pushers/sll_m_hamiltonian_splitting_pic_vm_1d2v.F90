@@ -107,7 +107,7 @@ contains
     sll_int32 :: i_part, ind
     sll_real64 :: xi, x_new(3), vi(3), wi(1), x_old(3)
     sll_int32  :: n_cells
-    sll_real64 :: r_new, r_old, qoverm
+    sll_real64 :: r_new, r_old, qoverm, bfield
     sll_int32 :: index_new, index_old
     !sll_real64 :: primitive_1(3)
 
@@ -141,8 +141,15 @@ contains
        qoverm = this%particle_group%species%q_over_m();
 
 
-       call this%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
+       !call this%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
+       !     this%bfield_dofs, vi, this%j_dofs_local(:,1))
+       call this%kernel_smoother_1%add_current_update_v( x_old, x_old, wi(1), qoverm, &
             this%bfield_dofs, vi, this%j_dofs_local(:,1))
+       !call this%kernel_smoother_1%evaluate &
+       !     (x_old(1), this%bfield_dofs, bfield)
+       !vi(2) = vi(2) - dt*qoverm*vi(1)*bfield
+       !wi = wi*vi(1)
+       !call this%kernel_smoother_1%add_charge(x_old(1:1), wi(1), this%j_dofs_local(:,1))
 
        call this%particle_group%set_v(i_part, vi)
 
@@ -154,7 +161,7 @@ contains
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
-    !this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
+    this%j_dofs(:,1) = this%j_dofs(:,1)*dt!this%delta_x!/this%Lx
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
 
 
@@ -365,25 +372,11 @@ contains
        call this%particle_group%set_v(i_part, vi)
 
        xi = this%particle_group%get_x(i_part)
-       ! Compute the new box index index_box and normalized position r_box.
-       x_box = (xi(1) - this%x_min) /&
-            this%delta_x
-       index_box = floor(x_box)
-       r_box = x_box - real(index_box ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_charge(i_part)
-       vi = vi*wi(1)
+       wi = this%particle_group%get_charge(i_part)*vi(2)
 
-       ! Now, we loop through the DoFs and add the contributions.
-       values_0 = uniform_b_splines_at_x(this%spline_degree, r_box)
-       ind = 1
-       do i_grid = index_box - this%spline_degree, index_box
-          i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
-               values_0(ind)*vi (2)
-          ind = ind + 1
-       end do     
+       call this%kernel_smoother_0%add_charge(xi(1:1), wi(1), this%j_dofs_local(:,2)) 
 
     end do
 
