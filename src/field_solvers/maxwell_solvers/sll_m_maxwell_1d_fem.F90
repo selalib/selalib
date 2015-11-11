@@ -101,19 +101,30 @@ contains
      sll_int32, intent(in)                 :: component !< Component of the Efield to be computed
      sll_real64,dimension(:),intent(inout) :: E !< Updated electric field
      ! local variables
-     !sll_int32 :: i 
+     sll_int32 :: i 
+     sll_real64, dimension(this%n_dofs) :: eigvals
 
      ! Multiply by inverse mass matrix  using the eigenvalues of the circulant inverse matrix
+     eigvals=0.0_f64
      if (component == 1) then
-        call solve_circulant(this, this%eig_mass1, current, this%work)
+        eigvals(1) = 1.0_f64 / this%eig_mass1(1)
+        do i=1,this%n_dofs/2
+           eigvals(2*i) = 1.0_f64 / this%eig_mass1(2*i)
+        end do
+        call solve_circulant(this, eigvals, current, this%work)
      elseif (component == 2) then
-        call solve_circulant(this, this%eig_mass0, current, this%work)
+        eigvals(1) = 1.0_f64 / this%eig_mass0(1)
+        do i=1,this%n_dofs/2
+           eigvals(2*i) = 1.0_f64 / this%eig_mass0(2*i)
+        end do
+        call solve_circulant(this, eigvals, current, this%work)
      else
         print*, 'Component ', component, 'not implemented in compute_E_from_j_1d_fem.'
      end if
+     
 
      ! Update the electric field and scale
-     E = E - this%work/this%delta_x
+     E = E - this%work!/this%delta_x
 
    end subroutine compute_E_from_j_1d_fem
   
