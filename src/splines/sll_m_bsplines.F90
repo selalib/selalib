@@ -402,7 +402,7 @@ subroutine build_system(this)
       left = left + 1
       if ( left < ilp1mx ) cycle
       left = left - 1
-      if ( this%t(left+1) < taui ) stop '  The linear system is not invertible!'
+      if ( this%t(left+1) < taui ) stop ' The linear system is not invertible!'
       exit
     end do
     call bsplvb ( this, k, 1, taui, left, this%bcoef )
@@ -1124,7 +1124,8 @@ function interpolate_derivative_1d( this, x) result(y)
   do j = jderiv+1, k-1
     ilo = k-j
     do jj = 1, k-j
-      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj))/(this%dl(ilo)+this%dr(jj))
+      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj)) &
+        /(this%dl(ilo)+this%dr(jj))
       ilo = ilo-1
     end do
   end do
