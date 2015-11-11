@@ -604,12 +604,13 @@ sll_int32 :: jcmax
 sll_int32 :: jcmin
 sll_int32 :: jj
 sll_int32 :: mflag
+sll_int32 :: ierr
 
 bvalue = 0.0_f64
 
-SLL_CLEAR_ALLOCATE(aj(k)
-SLL_CLEAR_ALLOCATE(dl(k)
-SLL_CLEAR_ALLOCATE(dr(k)
+SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
+SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
+SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
 
 if ( k <= jderiv ) return
 
