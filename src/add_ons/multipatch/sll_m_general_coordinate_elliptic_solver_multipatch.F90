@@ -444,6 +444,7 @@ sll_int32 :: li_A, li_Aprime
 sll_int32 :: nbsp,nbsp1
 sll_int32 :: index_coef1,index_coef2,index
 sll_real64 :: elt_mat_global
+type(deboor_type) :: deboor
 
 call sll_set_time_mark(t0)
 
@@ -507,10 +508,13 @@ do patch = 1,es_mp%T%number_patches
       wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
       gtmp2 = gpt2
       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
-      call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
+      call interv(deboor, &
+        es_mp%knots2(patch,:), &
+        size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
       if (mflag_y .eq. -1) stop "Problem : interv2 returned flag = -1"
     
-      call bsplvd( es_mp%knots2(patch,:),        &
+      call bsplvd( deboor,                       &
+                   es_mp%knots2(patch,:),        &
                    es_mp%spline_degree2(patch)+1,&
                    gtmp2,                        &
                    left_y,                       &
@@ -525,9 +529,11 @@ do patch = 1,es_mp%T%number_patches
         wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
         gtmp1   = gpt1
         local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
-        call interv(es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
+        call interv(deboor, &
+         es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
 
-        call bsplvd( es_mp%knots1(patch,:),        &
+        call bsplvd( deboor,                       &
+                     es_mp%knots1(patch,:),        &
                      es_mp%spline_degree1(patch)+1,&
                      gtmp1,                        &
                      left_x,                       &
