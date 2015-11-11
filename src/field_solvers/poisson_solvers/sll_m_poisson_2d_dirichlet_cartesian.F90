@@ -139,8 +139,8 @@ contains
     SLL_ALLOCATE(plan%vkgs(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgi(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgd(n),ierr)
-    plan%vkgs=0.d0
-    plan%vkgi=0.d0
+    plan%vkgs=0._f64
+    plan%vkgi=0._f64
     !definir vkgs,vkgi,vkgd
     do l=1,ch
        i=plan%indi(l)

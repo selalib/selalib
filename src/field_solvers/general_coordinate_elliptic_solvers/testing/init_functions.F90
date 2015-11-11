@@ -633,10 +633,10 @@ real(8) function source_term_chgt_adim(eta1,eta2)
   intrinsic :: cos
   intrinsic :: sin
   
-  x =   2d0*sll_pi*eta1 !+eta2)
-  y =   2d0*sll_pi*eta2
+  x =   2.0_f64*sll_pi*eta1 !+eta2)
+  y =   2.0_f64*sll_pi*eta2
   
-  source_term_chgt_adim = -2d0*cos(x)*cos(y)
+  source_term_chgt_adim = -2.0_f64*cos(x)*cos(y)
   
 end function source_term_chgt_adim
 
@@ -658,12 +658,12 @@ real(8) function f_cos( eta1, eta2)
    integer :: n = N_MOD 
 
    r = eta1 * (R_MAX-R_MIN) + R_MIN
-   theta = eta2 * 2d0 * sll_pi
+   theta = eta2 * 2.0_f64 * sll_pi
 
    f_cos = -(r-R_MAX)*(r-R_MIN)*n*n*cos(n*theta)/r &
            + ((r-R_MAX)*(r-R_MIN)*cos(n*theta)  &
            + (r-R_MAX)*r*cos(n*theta) + (r-R_MIN)*r*cos(n*theta) &
-           + 2d0*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
+           + 2.0_f64*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
            + r*cos(n*theta))*r)/r
 
 end function f_cos
@@ -687,7 +687,7 @@ real(8) function f_sin( eta1, eta2)
    f_sin = -(r-R_MAX)*(r-R_MIN)*n*n*sin(n*theta)/r &
          + ((r-R_MAX)*(r-R_MIN)*sin(n*theta) &
          + (r-R_MAX)*r*sin(n*theta) + (r-R_MIN)*r*sin(n*theta) &
-         + 2d0*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
+         + 2.0_f64*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
          + r*sin(n*theta))*r)/r
 
 end function f_sin
@@ -728,7 +728,7 @@ real(8) function u_sin_der2( eta1, eta2)
    integer :: n = N_MOD 
    
    r = eta1 + R_MIN
-   theta = eta2 * 2d0 * sll_pi
+   theta = eta2 * 2.0_f64 * sll_pi
 
    u_sin_der2 = n*(r - R_MAX)*(r - R_MIN)*r*cos(n*theta)
 

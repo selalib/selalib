@@ -592,14 +592,14 @@ contains
     k2  = mu*(1._f64-2._f64*xi+2._f64*phi(1))/(3._f64-2._f64*xi)*exp(-phi(1))
     tab_phi(1) = phi(1)
     tab_dphi(1)= phi(2)
-    !write(10,* ) x, phi(1), phi(2),k2,v1,v2,1.d0/phi(2)
+    !write(10,* ) x, phi(1), phi(2),k2,v1,v2,1._f64/phi(2)
     do j=2, Nx+1
       x =xmin+ (j-1)*dx
       call Solve_Runge_K4(mu,xi,x, phi, dx, 2, Diff_Eq,0._f64,1._f64)
       k2=mu*(1._f64-2._f64*xi+2._f64*phi(1))/(3._f64-2._f64*xi)*exp(-phi(1))
       tab_phi(j) = phi(1)
       tab_dphi(j)= phi(2)
-      ! write(10,* ) x, phi(1), phi(2),k2,v1,v2,1.d0/phi(2)
+      ! write(10,* ) x, phi(1), phi(2),k2,v1,v2,1._f64/phi(2)
     enddo!j 
   
     !open(unit=10,file='phi.dat')
