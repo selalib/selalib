@@ -21,19 +21,19 @@ program poisson3d_with__fftw3_seq
   
   
   nx = 130; ny = 130; nz = 130
-  dx = 1d0 / nx ; dy = 1d0 / ny ; dz = 1d0 / nz
+  dx = 1.0_8 / nx ; dy = 1.0_8 / ny ; dz = 1.0_8 / nz
   dt = 0.1; nstep = 10
-  pi = 4d0 * datan(1d0)
+  pi = 4.0_8 * datan(1.0_8)
   
-  allocate(u(nx,ny,nz)); u = 0.
-  allocate(f(nx,ny,nz)); f = 0.
-  allocate(g(nx,ny,nz)); g = 0.
+  allocate(u(nx,ny,nz)); u = 0.0_8
+  allocate(f(nx,ny,nz)); f = 0.0_8
+  allocate(g(nx,ny,nz)); g = 0.0_8
   
   call init_poisson_fftw(nx,ny,nz)
   call system_clock(count=t0, count_rate=ncount)
   call cpu_time(tbegin)
   
-  time = 0.0
+  time = 0.0_8
   do istep = 1, nstep !loop over time
      
      do k = 1, nz
@@ -42,8 +42,8 @@ program poisson3d_with__fftw3_seq
            y = (j-1)*dy
            do i = 1, nx
               x = (i-1)*dx
-              f(i,j,k) = 12.*pi*pi*sin(2*pi*x)*sin(2*pi*y)*sin(2*pi*z)*cos(2*pi*time)
-              g(i,j,k) = sin(2*pi*x)*sin(2*pi*y)*sin(2*pi*z)*cos(2*pi*time)
+              f(i,j,k) = 12._8*pi*pi*sin(2._8*pi*x)*sin(2._8*pi*y)*sin(2._8*pi*z)*cos(2._8*pi*time)
+              g(i,j,k) = sin(2._8*pi*x)*sin(2._8*pi*y)*sin(2._8*pi*z)*cos(2._8*pi*time)
            enddo
         enddo
      enddo
@@ -75,9 +75,9 @@ contains
     
     mx = nx-2; my = ny-2; mz = nz-2
     
-    cx = 1.0 / (dx*dx)
-    cy = 1.0 / (dy*dy)
-    cz = 1.0 / (dz*dz)
+    cx = 1.0_8 / (dx*dx)
+    cy = 1.0_8 / (dy*dy)
+    cz = 1.0_8 / (dz*dz)
     
     !rhs
     allocate(b(mx,my,mz), d(mx,my,mz),c(mx,my,mz))
@@ -86,11 +86,11 @@ contains
     do k=1,mz
        do j=1,my
           do i=1,mx
-             vpx=1.0-cos(float(i)*pi/float(mx+1))
-             vpy=1.0-cos(float(j)*pi/float(my+1))
-             vpz=1.0-cos(float(k)*pi/float(mz+1))
-             d(i,j,k)= 2.0 * (cz*vpz + cx*vpx + cy*vpy) &
-                  * (8*(mx+1)*(my+1)*(mz+1))
+             vpx=1.0_8-cos(float(i)*pi/float(mx+1))
+             vpy=1.0_8-cos(float(j)*pi/float(my+1))
+             vpz=1.0_8-cos(float(k)*pi/float(mz+1))
+             d(i,j,k)= 2.0_8 * (cz*vpz + cx*vpx + cy*vpy) &
+                  * (8.0_8*(mx+1)*(my+1)*(mz+1))
           end do
        end do
     end do

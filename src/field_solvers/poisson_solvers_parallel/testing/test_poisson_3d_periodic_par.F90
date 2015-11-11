@@ -130,7 +130,7 @@ program test_poisson_3d_periodic_par
      SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
      call solve_poisson_3d_periodic_par(plan, rho, phi)
 
-     average_err  = 0.d0
+     average_err  = 0._f64
 
      do k=1,nz_loc
         do j=1,ny_loc

@@ -402,11 +402,11 @@ end subroutine bc_periodic_2d_fdtd
 !PN    ex => fx; ey => fy; bz => fz
 !PN    select case(side)
 !PN    case(SOUTH)
-!PN       ex(i1:j1,i2) = 0.d0
+!PN       ex(i1:j1,i2) = 0._f64
 !PN    case(NORTH)
 !PN       bz(i1:j1,j2) = bz(i1:j1,j2-1)
 !PN    case(WEST)
-!PN       ey(i1,i2:j2) = 0.d0
+!PN       ey(i1,i2:j2) = 0._f64
 !PN    case(EAST)
 !PN       bz(j1,i2:j2) = bz(j1-1,i2:j2)
 !PN    end select
@@ -420,7 +420,7 @@ end subroutine bc_periodic_2d_fdtd
 !PN    case(NORTH)
 !PN       ez(i1:j1,j2) = ez(i1:j1,j2-1)
 !PN    case(WEST)
-!PN       by(i1,i2:j2) = 0.d0
+!PN       by(i1,i2:j2) = 0._f64
 !PN    case(EAST)
 !PN       ez(j1,i2:j2) = ez(j1-1,i2:j2)
 !PN    end select

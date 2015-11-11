@@ -98,7 +98,7 @@ delta_v = (vmax-vmin)/(nv-1)
 
 weight = 1._f64!/(delta_x*delta_v)   ! needs improvement
 
-df = 0.d0
+df = 0.0_f64
 do k=1,size(x)
    do i=1,nx
       if (xmin+(i-1)*delta_x <= x(k) .and. x(k) < xmin+i*delta_x) then

@@ -517,9 +517,9 @@ program cg_polar
       call sll_set_time_mark(t2)
       temps = sll_time_elapsed_between(t1,t2)
       temps = temps/100*real(nb_step,f32)
-      hh    = floor(temps/3600.0d0)
-      min   = floor((temps-3600.0d0*real(hh))/60.0d0)
-      ss    = floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
+      hh    = floor(temps/3600.0_f64)
+      min   = floor((temps-3600.0_f64*real(hh))/60.0_f64)
+      ss    = floor(temps-3600.0_f64*real(hh)-60.0_f64*real(min))
       print*,'# CPU time estimation : ',hh,'h',min,'min',ss,'s'
     end if
 
@@ -685,9 +685,9 @@ program cg_polar
 
   call sll_set_time_mark(t3)
   temps = sll_time_elapsed_between(t1,t3)
-  hh    = floor(temps/3600.0d0)
-  min   = floor((temps-3600.0d0*real(hh))/60.0d0)
-  ss    = floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
+  hh    = floor(temps/3600.0_f64)
+  min   = floor((temps-3600.0_f64*real(hh))/60.0_f64)
+  ss    = floor(temps-3600.0_f64*real(hh)-60.0_f64*real(min))
   print*,'# CPU time for the loop in time : ', &
     hh,'h',min,'min',ss,'s'
 
