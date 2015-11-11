@@ -156,7 +156,7 @@ contains
 
    n_cells = this%n_grid(1)
 
-   quad_xw(2,1:this%n_quad_points) = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
+   quad_xw(:,1:this%n_quad_points) = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
 
    fy = quad_xw(2,1) * uniform_b_splines_at_x(this%spline_degree, quad_xw(1,1))
    do j=2,this%n_quad_points
