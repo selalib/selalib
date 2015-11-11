@@ -492,7 +492,7 @@ if( x .gt. 2. ) then
 else if ( x .ge. 1. .and. x .le. 2. ) then
    f_m4 = 0.5 * (2.-x)**2 * (1.-x)
 else if ( x .le. 1. ) then
-   f_m4 = 1. - 2.5 *x**2 + 1.5 * (dabs(x))**3
+   f_m4 = 1. - 2.5 *x**2 + 1.5 * (abs(x))**3
 end if
 
 return

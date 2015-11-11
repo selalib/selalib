@@ -298,10 +298,10 @@ enddo
 do while (eta2<eta2_min)
 eta2 = eta2+(eta2_max-eta2_min)
 enddo
-if (dabs(eta1)<1.0e-12_f64) then
+if (abs(eta1)<1.0e-12_f64) then
 eta1=0.0_f64
 endif
-if (dabs(eta2)<1.0e-12_f64) then
+if (abs(eta2)<1.0e-12_f64) then
 eta2=0.0_f64
 endif
 end subroutine apply_bc
@@ -332,7 +332,7 @@ end program
 !    x=cos(t)*r(n)-sin(t)*v(m)
 !    y=sin(t)*r(n)+cos(t)*v(m)
 !    sum0=cmplx(0.0_f64,0.0_f64,kind=f64)
-!        if (dabs(x)<L .and. dabs(y)<L) then
+!        if (abs(x)<L .and. abs(y)<L) then
 !            do p=1,Nn
 !                do q=1,Nn
 !                sum0=sum0+cdexp(sll_i1*lx(p)*(x+L)+sll_i1*lx(q)*(y+L))*ftilde(p,q)
@@ -528,7 +528,7 @@ Etilde1=Etilde1/dble(Nn)
 x=cos(ta)*x1+sin(ta)*x2
 sum0=cmplx(0.0_f64,0.0_f64,kind=f64)
 
-if (dabs(x)<L) then
+if (abs(x)<L) then
     do n=1,Nn
     sum0=sum0+cdexp(sll_i1*lx(n)*(x+L))*Etilde1(n)
     enddo
