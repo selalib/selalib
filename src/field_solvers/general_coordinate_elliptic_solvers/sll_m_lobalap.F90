@@ -342,7 +342,7 @@ contains
     do ino=1,neq
        u=node(1,ino)
        v=node(2,ino)
-       if (dabs(u*(1-u)*v*(1-v)).lt.eps) nbc=nbc+1
+       if (abs(u*(1-u)*v*(1-v)).lt.eps) nbc=nbc+1
     end do
     
     allocate(indexbc(nbc))
@@ -354,7 +354,7 @@ contains
     do ino=1,neq
        u=node(1,ino)
        v=node(2,ino)
-       if (dabs(u*(1-u)*v*(1-v)).lt.eps) then
+       if (abs(u*(1-u)*v*(1-v)).lt.eps) then
           nbc=nbc+1
           indexbc(nbc)=ino
        end if
