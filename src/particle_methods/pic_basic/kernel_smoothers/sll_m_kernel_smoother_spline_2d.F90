@@ -50,7 +50,7 @@ contains
     class( sll_t_kernel_smoother_spline_2d), intent(in) :: this !< kernel smoother object
     sll_real64, intent( in ) :: position(2)
     sll_int32, intent( out ) :: indices(2)
-    sll_real64, intent( out ) :: spline_val(this%n_span,2)
+    sll_real64, intent( out ) :: spline_val(20,2)!(this%n_span,2)
 
     ! local variables
     sll_real64 :: xi(2)
@@ -78,7 +78,7 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_int32  :: indices(2)
-    sll_real64 :: spline_val(this%n_span,2)
+    sll_real64 :: spline_val(20,2)!(this%n_span,2)
     
 
     call compute_shape_factor_spline_2d(this, position, indices, spline_val)
@@ -165,7 +165,7 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_int32  :: indices(2)
-    sll_real64 :: spline_val(this%n_span,2)
+    sll_real64 :: spline_val(20,2)!(this%n_span,2)
     
 
     call compute_shape_factor_spline_2d(this, position, indices, spline_val)
@@ -198,7 +198,7 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_int32  :: indices(2)
-    sll_real64 :: spline_val(this%n_span,2)
+    sll_real64 :: spline_val(20,2)!(this%n_span,2)
     
 
     call compute_shape_factor_spline_2d(this, position, indices, spline_val)
@@ -232,7 +232,13 @@ contains
     !local variables
     sll_int32 :: ierr
 
+    ! In order to avoid dynamic memory allocation, we do not allow for spline degree > 19.
+    if (spline_degree > 20) then
+       print*, 'sll_m_kernel_smoother_spline_2d: degree > 19 not implemented.'
+    end if
+
     SLL_ALLOCATE( this, ierr)
+
 
     this%dim = 2
 
