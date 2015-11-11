@@ -1032,25 +1032,25 @@ end subroutine rk4_generalvp_pif
   vv=-(v(1,:)**2+v(2,:)**2+v(3,:)**2)
   sqrtvv=sll_i1*sqrt(-vv)
   
-     c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0D0+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2+v(3,:)**2)*&
-     (-1.0D0/2.0D0))/vv+1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*&
+     c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0_f64+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2+v(3,:)**2)*&
+     (-1.0_f64/2.0_f64))/vv+1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*&
      (v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*&
-     exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+(w(3,:)*&
-     exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))/vv)
+     exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+(w(3,:)*&
+     exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
   
-     c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0D0+v(1,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(1,:)**2+v(3,:)**2)*&
-     (-1.0D0/2.0D0))/vv-1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*&
+     c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*&
+     (-1.0_f64/2.0_f64))/vv-1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*&
      exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)**2*v(3,:)*&
-     exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)-&
-     (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
-     exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))/vv)
+     exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)-&
+     (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
+     exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
      
      
-     c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0D0+v(1,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(1,:)**2+v(3,:)**2)*(-1.0D0/2.0D0))/&
-     vv-1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
-     *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+&
-     1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
-     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)) 
+     c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*(-1.0_f64/2.0_f64))/&
+     vv-1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
+     *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+&
+     1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
+     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))
   end function
  
  

@@ -1055,13 +1055,13 @@ subroutine compute_gyroaverage_pade_polar(gyro,f,rho)
   !***POISSON
   do k=1,gyro%Nc(2)
      do i=1,gyro%Nc(1)
-        diagm1(i+1)=-(rho**2/4d0)*(1d0/dr**2-1d0/(2d0*dr*(gyro%eta_min(1)+ &
+        diagm1(i+1)=-(rho**2/4._f64)*(1._f64/dr**2-1._f64/(2._f64*dr*(gyro%eta_min(1)+ &
              (gyro%eta_max(1)-gyro%eta_min(1))*real(i,f64)&
              /real(gyro%Nc(1),f64))))
-        diag(i)=1.0_f64-(rho**2/4d0)*(-(2.0_f64/dr**2)-(real(floor(k/2._f64),kind=f64)/ &
+        diag(i)=1._f64-(rho**2/4._f64)*(-(2._f64/dr**2)-(real(floor(k/2._f64),kind=f64)/ &
              (gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*&
              real(i-1,f64)/real(gyro%Nc(1),f64)))**2)
-        diagp1(i)=-(rho**2/4d0)*(1/dr**2+1d0/(2d0*dr*(gyro%eta_min(1)+ &
+        diagp1(i)=-(rho**2/4._f64)*(1._f64/dr**2+1._f64/(2._f64*dr*(gyro%eta_min(1)+ &
              (gyro%eta_max(1)-gyro%eta_min(1))*real(i-1,f64)&
              /real(gyro%Nc(1),f64))))
      enddo

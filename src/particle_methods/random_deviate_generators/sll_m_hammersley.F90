@@ -38,7 +38,7 @@ contains
     sll_int32 :: m
 
     m=n
-    vandercorput = 0.d0
+    vandercorput = 0._f64
     s=1.0_f64
     do while (m>0)
        s=s/p1
