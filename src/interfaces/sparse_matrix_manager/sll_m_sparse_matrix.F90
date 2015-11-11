@@ -396,7 +396,7 @@ if ( mat%num_rows /= mat%num_cols ) then
   stop
 end if
 
-if ((dabs(maxval(B)) < eps) .AND. (dabs(minval(B)) < eps)) then
+if ((abs(maxval(B)) < eps) .AND. (abs(minval(B)) < eps)) then
   U = 0.0_8
   return
 end if
@@ -439,7 +439,7 @@ do iter = 1, maxiter
   !     pour le test d'arret                              !
   ! (b) extraction de la norme euclidienne du residu rk+1 !
   !-------------------------------------------------------!
-  NormInfr = maxval(dabs(B))
+  NormInfr = maxval(abs(B))
   Norm2r1  = dot_product(B,B)
 
   !==================================================!
@@ -499,7 +499,7 @@ if ( this%num_rows /= this%num_cols ) then
   stop
 end if
 
-if ((dabs(maxval(B)) < eps ) .AND. (dabs(MINVAL(B)) < eps )) then
+if ((abs(maxval(B)) < eps ) .AND. (abs(MINVAL(B)) < eps )) then
   U = 0.0_8
   return
 end if
@@ -518,7 +518,7 @@ call sll_mult_csr_matrix_vector( this , Ux , Ad )
 Ad = Ad - dot_product(Masse_tot, Ux)
 r       = B - Ad
 Norm2r0  = DOT_PRODUCT( r , r )
-NormInfb = maxval( dabs( B ) )
+NormInfb = maxval( abs( B ) )
 
 d = r
 
@@ -552,7 +552,7 @@ do while(ll_continue)
   !     pour le test d'arret                              !
   ! (b) extraction de la norme euclidienne du residu rk+1 !
   !-------------------------------------------------------!
-  NormInfr = maxval(dabs( r ))
+  NormInfr = maxval(abs( r ))
   Norm2r1 = DOT_PRODUCT( r , r )
          
   !==================================================!

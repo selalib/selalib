@@ -413,7 +413,7 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
         j=0
   105   do 110 m=l,n
           if(m.eq.n) goto 120
-          if(dabs(de(m)).le.deps*(dabs(dzero(m))+dabs(dzero(m+1)))) goto 120
+          if(abs(de(m)).le.deps*(abs(dzero(m))+abs(dzero(m+1)))) goto 120
   110   continue
   120   dp=dzero(l)
         if(m.eq.l) goto 240
@@ -430,7 +430,7 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
           i=m-ii
           df=ds*de(i)
           db=dc*de(i)
-          if(dabs(df).lt.dabs(dg)) goto 150
+          if(abs(df).lt.abs(dg)) goto 150
           dc=dg/df
           dr=dsqrt(dc*dc+1.0_f64)
           de(i+1)=df*dr
