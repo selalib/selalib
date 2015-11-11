@@ -53,6 +53,7 @@ program test_maxwell_1d_fem
   sll_real64                              :: time
   sll_int32                               :: istep, nstep
   sll_real64                              :: err_ex
+  sll_real64                              :: err_ex2
   sll_real64                              :: err_ey
   sll_real64                              :: err_bz
   sll_real64                              :: dt
@@ -108,6 +109,29 @@ program test_maxwell_1d_fem
   print*, 'error Poisson',  err_ex
   call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
 
+  ! Test Ampere
+  !-------------
+  ! Set time step
+  dt = .5 * delta_eta1
+  ! Set exact solution
+  do i = 1, nc_eta1
+     xi = eta1_min + (i-1)*delta_eta1
+     ex_exact(i) =   -cos_k(xi)*dt
+  end do
+
+  call maxwell_1d%compute_rhs_from_function(cos_k, deg-1, rho)
+  ex = 0.0_f64
+  call maxwell_1d%compute_E_from_j(dt*rho, 1, ex )
+
+
+  ! Evaluate spline curve at grid points and compute error
+  ! Ex is a 1-form, i.e. one spline degree lower
+  sval = eval_uniform_periodic_spline_curve(deg-1, ex)
+  err_ex2 = maxval(sval-ex_exact)
+  print*, 'error Poisson',  err_ex2
+  !call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
+
+
   ! Test Maxwell on By and Ez 
   !--------------------------
   ! Set time stepping parameters
@@ -147,7 +171,7 @@ program test_maxwell_1d_fem
   end do ! next time step
 
   tol = 1.0d-3
-  if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol)) then
+  if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol) .and. (err_ex2 < tol)) then
      print*,'PASSED'
   endif
 
