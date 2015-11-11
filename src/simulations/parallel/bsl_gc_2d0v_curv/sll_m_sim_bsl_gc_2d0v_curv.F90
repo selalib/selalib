@@ -240,7 +240,6 @@ contains
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
     character(len=256) ::  es_control_case
-    sll_int32 ::  es_control
     character(len=256) ::  interp_rho_case
     sll_int32 :: rho_degree1
     sll_int32 :: rho_degree2
@@ -286,12 +285,6 @@ contains
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
     sll_real64, dimension(9) :: params_mesh_DSG
-    sll_real64 :: eta1_min_bis
-    sll_real64 :: eta1_max_bis
-    sll_real64 :: eta2_min_bis
-    sll_real64 :: eta2_max_bis
-    sll_int32  :: Nc_eta1_bis
-    sll_int32  :: Nc_eta2_bis
 
     character(len=256)      :: str_num_run
     character(len=256)      :: filename_loc
@@ -2463,8 +2456,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+          eta1 = eta1_min+real(i-1,f64)*deta1
+          eta2 = eta2_min+real(j-1,f64)*deta2
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -2530,8 +2523,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+          eta1 = eta1_min+real(i-1,f64)*deta1
+          eta2 = eta2_min+real(j-1,f64)*deta2
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -2701,13 +2694,13 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     enddo 
   end subroutine sll_DSG 
 
+
   subroutine delete_guiding_center_2d_curvilinear( sim )
 
     class(sll_simulation_2d_guiding_center_curvilinear) :: sim
-    sll_int32 :: ierr
-    
             
   end subroutine delete_guiding_center_2d_curvilinear
+
 
   function compute_integral_trapezoid_2d( &
     input, &
