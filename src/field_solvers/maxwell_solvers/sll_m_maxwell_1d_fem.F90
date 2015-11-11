@@ -124,7 +124,7 @@ contains
      
 
      ! Update the electric field and scale
-     E = E - this%work!/this%delta_x
+     E = E - this%work/this%delta_x
 
    end subroutine compute_E_from_j_1d_fem
   
@@ -139,10 +139,10 @@ contains
      call solve_circulant(this, this%eig_weak_poisson, rho, this%work)
      ! Compute spline coefficients of Ex from those of phi
      do i=2,this%n_dofs
-        E(i) =  (this%work(i-1) -  this%work(i)) * (this%delta_x)
+        E(i) =  (this%work(i-1) -  this%work(i)) !* (this%delta_x)
      end do
      ! treat Periodic point
-     E(1) = (this%work(this%n_dofs) - this%work(1)) * (this%delta_x)
+     E(1) = (this%work(this%n_dofs) - this%work(1)) !* (this%delta_x)
    end subroutine compute_E_from_rho_1d_fem
 
    subroutine solve_circulant(this, eigvals, rhs, res)
@@ -207,7 +207,7 @@ contains
            enddo
         enddo
         ! rescale by cell size
-        coefs_dofs(i) = coef!*this%delta_x
+        coefs_dofs(i) = coef*this%delta_x
      enddo
 
    end subroutine compute_fem_rhs
@@ -245,6 +245,8 @@ contains
      endif
 
      call solve_circulant(this, eigvals, this%work, coefs_dofs)
+     ! Account for scaling in the mass matrix by dx
+     coefs_dofs = coefs_dofs/this%delta_x
 
    end subroutine L2projection_1d_fem
 
