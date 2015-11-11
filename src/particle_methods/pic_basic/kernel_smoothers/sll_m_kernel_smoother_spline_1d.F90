@@ -59,7 +59,7 @@ contains
     sll_int32 :: i1
     sll_int32 :: index1d, index
     sll_real64 :: xi(1)
-    sll_real64 :: spline_val(this%n_span)
+    sll_real64 :: spline_val(20)!(this%n_span)
    
     xi(1) = (position(1) - this%domain(1,1))/this%delta_x(1)
     index = ceiling(xi(1))
@@ -151,12 +151,12 @@ contains
    !Local variables
    sll_real64 :: fy(this%spline_degree+1)
    sll_int32  :: ind, i_grid, i_mod, n_cells, j
-   sll_real64 :: quad_xw(2, this%n_quad_points)
+   sll_real64 :: quad_xw(2,20)!(2, this%n_quad_points)
 
 
    n_cells = this%n_grid(1)
 
-   quad_xw = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
+   quad_xw(2,1:this%n_quad_points) = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
 
    fy = quad_xw(2,1) * uniform_b_splines_at_x(this%spline_degree, quad_xw(1,1))
    do j=2,this%n_quad_points
@@ -210,7 +210,7 @@ contains
     sll_int32 :: i1
     sll_int32 :: index1d, index
     sll_real64 :: xi(1)
-    sll_real64 :: spline_val(this%n_span)
+    sll_real64 :: spline_val(20)!(this%n_span)
 
     xi(1) = (position(1) - this%domain(1,1))/this%delta_x(1)
     index = ceiling(xi(1))
@@ -242,7 +242,7 @@ contains
     sll_int32 :: i1
     sll_int32 :: index1d, index
     sll_real64 :: xi(1)
-    sll_real64 :: spline_val(this%n_span)
+    sll_real64 :: spline_val(20)!(this%n_span)
 
     ! TODO: Add assertions on sive of field_dofs(this%n_dofs, size(field_value)
 
@@ -276,6 +276,12 @@ contains
 
     !local variables
     sll_int32 :: ierr
+
+
+    ! In order to avoid dynamic memory allocation, we do not allow for spline degree > 19.
+    if (spline_degree > 20) then
+       print*, 'sll_m_kernel_smoother_spline_2d: degree > 19 not implemented.'
+    end if
 
     SLL_ALLOCATE( this, ierr)
 
