@@ -263,9 +263,12 @@ def compute_all_used_symbols( content ):
                 variables.extend( re_engines['dimension'].findall( s ) )
             # Array dimensions on r.h.s.
             for v in item.entity_decls:
+                # TODO: cleanup this code
                 v = remove_fortran_strings ( v )  # remove strings
                 v = remove_fortran_logicals( v )  # remove logicals
-                syms = re_engines['name'].findall( v )
+                v = v.replace('(',',')
+                v = v.replace(')',',')
+                syms = re_engines['variable'].findall( v )
                 syms = (s for s in syms[1:] if s not in intrinsic_procedures)
                 variables.extend( syms )
             # kind parameter in numerical type declarations
