@@ -10,7 +10,7 @@
 !> \mathbf{S}(t) = \sum_{i = 0}^{m-n-1} b_{i,n} (t) . \mathbf{P}_{i} \,,\, t \in [0, 1],
 !> \f]
 !> 
-!> où les \f$ P_i \f$ is a polynomial function \f$ (m-n) \f$ points.
+!> where \f$ P_i \f$ is a polynomial function \f$ (m-n) \f$ points.
 !> 
 !> \f$ m-n \f$ B-splines n degree functions are defined recursively :
 !> 
