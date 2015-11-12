@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 11 Nov 2015
+# Last revision: 12 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -222,7 +222,7 @@ def compute_locals( content, return_dict=False ):
 
 #------------------------------------------------------------------------------
 patterns = {}
-patterns['name']      = r"\b([a-zA-Z]\w*)\b"
+patterns['name']      = r"(?<!\d\.)\b([a-zA-Z]\w*)\b"
 patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"\s*(?![\s\(])"
 patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"\s*\("
 patterns['extends']   = r"extends\s*\("  + patterns['name'] + r"\s*\)"
