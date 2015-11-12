@@ -1128,7 +1128,7 @@ subroutine compute_w_hermite(w,r,s)
     
     eta(1)=sqrt(x(1)**2+x(2)**2)
     call localize_nat(ii(1),eta(1),eta_min(1),eta_max(1),N(1))
-    eta(2)=datan2(x(2),x(1))
+    eta(2)=atan2(x(2),x(1))
     call localize_per(ii(2),eta(2),eta_min(2),eta_max(2),N(2))
   end subroutine localize_polar
 
