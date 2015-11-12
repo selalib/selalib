@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 23 Oct 2015
+# Last revision: 11 Nov 2015
 #
 from __future__ import print_function
 
@@ -98,7 +98,12 @@ def create_interface_sections( root ):
     from fortran_module    import FortranModule, populate_exported_symbols
     from fparser.api       import parse
 
-    # Walk directory and store FortranModule objects
+    from fortran_external import external_modules, find_external_library
+
+    # Walk library tree and store FortranModule objects
+    print( "================================================================" )
+    print( "Processing library modules")
+    print( "================================================================" )
     modules = {}
     for fpath in recursive_file_search( root, ignore_dir, select_file ):
         if contains_exactly_1_module( fpath, verbose=True ):
@@ -108,13 +113,21 @@ def create_interface_sections( root ):
             # Create 'my' module object and store it in dictionary
             modules[fmod.name] = FortranModule( fpath, fmod )
 
+    print( "================================================================" )
+    print( "Link library modules against used ones" )
+    print( "================================================================" )
     # [0] Link modules against used ones, creating a graph
     for name,mmod in modules.items():
-        mmod.link_used_modules( *modules.values() )
+        mmod.link_used_modules( modules.values(), externals=external_modules )
+        print("  - linked module '%s'" % name )
 
+    print( "================================================================" )
+    print( "Search symbols in used modules" )
+    print( "================================================================" )
     # [1] Update use statements (recursively search symbols in used modules)
     for name,mmod in modules.items():
-        mmod.update_use_statements()
+        mmod.update_use_statements( find_external_library, ignored_symbols )
+        print("  - updated module '%s'" % name )
 
     #########################
     return        # STOP HERE
