@@ -38,7 +38,7 @@ module sll_m_kernel_smoother_base
      subroutine add_single(this, position, weight, rho_dofs) 
        use sll_m_working_precision
        import sll_c_kernel_smoother
-       class (sll_c_kernel_smoother), intent( in ) :: this !< Kernel smoother object
+       class (sll_c_kernel_smoother), intent( inout ) :: this !< Kernel smoother object
        sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
        sll_real64,                intent( in ) :: weight !< Weight of the particle
        sll_real64,                    intent( inout ) :: rho_dofs(this%n_dofs) !< Coefficient vector of the charge distribution
@@ -51,7 +51,7 @@ module sll_m_kernel_smoother_base
      subroutine add_update (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
        use sll_m_working_precision
        import sll_c_kernel_smoother
-       class(sll_c_kernel_smoother), intent(in) :: this !< kernel smoother object
+       class(sll_c_kernel_smoother), intent(inout) :: this !< kernel smoother object
        sll_real64, intent(in) :: position_old(this%dim)
        sll_real64, intent(in) :: position_new(this%dim)
        sll_real64, intent(in) :: weight
@@ -70,7 +70,7 @@ module sll_m_kernel_smoother_base
      subroutine eval_single(this, position, field_dofs, field_value)
        use sll_m_working_precision
        import sll_c_kernel_smoother
-       class (sll_c_kernel_smoother), intent( in ) :: this !< Kernel smoother object 
+       class (sll_c_kernel_smoother), intent( inout ) :: this !< Kernel smoother object 
        sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
        sll_real64,                    intent( in ) :: field_dofs(this%n_dofs) !< Coefficient vector for the field DoFs
        sll_real64, intent(out) :: field_value !< Value(s) of the electric fields at given position
@@ -82,7 +82,7 @@ module sll_m_kernel_smoother_base
      subroutine eval_multiple(this, position, components, field_dofs, field_value)
        use sll_m_working_precision
        import sll_c_kernel_smoother
-       class (sll_c_kernel_smoother), intent( in ) :: this !< Kernel smoother object 
+       class (sll_c_kernel_smoother), intent( inout ) :: this !< Kernel smoother object 
        sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
        sll_int32, intent(in) :: components(:)
        sll_real64,                    intent( in ) :: field_dofs(:,:) !< Coefficient vector for the field DoFs
