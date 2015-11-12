@@ -540,7 +540,7 @@ end subroutine compute_bspline_2d_with_variable_slopes
 
 
 !> @brief 
-!> update 2 values before computing bsplines coefficientcs
+!> update 2 values before computing bsplines coefficients
 !> @details
 !> If the points positions did not change use this function instead
 !> of compute_bspline_2d. You still need to call compute_bspline_2d at
