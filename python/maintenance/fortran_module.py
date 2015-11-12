@@ -13,13 +13,14 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 09 Nov 2015
+# Last revision: 12 Nov 2015
 #
 from __future__ import print_function
 import re
 from fparser    import statements, typedecl_statements, block_statements
 from fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
-                                logical_operators, logical_constants)
+                                logical_operators, logical_constants, \
+                                relational_operators)
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -79,6 +80,7 @@ def remove_fortran_strings( text ):
 def remove_fortran_logicals( text ):
     """
     Remove any fortran logical operator or constant from the given text.
+    Also remove fortran relational operators.
 
     NOTE
     ----
@@ -86,8 +88,9 @@ def remove_fortran_logicals( text ):
 
     """
     text = text.lower()
-    for s in logical_operators:  text = text.replace( s, '' )
-    for s in logical_constants:  text = text.replace( s, '' )
+    for s in    logical_operators:  text = text.replace( s, ' ' )
+    for s in    logical_constants:  text = text.replace( s, ' ' )
+    for s in relational_operators:  text = text.replace( s, ' ' )
     return text
 
 #------------------------------------------------------------------------------
@@ -219,7 +222,7 @@ def compute_locals( content, return_dict=False ):
 
 #------------------------------------------------------------------------------
 patterns = {}
-patterns['name']      = r"\b([a-zA-Z]\w*)\b"
+patterns['name']      = r"(?<!\d\.)\b([a-zA-Z]\w*)\b"
 patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"\s*(?![\s\(])"
 patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"\s*\("
 patterns['extends']   = r"extends\s*\("  + patterns['name'] + r"\s*\)"
@@ -228,6 +231,66 @@ patterns['dimension'] = r"dimension\s*\("+ patterns['name'] + r"\s*\)"
 re_engines = {}
 for key,val in patterns.items():
     re_engines[key] = re.compile( val, re.I )
+
+#------------------------------------------------------------------------------
+def extract_expr_symbols( expr, strip=False ):
+    """
+    Extract all symbols that are used in a certain mathematical expression,
+    distinguishing between calls and variables.
+
+    Parameters
+    ----------
+    expr : str
+      Mathematical expression to be parsed
+
+    strip : bool
+      If True, Fortran strings and logicals should be removed before proceeding
+
+    Returns
+    -------
+    calls : list of str
+      Names of functions and arrays (they cannot be distinguished)
+
+    variables : list of str
+      Names of variables (also arrays, if used as a whole)
+
+    """
+    from fparser.splitline import string_replace_map
+    from fparser.utils     import specs_split_comma
+
+    # If expression is not in lower case, convert it
+    if not expr.islower():
+        expr = expr.lower()
+
+    # If required, remove Fortran strings, logicals and relationals
+    if strip:
+        expr = remove_fortran_strings ( expr )
+        expr = remove_fortran_logicals( expr )
+
+    # Substitute argument lists with 'F2PY_EXPR_TUPLE' strings, and store map
+    string, string_map = string_replace_map( expr )
+
+    # Extract all symbols at this level
+    calls     = re_engines['call'    ].findall( string )
+    variables = re_engines['variable'].findall( string )
+    variables = [v for v in variables if not v.startswith('F2PY_EXPR_TUPLE')]
+
+    # Search for symbols in each of the 'mapped' strings
+    for text in string_map.values():
+        # Split argument lists
+        for expr in specs_split_comma( text ):
+            # Ignore keywords in function calls
+            if '=' in expr:
+                string, string_map = string_replace_map( expr )
+                expr = string_map( string.rpartition('=')[2].lstrip() )
+            # Recursion: extract symbols from new expression and update lists
+            if expr:
+                new_calls, new_variables = extract_expr_symbols( expr )
+                calls    .extend( new_calls     )
+                variables.extend( new_variables )
+
+    # Return symbol lists
+    return calls, variables
 
 #------------------------------------------------------------------------------
 def compute_all_used_symbols( content ):
@@ -260,9 +323,12 @@ def compute_all_used_symbols( content ):
                 variables.extend( re_engines['dimension'].findall( s ) )
             # Array dimensions on r.h.s.
             for v in item.entity_decls:
+                # TODO: cleanup this code
                 v = remove_fortran_strings ( v )  # remove strings
                 v = remove_fortran_logicals( v )  # remove logicals
-                syms = re_engines['name'].findall( v )
+                v = v.replace('(',',')
+                v = v.replace(')',',')
+                syms = re_engines['variable'].findall( v )
                 syms = (s for s in syms[1:] if s not in intrinsic_procedures)
                 variables.extend( syms )
             # kind parameter in numerical type declarations
@@ -339,10 +405,9 @@ def compute_all_used_symbols( content ):
             # l.h.s.
             variables.append( re_engines['name'].findall( item.variable )[0] )
             # r.h.s.
-            s = remove_fortran_strings( item.expr )
-            s = remove_fortran_logicals( s )
-            variables.extend( re_engines['variable'].findall( s ) )
-            calls    .extend( re_engines['call'    ].findall( s ) )
+            new_calls, new_vars = extract_expr_symbols( item.expr, strip=True )
+            variables.extend( new_vars  )
+            calls    .extend( new_calls )
         # Type blocks
         elif isinstance( item, block_statements.Type ):
             if len( item.specs ) > 0:
@@ -384,14 +449,13 @@ def compute_all_used_symbols( content ):
             # Nothing of the above
             else:
                 text = ''
-            # Remove Fortran strings and logical intrinsics from expression
-            if text:
-                text = remove_fortran_strings ( text )
-                text = remove_fortran_logicals( text )
+
             # Extract variables and calls from expression
             if text:
-                variables.extend( re_engines['variable'].findall( text ) )
-                calls    .extend( re_engines['call'    ].findall( text ) )
+                new_calls, new_vars = extract_expr_symbols( text, strip=True )
+                variables.extend( new_vars  )
+                calls    .extend( new_calls )
+
             # Double-check that we do not have F2Py strings
             if ('f2py' in text) or ('F2PY' in text):
                 print('ERROR: ', text )
@@ -426,22 +490,28 @@ class FortranModule( object ):
         for item in module.content:
             if type( item ) == statements.Use:
                 self._used_modules[item.name] = {'isonly':item.isonly, \
-                                                 'items' :item.items }
+                        'items':item.items, 'object':None }
 
     #--------------------------------------------------------------------------
-    def link_used_modules( self, *modules ):
+    def link_used_modules( self, modules, externals={} ):
         """ Given a list of library modules, link against the used ones.
         """
         for name,data in self._used_modules.items():
-            objects = []
-            for m in modules:
-                if m.name == name:
-                    objects.append( m )
+
+            if name in externals:
+                print( "WARNING: skipping external module %s" % name )
+                data['object']   = None
+                data['external'] = True
+                continue
+
+            objects = [m for m in modules if m.name == name]
+
             if len( objects ) == 0:
-                print( "WARNING: missing link for module %s" % name )
-                data['object'] = None
+                print( "ERROR: missing link for module %s" % name )
+                raise SystemExit()
             elif len( objects ) == 1:
-                data['object'] = m
+                data['object']   = objects[0]
+                data['external'] = False
             else:
                 print( "ERROR: multiple modules with name %s" % name )
                 raise SystemExit()
@@ -470,43 +540,58 @@ class FortranModule( object ):
             # Symbol is found in module
             return self.name
 
-        # Search in all used modules
+        # Search in used modules
         for name,data in self._used_modules.items():
+            # Search in "use only" symbol list
             if data['isonly']:
                 if symbol in data['items']:
                     # Symbol is found in "use [], only:" list
                     return name
                 continue
-            if data['object'] is None:
-                print( "WARNING: missing link for module %s" % name )
-                continue
-            # Recursively call same function
-            mod_name = data['object'].find_symbol_def( symbol )
-            if mod_name is not None:
-                # Symbol is found in some other module in the use hierarchy
-                return mod_name
+            # Recursively call same function in "use all" modules (if linked!)
+            if data['object']:
+                mod_name = data['object'].find_symbol_def( symbol )
+                if mod_name:
+                    # Symbol is found in some other module in the use hierarchy
+                    return mod_name
 
         # Nothing was found
         return None
 
     #--------------------------------------------------------------------------
-    def update_use_statements( self ):
-        """ Update all use statements.
+    def update_use_statements( self,
+            find_external_library = None,
+            ignored_symbols       = [] ):
+        """
+        Update all use statements.
+
         """
         unlocated_symbols = list( self._imported_symbols )
 
         for s in self._imported_symbols:
             mod_name = self.find_symbol_def( s )
             if mod_name is None:
-                print( "ERROR: cannot locate symbol %s" % s )
-                raise SystemExit()
+                if find_external_library is not None:
+
+                    # Search in external libraries
+                    external_match = find_external_library( s )
+                    if external_match:
+                        lib_name, mod_name = external_match
+                        if mod_name == '':
+                            mod_name = 'F77_' + lib_name
+                            # TODO: properly handle fftpack
+                    else:
+                        if s not in ignored_symbols:
+                            print( "ERROR processing file %s:" % self.filepath )
+                            print( "  cannot locate symbol %s" % s )
+                            raise SystemExit()
 
             if mod_name in self._used_modules.keys():
                 self._used_modules[mod_name]['items'].append( s )
                 unlocated_symbols.remove( s )
             else:
-                new_mod = { 'isonly': True, 'items': [s] }
-                self._used_module['mod_name'] = new_mod
+                new_mod = { 'isonly': True, 'items': [s], 'object': None }
+                self._used_modules[mod_name] = new_mod
                 unlocated_symbols.remove( s )
 
         assert( unlocated_symbols == [] )
