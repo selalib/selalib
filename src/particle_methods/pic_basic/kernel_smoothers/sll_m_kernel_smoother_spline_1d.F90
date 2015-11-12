@@ -36,6 +36,9 @@ module sll_m_kernel_smoother_spline_1d
      sll_real64 :: scaling
      sll_int32  :: n_quad_points
 
+     sll_real64, allocatable :: spline_val(:)
+     sll_real64, allocatable :: quad_xw(:,:)
+
      
    contains
      procedure :: add_charge => add_charge_single_spline_1d !> 
@@ -50,7 +53,7 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine add_charge_single_spline_1d(this, position, weight, rho_dofs)
-    class( sll_t_kernel_smoother_spline_1d ), intent(in) :: this !< kernel smoother object
+    class( sll_t_kernel_smoother_spline_1d ), intent(inout) :: this !< kernel smoother object
      sll_real64, intent(in)  :: position(this%dim) !< Position of the particle
     sll_real64,                intent( in ) :: weight !< Weight of the particle
     sll_real64,                 intent( inout ) :: rho_dofs(this%n_dofs) !< Coefficient vector of the charge distribution
@@ -59,25 +62,24 @@ contains
     sll_int32 :: i1
     sll_int32 :: index1d, index
     sll_real64 :: xi(1)
-    sll_real64 :: spline_val(20)!(this%n_span)
    
     xi(1) = (position(1) - this%domain(1,1))/this%delta_x(1)
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    spline_val(1:this%n_span) = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    this%spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2,this%n_grid(1))+1
        rho_dofs(index1d) = rho_dofs(index1d) +&
-            (weight * spline_val(i1)* this%scaling)
+            (weight * this%spline_val(i1)* this%scaling)
     end do
 
   end subroutine add_charge_single_spline_1d
 
 
   subroutine add_current_update_v_spline_1d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
-    class(sll_t_kernel_smoother_spline_1d), intent(in) :: this !< kernel smoother object
+    class(sll_t_kernel_smoother_spline_1d), intent(inout) :: this !< kernel smoother object
     sll_real64, intent(in) :: position_old(this%dim)
     sll_real64, intent(in) :: position_new(this%dim)
     sll_real64, intent(in) :: weight
@@ -137,7 +139,7 @@ contains
 
  ! TODO: This is hard coded for quadratic, cubic splines. Make general.
  subroutine update_jv(this, lower, upper, index, weight, qoverm, sign, vi, j_dofs, bfield_dofs)
-   class(sll_t_kernel_smoother_spline_1d), intent(in) :: this !< time splitting object 
+   class(sll_t_kernel_smoother_spline_1d), intent(inout) :: this !< time splitting object 
    sll_real64, intent(in) :: lower
    sll_real64, intent(in) :: upper
    sll_int32,  intent(in) :: index
@@ -149,27 +151,28 @@ contains
    sll_real64, intent(inout) :: j_dofs(this%n_dofs)
 
    !Local variables
-   sll_real64 :: fy(20)!(this%spline_degree+1)
    sll_int32  :: ind, i_grid, i_mod, n_cells, j
-   sll_real64 :: quad_xw(2,20)!(2, this%n_quad_points)
 
 
    n_cells = this%n_grid(1)
 
-   quad_xw(:,1:this%n_quad_points) = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
+   this%quad_xw = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
 
-   fy(1:this%n_span) = quad_xw(2,1) * uniform_b_splines_at_x(this%spline_degree, quad_xw(1,1))
+   this%spline_val = this%quad_xw(2,1) * &
+        uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,1))
    do j=2,this%n_quad_points
-      fy(1:this%n_span) = fy(1:this%n_span) + quad_xw(2,j) *  uniform_b_splines_at_x(this%spline_degree, quad_xw(1,j))
+      this%spline_val = this%spline_val + &
+           this%quad_xw(2,j) * &
+           uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,j))
    end do
-   fy(1:this%n_span) = fy(1:this%n_span) * sign*this%delta_x(1)
+   this%spline_val = this%spline_val * sign*this%delta_x(1)
 
    ind = 1
    do i_grid = index - this%spline_degree , index
       i_mod = modulo(i_grid, n_cells ) + 1
       j_dofs(i_mod) = j_dofs(i_mod) + &
-           (weight*fy(ind)* this%scaling)
-      vi = vi - qoverm* fy(ind)*bfield_dofs(i_mod)
+           (weight*this%spline_val(ind)* this%scaling)
+      vi = vi - qoverm* this%spline_val(ind)*bfield_dofs(i_mod)
       ind = ind + 1
    end do
 
@@ -201,7 +204,7 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine evaluate_field_single_spline_1d(this, position, field_dofs, field_value)
-    class (sll_t_kernel_smoother_spline_1d), intent( in ) :: this !< Kernel smoother object 
+    class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: this !< Kernel smoother object 
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
     sll_real64,                    intent( in ) :: field_dofs(this%n_dofs) !< Coefficient vector for the field DoFs
     sll_real64, intent( out)                              :: field_value !< Value(s) of the electric fields at given position
@@ -210,20 +213,19 @@ contains
     sll_int32 :: i1
     sll_int32 :: index1d, index
     sll_real64 :: xi(1)
-    sll_real64 :: spline_val(20)!(this%n_span)
 
     xi(1) = (position(1) - this%domain(1,1))/this%delta_x(1)
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    spline_val(1:this%n_span) = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    this%spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2, this%n_grid(1))+1
        field_value = field_value + &
             field_dofs(index1d) *  &
-            spline_val(i1)
+            this%spline_val(i1)
     end do
 
   end subroutine evaluate_field_single_spline_1d
@@ -232,7 +234,7 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine evaluate_multiple_spline_1d(this, position, components, field_dofs, field_value)
-    class (sll_t_kernel_smoother_spline_1d), intent( in ) :: this !< Kernel smoother object 
+    class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: this !< Kernel smoother object 
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
     sll_int32, intent(in) :: components(:)
     sll_real64,                    intent( in ) :: field_dofs(:,:) !< Coefficient vector for the field DoFs
@@ -242,7 +244,6 @@ contains
     sll_int32 :: i1
     sll_int32 :: index1d, index
     sll_real64 :: xi(1)
-    sll_real64 :: spline_val(20)!(this%n_span)
 
     ! TODO: Add assertions on sive of field_dofs(this%n_dofs, size(field_value)
 
@@ -250,14 +251,14 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    spline_val(1:this%n_span) = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    this%spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2, this%n_grid(1))+1
        field_value = field_value + &
             field_dofs(index1d,components) *  &
-            spline_val(i1)
+            this%spline_val(i1)
     end do
 
   end subroutine evaluate_multiple_spline_1d
@@ -277,11 +278,6 @@ contains
     !local variables
     sll_int32 :: ierr
 
-
-    ! In order to avoid dynamic memory allocation, we do not allow for spline degree > 19.
-    if (spline_degree > 20) then
-       print*, 'sll_m_kernel_smoother_spline_2d: degree > 19 not implemented.'
-    end if
 
     SLL_ALLOCATE( this, ierr)
 
@@ -311,6 +307,9 @@ contains
     end if
     
     this%n_quad_points = (this%spline_degree+2)/2
+
+    ALLOCATE( this%spline_val(this%n_span))
+    ALLOCATE( this%quad_xw(2,this%n_quad_points))
 
   end function sll_new_smoother_spline_1d
 
