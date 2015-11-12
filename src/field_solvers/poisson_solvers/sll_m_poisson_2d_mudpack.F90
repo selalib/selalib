@@ -1290,12 +1290,12 @@ real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
-pe = 0.0d0
+pe = 0.0_8
 !subroutine not used in periodic case
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0d0
+   alfa = -1.0_8
    gbdy = px + alfa*pe
    return
 end if
@@ -1303,7 +1303,7 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0d0
+   alfa = 1.0_8
    gbdy = py + alfa*pe
    return
 end if

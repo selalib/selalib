@@ -8,6 +8,7 @@ module sll_m_bsplines
 
   use sll_m_boundary_condition_descriptors
   use sll_m_fornberg
+  use sll_m_deboor_splines_1d
 
 implicit none 
 
@@ -26,12 +27,9 @@ type, public :: sll_bspline_1d
   sll_real64, pointer       :: q(:)
   sll_real64, pointer       :: bcoef(:)
   sll_int32                 :: bc_type
+  sll_real64, pointer       :: a(:,:)
   sll_real64, pointer       :: dbiatx(:,:)
-  sll_real64, dimension(20) :: deltal
-  sll_real64, dimension(20) :: deltar
-  sll_int32                 :: j = 1
   sll_real64                :: length
-  sll_int32                 :: ilo
   sll_real64                :: vl
   sll_real64                :: vr
   sll_real64                :: sl
@@ -128,6 +126,8 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
   k = degree+1
   n = num_points
 
+  SLL_ALLOCATE(new_bspline_1d%a(k,k), ierr)
+
   new_bspline_1d%bc_type = bc_type
   new_bspline_1d%n       = num_points
   new_bspline_1d%k       = degree+1
@@ -195,8 +195,6 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
   allocate(new_bspline_1d%aj(k))
   allocate(new_bspline_1d%dl(k))
   allocate(new_bspline_1d%dr(k))
-
-  new_bspline_1d%ilo = k
 
 end function new_bspline_1d
 
@@ -298,7 +296,7 @@ subroutine build_system_with_derivative(this)
   sll_int32               :: jj
   sll_int32               :: l
   sll_int32, parameter    :: m=2
-  sll_int32               :: ilo
+  type(deboor_type)       :: db
   
   n = this%n
   k = this%k
@@ -312,16 +310,16 @@ subroutine build_system_with_derivative(this)
 
   l = 0 ! index for the derivative
 
-  ilo = k
+  db%ilo = k
 
   do i = 1, n
       
     taui = this%tau(i)
-    call interv( this%t, n+m+k, taui, left, ilo, mflag )
+    call interv( db, this%t, n+m+k, taui, left, mflag )
 
     if (i < n) then
 
-      call bsplvb ( this, k, 1, taui, left, this%bcoef )
+      call bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -329,7 +327,7 @@ subroutine build_system_with_derivative(this)
       end do
    
       if ( i == 1 ) then   
-        call bsplvd( this, k, taui, left, 2)
+        call bsplvd( db, this%t, k, taui, left, this%a, this%dbiatx, 2)
         l = l + 1
         jj = i-left+1+(left-k)*(k+k-1)+l
         do j = 1, k
@@ -340,7 +338,7 @@ subroutine build_system_with_derivative(this)
 
     else
 
-      call bsplvd( this, k, taui, left, 2)
+      call bsplvd( db, this%t, k, taui, left, this%a, this%dbiatx, 2)
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -348,7 +346,7 @@ subroutine build_system_with_derivative(this)
       end do
       l = l + 1
       
-      call bsplvb ( this, k, 1, taui, left, this%bcoef )
+      call bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2 
@@ -379,6 +377,7 @@ subroutine build_system(this)
   sll_int32               :: j
   sll_int32               :: jj
   sll_int32               :: ilp1mx
+  type(deboor_type)       :: db
   
   !PN Warning:
   !PN The system built for periodic boundary conditions is wrong
@@ -402,10 +401,10 @@ subroutine build_system(this)
       left = left + 1
       if ( left < ilp1mx ) cycle
       left = left - 1
-      if ( this%t(left+1) < taui ) stop '  The linear system is not invertible!'
+      if ( this%t(left+1) < taui ) stop ' The linear system is not invertible!'
       exit
     end do
-    call bsplvb ( this, k, 1, taui, left, this%bcoef )
+    call bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
     jj = i-left+1+(left-k)*(k+k-1)
     do j = 1, k
         jj = jj + kpkm2
@@ -469,8 +468,6 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
   else
     call update_bspline_1d( this, gtau)
   end if
-
-  this%ilo = this%k
 
 end subroutine compute_bspline_1d
 
@@ -692,6 +689,7 @@ function interpolate_value_1d( this, x) result(y)
   sll_int32               :: n
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
+  type(deboor_type)       :: db
   
   k = this%k
   n = this%n  
@@ -702,7 +700,7 @@ function interpolate_value_1d( this, x) result(y)
     nmk = n+m+k
   end if
   
-  call interv( this%t, nmk, x, i, this%ilo, mflag )
+  call interv( db, this%t, nmk, x, i, mflag )
   
   y = this%bcoef(i)
   
@@ -793,6 +791,7 @@ subroutine interpolate_array_values_1d( this, n, x, y)
   sll_real64, allocatable :: dl(:)
   sll_real64, allocatable :: dr(:)
   sll_real64              :: xi
+  type(deboor_type)       :: db
   
   k = this%k
   if (this%bc_type == SLL_PERIODIC) then
@@ -812,7 +811,7 @@ subroutine interpolate_array_values_1d( this, n, x, y)
   
     xi = x(l)
   
-    call interv ( this%t, nmk, xi, i, ilo, mflag )
+    call interv ( db, this%t, nmk, xi, i, mflag )
     
     if ( mflag /= 0 ) return
   
@@ -894,7 +893,6 @@ subroutine interpolate_array_derivatives_1d( this, n, x, y)
   
   sll_int32               :: i
   sll_int32               :: j
-  sll_int32               :: ilo
   sll_int32               :: jlo
   sll_int32               :: jc
   sll_int32               :: jcmax
@@ -911,6 +909,7 @@ subroutine interpolate_array_derivatives_1d( this, n, x, y)
   sll_real64, allocatable :: dr(:)
   sll_real64              :: xi
   sll_int32               :: jderiv = 1
+  type(deboor_type)       :: db
   
   k = this%k
 
@@ -924,7 +923,7 @@ subroutine interpolate_array_derivatives_1d( this, n, x, y)
   SLL_ALLOCATE(dl(k), ierr)
   SLL_ALLOCATE(dr(k), ierr)
   
-  ilo = k
+  db%ilo = k
   
   do l = 1, n
   
@@ -937,7 +936,7 @@ subroutine interpolate_array_derivatives_1d( this, n, x, y)
     !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
     !  right continuous.
     !
-    call interv ( this%t, nmk, xi, i, ilo, mflag )
+    call interv ( db, this%t, nmk, xi, i, mflag )
     
     if ( mflag /= 0 ) return
     !
@@ -1038,6 +1037,7 @@ function interpolate_derivative_1d( this, x) result(y)
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
   sll_int32,  parameter   :: jderiv = 1
+  type(deboor_type)       :: db
   
   k = this%k
   n = this%n
@@ -1054,7 +1054,7 @@ function interpolate_derivative_1d( this, x) result(y)
   !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
   !  right continuous.
   !
-  call interv ( this%t, nmk, x, i, this%ilo, mflag )
+  call interv ( db, this%t, nmk, x, i, mflag )
   
   y = this%bcoef(i)
   
@@ -1124,7 +1124,8 @@ function interpolate_derivative_1d( this, x) result(y)
   do j = jderiv+1, k-1
     ilo = k-j
     do jj = 1, k-j
-      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj))/(this%dl(ilo)+this%dr(jj))
+      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj)) &
+        /(this%dl(ilo)+this%dr(jj))
       ilo = ilo-1
     end do
   end do
@@ -1133,283 +1134,189 @@ function interpolate_derivative_1d( this, x) result(y)
   
 end function interpolate_derivative_1d
 
-!>@brief
-!> Calculates the nonvanishing B-splines and derivatives at X.
-!> @details
-!>   Values at X of all the relevant B-splines of order K:K+1-NDERIV
-!>   are generated via BSPLVB and stored temporarily in DBIATX.
-!>   Then the B-spline coefficients of the required derivatives
-!>   of the B-splines of interest are generated by differencing,
-!>   each from the preceding one of lower order, and combined with
-!>   the values of B-splines of corresponding order in DBIATX
-!>   to produce the desired values.
+!!>@brief
+!!> Calculates the nonvanishing B-splines and derivatives at X.
+!!> @details
+!!>   Values at X of all the relevant B-splines of order K:K+1-NDERIV
+!!>   are generated via BSPLVB and stored temporarily in DBIATX.
+!!>   Then the B-spline coefficients of the required derivatives
+!!>   of the B-splines of interest are generated by differencing,
+!!>   each from the preceding one of lower order, and combined with
+!!>   the values of B-splines of corresponding order in DBIATX
+!!>   to produce the desired values.
+!!
+!!
+!!> Parameters:
+!!> @param[in] T(LEFT+K), the knot sequence.  It is assumed that
+!!>   T(LEFT) < T(LEFT+1).  Also, the output is correct only if
+!!>   T(LEFT) <= X <= T(LEFT+1).
+!!> @param[in] K, the order of the B-splines to be evaluated.
+!!> @param[in] X, the point at which these values are sought.
+!!> @param[in] LEFT, indicates the left endpoint of the interval of
+!!>   interest.  The K B-splines whose support contains the interval
+!!>   ( T(LEFT), T(LEFT+1) ) are to be considered.
+!!
+!!>   DBIATX(K,NDERIV).  DBIATX(I,M) contains
+!!>   the value of the (M-1)st derivative of the (LEFT-K+I)-th B-spline
+!!>   of order K for knot sequence T, I=M,...,K, M=1,...,NDERIV.
+!!>   @parama[in] NDERIV, indicates that values of B-splines and their
+!!>   derivatives up to but not including the NDERIV-th are asked for.
+!!
+!!   Reference: 
+!!   Carl DeBoor,
+!!   A Practical Guide to Splines,
+!!   Springer, 2001,
+!!   ISBN: 0387953663.
+!subroutine bsplvd ( this, k, x, left, nderiv )
+!    
+!  type(sll_bspline_1d)      :: this
+!  sll_int32,  intent(in)    :: k
+!  sll_real64, intent(in)    :: x
+!  sll_int32,  intent(in)    :: left
+!  sll_int32,  intent(in)    :: nderiv
 !
+!  sll_real64, allocatable   :: a(:,:)
+!  sll_real64                :: factor
+!  sll_real64                :: fkp1mm
+!  sll_int32                 :: i
+!  sll_int32                 :: ideriv
+!  sll_int32                 :: il
+!  sll_int32                 :: j
+!  sll_int32                 :: jlow
+!  sll_int32                 :: jp1mid
+!  sll_int32                 :: ldummy
+!  sll_int32                 :: m
+!  sll_int32                 :: mhigh
+!  
+!  allocate(a(k,k))
 !
-!> Parameters:
-!> @param[in] T(LEFT+K), the knot sequence.  It is assumed that
-!>   T(LEFT) < T(LEFT+1).  Also, the output is correct only if
-!>   T(LEFT) <= X <= T(LEFT+1).
-!> @param[in] K, the order of the B-splines to be evaluated.
-!> @param[in] X, the point at which these values are sought.
-!> @param[in] LEFT, indicates the left endpoint of the interval of
-!>   interest.  The K B-splines whose support contains the interval
-!>   ( T(LEFT), T(LEFT+1) ) are to be considered.
+!  mhigh = max ( min ( nderiv, k ), 1 )
+!  !
+!  !  MHIGH is usually equal to NDERIV.
+!  !
+!  call bsplvb ( this, k+1-mhigh, 1, x, left, this%dbiatx(:,1) )
+!  
+!  if ( mhigh == 1 ) return
+!  !
+!  !  The first column of DBIATX always contains the B-spline values
+!  !  for the current order.  These are stored in column K+1-current
+!  !  order before BSPLVB is called to put values for the next
+!  !  higher order on top of it.
+!  !
+!  ideriv = mhigh
+!  do m = 2, mhigh
+!    jp1mid = 1
+!    do j = ideriv, k
+!       this%dbiatx(j,ideriv) = this%dbiatx(jp1mid,1)
+!       jp1mid = jp1mid + 1
+!    end do
+!    ideriv = ideriv - 1
+!    call bsplvb ( this, k+1-ideriv, 2, x, left, this%dbiatx(:,1) )
+!  end do
+!  !
+!  !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
+!  !  I=J,...,K and J=1,...,MHIGH ('=' NDERIV).
+!  !
+!  !  In particular, the first column of DBIATX is already in final form.
+!  !
+!  !  To obtain corresponding derivatives of B-splines in subsequent columns,
+!  !  generate their B-representation by differencing, then evaluate at X.
+!  !
+!  jlow = 1
+!  do i = 1, k
+!    a(jlow:k,i) = 0.0D+00
+!    jlow = i
+!    a(i,i) = 1.0D+00
+!  end do
+!  !
+!  !  At this point, A(.,J) contains the B-coefficients for the J-th of the
+!  !  K B-splines of interest here.
+!  !
+!  do m = 2, mhigh
+!    fkp1mm = real(k+1-m, kind = f64 )
+!    il = left
+!    i = k
+!    !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
+!    !  B-splines from those for preceding derivative by differencing
+!    !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
+!    !  I < J is used.
+!    do ldummy = 1, k+1-m
+!      factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
+!      !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
+!      !  in FACTOR nonzero.
+!      a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
+!      il = il - 1
+!      i = i - 1
+!    end do
+!    !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
+!    !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
+!    !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
+!    !
+!    !  Storage of this value over the value of a B-spline
+!    !  of order M there is safe since the remaining B-spline derivatives
+!    !  of the same order do not use this value due to the fact
+!    !  that  A(J,I) = 0  for J < I.
+!    do i = 1, k
+!      jlow = max ( i, m )
+!      this%dbiatx(i,m) = dot_product ( a(jlow:k,i), this%dbiatx(jlow:k,m) )
+!    end do
+!  end do
 !
-!>   DBIATX(K,NDERIV).  DBIATX(I,M) contains
-!>   the value of the (M-1)st derivative of the (LEFT-K+I)-th B-spline
-!>   of order K for knot sequence T, I=M,...,K, M=1,...,NDERIV.
-!>   @parama[in] NDERIV, indicates that values of B-splines and their
-!>   derivatives up to but not including the NDERIV-th are asked for.
+!  deallocate(a)
 !
-!   Reference: 
-!   Carl DeBoor,
-!   A Practical Guide to Splines,
-!   Springer, 2001,
-!   ISBN: 0387953663.
-subroutine bsplvd ( this, k, x, left, nderiv )
-    
-  type(sll_bspline_1d)      :: this
-  sll_int32,  intent(in)    :: k
-  sll_real64, intent(in)    :: x
-  sll_int32,  intent(in)    :: left
-  sll_int32,  intent(in)    :: nderiv
-
-  sll_real64, allocatable   :: a(:,:)
-  sll_real64                :: factor
-  sll_real64                :: fkp1mm
-  sll_int32                 :: i
-  sll_int32                 :: ideriv
-  sll_int32                 :: il
-  sll_int32                 :: j
-  sll_int32                 :: jlow
-  sll_int32                 :: jp1mid
-  sll_int32                 :: ldummy
-  sll_int32                 :: m
-  sll_int32                 :: mhigh
-  
-  allocate(a(k,k))
-
-  mhigh = max ( min ( nderiv, k ), 1 )
-  !
-  !  MHIGH is usually equal to NDERIV.
-  !
-  call bsplvb ( this, k+1-mhigh, 1, x, left, this%dbiatx(:,1) )
-  
-  if ( mhigh == 1 ) return
-  !
-  !  The first column of DBIATX always contains the B-spline values
-  !  for the current order.  These are stored in column K+1-current
-  !  order before BSPLVB is called to put values for the next
-  !  higher order on top of it.
-  !
-  ideriv = mhigh
-  do m = 2, mhigh
-    jp1mid = 1
-    do j = ideriv, k
-       this%dbiatx(j,ideriv) = this%dbiatx(jp1mid,1)
-       jp1mid = jp1mid + 1
-    end do
-    ideriv = ideriv - 1
-    call bsplvb ( this, k+1-ideriv, 2, x, left, this%dbiatx(:,1) )
-  end do
-  !
-  !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
-  !  I=J,...,K and J=1,...,MHIGH ('=' NDERIV).
-  !
-  !  In particular, the first column of DBIATX is already in final form.
-  !
-  !  To obtain corresponding derivatives of B-splines in subsequent columns,
-  !  generate their B-representation by differencing, then evaluate at X.
-  !
-  jlow = 1
-  do i = 1, k
-    a(jlow:k,i) = 0.0D+00
-    jlow = i
-    a(i,i) = 1.0D+00
-  end do
-  !
-  !  At this point, A(.,J) contains the B-coefficients for the J-th of the
-  !  K B-splines of interest here.
-  !
-  do m = 2, mhigh
-    fkp1mm = real(k+1-m, kind = f64 )
-    il = left
-    i = k
-    !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
-    !  B-splines from those for preceding derivative by differencing
-    !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
-    !  I < J is used.
-    do ldummy = 1, k+1-m
-      factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
-      !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
-      !  in FACTOR nonzero.
-      a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
-      il = il - 1
-      i = i - 1
-    end do
-    !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
-    !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
-    !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
-    !
-    !  Storage of this value over the value of a B-spline
-    !  of order M there is safe since the remaining B-spline derivatives
-    !  of the same order do not use this value due to the fact
-    !  that  A(J,I) = 0  for J < I.
-    do i = 1, k
-      jlow = max ( i, m )
-      this%dbiatx(i,m) = dot_product ( a(jlow:k,i), this%dbiatx(jlow:k,m) )
-    end do
-  end do
-
-  deallocate(a)
-
-end subroutine bsplvd
-  
-!***********************************************************************
-!> @brief
-!> Evaluates B-splines at a point X with a given knot sequence.
-!> @details
-!>   Evaluates all possibly nonzero B-splines at X of order
-!>     JOUT = MAX ( JHIGH, (J+1)*(INDEX-1) )
-!>   with knot sequence T. The recurrence relation
-!>   \f[
-!> B_{i,j+1}(x) = \frac{x-t_i}{t_{i+j}-t_i} B_{i,j}(x) + 
-!> \frac{t_{i+j+1}-x}{t_{i+j+1}-t_{i+1}} B_{i+1,j}(x)
-!> \f]
-!>   is used to generate B(LEFT-J:LEFT,J+1)(X) from B(LEFT-J+1:LEFT,J)(X)
-!>   storing the new values in BIATX over the old.
+!end subroutine bsplvd
+!  
+!!***********************************************************************
+!!> @brief
+!!> Evaluates B-splines at a point X with a given knot sequence.
+!!> @details
+!!>   Evaluates all possibly nonzero B-splines at X of order
+!!>     JOUT = MAX ( JHIGH, (J+1)*(INDEX-1) )
+!!>   with knot sequence T. The recurrence relation
+!!>   \f[
+!!> B_{i,j+1}(x) = \frac{x-t_i}{t_{i+j}-t_i} B_{i,j}(x) + 
+!!> \frac{t_{i+j+1}-x}{t_{i+j+1}-t_{i+1}} B_{i+1,j}(x)
+!!> \f]
+!!>   is used to generate B(LEFT-J:LEFT,J+1)(X) from B(LEFT-J+1:LEFT,J)(X)
+!!>   storing the new values in BIATX over the old.
+!!
+!!>   The facts that
+!!>     B(I,1)(X) = 1  if  T(I) <= X < T(I+1)
+!!>   and that
+!!>     B(I,J)(X) = 0  unless  T(I) <= X < T(I+J)
+!!>   are used.
+!!>    @param[in] T(LEFT+JOUT), the knot sequence.  T is assumed to
+!!>    be nondecreasing, and also, T(LEFT) must be strictly less than
+!!>    T(LEFT+1).
+!!>
+!!>    @param[in] JHIGH, INDEX, determine the order
+!!>    JOUT = max ( JHIGH, (J+1)*(INDEX-1) )
+!!>    of the B-splines whose values at X are to be returned.
+!!>    INDEX is used to avoid recalculations when several
+!!>    columns of the triangular array of B-spline values are
+!!>    needed, for example, in BVALUE or in BSPLVD.
+!!>    If INDEX = 1, the calculation starts from scratch and the entire
+!!>    triangular array of B-spline values of orders
+!!>    1, 2, ...,JHIGH is generated order by order, that is,
+!!>    column by column.
+!!>    If INDEX = 2, only the B-spline values of order J+1, J+2, ..., JOUT
+!!>    are generated, the assumption being that BIATX, J,
+!!>    DELTAL, DELTAR are, on entry, as they were on exit
+!!>    at the previous call.  In particular, if JHIGH = 0,
+!!>    then JOUT = J+1, that is, just the next column of B-spline
+!!>    values is generated.
+!!>    Warning: the restriction  JOUT <= JMAX (= 20) is
+!!>    imposed arbitrarily by the dimension statement for DELTAL
+!!>    and DELTAR, but is nowhere checked for.
+!!>
+!!>    @param[in] x, the point at which the B-splines are to be evaluated.
+!!>    @param[in] left, an integer chosen so that T(LEFT) <= X <= T(LEFT+1).
+!!>    @param[out] biatx(jout), with biatx(i) containing the
+!!>    value at X of the polynomial of order JOUT which agrees
+!!>    with the B-spline B(LEFT-JOUT+I,JOUT,T) on the interval
+!!>    (T(LEFT),T(LEFT+1)).
+!!>
 !
-!>   The facts that
-!>     B(I,1)(X) = 1  if  T(I) <= X < T(I+1)
-!>   and that
-!>     B(I,J)(X) = 0  unless  T(I) <= X < T(I+J)
-!>   are used.
-!>    @param[in] T(LEFT+JOUT), the knot sequence.  T is assumed to
-!>    be nondecreasing, and also, T(LEFT) must be strictly less than
-!>    T(LEFT+1).
-!>
-!>    @param[in] JHIGH, INDEX, determine the order
-!>    JOUT = max ( JHIGH, (J+1)*(INDEX-1) )
-!>    of the B-splines whose values at X are to be returned.
-!>    INDEX is used to avoid recalculations when several
-!>    columns of the triangular array of B-spline values are
-!>    needed, for example, in BVALUE or in BSPLVD.
-!>    If INDEX = 1, the calculation starts from scratch and the entire
-!>    triangular array of B-spline values of orders
-!>    1, 2, ...,JHIGH is generated order by order, that is,
-!>    column by column.
-!>    If INDEX = 2, only the B-spline values of order J+1, J+2, ..., JOUT
-!>    are generated, the assumption being that BIATX, J,
-!>    DELTAL, DELTAR are, on entry, as they were on exit
-!>    at the previous call.  In particular, if JHIGH = 0,
-!>    then JOUT = J+1, that is, just the next column of B-spline
-!>    values is generated.
-!>    Warning: the restriction  JOUT <= JMAX (= 20) is
-!>    imposed arbitrarily by the dimension statement for DELTAL
-!>    and DELTAR, but is nowhere checked for.
-!>
-!>    @param[in] x, the point at which the B-splines are to be evaluated.
-!>    @param[in] left, an integer chosen so that T(LEFT) <= X <= T(LEFT+1).
-!>    @param[out] biatx(jout), with biatx(i) containing the
-!>    value at X of the polynomial of order JOUT which agrees
-!>    with the B-spline B(LEFT-JOUT+I,JOUT,T) on the interval
-!>    (T(LEFT),T(LEFT+1)).
-!>
-
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663.
-!
-subroutine bsplvb ( this, jhigh, index, x, left, biatx )
-  
-  type(sll_bspline_1d)    :: this
-  sll_int32,  intent(in)  :: jhigh
-  sll_int32,  intent(in)  :: index
-  sll_real64, intent(in)  :: x
-  sll_int32,  intent(in)  :: left
-  sll_real64, intent(out) :: biatx(:) ! (jhigh)
-  
-  sll_int32               :: i
-  sll_int32               :: j
-  sll_real64              :: saved
-  sll_real64              :: term
-  
-  j = this%j
-  if ( index == 1 ) then
-    j = 1
-    biatx(1) = 1.0_f64
-    if ( jhigh <= j ) return
-  end if
-  
-  SLL_ASSERT ( this%t(left+1) > this%t(left) )
-  
-  !if ( this%t(left+1) <= this%t(left) ) then
-  !  print*,'x=',x
-  !  write ( *, '(a)' ) ' '
-  !  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-  !  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-  !  write ( *, '(a,i8)' ) '  But LEFT = ', left
-  !  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', this%t(left)
-  !  write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', this%t(left+1)
-  !  stop
-  !end if
-  
-  do
-     
-    this%deltar(j) = this%t(left+j) - x
-    this%deltal(j) = x - this%t(left+1-j)
-    
-    saved = 0.0_f64
-    do i = 1, j
-       term = biatx(i) / ( this%deltar(i) + this%deltal(j+1-i) )
-       biatx(i) = saved + this%deltar(i) * term
-       saved = this%deltal(j+1-i) * term
-    end do
-  
-    biatx(j+1) = saved
-    j = j + 1
-    
-    if ( jhigh <= j ) exit
-  
-  end do
-
-  this%j = j
-
-end subroutine bsplvb
-  
-!> Brackets a real value in an ascending vector of values.
-!> @details
-!!
-!!  The XT array is a set of increasing values.  The goal of the routine
-!!  is to determine the largest index I so that XT(I) <= X.
-!!
-!!  The routine is designed to be efficient in the common situation
-!!  that it is called repeatedly, with X taken from an increasing
-!!  or decreasing sequence.
-!!
-!!  This will happen when a piecewise polynomial is to be graphed.
-!!  The first guess for LEFT is therefore taken to be the value
-!!  returned at the previous call and stored in the local variable ILO.
-!!
-!!  A first check ascertains that ILO < LXT.  This is necessary
-!!  since the present call may have nothing to do with the previous
-!!  call.  Then, if
-!!
-!!    XT(ILO) <= X < XT(ILO+1),
-!!
-!!  we set LEFT = ILO and are done after just three comparisons.
-!!
-!!  Otherwise, we repeatedly double the difference ISTEP = IHI - ILO
-!!  while also moving ILO and IHI in the direction of X, until
-!!
-!!    XT(ILO) <= X < XT(IHI)
-!!
-!!  after which we use bisection to get, in addition, ILO + 1 = IHI.
-!!  The value LEFT = ILO is then returned.
-!!
 !!  Reference:
 !!
 !!    Carl DeBoor,
@@ -1417,115 +1324,209 @@ end subroutine bsplvb
 !!    Springer, 2001,
 !!    ISBN: 0387953663.
 !!
-!! @param[in] xt(lxt), a nondecreasing sequence of values.
-!! @param[in] lxt, the dimension of xt.
-!! @param[in] x, the point whose location with
-!!    respect to the sequence XT is to be determined.
-!! @param[out] left, the index of the bracketing value:
-!!      1     if             X  <  XT(1)
-!!      I     if   XT(I)  <= X  < XT(I+1)
-!!      LXT   if  XT(LXT) <= X
-!! @param[out] mflag, indicates whether X lies within the
-!!    range of the data.
-!!    -1:            X  <  XT(1)
-!!     0: XT(I)   <= X  < XT(I+1)
-!!    +1: XT(LXT) <= X
-!<
-subroutine interv( xt, lxt, x, left, ilo, mflag )
- 
-  sll_real64, intent(in)    :: xt(:)
-  sll_int32,  intent(in)    :: lxt
-  sll_real64, intent(in)    :: x
-  sll_int32,  intent(out)   :: left
-  sll_int32,  intent(inout) :: ilo
-  sll_int32,  intent(out)   :: mflag
-  
-  sll_int32                 :: ihi
-  sll_int32                 :: istep
-  sll_int32                 :: middle
-  sll_real64                :: xtmax
-
-  xtmax = xt(lxt)
-  
-  ihi = ilo + 1
-  if ( ihi >= lxt ) then
-    if ( x >= xtmax ) goto 110
-    ilo = lxt - 1
-    ihi = lxt
-  end if
-  if ( xt(ihi) <= x ) goto 20
-  if ( xt(ilo) <= x ) then
-    mflag = 0
-    left = ilo
-    return
-  end if
-  !
-  !  Now X < XT(ILO).  Decrease ILO to capture X.
-  !
-  istep = 1
-  10  continue
-  ihi = ilo
-  ilo = ihi - istep
-  if ( 1 < ilo ) then
-    if ( xt(ilo) <= x ) goto 50
-    istep = istep * 2
-    goto 10
-  end if
-  ilo = 1
-  if ( x < xt(1) ) then
-    mflag = -1
-    left = 1
-    return
-  end if
-  goto 50
-  !
-  !  Now XT(IHI) <= X.  Increase IHI to capture X.
-  !
-  20 continue
-  istep = 1
-  30 continue
-  ilo = ihi
-  ihi = ilo + istep
-  if ( ihi < lxt ) then
-    if ( x < xt(ihi) ) goto 50
-    istep = istep * 2
-    goto 30
-  end if
-  if ( xtmax <= x ) goto 110
-  !
-  !  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
-  !
-  ihi = lxt
-  50  continue
-  do
-    middle = (ilo+ihi)/2
-    if ( middle == ilo ) then
-      mflag = 0
-      left = ilo
-      return
-    end if
-    !
-    !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
-    !
-    if ( xt(middle) <= x ) then
-      ilo = middle
-    else
-      ihi = middle
-    end if
-     
-  end do
-  !
-  !  Set output and return.
-  !
-  110 continue
-  mflag = 1
-  if ( x == xtmax ) mflag = 0
-
-  do left = lxt, 1, -1
-    if ( xt(left) < xtmax ) return
-  end do
-
-end subroutine interv
+!subroutine bsplvb ( this, jhigh, index, x, left, biatx )
+!  
+!  type(sll_bspline_1d)    :: this
+!  sll_int32,  intent(in)  :: jhigh
+!  sll_int32,  intent(in)  :: index
+!  sll_real64, intent(in)  :: x
+!  sll_int32,  intent(in)  :: left
+!  sll_real64, intent(out) :: biatx(:) ! (jhigh)
+!  
+!  sll_int32               :: i
+!  sll_int32               :: j
+!  sll_real64              :: saved
+!  sll_real64              :: term
+!  
+!  j = this%j
+!  if ( index == 1 ) then
+!    j = 1
+!    biatx(1) = 1.0_f64
+!    if ( jhigh <= j ) return
+!  end if
+!  
+!  SLL_ASSERT ( this%t(left+1) > this%t(left) )
+!  
+!  !if ( this%t(left+1) <= this%t(left) ) then
+!  !  print*,'x=',x
+!  !  write ( *, '(a)' ) ' '
+!  !  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
+!  !  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
+!  !  write ( *, '(a,i8)' ) '  But LEFT = ', left
+!  !  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', this%t(left)
+!  !  write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', this%t(left+1)
+!  !  stop
+!  !end if
+!  
+!  do
+!     
+!    this%deltar(j) = this%t(left+j) - x
+!    this%deltal(j) = x - this%t(left+1-j)
+!    
+!    saved = 0.0_f64
+!    do i = 1, j
+!       term = biatx(i) / ( this%deltar(i) + this%deltal(j+1-i) )
+!       biatx(i) = saved + this%deltar(i) * term
+!       saved = this%deltal(j+1-i) * term
+!    end do
+!  
+!    biatx(j+1) = saved
+!    j = j + 1
+!    
+!    if ( jhigh <= j ) exit
+!  
+!  end do
+!
+!  this%j = j
+!
+!end subroutine bsplvb
+!  
+!!> Brackets a real value in an ascending vector of values.
+!!> @details
+!!!
+!!!  The XT array is a set of increasing values.  The goal of the routine
+!!!  is to determine the largest index I so that XT(I) <= X.
+!!!
+!!!  The routine is designed to be efficient in the common situation
+!!!  that it is called repeatedly, with X taken from an increasing
+!!!  or decreasing sequence.
+!!!
+!!!  This will happen when a piecewise polynomial is to be graphed.
+!!!  The first guess for LEFT is therefore taken to be the value
+!!!  returned at the previous call and stored in the local variable ILO.
+!!!
+!!!  A first check ascertains that ILO < LXT.  This is necessary
+!!!  since the present call may have nothing to do with the previous
+!!!  call.  Then, if
+!!!
+!!!    XT(ILO) <= X < XT(ILO+1),
+!!!
+!!!  we set LEFT = ILO and are done after just three comparisons.
+!!!
+!!!  Otherwise, we repeatedly double the difference ISTEP = IHI - ILO
+!!!  while also moving ILO and IHI in the direction of X, until
+!!!
+!!!    XT(ILO) <= X < XT(IHI)
+!!!
+!!!  after which we use bisection to get, in addition, ILO + 1 = IHI.
+!!!  The value LEFT = ILO is then returned.
+!!!
+!!!  Reference:
+!!!
+!!!    Carl DeBoor,
+!!!    A Practical Guide to Splines,
+!!!    Springer, 2001,
+!!!    ISBN: 0387953663.
+!!!
+!!! @param[in] xt(lxt), a nondecreasing sequence of values.
+!!! @param[in] lxt, the dimension of xt.
+!!! @param[in] x, the point whose location with
+!!!    respect to the sequence XT is to be determined.
+!!! @param[out] left, the index of the bracketing value:
+!!!      1     if             X  <  XT(1)
+!!!      I     if   XT(I)  <= X  < XT(I+1)
+!!!      LXT   if  XT(LXT) <= X
+!!! @param[out] mflag, indicates whether X lies within the
+!!!    range of the data.
+!!!    -1:            X  <  XT(1)
+!!!     0: XT(I)   <= X  < XT(I+1)
+!!!    +1: XT(LXT) <= X
+!!<
+!subroutine interv( xt, lxt, x, left, ilo, mflag )
+! 
+!  sll_real64, intent(in)    :: xt(:)
+!  sll_int32,  intent(in)    :: lxt
+!  sll_real64, intent(in)    :: x
+!  sll_int32,  intent(out)   :: left
+!  sll_int32,  intent(inout) :: ilo
+!  sll_int32,  intent(out)   :: mflag
+!  
+!  sll_int32                 :: ihi
+!  sll_int32                 :: istep
+!  sll_int32                 :: middle
+!  sll_real64                :: xtmax
+!
+!  xtmax = xt(lxt)
+!  
+!  ihi = ilo + 1
+!  if ( ihi >= lxt ) then
+!    if ( x >= xtmax ) goto 110
+!    ilo = lxt - 1
+!    ihi = lxt
+!  end if
+!  if ( xt(ihi) <= x ) goto 20
+!  if ( xt(ilo) <= x ) then
+!    mflag = 0
+!    left = ilo
+!    return
+!  end if
+!  !
+!  !  Now X < XT(ILO).  Decrease ILO to capture X.
+!  !
+!  istep = 1
+!  10  continue
+!  ihi = ilo
+!  ilo = ihi - istep
+!  if ( 1 < ilo ) then
+!    if ( xt(ilo) <= x ) goto 50
+!    istep = istep * 2
+!    goto 10
+!  end if
+!  ilo = 1
+!  if ( x < xt(1) ) then
+!    mflag = -1
+!    left = 1
+!    return
+!  end if
+!  goto 50
+!  !
+!  !  Now XT(IHI) <= X.  Increase IHI to capture X.
+!  !
+!  20 continue
+!  istep = 1
+!  30 continue
+!  ilo = ihi
+!  ihi = ilo + istep
+!  if ( ihi < lxt ) then
+!    if ( x < xt(ihi) ) goto 50
+!    istep = istep * 2
+!    goto 30
+!  end if
+!  if ( xtmax <= x ) goto 110
+!  !
+!  !  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
+!  !
+!  ihi = lxt
+!  50  continue
+!  do
+!    middle = (ilo+ihi)/2
+!    if ( middle == ilo ) then
+!      mflag = 0
+!      left = ilo
+!      return
+!    end if
+!    !
+!    !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
+!    !
+!    if ( xt(middle) <= x ) then
+!      ilo = middle
+!    else
+!      ihi = middle
+!    end if
+!     
+!  end do
+!  !
+!  !  Set output and return.
+!  !
+!  110 continue
+!  mflag = 1
+!  if ( x == xtmax ) mflag = 0
+!
+!  do left = lxt, 1, -1
+!    if ( xt(left) < xtmax ) return
+!  end do
+!
+!end subroutine interv
 
 !!> @brief Returns the interpolated value of the derivative in the x1 
 !!> direction at the point
@@ -1611,6 +1612,7 @@ sll_real64              :: xi
 sll_real64              :: xj
 sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
+type(deboor_type)       :: db
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
@@ -1647,10 +1649,10 @@ do j=1,n2
   ilo = kx
   klo = jlo
   xj  = this%bs2%tau(j)
-  call interv(ty,nmky,xj,lefty,jlo,mflag)
+  call interv(db,ty,nmky,xj,lefty,mflag)
   do i=1,nx
     xi = this%bs1%tau(i)
-    call interv(tx,nmkx,xi,leftx,ilo,mflag)
+    call interv(db,tx,nmkx,xi,leftx,mflag)
     do jj=1,ky
       jcmin = 1
       if ( kx <= leftx ) then
@@ -1701,7 +1703,7 @@ do j=1,n2
       end do
       wrk(jj) = ajx(1)
     end do
-    call interv(ty(lefty-ky+1:nmky),ky+ky,xj,left,klo,mflag)
+    call interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
     jcmin = 1
     if ( ky <= left ) then
       do jjj = 1, ky-1
@@ -1776,7 +1778,6 @@ sll_int32               :: jj
 sll_int32               :: jc, jcmin, jcmax
 sll_int32               :: nx, kx, ny, ky
 sll_int32               :: left, leftx, lefty
-sll_int32               :: klo
 sll_int32               :: llo
 sll_int32               :: mflag
 sll_int32               :: jjj
@@ -1788,6 +1789,7 @@ sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
 
 sll_real64, allocatable :: work(:)
+type(deboor_type)       :: db
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
@@ -1810,8 +1812,8 @@ else
   nmky = ny+ky+2
 end if
 
-call interv(tx,nmkx,xi,leftx,this%bs1%ilo,mflag)
-call interv(ty,nmky,xj,lefty,this%bs2%ilo,mflag)
+call interv(db,tx,nmkx,xi,leftx,mflag)
+call interv(db,ty,nmky,xj,lefty,mflag)
 
 do jj=1,ky
   jcmin = 1
@@ -1850,7 +1852,8 @@ do jj=1,ky
   do jjj = 1, ideriv
     llo = kx - jjj
     do kkk = 1, kx - jjj
-      this%bs1%aj(kkk) = ((this%bs1%aj(kkk+1)-this%bs1%aj(kkk))/(this%bs1%dl(llo)+this%bs1%dr(kkk)))*(kx-jjj)
+      this%bs1%aj(kkk) = ((this%bs1%aj(kkk+1)-this%bs1%aj(kkk)) &
+        /(this%bs1%dl(llo)+this%bs1%dr(kkk)))*(kx-jjj)
       llo = llo-1
     end do
   end do
@@ -1866,8 +1869,8 @@ do jj=1,ky
   work(jj) = this%bs1%aj(1)
 end do
 
-klo = this%bs2%ilo
-call interv(ty(lefty-ky+1:nmky),ky+ky,xj,left,klo,mflag)
+!klo = this%bs2%ilo
+call interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
 
 jcmin = 1
 if ( ky <= left ) then

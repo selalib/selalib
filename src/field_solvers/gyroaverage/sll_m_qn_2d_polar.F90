@@ -547,7 +547,7 @@ contains
           quasineutral%mat_qn_inverse(m,i,:) = &
           quasineutral%mat_qn_inverse(m,i,:)   &
           - mu_weights(p)*mat_stock2(i,:)*  &
-          cmplx(dexp(-mu_points(p)/quasineutral%T_i(i+1)),0d0,f64)
+          cmplx(dexp(-mu_points(p)/quasineutral%T_i(i+1)),0._f64,f64)
         enddo
       enddo 
     enddo     
@@ -817,7 +817,7 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     call zfftb(Ntheta,sol_comp(i,:),buf_fft)
   enddo
   
-  sol=real(sol_comp/cmplx(Ntheta,0d0,f64),f64)
+  sol=real(sol_comp/cmplx(Ntheta,0._f64,f64),f64)
 
 end subroutine solve_circulant_system
 
@@ -1128,7 +1128,7 @@ subroutine compute_w_hermite(w,r,s)
     
     eta(1)=sqrt(x(1)**2+x(2)**2)
     call localize_nat(ii(1),eta(1),eta_min(1),eta_max(1),N(1))
-    eta(2)=datan2(x(2),x(1))
+    eta(2)=atan2(x(2),x(1))
     call localize_per(ii(2),eta(2),eta_min(2),eta_max(2),N(2))
   end subroutine localize_polar
 
@@ -1938,7 +1938,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         do i=1,N_mu_for_phi
           quasineutral%mu_points_for_phi(i) = mu_max_for_phi*real(i-1,f64)/real(N_mu_for_phi-1,f64)
         enddo     
-        h = mu_max_for_phi/(3d0*real(N_mu_for_phi,f64))
+        h = mu_max_for_phi/(3._f64*real(N_mu_for_phi,f64))
         quasineutral%mu_weights_for_phi(1) = h
         do i=1,(N_mu_for_phi-1)/2-1
           quasineutral%mu_weights_for_phi(2*i) = 4._f64*h

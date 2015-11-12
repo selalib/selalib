@@ -38,7 +38,7 @@ program collective_test
                                       1    , MPI_SUM,0,recvbuf_real)
 
   if( rank == 0 ) then
-   if( recvbuf_real(1) .eq. (size-1)*size/2.0 ) then
+   if( recvbuf_real(1) .eq. (size-1)*size/2.0_f64 ) then
     print *,'(REDUCE REAL) PASS'
    else
     stop '(REDUCE REAL) NOT PASS'
@@ -60,7 +60,7 @@ program collective_test
                                       1    , MPI_SUM,0,recvbuf_int)
 
   if( rank == 0 ) then
-   if( recvbuf_int(1) .eq. (1 + size)*size/2 ) then
+   if( recvbuf_int(1) .eq. (1 + size)*size/2.0_f64 ) then
     print *,'(REDUCE INT) PASS'
    else
     stop '(REDUCE INT) NOT PASS'
@@ -138,7 +138,7 @@ program collective_test
                                       1    , MPI_SUM,0,sendbuf_real)
 
   if( rank == 0 ) then
-   if( sendbuf_real(1) .eq. size*(size-1)*size/2.0 ) then
+   if( sendbuf_real(1) .eq. size*(size-1)*size/2.0_f64 ) then
     print *,'(ALLREDUCE REAL) PASS'
    else
     stop '(ALLREDUCE REAL) NOT PASS'
@@ -200,7 +200,7 @@ program collective_test
                                   MPI_SUM,0,somme)
 
   if( rank .eq. 0 ) then
-   if( somme(1) .eq. size*(size-1)/2.0) then
+   if( somme(1) .eq. size*(size-1)/2.0_f64) then
     print *,'(SCATTER REAL) PASS'
    else
     stop '(SCATTER REAL) NOT PASS'
@@ -218,7 +218,7 @@ program collective_test
 
   if( rank .eq. 0 ) then
     SLL_ALLOCATE(sendbuf_real(size+1),ierr)
-    sendbuf_real(:)=1.D0
+    sendbuf_real(:)=1.0_f64
   endif
 
   SLL_ALLOCATE(sendcounts(size),ierr)

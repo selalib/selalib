@@ -1009,7 +1009,8 @@ contains
                                        twiddle_index, sign )
     intrinsic ishft, conjg
     integer, intent(in)                             :: size
-    sll_comp64, dimension(0:size-1), intent(inout)  :: dat
+    !sll_comp64, dimension(0:size-1), intent(inout)  :: dat
+    sll_comp64, dimension(0:),       intent(inout)  :: dat
     ! It is more convenient when the twiddles are 0-indexed
     sll_comp64, dimension(0:), intent(in)           :: twiddles
     integer, intent(in)                             :: twiddle_index

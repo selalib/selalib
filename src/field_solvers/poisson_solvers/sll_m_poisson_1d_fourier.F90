@@ -173,7 +173,7 @@ contains
         call  solve_poisson_1d_fourier_rhs(this, rhs)
 
         field=-this%fourier_fmode/coeff/ &
-               cmplx(solve_poisson_1d_fourier_get_modes(this),0d0,8) &
+               cmplx(solve_poisson_1d_fourier_get_modes(this),0.0_f64,kind=f64) &
                /sll_i1
 
     end subroutine
@@ -333,7 +333,7 @@ contains
             !rhs(fmode)=dot_product(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength), pweight )
             rhs(fmode)= &
           sum(exp(-fmode*sll_i1*ppos*sll_kx/this%Ilength)&
-             * cmplx(pweight,0d0,8))
+             * cmplx(pweight,0.0_f64,kind=f64))
 
         enddo
     endfunction

@@ -349,7 +349,7 @@ program contrib_rho_tester
            tmp  = (mu/sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-eta_1)-f_val
            tmp2 = (mu/sqrt(2._f64*sll_pi))*2._f64* (eta_1-xi )*exp(-eta_1)/(-3._f64 + 2._f64* xi)
            !print*,c,f,fp, En(i) 
-           !alpha=1.d0/(1.d0-fp)
+           !alpha=1._f64/(1._f64-fp)
            eta_1=eta_1-tmp/tmp2
          else         
            !eta_1=0
@@ -380,7 +380,7 @@ program contrib_rho_tester
            tmp  = (mu/sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-eta_1)-f_val
            tmp2 = (mu/sqrt(2._f64*sll_pi))*2._f64* (eta_1-xi )*exp(-eta_1)/(-3._f64 + 2._f64* xi)
            !print*,c,f,fp, En(i) 
-           !alpha=1.d0/(1.d0-fp)
+           !alpha=1._f64/(1._f64-fp)
            eta_1=eta_1-tmp/tmp2
          else
            !eta_1=0
