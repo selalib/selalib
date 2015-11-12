@@ -493,19 +493,25 @@ class FortranModule( object ):
                                                  'items' :item.items }
 
     #--------------------------------------------------------------------------
-    def link_used_modules( self, *modules ):
+    def link_used_modules( self, modules, externals={} ):
         """ Given a list of library modules, link against the used ones.
         """
         for name,data in self._used_modules.items():
-            objects = []
-            for m in modules:
-                if m.name == name:
-                    objects.append( m )
+
+            if name in externals:
+                print( "WARNING: skipping external module %s" % name )
+                data['object']   = None
+                data['external'] = True
+                continue
+
+            objects = [m for m in modules if m.name == name]
+
             if len( objects ) == 0:
-                print( "WARNING: missing link for module %s" % name )
-                data['object'] = None
+                print( "ERROR: missing link for module %s" % name )
+                raise SystemExit()
             elif len( objects ) == 1:
                 data['object']   = objects[0]
+                data['external'] = False
             else:
                 print( "ERROR: multiple modules with name %s" % name )
                 raise SystemExit()
@@ -554,16 +560,32 @@ class FortranModule( object ):
         return None
 
     #--------------------------------------------------------------------------
-    def update_use_statements( self ):
-        """ Update all use statements.
+    def update_use_statements( self,
+            find_external_library = None,
+            ignored_symbols       = [] ):
+        """
+        Update all use statements.
+
         """
         unlocated_symbols = list( self._imported_symbols )
 
         for s in self._imported_symbols:
             mod_name = self.find_symbol_def( s )
             if mod_name is None:
-                print( "ERROR: cannot locate symbol %s" % s )
-                raise SystemExit()
+                if find_external_library is not None:
+
+                    # Search in external libraries
+                    external_match = find_external_library( s )
+                    if external_match:
+                        lib_name, mod_name = external_match
+                        if mod_name == '':
+                            mod_name = 'F77_' + lib_name
+                            # TODO: properly handle fftpack
+                    else:
+                        if s not in ignored_symbols:
+                            print( "ERROR processing file %s:" % self.filepath )
+                            print( "  cannot locate symbol %s" % s )
+                            raise SystemExit()
 
             if mod_name in self._used_modules.keys():
                 self._used_modules[mod_name]['items'].append( s )
