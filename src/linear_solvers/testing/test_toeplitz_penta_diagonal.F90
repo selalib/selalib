@@ -70,8 +70,8 @@ use sll_m_penta_diagonal
       call  sll_solve(a, b, c, f, plan)
       x = plan%solution
 
-      error = 0.d0
-      norm = 0.d0
+      error = 0.0_f64
+      norm  = 0.0_f64
       do i=1,n
         error = error + (x_exact(i)-x(i)) **2
         norm = norm + (x_exact(i)) **2
@@ -80,7 +80,7 @@ use sll_m_penta_diagonal
       error = error/norm;
       print*, 'Test', i_test, ', nb_points =', n, ', error = ', error
 
-      if (error > 1.e-15) then 
+      if (error > 1.0e-15_f64) then
         print*, 'Toeplitz penta-diagonal solver: FAILED'
         stop
       endif

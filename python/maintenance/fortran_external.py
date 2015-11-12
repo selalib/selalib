@@ -14,6 +14,7 @@ iso_c_binding = {}
 iso_c_binding['lib_name'] = 'iso_c_binding'
 iso_c_binding['mod_name'] = 'iso_c_binding' 
 iso_c_binding['all_syms'] = set.union( \
+        fortran_iso_c_binding.derived_types,
         fortran_iso_c_binding.intrinsic_procedures,
         fortran_iso_c_binding.named_constants,
         fortran_iso_c_binding.parameters,
