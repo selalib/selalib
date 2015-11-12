@@ -32,6 +32,9 @@ module sll_m_kernel_smoother_spline_2d
      sll_int32 :: n_span !< Number of intervals where spline non zero (spline_degree + 1)
 !     sll_int32 :: smoothing_type !< Defines whether we use Galerkin or collocation in order to decide on scaling when accumulating
      sll_real64 :: scaling
+
+     ! Internal work space
+     sll_real64, allocatable :: spline_val(:,:)
      
    contains
      procedure :: compute_shape_factor_spline_2d !> Compute the shape factor
@@ -46,11 +49,10 @@ module sll_m_kernel_smoother_spline_2d
   
 contains
   !---------------------------------------------------------------------------!
-  subroutine compute_shape_factor_spline_2d(this, position, indices, spline_val)
-    class( sll_t_kernel_smoother_spline_2d), intent(in) :: this !< kernel smoother object
+  subroutine compute_shape_factor_spline_2d(this, position, indices)
+    class( sll_t_kernel_smoother_spline_2d), intent(inout) :: this !< kernel smoother object
     sll_real64, intent( in ) :: position(2)
     sll_int32, intent( out ) :: indices(2)
-    sll_real64, intent( out ) :: spline_val(20,2)!(this%n_span,2)
 
     ! local variables
     sll_real64 :: xi(2)
@@ -61,15 +63,15 @@ contains
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - this%spline_degree
-    spline_val(1:this%n_span,1) = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
-    spline_val(1:this%n_span,2) = uniform_b_splines_at_x(this%spline_degree, xi(2))
+    this%spline_val(1:this%n_span,1) = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
+    this%spline_val(1:this%n_span,2) = uniform_b_splines_at_x(this%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
 
   !---------------------------------------------------------------------------!
 
   subroutine add_charge_single_spline_2d(this, position, weight, rho_dofs)
-    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
+    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object
     sll_real64, intent( in ) :: position(this%dim)
     sll_real64, intent( in ) :: weight
     sll_real64, intent(inout)                       :: rho_dofs(this%n_dofs ) !< spline coefficient of accumulated density
@@ -78,10 +80,9 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_int32  :: indices(2)
-    sll_real64 :: spline_val(20,2)!(this%n_span,2)
     
 
-    call compute_shape_factor_spline_2d(this, position, indices, spline_val)
+    call compute_shape_factor_spline_2d(this, position, indices)
     do i1 = 1, this%n_span
        index1d(1) = indices(1)+i1-2
        do i2 = 1, this%n_span
@@ -89,7 +90,7 @@ contains
           index2d = index_1dto2d_column_major(this,index1d)
           rho_dofs(index2d) = rho_dofs(index2d) +&
                ( weight* this%scaling * &
-               spline_val(i1,1) * spline_val(i2,2))
+               this%spline_val(i1,1) * this%spline_val(i2,2))
        end do
     end do
 
@@ -98,7 +99,7 @@ contains
 
 
   subroutine add_current_update_v_spline_2d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
-    class(sll_t_kernel_smoother_spline_2d), intent(in) :: this !< kernel smoother object
+    class(sll_t_kernel_smoother_spline_2d), intent(inout) :: this !< kernel smoother object
     sll_real64, intent(in) :: position_old(this%dim)
     sll_real64, intent(in) :: position_new(this%dim)
     sll_real64, intent(in) :: weight
@@ -156,7 +157,7 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine evaluate_field_single_spline_2d(this, position, field_dofs, field_value)
-    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object    
+    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object    
     sll_real64, intent( in ) :: position(this%dim)
     sll_real64, intent(in)                               :: field_dofs(this%n_dofs) !< Degrees of freedom in kernel representation.
     sll_real64, intent(out) :: field_value
@@ -165,10 +166,9 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_int32  :: indices(2)
-    sll_real64 :: spline_val(20,2)!(this%n_span,2)
     
 
-    call compute_shape_factor_spline_2d(this, position, indices, spline_val)
+    call compute_shape_factor_spline_2d(this, position, indices)
 
 
     field_value = 0.0_f64
@@ -179,8 +179,8 @@ contains
           index2d = index_1dto2d_column_major(this,index1d)
           field_value = field_value + &
                field_dofs(index2d) *  &
-               spline_val(i1,1) *&
-               spline_val(i2,2)
+               this%spline_val(i1,1) *&
+               this%spline_val(i2,2)
        end do
     end do
 
@@ -188,7 +188,7 @@ contains
 
   !---------------------------------------------------------------------------!
   subroutine evaluate_multiple_spline_2d(this, position, components, field_dofs, field_value)
-    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object    
+    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object    
     sll_real64, intent( in ) :: position(this%dim)
     sll_int32, intent(in) :: components(:)
     sll_real64, intent(in)                               :: field_dofs(:,:) !< Degrees of freedom in kernel representation.
@@ -198,10 +198,9 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
     sll_int32  :: indices(2)
-    sll_real64 :: spline_val(20,2)!(this%n_span,2)
     
 
-    call compute_shape_factor_spline_2d(this, position, indices, spline_val)
+    call compute_shape_factor_spline_2d(this, position, indices)
 
 
     field_value = 0.0_f64
@@ -212,8 +211,8 @@ contains
           index2d = index_1dto2d_column_major(this,index1d)
           field_value = field_value + &
                field_dofs(index2d,components) *  &
-               spline_val(i1,1) *&
-               spline_val(i2,2)
+               this%spline_val(i1,1) *&
+               this%spline_val(i2,2)
        end do
     end do
 
@@ -231,11 +230,6 @@ contains
 
     !local variables
     sll_int32 :: ierr
-
-    ! In order to avoid dynamic memory allocation, we do not allow for spline degree > 19.
-    if (spline_degree > 20) then
-       print*, 'sll_m_kernel_smoother_spline_2d: degree > 19 not implemented.'
-    end if
 
     SLL_ALLOCATE( this, ierr)
 
@@ -265,6 +259,8 @@ contains
        print*, 'Smoothing Type ', smoothing_type, ' not implemented for kernel_smoother_spline_2d.'
     end if
 
+    allocate( this%spline_val(this%n_span, 2))
+
   end function sll_new_smoother_spline_2d
 
   
@@ -279,6 +275,5 @@ contains
     index2d = index1d(1) + index1d(2)*this%n_grid(1) + 1
 
   end function index_1dto2d_column_major
-  
 
 end module sll_m_kernel_smoother_spline_2d
