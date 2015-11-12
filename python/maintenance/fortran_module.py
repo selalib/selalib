@@ -13,13 +13,14 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 09 Nov 2015
+# Last revision: 10 Nov 2015
 #
 from __future__ import print_function
 import re
 from fparser    import statements, typedecl_statements, block_statements
 from fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
-                                logical_operators, logical_constants)
+                                logical_operators, logical_constants, \
+                                relational_operators)
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -79,6 +80,7 @@ def remove_fortran_strings( text ):
 def remove_fortran_logicals( text ):
     """
     Remove any fortran logical operator or constant from the given text.
+    Also remove fortran relational operators.
 
     NOTE
     ----
@@ -86,8 +88,9 @@ def remove_fortran_logicals( text ):
 
     """
     text = text.lower()
-    for s in logical_operators:  text = text.replace( s, '' )
-    for s in logical_constants:  text = text.replace( s, '' )
+    for s in    logical_operators:  text = text.replace( s, '' )
+    for s in    logical_constants:  text = text.replace( s, '' )
+    for s in relational_operators:  text = text.replace( s, '' )
     return text
 
 #------------------------------------------------------------------------------

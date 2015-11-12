@@ -8,6 +8,7 @@ intrinsic_types = { \
 }
 
 intrinsic_procedures = { \
+'abort', # Terminates program and produces core dump (GNU)
 'abs', # Absolute value
 'achar', # Character in ASCII collating sequence
 'acos', # Arccosine function
@@ -68,6 +69,7 @@ intrinsic_procedures = { \
 'erfc', # Complementary error function
 'erfc_scaled', # Error function
 'execute_command_line', # Execute a shell command
+'exit', # Terminates program with given status (GNU)
 'exp', # Exponential function
 'exponent', # Exponent function
 'extends_type_of', # Type extension inquiry
@@ -190,4 +192,13 @@ logical_operators = { \
 logical_constants = { \
 '.true.',
 '.false.',
+}
+
+relational_operators = { \
+'.lt.',
+'.le.',
+'.eq.',
+'.ne.',
+'.gt.',
+'.ge.',
 }
