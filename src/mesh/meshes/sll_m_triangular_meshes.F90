@@ -1004,9 +1004,9 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 write(6,*)"*** Calcul des aires des triangles ***"
 #endif /* DEBUG */
 
-allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0d0
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0_f64
 
-airtot = 0.d0
+airtot = 0._f64
 
 do it = 1, mesh%num_triangles
 
@@ -1596,7 +1596,7 @@ end do
 !end if
 
 allocate(mesh%vtaux(mesh%nbtcot),mesh%vtauy(mesh%nbtcot))
-mesh%vtaux = 0.d0; mesh%vtauy = 0.d0
+mesh%vtaux = 0._f64; mesh%vtauy = 0._f64
 
 !==============================================================!
 !--- Calcul complementaires relatifs au lissage des champs ----!
@@ -1607,12 +1607,12 @@ mesh%vtaux = 0.d0; mesh%vtauy = 0.d0
 allocate(mesh%nuvac(2,mesh%nbtcot)); mesh%nuvac = 0
 
 !tableau des longueurs des cotes 
-allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0d0
+allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0_f64
 
 !tableaux de lissage et des cotes tangeants 
-allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0.d0
-allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0.d0
-allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0.d0
+allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0._f64
+allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0._f64
+allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0._f64
 
 allocate(mesh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
 allocate(mesh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes

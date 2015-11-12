@@ -27,16 +27,24 @@
 !> In future developement we consider to put here some ISO_C bindings
 !> to call selalib from python.
 module sll_m_working_precision
+
   implicit none
-  intrinsic :: kind, selected_real_kind
+!  intrinsic :: kind, selected_real_kind
+  intrinsic :: selected_int_kind, selected_real_kind
+
+  public :: i32, i64, f32, f64
+  private
 
   ! The intent is that i32 will hold values up to 2**32-1
   !> i32 is the kind type for 32-bit integers
-  integer, parameter :: i32 = kind(0)
+!  integer, parameter :: i32 = kind(0)
+  integer, parameter :: i32 = selected_int_kind(9)
   !> i64 is the kind type for 64-bit integers
-  integer, parameter :: i64 = kind(2_8**32) !i64=kind(1.0d0) should be specific enough
+!  integer, parameter :: i64 = kind(2_8**32) !i64=kind(1.0d0) should be specific enough
+  integer, parameter :: i64 = selected_int_kind(18)
   !> f32 is the kind type for 32-bit reals (simple precision)
   integer, parameter :: f32 = selected_real_kind(1,37)
   !> f64 is the kind type for 64-bit reals (double precision)
   integer, parameter :: f64 = selected_real_kind(1,99)
+
 end module sll_m_working_precision

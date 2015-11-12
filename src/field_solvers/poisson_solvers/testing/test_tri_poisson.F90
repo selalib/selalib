@@ -12,15 +12,15 @@ use sll_m_timer
 
 implicit none
 
-type(sll_time_mark)  :: t0 
-type(sll_time_mark)  :: t1 
-real(8), dimension(:), pointer           :: x1
-real(8), dimension(:), pointer           :: x2
-real(8), dimension(:), allocatable       :: rho
-real(8), dimension(:), allocatable       :: phi
-real(8), dimension(:), allocatable       :: sol
-real(8), dimension(:), allocatable       :: e_x
-real(8), dimension(:), allocatable       :: e_y
+type(sll_time_mark)     ::  t0
+type(sll_time_mark)     ::  t1
+sll_real64, pointer     ::  x1(:)
+sll_real64, pointer     ::  x2(:)
+sll_real64, allocatable :: rho(:)
+sll_real64, allocatable :: phi(:)
+sll_real64, allocatable :: sol(:)
+sll_real64, allocatable :: e_x(:)
+sll_real64, allocatable :: e_y(:)
 type(sll_triangular_poisson_2d), pointer :: solver
 type(sll_triangular_poisson_2d), pointer :: poisson
 type(sll_triangular_mesh_2d), pointer    :: square
@@ -110,7 +110,7 @@ x1 => t_mesh%coord(1,:)
 x2 => t_mesh%coord(2,:)
 do i = 1, t_mesh%num_nodes
   r = sqrt(x1(i)*x1(i)+x2(i)*x2(i))
-  rho(i) = 4 * sll_pi * f(r)
+  rho(i) = 4._f64 * sll_pi * f(r)
   sol(i) = u(r)
 end do
 
@@ -146,36 +146,36 @@ contains
 
 function u(r)
 
-  real(8) :: u
-  real(8) :: r
-  real(8) :: pi 
-  real(8), parameter :: one = 1d0 
-  real(8) :: a_1, a_2
+  sll_real64 :: u
+  sll_real64 :: r
+  sll_real64 :: pi
+  sll_real64, parameter :: one = 1._f64
+  sll_real64 :: a_1, a_2
 
-  pi  =  4d0 * atan(1d0)
-  a_1 =  0.04 * pi * one * (-2*log(0.2d0)+1)
-  a_2 = -0.08 * pi * one
+  pi  =  4.0_f64 * atan(1._f64)
+  a_1 =  0.04_f64 * pi * one * (-2._f64*log(0.2_f64)+1._f64)
+  a_2 = -0.08_f64 * pi * one
 
-  if (0d0 <= r .and. r <= 0.2d0) then
+  if (0._f64 <= r .and. r <= 0.2_f64) then
     u = -pi * r*r + a_1 
-  else if ( 0.2d0 < r .and. r <= 1d0) then
+  else if ( 0.2_f64 < r .and. r <= 1._f64) then
     u = a_2 * log(r) 
   else 
-    u = 0.0d0
+    u = 0._f64
   end if
 
 end function u
 
 function f(r)
 
-  real(8) :: f
-  real(8) :: r
-  real(8), parameter :: one = 1d0 
+  sll_real64 :: f
+  sll_real64 :: r
+  sll_real64, parameter :: one = 1._f64
 
-  if ( 0d0 <= r .and. r <= 0.2d0 ) then
+  if ( 0._f64 <= r .and. r <= 0.2_f64 ) then
     f = one
   else 
-    f = 0.0d0
+    f = 0._f64
   end if
 
 end function f

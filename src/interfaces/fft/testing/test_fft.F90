@@ -468,13 +468,13 @@ contains
   END SUBROUTINE
 
   SUBROUTINE RANDOM_COMPLEX(c)
-    COMPLEX(KIND=KIND(1.D0)) :: c
-    REAL(KIND=KIND(1.D0))    :: realpart,imagpart
+    sll_comp64, intent(out) :: c
+    sll_real64 :: realpart, imagpart
    
     CALL init_random_seed() 
     CALL RANDOM_NUMBER(realpart)
     CALL RANDOM_NUMBER(imagpart)
-    c = CMPLX(realpart,imagpart,KIND=KIND(1.D0))
+    c = CMPLX(realpart,imagpart,kind=f64)
   END SUBROUTINE
 
 end program unit_test

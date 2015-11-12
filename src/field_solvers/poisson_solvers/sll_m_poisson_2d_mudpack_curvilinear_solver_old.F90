@@ -831,7 +831,7 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0d0
+   alfa = -1._f64
    gbdy = px + alfa*pe
    return
 end if
@@ -839,7 +839,7 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0d0
+   alfa = 1._f64
    gbdy = py + alfa*pe
    return
 end if

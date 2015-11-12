@@ -126,7 +126,7 @@ real(8) function lap_f_cos( r, theta )
    lap_f_cos = -(r-R_MAX)*(r-R_MIN)*N*N*cos(N*theta)/r &
            + ((r-R_MAX)*(r-R_MIN)*cos(N*theta)  &
            + (r-R_MAX)*r*cos(N*theta) + (r-R_MIN)*r*cos(N*theta) &
-           + 2d0*((r-R_MAX)*cos(N*theta) + (r-R_MIN)*cos(N*theta) &
+           + 2.0_8*((r-R_MAX)*cos(N*theta) + (r-R_MIN)*cos(N*theta) &
            + r*cos(N*theta))*r)/r
 
 
@@ -145,7 +145,7 @@ real(8) function lap_f_sin( r, theta)
    lap_f_sin = -(r-R_MAX)*(r-R_MIN)*N*N*sin(N*theta)/r &
          + ((r-R_MAX)*(r-R_MIN)*sin(N*theta) &
          + (r-R_MAX)*r*sin(N*theta) + (r-R_MIN)*r*sin(N*theta) &
-         + 2d0*((r-R_MAX)*sin(N*theta) + (r-R_MIN)*sin(N*theta)  &
+         + 2.0_8*((r-R_MAX)*sin(N*theta) + (r-R_MIN)*sin(N*theta)  &
          + r*sin(N*theta))*r)/r
 
 end function lap_f_sin
