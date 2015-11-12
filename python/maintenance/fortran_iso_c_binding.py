@@ -1,3 +1,8 @@
+derived_types = { \
+'C_PTR',    # Pointer to variable
+'C_FUNPTR', # Pointer to function
+}
+
 intrinsic_procedures = { \
 'C_ASSOCIATED', 
 'C_F_POINTER',
