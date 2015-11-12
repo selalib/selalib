@@ -88,9 +88,9 @@ def remove_fortran_logicals( text ):
 
     """
     text = text.lower()
-    for s in    logical_operators:  text = text.replace( s, '' )
-    for s in    logical_constants:  text = text.replace( s, '' )
-    for s in relational_operators:  text = text.replace( s, '' )
+    for s in    logical_operators:  text = text.replace( s, ' ' )
+    for s in    logical_constants:  text = text.replace( s, ' ' )
+    for s in relational_operators:  text = text.replace( s, ' ' )
     return text
 
 #------------------------------------------------------------------------------
@@ -258,29 +258,38 @@ def extract_expr_symbols( expr, strip=False ):
     from fparser.splitline import string_replace_map
     from fparser.utils     import specs_split_comma
 
+    # If expression is not in lower case, convert it
+    if not expr.islower():
+        expr = expr.lower()
+
+    # If required, remove Fortran strings, logicals and relationals
     if strip:
         expr = remove_fortran_strings ( expr )
         expr = remove_fortran_logicals( expr )
 
+    # Substitute argument lists with 'F2PY_EXPR_TUPLE' strings, and store map
     string, string_map = string_replace_map( expr )
 
+    # Extract all symbols at this level
     calls     = re_engines['call'    ].findall( string )
     variables = re_engines['variable'].findall( string )
     variables = [v for v in variables if not v.startswith('F2PY_EXPR_TUPLE')]
-    symbols   = calls + variables
 
+    # Search for symbols in each of the 'mapped' strings
     for text in string_map.values():
+        # Split argument lists
         for expr in specs_split_comma( text ):
             # Ignore keywords in function calls
             if '=' in expr:
                 string, string_map = string_replace_map( expr )
                 expr = string_map( string.rpartition('=')[2].lstrip() )
-            # Recursion: extract symbols from new expression
+            # Recursion: extract symbols from new expression and update lists
             if expr:
                 new_calls, new_variables = extract_expr_symbols( expr )
                 calls    .extend( new_calls     )
                 variables.extend( new_variables )
 
+    # Return symbol lists
     return calls, variables
 
 #------------------------------------------------------------------------------
@@ -496,7 +505,7 @@ class FortranModule( object ):
                 print( "WARNING: missing link for module %s" % name )
                 data['object'] = None
             elif len( objects ) == 1:
-                data['object'] = m
+                data['object']   = objects[0]
             else:
                 print( "ERROR: multiple modules with name %s" % name )
                 raise SystemExit()
@@ -535,7 +544,7 @@ class FortranModule( object ):
             if data['object'] is None:
                 print( "WARNING: missing link for module %s" % name )
                 continue
-            # Recursively call same function
+            # Recursively call same function in "use all" modules
             mod_name = data['object'].find_symbol_def( symbol )
             if mod_name is not None:
                 # Symbol is found in some other module in the use hierarchy
@@ -560,8 +569,8 @@ class FortranModule( object ):
                 self._used_modules[mod_name]['items'].append( s )
                 unlocated_symbols.remove( s )
             else:
-                new_mod = { 'isonly': True, 'items': [s] }
-                self._used_module['mod_name'] = new_mod
+                new_mod = { 'isonly': True, 'items': [s], 'object': None }
+                self._used_modules[mod_name] = new_mod
                 unlocated_symbols.remove( s )
 
         assert( unlocated_symbols == [] )
