@@ -490,7 +490,7 @@ class FortranModule( object ):
         for item in module.content:
             if type( item ) == statements.Use:
                 self._used_modules[item.name] = {'isonly':item.isonly, \
-                                                 'items' :item.items }
+                        'items':item.items, 'object':None }
 
     #--------------------------------------------------------------------------
     def link_used_modules( self, modules, externals={} ):
@@ -540,21 +540,20 @@ class FortranModule( object ):
             # Symbol is found in module
             return self.name
 
-        # Search in all used modules
+        # Search in used modules
         for name,data in self._used_modules.items():
+            # Search in "use only" symbol list
             if data['isonly']:
                 if symbol in data['items']:
                     # Symbol is found in "use [], only:" list
                     return name
                 continue
-            if data['object'] is None:
-                print( "WARNING: missing link for module %s" % name )
-                continue
-            # Recursively call same function in "use all" modules
-            mod_name = data['object'].find_symbol_def( symbol )
-            if mod_name is not None:
-                # Symbol is found in some other module in the use hierarchy
-                return mod_name
+            # Recursively call same function in "use all" modules (if linked!)
+            if data['object']:
+                mod_name = data['object'].find_symbol_def( symbol )
+                if mod_name:
+                    # Symbol is found in some other module in the use hierarchy
+                    return mod_name
 
         # Nothing was found
         return None
