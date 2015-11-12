@@ -65,7 +65,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    spline_val(1:this%n_span) = uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2,this%n_grid(1))+1
@@ -149,7 +149,7 @@ contains
    sll_real64, intent(inout) :: j_dofs(this%n_dofs)
 
    !Local variables
-   sll_real64 :: fy(this%spline_degree+1)
+   sll_real64 :: fy(20)!(this%spline_degree+1)
    sll_int32  :: ind, i_grid, i_mod, n_cells, j
    sll_real64 :: quad_xw(2,20)!(2, this%n_quad_points)
 
@@ -158,11 +158,11 @@ contains
 
    quad_xw(:,1:this%n_quad_points) = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
 
-   fy = quad_xw(2,1) * uniform_b_splines_at_x(this%spline_degree, quad_xw(1,1))
+   fy(1:this%n_span) = quad_xw(2,1) * uniform_b_splines_at_x(this%spline_degree, quad_xw(1,1))
    do j=2,this%n_quad_points
-      fy = fy + quad_xw(2,j) *  uniform_b_splines_at_x(this%spline_degree, quad_xw(1,j))
+      fy(1:this%n_span) = fy(1:this%n_span) + quad_xw(2,j) *  uniform_b_splines_at_x(this%spline_degree, quad_xw(1,j))
    end do
-   fy = fy * sign*this%delta_x(1)
+   fy(1:this%n_span) = fy(1:this%n_span) * sign*this%delta_x(1)
 
    ind = 1
    do i_grid = index - this%spline_degree , index
@@ -216,7 +216,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    spline_val(1:this%n_span) = uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
@@ -250,7 +250,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    spline_val(1:this%n_span) = uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span

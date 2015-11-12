@@ -61,8 +61,8 @@ contains
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - this%spline_degree
-    spline_val(:,1) = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
-    spline_val(:,2) = uniform_b_splines_at_x(this%spline_degree, xi(2))
+    spline_val(1:this%n_span,1) = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
+    spline_val(1:this%n_span,2) = uniform_b_splines_at_x(this%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
 
