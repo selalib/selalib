@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 10 Nov 2015
+# Last revision: 11 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -233,6 +233,57 @@ for key,val in patterns.items():
     re_engines[key] = re.compile( val, re.I )
 
 #------------------------------------------------------------------------------
+def extract_expr_symbols( expr, strip=False ):
+    """
+    Extract all symbols that are used in a certain mathematical expression,
+    distinguishing between calls and variables.
+
+    Parameters
+    ----------
+    expr : str
+      Mathematical expression to be parsed
+
+    strip : bool
+      If True, Fortran strings and logicals should be removed before proceeding
+
+    Returns
+    -------
+    calls : list of str
+      Names of functions and arrays (they cannot be distinguished)
+
+    variables : list of str
+      Names of variables (also arrays, if used as a whole)
+
+    """
+    from fparser.splitline import string_replace_map
+    from fparser.utils     import specs_split_comma
+
+    if strip:
+        expr = remove_fortran_strings ( expr )
+        expr = remove_fortran_logicals( expr )
+
+    string, string_map = string_replace_map( expr )
+
+    calls     = re_engines['call'    ].findall( string )
+    variables = re_engines['variable'].findall( string )
+    variables = [v for v in variables if not v.startswith('F2PY_EXPR_TUPLE')]
+    symbols   = calls + variables
+
+    for text in string_map.values():
+        for expr in specs_split_comma( text ):
+            # Ignore keywords in function calls
+            if '=' in expr:
+                string, string_map = string_replace_map( expr )
+                expr = string_map( string.rpartition('=')[2].lstrip() )
+            # Recursion: extract symbols from new expression
+            if expr:
+                new_calls, new_variables = extract_expr_symbols( expr )
+                calls    .extend( new_calls     )
+                variables.extend( new_variables )
+
+    return calls, variables
+
+#------------------------------------------------------------------------------
 def compute_all_used_symbols( content ):
     """
     Compute all used symbols in a certain scope level, without searching any
@@ -345,10 +396,9 @@ def compute_all_used_symbols( content ):
             # l.h.s.
             variables.append( re_engines['name'].findall( item.variable )[0] )
             # r.h.s.
-            s = remove_fortran_strings( item.expr )
-            s = remove_fortran_logicals( s )
-            variables.extend( re_engines['variable'].findall( s ) )
-            calls    .extend( re_engines['call'    ].findall( s ) )
+            new_calls, new_vars = extract_expr_symbols( item.expr, strip=True )
+            variables.extend( new_vars  )
+            calls    .extend( new_calls )
         # Type blocks
         elif isinstance( item, block_statements.Type ):
             if len( item.specs ) > 0:
@@ -390,14 +440,13 @@ def compute_all_used_symbols( content ):
             # Nothing of the above
             else:
                 text = ''
-            # Remove Fortran strings and logical intrinsics from expression
-            if text:
-                text = remove_fortran_strings ( text )
-                text = remove_fortran_logicals( text )
+
             # Extract variables and calls from expression
             if text:
-                variables.extend( re_engines['variable'].findall( text ) )
-                calls    .extend( re_engines['call'    ].findall( text ) )
+                new_calls, new_vars = extract_expr_symbols( text, strip=True )
+                variables.extend( new_vars  )
+                calls    .extend( new_calls )
+
             # Double-check that we do not have F2Py strings
             if ('f2py' in text) or ('F2PY' in text):
                 print('ERROR: ', text )
