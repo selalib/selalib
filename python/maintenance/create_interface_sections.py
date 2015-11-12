@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 11 Nov 2015
+# Last revision: 12 Nov 2015
 #
 from __future__ import print_function
 
@@ -21,6 +21,12 @@ __docformat__ = 'reStructuredText'
 #==============================================================================
 # PARAMETERS.. CHANGE THIS
 #==============================================================================
+
+ignored_symbols = [ \
+        'mudpack_curvilinear_cof',
+        'mudpack_curvilinear_cofcr',
+        'mudpack_curvilinear_bndcr',
+        ]
 
 def ignore_dir( d ):
     """ Return True if subdirectory should be ignored.
