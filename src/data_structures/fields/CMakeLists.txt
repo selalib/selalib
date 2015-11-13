@@ -5,7 +5,6 @@ ADD_LIBRARY(sll_fields STATIC
             sll_m_scalar_field_2d_base.F90
             sll_m_scalar_field_2d.F90
             sll_m_dg_fields.F90
-            sll_m_fem_fields.F90
             init_function_module.F90)		
 
 TARGET_LINK_LIBRARIES(sll_fields
