@@ -54,7 +54,7 @@ real(8) function sol_ey( x1, x2, time)
 
 end function sol_ey
 
-real(8) function sll_m_gaussian( x1, x2, time)
+real(8) function gaussian( x1, x2, time)
 
    use sll_m_constants
    implicit none
@@ -63,10 +63,10 @@ real(8) function sll_m_gaussian( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   sll_m_gaussian =   exp(-(x1*x1+x2*x2)) * cos(time)
+   gaussian =   exp(-(x1*x1+x2*x2)) * cos(time)
    return
 
-end function sll_m_gaussian
+end function gaussian
 
 
 real(8) function add( x1, x2, time)
