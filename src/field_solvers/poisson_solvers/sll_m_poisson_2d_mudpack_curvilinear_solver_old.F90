@@ -231,11 +231,7 @@ contains
     common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
     equivalence(intl,iprm)
     equivalence(xa,fprm)
-    !declare coefficient and boundary condition input subroutines external
-    !external mudpack_curvilinear_cofx,mudpack_curvilinear_cofy,mudpack_curvilinear_bndsp
-    external mudpack_curvilinear_cof
-    external mudpack_curvilinear_cofcr
-    external mudpack_curvilinear_bndcr
+
     !!!! end variables for mudpack_curvilinear 
     sll_real64 :: delta1,delta2
 
@@ -509,11 +505,6 @@ contains
     equivalence(intl,iprm)
     equivalence(xa,fprm)
 
-    !declare coefficient and boundary condition input subroutines external
-    !external mudpack_curvilinear_cofx,mudpack_curvilinear_cofy,mudpack_curvilinear_bndsp
-    external mudpack_curvilinear_cof
-    external mudpack_curvilinear_cofcr
-    external mudpack_curvilinear_bndcr
     !set initial guess because solve should be called every time step in a
     !time dependent problem and the elliptic operator does not depend on time.
     iguess = poisson%iguess
@@ -767,6 +758,7 @@ do j=1,ny
  enddo
 enddo 
 end subroutine coefx_array
+
 subroutine coefy_array(eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cyy_2d_interp,a12_interp,cy_array)
   implicit none                     
@@ -787,13 +779,7 @@ do j=1,ny
 enddo 
 end subroutine coefy_array  
   
-  
-end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
-
-
 subroutine mudpack_curvilinear_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-implicit none
 real(8)  :: x,cxx,cx
 real(8)  :: y,cyy,cy,ce
 cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_value(x,y)
@@ -805,8 +791,6 @@ return
 end
 
 subroutine mudpack_curvilinear_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
 cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_value(x,y)
@@ -818,10 +802,9 @@ ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
 
 return
 end
+
 !> input mixed derivative b.c. to mud2sp
 subroutine mudpack_curvilinear_bndcr(kbdy,xory,alfa,gbdy)
-use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
@@ -845,18 +828,7 @@ if (kbdy == 4) then  ! y=yd boundary
 end if
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
+end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

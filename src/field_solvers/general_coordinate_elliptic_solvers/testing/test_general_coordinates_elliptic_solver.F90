@@ -11,6 +11,51 @@ use sll_m_constants
 use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_timer
 use sll_m_deboor_splines_2d
+use m_init_functions, only: &
+  func_zero, &
+  func_four, &
+  func_one, &
+  func_epsi, &
+  source_term_perper, &
+  source_term_perdir, &
+  source_term_dirper, &
+  source_term_chgt_perper, &
+  source_term_chgt_perdir, &
+  source_term_chgt_dirper, &
+  source_term_chgt_dirdir, &
+  f_sin, u_sin, u_sin_der1, u_sin_der2, &
+  f_cos, u_cos, u_cos_der1, u_cos_der2, &
+  sol_exacte_perper, &
+  sol_exacte_perper_der1, &
+  sol_exacte_perper_der2, &
+  sol_exacte_perdir  , &
+  sol_exacte_perdir_der1, &
+  sol_exacte_perdir_der2, &
+  sol_exacte_dirper, &
+  sol_exacte_dirper_der1, &
+  sol_exacte_dirper_der2, &
+  sol_exacte_chgt_perper, &
+  sol_exacte_chgt_perper_der1, &
+  sol_exacte_chgt_perper_der2, &
+  sol_exacte_chgt_perdir  , &
+  sol_exacte_chgt_perdir_der1, &
+  sol_exacte_chgt_perdir_der2, &
+  sol_exacte_chgt_dirper, &
+  sol_exacte_chgt_dirper_der1, &
+  sol_exacte_chgt_dirper_der2, &
+  sol_exacte_chgt_dirdir, &
+  sol_exacte_chgt_dirdir_der1, &
+  sol_exacte_chgt_dirdir_der2, &
+  adimension_chgt_x, &
+  adimension_chgt_y, &
+  jac11_adimension_chgt, &
+  jac12_adimension_chgt, &
+  jac21_adimension_chgt, &
+  jac22_adimension_chgt, &
+  sol_exacte_chgt_adim, &
+  source_term_chgt_adim
+
+
 
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack
@@ -48,21 +93,6 @@ type(sll_scalar_field_2d_discrete), pointer               :: phi
 type(sll_time_mark)                                       :: t_reference
 
 sll_real64 :: ti(16), te(16)
-
-real(8), external :: func_zero
-real(8), external :: func_four
-real(8), external :: func_one
-real(8), external :: func_epsi
-real(8), external :: source_term_perper
-real(8), external :: source_term_perdir
-real(8), external :: source_term_dirper
-real(8), external :: source_term_chgt_perper
-real(8), external :: source_term_chgt_perdir
-real(8), external :: source_term_chgt_dirper
-real(8), external :: source_term_chgt_dirdir
-real(8), external :: f_sin, u_sin, u_sin_der1, u_sin_der2
-real(8), external :: f_cos, u_cos, u_cos_der1, u_cos_der2
-
 sll_real64 :: acc(16)    
 sll_real64 :: normL2(16)
 sll_real64 :: normH1(16)
@@ -79,36 +109,6 @@ sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
 sll_int32  :: npts1,npts2
 !sll_int32  :: ierr
-
-real(8), external :: sol_exacte_perper
-real(8), external :: sol_exacte_perper_der1
-real(8), external :: sol_exacte_perper_der2
-real(8), external :: sol_exacte_perdir  
-real(8), external :: sol_exacte_perdir_der1
-real(8), external :: sol_exacte_perdir_der2
-real(8), external :: sol_exacte_dirper
-real(8), external :: sol_exacte_dirper_der1
-real(8), external :: sol_exacte_dirper_der2
-real(8), external :: sol_exacte_chgt_perper
-real(8), external :: sol_exacte_chgt_perper_der1
-real(8), external :: sol_exacte_chgt_perper_der2
-real(8), external :: sol_exacte_chgt_perdir  
-real(8), external :: sol_exacte_chgt_perdir_der1
-real(8), external :: sol_exacte_chgt_perdir_der2
-real(8), external :: sol_exacte_chgt_dirper
-real(8), external :: sol_exacte_chgt_dirper_der1
-real(8), external :: sol_exacte_chgt_dirper_der2
-real(8), external :: sol_exacte_chgt_dirdir
-real(8), external :: sol_exacte_chgt_dirdir_der1
-real(8), external :: sol_exacte_chgt_dirdir_der2
-real(8), external :: adimension_chgt_x
-real(8), external :: adimension_chgt_y
-real(8), external :: jac11_adimension_chgt
-real(8), external :: jac12_adimension_chgt
-real(8), external :: jac21_adimension_chgt
-real(8), external :: jac22_adimension_chgt
-real(8), external :: sol_exacte_chgt_adim
-real(8), external :: source_term_chgt_adim
 
 real(8) :: integral_solution
 real(8) :: integral_exact_solution
@@ -669,7 +669,7 @@ do k = itest1, itest2
 
   do j=1,npts2
     do i=1,npts1
-      tab_rho(i,j) = source_term_perper(eta1(i),eta2(j))
+      tab_rho(i,j) = source_term_perper( eta1(i), eta2(j), whatever )
     end do
   end do
   
@@ -742,7 +742,7 @@ do k = itest1, itest2
   
   do j=1,npts2
   do i=1,npts1
-    tab_rho(i,j) = source_term_chgt_perper(eta1(i),eta2(j))
+    tab_rho(i,j) = source_term_chgt_perper( eta1(i), eta2(j), whatever )
   end do
   end do
   
@@ -822,7 +822,7 @@ do k = itest1, itest2
 
   do j=1,npts2
   do i=1,npts1
-    tab_rho(i,j) = source_term_chgt_perdir(eta1(i),eta2(j))
+    tab_rho(i,j) = source_term_chgt_perdir( eta1(i), eta2(j), whatever )
   end do
   end do
 
@@ -903,7 +903,7 @@ do k = itest1, itest2
 
   do j=1,npts2
   do i=1,npts1
-    tab_rho(i,j)  = source_term_chgt_dirdir(eta1(i),eta2(j))
+    tab_rho(i,j)  = source_term_chgt_dirdir( eta1(i), eta2(j), whatever )
   end do
   end do
 
@@ -985,7 +985,7 @@ do k = itest1, itest2
 
   do j=1,npts2
      do i=1,npts1
-        tab_rho(i,j)  = source_term_chgt_dirper(eta1(i),eta2(j))
+        tab_rho(i,j)  = source_term_chgt_dirper( eta1(i), eta2(j), whatever )
      end do
   end do
   
@@ -1074,7 +1074,7 @@ do k = itest1, itest2
 
   do j = 1, npts2
   do i = 1, npts1
-    values(i,j) = u_sin(eta1(i),eta2(j))
+    values(i,j) = u_sin( eta1(i), eta2(j) )
   end do
   end do
 
