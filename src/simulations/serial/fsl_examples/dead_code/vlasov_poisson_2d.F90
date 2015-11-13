@@ -38,7 +38,6 @@ sll_comp64 :: F1(0:ntau-1),F2(0:ntau-1),Ftilde1(0:ntau-1),Ftilde2(0:ntau-1)
 sll_comp64 :: Term2(0:ntau-1),Term1(0:ntau-1),dtF1_F(0:ntau-1),dtF2_F(0:ntau-1)
 sll_comp64 :: temp1_F(0:ntau-1),temp2_F(0:ntau-1),dtF1(0:ntau-1),dtF2(0:ntau-1)
 sll_int32  :: n,m
-sll_real64, external :: g
 
 Neta1 = Nn
 Neta2 = Nn
@@ -429,7 +428,6 @@ sll_int32   :: n,m,i
 sll_comp64  :: fvptilde(1:Nn),fvptilde0(1:Nn),temp(1:Nn),sum0(1:Nn)
 sll_comp64  :: vctmp(Nn),uctmp(Nn)
 type(C_PTR) :: PlnF,PlnB
-sll_real64, external :: g
 
 L=4.0_f64
 x=r
@@ -502,9 +500,9 @@ enddo
 call fftw_destroy_plan(PlnF)
 call fftw_destroy_plan(PlnB)
 
-end subroutine poissonsolver
+contains
 
-!-----function g(tau,xi1,xi2,E,lx)---
+  !-----function g(tau,xi1,xi2,E,lx)---
 double precision function g(ta,x1,x2,E,lx,Nn)
 
 use sll_m_constants
@@ -538,4 +536,8 @@ g = dreal(sum0)
 call fftw_destroy_plan(PlnF)
 
 end function g
+
+
+end subroutine poissonsolver
+
 
