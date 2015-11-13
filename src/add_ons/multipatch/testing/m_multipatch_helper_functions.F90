@@ -1,3 +1,7 @@
+module m_multipatch_helper_functions
+
+
+contains
 
 ! External functions used as parameters in the above unit test:
 
@@ -590,3 +594,5 @@ real(8) function source_term_chgt_adim(eta1,eta2)
   source_term_chgt_adim = -2.0_f64*cos(x)*cos(y)
   
 end function source_term_chgt_adim
+
+end module m_multipatch_helper_functions
