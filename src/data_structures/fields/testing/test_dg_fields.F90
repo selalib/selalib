@@ -31,7 +31,7 @@ class(sll_coordinate_transformation_2d_base), pointer :: collela
 type(sll_dg_field_2d), pointer :: ex
 type(sll_dg_field_2d), pointer :: bz
 
-sll_real64, external :: sll_m_gaussian, add
+sll_real64, external :: gaussian, add
 
 mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta1_max=1._f64, &
@@ -86,7 +86,7 @@ call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
 
-bz => sll_new( degree, collela, sll_m_gaussian) 
+bz => sll_new( degree, collela, gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
 call bz%write_to_file('bz', SLL_IO_MTV)
 call bz%write_to_file('bz', SLL_IO_XDMF)
