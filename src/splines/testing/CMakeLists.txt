@@ -59,3 +59,8 @@ TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
 # Ctests
 #...........................................
+FIND_PACKAGE(GSL)
+IF(GSL_FOUND)
+  ADD_EXECUTABLE( test_gsl_bsplines test_gsl_bsplines.c )
+  TARGET_LINK_LIBRARIES( test_gsl_bsplines  ${GSL_LIB})
+ENDIF(GSL_FOUND)

@@ -272,7 +272,6 @@ function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
   n2 = size(new_bspline_2d%bs2%bcoef)
   SLL_CLEAR_ALLOCATE(new_bspline_2d%bcoef(1:n1,1:n2), ierr)
 
-
   if (present(sl1)) new_bspline_2d%x1_min_slopes(:) = sl1
   if (present(sr1)) new_bspline_2d%x1_max_slopes(:) = sr1
   if (present(sl2)) new_bspline_2d%x2_min_slopes(:) = sl2
@@ -309,7 +308,7 @@ subroutine build_system_with_derivative(this)
   
   SLL_ASSERT(m < n) 
 
-  l = 0 ! index for the derivative
+  l = 0 ! line number of the built system matrix
 
   db%ilo = k
 
@@ -364,7 +363,7 @@ subroutine build_system_with_derivative(this)
 
 end subroutine build_system_with_derivative
 
-subroutine build_system(this)
+subroutine build_system_periodic(this)
 
   type(sll_bspline_1d)    :: this 
 
@@ -415,7 +414,7 @@ subroutine build_system(this)
   
   call banfac ( this%q, k+k-1, n, k-1, k-1, iflag )
 
-end subroutine build_system
+end subroutine build_system_periodic
 
 !> @brief
 !>  produces the B-spline coefficients of an interpolating spline.
@@ -459,7 +458,7 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
   sll_real64, optional   :: slope_max
 
   if ( this%bc_type == SLL_PERIODIC) then
-    call build_system(this)
+    call build_system_periodic(this)
   else
     call build_system_with_derivative(this)
   end if
@@ -483,13 +482,13 @@ subroutine compute_bspline_2d_with_constant_slopes(this, gtau, &
   sll_real64, optional    :: sl2_r
 
   if ( this%bs1%bc_type == SLL_PERIODIC) then
-    call build_system(this%bs1)
+    call build_system_periodic(this%bs1)
   else
     call build_system_with_derivative(this%bs1)
   end if
 
   if ( this%bs2%bc_type == SLL_PERIODIC) then
-    call build_system(this%bs2)
+    call build_system_periodic(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
   end if
@@ -514,13 +513,13 @@ subroutine compute_bspline_2d_with_variable_slopes(this, gtau, &
   sll_real64, intent(in)  :: sl2_r(:)
 
   if ( this%bs1%bc_type == SLL_PERIODIC) then
-    call build_system(this%bs1)
+    call build_system_periodic(this%bs1)
   else
     call build_system_with_derivative(this%bs1)
   end if
 
   if ( this%bs2%bc_type == SLL_PERIODIC) then
-    call build_system(this%bs2)
+    call build_system_periodic(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
   end if
@@ -1087,7 +1086,6 @@ sll_real64, allocatable :: wrk(:)
 
 sll_int32               :: nx, kx, ny, ky
 sll_int32               :: left, leftx, lefty
-sll_int32               :: ilo
 sll_int32               :: jlo
 sll_int32               :: klo
 sll_int32               :: llo
@@ -1136,7 +1134,7 @@ SLL_CLEAR_ALLOCATE(wrk(1:nmkx),ierr)
 
 jlo = ky
 do j=1,n2
-  ilo = kx
+  db%ilo = kx
   klo = jlo
   xj  = this%bs2%tau(j)
   call interv(db,ty,nmky,xj,lefty,mflag)
