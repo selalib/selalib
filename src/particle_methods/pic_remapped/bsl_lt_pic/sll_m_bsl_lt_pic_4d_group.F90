@@ -94,7 +94,7 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The sparse grid object used for the interpolation of the remapped density f, if remapping with sparse grid
     !> @{
-    type(sparse_grid_interpolator_4d),          pointer         :: sparse_grid_interpolator
+    type(sparse_grid_interpolator_4d)                           :: sparse_grid_interpolator
     sll_int32, dimension(4)                                     :: sparse_grid_max_levels
     sll_real64, dimension(:), allocatable                       :: remapped_f_sparse_grid_coefficients
     ! maybe more stuff is needed here
@@ -481,7 +481,7 @@ contains
                                             )
 
     scenario = SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID
-    dummy_total_charge = 0
+    dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
     call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(void_charge_accumulator,   &
@@ -778,10 +778,11 @@ contains
       call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
 
 
-    else if( res%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+    else if( res%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
       ! C.2 interpolator for sparse grids
 
       ! C.2.a  sparse remapping grid
+      print*, "sll_bsl_lt_pic_4d_group_new - C.2", remapping_sparse_grid_max_level
       res%sparse_grid_max_levels(1) = remapping_sparse_grid_max_level
       res%sparse_grid_max_levels(2) = remapping_sparse_grid_max_level
       res%sparse_grid_max_levels(3) = remapping_sparse_grid_max_level
@@ -795,10 +796,15 @@ contains
                   res%remapping_grid_eta_max                &
                   )
 
+      print*, "sll_bsl_lt_pic_4d_group_new - C.2 -- ", remapping_sparse_grid_max_level
+      print*, "sll_bsl_lt_pic_4d_group_new - res%sparse_grid_interpolator%size_basis = ", res%sparse_grid_interpolator%size_basis
+
       ! C.2.b  array of sparse grid coefficients for remapped_f
       SLL_ALLOCATE( res%remapped_f_sparse_grid_coefficients(res%sparse_grid_interpolator%size_basis), ierr )
       res%remapped_f_sparse_grid_coefficients = 0.0_f64
 
+    else
+      SLL_ERROR("sll_bsl_lt_pic_4d_group_new", "ahem, a test must be broken -- you should not be reading this :)")
     end if
 
   end function sll_bsl_lt_pic_4d_group_new
@@ -814,6 +820,7 @@ contains
     sll_int32                       , intent( in ), optional :: rank, world_size
 
     !> A. first step is to write the nodal values of f0 on the relevant array
+    print *, "bsl_lt_pic_4d_initializer -- A"
 
     if( initial_density_identifier == SLL_BSL_LT_PIC_LANDAU_F0 )then
 
@@ -833,10 +840,12 @@ contains
     end if
 
     !> B. next compute the interpolation coefs for remapped_f
+    print *, "bsl_lt_pic_4d_initializer -- B"
 
     call self%bsl_lt_pic_4d_compute_new_remapped_f_coefficients()
 
     !> C. initialize the markers
+    print *, "bsl_lt_pic_4d_initializer -- C"
 
     call self%bsl_lt_pic_4d_reset_markers_position()
     call self%bsl_lt_pic_4d_set_markers_connectivity()
@@ -915,6 +924,9 @@ contains
     one_over_thermal_velocity = 1./thermal_speed
     one_over_two_pi = 1./(2*sll_pi)
 
+
+    print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- a "
+
     if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
 
       number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
@@ -933,6 +945,13 @@ contains
       vy_min   = p_group%remapping_cart_grid%eta4_min
 
       ! compute the values of f0 on the (cartesian, phase-space) remapping grid
+
+      SLL_ASSERT( size(p_group%remapped_f_splines_coefficients,1) == number_nodes_x )
+      SLL_ASSERT( size(p_group%remapped_f_splines_coefficients,2) == number_nodes_y )
+      SLL_ASSERT( size(p_group%remapped_f_splines_coefficients,3) == number_nodes_vx )
+      SLL_ASSERT( size(p_group%remapped_f_splines_coefficients,4) == number_nodes_vy )
+
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- assert ok "
 
       do j_x = 1, number_nodes_x
         x_j = x_min + (j_x-1) * h_x
@@ -959,7 +978,17 @@ contains
 
     else
 
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- b"
+      print*, p_group%remapped_f_interpolation_type
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- c"
+      print*, p_group%sparse_grid_interpolator%size_basis
+      print*, size(p_group%remapped_f_sparse_grid_coefficients,1)
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- d"
       SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+
+      SLL_ASSERT( size(p_group%remapped_f_sparse_grid_coefficients,1) == p_group%sparse_grid_interpolator%size_basis )
+
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- assert ok "
 
       do j=1, p_group%sparse_grid_interpolator%size_basis
           x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
@@ -1849,7 +1878,7 @@ contains
     nullify(void_array_2d)
 
     scenario = SLL_BSL_LT_PIC_WRITE_F_ON_REMAPPING_GRID
-    dummy_total_charge = 0
+    dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
     ! (no need to distinguish between sparse grid or spline remapping here, this is done inside the function below)
@@ -3037,7 +3066,7 @@ contains
 
   !> separate interpolation routine for the remapped f
   function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_bsl_lt_pic_4d_group), intent(inout)  :: p_group
     sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
     sll_real64                                  :: val
 
@@ -3372,7 +3401,7 @@ contains
 
         ! and           dg_np = cst * cst * cst * cst * num_cells1 * num_cells2 * ratio_vx * ratio_vy
         !                     >=  p_group%number_deposition_particles
-        tmp = p_group%number_deposition_particles   &
+        tmp = real(p_group%number_deposition_particles, f64)   &
               / ( ratio_vx * ratio_vy * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2 )
         cst = int(ceiling( sqrt(sqrt( tmp )) ))
 
@@ -3381,8 +3410,8 @@ contains
         deposition_grid_num_cells_vx = cst * cst * ratio_vx - 1
         deposition_grid_num_cells_vy = cst * cst * ratio_vy - 1
 
-        tmp =   (deposition_grid_num_cells_x +1) * (deposition_grid_num_cells_y +1) &
-              * (deposition_grid_num_cells_vx+1) * (deposition_grid_num_cells_vy+1)
+        tmp = real(  (deposition_grid_num_cells_x +1) * (deposition_grid_num_cells_y +1) &
+                   * (deposition_grid_num_cells_vx+1) * (deposition_grid_num_cells_vy+1) , f64)
         SLL_ASSERT( tmp >= p_group%number_deposition_particles )
 
         ! then we position the grid of deposition cells so that every deposition particle is _inside_ a poisson cell

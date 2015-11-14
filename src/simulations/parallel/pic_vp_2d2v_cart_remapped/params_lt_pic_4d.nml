@@ -2,7 +2,7 @@
         THERM_SPEED         = 1.0
         dt                  =  0.1
         number_iterations   = 120
-        plot_period         = 1
+        plot_period         = 10
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
         ALPHA  = 0.05                   ! amplitude of initial perturbation
