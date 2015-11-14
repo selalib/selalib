@@ -55,7 +55,7 @@ contains
   end function
 
 
-! <<get_particle_index_from_initial_position_on_cartesian_grid>>
+  ! <<marker_index_from_initial_position_on_cartesian_grid>>
 
   !! transforms a standard particle position (x,y) in (i_cell_x, i_cell_y, dx, dy)
   !! -> here the indices i_cell_x and i_cell_y do not need to be within [1, m2d%num_cells1] or [1, m2d%num_cells2]
@@ -122,10 +122,11 @@ contains
   end subroutine get_poisson_cell_index
 
 
-  subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                            &
-                                                                       n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
-                                                                       k                                                &
-                                                                       )
+  function marker_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                                &
+                                                                       n_parts_x, n_parts_y, n_parts_vx, n_parts_vy     &
+                                                                       ) result(k)
+    sll_int32 :: k
+
     sll_int32, intent(in) :: j_x
     sll_int32, intent(in) :: j_y
     sll_int32, intent(in) :: j_vx
@@ -134,7 +135,6 @@ contains
     sll_int32, intent(in) :: n_parts_y
     sll_int32, intent(in) :: n_parts_vx
     sll_int32, intent(in) :: n_parts_vy
-    sll_int32, intent(out) :: k
 
     if(         j_x <= 0  .or. j_x > n_parts_x      &
         .or.    j_y <= 0  .or. j_y > n_parts_y      &
@@ -147,12 +147,12 @@ contains
 
     SLL_ASSERT( k <= n_parts_x * n_parts_y * n_parts_vx * n_parts_vy )
 
-  end subroutine get_particle_index_from_initial_position_on_cartesian_grid
+  end function marker_index_from_initial_position_on_cartesian_grid
 
 
-  ! <<get_initial_position_on_cartesian_grid_from_particle_index>>
+  ! <<get_initial_position_on_cartesian_grid_from_marker_index>>
 
-  subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,                                               &
+  subroutine get_initial_position_on_cartesian_grid_from_marker_index (k,                                               &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        j_x, j_y, j_vx, j_vy                             &
                                                                        )
@@ -351,21 +351,21 @@ contains
   ! update the arrays closest_particle and closest_particle_distance with the index of the given particle
   ! if closer to what had been stored up to now.
 
-  ! x_aux : x_particle - x_min_virtual_mesh   and  similarly for y, vx, vy
-  subroutine update_closest_particle_arrays(k_part,                         &
+  ! x_aux : x_marker - flow_grid_x_min   and  similarly for y, vx, vy
+  subroutine update_closest_marker_arrays(k_part,                         &
                                             x_aux, y_aux, vx_aux, vy_aux,   &
                                             i, j, l, m,                     &
                                             h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy,   &
-                                            closest_particle,               &
-                                            closest_particle_distance)
+                                            closest_marker,               &
+                                            closest_marker_distance)
 
       sll_int32, intent(in) :: k_part
       sll_int32, intent(in) :: i, j, l, m
       sll_real64, intent(in) :: x_aux, y_aux, vx_aux, vy_aux
       sll_real64, intent(in) :: h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy
 
-      sll_int32, dimension(:,:,:,:), intent(inout)  :: closest_particle
-      sll_real64, dimension(:,:,:,:), intent(inout) :: closest_particle_distance
+      sll_int32, dimension(:,:,:,:), intent(inout)  :: closest_marker
+      sll_real64, dimension(:,:,:,:), intent(inout) :: closest_marker_distance
 
       sll_real64 :: square_dist_to_cell_center
 
@@ -374,14 +374,14 @@ contains
                                  + (vx_aux - (l + 0.5) * h_virtual_cell_vx )**2.    &
                                  + (vy_aux - (m + 0.5) * h_virtual_cell_vy )**2.
 
-      ! if new particle is closer to center, keep the new one
+      ! if new marker is closer to center, keep the new one
 
-      if(closest_particle(i,j,l,m) == 0 .or. square_dist_to_cell_center < closest_particle_distance(i,j,l,m)) then
-         closest_particle(i,j,l,m) = k_part
-         closest_particle_distance(i,j,l,m) = square_dist_to_cell_center
+      if(closest_marker(i,j,l,m) == 0 .or. square_dist_to_cell_center < closest_marker_distance(i,j,l,m)) then
+         closest_marker(i,j,l,m) = k_part
+         closest_marker_distance(i,j,l,m) = square_dist_to_cell_center
       end if
 
-  end subroutine update_closest_particle_arrays
+  end subroutine update_closest_marker_arrays
 
   function eval_landau_fx(alpha, kx, x)
     sll_real64 :: alpha, kx, x

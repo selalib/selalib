@@ -319,13 +319,14 @@ contains
    end subroutine simple_pic_4d_initializer
 
 
-  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge )
+  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge, enforce_total_charge )
     class( sll_simple_pic_4d_group ),           intent( inout )  :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
-    sll_real64,                                 intent(in), optional :: target_total_charge             ! for a check (if present)
+    sll_real64,                                 intent(in)      :: target_total_charge
+    logical,                                    intent(in)      :: enforce_total_charge   !< here, do a check if true
 
-    type( charge_accumulator_cell_2d ), pointer             :: charge_accumulator_cell
-    type(sll_simple_pic_4d_particle), pointer :: particle
+    type( charge_accumulator_cell_2d ), pointer :: charge_accumulator_cell
+    type(sll_simple_pic_4d_particle),   pointer :: particle
     sll_int32       :: i_part, i_cell
     sll_real64      :: xy_part(3)
     sll_real64      :: particle_charge
@@ -362,7 +363,7 @@ contains
         stop
       end if
 
-      if( present(target_total_charge) )then
+      if( enforce_total_charge )then
         if( abs( deposited_charge - target_total_charge ) > 0.0000001 * abs(target_total_charge) )then
            print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
            print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
@@ -387,17 +388,20 @@ contains
   end subroutine simple_pic_4d_remap
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
-
+  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
+    use sll_m_working_precision
     class( sll_simple_pic_4d_group ),   intent( inout ) :: self
-    character(len=*),                   intent(in)      :: array_name !< field name
-    sll_int32,                          intent(in)      :: iplot      !< plot counter
-    !character(len=4)                                    :: cplot
+    character(len=*),                   intent(in)      :: array_name   !< field name
+    sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vx   !< nb of points in the vx plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vy   !< nb of points in the vy plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: iplot        !< plot counter
 
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
     print*, " WARNING (956542375763) -- this function (simple_pic_4d_visualize_f_slice_x_vx) does nothing, need to be implemented!"
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
-    print*, len(array_name), iplot, storage_size(self)
+    print*, len(array_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot, storage_size(self)
 
   end subroutine simple_pic_4d_visualize_f_slice_x_vx
 
