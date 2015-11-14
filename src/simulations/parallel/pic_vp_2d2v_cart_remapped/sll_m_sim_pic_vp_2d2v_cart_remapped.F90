@@ -88,7 +88,7 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      sll_real64 :: thermal_speed_ions
      
      sll_int32  :: number_particles
-     sll_int32  :: virtual_particle_number
+     sll_int32  :: virtual_particle_number  ! todo correct and set value
      logical :: domain_is_x_periodic
      logical :: domain_is_y_periodic
      sll_real64, dimension(1:6) :: elec_params
@@ -198,20 +198,29 @@ contains
     logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, KX_LANDAU, XMAX, YMIN, YMAX
-    sll_int32   :: number_parts_x, number_parts_y, number_parts_vx, number_parts_vy
-    sll_real64  :: remapping_grid_vx_min, remapping_grid_vx_max
-    sll_real64  :: remapping_grid_vy_min, remapping_grid_vy_max
-    sll_real64  :: target_charge
-    sll_int32   :: spline_degree
+    sll_real64  :: target_total_charge
+    logical     :: enforce_total_charge
     sll_int32   :: particle_group_id
-    sll_int32   :: N_virtual_particles_per_deposition_cell_x
-    sll_int32   :: N_virtual_particles_per_deposition_cell_y
-    sll_int32   :: N_virtual_particles_per_deposition_cell_vx
-    sll_int32   :: N_virtual_particles_per_deposition_cell_vy
-    sll_int32   :: N_remapping_nodes_per_virtual_cell_x
-    sll_int32   :: N_remapping_nodes_per_virtual_cell_y
-    sll_int32   :: N_remapping_nodes_per_virtual_cell_vx
-    sll_int32   :: N_remapping_nodes_per_virtual_cell_vy
+    sll_int32   :: remap_f_type
+    sll_int32   :: remap_degree
+    sll_real64  :: remapping_grid_vx_min
+    sll_real64  :: remapping_grid_vx_max
+    sll_real64  :: remapping_grid_vy_min
+    sll_real64  :: remapping_grid_vy_max
+    sll_int32   :: remapping_cart_grid_number_cells_x
+    sll_int32   :: remapping_cart_grid_number_cells_y
+    sll_int32   :: remapping_cart_grid_number_cells_vx
+    sll_int32   :: remapping_cart_grid_number_cells_vy
+    sll_int32   :: remapping_sparse_grid_max_level
+    sll_int32   :: number_deposition_particles
+    sll_int32   :: number_markers_x
+    sll_int32   :: number_markers_y
+    sll_int32   :: number_markers_vx
+    sll_int32   :: number_markers_vy
+    sll_int32   :: flow_grid_number_cells_x
+    sll_int32   :: flow_grid_number_cells_y
+    sll_int32   :: flow_grid_number_cells_vx
+    sll_int32   :: flow_grid_number_cells_vy
 
     sll_int32   :: initial_density_identifier
 
@@ -254,9 +263,8 @@ contains
     ! discretization of the remapped f
     !   -> remapping period, type of interpolation structure and polynomial degree
     !   -> size of the remapping grid / sparse grid
-    namelist /lt_pic_remap_params/
-                                    remap_period,                       &
-                                    remap_f_type,                       &   ! 0 for splines, 1 for sparse grids
+    namelist /lt_pic_remap_params/  remap_period,                       &
+                                    remap_f_type,                       &
                                     remap_degree,                       &
                                     remapping_grid_vx_min,              &   ! note: the x-y domain is given by the Poisson grid
                                     remapping_grid_vx_max,              &
@@ -270,18 +278,14 @@ contains
 
 
     ! discretization of the deposited f
-    !   -> number of virtual particles created for the deposition
-    !
-    ! note: the number and size of the "virtual cells" previously used are now specified in the flow parameters
-    namelist /lt_pic_deposition_params/
-                                    number_virtual_particles
+    !   -> number of deposition particles
+    namelist /lt_pic_deposition_params/ number_deposition_particles
 
     ! discretization of the flow:
     !   -> number of markers to be pushed forward
     !   -> size of the cells where the flow is linearized (the flow grid)
     !      note: the bounds of the flow grid are the same as those of the remap grid
-    namelist /lt_pic_markers_params/
-                                    number_markers_x,             &
+    namelist /lt_pic_markers_params/number_markers_x,             &
                                     number_markers_y,             &
                                     number_markers_vx,            &
                                     number_markers_vy,            &
@@ -290,27 +294,6 @@ contains
                                     flow_grid_number_cells_vx,    &
                                     flow_grid_number_cells_vy
 
-
-                                    ! previous parameters were:
-
-!                                    spline_degree,              &
-!                                    number_parts_x,             &
-!                                    number_parts_y,             &
-!                                    number_parts_vx,            &
-!                                    number_parts_vy,            &
-!                                    remap_grid_vx_min,          &
-!                                    remap_grid_vx_max,          &
-!                                    remap_grid_vy_min,          &
-!                                    remap_grid_vy_max,          &
-!                                    N_virtual_particles_per_deposition_cell_x,      &
-!                                    N_virtual_particles_per_deposition_cell_y,      &
-!                                    N_virtual_particles_per_deposition_cell_vx,     &
-!                                    N_virtual_particles_per_deposition_cell_vy,     &
-!                                    N_remapping_nodes_per_virtual_cell_x,           &
-!                                    N_remapping_nodes_per_virtual_cell_y,           &
-!                                    N_remapping_nodes_per_virtual_cell_vx,          &
-!                                    N_remapping_nodes_per_virtual_cell_vy,          &
-!                                    remap_period
     namelist /simple_pic_params/    NUM_PARTICLES
 
     print *, "AA0"
@@ -324,9 +307,11 @@ contains
     print *, "AA1"
     read(input_file, sim_params)
     read(input_file, elec_params)
-    read(input_file, grid_dims)
+    read(input_file, poisson_grid_params)
     if( UseLtPicScheme )then
-        read(input_file, lt_pic_params)
+        read(input_file, lt_pic_remap_params)
+        read(input_file, lt_pic_deposition_params)
+        read(input_file, lt_pic_markers_params)
     else
         read(input_file, simple_pic_params)
     end if
@@ -373,7 +358,7 @@ contains
         particle_group_id,                          &
         DOMAIN_IS_X_PERIODIC,                       &
         DOMAIN_IS_Y_PERIODIC,                       &
-        remap_f_type,                               &   ! 0 for splines, 1 for sparse grids
+        remap_f_type,                               &
         remap_degree,                               &
         remapping_grid_vx_min,                          &
         remapping_grid_vx_max,                          &
@@ -384,7 +369,7 @@ contains
         remapping_cart_grid_number_cells_vx,                 &   ! for splines
         remapping_cart_grid_number_cells_vy,                 &   ! for splines
         remapping_sparse_grid_max_level,                     &   ! for the sparse grid: for now, same level in each dimension
-        number_virtual_particles,                   &
+        number_deposition_particles,                &
         number_markers_x,                           &
         number_markers_y,                           &
         number_markers_vx,                          &
@@ -393,23 +378,6 @@ contains
         flow_grid_number_cells_y,                   &
         flow_grid_number_cells_vx,                  &
         flow_grid_number_cells_vy,                  &
-!        spline_degree,                                  &
-!        number_parts_x,                                 &
-!        number_parts_y,                                 &
-!        number_parts_vx,                                &
-!        number_parts_vy,                                &
-!        remap_grid_vx_min,                              &
-!        remap_grid_vx_max,                              &
-!        remap_grid_vy_min,                              &
-!        remap_grid_vy_max,                              &
-!        N_virtual_particles_per_deposition_cell_x,      &
-!        N_virtual_particles_per_deposition_cell_y,      &
-!        N_virtual_particles_per_deposition_cell_vx,     &
-!        N_virtual_particles_per_deposition_cell_vy,     &
-!        N_remapping_nodes_per_virtual_cell_x,           &
-!        N_remapping_nodes_per_virtual_cell_y,           &
-!        N_remapping_nodes_per_virtual_cell_vx,          &
-!        N_remapping_nodes_per_virtual_cell_vy,          &
         sim%mesh_2d )
 
       ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
@@ -468,9 +436,9 @@ contains
 
    charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-   target_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-
-   call sim%particle_group%deposit_charge_2d( charge_accumulator, target_charge)
+   target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+   enforce_total_charge = .true.
+   call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
 
    !! -- --  First charge deposition [end]  -- --
 
@@ -497,7 +465,7 @@ contains
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j, k
     sll_real64 :: tmp1, tmp2, tmp3, tmp4
-    sll_real32 :: tmp5, tmp6, temp
+    sll_real64 :: tmp5, tmp6, temp
     sll_real32 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
     sll_real64 :: valeur, val2
     sll_real64, dimension(:,:), pointer :: phi
@@ -528,6 +496,11 @@ contains
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
+    sll_int32 :: plot_np_x    !< nb of points in the x  plotting grid for a (x,vx) plot
+    sll_int32 :: plot_np_y    !< nb of points in the y  plotting grid for a (x,vx) plot
+    sll_int32 :: plot_np_vx   !< nb of points in the vx plotting grid for a (x,vx) plot
+    sll_int32 :: plot_np_vy   !< nb of points in the vy plotting grid for a (x,vx) plot
+
     type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
     sll_int32 :: sort_nb
     sll_real64 :: some_val, une_cst
@@ -536,6 +509,9 @@ contains
     sll_real64 :: omega_i, omega_r, psi
     sll_real64 :: bors
     sll_real64 :: coords(3)
+    sll_real64 :: target_total_charge
+    logical    :: enforce_total_charge
+
 
     ! Timings and statistics
     sll_real64 :: deposit_time
@@ -706,7 +682,7 @@ contains
       ! Set particle speed [[dt_q_over_m]]
       coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
       coords(2) = pp_vy - 0.5_f64 * dt_q_over_m * Ey
-      coords(3) = 0
+      coords(3) = 0.0_f64
       call sim%particle_group%set_v(k, coords)
     enddo
 
@@ -736,7 +712,7 @@ contains
 
     ! Time statistics
     call sll_set_time_mark(loop_time_mark)
-    deposit_time=0
+    deposit_time = 0._f64
 
     ! First snapshot at time 0 [[particles_snapshot]]
     ! AAA_ALH_TODO call particles_snapshot(0.0_8,sim)
@@ -813,7 +789,7 @@ contains
          ! Set particle speed [[dt_q_over_m]]
          coords(1) = pp_vx + dt_q_over_m * Ex
          coords(2) = pp_vy + dt_q_over_m * Ey
-         coords(3) = 0
+         coords(3) = 0.0_f64
          call sim%particle_group%set_v(k, coords)
 
          !> remember new speed for x-push
@@ -828,7 +804,7 @@ contains
 
          coords(1) = pp_x + dt * pp_vx
          coords(2) = pp_y + dt * pp_vy
-         coords(3) = 0
+         coords(3) = 0.0_f64
 
          !! -- --  x-push [end]  -- --
 
@@ -853,8 +829,10 @@ contains
       call sll_set_time_mark(deposit_time_mark)
 
       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::deposit_charge_2d]]
+      target_total_charge = 0._f64
+      enforce_total_charge = .false.   ! todo: try with true
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
-      call sim%particle_group%deposit_charge_2d( charge_accumulator )
+      call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
 
       deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
 
@@ -901,7 +879,11 @@ contains
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
         print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
-        call sim%particle_group%visualize_f_slice_x_vx("f_slice", it)
+        plot_np_x  = 100
+        plot_np_y  = 10
+        plot_np_vx = 30
+        plot_np_vy = 10
+        call sim%particle_group%visualize_f_slice_x_vx("f_slice", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it)
 
       end if
 
@@ -910,30 +892,7 @@ contains
 
         print *, "remapping f..."
         call sim%particle_group%remap()
-
-!            call sll_lt_pic_4d_remap(sim%part_group)
-!
-!            print *, "writing (remapped) f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
-!
-!            call plot_f_slice_x_vx(sim%part_group,           &
-!                                   sim%part_group%remapping_grid%eta1_min,   &
-!                                   sim%part_group%remapping_grid%eta1_max,   &
-!                                   sim%part_group%remapping_grid%eta2_min,   &
-!                                   sim%part_group%remapping_grid%eta2_max,   &
-!                                   sim%part_group%remapping_grid%eta3_min,   &
-!                                   sim%part_group%remapping_grid%eta3_max,   &
-!                                   sim%part_group%remapping_grid%eta4_min,   &
-!                                   sim%part_group%remapping_grid%eta4_max,   &
-!                                   sim%part_group%remapping_grid%num_cells1, &
-!                                   sim%part_group%remapping_grid%num_cells2, &
-!                                   sim%part_group%remapping_grid%num_cells3, &
-!                                   sim%part_group%remapping_grid%num_cells4, &
-!                                   sim%n_virtual_x_for_deposition,    &
-!                                   sim%n_virtual_y_for_deposition,    &
-!                                   sim%n_virtual_vx_for_deposition,   &
-!                                   sim%n_virtual_vy_for_deposition,   &
-!                                   "f_slice_remapped", it)
-       end if
+      end if
 
        if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
 
