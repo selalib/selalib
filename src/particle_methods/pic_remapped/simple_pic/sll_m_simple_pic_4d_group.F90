@@ -364,15 +364,17 @@ contains
         stop
       end if
 
-      if( enforce_total_charge )then
-        if( abs( deposited_charge - target_total_charge ) > 0.0000001 * abs(target_total_charge) )then
-           print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
-           print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
-           print*, "Warning (8756537654) target_total_charge = ", target_total_charge
-           print *,"self%number_particles=",self%number_particles
-           print *,"particle_charge*self%number_particles=",particle_charge*self%number_particles
-        end if
+    end do
+
+    if( enforce_total_charge )then
+      if( abs( deposited_charge - target_total_charge ) > 0.0000001 * abs(target_total_charge) )then
+         print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
+         print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
+         print*, "Warning (8756537654) target_total_charge = ", target_total_charge
+         print *,"self%number_particles=",self%number_particles
+         print *,"particle_charge*self%number_particles=",particle_charge*self%number_particles
       end if
+    end if
 
   end subroutine simple_pic_4d_deposit_charge_2d
 
@@ -391,8 +393,6 @@ contains
   !----------------------------------------------------------------------------
   ! <<simple_pic_4d_visualize_f_slice_x_vx>>
   
-  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
-
   subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
     use sll_m_working_precision
     class( sll_simple_pic_4d_group ),   intent( inout ) :: self

@@ -879,15 +879,14 @@ contains
         plot_np_y  = 10
         plot_np_vx = 30
         plot_np_vy = 10
-        call sim%particle_group%visualize_f_slice_x_vx("f_slice", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it)
 
-         ! base class definition of visualize_f_slice_x_vx:
-         !   [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::visualize_f_slice_x_vx]]
-         ! specialized in:
-         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
-         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
+        ! base class definition of visualize_f_slice_x_vx:
+        !   [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::visualize_f_slice_x_vx]]
+        ! specialized in:
+        ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
+        ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
 
-         call sim%particle_group%visualize_f_slice_x_vx("f_slice", it+1)
+        call sim%particle_group%visualize_f_slice_x_vx("f_slice", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
 
       end if
 
