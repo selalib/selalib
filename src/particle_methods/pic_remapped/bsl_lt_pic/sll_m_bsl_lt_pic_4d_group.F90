@@ -19,8 +19,7 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle <!--
-!> [[file:bsl_lt_pic_4d_particle.F90::sll_bsl_lt_pic_4d_particle]] -->
+!> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle
 
 !todo: rename the method and the module according to the new naming conventions
 
@@ -1868,12 +1867,9 @@ contains
   ! <<bsl_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
   !  - 1.  the "write f" scenario:
   !        write the density on the (phase-space) remapping grid, using the method described
-  !        in the "BSL-remapping" notes (version of december 2, 2014) cf
-  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping]] and more precisely
-  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_step_1]].  Algorithm from
-  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr]] (but without the deposition step)
+  !        in the "BSL-remapping" notes (version of december 2, 2014)
   !
-  !        -- this function should be a faster alternative to [[sll_lt_pic_4d_write_f_on_remap_grid]] --
+  !        -- this function should be a faster alternative to [[bsl_lt_pic_4d_write_f_on_remapping_grid]] --
   !
   !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
   !        particle group (in particular if the (x,y) domain is not periodic)
@@ -3585,8 +3581,7 @@ contains
       vx_k = coords(1)
       vy_k = coords(2)
 
-      ! which flow cell is this marker in?
-      ! uses [[file:sll_representation_conversion.F90::compute_cell_and_offset]] and [[g]]
+      ! which _virtual_ cell is this particle in?
 
       x_aux = x_k - flow_grid_x_min
       j_x = int( x_aux / h_flow_grid_x ) + 1
@@ -3626,7 +3621,6 @@ contains
 
     closest_marker(1,1,1,1) = k_marker_closest_to_first_corner
 
-    ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
     if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(2) ) )then
       print*, "WARNING -- STOP -- verify that the non-periodic case is well implemented"
       stop
@@ -4055,7 +4049,6 @@ contains
     sll_real64 :: dim_t0
     sll_int32 :: neighbour
 
-    ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-p_list]]
     type(sll_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
 
     !sll_int32 :: ngb_dim_right_index
@@ -4101,7 +4094,6 @@ contains
     do while(j<=jumps .and. kprime/=0)
 
        ! going through neighbours
-       ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
 
        select case (dim)
 #define ALONG_X 1
@@ -4136,9 +4128,8 @@ contains
           SLL_ASSERT(.false.)
        end select
 
-       ! The convention in
-       ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]] is
-       ! that if there is no neighbour then a neighbour index is equal to the particle index
+       ! The convention in [[bsl_lt_pic_4d_compute_new_particles]] is that if there is no neighbour then a neighbour
+       ! index is equal to the particle index
 
        if(neighbour/=kprime) then
           kprime = neighbour

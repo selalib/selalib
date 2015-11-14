@@ -230,12 +230,12 @@ program test_bsl_lt_pic_4d
      ! -- --  push the k-th particle [begin]  -- --
 
      ! get particle position
-     coords = particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
+     coords = particle_group%get_x(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      x_k = coords(1)
      y_k = coords(2)
 
      ! get particle speed
-     coords = particle_group%get_v(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
+     coords = particle_group%get_v(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      vx_k = coords(1)
      vy_k = coords(2)
 
@@ -269,8 +269,7 @@ program test_bsl_lt_pic_4d
   end if
 
   call sll_set_time_mark(remapstart)
-  if(remap_type == 'ltp') then      ! todo: remove this case
-    ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
+  if(remap_type == 'ltp') then
     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
     stop
     print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
@@ -342,6 +341,27 @@ program test_bsl_lt_pic_4d
 
   close(80)
 
+  ! uses [[selalib:src/data_structures/fields/sll_m_array_plotting.F90::write_projection_2d]] developed by PN (cf
+  ! example in [[selalib:src/data_structures/fields/testing/test_plot_array_4d.F90::write_projection_2d]]) todo: we
+  ! could plot a slice of f here, but this seems heavy in a unit test...
+
+    !  plotting_mesh_2d =>  new_cartesian_mesh_2d( NC_X1_PLOT, NC_X2_PLOT, &
+    !         X1_MIN_PLOT, X1_MAX_PLOT, X2_MIN_PLOT, X2_MAX_PLOT )
+    !
+    !  file_name = "lt_pic_density_test_init4D.dat"
+    !
+    !  call sll_lt_pic_4d_plot_f_on_2d_grid( &
+    !    file_name,        &
+    !    PLOT_DIM1,        &
+    !    PLOT_DIM2,        &
+    !    PLOT_CST_DIM3,    &
+    !    PLOT_CST_DIM4,    &
+    !    X3_PLOT_CST,      &
+    !    X4_PLOT_CST,      &
+    !    plotting_mesh_2d, &
+    !    particle_group    &
+    !    )
+
 
   write(ncx_name,'(i3)') NC_X
   write(ncy_name,'(i3)') NC_Y
@@ -392,6 +412,7 @@ contains
 !#define COEFF_X_VX 0.0
 !#define COEFF_Y_VY 0.0
 
+  ! <<test_forward_push>>
   subroutine test_forward_push(x,y,vx,vy,new_x,new_y,new_vx,new_vy)
 
     ! [[file:../working_precision/sll_m_working_precision.h]]

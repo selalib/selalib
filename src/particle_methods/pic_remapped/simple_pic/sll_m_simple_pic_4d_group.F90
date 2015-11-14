@@ -19,8 +19,9 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_simple_pic_4d_particle <!--
-!> [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
+!> @brief Module for groups of particles of type sll_simple_pic_4d_particle
+
+! [[file:sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
 
 module sll_m_simple_pic_4d_group
 
@@ -41,7 +42,7 @@ module sll_m_simple_pic_4d_group
 
   !> Group of sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle
 
-  ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
+  ! <<sll_simple_pic_4d_group>> [[file:sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
   
   type, extends(sll_c_remapped_particle_group) :: sll_simple_pic_4d_group
 
@@ -368,10 +369,10 @@ contains
            print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
            print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
            print*, "Warning (8756537654) target_total_charge = ", target_total_charge
+           print *,"self%number_particles=",self%number_particles
+           print *,"particle_charge*self%number_particles=",particle_charge*self%number_particles
         end if
       end if
-
-    end do
 
   end subroutine simple_pic_4d_deposit_charge_2d
 
@@ -388,6 +389,10 @@ contains
   end subroutine simple_pic_4d_remap
 
   !----------------------------------------------------------------------------
+  ! <<simple_pic_4d_visualize_f_slice_x_vx>>
+  
+  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
+
   subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
     use sll_m_working_precision
     class( sll_simple_pic_4d_group ),   intent( inout ) :: self
