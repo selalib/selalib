@@ -85,7 +85,7 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      sll_real64 :: thermal_speed_ions
      
      sll_int32  :: number_particles
-     sll_int32  :: virtual_particle_number  ! todo correct and set value
+     sll_int32  :: number_deposition_particles
      logical :: domain_is_x_periodic
      logical :: domain_is_y_periodic
      sll_real64, dimension(1:6) :: elec_params
@@ -380,6 +380,8 @@ contains
 
       ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
       sim%particle_group => bsl_lt_pic_particle_group
+      sim%number_deposition_particles = number_deposition_particles
+
 
     else
 
@@ -397,10 +399,11 @@ contains
 
       ! here [[particle_group]] will contain a reference to a simple pic group
       sim%particle_group => simple_pic_particle_group
-        
+      sim%number_deposition_particles = NUM_PARTICLES
+
     end if
 
-    sim%number_particles = sim%particle_group%number_particles
+    sim%number_particles = sim%particle_group%number_particles    ! with bsl_lt_pic this is actually the number of markers
 
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
@@ -409,17 +412,24 @@ contains
     ! todo: should we write a structure for the initialization?
     call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
+    rand_seed_size = 10
     print *, "rand_seed_size = ", rand_seed_size
     print *, "sim%my_rank = ", sim%my_rank
     call random_seed (SIZE=rand_seed_size)
+    print *, "AA BB"
+
     SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
     do j=1, rand_seed_size
       rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
     end do
 
+    print *, "BBB"
+
     initial_density_identifier = 0     ! for the moment we only use one density (landau)
     call sim%particle_group%initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
     SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
+
+    print *, "CCC"
 
     sim%n_threads = 1
     print*, 'number of threads is ', sim%n_threads
@@ -876,9 +886,9 @@ contains
 
         print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
         plot_np_x  = 100
-        plot_np_y  = 10
+        plot_np_y  = 6
         plot_np_vx = 30
-        plot_np_vy = 10
+        plot_np_vy = 5
 
         ! base class definition of visualize_f_slice_x_vx:
         !   [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::visualize_f_slice_x_vx]]
@@ -997,7 +1007,7 @@ contains
     write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%number_particles,' pushes/sec '
     if(sim%use_lt_pic_scheme)then
        write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                     &
-            1 / deposit_time * sim%num_iterations * sim%virtual_particle_number,    &
+            1 / deposit_time * sim%num_iterations * sim%number_deposition_particles,    &
             ' deposits/sec'
     end if
 
