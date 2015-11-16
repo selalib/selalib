@@ -139,8 +139,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         sumup1=cmplx(0.0_f64,0.0_f64,kind=f64)
         sumup2=cmplx(0.0_f64,0.0_f64,kind=f64)
             do n=1,ntau-1
-            sumup1=sumup1-sll_i1*Ftilde1(n)/ltau(n)*(cdexp(sll_i1*ltau(n)*tau(m))-1.0_f64)
-            sumup2=sumup2-sll_i1*Ftilde2(n)/ltau(n)*(cdexp(sll_i1*ltau(n)*tau(m))-1.0_f64)
+            sumup1=sumup1-sll_i1*Ftilde1(n)/ltau(n)*(exp(sll_i1*ltau(n)*tau(m))-1.0_f64)
+            sumup2=sumup2-sll_i1*Ftilde2(n)/ltau(n)*(exp(sll_i1*ltau(n)*tau(m))-1.0_f64)
             enddo
         w1_0(m)=xi1_0+eps*dreal(sumup1)
         w2_0(m)=xi2_0+eps*dreal(sumup2)
@@ -166,8 +166,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         temp1(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
         temp2(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
             do n=1,ntau-1
-            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF1_F(n)/sll_i1/ltau(n))+temp1(m)
-            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF2_F(n)/sll_i1/ltau(n))+temp2(m)
+            temp1(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF1_F(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF2_F(n)/sll_i1/ltau(n))+temp2(m)
             enddo
         enddo
         call fftw_execute_dft(PlnFwd,temp1,temp1_F)
@@ -186,8 +186,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         temp1(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
         temp2(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
             do n=1,ntau-1
-            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp1_F(n)/sll_i1/ltau(n))+temp1(m)
-            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp2_F(n)/sll_i1/ltau(n))+temp2(m)
+            temp1(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp1_F(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp2_F(n)/sll_i1/ltau(n))+temp2(m)
             enddo
         enddo
         w1_0=xi1_0+eps*dreal(temp1)
@@ -211,8 +211,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
 !        sumup1=cmplx(0.0_f64,0.0_f64,kind=f64)
 !        sumup2=cmplx(0.0_f64,0.0_f64,kind=f64)
 !        do n=0,ntau-1
-!            sumup1=sumup1+Ftilde1(n)*cdexp(sll_i1*ltau(n)*k/eps)
-!            sumup2=sumup2+Ftilde2(n)*cdexp(sll_i1*ltau(n)*k/eps)
+!            sumup1=sumup1+Ftilde1(n)*exp(sll_i1*ltau(n)*k/eps)
+!            sumup2=sumup2+Ftilde2(n)*exp(sll_i1*ltau(n)*k/eps)
 !        enddo
 !---2nd UA
         do m=0,ntau-1
@@ -254,8 +254,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         sumup1=cmplx(0.0_f64,0.0_f64,kind=f64)
         sumup2=cmplx(0.0_f64,0.0_f64,kind=f64)
         do n=0,ntau-1
-        sumup1=sumup1+temp1(n)*cdexp(sll_i1*ltau(n)*k/eps)
-        sumup2=sumup2+temp2(n)*cdexp(sll_i1*ltau(n)*k/eps)
+        sumup1=sumup1+temp1(n)*exp(sll_i1*ltau(n)*k/eps)
+        sumup2=sumup2+temp2(n)*exp(sll_i1*ltau(n)*k/eps)
         enddo
 !---------------end time solve-------------------------
         eta1=dreal(sumup1)
@@ -334,7 +334,7 @@ end program
 !        if (abs(x)<L .and. abs(y)<L) then
 !            do p=1,Nn
 !                do q=1,Nn
-!                sum0=sum0+cdexp(sll_i1*lx(p)*(x+L)+sll_i1*lx(q)*(y+L))*ftilde(p,q)
+!                sum0=sum0+exp(sll_i1*lx(p)*(x+L)+sll_i1*lx(q)*(y+L))*ftilde(p,q)
 !                enddo
 !            enddo
 !        endif
@@ -528,7 +528,7 @@ sum0=cmplx(0.0_f64,0.0_f64,kind=f64)
 
 if (abs(x)<L) then
     do n=1,Nn
-    sum0=sum0+cdexp(sll_i1*lx(n)*(x+L))*Etilde1(n)
+    sum0=sum0+exp(sll_i1*lx(n)*(x+L))*Etilde1(n)
     enddo
 endif
 
