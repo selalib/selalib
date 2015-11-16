@@ -5,6 +5,8 @@ program test_poisson_2d_dirichlet_cartesian
   use sll_m_constants
   use sll_m_poisson_2d_dirichlet_cartesian
   use sll_m_gnuplot
+  use iso_fortran_env, only: output_unit
+
   implicit none
 
   type (poisson_2d_dirichlet_cartesian), pointer :: plan
@@ -52,11 +54,11 @@ program test_poisson_2d_dirichlet_cartesian
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_dirichlet" failure'
@@ -77,11 +79,11 @@ program test_poisson_2d_dirichlet_cartesian
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   print *, 'PASSED'
 end program test_poisson_2d_dirichlet_cartesian
