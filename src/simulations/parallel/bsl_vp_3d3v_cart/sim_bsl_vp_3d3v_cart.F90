@@ -6,6 +6,8 @@
 program sim_bsl_vp_3d3v_cart
   use sll_m_sim_bsl_vp_3d3v_cart
   use sll_m_collective
+  use iso_fortran_env, only: output_unit
+
   implicit none
 
   character(len=256) :: filename
@@ -16,7 +18,7 @@ program sim_bsl_vp_3d3v_cart
   call sll_boot_collective() ! Wrap this up in something else
 
   print *, 'Proceed to run simulation.'
-  call flush(6)
+  flush( output_unit )
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.

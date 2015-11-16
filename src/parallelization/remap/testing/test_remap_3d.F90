@@ -1,4 +1,3 @@
-
 !****************************************************************************
 !
 ! Selalib      
@@ -18,8 +17,11 @@ program remap_test
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-    use sll_m_utilities, only : &
-         is_power_of_two
+  use sll_m_utilities, only : &
+    is_power_of_two
+
+  use iso_fortran_env, only: &
+    output_unit
 
   implicit none
 
@@ -74,7 +76,7 @@ program remap_test
      print *, '--------------- REMAP test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -85,7 +87,7 @@ program remap_test
 
   ok = 1
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -207,7 +209,7 @@ program remap_test
                  print*, 'program stopped by failure'
                  stop
               end if
-              call flush(6)
+              flush( output_unit )
            end do
         end do
      end do
@@ -228,9 +230,9 @@ program remap_test
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   
