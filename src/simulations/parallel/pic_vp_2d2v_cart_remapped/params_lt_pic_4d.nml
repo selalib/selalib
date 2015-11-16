@@ -2,10 +2,10 @@
         THERM_SPEED         = 1.0
         dt                  =  0.1
         number_iterations   = 120
-        plot_period         = 10
+        plot_period         = 1
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
-        ALPHA  = 0.05                   ! amplitude of initial perturbation
+        ALPHA  = 0.5                   ! amplitude of initial perturbation
         UseLtPicScheme = .true.         ! pour utiliser du PIC standard ou bien du LTPIC-BSL
 /
 
@@ -28,51 +28,29 @@
         DOMAIN_IS_Y_PERIODIC = .true.
 /
 
-&lt_pic_params
-    spline_degree          = 1
-    NUMBER_PARTS_X         = 50         !  Particle remapping grid // voir l'influence
-    NUMBER_PARTS_Y         = 10         !  Particle remapping grid // voir l'influence
-    NUMBER_PARTS_VX        = 20         !  Particle remapping grid // voir l'influence
-    NUMBER_PARTS_VY        = 6          !  Particle remapping grid // voir l'influence
-    REMAP_GRID_VX_MIN   = -4.0      !  Particle remapping grid // voir l'influence
-    REMAP_GRID_VX_MAX   = 4.0       !  Particle remapping grid // voir l'influence
-    REMAP_GRID_VY_MIN   = -4.0      !  Particle remapping grid // voir l'influence
-    REMAP_GRID_VY_MAX   = 4.0       !  Particle remapping grid // voir l'influence
-    N_virtual_particles_per_deposition_cell_x = 2           ! size of the virtual grid in one deposition cell
-    N_virtual_particles_per_deposition_cell_y = 1           ! size of the virtual grid in one deposition cell
-    N_virtual_particles_per_deposition_cell_vx = 2          ! size of the virtual grid in one deposition cell
-    N_virtual_particles_per_deposition_cell_vy = 1          ! size of the virtual grid in one deposition cell
-    N_remapping_nodes_per_virtual_cell_x = 2       ! size of the virtual cells to gather the reconstruction of f on remapping grid
-    N_remapping_nodes_per_virtual_cell_y = 2       ! size of the virtual cells to gather the reconstruction of f on remapping grid
-    N_remapping_nodes_per_virtual_cell_vx = 2      ! size of the virtual cells to gather the reconstruction of f on remapping grid
-    N_remapping_nodes_per_virtual_cell_vy = 2      ! size of the virtual cells to gather the reconstruction of f on remapping grid
-    remap_period        = 15        !  voir l'influence
-/
-
-
 &lt_pic_remap_params
-    remap_period        = 15
+    remap_period        = 10
     remap_f_type        = 1         !  0 = splines, 1 = sparse grid -- find a better way to specify this
     remap_degree        = 3
-    remapping_grid_vx_min = -4.0            ! note: the x-y domain is given by the Poisson grid
-    remapping_grid_vx_max =  4.0
-    remapping_grid_vy_min = -4.0
-    remapping_grid_vy_max =  4.0
+    remapping_grid_vx_min = -5.0            ! note: the x-y domain is given by the Poisson grid
+    remapping_grid_vx_max =  5.0
+    remapping_grid_vy_min = -5.0
+    remapping_grid_vy_max =  5.0
     remapping_cart_grid_number_cells_x  = 50            ! for splines
     remapping_cart_grid_number_cells_y  = 10            ! for splines
     remapping_cart_grid_number_cells_vx = 20            ! for splines
     remapping_cart_grid_number_cells_vy = 6             ! for splines
-    remapping_sparse_grid_max_level = 4                 ! for the sparse grid (same level in each dim for now)
+    remapping_sparse_grid_max_level = 7                 ! for the sparse grid (same level in each dim for now)
 /
 
 &lt_pic_deposition_params
-    number_deposition_particles = 100000
+    number_deposition_particles = 100000                ! lower bound for the number of deposition particles
 /
 
 &lt_pic_markers_params
     number_markers_x  = 100
     number_markers_y  = 20
-    number_markers_vx = 50
+    number_markers_vx = 60
     number_markers_vy = 10
     flow_grid_number_cells_x = 60
     flow_grid_number_cells_y = 15
