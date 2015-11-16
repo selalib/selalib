@@ -10,7 +10,7 @@
 /* number of fit coefficients */
 #define NCOEFFS  5
 
-/* nbreak = ncoeffs + 2 - k = ncoeffs - 2 since k = 4 */
+/* nbreak = ncoeffs + 2 - k */
 #define NBREAK   (NCOEFFS - 2)
 
 int
@@ -21,28 +21,36 @@ main (void)
   const size_t nbreak = NBREAK;
   size_t i, j;
   gsl_bspline_workspace *bw;
-  gsl_bspline_deriv_workspace *dw;
   gsl_vector *B;
-  double xmin=0.0, xmax=2.0*M_PI;
-  const size_t nderiv=1;
-  gsl_matrix *dB;
+  double xmin=0.0, xmax=2.0;
   const size_t k = 4;
   double xi;
   gsl_vector *x;
-  gsl_matrix *X;
+  gsl_matrix *A;
 
   x = gsl_vector_alloc(n);
+  for (i = 0; i < n; ++i)
+    {
+       
+    }
   
 
   /* allocate a cubic bspline workspace */
   bw = gsl_bspline_alloc(k, nbreak);
-  dw = gsl_bspline_deriv_alloc(k);
   B  = gsl_vector_alloc(ncoeffs);
-  dB = gsl_matrix_alloc(nbreak+k-2, nderiv+1);
-  X = gsl_matrix_alloc(n, ncoeffs);
+  A  = gsl_matrix_alloc(n, ncoeffs);
+
+  /* gsl_bspline_knots(breakpts, bw) 
+  Compute the knots from the given breakpoints:
+   knots(1:k) = breakpts(1)
+   knots(k+1:k+l-1) = breakpts(i), i = 2 .. l
+   knots(n+1:n+k) = breakpts(l + 1) */
 
   /* use uniform breakpoints on [xmin, xmax] */
   gsl_bspline_knots_uniform(xmin, xmax, bw);
+  //knots(1:k) = xmin
+  //knots(k+1:k+l-1) = xmin + i*delta, i = 1 .. l - 1
+  //knots(n+1:n+k) = xmax
 
   /* construct the fit matrix X */
   for (i = 0; i < n; ++i)
@@ -54,7 +62,6 @@ main (void)
 
       /* compute B_j(xi) for all j */
       gsl_bspline_eval(xi, B, bw);
-      int out = gsl_bspline_deriv_eval (xi, nderiv, dB, bw, dw);
 
       printf("%f %f\n", xi, ti);
 
@@ -62,16 +69,47 @@ main (void)
       for (j = 0; j < ncoeffs; ++j)
         {
           double Bj = gsl_vector_get(B, j);
-          gsl_matrix_set(X, i, j, Bj);
+          gsl_matrix_set(A, i, j, Bj);
         }
 
     }
+  for (i = 0; i < n; i++)  
+    { 
+      for (j = 0; j < ncoeffs; j++)
+        printf ("%6.3f", gsl_matrix_get (A, i, j));
+      printf("\n");
+    }
+
+/*
+  gsl_permutation * p = gsl_permutation_alloc (ncoeffs);
+
+  gsl_linalg_LU_decomp (A, p, &s);
+
+  gsl_linalg_LU_solve (A, p, b, x);
+
+  printf ("x = \n");
+  gsl_vector_fprintf (stdout, x, "%g");
+
+  gsl_permutation_free (p);
+  gsl_vector_free (x);
+*/
+
+  //gsl_vector *d; d = gsl_vector_alloc(ncoeffs);
+  //gsl_vector *e; e = gsl_vector_alloc(ncoeffs);
+  //gsl_vector *f; f = gsl_vector_alloc(ncoeffs);
+  //gsl_vector *b; b = gsl_vector_alloc(ncoeffs);
+  //gsl_vector *x; x = gsl_vector_alloc(ncoeffs);
+
+  // A = ( d_0 e_0  0  f_3 )
+  //     ( f_0 d_1 e_1  0  )
+  //     (  0  f_1 d_2 e_2 )
+  //     ( e_3  0  f_2 d_3 )
+ 
+  // gsl_linalg_solve_cyc_tridiag (d, e, f, b, x)
 
   gsl_bspline_free(bw);
-  gsl_bspline_deriv_free(dw);
   gsl_vector_free(B);
   return 0;
 
 } 
-
 
