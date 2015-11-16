@@ -13,7 +13,7 @@ Just type::
    mkdir build; cd build
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DBUILD_PACKAGE=1 ../src
+         -DBUILD_PACKAGE=1 ../
    make 
    make install
 
