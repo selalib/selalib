@@ -103,7 +103,7 @@ do i=1,Neta1+1
     do j=1,Neta2+1
         eta2 = eta2_min + (j-1)*delta_eta2
         x2_array(j) = eta2
-        fh_fsl(i,j) = dexp(-2.0_f64*eta2**2)*dexp(-2.0_f64*eta1**2)
+        fh_fsl(i,j) = exp(-2.0_f64*eta2**2)*exp(-2.0_f64*eta1**2)
     enddo
 enddo
 r_array=x1_array(1:Nn)
