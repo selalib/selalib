@@ -406,7 +406,7 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
           ierr=-2
           return
         end if
-        de(k-1)=dsqrt(dbeta(k))
+        de(k-1)=sqrt(dbeta(k))
         dweigh(k)=0.0_f64
   100 continue
       do 240 l=1,n
@@ -420,7 +420,7 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
         if(j.eq.30) goto 400
         j=j+1
         dg=(dzero(l+1)-dp)/(2.0_f64*de(l))
-        dr=dsqrt(dg*dg+1.0_f64)
+        dr=sqrt(dg*dg+1.0_f64)
         dg=dzero(m)-dp+de(l)/(dg+dsign(dr,dg))
         ds=1.0_f64
         dc=1.0_f64
@@ -432,13 +432,13 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
           db=dc*de(i)
           if(abs(df).lt.abs(dg)) goto 150
           dc=dg/df
-          dr=dsqrt(dc*dc+1.0_f64)
+          dr=sqrt(dc*dc+1.0_f64)
           de(i+1)=df*dr
           ds=1.0_f64/dr
           dc=dc*ds
           goto 160
   150     ds=df/dg
-          dr=dsqrt(ds*ds+1.0_f64)
+          dr=sqrt(ds*ds+1.0_f64)
           de(i+1)=dg*dr
           dc=1.0_f64/dr
           ds=ds*dc
