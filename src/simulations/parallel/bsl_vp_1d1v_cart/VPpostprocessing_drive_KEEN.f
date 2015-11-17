@@ -49,7 +49,7 @@
       ! get run directory
       numarg = iargc ( )
       if (numarg > 0) then
-         call getarg ( 1, rundir )
+         call get_command_argument( 1, rundir )
       else 
          print*, 'Error: rundir not defined'
          stop
