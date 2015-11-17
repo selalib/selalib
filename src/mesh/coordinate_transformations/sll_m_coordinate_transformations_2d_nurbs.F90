@@ -23,6 +23,7 @@ module sll_m_coordinate_transformations_2d_nurbs
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_gnuplot
   use sll_m_interpolators_2d_base
+  use sll_m_arbitrary_degree_spline_interpolator_2d
   use sll_m_coordinate_transformation_2d_base
   use sll_m_deboor_splines_2d
   use sll_m_constants, only : &
@@ -122,7 +123,6 @@ contains
   end function new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_m_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
