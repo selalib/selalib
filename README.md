@@ -113,7 +113,9 @@ then merges it directly back into master.
 
 ```
 git checkout -b issue-#001 master
-#Fix the bug
+```
+Fix the bug
+```
 git checkout master
 git merge issue-#001
 git push gitlab master
