@@ -30,7 +30,7 @@ program sim_pif_vp_ndnv_cart
   ! argument.
   
   do idx=1, COMMAND_ARGUMENT_COUNT()
-  call getarg(idx, filename)
+  call get_command_argument(idx, filename)
   filename_local = trim(filename)
   call run_from_file(filename)
   end do
