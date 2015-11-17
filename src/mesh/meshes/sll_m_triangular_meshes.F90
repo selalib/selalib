@@ -358,7 +358,7 @@ mesh%eta2_max = eta2_max
 
 nbox = nc_eta1+1
 nboy = nc_eta2+1
-ndd = max0(nbox,nboy)
+ndd = max(nbox,nboy)
 alx = eta1_max-eta1_min
 aly = eta2_max-eta2_min
 
