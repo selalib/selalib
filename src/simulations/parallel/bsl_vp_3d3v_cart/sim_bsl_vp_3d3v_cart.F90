@@ -22,7 +22,7 @@ program sim_bsl_vp_3d3v_cart
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
   call simulation%run( )
