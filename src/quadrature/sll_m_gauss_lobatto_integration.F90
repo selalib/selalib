@@ -421,7 +421,7 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
         j=j+1
         dg=(dzero(l+1)-dp)/(2.0_f64*de(l))
         dr=sqrt(dg*dg+1.0_f64)
-        dg=dzero(m)-dp+de(l)/(dg+dsign(dr,dg))
+        dg=dzero(m)-dp+de(l)/(dg+sign(dr,dg))
         ds=1.0_f64
         dc=1.0_f64
         dp=0.0_f64
