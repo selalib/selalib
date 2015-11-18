@@ -50,7 +50,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
   use sll_m_fft
   use sll_m_reduction
   
-
+  use sll_m_xdmf
   use sll_m_sim_base
   use sll_m_time_splitting_coeff
   use sll_m_utilities, only: int2string

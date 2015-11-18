@@ -63,7 +63,7 @@ module sll_m_sim_bsl_dk_3d1v_polar
   use sll_m_hdf5_io_serial
   use sll_m_ascii_io
   use sll_m_gnuplot
-
+  use sll_m_xdmf
 
 
   implicit none
