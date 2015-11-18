@@ -3,5 +3,5 @@ demo:
     - "scripts/selalib-ci.sh"
 trigger:
   script:
-    - "wget --auth-no-challenge --no-check-certificate http://ci.inria.fr/selalib/git/notifyCommit?url=ssh://sll_jenkins@scm.gforge.inria.fr//gitroot/selalib/selalib.git"
+    - "curl -X POST -F token=6d02ee70098ff617bf46237c5da0e9  http://ci.inria.fr/selalib/git/notifyCommit?url=ssh://sll_jenkins@scm.gforge.inria.fr//gitroot/selalib/selalib.git"
   
