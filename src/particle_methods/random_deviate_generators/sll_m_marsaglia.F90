@@ -21,13 +21,15 @@ contains
     kiss = x + y + ishft (z, 16) + w
   contains
    function m(k, n)
-      integer :: m, k, n
+      integer :: m
+      integer, intent(in) :: k, n
       m = ieor (k, ishft (k, n) )
     end function m
   end function kiss
 
   function kisset (ix, iy, iz, iw)
-     integer :: kisset, ix, iy, iz, iw
+     integer :: kisset
+     integer, intent(in) :: ix, iy, iz, iw
      x = ix
      y = iy
      z = iz
