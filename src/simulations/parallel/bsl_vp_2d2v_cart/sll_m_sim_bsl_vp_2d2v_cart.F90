@@ -12,6 +12,8 @@ module sll_m_sim_bsl_vp_2d2v_cart
   use sll_m_interpolators_1d_base
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_sim_base
+  use sll_m_xdmf
+
   implicit none
 
   type, extends(sll_simulation_base_class) :: &

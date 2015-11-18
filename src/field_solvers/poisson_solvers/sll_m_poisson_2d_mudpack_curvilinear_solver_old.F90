@@ -788,7 +788,7 @@ cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_value(x,y)
 cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
 ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
 return
-end
+end subroutine
 
 subroutine mudpack_curvilinear_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
 real(8)  :: x,cxx,cx,cxy
@@ -801,7 +801,7 @@ cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
 ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
 
 return
-end
+end subroutine
 
 !> input mixed derivative b.c. to mud2sp
 subroutine mudpack_curvilinear_bndcr(kbdy,xory,alfa,gbdy)
@@ -826,7 +826,7 @@ if (kbdy == 4) then  ! y=yd boundary
    gbdy = py + alfa*pe
    return
 end if
-end
+end subroutine
 
 end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 
