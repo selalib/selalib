@@ -547,7 +547,7 @@ contains
           quasineutral%mat_qn_inverse(m,i,:) = &
           quasineutral%mat_qn_inverse(m,i,:)   &
           - mu_weights(p)*mat_stock2(i,:)*  &
-          cmplx(dexp(-mu_points(p)/quasineutral%T_i(i+1)),0._f64,f64)
+          cmplx(exp(-mu_points(p)/quasineutral%T_i(i+1)),0._f64,f64)
         enddo
       enddo 
     enddo     
@@ -682,7 +682,7 @@ contains
     rho2d(2) = sqrt(2._f64*mu_points(p))
     call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
     do i = 1, Nc(1)+1
-      gamma0(i) = gamma0(i) + mu_weights(p)*dexp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
+      gamma0(i) = gamma0(i) + mu_weights(p)*exp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
     enddo
   enddo
   do i = 1, Nc(1)+1
@@ -742,7 +742,7 @@ contains
       rho2d(1) = sqrt(2._f64*mu_points(p))
       rho2d(2) = sqrt(2._f64*mu_points(p))
       call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-      !gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(1._f64-tmp1**2)
+      !gamma0 = gamma0 + mu_weights(p)*exp(-mu_points(p))*(1._f64-tmp1**2)
       gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
       !gamma0 = gamma0 + mu_weights(p)*(tmp1**2)
      enddo
@@ -1828,13 +1828,13 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !    delta_x=real(real(mu_max,f64)/real(N_approx,f64),f64)
 !    do i=1,N_approx/2-1
 !      mu = real(2._f64*real(i,f64)*delta_x,f64)
-!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
 !    do i=1,N_approx/2
 !      mu = real((2._f64*real(i,f64)-1._f64)*delta_x,f64)
-!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
-!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*dexp(-mu_max)
+!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*exp(-mu_max)
 !    val = val*real(delta_x/3._f64,f64)
   end subroutine compute_gamma0
 

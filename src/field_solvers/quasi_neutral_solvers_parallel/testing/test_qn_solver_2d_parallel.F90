@@ -22,6 +22,7 @@ program test_qn_solver_2d_parallel
   use sll_m_collective
   use sll_m_qn_solver_2d_parallel
   use sll_m_boundary_condition_descriptors
+  use iso_fortran_env, only: output_unit
 
 implicit none
 
@@ -53,11 +54,11 @@ implicit none
         BC = SLL_DIRICHLET
      endif
      if (myrank==0) then
-        call flush(6)
+        flush( output_unit )
         print*, ' '
-        call flush(6)
+        flush( output_unit )
         print*, 'Testing sll_qns2d_angular_spect_method_par with ', BC
-        call flush(6)
+        flush( output_unit )
         print*, ' '
      endif
      SLL_ALLOCATE(Te(NP_r), ierr)
@@ -69,9 +70,9 @@ implicit none
 
   if (myrank==0) then
      if (prod4test(1)==1._f64) then
-        call flush(6)
+        flush( output_unit )
         print*, 'test_sll_qns2d_angular_spect_method_par: PASSED'
-        call flush(6)
+        flush( output_unit )
         print*, ' '
      endif
   endif
@@ -225,18 +226,18 @@ contains
     average_err  = average_err/(NP_r_loc*NP_theta_loc)
     average_err_bound = average_err_bound/(NP_r_loc*NP_theta_loc)
 
-    call flush(6)
+    flush( output_unit )
     print*, 'Error in proc', myrank, ':', average_err
-    call flush(6)
+    flush( output_unit )
     print*, 'Boundary error in proc', myrank, ':', average_err_bound
-    call flush(6)
+    flush( output_unit )
     print*, ' '
     if ( average_err > average_err_bound) then
-       call flush(6)
+       flush( output_unit )
        print*, 'test_sll_qns2d_angular_spect_method_par: FAILED'
-       call flush(6)
+       flush( output_unit )
        print*, 'myrank=', myrank
-       call flush(6)
+       flush( output_unit )
        print*, ' '
        stop
     endif

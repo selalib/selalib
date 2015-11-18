@@ -11,7 +11,8 @@ use sll_m_utilities, only : &
 
 use sll_m_interpolators_1d_base
 use sll_m_quintic_spline_interpolator_1d
- 
+use iso_fortran_env, only: output_unit
+
 
 implicit none
 
@@ -87,7 +88,7 @@ call initialize_layout_with_distributed_array( &
            nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
 if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta1 )
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
 SLL_CLEAR_ALLOCATE(f_eta1(1:loc_sz_i,1:loc_sz_j),error)
@@ -98,7 +99,7 @@ call initialize_layout_with_distributed_array( &
             nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
 if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta2 )
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 SLL_CLEAR_ALLOCATE(f_eta2(1:loc_sz_i,1:loc_sz_j),error)

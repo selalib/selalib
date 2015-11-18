@@ -200,7 +200,7 @@ character(len=*), parameter :: this_sub_name = 'read_data_solver'
 
 NAMELIST/nlcham/ntypfr,potfr
 
-call getarg( 1, argv); write(*,'(1x, a)') argv
+call get_command_argument( 1, argv); write(*,'(1x, a)') argv
 
 !------------------------------------------------------------!
 !     Reads in default parameters from input file (.inp)        !
