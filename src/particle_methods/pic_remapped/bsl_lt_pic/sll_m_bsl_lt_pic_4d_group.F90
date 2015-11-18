@@ -95,7 +95,7 @@ module sll_m_bsl_lt_pic_4d_group
     !> @name The sparse grid object used for the interpolation of the remapped density f, if remapping with sparse grid
     !> @{
     type(sparse_grid_interpolator_4d)                           :: sparse_grid_interpolator
-    sll_int32, dimension(4)                                     :: sparse_grid_max_levels
+    sll_int32,  dimension(4)                                    :: sparse_grid_max_levels
     sll_real64, dimension(:), allocatable                       :: remapped_f_sparse_grid_coefficients
     ! maybe more stuff is needed here
     !> @}
@@ -562,7 +562,7 @@ contains
         remapping_cart_grid_number_cells_y,         &   ! for splines
         remapping_cart_grid_number_cells_vx,        &   ! for splines
         remapping_cart_grid_number_cells_vy,        &   ! for splines
-        remapping_sparse_grid_max_level,            &   ! for the sparse grid: for now, same level in each dimension
+        remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         number_deposition_particles,                &   ! lower bound for the number of deposition particles
         number_markers_x,                           &
         number_markers_y,                           &
@@ -576,32 +576,32 @@ contains
 
     type( sll_bsl_lt_pic_4d_group ), pointer :: res
 
-    sll_real64, intent(in)  :: species_charge
-    sll_real64, intent(in)  :: species_mass
-    sll_int32,  intent(in)  :: particle_group_id
-    logical,    intent(in)  :: domain_is_x_periodic
-    logical,    intent(in)  :: domain_is_y_periodic
+    sll_real64,               intent(in)  :: species_charge
+    sll_real64,               intent(in)  :: species_mass
+    sll_int32,                intent(in)  :: particle_group_id
+    logical,                  intent(in)  :: domain_is_x_periodic
+    logical,                  intent(in)  :: domain_is_y_periodic
 
-    sll_int32,  intent(in)  :: remap_f_type
-    sll_int32,  intent(in)  :: remap_degree
-    sll_real64, intent(in)  :: remapping_grid_vx_min
-    sll_real64, intent(in)  :: remapping_grid_vx_max
-    sll_real64, intent(in)  :: remapping_grid_vy_min
-    sll_real64, intent(in)  :: remapping_grid_vy_max
-    sll_int32,  intent(in)  :: remapping_cart_grid_number_cells_x
-    sll_int32,  intent(in)  :: remapping_cart_grid_number_cells_y
-    sll_int32,  intent(in)  :: remapping_cart_grid_number_cells_vx
-    sll_int32,  intent(in)  :: remapping_cart_grid_number_cells_vy
-    sll_int32,  intent(in)  :: remapping_sparse_grid_max_level
-    sll_int32,  intent(in)  :: number_deposition_particles
-    sll_int32,  intent(in)  :: number_markers_x
-    sll_int32,  intent(in)  :: number_markers_y
-    sll_int32,  intent(in)  :: number_markers_vx
-    sll_int32,  intent(in)  :: number_markers_vy
-    sll_int32,  intent(in)  :: flow_grid_number_cells_x
-    sll_int32,  intent(in)  :: flow_grid_number_cells_y
-    sll_int32,  intent(in)  :: flow_grid_number_cells_vx
-    sll_int32,  intent(in)  :: flow_grid_number_cells_vy
+    sll_int32,                intent(in)  :: remap_f_type
+    sll_int32,                intent(in)  :: remap_degree
+    sll_real64,               intent(in)  :: remapping_grid_vx_min
+    sll_real64,               intent(in)  :: remapping_grid_vx_max
+    sll_real64,               intent(in)  :: remapping_grid_vy_min
+    sll_real64,               intent(in)  :: remapping_grid_vy_max
+    sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_x
+    sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_y
+    sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vx
+    sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vy
+    sll_int32,  dimension(4), intent(in)  :: remapping_sparse_grid_max_levels
+    sll_int32,                intent(in)  :: number_deposition_particles
+    sll_int32,                intent(in)  :: number_markers_x
+    sll_int32,                intent(in)  :: number_markers_y
+    sll_int32,                intent(in)  :: number_markers_vx
+    sll_int32,                intent(in)  :: number_markers_vy
+    sll_int32,                intent(in)  :: flow_grid_number_cells_x
+    sll_int32,                intent(in)  :: flow_grid_number_cells_y
+    sll_int32,                intent(in)  :: flow_grid_number_cells_vx
+    sll_int32,                intent(in)  :: flow_grid_number_cells_vy
 
     type(sll_cartesian_mesh_2d), pointer, intent(in) :: space_mesh_2d
 
@@ -772,11 +772,11 @@ contains
       ! C.2 interpolator for sparse grids
 
       ! C.2.a  sparse remapping grid
-      print*, "sll_bsl_lt_pic_4d_group_new - C.2", remapping_sparse_grid_max_level
-      res%sparse_grid_max_levels(1) = remapping_sparse_grid_max_level
-      res%sparse_grid_max_levels(2) = remapping_sparse_grid_max_level
-      res%sparse_grid_max_levels(3) = remapping_sparse_grid_max_level
-      res%sparse_grid_max_levels(4) = remapping_sparse_grid_max_level
+      print*, "sll_bsl_lt_pic_4d_group_new - C.2", remapping_sparse_grid_max_levels
+      res%sparse_grid_max_levels(1) = remapping_sparse_grid_max_levels(1)
+      res%sparse_grid_max_levels(2) = remapping_sparse_grid_max_levels(2)
+      res%sparse_grid_max_levels(3) = remapping_sparse_grid_max_levels(3)
+      res%sparse_grid_max_levels(4) = remapping_sparse_grid_max_levels(4)
       call res%sparse_grid_interpolator%initialize(         &
                   res%sparse_grid_max_levels,               &
                   res%remapped_f_interpolation_degree,      &
@@ -786,7 +786,7 @@ contains
                   res%remapping_grid_eta_max                &
                   )
 
-      print*, "sll_bsl_lt_pic_4d_group_new - C.2 -- ", remapping_sparse_grid_max_level
+      print*, "sll_bsl_lt_pic_4d_group_new - C.2 -- ", remapping_sparse_grid_max_levels
       print*, "sll_bsl_lt_pic_4d_group_new - res%sparse_grid_interpolator%size_basis = ", res%sparse_grid_interpolator%size_basis
 
       ! C.2.b  array of sparse grid coefficients for remapped_f
@@ -1956,7 +1956,8 @@ contains
     sll_real64 :: marker_distance_to_first_corner
 
     ! working space
-    sll_int32  :: cst, approx_ratio_vx, approx_ratio_vy
+    sll_int32  :: cst
+    sll_real64 :: cst_real, ratio_vx, ratio_vy
     sll_real64 :: tmp, tmp1, tmp2
 
     sll_real64 :: mesh_period_x
@@ -2053,8 +2054,8 @@ contains
         ! particles will be created on a cartesian grid denoted 'deposition_grid' with the following properties:
         !
         !   - it matches the poisson grid in the sense that its nb of cells satisfies (with dg_np_d = deposition_grid_num_points_d)
-        !     dg_np_x = cst * p_group%space_mesh_2d%num_cells1  and
-        !     dg_np_y = cst * p_group%space_mesh_2d%num_cells2  for some  cst
+        !     dg_np_x ~ cst * p_group%space_mesh_2d%num_cells1  and
+        !     dg_np_y ~ cst * p_group%space_mesh_2d%num_cells2  for some  cst
         !
         !   - the griding in vx, vy is obtained from that of the initial markers, using the linear scaling
         !     dg_np_vx / (dg_np_x * dg_np_y) = (approx) number_markers_vx / (number_markers_x * number_markers_y)
@@ -2063,36 +2064,38 @@ contains
         !   - its number of nodes satisfies
         !     dg_np = dg_np_x * dg_np_y * dg_nc_vx * dg_nc_vy >= p_group%number_deposition_particles
 
-        ! we will have  dg_np_vx = cst * cst * approx_ratio_vx
-        approx_ratio_vx = int(ceiling( p_group%number_markers_vx * 1./ (p_group%number_markers_x * p_group%number_markers_y)       &
-                                     * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2 ))
-        ! and           dg_np_vy = cst * cst * approx_ratio_vy
-        approx_ratio_vy = int(ceiling( p_group%number_markers_vy * 1./ (p_group%number_markers_x * p_group%number_markers_y)       &
-                                     * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2 ))
+        ! we will have  dg_np_vx ~ cst * cst * ratio_vx
+        ratio_vx = p_group%number_markers_vx * 1./ (p_group%number_markers_x * p_group%number_markers_y)       &
+                                             * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2
+        ! and           dg_np_vy ~ cst * cst * ratio_vy
+        ratio_vy = p_group%number_markers_vy * 1./ (p_group%number_markers_x * p_group%number_markers_y)       &
+                                             * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2
 
-        ! and           dg_np = cst * cst * cst * cst * num_cells1 * num_cells2 * approx_ratio_vx * approx_ratio_vy
+        ! and           dg_np ~ cst * cst * cst * cst * num_cells1 * num_cells2 * ratio_vx * ratio_vy
         !                     >=  p_group%number_deposition_particles
-        tmp = real(p_group%number_deposition_particles, f64)   &
-              / real( approx_ratio_vx * approx_ratio_vy * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2, f64)
-        cst = int(ceiling( sqrt(sqrt( tmp )) ))
 
-        deposition_grid_num_cells_x  = cst * p_group%space_mesh_2d%num_cells1 - 1
-        deposition_grid_num_cells_y  = cst * p_group%space_mesh_2d%num_cells2 - 1
-        deposition_grid_num_cells_vx = cst * cst * approx_ratio_vx - 1
-        deposition_grid_num_cells_vy = cst * cst * approx_ratio_vy - 1
+        ! cst_real is the float approx of cst above
+        cst_real = (real(p_group%number_deposition_particles, f64)   &
+               / real( ratio_vx * ratio_vy * p_group%space_mesh_2d%num_cells1 * p_group%space_mesh_2d%num_cells2, f64)) ** (1./6)
 
-        g_num_points_x  = deposition_grid_num_cells_x  + 1
-        g_num_points_y  = deposition_grid_num_cells_y  + 1
-        g_num_points_vx = deposition_grid_num_cells_vx + 1
-        g_num_points_vy = deposition_grid_num_cells_vy + 1
+        cst = int(ceiling( cst_real ))
 
-        tmp = real(  (deposition_grid_num_cells_x +1) * (deposition_grid_num_cells_y +1) &
-                   * (deposition_grid_num_cells_vx+1) * (deposition_grid_num_cells_vy+1) , f64)
-        SLL_ASSERT( tmp >= p_group%number_deposition_particles )
+        g_num_points_x  = max( cst * p_group%space_mesh_2d%num_cells1, 2 )
+        g_num_points_y  = max( cst * p_group%space_mesh_2d%num_cells2, 2 )
+        g_num_points_vx = max( int(ceiling( cst_real * cst_real * ratio_vx )), 2 )
+        g_num_points_vy = max( int(ceiling( cst_real * cst_real * ratio_vy )), 2 )
 
+        deposition_grid_num_cells_x  = g_num_points_x  - 1
+        deposition_grid_num_cells_y  = g_num_points_y  - 1
+        deposition_grid_num_cells_vx = g_num_points_vx - 1
+        deposition_grid_num_cells_vy = g_num_points_vy - 1
+
+        ! todo: write these computations in constructor, and set p_group%number_deposition_particles to the actual nb of dep parts
+        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F]  -- given lower bound:",p_group%number_deposition_particles
+
+        tmp = real(  g_num_points_x * g_num_points_y * g_num_points_vx * g_num_points_vy, f64)  ! number of deposition particles
         print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F]  will use ", tmp, "deposition particles"
-        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F]  -- given lower bound:", p_group%number_deposition_particles
-
+        SLL_ASSERT( tmp >= p_group%number_deposition_particles )
 
         ! then we position the grid of deposition cells so that every deposition particle is _inside_ a poisson cell
         ! (so that we do not have to do something special for periodic boundary conditions)
@@ -2373,7 +2376,6 @@ contains
     !>   - C.4 write the resulting f value or deposit the deposition particle just created (depending on the scenario)
 
     ! <<loop_on_flow_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
-
 
     ! cell size of the initial_markers_grid, for finite differencing of the flow  - same as in [[write_f_on_remap_grid-h_parts_x]]
     h_markers_x    = p_group%initial_markers_grid%delta_eta1
@@ -2822,14 +2824,18 @@ contains
 
     if( (scenario == SLL_BSL_LT_PIC_DEPOSIT_F) .and. enforce_total_charge )then
 
+
       if( deposited_charge == 0 )then
         print *, "WARNING (76576537475) -- total deposited charge is zero, which is strange..."
         print *, "                      -- (no charge correction in this case) "
       else
         charge_correction_factor = target_total_charge / deposited_charge
 
+        print *, "[Enforcing charge]: target_total_charge, deposited_charge, charge_correction_factor = ", &
+          target_total_charge, deposited_charge, charge_correction_factor
+
         do i_cell_x = 1, p_group%space_mesh_2d%num_cells1
-          do j_y = 1, p_group%space_mesh_2d%num_cells2
+          do i_cell_y = 1, p_group%space_mesh_2d%num_cells2
 
             ! index of the Poisson cell
             i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1

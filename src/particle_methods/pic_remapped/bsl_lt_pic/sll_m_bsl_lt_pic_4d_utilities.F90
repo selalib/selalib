@@ -389,10 +389,10 @@ contains
     eval_landau_fx = 1._f64 + alpha * cos(kx * x)
   end function eval_landau_fx
 
-  function eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, x, y, vx, vy)
+  function eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x, y, vx, vy)
     sll_real64 :: x0,y0,vx0,vy0             ! centers of the hat
     sll_real64 :: r_x,r_y,r_vx,r_vy         ! radii of the hat
-    sll_real64 :: basis_height, hat_shift
+    sll_real64 :: basis_height, shift
     sll_real64 :: x, y, vx, vy
     sll_real64 :: eval_hat_function
 
@@ -406,10 +406,11 @@ contains
     inv_r_vx = 1./r_vx
     inv_r_vy = 1./r_vy
 
-    eval_hat_function = basis_height + hat_shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
-                                                 * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
-                                                 * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
-                                                 * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
+    eval_hat_function = basis_height + shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
+                                             * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
+                                             * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
+                                             * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
+
   end function eval_hat_function
 
 end module  sll_m_bsl_lt_pic_4d_utilities
