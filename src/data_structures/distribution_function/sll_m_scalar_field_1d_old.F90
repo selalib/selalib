@@ -29,12 +29,16 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_1d_old
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
+
   use sll_m_constants
   use sll_m_scalar_field_initializers_base
+  use sll_m_gnuplot
+
   implicit none
   
   !I removed this line because, it not exists in 2d version
