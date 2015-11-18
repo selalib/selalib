@@ -25,7 +25,7 @@ program sim_bsl_gk_3d1v_polar_multi_mu
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
 !if(sll_get_collective_rank(sll_world_collective)==0)then
