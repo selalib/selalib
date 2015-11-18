@@ -3,9 +3,6 @@
 !> Library to solve Maxwell system in 2D and 3D
 !> @details
 !>
-!> - Include file
-!> <code>sll_maxwell_solvers.h</code>
-!>
 !> - Fortran modules
 !>  + sll_m_maxwell_2d_fdtd
 !>  + sll_m_maxwell_2d_pstd

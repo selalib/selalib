@@ -48,6 +48,7 @@ use sll_m_advection_1d_periodic
 use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_m_fft
 use sll_m_sim_base
+use sll_m_xdmf
 use sll_m_time_splitting_coeff
 use sll_m_poisson_1d_periodic  
 use sll_m_poisson_1d_periodic_solver
