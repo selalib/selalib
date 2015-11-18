@@ -26,10 +26,17 @@ program unit_test
   sll_real64 :: ierr  ! this is not used as an integer below, bad name
   sll_real64 :: err_var
   sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
-
+  sll_int32 :: rnd_seed_size
+  sll_int32, allocatable :: rnd_seed(:) !< Random seed.
+ 
   call print_defaultfftlib()
   
-  
+  call random_seed (size=rnd_seed_size)
+  allocate(rnd_seed(rnd_seed_size))
+  do j=1, rnd_seed_size
+     rnd_seed(j) = 100+15*j
+  end do
+  call random_seed (put=rnd_seed)
   
 ! test getter and setter functions in complex case
   s = 2**imin
