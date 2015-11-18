@@ -207,7 +207,10 @@ contains
     sll_int32   :: remapping_cart_grid_number_cells_y
     sll_int32   :: remapping_cart_grid_number_cells_vx
     sll_int32   :: remapping_cart_grid_number_cells_vy
-    sll_int32   :: remapping_sparse_grid_max_level
+    sll_int32   :: remapping_sparse_grid_max_level_x
+    sll_int32   :: remapping_sparse_grid_max_level_y
+    sll_int32   :: remapping_sparse_grid_max_level_vx
+    sll_int32   :: remapping_sparse_grid_max_level_vy
     sll_int32   :: number_deposition_particles
     sll_int32   :: number_markers_x
     sll_int32   :: number_markers_y
@@ -219,6 +222,8 @@ contains
     sll_int32   :: flow_grid_number_cells_vy
 
     sll_int32   :: initial_density_identifier
+
+    sll_int32, dimension(4)   :: remapping_sparse_grid_max_levels
 
     ! <<simple_pic_particle_group>>
 
@@ -272,7 +277,10 @@ contains
                                     remapping_cart_grid_number_cells_y,          &   ! for splines
                                     remapping_cart_grid_number_cells_vx,         &   ! for splines
                                     remapping_cart_grid_number_cells_vy,         &   ! for splines
-                                    remapping_sparse_grid_max_level          ! for the sparse grid (same level in each dim for now)
+                                    remapping_sparse_grid_max_level_x,           &   ! for the sparse grid
+                                    remapping_sparse_grid_max_level_y,           &   ! for the sparse grid
+                                    remapping_sparse_grid_max_level_vx,          &   ! for the sparse grid
+                                    remapping_sparse_grid_max_level_vy               ! for the sparse grid
 
 
     ! discretization of the deposited f
@@ -348,8 +356,14 @@ contains
     ! construct [[particle_group]]
     if( sim%use_lt_pic_scheme )then
 
+
       ! construct [[bsl_lt_pic_particle_group]]
       particle_group_id = 1
+      remapping_sparse_grid_max_levels(1) = remapping_sparse_grid_max_level_x
+      remapping_sparse_grid_max_levels(2) = remapping_sparse_grid_max_level_y
+      remapping_sparse_grid_max_levels(3) = remapping_sparse_grid_max_level_vx
+      remapping_sparse_grid_max_levels(4) = remapping_sparse_grid_max_level_vy
+
       bsl_lt_pic_particle_group => sll_bsl_lt_pic_4d_group_new( &
         SPECIES_CHARGE,                             &
         SPECIES_MASS,                               &
@@ -366,7 +380,7 @@ contains
         remapping_cart_grid_number_cells_y,                  &   ! for splines
         remapping_cart_grid_number_cells_vx,                 &   ! for splines
         remapping_cart_grid_number_cells_vy,                 &   ! for splines
-        remapping_sparse_grid_max_level,                     &   ! for the sparse grid: for now, same level in each dimension
+        remapping_sparse_grid_max_levels,                     &   ! for the sparse grid: for now, same level in each dimension
         number_deposition_particles,                &
         number_markers_x,                           &
         number_markers_y,                           &
@@ -557,6 +571,8 @@ contains
     rdx = 1._f64/sim%mesh_2d%delta_eta1
     rdy = 1._f64/sim%mesh_2d%delta_eta2
 
+    print*,  "aaaaaa"
+
     !  ----------------------------------------------------------------------------------------------------
     !> ## Time loop initialisation
     !>
@@ -579,6 +595,8 @@ contains
 
     call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
 
+    print*,  "aaa bb"
+
     !! -- --  ?? [end]  -- --
 
 
@@ -593,7 +611,9 @@ contains
     
     call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
          MPI_SUM, rho1d_receive   )
-    
+
+    print*,  "aaaa cc"
+
     do j = 1, ncy+1
        do i = 1, ncx+1
           sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
@@ -601,6 +621,18 @@ contains
     enddo
 
     !! -- --  MPI communications of rho [end]  -- --
+
+    print*,  "aa  dd"
+
+    print*,  "aa  dd 1 ", xmin
+    print*,  "aa  dd 2 ", sim%mesh_2d%eta1_max
+    print*,  "aa  dd 3 ", ncx+1
+    print*,  "aa  dd 4 ", ymin
+    print*,  "aa  dd 5 ", sim%mesh_2d%eta2_max
+    print*, sim%my_rank
+    print*, sim%rho
+    print*, size(sim%rho)
+
 
     if (sim%my_rank == 0) then
        it = 0
@@ -610,14 +642,18 @@ contains
        ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%rho, 'rho_init_standPUSH', 1, ierr )
+            sim%rho, 'rho_init_standPUSH', it+1, ierr )
     endif
 
     !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
     !> sign (hence there is no need to multiply it by an additional physical constant). The resulting field \f$E^0_x\f$
     !> is stored in sim\%E1, and \f$E^0_y\f$ in sim\%E2.
 
+    print*,  "aa  ee"
+
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+
+    print*,  "aa  ff"
 
     ! <<Ex_Ey_output>> using the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably
     ! the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
