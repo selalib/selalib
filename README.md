@@ -2,8 +2,8 @@ Dear selalib developers,
 
 
 To work with gitlab you don’t need to clone again the repository.
-If you want to keep INRIA gforge as primary repository.
-In your selalib directory add the gitlab repository with:
+If you want to keep INRIA gforge as primary repository, add the gitlab 
+repository with:
 ```
 git remote add gitlab git@gitlab.mpcdf.mpg.de/selalib/selalib.git
 ```
@@ -23,31 +23,33 @@ After this, you can push your local branch on gitlab with
 git push gitlab your_branch
 ```
 
-Your branch will be available on gitlab interface and available for a merge request
-If this branch is changed on the interface, you can update it with:
+Your branch will be available on gitlab interface to file a merge 
+request. If this branch is changed on gitlab, you can update it with:
 ```
 git fetch gitlab
 git checkout your_branch
 git merge gitlab/your_branch
 ```
 
-You can push to the INRIA gorge
+To push to the INRIA gorge as primary repository:
 ```
 git push origin your_branch
 ```
 
-If you merge your branch with the develop branch on gitlab, don’t forget to remove
-your_branch on gitlab.
-```sh
+If you merge your branch with the develop branch on gitlab, don’t forget to 
+remove your_branch on gitlab.
+```
 git push gitlab —delete your_branch
 ```
 
-it deletes the remote branch not the local one and you still have a copy on the INRIA gforge.
+It deletes the remote branch not the local one and you still have a copy 
+on the INRIA gforge.
 
 With this new gitlab server, we change the way we use git.
 I describe this process, you can find the long version with figures here
  (https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
-I added some git commands but branch creation and merge could be done through the gitlab interface.
+I added some git commands but branch creation and merge could be done through 
+the gitlab interface.
 
 
 ## New rules
@@ -63,8 +65,9 @@ I added some git commands but branch creation and merge could be done through th
 	- The develop branch serves as an integration branch for features.
 
 Every new branch created has to be dedicated to a new feature that will be
-available in the release. If not, you can stay with the actual repository on the INRIA gforge.
-The master branch on the INRIA gforge will be regularly updated from master branch of the gitlab server.
+available in the release. If not, you can stay with the actual repository on 
+the INRIA gforge. The master branch on the INRIA gforge will be regularly 
+updated from master branch of the gitlab server.
 
 - Each new feature should reside in its own branch.
 - Feature branches use develop as their parent branch.
@@ -73,13 +76,17 @@ The master branch on the INRIA gforge will be regularly updated from master bran
 ## Example: Develop a new feature
 
 Base the feature branches on develop:
-$ git checkout -b some-feature develop
+```
+git checkout -b some-feature develop
+```
 After some commits, file a merge request and delete the branch:
-$ git pull gitlab develop
-$ git checkout develop
-$ git merge some-feature
-$ git push gitlab develop
-$ git branch -d some-feature
+```
+git pull gitlab develop
+git checkout develop
+git merge some-feature
+git push gitlab develop
+git branch -d some-feature
+```
 
 Very important, the branch created has to be deleted after the merge. If you want to
 fix something or extend a feature, create a new branch!
