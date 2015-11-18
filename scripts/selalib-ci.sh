@@ -1,5 +1,4 @@
 #!/bin/bash
- 
 HOST=`hostname -s`
 echo "${HOST}"
 ARCH=`uname -s`
@@ -10,20 +9,14 @@ awk '/^Author/ {sub(/\\$/,""); getline t; print $0 t; next}; 1' | \
 sed -e 's/^Author: //g' | \
 sed -e 's/>Date:   \([0-9]*-[0-9]*-[0-9]*\)/>\t\1/g' | \
 sed -e 's/^\(.*\) \(\)\t\(.*\)/\3    \1    \2/g' > ChangeLog
-
 rm -rf build
 mkdir build
 cd build; {
-${CMAKE} -DCMAKE_BUILD_TYPE=Release \
-	-DHDF5_PARALLEL_ENABLED=ON ..
+cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON ..
 make Experimental
 }; cd -
-
 rm -rf build
-
 exit 0
-
-
 mkdir build
 cd build; {
 cmake ../
