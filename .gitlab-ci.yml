@@ -1,8 +1,8 @@
 stages:
-  - test
+  - ctest
   
-job1:
-  stage: test
+ubuntu:
+  stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
   only:
@@ -10,8 +10,8 @@ job1:
   tags:
     - ubuntu
     
-job2:
-  stage: test
+mavericks:
+  stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
   only:
@@ -19,8 +19,8 @@ job2:
   tags:
     - osx
     
-job3:
-  stage: test
+fedora:
+  stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
   only:
