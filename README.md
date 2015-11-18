@@ -1,28 +1,40 @@
 Dear selalib developers,
 
 
-To work with gitlab you don’t need to clone the repository and stay with
-the clone you download from INRIA gorge. If you want to push a branch on
-gitlab repository, in your selalib directory add the repository with
-```sh
+To work with gitlab you don’t need to clone again the repository.
+If you want to keep INRIA gforge as primary repository.
+In your selalib directory add the gitlab repository with:
+```
 git remote add gitlab git@gitlab.mpcdf.mpg.de/selalib/selalib.git
 ```
 
+If you want to set gitlab as primary repository, do:
+```
+git remote set-url origin git@gitlab.mpcdf.mpg.de/selalib/selalib.git
+```
+
+Check your repositories with:
+```
+git remote -v
+```
+
 After this, you can push your local branch on gitlab with
-```sh
+```
 git push gitlab your_branch
 ```
 
 Your branch will be available on gitlab interface and available for a merge request
 If this branch is changed on the interface, you can update it with:
-```sh
+```
 git fetch gitlab
 git checkout your_branch
 git merge gitlab/your_branch
 ```
 
 You can push to the INRIA gorge
-$ git push origin your_branch
+```
+git push origin your_branch
+```
 
 If you merge your branch with the develop branch on gitlab, don’t forget to remove
 your_branch on gitlab.
@@ -86,9 +98,11 @@ Every achieved step has to be communicated to all developers.
 
 ## Example: Prepare the release
 
+Create the release branch:
 ```
 git checkout -b release-0.1 develop
 ```
+
 After documentation generation and bug fixes, merge it into master and develop.
 ```
 git checkout master
@@ -99,6 +113,7 @@ git merge release-0.1
 git push gitlab develop
 git branch -d release-0.1
 ```
+
 Tag the commit :
 ```
 git tag -a 0.1 -m "Initial public release" master
@@ -110,10 +125,10 @@ git push --tags
 This part concerns every developer and bug should be reported and assigned through the “Issues” tab of Gitlab.
 Create a maintenance branch off of master, fixes the issue with as many commits as necessary,
 then merges it directly back into master.
-
 ```
 git checkout -b issue-#001 master
 ```
+
 Fix the bug
 ```
 git checkout master
@@ -122,7 +137,6 @@ git push gitlab master
 ```
 
 Updates  need to be included also in develop
-
 ```
 git checkout develop
 git merge issue-#001
