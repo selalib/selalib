@@ -1,3 +1,7 @@
 demo:
-    script:
-        - "scripts/selalib-ci.sh"
+  script:
+    - "scripts/selalib-ci.sh"
+trigger:
+  script:
+    - "wget --auth-no-challenge --no-check-certificate http://ci.inria.fr/selalib/git/notifyCommit?url=ssh://sll_jenkins@scm.gforge.inria.fr//gitroot/selalib/selalib.git"
+  
