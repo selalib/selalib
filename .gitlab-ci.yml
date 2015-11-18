@@ -1,3 +1,9 @@
-demo:
+ctest:
   script:
     - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - ubuntu
+    - osx
+    - fedora
