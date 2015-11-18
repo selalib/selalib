@@ -55,6 +55,7 @@ use sll_m_poisson_1d_polar_solver
 use sll_m_advection_1d_spectral
 use sll_m_advection_1d_ampere
 use sll_m_primitives
+use sll_m_xdmf
 
 #ifdef _OPENMP
 use omp_lib
