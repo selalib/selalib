@@ -9,12 +9,12 @@ module sll_m_sim_bsl_gc_2d0v_curv
 #include "sll_memory.h"
 !#include "sll_field_2d.h"
 #include "sll_errors.h"
-#include "sll_fft.h"
 #include "sll_poisson_solvers.h"
 !  use sll_m_constants
 !  use sll_m_cartesian_meshes  
 !  use sll_m_advection_1d_periodic
 !  use sll_m_interpolators_1d_base
+  use sll_m_fft
   use sll_m_advection_2d_base
   use sll_m_characteristics_1d_explicit_euler
   use sll_m_advection_2d_bsl
