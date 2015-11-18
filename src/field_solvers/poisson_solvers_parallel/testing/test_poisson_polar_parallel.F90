@@ -8,6 +8,7 @@ program test_poisson_polar_parallel
        sll_pi
   use sll_m_gnuplot_parallel
   use sll_m_poisson_polar_parallel
+  use iso_fortran_env, only: output_unit
 
 implicit none
 
@@ -75,12 +76,12 @@ call initialize_layout_with_distributed_array( nr,     &
                                                   psize,  &
                                                   1,      &
                                                   layout_a )
-call flush(6)
+flush( output_unit )
 if (prank == 0) then
    call sll_view_lims(layout_a)
    call sll_view_lims(layout_a)
 end if
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout_a, nr_loc, na_loc )
 SLL_CLEAR_ALLOCATE(rhs(1:nr_loc,1:na_loc),error)

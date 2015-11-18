@@ -307,7 +307,7 @@ contains
     namelist /landau_params/ lalpha, lmode, pi_unit, interval_a, interval_b
  
     ! Read namelists from input file
-    call getarg(1,arg_filename)
+    call get_command_argument(1,arg_filename)
     open(unit=input_file, file=trim(arg_filename), IOStat=IO_stat)
     if( IO_stat /= 0 ) then
         print *, 'init_file() failed to open file ', arg_filename
