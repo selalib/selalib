@@ -181,7 +181,7 @@ contains
          else
             djacp2 = 0.0._f64
          end if
-         coef = dsqrt(dble((2*m+1)*2*(n+m+1)))
+         coef = sqrt(dble((2*m+1)*2*(n+m+1)))
          dum(:) = 1. !calcul de (1.0._f64-y)**m
          do i = 1,m
             dum(:) = dum(:) * (1.0._f64-y(:))
