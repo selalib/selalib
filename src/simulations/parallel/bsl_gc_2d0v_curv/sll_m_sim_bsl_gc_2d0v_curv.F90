@@ -45,6 +45,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_common_coordinate_transformations
   use sll_m_common_array_initializers
   use sll_m_parallel_array_initializer
+
+  use sll_m_xdmf
   
 #ifdef MUDPACK
  !use sll_m_mudpack_curvilinear
@@ -54,6 +56,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_poisson_2d_elliptic_solver, &
      only: new_poisson_2d_elliptic_solver, &
            es_gauss_legendre
+
   implicit none
 
   sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI = 0 

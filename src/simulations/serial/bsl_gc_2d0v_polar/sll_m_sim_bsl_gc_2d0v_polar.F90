@@ -42,6 +42,7 @@ module sll_m_sim_bsl_gc_2d0v_polar
 
   use sll_m_boundary_condition_descriptors
   use sll_m_hermite_interpolation_2d
+  use sll_m_xdmf
   
   !use sll_m_parallel_array_initializer
 
