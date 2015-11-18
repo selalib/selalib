@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PROJECT=selalib
+GFORGEPROJECT=selalib
+wget -O - -q --auth-no-challenge --no-check-certificate \
+	http://ci.inria.fr/$PROJECT/git/notifyCommit?url=git%2Bssh://sll_jenkins@scm.gforge.inria.fr//gitroot/$GFORGEPROJECT/$GFORGEPROJECT.git\&branches=prototype-devel
+curl -X POST -F token=6d02ee70098ff617bf46237c5da0e9 https://ci.inria.fr/selalib/project/package
