@@ -37,9 +37,8 @@ module sll_m_sim_bsl_gc_2d0v_polar
 #endif
 !  use sll_m_poisson_2d_base
   use sll_m_poisson_2d_polar_wrapper
-  use sll_m_poisson_2d_elliptic_solver, &
-     only: new_poisson_2d_elliptic_solver, &
-           es_gauss_legendre
+  use sll_m_general_coordinate_elliptic_solver, only: es_gauss_legendre
+  use sll_m_poisson_2d_elliptic_solver, only: new_poisson_2d_elliptic_solver
 
   use sll_m_boundary_condition_descriptors
   use sll_m_hermite_interpolation_2d
