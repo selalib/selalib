@@ -52,7 +52,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
   use sll_m_poisson_1d_periodic_solver
   use sll_m_poisson_1d_polar_solver
   use sll_m_parallel_array_initializer
-
+  use sll_m_xdmf
 
 
   implicit none
