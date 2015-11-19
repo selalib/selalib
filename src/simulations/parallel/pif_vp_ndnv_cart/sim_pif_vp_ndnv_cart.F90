@@ -6,6 +6,8 @@
 program sim_pif_vp_ndnv_cart
    use sll_m_sim_pif_vp_ndnv_cart
    use sll_m_collective
+   use iso_fortran_env, only: output_unit
+
    implicit none
 ! 
    character(len=256) :: filename
@@ -22,13 +24,13 @@ program sim_pif_vp_ndnv_cart
        print *, 'Proceed to run simulation.'
        print *, 'There are ', COMMAND_ARGUMENT_COUNT(), ' simulation files to be run.'
    endif
-   call flush(6)
+   flush( output_unit )
    
   ! Provide files to open as a command line argument, seprated by spaces
   ! argument.
   
   do idx=1, COMMAND_ARGUMENT_COUNT()
-  call getarg(idx, filename)
+  call get_command_argument(idx, filename)
   filename_local = trim(filename)
   call run_from_file(filename)
   end do

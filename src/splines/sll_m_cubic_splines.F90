@@ -51,7 +51,7 @@ module sll_m_cubic_splines
      sll_real64 SLL_PRIV                  :: xmin     !< left boundary
      sll_real64 SLL_PRIV                  :: xmax     !< right boundary
      sll_int32 SLL_PRIV                   :: bc_type  !< periodic, hermite
-     !> scratch space D (L*D=F); refer to the algorithm below. Size depends on 
+     !> scratch space D (L*D=F), refer to the algorithm below. Size depends on 
      !> BCs.
      sll_real64, dimension(:), pointer SLL_PRIV :: d =>null() 
      !> the spline coeffs
@@ -392,7 +392,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   ! Fast spline algorithm description:
   !
   ! - data: the array whose data must be fit with the cubic spline.
-  ! - np: (number of points; length of the data array that must be fit with 
+  ! - np: (number of points, length of the data array that must be fit with 
   !   the spline.
   ! - bc_type: an integer flag describing the type of boundary conditions 
   !   desired.

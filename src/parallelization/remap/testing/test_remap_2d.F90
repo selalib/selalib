@@ -5,6 +5,9 @@ program remap_2d_unit_test
 #include "sll_working_precision.h"
   use sll_m_utilities, only : &
        is_power_of_two
+  use iso_fortran_env, only: &
+       output_unit
+
   implicit none
 
   ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,
@@ -61,7 +64,7 @@ program remap_2d_unit_test
      print *, '--------------- REMAP test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -71,7 +74,7 @@ program remap_2d_unit_test
   end if
 
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -187,7 +190,7 @@ print *, 'applied plan'
               print*, 'program stopped by failure'
               stop
            end if
-           call flush(6)
+           flush( output_unit )
         end do
      end do
      
@@ -208,9 +211,9 @@ print *, 'applied plan'
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   
@@ -239,11 +242,11 @@ print *, 'applied plan'
      print *, '--------------- REMAP 2D test: complex case ------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -342,7 +345,7 @@ print *, 'applied plan'
               print*, 'program stopped by failure'
               stop
            end if
-           call flush(6)
+           flush( output_unit )
         end do
      end do
      
@@ -363,9 +366,9 @@ print *, 'applied plan'
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   

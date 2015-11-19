@@ -26,6 +26,8 @@ program test_layout_output
   use sll_m_hdf5_io_parallel
   use sll_m_utilities, only : &
        is_power_of_two
+  use iso_fortran_env, only: &
+       output_unit
 
   implicit none
 
@@ -74,7 +76,7 @@ program test_layout_output
      print *, '--------------- layout output test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     

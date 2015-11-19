@@ -27,6 +27,7 @@ module sll_m_remapper
 #include "sll_utilities.h"
   use sll_m_utilities, only : is_even, is_power_of_two, int2string
   use sll_m_collective
+  use iso_fortran_env, only: output_unit
 
   implicit none
   private
@@ -2121,7 +2122,7 @@ contains  !******************************************************************
   ! about the layouts, since the global_to_local function only has meaning 
   ! in the context of the global layout. I find this 'mixing' very unpleasant, 
   ! and it might invite confusing those two collectives (the parent and the
-  ! reduced); for now see no clean & easy way to fix this. Fortunately, at 
+  ! reduced), for now see no clean & easy way to fix this. Fortunately, at 
   ! least, the reference to the larger collective is hidden inside the 'layout' 
   ! information and used only by 'global_to_local()'.
 #define MAKE_REMAP_OPTIMIZER( fname, remap_type, box_type ) \
@@ -2470,7 +2471,7 @@ end subroutine fname
     print *, plan%send_displs(:)
     print *, plan%recv_counts(:)
     print *, plan%recv_displs(:)
-    call flush(6)
+    flush( output_unit )
 #endif
   end subroutine optimize_remap_plan_3D
 #endif
@@ -2664,7 +2665,7 @@ end subroutine fname
     
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
-!    call flush(6)
+!    flush( output_unit )
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -2681,7 +2682,7 @@ end subroutine fname
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2784,7 +2785,7 @@ end subroutine fname
 !!$    print *, 'sdispi', sdispi(:)
 !!$    print *, 'rcntsi', rcntsi(:)
 !!$    print *, 'rdispi', rdispi(:)
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$#endif
 
     ! load the send buffer
@@ -2802,7 +2803,7 @@ end subroutine fname
 !!$                  'i = ', i, ' displs(i) = ', sdispi(i)
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2842,9 +2843,9 @@ end subroutine fname
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
+    ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+    !    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -2870,7 +2871,7 @@ end subroutine fname
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2964,7 +2965,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2998,9 +2999,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
@@ -3022,7 +3023,7 @@ print *, 'remap 2d complex:'
     ! Comment when not debugging:
 !!$    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3127,7 +3128,7 @@ print *, 'remap 2d complex:'
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush(6)
+    flush( output_unit )
 #endif
     
     ! load the send buffer
@@ -3143,7 +3144,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3175,9 +3176,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
+    ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+    !    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -3196,7 +3197,7 @@ print *, 'remap 2d complex:'
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3282,7 +3283,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3320,9 +3321,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
  !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
   !  print *, sb(0:(size(sb)-1))
-   ! call flush(6)
+   ! flush( output_unit )
 !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!    call flush(6)
+!    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scnts(0:col_sz-1), &
@@ -3338,7 +3339,7 @@ print *, 'remap 2d complex:'
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3424,7 +3425,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3466,9 +3467,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
+    ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+    !    flush( output_unit )
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scnts(0:col_sz-1), &
@@ -3484,7 +3485,7 @@ print *, 'remap 2d complex:'
     end if
     !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
     !    print *, rb(0:size(rb)-1)
-    !    call flush(6)
+    !    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3605,7 +3606,7 @@ print *, 'remap 2d complex:'
     
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
-!    call flush(6)
+!    flush( output_unit )
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3622,7 +3623,7 @@ print *, 'remap 2d complex:'
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3710,7 +3711,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3755,9 +3756,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3775,7 +3776,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3867,7 +3868,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3921,10 +3922,10 @@ print *, 'remap 2d complex:'
 !!$       print *, 'rcntsi: ', rcntsi(:)
 !!$       print *, 'rdispi: ', rdispi(:)
 !!$       print *, 'uniformity: ', plan%is_uniform
-!!$       call flush(6)
+!!$       flush( output_unit )
 !!$    end if
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3942,7 +3943,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
@@ -4042,7 +4043,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -4091,9 +4092,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -4111,7 +4112,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -4205,7 +4206,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -4263,10 +4264,10 @@ print *, 'remap 2d complex:'
 !!$       print *, 'rcntsi: ', rcntsi(:)
 !!$       print *, 'rdispi: ', rdispi(:)
 !!$       print *, 'uniformity: ', plan%is_uniform
-!!$       call flush(6)
+!!$       flush( output_unit )
 !!$    end if
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -4284,7 +4285,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
@@ -4780,7 +4781,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_2D(get_layout_2D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_2D
 
 
@@ -4793,7 +4794,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_3D(get_layout_3D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_3D
 
   subroutine sll_view_lims_4D( layout )
@@ -4805,7 +4806,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_4D(get_layout_4D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_4D
 
   subroutine sll_view_lims_5D( layout )
@@ -4817,7 +4818,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_5D(get_layout_5D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_5D
 
 
@@ -4830,7 +4831,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_6D(get_layout_6D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_6D
 
 

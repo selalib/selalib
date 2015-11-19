@@ -173,7 +173,7 @@ contains
         call  solve_poisson_1d_fourier_rhs(this, rhs)
 
         field=-this%fourier_fmode/coeff/ &
-               cmplx(solve_poisson_1d_fourier_get_modes(this),0d0,8) &
+               cmplx(solve_poisson_1d_fourier_get_modes(this),0.0_f64,kind=f64) &
                /sll_i1
 
     end subroutine
@@ -236,7 +236,7 @@ contains
         do idx=1, size(knots_eval)
                 eval_solution(idx)= -2.0_f64* sum( &
                     real(  this%fourier_fmode/(coeff*fmode)**2 )*cos(knots_eval(idx)*fmode*coeff) &
-                     -imag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
+                     -aimag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
 
         enddo
 
@@ -261,7 +261,7 @@ contains
         do idx=1, size(knots_eval)
                 eval_solution(idx)= -2.0_f64* sum( &
                     real(   this%fourier_fmode/(coeff*fmode*sll_i1) )*cos(knots_eval(idx)*fmode*coeff) &
-                    - imag( this%fourier_fmode/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))
+                    - aimag( this%fourier_fmode/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))
 
         enddo
 
@@ -284,10 +284,10 @@ contains
 
 
             !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)/this%Ilength
-!            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -imag(this%fourier_fmode(fmode_a))**2) &
+!            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -aimag(this%fourier_fmode(fmode_a))**2) &
 !                                  *(1.0_f64/fmode_a)**2/coeff**2/this%Ilength*2
 !            seminorm=seminorm=
-            !seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +imag(this%fourier_fmode(fmode_a))**2)
+            !seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +aimag(this%fourier_fmode(fmode_a))**2)
             !seminorm=seminorm+  2.0_f64*real(this%fourier_fmode(fmode_a)*conjg(this%fourier_fmode(fmode_a)))
         enddo
     endfunction
@@ -333,7 +333,7 @@ contains
             !rhs(fmode)=dot_product(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength), pweight )
             rhs(fmode)= &
           sum(exp(-fmode*sll_i1*ppos*sll_kx/this%Ilength)&
-             * cmplx(pweight,0d0,8))
+             * cmplx(pweight,0.0_f64,kind=f64))
 
         enddo
     endfunction

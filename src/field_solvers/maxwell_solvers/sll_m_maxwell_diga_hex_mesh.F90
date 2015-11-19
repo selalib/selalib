@@ -15,8 +15,8 @@ use sll_m_triangle_dg_matrices, only : &
 implicit none
 private
 
-sll_real64, parameter :: xi = 0d0
-sll_real64, parameter :: c  = 1d0
+sll_real64, parameter :: xi = 0._f64
+sll_real64, parameter :: c  = 1._f64
 
 type, public :: maxwell_dg_hex_mesh
 
@@ -91,19 +91,19 @@ SLL_ALLOCATE(yref(n_ddl), error)
 
 SLL_ALLOCATE(this%Elem%MassMat(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%MassMat'
-this%Elem%MassMat = 0d0
+this%Elem%MassMat = 0._f64
 SLL_ALLOCATE(this%Elem%MassMatInv(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%MassMatInv'
-this%Elem%MassMatInv = 0d0
+this%Elem%MassMatInv = 0._f64
 SLL_ALLOCATE(this%Elem%DxMat(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%DxMat'
-this%Elem%DxMat = 0d0
+this%Elem%DxMat = 0._f64
 SLL_ALLOCATE(this%Elem%DyMat(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%DyMat'
-this%Elem%DyMat = 0d0
+this%Elem%DyMat = 0._f64
 SLL_ALLOCATE(this%Elem%BndMassMat(degree+1,degree+1),error)
 if (error.ne.0) print*, 'error in allocation of Elem%BndMassMat'
-this%Elem%BndMassMat = 0d0
+this%Elem%BndMassMat = 0._f64
 
 call AssMatElem(this%Elem,degree,xref,yref)
 
@@ -367,13 +367,13 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
     A_p(1,:) = [ (n2*n2+xi*n1*n1)*c,     n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
     A_p(2,:) = [     n2*n1*(xi-1)*c, (n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
-    A_p(3,:) = [                -n2,                 n1,        c,    0d0]
-    A_p(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,   xi*c]
+    A_p(3,:) = [                -n2,                 n1,        c,    0._f64]
+    A_p(4,:) = [           n1*xi*xi,           n2*xi*xi,      0._f64,   xi*c]
 
     A_m(1,:) = [-(n2*n2+xi*n1*n1)*c,    -n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
     A_m(2,:) = [    -n2*n1*(xi-1)*c,-(n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
-    A_m(3,:) = [                -n2,                 n1,       -c,    0d0]
-    A_m(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,  -xi*c]
+    A_m(3,:) = [                -n2,                 n1,       -c,    0._f64]
+    A_m(4,:) = [           n1*xi*xi,           n2*xi*xi,      0._f64,  -xi*c]
 
     A_p = 0.5 * A_p
     A_m = 0.5 * A_m
@@ -426,7 +426,7 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
             else if (ief == 3) then
                flux(idl,:) = matmul(A_p,W_l)
             else
-               flux = 0d0
+               flux = 0._f64
             end if
 
             Esn(idl) = n1*W_l(1)+n2*W_l(2)

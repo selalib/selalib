@@ -53,21 +53,4 @@ IF(HDF5_ENABLED)
 ENDIF(HDF5_ENABLED)
 
 ADD_SUBDIRECTORY(bsl_examples)
-ADD_SUBDIRECTORY(csl_examples)
 ADD_SUBDIRECTORY(fsl_examples)
-
-
-
-
-#SET( SIM_LIBS sll_advection sll_parallel_array_utilities )
-#to move elsewhere
-#ADD_SUBDIRECTORY( sim_poisson_polar_test                   )
-#to backup in sll_simulations
-#ADD_SUBDIRECTORY( sim_CG_polar                              )
-#ADD_SUBDIRECTORY( sim_CG_curvilinear_2D                     )
-#ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords  )
-#ADD_SUBDIRECTORY( sim_VlasovPoisson1D_cartesian_non_uniform )
-#ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic  )
-#ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords_mudpack  )
-
-

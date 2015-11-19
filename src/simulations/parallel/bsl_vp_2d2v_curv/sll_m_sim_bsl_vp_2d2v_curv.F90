@@ -18,6 +18,8 @@ module sll_m_sim_bsl_vp_2d2v_curv
   use sll_m_parallel_array_initializer
   use sll_m_coordinate_transformation_2d_base
   use sll_m_gnuplot_parallel
+  use sll_m_xdmf
+
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_general

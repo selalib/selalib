@@ -56,7 +56,7 @@ program sim_bsl_vp_1d1v_cart_serial
   namelist / tsi / kmode, eps, v0, is_delta_f 
 
   ! determine what case is being run
-  call GET_COMMAND_ARGUMENT(1,case)
+  call get_command_argument(1,case)
   ! open and read input file
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.nml')

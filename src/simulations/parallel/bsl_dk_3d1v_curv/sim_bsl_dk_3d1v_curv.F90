@@ -30,7 +30,7 @@ program sim_bsl_dk_3d1v_curv
   world_size = sll_get_collective_size(sll_world_collective)
   my_rank    = sll_get_collective_rank(sll_world_collective)
   ! Reading of the input file 'sim4d_DK_hybrid_input.txt'
-  call getarg(1,filename)
+  call get_command_argument(1,filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
 

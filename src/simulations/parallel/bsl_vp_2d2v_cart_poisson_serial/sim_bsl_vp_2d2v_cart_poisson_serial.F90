@@ -86,7 +86,7 @@ program sim_bsl_vp_2d2v_cart_poisson_serial
   ! argument.
 
   
-!  call getarg(1, filename)
+!  call get_command_argument(1, filename)
 !  filename_local = trim(filename)
 !  
 !  sim => new_vlasov_par_poisson_seq_cart( filename_local )

@@ -37,12 +37,12 @@ module sll_m_sim_bsl_gc_2d0v_polar
 #endif
 !  use sll_m_poisson_2d_base
   use sll_m_poisson_2d_polar_wrapper
-  use sll_m_poisson_2d_elliptic_solver, &
-     only: new_poisson_2d_elliptic_solver, &
-           es_gauss_legendre
+  use sll_m_general_coordinate_elliptic_solver, only: es_gauss_legendre
+  use sll_m_poisson_2d_elliptic_solver, only: new_poisson_2d_elliptic_solver
 
   use sll_m_boundary_condition_descriptors
   use sll_m_hermite_interpolation_2d
+  use sll_m_xdmf
   
   !use sll_m_parallel_array_initializer
 
@@ -755,7 +755,6 @@ contains
     sll_int32 :: step
     sll_real64 :: dt
     sll_int32 :: thdiag_id = 99 
-    sll_int32             :: IO_stat
     sll_int32 :: iplot
     sll_real64 :: time
     
@@ -1092,8 +1091,8 @@ contains
       do j = 1,nnodes_x2
         
         do i = 1,nnodes_x1
-          r       = rmin+real(i-1,f32)*dr
-          theta   = real(j-1,f32)*dtheta
+          r       = rmin+real(i-1,f64)*dr
+          theta   = real(j-1,f64)*dtheta
           x1(i,j) = r*cos(theta)
           x2(i,j) = r*sin(theta)
         end do

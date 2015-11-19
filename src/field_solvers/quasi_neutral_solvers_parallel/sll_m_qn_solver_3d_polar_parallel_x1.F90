@@ -392,7 +392,7 @@ contains
           !  this%f_r(i,2) = real(this%phik(i),kind=f64)
           !else
           !  this%f_r(i,j) = real(this%phik(i),kind=f64)
-          !  this%f_r(i,j+1) = dimag(this%phik(i))
+          !  this%f_r(i,j+1) = aimag(this%phik(i))
           !endif
 
         end do
