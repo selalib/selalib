@@ -53,9 +53,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
   use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_elliptic_solver, &
-     only: new_poisson_2d_elliptic_solver, &
-           es_gauss_legendre
+  use sll_m_poisson_2d_elliptic_solver, only: new_poisson_2d_elliptic_solver
+  use sll_m_general_coordinate_elliptic_solver, only: es_gauss_legendre
 
   implicit none
 
