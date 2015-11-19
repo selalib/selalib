@@ -19,6 +19,8 @@ module sll_parallel_array_output_module
 
 #define MPI_MASTER 0
 
+  implicit none
+
 contains
 
 subroutine write_mesh_4d(mesh)
@@ -30,6 +32,8 @@ subroutine write_mesh_4d(mesh)
   sll_real64, dimension(:), allocatable   :: eta2
   sll_real64, dimension(:), allocatable   :: eta3
   sll_real64, dimension(:), allocatable   :: eta4
+
+  sll_int32 :: i, j, k, l
 
   error = 0
  
@@ -167,11 +171,16 @@ subroutine write_fx1x2(f, layout, cplot)
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fij
   sll_real64                              :: sumloc
-  
+ 
+  sll_int32 :: i, j
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
+
   call compute_local_sizes(layout,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(fij(1:loc_sz_i,1:loc_sz_j),error)
+
   do j=1,loc_sz_j
      do i=1,loc_sz_i
         sumloc = sum(f(i,j,:,:))
@@ -199,11 +208,16 @@ subroutine write_fx1x3(f, layout, cplot)
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64                              :: sumloc
-  
+
+  sll_int32 :: i, k
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
+
   call compute_local_sizes(layout,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(fik(1:loc_sz_i,1:loc_sz_k),error)
+
   do k=1,loc_sz_k
      do i=1,loc_sz_i
         sumloc= sum(f(i,:,k,:))
@@ -232,7 +246,10 @@ subroutine write_fx2x4(f, layout, cplot)
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fjl
-  
+
+  sll_int32 :: j, l
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
 
@@ -274,7 +291,10 @@ subroutine write_fx3x4(f, layout, cplot)
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fkl
-  
+
+  sll_int32 :: k, l
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
 
