@@ -1,16 +1,20 @@
 !> @ingroup fields
 module sll_parallel_array_output_module
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_m_collective
-use sll_m_remapper
-use sll_m_xml_io
-use sll_m_cartesian_meshes
-use sll_m_utilities, only : &
-     int2string
+
+  use sll_m_collective
+  use sll_m_remapper
+  use sll_m_xml_io
+  use sll_m_cartesian_meshes
+  use sll_m_utilities, only : &
+       int2string
 
 #ifndef NOHDF5
-use hdf5, only: hid_t, hssize_t, hsize_t
+  use hdf5, only: hid_t, hssize_t, hsize_t
+  use sll_m_hdf5_io_serial
+  use sll_m_hdf5_io_parallel
 #endif
 
 #define MPI_MASTER 0
@@ -18,10 +22,6 @@ use hdf5, only: hid_t, hssize_t, hsize_t
 contains
 
 subroutine write_mesh_4d(mesh)
-
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
 
   type(sll_cartesian_mesh_4d), intent(in) :: mesh
   sll_int32                               :: error
@@ -158,10 +158,6 @@ end subroutine write_attribute
 
 subroutine write_fx1x2(f, layout, cplot)
 
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
-
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -194,9 +190,6 @@ end subroutine write_fx1x2
 
 subroutine write_fx1x3(f, layout, cplot)
 
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -228,10 +221,6 @@ subroutine write_fx1x3(f, layout, cplot)
 end subroutine write_fx1x3
 
 subroutine write_fx2x4(f, layout, cplot)
-
-#ifndef NOHDF5
-  use sll_m_hdf5_io_parallel
-#endif
 
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
@@ -267,15 +256,13 @@ subroutine write_fx2x4(f, layout, cplot)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx2x4_'//cplot//".h5",comm,pfile_id,error)
-  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
+  call sll_hdf5_write_array(pfile_id,global_dims,offset,fjl,"/values",error)
   call sll_hdf5_file_close(pfile_id, error)
 #endif
 
 end subroutine write_fx2x4
 
 subroutine write_fx3x4(f, layout, cplot)
-
-  use sll_m_hdf5_io_parallel
 
   sll_real64, dimension(:,:,:,:)          :: f
   Type(layout_4D), pointer                :: layout
@@ -305,7 +292,7 @@ subroutine write_fx3x4(f, layout, cplot)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx3x4_'//cplot//".h5",comm,pfile_id,error)
-  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/values",error)
+  call sll_hdf5_write_array(pfile_id,global_dims,offset,fkl,"/values",error)
   call sll_hdf5_file_close(pfile_id, error)
 #endif
 
