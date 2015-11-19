@@ -1,7 +1,6 @@
 program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
   use sll_m_constants
   use sll_m_distribution_function
   use sll_m_common_coordinate_transformations
