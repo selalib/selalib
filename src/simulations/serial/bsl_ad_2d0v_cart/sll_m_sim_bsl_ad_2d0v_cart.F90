@@ -37,6 +37,9 @@ module sll_m_sim_bsl_ad_2d0v_cart
   use sll_m_coordinate_transformation_2d_base
   use sll_m_common_array_initializers
   use sll_m_parallel_array_initializer
+
+  use sll_m_xdmf
+  use sll_m_hdf5_io_serial
   
 #ifdef MUDPACK
 !  use sll_m_mudpack_curvilinear
@@ -904,8 +907,6 @@ contains
   !> @param[in] mesh_2d  2D cartesian mesh object
   !----------------------------------------------------------------------------
   subroutine plot_f_cartesian( iplot, f, mesh_2d )
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
 
     ! Function arguments
     sll_int32,                   intent(in) :: iplot
