@@ -120,6 +120,7 @@ module sll_m_hexagonal_meshes
      procedure, pass(mesh) :: write_hex_mesh_mtv
      procedure, pass(mesh) :: get_neighbours
      procedure, pass(mesh) :: hex_to_circ_pt
+     procedure, pass(mesh) :: hex_to_aligned_pt
      procedure, pass(mesh) :: hex_to_circ_elmt
      procedure, pass(mesh) :: ref_to_hex_elmt
      procedure, pass(mesh) :: ref_to_circ_elmt
@@ -1563,6 +1564,49 @@ contains
     end if
 
   end subroutine hex_to_circ_pt
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation hex->aligned for a point.
+  !> @details Given a point in the hexagonal mesh, this subroutine computes the
+  !> coordinates it would have if mapped to an aligned flux surface.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] ind integer index of the point to be mapped.
+  !> @param[IN] x real the x-coordinate of point to be mapped
+  !> @param[IN] y real the y-coordinate of point to be mapped
+  !> @param[OUT] x_new real the x-coordinate of mapped point
+  !> @param[OUT] y_new real the y-coordinate of mapped point
+  subroutine hex_to_aligned_pt(mesh, ind, x, y, x_new, y_new)
+    class(sll_hex_mesh_2d), intent(in)  :: mesh
+    sll_int32,              intent(in)  :: ind
+    sll_real64,             intent(in)  :: x
+    sll_real64,             intent(in)  :: y
+    sll_real64,             intent(out) :: x_new
+    sll_real64,             intent(out) :: y_new
+    ! Local
+    sll_real64 :: radius
+    sll_real64 :: angle
+    sll_real64 :: asin_gamma
+    sll_real64 :: kappa
+    sll_real64 :: x_temp
+    sll_real64 :: y_temp
+
+    call mesh%hex_to_circ_pt(ind, x, y, x_temp, y_temp)
+
+    ! Computing current radius and angle
+    radius = SQRT(x_temp**2 + y_temp**2)
+    angle  = 0._f64
+    if (.not.( (x_temp .eq. 0._f64) .and. (y_temp .eq. 0._f64))) then
+       angle = ATAN2(y_temp, x_temp)
+    end if
+
+    ! Some constants taken from "Noncircular, finite aspect ratio, local
+    ! equilibrium model" by R.L. Miller et al., Physics of Plamas, Vol 5 (1998)
+    asin_gamma = 0.4290421956533866_f64
+    kappa      = 1.66_f64
+    x_new = radius * COS(angle + asin_gamma * SIN(angle))
+    y_new = kappa * radius * SIN(angle)
+
+  end subroutine hex_to_aligned_pt
 
 
   !---------------------------------------------------------------------------

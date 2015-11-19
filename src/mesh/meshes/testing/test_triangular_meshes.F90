@@ -18,6 +18,7 @@ program test_triangular_meshes
   sll_int32    :: num_cells
   logical                          :: file_exists
   character(len=256)               :: reference_filename
+
   !Create a triangular mesh from square
   t_mesh => new_triangular_mesh_2d(nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max)
 
@@ -53,8 +54,17 @@ program test_triangular_meshes
   call map_to_circle(t_mesh, num_cells, 1)
   call write_triangular_mesh_mtv(t_mesh, "circle_hex_mesh.mtv")
 
+  call sll_delete(t_mesh)
+
+  ! Creating a triangular field aligned  mesh from a hexmesh
+  num_cells = 10
+  h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64)
+  t_mesh => new_triangular_mesh_2d_aligned_from_hex_mesh(h_mesh)
+
+  call write_triangular_mesh_mtv(t_mesh, "aligned_hex_mesh.mtv")
 
   call sll_delete(t_mesh)
+  call delete(h_mesh)
 
   print *, 'PASSED'
 
