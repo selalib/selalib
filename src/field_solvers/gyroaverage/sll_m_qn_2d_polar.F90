@@ -521,7 +521,7 @@ contains
     do m=0,Ntheta-1
       do j=0,Ntheta-1
         mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-        exp_comp=dcmplx(dcos(mode),dsin(mode))
+        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
         D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
         do p=1,N_mu
           D_contr(p,m,:,:) = D_contr(p,m,:,:) + pointer_mat_contribution_circ(p,j,:,:)*exp_comp
@@ -547,7 +547,7 @@ contains
           quasineutral%mat_qn_inverse(m,i,:) = &
           quasineutral%mat_qn_inverse(m,i,:)   &
           - mu_weights(p)*mat_stock2(i,:)*  &
-          cmplx(dexp(-mu_points(p)/quasineutral%T_i(i+1)),0d0,f64)
+          cmplx(exp(-mu_points(p)/quasineutral%T_i(i+1)),0._f64,f64)
         enddo
       enddo 
     enddo     
@@ -682,7 +682,7 @@ contains
     rho2d(2) = sqrt(2._f64*mu_points(p))
     call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
     do i = 1, Nc(1)+1
-      gamma0(i) = gamma0(i) + mu_weights(p)*dexp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
+      gamma0(i) = gamma0(i) + mu_weights(p)*exp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
     enddo
   enddo
   do i = 1, Nc(1)+1
@@ -742,7 +742,7 @@ contains
       rho2d(1) = sqrt(2._f64*mu_points(p))
       rho2d(2) = sqrt(2._f64*mu_points(p))
       call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-      !gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(1._f64-tmp1**2)
+      !gamma0 = gamma0 + mu_weights(p)*exp(-mu_points(p))*(1._f64-tmp1**2)
       gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
       !gamma0 = gamma0 + mu_weights(p)*(tmp1**2)
      enddo
@@ -791,7 +791,7 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     do m=0,Ntheta-1
       do j=0,Ntheta-1
         mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-        exp_comp=dcmplx(dcos(mode),dsin(mode))
+        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
         Dm(m,:,:) = Dm(m,:,:) + mat_circ(j,:,:)*exp_comp
       enddo
       
@@ -817,7 +817,7 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     call zfftb(Ntheta,sol_comp(i,:),buf_fft)
   enddo
   
-  sol=real(sol_comp/cmplx(Ntheta,0d0,f64),f64)
+  sol=real(sol_comp/cmplx(Ntheta,0._f64,f64),f64)
 
 end subroutine solve_circulant_system
 
@@ -1128,7 +1128,7 @@ subroutine compute_w_hermite(w,r,s)
     
     eta(1)=sqrt(x(1)**2+x(2)**2)
     call localize_nat(ii(1),eta(1),eta_min(1),eta_max(1),N(1))
-    eta(2)=datan2(x(2),x(1))
+    eta(2)=atan2(x(2),x(1))
     call localize_per(ii(2),eta(2),eta_min(2),eta_max(2),N(2))
   end subroutine localize_polar
 
@@ -1828,13 +1828,13 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !    delta_x=real(real(mu_max,f64)/real(N_approx,f64),f64)
 !    do i=1,N_approx/2-1
 !      mu = real(2._f64*real(i,f64)*delta_x,f64)
-!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
 !    do i=1,N_approx/2
 !      mu = real((2._f64*real(i,f64)-1._f64)*delta_x,f64)
-!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
-!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*dexp(-mu_max)
+!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*exp(-mu_max)
 !    val = val*real(delta_x/3._f64,f64)
   end subroutine compute_gamma0
 
@@ -1938,7 +1938,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         do i=1,N_mu_for_phi
           quasineutral%mu_points_for_phi(i) = mu_max_for_phi*real(i-1,f64)/real(N_mu_for_phi-1,f64)
         enddo     
-        h = mu_max_for_phi/(3d0*real(N_mu_for_phi,f64))
+        h = mu_max_for_phi/(3._f64*real(N_mu_for_phi,f64))
         quasineutral%mu_weights_for_phi(1) = h
         do i=1,(N_mu_for_phi-1)/2-1
           quasineutral%mu_weights_for_phi(2*i) = 4._f64*h

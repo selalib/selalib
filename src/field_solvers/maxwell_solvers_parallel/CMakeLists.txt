@@ -1,7 +1,6 @@
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
   ADD_LIBRARY(sll_maxwell_parallel STATIC 
-              #sll_m_maxwell_2d_diga_parallel.F90 
               sll_m_maxwell_2d_periodic_cartesian_par.F90 )
   
   TARGET_LINK_LIBRARIES(sll_maxwell_parallel sll_remap ${FFTW_LIBRARIES})

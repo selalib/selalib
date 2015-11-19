@@ -94,6 +94,7 @@ contains
     character(len=256) :: init_case
 
     sll_int32, parameter :: input_file = 99
+    sll_int32 :: io_stat
     
 
     namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v1, thermal_v2

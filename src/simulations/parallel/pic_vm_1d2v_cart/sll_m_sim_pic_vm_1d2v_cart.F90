@@ -189,7 +189,7 @@ contains
     sll_int32 :: rnd_seed_size
     sll_int64 :: sobol_seed
     sll_int32 :: j, ierr, i_part
-    sll_real64 :: eenergy
+    !sll_real64 :: eenergy
     sll_real64, allocatable :: rho(:), rho_local(:)
     sll_int32 :: th_diag_id
 
@@ -242,7 +242,7 @@ contains
             sim%domain(3), &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
+       sobol_seed = 10_i64 + sim%rank*sim%particle_group%n_particles
        ! Pseudorandom initialization with sobol numbers
        !sim%thermal_velocity = 0.1_f64
        call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
@@ -367,6 +367,7 @@ contains
 
   subroutine delete_pic_vm_1d2v (sim)
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+    SLL_ASSERT(storage_size(sim)>0)
   end subroutine delete_pic_vm_1d2v
 
 !------------------------------------------------------------------------------!

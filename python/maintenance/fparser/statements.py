@@ -15,6 +15,7 @@ Modifications:
             : modify regex pattern in 'Forall' to avoid false matches (YG)
             : modify 'process_item' in 'Call' to avoid failing on arrays (YG)
             : add 'TypeGuard' statement for 'select type' constructs (YG)
+            : 'Allocate': warning removed, parsing extended (YG)
 -----
 """
 
@@ -42,6 +43,7 @@ from base_classes import Statement, Variable
 from utils import split_comma, specs_split_comma, AnalyzeError, ParseError,\
      get_module_file, parse_bind, parse_result, is_name
 from utils import classes
+from splitline import string_replace_map
 
 class StatementWithNamelist(Statement):
     """
@@ -486,7 +488,11 @@ class Contains(Statement):
     def process_item(self): return
     def tofortran(self, isfix=None): return self.get_indent_tab(isfix=isfix) + 'CONTAINS'
 
-class Allocate(Statement):
+#==============================================================================
+# Allocate
+#==============================================================================
+
+class Allocate( Statement ):
     """
     ALLOCATE ( [ <type-spec> :: ] <allocation-list> [ , <alloc-opt-list> ] )
     <alloc-opt> = STAT = <stat-variable>
@@ -494,40 +500,100 @@ class Allocate(Statement):
                 | SOURCE = <source-expr>
     <allocation> = <allocate-object> [ ( <allocate-shape-spec-list> ) ]
     """
-    match = re.compile(r'allocate\s*\(.*\)\Z',re.I).match
-    def process_item(self):
-        line = self.item.get_line()[8:].lstrip()[1:-1].strip()
-        item2 = self.item.copy(line, True)
+    _stat   =   r"\bstat\b\s*=\s*[a-zA-Z]\w*\b"
+    _errmsg = r"\berrmsg\b\s*=\s*[a-zA-Z]\w*\b"
+    _source = r"\bsource\b\s*=\s*[a-zA-Z]\w*\b"
+    _alloc_opt = r"^({}|{}|{})\Z".format( _stat, _errmsg, _source )
+    _match_alloc_opt = re.compile( _alloc_opt, re.I ).match
+
+    # Match function is static method that is used to identify statement type
+    match = re.compile( r'allocate\s*\(.*\)\Z', re.I ).match
+
+    #--------------------------------------------------------------------------
+    def process_item( self ):
+        line  = self.item.get_line()[8:].lstrip()[1:-1].strip()
+        item2 = self.item.copy( line, True )
         line2 = item2.get_line()
-        i = line2.find('::')
+
+        # Extract <type-spec>, if any
+        i = line2.find( '::' )
         if i != -1:
-            spec = item2.apply_map(line2[:i].rstrip())
-            from block_statements import type_spec
-            stmt = None
-            for cls in type_spec:
-                if cls.match(spec):
-                    stmt = cls(self, item2.copy(spec))
-                    if stmt.isvalid:
-                        break
-            if stmt is not None and stmt.isvalid:
-                spec = stmt
-            else:
-                self.warning('TODO: unparsed type-spec' + `spec`)
+            spec = item2.apply_map( line2[:i].rstrip() )
+#            from block_statements import type_spec
+#            stmt = None
+#            for cls in type_spec:
+#                if cls.match(spec):
+#                    stmt = cls(self, item2.copy(spec))
+#                    if stmt.isvalid:
+#                        break
+#            if stmt is not None and stmt.isvalid:
+#                spec = stmt
+#            else:
+#                self.warning('TODO: unparsed type-spec' + `spec`)
             line2 = line2[i+2:].lstrip()
         else:
             spec = None
-        self.spec = spec
-        self.items = specs_split_comma(line2, item2)
+        self.type_spec = spec
+        self.items = specs_split_comma( line2, item2 )
+
+        # Extract <allocation-list> and <alloc-opt-list>, if any
+        self.allocation_list = []
+        self.alloc_opt_list  = []
+        for item in self.items:
+            if self._match_alloc_opt( item ):
+                self.alloc_opt_list.append( item )
+            else:
+                self.allocation_list.append( item )
+
+        # Parse <type-spec>, and store info in object
+        self.type_name, self.type_params_dict = self.parse_type_spec()
         return
 
-    def tofortran(self, isfix=None):
+    #--------------------------------------------------------------------------
+    def tofortran( self, isfix=None ):
         t = ''
-        if self.spec:
-            t = self.spec.tostr() + ' :: '
-        return self.get_indent_tab(isfix=isfix) \
-               + 'ALLOCATE (%s%s)' % (t,', '.join(self.items))
+        if self.type_spec:
+            t = self.type_spec.tostr() + ' :: '
+        return self.get_indent_tab( isfix=isfix ) \
+               + 'ALLOCATE (%s%s)' % (t,', '.join( self.items ))
+
+    #--------------------------------------------------------------------------
     def analyze(self): return
 
+    #--------------------------------------------------------------------------
+    def parse_type_spec( self ):
+        type_spec = self.type_spec
+
+        if not type_spec:
+            return ['',{}]
+
+        # Extract type name
+        if type_spec.endswith(')'):
+            i = type_spec.find('(')
+            type_name   = type_spec[:i].rstrip()
+            type_params = type_spec[i+1:-1].strip()
+        else:
+            type_name   = type_spec
+            type_params = ''
+
+        # Extract type parameters, and put them in a dictionary
+        type_params_dict = {}
+        if type_params:
+            type_params_list = specs_split_comma( type_params, self.item )
+            for i,s in enumerate( type_params_list ):
+                t,m = string_replace_map( s )
+                if '=' in t:
+                    key, eq, val = s.partition( '=' )
+                    key = key.rstrip()
+                    val = val.lstrip()
+                else:
+                    key = "param%d" % i
+                    val = s
+                type_params_dict[key] = val
+
+        return (type_name, type_params_dict)
+
+#==============================================================================
 class Deallocate(Statement):
     """
     DEALLOCATE ( <allocate-object-list> [ , <dealloc-opt-list> ] )

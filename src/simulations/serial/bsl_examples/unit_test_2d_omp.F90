@@ -13,8 +13,8 @@ implicit none
 
 #ifdef _OPENMP
   integer :: OMP_GET_NUM_THREADS, OMP_GET_THREAD_NUM
-  real(8) :: OMP_GET_WTIME
-  sll_real64 :: t0,t1,t2
+  !real(8) :: OMP_GET_WTIME
+  !sll_real64 :: t0,t1,t2
 #endif
 
   sll_int32  :: n_x, n_vx, n_y, n_vy
@@ -108,7 +108,7 @@ implicit none
 
   ! run BSL method using 10 time steps and second order splitting
   n_steps = 200
-  dt = 0.05
+  dt = 0.05_f64
 
   do it = 1, n_steps
 

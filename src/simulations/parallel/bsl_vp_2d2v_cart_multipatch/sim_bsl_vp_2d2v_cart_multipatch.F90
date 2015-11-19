@@ -36,13 +36,10 @@ program sim_bsl_vp_2d2v_cart_multipatch
 
   sll_real64, dimension(1:8) :: gaussian_beam_params
   sll_real64, dimension(1:2) :: elec_field_ext_params
-  sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
   sll_real64, dimension(1) :: f_zero_params
   sll_real64, dimension(1) :: f_one_params
   sll_real64, dimension(1) :: f_minus_one_params
   sll_real64, dimension(1) :: f_epsi_params
-  sll_real64, external :: electric_field_ext_1
-  sll_real64, external :: electric_field_ext_2
 
 
   print *, 'Booting parallel environment...'
@@ -51,7 +48,7 @@ program sim_bsl_vp_2d2v_cart_multipatch
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
   
   f_zero_params(:) = (/0.0_f64/)
@@ -159,60 +156,64 @@ program sim_bsl_vp_2d2v_cart_multipatch
   !call delete(simulation)
   !call delete(transformation_x)
 
+contains
+  
+  function func_one( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 1.0_8
+  end function func_one
+  
+  function func_minus_one( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = -1.0_8
+  end function func_minus_one
+  
+  function func_zero( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 0.0_8
+  end function func_zero
+  
+  
+  function func_epsi( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 0.00001_8
+  end function func_epsi
+  
+  function electric_field_ext_1(x,y,params) result(res)
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = params(1)*x
+  end function electric_field_ext_1
+  
+  
+  function electric_field_ext_2(x,y,params) result(res)
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = params(2)*y
+  end function electric_field_ext_2
+  
+
 end program sim_bsl_vp_2d2v_cart_multipatch
 
 ! External functions used as parameters in the above unit test:
 
 
-function func_one( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = 1.0_8
-end function func_one
-
-function func_minus_one( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = -1.0_8
-end function func_minus_one
-
-function func_zero( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = 0.0_8
-end function func_zero
-
-
-function func_epsi( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = 0.00001_8
-end function func_epsi
-
-function electric_field_ext_1(x,y,params) result(res)
-  real(8), intent(in) :: x
-  real(8), intent(in) :: y
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = params(1)*x
-end function electric_field_ext_1
-
-
-function electric_field_ext_2(x,y,params) result(res)
-  real(8), intent(in) :: x
-  real(8), intent(in) :: y
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = params(2)*y
-end function electric_field_ext_2
 
 
 

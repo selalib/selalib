@@ -445,9 +445,9 @@ mode2 = params(6)
 
 x1  = sinprod_x1(eta1,eta2, params)
 x2  = sinprod_x2(eta1,eta2, params)
-pi  = 4d0*atan(1d0)
-res = (mode1*2d0*pi/L1)**2
-res = res+(mode2*2d0*pi/L2)**2
+pi  = 4._f64*atan(1._f64)
+res = (mode1*2.0_f64*pi/L1)**2
+res = res+(mode2*2.0_f64*pi/L2)**2
 res = -res*cos(2*pi*mode1*x1/L1)*cos(2*pi*mode2*x2/L2)
 
 end function rhs
@@ -471,8 +471,8 @@ mode1 = params(5)
 mode2 = params(6)
 x1 = sinprod_x1(eta1,eta2, params)
 x2 = sinprod_x2(eta1,eta2, params)
-pi = 4d0*atan(1d0)
-res = cos(2d0*pi*mode1*x1/L1)*cos(2d0*pi*mode2*x2/L2)
+pi = 4._f64*atan(1._f64)
+res = cos(2.0_f64*pi*mode1*x1/L1)*cos(2.0_f64*pi*mode2*x2/L2)
 end function sol
 
 end program test_gces_full_periodic_prototype

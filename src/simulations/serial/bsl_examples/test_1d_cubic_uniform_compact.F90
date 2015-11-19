@@ -71,7 +71,7 @@ interp_v => spline_v
 
 ! run BSL method using 10 time steps
 n_steps = 200
-delta_t = 0.05
+delta_t = 0.05_f64
 time    = 0.0_f64
 call advection_x(0.5*delta_t)
 time    = time + 0.5*delta_t
@@ -83,7 +83,7 @@ do it = 1, n_steps
    call advection_x(delta_t)
    time = time + 0.5*delta_t
 
-   error = 0.0
+   error = 0.0_f64
    xc = r*cos(time)
    vc = r*sin(time)
 

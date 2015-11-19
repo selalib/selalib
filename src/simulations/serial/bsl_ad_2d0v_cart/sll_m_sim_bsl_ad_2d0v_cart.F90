@@ -259,11 +259,11 @@ contains
     kmode_x1 = 0.5_f64
     kmode_x2 = 1._f64
     eps = 0.015_f64
-    sigma_1 = 0.70710678118654752440
-    sigma_2 = 0.70710678118654752440
+    sigma_1 = 0.70710678118654752440_f64
+    sigma_2 = 0.70710678118654752440_f64
     !initial_function_case="SLL_COS_BELL"
-    xc_1 = 1.
-    xc_2 = -0.2
+    xc_1 = 1.0_f64
+    xc_2 = -0.20_f64
 
     
     
@@ -945,8 +945,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = x1_min+real(i-1,f64)*dx1
+          x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
       call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)

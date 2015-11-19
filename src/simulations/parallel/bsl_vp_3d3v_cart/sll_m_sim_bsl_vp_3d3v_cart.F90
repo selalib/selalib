@@ -2,7 +2,7 @@ module sll_m_sim_bsl_vp_3d3v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+
   use sll_m_collective
   use sll_m_remapper
   use sll_m_constants
@@ -12,6 +12,12 @@ module sll_m_sim_bsl_vp_3d3v_cart
   use sll_m_poisson_3d_periodic_par
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_sim_base
+
+  use sll_m_xml_io
+  use sll_m_xdmf_parallel
+  use sll_m_hdf5_io_parallel
+  use hdf5
+
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -1252,7 +1258,6 @@ contains
   end subroutine advection_v_1d
 
   subroutine test_write(sim)
-    use sll_m_xdmf_parallel
     class(sll_simulation_6d_vlasov_poisson_cart), intent(in) :: sim
     type(layout_3D), pointer :: my_layout
     integer(HSIZE_T), dimension(3)  :: array_dims 
@@ -1333,10 +1338,6 @@ contains
 
 
   subroutine plot_fields(itime, sim)
-    use sll_m_collective
-    use hdf5
-    use sll_m_hdf5_io_parallel
-    use sll_m_xml_io
     sll_int32, intent(in) :: itime
     character(len=4)      :: ctime
     sll_int32             :: i_layout

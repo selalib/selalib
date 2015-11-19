@@ -9,7 +9,7 @@ program unit_test
 
   type(sll_fft_plan), pointer :: p => null()
 
-  sll_real64, parameter  :: err_max = 10E-14
+  sll_real64, parameter  :: err_max = 10E-14_f64
   sll_int32, parameter   :: hmax = 1
   sll_int32, parameter   :: imin = 10
   sll_int32, parameter   :: imax = 15
@@ -232,7 +232,7 @@ program unit_test
              FFT_INVERSE,FFT_NORMALIZE)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
-        ierr = 0_f64
+        ierr = 0._f64
         do j=1,t
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
@@ -264,7 +264,7 @@ program unit_test
              FFT_INVERSE, FFT_NORMALIZE+FFT_ONLY_SECOND_DIRECTION)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
-        err_var = 0_f64
+        err_var = 0._f64
         do j=1,t 
            err_var = MAX(ERROR_MAX(data_comp2d(1:s,j)-data_copy2d(1:s,j)), &
                 err_var)
@@ -323,7 +323,7 @@ program unit_test
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
 #endif
-        ierr = 0_f64
+        ierr = 0._f64
         do j=1,t
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
@@ -360,7 +360,7 @@ program unit_test
     p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE)
     call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
     call fft_delete_plan(p)
-    ierr = 0_f64
+    ierr = 0._f64
     do j=1,t
       ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
     enddo
@@ -397,7 +397,7 @@ program unit_test
     call fft_apply_plan(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call fft_delete_plan(p)
  
-    ierr = 0_f64
+    ierr = 0._f64
     do j=1,t
       ierr = MAX(MAXVAL(ABS(data_real2d(1:s,j) - rdata_copy2d(1:s,j))),ierr)
     enddo
@@ -430,7 +430,7 @@ program unit_test
     call fft_apply_plan(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call fft_delete_plan(p)
 
-    ierr = 0_f64
+    ierr = 0._f64
     do j=1,t
       ierr = MAX(MAXVAL(ABS(data_real2d(1:s,j) - rdata_copy2d(1:s,j))),ierr)
     enddo
@@ -449,7 +449,7 @@ contains
     sll_comp64, DIMENSION(:) :: tab
     sll_real64 :: error
 
-    error = MAX( MAXVAL(ABS(REAL(tab))) , MAXVAL(ABS(DIMAG(tab))) )
+    error = MAX( MAXVAL(ABS(REAL(tab))) , MAXVAL(ABS(aimag(tab))) )
   END FUNCTION
 
   SUBROUTINE init_random_seed()
@@ -468,13 +468,13 @@ contains
   END SUBROUTINE
 
   SUBROUTINE RANDOM_COMPLEX(c)
-    COMPLEX(KIND=KIND(1.D0)) :: c
-    REAL(KIND=KIND(1.D0))    :: realpart,imagpart
+    sll_comp64, intent(out) :: c
+    sll_real64 :: realpart, imagpart
    
     CALL init_random_seed() 
     CALL RANDOM_NUMBER(realpart)
     CALL RANDOM_NUMBER(imagpart)
-    c = CMPLX(realpart,imagpart,KIND=KIND(1.D0))
+    c = CMPLX(realpart,imagpart,kind=f64)
   END SUBROUTINE
 
 end program unit_test

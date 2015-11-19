@@ -93,7 +93,7 @@ interp_2 => spl_eta2
 interp_3 => spl_eta3
 interp_4 => spl_eta4
 
-eps = 0.05
+eps = 0.05_f64
 kx  = 2*sll_pi/(eta1_max-eta1_min)
 ky  = 2*sll_pi/(eta2_max-eta2_min)
 
@@ -106,7 +106,7 @@ do i4=1,nc_eta4+1
       do i2=1,nc_eta2+1
          eta1 = eta1_min
          do i1=1,nc_eta1+1
-            f(i1,i2,i3,i4)=(1+eps*cos(kx*eta1)*cos(ky*eta2))/(2*sll_pi)*exp(-.5*v2)
+            f(i1,i2,i3,i4)=(1.0_f64+eps*cos(kx*eta1)*cos(ky*eta2))/(2*sll_pi)*exp(-.5*v2)
             eta1 = eta1 + delta_eta1
          end do
          eta2 = eta2 + delta_eta2
@@ -119,7 +119,7 @@ end do
 n_step = 1000
 SLL_CLEAR_ALLOCATE(nrj(1:n_step), error)
 delta_t = .01_f64
-time = 0.0_f32
+time = 0.0_f64
 
 if ( delta_t > 0.5/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))) &
   stop 'Warning CFL'

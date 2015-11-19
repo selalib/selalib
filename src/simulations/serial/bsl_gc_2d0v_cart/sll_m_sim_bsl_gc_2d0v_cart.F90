@@ -44,7 +44,8 @@ module sll_m_sim_bsl_gc_2d0v_cart
   use sll_m_poisson_2d_mudpack
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_m_poisson_2d_elliptic_solver, only:new_poisson_2d_elliptic_solver, es_gauss_legendre
+  use sll_m_general_coordinate_elliptic_solver, only: es_gauss_legendre
+  use sll_m_poisson_2d_elliptic_solver, only: new_poisson_2d_elliptic_solver
 !  use sll_m_timer
 !  use sll_m_fft
   use sll_m_poisson_2d_periodic_solver
@@ -1355,8 +1356,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = x1_min+real(i-1,f64)*dx1
+          x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
       call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)

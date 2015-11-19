@@ -297,7 +297,7 @@ subroutine initialize_file( data_file_id, thf_file_id )
   integer                     :: IO_stat
   sll_int32                   :: error
 
-  call getarg( 1, filename)
+  call get_command_argument( 1, filename)
 
   call sll_new_file_id(data_file_id, error)
   open(data_file_id,file=trim(filename),IOStat=IO_stat)

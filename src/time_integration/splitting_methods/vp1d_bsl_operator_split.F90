@@ -71,7 +71,7 @@ program VP1d_BSL_time_split
 
 
   ! determine what case is being run
-  call GET_COMMAND_ARGUMENT(1,case)
+  call get_command_argument(1,case)
   ! open and read input file
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.txt')
