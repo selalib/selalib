@@ -29,9 +29,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
 
 use sll_m_collective
 use sll_m_remapper

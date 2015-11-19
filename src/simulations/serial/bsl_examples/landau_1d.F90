@@ -1,8 +1,8 @@
 program landau_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 
+use sll_m_poisson_1d_periodic
 use sll_m_constants, only : sll_pi
 use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
