@@ -31,15 +31,15 @@ use sll_m_constants, only : &
 implicit none
 
 
-!> @brief 2d hexagonal mesh
-!  vtaux  - composante x des vecteurs tangeants
-!  vtauy  - composante y des vecteurs tangeants
+!> @brief 2d triangular mesh
+!  vtaux  - x component of tangent vector
+!  vtauy  - y component of tangent vector
 type :: sll_triangular_mesh_2d
 
-  sll_int32           :: num_nodes  
-  sll_int32           :: num_triangles 
-  sll_int32           :: num_edges     
-  sll_int32           :: num_bound     
+  sll_int32           :: num_nodes
+  sll_int32           :: num_triangles
+  sll_int32           :: num_edges
+  sll_int32           :: num_bound
 
   sll_real64, pointer :: coord(:,:)
   sll_int32,  pointer :: nodes(:,:)
@@ -89,14 +89,6 @@ contains
 
    procedure, pass(mesh) :: global_to_x1
    procedure, pass(mesh) :: global_to_x2
-!     procedure, pass(mesh) :: eta1_node => eta1_node_hex
-!     procedure, pass(mesh) :: eta2_node => eta2_node_hex
-!     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
-!     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_triangular_two_arg
-!     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
-!     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_triangular_two_arg
-!     procedure, pass(mesh) :: display => display_triangular_mesh_2d
-!     procedure, pass(mesh) :: delete => delete_triangular_mesh_2d
 
 end type sll_triangular_mesh_2d
 
@@ -262,6 +254,46 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   call compute_aires( tri_mesh )
 
 end function new_triangular_mesh_2d_from_hex_mesh
+
+
+!> @brief  Creates a new field aligned triangular mesh from a hex-mesh
+!> @details Allocates the memory space for a new 2D triangular mesh on the heap,
+!> initializes it with the given hexagonal mesh, mapps it to a fielad aligned
+!> mesh and returns a pointer to the new triangular mesh
+!> @param hex_mesh hexagonal mesh
+!> @return a pointer to the newly allocated object.
+function new_triangular_mesh_2d_aligned_from_hex_mesh(hex_mesh) result(tri_mesh)
+
+  type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
+  type(sll_triangular_mesh_2d),      pointer :: tri_mesh
+
+  !Local
+  sll_int32  :: i_node
+  sll_real64 :: x_aligned
+  sll_real64 :: y_aligned
+
+  !We start by initializing the mesh as a normal hex-mesh:
+  tri_mesh => new_triangular_mesh_2d_from_hex_mesh(hex_mesh)
+
+  !We change now, point by point, the coordinates so that they are field aligned
+  do i_node = 1, tri_mesh%num_nodes
+
+     call hex_mesh%hex_to_aligned_pt( &
+          i_node, &
+          tri_mesh%coord(1, i_node), & !x coordinate
+          tri_mesh%coord(2, i_node), & !y coordinate
+          x_aligned, & ! aligned x coordinate (result)
+          y_aligned )  ! aligned x coordinate (result)
+
+     ! Replacing in the coordinate system
+     tri_mesh%coord(1, i_node) = x_aligned
+     tri_mesh%coord(2, i_node) = y_aligned
+
+  end do
+
+    call compute_aires( tri_mesh )
+
+end function new_triangular_mesh_2d_aligned_from_hex_mesh
 
 
 !> @brief
