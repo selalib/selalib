@@ -28,7 +28,6 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 #include "sll_poisson_solvers.h"
   use sll_m_collective
   use sll_m_remapper
