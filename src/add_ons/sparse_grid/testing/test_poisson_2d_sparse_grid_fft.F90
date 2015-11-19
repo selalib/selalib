@@ -2,7 +2,6 @@ program test_poisson_2d_sparse_grid_fft
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_poisson_solvers.h"
 
    !-------------------------------------------------------------------
    !  test 2D Poisson solver based on FFT on sparse grid
