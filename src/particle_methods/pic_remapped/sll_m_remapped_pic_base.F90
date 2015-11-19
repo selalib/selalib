@@ -7,6 +7,8 @@ module sll_m_remapped_pic_base
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
+  use sll_m_accumulators, only: sll_charge_accumulator_2d
+
   implicit none
   private
 
@@ -192,8 +194,7 @@ module sll_m_remapped_pic_base
   abstract interface
    subroutine dep_charge_2d( self, charge_accumulator, target_total_charge )
     use sll_m_working_precision
-#include "sll_accumulators.h"
-    import sll_c_remapped_particle_group
+    import sll_c_remapped_particle_group, sll_charge_accumulator_2d
     class( sll_c_remapped_particle_group ),           intent( inout ) :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
     sll_real64,                                 intent(in), optional :: target_total_charge

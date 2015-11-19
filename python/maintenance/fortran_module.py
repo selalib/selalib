@@ -9,20 +9,18 @@ Modules required
   * Library   : fortran_intrinsics
   * 3rd-party : f2py.fparser
 
-TODO
-----
-  * Collect abstract interfaces
-
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 02 Nov 2015
+# Last revision: 12 Nov 2015
 #
 from __future__ import print_function
+import re
 from fparser    import statements, typedecl_statements, block_statements
-from fortran_intrinsics import (intrinsic_procedures, logical_operators,
-                                                      logical_constants)
+from fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
+                                logical_operators, logical_constants, \
+                                relational_operators)
 
 __all__ = ['FortranModule','populate_exported_symbols']
 __docformat__ = 'reStructuredText'
@@ -82,6 +80,7 @@ def remove_fortran_strings( text ):
 def remove_fortran_logicals( text ):
     """
     Remove any fortran logical operator or constant from the given text.
+    Also remove fortran relational operators.
 
     NOTE
     ----
@@ -89,30 +88,35 @@ def remove_fortran_logicals( text ):
 
     """
     text = text.lower()
-    for s in logical_operators:  text = text.replace( s, '' )
-    for s in logical_constants:  text = text.replace( s, '' )
+    for s in    logical_operators:  text = text.replace( s, ' ' )
+    for s in    logical_constants:  text = text.replace( s, ' ' )
+    for s in relational_operators:  text = text.replace( s, ' ' )
     return text
 
 #------------------------------------------------------------------------------
-def extract_associated_symbols( text ):
+def compute_external_symbols( content, fglobals=set() ):
     """
-    Extract new (local) symbols defined by an 'associate' declaration.
+    Compute all external symbols in a 'content' list of items (usually a
+    Fortran block), which represent a certain scope. This is done by searching
+    all used symbols in the current scope, and substracting the globals symbols
+    inherited from the parent scope. When one of the items is itself a block,
+    this function is recursively called in the block, once the global variables
+    of the child scope are updated with the local symbols at the current scope,
+    as well as the 'associated' variables.
 
-    """
-    text = remove_fortran_strings( text ).replace( 'associate','')[1:-1]
-    symbols = []
-    for s in text.split( ',' ):
-        v = s.partition( '=>' )[0].strip()
-        symbols.append( v )
-    return symbols
+    Parameters
+    ----------
+    content : list of 'fparser' objects
+      List of items (Fortran statements), usually representing a Fortran block
 
-#------------------------------------------------------------------------------
-def get_external_symbols( content, fglobals=set() ):
-    """ TODO: this should include
-           1) all used variables
-           2) all used types
-           3) all used subroutines (NOT intrinsic)
-           4) all calls (used functions and arrays, NOT intrinsic)
+    fglobals : set
+      Global symbols in the parent scope, which the current scope inherits
+
+    Returns
+    -------
+    fexternals : set
+      External symbols in the current scope (child blocks included)
+
     """
     # Compute locally defined symbols
     flocals = compute_locals( content )
@@ -127,12 +131,17 @@ def get_external_symbols( content, fglobals=set() ):
         if hasattr( item, 'content' ):
             # Get associated symbols from 'associate' block
             if isinstance( item, block_statements.Associate ):
-                fassociations  = extract_associated_symbols( item.item.line )
-                fglobals_block = set.union( fglobals, fassociations )
+                assoc_syms = [a.associate_name for a in item.association_list]
+                fglobals_block = set.union( fglobals, assoc_syms )
+            # Get associated symbol (if any) from 'select type' block
+            elif isinstance( item, block_statements.SelectType ):
+                if item.associate_name:
+                    assoc_syms = [item.associate_name]
+                    fglobals_block = set.union( fglobals, assoc_syms )
             else:
                 fglobals_block = fglobals
             # Recursion: find external symbols in block contents
-            fexternals_block = get_external_symbols( item.content, \
+            fexternals_block = compute_external_symbols( item.content, \
                     fglobals_block )
             # Update set of all external symbols
             fexternals.update( fexternals_block )
@@ -141,11 +150,27 @@ def get_external_symbols( content, fglobals=set() ):
 
 #------------------------------------------------------------------------------
 def compute_locals( content, return_dict=False ):
-    """ Compute local symbols from:
-          1. r.h.s. of type declarations (local variables)
-          2. type definitions (local types)
-          3. procedure definitions (local functions and subroutines)
-          4. interface definitions (TODO)
+    """
+    Compute local symbols from:
+      1. r.h.s. of type declarations (local variables)
+      2. type definitions (local types)
+      3. procedure definitions (local functions and subroutines)
+      4. interface definitions
+      5. abstract interfaces
+
+    Parameters
+    ----------
+    content : list of 'fparser' objects
+      List of items (Fortran statements), usually representing a Fortran block
+
+    return_dict : bool
+      If True, a dictionary with 7 separate entries is returned
+
+    Returns
+    -------
+    flocals : set | dict
+      Local symbols (divided into 7 cathegories if return_dict is True)
+
     """
     variables   = []
     types       = []
@@ -196,21 +221,94 @@ def compute_locals( content, return_dict=False ):
                 subroutines + interfaces + abstract_i )
 
 #------------------------------------------------------------------------------
-def compute_all_used_symbols( content ):
-    """ Compute all used symbols from:
-          1. l.h.s. of type declarations (used types)
-          2. subroutine calls (used subroutines)
-          3. r.h.s. of assignments (used functions and variables)
-          4. l.h.s. of assignments (used variables)
-          5. type blocks (entends...)
-    """
-    import re
-    pattern_name     = r"\b([a-zA-Z]\w*)\b"
-    pattern_variable = r"(?<![%\s])\s*" + pattern_name + r"\s*(?![\s\(])"
-    pattern_call     = r"(?<![%\s])\s*" + pattern_name + r"\s*\("
-    pattern_extends  = r"extends\s*\("  + pattern_name + r"\s*\)"
-    pattern_dimension= r"dimension\s*\("+ pattern_name + r"\s*\)"
+patterns = {}
+patterns['name']      = r"(?<!\d\.)\b([a-zA-Z]\w*)\b"
+patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"\s*(?![\s\(])"
+patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"\s*\("
+patterns['extends']   = r"extends\s*\("  + patterns['name'] + r"\s*\)"
+patterns['dimension'] = r"dimension\s*\("+ patterns['name'] + r"\s*\)"
 
+re_engines = {}
+for key,val in patterns.items():
+    re_engines[key] = re.compile( val, re.I )
+
+#------------------------------------------------------------------------------
+def extract_expr_symbols( expr, strip=False ):
+    """
+    Extract all symbols that are used in a certain mathematical expression,
+    distinguishing between calls and variables.
+
+    Parameters
+    ----------
+    expr : str
+      Mathematical expression to be parsed
+
+    strip : bool
+      If True, Fortran strings and logicals should be removed before proceeding
+
+    Returns
+    -------
+    calls : list of str
+      Names of functions and arrays (they cannot be distinguished)
+
+    variables : list of str
+      Names of variables (also arrays, if used as a whole)
+
+    """
+    from fparser.splitline import string_replace_map
+    from fparser.utils     import specs_split_comma
+
+    # If expression is not in lower case, convert it
+    if not expr.islower():
+        expr = expr.lower()
+
+    # If required, remove Fortran strings, logicals and relationals
+    if strip:
+        expr = remove_fortran_strings ( expr )
+        expr = remove_fortran_logicals( expr )
+
+    # Substitute argument lists with 'F2PY_EXPR_TUPLE' strings, and store map
+    string, string_map = string_replace_map( expr )
+
+    # Extract all symbols at this level
+    calls     = re_engines['call'    ].findall( string )
+    variables = re_engines['variable'].findall( string )
+    variables = [v for v in variables if not v.startswith('F2PY_EXPR_TUPLE')]
+
+    # Search for symbols in each of the 'mapped' strings
+    for text in string_map.values():
+        # Split argument lists
+        for expr in specs_split_comma( text ):
+            # Ignore keywords in function calls
+            if '=' in expr:
+                string, string_map = string_replace_map( expr )
+                expr = string_map( string.rpartition('=')[2].lstrip() )
+            # Recursion: extract symbols from new expression and update lists
+            if expr:
+                new_calls, new_variables = extract_expr_symbols( expr )
+                calls    .extend( new_calls     )
+                variables.extend( new_variables )
+
+    # Return symbol lists
+    return calls, variables
+
+#------------------------------------------------------------------------------
+def compute_all_used_symbols( content ):
+    """
+    Compute all used symbols in a certain scope level, without searching any
+    child scopes.
+
+    Parameters
+    ----------
+    content : list of 'fparser' objects
+      List of items (Fortran statements), usually representing a Fortran block
+
+    Returns
+    -------
+    used_symbols : set
+      All symbols used in the current scope level
+
+    """
     types       = []
     subroutines = []
     variables   = []
@@ -222,12 +320,15 @@ def compute_all_used_symbols( content ):
         if isinstance( item, variable_declaration_types ):
             # Array dimensions on l.h.s.
             for s in item.attrspec:
-                variables.extend( re.findall( pattern_dimension, s ) )
+                variables.extend( re_engines['dimension'].findall( s ) )
             # Array dimensions on r.h.s.
             for v in item.entity_decls:
+                # TODO: cleanup this code
                 v = remove_fortran_strings ( v )  # remove strings
                 v = remove_fortran_logicals( v )  # remove logicals
-                syms = re.findall( pattern_name, v )
+                v = v.replace('(',',')
+                v = v.replace(')',',')
+                syms = re_engines['variable'].findall( v )
                 syms = (s for s in syms[1:] if s not in intrinsic_procedures)
                 variables.extend( syms )
             # kind parameter in numerical type declarations
@@ -247,11 +348,36 @@ def compute_all_used_symbols( content ):
                 types.append( item.name )
             # Type name in polymorphic extended type declarations
             elif isinstance( item, typedecl_statements.Class ):
-                types.append( item.get_kind() ) # NOTE: this makes no sense, but...
+                type_name = item.get_kind() # NOTE: this makes no sense, but...
+                if type_name != '*':
+                    types.append( type_name )
         # Procedure declaration statements or bindings
         elif isinstance( item, has_interface_types ):
             if item.iname:
                 interfaces.append( item.iname )
+        # ALLOCATE statement
+        elif isinstance( item, statements.Allocate ):
+            # Type name and type parameters
+            type_params_rhs = []
+            if item.type_spec:
+                type_name, type_params_dict = item.parse_type_spec()
+                if type_name not in intrinsic_types:
+                    types.append( type_name )
+                for key,val in type_params_dict.items():
+                    type_params_rhs.append( val )
+            # Optional arguments
+            alloc_opt_rhs = [a.partition('=')[2] for a in item.alloc_opt_list]
+            # Create unique string together with allocation list
+            s = ','.join( type_params_rhs + item.allocation_list + alloc_opt_rhs )
+            # Find all symbols in string
+            s = remove_fortran_strings ( s )
+            s = remove_fortran_logicals( s )
+            variables.extend( re_engines['variable'].findall( s ) )
+            calls    .extend( re_engines['call'    ].findall( s ) )
+        # TYPE GUARD statement
+        elif isinstance( item, statements.TypeGuard ):
+            if item.type_spec:
+                types.append( item.type_spec )
         # Subroutine calls (both caller and arguments)
         elif isinstance( item, statements.Call ):
             # caller
@@ -271,24 +397,69 @@ def compute_all_used_symbols( content ):
                     if '=' in s:
                         s = s.partition('=')[2].strip()
                     # Search for symbols
-                    variables.extend( re.findall( pattern_variable, s ) )
-                    calls    .extend( re.findall( pattern_call    , s ) )
+                    variables.extend( re_engines['variable'].findall( s ) )
+                    calls    .extend( re_engines['call'    ].findall( s ) )
         # Assignments (both sides)
         elif isinstance( item, (statements.Assignment, 
                                 statements.PointerAssignment) ):
             # l.h.s.
-            variables.append( re.findall( pattern_name, item.variable )[0] )
+            variables.append( re_engines['name'].findall( item.variable )[0] )
             # r.h.s.
-            s = remove_fortran_strings( item.expr )
-            s = remove_fortran_logicals( s )
-            variables.extend( re.findall( pattern_variable, s ) )
-            calls    .extend( re.findall( pattern_call    , s ) )
+            new_calls, new_vars = extract_expr_symbols( item.expr, strip=True )
+            variables.extend( new_vars  )
+            calls    .extend( new_calls )
         # Type blocks
         elif isinstance( item, block_statements.Type ):
             if len( item.specs ) > 0:
                 for s in item.specs:
                     if not is_fortran_string( s ):
-                        types.extend( re.findall( pattern_extends, s, re.I ) )
+                        types.extend( re_engines['extends'].findall( s ) )
+        # Extract symbols from all sorts of expressions
+        else:
+            # IF-THEN-ELSE block
+            if isinstance( item, (block_statements.If, \
+                    block_statements.IfThen, statements.ElseIf) ):
+                text = item.expr
+            # DO loop
+            elif isinstance( item, block_statements.Do ):
+                text = item.item.apply_map( item.loopcontrol )
+                if text.startswith( 'while' ): # DO WHILE
+                    text = text[6:-1]
+            # PRINT or WRITE statement
+            elif isinstance( item, (statements.Print, statements.Write) ):
+                text = ','.join( item.items )
+            # FORALL statement
+            elif isinstance( item, statements.Forall ):
+                text = ','.join( item.specs[0] )
+            # FORALL block
+            elif isinstance( item, block_statements.Forall ):
+                text = item.item.apply_map( item.specs )
+            # WHERE statement
+            elif isinstance( item, statements.Where ):
+                text = item.expr
+            # WHERE block
+            elif isinstance( item, block_statements.Where ):
+                text = item.item.apply_map( item.expr )
+            # SELECT TYPE block
+            elif isinstance( item, block_statements.SelectType ):
+                text = item.selector
+            # ASSOCIATE block
+            elif isinstance( item, block_statements.Associate ):
+                text = ','.join( a.selector for a in item.association_list )
+            # Nothing of the above
+            else:
+                text = ''
+
+            # Extract variables and calls from expression
+            if text:
+                new_calls, new_vars = extract_expr_symbols( text, strip=True )
+                variables.extend( new_vars  )
+                calls    .extend( new_calls )
+
+            # Double-check that we do not have F2Py strings
+            if ('f2py' in text) or ('F2PY' in text):
+                print('ERROR: ', text )
+                raise SystemExit()
 
     return set( types + subroutines + variables + calls + interfaces )
 
@@ -309,7 +480,7 @@ class FortranModule( object ):
         self._flocals = compute_locals( module.content, return_dict=True )
 
         # Extract external symbols (not declared anywhere in module)
-        self._imported_symbols = get_external_symbols( module.content )
+        self._imported_symbols = compute_external_symbols( module.content )
 
         # Set: exported symbols (empty for now)
         self._exported_symbols = set()
@@ -319,22 +490,28 @@ class FortranModule( object ):
         for item in module.content:
             if type( item ) == statements.Use:
                 self._used_modules[item.name] = {'isonly':item.isonly, \
-                                                 'items' :item.items }
+                        'items':item.items, 'object':None }
 
     #--------------------------------------------------------------------------
-    def link_used_modules( self, *modules ):
+    def link_used_modules( self, modules, externals={} ):
         """ Given a list of library modules, link against the used ones.
         """
         for name,data in self._used_modules.items():
-            objects = []
-            for m in modules:
-                if m.name == name:
-                    objects.append( m )
+
+            if name in externals:
+                print( "WARNING: skipping external module %s" % name )
+                data['object']   = None
+                data['external'] = True
+                continue
+
+            objects = [m for m in modules if m.name == name]
+
             if len( objects ) == 0:
-                print( "WARNING: missing link for module %s" % name )
-                data['object'] = None
+                print( "ERROR: missing link for module %s" % name )
+                raise SystemExit()
             elif len( objects ) == 1:
-                data['object'] = m
+                data['object']   = objects[0]
+                data['external'] = False
             else:
                 print( "ERROR: multiple modules with name %s" % name )
                 raise SystemExit()
@@ -363,43 +540,58 @@ class FortranModule( object ):
             # Symbol is found in module
             return self.name
 
-        # Search in all used modules
+        # Search in used modules
         for name,data in self._used_modules.items():
+            # Search in "use only" symbol list
             if data['isonly']:
                 if symbol in data['items']:
                     # Symbol is found in "use [], only:" list
                     return name
                 continue
-            if data['object'] is None:
-                print( "WARNING: missing link for module %s" % name )
-                continue
-            # Recursively call same function
-            mod_name = data['object'].find_symbol_def( symbol )
-            if mod_name is not None:
-                # Symbol is found in some other module in the use hierarchy
-                return mod_name
+            # Recursively call same function in "use all" modules (if linked!)
+            if data['object']:
+                mod_name = data['object'].find_symbol_def( symbol )
+                if mod_name:
+                    # Symbol is found in some other module in the use hierarchy
+                    return mod_name
 
         # Nothing was found
         return None
 
     #--------------------------------------------------------------------------
-    def update_use_statements( self ):
-        """ Update all use statements.
+    def update_use_statements( self,
+            find_external_library = None,
+            ignored_symbols       = [] ):
+        """
+        Update all use statements.
+
         """
         unlocated_symbols = list( self._imported_symbols )
 
         for s in self._imported_symbols:
             mod_name = self.find_symbol_def( s )
             if mod_name is None:
-                print( "ERROR: cannot locate symbol %s" % s )
-                raise SystemExit()
+                if find_external_library is not None:
+
+                    # Search in external libraries
+                    external_match = find_external_library( s )
+                    if external_match:
+                        lib_name, mod_name = external_match
+                        if mod_name == '':
+                            mod_name = 'F77_' + lib_name
+                            # TODO: properly handle fftpack
+                    else:
+                        if s not in ignored_symbols:
+                            print( "ERROR processing file %s:" % self.filepath )
+                            print( "  cannot locate symbol %s" % s )
+                            raise SystemExit()
 
             if mod_name in self._used_modules.keys():
                 self._used_modules[mod_name]['items'].append( s )
                 unlocated_symbols.remove( s )
             else:
-                new_mod = { 'isonly': True, 'items': [s] }
-                self._used_module['mod_name'] = new_mod
+                new_mod = { 'isonly': True, 'items': [s], 'object': None }
+                self._used_modules[mod_name] = new_mod
                 unlocated_symbols.remove( s )
 
         assert( unlocated_symbols == [] )
@@ -489,37 +681,37 @@ class FortranModule( object ):
         print()
         print( "VARIABLES" )
         print( "---------" )
-        map( printer, self.variables )
+        map( printer, sorted( self.variables ) )
         print()
         print( "TYPES" )
         print( "-----" )
-        map( printer, self.types )
+        map( printer, sorted( self.types ) )
         print()
         print( "ABSTRACT TYPES" )
         print( "--------------" )
-        map( printer, self.classes )
+        map( printer, sorted( self.classes ) )
         print()
         print( "SUBROUTINES" )
         print( "-----------" )
-        map( printer, self.subroutines )
+        map( printer, sorted( self.subroutines ) )
         print()
         print( "FUNCTIONS" )
         print( "---------" )
-        map( printer, self.functions )
+        map( printer, sorted( self.functions ) )
         print()
         print( "INTERFACES" )
         print( "----------" )
-        map( printer, self.interfaces )
+        map( printer, sorted( self.interfaces ) )
         print()
         print( "ABSTRACT INTERFACES" )
         print( "-------------------" )
-        map( printer, self.abstract_i )
+        map( printer, sorted( self.abstract_i ) )
         print()
 
         print( "================" )
         print( "IMPORTED SYMBOLS" )
         print( "================" )
-        map( printer, self._imported_symbols )
+        map( printer, sorted( self._imported_symbols ) )
         print()
 
         print( "============" )

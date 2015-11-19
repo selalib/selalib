@@ -301,7 +301,7 @@ contains
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
 !        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !        D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo
@@ -354,7 +354,7 @@ contains
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
 !        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !          D_contr(m,:,:) = D_contr(m,:,:) + pointer_mat_contribution_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo

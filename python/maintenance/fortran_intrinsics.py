@@ -1,4 +1,14 @@
+intrinsic_types = { \
+'integer',
+'real',
+'double precision',
+'complex',
+'character',
+'logical',
+}
+
 intrinsic_procedures = { \
+'abort', # Terminates program and produces core dump (GNU)
 'abs', # Absolute value
 'achar', # Character in ASCII collating sequence
 'acos', # Arccosine function
@@ -59,6 +69,7 @@ intrinsic_procedures = { \
 'erfc', # Complementary error function
 'erfc_scaled', # Error function
 'execute_command_line', # Execute a shell command
+'exit', # Terminates program with given status (GNU)
 'exp', # Exponential function
 'exponent', # Exponent function
 'extends_type_of', # Type extension inquiry
@@ -155,6 +166,7 @@ intrinsic_procedures = { \
 'spacing', # Smallest distance between two numbers of a given type
 'spread', # Add a dimension to an array
 'sqrt', # Square-root function
+'storage_size', # Storage size of argument A in bits (Fortran 2008 and later)
 'sum', # Sum of array elements
 'system_clock', # Time function
 'tan', # Tangent function
@@ -180,4 +192,13 @@ logical_operators = { \
 logical_constants = { \
 '.true.',
 '.false.',
+}
+
+relational_operators = { \
+'.lt.',
+'.le.',
+'.eq.',
+'.ne.',
+'.gt.',
+'.ge.',
 }

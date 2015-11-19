@@ -118,21 +118,21 @@ contains
    do n=0,k
       nn = nn +1
       x(nn) = dble(n)/k
-      y(nn) = 0.0d0
+      y(nn) = 0.0._f64
    end do
 
    ! On continue avec les points sur l'arete 2-3 (x+y=1)
    do n=1,k
       nn = nn +1
       y(nn) = dble(n)/k
-      x(nn) = 1.0d0-y(nn)
+      x(nn) = 1.0._f64-y(nn)
    end do
 
    ! puis avec les points sur l'arete 3-1 (x=0)
    do n=1,k-1
       nn = nn +1
-      y(nn) = 1.0d0-dble(n)/k
-      x(nn) = 0.0d0
+      y(nn) = 1.0._f64-dble(n)/k
+      x(nn) = 0.0._f64
    end do
 
    ! et on finit par les points interieurs
@@ -151,44 +151,44 @@ contains
 
    ! coordonnees pour le passage du carre au triangle
    do n = 1, Nk
-      xi(n) = 2.d0*x(n)/(1.d0-y(n)+epsilon(y(n)))-1.0d0
-      eta(n) = 2.d0*y(n)-1.0d0
+      xi(n) = 2._f64*x(n)/(1._f64-y(n)+epsilon(y(n)))-1.0._f64
+      eta(n) = 2._f64*y(n)-1.0._f64
    end do
 
    ! On calcule les matrices de Vandermonde des P et des derivees DxP et DyP
    do n = 0,k
       do m = 0,k-n
          nn = 1 + (n+m)*(n+m+1)/2 + n 
-         jacp1 = JacobiP(m,0.d0,0.d0,xi)
-         jacp2 = JacobiP(n,dble(2*m+1),0.0d0,eta)
+         jacp1 = JacobiP(m,0._f64,0._f64,xi)
+         jacp2 = JacobiP(n,dble(2*m+1),0.0._f64,eta)
          if (m > 0) then
-            dum(:) = 1. !calcul de (1.0d0-y)**m-1
+            dum(:) = 1. !calcul de (1.0._f64-y)**m-1
             do i = 1,m-1
-               dum(:) = dum(:) * (1.0d0-y(:))
+               dum(:) = dum(:) * (1.0._f64-y(:))
             end do
-            djacp1  = JacobiP(m-1,1.d0,1.d0,xi)
-            djacp1x = djacp1*dum(:) !(1.d0-y)**(m-1)
-            jacp2y  = jacp2*dum(:)  !(1.0d0-y)**(m-1)
+            djacp1  = JacobiP(m-1,1._f64,1._f64,xi)
+            djacp1x = djacp1*dum(:) !(1._f64-y)**(m-1)
+            jacp2y  = jacp2*dum(:)  !(1.0._f64-y)**(m-1)
          else 
             djacp1  = 0.0
             djacp1x = 0.0
             do l = 1, Nk
-               jacp2y(l) = jacp2(l)/(1.0d0-y(l)+epsilon(y(l)))
+               jacp2y(l) = jacp2(l)/(1.0._f64-y(l)+epsilon(y(l)))
             end do
          end if
          if (n > 0) then
-            djacp2 = JacobiP(n-1,real(2*m+2,8),1.d0,eta)
+            djacp2 = JacobiP(n-1,real(2*m+2,8),1._f64,eta)
          else
-            djacp2 = 0.0d0
+            djacp2 = 0.0._f64
          end if
-         coef = dsqrt(dble((2*m+1)*2*(n+m+1)))
-         dum(:) = 1. !calcul de (1.0d0-y)**m
+         coef = sqrt(dble((2*m+1)*2*(n+m+1)))
+         dum(:) = 1. !calcul de (1.0._f64-y)**m
          do i = 1,m
-            dum(:) = dum(:) * (1.0d0-y(:))
+            dum(:) = dum(:) * (1.0._f64-y(:))
          end do
          vdm(:,nn) = jacp1(:) * jacp2(:) * coef * dum(:)
          dxvdm(:,nn) = coef*(m+1)*djacp1x*jacp2
-         dyvdm(:,nn) = coef*(((xi+1.d0)*0.5*(m+1)*djacp1-m*jacp1)*jacp2y &
+         dyvdm(:,nn) = coef*(((xi+1._f64)*0.5*(m+1)*djacp1-m*jacp1)*jacp2y &
                  + jacp1*dum(:)*(2*m+n+2)*djacp2)
       end do
    end do
@@ -248,7 +248,7 @@ contains
    ! Les points du bord sont les k+1 premiers, il faut les ramener
    ! de l'intervalle [0,1] x [-1,1] 
    do n=0,k
-      vdm1d(:,n+1)=JacobiP(n,0.0d0,0.0d0,2.0d0*x(1:k+1)-1.0d0)
+      vdm1d(:,n+1)=JacobiP(n,0.0._f64,0.0._f64,2.0._f64*x(1:k+1)-1.0._f64)
       vdm1d(:,n+1)=vdm1d(:,n+1)*sqrt(real(2*n+1,8))  ! normalisation
    end do
 

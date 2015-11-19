@@ -3,7 +3,7 @@ IF (HDF5_IS_PARALLEL)
 ENDIF (HDF5_IS_PARALLEL)
 
 ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
-                init_functions.F90 test_general_coordinates_elliptic_solver.F90 )
+                m_init_functions.F90 test_general_coordinates_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
                        sll_general_coordinate_elliptic_solvers )

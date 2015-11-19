@@ -1,0 +1,9 @@
+This is new version of sim_bsl_vp_1d1v_cart_two_species.
+We modified the module in order to consider more than two species.
+
+$ mkdir run
+$ cd run 
+$ ../sim_bsl_vp_1d1v_cart_multi_species tsi2sp
+$ gnuplot -p tsi2sp.gnu
+
+Compare the result with the pdf file.

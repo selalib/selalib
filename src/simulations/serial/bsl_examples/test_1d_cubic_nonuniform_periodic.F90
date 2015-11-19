@@ -49,8 +49,8 @@ do j = 1, nc_v+1
    end do
 end do
 
-advfield_x = 1_f64 
-advfield_v = 0.0 
+advfield_x = 1.0_f64 
+advfield_v = 0.0_f64 
 
 print*, 'initialize 2d distribution function f(x,v) sll_m_gaussian'
 print*, 'checking advection of a Gaussian in a uniform field'
@@ -73,7 +73,7 @@ do it = 1, n_steps
 end do
 
 ! compute error when Gaussian arrives at center (t=1)
-error = 0.0
+error = 0.0_f64
 do j = 1, nc_v+1
    do i = 1, nc_x+1
       error = max(error,abs(df(i,j)-exp(-(x(i)*x(i)+v(j)*v(j)))))

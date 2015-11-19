@@ -10,7 +10,6 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 
   use sll_m_collective
   use sll_m_remapper

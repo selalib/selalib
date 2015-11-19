@@ -249,25 +249,25 @@ contains
     class(sll_interpolator_2d_base), pointer :: f_interp2d
     class(sll_interpolator_2d_base), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_characteristics_1d_base), pointer :: charac1d_x1
-    class(sll_characteristics_1d_base), pointer :: charac1d_x2
+    !class(sll_characteristics_1d_base), pointer :: charac1d_x1
+    !class(sll_characteristics_1d_base), pointer :: charac1d_x2
     class(sll_interpolator_2d_base), pointer   :: A1_interp2d
     class(sll_interpolator_2d_base), pointer   :: A2_interp2d
     class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    !class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
+    !class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
     !class(sll_advection_1d_base), pointer    :: advect_1d_x1
     !class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
     sll_real64 :: eta1_min_bis
     sll_real64 :: eta1_max_bis
-    sll_real64 :: eta2_min_bis
-    sll_real64 :: eta2_max_bis
-    sll_int32  :: Nc_eta1_bis
-    sll_int32  :: Nc_eta2_bis
+    !sll_real64 :: eta2_min_bis
+    !sll_real64 :: eta2_max_bis
+    !sll_int32  :: Nc_eta1_bis
+    !sll_int32  :: Nc_eta2_bis
     sll_real64 :: A1 !parameter for translation
     sll_real64 :: A2 !parameter for translation
     sll_int32 :: hermite_degree1
@@ -1364,7 +1364,7 @@ contains
     sll_real64 :: err
     sll_real64 :: feet1
     sll_real64 :: feet2
-    sll_real64 :: jac_m(2,2)
+    !sll_real64 :: jac_m(2,2)
 
     Nc_eta1 = sim%mesh_2d%num_cells1
     Nc_eta2 = sim%mesh_2d%num_cells2
@@ -1843,14 +1843,14 @@ contains
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
     character(len=4)      :: cplot
-    sll_int32             :: nnodes_x1, nnodes_x2
+    !sll_int32             :: nnodes_x1, nnodes_x2
     !type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 ::  eta1_min, eta2_min
-    sll_real64 ::  eta1_max, eta2_max  
-    sll_real64 :: deta1
-    sll_real64 :: deta2
+    !sll_real64 ::  eta1_min, eta2_min
+    !sll_real64 ::  eta1_max, eta2_max  
+    !sll_real64 :: deta1
+    !sll_real64 :: deta2
     
     
     
@@ -2694,7 +2694,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64, dimension(:), allocatable :: tmp2
     sll_real64, dimension(:), allocatable :: jac1
     sll_real64, dimension(:), allocatable :: jac2
-    sll_real64, dimension(:,:), allocatable :: dphi
+    !sll_real64, dimension(:,:), allocatable :: dphi
     sll_int32 :: ierr
     
     Nc_eta1 = mesh_2d%num_cells1
@@ -2781,7 +2781,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64 :: eta2
     sll_int32 :: i1
     sll_int32 :: i2
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
 
     do i2=1,num_dof2
@@ -2816,7 +2816,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64 :: eta2
     sll_int32 :: i1
     sll_int32 :: i2
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
 
     do i2=1,num_dof2
@@ -3420,7 +3420,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_int32 :: ii
     sll_int32 :: ind
     sll_real64 :: tmp
-    sll_real64, dimension(:,:), allocatable :: buf
+    !sll_real64, dimension(:,:), allocatable :: buf
 
     r=-p/2
     s=(p+1)/2
@@ -3481,7 +3481,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64 :: tmp
     sll_int32 :: i
     sll_int32 :: j
-    sll_int32 :: ii
+    !sll_int32 :: ii
     sll_int32 :: ierr
 
     SLL_ALLOCATE(w(r:s),ierr)
@@ -3620,7 +3620,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
   subroutine delete_analytic_field_2d_curvilinear( sim )
 
     class(sll_simulation_2d_analytic_field_curvilinear) :: sim
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
             
   end subroutine delete_analytic_field_2d_curvilinear

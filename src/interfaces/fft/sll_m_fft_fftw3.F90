@@ -181,10 +181,10 @@ contains
         data(n_2) = real(new_value,kind=f64)
       else if( k .gt. n_2 ) then
         data(n-k) = real(new_value,kind=f64)
-        data(k) = -dimag(new_value)
+        data(k) = -aimag(new_value)
       else
         data(k) = real(new_value,kind=f64)
-        data(n-k) = dimag(new_value)
+        data(n-k) = aimag(new_value)
       endif
   end subroutine 
 

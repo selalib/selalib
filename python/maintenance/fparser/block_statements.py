@@ -15,6 +15,7 @@ Modifications:
               (Yaman Güçlü [YG] - IPP Garching)
             : modify regex pattern in 'Forall' to avoid false matches (YG)
             : add 'SelectType' block statement (YG)
+            : extracting association info from 'Associate' block (YG)
 -----
 """
 
@@ -811,9 +812,15 @@ class SelectType( BeginStatement ):
         return 'SELECT TYPE ( %s )' % self.expr
 
     def process_item( self ):
-        # TODO: "<associate-name> =>" should be properly parsed
+        # Get expression within parentheses
         self.expr = self.item.get_line()[6:].lstrip()[4:].lstrip()[1:-1].strip()
+        # Parse "<associate-name> => <selector>"
+        left, sym, right = self.item.apply_map( self.expr ).partition( '=>' )
+        self.associate_name =  left.strip()
+        self.selector       = right.strip()
+        # Get construct name, if any
         self.construct_name = self.item.name
+        # Call parent class method
         return BeginStatement.process_item( self )
 
     def get_classes( self ):
@@ -1024,7 +1031,20 @@ class Do(BeginStatement):
     def get_classes(self):
         return execution_part_construct
 
+#==============================================================================
 # Associate
+#==============================================================================
+
+class Association( object ):
+    """
+    <association> = <associate-name> => <selector>
+    <selector> = <expr> | <variable>
+
+    """
+    def __init__( self, text ):
+        left, sym, right = text.partition( '=>' )
+        self.associate_name =  left.strip()
+        self.selector       = right.strip()
 
 class EndAssociate(EndStatement):
     """
@@ -1043,15 +1063,24 @@ class Associate(BeginStatement):
     match = re.compile(r'associate\s*\(.*\)\Z',re.I).match
     end_stmt_cls = EndAssociate
 
-    def process_item(self):
+    def process_item( self ):
+        # Store associations as a unique F2Py string
         line = self.item.get_line()[9:].lstrip()
         self.associations = line[1:-1].strip()
+        # Store a list of Association objects
+        arg = self.item.apply_map( self.associations )
+        self.association_list = \
+                [Association( s ) for s in split_comma( arg, self.item )]
+        # Call parent class method
         return BeginStatement.process_item(self)
+
     def tostr(self):
         return 'ASSOCIATE (%s)' % (self.associations)
+
     def get_classes(self):
         return execution_part_construct
 
+#==============================================================================
 # Type
 
 class EndType(EndStatement):

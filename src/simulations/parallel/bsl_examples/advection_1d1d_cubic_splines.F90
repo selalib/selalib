@@ -9,6 +9,9 @@ use sll_m_collective
 use sll_m_remapper
 use sll_m_utilities, only : &
      is_power_of_two
+use iso_fortran_env, only: &
+     output_unit
+
 #define MPI_MASTER 0
 
   implicit none
@@ -60,7 +63,7 @@ use sll_m_utilities, only : &
   call sll_boot_collective()
 
   prank = sll_get_collective_rank(sll_world_collective)
-  psize = sll_get_collective_size(sll_world_collective)
+  psize = int(sll_get_collective_size(sll_world_collective),kind=i64)
   comm  = sll_world_collective%comm
 
   tcpu1 = MPI_WTIME()
@@ -83,7 +86,7 @@ use sll_m_utilities, only : &
              nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
   if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta1 )
-  call flush(6)
+  flush( output_unit )
 
   call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f_eta1(1:loc_sz_i,1:loc_sz_j),error)
@@ -94,7 +97,7 @@ use sll_m_utilities, only : &
               nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
   if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta2 )
-  call flush(6)
+  flush( output_unit )
 
   call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f_eta2(1:loc_sz_i,1:loc_sz_j),error)

@@ -29,15 +29,13 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
 use sll_m_collective
 use sll_m_remapper
 use sll_m_buffer_loader_utilities
 use sll_m_constants
 use sll_m_cartesian_meshes  
-use sll_m_gnuplot_parallel
+use sll_m_gnuplot
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_common_coordinate_transformations
@@ -53,6 +51,7 @@ use sll_m_poisson_1d_periodic_solver
 use sll_m_poisson_1d_polar_solver
 use sll_m_advection_1d_ampere
 use sll_m_primitives
+use sll_m_xdmf
 !#ifdef _OPENMP
 !use omp_lib
 !#endif
@@ -334,8 +333,8 @@ contains
     type(sll_cartesian_mesh_1d), pointer :: mesh_x2_sp2
     sll_int32 :: ierr
     sll_int32, parameter  :: param_out = 37, param_out_drive = 40
-    sll_real64 :: bloc_coord(2)
-    sll_int32 :: bloc_index(3)
+    !sll_real64 :: bloc_coord(2)
+    !sll_int32 :: bloc_index(3)
     sll_int32 :: i
     sll_int32 :: num_threads
     sll_int32 :: tid
@@ -1205,7 +1204,7 @@ contains
     sll_int32 :: global_indices_sp2(2)
     sll_int32 :: ierr
     sll_int32 :: local_size_x1_sp1,local_size_x1_sp2,local_size_x2_sp1,local_size_x2_sp2
-    sll_real64 :: adr
+    !sll_real64 :: adr
     sll_real64 :: tmp_loc(10),tmp(10)
     sll_int32 :: i,istep,ig,k
     
@@ -2202,6 +2201,8 @@ contains
     endif
 
 
+    print*, 176.00010668708197, 820.34117552361215 
+    print*, sum(f_x1_sp1), sum(f_x1_sp2)
     
     
   end subroutine run_vp2d_cartesian_two_species
