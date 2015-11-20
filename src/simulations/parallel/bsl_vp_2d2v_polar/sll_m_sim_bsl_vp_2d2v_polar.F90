@@ -47,7 +47,6 @@ module sll_m_sim_bsl_vp_2d2v_polar
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 
 use sll_m_collective
 use sll_m_remapper
@@ -61,6 +60,7 @@ use sll_m_parallel_array_initializer
 use sll_m_coordinate_transformation_2d_base
 use sll_m_gnuplot_parallel
 use sll_m_poisson_polar_parallel
+use iso_fortran_env, only: output_unit
 
 implicit none
 
@@ -262,12 +262,12 @@ contains
     SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),error)
     SLL_ALLOCATE(sim%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
 
-    
+ 
     if ( prank == MPI_MASTER ) call sll_view_lims( sim%sequential_x1x2 )
-    call flush(6)
+    flush( output_unit )
     if ( prank == MPI_MASTER ) call sll_view_lims( sim%sequential_x3x4 )
-    call flush(6)
-    
+    flush( output_unit )
+ 
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, sim%mesh2d_x, sim%mesh2d_v, &
          sim%f_x3x4, sim%init_func, sim%params, &

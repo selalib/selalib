@@ -1,0 +1,9 @@
+skyline.f
+---------
+This file contains a program (by Nhung Pham and Philippe Helluy) which solves
+the linear system Ax=b, where A is given as a standard Fortran 2D array.
+First, A is stored in a skyline structure, and then the system is solved by
+using a specialized function "sol" (contained in file "sol.f").
+By doing this, computation time is saved.
+Nhung Pham does not know who still needs this file, and she thinks it can be
+removed.

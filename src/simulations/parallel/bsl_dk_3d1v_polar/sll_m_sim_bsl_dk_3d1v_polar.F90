@@ -41,7 +41,6 @@ module sll_m_sim_bsl_dk_3d1v_polar
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
   use sll_m_collective
   use sll_m_remapper
   use sll_m_constants
@@ -63,7 +62,7 @@ module sll_m_sim_bsl_dk_3d1v_polar
   use sll_m_hdf5_io_serial
   use sll_m_ascii_io
   use sll_m_gnuplot
-
+  use sll_m_xdmf
 
 
   implicit none

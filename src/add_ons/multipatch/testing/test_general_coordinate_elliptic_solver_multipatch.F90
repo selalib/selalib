@@ -16,6 +16,10 @@ use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_timer
 use sll_m_general_coordinate_elliptic_solver_multipatch
 
+
+use m_multipatch_helper_functions, only : &
+     func_zero, func_one
+
 implicit none
 
 #define SPLINE_DEG1       3
@@ -58,12 +62,6 @@ sll_real64 :: delta2
 sll_real64 :: x1
 sll_real64 :: x2
 
-real(8), external    :: func_zero
-real(8), external    :: func_one
-real(8), external    :: func_epsi
-real(8), external    :: source_term_perdir
-real(8), external    :: source_term_dirper
-sll_real64, external :: sol_exacte_perdir
 
 T => new_coordinate_transformation_multipatch_2d("circle_mp5_pts12")
 

@@ -9,6 +9,7 @@ program test_poisson_2d_periodic_cart_par
   use hdf5
   use sll_m_hdf5_io_parallel
   use sll_m_gnuplot_parallel
+  use iso_fortran_env, only: output_unit
 
   implicit none
 
@@ -103,11 +104,11 @@ program test_poisson_2d_periodic_cart_par
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
@@ -164,11 +165,11 @@ program test_poisson_2d_periodic_cart_par
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
@@ -185,11 +186,11 @@ program test_poisson_2d_periodic_cart_par
 
   if (myrank==0) then
      if (prod4test(1)==1.) then
-        call flush(6)
+        flush( output_unit )
         print*, ' '
-        call flush(6)
+        flush( output_unit )
         print*, '"sll_poisson_2d_periodic_cart_par" test: PASSED'
-        call flush(6)
+        flush( output_unit )
         print*, ' '
      endif
   endif

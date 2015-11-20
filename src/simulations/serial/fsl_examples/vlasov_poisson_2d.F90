@@ -38,7 +38,6 @@ sll_comp64 :: F1(0:ntau-1),F2(0:ntau-1),Ftilde1(0:ntau-1),Ftilde2(0:ntau-1)
 sll_comp64 :: Term2(0:ntau-1),Term1(0:ntau-1),dtF1_F(0:ntau-1),dtF2_F(0:ntau-1)
 sll_comp64 :: temp1_F(0:ntau-1),temp2_F(0:ntau-1),dtF1(0:ntau-1),dtF2(0:ntau-1)
 sll_int32  :: n,m
-sll_real64, external :: g
 
 Neta1 = Nn
 Neta2 = Nn
@@ -104,7 +103,7 @@ do i=1,Neta1+1
     do j=1,Neta2+1
         eta2 = eta2_min + (j-1)*delta_eta2
         x2_array(j) = eta2
-        fh_fsl(i,j) = dexp(-2.0_f64*eta2**2)*dexp(-2.0_f64*eta1**2)
+        fh_fsl(i,j) = exp(-2.0_f64*eta2**2)*exp(-2.0_f64*eta1**2)
     enddo
 enddo
 r_array=x1_array(1:Nn)
@@ -140,8 +139,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         sumup1=cmplx(0.0_f64,0.0_f64,kind=f64)
         sumup2=cmplx(0.0_f64,0.0_f64,kind=f64)
             do n=1,ntau-1
-            sumup1=sumup1-sll_i1*Ftilde1(n)/ltau(n)*(cdexp(sll_i1*ltau(n)*tau(m))-1.0_f64)
-            sumup2=sumup2-sll_i1*Ftilde2(n)/ltau(n)*(cdexp(sll_i1*ltau(n)*tau(m))-1.0_f64)
+            sumup1=sumup1-sll_i1*Ftilde1(n)/ltau(n)*(exp(sll_i1*ltau(n)*tau(m))-1.0_f64)
+            sumup2=sumup2-sll_i1*Ftilde2(n)/ltau(n)*(exp(sll_i1*ltau(n)*tau(m))-1.0_f64)
             enddo
         w1_0(m)=xi1_0+eps*dreal(sumup1)
         w2_0(m)=xi2_0+eps*dreal(sumup2)
@@ -167,8 +166,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         temp1(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
         temp2(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
             do n=1,ntau-1
-            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF1_F(n)/sll_i1/ltau(n))+temp1(m)
-            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF2_F(n)/sll_i1/ltau(n))+temp2(m)
+            temp1(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF1_F(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(dtF2_F(n)/sll_i1/ltau(n))+temp2(m)
             enddo
         enddo
         call fftw_execute_dft(PlnFwd,temp1,temp1_F)
@@ -187,8 +186,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         temp1(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
         temp2(m)=cmplx(0.0_f64,0.0_f64,kind=f64)
             do n=1,ntau-1
-            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp1_F(n)/sll_i1/ltau(n))+temp1(m)
-            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp2_F(n)/sll_i1/ltau(n))+temp2(m)
+            temp1(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp1_F(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(exp(sll_i1*tau(m)*ltau(n))-1.0_f64)*(temp2_F(n)/sll_i1/ltau(n))+temp2(m)
             enddo
         enddo
         w1_0=xi1_0+eps*dreal(temp1)
@@ -212,8 +211,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
 !        sumup1=cmplx(0.0_f64,0.0_f64,kind=f64)
 !        sumup2=cmplx(0.0_f64,0.0_f64,kind=f64)
 !        do n=0,ntau-1
-!            sumup1=sumup1+Ftilde1(n)*cdexp(sll_i1*ltau(n)*k/eps)
-!            sumup2=sumup2+Ftilde2(n)*cdexp(sll_i1*ltau(n)*k/eps)
+!            sumup1=sumup1+Ftilde1(n)*exp(sll_i1*ltau(n)*k/eps)
+!            sumup2=sumup2+Ftilde2(n)*exp(sll_i1*ltau(n)*k/eps)
 !        enddo
 !---2nd UA
         do m=0,ntau-1
@@ -255,8 +254,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         sumup1=cmplx(0.0_f64,0.0_f64,kind=f64)
         sumup2=cmplx(0.0_f64,0.0_f64,kind=f64)
         do n=0,ntau-1
-        sumup1=sumup1+temp1(n)*cdexp(sll_i1*ltau(n)*k/eps)
-        sumup2=sumup2+temp2(n)*cdexp(sll_i1*ltau(n)*k/eps)
+        sumup1=sumup1+temp1(n)*exp(sll_i1*ltau(n)*k/eps)
+        sumup2=sumup2+temp2(n)*exp(sll_i1*ltau(n)*k/eps)
         enddo
 !---------------end time solve-------------------------
         eta1=dreal(sumup1)
@@ -335,7 +334,7 @@ end program
 !        if (abs(x)<L .and. abs(y)<L) then
 !            do p=1,Nn
 !                do q=1,Nn
-!                sum0=sum0+cdexp(sll_i1*lx(p)*(x+L)+sll_i1*lx(q)*(y+L))*ftilde(p,q)
+!                sum0=sum0+exp(sll_i1*lx(p)*(x+L)+sll_i1*lx(q)*(y+L))*ftilde(p,q)
 !                enddo
 !            enddo
 !        endif
@@ -429,7 +428,6 @@ sll_int32   :: n,m,i
 sll_comp64  :: fvptilde(1:Nn),fvptilde0(1:Nn),temp(1:Nn),sum0(1:Nn)
 sll_comp64  :: vctmp(Nn),uctmp(Nn)
 type(C_PTR) :: PlnF,PlnB
-sll_real64, external :: g
 
 L=4.0_f64
 x=r
@@ -502,9 +500,9 @@ enddo
 call fftw_destroy_plan(PlnF)
 call fftw_destroy_plan(PlnB)
 
-end subroutine poissonsolver
+contains
 
-!-----function g(tau,xi1,xi2,E,lx)---
+  !-----function g(tau,xi1,xi2,E,lx)---
 double precision function g(ta,x1,x2,E,lx,Nn)
 
 use sll_m_constants
@@ -530,7 +528,7 @@ sum0=cmplx(0.0_f64,0.0_f64,kind=f64)
 
 if (abs(x)<L) then
     do n=1,Nn
-    sum0=sum0+cdexp(sll_i1*lx(n)*(x+L))*Etilde1(n)
+    sum0=sum0+exp(sll_i1*lx(n)*(x+L))*Etilde1(n)
     enddo
 endif
 
@@ -538,4 +536,8 @@ g = dreal(sum0)
 call fftw_destroy_plan(PlnF)
 
 end function g
+
+
+end subroutine poissonsolver
+
 

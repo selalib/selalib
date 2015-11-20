@@ -19,6 +19,10 @@ program test_maxwell_2d_periodic_cart_par
                                   sll_hdf5_file_close
   use sll_m_utilities, only : &
        int2string
+
+  use iso_fortran_env, only: &
+       output_unit
+
   implicit none
 
   sll_int32   :: ncx
@@ -103,11 +107,11 @@ program test_maxwell_2d_periodic_cart_par
                                                  nprocx, &
                                                       1, &
                                                 layout_y )
-  call flush(6)
+  flush( output_unit )
   call sll_view_lims(layout_x)
-  call flush(6)
+  flush( output_unit )
   call sll_view_lims(layout_y)
-  call flush(6)
+  flush( output_unit )
 
   plan => new_maxwell_2d_periodic_plan_cartesian_par(layout_x, &
                                                      layout_y, &

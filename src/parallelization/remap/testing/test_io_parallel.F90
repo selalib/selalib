@@ -14,6 +14,8 @@ use sll_m_remapper
 #include "sll_working_precision.h"
 use sll_m_utilities, only : &
      is_power_of_two
+use iso_fortran_env, only: &
+     output_unit
 
 implicit none
 
@@ -46,7 +48,7 @@ if( myrank .eq. 0) then
    print *, '--------------- HDF5 parallel test ---------------------'
    print *, ' '
    print"('Running a test on ',i4,' processes')", colsz
-   call flush(6)
+   flush( output_unit )
 end if
 
 if (.not. is_power_of_two(colsz)) then     

@@ -5,6 +5,9 @@ program remap_test_5d
 #include "sll_working_precision.h"
   use sll_m_utilities, only : &
        is_power_of_two
+  use iso_fortran_env, only: &
+       output_unit
+
   implicit none
 
 #define RANK_TO_PRINT 0
@@ -81,7 +84,7 @@ program remap_test_5d
      print *, '--------------- REMAP 5D test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -92,7 +95,7 @@ program remap_test_5d
 
   ok = 1
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -124,7 +127,7 @@ program remap_test_5d
 !!$        print *, 'process: ', myrank, 'viewing layout1: '
 !!$        call sll_view_lims(layout1)
 !!$        print *, '----------------------------------------'
-!!$        call flush(6)
+!!$        flush( output_unit )
 !!$     end if
 
      call compute_local_sizes( &
@@ -233,7 +236,7 @@ program remap_test_5d
 !!$        print *, '*********************************************************'
 !!$        print *, 'rank = ', myrank, 'initialized array:'
 !!$        print *, local_array1(:,:,:,:,:,:)
-!!$        call flush(6)
+!!$        flush( output_unit )
 !!$        print *, '*********************************************************'
 !!$     end if
 
@@ -354,7 +357,7 @@ program remap_test_5d
                           print*, 'program stopped by failure'
                           stop
                        end if
-                       call flush(6)
+                       flush( output_unit )
                     end do
                  end do
               end do
@@ -377,9 +380,9 @@ program remap_test_5d
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   
