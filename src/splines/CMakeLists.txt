@@ -15,6 +15,7 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_meshes
   sll_linear_solvers
   deboor
+  sll_timer
   ${LAPACK_LIBRARIES} )
 
 IF(BUILD_TESTING)
