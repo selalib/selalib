@@ -92,8 +92,32 @@ computations = [ \
 'TRS',  # solve systems of linear equations (based on triangular factorization)
 ]
 
+drivers = [\
+'SV' ,  # factor the matrix and solve a system of equations
+'SVX',  # equilibrate, factor, solve, compute error bounds and do iterative refinement, and estimate the condition number
+'GLM',  #  solves the generalized linear regression model
+'LS' ,  # solve over- or underdetermined linear system using orthogonal factorizations
+'LSE',  #  solves the constrained linear least squares problem
+'LSX',  # compute a minimum-norm solution using a complete orthogonal factorization (using QR with column pivoting xGEQPF, xTZRQF, and xLATZM)
+'LSY',  # compute a minimum-norm solution using a complete orthogonal factorization (using QR with column pivoting xGEQP3, xTZRZF, and xORMRZ)
+'LSS',  # solve least squares problem using the SVD
+'LSD',  # solve least squares problem using the divide and conquer SVD
+'EV' ,  # compute all eigenvalues and/or eigenvectors
+'EVD',  # compute all eigenvalues and/or eigenvectors; if eigenvectors are desired, it uses a divide and conquer algorithm.
+'EVX',  # compute selected eigenvalues and eigenvectors
+'EVR',  # compute selected eigenvalues, and optionally, eigenvectors using the Relatively Robust Representation
+'ES' ,  # compute all eigenvalues, Schur form, and/or Schur vectors
+'ESX',  # compute all eigenvalues, Schur form, and/or Schur vectors and the conditioning # of selected eigenvalues or eigenvectors
+'GV' ,  # compute generalized eigenvalues and/or generalized eigenvectors
+'GVD',  # compute generalized eigenvalues, and optionally, generalized eigenvectors using a divide and conquer algorithm
+'GVX',  # compute selected generalized eigenvalues, and optionally, generalized eigenvectors
+'GS' ,  # compute generalized eigenvalues, Schur form, and/or Schur vectors
+'SDD',  # compute the divide-and-conquer SVD
+'SVD',  # compute the SVD and/or singular vectors
+]
+
 pattern = r"\b([{}](?:{})(?:{}))\b".format( \
         '' .join( data_types ),
         '|'.join( matrix_types ),
-        '|'.join( computations ),
+        '|'.join( computations + drivers ),
         )
