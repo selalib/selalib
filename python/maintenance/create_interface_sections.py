@@ -89,7 +89,7 @@ def contains_exactly_1_module( filepath, verbose=False ):
 # MAIN FUNCTION
 #==============================================================================
 
-def create_interface_sections( root ):
+def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     """
     Create interface sections for all modules (and programs?)
     in a Fortran library.
@@ -100,6 +100,7 @@ def create_interface_sections( root ):
       Relative path to root of directory tree
 
     """
+    import os
     from maintenance_tools import recursive_file_search
     from fortran_module    import FortranModule, populate_exported_symbols
     from fparser.api       import parse
@@ -110,28 +111,71 @@ def create_interface_sections( root ):
     print( "================================================================" )
     print( "Processing library modules")
     print( "================================================================" )
-    modules = {}
-    for fpath in recursive_file_search( root, ignore_dir, select_file ):
+    src_modules = {}
+    src_root    = os.path.join( root, src )
+    for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
+        if interfaces in fpath:
+            print( "WARNING: Interface. Skipping file %s" % fpath )
+            continue
         if contains_exactly_1_module( fpath, verbose=True ):
             # Create fparser module object
             tree = parse( fpath, analyze=False )
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
-            modules[fmod.name] = FortranModule( fpath, fmod )
+            src_modules[fmod.name] = FortranModule( fpath, fmod )
+
+    # Additional source directory (ad-hoc)
+    src_root = os.path.join( root, 'external/burkardt' )
+    for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
+        if contains_exactly_1_module( fpath, verbose=True ):
+            # Create fparser module object
+            tree = parse( fpath, analyze=False )
+            fmod = tree.content[0]
+            # Create 'my' module object and store it in dictionary
+            src_modules[fmod.name] = FortranModule( fpath, fmod )
+
+    # Interface modules
+    print( "================================================================" )
+    print( "Processing interface modules" )
+    print( "================================================================" )
+    int_modules = {}
+    int_root    = os.path.join( root, interfaces )
+    for fpath in recursive_file_search( int_root, ignore_dir, select_file ):
+        if contains_exactly_1_module( fpath, verbose=True ):
+            # Create fparser module object
+            tree = parse( fpath, analyze=False )
+            fmod = tree.content[0]
+            # Create 'my' module object and store it in dictionary
+            int_modules[fmod.name] = FortranModule( fpath, fmod )
+
+    # Dictionary with all the modules
+    all_modules = {}
+    all_modules.update( src_modules )
+    all_modules.update( int_modules )
+
+    print( "Source modules:" )
+    for src_mod in src_modules.values():
+        print( src_mod.name )
+    print()
+
+    print( "Interface modules:" )
+    for int_mod in int_modules.values():
+        print( int_mod.name )
+    print()
 
     print( "================================================================" )
     print( "Link library modules against used ones" )
     print( "================================================================" )
     # [0] Link modules against used ones, creating a graph
-    for name,mmod in modules.items():
-        mmod.link_used_modules( modules.values(), externals=external_modules )
+    for name,mmod in src_modules.items():
+        mmod.link_used_modules( all_modules.values(), externals=external_modules )
         print("  - linked module '%s'" % name )
 
     print( "================================================================" )
     print( "Search symbols in used modules" )
     print( "================================================================" )
     # [1] Update use statements (recursively search symbols in used modules)
-    for name,mmod in modules.items():
+    for name,mmod in src_modules.items():
         mmod.update_use_statements( find_external_library, ignored_symbols )
         print("  - updated module '%s'" % name )
 
@@ -139,11 +183,12 @@ def create_interface_sections( root ):
     return        # STOP HERE
     #########################
 
+
     # [2] Populate exported symbols
-    populate_exported_symbols( *modules.values() )
+    populate_exported_symbols( *src_modules.values() )
 
     # [3] Generate interface sections
-    for name,mmod in modules.items():
+    for name,mmod in src_modules.items():
         interface = mmod.generate_interface_section()
         filepath  = mmod.filepath[:-4] + '-interface.txt'
         with open( filepath, 'w' ) as f:
