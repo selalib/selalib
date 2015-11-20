@@ -450,7 +450,7 @@ def compute_all_used_symbols( content ):
             elif isinstance( item, block_statements.Do ):
                 text = item.item.apply_map( item.loopcontrol )
                 if text.startswith( 'while' ): # DO WHILE
-                    text = text[6:-1]
+                    text = text[5:].strip()[1:-1].strip()
             # PRINT or WRITE statement
             elif isinstance( item, (statements.Print, statements.Write) ):
                 text = ','.join( item.items )
