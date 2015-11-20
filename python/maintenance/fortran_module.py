@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 19 Nov 2015
+# Last revision: 20 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -655,7 +655,9 @@ class FortranModule( object ):
             self._exported_symbols.add( s )
 
     #--------------------------------------------------------------------------
-    def scatter_exported_symbols( self ):
+    def scatter_imported_symbols( self ):
+        """ Notify used modules that symbols here imported should be public.
+        """
         for name,data in self._used_modules.items():
             m = data['object']
             if m is not None:
