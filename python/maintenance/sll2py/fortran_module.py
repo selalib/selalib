@@ -17,6 +17,7 @@ from __future__        import print_function
 from fparser           import statements, block_statements
 from content_extractor import compute_local_symbols, compute_external_symbols
 
+from fortran_units import FortranUnitBase
 
 __all__ = ['FortranModule','LibraryInterfaceModule','NewFortranModule']
 __docformat__ = 'reStructuredText'
@@ -25,7 +26,7 @@ __docformat__ = 'reStructuredText'
 # CLASS: Fortran module
 #==============================================================================
 
-class FortranModule( object ):
+class FortranModule( FortranUnitBase ):
 
     def __init__( self, filepath, module ):
 
