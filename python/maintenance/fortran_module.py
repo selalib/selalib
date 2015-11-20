@@ -566,35 +566,34 @@ class FortranModule( object ):
         Update all use statements.
 
         """
-        unlocated_symbols = list( self._imported_symbols )
-
         for s in self._imported_symbols:
-            mod_name = self.find_symbol_def( s )
-            if mod_name is None:
-                if find_external_library is not None:
 
-                    # Search in external libraries
-                    external_match = find_external_library( s )
-                    if external_match:
-                        lib_name, mod_name = external_match
-                        if mod_name == '':
-                            mod_name = 'F77_' + lib_name
-                            # TODO: properly handle fftpack
-                    else:
-                        if s not in ignored_symbols:
-                            print( "ERROR processing file %s:" % self.filepath )
-                            print( "  cannot locate symbol %s" % s )
-                            raise SystemExit()
+            # Recursively search for symbol in used modules
+            mod_name = self.find_symbol_def( s )
+
+            if (mod_name is None) and (find_external_library is not None):
+                # Search in external libraries
+                external_match = find_external_library( s )
+                if external_match:
+                    # Get library and module name
+                    lib_name, mod_name = external_match
+                    if mod_name == '':
+                        # If module name is missing, F77 interface is used
+                        mod_name = 'F77_' + lib_name
+                else:
+                    # Check if symbol should be ignored. If not, raise error
+                    if s not in ignored_symbols:
+                        print( "ERROR processing file %s:" % self.filepath )
+                        print( "  cannot locate symbol %s" % s )
+                        raise SystemExit()
 
             if mod_name in self._used_modules.keys():
+                # Update item list of existing module
                 self._used_modules[mod_name]['items'].append( s )
-                unlocated_symbols.remove( s )
             else:
+                # Add new module to list of used modules
                 new_mod = { 'isonly': True, 'items': [s], 'object': None }
                 self._used_modules[mod_name] = new_mod
-                unlocated_symbols.remove( s )
-
-        assert( unlocated_symbols == [] )
 
     #--------------------------------------------------------------------------
     def cleanup_use_statements( self ):
