@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 12 Nov 2015
+# Last revision: 17 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -596,14 +596,19 @@ class FortranModule( object ):
 
         assert( unlocated_symbols == [] )
 
-        # Remove useless modules, remove duplicate items, add only
-        # NOTE: modules from external libraries will give problems
+    #--------------------------------------------------------------------------
+    def cleanup_use_statements( self ):
+        """ Remove useless modules, remove duplicate items, add only
+        """
+        # Set 'isonly=True' for all used modules, remove duplicate symbols,
+        # and identify useless modules
         useless = []
         for name,data in self._used_modules.items():
             data['isonly'] = True
             data['items' ] = tuple( set( data['items'] ) )
             if data['items'] == ():
                 useless.append( name )
+        # Remove useless modules
         for m in useless:
             self._used_modules.pop( m )
 
