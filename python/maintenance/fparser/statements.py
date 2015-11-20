@@ -16,6 +16,7 @@ Modifications:
             : modify 'process_item' in 'Call' to avoid failing on arrays (YG)
             : add 'TypeGuard' statement for 'select type' constructs (YG)
             : 'Allocate': warning removed, parsing extended (YG)
+            : fix bug in 'Where' statement: map was not applied to content (YG)
 -----
 """
 
@@ -1991,7 +1992,7 @@ class Where(Statement):
         i = line.index(')')
         self.expr = self.item.apply_map(line[1:i].strip())
         line = line[i+1:].lstrip()
-        newitem = self.item.copy(line)
+        newitem = self.item.copy( line, True )
         cls = Assignment
         if cls.match(line):
             stmt = cls(self, newitem)
