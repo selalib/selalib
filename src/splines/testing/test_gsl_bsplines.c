@@ -21,21 +21,11 @@
 
 
 void gsl_solve( gsl_matrix *A,  const size_t n,
-                double xmax, double xmin )
+                double xmax, double xmin,
+                double *B )
 {
 
-  double dx = (xmax-xmin)/(n-1);
-  double xc = (xmax+xmin)*0.5;
-
-  for (int i = 0; i < n; i++)  
-    { 
-      for (int j = 0; j < n; j++)
-        {
-          printf ("%6.3f", gsl_matrix_get (A, i, j));
-        }
-      printf("\n");
-    }
-
+  printf("\n *** Solve with GSL *** \n");
   gsl_vector *d; d = gsl_vector_alloc(n);
   gsl_vector *e; e = gsl_vector_alloc(n-1);
   gsl_vector *f; f = gsl_vector_alloc(n-1);
@@ -52,9 +42,54 @@ void gsl_solve( gsl_matrix *A,  const size_t n,
     }
 
   for (int i=0; i<n; i++) 
-    gsl_vector_set(b,i,fabs(i*dx-xc));
+    gsl_vector_set(b,i,B[i]);
 
   gsl_linalg_solve_tridiag ( d, e, f, b, x);
+
+  for (int i=0; i<n; i++)
+    printf ("x[%d] = %f \n", i, gsl_vector_get(x,i));
+
+  gsl_vector_free(e); e = gsl_vector_alloc(n);
+  gsl_vector_free(f); f = gsl_vector_alloc(n);
+
+ 
+  double alpha = 0.5;
+  double beta  = 0.5;
+  printf("\n *** A Matrix *** \n");
+  for (int i = 0; i < n; i++)  
+    { for (int j = 0; j < n; j++)
+        {
+          printf ("%6.3f", gsl_matrix_get (A, i, j));
+        }
+      printf("\n");
+    }
+
+  for (int i = 0; i < n; i++)  
+    { 
+      gsl_vector_set(d, i, gsl_matrix_get(A,i,i));
+      if (i>0) 
+        gsl_vector_set(f, i-1, gsl_matrix_get(A,i,i-1));
+      if (i<n-1) 
+        gsl_vector_set(e, i, gsl_matrix_get(A,i,i+1));
+    }
+
+  gsl_vector_set(e,n-1,alpha);
+  gsl_vector_set(f,n-1,beta);
+
+  for (int i=0; i<n; i++) gsl_vector_set(b,i,B[i]);
+
+  // A = ( d_0 e_0  0  f_3 )
+  //     ( f_0 d_1 e_1  0  )
+  //     (  0  f_1 d_2 e_2 )
+  //     ( e_3  0  f_2 d_3 )
+  for (int i=0; i<n; i++)
+    printf ("%d = %f %f %f \n", i, gsl_vector_get(d,i)
+                                 , gsl_vector_get(e,i)
+                                 , gsl_vector_get(f,i));
+
+  gsl_linalg_solve_cyc_tridiag (d, e, f, b, x);
+
+  printf("\n cyclic \n\n");
   for (int i=0; i<n; i++)
     printf ("x[%d] = %f \n", i, gsl_vector_get(x,i));
 }
@@ -65,46 +100,41 @@ void tridag(double a[],
             double c[], 
             double r[], 
             double u[], 
-            unsigned long n)
+            int n)
 {
-  unsigned long j; 
-  float bet;
+  double bet;
   double *gam;
 
   gam = (double *) malloc(n*sizeof(double));
 
-  if (b[1] == 0.0) 
-    printf("Error 1 in tridag");
+  if (b[0] == 0.0) printf("Error 1 in tridag");
 
-  u[1]=r[1]/(bet=b[1]);
+  u[0]=r[0]/(bet=b[0]);
 
-  for (j=2;j<=n;j++) 
+  for (int j=1;j<n;j++) 
   { 
     gam[j]= c[j-1]/bet;
     bet=b[j]-a[j]*gam[j];
-    if (bet == 0.0) 
-      printf("Error 2 in tridag");
+    if (bet == 0.0) printf("Error 2 in tridag");
     u[j]=(r[j]-a[j]*u[j-1])/bet;
   }
 
-  for (j=(n-1);j>=1;j--)
+  for (int j=(n-2);j>=0;j--)
     u[j] -= gam[j+1]*u[j+1]; 
 
   free(gam);
 
 }
 
-/*
 void cyclic(double a[], 
             double b[], 
             double c[], 
             double alpha, 
             double beta, 
             double r[], 
-            double x[], unsigned long n)
+            double x[], int n)
 
 {
-  unsigned long i;
   double fact,gamma;
   double *bb;
   double *u;
@@ -115,30 +145,69 @@ void cyclic(double a[],
   u  = (double *) malloc(n*sizeof(double));
   z  = (double *) malloc(n*sizeof(double));
   
-  gamma = -b[1]; 
-  bb[1]=b[1]-gamma; 
-  bb[n]=b[n]-alpha*beta/gamma; 
-  for (i=2;i<n;i++) 
+  gamma = -b[0]; 
+  bb[0]=b[0]-gamma; 
+  bb[n-1]=b[n-1]-alpha*beta/gamma; 
+  for (int i=1;i<n-1;i++) 
     bb[i]=b[i]; 
   
   tridag(a,bb,c,r,x,n); 
-  u[1]=gamma;
-  u[n]=alpha;
-  for (i=2;i<n;i++) 
+  u[0]  =gamma;
+  u[n-1]=alpha;
+  for (int i=1;i<n-1;i++) 
     u[i]=0.0; 
 
   tridag(a,bb,c,u,z,n); 
 
-  fact=(x[1]+beta*x[n]/gamma)/(1.0+z[1]+beta*z[n]/gamma);
+  fact=(x[0]+beta*x[n-1]/gamma)/(1.0+z[0]+beta*z[n-1]/gamma);
 
-  for (i=1;i<=n;i++) 
+  for (int i=0;i<n;i++) 
     x[i] -= fact*z[i]; 
   
-  gsl_vector_free(z); 
-  gsl_vector_free(u); 
-  gsl_vector_free(bb);
+  free(z); 
+  free(u); 
+  free(bb);
 }
-*/
+
+void nr_solve( gsl_matrix *A,  
+               int n,
+               double xmax, 
+               double xmin,
+               double *B )
+{
+
+  printf("\n *** Solve with Numerical Recipes *** \n");
+
+  double *a; a = (double *) malloc(n*sizeof(double));
+  double *b; b = (double *) malloc(n*sizeof(double));
+  double *c; c = (double *) malloc(n*sizeof(double));
+  double *r; r = (double *) malloc(n*sizeof(double));
+  double *u; u = (double *) malloc(n*sizeof(double));
+
+  for (int i = 0; i < n; i++)  
+    { 
+      if (i>0) a[i] = gsl_matrix_get (A, i, i-1);
+      b[i] = gsl_matrix_get (A, i, i);
+      if (i<n-1) c[i] = gsl_matrix_get (A, i, i+1);
+      r[i] = B[i];
+    }
+
+  for (int i=0; i<n; i++)
+    printf ("%d = %f %f %f \n", i, a[i], b[i], c[i]);
+
+  tridag ( a, b, c, r, u, n);
+  for (int i=0; i<n; i++)
+    printf ("u[%d] = %f \n", i, u[i]);
+
+  double alpha = 0.5;
+  double beta  = 0.5;
+
+  cyclic( a, b, c, alpha, beta, r, u, n);
+
+  printf("\n cyclic \n\n");
+  for (int i=0; i<n; i++)
+    printf ("u[%d] = %f \n", i, u[i]);
+}
 
 int
 main (void)
@@ -154,19 +223,11 @@ main (void)
   gsl_vector *tau;
   gsl_matrix *A;
 
+  double *y;
+
   double dx = (xmax-xmin)/(n-1);
   double xc = (xmax+xmin)*0.5;
-  //double *a;
-  //double *b;
-  //double *c;
-  //double *r;
-  //double *u;
-
-  //a = (double *) malloc(n*sizeof(double));
-  //b = (double *) malloc(n*sizeof(double));
-  //c = (double *) malloc(n*sizeof(double));
-  //r = (double *) malloc(n*sizeof(double));
-  //u = (double *) malloc(n*sizeof(double));
+  y = (double *) malloc(ncoeffs*sizeof(double));
 
   tau = gsl_vector_alloc(n);
   
@@ -209,20 +270,24 @@ main (void)
 
     }
 
-  gsl_solve( A, ncoeffs, xmax, xmin);
+  for (int i = 0; i < n; i++)  
+    { for (int j = 0; j < n; j++)
+        {
+          printf ("%6.3f", gsl_matrix_get (A, i, j));
+        }
+      printf("\n");
+    }
 
-          //b[i+1] = gsl_matrix_get (A, i, i);
-          //if (i>0) a[i+1] = gsl_matrix_get (A, i-1, i);
-          //if (i<ncoeffs-1) c[i+1] = gsl_matrix_get (A, i+1, i);
-  // A = ( d_0 e_0  0  f_3 )
-  //     ( f_0 d_1 e_1  0  )
-  //     (  0  f_1 d_2 e_2 )
-  //     ( e_3  0  f_2 d_3 )
- 
-  // gsl_linalg_solve_cyc_tridiag (d, e, f, b, x)
+  for (int i=0; i<n;i++) 
+    y[i] = fabs(i*dx-xc);
+
+  nr_solve( A, ncoeffs, xmax, xmin, y);
+
+  gsl_solve( A, ncoeffs, xmax, xmin, y);
 
   gsl_bspline_free(bw);
   gsl_vector_free(B);
+  gsl_matrix_free(A);
   return 0;
 
 } 
