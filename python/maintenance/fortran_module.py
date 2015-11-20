@@ -383,7 +383,9 @@ def compute_all_used_symbols( content ):
             # caller
             sub_name = item.designator
             if '%' in sub_name:
-                variables.append( sub_name.split('%')[0].strip() )
+                new_calls, new_vars = extract_expr_symbols( sub_name, strip=True )
+                variables.extend( new_vars  )
+                calls    .extend( new_calls )
             else:
                 subroutines.append( sub_name )
             # arguments
