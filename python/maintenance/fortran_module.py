@@ -643,10 +643,11 @@ class FortranModule( object ):
         """ Notify module that symbols are used outside and should be public.
         """
         for s in symbols:
-            if not self.defines_symbol( symbol ):
-                print( "ERROR: adding symbol that is not defined in module." )
+            if not self.defines_symbol( s ):
+                print( "ERROR processing file '%s':" % self.filepath )
+                print( "  adding symbol '%s' that is not defined here" % s )
                 raise SystemExit()
-            self._exported_symbols.add( symbol )
+            self._exported_symbols.add( s )
 
     #--------------------------------------------------------------------------
     def generate_interface_section( self ):
