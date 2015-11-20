@@ -104,7 +104,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     """
     import os
     from maintenance_tools import recursive_file_search
-    from sll2py.fortran_module    import FortranModule
+    from sll2py.fortran_module    import FortranModule, NewFortranModule
     from sll2py.fortran_external  import external_modules, find_external_library
     from sll2py.fparser.api       import parse
 
@@ -125,7 +125,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
             print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
-            src_modules[fmod.name] = FortranModule( fpath, fmod )
+            src_modules[fmod.name] = NewFortranModule( fpath, fmod )
 
     # Additional source directory (ad-hoc)
     src_root = os.path.join( root, 'external/burkardt' )
@@ -136,7 +136,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
             print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
-            src_modules[fmod.name] = FortranModule( fpath, fmod )
+            src_modules[fmod.name] = NewFortranModule( fpath, fmod )
 
     # Interface modules
     print( "================================================================" )
