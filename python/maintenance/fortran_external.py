@@ -6,6 +6,7 @@ import fortran_fftpack
 import fortran_fishpack
 import fortran_mudpack
 import fortran_lapack
+import fortran_blas
 
 #==============================================================================
 # Fortran extension modules
@@ -66,6 +67,12 @@ mudpack['match'   ] = lambda s : s.lower() in mudpack['all_syms']
 # Libraries installed on the system
 #==============================================================================
 
+blas = {}
+blas['lib_name'] = 'blas'
+blas['mod_name'] = ''
+blas['all_syms'] = set( s.lower() for s in fortran_blas.all_routines )
+blas['match'   ] = lambda s : s.lower() in blas['all_syms']
+
 lapack = {}
 lapack['lib_name'] = 'lapack'
 lapack['mod_name'] = ''
@@ -92,18 +99,13 @@ hdf5['match']    = re.compile( r'^h5\w+_f\Z', re.I ).match
 #==============================================================================
 
 library_collection = [iso_c_binding, iso_fortran_env, deboor, fftpack,
-        fishpack, mudpack, lapack, fftw, mpi, hdf5]
+        fishpack, mudpack, blas, lapack, fftw, mpi, hdf5]
 
 external_modules = \
         {lib['mod_name'] for lib in library_collection if lib['mod_name']}
 
 external_f77 = \
         {lib['lib_name'] for lib in library_collection if not lib['mod_name']}
-
-# Add 'match' function to dictionaries that do not have it
-for lib in library_collection:
-    if lib.has_key('all_syms') and not lib.has_key('match'):
-        lib['match'] = lambda s : s.lower() in lib['all_syms']
 
 #==============================================================================
 # Convenience functions
