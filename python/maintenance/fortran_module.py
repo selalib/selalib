@@ -33,7 +33,7 @@ variable_declaration_types = \
   ( typedecl_statements.Integer,   typedecl_statements.Real,
     typedecl_statements.Complex,   typedecl_statements.Logical,
     typedecl_statements.Character, typedecl_statements.Type,
-    typedecl_statements.Class )
+    typedecl_statements.Class,     typedecl_statements.DoublePrecision )
 
 has_interface_types = \
 ( statements.ProcedureDeclaration, statements.SpecificBinding )
