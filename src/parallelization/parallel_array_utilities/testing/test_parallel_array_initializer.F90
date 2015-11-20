@@ -9,6 +9,7 @@ use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_cartesian_meshes
+use iso_fortran_env, only: output_unit
 
 #define MPI_MASTER 0
 
@@ -78,7 +79,7 @@ call initialize_layout_with_distributed_array( mx%num_cells1+1,    &
                                                layout)
 
 if ( prank == MPI_MASTER ) call sll_view_lims( layout )
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 SLL_CLEAR_ALLOCATE(f(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l), error)

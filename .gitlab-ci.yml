@@ -1,0 +1,3 @@
+demo:
+    script:
+        - "scripts/selalib-ci.sh"

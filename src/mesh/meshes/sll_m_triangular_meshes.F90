@@ -23,7 +23,7 @@ module sll_m_triangular_meshes
 #include "sll_errors.h"
 
 use sll_m_boundary_condition_descriptors
-use sll_m_meshes_base
+use sll_m_hexagonal_meshes
 use sll_m_tri_mesh_xmf
 use sll_m_constants, only : &
      sll_pi
@@ -180,7 +180,6 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
-  use sll_m_hexagonal_meshes
   type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
   type(sll_triangular_mesh_2d),      pointer :: tri_mesh
 
@@ -358,7 +357,7 @@ mesh%eta2_max = eta2_max
 
 nbox = nc_eta1+1
 nboy = nc_eta2+1
-ndd = max0(nbox,nboy)
+ndd = max(nbox,nboy)
 alx = eta1_max-eta1_min
 aly = eta2_max-eta2_min
 

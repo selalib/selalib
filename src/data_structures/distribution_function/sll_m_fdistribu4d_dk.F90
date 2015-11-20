@@ -22,6 +22,9 @@ module sll_m_fdistribu4d_dk
 
   use sll_m_constants
   use sll_m_boundary_condition_descriptors
+  use sll_m_cubic_splines
+  use sll_m_common_coordinate_transformations, only : &
+    polar_eta1, polar_eta2
 
   implicit none
 
@@ -284,9 +287,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_r(r_grid,func_r, &
     xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
     sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
@@ -325,10 +325,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_rtheta(r_grid,theta_grid, &
     func_rtheta,xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_constants
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1, polar_eta2
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: theta_grid
     sll_real64, dimension(:,:), intent(in)  :: func_rtheta
