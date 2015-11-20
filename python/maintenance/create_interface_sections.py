@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 18 Nov 2015
+# Last revision: 20 Nov 2015
 #
 from __future__ import print_function
 
@@ -112,6 +112,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     print( "================================================================" )
     print( "Processing library modules")
     print( "================================================================" )
+    i = 0
     src_modules = {}
     src_root    = os.path.join( root, src )
     for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
@@ -123,6 +124,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
             tree = parse( fpath, analyze=False )
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
+            print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
             src_modules[fmod.name] = FortranModule( fpath, fmod )
 
     # Additional source directory (ad-hoc)
@@ -133,6 +135,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
             tree = parse( fpath, analyze=False )
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
+            print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
             src_modules[fmod.name] = FortranModule( fpath, fmod )
 
     # Interface modules
@@ -147,22 +150,13 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
             tree = parse( fpath, analyze=False )
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
+            print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
             int_modules[fmod.name] = FortranModule( fpath, fmod )
 
     # Dictionary with all the modules
     all_modules = {}
     all_modules.update( src_modules )
     all_modules.update( int_modules )
-
-    print( "Source modules:" )
-    for src_mod in src_modules.values():
-        print( src_mod.name )
-    print()
-
-    print( "Interface modules:" )
-    for int_mod in int_modules.values():
-        print( int_mod.name )
-    print()
 
     print( "================================================================" )
     print( "Link library modules against used ones" )
@@ -194,7 +188,7 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     # [3] Populate exported symbols
     for i,(name,mmod) in enumerate( src_modules.items() ):
         print("  - scatter from module %3d: %s" % (i+1,name) )
-        mmod.scatter_exported_symbols()
+        mmod.scatter_imported_symbols()
 
     print( "================================================================" )
     print( "Generate interface sections" )
