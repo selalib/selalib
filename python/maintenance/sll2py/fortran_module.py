@@ -18,10 +18,11 @@ from fparser           import statements, block_statements
 from content_extractor import compute_local_symbols, compute_external_symbols
 
 
-__all__ = ['FortranModule']
+__all__ = ['FortranModule','LibraryInterfaceModule','NewFortranModule']
 __docformat__ = 'reStructuredText'
+
 #==============================================================================
-# CLASSES
+# CLASS: Fortran module
 #==============================================================================
 
 class FortranModule( object ):
@@ -305,3 +306,44 @@ class FortranModule( object ):
                 print( '\n%s: (all)' % name )
         print()
 
+#==============================================================================
+# CLASS: Selalib library interface (= Fortran module with no definitions)
+#==============================================================================
+
+class LibraryInterfaceModule( FortranModule ):
+
+    def __init__( self, filepath, module ):
+        FortranModule.__init__( self, filepath, module )
+        self.used_symbols = []
+        for name,data in self._used_modules.items():
+            self.used_symbols.extend( data['items'] )
+
+    #--------------------------------------------------------------------------
+    def add_exported_symbols( self, *symbols ):
+        """ Notify module that symbols are used outside and should be public.
+        """
+        for s in symbols:
+            if s not in self.used_symbols:
+                print( "ERROR processing file '%s':" % self.filepath )
+                print( "  adding symbol '%s' that is not present here" % s )
+                raise SystemExit()
+
+    #--------------------------------------------------------------------------
+    def generate_interface_section( self ):
+        """ Generate the interface section of a module file.
+        """
+        print( "WARNING: no interface section for library interface module" )
+        return ''
+
+#==============================================================================
+# FACTORY FUNCTION: returns FortranModule or LibraryInterfaceModule
+#==============================================================================
+
+def NewFortranModule( filepath, module ):
+    name = module.name
+    mmod = FortranModule( filepath, module )
+    nsym = len( set.union( *mmod.locals.values() ) )
+    if name.startswith('sll_') and not name.startswith('sll_m_') and nsym == 0:
+        return LibraryInterfaceModule( filepath, module )
+    else:
+        return mmod
