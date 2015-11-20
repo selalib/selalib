@@ -622,7 +622,9 @@ class FortranModule( object ):
             # in the list of used modules, add symbol to the module item list.
             # Otherwise, add 'mod_name' to the list of used modules
             if mod_name in self._used_modules.keys():
-                self._used_modules[mod_name]['items'].append( s )
+                item_list = self._used_modules[mod_name]['items']
+                if s not in item_list:
+                    item_list.append( s )
             else:
                 new_mod = { 'isonly': True, 'items': [s], 'object': None }
                 self._used_modules[mod_name] = new_mod
@@ -670,9 +672,10 @@ class FortranModule( object ):
         lines = []
         # Use only section
         for name,data in self._used_modules.items():
-            lines.append( "use %s, only: &" % name )
+            tab = '! ' if name.startswith('F77_') else '  '
+            lines.append( tab + "use %s, only: &" % name )
             for m in data['items']:
-                lines.append( "  %s, &" % m )
+                lines.append( tab + "  %s, &" % m )
             lines[-1] = lines[-1].rstrip( ', &' )
             lines.append( "" )
         # Implicit none statement
