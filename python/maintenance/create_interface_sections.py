@@ -27,6 +27,7 @@ ignored_symbols = [ \
         'mudpack_curvilinear_cofcr',
         'mudpack_curvilinear_bndcr',
         'sol',
+        'mulku',
         ]
 
 def ignore_dir( d ):
