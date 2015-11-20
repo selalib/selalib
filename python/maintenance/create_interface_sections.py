@@ -168,17 +168,25 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     print( "Link library modules against used ones" )
     print( "================================================================" )
     # [0] Link modules against used ones, creating a graph
-    for name,mmod in src_modules.items():
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - link module %3d: %s" % (i+1,name) )
         mmod.link_used_modules( all_modules.values(), externals=external_modules )
-        print("  - linked module '%s'" % name )
 
     print( "================================================================" )
     print( "Search symbols in used modules" )
     print( "================================================================" )
     # [1] Update use statements (recursively search symbols in used modules)
-    for name,mmod in src_modules.items():
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - update module %3d: %s" % (i+1,name) )
         mmod.update_use_statements( find_external_library, ignored_symbols )
-        print("  - updated module '%s'" % name )
+
+    print( "================================================================" )
+    print( "Cleanup imported symbols lists" )
+    print( "================================================================" )
+    # [2] Cleanup use statements (remove duplicate symbols and useless modules)
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - cleanup module %3d: %s" % (i+1,name) )
+        mmod.cleanup_use_statements()
 
     #########################
     return        # STOP HERE
