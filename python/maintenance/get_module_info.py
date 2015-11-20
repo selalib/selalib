@@ -5,14 +5,14 @@ Extract info from pre-processed Fortran module file.
 Modules required
 ----------------
   * Built-in  : os, sys, argparse
-  * Library   : fortran_module
+  * Library   : sll2py
   * 3rd-party : f2py.fparser
 
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 23 Oct 2015
+# Last revision: 20 Nov 2015
 #
 from __future__ import print_function
 
@@ -61,8 +61,8 @@ def get_module_info( *filepaths ):
     """ Extract info from pre-processed Fortran module file.
     """
     import os
-    from fortran_module import FortranModule
-    from fparser.api    import parse
+    from sll2py.fortran_module import FortranModule
+    from sll2py.fparser.api    import parse
 
     for filepath in filepaths:
 
