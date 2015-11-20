@@ -650,6 +650,13 @@ class FortranModule( object ):
             self._exported_symbols.add( s )
 
     #--------------------------------------------------------------------------
+    def scatter_exported_symbols( self ):
+        for name,data in self._used_modules.items():
+            m = data['object']
+            if m is not None:
+                m.add_exported_symbols( *data['items'] )
+
+    #--------------------------------------------------------------------------
     def generate_interface_section( self ):
         """ Generate the interface section of a module file.
         """
@@ -756,14 +763,4 @@ class FortranModule( object ):
             else:
                 print( '\n%s: (all)' % name )
         print()
-
-#==============================================================================
-# Functions that operate on module objects
-#==============================================================================
-
-def populate_exported_symbols( *modules ):
-    for m in modules:
-        for name,data in m.used_modules:
-            mod = data['object']
-            mod.add_exported_symbols( data['items'] )
 

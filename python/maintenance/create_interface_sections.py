@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 17 Nov 2015
+# Last revision: 18 Nov 2015
 #
 from __future__ import print_function
 
@@ -103,10 +103,9 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     """
     import os
     from maintenance_tools import recursive_file_search
-    from fortran_module    import FortranModule, populate_exported_symbols
+    from fortran_module    import FortranModule
+    from fortran_external  import external_modules, find_external_library
     from fparser.api       import parse
-
-    from fortran_external import external_modules, find_external_library
 
     # Walk library tree and store FortranModule objects
     print( "================================================================" )
@@ -188,16 +187,20 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
         print("  - cleanup module %3d: %s" % (i+1,name) )
         mmod.cleanup_use_statements()
 
-    #########################
-    return        # STOP HERE
-    #########################
+    print( "================================================================" )
+    print( "Scatter imported symbols" )
+    print( "================================================================" )
+    # [3] Populate exported symbols
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - scatter from module %3d: %s" % (i+1,name) )
+        mmod.scatter_exported_symbols()
 
-
-    # [2] Populate exported symbols
-    populate_exported_symbols( *src_modules.values() )
-
-    # [3] Generate interface sections
-    for name,mmod in src_modules.items():
+    print( "================================================================" )
+    print( "Generate interface sections" )
+    print( "================================================================" )
+    # [4] Generate interface sections
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - interface for module %3d: %s" % (i+1,name) )
         interface = mmod.generate_interface_section()
         filepath  = mmod.filepath[:-4] + '-interface.txt'
         with open( filepath, 'w' ) as f:
