@@ -31,7 +31,6 @@ class(sll_coordinate_transformation_2d_base), pointer :: collela
 type(sll_dg_field_2d), pointer :: ex
 type(sll_dg_field_2d), pointer :: bz
 
-sll_real64, external :: sll_m_gaussian, add
 
 mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta1_max=1._f64, &
@@ -86,11 +85,45 @@ call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
 
-bz => sll_new( degree, collela, sll_m_gaussian) 
+bz => sll_new( degree, collela, gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
 call bz%write_to_file('bz', SLL_IO_MTV)
 call bz%write_to_file('bz', SLL_IO_XDMF)
 
 print*,'PASSED'
+
+contains
+  
+  
+  sll_real64 function gaussian( x1, x2, time)
+
+    use sll_m_constants
+    implicit none
+    
+    sll_real64, intent(in) :: x1
+    sll_real64, intent(in) :: x2
+    sll_real64, intent(in) :: time
+    
+    gaussian =   exp(-(x1*x1+x2*x2)) * cos(time)
+    return
+    
+  end function gaussian
+
+
+  sll_real64 function add( x1, x2, time)
+
+   use sll_m_constants
+   implicit none
+
+   sll_real64, intent(in) :: x1
+   sll_real64, intent(in) :: x2
+   sll_real64, intent(in) :: time
+
+   add =   x1+x2
+   return
+   print*, time
+
+ end function add
+
 
 end program test_dg_fields

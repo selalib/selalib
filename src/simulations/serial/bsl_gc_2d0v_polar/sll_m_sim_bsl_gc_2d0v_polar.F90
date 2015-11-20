@@ -12,7 +12,6 @@ module sll_m_sim_bsl_gc_2d0v_polar
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-!#include "sll_field_2d.h"
 #include "sll_poisson_solvers.h"
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
@@ -37,12 +36,12 @@ module sll_m_sim_bsl_gc_2d0v_polar
 #endif
 !  use sll_m_poisson_2d_base
   use sll_m_poisson_2d_polar_wrapper
-  use sll_m_poisson_2d_elliptic_solver, &
-     only: new_poisson_2d_elliptic_solver, &
-           es_gauss_legendre
+  use sll_m_general_coordinate_elliptic_solver, only: es_gauss_legendre
+  use sll_m_poisson_2d_elliptic_solver, only: new_poisson_2d_elliptic_solver
 
   use sll_m_boundary_condition_descriptors
   use sll_m_hermite_interpolation_2d
+  use sll_m_xdmf
   
   !use sll_m_parallel_array_initializer
 

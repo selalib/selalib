@@ -8,7 +8,7 @@ program test_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
 use sll_m_constants
 
 use sll_m_maxwell_2d_pstd

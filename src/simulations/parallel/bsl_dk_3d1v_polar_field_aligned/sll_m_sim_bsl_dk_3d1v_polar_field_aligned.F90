@@ -51,7 +51,6 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 #include "sll_assert.h"
 #include "sll_errors.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
   use sll_m_collective
   use sll_m_remapper
   use sll_m_constants

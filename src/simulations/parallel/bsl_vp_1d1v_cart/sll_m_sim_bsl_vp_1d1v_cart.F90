@@ -29,9 +29,7 @@ module sll_m_sim_bsl_vp_1d1v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
 
 use sll_m_collective
 use sll_m_remapper
@@ -55,6 +53,7 @@ use sll_m_poisson_1d_periodic_solver
 use sll_m_poisson_1d_polar_solver
 use sll_m_advection_1d_ampere
 use sll_m_primitives
+use sll_m_xdmf
 
 #ifdef _OPENMP
 use omp_lib

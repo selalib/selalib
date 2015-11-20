@@ -34,12 +34,12 @@ IF(Fortran_COMPILER_NAME MATCHES gfortran)
 
   ADD_DEFINITIONS(-DGFORTRAN)
   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC")
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
 
-  SET(CONVERSION_EXTRA_FLAG_ENABLED ON CACHE BOOL   "Add -Wconversion-extra flag to gfortran")
-  IF(CONVERSION_EXTRA_FLAG_ENABLED)
-    SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wconversion-extra")
-  ENDIF(CONVERSION_EXTRA_FLAG_ENABLED)
+  SET(UNUSED_DUMMY_WARNING_ENABLED OFF CACHE BOOL   "Add -Wunused-dummy-argument flag to gfortran")
+  IF(NOT UNUSED_DUMMY_WARNING_ENABLED)
+    SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
+  ENDIF()
 
 ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 
@@ -57,6 +57,9 @@ ELSE()
 
 ENDIF()
 
+SET(ADDITIONAL_COMPILER_FLAGS "" CACHE STRING "The user can define additional compiler flags here")
+SET(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} ${ADDITIONAL_COMPILER_FLAGS}")
+SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${ADDITIONAL_COMPILER_FLAGS}")
 
 IF(OPENMP_ENABLED)
   FIND_PACKAGE(OpenMP_Fortran)
