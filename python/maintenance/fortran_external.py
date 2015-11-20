@@ -5,6 +5,7 @@ import fortran_deboor
 import fortran_fftpack
 import fortran_fishpack
 import fortran_mudpack
+import fortran_lapack
 
 #==============================================================================
 # Fortran extension modules
@@ -65,27 +66,33 @@ mudpack['match'   ] = lambda s : s.lower() in mudpack['all_syms']
 # Libraries installed on the system
 #==============================================================================
 
+lapack = {}
+lapack['lib_name'] = 'lapack'
+lapack['mod_name'] = ''
+lapack['match'   ] = \
+        re.compile( r'^{}\Z'.format( fortran_lapack.pattern ), re.I ).match
+
 fftw = {}
 fftw['lib_name'] = 'fftw'
 fftw['mod_name'] = 'sll_m_fftw3'
-fftw['match'   ] = re.compile( '^d?fftw_\w+\Z', re.I ).match
+fftw['match'   ] = re.compile( r'^d?fftw_\w+\Z', re.I ).match
 
 mpi = {}
 mpi['lib_name'] = 'mpi'
 mpi['mod_name'] = 'mpi'
-mpi['match']    = re.compile( '^mpi_\w+\Z', re.I ).match
+mpi['match']    = re.compile( r'^mpi_\w+\Z', re.I ).match
 
 hdf5 = {}
 hdf5['lib_name'] = 'hdf5'
 hdf5['mod_name'] = 'hdf5'
-hdf5['match']    = re.compile( '^h5\w+_f\Z', re.I ).match
+hdf5['match']    = re.compile( r'^h5\w+_f\Z', re.I ).match
 
 #==============================================================================
 # Convenience objects
 #==============================================================================
 
 library_collection = [iso_c_binding, iso_fortran_env, deboor, fftpack,
-        fishpack, mudpack, fftw, mpi, hdf5]
+        fishpack, mudpack, lapack, fftw, mpi, hdf5]
 
 external_modules = \
         {lib['mod_name'] for lib in library_collection if lib['mod_name']}
