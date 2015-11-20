@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 17 Nov 2015
+# Last revision: 18 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -49,6 +49,19 @@ def is_fortran_string( text ):
         return True
     else:
         return False
+
+#------------------------------------------------------------------------------
+class regex_bin_oct_hex( object ):
+    bin_patterns = [r"\bb'[0-1]+'"  , r'\bb"[0-1]+"'  ]
+    oct_patterns = [r"\bo'[0-7]+'"  , r'\bo"[0-7]+"'  ]
+    hex_patterns = [r"\bz'[a-f\d]+'", r'\bz"[a-f\d]+"']
+    patterns = bin_patterns + oct_patterns + hex_patterns
+    regex    = re.compile( r'({})'.format( '|'.join( patterns ) ) )
+
+def remove_fortran_bin_oct_hex( text ):
+    """ Remove Fortran literal constants in binary, octal or hexadecimal form.
+    """
+    return regex_bin_oct_hex.regex.sub( ' ', text )
 
 #------------------------------------------------------------------------------
 def remove_fortran_strings( text ):
@@ -264,8 +277,9 @@ def extract_expr_symbols( expr, strip=False ):
 
     # If required, remove Fortran strings, logicals and relationals
     if strip:
-        expr = remove_fortran_strings ( expr )
-        expr = remove_fortran_logicals( expr )
+        expr = remove_fortran_bin_oct_hex( expr )
+        expr = remove_fortran_strings    ( expr )
+        expr = remove_fortran_logicals   ( expr )
 
     # Substitute argument lists with 'F2PY_EXPR_TUPLE' strings, and store map
     string, string_map = string_replace_map( expr )
@@ -320,12 +334,14 @@ def compute_all_used_symbols( content ):
         if isinstance( item, variable_declaration_types ):
             # Array dimensions on l.h.s.
             for s in item.attrspec:
+                # TODO: what about "dimension(size(x))"?
                 variables.extend( re_engines['dimension'].findall( s ) )
             # Array dimensions on r.h.s.
             for v in item.entity_decls:
                 # TODO: cleanup this code
-                v = remove_fortran_strings ( v )  # remove strings
-                v = remove_fortran_logicals( v )  # remove logicals
+                v = remove_fortran_bin_oct_hex( v )
+                v = remove_fortran_strings    ( v )  # remove strings
+                v = remove_fortran_logicals   ( v )  # remove logicals
                 v = v.replace('(',',')
                 v = v.replace(')',',')
                 syms = re_engines['variable'].findall( v )
@@ -370,8 +386,9 @@ def compute_all_used_symbols( content ):
             # Create unique string together with allocation list
             s = ','.join( type_params_rhs + item.allocation_list + alloc_opt_rhs )
             # Find all symbols in string
-            s = remove_fortran_strings ( s )
-            s = remove_fortran_logicals( s )
+            s = remove_fortran_bin_oct_hex( s )
+            s = remove_fortran_strings    ( s )
+            s = remove_fortran_logicals   ( s )
             variables.extend( re_engines['variable'].findall( s ) )
             calls    .extend( re_engines['call'    ].findall( s ) )
         # TYPE GUARD statement
@@ -391,6 +408,8 @@ def compute_all_used_symbols( content ):
             # arguments
             for s in item.items:
                 if not is_fortran_string( s ):
+                    # Remove binary/octal/hexadecimal literal constants
+                    s = remove_fortran_bin_oct_hex( s )
                     # Remove strings
                     s = remove_fortran_strings( s )
                     # Remove logicals
