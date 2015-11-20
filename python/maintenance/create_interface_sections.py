@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 12 Nov 2015
+# Last revision: 17 Nov 2015
 #
 from __future__ import print_function
 
@@ -26,6 +26,7 @@ ignored_symbols = [ \
         'mudpack_curvilinear_cof',
         'mudpack_curvilinear_cofcr',
         'mudpack_curvilinear_bndcr',
+        'sol',
         ]
 
 def ignore_dir( d ):
