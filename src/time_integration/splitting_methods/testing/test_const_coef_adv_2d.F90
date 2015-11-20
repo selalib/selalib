@@ -5,7 +5,6 @@ program test_const_coef_adv_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_2d.h"
   use sll_m_const_coef_advection_2d
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_interpolators_1d_base
