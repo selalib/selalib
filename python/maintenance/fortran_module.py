@@ -592,8 +592,8 @@ class FortranModule( object ):
             # Recursively search for symbol in used modules
             mod_name = self.find_symbol_def( s )
 
+            # Symbol was NOT FOUND. If available, search in external libraries
             if (mod_name is None) and (find_external_library is not None):
-                # Search in external libraries
                 external_match = find_external_library( s )
                 if external_match:
                     # Get library and module name
@@ -601,18 +601,24 @@ class FortranModule( object ):
                     if mod_name == '':
                         # If module name is missing, F77 interface is used
                         mod_name = 'F77_' + lib_name
-                else:
-                    # Check if symbol should be ignored. If not, raise error
-                    if s not in ignored_symbols:
-                        print( "ERROR processing file %s:" % self.filepath )
-                        print( "  cannot locate symbol %s" % s )
-                        raise SystemExit()
 
+            # Symbol was NOT FOUND. If it should be ignored, print warning and
+            # move to next symbol. Otherwise, raise error
+            if mod_name is None:
+                if s in ignored_symbols:
+                    print( "WARNING: ignoring symbol '%s'" % s )
+                    continue
+                else:
+                    print( "ERROR processing file '%s':" % self.filepath )
+                    print( "  cannot locate symbol '%s'" % s )
+                    raise SystemExit()
+
+            # Symbol was FOUND in module 'mod_name'. If 'mod_name' is already
+            # in the list of used modules, add symbol to the module item list.
+            # Otherwise, add 'mod_name' to the list of used modules
             if mod_name in self._used_modules.keys():
-                # Update item list of existing module
                 self._used_modules[mod_name]['items'].append( s )
             else:
-                # Add new module to list of used modules
                 new_mod = { 'isonly': True, 'items': [s], 'object': None }
                 self._used_modules[mod_name] = new_mod
 
