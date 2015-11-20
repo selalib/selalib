@@ -541,7 +541,7 @@ end subroutine compute_bspline_2d_with_variable_slopes
 !> @details
 !> If the points positions did not change use this function instead
 !> of compute_bspline_2d. You still need to call compute_bspline_2d at
-!> the begginning to build the linear system.
+!> the beginning to build the linear system.
 subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
   type(sll_bspline_2d)    :: this 
