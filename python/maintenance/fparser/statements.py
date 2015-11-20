@@ -495,15 +495,17 @@ class Contains(Statement):
 class Allocate( Statement ):
     """
     ALLOCATE ( [ <type-spec> :: ] <allocation-list> [ , <alloc-opt-list> ] )
-    <alloc-opt> = STAT = <stat-variable>
-                | ERRMSG = <errmsg-variable>
+    <alloc-opt> = ERRMSG = <errmsg-variable>
+                | MOLD   = <source-expr>
                 | SOURCE = <source-expr>
+                | STAT   = <stat-variable>
     <allocation> = <allocate-object> [ ( <allocate-shape-spec-list> ) ]
     """
-    _stat   =   r"\bstat\b\s*=\s*[a-zA-Z]\w*\b"
-    _errmsg = r"\berrmsg\b\s*=\s*[a-zA-Z]\w*\b"
-    _source = r"\bsource\b\s*=\s*[a-zA-Z]\w*\b"
-    _alloc_opt = r"^({}|{}|{})\Z".format( _stat, _errmsg, _source )
+    _errmsg = r"\berrmsg\b\s*=.*"
+    _mold   =   r"\bmold\b\s*=.*"
+    _source = r"\bsource\b\s*=.*"
+    _stat   =   r"\bstat\b\s*=.*"
+    _alloc_opt = r"^({}|{}|{}|{})\Z".format( _errmsg, _mold, _source, _stat )
     _match_alloc_opt = re.compile( _alloc_opt, re.I ).match
 
     # Match function is static method that is used to identify statement type
