@@ -7,6 +7,7 @@ import fortran_fishpack
 import fortran_mudpack
 import fortran_lapack
 import fortran_blas
+import fortran_hdf5
 
 #==============================================================================
 # Fortran extension modules
@@ -90,11 +91,12 @@ mpi['mod_name'] = 'mpi'
 mpi['match']    = re.compile( r'^mpi_\w+\Z', re.I ).match
 
 hdf5 = {}
-hdf5['lib_name'] = 'hdf5'
-hdf5['mod_name'] = 'hdf5'
-hdf5['match_a']  = re.compile( r'^h5\w+_f\Z', re.I ).match
-hdf5['match_b']  = lambda s : s.upper() in ['HID_T','HSIZE_T','HSSIZE_T']
-hdf5['match']    = lambda s : hdf5['match_a']( s ) or hdf5['match_b']( s )
+hdf5['lib_name']      = 'hdf5'
+hdf5['mod_name']      = 'hdf5'
+hdf5['match_list'   ] = lambda s : s.upper() in fortran_hdf5.symbols_list
+hdf5['match_pattern'] = \
+  re.compile( r'^{}\Z'.format( fortran_hdf5.symbols_pattern ), re.I ).match
+hdf5['match'] = lambda s: hdf5['match_list']( s ) or hdf5['match_pattern']( s )
 
 #==============================================================================
 # Convenience objects
