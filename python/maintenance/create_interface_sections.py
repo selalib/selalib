@@ -5,7 +5,7 @@ Create interface sections for all modules (and programs?) in a Fortran library.
 Modules required
 ----------------
   * Built-in  : os, sys, argparse
-  * Library   : maintenance_tools
+  * Library   : maintenance_tools, sll2py
 
 """
 #
@@ -104,9 +104,9 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     """
     import os
     from maintenance_tools import recursive_file_search
-    from fortran_module    import FortranModule
-    from fortran_external  import external_modules, find_external_library
-    from fparser.api       import parse
+    from sll2py.fortran_module    import FortranModule
+    from sll2py.fortran_external  import external_modules, find_external_library
+    from sll2py.fparser.api       import parse
 
     # Walk library tree and store FortranModule objects
     print( "================================================================" )
