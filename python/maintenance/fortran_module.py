@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 18 Nov 2015
+# Last revision: 19 Nov 2015
 #
 from __future__ import print_function
 import re
@@ -271,6 +271,10 @@ def extract_expr_symbols( expr, strip=False ):
     from fparser.splitline import string_replace_map
     from fparser.utils     import specs_split_comma
 
+    # Empty symbol lists, to be populated
+    calls     = []
+    variables = []
+
     # If expression is not in lower case, convert it
     if not expr.islower():
         expr = expr.lower()
@@ -284,24 +288,25 @@ def extract_expr_symbols( expr, strip=False ):
     # Substitute argument lists with 'F2PY_EXPR_TUPLE' strings, and store map
     string, string_map = string_replace_map( expr )
 
-    # Extract all symbols at this level
-    calls     = re_engines['call'    ].findall( string )
-    variables = re_engines['variable'].findall( string )
-    variables = [v for v in variables if not v.startswith('F2PY_EXPR_TUPLE')]
+    # Split argument lists, if any
+    for text in specs_split_comma( string ):
+        # Ignore keywords in function calls
+        if '=' in text:
+            text = text.rpartition('=')[2].lstrip()
+        # Extract all symbols at this level
+        if text:
+            new_calls     = re_engines['call'    ].findall( text )
+            new_variables = re_engines['variable'].findall( text )
+            new_variables = [v for v in new_variables \
+                    if not v.startswith('F2PY_EXPR_TUPLE')]
+            calls    .extend( new_calls     )
+            variables.extend( new_variables )
 
-    # Search for symbols in each of the 'mapped' strings
-    for text in string_map.values():
-        # Split argument lists
-        for expr in specs_split_comma( text ):
-            # Ignore keywords in function calls
-            if '=' in expr:
-                string, string_map = string_replace_map( expr )
-                expr = string_map( string.rpartition('=')[2].lstrip() )
-            # Recursion: extract symbols from new expression and update lists
-            if expr:
-                new_calls, new_variables = extract_expr_symbols( expr )
-                calls    .extend( new_calls     )
-                variables.extend( new_variables )
+    # Recursion: search for symbols in the 'mapped' strings, and update lists
+    for expr in string_map.values():
+        new_calls, new_variables = extract_expr_symbols( expr )
+        calls    .extend( new_calls     )
+        variables.extend( new_variables )
 
     # Return symbol lists
     return calls, variables
