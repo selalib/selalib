@@ -205,7 +205,7 @@ class FortranModule( FortranUnitBase ):
         lines = []
         # Use only section
         for name,data in self._used_modules.items():
-            tab = '! ' if name.startswith('F77_') else '  '
+            tab = '! ' if name.startswith('F77_') else ''
             lines.append( tab + "use %s, only: &" % name )
             for m in data['items']:
                 lines.append( tab + "  %s, &" % m )
@@ -215,10 +215,12 @@ class FortranModule( FortranUnitBase ):
         lines.append( "implicit none" )
         lines.append( "" )
         # Public section
-        lines.append( "public :: &" )
-        for s in self._exported_symbols:
-            lines.append( "  %s, &" )
-        lines[-1] = lines[-1].rstrip( ', &' )
+        if self._exported_symbols:
+            lines.append( "public :: &" )
+            for s in self._exported_symbols:
+                lines.append( "  %s, &" % s )
+            lines[-1] = lines[-1].rstrip( ', &' )
+            lines.append( "" )
         # Private blanket statement
         lines.append( "private" )
         # Concatenate line strings using newline characters
