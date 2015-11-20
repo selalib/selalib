@@ -92,7 +92,9 @@ mpi['match']    = re.compile( r'^mpi_\w+\Z', re.I ).match
 hdf5 = {}
 hdf5['lib_name'] = 'hdf5'
 hdf5['mod_name'] = 'hdf5'
-hdf5['match']    = re.compile( r'^h5\w+_f\Z', re.I ).match
+hdf5['match_a']  = re.compile( r'^h5\w+_f\Z', re.I ).match
+hdf5['match_b']  = lambda s : s.upper() in ['HID_T','HSIZE_T','HSSIZE_T']
+hdf5['match']    = lambda s : hdf5['match_a']( s ) or hdf5['match_b']( s )
 
 #==============================================================================
 # Convenience objects
