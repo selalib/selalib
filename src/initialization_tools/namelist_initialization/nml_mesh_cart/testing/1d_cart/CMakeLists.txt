@@ -1,0 +1,10 @@
+set(    MOD_NAME nml_mesh_1d_cart             )
+set(    LIB_NAME sll_nml_mesh_cart            )
+set(   TEST_NAME "test_${MOD_NAME}"           )
+set(  EXECUTABLE "${TEST_NAME}"               )
+SET( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/test )
+
+ADD_EXECUTABLE( ${EXECUTABLE} ${TEST_NAME}.F90 )
+TARGET_LINK_LIBRARIES (${EXECUTABLE} ${LIB_NAME} )
+ADD_TEST( NAME ${MOD_NAME}  COMMAND ${TEST_NAME} ${NML_FILE} )
+SET_TESTS_PROPERTIES( ${MOD_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
