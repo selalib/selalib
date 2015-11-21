@@ -553,10 +553,9 @@ contains
   function uniform_b_spline_derivatives_at_x( spline_degree, normalized_offset ) &
        result(bspl)
     sll_int32, intent(in)                      :: spline_degree
-!    sll_real64, dimension(0:spline_degree)   :: uniform_b_spline_derivatives_at_x
+    sll_real64, dimension(0:spline_degree)     :: bspl
     sll_real64, intent(in)                     :: normalized_offset
-    ! local variables
-    sll_real64, dimension(0:spline_degree-1)     :: bspl
+    ! local variables   
     sll_real64                                 :: inv_j
     sll_real64                                 :: x,xx
     sll_real64                                 :: j_real
