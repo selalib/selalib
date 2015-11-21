@@ -600,8 +600,8 @@ contains
     ! Test performance of nonuniform arbitrary degree spline evaluation
     num_pts   = 10
     min_val = 0.0_f64
-    degree    = 7
-    num_tests = 10000
+    degree    = 5
+    num_tests = 1000
     print *, "Test performance of spline evaluation for"
     print *, " Spline degree = ", degree
     print *, " -----------------------------------------------------" 
