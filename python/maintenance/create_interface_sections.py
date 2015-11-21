@@ -5,13 +5,13 @@ Create interface sections for all modules (and programs?) in a Fortran library.
 Modules required
 ----------------
   * Built-in  : os, sys, argparse
-  * Library   : maintenance_tools
+  * Library   : maintenance_tools, sll2py
 
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 12 Nov 2015
+# Last revision: 20 Nov 2015
 #
 from __future__ import print_function
 
@@ -26,6 +26,8 @@ ignored_symbols = [ \
         'mudpack_curvilinear_cof',
         'mudpack_curvilinear_cofcr',
         'mudpack_curvilinear_bndcr',
+        'sol',
+        'mulku',
         ]
 
 def ignore_dir( d ):
@@ -89,7 +91,7 @@ def contains_exactly_1_module( filepath, verbose=False ):
 # MAIN FUNCTION
 #==============================================================================
 
-def create_interface_sections( root ):
+def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     """
     Create interface sections for all modules (and programs?)
     in a Fortran library.
@@ -100,50 +102,100 @@ def create_interface_sections( root ):
       Relative path to root of directory tree
 
     """
+    import os
     from maintenance_tools import recursive_file_search
-    from fortran_module    import FortranModule, populate_exported_symbols
-    from fparser.api       import parse
-
-    from fortran_external import external_modules, find_external_library
+    from sll2py.fortran_module    import FortranModule, NewFortranModule
+    from sll2py.fortran_external  import external_modules, find_external_library
+    from sll2py.fparser.api       import parse
 
     # Walk library tree and store FortranModule objects
     print( "================================================================" )
     print( "Processing library modules")
     print( "================================================================" )
-    modules = {}
-    for fpath in recursive_file_search( root, ignore_dir, select_file ):
+    i = 0
+    src_modules = {}
+    src_root    = os.path.join( root, src )
+    for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
+        if interfaces in fpath:
+            print( "WARNING: Interface. Skipping file %s" % fpath )
+            continue
         if contains_exactly_1_module( fpath, verbose=True ):
             # Create fparser module object
             tree = parse( fpath, analyze=False )
             fmod = tree.content[0]
             # Create 'my' module object and store it in dictionary
-            modules[fmod.name] = FortranModule( fpath, fmod )
+            print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
+            src_modules[fmod.name] = NewFortranModule( fpath, fmod )
+
+    # Additional source directory (ad-hoc)
+    src_root = os.path.join( root, 'external/burkardt' )
+    for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
+        if contains_exactly_1_module( fpath, verbose=True ):
+            # Create fparser module object
+            tree = parse( fpath, analyze=False )
+            fmod = tree.content[0]
+            # Create 'my' module object and store it in dictionary
+            print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
+            src_modules[fmod.name] = NewFortranModule( fpath, fmod )
+
+    # Interface modules
+    print( "================================================================" )
+    print( "Processing interface modules" )
+    print( "================================================================" )
+    int_modules = {}
+    int_root    = os.path.join( root, interfaces )
+    for fpath in recursive_file_search( int_root, ignore_dir, select_file ):
+        if contains_exactly_1_module( fpath, verbose=True ):
+            # Create fparser module object
+            tree = parse( fpath, analyze=False )
+            fmod = tree.content[0]
+            # Create 'my' module object and store it in dictionary
+            print("  - read module %3d: %s" % (i+1, fmod.name ) );  i += 1
+            int_modules[fmod.name] = FortranModule( fpath, fmod )
+
+    # Dictionary with all the modules
+    all_modules = {}
+    all_modules.update( src_modules )
+    all_modules.update( int_modules )
 
     print( "================================================================" )
     print( "Link library modules against used ones" )
     print( "================================================================" )
     # [0] Link modules against used ones, creating a graph
-    for name,mmod in modules.items():
-        mmod.link_used_modules( modules.values(), externals=external_modules )
-        print("  - linked module '%s'" % name )
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - link module %3d: %s" % (i+1,name) )
+        mmod.link_used_modules( all_modules.values(), externals=external_modules )
 
     print( "================================================================" )
     print( "Search symbols in used modules" )
     print( "================================================================" )
     # [1] Update use statements (recursively search symbols in used modules)
-    for name,mmod in modules.items():
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - update module %3d: %s" % (i+1,name) )
         mmod.update_use_statements( find_external_library, ignored_symbols )
-        print("  - updated module '%s'" % name )
 
-    #########################
-    return        # STOP HERE
-    #########################
+    print( "================================================================" )
+    print( "Cleanup imported symbols lists" )
+    print( "================================================================" )
+    # [2] Cleanup use statements (remove duplicate symbols and useless modules)
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - cleanup module %3d: %s" % (i+1,name) )
+        mmod.cleanup_use_statements()
 
-    # [2] Populate exported symbols
-    populate_exported_symbols( *modules.values() )
+    print( "================================================================" )
+    print( "Scatter imported symbols" )
+    print( "================================================================" )
+    # [3] Populate exported symbols
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - scatter from module %3d: %s" % (i+1,name) )
+        mmod.scatter_imported_symbols()
 
-    # [3] Generate interface sections
-    for name,mmod in modules.items():
+    print( "================================================================" )
+    print( "Generate interface sections" )
+    print( "================================================================" )
+    # [4] Generate interface sections
+    for i,(name,mmod) in enumerate( src_modules.items() ):
+        print("  - interface for module %3d: %s" % (i+1,name) )
         interface = mmod.generate_interface_section()
         filepath  = mmod.filepath[:-4] + '-interface.txt'
         with open( filepath, 'w' ) as f:
