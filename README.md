@@ -29,7 +29,8 @@ make install
 Problems in building any of the modules should be related with how to 
 locate the right libraries for your system, as explained in the next section.
 
-EXTERNAL LIBRARY DEPENDENCIES:
+EXTERNAL LIBRARY DEPENDENCIES
+-----------------------------
 
 The prototype presently depends on:
   - mpi
@@ -57,8 +58,9 @@ In .tcshrc, this would be something like:
   setenv HDF5_ROOT /usr/local
 
 To develop in Selalib please read :
-   - GitQuickstart.txt
-   - CMakeQuickstart.txt
+   - GitQuickstart.md
+   - CMakeQuickstart.md
+   - CONTRIBUTING.md
 
 Selalib compilation, testing 
 ----------------------------
