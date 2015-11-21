@@ -1,4 +1,5 @@
 REQUIRED COMPILER
+-----------------
 
 The prototype is exploratory and forward-looking in character. We have decided
 to test some additions to the Fortran language described in the Fortran 2003
@@ -13,6 +14,7 @@ we could re-implement the specific capabilities with external functions, but
 for the moment, we would like to see how far this approach can be taken.
 
 BUILDING THE LIBRARY MODULES
+----------------------------
 
 Upon cloning the repository, you will see a collection of directories. Each
 directory contains at least a library module, an SConstruct file and a unit 
@@ -30,12 +32,9 @@ locate the right libraries for your system, as explained in the next section.
 EXTERNAL LIBRARY DEPENDENCIES:
 
 The prototype presently depends on:
-- mpi
-- hdf5
-- lapack
-- glibc: for high-resolution timer capabilities. This may pose a problem in
-         systems that do not have a sufficiently recent version of glibc to
-         use the high-resolution timer.
+  - mpi
+  - hdf5
+  - lapack
 
 We want to offer a fine-grained control to the user in terms of the choice of
 which version of any of these libraries to use, in case that the user can't or
@@ -60,8 +59,9 @@ To develop in Selalib please read :
    - CMakeQuickstart.txt
 
 selalib compilation, installation
-------------------------------------------
+---------------------------------
 
+~~~~
 mkdir build 
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release                                    \
@@ -69,12 +69,15 @@ cmake -DCMAKE_BUILD_TYPE=Release                                    \
       -DCMAKE_INSTALL_PREFIX=<path where selalib will be installed> \
       <the path of this directory>/src 
 make install
+~~~~
 
 selalib compilation, testing 
-------------------------------------------
+----------------------------
 
+~~~~
 mkdir build
 cd build
 cmake <the path of this directory>
 make Experimental
+~~~~
 (the test result goes to http://cdash.inria.fr/CDash/index.php?project=Selalib)
