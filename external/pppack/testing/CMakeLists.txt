@@ -1,0 +1,10 @@
+ADD_EXECUTABLE( test_ban_solver test_ban_solver.F90 )
+TARGET_LINK_LIBRARIES( test_ban_solver pppack )
+
+FIND_PACKAGE(GSL)
+IF(GSL_FOUND)
+  ADD_EXECUTABLE( test_gsl_bsplines test_gsl_bsplines.c )
+  TARGET_LINK_LIBRARIES( test_gsl_bsplines  ${GSL_LIBRARIES})
+  ADD_EXECUTABLE( test_gsl_woodbury test_gsl_woodbury.c )
+  TARGET_LINK_LIBRARIES( test_gsl_woodbury  ${GSL_LIBRARIES})
+ENDIF(GSL_FOUND)

@@ -57,10 +57,3 @@ SET_TESTS_PROPERTIES( arbitrary_degree_splines PROPERTIES
 ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
 TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
-# Ctests
-#...........................................
-FIND_PACKAGE(GSL)
-IF(GSL_FOUND)
-  ADD_EXECUTABLE( test_gsl_bsplines test_gsl_bsplines.c )
-  TARGET_LINK_LIBRARIES( test_gsl_bsplines  ${GSL_LIBRARIES})
-ENDIF(GSL_FOUND)

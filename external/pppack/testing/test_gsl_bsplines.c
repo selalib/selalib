@@ -145,15 +145,17 @@ void cyclic(double a[],
   u  = (double *) malloc(n*sizeof(double));
   z  = (double *) malloc(n*sizeof(double));
   
-  gamma = -b[0]; 
-  bb[0]=b[0]-gamma; 
-  bb[n-1]=b[n-1]-alpha*beta/gamma; 
+  gamma   = -b[0]; 
+  bb[0]   =  b[0]-gamma; 
+  bb[n-1] =  b[n-1]-alpha*beta/gamma; 
+
   for (int i=1;i<n-1;i++) 
     bb[i]=b[i]; 
   
   tridag(a,bb,c,r,x,n); 
   u[0]  =gamma;
   u[n-1]=alpha;
+
   for (int i=1;i<n-1;i++) 
     u[i]=0.0; 
 
