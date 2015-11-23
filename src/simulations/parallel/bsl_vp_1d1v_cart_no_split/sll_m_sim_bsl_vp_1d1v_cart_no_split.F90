@@ -27,8 +27,6 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
-#include "sll_poisson_solvers.h"
   use sll_m_constants
   use sll_m_cartesian_meshes  
   use sll_m_coordinate_transformation_2d_base
@@ -52,7 +50,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
   use sll_m_poisson_1d_periodic_solver
   use sll_m_poisson_1d_polar_solver
   use sll_m_parallel_array_initializer
-
+  use sll_m_xdmf
 
 
   implicit none
