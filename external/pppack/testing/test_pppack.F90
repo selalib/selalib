@@ -46,8 +46,8 @@
 program test_pppack
 implicit none
 
-integer, parameter :: n = 11
-integer, parameter :: k = 3
+integer, parameter :: n = 21
+integer, parameter :: k = 6
 real(8) :: bcoef(n)
 real(8) :: gtau(n)
 real(8) :: tau(n)
@@ -64,18 +64,15 @@ integer :: iflag
 integer :: i
 integer :: ilp1mx
 integer :: j
-integer :: jj
 integer :: km1
-integer :: kpkm2
 integer :: left
 integer :: lenq
-integer :: np1
 real(8) :: fact
 real(8) :: alpha, beta, gamma
 
 do i = 1, n
   tau(i)  = tau_min + (i-1)*(tau_max-tau_min)/(n-1)
-  gtau(i) = tau(i)
+  gtau(i) = 1.0
 end do
 
 t(1:k) = tau_min
@@ -89,12 +86,8 @@ else
   end do
 end if
 t(n+1:n+k) = tau_max
-write(*,"(' tau = ', 11f7.3)") tau
-write(*,"(' t   = ', 14f7.3)") t
 
-np1 = n + 1
 km1 = k - 1
-kpkm2 = 2*km1
 left = k
 lenq = n*(k+km1)
 
@@ -122,7 +115,6 @@ do i=1,n
     exit
   end do
 
-  write(*,"(i3,3f7.3)") left, t(left), taui, t(left+1)
   ! *** the i-th equation enforces interpolation at taui, hence
   ! a(i,j) = b(j,k,t)(taui), all j. only the  k  entries with  j =
   ! left-k+1,...,left actually might be nonzero. these  k  numbers
@@ -130,21 +122,10 @@ do i=1,n
   ! following
   call bsplvb ( t, k, 1, taui, left, bcoef )
 
-  ! we therefore want  bcoef(j) = b(left-k+j)(taui) to go into
+  ! we want  bcoef(j) = b(left-k+j)(taui) to go into
   ! a(i,left-k+j), i.e., into  q(i-(left+j)+2*k,(left+j)-k) since
-  ! a(i+j,j)  is to go into  q(i+k,j), all i,j,  if we consider  q
-  ! as a two-dim. array , with  2*k-1  rows (see comments in
-  ! banfac). in the present program, we treat  q  as an equivalent
-  ! one-dimensional array (because of fortran restrictions on
-  ! dimension statements) . we therefore want  bcoef(j) to go into
-  ! entry
-  !     i -(left+j) + 2*k + ((left+j) - k-1)*(2*k-1)
-  !            =  i-left+1 + (left -k)*(2*k-1) + (2*k-2)*j
-  ! of  q .
-  jj = i-left+1 + (left-k)*(k+km1)
+  ! a(i+j,j)  is to go into  q(i+k,j), all i,j,  
   do j=1,k
-    !jj = jj+kpkm2
-    !q(jj) = bcoef(j)
     q(i-(left+j)+2*k,(left+j)-k) = bcoef(j)
   end do
 
@@ -155,34 +136,36 @@ do j = 1, n
   do i = -k+1,k-1
     if( i+j >=1 .and. i+j <=n) a(i+j,j) = q(i+k,j)
   end do
-  write(*,"(11f7.3)") a(:,j)
+  write(*,"(21e10.3)") a(:,j)
 end do
 
-alpha        = q(2*k-2,n)
-beta         = q(2,1)
-gamma        = - q(1,1) 
-
-q(1,1)      = q(1,1) - gamma 
-q(2*k-1,n)  = q(2*k-1,n)-alpha*beta/gamma 
+!alpha      = 0.0 !q(2*k-2,n)
+!beta       = 0.0 !q(2,1)
+!gamma      = - q(k+1,1) 
+!q(1,1)     = q(1,1) - gamma 
+!q(2*k-1,n) = q(2*k-1,n)-alpha*beta/gamma 
 
 call banfac ( q, k+km1, n, km1, km1, iflag )
 bcoef = gtau
 call banslv ( q, k+km1, n, km1, km1, bcoef )
 
-z    = 0.0_8    
-z(1) = gamma
-z(n) = alpha
-
-call banslv ( q, k+km1, n, km1, km1, z )
-
-print*, "gamma=",gamma
-fact=(bcoef(1)+beta*bcoef(n)/gamma)/(1.0+z(1)+beta*z(n)/gamma)
-
-do i=1,n 
-  bcoef(i) = bcoef(i) - fact*z(i) 
-end do
+!z    = 0.0_8    
+!z(1) = gamma
+!z(n) = alpha
+!
+!call banslv ( q, k+km1, n, km1, km1, z )
+!
+!print*, "gamma=",gamma
+!fact=(bcoef(1)+beta*bcoef(n)/gamma)/(1.0+z(1)+beta*z(n)/gamma)
+!
+!do i=1,n 
+!  bcoef(i) = bcoef(i) - fact*z(i) 
+!end do
 
 write(*,"(' bcoef = ', 11f7.3)") bcoef
 
+do i = 1, n
+   write(17,*) tau(i), bcoef(i)
+end do
 
 end program test_pppack

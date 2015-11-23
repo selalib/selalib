@@ -1,5 +1,7 @@
 ADD_EXECUTABLE( test_pppack test_pppack.F90 )
 TARGET_LINK_LIBRARIES( test_pppack pppack )
+ADD_EXECUTABLE( test_cyclic_banded_solver test_cyclic_banded_solver.F90 )
+TARGET_LINK_LIBRARIES( test_cyclic_banded_solver pppack )
 
 FIND_PACKAGE(GSL)
 IF(GSL_FOUND)
