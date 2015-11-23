@@ -59,7 +59,7 @@ program test_triangular_meshes
   ! Creating a triangular field aligned  mesh from a hexmesh
   num_cells = 10
   h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64)
-  t_mesh => new_triangular_mesh_2d_aligned_from_hex_mesh(h_mesh)
+  t_mesh => new_triangular_mesh_2d(h_mesh, type="TOKAMAK")
 
   call write_triangular_mesh_mtv(t_mesh, "aligned_hex_mesh.mtv")
 
