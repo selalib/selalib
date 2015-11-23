@@ -44,12 +44,53 @@
 !
 
 program test_pppack
+implicit none
 
-integer, parameter :: n = 8
+integer, parameter :: n = 11
 integer, parameter :: k = 3
-integer :: iflag, i,ilp1mx,j,jj,km1,kpkm2,left,lenq,np1
-real(8) :: bcoef(n),gtau(n),tau(n),   taui
-real(8) :: q((2*k-1)*n), t(n+k)
+real(8) :: bcoef(n)
+real(8) :: gtau(n)
+real(8) :: tau(n)
+real(8) :: z(n)
+real(8) :: taui
+real(8) :: q( 2*k-1,n)
+real(8) :: t(n+k)
+real(8) :: a(n,n)
+
+real(8), parameter :: tau_min = -0.0_8
+real(8), parameter :: tau_max = +1.0_8
+
+integer :: iflag
+integer :: i
+integer :: ilp1mx
+integer :: j
+integer :: jj
+integer :: km1
+integer :: kpkm2
+integer :: left
+integer :: lenq
+integer :: np1
+real(8) :: fact
+real(8) :: alpha, beta, gamma
+
+do i = 1, n
+  tau(i)  = tau_min + (i-1)*(tau_max-tau_min)/(n-1)
+  gtau(i) = tau(i)
+end do
+
+t(1:k) = tau_min
+if ( mod(k,2) == 0 ) then
+  do i = k+1,n
+    t(i) = tau(i-k/2) 
+  end do
+else
+  do i = k+1, n
+    t(i) = 0.5*(tau(i-(k-1)/2)+tau(i-1-(k-1)/2))
+  end do
+end if
+t(n+1:n+k) = tau_max
+write(*,"(' tau = ', 11f7.3)") tau
+write(*,"(' t   = ', 14f7.3)") t
 
 np1 = n + 1
 km1 = k - 1
@@ -63,29 +104,32 @@ q = 0.0_8
 do i=1,n
 
   taui = tau(i)
-  ilp1mx = min0(i+k,np1)
-!        *** find  left  in the closed interval (i,i+k-1) such that
-!                t(left) .le. tau(i) .lt. t(left+1)
-!        matrix is singular if this is not possible
+  ilp1mx = min(i+k,n+1)
+  
+  !  Find LEFT in the closed interval (I,I+K-1) such that
+  !    T(LEFT) <= TAU(I) < T(LEFT+1)
+  !  The matrix is singular if this is not possible.
+  
   left = max(left,i)
-  do while (left .lt. ilp1mx .and. taui < t(left+1)) 
-    left = left+1
+  
+  if ( taui < t(left) ) stop ' The linear system is not invertible!'
+
+  do while ( t(left+1) <= taui )
+    left = left + 1
+    if ( left < ilp1mx ) cycle
+    left = left - 1
+    if ( t(left+1) < taui ) stop ' The linear system is not invertible!'
+    exit
   end do
 
-  if (taui .lt. t(left+1)) then 
-    ! *** the i-th equation enforces interpolation at taui, hence
-    ! a(i,j) = b(j,k,t)(taui), all j. only the  k  entries with  j =
-    ! left-k+1,...,left actually might be nonzero. these  k  numbers
-    ! are returned, in  bcoef (used for temp.storage here), by the
-    ! following
-    call bsplvb ( t, k, 1, taui, left, bcoef )
+  write(*,"(i3,3f7.3)") left, t(left), taui, t(left+1)
+  ! *** the i-th equation enforces interpolation at taui, hence
+  ! a(i,j) = b(j,k,t)(taui), all j. only the  k  entries with  j =
+  ! left-k+1,...,left actually might be nonzero. these  k  numbers
+  ! are returned, in  bcoef (used for temp.storage here), by the
+  ! following
+  call bsplvb ( t, k, 1, taui, left, bcoef )
 
-  else 
-
-    stop 'linear system is not invertible'
-
-  end if
-     
   ! we therefore want  bcoef(j) = b(left-k+j)(taui) to go into
   ! a(i,left-k+j), i.e., into  q(i-(left+j)+2*k,(left+j)-k) since
   ! a(i+j,j)  is to go into  q(i+k,j), all i,j,  if we consider  q
@@ -99,19 +143,46 @@ do i=1,n
   ! of  q .
   jj = i-left+1 + (left-k)*(k+km1)
   do j=1,k
-    jj = jj+kpkm2
-    q(jj) = bcoef(j)
+    !jj = jj+kpkm2
+    !q(jj) = bcoef(j)
+    q(i-(left+j)+2*k,(left+j)-k) = bcoef(j)
   end do
 
 end do
 
-! ***obtain factorization of  a  , stored again in  q.
+a = 0.0_8
+do j = 1, n
+  do i = -k+1,k-1
+    if( i+j >=1 .and. i+j <=n) a(i+j,j) = q(i+k,j)
+  end do
+  write(*,"(11f7.3)") a(:,j)
+end do
+
+alpha        = q(2*k-2,n)
+beta         = q(2,1)
+gamma        = - q(1,1) 
+
+q(1,1)      = q(1,1) - gamma 
+q(2*k-1,n)  = q(2*k-1,n)-alpha*beta/gamma 
 
 call banfac ( q, k+km1, n, km1, km1, iflag )
-
-! *** solve  a*bcoef = gtau  by backsubstitution
 bcoef = gtau
-
 call banslv ( q, k+km1, n, km1, km1, bcoef )
+
+z    = 0.0_8    
+z(1) = gamma
+z(n) = alpha
+
+call banslv ( q, k+km1, n, km1, km1, z )
+
+print*, "gamma=",gamma
+fact=(bcoef(1)+beta*bcoef(n)/gamma)/(1.0+z(1)+beta*z(n)/gamma)
+
+do i=1,n 
+  bcoef(i) = bcoef(i) - fact*z(i) 
+end do
+
+write(*,"(' bcoef = ', 11f7.3)") bcoef
+
 
 end program test_pppack
