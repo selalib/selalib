@@ -27,11 +27,11 @@ module sll_m_bsl_lt_pic_4d_group
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_accumulators.h"
 #include "sll_errors.h"
 
 ! #include "particle_representation.h"   NEEDED?
 
+  use sll_m_accumulators
   use sll_m_constants, only: sll_pi
   use sll_m_working_precision
   use sll_m_cartesian_meshes

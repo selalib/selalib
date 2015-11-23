@@ -168,6 +168,8 @@ intrinsic_procedures = { \
 'sqrt', # Square-root function
 'storage_size', # Storage size of argument A in bits (Fortran 2008 and later)
 'sum', # Sum of array elements
+'system', # Passes the command COMMAND to a shell (GCC and ifort)
+          # F2008 'execute_command_line' exists (GCC 4.7+ or ifort 15+ needed)
 'system_clock', # Time function
 'tan', # Tangent function
 'tanh', # Hyperbolic tangent function

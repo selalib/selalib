@@ -14,6 +14,7 @@ Created: May 2006
 Modifications:
   - Nov 2015: bugfix in 'string_replace_map' (Yaman Güçlü - IPP Garching)
             : new 'splitquote', which does not crash on trailing backslash (YG)
+            : new 'split_brackets', now used in 'string_replace_map' (YG)
 -----
 """
 
@@ -74,22 +75,15 @@ def string_replace_map(line, lower=False,
     items = []
     expr_keys = []
     #===========================================================================
-    # 02 Nov 2015: BUGFIX (Yaman Güçlü - IPP Garching)
+    # 19 Nov 2015: BUGFIX (Yaman Güçlü - IPP Garching)
     #===========================================================================
     #
     # OLD VERSION: Only splits round brackets => issue with array constants
     #-------------
 #    for item in splitparen(newline):
     #
-    # NEW VERSION: First split round brackets, then square brackets if needed
-    #-------------
-    split_line = []
-    for s in splitparen( newline, paren='()' ):
-        if s.startswith('(') and s.endswith(')'):
-            split_line.append( s )
-        else:
-            split_line.extend( splitparen( s, paren='[]') )
-    for item in split_line:
+    # NEW VERSION: Both round and square brackets are split, at the first level
+    for item in split_brackets( newline ):
     #
     #===========================================================================
         if isinstance(item, ParenString) and not _is_name(item[1:-1].strip()):
@@ -117,6 +111,84 @@ def string_replace_map(line, lower=False,
     for k in found_keys:
         del string_map[k]
     return ''.join(items), string_map
+
+#------------------------------------------------------------------------------
+def split_brackets( text, *bracket_pairs ):
+    """
+    Split text into a list of strings, which are of class 'ParenString' if
+    between brackets (round or square), and of type 'str' otherwise.
+
+    Parameters
+    ----------
+    text : str
+      String containing a line of Fortran code
+
+    bracket_pairs: list of str
+      Each 2-character string is a pair of open/close brackets
+
+    Returns
+    -------
+    split_text : list of {str or ParenString}
+      Line decomposed into smaller pieces
+
+    """
+    if bracket_pairs:
+        for pair in bracket_pairs:
+            assert isinstance( str, pair ) and len( pair ) == 2
+    else:
+        # Set default bracket pairs
+        bracket_pairs = ['()','[]']
+
+    split_text = []
+    new_string = ''
+    open_char  = None
+    close_char = None
+    level = 0
+
+    # Construct new text
+    for c in text:
+        # Are we between brackets?
+        if level > 0:
+            # Add character to old string
+            new_string += c
+            # Update bracket level
+            if   c ==  open_char: level += 1
+            elif c == close_char: level -= 1
+            # If quoted string has finished, store it into list and reset it
+            if level == 0:
+                # Recognize that string has finished
+                split_text.append( ParenString( new_string ))
+                open_char  = None
+                close_char = None
+                new_string = ''
+        else:
+            # If quoted string has just began, store previous string in list
+            for pair in bracket_pairs:
+                if c == pair[0]:
+                    open_char  = pair[0]
+                    close_char = pair[1]
+                    level = 1
+                    break
+            if level > 0:
+                if new_string:
+                    split_text.append( new_string )
+                new_string = ''
+            # Add character to new string
+            new_string += c
+
+    # If last string is not empty, store it as well
+    if new_string:
+        # If a closing bracket is missing, raise error
+        if level > 0:
+            print( "ERROR: unbalanced brackets:" )
+            print( "  %s" % text )
+            raise SystemExit()
+        # If not between brackets, store as 'str'
+        else:
+            split_text.append( new_string )
+
+    # Return split text
+    return split_text
 
 #------------------------------------------------------------------------------
 def splitquote( text, quotechar=None, lower=False ):

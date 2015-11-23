@@ -29,9 +29,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_multi_species
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
 
 use sll_m_collective
 use sll_m_remapper
@@ -48,6 +46,7 @@ use sll_m_advection_1d_periodic
 use sll_m_advection_1d_non_uniform_cubic_splines
 use sll_m_fft
 use sll_m_sim_base
+use sll_m_xdmf
 use sll_m_time_splitting_coeff
 use sll_m_poisson_1d_periodic  
 use sll_m_poisson_1d_periodic_solver

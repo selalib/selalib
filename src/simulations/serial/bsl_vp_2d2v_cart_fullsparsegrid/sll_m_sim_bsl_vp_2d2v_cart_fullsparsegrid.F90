@@ -10,7 +10,6 @@ module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 
   use sll_m_sparse_grid_2d
   use sll_m_sparse_grid_4d

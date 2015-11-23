@@ -226,7 +226,7 @@ contains
         r1=uniform_random_numbers(2*idx-1)
         r2=uniform_random_numbers(2*idx)
         r1= 1.0_f64-r1
-        r1 = -dlog(real(r1,f64))
+        r1 = -log(real(r1,f64))
         r1 = sqrt(2.0*r1)
         r2 = 2.0*sll_pi*r2
         gaussian_random_numbers(2*idx-1)= r1*cos(r2)- mu

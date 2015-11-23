@@ -617,7 +617,7 @@
             do i=1, N
                do j=1, Nv
                   f = f0(i,j) + deltaf(i,j)
-                  entropy1 = entropy1 + f*dlog(f+1.e-8)
+                  entropy1 = entropy1 + f*log(f+1.e-8)
                   entropy2 = entropy2 + f*f
                   KE = KE + 0.5_8*f*v(j)*v(j)
                enddo
