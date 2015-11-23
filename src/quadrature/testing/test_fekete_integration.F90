@@ -32,6 +32,7 @@ program test_fekete_integration
   type(sll_hex_mesh_2d), pointer :: mesh
   sll_real64, dimension(:,:), allocatable     :: knots
   sll_int32,  dimension(:,:), allocatable     :: LM
+  character(len=10) :: transf
 
   write(*,"(/,a)") "*********************************** "
   write(*,"(a)") "       FEKETE QUAD TEST       "
@@ -70,15 +71,17 @@ program test_fekete_integration
 
 
   ! Writing all django files....................................................
-  num_cells = 40
+  num_cells = 20
   degree = 1
   rule = 1
-  call write_all_django_files(num_cells, degree, rule)
+  transf="TOKAMAK"
+  call write_all_django_files(num_cells, degree, rule, trim(transf))
   print *, ""
   print *, "*********** wrote all django files ***********"
   print *, "   - number of cells    : ", num_cells
-  print *, "   - degree of splines  :", degree
-  print *, "   - rule of quadrature :", rule
+  print *, "   - degree of splines  : ", degree
+  print *, "   - rule of quadrature : ", rule
+  print *, "   - coo transformation : ", trim(transf)
   print *, ""
 
   print*, 'PASSED'
