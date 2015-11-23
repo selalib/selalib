@@ -2,7 +2,6 @@ module sll_m_sim_bsl_vp_2d2v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
   use sll_m_collective
   use sll_m_remapper
   use sll_m_constants
@@ -12,6 +11,8 @@ module sll_m_sim_bsl_vp_2d2v_cart
   use sll_m_interpolators_1d_base
   use sll_m_cubic_spline_interpolator_1d
   use sll_m_sim_base
+  use sll_m_xdmf
+
   implicit none
 
   type, extends(sll_simulation_base_class) :: &

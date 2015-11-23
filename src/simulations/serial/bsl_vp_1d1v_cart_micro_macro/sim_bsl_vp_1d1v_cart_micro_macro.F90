@@ -9,7 +9,6 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 
   use sll_m_cubic_splines
   use sll_m_cubic_spline_interpolator_1d

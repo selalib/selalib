@@ -3,7 +3,6 @@ module sll_m_sim_bsl_vp_2d2v_curv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
 
   use sll_m_collective
   use sll_m_remapper
@@ -18,6 +17,8 @@ module sll_m_sim_bsl_vp_2d2v_curv
   use sll_m_parallel_array_initializer
   use sll_m_coordinate_transformation_2d_base
   use sll_m_gnuplot_parallel
+  use sll_m_xdmf
+
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_general
