@@ -45,67 +45,73 @@
 
 program test_pppack
 
-      integer iflag,k,n,   i,ilp1mx,j,jj,km1,kpkm2,left,lenq,np1
-      real bcoef(n),gtau(n),q(1),t(1),tau(n),   taui
-c     dimension q(2*k-1,n), t(n+k)
-current fortran standard makes it impossible to specify precisely the
-c  dimension of  q  and  t  without the introduction of otherwise super-
-c  fluous additional arguments.
-      np1 = n + 1
-      km1 = k - 1
-      kpkm2 = 2*km1
-      left = k
-c                zero out all entries of q
-      lenq = n*(k+km1)
-      do 5 i=1,lenq
-    5    q(i) = 0.
-c
-c  ***   loop over i to construct the  n  interpolation equations
-      do 30 i=1,n
-         taui = tau(i)
-         ilp1mx = min0(i+k,np1)
-c        *** find  left  in the closed interval (i,i+k-1) such that
-c                t(left) .le. tau(i) .lt. t(left+1)
-c        matrix is singular if this is not possible
-         left = max0(left,i)
-         if (taui .lt. t(left))         go to 998
-   15       if (taui .lt. t(left+1))    go to 16
-            left = left + 1
-            if (left .lt. ilp1mx)       go to 15
-         left = left - 1
-         if (taui .gt. t(left+1))       go to 998
-c        *** the i-th equation enforces interpolation at taui, hence
-c        a(i,j) = b(j,k,t)(taui), all j. only the  k  entries with  j =
-c        left-k+1,...,left actually might be nonzero. these  k  numbers
-c        are returned, in  bcoef (used for temp.storage here), by the
-c        following
-   16    call bsplvb ( t, k, 1, taui, left, bcoef )
-c        we therefore want  bcoef(j) = b(left-k+j)(taui) to go into
-c        a(i,left-k+j), i.e., into  q(i-(left+j)+2*k,(left+j)-k) since
-c        a(i+j,j)  is to go into  q(i+k,j), all i,j,  if we consider  q
-c        as a two-dim. array , with  2*k-1  rows (see comments in
-c        banfac). in the present program, we treat  q  as an equivalent
-c        one-dimensional array (because of fortran restrictions on
-c        dimension statements) . we therefore want  bcoef(j) to go into
-c        entry
-c            i -(left+j) + 2*k + ((left+j) - k-1)*(2*k-1)
-c                   =  i-left+1 + (left -k)*(2*k-1) + (2*k-2)*j
-c        of  q .
-         jj = i-left+1 + (left-k)*(k+km1)
-         do 30 j=1,k
-            jj = jj+kpkm2
-   30       q(jj) = bcoef(j)
-c
-c     ***obtain factorization of  a  , stored again in  q.
-      call banfac ( q, k+km1, n, km1, km1, iflag )
-                                        go to (40,999), iflag
-c     *** solve  a*bcoef = gtau  by backsubstitution
-   40 do 41 i=1,n
-   41    bcoef(i) = gtau(i)
-      call banslv ( q, k+km1, n, km1, km1, bcoef )
-                                        return
-  998 iflag = 2
-  999 print 699
-  699 format(41h linear system in  splint  not invertible)
-                                        return
+integer, parameter :: n = 8
+integer, parameter :: k = 3
+integer :: iflag, i,ilp1mx,j,jj,km1,kpkm2,left,lenq,np1
+real(8) :: bcoef(n),gtau(n),tau(n),   taui
+real(8) :: q((2*k-1)*n), t(n+k)
+
+np1 = n + 1
+km1 = k - 1
+kpkm2 = 2*km1
+left = k
+lenq = n*(k+km1)
+
+q = 0.0_8
+
+!  ***   loop over i to construct the  n  interpolation equations
+do i=1,n
+
+  taui = tau(i)
+  ilp1mx = min0(i+k,np1)
+!        *** find  left  in the closed interval (i,i+k-1) such that
+!                t(left) .le. tau(i) .lt. t(left+1)
+!        matrix is singular if this is not possible
+  left = max(left,i)
+  do while (left .lt. ilp1mx .and. taui < t(left+1)) 
+    left = left+1
+  end do
+
+  if (taui .lt. t(left+1)) then 
+    ! *** the i-th equation enforces interpolation at taui, hence
+    ! a(i,j) = b(j,k,t)(taui), all j. only the  k  entries with  j =
+    ! left-k+1,...,left actually might be nonzero. these  k  numbers
+    ! are returned, in  bcoef (used for temp.storage here), by the
+    ! following
+    call bsplvb ( t, k, 1, taui, left, bcoef )
+
+  else 
+
+    stop 'linear system is not invertible'
+
+  end if
+     
+  ! we therefore want  bcoef(j) = b(left-k+j)(taui) to go into
+  ! a(i,left-k+j), i.e., into  q(i-(left+j)+2*k,(left+j)-k) since
+  ! a(i+j,j)  is to go into  q(i+k,j), all i,j,  if we consider  q
+  ! as a two-dim. array , with  2*k-1  rows (see comments in
+  ! banfac). in the present program, we treat  q  as an equivalent
+  ! one-dimensional array (because of fortran restrictions on
+  ! dimension statements) . we therefore want  bcoef(j) to go into
+  ! entry
+  !     i -(left+j) + 2*k + ((left+j) - k-1)*(2*k-1)
+  !            =  i-left+1 + (left -k)*(2*k-1) + (2*k-2)*j
+  ! of  q .
+  jj = i-left+1 + (left-k)*(k+km1)
+  do j=1,k
+    jj = jj+kpkm2
+    q(jj) = bcoef(j)
+  end do
+
+end do
+
+! ***obtain factorization of  a  , stored again in  q.
+
+call banfac ( q, k+km1, n, km1, km1, iflag )
+
+! *** solve  a*bcoef = gtau  by backsubstitution
+bcoef = gtau
+
+call banslv ( q, k+km1, n, km1, km1, bcoef )
+
 end program test_pppack
