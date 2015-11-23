@@ -1,5 +1,5 @@
-ADD_EXECUTABLE( test_ban_solver test_ban_solver.F90 )
-TARGET_LINK_LIBRARIES( test_ban_solver pppack )
+ADD_EXECUTABLE( test_pppack test_pppack.F90 )
+TARGET_LINK_LIBRARIES( test_pppack pppack )
 
 FIND_PACKAGE(GSL)
 IF(GSL_FOUND)
