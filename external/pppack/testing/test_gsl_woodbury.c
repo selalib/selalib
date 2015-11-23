@@ -33,9 +33,6 @@ main (void)
 
   gsl_matrix *A;
   gsl_vector *b;
-  gsl_vector *u;
-  gsl_vector *v;
-  gsl_matrix *w;
 
   printf("n       = %d \n", n);
 
@@ -92,6 +89,8 @@ main (void)
   gsl_vector * u;  u  = gsl_vector_alloc(n);
   gsl_vector * z;  z  = gsl_vector_alloc(n);
   
+  double alpha = -1.;
+  double beta  = -1.;
   double gamma   = - gsl_vector_get(d,0); 
   gsl_vector_set(bb,0,   gsl_vector_get(d,0)-gamma); 
   gsl_vector_set(bb,n-1, gsl_vector_get(d,n-1)-alpha*beta/gamma); 
@@ -109,16 +108,21 @@ main (void)
 
   gsl_linalg_solve_tridiag ( d, e, f, u, z);
 
-  fact=( x.data[0]+beta*x.data[n-1]/gamma
-       /(1.0+z.data[0]+beta*z.data[n-1]/gamma);
+  double fact;
+  fact=( x->data[0]+beta*x->data[n-1]/gamma)
+       /(1.0+z->data[0]+beta*z->data[n-1]/gamma);
 
   for (int i=0;i<n;i++) 
-    x.data[i] -= fact*z.data[i]; 
+    x->data[i] -= fact*z->data[i]; 
 
   printf ("x = \n");
   for ( i=0; i<n; i++)
     printf ("x[%d] = %f \n", i, gsl_vector_get(x,i));
 
+  /*
+  gsl_vector *u;
+  gsl_vector *v;
+  gsl_matrix *w;
   u  = gsl_vector_alloc(n);
   v  = gsl_vector_alloc(n);
   w  = gsl_matrix_alloc(n,n);
