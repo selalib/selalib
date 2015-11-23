@@ -659,9 +659,9 @@ do iel=1,this%mesh%num_triangles
 
   !Contribution a la matrice de masse
 
-  amloc(1) = this%mesh%aire(iel)/3.
-  amloc(2) = this%mesh%aire(iel)/3.
-  amloc(3) = this%mesh%aire(iel)/3.
+  amloc(1) = this%mesh%area(iel)/3.
+  amloc(2) = this%mesh%area(iel)/3.
+  amloc(3) = this%mesh%area(iel)/3.
 
   !Assemblage
 
@@ -669,7 +669,7 @@ do iel=1,this%mesh%num_triangles
 
   !Contribution a la matrice grad-grad
 
-  coef=1./(4.*this%mesh%aire(iel))
+  coef=1./(4.*this%mesh%area(iel))
 
   aggloc(1)=(dntx1**2   +dnty1**2   )*coef
   aggloc(2)=(dntx1*dntx2+dnty1*dnty2)*coef
