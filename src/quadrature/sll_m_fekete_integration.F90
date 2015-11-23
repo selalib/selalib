@@ -872,12 +872,12 @@ contains
   !> @details Takes the reference triangle of a hexmesh and computes the
   !> fekete points on it. Then it writes the results in a file following
   !> CAID/Django nomenclature.
-  !> Output file : quadrature.txt
+  !> Output file : boxsplines_quadrature.txt
   !> @param[in]  rule integer for the fekete quadrature rule
   subroutine write_quadrature(rule)
     sll_int32, intent(in)       :: rule
     sll_int32                   :: out_unit
-    character(len=14), parameter :: name = "quadrature.txt"
+    character(len=14), parameter :: name = "boxsplines_quadrature.txt"
     sll_real64, dimension(2, 3) :: ref_pts
     sll_real64, dimension(:,:), allocatable :: quad_pw
     sll_int32  :: num_fek
@@ -933,7 +933,7 @@ contains
   !> @details Following CAID structure, we write a file with the values
   !> of the basis function (box splines) on a reference element (triangle)
   !> fekete points. Output for DJANGO.
-  !> Output file : basis_values.txt
+  !> Output file : boxsplines_basis_values.txt
   !> @param[in] deg integer with degree of splines
   subroutine write_basis_values(deg, rule)
     sll_int32,  intent(in)      :: deg
@@ -942,7 +942,7 @@ contains
     sll_real64, dimension(:, :), allocatable :: quad_pw
     sll_real64, dimension(:, :), allocatable :: disp_vec
     sll_int32,  parameter       :: out_unit=20
-    character(len=*), parameter :: name = "basis_values.txt"
+    character(len=*), parameter :: name = "boxsplines_basis_values.txt"
     sll_real64  :: x
     sll_real64  :: y
     sll_real64  :: val
@@ -1022,15 +1022,16 @@ contains
   !> mesh
   !> @param[in] deg integer degree of the splines that will be used for the
   !> interpolation
-  subroutine write_all_django_files(num_cells, deg, rule)
+  subroutine write_all_django_files(num_cells, deg, rule, transf)
     sll_int32, intent(in)          :: num_cells
     sll_int32, intent(in)          :: deg
     sll_int32, intent(in)          :: rule
     type(sll_hex_mesh_2d), pointer :: mesh
+    character(len=*),  intent(in)  :: transf
 
     mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
 
-    call write_caid_files(mesh, deg)
+    call write_caid_files(mesh, transf, deg)
     call write_connectivity(mesh, deg)
     call write_basis_values(deg, rule)
     call write_quadrature(rule)
