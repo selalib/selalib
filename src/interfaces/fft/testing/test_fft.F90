@@ -122,7 +122,7 @@ program unit_test
     call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,FFT_NORMALIZE)
+    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,normalized=.TRUE.)
     call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
