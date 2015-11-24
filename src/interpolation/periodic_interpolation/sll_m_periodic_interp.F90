@@ -110,7 +110,7 @@ contains
        SLL_ALLOCATE(this%buf(this%sizebuf),ierr)          
        !SLL_ALLOCATE(buf(N),ierr)
        this%pfwd => fft_new_plan(N,this%buf,this%buf,FFT_FORWARD,FFT_NORMALIZE)
-       this%pinv => fft_new_plan(N,this%buf,this%buf,FFT_INVERSE)
+       this%pinv => fft_new_plan(N,this%buf,this%buf,FFT_BACKWARD)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
        print*, 'sll_m_periodic_interp:interpolator ',interpolator, ' not implemented'

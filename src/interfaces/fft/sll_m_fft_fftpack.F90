@@ -48,7 +48,7 @@ module sll_m_fft
   end interface 
   
   integer, parameter :: FFT_FORWARD = -1
-  integer, parameter :: FFT_INVERSE = 1
+  integer, parameter :: FFT_BACKWARD = 1
 
 
 ! Flags to pass when we create a new plan
@@ -192,7 +192,7 @@ contains
  
     if( plan%direction .eq. FFT_FORWARD ) then
       call zfftf( nx , array_out ,plan%twiddles )
-    else if( plan%direction .eq. FFT_INVERSE ) then
+    else if( plan%direction .eq. FFT_BACKWARD ) then
       call zfftb( nx, array_out , plan%twiddles )
     endif
 
@@ -242,7 +242,7 @@ contains
 
     if( plan%direction .eq. FFT_FORWARD ) then
       call dfftf( nx , array_out ,plan%twiddles )
-    else if( plan%direction .eq. FFT_INVERSE ) then
+    else if( plan%direction .eq. FFT_BACKWARD ) then
       call dfftb( nx, array_out , plan%twiddles )
     endif
 

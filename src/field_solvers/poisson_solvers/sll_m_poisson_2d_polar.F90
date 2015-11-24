@@ -211,7 +211,7 @@ contains
     end if
 
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_BACKWARD)
     
     SLL_DEALLOCATE_ARRAY(buf,err)
 
@@ -278,7 +278,7 @@ contains
 
     SLL_ALLOCATE(buf(ntheta),error)
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_BACKWARD)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
   end subroutine initialize_poisson_polar

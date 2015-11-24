@@ -183,7 +183,7 @@ contains
         this%forward_fftplan => fft_new_plan(this%num_cells,this%fem_solution,this%stiffn_matrix_first_line_fourier, &
             FFT_FORWARD+FFT_NORMALIZE)
         this%backward_fftplan=>fft_new_plan(this%num_cells,this%stiffn_matrix_first_line_fourier,this%fem_solution, &
-            FFT_INVERSE  + FFT_NORMALIZE_INVERSE)
+            FFT_BACKWARD  + FFT_NORMALIZE_INVERSE)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
 
         !------------------------------------------------------------------------------------------

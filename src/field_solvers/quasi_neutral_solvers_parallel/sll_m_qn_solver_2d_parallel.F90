@@ -90,7 +90,7 @@ contains
     
     plan%fft_plan => fft_new_plan( NP_theta, x, x, FFT_FORWARD )
 
-    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
+    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_BACKWARD )
 
     plan%layout_fft => new_layout_3D( sll_world_collective )
     call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
