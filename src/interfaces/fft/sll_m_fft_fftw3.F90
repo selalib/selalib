@@ -29,6 +29,7 @@ module sll_m_fft
   
   type sll_fft_plan
     fftw_plan                        :: fftw
+    logical                          :: normalized
     sll_int32                        :: style
     sll_int32                        :: library
     sll_int32                        :: direction
@@ -56,10 +57,18 @@ module sll_m_fft
        fftw_apply_plan_r2c_2d, &
        fftw_apply_plan_c2r_2d
   end interface 
- 
-  integer, parameter :: FFT_FORWARD = -1
-  integer, parameter :: FFT_BACKWARD = 1
+  
+  ! Flags for direction (values as in fftw3.f03)
+  integer, parameter :: FFT_FORWARD = FFTW_FORWARD!-1
+  integer, parameter :: FFT_BACKWARD = FFTW_BACKWARD!1
 
+  ! Flags for initialization of the plan (values as in fftw3.f03)
+  integer(C_INT), parameter :: FFT_MEASURE = FFTW_MEASURE!0
+  integer(C_INT), parameter :: FFT_PATIENT = FFTW_PATIENT!32
+  integer(C_INT), parameter :: FFT_ESTIMATE = FFTW_ESTIMATE!64
+  integer(C_INT), parameter :: FFT_EXHAUSTIVE = FFTW_EXHAUSTIVE !8
+  integer(C_INT), parameter :: FFT_WISDOM_ONLY = FFTW_WISDOM_ONLY ! 2097152
+  
 ! Flags to pass when we create a new plan
 ! We can define 31 different flags.
 ! The value assigned to the flag can only be a power of two.
@@ -202,31 +211,49 @@ contains
   end function fft_ith_stored_mode
 
 ! COMPLEX
-  function fftw_new_plan_c2c_1d(nx,array_in,array_out,direction,flags) result(plan)
+  function fftw_new_plan_c2c_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx
     sll_comp64, dimension(:), intent(inout)      :: array_in
     sll_comp64, dimension(:), intent(inout)      :: array_out
-    sll_int32, intent(in)                        :: direction
-    sll_int32, optional, intent(in)              :: flags
+    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a FFT_FORWARD or \a FFT_BACKWARD)
+    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
     type(sll_fft_plan), pointer                  :: plan
+
+    ! local variables
     sll_int32                                    :: ierr
+    sll_int32                                    :: flag_fftw
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = FFTW_MOD 
     plan%direction = direction
-    if( present(flags) )then
-      plan%style = flags
+    if( present(normalized) ) then
+       plan%normalized = normalized
     else
-      plan%style = 0_f32
-    endif
+       plan%normalized = .false.
+    end if
+    ! Set the information about the algorithm to compute the plan. The default is FFTW_ESTIMATE
+    if ( present(optimization) ) then
+       flag_fftw = optimization
+    else
+       flag_fftw = FFTW_ESTIMATE
+    end if
+    if ( present(aligned) ) then
+       if (aligned .EQV. .false.) then
+          flag_fftw = flag_fftw + FFTW_UNALIGNED
+       end if
+    else
+       flag_fftw = flag_fftw + FFTW_UNALIGNED
+    end if
     plan%problem_rank = 1
     SLL_ALLOCATE(plan%problem_shape(1),ierr)
     plan%problem_shape = (/ nx  /)
 
 #ifdef FFTW_F2003
-    plan%fftw = fftw_plan_dft_1d(nx,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+    plan%fftw = fftw_plan_dft_1d(nx,array_in,array_out,direction,flag_fftw)
 #else
-    call dfftw_plan_dft_1d(plan%fftw,nx,array_in,array_out,direction,FFTW_ESTIMATE)
+    call dfftw_plan_dft_1d(plan%fftw,nx,array_in,array_out,direction,flag_fftw)
 #endif
 
   end function
@@ -238,9 +265,9 @@ contains
 
     call fftw_execute_dft(plan%fftw, array_in, array_out)
 
-    if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
-      factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
-      array_out = factor*array_out
+    if ( plan%normalized .EQV. .true.) then
+       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
+       array_out = factor*array_out
     endif
   end subroutine 
 ! END COMPLEX
