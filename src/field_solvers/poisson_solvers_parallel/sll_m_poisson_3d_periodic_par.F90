@@ -116,9 +116,9 @@ contains
     plan%pz => fft_new_plan( ncz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( ncx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ncy, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( ncz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan( ncx, x, x, FFT_BACKWARD )
+    plan%py_inv => fft_new_plan( ncy, y, y, FFT_BACKWARD )
+    plan%pz_inv => fft_new_plan( ncz, z, z, FFT_BACKWARD )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout

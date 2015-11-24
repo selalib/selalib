@@ -74,8 +74,8 @@ contains
     plan%fft_plan => fft_new_plan( NP_theta, x, x, FFT_FORWARD )
 
     ! For inverse FFTs in theta-direction
-    !plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_INVERSE )
-    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
+    !plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
+    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_BACKWARD )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 

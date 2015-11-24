@@ -23,7 +23,7 @@
 !> \warning For complex to real and real to complex transform, there is no direction flag.
 !>          \code p => fft_new_plan(size,in,out,flags) \endcode
 !>
-!> \a direction can take two values : FFT_FORWARD and FFT_INVERSE
+!> \a direction can take two values : FFT_FORWARD and FFT_BACKWARD
 !>
 !> \a flags optional argument that can be : FFT_NORMALIZE
 !>                                FFT_ONLY_FIRST_DIRECTION, FFT_ONLY_SECOND_DIRECTION (2d case only)
@@ -54,7 +54,7 @@
 !> <td> real </td>
 !> <td> n </td>
 !> <td> n </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
 !> <td> FFT_NORMALIZE </td>
 !> </tr>
 !> <tr>
@@ -63,7 +63,7 @@
 !> <td> complex </td>
 !> <td> n </td>
 !> <td> n </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
 !> <td> FFT_NORMALIZE </td>
 !> </tr>
 !> <tr>
@@ -104,7 +104,7 @@
 !> <td> real </td>
 !> <td> n,m </td>
 !> <td> n,m </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
 !> <td> FFT_NORMALIZE </td>
 !> </tr>
 !> <tr>
@@ -113,7 +113,7 @@
 !> <td> complex </td>
 !> <td> n,m </td>
 !> <td> n,m </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
 !> <td> FFT_NORMALIZE <br /> FFT_ONLY_FIRST_DIRECTION <br /> FFT_ONLY_SECOND_DIRECTION </td>
 !> </tr>
 !> <tr>
@@ -161,7 +161,7 @@
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan(n,in,out,FFT_INVERSE)
+!> p => fft_new_plan(n,in,out,FFT_BACKWARD)
 !> call fft_apply_plan(p,in,out)
 !> call fft_delete_plan(p)
 !> \endcode
@@ -211,7 +211,7 @@
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan(n,in,out,FFT_INVERSE)
+!> p => fft_new_plan(n,in,out,FFT_BACKWARD)
 !> call fft_apply_plan(p,in,out)
 !> mode = fft_get_mode(plan,out,k,l)
 !> call fft_delete_plan(p)
@@ -262,7 +262,7 @@
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan(n,in,out,FFT_INVERSE)
+!> p => fft_new_plan(n,in,out,FFT_BACKWARD)
 !> call fft_apply_plan(p,in,out)
 !> new_value = complex(5.0_f64,3.2_f64)
 !> call fft_set_mode(plan,out,new_value,k,l)
@@ -292,27 +292,27 @@
 !>
 !> \f[ X_k = \sum_{i=0}^{n-1} x_i e^{-2\pi i j k/n}. \f]
 !>
-!> The backward (FFT_INVERSE) DFT computes:
+!> The backward (FFT_BACKWARD) DFT computes:
 !>
 !> \f[ x_i = \sum_{k=0}^{n-1} X_k e^{2\pi k j i/n}. \f]
 !>
-! For the real transform, we have
-! \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
-!     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
-! which must be interpreted as the complex array
-! \f[ \begin{pmatrix} r_0 &,& 0
-!                     \\ r_1 &,& i_1
-!                     \\ \vdots  & & \vdots 
-!                     \\ r_{n/2-1} &,& i_{n/2-1}
-!                     \\ r_{n/2} &,& 0
-!                     \\ r_{n/2-1} &,& -i_{n/2-1}
-!                     \\ \vdots    & & \vdots
-!                     \\ r_1 &,& -i_1 
-! \end{pmatrix}\f] 
-! \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
-!          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
-! 
-!
-! By example if, the input data is \f$(x_0,x_1,x_2,x_3)\f$ the output is \f$(X_0,X_2,X_1,X_3)\f$.
-! Thus, sll_get_index(1) returns 2 (cause data[1]=X_2) and sll_get_mode(1) returns X_1.
+!> For the real transform, we have
+!> \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
+!>     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
+!> which must be interpreted as the complex array
+!> \f[ \begin{pmatrix} r_0 &,& 0
+!>                     \\ r_1 &,& i_1
+!>                     \\ \vdots  & & \vdots 
+!>                     \\ r_{n/2-1} &,& i_{n/2-1}
+!>                     \\ r_{n/2} &,& 0
+!>                     \\ r_{n/2-1} &,& -i_{n/2-1}
+!>                     \\ \vdots    & & \vdots
+!>                     \\ r_1 &,& -i_1 
+!> \end{pmatrix}\f] 
+!> \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
+!>          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
+!> 
+!>
+!> By example if, the input data is \f$(x_0,x_1,x_2,x_3)\f$ the output is \f$(X_0,X_2,X_1,X_3)\f$.
+!> Thus, sll_get_index(1) returns 2 (cause data[1]=X_2) and sll_get_mode(1) returns X_1.
 !------------------------------------------------------------------------------
