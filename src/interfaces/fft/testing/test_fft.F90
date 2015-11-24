@@ -122,7 +122,7 @@ program unit_test
     call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_INVERSE,FFT_NORMALIZE)
+    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,FFT_NORMALIZE)
     call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
@@ -149,7 +149,7 @@ program unit_test
     call fft_apply_plan(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_INVERSE,FFT_NORMALIZE)
+    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_BACKWARD,FFT_NORMALIZE)
     call fft_apply_plan(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
  
@@ -236,7 +236,7 @@ program unit_test
         call fft_delete_plan(p)
         
         p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_NORMALIZE)
+             FFT_BACKWARD,FFT_NORMALIZE)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         ierr = 0._f64
@@ -268,7 +268,7 @@ program unit_test
         call fft_delete_plan(p)
         
         p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE, FFT_NORMALIZE+FFT_ONLY_SECOND_DIRECTION)
+             FFT_BACKWARD, FFT_NORMALIZE+FFT_ONLY_SECOND_DIRECTION)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         err_var = 0._f64
@@ -315,18 +315,18 @@ program unit_test
         ! The following are 2 ways to do the same thing.
 #if 1        
         p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_NORMALIZE)
+             FFT_BACKWARD,FFT_NORMALIZE)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
 #endif
 #if 0
    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_ONLY_SECOND_DIRECTION+FFT_NORMALIZE)
+             FFT_BACKWARD,FFT_ONLY_SECOND_DIRECTION+FFT_NORMALIZE)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
 
    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_ONLY_FIRST_DIRECTION+FFT_NORMALIZE)
+             FFT_BACKWARD,FFT_ONLY_FIRST_DIRECTION+FFT_NORMALIZE)
         call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
 #endif
@@ -364,7 +364,7 @@ program unit_test
     call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE)
+    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_BACKWARD)
     call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
     call fft_delete_plan(p)
     ierr = 0._f64

@@ -58,7 +58,7 @@ module sll_m_fft
   end interface 
  
   integer, parameter :: FFT_FORWARD = -1
-  integer, parameter :: FFT_INVERSE = 1
+  integer, parameter :: FFT_BACKWARD = 1
 
 ! Flags to pass when we create a new plan
 ! We can define 31 different flags.
@@ -318,7 +318,7 @@ contains
 #else
       call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE)
 #endif
-    else if(direction .eq. FFT_INVERSE) then
+    else if(direction .eq. FFT_BACKWARD) then
 #ifdef FFTW_F2003
       plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE)
 #else

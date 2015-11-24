@@ -72,9 +72,9 @@ contains
     plan%pz => fft_new_plan( nz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( nx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ny, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( nz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan( nx, x, x, FFT_BACKWARD )
+    plan%py_inv => fft_new_plan( ny, y, y, FFT_BACKWARD )
+    plan%pz_inv => fft_new_plan( nz, z, z, FFT_BACKWARD )
 
   end function new_poisson_3d_periodic_plan_seq
 

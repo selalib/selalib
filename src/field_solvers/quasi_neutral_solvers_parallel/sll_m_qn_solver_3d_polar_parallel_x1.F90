@@ -200,7 +200,7 @@ contains
 
     SLL_ALLOCATE(buf(ntheta),error)
     this%fw => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%bw => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    this%bw => fft_new_plan(ntheta,buf,buf,FFT_BACKWARD)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
     psize = sll_get_collective_size(sll_world_collective)

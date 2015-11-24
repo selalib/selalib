@@ -73,7 +73,7 @@ module sll_m_fft
   !> Set a forward fft
   integer, parameter, public :: FFT_FORWARD = -1
   !> Set a backward fft
-  integer, parameter, public :: FFT_INVERSE = 1
+  integer, parameter, public :: FFT_BACKWARD = 1
 
 
   ! Flags to pass when we create a new plan
@@ -571,7 +571,7 @@ contains
     SLL_ASSERT(size(array_out).eq.nx)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = FFT_INVERSE
+    plan%direction = FFT_BACKWARD
     if( present(flags) )then
       plan%style = flags
     else
@@ -700,7 +700,7 @@ contains
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = FFT_INVERSE
+    plan%direction = FFT_BACKWARD
     if( present(flags) )then
       plan%style = flags
     else
@@ -1022,7 +1022,7 @@ contains
     sll_comp64                                      :: tmp
 
     half = ishft(size,-1) ! any evidence this is faster?
-    !if ( sign == FFT_INVERSE ) then
+    !if ( sign == FFT_BACKWARD ) then
     !   omega = twiddles(twiddle_index)
     !else if ( sign == FFT_FORWARD ) then
     !   omega = conjg(twiddles(twiddle_index))
@@ -1102,7 +1102,7 @@ contains
     do j=1,half
        !if ( sign == FFT_FORWARD ) then
        !   omega = conjg(twiddles(jtwiddle))
-       !else if ( sign == FFT_INVERSE ) then
+       !else if ( sign == FFT_BACKWARD ) then
        !   omega = twiddles(jtwiddle)
        !else
        !  stop 'ERROR in =fft_dit_rn_aux= argument sign invalid'
@@ -1166,7 +1166,7 @@ contains
     !if ( sign == FFT_FORWARD ) then
     !   omega_re =  CREAL0(twiddles, twiddle_index)
     !   omega_im = -CIMAG0(twiddles, twiddle_index)
-    !else if ( sign == FFT_INVERSE ) then
+    !else if ( sign == FFT_BACKWARD ) then
     !   omega_re =  CREAL0(twiddles, twiddle_index)
     !   omega_im =  CIMAG0(twiddles, twiddle_index)
     !else
@@ -1257,7 +1257,7 @@ contains
        !if( sign == FFT_FORWARD ) then
        !   omega_re =  CREAL1(twiddles, jtwiddle)
        !   omega_im = -CIMAG1(twiddles, jtwiddle)
-       !else if ( sign == FFT_INVERSE ) then
+       !else if ( sign == FFT_BACKWARD ) then
        !   omega_re =  CREAL1(twiddles, jtwiddle)
        !   omega_im =  CIMAG1(twiddles, jtwiddle)
        !else
@@ -1371,7 +1371,7 @@ contains
        ! but our _nr_ algorithm bit reverses the result, so, until we have
        ! some way to index the data correctly we have to do this:
        call bit_reverse_in_pairs( n_2, data(0:n-1) )
-    else if (sign .eq. FFT_INVERSE) then
+    else if (sign .eq. FFT_BACKWARD) then
        s =  1.0_f64
     else
       stop 'ERROR IN =REAL_DATA_FFT_DIT= invalid argument sign'
@@ -1385,7 +1385,7 @@ contains
        !
        ! which is the answer we are after.
        !
-       ! FFT_INVERSE case: The process of decomposing the H_n's into the
+       ! FFT_BACKWARD case: The process of decomposing the H_n's into the
        ! corresponding even and odd terms:
        !
        ! (even terms:) F_n^e = (F_n + F_(N/2-n)^*)
@@ -1422,7 +1422,7 @@ contains
        tmp_re = data(0)
        data(0) = tmp_re + data(1)   ! mode 0   is real
        data(1) = tmp_re - data(1)   ! mode N/2 is real
-    else if ( sign .eq. FFT_INVERSE ) then
+    else if ( sign .eq. FFT_BACKWARD ) then
        ! Unpack the modes.
        tmp_re  = data(0)
        data(0) = 0.5_f64*(tmp_re + data(1))
@@ -1432,7 +1432,7 @@ contains
                                        n_2,         &
                                        twiddles,    &
                                        0,           &
-                                       FFT_INVERSE )
+                                       FFT_BACKWARD )
        ! but our _nr_ algorithm bit reverses the result, so, until we have
        ! some way to index the data correctly we have to do this:
        call bit_reverse_in_pairs( n_2, data(0:n-1) )

@@ -131,7 +131,7 @@ contains
          loc_sz_x2, &
          plan%fft_x_array, &
          plan%fft_x_array, &
-         FFT_INVERSE, &
+         FFT_BACKWARD, &
          FFT_ONLY_FIRST_DIRECTION) !+FFT_NORMALIZE )
 
     ! Layout and local sizes for FFTs in y-direction (x2)
@@ -170,7 +170,7 @@ contains
          ncy, &
          plan%fft_y_array, &
          plan%fft_y_array, &
-         FFT_INVERSE, &
+         FFT_BACKWARD, &
          FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
     plan%rmp_xy => &
@@ -259,7 +259,7 @@ contains
          loc_sz_x2, &
          plan%fft_x_array, &
          plan%fft_x_array, &
-         FFT_INVERSE, &
+         FFT_BACKWARD, &
          FFT_ONLY_FIRST_DIRECTION) !+FFT_NORMALIZE )
 
     ! Layout and local sizes for FFTs in y-direction (x2)
@@ -298,7 +298,7 @@ contains
          ncy, &
          plan%fft_y_array, &
          plan%fft_y_array, &
-         FFT_INVERSE, &
+         FFT_BACKWARD, &
          FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
     plan%rmp_xy => &
