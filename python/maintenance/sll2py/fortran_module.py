@@ -93,10 +93,10 @@ class FortranModule( FortranUnit ):
         """
         lines = []
         # Use only section
-        for name,data in self._used_modules.items():
+        for name,data in sorted( self._used_modules.items() ):
             tab = '! ' if name.startswith('F77_') else ''
             lines.append( tab + "use %s, only: &" % name )
-            for m in data['items']:
+            for m in sorted( data['items'] ):
                 lines.append( tab + "  %s, &" % m )
             lines[-1] = lines[-1].rstrip( ', &' )
             lines.append( "" )
@@ -106,7 +106,7 @@ class FortranModule( FortranUnit ):
         # Public section
         if self._exported_symbols:
             lines.append( "public :: &" )
-            for s in self._exported_symbols:
+            for s in sorted( self._exported_symbols ):
                 lines.append( "  %s, &" % s )
             lines[-1] = lines[-1].rstrip( ', &' )
             lines.append( "" )
