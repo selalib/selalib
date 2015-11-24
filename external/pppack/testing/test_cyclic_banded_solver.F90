@@ -2,66 +2,86 @@ program test_cyclic_banded_solver
 implicit none
 
 integer, parameter :: n = 10
-integer, parameter :: k = 1
+integer, parameter :: k = 2
 real(8) :: x(n)
 real(8) :: y(n)
 real(8) :: b(n)
-real(8) :: tau(n)
-real(8) :: z(n)
 real(8) :: q(2*k+1,n)
 real(8) :: a(n,n)
-real(8) :: u(n)
-real(8) :: v(n)
-
-real(8) :: tau_min 
-real(8) :: tau_max
-
+real(8) :: u(n,k)
+real(8) :: v(n,k)
+real(8) :: z(n,k)
 integer :: iflag
 integer :: i
 integer :: j, l
 integer :: kp1
 real(8) :: fact
-real(8) :: alpha, beta, gamma
-real(8) :: pi
 
-real(8), allocatable  :: df_coeffs(:) 
-real(8)               :: lu(n,n)
-integer,  allocatable :: ipiv(:)
-integer               :: info
-integer               :: nrhs
-
-pi = 4.0_8 * atan(1.0_8)
-tau_min = 0.0_8
-tau_max = 2.0_8*pi
+real(8) :: m(n,n)
+real(8) :: g(k)
 
 kp1 = k+1
 do i = 1, n
-  tau(i)  = tau_min + (i-1)*(tau_max-tau_min)/(n)
-  b(i) = 1.0_8 !sin(tau(i)) * ((tau_max-tau_min)/(n))**2
+  b(i) = 1.0_8 
 end do
 
-lu = 0.0_8
-a  = 0.0_8
+m = 0.0_8
 call random_number(a)
-write(*,*) "a="
+write(*,*) "m="
 do j = 1, n
   do i = -k,k
     l=modulo(j+i-1,n)+1 
-    lu(l,j) = a(l,j)
+    m(l,j) = a(l,j)
   end do
-  write(*,"(11f7.3)") lu(:,j)
+  write(*,"(11f7.3)") m(:,j)
 end do
 write(*,*)
 
-a = lu
+a = 0.0
+do j = 1, n
+  do i = -k,k
+    if (i+j>=1 .and. i+j<=n) a(i+j,j) = m(i+j,j)
+  end do
+end do
+print*, "a="
+call print_matrix(a)
 
-!General Matrix Factorization
-allocate(ipiv(n)); ipiv=0
-call dgetrf(n,n,lu,n,ipiv,info)
-x = b
-nrhs = 1
-call dgetrs('n',n,nrhs,lu,n,ipiv,x,n,info)
-write(*,"(' x = ', 11f7.3)") b - matmul(a,x)
+!set u and v vectors and modify a
+u = 0.0_8
+v = 0.0_8
+do l = 1, k
+  g(l)   = -m(l,l)
+  u(l,l) = g(l)
+  v(l,l) = 1.0 
+end do
+
+do j = 1, k
+  a(j,j) = a(j,j) - g(j) 
+  do i = n-j,n
+    u(i,j) = m(i,j)
+    v(i,j) = m(j,i)/g(j)
+  end do
+end do
+
+!a(n-1,n-1) = a(n-1,n-1) - u(n-1,1)*v(n-1,1)
+!a(n-1,n  ) = a(n-1,n  ) - u(n-1,1)*v(n  ,1)
+!a(n  ,n-1) = a(n  ,n-1) - u(n  ,1)*v(n-1,1)
+!a(n  ,n  ) = a(n  ,n  ) - u(n  ,1)*v(n  ,1) - u(n,2)*v(n,2)
+
+do j = n-k+1,n
+  do i = n-k+1,n
+    a(i,j) = a(i,j) - sum(u(i,:)*v(j,:))
+  end do
+end do
+
+print*, 'u='
+call print_matrix(u)
+print*, 'v='
+call print_matrix(v)
+print*, 'w='
+call print_matrix(m - (a + matmul(u,transpose(v))))
+stop
+
 
 q = 0.0_8
 do j = 1, n
@@ -77,43 +97,41 @@ do i = 1, 2*k+1
   write(*,"(11f7.3)") q(i,:)
 end do
 
-gamma      = -a(1,1) 
-alpha      = a(1,n)
-beta       = a(n,1)
 
-u    = 0.0_8    
-u(1) = gamma
-u(n) = alpha
 
-v    = 0.0_8    
-v(1) = 1.0_8
-v(n) = beta / gamma
+!do l = 1, k
+!
+!  q(k+1,1) = a(1,1) - u(1,l) 
+!  q(k+1,n) = a(n,n) - u(n,l)*v(n,l)
+!
+!  call banfac ( q, k+kp1, n, k, k, iflag )
+!  y = b
+!  call banslv ( q, k+kp1, n, k, k, y )
+!
+!  z = u
+!  call banslv ( q, k+kp1, n, k, k, z )
+!
+!end do
 
-q(k+1,1)   = a(1,1) - u(1) 
-q(k+1,n)   = a(n,n) - u(n)*v(n)
+!fact = (dot_product(y,v))/(1.0_8+dot_product(v,z))
+!x = y - fact * z 
+!
+!write(*,"(' x = ', g15.3)") sum(b - matmul(a,x))
 
-call banfac ( q, k+kp1, n, k, k, iflag )
-y = b
-call banslv ( q, k+kp1, n, k, k, y )
 
-z = u
-call banslv ( q, k+kp1, n, k, k, z )
+contains
 
-write(*,"('x:',10f7.3)") x
-write(*,"('z:',10f7.3)") z
-write(*,"('v:',10f7.3)") v
 
-write(*,"(' z.v = ', f7.3)") z(1)*v(1)+z(n)*v(n)
-write(*,"(' z.v = ', f7.3)") sum(z*v)
-write(*,"(' z.v = ', f7.3)") dot_product(z,v)
+subroutine print_matrix(m)
+real(8), intent(in)  :: m(:,:)
+integer :: j
+character(len=20) :: display_format
 
-fact = (y(1)+y(n)*v(n))/(1.0_8+v(1)*z(1)+v(n)*z(n))
-x = y - fact * z 
-
-write(*,"(' x = ', 11f7.3)") x - matmul(a,b)
-
-do i = 1, n
-   write(17,*) tau(i), x(i) !- sum(x)/real(n,8)
+write(display_format, "('(''|''',i2,a,''' |'')')")size(m,1),'f7.3'
+do j = 1, size(m,2)
+  write(*,display_format) m(:,j)
 end do
+write(*,*)
+end subroutine print_matrix
 
 end program test_cyclic_banded_solver
