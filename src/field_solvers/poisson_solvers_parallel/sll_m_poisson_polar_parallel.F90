@@ -175,7 +175,7 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%fw => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
+    this%fw => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,normalized=.true.)
     this%bw => fft_new_plan(ntheta,buf,buf,FFT_BACKWARD)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
