@@ -25,6 +25,8 @@ module sll_m_fft
   use sll_m_fft_utils
   use, intrinsic :: iso_c_binding
 
+  !public :: fft_new_plan_c2c_1d, fft_apply_plan_c2c_1d
+
   implicit none 
   
   type sll_fft_plan
@@ -39,23 +41,21 @@ module sll_m_fft
 
   interface fft_new_plan
     module procedure &
-       fftw_new_plan_c2c_1d, &
-       fftw_new_plan_c2c_2d, &
-       fftw_new_plan_r2r_1d, &
-       fftw_new_plan_r2c_1d, &
-       fftw_new_plan_c2r_1d, &
-       fftw_new_plan_r2c_2d, &
-       fftw_new_plan_c2r_2d 
+       fft_new_plan_c2c_2d, &
+       fft_new_plan_r2r_1d, &
+       fft_new_plan_r2c_1d, &
+       fft_new_plan_c2r_1d, &
+       fft_new_plan_r2c_2d, &
+       fft_new_plan_c2r_2d 
   end interface
   interface fft_apply_plan
     module procedure &
-       fftw_apply_plan_c2c_1d, &
-       fftw_apply_plan_c2c_2d, &
-       fftw_apply_plan_r2r_1d, &
-       fftw_apply_plan_r2c_1d, &
-       fftw_apply_plan_c2r_1d, &
-       fftw_apply_plan_r2c_2d, &
-       fftw_apply_plan_c2r_2d
+       fft_apply_plan_c2c_2d, &
+       fft_apply_plan_r2r_1d, &
+       fft_apply_plan_r2c_1d, &
+       fft_apply_plan_c2r_1d, &
+       fft_apply_plan_r2c_2d, &
+       fft_apply_plan_c2r_2d
   end interface 
   
   ! Flags for direction (values as in fftw3.f03)
@@ -211,7 +211,7 @@ contains
   end function fft_ith_stored_mode
 
 ! COMPLEX
-  function fftw_new_plan_c2c_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
+  function fft_new_plan_c2c_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx
     sll_comp64, dimension(:), intent(inout)      :: array_in
     sll_comp64, dimension(:), intent(inout)      :: array_out
@@ -258,7 +258,7 @@ contains
 
   end function
 
-  subroutine fftw_apply_plan_c2c_1d(plan,array_in,array_out)
+  subroutine fft_apply_plan_c2c_1d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
     sll_real64 :: factor
@@ -273,7 +273,7 @@ contains
 ! END COMPLEX
 
 ! COMPLEX 2D
-  function fftw_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
+  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                            :: NX,NY
     sll_comp64, dimension(0:,0:)                     :: array_in, array_out
     sll_int32, intent(in)                            :: direction
@@ -303,7 +303,7 @@ contains
 
   end function
 
-  subroutine fftw_apply_plan_c2c_2d(plan,array_in,array_out)
+  subroutine fft_apply_plan_c2c_2d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)      :: plan
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in, array_out
     sll_real64                                   :: factor
@@ -318,7 +318,7 @@ contains
 ! END COMPLEX 2D
 
 ! REAL
-  function fftw_new_plan_r2r_1d(nx,array_in,array_out,direction,flags) result(plan)
+  function fft_new_plan_r2r_1d(nx,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: nx
     sll_real64, dimension(:), intent(inout)      :: array_in
     sll_real64, dimension(:), intent(inout)      :: array_out
@@ -354,7 +354,7 @@ contains
     endif
   end function
 
-  subroutine fftw_apply_plan_r2r_1d(plan,array_in,array_out)
+  subroutine fft_apply_plan_r2r_1d(plan,array_in,array_out)
 
     type(sll_fft_plan), pointer, intent(in) :: plan
     sll_real64, dimension(:), intent(inout) :: array_in
@@ -376,7 +376,7 @@ contains
 
 
 ! R2C
-  function fftw_new_plan_r2c_1d(nx,array_in,array_out,flags) result(plan)
+  function fft_new_plan_r2c_1d(nx,array_in,array_out,flags) result(plan)
     sll_int32, intent(in)                   :: nx
     sll_real64, dimension(:), intent(inout) :: array_in
     sll_comp64, dimension(:), intent(out)   :: array_out
@@ -403,7 +403,7 @@ contains
 #endif
   end function
 
-  subroutine fftw_apply_plan_r2c_1d(plan,array_in,array_out)
+  subroutine fft_apply_plan_r2c_1d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_real64, dimension(:), intent(inout)         :: array_in
     sll_comp64, dimension(:), intent(out)           :: array_out
@@ -417,7 +417,7 @@ contains
     endif
   end subroutine
 
-  function fftw_new_plan_r2c_2d(nx,ny,array_in,array_out,flags) result(plan)
+  function fft_new_plan_r2c_2d(nx,ny,array_in,array_out,flags) result(plan)
     sll_int32, intent(in)                     :: nx,ny
     sll_real64, dimension(:,:), intent(inout) :: array_in
     sll_comp64, dimension(:,:), intent(out)   :: array_out
@@ -446,7 +446,7 @@ contains
 
   end function
 
-  subroutine fftw_apply_plan_r2c_2d(plan,array_in,array_out)
+  subroutine fft_apply_plan_r2c_2d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)           :: plan
     sll_real64, dimension(:,:), intent(inout)         :: array_in
     sll_comp64, dimension(:,:), intent(out)           :: array_out
@@ -485,7 +485,7 @@ contains
 !END R2C
 
 ! C2R
-  function fftw_new_plan_c2r_1d(nx,array_in,array_out,flags) result(plan)
+  function fft_new_plan_c2r_1d(nx,array_in,array_out,flags) result(plan)
     sll_int32, intent(in)                  :: nx
     sll_comp64, dimension(:)               :: array_in
     sll_real64, dimension(:)               :: array_out
@@ -513,7 +513,7 @@ contains
 
   end function
 
-  subroutine fftw_apply_plan_c2r_1d(plan,array_in,array_out)
+  subroutine fft_apply_plan_c2r_1d(plan,array_in,array_out)
     type(sll_fft_plan), pointer :: plan
     sll_comp64, dimension(:)    :: array_in
     sll_real64, dimension(:)    :: array_out
@@ -527,7 +527,7 @@ contains
     endif
   end subroutine
 
-  function fftw_new_plan_c2r_2d(nx,ny,array_in,array_out,flags) result(plan)
+  function fft_new_plan_c2r_2d(nx,ny,array_in,array_out,flags) result(plan)
     sll_int32, intent(in)                     :: nx, ny
     sll_comp64, dimension(:,:), intent(inout) :: array_in
     sll_real64, dimension(:,:), intent(out)   :: array_out
@@ -554,7 +554,7 @@ contains
 #endif
   end function
 
-  subroutine fftw_apply_plan_c2r_2d(plan,array_in,array_out)
+  subroutine fft_apply_plan_c2r_2d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)           :: plan
     sll_comp64, dimension(1:,1:), intent(inout)       :: array_in
     sll_real64, dimension(1:,1:), intent(out)         :: array_out
