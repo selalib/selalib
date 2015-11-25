@@ -267,11 +267,10 @@ contains
 
 ! COMPLEX 2D
   ! TODO: Remove flags
-  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags,normalized, aligned, optimization) result(plan)
+  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: NX,NY
     sll_comp64, dimension(0:,0:)                 :: array_in, array_out
     sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a FFT_FORWARD or \a FFT_BACKWARD)
-    sll_int32, optional, intent(in)              :: flags
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
