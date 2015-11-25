@@ -210,8 +210,8 @@ contains
       this%bc(2)=-1
     end if
 
-    this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_BACKWARD)
+    this%pfwd => fft_new_plan_r2r_1d(ntheta,buf,buf,FFT_FORWARD,normalized = .TRUE.)
+    this%pinv => fft_new_plan_r2r_1d(ntheta,buf,buf,FFT_BACKWARD)
     
     SLL_DEALLOCATE_ARRAY(buf,err)
 
@@ -277,8 +277,8 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_BACKWARD)
+    this%pfwd => fft_new_plan_r2r_1d(ntheta,buf,buf,FFT_FORWARD,normalized = .TRUE.)
+    this%pinv => fft_new_plan_r2r_1d(ntheta,buf,buf,FFT_BACKWARD)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
   end subroutine initialize_poisson_polar
@@ -345,7 +345,7 @@ contains
     plan%f_fft = f
 
     do i=1,nr+1
-      call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
+      call fft_apply_plan_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
 
     do k = 0,ntheta/2
@@ -459,7 +459,7 @@ contains
       endif
     ! FFT INVERSE
     do i=1,nr+1
-      call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+      call fft_apply_plan_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
     phi(:,ntheta+1)=phi(:,1)
@@ -499,7 +499,7 @@ contains
     plan%f_fft = f
 
     do i=1,nr+1
-      call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
+      call fft_apply_plan_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
 
     ierr_sup_1em12 = 0
@@ -620,7 +620,7 @@ contains
 
     ! FFT INVERSE
     do i=1,nr+1
-      call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+      call fft_apply_plan_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
     phi(:,ntheta+1)=phi(:,1)

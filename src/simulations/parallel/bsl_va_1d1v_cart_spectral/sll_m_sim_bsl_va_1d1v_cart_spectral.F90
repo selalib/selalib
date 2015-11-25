@@ -1080,7 +1080,7 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
     
     SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
     
     layout_x1       => new_layout_2D( sll_world_collective )
     layout_x2       => new_layout_2D( sll_world_collective )    
@@ -1719,7 +1719,7 @@ contains
     f_hat_x2_loc(1:sim%nb_mode+1) = 0._f64
     do i=1,local_size_x2
       buf_fft = f_x1(1:np_x1-1,i)
-      call fft_apply_plan(pfwd,buf_fft,buf_fft)
+      call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
       do k=0,sim%nb_mode
         f_hat_x2_loc(k+1) = f_hat_x2_loc(k+1) &
           +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
@@ -1736,7 +1736,7 @@ contains
     if (MPI_MASTER) then                  
     
       buf_fft = rho(1:np_x1-1)
-      call fft_apply_plan(pfwd,buf_fft,buf_fft)
+      call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
     
       do k=0,sim%nb_mode
         rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
