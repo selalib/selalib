@@ -1,4 +1,4 @@
-program test_poisson_2d
+program test_poisson_2d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -82,4 +82,4 @@ program test_poisson_2d
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
 
-end program test_poisson_2d
+ end program test_poisson_2d_periodic
