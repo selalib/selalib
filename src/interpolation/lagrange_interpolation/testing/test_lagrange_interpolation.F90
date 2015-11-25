@@ -4,7 +4,9 @@ program test_lagrange_interpolation
 #include "sll_memory.h"
  use sll_m_lagrange_interpolation_1d
  use sll_m_constants
+
 implicit none
+
 sll_int32  :: i,d,num_points
 sll_real64 :: diff,alpha,xmin,xmax,l
 sll_real64,dimension(:),allocatable ::xi,fi,coord
@@ -21,7 +23,7 @@ xmin=0.0_f64
 xmax=num_points-1.0_f64
 l=xmax-xmin
 do i=1,num_points
- xi(i)=i-1
+ xi(i)=real(i-1,f64)
  fi(i)=f(xi(i),num_points)
  coord(i)=xi(i)+alpha
 end do 
@@ -52,10 +54,11 @@ deallocate(coord)
 
 contains 
 
-function f(x,num_points)
-sll_int32 :: num_points
-sll_real64 :: x,f
-f=cos(2*sll_pi*x/(num_points-1.0))
+function f( x, num_points )
+  sll_real64, intent(in) :: x
+  sll_int32,  intent(in) :: num_points
+  sll_real64 :: f
+  f = cos(2*sll_pi*x/(num_points-1.0))
 end function
 
 end program test_lagrange_interpolation
