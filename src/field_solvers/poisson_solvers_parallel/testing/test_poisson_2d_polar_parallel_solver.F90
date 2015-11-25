@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_poisson_polar_parallel_solver
+program unit_test_poisson_2d_polar_parallel_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
