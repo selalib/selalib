@@ -18,7 +18,7 @@ use sll_m_constants
 
 endmodule unit_test_poisson_1d_fem_module
 
-program unit_test_poisson_1d_fem
+program test_poisson_1d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
