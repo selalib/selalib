@@ -1,7 +1,7 @@
 program test_cyclic_banded_solver
 implicit none
 
-integer, parameter :: n = 9
+integer, parameter :: n = 16
 integer, parameter :: k = 2
 
 real(8) :: x(n)
@@ -66,20 +66,21 @@ nrhs = 1
 call dgetrs('n',n,nrhs,lu,n,ipiv,x,n,info)
 write(*,"(' Lapack error = ', g15.3)") sum(abs(b-matmul(m,x)))
 call print_vector(x)
+call dgetri(n,lu,n,ipiv,w,n*n,info)
 
 !Create matrix A without corners terms
 a = 0.0_8
-do i = 1, n
-do j = -k,k
-  if (i+j>=1 .and. i+j<=n) a(i,i+j) = m(i,i+j)
-end do
+do j = 1,n
+  do i = max(1,j-k), min(n,j+k)
+    a(i,j) = m(i,j)
+  end do
 end do
 
 !set u and v vectors and modify a
 u = 0.0_8
 v = 0.0_8
 do l = 1, k
-  g(l)   = -a(l,l)  ! Arbitrary gamma is set by diagonal of A
+  g(l)   = -a(l,l)  ! Arbitrary gamma is set using diagonal term of A
   u(l,l) = g(l)
   v(l,l) = 1.0_8 
 end do
@@ -109,9 +110,9 @@ ldab=2*k+k+1
 allocate(ab(ldab,n))
 ab = 0.0
 do j = 1, n
-do i = max(1,j-k), min(n,j+k)
-   ab(k+k+1+i-j,j) = a(i,j) 
-end do
+  do i = max(1,j-k), min(n,j+k)
+    ab(k+k+1+i-j,j) = a(i,j) 
+  end do
 end do
 call dgbtrf(n,n,k,k,ab,ldab,ipiv,info)
 x=b
