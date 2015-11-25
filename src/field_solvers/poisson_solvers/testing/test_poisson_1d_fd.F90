@@ -1,35 +1,20 @@
 #ifndef SLL_CIRCULAR_MATRIX_SOLVER_TOL
 #define SLL_CIRCULAR_MATRIX_SOLVER_TOL 1e-10
 #endif
-  module test_poisson_1d_fd_module
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-use sll_m_constants
-    sll_real64 :: testfunction_test_mode
-
-    contains
-    function sll_poisson_1d_fd_testfunction(x) result(y)
-        sll_real64, dimension(:), intent(in) :: x
-        !sll_real:: test_mode
-        sll_real64, dimension(size(x)) :: y
-        !test_mode=4
-        y= ((testfunction_test_mode*sll_kx)**2 )*sin(testfunction_test_mode*sll_kx*x)
-    endfunction
-
-endmodule test_poisson_1d_fd_module
 
 program unit_test_poisson_1d_fd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-    use test_poisson_1d_fd_module
     use sll_m_poisson_1d_fd
     use sll_m_cartesian_meshes
     use sll_m_constants
-    implicit none
-    integer :: ierr
-    sll_int :: idx, jdx
 
+    implicit none
+
+    integer    :: ierr
+    sll_int    :: idx, jdx
+    sll_real64 :: testfunction_test_mode
 
     !call test_poisson_solver(10, 3)
     !stop
@@ -51,9 +36,13 @@ program unit_test_poisson_1d_fd
 
 contains
 
-
-
-
+    function sll_poisson_1d_fd_testfunction(x) result(y)
+        sll_real64, dimension(:), intent(in) :: x
+        !sll_real:: test_mode
+        sll_real64, dimension(size(x)) :: y
+        !test_mode=4
+        y= ((testfunction_test_mode*sll_kx)**2 )*sin(testfunction_test_mode*sll_kx*x)
+    end function
 
 
 !    subroutine test_poisson_solver_circulant_matrix_vector_product(test_power_two)
@@ -111,16 +100,13 @@ contains
         sll_real64 :: H1seminorm, residual
         sll_real64, dimension(npart) :: xx
         sll_real64, dimension(npart) :: ww
-        
-        
+
         integer :: test_mode
         !Test Mass Matrix Assembler
         test_dimension=2**test_power_two
 
-
         mesh=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
         knots=mesh%eta1_nodes()
-
 
         mesh_eval=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
         knots_eval=mesh_eval%eta1_nodes()
@@ -182,7 +168,6 @@ contains
             actual_solution=(2.0_f64**test_mode)*sll_kx*cos((2.0_f64**test_mode)*sll_kx*knots_eval)
             numerical_error_deriv(test_mode+1)=maxval(abs( (solution - actual_solution)/maxval(abs(actual_solution)) ) )
 
-            
             print *, "MAX",maxloc(abs( (solution - actual_solution)))
 
             H1seminorm=solver%H1seminorm_solution()
@@ -191,18 +176,16 @@ contains
 
             print *, "Relative Numerical Error: ", numerical_error(test_mode+1),"  ",numerical_error_deriv(test_mode+1)
 
-
             num_error_sum= sqrt(sum( (solution - actual_solution)**2))/sqrt(sum( actual_solution**2))
             print *, "Relative l2 Error: ", num_error_sum
-
 
             print *, "H1-Seminorm of solution: ",&
                 H1seminorm, "Rel. Error: " , abs(H1seminorm - 0.5_f64*((2**test_mode)*sll_kx)**2)/(((2**test_mode)*sll_kx)**2)/2.0_f64
 
             print *, "Residual FEM Equation: ", residual
 
-
         enddo
+
         do  test_mode=0,test_power_two-1,1
              print*, numerical_error(test_mode+1)! / (4**test_mode)
         enddo
@@ -213,15 +196,13 @@ contains
         SLL_DEALLOCATE_ARRAY(solution,ierr)
         SLL_DEALLOCATE_ARRAY(actual_solution,ierr)
 
-
         call solver%delete(ierr)
         !call delete(mesh)
         !call delete(mesh_eval)
     endsubroutine
 
-    
-    
-        subroutine test_momentum(test_power_two, spline_degree,npart)
+
+    subroutine test_momentum(test_power_two, spline_degree,npart)
         implicit none
         integer :: ierr
         sll_real64 :: interval_a=0, interval_b=1.0_f64
@@ -247,47 +228,32 @@ contains
 
         call random_number(xx)
         xx=xx*(interval_b- interval_a)+interval_a
-        
-        
+
         !print *, "Nodes:" , mesh%eta1_nodes()
-        
+
         numerical_error=0.0_f64
         do  test_mode=0,test_power_two-2,1
             print *, "--Test Mode: ", 2**test_mode,   " -----------------------------------------"
 
             testfunction_test_mode=1.0_f64*(2**(test_mode))
-            
+
             ww=sll_poisson_1d_fd_testfunction(xx)/(interval_b- interval_a)
-        
-  
+
             rhs=solver%get_rhs_klimontovich(xx(1:npart),ww(1:npart))/npart    
-   
+
             !call solver%set_solution(rhs)
-   
             call solver%solve(rhs)
             call solver%eval_solution_derivative(xx,E)
             call solver%eval_solution(xx,Phi)
 
-   
-           print *, "Int[E]= ", sum(E*ww)/npart,"	Int[Phi]= ", sum(Phi*ww)/npart
+            print *, "Int[E]= ", sum(E*ww)/npart,"	Int[Phi]= ", sum(Phi*ww)/npart
+        enddo
 
-   
-   
-           enddo
-            
-              call solver%delete(ierr)
+        call solver%delete(ierr)
 
     end subroutine
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
     subroutine test_monte_carlo(test_power_two, spline_degree,npartmax)
         implicit none
         integer :: ierr
@@ -316,10 +282,9 @@ contains
 
         call random_number(xx)
         xx=xx*(interval_b- interval_a)+interval_a
-        
-        
+
         !print *, "Nodes:" , mesh%eta1_nodes()
-        
+
         numerical_error=0.0_f64
         do  test_mode=0,test_power_two-2,1
             print *, "--Test Mode: ", 2**test_mode,   " -----------------------------------------"
@@ -329,19 +294,20 @@ contains
             
             ww=sll_poisson_1d_fd_testfunction(xx)/(interval_b- interval_a)
         
-npart=npartmax
-do while (npart > 100)
-   
-   rhs=solver%get_rhs_klimontovich(xx(1:npart),ww(1:npart))/npart    
-   
-   print *, "L2 Error (rhs vector): ", sqrt(sum( (rhs-rhsfun)**2))/sqrt(sum( rhsfun**2))
+            npart=npartmax
 
+            do while (npart > 100)
    
-   npart= ceiling(npart/2.0_f64)
-   enddo
-enddo
+                rhs=solver%get_rhs_klimontovich(xx(1:npart),ww(1:npart))/npart    
+   
+                print *, "L2 Error (rhs vector): ", sqrt(sum( (rhs-rhsfun)**2))/sqrt(sum( rhsfun**2))
+
+                npart= ceiling(npart/2.0_f64)
+
+            enddo
+        enddo
             
-              call solver%delete(ierr)
+        call solver%delete(ierr)
 
     end subroutine
 
