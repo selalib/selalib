@@ -45,7 +45,7 @@ program unit_test
   enddo
 
   data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
   do i=0,s-1
     mode = fft_get_mode(p,data_comp(1:s),i)
     call fft_set_mode(p,data_comp(1:s),mode,i)
@@ -87,7 +87,7 @@ program unit_test
     CALL RANDOM_COMPLEX(data_comp(j))
   enddo
   data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
   do ind_mode=0,s-1
     mode = fft_get_mode(p,data_comp(1:s),ind_mode)
   enddo
@@ -99,7 +99,7 @@ program unit_test
     CALL RANDOM_COMPLEX(data_comp(j))
   enddo
   data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
   do array_position=0,s-1
     ind_mode = fft_ith_stored_mode(p,array_position) !The only change with the standard
                                                      !do-loop is this line.
@@ -118,12 +118,12 @@ program unit_test
     enddo
     data_copy(1:s) = data_comp(1:s)
   
-    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-    call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
+    p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+    call fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,normalized=.TRUE.)
-    call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
+    p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,normalized=.TRUE.)
+    call fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
     if( ierr > err_max ) then
