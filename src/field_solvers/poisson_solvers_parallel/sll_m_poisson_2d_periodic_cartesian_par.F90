@@ -118,7 +118,7 @@ contains
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
 
     ! For FFTs (in x-direction)
-    plan%px => fft_new_plan( &
+    plan%px => fft_new_plan_c2c_2d( &
          ncx, &
          loc_sz_x2, &
          plan%fft_x_array, &
@@ -126,7 +126,7 @@ contains
          FFT_FORWARD, &
          FFT_ONLY_FIRST_DIRECTION)!+FFT_NORMALIZE )
 
-    plan%px_inv => fft_new_plan( &
+    plan%px_inv => fft_new_plan_c2c_2d( &
          ncx, &
          loc_sz_x2, &
          plan%fft_x_array, &
@@ -157,7 +157,7 @@ contains
 
     ! For FFTs (in y-direction)
 
-    plan%py => fft_new_plan( &
+    plan%py => fft_new_plan_c2c_2d( &
          loc_sz_x1, &
          ncy, &
          plan%fft_y_array, &
@@ -165,7 +165,7 @@ contains
          FFT_FORWARD, &
          FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
-    plan%py_inv => fft_new_plan( &
+    plan%py_inv => fft_new_plan_c2c_2d( &
          loc_sz_x1, &
          ncy, &
          plan%fft_y_array, &
@@ -246,7 +246,7 @@ contains
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
 
     ! For FFTs (in x-direction)
-    plan%px => fft_new_plan( &
+    plan%px => fft_new_plan_c2c_2d( &
          ncx, &
          loc_sz_x2, &
          plan%fft_x_array, &
@@ -254,7 +254,7 @@ contains
          FFT_FORWARD, &
          FFT_ONLY_FIRST_DIRECTION)!+FFT_NORMALIZE )
 
-    plan%px_inv => fft_new_plan( &
+    plan%px_inv => fft_new_plan_c2c_2d( &
          ncx, &
          loc_sz_x2, &
          plan%fft_x_array, &
@@ -285,7 +285,7 @@ contains
 
     ! For FFTs (in y-direction)
 
-    plan%py => fft_new_plan( &
+    plan%py => fft_new_plan_c2c_2d( &
          loc_sz_x1, &
          ncy, &
          plan%fft_y_array, &
@@ -293,7 +293,7 @@ contains
          FFT_FORWARD, &
          FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
-    plan%py_inv => fft_new_plan( &
+    plan%py_inv => fft_new_plan_c2c_2d( &
          loc_sz_x1, &
          ncy, &
          plan%fft_y_array, &
@@ -348,14 +348,14 @@ contains
     ! The input is handled internally as a complex array
     plan%fft_x_array = cmplx(rho, 0.0_f64, kind=f64)
 
-    call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
+    call fft_apply_plan_c2c_2d(plan%px, plan%fft_x_array, plan%fft_x_array)
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
     npy_loc = plan%seq_x2_local_sz_x2
 
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
 
-    call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
+    call fft_apply_plan_c2c_2d(plan%py, plan%fft_y_array, plan%fft_y_array) 
 
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
@@ -418,7 +418,7 @@ contains
     enddo
 
     ! Inverse FFTs in y-direction
-    call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
+    call fft_apply_plan_c2c_2d(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
 
     ! Force the periodicity condition in the y-direction. CAN'T USE THE FFT
     ! INTERFACE SINCE THIS POINT FALLS OUTSIDE OF THE POINTS IN THE ARRAY
@@ -433,7 +433,7 @@ contains
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
 
-    call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
+    call fft_apply_plan_c2c_2d(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
 
     ! Also ensure the periodicity in x
     plan%fft_x_array(npx_loc,:) = plan%fft_x_array(1,:)
@@ -486,14 +486,14 @@ contains
     ! The input is handled internally as a complex array
     plan%fft_x_array = cmplx(rho, 0.0_f64, kind=f64)
 
-    call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
+    call fft_apply_plan_c2c_2d(plan%px, plan%fft_x_array, plan%fft_x_array)
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
     npy_loc = plan%seq_x2_local_sz_x2
 
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
 
-    call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
+    call fft_apply_plan_c2c_2d(plan%py, plan%fft_y_array, plan%fft_y_array) 
 
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
@@ -556,7 +556,7 @@ contains
     enddo
 
     ! Inverse FFTs in y-direction
-    call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
+    call fft_apply_plan_c2c_2d(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
 
     ! Prepare to take inverse FFTs in x-direction
     call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
@@ -564,7 +564,7 @@ contains
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
 
-    call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
+    call fft_apply_plan_c2c_2d(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
 
     phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
   end subroutine solve_poisson_2d_periodic_cartesian_par_alt

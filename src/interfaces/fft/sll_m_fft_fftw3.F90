@@ -41,7 +41,6 @@ module sll_m_fft
 
   interface fft_new_plan
     module procedure &
-       fft_new_plan_c2c_2d, &
        fft_new_plan_r2r_1d, &
        fft_new_plan_r2c_1d, &
        fft_new_plan_c2r_1d, &
@@ -50,7 +49,6 @@ module sll_m_fft
   end interface
   interface fft_apply_plan
     module procedure &
-       fft_apply_plan_c2c_2d, &
        fft_apply_plan_r2r_1d, &
        fft_apply_plan_r2c_1d, &
        fft_apply_plan_c2r_1d, &
@@ -273,22 +271,41 @@ contains
 ! END COMPLEX
 
 ! COMPLEX 2D
-  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                            :: NX,NY
-    sll_comp64, dimension(0:,0:)                     :: array_in, array_out
-    sll_int32, intent(in)                            :: direction
-    sll_int32, optional, intent(in)                  :: flags
-    type(sll_fft_plan), pointer                      :: plan
-    sll_int32                                        :: ierr
+  ! TODO: Remove flags
+  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags,normalized, aligned, optimization) result(plan)
+    sll_int32, intent(in)                        :: NX,NY
+    sll_comp64, dimension(0:,0:)                 :: array_in, array_out
+    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a FFT_FORWARD or \a FFT_BACKWARD)
+    sll_int32, optional, intent(in)              :: flags
+    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
+    type(sll_fft_plan), pointer                   :: plan
+ 
+    sll_int32                                     :: ierr
+    sll_int32                                     :: flag_fftw
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = FFTW_MOD
     plan%direction = direction
-    if( present(flags) )then
-      plan%style = flags
+    if( present(normalized) ) then
+       plan%normalized = normalized
     else
-      plan%style = 0_f32
-    endif
+       plan%normalized = .false.
+    end if
+    ! Set the information about the algorithm to compute the plan. The default is FFTW_ESTIMATE
+    if ( present(optimization) ) then
+       flag_fftw = optimization
+    else
+       flag_fftw = FFTW_ESTIMATE
+    end if
+    if ( present(aligned) ) then
+       if (aligned .EQV. .false.) then
+          flag_fftw = flag_fftw + FFTW_UNALIGNED
+       end if
+    else
+       flag_fftw = flag_fftw + FFTW_UNALIGNED
+    end if
     plan%problem_rank = 2
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
     plan%problem_shape = (/ NX , NY /)
@@ -296,9 +313,9 @@ contains
     !We must switch the dimension. It's a fftw convention. 
 
 #ifdef FFTW_F2003
-    plan%fftw = fftw_plan_dft_2d(NY,NX,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+    plan%fftw = fftw_plan_dft_2d(NY,NX,array_in,array_out,direction,flag_fftw)!FFTW_ESTIMATE + FFTW_UNALIGNED)
 #else
-    call dfftw_plan_dft_2d(plan%fftw,NY,NX,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+    call dfftw_plan_dft_2d(plan%fftw,NY,NX,array_in,array_out,direction,flag_fftw)!FFTW_ESTIMATE + FFTW_UNALIGNED)
 #endif
 
   end function
@@ -310,10 +327,11 @@ contains
 
     call fftw_execute_dft(plan%fftw, array_in, array_out)
 
-    if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
+    if ( plan%normalized .EQV. .true.) then
       factor = 1.0_f64/real(plan%problem_shape(1)*plan%problem_shape(2),kind=f64)
       array_out = factor*array_out
     endif
+
   end subroutine 
 ! END COMPLEX 2D
 

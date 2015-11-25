@@ -230,14 +230,14 @@ program unit_test
         enddo
         data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
         
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+        p => fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
              FFT_FORWARD)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_BACKWARD,FFT_NORMALIZE)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        p => fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_BACKWARD,normalized = .TRUE.)
+        call fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         ierr = 0._f64
         do j=1,t
@@ -262,14 +262,14 @@ program unit_test
         enddo
         data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
         
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+        p => fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
              FFT_FORWARD, FFT_ONLY_SECOND_DIRECTION)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_BACKWARD, FFT_NORMALIZE+FFT_ONLY_SECOND_DIRECTION)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        p => fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_BACKWARD, FFT_ONLY_SECOND_DIRECTION, normalized = .TRUE.)
+        call fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         err_var = 0._f64
         do j=1,t 
