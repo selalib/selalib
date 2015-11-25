@@ -8,9 +8,6 @@ use sll_m_constants
 
   implicit none
 
-  sll_real64, parameter ::    pi = 3.1415926535897932385_f64
-  sll_real64, parameter :: twopi = 6.2831853071795864769_f64
-
   sll_int32,  parameter :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
   sll_int32,  parameter :: TRIGO_REAL = 4
   sll_comp64, parameter :: ii_64 = (0.0_f64, 1.0_f64)
@@ -89,11 +86,11 @@ contains
        this%buf=>NULL()
        biatx = uniform_b_splines_at_x(p, 0.0_f64 )
        do i=1, N
-          this%modes(i-1) = exp(ii_64*twopi*(i-1)/N)
+          this%modes(i-1) = exp(ii_64*sll_twopi*(i-1)/N)
           this%eigenvalues_Minv(i) = biatx((p+1)/2)
           do j = 1,(p+1)/2
              this%eigenvalues_Minv(i) = this%eigenvalues_Minv(i) &
-                  + biatx(j+(p+1)/2)*2*cos(j*twopi*(i-1)/N)
+                  + biatx(j+(p+1)/2)*2*cos(j*sll_twopi*(i-1)/N)
           end do
           this%eigenvalues_Minv(i) = 1.0_f64 / this%eigenvalues_Minv(i)
        end do
@@ -168,15 +165,15 @@ contains
        end do
        call zfftf(this%N, this%ufft, this%wsave)
        this%eigenvalues_S(1) = (1.0_f64, 0.0_f64)
-       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*pi*alpha)
+       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*sll_pi*alpha)
        do k=1, this%N/2-1
           !filter = 0.5_8*(1+tanh(100*(.35_8*this%N/2-k)/(this%N/2))) !F1
           !filter = 0.5_8*(1+tanh(100*(.25_8*this%N/2-k)/(this%N/2))) !F2
           !filter = 0.5_8*(1+tanh(50*(.25_8*this%N/2-k)/(this%N/2))) !F3
           filter = (1.0_f64, 0.0_f64)
 
-          this%eigenvalues_S(k+1) = exp(-ii_64*twopi*k*alpha/this%N) * filter
-          this%eigenvalues_S(this%N-k+1) = exp(ii_64*twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(k+1) = exp(-ii_64*sll_twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(this%N-k+1) = exp(ii_64*sll_twopi*k*alpha/this%N) * filter
        end do
        this%ufft = this%ufft*this%eigenvalues_S
        ! Perform inverse FFT and normalized
