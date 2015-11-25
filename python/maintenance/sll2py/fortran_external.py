@@ -8,6 +8,7 @@ import fortran_mudpack
 import fortran_lapack
 import fortran_blas
 import fortran_hdf5
+import fortran_openmp
 
 #==============================================================================
 # Fortran extension modules
@@ -68,6 +69,12 @@ mudpack['match'   ] = lambda s : s.lower() in mudpack['all_syms']
 # Libraries installed on the system
 #==============================================================================
 
+openmp = {}
+openmp['lib_name'] = 'openmp'
+openmp['mod_name'] = 'omp_lib'
+openmp['all_syms'] = fortran_openmp.all_routines
+openmp['match'   ] = lambda s : s.lower() in openmp['all_syms']
+
 blas = {}
 blas['lib_name'] = 'blas'
 blas['mod_name'] = ''
@@ -103,7 +110,7 @@ hdf5['match'] = lambda s: hdf5['match_list']( s ) or hdf5['match_pattern']( s )
 #==============================================================================
 
 library_collection = [iso_c_binding, iso_fortran_env, deboor, fftpack,
-        fishpack, mudpack, blas, lapack, fftw, mpi, hdf5]
+        fishpack, mudpack, openmp, blas, lapack, fftw, mpi, hdf5]
 
 external_modules = \
         {lib['mod_name'] for lib in library_collection if lib['mod_name']}
