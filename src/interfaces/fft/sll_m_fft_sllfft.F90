@@ -86,12 +86,6 @@ module sll_m_fft
   integer, parameter, public :: FFT_NORMALIZE_INVERSE     = 2**0
   !> Get the solution normalized
   integer, parameter, public :: FFT_NORMALIZE             = 2**0
-  !> PLEASE ADD DOCUMENTATION
-  integer, parameter, public :: FFT_ONLY_FIRST_DIRECTION  = 2**2
-  !> PLEASE ADD DOCUMENTATION
-  integer, parameter, public :: FFT_ONLY_SECOND_DIRECTION = 2**3
-  !> PLEASE ADD DOCUMENTATION
-  integer, parameter, public :: FFT_ONLY_THIRD_DIRECTION  = 2**4
 
   ! Assign a value to the different library.
   ! these values are completly arbitrary.
@@ -312,8 +306,6 @@ contains
     sll_int32, optional,  intent(in)                 :: flags
     type(sll_fft_plan), pointer                      :: plan
     sll_int32                                        :: ierr
-    !true if dft in the two directions, false otherwise.
-    logical                                          :: two_direction
 
     ! This does not look good.
     ! 1. Error checking like this should be permanent, not with assertions.
@@ -334,38 +326,6 @@ contains
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
     plan%problem_shape = (/ NX , NY /)
 
-    two_direction = .false.
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. &
-        fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-       SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
-    else if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) ) then
-       SLL_ALLOCATE(plan%t(1:NX/2),ierr)
-    else if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-       SLL_ALLOCATE(plan%t(NX/2+1:NX/2+NY/2),ierr)
-    else
-       !If we are here, there is no FFT_ONLY_XXXXX_DIRECTION flags.
-       ! So we want a 2D FFT in all direction.
-       SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
-       two_direction = .true.
-    endif
-
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
-        two_direction ) then
-       call compute_twiddles(NX,plan%t(1:NX/2))
-       if ( direction == FFT_FORWARD ) then
-          plan%t(1:NX/2) = conjg(plan%t(1:NX/2))
-       end if
-       call bit_reverse(NX/2,plan%t(1:NX/2))
-    endif
-
-    if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) .or. &
-         two_direction ) then
-       call compute_twiddles(NY,plan%t(NX/2+1:NX/2 + NY/2))
-       if ( direction == FFT_FORWARD ) then
-          plan%t(NX/2+1:NX/2 + NY/2) = conjg(plan%t(NX/2+1:NX/2 + NY/2))
-       end if
-       call bit_reverse(NY/2,plan%t(NX/2+1:NX/2 + NY/2))
-    endif
   end function fft_new_plan_c2c_2d
 
   subroutine fft_apply_plan_c2c_2d(plan,array_in,array_out)
@@ -373,7 +333,7 @@ contains
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_int32                                       :: i, nx, ny
     sll_int32, dimension(2)                         :: fft_shape
-    logical                                         :: two_direction
+
     sll_real64 :: factor
 
     if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
@@ -383,55 +343,6 @@ contains
     nx = fft_shape(1)
     ny = fft_shape(2)
 
-    ! Review this logic, it looks bizarre and contradictory. One should
-    ! never have to specify SIMULTANEOUSLY FFT_ONLY_FIRST_DIRECTION *AND*
-    ! FFT_ONLY_SECOND_DIRECTION. Such thing should make no sense.
-    ! Formatting: was trying to limit lines to 80 character length, but
-    ! this will have to wait for a more detailed revision. ECG 9-5-12
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. &
-        fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-       two_direction = .true.
-    else if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
-             fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-       two_direction = .false.
-    else
-       ! Default case: no direction flags passed means that a two-directional
-       ! case is wanted.
-       two_direction = .true.
-    endif
-
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
-        two_direction ) then
-       do i=0,ny-1
-          call fft_dit_nr(array_out(0:nx-1,i),nx,plan%t(1:nx/2),plan%direction)
-          call bit_reverse_complex(nx,array_out(0:nx-1,i))
-       enddo
-    endif
-
-    if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) .or. &
-         two_direction ) then
-       do i=0,nx-1
-          call fft_dit_nr( &
-               array_out(i,0:ny-1), &
-               ny, &
-               plan%t(nx/2+1:nx/2+ny/2), &
-               plan%direction)
-          call bit_reverse_complex(ny,array_out(i,0:ny-1))
-       enddo
-    endif
-
-    if( fft_is_present_flag(plan%style,FFT_NORMALIZE) .and. two_direction ) then
-       factor = 1.0_f64/real(nx*ny,kind=f64)
-       array_out = factor*array_out
-    else if( fft_is_present_flag(plan%style,FFT_NORMALIZE) .and. &
-             fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION)) then
-       factor = 1.0_f64/real(nx,kind=f64)
-       array_out = factor*array_out
-    else if( fft_is_present_flag(plan%style,FFT_NORMALIZE) .and. &
-             fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION)) then
-       factor = 1.0_f64/real(ny,kind=f64)
-       array_out = factor*array_out
-    endif
   end subroutine
 
 
