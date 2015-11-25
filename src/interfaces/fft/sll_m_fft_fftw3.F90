@@ -73,9 +73,6 @@ module sll_m_fft
   integer, parameter :: FFT_NORMALIZE_FORWARD     = 2**0
   integer, parameter :: FFT_NORMALIZE_INVERSE     = 2**0
   integer, parameter :: FFT_NORMALIZE             = 2**0
-  integer, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
-  integer, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
-  integer, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
   integer, parameter :: FFTW_MOD = 1000000000
 
   interface fft_get_mode
