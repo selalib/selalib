@@ -66,7 +66,7 @@ program unit_test
     CALL RANDOM_NUMBER(rdata(j))
   enddo
   rdata_copy(1:s) = rdata(1:s)
-  p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
+  p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
   do i=0,s/2
     mode = fft_get_mode(p,rdata(1:s),i)
     call fft_set_mode(p,rdata(1:s),mode,i)
@@ -145,12 +145,12 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
-    call fft_apply_plan(p,rdata(1:s),rdata(1:s))
+    p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
+    call fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_BACKWARD,FFT_NORMALIZE)
-    call fft_apply_plan(p,rdata(1:s),rdata(1:s))
+    p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_BACKWARD,normalized = .TRUE.)
+    call fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
  
     ierr = MAXVAL(ABS( rdata(1:s) - rdata_copy(1:s) ))

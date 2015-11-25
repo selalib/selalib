@@ -867,7 +867,7 @@ SLL_ALLOCATE(collective_displs(collective_size),ierr)
 SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
 
 SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
 
 layout_x1       => new_layout_2D( sll_world_collective )
 layout_x2       => new_layout_2D( sll_world_collective )    

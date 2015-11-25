@@ -1310,7 +1310,7 @@ contains
         
     !if(sll_get_collective_rank(sll_world_collective)==0)then
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-      pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+      pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
     !endif
     ! allocate and initialize the layouts...
@@ -1963,7 +1963,7 @@ contains
         f_hat_x2_sp1_loc(1:nb_mode+1) = 0._f64
         do i=1,local_size_x2_sp1
           buf_fft = f_x1_sp1(1:np_x1-1,i)
-          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             f_hat_x2_sp1_loc(k+1) = f_hat_x2_sp1_loc(k+1) &
               +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
@@ -1980,7 +1980,7 @@ contains
         f_hat_x2_sp2_loc(1:nb_mode+1) = 0._f64
         do i=1,local_size_x2_sp2
           buf_fft = f_x1_sp2(1:np_x1-1,i)
-          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             f_hat_x2_sp2_loc(k+1) = f_hat_x2_sp2_loc(k+1) &
               +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
@@ -2007,7 +2007,7 @@ contains
 
         if(sll_get_collective_rank(sll_world_collective)==0)then                  
           buf_fft = rho_sp1(1:np_x1-1)-rho_sp2(1:np_x1-1)
-          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
           enddo  

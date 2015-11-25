@@ -109,8 +109,8 @@ contains
        this%sizebuf=N
        SLL_ALLOCATE(this%buf(this%sizebuf),ierr)          
        !SLL_ALLOCATE(buf(N),ierr)
-       this%pfwd => fft_new_plan(N,this%buf,this%buf,FFT_FORWARD,FFT_NORMALIZE)
-       this%pinv => fft_new_plan(N,this%buf,this%buf,FFT_BACKWARD)
+       this%pfwd => fft_new_plan_r2r_1d(N,this%buf,this%buf,FFT_FORWARD,normalized = .TRUE.)
+       this%pinv => fft_new_plan_r2r_1d(N,this%buf,this%buf,FFT_BACKWARD)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
        print*, 'sll_m_periodic_interp:interpolator ',interpolator, ' not implemented'
@@ -225,7 +225,7 @@ contains
             
     case (TRIGO_FFT_SELALIB)
        u_out = u
-       call fft_apply_plan(this%pfwd,u_out,u_out)
+       call fft_apply_plan_r2r_1d(this%pfwd,u_out,u_out)
        n=this%N
        tmp2=-ii_64*2._f64*sll_pi/n*alpha
 
@@ -253,7 +253,7 @@ contains
       !   !print *,i,tmp
       ! enddo
 
-       call fft_apply_plan(this%pinv,u_out,u_out)        
+       call fft_apply_plan_r2r_1d(this%pinv,u_out,u_out)        
     case default
        print*, 'sll_m_periodic_interp:interpolator ',this%interpolator, ' not implemented'
        stop

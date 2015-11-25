@@ -2223,7 +2223,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    pfwd => fft_new_plan(Nc_eta2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_eta2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -2268,7 +2268,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l1 = l1*delta_eta2
     l2 = sqrt(l2*delta_eta2)
     e  = 0.5_f64*e*delta_eta2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
@@ -2340,7 +2340,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    pfwd => fft_new_plan(Nc_eta2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_eta2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -2389,7 +2389,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l1 = l1*delta_eta2
     l2 = sqrt(l2*delta_eta2)
     e  = 0.5_f64*e*delta_eta2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
