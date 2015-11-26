@@ -70,10 +70,10 @@ fk1 = cmplx(0.0,0.0, kind=f64)
 SLL_ALLOCATE(fk2(1:nc_eta2/2+1), error)
 fk2 = cmplx(0.0,0.0, kind=f64)
 
-fwx1 => fft_new_plan(nc_eta1, d_dx1, fk1)
-bwx1 => fft_new_plan(nc_eta1,   fk1, d_dx1)
-fwx2 => fft_new_plan(nc_eta2, d_dx2, fk2)
-bwx2 => fft_new_plan(nc_eta2,   fk2, d_dx2)
+fwx1 => fft_new_plan_r2c_1d(nc_eta1, d_dx1, fk1)
+bwx1 => fft_new_plan_c2r_1d(nc_eta1,   fk1, d_dx1)
+fwx2 => fft_new_plan_r2c_1d(nc_eta2, d_dx2, fk2)
+bwx2 => fft_new_plan_c2r_1d(nc_eta2,   fk2, d_dx2)
 
 SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
 SLL_CLEAR_ALLOCATE(kx2(1:nc_eta2/2+1), error)
@@ -302,11 +302,11 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   do j = 1, nc_eta2+1
 
     d_dx1 = fh_spe(1:nc_eta1,j)
-    call fft_apply_plan(fwx1, d_dx1, fk1)
+    call fft_apply_plan_r2c_1d(fwx1, d_dx1, fk1)
     do i = 2, nc_eta1/2+1
       fk1(i) = fk1(i)*cmplx(cos(kx1(i)*0.01*a1*dt),sin(kx1(i)*0.01*a1*dt),kind=f64)
     end do
-    call fft_apply_plan(bwx1, fk1, d_dx1)
+    call fft_apply_plan_c2r_1d(bwx1, fk1, d_dx1)
   
     fh_spe(1:nc_eta1,j) = d_dx1 / nc_eta1
 
@@ -317,11 +317,11 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   do i = 1, nc_eta1+1
 
     d_dx2 = fh_spe(i,1:nc_eta2)
-    call fft_apply_plan(fwx2, d_dx2, fk2)
+    call fft_apply_plan_r2c_1d(fwx2, d_dx2, fk2)
     do j = 2, nc_eta2/2+1
       fk2(j) = fk2(j)*cmplx(cos(kx2(j)*0.01*a2*dt),sin(kx2(j)*0.01*a2*dt),kind=f64)
     end do
-    call fft_apply_plan(bwx2, fk2, d_dx2)
+    call fft_apply_plan_c2r_1d(bwx2, fk2, d_dx2)
   
     fh_spe(i,1:nc_eta2) = d_dx2 / nc_eta2
 

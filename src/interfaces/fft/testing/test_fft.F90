@@ -177,12 +177,12 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => fft_new_plan(s,rdata(1:s),data_comp(1:s/2+1))
-    call fft_apply_plan(p,rdata(1:s),data_comp(1:s/2+1))
+    p => fft_new_plan_r2c_1d(s,rdata(1:s),data_comp(1:s/2+1))
+    call fft_apply_plan_r2c_1d(p,rdata(1:s),data_comp(1:s/2+1))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,data_comp(1:s/2+1),rdata(1:s),FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp(1:s/2+1),rdata(1:s))
+    p => fft_new_plan_c2r_1d(s,data_comp(1:s/2+1),rdata(1:s), normalized = .TRUE.)
+    call fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata(1:s))
     call fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
@@ -201,12 +201,12 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata_comp(1:s)
   
-    p => fft_new_plan(s,rdata_comp(1:s),data_comp(1:s/2+1),FFT_NORMALIZE)
-    call fft_apply_plan(p,rdata_comp(1:s),data_comp(1:s/2+1))
+    p => fft_new_plan_r2c_1d(s,rdata_comp(1:s),data_comp(1:s/2+1), normalized = .TRUE.)
+    call fft_apply_plan_r2c_1d(p,rdata_comp(1:s),data_comp(1:s/2+1))
     call fft_delete_plan(p)
     
-    p => fft_new_plan(s,data_comp(1:s/2+1),rdata_comp(1:s))
-    call fft_apply_plan(p,data_comp(1:s/2+1),rdata_comp(1:s))
+    p => fft_new_plan_c2r_1d(s,data_comp(1:s/2+1),rdata_comp(1:s))
+    call fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata_comp(1:s))
     call fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata_comp(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
