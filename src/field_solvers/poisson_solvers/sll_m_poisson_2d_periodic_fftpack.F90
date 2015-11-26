@@ -160,8 +160,8 @@ subroutine initialize_poisson_2d_periodic_fftpack( &
    this%x_max = x_max
    this%y_min = y_min
    this%y_max = y_max
-   this%dx   = (x_max-x_min) / nc_x
-   this%dy   = (y_max-y_min) / nc_y
+   this%dx   = (x_max-x_min) / real(nc_x, f64)
+   this%dy   = (y_max-y_min) / real(nc_y, f64)
 
    SLL_ALLOCATE(this%rhst(nc_y,nc_x/2+1), error)
    SLL_ALLOCATE(this%ext (nc_y,nc_x/2+1), error)
@@ -218,7 +218,7 @@ subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
       call dfftb( nc_x, sol(1:nc_x,j),  this%fftx%coefd )
    end do
 
-   sol(1:nc_x,1:nc_y) = sol(1:nc_x,1:nc_y) / (nc_x*nc_y)     ! normalize FFTs
+   sol(1:nc_x,1:nc_y) = sol(1:nc_x,1:nc_y) / real(nc_x*nc_y, f64)     ! normalize FFTs
 
    if (size(sol,1) == nc_x+1) sol(nc_x+1,:) = sol(1,:)
    if (size(sol,2) == nc_y+1) sol(:,nc_y+1) = sol(:,1)
