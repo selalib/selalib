@@ -1,7 +1,7 @@
 #ifndef _sll_accumulators_h_
 #define _sll_accumulators_h_
 
-  use sll_m_accumulators
+  use sll_m_working_precision, only : f32, f64
 
   ! Note that this macro depends on having the precision module active in its
   ! environment.
