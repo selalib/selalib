@@ -16,7 +16,7 @@ module sll_m_sim_6d_vlasov_poisson_cartesian
 
   type, extends(sll_simulation_base_class) :: &
      sll_simulation_6d_vlasov_poisson_cart
-     
+
 ! Parallel environment parameters
      sll_int32  :: world_size
      sll_int32  :: my_rank
@@ -25,7 +25,7 @@ module sll_m_sim_6d_vlasov_poisson_cartesian
      sll_int32  :: nproc_x1
      sll_int32  :: nproc_x2
      sll_int32  :: nproc_x3
-     sll_int32  :: nproc_x4 
+     sll_int32  :: nproc_x4
      sll_int32  :: nproc_x5
      sll_int32  :: nproc_x6
      ! Physics parameters
@@ -44,15 +44,15 @@ module sll_m_sim_6d_vlasov_poisson_cartesian
      type(poisson_3d_periodic_plan_par), pointer :: poisson_plan
 
      ! distribution functions. There are several because each array represents
-     ! a differently shaped chunk of memory. In this example, each chunk 
-     ! allows sequential operations in one given direction. f_x1x2x3 should 
+     ! a differently shaped chunk of memory. In this example, each chunk
+     ! allows sequential operations in one given direction. f_x1x2x3 should
      ! permit to carry out sequential operations in x1, x2 and x3 for example.
-     sll_real64, dimension(:,:,:,:,:,:), pointer     :: f_x1x2x3 
+     sll_real64, dimension(:,:,:,:,:,:), pointer     :: f_x1x2x3
      sll_real64, dimension(:,:,:,:,:,:), pointer     :: f_x4x5x6
      sll_real64, dimension(:,:,:,:,:), allocatable   :: partial_reduction
-     sll_real64, dimension(:,:,:), allocatable       :: rho_x1 
-     sll_real64, dimension(:,:,:), allocatable       :: rho_x2 
-     sll_real64, dimension(:,:,:), allocatable       :: rho_x3 
+     sll_real64, dimension(:,:,:), allocatable       :: rho_x1
+     sll_real64, dimension(:,:,:), allocatable       :: rho_x2
+     sll_real64, dimension(:,:,:), allocatable       :: rho_x3
      sll_real64, dimension(:,:,:), allocatable       :: rho_split
      sll_real64, dimension(:,:,:), allocatable       :: phi_x1
      sll_real64, dimension(:,:,:), allocatable       :: phi_x2
@@ -187,7 +187,7 @@ contains
     sim%nproc_x4 = 1
     sim%nproc_x5 = 1
     sim%nproc_x6 = 1
-    
+
     call initialize_layout_with_distributed_array( &
          sim%nc_x1, &
          sim%nc_x2, &
@@ -204,8 +204,8 @@ contains
          sim%sequential_x4x5x6 )
 
     ! Use this information to initialize the layout that describes the result
-    ! of computing rho (thus, a 3D layout). This layout is not useful to do 
-    ! sequential operations in any of the three available directions. 
+    ! of computing rho (thus, a 3D layout). This layout is not useful to do
+    ! sequential operations in any of the three available directions.
     call initialize_layout_with_distributed_array( &
          sim%nc_x1, &
          sim%nc_x2, &
@@ -214,27 +214,27 @@ contains
          sim%nproc_x2, &
          sim%nproc_x3, &
          sim%split_rho_layout )
-    
-    ! We also initialize the other two layouts needed for both sequential 
+
+    ! We also initialize the other two layouts needed for both sequential
     ! operations on x1, x2 and x3 in the 3D case.
     call factorize_in_two_powers_of_two( sim%world_size, itmp1, itmp2 )
     call initialize_layout_with_distributed_array( &
          sim%nc_x1, &
          sim%nc_x2, &
          sim%nc_x3, &
-         1, & 
+         1, &
          itmp1, &
          itmp2, &
          sim%rho_seq_x1 )
-    
+
     call compute_local_sizes(sim%rho_seq_x1, loc_sz_x1, loc_sz_x2, loc_sz_x3)
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
 
-    ! Since now each point has 3 electric field components, we can't use a 
-    ! complex number array. So now we use three different arrays, ex, ey, 
-    ! and ez and treat them separately. This is expensive and there should 
-    ! be a better way to do this, but this will do for now. 
+    ! Since now each point has 3 electric field components, we can't use a
+    ! complex number array. So now we use three different arrays, ex, ey,
+    ! and ez and treat them separately. This is expensive and there should
+    ! be a better way to do this, but this will do for now.
     SLL_ALLOCATE(sim%ex_x1(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
 
     ! Sequential operations in x2:
@@ -250,7 +250,7 @@ contains
     SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
     SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
     SLL_ALLOCATE(sim%ey_x2(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
-    
+
     ! Sequential operations in x3:
     call initialize_layout_with_distributed_array( &
          sim%nc_x1, &
@@ -265,11 +265,11 @@ contains
     SLL_ALLOCATE(sim%phi_x3(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
     SLL_ALLOCATE(sim%ez_x3(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
 
-    ! layout for sequential operations in x1, x2 and x3. This is basically 
+    ! layout for sequential operations in x1, x2 and x3. This is basically
     ! just the flipping of the values between x1 and x4, x2 and x5, and
     ! x3 and x6 on the previous layout.
     ! This is the wrong (dangerous) way to do this. We should not be changing
-    ! the values of these variables, which should behave like parameters. 
+    ! the values of these variables, which should behave like parameters.
     ! Choose a better name for each, initialize and don't change any further.
 
     ! switch x1 and x4:
@@ -278,13 +278,13 @@ contains
     sim%nproc_x1 = itemp
     ! switch x2 and x5
     itemp = sim%nproc_x5
-    sim%nproc_x5 = sim%nproc_x2 
+    sim%nproc_x5 = sim%nproc_x2
     sim%nproc_x2 = itemp
     ! switch x3 and x6
     itemp = sim%nproc_x6
-    sim%nproc_x6 = sim%nproc_x3 
+    sim%nproc_x6 = sim%nproc_x3
     sim%nproc_x3 = itemp
-    
+
     call initialize_layout_with_distributed_array( &
          sim%nc_x1, &
          sim%nc_x2, &
@@ -299,7 +299,7 @@ contains
          sim%nproc_x5, &
          sim%nproc_x6, &
          sim%sequential_x1x2x3 )
-    
+
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate multiple arrays, one for each layout.
@@ -311,7 +311,7 @@ contains
          loc_sz_x5, &
          loc_sz_x6 )
     SLL_ALLOCATE(sim%f_x1x2x3(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4,loc_sz_x5,loc_sz_x6),ierr)
-    
+
     ! This layout is also useful to represent the charge density array. Since
     ! this is a result of a local reduction on x4, x5 and x6, the new layout is
     ! 3D but with the same dimensions of the process mesh in x1, x2 and x3.
@@ -319,7 +319,7 @@ contains
     SLL_ALLOCATE(sim%ex_split(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
     SLL_ALLOCATE(sim%ey_split(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
     SLL_ALLOCATE(sim%ez_split(loc_sz_x1,loc_sz_x2,loc_sz_x3),ierr)
-  
+
     call compute_local_sizes( sim%sequential_x4x5x6, &
          loc_sz_x1, &
          loc_sz_x2, &
@@ -328,13 +328,13 @@ contains
          loc_sz_x5, &
          loc_sz_x6 )
     SLL_ALLOCATE(sim%f_x4x5x6(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4,loc_sz_x5,loc_sz_x6),ierr)
-    
+
     ! These dimensions are also the ones needed for the array where we store
     ! the intermediate results of the charge density computation.
     SLL_ALLOCATE(sim%partial_reduction(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4,loc_sz_x5),ierr)
-    
+
     ! Initialize the initial distribution function data. We do this with an
-    ! initializer object which needs to be initialized itself! Note also that 
+    ! initializer object which needs to be initialized itself! Note also that
     ! the mesh is described in global terms. This should be fine as meshes are
     ! supposed to be read-only entities.
     ! This should be done elsewhere...
@@ -351,7 +351,7 @@ contains
          -1.0_f64, 1.0_f64, &
          -1.0_f64, 1.0_f64, &
          -1.0_f64, 1.0_f64 )
-    
+
     call load_test_6d_initializer( sim%init_6d, &
          NODE_CENTERED_FIELD, &
          sim%mesh6d, &
@@ -365,18 +365,18 @@ contains
     ! The computation of rho is a reduction process that takes as input a 6d
     ! array and that should return a 3d array (or alternatively: a 6d array
     ! of size 1 in the reduced directions). For example, a df of dimensions
-    ! np1 X np2 X np3 X np4 X np5 X np6 might effectively end up as an array 
+    ! np1 X np2 X np3 X np4 X np5 X np6 might effectively end up as an array
     ! of dimensions
-    ! np1 X np2 X np3 X np4 X np5 X 1  after a summation of all the values in 
+    ! np1 X np2 X np3 X np4 X np5 X 1  after a summation of all the values in
     ! x6. After a
     ! second summation along x5, the dimensions would be:
     ! np1 X np2 X np3 X np4 X 1 X 1 and after a last summation:
-    ! np1 X np2 X np3 X 1 X 1 X 1 
+    ! np1 X np2 X np3 X 1 X 1 X 1
     ! One simple-minded but inefficient way to prepare the data for the triple
-    ! reduction could be to have a layout in a process mesh 
+    ! reduction could be to have a layout in a process mesh
     ! NP1 X NP2 X NP3 X 1 X 1 X 1
-    ! where NP1xNP2xNP3 is the total number of processors available. The 
-    ! problem 
+    ! where NP1xNP2xNP3 is the total number of processors available. The
+    ! problem
     ! here is that the end result would still need a layout change to be fed
     ! into the Poisson solver...
     sim%rho_split(:,:,:) = 0.0
@@ -389,13 +389,13 @@ contains
          sim%f_x4x5x6, &
          sim%partial_reduction, &
          sim%rho_split )
- 
+
     ! Re-arrange rho_split in a way that permits sequential operations in x1, to
     ! feed to the Poisson solver.
     sim%split_to_seqx1 => &
          NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_3D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-    
+
     ! We are in a position now to compute the electric potential.
     ! Initialize the poisson plan
     sim%poisson_plan => new_poisson_3d_periodic_plan_par( &
@@ -406,20 +406,20 @@ contains
          1.0_f64, &    ! parametrize with mesh values
          1.0_f64, &
          1.0_f64 )     ! parametrize with mesh values
-    
+
     ! solve for the electric potential
     call solve_poisson_3d_periodic_par( &
          sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1)
 
-    ! compute the values of the electric field. Since the electric field is 
+    ! compute the values of the electric field. Since the electric field is
     ! now stored in 3 different arrays, we need to do this in multiple steps.
     ! This is quite ugly and inefficient. Need to improve here...
-    ! rho is configured for sequential operations in x1, thus we start by 
+    ! rho is configured for sequential operations in x1, thus we start by
     ! computing the E_x component.
     ! The following call is inefficient and unnecessary. The local sizes for
-    ! the arrays should be kept around as parameters basically and not on 
+    ! the arrays should be kept around as parameters basically and not on
     ! variables whose content could be anything... This will have to do for now.
     call compute_local_sizes( sim%rho_seq_x1,loc_sz_x1,loc_sz_x2,loc_sz_x3 )
     call compute_electric_field_x1_3d( &
@@ -473,14 +473,14 @@ contains
          NEW_REMAP_PLAN( sim%rho_seq_x3, sim%split_rho_layout, sim%ez_x3)
     call apply_remap_3D( sim%ez_x3_to_split, sim%ez_x3, sim%ez_split )
 
-    ! Now we proceed to reconfigure the data. This is very expensive. 
-    ! There might be advantages to this approach if we avoid larger data 
-    ! transfers like with an all-to-all transfer... however, we could end 
+    ! Now we proceed to reconfigure the data. This is very expensive.
+    ! There might be advantages to this approach if we avoid larger data
+    ! transfers like with an all-to-all transfer... however, we could end
     ! up paying more if the simulation is latency-dominated.
-    
+
     ! Proceed to carry out the advections. The following should go inside a
     ! subroutine...
-    
+
     ! Start the interpolators... Watch out: the periodic case has equal number
     ! of cells than points. Is this properly handled by the interpolators??
     ! The interpolators need the number of points and always consider that
@@ -547,12 +547,12 @@ contains
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4, loc_sz_x5, loc_sz_x6 )
        do n=1, sim%mesh6d%num_cells6
           do m=1, sim%mesh6d%num_cells5
-             do k=1, loc_sz_x3 
+             do k=1, loc_sz_x3
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ex    =  sim%ex_split(i,j,k)
                       alpha = -ex*0.5_f64*sim%dt
-                      ! interpolate_array_disp() has an interface that must 
+                      ! interpolate_array_disp() has an interface that must
                       ! be changed.
                       sim%f_x4x5x6(i,j,k,:,m,n) = &
                            sim%interp_x4%interpolate_array_disp( &
@@ -573,7 +573,7 @@ contains
                    do i=1,loc_sz_x1
                       ey    = sim%ey_split(i,j,k)
                       alpha = -ey*0.5_f64*sim%dt
-                      ! interpolate_array_disp() has an interface that must 
+                      ! interpolate_array_disp() has an interface that must
                       ! be changed
                       sim%f_x4x5x6(i,j,k,l,:,n) = &
                            sim%interp_x5%interpolate_array_disp( &
@@ -589,12 +589,12 @@ contains
        ! Continue with vz...(x6)
        do m=1, sim%mesh6d%num_cells5
           do l=1, sim%mesh6d%num_cells4
-             do k=1, loc_sz_x3 
+             do k=1, loc_sz_x3
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ez    =  sim%ez_split(i,j,k)
                       alpha = -ez*0.5_f64*sim%dt
-                      ! interpolate_array_disp() has an interface that must 
+                      ! interpolate_array_disp() has an interface that must
                       ! be changed
                       sim%f_x4x5x6(i,j,k,l,m,:) = &
                            sim%interp_x6%interpolate_array_disp( &
@@ -612,15 +612,15 @@ contains
        call apply_remap_6D( sim%seqx4x5x6_to_seqx1x2x3, &
             sim%f_x4x5x6, sim%f_x1x2x3 )
 
-       ! what are the new local limits on x4, x5 and x6? It is bothersome to 
+       ! what are the new local limits on x4, x5 and x6? It is bothersome to
        ! have to make these calls...
        call compute_local_sizes( sim%sequential_x1x2x3, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4, loc_sz_x5, loc_sz_x6 )
-       
+
        ! full time step advection in 'x' (x1)
        do n=1, loc_sz_x6
           do m=1, loc_sz_x5
-             do l=1, loc_sz_x4 
+             do l=1, loc_sz_x4
                 do k=1,sim%mesh6d%num_cells3
                    do j=1,sim%mesh6d%num_cells2
                       vmin = sim%mesh6d%x4_min
@@ -684,12 +684,12 @@ contains
             sim%rho_x1, &
             sim%phi_x1)
 
-       ! compute the values of the electric field. rho is configured for 
-       ! sequential operations in x1, thus we start by computing the E_x 
+       ! compute the values of the electric field. rho is configured for
+       ! sequential operations in x1, thus we start by computing the E_x
        ! component.
        ! The following call is inefficient and unnecessary. The local sizes for
-       ! the arrays should be kept around as parameters basically and not on 
-       ! variables whose content could be anything... This will have to do for 
+       ! the arrays should be kept around as parameters basically and not on
+       ! variables whose content could be anything... This will have to do for
        ! now.
        call compute_local_sizes(sim%rho_seq_x1,loc_sz_x1,loc_sz_x2,loc_sz_x3)
        call compute_electric_field_x1_3d( &
@@ -730,15 +730,15 @@ contains
        ! Start with vx...(x4)
        call compute_local_sizes( sim%sequential_x4x5x6, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4, loc_sz_x5, loc_sz_x6 )
-       
+
        do n=1, sim%mesh6d%num_cells6
           do m=1, sim%mesh6d%num_cells5
-             do k=1, loc_sz_x2 
+             do k=1, loc_sz_x2
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ex    = sim%ex_split(i,j,k)
                       alpha = -ex*0.5_f64*sim%dt
-                      ! interpolate_array_disp() has an interface that must 
+                      ! interpolate_array_disp() has an interface that must
                       ! be changed
                       sim%f_x4x5x6(i,j,k,:,m,n) = &
                            sim%interp_x4%interpolate_array_disp( &
@@ -754,12 +754,12 @@ contains
        ! Continue with vy...(x5)
        do n=1, sim%mesh6d%num_cells6
           do l=1, sim%mesh6d%num_cells4
-             do k=1, loc_sz_x2 
+             do k=1, loc_sz_x2
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ey    = sim%ey_split(i,j,k)
                       alpha = -ey*0.5_f64*sim%dt
-                      ! interpolate_array_disp() has an interface that must 
+                      ! interpolate_array_disp() has an interface that must
                       ! be changed
                       sim%f_x4x5x6(i,j,k,l,:,n) = &
                            sim%interp_x5%interpolate_array_disp( &
@@ -775,12 +775,12 @@ contains
        ! Continue with vz...(x6)
        do m=1, sim%mesh6d%num_cells5
           do l=1, sim%mesh6d%num_cells4
-             do k=1, loc_sz_x2 
+             do k=1, loc_sz_x2
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ez    =  sim%ez_split(i,j,k)
                       alpha = -ez*0.5_f64*sim%dt
-                      ! interpolate_array_disp() has an interface that must 
+                      ! interpolate_array_disp() has an interface that must
                       ! be changed
                       sim%f_x4x5x6(i,j,k,l,m,:) = &
                            sim%interp_x6%interpolate_array_disp( &
@@ -822,7 +822,7 @@ contains
     end if
   end function divisible_by_three
 
-  ! given a number that is a power of two, we decompose it in 3 factors 
+  ! given a number that is a power of two, we decompose it in 3 factors
   ! intended to be as close to each other as possible, while still keeping
   ! them factors of two as well.
   subroutine factorize_in_three_powers_of_two( num_procs, f1, f2, f3 )
@@ -880,7 +880,7 @@ contains
        if( exponent == 0 ) then
           f1   = 1
           f2   = 1
-       else 
+       else
           tmpi = (exponent-1)/2
           f1   = 2**((exponent-1)/2)
           f2   = 2**((exponent+1)/2)
@@ -966,11 +966,11 @@ contains
     sll_int32                                   :: numpts5
     sll_int32                                   :: numpts6
     sll_int32 :: i, j, k, l, m, n
-    
+
     delta4   = mesh%delta_x4
     delta5   = mesh%delta_x5
     delta6   = mesh%delta_x6
-    partial(:,:,:,:,:) = 0.0 
+    partial(:,:,:,:,:) = 0.0
     numpts4 = mesh%num_cells4
     numpts5 = mesh%num_cells5
     numpts6 = mesh%num_cells6
@@ -978,7 +978,7 @@ contains
     ! 'partial' must have been initialized to zero.
     ! reduction in x6:
     do m=1, numpts5
-       do l=1,numpts4   
+       do l=1,numpts4
           do k=1,numpts3
              do j=1,numpts2
                 do i=1,numpts1
@@ -994,7 +994,7 @@ contains
           end do
        end do
     end do
-    
+
     ! reduction on x5.
     do l=1,numpts4
        do k=1,numpts3
@@ -1026,42 +1026,42 @@ contains
        end do
     end do
   end subroutine compute_charge_density_6d
-  
-  ! Temporary utility to compute the values of the electric field given 
-  ! a pointer to an array of double precision values. It uses 
-  ! forward/backward differencing schemes for the end points and a 
-  ! centered one for the interior points. 
+
+  ! Temporary utility to compute the values of the electric field given
+  ! a pointer to an array of double precision values. It uses
+  ! forward/backward differencing schemes for the end points and a
+  ! centered one for the interior points.
   subroutine compute_electric_field_on_line( &
        phi, &
        num_pts, &
        delta, &
        efield )
-    
+
     sll_real64, dimension(:), intent(in) :: phi
     sll_int32                            :: num_pts
     sll_real64, intent(in)               :: delta
     sll_real64, dimension(:), intent(out):: efield
     sll_int32                            :: i
     sll_real64                           :: r_delta  ! reciprocal
-    
+
     ! FIXME: check arrays sizes
-    
+
     r_delta = 1.0_f64/delta
-    
+
     ! Do first point:
     efield(1) = r_delta*(-1.5_f64*phi(1) + 2.0_f64*phi(2) - 0.5_f64*phi(3))
-    
+
     ! Do the internal values:
     do i=2,num_pts-1
        efield(i) = r_delta*(phi(i+1) - phi(i-1))
     end do
-    
+
     ! Do last point:
     efield(num_pts) = r_delta*( 0.5_f64*phi(num_pts-2) - &
          2.0_f64*phi(num_pts-1) + &
          1.5_f64*phi(num_pts) )
   end subroutine compute_electric_field_on_line
-  
+
   subroutine compute_electric_field_x1_3d( &
     phi_x1, &
     num_pts_x1, &
@@ -1082,9 +1082,9 @@ contains
     sll_real64                                :: r_delta
     sll_real64                                :: ex
     ! FIXME: arg checking
-    
+
     r_delta = 1.0_f64/delta_x1
-    
+
     ! Compute the electric field values on the left and right edges.
     do k=1,num_pts_x3
        do j=1,num_pts_x2
@@ -1092,7 +1092,7 @@ contains
           ex = r_delta*(-1.5_f64*phi_x1(1,j,k) + &
                          2.0_f64*phi_x1(2,j,k) - &
                          0.5_f64*phi_x1(3,j,k) )
-          efield_x1(1,j,k) = ex  
+          efield_x1(1,j,k) = ex
           ! i=num_pts_x1 plane:
           ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j,k) - &
                         2.0_f64*phi_x1(num_pts_x1-1,j,k) + &
@@ -1100,7 +1100,7 @@ contains
           efield_x1(num_pts_x1,j,k) = ex
        end do
     end do
-    
+
     ! Electric field in interior points
     do k=1,num_pts_x3
        do j=1,num_pts_x2
@@ -1113,7 +1113,7 @@ contains
 
   end subroutine compute_electric_field_x1_3d
 
-  
+
   ! This function only sets the Ey component of the electric field.
   subroutine compute_electric_field_x2_3d( &
        phi_x2, &
@@ -1122,7 +1122,7 @@ contains
        num_pts_x3, &
        delta_x2, &
        efield_x2 )
-    
+
     sll_real64, dimension(:,:,:), intent(in)  :: phi_x2
     sll_int32, intent(in)                     :: num_pts_x1
     sll_int32, intent(in)                     :: num_pts_x2
@@ -1136,9 +1136,9 @@ contains
     sll_real64                                :: ey
 
     ! FIXME: arg checking
-    
+
     r_delta = 1.0_f64/delta_x2
-    
+
     ! Compute the electric field values on the bottom and top edges.
     do k=1,num_pts_x3
        do i=1,num_pts_x1
@@ -1150,10 +1150,10 @@ contains
           ey = r_delta*(0.5_f64*phi_x2(i,num_pts_x2-2,k) - &
                         2.0_f64*phi_x2(i,num_pts_x2-1,k) + &
                         1.5_f64*phi_x2(i,num_pts_x2  ,k))
-          efield_x2(i,num_pts_x2,k) = ey 
+          efield_x2(i,num_pts_x2,k) = ey
        end do
     end do
-    
+
     ! Electric field in interior points
     do k=1,num_pts_x3
        do j=2,num_pts_x2-1
@@ -1173,7 +1173,7 @@ contains
     num_pts_x3, &
     delta_x3, &
     efield_x3 )
-    
+
     sll_real64, dimension(:,:,:), intent(in)  :: phi_x3
     sll_int32, intent(in)                     :: num_pts_x1
     sll_int32, intent(in)                     :: num_pts_x2
@@ -1187,9 +1187,9 @@ contains
     sll_real64                                :: ez
 
     ! FIXME: arg checking
-    
+
     r_delta = 1.0_f64/delta_x3
-    
+
     ! Compute the electric field values on the end faces.
     do j=1,num_pts_x2
        do i=1,num_pts_x1
@@ -1203,7 +1203,7 @@ contains
           efield_x3(i,j,num_pts_x3) = ez
        end do
     end do
-    
+
     ! Electric field in interior points
     do k=2,num_pts_x3-1
        do j=1,num_pts_x2
@@ -1215,7 +1215,7 @@ contains
     end do
   end subroutine compute_electric_field_x3_3d
 
-  
+
   ! Tentative advection routines.
   subroutine advection_x_1d( dt, vmin, delta_v, num_pts, f_line, f_interp )
     sll_real64, intent(in)                      :: dt
@@ -1255,8 +1255,8 @@ contains
     use sll_m_xdmf_parallel
     class(sll_simulation_6d_vlasov_poisson_cart), intent(in) :: sim
     type(layout_3D), pointer :: my_layout
-    integer(HSIZE_T), dimension(3)  :: array_dims 
-    integer(HSSIZE_T), dimension(3) :: offset 
+    integer(HSIZE_T), dimension(3)  :: array_dims
+    integer(HSSIZE_T), dimension(3) :: offset
     sll_int32,  dimension(3) :: global_indices
     sll_real64, dimension(:,:,:), allocatable :: x1
     sll_real64, dimension(:,:,:), allocatable :: x2
@@ -1314,7 +1314,7 @@ contains
           end do
        end do
     end do
-       
+
     call sll_xdmf_open(my_rank,"test.xmf","grid",               &
                        sim%nc_x1,sim%nc_x2,sim%nc_x3,   &
                        file_id,error)
@@ -1379,14 +1379,14 @@ contains
     sll_real64 :: delta_x1
     sll_real64 :: delta_x2
     sll_real64 :: delta_x3
-    sll_real64 :: delta_x4 
-    sll_real64 :: delta_x5 
-    sll_real64 :: delta_x6 
+    sll_real64 :: delta_x4
+    sll_real64 :: delta_x5
+    sll_real64 :: delta_x6
 
     integer(HID_T)                  :: hdf_file_id
     sll_int32                       :: xml_file_id
-    integer(HSIZE_T), dimension(3)  :: array_dims 
-    integer(HSSIZE_T), dimension(3) :: offset 
+    integer(HSIZE_T), dimension(3)  :: array_dims
+    integer(HSSIZE_T), dimension(3) :: offset
 
     array_dims(1) = sim%nc_x1
     array_dims(2) = sim%nc_x2
@@ -1405,7 +1405,7 @@ contains
        end if
 
        call compute_local_sizes(my_layout, local_nx1, local_nx2, local_nx3)
-    
+
        offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
        offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
        offset(3) =  get_layout_k_min( my_layout, my_rank ) - 1
@@ -1426,14 +1426,14 @@ contains
           x5_max = sim%mesh6d%x5_max
           x6_min = sim%mesh6d%x6_min
           x6_max = sim%mesh6d%x6_max
-   
+
           delta_x1 = sim%mesh6d%delta_x1
           delta_x2 = sim%mesh6d%delta_x2
           delta_x3 = sim%mesh6d%delta_x3
           delta_x4 = sim%mesh6d%delta_x4
           delta_x5 = sim%mesh6d%delta_x5
           delta_x6 = sim%mesh6d%delta_x6
-   
+
           do k = 1, local_nx3
              do j = 1, local_nx2
                 do i = 1, local_nx1
@@ -1447,7 +1447,7 @@ contains
                 end do
              end do
           end do
-       
+
           call sll_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",&
                sll_world_collective%comm, hdf_file_id,error)
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
@@ -1479,9 +1479,9 @@ contains
        end if
 
        call sll_hdf5_file_close(hdf_file_id,error)
-   
+
        if (my_rank == 0) then
-          
+
           !Conversion int64 -> int32
           global_nx1 = transfer(array_dims(1),global_nx1)
           global_nx2 = transfer(array_dims(2),global_nx2)
@@ -1510,7 +1510,7 @@ contains
     tcpu2 = MPI_WTIME()
     !if (my_rank == 0) &
     !   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
-    
+
   end subroutine plot_fields
-  
+
 end module sll_m_sim_6d_vlasov_poisson_cartesian
