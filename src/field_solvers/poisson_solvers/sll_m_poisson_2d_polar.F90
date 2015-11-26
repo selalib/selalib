@@ -361,7 +361,7 @@ contains
         plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2+plan%inv_Te(i)
         plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r)+plan%dlog_density(i)/(2._f64*dr)
         
-        plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)
+        plan%fk(i)=fft_get_mode_r2c_1d(plan%pfwd,plan%f_fft(i,1:ntheta),k)
 
       enddo
       
@@ -435,7 +435,7 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)
+        call fft_set_mode_c2r_1d(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)
       end do
     end do
 
@@ -514,7 +514,7 @@ contains
         plan%a(3*(i-1)-1)=2.0_f64/dr**2+(kval/r)**2
         plan%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
 
-        plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
+        plan%fk(i)=fft_get_mode_r2c_1d(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
       enddo
 
       plan%phik=(0.0_f64,0.0_f64)
@@ -614,7 +614,7 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
+        call fft_set_mode_c2r_1d(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
       end do
     end do
 

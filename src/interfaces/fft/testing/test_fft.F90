@@ -73,31 +73,32 @@ program unit_test
   call fft_delete_plan(p)
 
 
-! Standard do-loop on the mode
-  s = 2**imin
-  do j=1,s
-    CALL RANDOM_COMPLEX(data_comp(j))
-  enddo
-  data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  do ind_mode=0,s-1
-    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
-  enddo
-  call fft_delete_plan(p)
+!!$! Standard do-loop on the mode
+!!$  s = 2**imin
+!!$  do j=1,s
+!!$    CALL RANDOM_COMPLEX(data_comp(j))
+!!$  enddo
+!!$  data_copy(1:s) = data_comp(1:s)
+!!$  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+!!$  do ind_mode=0,s-1
+!!$    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
+!!$  enddo
+!!$  call fft_delete_plan(p)
 
-! optimized do-loop on the mode
-  s = 2**imin
-  do j=1,s
-    CALL RANDOM_COMPLEX(data_comp(j))
-  enddo
-  data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  do array_position=0,s-1
-    ind_mode = fft_ith_stored_mode(p,array_position) !The only change with the standard
-                                                     !do-loop is this line.
-    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
-  enddo
-  call fft_delete_plan(p)
+!!$! optimized do-loop on the mode
+!!$  s = 2**imin
+!!$  do j=1,s
+!!$    CALL RANDOM_COMPLEX(data_comp(j))
+!!$  enddo
+!!$  data_copy(1:s) = data_comp(1:s)
+!!$  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+!!$  !do array_position=0,s-1
+!!$    !ind_mode = fft_ith_stored_mode(p,array_position) !The only change with the standard
+!!$                                                     !do-loop is this line.
+!!$    !mode = fft_get_mode(p,data_comp(1:s),array_position)!ind_mode)
+!!$  !enddo
+!!$  
+!!$  call fft_delete_plan(p)
 
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX'
