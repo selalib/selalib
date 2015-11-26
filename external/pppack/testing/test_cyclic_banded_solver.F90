@@ -1,7 +1,18 @@
+! Solve M.x = b
+! Compute the A matrix andf U and V vectors where
+! A + U.t(V) = M
+! To solve (A+U.t(V))X = b. First solve:
+! A.z_p = u_p  (for all columns of U)
+! Inverse matrix H
+! H = inverse(1 + t(V).Z)
+! Solve 
+! Ay = b
+! and the solution is
+! x = y - Z.[H.(t(V).y))]
 program test_cyclic_banded_solver
 implicit none
 
-integer, parameter :: n = 16
+integer, parameter :: n = 9
 integer, parameter :: k = 2
 
 real(8) :: x(n)
@@ -22,6 +33,7 @@ integer :: kp1
 real(8) :: fact
 
 real(8) :: m(n,n)
+real(8) :: im(n,n)
 real(8) :: lu(n,n)
 real(8) :: f(k)
 real(8) :: g(k)
@@ -66,7 +78,7 @@ nrhs = 1
 call dgetrs('n',n,nrhs,lu,n,ipiv,x,n,info)
 write(*,"(' Lapack error = ', g15.3)") sum(abs(b-matmul(m,x)))
 call print_vector(x)
-call dgetri(n,lu,n,ipiv,w,n*n,info)
+
 
 !Create matrix A without corners terms
 a = 0.0_8
@@ -99,13 +111,6 @@ do j = n-k+1,n
   end do
 end do
 
-print*, "A:"; call print_matrix(a)
-print*, 'U:'; call print_matrix(u)
-print*, 'V:'; call print_matrix(v)
-print*, 'M - (A + U.t(V)) : must be zero '
-write(*,"(' Decomposition error = ', g15.3)") &
-  sum(abs(m-(a+matmul(u,transpose(v)))))
-
 ldab=2*k+k+1
 allocate(ab(ldab,n))
 ab = 0.0
@@ -115,29 +120,54 @@ do j = 1, n
   end do
 end do
 call dgbtrf(n,n,k,k,ab,ldab,ipiv,info)
-x=b
+
+
+print*, "A:"; call print_matrix(a)
+print*, 'U:'; call print_matrix(u)
+print*, 'V:'; call print_matrix(v)
+print*, 'M - (A + U.t(V)) : must be zero '
+write(*,"(' Decomposition error = ', g15.3)") &
+  sum(abs(m-(a+matmul(u,transpose(v)))))
+
+!Compute inverse(A)
+call dgetrf(n,n,a,n,ipiv,info)
+call dgetri(n,a,n,ipiv,w,n*n,info)
+print*, 'inverse(H)'
+call print_matrix(1.+matmul(transpose(v),matmul(a,u)))
+
+y=b
 nrhs = 1
-call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,x,n,info)
-print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,x)))
+call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,y,n,info)
+print*, ' Solve A.y = b error : ', sum(abs(y-matmul(a,b)))
 !Solve A.z = u
 nrhs = k
-call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,u,n,info)
+z = u
+call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,z,n,info)
 print*,'Z:';call print_matrix(u)
 
 !compute the matrix H = inverse(1+t(v).z)
-h = one+matmul(transpose(v),u)
-deallocate(ipiv); allocate(ipiv(k)); ipiv = 0
-
-call dgetrf(k,k,h,k,ipiv,info)
-call dgetri(k,h,k,ipiv,work,k*k,info)
+h = one+matmul(transpose(v),z)
+print*, 'inverse(H)'
 print*,'H:';call print_matrix(h)
-f = matmul(h,matmul(transpose(v),x))
+ipiv(1:k) = 0
+
+
+call dgetrf(k,k,h,k,ipiv(1:k),info)
+call dgetri(k,h,k,ipiv(1:k),work,k*k,info)
+print*,'H:';call print_matrix(h)
+
+im = matmul(u,matmul(h,transpose(v)))
+im = matmul(a,matmul(im,a))
+im = a - im
+call print_vector(x)
+call print_vector(matmul(im,b))
+
+
+f = matmul(h,matmul(transpose(v),y))
 print*, ' X = Y - Z . [H . (t(V).Y)] : '
-x = x - matmul(u,f)
+x = y - matmul(z,f)
 call print_vector(x)
 write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
-
-
 
 !!store banded matrix A in q for banfac
 !q = 0.0_8
