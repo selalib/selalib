@@ -489,24 +489,7 @@ contains
           gj = global(2)
           
           if( (gi == 1) .and. (gj == 1) ) then
-             ! NOTE: WE HAVE A POTENTIALLY DANGEROUS SITUATION HERE. THE 2D
-             ! FFT WE HAVE CARRIED OUT WAS THE RESULT OF A SEQUENCE OF TWO
-             ! INDEPENDENT FFTS. HENCE WHEN WE CALL fft_set_mode_complx_2d()
-             ! BASED ON ONE OF THE FFT PLANS, IT WILL BELIEVE THAT ONLY ONE
-             ! DIRECTION WAS TRANSFORMED. IN CASE THAT THE UNDERLYING ARRAYS
-             ! HAVE BEEN SCRAMBLED IN ANY WAY, THIS WOULD YIELD THE WRONG
-             ! RESULT. WE MAY BE GETTING LUCKY HERE IF EVERYTHING IS IN 
-             ! NATURAL ORDER, BUT THIS NEEDS TO BE FIXED. CAN THIS BE FIXED BY
-             ! USING ONLY 1D FFTs? HARDLY, BECAUSE OF THE SAME SITUATION. IT 
-             ! SEEMS THAT THE 2d FFT DONE IN A PARALLEL WAY, NEEDS TO BE 
-             ! IMPLEMENTED INDEPENDENTLY AND WITH KNOWLEDGE OF LAYOUTS, REMAP, 
-             ! ETC. ...
-             call fft_set_mode( &
-                  plan%py,&
-                  plan%fft_y_array,&
-                  (0.0_f64,0.0_f64),&
-                  1,&
-                  1)
+             plan%fft_y_array(1,1) = (0.0_f64,0.0_f64)
           else
              kx  = real(gi-1,f64)
              ky  = real(gj-1,f64)
@@ -526,9 +509,8 @@ contains
                 ky = ky - ncy
              end if
 
-              val = -plan%fft_y_array(i,j)*normalization / &
+              plan%fft_y_array(i,j) = -plan%fft_y_array(i,j)*normalization / &
                   ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_pi**2)
-              call fft_set_mode(plan%py,plan%fft_y_array,val,i,j)
           end if
        enddo
     enddo

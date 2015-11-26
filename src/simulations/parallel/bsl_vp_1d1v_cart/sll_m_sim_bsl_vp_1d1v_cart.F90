@@ -1646,7 +1646,7 @@ contains
              call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
              do k=0,nb_mode
                 f_hat_x2_loc(k+1) = f_hat_x2_loc(k+1) &
-                     +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+                     +abs(buf_fft(k+1))**2 &
                      *sim%integration_weight(ig+i)
              enddo
           enddo
@@ -1673,7 +1673,7 @@ contains
              call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
 
              do k=0,nb_mode
-                rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+                rho_mode(k)=fft_get_mode_r2c_1d(pfwd,buf_fft,k)
              enddo
 
              !write(th_diag_id,'(8g20.12)',advance='no') &
