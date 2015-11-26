@@ -1280,7 +1280,7 @@ contains
           buf_fft = rho(1:np_x1-1)
           call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
-            rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+            rho_mode(k)=fft_get_mode_r2c_1d(pfwd,buf_fft,k)
           enddo  
           write(th_diag_id,'(f12.5,13g20.12)') &
             time, &

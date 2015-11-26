@@ -1966,7 +1966,7 @@ contains
           call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             f_hat_x2_sp1_loc(k+1) = f_hat_x2_sp1_loc(k+1) &
-              +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+              +abs(buf_fft(k+1))**2 &
               *sim%integration_weight_sp1(ig+i)
           enddo
         enddo
@@ -1983,7 +1983,7 @@ contains
           call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             f_hat_x2_sp2_loc(k+1) = f_hat_x2_sp2_loc(k+1) &
-              +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+              +abs(buf_fft(k+1))**2 &
               *sim%integration_weight_sp2(ig+i)
           enddo
         enddo
@@ -2009,7 +2009,7 @@ contains
           buf_fft = rho_sp1(1:np_x1-1)-rho_sp2(1:np_x1-1)
           call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
-            rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+            rho_mode(k)=fft_get_mode_r2c_1d(pfwd,buf_fft,k)
           enddo  
           write(th_diag_id,'(f12.5,12g20.12)',advance='no') &
             time, &

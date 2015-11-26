@@ -61,21 +61,21 @@ module sll_m_fft
   integer, parameter :: FFT_NORMALIZE             = 2**0
   integer, parameter :: FFTW_MOD = 1000000000
 
-  interface fft_get_mode
-     module procedure &
-        fft_get_mode_complx_1d, &
-        fft_get_mode_complx_2d, &
-        fft_get_mode_complx_3d, &
-        fft_get_mode_real_1d
-  end interface
-
-  interface fft_set_mode
-     module procedure &
-        fft_set_mode_complx_1d, &
-        fft_set_mode_complx_2d, &
-        fft_set_mode_complx_3d, &
-        fft_set_mode_real_1d
-  end interface
+!!$  interface fft_get_mode
+!!$     module procedure &
+!!$        fft_get_mode_complx_1d, &
+!!$        fft_get_mode_complx_2d, &
+!!$        fft_get_mode_complx_3d, &
+!!$        fft_get_mode_real_1d
+!!$  end interface
+!!$
+!!$  interface fft_set_mode
+!!$     module procedure &
+!!$        fft_set_mode_complx_1d, &
+!!$        fft_set_mode_complx_2d, &
+!!$        fft_set_mode_complx_3d, &
+!!$        fft_set_mode_real_1d
+!!$  end interface
 
 contains
 
@@ -83,31 +83,32 @@ contains
     print *, 'The library used is FFTW'
   end subroutine
 
-  function fft_get_mode_complx_1d(plan,array,k) result(mode)
-    type(sll_fft_plan), pointer :: plan
-    sll_comp64, dimension(0:)   :: array
-    sll_int32                   :: k
-    sll_comp64                  :: mode
-    mode = array(k)
-  end function
+!!$  function fft_get_mode_complx_1d(plan,array,k) result(mode)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_comp64, dimension(0:)   :: array
+!!$    sll_int32                   :: k
+!!$    sll_comp64                  :: mode
+!!$    mode = array(k)
+!!$  end function
+!!$
+!!$  function fft_get_mode_complx_2d(plan,array,k,l) result(mode)
+!!$    type(sll_fft_plan), pointer   :: plan
+!!$    sll_comp64, dimension(0:,0:)  :: array
+!!$    sll_int32                     :: k, l
+!!$    sll_comp64                    :: mode
+!!$    mode = array(k,l)
+!!$  end function
+!!$
+!!$  function fft_get_mode_complx_3d(plan,array,k,l,m) result(mode)
+!!$    type(sll_fft_plan), pointer     :: plan
+!!$    sll_comp64, dimension(0:,0:,0:) :: array
+!!$    sll_int32                       :: k, l, m
+!!$    sll_comp64                      :: mode
+!!$    mode = array(k,l,m)
+!!$  end function
 
-  function fft_get_mode_complx_2d(plan,array,k,l) result(mode)
-    type(sll_fft_plan), pointer   :: plan
-    sll_comp64, dimension(0:,0:)  :: array
-    sll_int32                     :: k, l
-    sll_comp64                    :: mode
-    mode = array(k,l)
-  end function
-
-  function fft_get_mode_complx_3d(plan,array,k,l,m) result(mode)
-    type(sll_fft_plan), pointer     :: plan
-    sll_comp64, dimension(0:,0:,0:) :: array
-    sll_int32                       :: k, l, m
-    sll_comp64                      :: mode
-    mode = array(k,l,m)
-  end function
-
-  function fft_get_mode_real_1d(plan,data,k) result(mode)
+  !> Function to reconstruct the complex FFT mode from the data of a r2r transform
+  function fft_get_mode_r2c_1d(plan,data,k) result(mode)
     type(sll_fft_plan), pointer :: plan
     sll_real64, dimension(0:)   :: data
     sll_int32                   :: k, n_2, n
@@ -128,37 +129,63 @@ contains
       endif
   end function
 
-  subroutine fft_set_mode_complx_1d(plan,array,new_value,k)
+
+!!$  function fft_get_mode_real_1d(plan,data,k) result(mode)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_real64, dimension(0:)   :: data
+!!$    sll_int32                   :: k, n_2, n
+!!$    sll_comp64                  :: mode
+!!$
+!!$    n = plan%problem_shape(1)
+!!$    n_2 = n/2 !ishft(n,-1)
+!!$
+!!$      if( k .eq. 0 ) then
+!!$        mode = cmplx(data(0),0.0_f64,kind=f64)
+!!$      else if( k .eq. n_2 ) then
+!!$        mode = cmplx(data(n_2),0.0_f64,kind=f64)
+!!$      else if( k .gt. n_2 ) then
+!!$        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
+!!$        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
+!!$      else
+!!$        mode = cmplx( data(k) , data(n-k) ,kind=f64)
+!!$      endif
+!!$  end function
+!!$
+!!$  subroutine fft_set_mode_complx_1d(plan,array,new_value,k)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_comp64, dimension(0:)   :: array
+!!$    sll_int32                   :: k
+!!$    sll_comp64                  :: new_value
+!!$    array(k) = new_value
+!!$  end subroutine
+!!$
+!!$
+!!$  subroutine fft_set_mode_complx_2d(plan,array,new_value,k,l)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_comp64, dimension(0:,0:)   :: array
+!!$    sll_int32                   :: k,l
+!!$    sll_comp64                  :: new_value
+!!$    array(k,l) = new_value
+!!$  end subroutine
+!!$
+!!$
+!!$  subroutine fft_set_mode_complx_3d(plan,array,new_value,k,l,m)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_comp64, dimension(0:,0:,0:)   :: array
+!!$    sll_int32                   :: k,l,m
+!!$    sll_comp64                  :: new_value
+!!$    array(k,l,m) = new_value
+!!$  end subroutine
+!!$
+
+  !> Function to set a complex mode to the real representation of r2r.
+  subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
     type(sll_fft_plan), pointer :: plan
-    sll_comp64, dimension(0:)   :: array
-    sll_int32                   :: k
-    sll_comp64                  :: new_value
-    array(k) = new_value
-  end subroutine
+    sll_real64, dimension(0:), intent(out)   :: data
+    sll_comp64, intent(in)                  :: new_value
+    sll_int32, intent(in)                   :: k
 
-
-  subroutine fft_set_mode_complx_2d(plan,array,new_value,k,l)
-    type(sll_fft_plan), pointer :: plan
-    sll_comp64, dimension(0:,0:)   :: array
-    sll_int32                   :: k,l
-    sll_comp64                  :: new_value
-    array(k,l) = new_value
-  end subroutine
-
-
-  subroutine fft_set_mode_complx_3d(plan,array,new_value,k,l,m)
-    type(sll_fft_plan), pointer :: plan
-    sll_comp64, dimension(0:,0:,0:)   :: array
-    sll_int32                   :: k,l,m
-    sll_comp64                  :: new_value
-    array(k,l,m) = new_value
-  end subroutine
-
-  subroutine fft_set_mode_real_1d(plan,data,new_value,k)
-    type(sll_fft_plan), pointer :: plan
-    sll_real64, dimension(0:)   :: data
-    sll_int32                   :: k, n_2, n!, index_mode
-    sll_comp64                  :: new_value
+    sll_int32 :: n_2, n!, index_mode
 
     n = plan%problem_shape(1)
     n_2 = n/2 !ishft(n,-1)
@@ -175,19 +202,19 @@ contains
         data(n-k) = aimag(new_value)
       endif
   end subroutine 
-
-  ! return the index mode of ith stored mode
-  ! In the complex output case the mode are stored in the natural order
-  !     X_0,X_1,...,X_N-1
-  ! In the real output case the order is
-  !     r_o,r_1,...,r_N/2,i_N/2-1,...,i_1
-  ! where X_k is the complex number (r_k,i_k).
-  ! X_o and X_N/2 are purely real.
-  function fft_ith_stored_mode(plan,i)
-    type(sll_fft_plan), pointer :: plan
-    sll_int32                   :: i, fft_ith_stored_mode
-    fft_ith_stored_mode = i
-  end function fft_ith_stored_mode
+!!$
+!!$  ! return the index mode of ith stored mode
+!!$  ! In the complex output case the mode are stored in the natural order
+!!$  !     X_0,X_1,...,X_N-1
+!!$  ! In the real output case the order is
+!!$  !     r_o,r_1,...,r_N/2,i_N/2-1,...,i_1
+!!$  ! where X_k is the complex number (r_k,i_k).
+!!$  ! X_o and X_N/2 are purely real.
+!!$  function fft_ith_stored_mode(plan,i)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_int32                   :: i, fft_ith_stored_mode
+!!$    fft_ith_stored_mode = i
+!!$  end function fft_ith_stored_mode
 
 ! COMPLEX
   function fft_new_plan_c2c_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)

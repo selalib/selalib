@@ -2,7 +2,7 @@ module sll_m_periodic_interp
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_fft.h"
+use sll_m_fft
 use sll_m_arbitrary_degree_splines
 use sll_m_constants
 
@@ -226,17 +226,16 @@ contains
        n=this%N
        tmp2=-ii_64*2._f64*sll_pi/n*alpha
 
-         GET_MODE0(tmp,u_out)
-         !tmp=tmp*exp(tmp2*real(0,f64))
-         SET_MODE0(tmp,u_out)
        do i=1,n/2-1
-         GET_MODE_LT_N_2(tmp,u_out,i,n)
+         tmp = cmplx( u_out(2*i+1) , u_out(2*i+2) ,kind=f64)
          tmp=tmp*exp( tmp2*cmplx(i,0.0_f64,f64) )
-         SET_MODE_LT_N_2(tmp,u_out,i,n)
+         u_out(2*i+1) = real(tmp, kind=f64)
+         u_out(2*i+2) = aimag(tmp)
        enddo
-         GET_MODE_N_2(tmp,u_out,n)
-         tmp=tmp*exp( tmp2*cmplx(0.5_f64*n,0.0_f64,f64) )
-         SET_MODE_N_2(tmp,u_out,n)
+       tmp = cmplx(u_out(n/2+1),0.0_f64,kind=f64)
+       tmp=tmp*exp( tmp2*cmplx(0.5_f64*n,0.0_f64,f64) )
+       u_out(n/2+1) = real(tmp, kind=f64) 
+       
 
 !*** Without macro
       ! do i=0,this%N/2
