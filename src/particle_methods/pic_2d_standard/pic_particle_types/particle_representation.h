@@ -1,7 +1,6 @@
 #ifndef _particle_representations_h_
 #define _particle_representations_h_
 
-  use sll_m_particle_representations
 ! ------   ATTENTION   ------   !
 !  the 'real' offset (i.e. x - x_j where x_j is the closest node, at left of x)
 !  of a particle is  offset*dx.
