@@ -1,7 +1,7 @@
 SET(ARGS " ")
 
 ADD_EXECUTABLE( test_decomposition test_decomposition.F90 )
-TARGET_LINK_LIBRARIES( test_decomposition sll_decomposition )
+TARGET_LINK_LIBRARIES( test_decomposition sll_decomposition sll_collective )
 ADD_MPI_TEST( decomposition test_decomposition ${PROCS} ${ARGS} )
 SET_TESTS_PROPERTIES( decomposition PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
