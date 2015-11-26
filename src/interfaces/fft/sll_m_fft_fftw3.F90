@@ -37,6 +37,20 @@ module sll_m_fft
     sll_int32                        :: direction
     sll_int32                        :: problem_rank
     sll_int32, dimension(:), pointer :: problem_shape
+
+    contains
+      procedure :: print_defaultfftlib
+      procedure :: fft_get_mode_r2c_1d
+      procedure :: fft_set_mode_c2r_1d
+      ! Complex to complex 1d
+      procedure :: fft_new_plan_c2c_1d
+      procedure :: fft_apply_plan_c2c_1d
+      ! Complex to complex 2d
+      procedure :: fft_new_plan_c2c_2d
+      procedure :: fft_apply_plan_c2c_2d
+      ! 
+      
+
   end type sll_fft_plan
 
   
