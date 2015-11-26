@@ -19,7 +19,8 @@ module sll_m_pic_utilities
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_accumulators.h" 
+#include "sll_accumulators.h"
+  use sll_m_accumulators
   use sll_m_particle_group_4d
   use sll_m_particle_group_2d
 
