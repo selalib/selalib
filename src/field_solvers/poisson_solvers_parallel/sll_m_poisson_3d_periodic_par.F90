@@ -259,11 +259,7 @@ contains
              gj = global(2)
              gk = global(3)
              if( (gi==1) .and. (gj==1) .and. (gk==1) ) then
-                call fft_set_mode( &
-                     plan%pz, &
-                     plan%array_z(1,1,:), &
-                     (0.0_f64,0.0_f64), &
-                     1)
+                plan%array_z(1,1,1) = (0.0_f64,0.0_f64)
              else
                 if (gi<=nx/2) then
                    ind_x = real(gi-1,f64)

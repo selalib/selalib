@@ -39,16 +39,6 @@ module sll_m_fft
     sll_int32, dimension(:), pointer :: problem_shape
   end type sll_fft_plan
 
-  interface fft_new_plan
-    module procedure &
-       fft_new_plan_r2c_2d, &
-       fft_new_plan_c2r_2d 
-  end interface
-  interface fft_apply_plan
-    module procedure &
-       fft_apply_plan_r2c_2d, &
-       fft_apply_plan_c2r_2d
-  end interface 
   
   ! Flags for direction (values as in fftw3.f03)
   integer, parameter :: FFT_FORWARD = FFTW_FORWARD!-1
@@ -459,22 +449,39 @@ contains
     endif
   end subroutine
 
-  function fft_new_plan_r2c_2d(nx,ny,array_in,array_out,flags) result(plan)
+  function fft_new_plan_r2c_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                     :: nx,ny
     sll_real64, dimension(:,:), intent(inout) :: array_in
-    sll_comp64, dimension(:,:), intent(out)   :: array_out
-    sll_int32, optional, intent(in)           :: flags
+    sll_comp64, dimension(:,:), intent(out)   :: array_out 
+    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
     type(sll_fft_plan), pointer               :: plan
-    sll_int32 :: ierr
+
+    sll_int32 :: ierr    
+    sll_int32 :: flag_fftw
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = FFTW_MOD
     plan%direction = 0
-    if( present(flags) )then
-      plan%style = flags
+    if( present(normalized) ) then
+       plan%normalized = normalized
     else
-      plan%style = 0_f32
-    endif
+       plan%normalized = .false.
+    end if
+    ! Set the information about the algorithm to compute the plan. The default is FFTW_ESTIMATE
+    if ( present(optimization) ) then
+       flag_fftw = optimization
+    else
+       flag_fftw = FFTW_ESTIMATE
+    end if
+    if ( present(aligned) ) then
+       if (aligned .EQV. .false.) then
+          flag_fftw = flag_fftw + FFTW_UNALIGNED
+       end if
+    else
+       flag_fftw = flag_fftw + FFTW_UNALIGNED
+    end if
       
     plan%problem_rank = 2
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
@@ -518,7 +525,7 @@ contains
 
     call fftw_execute_dft_r2c(plan%fftw, array_in, array_out)
 
-    if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
+    if( plan%normalized .EQV. .TRUE. ) then
       factor = 1.0_f64/real(nx*ny,kind=f64)
       array_out = factor*array_out
     endif
@@ -586,22 +593,39 @@ contains
     endif
   end subroutine
 
-  function fft_new_plan_c2r_2d(nx,ny,array_in,array_out,flags) result(plan)
+  function fft_new_plan_c2r_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                     :: nx, ny
     sll_comp64, dimension(:,:), intent(inout) :: array_in
     sll_real64, dimension(:,:), intent(out)   :: array_out
-    sll_int32, optional, intent(in)           :: flags
+    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
     type(sll_fft_plan), pointer               :: plan
+
     sll_int32 :: ierr
+    sll_int32 :: flag_fftw
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = FFTW_MOD
     plan%direction = 0
-    if( present(flags) )then
-      plan%style = flags
+    if( present(normalized) ) then
+       plan%normalized = normalized
     else
-      plan%style = 0_f32
-    endif
+       plan%normalized = .false.
+    end if
+    ! Set the information about the algorithm to compute the plan. The default is FFTW_ESTIMATE
+    if ( present(optimization) ) then
+       flag_fftw = optimization
+    else
+       flag_fftw = FFTW_ESTIMATE
+    end if
+    if ( present(aligned) ) then
+       if (aligned .EQV. .false.) then
+          flag_fftw = flag_fftw + FFTW_UNALIGNED
+       end if
+    else
+       flag_fftw = flag_fftw + FFTW_UNALIGNED
+    end if
       
     plan%problem_rank = 2
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
@@ -630,7 +654,7 @@ contains
     ny = plan%problem_shape(2)
     call fftw_execute_dft_c2r(plan%fftw, array_in(1:nx/2+1,1:ny), array_out(1:nx,1:ny) )
 
-    if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
+    if( plan%normalized .EQV. .TRUE. ) then
       factor = 1.0_f64/real(nx*ny,kind=f64)
       array_out = factor*array_out
     endif

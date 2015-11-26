@@ -46,10 +46,6 @@ program unit_test
 
   data_copy(1:s) = data_comp(1:s)
   p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  do i=0,s-1
-    mode = fft_get_mode(p,data_comp(1:s),i)
-    call fft_set_mode(p,data_comp(1:s),mode,i)
-  enddo
   ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
 
   if( ierr .ne. 0_f64 ) then
@@ -67,10 +63,6 @@ program unit_test
   enddo
   rdata_copy(1:s) = rdata(1:s)
   p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
-  do i=0,s/2
-    mode = fft_get_mode(p,rdata(1:s),i)
-    call fft_set_mode(p,rdata(1:s),mode,i)
-  enddo
   ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
   if( ierr .ne. 0_f64 ) then
     print *,'Average error too big',ierr
@@ -267,12 +259,12 @@ program unit_test
     enddo
     rdata_copy2d(1:s,1:t) = data_real2d(1:s,1:t)
  
-    p => fft_new_plan(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
-    call fft_apply_plan(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    p => fft_new_plan_r2c_2d(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    call fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    p => fft_new_plan_c2r_2d(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),normalized = .TRUE.)
+    call fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call fft_delete_plan(p)
  
     ierr = 0._f64
@@ -300,12 +292,13 @@ program unit_test
     enddo
     rdata_copy2d(1:s,1:t) = data_real2d(1:s,1:t)
  
-    p => fft_new_plan(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t),FFT_NORMALIZE)
-    call fft_apply_plan(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    p => fft_new_plan_r2c_2d(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t),&
+         normalized = .TRUE.)
+    call fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
-    call fft_apply_plan(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    p => fft_new_plan_c2r_2d(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    call fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call fft_delete_plan(p)
 
     ierr = 0._f64
