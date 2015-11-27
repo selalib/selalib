@@ -397,7 +397,6 @@ contains
     end select
 
   end subroutine lagrange_halo_cells
->>>>>>> d7312231ecf37fb6e3a1c81e456d50b51dae7bfb
 
 
 end module sll_m_lagrange_fast
