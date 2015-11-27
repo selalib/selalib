@@ -16,20 +16,14 @@ implicit none
 integer, parameter :: n = 9
 integer, parameter :: k = 3
 
+type(woodbury_solver) :: s
 real(8) :: x(n), b(n)
 real(8) :: q(2*k+1,n)
 integer :: i
 integer :: j
 integer :: l
-integer :: kp1
 
 real(8) :: m(n,n)
-real(8) :: g(k)
-
-real(8) :: work(k*k)
-integer :: iflag
-integer :: info
-integer :: jpiv(k)
 
 !Build the complete system with random coefficients
 !Create a cyclic banded system m
@@ -55,8 +49,9 @@ do j = 1, n
 end do
 
 !set u and v vectors and modify a
-call woodbury_fac(n, k, q)
-call woodbury_slv(n, k, q, b, x)
+call woodbury_fac(s, n, k, q)
+x = b
+call woodbury_slv(s, n, k, q, x)
 
 write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
 
