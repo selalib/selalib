@@ -88,6 +88,32 @@ def contains_exactly_1_module( filepath, verbose=False ):
     return (not skip_file)
 
 #==============================================================================
+# Overwrite instance methods (special cases)
+#==============================================================================
+
+def add_exported_symbols_permissive( self, *symbols ):
+    for s in symbols:
+        if not self.defines_symbol( s ):
+            origin = self.find_symbol_def( s )
+            if origin:
+                print( "WARNING processing file '%s':" % self.filepath )
+                print( "  symbol '%s' is imported but not defined here" % s )
+                print( "  original definition in module '%s'" % origin )
+            else:
+                print( "ERROR processing file '%s':" % self.filepath )
+                print( "  symbol '%' is neither defined nor imported here" % s )
+                raise SystemExit()
+
+permissive_modules = ['sll_m_hdf5_io_parallel']
+
+def make_modules_permissive( *modules ):
+    from types import MethodType
+    for m in modules:
+        if m.name in permissive_modules:
+            m.add_exported_symbols = \
+                    MethodType( add_exported_symbols_permissive, m )
+
+#==============================================================================
 # HELPER FUNCTION
 #==============================================================================
 
@@ -222,6 +248,10 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     print( "================================================================" )
     print( "[6] Library modules/programs: Scatter imported symbols" )
     print( "================================================================" )
+
+    # Some modules must be made permissive
+    make_modules_permissive( *src_modules.values() )
+
     for i,(name,mmod) in enumerate( src_modules.items() ):
         print("  - scatter from module %3d: %s" % (i+1,name) )
         mmod.scatter_imported_symbols()
