@@ -8,7 +8,7 @@ module sll_m_sim_bsl_ad_2d0v_curv
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
+
   use sll_m_constants
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic

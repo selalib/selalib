@@ -15,7 +15,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
+
   use sll_m_constants
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
@@ -41,16 +41,6 @@ module sll_m_sim_bsl_ad_2d0v_cart
   use sll_m_xdmf
   use sll_m_hdf5_io_serial
   
-#ifdef MUDPACK
-!  use sll_m_mudpack_curvilinear
-!  use sll_m_poisson_2d_mudpack
-!  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-#endif
-!  use sll_m_poisson_2d_elliptic_solver
-!  use sll_m_timer
-!  use sll_m_fft
-!  use sll_m_poisson_2d_periodic_solver
-
   implicit none
 
   
