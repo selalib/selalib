@@ -12,7 +12,7 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
+
   !use sll_logical_meshes 
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
