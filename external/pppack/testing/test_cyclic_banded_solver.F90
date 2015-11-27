@@ -46,8 +46,9 @@ integer              :: iflag
 integer              :: info
 integer              :: ldab
 real(8), allocatable :: ab(:,:)
+integer              :: jpiv(k)
 
-one = 1.0_8
+one = 0.0_8
 
 kp1 = k+1
 do i = 1, n
@@ -59,10 +60,9 @@ call random_number(p)
 !Create a cyclic banded system m
 m = 0.0_8
 do i = 1, n
-  do j = 0,k
+  do j = -k,k
     l=modulo(j+i-1,n)+1 
     m(i,l) = p(i,l)
-    m(l,i) = p(i,l) ! Matrix is symetric
   end do
 end do
 write(*,*) "M="
@@ -121,51 +121,41 @@ do j = 1, n
 end do
 call dgbtrf(n,n,k,k,ab,ldab,ipiv,info)
 
-
 print*, "A:"; call print_matrix(a)
 print*, 'U:'; call print_matrix(u)
 print*, 'V:'; call print_matrix(v)
 print*, 'M - (A + U.t(V)) : must be zero '
 write(*,"(' Decomposition error = ', g15.3)") &
   sum(abs(m-(a+matmul(u,transpose(v)))))
-
-!Compute inverse(A)
-call dgetrf(n,n,a,n,ipiv,info)
-call dgetri(n,a,n,ipiv,w,n*n,info)
-print*, 'inverse(H)'
-call print_matrix(1.+matmul(transpose(v),matmul(a,u)))
+call print_matrix(matmul(u,transpose(v)))
 
 y=b
 nrhs = 1
 call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,y,n,info)
-print*, ' Solve A.y = b error : ', sum(abs(y-matmul(a,b)))
-!Solve A.z = u
+print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,y)))
 nrhs = k
 z = u
 call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,z,n,info)
-print*,'Z:';call print_matrix(u)
+print*, ' Solve A.z = u error : ', sum(abs(u-matmul(a,z)))
 
 !compute the matrix H = inverse(1+t(v).z)
-h = one+matmul(transpose(v),z)
+call print_matrix(1.0+matmul(z,transpose(v)))
+h = 1.0_8 + matmul(transpose(v),z)
+print*,'H:';call print_matrix(h)
+h(1,1) = 1 + dot_product(v(:,1),z(:,1))
+h(2,1) = dot_product(v(:,2),z(:,1))
+h(1,2) = dot_product(v(:,1),z(:,2))
+h(2,2) = 1 + dot_product(v(:,2),z(:,2))
+
+print*,'H:';call print_matrix(h)
+call dgetrf(k,k,h,k,jpiv,info)
+call dgetri(k,h,k,jpiv,work,k*k,info)
+
 print*, 'inverse(H)'
 print*,'H:';call print_matrix(h)
-ipiv(1:k) = 0
 
-
-call dgetrf(k,k,h,k,ipiv(1:k),info)
-call dgetri(k,h,k,ipiv(1:k),work,k*k,info)
-print*,'H:';call print_matrix(h)
-
-im = matmul(u,matmul(h,transpose(v)))
-im = matmul(a,matmul(im,a))
-im = a - im
-call print_vector(x)
-call print_vector(matmul(im,b))
-
-
-f = matmul(h,matmul(transpose(v),y))
 print*, ' X = Y - Z . [H . (t(V).Y)] : '
-x = y - matmul(z,f)
+x = y - matmul(z,matmul(h,matmul(transpose(v),y)))
 call print_vector(x)
 write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
 
