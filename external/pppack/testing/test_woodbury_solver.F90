@@ -9,49 +9,31 @@
 ! Ay = b
 ! and the solution is
 ! x = y - Z.[H.(t(V).y))]
-program test_cyclic_banded_solver
+program test_woodbury_solver
 implicit none
 
 integer, parameter :: n = 9
 integer, parameter :: k = 3
 
-real(8) :: x(n)
-real(8) :: y(n)
-real(8) :: b(n)
+real(8) :: x(n), b(n)
 real(8) :: q(2*k+1,n)
-real(8) :: one(k,k)
 real(8) :: a(n,n)
 real(8) :: u(n,k) 
 real(8) :: v(n,k)
-real(8) :: w(n,n)
-real(8) :: p(n,n)
-real(8) :: z(n,k)
-integer :: ifla
 integer :: i
-integer :: j, l
+integer :: j
+integer :: l
 integer :: kp1
-real(8) :: fact
 
 real(8) :: m(n,n)
-real(8) :: im(n,n)
-real(8) :: lu(n,n)
-real(8) :: f(k)
 real(8) :: g(k)
 real(8) :: h(k,k)
 
 real(8)              :: work(k*k)
-integer, allocatable :: ipiv(:)
-integer              :: nrhs
 integer              :: iflag
 integer              :: info
-integer              :: ldab
-real(8), allocatable :: ab(:,:)
 integer              :: jpiv(k)
 
-one = 0.0_8
-do i = 1, k
-  one(i,i) = 1.0_8
-end do
 
 kp1 = k+1
 do i = 1, n
@@ -59,30 +41,16 @@ do i = 1, n
 end do
 
 !Build the complete system with random coefficients
-call random_number(p) 
 !Create a cyclic banded system m
 m = 0.0_8
 do i = 1, n
   do j = -k,k
     l=modulo(j+i-1,n)+1 
-    m(i,l) = p(i,l)
+    m(i,l) = real(i*10+l,8)
   end do
 end do
-write(*,*) "M="
+
 call print_matrix(m)
-
-
-!General Matrix Factorization with Lapack
-allocate(ipiv(n)); ipiv=0
-lu = m
-call dgetrf(n,n,lu,n,ipiv,info)
-x = b
-nrhs = 1
-call dgetrs('n',n,nrhs,lu,n,ipiv,x,n,info)
-write(*,"(' Lapack error = ', g15.3)") sum(abs(b-matmul(m,x)))
-call print_vector(x)
-
-
 !Create matrix A without corners terms
 a = 0.0_8
 do j = 1,n
@@ -90,6 +58,8 @@ do j = 1,n
     a(i,j) = m(i,j)
   end do
 end do
+call print_matrix(a)
+
 
 !set u and v vectors and modify a
 u = 0.0_8
@@ -101,11 +71,14 @@ do l = 1, k
 end do
 
 do j = 1, k
-  a(j,j) = a(j,j) - g(j) 
   do i = n-k+j-1,n
     u(i,j) = m(i,j)
     v(i,j) = m(j,i)/g(j)
   end do
+end do
+
+do j = 1, k
+  a(j,j) = a(j,j) - g(j) 
 end do
 
 do j = n-k+1,n
@@ -123,57 +96,36 @@ do j = 1, n
     if (i+j >= 1 .and. i+j <= n) q(l,j) = a(i+j,j)
   end do
 end do
-
-write(*,*) "Banded matrix A stored in Q:"
 call print_matrix(q)
 
 !Factorize the matrix A
 call banfac ( q, k+kp1, n, k, k, iflag )
 
 !Solve A.y = b
-y = b
-call banslv ( q, k+kp1, n, k, k, y )
-print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,x)))
-
+x = b
+call banslv ( q, k+kp1, n, k, k, x )
 !Solve A.z = u
-z = u
 do l = 1, k
-  call banslv ( q, k+kp1, n, k, k, z(:,l) )
+  call banslv ( q, k+kp1, n, k, k, u(:,l) )
 end do
-print*,'Z:';call print_matrix(z)
 
 !compute the matrix H = inverse(1+t(v).z)
-call print_matrix(1.0+matmul(z,transpose(v)))
-h = one + matmul(transpose(v),z)
+h = 0.0_8
+do i = 1, k
+  h(i,i) = 1.0_8
+end do
+h = h + matmul(transpose(v),u)
 
-print*,'H:';call print_matrix(h)
 call dgetrf(k,k,h,k,jpiv,info)
 call dgetri(k,h,k,jpiv,work,k*k,info)
+x = x - matmul(u,matmul(h,matmul(transpose(v),x)))
 
-print*, 'inverse(H)'
-print*,'H:';call print_matrix(h)
-
-print*, ' X = Y - Z . [H . (t(V).Y)] : '
-x = y - matmul(z,matmul(h,matmul(transpose(v),y)))
-call print_vector(x)
 write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
-
 
 contains
 
-subroutine print_vector(v)
-real(8), intent(in)  :: v(:)
-integer :: j
-character(len=20) :: display_format
-
-write(display_format, "('(''|''',i2,a,''' |'')')")size(v),'f9.3'
-write(*,display_format) v
-write(*,*)
-end subroutine print_vector
-
 subroutine print_matrix(m)
 real(8), intent(in)  :: m(:,:)
-integer :: j
 character(len=20) :: display_format
 
 write(display_format, "('(''|''',i2,a,''' |'')')")size(m,2),'f9.3'
@@ -183,18 +135,6 @@ end do
 write(*,*)
 end subroutine print_matrix
 
-subroutine outer_product(u,v,w)
-real(8), intent(in)   :: u(:)
-real(8), intent(in)   :: v(:)
-real(8), intent(out)  :: w(:,:)
-
-do j = 1, size(v)
-  do i = 1, size(u)
-    w(i,j) = u(i)*v(j)
-  end do
-end do
-end subroutine outer_product
-
-end program test_cyclic_banded_solver
+end program test_woodbury_solver
 
 
