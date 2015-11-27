@@ -45,18 +45,21 @@ program test_bsl_lt_pic_4d
 #define SPECIES_MASS    1._f64
 #define particle_group_id 1_i32
 
-#define NUM_MARKERS_X  3_i32
-#define NUM_MARKERS_Y  3_i32
-#define NUM_MARKERS_VX 3_i32
-#define NUM_MARKERS_VY 3_i32
+#define NUM_MARKERS_X  10_i32
+#define NUM_MARKERS_Y  10_i32
+#define NUM_MARKERS_VX 10_i32
+#define NUM_MARKERS_VY 10_i32
 
 #define REMAP_NC_X   20_i32
 #define REMAP_NC_Y   20_i32
 #define REMAP_NC_VX  20_i32
 #define REMAP_NC_VY  20_i32
-#define SPLINE_DEGREE 1_i32
+#define REMAP_DEGREE 1_i32
 
-#define REMAP_SPARSE_GRID_LEVEL 1_i32
+#define REMAP_SPARSE_GRID_LEVEL_X  6_i32
+#define REMAP_SPARSE_GRID_LEVEL_Y  6_i32
+#define REMAP_SPARSE_GRID_LEVEL_VX 6_i32
+#define REMAP_SPARSE_GRID_LEVEL_VY 6_i32
 #define NUM_DEPOSITION_PARTS    1000_i32
 
 #define DOMAIN_IS_X_PERIODIC .true.
@@ -66,16 +69,6 @@ program test_bsl_lt_pic_4d
 #define REMAP_GRID_VX_MAX  6._f64
 #define REMAP_GRID_VY_MIN -6._f64
 #define REMAP_GRID_VY_MAX  6._f64
-
-  !#define N_virtual_particles_per_deposition_cell_x  2_i32
-  !#define N_virtual_particles_per_deposition_cell_y  2_i32
-  !#define N_virtual_particles_per_deposition_cell_vx 2_i32
-  !#define N_virtual_particles_per_deposition_cell_vy 2_i32
-  !
-  !#define N_remapping_nodes_per_virtual_cell_x       2_i32
-  !#define N_remapping_nodes_per_virtual_cell_y       2_i32
-  !#define N_remapping_nodes_per_virtual_cell_vx      2_i32
-  !#define N_remapping_nodes_per_virtual_cell_vy      2_i32
 
 #define NC_X 256_i32
 #define KX   0.5_f64
@@ -106,22 +99,22 @@ program test_bsl_lt_pic_4d
 #define PLOT_CST_DIM4 4
 #define X4_PLOT_CST 0._f64
 
-
   implicit none
   
-  type(sll_bsl_lt_pic_4d_group),        pointer     :: particle_group
+  type(sll_bsl_lt_pic_4d_group),        pointer     :: p_group
   type(sll_cartesian_mesh_2d),          pointer     :: mesh_2d
 
   character(5)      :: ncx_name, ncy_name
 
   sll_int32 :: k
-  sll_int64 :: j_x, j_y, j_vx, j_vy
+  sll_int32 :: j
+  sll_int32 :: j_x, j_y, j_vx, j_vy
+  sll_int32 :: number_nodes_x
+  sll_int32 :: number_nodes_y
+  sll_int32 :: number_nodes_vx
+  sll_int32 :: number_nodes_vy
   sll_real64 :: error, tolerance, f_target
   sll_real64 :: f_j
-  sll_int64 :: number_nodes_x
-  sll_int64 :: number_nodes_y
-  sll_int64 :: number_nodes_vx
-  sll_int64 :: number_nodes_vy
   sll_real64 :: h_x
   sll_real64 :: h_y
   sll_real64 :: h_vx
@@ -150,33 +143,62 @@ program test_bsl_lt_pic_4d
   sll_real64 :: shift
   sll_real64 :: basis_height
 
+  sll_int32 :: plot_np_x
+  sll_int32 :: plot_np_y
+  sll_int32 :: plot_np_vx
+  sll_int32 :: plot_np_vy
+
   ! Benchmarking remap performance
   type(sll_time_mark) :: remapstart
   sll_real64 :: remaptime
 
   sll_real64, dimension(3) :: coords
+  sll_real64, dimension(4) :: eta
+  sll_int32,  dimension(4) :: remapping_sparse_grid_max_levels
   sll_real64 :: x_k,  new_x_k
   sll_real64 :: y_k,  new_y_k
   sll_real64 :: vx_k, new_vx_k
   sll_real64 :: vy_k, new_vy_k
 
   character(len=10) :: remap_type
+  logical :: evaluate_error_on_sparse_grid
   logical :: testing
 
+  logical :: DEBUG_MODE
 
   ! --- end of declarations
 
+  DEBUG_MODE = .false.
+
+  plot_np_x  = 21
+  plot_np_y  = 10
+  plot_np_vx = 21
+  plot_np_vy = 10
+
+  open(82,file='error_test_lt_pic_init4D.dat')
+
+
+  ! A -- build and initialize the particle group
 
   mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, X_MIN, X_MAX, Y_MIN, Y_MAX )
 
-  particle_group => sll_bsl_lt_pic_4d_group_new(      &
+  if( DEBUG_MODE )then
+    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA"
+  end if
+
+  remapping_sparse_grid_max_levels(1) = REMAP_SPARSE_GRID_LEVEL_X
+  remapping_sparse_grid_max_levels(2) = REMAP_SPARSE_GRID_LEVEL_Y
+  remapping_sparse_grid_max_levels(3) = REMAP_SPARSE_GRID_LEVEL_VX
+  remapping_sparse_grid_max_levels(4) = REMAP_SPARSE_GRID_LEVEL_VY
+
+  p_group => sll_bsl_lt_pic_4d_group_new(             &
         SPECIES_CHARGE,                               &
         SPECIES_MASS,                                 &
         particle_group_id,                            &
         DOMAIN_IS_X_PERIODIC,                         &
         DOMAIN_IS_Y_PERIODIC,                         &
-        SLL_BSL_LT_PIC_REMAP_WITH_SPLINES,            &
-        SPLINE_DEGREE,            &
+        SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,       &       !! other option SLL_BSL_LT_PIC_REMAP_WITH_SPLINES
+        REMAP_DEGREE,             &
         REMAP_GRID_VX_MIN,        &
         REMAP_GRID_VX_MAX,        &
         REMAP_GRID_VY_MIN,        &
@@ -185,7 +207,7 @@ program test_bsl_lt_pic_4d
         REMAP_NC_Y,               &
         REMAP_NC_VX,              &
         REMAP_NC_VY,              &
-        REMAP_SPARSE_GRID_LEVEL,  &
+        remapping_sparse_grid_max_levels, &
         NUM_DEPOSITION_PARTS,     &
         NUM_MARKERS_X,            &
         NUM_MARKERS_Y,            &
@@ -212,51 +234,219 @@ program test_bsl_lt_pic_4d
   shift = 1._f64
   basis_height = 0._f64
 
+  if( DEBUG_MODE )then
+    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA B"
+  end if
+
   ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
 
-  call particle_group%set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
+  call p_group%set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
     !  bsl_lt_pic_4d_set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
 
-  call particle_group%initializer( SLL_BSL_LT_PIC_HAT_F0 )
-!  call particle_group%bsl_lt_pic_4d_initializer( SLL_BSL_LT_PIC_HAT_F0 )
+  if( DEBUG_MODE )then
+    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA C"
+  end if
+
+  call p_group%initializer( SLL_BSL_LT_PIC_HAT_F0 )
+!  call p_group%bsl_lt_pic_4d_initializer( SLL_BSL_LT_PIC_HAT_F0 )
+
+  print *, "plotting initial f slice in gnuplot format "
+  call p_group%visualize_f_slice_x_vx("f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
+
+  if( DEBUG_MODE )then
+    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA D"
+  end if
 
 
-  ! push particles with a measure-preserving affine flow
+
+  ! B --- measure of the error after initialization
+  !       (error should be almost 0 on the sparse grid nodes if interpolation is exact)
+
+  open(70,file='f_values_after_init_test4D.dat')
+
+  write(70,*) "# x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )"
+
+  error = 0.0_f64
+  if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+
+    number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
+    number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
+    number_nodes_vx = p_group%remapping_cart_grid_number_nodes_vx()
+    number_nodes_vy = p_group%remapping_cart_grid_number_nodes_vy()
+
+    h_x    = p_group%remapping_cart_grid%delta_eta1
+    h_y    = p_group%remapping_cart_grid%delta_eta2
+    h_vx   = p_group%remapping_cart_grid%delta_eta3
+    h_vy   = p_group%remapping_cart_grid%delta_eta4
+
+    x_min    = p_group%remapping_cart_grid%eta1_min
+    y_min    = p_group%remapping_cart_grid%eta2_min
+    vx_min   = p_group%remapping_cart_grid%eta3_min
+    vy_min   = p_group%remapping_cart_grid%eta4_min
+
+    d_vol = h_x * h_y * h_vx * h_vy
+
+
+    do j_x = 1, number_nodes_x
+      x_j = x_min + (j_x-1) * h_x
+
+      do j_y = 1, number_nodes_y
+        y_j = y_min + (j_y-1) * h_y
+
+        do j_vx = 1, number_nodes_vx
+          vx_j = vx_min + (j_vx-1) * h_vx
+
+          do j_vy = 1, number_nodes_vy
+            vy_j = vy_min + (j_vy-1) * h_vy
+
+            f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
+
+            SLL_ASSERT( x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+
+            f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
+            error = max( error, abs( f_j - f_target ) )
+            write(70,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
+
+          end do
+        end do
+      end do
+    end do
+
+  else
+
+    if( DEBUG_MODE )then
+      print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA  12"
+    end if
+
+    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+
+    if( DEBUG_MODE )then
+      print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA  24"
+    end if
+
+    evaluate_error_on_sparse_grid = .false.
+
+    if( evaluate_error_on_sparse_grid )then
+
+      do j=1, p_group%sparse_grid_interpolator%size_basis
+
+          f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
+
+          x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+          y_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
+          vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+          vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+
+          SLL_ASSERT( x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+
+          f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
+          error = max( error, abs( f_j - f_target ) )
+          write(70,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
+
+      end do
+
+    else
+
+      number_nodes_x  = plot_np_x - 1
+      number_nodes_y  = plot_np_y - 1
+      number_nodes_vx = plot_np_vx - 1
+      number_nodes_vy = plot_np_vy - 1
+
+      x_min    = p_group%remapping_grid_eta_min(1)
+      y_min    = p_group%remapping_grid_eta_min(2)
+      vx_min   = p_group%remapping_grid_eta_min(3)
+      vy_min   = p_group%remapping_grid_eta_min(4)
+
+      h_x    = (p_group%remapping_grid_eta_max(1) - x_min)  / number_nodes_x
+      h_y    = (p_group%remapping_grid_eta_max(2) - y_min)  / number_nodes_y
+      h_vx   = (p_group%remapping_grid_eta_max(3) - vx_min) / number_nodes_vx
+      h_vy   = (p_group%remapping_grid_eta_max(4) - vy_min) / number_nodes_vy
+
+      do j_x = 1, number_nodes_x
+        x_j = x_min + (j_x-1) * h_x
+
+        do j_y = 1, number_nodes_y
+          y_j = y_min + (j_y-1) * h_y
+
+          do j_vx = 1, number_nodes_vx
+            vx_j = vx_min + (j_vx-1) * h_vx
+
+            do j_vy = 1, number_nodes_vy
+              vy_j = vy_min + (j_vy-1) * h_vy
+
+              eta(1) = x_j
+              eta(2) = y_j
+              eta(3) = vx_j
+              eta(4) = vy_j
+
+              f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( eta )
+
+              SLL_ASSERT( x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+
+              f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
+              error = max( error, abs( f_j - f_target ) )
+              write(70,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
+
+            end do
+          end do
+        end do
+      end do
+
+    end if
+
+
+  end if
+
+  write(82,*) "(maximum) error after initialization: ", error
+
+  close(70)
+
+
+  if( DEBUG_MODE )then
+    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA 56"
+  end if
+
+
+
+
+  ! C -- push the markers with a measure-preserving affine flow
 
   ! loop over all particles (taken from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90]])
 
-  do k = 1, particle_group%number_particles
+  do k = 1, p_group%number_particles
 
      ! -- --  push the k-th particle [begin]  -- --
 
      ! get particle position
-     coords = particle_group%get_x(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
+     coords = p_group%get_x(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      x_k = coords(1)
      y_k = coords(2)
 
      ! get particle speed
-     coords = particle_group%get_v(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
+     coords = p_group%get_v(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      vx_k = coords(1)
      vy_k = coords(2)
 
      ! Flow is cte + A*(x,y,vx,vy), where det A = 1, cf [[test_forward_push]]
      call test_forward_push(x_k, y_k, vx_k, vy_k, new_x_k, new_y_k, new_vx_k, new_vy_k)
 
+     if( .not. x_is_in_domain_2d( new_x_k, new_y_k, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )then
+        !! -- -- put outside particles back in domain
+        ! [[selalib:src/particle_methods/pic_remapped/remapped_pic_utilities/sll_m_remapped_pic_utilities.F90::apply_periodic_bc_on_cartesian_mesh_2d]]
+        call apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x_k, new_y_k)
+     end if
+
      ! set particle position
      coords(1) = new_x_k
      coords(2) = new_y_k
-     coords(3) = 0
-     call particle_group%set_x(k, coords)
-
+     coords(3) = 0.0_f64
+     call p_group%set_x(k, coords)
 
      ! set particle speed
      coords(1) = new_vx_k
      coords(2) = new_vy_k
-     coords(3) = 0
-     call particle_group%set_v(k, coords)
-
-    ! SHOULD WE PUT THE PARTICLES BACK INTO THE DOMAIN ???
-    ! (see the LD simulation if that is needed)
+     coords(3) = 0.0_f64
+     call p_group%set_v(k, coords)
 
   end do
 
@@ -268,82 +458,157 @@ program test_bsl_lt_pic_4d
     call getarg(1,remap_type)
   end if
 
+  print *, "plotting transported f slice in gnuplot format "
+  call p_group%visualize_f_slice_x_vx("f_transported", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
+
+
+  ! D --- remap the particle group to get the values of transported f on the remapping grid
+
   call sll_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
     stop
     print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
-    ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( particle_group )
+    ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( p_group )
 
   else if (remap_type == 'bsl_ltp') then
     ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
-    call particle_group%remap()
+    call p_group%remap()
   else
     print*, 'ERROR (code=656536756757657): option is ltp (WARNING: not implemented yet) or bsl_ltp'
     stop
   end if
 
+  print *, "plotting remapped f slice in gnuplot format "
+  call p_group%visualize_f_slice_x_vx("f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
+
   remaptime = sll_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
   write(*,'(A,A,ES8.2,A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec',&
-       ' ie ',particle_group%number_particles/remaptime,' remapped-ptc/sec'
-  
-  ! result should still be exact on the new grid because all the transformations have been linear
+       ' ie ',p_group%number_particles/remaptime,' remapped-ptc/sec'
 
-  number_nodes_x  = particle_group%remapping_cart_grid_number_nodes_x()
-  number_nodes_y  = particle_group%remapping_cart_grid_number_nodes_y()
-  number_nodes_vx = particle_group%remapping_cart_grid_number_nodes_vx()
-  number_nodes_vy = particle_group%remapping_cart_grid_number_nodes_vy()
 
-  h_x    = particle_group%remapping_cart_grid%delta_eta1
-  h_y    = particle_group%remapping_cart_grid%delta_eta2
-  h_vx   = particle_group%remapping_cart_grid%delta_eta3
-  h_vy   = particle_group%remapping_cart_grid%delta_eta4
-    
-  x_min    = particle_group%remapping_cart_grid%eta1_min
-  y_min    = particle_group%remapping_cart_grid%eta2_min
-  vx_min   = particle_group%remapping_cart_grid%eta3_min
-  vy_min   = particle_group%remapping_cart_grid%eta4_min
 
-  d_vol = h_x * h_y * h_vx * h_vy
-  open(80,file='target_values_test_init4D.dat')
-  error = 0
-  do j_x = 1, number_nodes_x
-    x_j = x_min + (j_x-1) * h_x
+  ! E --- measure of the error after transport (and remapping):
+  !       (result should still be exact on the new grid because all the transformations have been linear)
 
-    do j_y = 1, number_nodes_y
-      y_j = y_min + (j_y-1) * h_y
+  open(80,file='f_values_after_remap_test4D.dat')
 
-      do j_vx = 1, number_nodes_vx
-        vx_j = vx_min + (j_vx-1) * h_vx
+  write(80,*) "# x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )"
 
-        do j_vy = 1, number_nodes_vy
-          vy_j = vy_min + (j_vy-1) * h_vy
+  error = 0.0_f64
+  if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
 
-          f_j = real( particle_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f32)
-          call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
+    number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
+    number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
+    number_nodes_vx = p_group%remapping_cart_grid_number_nodes_vx()
+    number_nodes_vy = p_group%remapping_cart_grid_number_nodes_vy()
 
-          if( .not. x_is_in_domain_2d( new_x, new_y, particle_group%space_mesh_2d,   &
-                                       DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
-               ) then
-            !! -- -- put outside particles back in domain
-            call apply_periodic_bc_on_cartesian_mesh_2d( particle_group%space_mesh_2d, new_x, new_y)
-          end if
+    h_x    = p_group%remapping_cart_grid%delta_eta1
+    h_y    = p_group%remapping_cart_grid%delta_eta2
+    h_vx   = p_group%remapping_cart_grid%delta_eta3
+    h_vy   = p_group%remapping_cart_grid%delta_eta4
 
-          f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
-          error = max( error, abs( f_j - f_target ) )
+    x_min    = p_group%remapping_cart_grid%eta1_min
+    y_min    = p_group%remapping_cart_grid%eta2_min
+    vx_min   = p_group%remapping_cart_grid%eta3_min
+    vy_min   = p_group%remapping_cart_grid%eta4_min
 
+    d_vol = h_x * h_y * h_vx * h_vy
+
+
+    do j_x = 1, number_nodes_x
+      x_j = x_min + (j_x-1) * h_x
+
+      do j_y = 1, number_nodes_y
+        y_j = y_min + (j_y-1) * h_y
+
+        do j_vx = 1, number_nodes_vx
+          vx_j = vx_min + (j_vx-1) * h_vx
+
+          do j_vy = 1, number_nodes_vy
+            vy_j = vy_min + (j_vy-1) * h_vy
+
+            if( DEBUG_MODE )then
+              print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA -- ddd"
+            end if
+
+            f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
+            call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
+
+            if( .not. x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
+                                         DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
+                 ) then
+              !! -- -- put outside particles back in domain
+              call apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+            end if
+
+            f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
+            error = max( error, abs( f_j - f_target ) )
+            write(80,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
+
+          end do
         end do
       end do
     end do
-  end do
+
+  else
+
+    if( DEBUG_MODE )then
+      print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 1"
+    end if
+
+    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+
+    if( DEBUG_MODE )then
+      print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 2"
+    end if
+
+    do j=1, p_group%sparse_grid_interpolator%size_basis
+
+        if( DEBUG_MODE )then
+          print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 3a - j =", j
+        end if
+
+        f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
+
+        if( DEBUG_MODE )then
+          print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 3b - f_j =", f_j
+        end if
+
+        x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+        y_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
+        vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+        vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+        call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
+
+        if( .not. x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
+                                     DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
+             ) then
+          !! -- -- put outside particles back in domain
+          call apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+        end if
+
+
+        f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
+        error = max( error, abs( f_j - f_target ) )
+
+        write(80,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
+
+        if( DEBUG_MODE )then
+          print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 3c - j, f_target =", j, f_target
+        end if
+
+    end do
+
+
+  end if
 
   close(80)
 
   ! uses [[selalib:src/data_structures/fields/sll_m_array_plotting.F90::write_projection_2d]] developed by PN (cf
-  ! example in [[selalib:src/data_structures/fields/testing/test_plot_array_4d.F90::write_projection_2d]]) todo: we
-  ! could plot a slice of f here, but this seems heavy in a unit test...
+  ! example in [[selalib:src/data_structures/fields/testing/test_plot_array_4d.F90::write_projection_2d]])
 
     !  plotting_mesh_2d =>  new_cartesian_mesh_2d( NC_X1_PLOT, NC_X2_PLOT, &
     !         X1_MIN_PLOT, X1_MAX_PLOT, X2_MIN_PLOT, X2_MAX_PLOT )
@@ -359,19 +624,19 @@ program test_bsl_lt_pic_4d
     !    X3_PLOT_CST,      &
     !    X4_PLOT_CST,      &
     !    plotting_mesh_2d, &
-    !    particle_group    &
+    !    p_group    &
     !    )
 
 
   write(ncx_name,'(i3)') NC_X
   write(ncy_name,'(i3)') NC_Y
   open(83,file='positions_and_speeds_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
-  do k = 1, particle_group%number_particles
-     coords = particle_group%get_x(k)
+  do k = 1, p_group%number_particles
+     coords = p_group%get_x(k)
      x_k = coords(1)
      y_k = coords(2)
 
-     coords = particle_group%get_v(k)
+     coords = p_group%get_v(k)
      vx_k = coords(1)
      vy_k = coords(2)
 
@@ -380,22 +645,21 @@ program test_bsl_lt_pic_4d
   enddo
   close(83)
 
-  open(82,file='error_test_lt_pic_init4D.dat')
-  write(82,*) "(maximum) error : ", error
+  write(82,*) "(maximum) error after remapping: ", error
   close(82)
   
-!  call sll_delete( particle_group )
+!  call sll_delete( p_group )
 !  call sll_delete( mesh_2d )
 
-  tolerance = 1e-6
+  tolerance = real( 1e-6, f64)
   if( error < tolerance )then
     ! print*, "TEST PASSED: error = ", error
     print *, 'PASSED'
-  ! else
-  !   print*, "TEST FAILED: error = ", error
+   else
+    print*, "FAILED: error = ", error
   endif
 
-  print *, 'PASSED'
+!  print *, 'PASSED'
 
 contains
 
