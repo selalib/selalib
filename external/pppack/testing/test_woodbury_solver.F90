@@ -77,15 +77,6 @@ do j = 1, k
   end do
 end do
 
-do j = 1, k
-  a(j,j) = a(j,j) - g(j) 
-end do
-
-do j = n-k+1,n
-  do i = n-k+1,n
-    a(i,j) = a(i,j) - sum(u(i,:)*v(j,:)) !This sum can be optimized
-  end do
-end do
 
 !store banded matrix A in q for banfac
 q = 0.0_8
@@ -97,6 +88,17 @@ do j = 1, n
   end do
 end do
 call print_matrix(q)
+do j = 1, k
+  q(kp1,j) = m(j,j) - g(j) 
+end do
+do j = n-k+1,n
+  l = n-j 
+  do i = n-k+1,n
+    l = l+1
+    q(l,j) = q(l,j) - sum(u(i,:)*v(j,:)) !This sum can be optimized
+  end do
+end do
+
 
 !Factorize the matrix A
 call banfac ( q, k+kp1, n, k, k, iflag )
