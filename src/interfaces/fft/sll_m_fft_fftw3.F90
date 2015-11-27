@@ -27,6 +27,8 @@ module sll_m_fft
   use sll_m_fft_utils
   use, intrinsic :: iso_c_binding
 
+  !private
+
   !public :: fft_new_plan_c2c_1d, fft_apply_plan_c2c_1d
 
   implicit none 
@@ -67,6 +69,61 @@ contains
   subroutine print_defaultfftlib()
     print *, 'The library used is FFTW'
   end subroutine
+
+
+  !> Function to allocate an aligned complex array
+  function fft_allocate_aligned_complex(n) result(data)!, ptr_data, data)
+    sll_int32,                 intent(in)  :: n                !< Size of the pointer
+    complex(C_DOUBLE_COMPLEX), pointer     :: data(:) !< Array to be allocated
+    
+    type(C_PTR) :: ptr_data         ! C pointer needed for allocation
+   
+
+    ptr_data = fftw_alloc_complex(int(n,kind=C_SIZE_T))
+    call c_f_pointer(ptr_data, data, [n])
+
+  end function fft_allocate_aligned_complex
+
+
+  !> Function to allocate an aligned real array
+  function fft_allocate_aligned_real(n) result(data)!, ptr_data, data)
+    sll_int32,                 intent(in)  :: n                !< Size of the pointer
+    real(C_DOUBLE), pointer                :: data(:) !< Array to be allocated
+    
+    type(C_PTR) :: ptr_data         ! C pointer needed for allocation
+   
+
+    ptr_data = fftw_alloc_real(int(n,kind=C_SIZE_T))
+    call c_f_pointer(ptr_data, data, [n])
+
+  end function fft_allocate_aligned_real
+
+
+!!$  !> Function to allocate an aligned complex array
+!!$  subroutine fft_allocate_aligned_complex(n, ptr_data, data)
+!!$    sll_int32,                 intent(in)  :: n                !< Size of the pointer
+!!$    type(C_PTR),               intent(out) :: ptr_data         !< C pointer needed for allocation
+!!$    complex(C_DOUBLE_COMPLEX), pointer, intent(out) :: data(:) !< Array to be allocated
+!!$   
+!!$
+!!$    ptr_data = fftw_alloc_complex(int(n,kind=C_SIZE_T))
+!!$    call c_f_pointer(ptr_data, data, [n])
+!!$
+!!$  end subroutine fft_allocate_aligned_complex
+
+
+!!$  !> Function to allocate an aligned complex array
+!!$  subroutine fft_allocate_aligned_real(n, ptr_data, data)
+!!$    sll_int32,                 intent(in)  :: n                !< Size of the pointer
+!!$    type(C_PTR),               intent(out) :: ptr_data         !< C pointer needed for allocation
+!!$    real(C_DOUBLE), pointer, intent(out) :: data(:) !< Array to be allocated
+!!$   
+!!$
+!!$    ptr_data = fftw_alloc_real(int(n,kind=C_SIZE_T))
+!!$    call c_f_pointer(ptr_data, data, [n])
+!!$
+!!$  end subroutine fft_allocate_aligned_real
+
 
   !> Function to reconstruct the complex FFT mode from the data of a r2r transform
   function fft_get_mode_r2c_1d(plan,data,k) result(mode)

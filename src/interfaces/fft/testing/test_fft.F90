@@ -8,6 +8,8 @@ program unit_test
 #define FFTW_MOD 1000000000
 
   type(sll_fft_plan), pointer :: p => null()
+  type(sll_fft_plan), pointer :: pf => null()
+  type(sll_fft_plan), pointer :: pb => null()
 
   sll_real64, parameter  :: err_max = 10E-14_f64
   sll_int32, parameter   :: hmax = 1
@@ -22,7 +24,6 @@ program unit_test
   sll_comp64, dimension(m1,m2) :: data_copy2d
   sll_real64, dimension(m1,m2) :: rdata_copy2d
   sll_real64, dimension(n) :: rdata_comp, rdata_copy, rdata
-  sll_comp64 :: mode
   sll_real64 :: ierr  ! this is not used as an integer below, bad name
   sll_real64 :: err_var
   sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
@@ -30,10 +31,8 @@ program unit_test
   sll_int32, allocatable :: rnd_seed(:) !< Random seed.
 
   ! Aligned data
-  complex(C_DOUBLE_COMPLEX), dimension(m1), pointer :: in
-  complex(C_DOUBLE_COMPLEX), dimension(m2), pointer :: out
-  type(C_PTR) :: p_in
-  type(C_PTR) :: p_out
+  complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: in
+  real(C_DOUBLE), dimension(:), pointer :: ar_data
  
   call print_defaultfftlib()
   
@@ -134,34 +133,35 @@ program unit_test
   print *, 'OK'
 
 
- print *,'-------------------------------------------------'
-  print * ,'COMPLEX TO COMPLEX WITH ALIGNED MEMORY'
+  print *,'-------------------------------------------------'
+  print * ,'COMPLEX TO COMPLEX WITH ALIGNED MEMORY AND PLANNER OPTIMIZATION'
 
-  p_in = fftw_alloc_complex(m1)
-  call c_f_pointer(p_in, in,[m1])
-
-  do i=imin,imax
-   do h=1,hmax
-    s = 2**i
-
-    do j=1,s
-      CALL RANDOM_COMPLEX(data_comp(j))
-    enddo
-    data_copy(1:s) = data_comp(1:s)
-  
-    p => fft_new_plan_c2c_1d(s,in,in,FFT_FORWARD)
-    call fft_apply_plan_c2c_1d(p,in,in)
-    call fft_delete_plan(p)
-
-    p => fft_new_plan_c2c_1d(s,in,in,FFT_BACKWARD,normalized=.TRUE.)
-    call fft_apply_plan_c2c_1d(p,in,in)
-    call fft_delete_plan(p)
-    ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
-    if( ierr > err_max ) then
-      stop 'Average error too big'
-    endif
-   enddo
+  ! Allocate aligned memory
+  in => fft_allocate_aligned_complex(m1)
+  !call fft_allocate_aligned_complex(m1, p_in, in)
+ 
+  ! Initialize the plans 
+  pf => fft_new_plan_c2c_1d(m1,in,in,FFT_FORWARD, aligned = .TRUE., optimization = FFT_MEASURE)
+  pb => fft_new_plan_c2c_1d(m1,in,in,FFT_BACKWARD,normalized=.TRUE., aligned = .TRUE., optimization = FFT_PATIENT)
+ 
+  ! Initialize the data (note that this has to be done after initializing the plans due to the optimization level.
+  do j=1,m1
+     CALL RANDOM_COMPLEX(data_comp(j))
   enddo
+  in = data_comp(1:m1)
+    
+  ! Forward transform
+  call fft_apply_plan_c2c_1d(pf,in,in)
+  call fft_delete_plan(pf)
+  
+  ! Backward transform
+  call fft_apply_plan_c2c_1d(pb,in,in)
+  call fft_delete_plan(pb)
+  ierr = ERROR_MAX(data_comp(1:m1) - in)
+  if( ierr > err_max ) then
+     stop 'Average error too big'
+  endif
+
   print *, 'OK'
 
 
@@ -194,6 +194,38 @@ program unit_test
    enddo
   enddo
   print *, 'OK'
+
+
+  print *,'-------------------------------------------------'
+  print * ,'REAL TO REAL WITH ALIGNED MEMORY AND PLANNER OPTIMIZATION'
+
+  ! Allocate aligned memory
+  ar_data => fft_allocate_aligned_real(m1)
+ 
+  ! Initialize the plans 
+  pf => fft_new_plan_r2r_1d(m1,ar_data,ar_data,FFT_FORWARD, aligned = .TRUE., optimization = FFT_MEASURE)
+  pb => fft_new_plan_r2r_1d(m1,ar_data,ar_data,FFT_BACKWARD,normalized=.TRUE., aligned = .TRUE., optimization = FFT_PATIENT)
+ 
+  ! Initialize the data (note that this has to be done after initializing the plans due to the optimization level.
+  do j=1,m1
+     CALL RANDOM_NUMBER(rdata(j))
+  enddo
+  ar_data = rdata(1:m1)
+    
+  ! Forward transform
+  call fft_apply_plan_r2r_1d(pf,ar_data,ar_data)
+  call fft_delete_plan(pf)
+  
+  ! Backward transform
+  call fft_apply_plan_r2r_1d(pb,ar_data, ar_data)
+  call fft_delete_plan(pb)
+  ierr = MAXVAL(ABS(rdata(1:m1) - ar_data))
+  if( ierr > err_max ) then
+     stop 'Average error too big'
+  endif
+
+  print *, 'OK'
+
 
 
 #if _DEFAULTFFTLIB!=FFTPACK_MOD
