@@ -13,7 +13,7 @@ program test_cyclic_banded_solver
 implicit none
 
 integer, parameter :: n = 9
-integer, parameter :: k = 2
+integer, parameter :: k = 3
 
 real(8) :: x(n)
 real(8) :: y(n)
@@ -49,6 +49,9 @@ real(8), allocatable :: ab(:,:)
 integer              :: jpiv(k)
 
 one = 0.0_8
+do i = 1, k
+  one(i,i) = 1.0_8
+end do
 
 kp1 = k+1
 do i = 1, n
@@ -140,12 +143,7 @@ print*, ' Solve A.z = u error : ', sum(abs(u-matmul(a,z)))
 
 !compute the matrix H = inverse(1+t(v).z)
 call print_matrix(1.0+matmul(z,transpose(v)))
-h = 1.0_8 + matmul(transpose(v),z)
-print*,'H:';call print_matrix(h)
-h(1,1) = 1 + dot_product(v(:,1),z(:,1))
-h(2,1) = dot_product(v(:,2),z(:,1))
-h(1,2) = dot_product(v(:,1),z(:,2))
-h(2,2) = 1 + dot_product(v(:,2),z(:,2))
+h = one + matmul(transpose(v),z)
 
 print*,'H:';call print_matrix(h)
 call dgetrf(k,k,h,k,jpiv,info)
