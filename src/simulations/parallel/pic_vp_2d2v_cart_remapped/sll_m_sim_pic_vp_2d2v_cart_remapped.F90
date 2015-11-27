@@ -125,8 +125,8 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
   
 contains
 
-  ! <<particles_snapshot>> ALH - gnuplot-compatible output of all particles with their position and speed at a given
-  ! time
+  ! <<particles_snapshot>> gnuplot-compatible output of all particles with their position and speed at a given time ALH_BUG Develop the
+  ! corresponding gnuplot visualisation script <<ALH>>
 
   subroutine particles_snapshot(time,sim)
 
@@ -698,7 +698,6 @@ contains
     !    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
     !#endif
 
-    !AAA-ALH-HERE
     !  ----------------------------------------------------------------------------------------------------
     !> ## Content of the time loop
     !>          - starting from
@@ -720,7 +719,7 @@ contains
 
        print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%num_iterations
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
-       !AAA-ALH-HERE
+
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64 * omega_i * real(it,f64) * sim%dt)                          &
                              * ( 0.5_f64 + 0.5_f64 * cos(2._f64 * (omega_r * real(it,f64) * sim%dt - psi)) )

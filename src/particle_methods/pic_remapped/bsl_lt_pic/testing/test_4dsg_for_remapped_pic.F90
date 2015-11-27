@@ -19,9 +19,9 @@
 ! [[shell:header\alh 'test_4dsg_for_remapped_pic.F90']] (cf [[file:~/alh/bin/headeralh]])
 ! emacs-keywords authors="MCP and ALH" brief="Testing the sparse interpolation algorithm from [[selalib:src/add_ons/sparse_grid]]" default=0 dox f90 selalib start=02/11/15
 
-! <<ALH>> The goal of this test is to reproduce the same function interpolations as in
-! [[selalib:src/add_ons/sparse_grid/testing/test_sparse_grid_4d.F90::test_interpolation_4d]]
-! (from directory [[selalib:src/add_ons/sparse_grid/testing]])
+! <<<<test_4dsg_for_remapped_pic>>>> The goal of this test is to reproduce the same function interpolations as in
+! [[selalib:src/add_ons/sparse_grid/testing/test_sparse_grid_4d.F90::test_interpolation_4d]] (from directory
+! [[selalib:src/add_ons/sparse_grid/testing]]) <<ALH>>
 
 ! Compilation commands in [[file:CMakeLists.txt::test_4dsg_for_remapped_pic]]
 
@@ -73,19 +73,17 @@ program test_4dsg_for_remapped_pic
   eta_min(3) = 0.0_f64; eta_max(3) = 2.0_f64*sll_pi;
   eta_min(4) = 0.0_f64; eta_max(4) = 2.0_f64*sll_pi;
 
-  ! [[levels]] AAA_ALH_TODO Select right value
+  ! [[levels]] This is a tunable parameter
   levels = 12;
   levelsini(1)=levels;
   levelsini(2)=levels;
   levelsini(3)=levels;
   levelsini(4)=levels;
 
-  ! [[elisp:(compile "cd ${SELALIB}/build && make test_4dsg_for_remapped_pic && ${SELALIB}/build/bin/test_4dsg_for_remapped_pic")]]
-  ! [[order]] AAA_ALH_TODO Which is best?
+  ! [[order]] This is a tunable parameter.
   order = 1;
   
-  ! Initialize sparse grid
-  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::subroutine%20initialize_sg4d]]
+  ! Initialize sparse grid [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::subroutine%20initialize_sg4d]]
   
   call interp%initialize(levelsini,order,order+1,0,eta_min,eta_max);
 
@@ -123,7 +121,7 @@ program test_4dsg_for_remapped_pic
      write(*,"(A,I3,A,G12.5,G12.5,G12.5,G12.5,G12.5)") "point",i," ",dx(1),dx(2),dx(3),dx(4),ferr
   end do
 
-  ! AAA_ALH_TODO Which accuracy do we need?
+  ! Accuracy depends strongly on the [[tunable]] parameters above.
   
   write(*,"(A,G12.5)") "maximum error = ",ferrmax
   if (ferrmax <= 1e-2) then
@@ -163,7 +161,7 @@ end program test_4dsg_for_remapped_pic
 ! mode:F90
 ! ispell-local-dictionary:"british"
 ! coding:utf-8
-! fill-column:80
+! fill-column:132
 ! eval:(flyspell-prog-mode)
 ! eval:(outline-minor-mode)
 ! End:
