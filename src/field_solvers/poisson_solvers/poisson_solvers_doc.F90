@@ -14,6 +14,5 @@
 !> Library with all Poisson solvers
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_poisson_solvers.h' \endcode
 !> - Link with   <code>-lsll_poisson_solvers</code>
 !>
