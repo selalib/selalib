@@ -14,7 +14,7 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 module sll_m_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -382,3 +382,4 @@ contains
   end subroutine
 
 end module sll_m_fft
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

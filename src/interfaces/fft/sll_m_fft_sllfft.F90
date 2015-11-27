@@ -21,6 +21,8 @@
 !> @details
 !> These functions do not depend on external library
 module sll_m_fft
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -1356,4 +1358,5 @@ contains
 #undef CREAL1
 #undef CIMAG1
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 end module sll_m_fft
