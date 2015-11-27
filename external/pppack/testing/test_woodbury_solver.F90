@@ -17,7 +17,6 @@ integer, parameter :: k = 3
 
 real(8) :: x(n), b(n)
 real(8) :: q(2*k+1,n)
-real(8) :: a(n,n)
 real(8) :: u(n,k) 
 real(8) :: v(n,k)
 integer :: i
@@ -51,43 +50,36 @@ do i = 1, n
 end do
 
 call print_matrix(m)
-!Create matrix A without corners terms
-a = 0.0_8
-do j = 1,n
-  do i = max(1,j-k), min(n,j+k)
-    a(i,j) = m(i,j)
+
+q = 0.0_8
+do j = 1, n
+  l = 0
+  do i = -k,k
+    l = l+1
+    q(l,j) = m(modulo(i+j-1,n)+1,j)
   end do
 end do
-call print_matrix(a)
+call print_matrix(q)
 
 
 !set u and v vectors and modify a
 u = 0.0_8
 v = 0.0_8
 do l = 1, k
-  g(l)   = -a(l,l)  ! Arbitrary gamma is set using diagonal term of A
+  g(l)   = -q(kp1,l)  ! Arbitrary gamma is set using diagonal term of A
   u(l,l) = g(l)
   v(l,l) = 1.0_8 
 end do
 
 do j = 1, k
   do i = n-k+j-1,n
+    print*,i*10+j
     u(i,j) = m(i,j)
     v(i,j) = m(j,i)/g(j)
   end do
 end do
 
 
-!store banded matrix A in q for banfac
-q = 0.0_8
-do j = 1, n
-  l = 0
-  do i = -k,k
-    l = l+1
-    if (i+j >= 1 .and. i+j <= n) q(l,j) = a(i+j,j)
-  end do
-end do
-call print_matrix(q)
 do j = 1, k
   q(kp1,j) = m(j,j) - g(j) 
 end do
