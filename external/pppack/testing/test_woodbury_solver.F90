@@ -114,32 +114,33 @@ do j = n-k+1,n
   end do
 end do
 
-ldab=2*k+k+1
-allocate(ab(ldab,n))
-ab = 0.0
+!store banded matrix A in q for banfac
+q = 0.0_8
 do j = 1, n
-  do i = max(1,j-k), min(n,j+k)
-    ab(k+k+1+i-j,j) = a(i,j) 
+  l = 0
+  do i = -k,k
+    l = l+1
+    if (i+j >= 1 .and. i+j <= n) q(l,j) = a(i+j,j)
   end do
 end do
-call dgbtrf(n,n,k,k,ab,ldab,ipiv,info)
 
-print*, "A:"; call print_matrix(a)
-print*, 'U:'; call print_matrix(u)
-print*, 'V:'; call print_matrix(v)
-print*, 'M - (A + U.t(V)) : must be zero '
-write(*,"(' Decomposition error = ', g15.3)") &
-  sum(abs(m-(a+matmul(u,transpose(v)))))
-call print_matrix(matmul(u,transpose(v)))
+write(*,*) "Banded matrix A stored in Q:"
+call print_matrix(q)
 
-y=b
-nrhs = 1
-call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,y,n,info)
-print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,y)))
-nrhs = k
+!Factorize the matrix A
+call banfac ( q, k+kp1, n, k, k, iflag )
+
+!Solve A.y = b
+y = b
+call banslv ( q, k+kp1, n, k, k, y )
+print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,x)))
+
+!Solve A.z = u
 z = u
-call dgbtrs('N',n,k,k,nrhs,ab,ldab,ipiv,z,n,info)
-print*, ' Solve A.z = u error : ', sum(abs(u-matmul(a,z)))
+do l = 1, k
+  call banslv ( q, k+kp1, n, k, k, z(:,l) )
+end do
+print*,'Z:';call print_matrix(z)
 
 !compute the matrix H = inverse(1+t(v).z)
 call print_matrix(1.0+matmul(z,transpose(v)))
@@ -157,46 +158,6 @@ x = y - matmul(z,matmul(h,matmul(transpose(v),y)))
 call print_vector(x)
 write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
 
-!!store banded matrix A in q for banfac
-!q = 0.0_8
-!do j = 1, n
-!  l = 0
-!  do i = -k,k
-!    l = l+1
-!    if (i+j >= 1 .and. i+j <= n) q(l,j) = a(i+j,j)
-!  end do
-!end do
-!
-!write(*,*) "Banded matrix A stored in Q:"
-!call print_matrix(q)
-!
-!!Factorize the matrix A
-!call banfac ( q, k+kp1, n, k, k, iflag )
-!print*, 'iflag=', iflag
-!
-!!Solve A.y = b
-!x = b
-!call banslv ( q, k+kp1, n, k, k, x )
-!print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,x)))
-!
-!!Solve A.z = u
-!do l = 1, k
-!  call banslv ( q, k+kp1, n, k, k, u(:,l) )
-!end do
-!print*,'Z:';call print_matrix(u)
-!!compute the matrix H = inverse(1+t(v).z)
-!h = one+matmul(transpose(v),u)
-!deallocate(ipiv); allocate(ipiv(k))
-!
-!call dgetrf(k,k,h,k,ipiv,info)
-!call dgetri(k,h,k,ipiv,work,k*k,info)
-!print*,'H:';call print_matrix(h)
-!
-!f = matmul(h,matmul(transpose(v),x))
-!print*, ' X = Y - Z . [H . (t(V).Y)] : '
-!x = x - matmul(u,f)
-!call print_vector(x)
-!write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
 
 contains
 
