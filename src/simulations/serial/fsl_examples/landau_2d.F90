@@ -3,7 +3,6 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 
 use sll_m_constants
 use sll_m_interpolators_1d_base
@@ -12,6 +11,14 @@ use sll_m_utilities, only: int2string
 use sll_m_cubic_splines
 use sll_m_boundary_condition_descriptors
 use sll_m_fft
+
+#ifdef FFTW
+use sll_m_poisson_2d_periodic_fftw
+#define poisson_2d_periodic poisson_2d_periodic_fftw
+#else
+use sll_m_poisson_2d_periodic_fftpack
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#endif
 
 implicit none
 
