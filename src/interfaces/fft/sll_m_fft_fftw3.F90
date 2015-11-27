@@ -129,7 +129,7 @@ contains
   !> Function to set a complex mode to the real representation of r2r.
   subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
     type(sll_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
-    sll_real64, dimension(0:), intent(out)   :: data !< Real array for 
+    sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
     sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
     sll_int32, intent(in)                    :: k !< mode to be set
 

@@ -25,14 +25,13 @@ program unit_test
   sll_real64, dimension(m1,m2) :: rdata_copy2d
   sll_real64, dimension(n) :: rdata_comp, rdata_copy, rdata
   sll_real64 :: ierr  ! this is not used as an integer below, bad name
-  sll_real64 :: err_var
-  sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
+  sll_int32 :: i,j,s,h,k,t
   sll_int32 :: rnd_seed_size
   sll_int32, allocatable :: rnd_seed(:) !< Random seed.
 
   ! Aligned data
-  complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: in
-  real(C_DOUBLE), dimension(:), pointer :: ar_data
+  sll_comp64, dimension(:), pointer :: in
+  sll_real64, dimension(:), pointer :: ar_data
  
   call print_defaultfftlib()
   
@@ -44,23 +43,6 @@ program unit_test
   end do
   call random_seed (put=rnd_seed)
   
-! test getter and setter functions in complex case
-  s = 2**imin
-  do j=1,s
-    CALL RANDOM_COMPLEX(data_comp(j))
-  enddo
-
-  data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
-
-  if( ierr .ne. 0_f64 ) then
-    print *,'Average error too big',ierr
-    stop
-  else
-    print *,'get and set mode complex ok'
-  endif
-  call fft_delete_plan(p)
 
 ! test getter and setter functions in real case
   s = 2**imax
@@ -68,8 +50,14 @@ program unit_test
     CALL RANDOM_NUMBER(rdata(j))
   enddo
   rdata_copy(1:s) = rdata(1:s)
+  ALLOCATE(ar_data(1:s))
   p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
-  ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
+  !call fft_apply_plan_r2r_1d(p, rdata(1:s), rdata(1:s))
+  do j=1,s/2+1
+     data_comp(j) =  fft_get_mode_r2c_1d(p,rdata(1:s), j-1)
+     call fft_set_mode_c2r_1d(p,ar_data, data_comp(j),j-1) 
+  end do
+  ierr = MAXVAL(ABS(ar_data - rdata_copy(1:s)))
   if( ierr .ne. 0_f64 ) then
     print *,'Average error too big',ierr
     stop
@@ -77,34 +65,8 @@ program unit_test
     print *,'get and set mode real ok'
   endif
   call fft_delete_plan(p)
+  DEALLOCATE(ar_data)
 
-
-!!$! Standard do-loop on the mode
-!!$  s = 2**imin
-!!$  do j=1,s
-!!$    CALL RANDOM_COMPLEX(data_comp(j))
-!!$  enddo
-!!$  data_copy(1:s) = data_comp(1:s)
-!!$  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-!!$  do ind_mode=0,s-1
-!!$    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
-!!$  enddo
-!!$  call fft_delete_plan(p)
-
-!!$! optimized do-loop on the mode
-!!$  s = 2**imin
-!!$  do j=1,s
-!!$    CALL RANDOM_COMPLEX(data_comp(j))
-!!$  enddo
-!!$  data_copy(1:s) = data_comp(1:s)
-!!$  p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-!!$  !do array_position=0,s-1
-!!$    !ind_mode = fft_ith_stored_mode(p,array_position) !The only change with the standard
-!!$                                                     !do-loop is this line.
-!!$    !mode = fft_get_mode(p,data_comp(1:s),array_position)!ind_mode)
-!!$  !enddo
-!!$  
-!!$  call fft_delete_plan(p)
 
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX'
