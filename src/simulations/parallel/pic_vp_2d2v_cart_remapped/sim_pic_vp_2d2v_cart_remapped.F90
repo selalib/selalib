@@ -37,13 +37,13 @@ program sim_pic_vp_2d2v_cart_remapped
           sim%mesh_2d%num_cells1, 'X',sim%mesh_2d%num_cells2,'cells'
      if( sim%use_lt_pic_scheme )then
          print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
-              * sim%number_particles, 'transport markers (pushed particles) per cell'
+              * real(sim%number_particles,f64), 'transport markers (pushed particles) per cell'
 
          print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
-              * sim%virtual_particle_number, 'virtual particles (deposited particles) per cell'
+              * real(sim%number_deposition_particles,f64), 'deposition particles per cell'
      else
          print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
-              * sim%number_particles, 'particles per cell'
+              * real(sim%number_particles,f64), 'particles per cell'
      end if
   endif
 
