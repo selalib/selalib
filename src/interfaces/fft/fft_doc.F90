@@ -212,7 +212,8 @@
 !>                     \\ r_1 &,& -i_1 
 !> \end{pmatrix}\f] 
 !> \warning Note that ffw uses \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
-!>          convention whereas fftpack uses \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$. Through the interface, FFTW ordering is enforced also for FFTPACK.
+!>          convention whereas fftpack uses \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$. Through the interface, FFTW ordering is enforced also for FFTPACK. 
+!> For r2c and r2c, the lower half (plus one element) is stored (non-negative frequencies). In higher dimensions, the first dimension is reduced to n/2+1 whereas the others remain n.
 !> 
 !>
 !------------------------------------------------------------------------------

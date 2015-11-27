@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 !> @ingroup fft
-!> @author ???? and Katharina Kormann, IPP
+!> @author ???? and Katharina Kormann (IPP)
 !> @brief FFT interface for FFTW
 module sll_m_fft
 #include "sll_working_precision.h"
@@ -398,8 +398,8 @@ contains
   function fft_new_plan_r2c_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
-    sll_real64, dimension(:,:), intent(inout)    :: array_in
-    sll_comp64, dimension(:,:), intent(out)      :: array_out 
+    sll_real64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64, dimension(:,:), intent(out)      :: array_out !< (Typical) output array (gets overwritten for certain options)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
     sll_int32, optional, intent(in)               :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
@@ -446,7 +446,7 @@ contains
   subroutine fft_apply_plan_r2c_2d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
     sll_real64, dimension(:,:), intent(inout)         :: array_in  !< Real input data to be Fourier transformed
-    sll_comp64, dimension(:,:), intent(out)           :: array_out !< Complex Fourier coefficients (only half part along XX dimension due to symmetry)
+    sll_comp64, dimension(:,:), intent(out)           :: array_out !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
     sll_int32     :: nx, ny
     sll_real64    :: factor
 

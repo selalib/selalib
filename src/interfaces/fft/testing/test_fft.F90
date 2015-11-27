@@ -28,9 +28,16 @@ program unit_test
   sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
   sll_int32 :: rnd_seed_size
   sll_int32, allocatable :: rnd_seed(:) !< Random seed.
+
+  ! Aligned data
+  complex(C_DOUBLE_COMPLEX), dimension(m1), pointer :: in
+  complex(C_DOUBLE_COMPLEX), dimension(m2), pointer :: out
+  type(C_PTR) :: p_in
+  type(C_PTR) :: p_out
  
   call print_defaultfftlib()
   
+  ! Set some random seed
   call random_seed (size=rnd_seed_size)
   allocate(rnd_seed(rnd_seed_size))
   do j=1, rnd_seed_size
@@ -117,6 +124,37 @@ program unit_test
 
     p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,normalized=.TRUE.)
     call fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
+    call fft_delete_plan(p)
+    ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
+    if( ierr > err_max ) then
+      stop 'Average error too big'
+    endif
+   enddo
+  enddo
+  print *, 'OK'
+
+
+ print *,'-------------------------------------------------'
+  print * ,'COMPLEX TO COMPLEX WITH ALIGNED MEMORY'
+
+  p_in = fftw_alloc_complex(m1)
+  call c_f_pointer(p_in, in,[m1])
+
+  do i=imin,imax
+   do h=1,hmax
+    s = 2**i
+
+    do j=1,s
+      CALL RANDOM_COMPLEX(data_comp(j))
+    enddo
+    data_copy(1:s) = data_comp(1:s)
+  
+    p => fft_new_plan_c2c_1d(s,in,in,FFT_FORWARD)
+    call fft_apply_plan_c2c_1d(p,in,in)
+    call fft_delete_plan(p)
+
+    p => fft_new_plan_c2c_1d(s,in,in,FFT_BACKWARD,normalized=.TRUE.)
+    call fft_apply_plan_c2c_1d(p,in,in)
     call fft_delete_plan(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
     if( ierr > err_max ) then
