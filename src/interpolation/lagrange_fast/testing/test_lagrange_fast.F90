@@ -20,7 +20,7 @@ program test_lagrange_fast
     ! interpolated function values
     allocate(fp(1:num_points))
 
-	! data initialization
+       ! data initialization
 	xmin = 0.0_f64
 	xmax = num_points-1.0_f64
 	l = xmax - xmin

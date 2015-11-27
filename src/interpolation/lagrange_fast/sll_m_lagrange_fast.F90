@@ -1,3 +1,6 @@
+
+!> @details Abramovic and Stegun, Chapter 25.2
+
 module sll_m_lagrange_fast
 #include "sll_working_precision.h"
 implicit none
@@ -30,8 +33,8 @@ contains
 
 	subroutine lagr_3pt_coeff(pp, p)
 		implicit none
-		sll_real64, intent(out) :: pp(3)
-		sll_real64, intent(in) :: p
+		sll_real64, intent(out) :: pp(3) !< Lagrange interpolations coefficients
+		sll_real64, intent(in) :: p      !< offset in units of grid spacing
 		pp(1) = p*(p-1.)*0.5
 		pp(2) = 1. - p*p
 		pp(3) = p*(p+1.)*0.5
@@ -40,8 +43,8 @@ contains
 	! --- single point 3-pt-lagrange interpolation
 	function lagr_3pt(fm1, f0, f1, p)
 		implicit none
-		sll_real64 :: lagr_3pt
-		sll_real64, intent(in) :: fm1, f0, f1, p
+		sll_real64 :: lagr_3pt   !< interpolated value
+		sll_real64, intent(in) :: fm1, f0, f1, p !< known function values at point -1, 0, 1 (relative to where we want to interpolate)
 		sll_real64 :: pp(3)
 		call lagr_3pt_coeff(pp, p)
 		lagr_3pt = pp(1) * fm1 &
