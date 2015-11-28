@@ -2237,7 +2237,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(int_r(i1))**2
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))**2
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
@@ -2358,7 +2358,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(int_r(i1))**2
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))**2
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo

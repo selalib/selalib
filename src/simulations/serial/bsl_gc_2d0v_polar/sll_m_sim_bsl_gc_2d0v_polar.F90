@@ -1015,13 +1015,12 @@ contains
     l2 = sqrt(l2*delta_x2)
     e  = 0.5_f64*e*delta_x2
     call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
-    time_mode(1:8) = abs(int_r(1:8))
-    !do i1=1,8
-    !  !mode_slope(i1) = time_mode(i1)
-    !  time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))
-    !  !mode_slope(i1) = &
-    !  !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
-    !enddo
+    do i1=1,8
+      !mode_slope(i1) = time_mode(i1)
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))
+      !mode_slope(i1) = &
+      !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
+    enddo
     
     write(file_id,*) &
       dt*real(step,f64), &

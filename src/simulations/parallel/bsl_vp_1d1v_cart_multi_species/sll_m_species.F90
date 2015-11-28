@@ -395,7 +395,7 @@ do i=1,local_size_x2
   call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
   do k=0,nb_mode
      sp%f_hat_x2_loc(k+1) = sp%f_hat_x2_loc(k+1)   &
-       +abs(buf_fft(k+1))**2 &
+       +abs(fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
        *sp%integration_weight(ig+i)
   enddo
 enddo
