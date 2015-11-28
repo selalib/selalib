@@ -79,7 +79,6 @@ s%h = s%h + matmul(transpose(s%v),s%u)
 call dgetrf(k,k,s%h,k,jpiv,info)
 call dgetri(k,s%h,k,jpiv,work,k*k,info)
 
-
 end subroutine woodbury_fac
 
 subroutine woodbury_slv(s, n, k, q, x)
