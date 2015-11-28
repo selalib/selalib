@@ -20,7 +20,7 @@
 !> 2. Initialize the plan
 !> \code p => fft_new_plan_c2c_1d(size,in,out,direction, normalized, aligned, optimization) \endcode
 !>
-!> The arrays in and out can be real and/or complex, 1d or 2d. Change c2c_1d accordingly. The size is only a power of two (radix-2).
+!> The arrays in and out can be real and/or complex, 1d or 2d. Change c2c_1d accordingly.
 !> \warning For complex to real and real to complex transform, there is no direction flag.
 !>          \code p => fft_new_plan_r2c_1d(size,in,out, normalized, aligned, optimization) \endcode
 !>
