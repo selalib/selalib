@@ -1,14 +1,35 @@
-module test_io
+!>Unit test program for xdmf outputs
+program test_io
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_xdmf
+  use sll_m_xdmf
 #ifndef NOHDF5
-use sll_m_hdf5_io_serial
+  use sll_m_hdf5_io_serial
 #endif
-use sll_m_constants
-use sll_m_utilities, only: int2string
+  use sll_m_constants
+  use sll_m_utilities, only: int2string
 
-sll_int32, private :: i, j, k !< indices
+  implicit none
+
+!==============================================================================
+! Run tests
+!==============================================================================
+
+  call test_io_2d()
+  call test_io_3d()
+  call test_sll_plot_f()
+
+  print*,"PASSED"
+
+!==============================================================================
+contains
+!==============================================================================
+
+!>Unit test program for xdmf outputs in 2d
+subroutine test_io_2d()
+
+sll_int32 :: i, j             !< indices
 sll_int32 :: error            !< error code
 sll_int32 :: file_id          !< file unit number
 sll_int32 :: iplot            !< plot counter
@@ -17,11 +38,6 @@ character(len=4) :: cplot     !< plot counter
 #ifndef NOHDF5
 integer(hid_t) :: hfile_id    !< file unit number
 #endif
-
-contains
-
-!>Unit test program for xdmf outputs in 2d
-subroutine test_io_2d()
 
 sll_int32 :: nnodes_x1, nnodes_x2
 sll_int32 :: ncells_x1, ncells_x2
@@ -47,11 +63,11 @@ SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2),error)
 SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2),error)
 
 do j = 1, nnodes_x2
-   vt = real(j-1)/(nnodes_x2-1)
+   vt = real(j-1,f64)/real(nnodes_x2-1,f64)
    angle = vt * 2. * sll_pi
    theta(j) = angle
    do i = 1, nnodes_x1
-      xt = real(i-1) / float(nnodes_x1-1)
+      xt = real(i-1,f64) / real(nnodes_x1-1,f64)
       R =  1 + xt
       ray(i) = R
       x1(i,j) = R * cos(angle)
@@ -69,8 +85,6 @@ call sll_xdmf_write_array(mesh_name,x2,'x2',error)
 call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
 call sll_xdmf_write_array("test2d",df(1:ncells_x1,1:ncells_x2),"CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
-
-
 
 !ASCII version just in case of problem with binary format
 call sll_xml_file_create("test_ascii.xmf",file_id,error)
@@ -109,7 +123,6 @@ call sll_xdmf_rect2d_nodes( "test_rect2d", df, "f2_2d", ray, theta, "HDF5")
 !Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
 call sll_xdmf_curv2d_nodes( "test_curv2d", df, "f3_2d", x1, x2, "HDF5") 
 
-
 #ifndef NOHDF5
 !Init step, create h5 files with mesh coordinates
 call sll_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
@@ -130,12 +143,15 @@ do iplot = 1, 10
    call sll_xdmf_close(file_id,error)
 end do
 
-
 end subroutine test_io_2d
 
 !> Unit test program for xdmf outputs in 3d
 subroutine test_io_3d()
-implicit none
+
+sll_int32 :: i, j, k          !< indices
+sll_int32 :: error            !< error code
+sll_int32 :: file_id          !< file unit number
+
 sll_int32  :: nnodes_x1, nnodes_x2, nnodes_x3
 sll_int32  :: ncells_x1, ncells_x2, ncells_x3
 sll_real64 :: a, b, phi , theta
@@ -162,12 +178,12 @@ SLL_ALLOCATE(vx(nnodes_x1),error)
 SLL_ALLOCATE(vy(nnodes_x2),error)
 SLL_ALLOCATE(vz(nnodes_x3),error)
 
-a = 3
-phi = 0
+a   = 3._f64
+phi = 0._f64
 do k = 1, nnodes_x3
-   theta = 0
+   theta = 0._f64
    do j = 1, nnodes_x2
-      b = 0
+      b = 0._f64
       do i = 1, nnodes_x1
          x1(i,j,k) =  (a + b*cos(phi))*cos(theta)
          x2(i,j,k) =  (a + b*cos(phi))*sin(theta)
@@ -213,11 +229,9 @@ end subroutine test_io_3d
 
 !> Example of use of sll_plot_f
 !> inside a loop
-
 subroutine test_sll_plot_f()
   sll_int32 :: iplot
   sll_real64, allocatable :: f(:,:)
-  sll_real64, allocatable :: phi(:,:)
   sll_int32 :: nnodes_x1
   sll_int32 :: nnodes_x2
   character(len=256) :: f_name
@@ -230,7 +244,6 @@ subroutine test_sll_plot_f()
   sll_real64 :: eta1_max
   sll_real64 :: eta2_min
   sll_real64 :: eta2_max
-  
   
   sll_int32 :: step
   sll_int32 :: num_iterations
@@ -257,10 +270,6 @@ subroutine test_sll_plot_f()
   sll_real64 :: x2_old
   sll_real64 :: res
   
-  
-  
-  
-  
   nnodes_x1 = 65
   nnodes_x2 = 65
   freq_diag = 20
@@ -278,7 +287,6 @@ subroutine test_sll_plot_f()
   k_mode = 3
   eps = 0.5_f64
   alpha = 2._f64*sll_pi
-  
   
   !first we initialize the mesh
   !we use here a polar geometry
@@ -305,6 +313,7 @@ subroutine test_sll_plot_f()
       x2(i,j) = eta1*sin(eta2)
     enddo 
   enddo
+
   !values for f are arbitrary here
   iplot = 0
   time = 0._f64
@@ -319,7 +328,6 @@ subroutine test_sll_plot_f()
     time, &
     x1, &
     x2)    
-  
   
   do step = 1, num_iterations+1
 
@@ -349,8 +357,6 @@ subroutine test_sll_plot_f()
       enddo 
     enddo
     
-    
-    
     if(modulo(step-1,freq_diag)==0)then
       call sll_plot_f( &
         iplot, &
@@ -378,26 +384,6 @@ subroutine test_sll_plot_f()
   
   enddo
 
-
 end subroutine test_sll_plot_f
 
-
-end module test_io
-
-!>Unit test program for xdmf outputs
-program test_io_module
-
-use test_io
-
-implicit none
-
-
-call test_io_2d()
-
-call test_io_3d()
-
-call test_sll_plot_f()
-
-print*,"PASSED"
-
-end program test_io_module
+end program test_io
