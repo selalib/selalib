@@ -28,6 +28,9 @@ implicit none
 !> @param PI number
 sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64 
 
+!> @param 2*PI number
+sll_real64, parameter :: sll_twopi = 2.0_f64*sll_pi
+
 !> @param sll_kx is the fundamental mode in the x-direction.
 sll_real64, parameter :: sll_kx = 2.0_f64*sll_pi
 
