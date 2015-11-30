@@ -37,15 +37,16 @@ integer, parameter :: n = 9
 integer, parameter :: k = 3
 
 real(8) :: x(n)
-real(8) :: y(n)
+real(8) :: y(n-k)
 real(8) :: b(n)
-real(8) :: q(2*k+1,n)
-real(8) :: a(n,n)
-real(8) :: u(n,k) 
-real(8) :: v(n,k)
-real(8) :: w(n,n)
-real(8) :: p(n,n)
-real(8) :: z(n,k)
+real(8) :: q(2*k+1,n-k)
+real(8) :: aa(n-k,n-k)
+real(8) :: bb(k,k)
+real(8) :: cc(k,k)
+real(8) :: dd(k,k)
+
+real(8) :: y(n-k)
+
 integer :: ifla
 integer :: i
 integer :: j, l
@@ -59,14 +60,7 @@ real(8) :: f(k)
 real(8) :: g(k)
 real(8) :: h(k,k)
 
-real(8)              :: work(k*k)
-integer, allocatable :: ipiv(:)
-integer              :: nrhs
-integer              :: iflag
-integer              :: info
-integer              :: ldab
-real(8), allocatable :: ab(:,:)
-integer              :: jpiv(k)
+integer       :: iflag
 
 kp1 = k+1
 do i = 1, n
@@ -84,28 +78,66 @@ end do
 write(*,*) "M="
 call print_matrix(m)
 
-!store banded matrix M in q for banfac
+aa = 0.0_8
+do j = 1,n-k
+  do i = max(1,j-k), min(n-k,j+k)
+    aa(i,j) = m(i,j)
+  end do
+end do
+write(*,*) "A="
+call print_matrix(aa)
+
+bb = 0.0_8
+do j = 1, k
+  do i = 1, k
+    bb(i,j) = m(i,j+n-k)
+  end do
+end do
+write(*,*) "B="
+call print_matrix(bb)
+
+cc = 0.0_8
+do j = 1, k
+  do i = 1, k
+    cc(i,j) = m(i+n-k,j)
+  end do
+end do
+write(*,*) "C="
+call print_matrix(cc)
+
+dd = 0.0_8
+do j = 1, k
+  do i = 1, k
+    dd(i,j) = m(i+n-k,j+n-k)
+  end do
+end do
+write(*,*) "D="
+call print_matrix(dd)
+!store banded matrix A in Q for banfac
 q = 0.0_8
-do j = 1, n
+do j = 1, n-k
   l = 0
   do i = -k,k
     l = l+1
-    q(l,j) = m(modulo(i+j-1,n)+1,j)
+    if (i+j >=1 .and. i+j <=n-k ) q(l,j) = aa(i+j,j)
   end do
 end do
-
-write(*,*) "Banded matrix M stored in Q:"
 call print_matrix(q)
 
-!!Factorize the matrix A
-!call banfac ( q, k+kp1, n, k, k, iflag )
-!print*, 'iflag=', iflag
-!
-!!Solve A.y = b
-!x = b
-!call banslv ( q, k+kp1, n, k, k, x )
-!print*, ' Solve A.y = b error : ', sum(abs(b-matmul(a,x)))
-!
+write(*,*) "Banded matrix M stored in Q:"
+
+!Factorize the matrix A
+call banfac ( q, k+kp1, n-k, k, k, iflag )
+print*, 'iflag=', iflag
+
+!Solve A.Y = B
+y = 0.0
+do i = 1, k
+  y = bb(1:n-k)
+  call banslv ( q, k+kp1, n-k, k, k, x(1:n-k) )
+end do
+print*, ' Solve A.y = b error : ', sum(abs(b(1:n-k)-matmul(aa,x(1:n-k))))
+
 !!Solve A.z = u
 !do l = 1, k
 !  call banslv ( q, k+kp1, n, k, k, u(:,l) )
