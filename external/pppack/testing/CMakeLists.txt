@@ -3,7 +3,7 @@ TARGET_LINK_LIBRARIES( test_pppack pppack )
 ADD_EXECUTABLE( test_woodbury_solver test_woodbury_solver.F90 )
 TARGET_LINK_LIBRARIES( test_woodbury_solver pppack ${LAPACK_LIBRARIES} )
 ADD_EXECUTABLE( test_schur_complement_solver test_schur_complement_solver.F90 )
-TARGET_LINK_LIBRARIES( test_schur_complement_solver pppack)
+TARGET_LINK_LIBRARIES( test_schur_complement_solver pppack ${LAPACK_LIBRARIES})
 
 FIND_PACKAGE(GSL)
 IF(GSL_FOUND)
