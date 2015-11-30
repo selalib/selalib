@@ -34,38 +34,49 @@ program test_cyclic_banded_solver
 implicit none
 
 integer, parameter :: n = 9
-integer, parameter :: k = 3
+integer, parameter :: k = 2
+integer, parameter :: kp1 = k+1
 
 real(8) :: x(n)
-real(8) :: y(n-k)
 real(8) :: b(n)
 real(8) :: q(2*k+1,n-k)
-real(8) :: aa(n-k,n-k)
-real(8) :: bb(k,k)
-real(8) :: cc(k,k)
-real(8) :: dd(k,k)
 
-real(8) :: y(n-k)
+real(8), allocatable :: aa(:,:)
+real(8), allocatable :: bb(:,:)
+real(8), allocatable :: cc(:,:)
+real(8), allocatable :: dd(:,:)
+real(8), allocatable :: yy(:,:)
+real(8), allocatable :: hh(:,:)
 
-integer :: ifla
+real(8), allocatable :: x1(:)
+real(8), allocatable :: x2(:)
+real(8), allocatable :: b1(:)
+real(8), allocatable :: b2(:)
+real(8), allocatable :: c1(:)
+real(8), allocatable :: c2(:)
+real(8), allocatable :: z1(:)
+real(8), allocatable :: z2(:)
+
 integer :: i
-integer :: j, l
-integer :: kp1
-real(8) :: fact
+integer :: j
+integer :: l
 
 real(8) :: m(n,n)
-real(8) :: im(n,n)
-real(8) :: lu(n,n)
-real(8) :: f(k)
-real(8) :: g(k)
-real(8) :: h(k,k)
+real(8) :: p(n,n)
 
-integer       :: iflag
+integer              :: info
+integer              :: nrhs
+integer, allocatable :: ipiv(:)
+integer              :: jpiv(k)
+integer              :: work(k*k)
 
-kp1 = k+1
 do i = 1, n
-  b(i) = 1.0_8 *i
+  b(i) = real(i,8)
 end do
+allocate(b1(n-k)); b1 = b(1:n-k)
+allocate(b2(k));   b2 = b(n-k+1:n)
+allocate(x1(n-k)); x1 = 0.0_8
+allocate(x2(k));   x2 = 0.0_8
 
 !Create a cyclic banded system m
 m = 0.0_8
@@ -73,11 +84,23 @@ do i = 1, n
   do j = -k,k
     l=modulo(j+i-1,n)+1 
     m(i,l) = real(i*10+l,8)
+    m(l,i) = real(i*10+l,8)
   end do
 end do
 write(*,*) "M="
 call print_matrix(m)
 
+!General Matrix Factorization with Lapack
+allocate(ipiv(n)); ipiv=0
+p = m
+call dgetrf(n,n,p,n,ipiv,info)
+x = b
+nrhs = 1
+call dgetrs('N',n,nrhs,p,n,ipiv,x,n,info)
+write(*,"(' Lapack error = ', g15.3)") sum(abs(b-matmul(m,x)))
+call print_vector(x)
+
+allocate(aa(n-k,n-k))
 aa = 0.0_8
 do j = 1,n-k
   do i = max(1,j-k), min(n-k,j+k)
@@ -87,17 +110,19 @@ end do
 write(*,*) "A="
 call print_matrix(aa)
 
+allocate(bb(n-k,k))
 bb = 0.0_8
 do j = 1, k
-  do i = 1, k
+  do i = 1, n-k
     bb(i,j) = m(i,j+n-k)
   end do
 end do
 write(*,*) "B="
 call print_matrix(bb)
 
+allocate(cc(k,n-k))
 cc = 0.0_8
-do j = 1, k
+do j = 1, n-k
   do i = 1, k
     cc(i,j) = m(i+n-k,j)
   end do
@@ -105,6 +130,7 @@ end do
 write(*,*) "C="
 call print_matrix(cc)
 
+allocate(dd(k,k))
 dd = 0.0_8
 do j = 1, k
   do i = 1, k
@@ -122,41 +148,64 @@ do j = 1, n-k
     if (i+j >=1 .and. i+j <=n-k ) q(l,j) = aa(i+j,j)
   end do
 end do
+write(*,*) "Q ="
 call print_matrix(q)
 
 write(*,*) "Banded matrix M stored in Q:"
 
 !Factorize the matrix A
-call banfac ( q, k+kp1, n-k, k, k, iflag )
-print*, 'iflag=', iflag
+call banfac ( q, k+kp1, n-k, k, k, info )
 
 !Solve A.Y = B
-y = 0.0
-do i = 1, k
-  y = bb(1:n-k)
-  call banslv ( q, k+kp1, n-k, k, k, x(1:n-k) )
+allocate(yy(n-k,k))
+yy = bb
+do j = 1, k
+  call banslv ( q, k+kp1, n-k, k, k, yy(:,j) )
 end do
-print*, ' Solve A.y = b error : ', sum(abs(b(1:n-k)-matmul(aa,x(1:n-k))))
+write(*,*) "Y ="
+call print_matrix(yy)
 
-!!Solve A.z = u
-!do l = 1, k
-!  call banslv ( q, k+kp1, n, k, k, u(:,l) )
-!end do
-!print*,'Z:';call print_matrix(u)
-!!compute the matrix H = inverse(1+t(v).z)
-!h = one+matmul(transpose(v),u)
-!deallocate(ipiv); allocate(ipiv(k))
-!
-!call dgetrf(k,k,h,k,ipiv,info)
-!call dgetri(k,h,k,ipiv,work,k*k,info)
-!print*,'H:';call print_matrix(h)
-!
-!f = matmul(h,matmul(transpose(v),x))
-!print*, ' X = Y - Z . [H . (t(V).Y)] : '
-!x = x - matmul(u,f)
-!call print_vector(x)
-!write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
+!Compute H= D - C.Y
+allocate(hh(k,k))
+hh = dd - matmul(cc,yy)
+write(*,*) "H ="
+call print_matrix(hh)
+call dgetrf(k,k,hh,k,jpiv,info)
+call dgetri(k,hh,k,jpiv,work,k*k,info)
+print*,'H^(-1) =';call print_matrix(hh)
 
+!Solve A.z2 = b1
+allocate(z2(n-k))
+z2 = b1
+call banslv ( q, k+kp1, n-k, k, k, z2 )
+write(*,*) " z2 = "
+call print_vector(z2)
+
+!compute c2 = b2 - C.z2
+allocate(c2(k))
+c2 = b2 - matmul(cc,z2)
+write(*,*) " c2 = "
+call print_vector(c2)
+!Solve H.x2 = c2
+x2 = matmul(hh,c2)
+write(*,*) " x2 = "
+call print_vector(x2)
+!Solve A.x1 = b1 - B.x2
+
+x1 = b1 - matmul(bb,x2)
+call banslv ( q, k+kp1, n-k, k, k, x1 )
+write(*,*) " x1 = "
+call print_vector(x1)
+
+x(1:n-k)   = x1
+x(n-k+1:n) = x2
+
+print*, ' x = '
+call print_vector(x)
+write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 
 subroutine print_vector(v)
