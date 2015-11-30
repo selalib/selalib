@@ -1,9 +1,20 @@
-
-!> @details Abramovic and Stegun, Chapter 25.2
-
+!> @ingroup interpolators
+!> @author
+!> @contact Klaus Reuter, MPCDF
+!> @brief
+!> Module for 1D Lagrange interpolation on a uniform grid (only odd order)
+!> @details
+!> This is an alternative implementation of the Lagrange interpolation for equidistant grids. The only function implemented is an interpolation for a given displacement. The purpose of this implementation is to provide a fast alternative that exploits the simplifications in this special case.
+!> Note: The implementation is based on the formulas in Abramowitz and Stegun: Handbook of Mathematical Functions, Chapter 25.2
+!> @todo
+!> delete function for this type
 module sll_m_lagrange_fast
 #include "sll_working_precision.h"
   implicit none
+
+  public :: lagrange, lagrange_periodic, lagrange_halo_cells
+
+  private
 
   ! --- compile-time constants to avoid run-time division
   sll_real64, parameter :: inv_6       = 1./6.
@@ -26,20 +37,23 @@ module sll_m_lagrange_fast
 
 contains
 
+  !> Compute coefficients for Lagrange interpolation for normalized displacement \a p
   subroutine lagr_3pt_coeff(pp, p)
-    implicit none
     sll_real64, intent(out) :: pp(3) !< Lagrange interpolations coefficients
-    sll_real64, intent(in) :: p      !< offset in units of grid spacing
+    sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
     pp(1) = p*(p-1.)*0.5
     pp(2) = 1. - p*p
     pp(3) = p*(p+1.)*0.5
   end subroutine
 
-  ! --- single point 3-pt-lagrange interpolation
+  !> single point 3-pt-lagrange interpolation
   function lagr_3pt(fm1, f0, f1, p)
     implicit none
-    sll_real64 :: lagr_3pt !< interpolated value
-    sll_real64, intent(in) :: fm1, f0, f1, p !< known function values at point -1, 0, 1 (relative to where we want to interpolate)
+    sll_real64 :: lagr_3pt        !< interpolated value
+    sll_real64, intent(in) :: fm1 !< known function values at point -1 (relative to where we want to interpolate)
+    sll_real64, intent(in) :: f0  !< known function values at point 0 (relative to where we want to interpolate)
+    sll_real64, intent(in) :: f1  !< known function values at point 1 (relative to where we want to interpolate)
+    sll_real64, intent(in) :: p   !< displacement in units of grid spacing
     sll_real64 :: pp(3)
     call lagr_3pt_coeff(pp, p)
     lagr_3pt = pp(1) * fm1 &
@@ -47,11 +61,12 @@ contains
       + pp(3) * f1
   end function lagr_3pt
 
-  ! --- vectorizable 3-pt-lagrange interpolation
+  !> vectorizable 3-pt-lagrange interpolation
   subroutine lagr_3pt_vec(fi, fp, p)
     implicit none
-    sll_real64, intent(in) :: fi(:), p
-    sll_real64, intent(out) :: fp(:)
+    sll_real64, intent(in)  :: fi(:) !< known function values 
+    sll_real64, intent(out) :: fp(:) !< interpolated function values
+    sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
     sll_real64 :: pp(3)
     sll_int32 :: i, n
     call lagr_3pt_coeff(pp, p)
@@ -64,11 +79,10 @@ contains
   end subroutine lagr_3pt_vec
 
 
-
+  !> Compute coefficients for Lagrange interpolation for normalized displacement \a p
   subroutine lagr_5pt_coeff(pp, p)
-    implicit none
-    sll_real64, intent(out) :: pp(5)
-    sll_real64, intent(in) :: p
+    sll_real64, intent(out) :: pp(5)  !< Lagrange interpolations coefficients
+    sll_real64, intent(in)  :: p      !< displacement in units of grid spacing
     pp(1) = (p*p-1.)*p*(p-2.)*inv_24
     pp(2) = -(p-1.)*p*(p*p-4.)*inv_6
     pp(3) = (p*p-1.)*(p*p-4.)*0.25
@@ -76,12 +90,12 @@ contains
     pp(5) = (p*p-1.)*p*(p+2.)*inv_24
   end subroutine
 
-  ! --- single point 5-pt-lagrange interpolation
+  !> single point 5-pt-lagrange interpolation
   function lagr_5pt(fm2, fm1, f0, f1, f2, p)
     implicit none
-    sll_real64 :: lagr_5pt
+    sll_real64             :: lagr_5pt
     sll_real64, intent(in) :: fm2, fm1, f0, f1, f2, p
-    sll_real64 :: pp(5)
+    sll_real64             :: pp(5)
     call lagr_5pt_coeff(pp, p)
     lagr_5pt = pp(1) * fm2 &
       + pp(2) * fm1 &
@@ -90,7 +104,7 @@ contains
       + pp(5) * f2
   end function lagr_5pt
 
-  ! --- vectorizable 5-pt-lagrange interpolation
+  !> vectorizable 5-pt-lagrange interpolation
   subroutine lagr_5pt_vec(fi, fp, p)
     implicit none
     sll_real64, intent(in) :: fi(:), p
@@ -109,11 +123,10 @@ contains
   end subroutine lagr_5pt_vec
 
 
-
+  !> Compute coefficients for Lagrange interpolation for normalized displacement \a p
   subroutine lagr_7pt_coeff(pp, p)
-    implicit none
-    sll_real64, intent(out) :: pp(7)
-    sll_real64, intent(in) :: p
+    sll_real64, intent(out) :: pp(7) !< Lagrange interpolations coefficients
+    sll_real64, intent(in) :: p      !< displacement in units of grid spacing
     pp(1) = p*(p-3)*(p**2-4)*(p**2-1)*inv_720
     pp(2) = -p*(p-2)*(p**2-9)*(p**2-1)*inv_120
     pp(3) = p*(p-1)*(p**2-9)*(p**2-4)*inv_48
@@ -123,7 +136,7 @@ contains
     pp(7) = (p+3)*p*(p**2-4)*(p**2-1)*inv_720
   end subroutine
 
-  ! --- single point 7-pt-lagrange interpolation
+  !> single point 7-pt-lagrange interpolation
   function lagr_7pt(fm3, fm2, fm1, f0, f1, f2, f3, p)
     implicit none
     sll_real64 :: lagr_7pt
@@ -139,7 +152,7 @@ contains
       + pp(7) * f3
   end function lagr_7pt
 
-  ! --- vectorizable 7-pt-lagrange interpolation
+  !> vectorizable 7-pt-lagrange interpolation
   subroutine lagr_7pt_vec(fi, fp, p)
     implicit none
     sll_real64, intent(in) :: fi(:), p
@@ -161,11 +174,12 @@ contains
 
 
 
-
+  !> Compute coefficients for Lagrange interpolation for normalized displacement \a p
   subroutine lagr_9pt_coeff(pp, p)
     implicit none
     sll_real64, intent(out) :: pp(9)
     sll_real64, intent(in) :: p
+
     pp(1) = p*(p-4)*(p**2-9)*(p**2-4)*(p**2-1)*inv_40320
     pp(2) = -p*(p-3)*(p**2-16)*(p**2-4)*(p**2-1)*inv_5040
     pp(3) = p*(p-2)*(p**2-16)*(p**2-9)*(p**2-1)*inv_1440
@@ -177,7 +191,7 @@ contains
     pp(9) = (p+4)*p*(p**2-9)*(p**2-4)*(p**2-1)*inv_40320
   end subroutine
 
-  ! --- single point 9-pt-lagrange interpolation
+  !> single point 9-pt-lagrange interpolation
   function lagr_9pt(fm4, fm3, fm2, fm1, f0, f1, f2, f3, f4, p)
     implicit none
     sll_real64 :: lagr_9pt
@@ -195,7 +209,7 @@ contains
       + pp(9) * f4
   end function lagr_9pt
 
-  ! --- vectorizable 9-pt-lagrange interpolation
+  !> vectorizable 9-pt-lagrange interpolation
   subroutine lagr_9pt_vec(fi, fp, p)
     implicit none
     sll_real64, intent(in) :: fi(:), p
@@ -219,11 +233,11 @@ contains
 
 
 
-
+  !> Compute coefficients for Lagrange interpolation for normalized displacement \a p
   subroutine lagr_11pt_coeff(pp, p)
-    implicit none
-    sll_real64, intent(out) :: pp(11)
-    sll_real64, intent(in) :: p
+    sll_real64, intent(out) :: pp(11) !< Lagrange interpolations coefficients
+    sll_real64, intent(in)  :: p      !< displacement in units of grid spacing
+
     ! generated using Maple
     pp(1)  = p*(p-5)*(p**2-16)*(p**2-9)*(p**2-4)*(p**2-1)*inv_3628800
     pp(2)  = -p*(p-4)*(p**2-25)*(p**2-9)*(p**2-4)*(p**2-1)*inv_362880
@@ -238,7 +252,7 @@ contains
     pp(11) = (p+5)*p*(p**2-16)*(p**2-9)*(p**2-4)*(p**2-1)*inv_3628800
   end subroutine
 
-  ! --- single point 11-pt-lagrange interpolation
+  !> single point 11-pt-lagrange interpolation
   function lagr_11pt(fm5, fm4, fm3, fm2, fm1, f0, f1, f2, f3, f4, f5, p)
     implicit none
     sll_real64 :: lagr_11pt
@@ -258,7 +272,7 @@ contains
       + pp(11)* f5
   end function lagr_11pt
 
-  ! --- vectorizable 11-pt-lagrange interpolation
+  !> vectorizable 11-pt-lagrange interpolation
   subroutine lagr_11pt_vec(fi, fp, p)
     implicit none
     sll_real64, intent(in) :: fi(:), p
@@ -283,15 +297,15 @@ contains
   end subroutine lagr_11pt_vec
 
 
-  ! --- Lagrange interpolation, without boundary conditions ---
-  ! fi(:)      input array of length n
-  ! fp(:)      output array of length n
-  ! p          offset in units of dx
-  ! stencil    number of points in fi used for interpolation
+  !> @brief Lagrange interpolation, without boundary conditions
+  !> @param [in] fi(:)      input array of length n
+  !> @param [out] fp(:)      output array of length n
+  !> @param [in]  p          offset in units of dx
+  !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
   subroutine lagrange(fi, fp, p, stencil)
     implicit none
-    sll_real64, intent(in) :: fi(:)
-    sll_real64, intent(out) :: fp(:)
+    sll_real64, intent(in) :: fi(:)   
+    sll_real64, intent(out) :: fp(:)  
     sll_real64, intent(in) :: p
     sll_int32, intent(in) :: stencil
     sll_int32 :: n, i
@@ -324,11 +338,11 @@ contains
   end subroutine lagrange
 
 
-  ! --- Lagrange interpolation, periodic boundary conditions ---
-  ! fi(:)      input array of length n
-  ! fp(:)      output array of length n
-  ! p          offset in units of dx
-  ! stencil    number of points in fi used for interpolation
+  !> @brief Lagrange interpolation, periodic boundary conditions
+  !> @param [in]  fi(:)      input array of length n
+  !> @param [out] fp(:)      output array of length n
+  !> @param [in]  p          offset in units of dx
+  !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
   subroutine lagrange_periodic(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in) :: fi(:)
@@ -359,16 +373,16 @@ contains
   end subroutine lagrange_periodic
 
 
-  ! --- Lagrange interpolation with halo cell boundaries, ---
-  !     where the input array already contains halo cells.
-  !     ==> This is what you would typically use for an
-  !         MPI decomposition with ghost cells.
-  !
-  ! fi(:)      input array of length n, including the halos
-  ! fp(:)      output array of length n, only the inner part is overwritten
-  !            (ie boundaries of half stencil width are untouched)
-  ! p          offset in units of dx
-  ! stencil    number of points {3,5,7,9,11} in fi used for interpolation
+  !> @brief Lagrange interpolation with halo cell boundaries,
+  !>     where the input array already contains halo cells.
+  !>     ==> This is what you would typically use for an
+  !>         MPI decomposition with ghost cells.
+  !>
+  !> @param [in]  fi(:)      input array of length n, including the halos
+  !> @param [out] fp(:)      output array of length n, only the inner part is overwritten
+  !>            (ie boundaries of half stencil width are untouched)
+  !> @param [in] p          offset in units of dx
+  !> @param [in] stencil    number of points {3,5,7,9,11} in fi used for interpolation
   subroutine lagrange_halo_cells(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in) :: fi(:)
