@@ -1,0 +1,55 @@
+Library downloaded from
+http://www.netlib.org/pppack/
+
+Files are modified to avoid errors with modern Fortran compiler.
+More details on http://pages.cs.wisc.edu/~deboor/
+A threadsafe version is available in src/splines directory
+
+file	banfac.f
+for	LU factorization, banded system, no pivoting
+
+file	banslv.f
+for	solve, banded system, given LU factors
+
+file	bchfac.f
+for	Cholesky factorization, banded lower triangular
+
+file	bchslv.f
+for	solve, banded lower triangular, given Cholesky factorization
+
+file	bsplpp.f  bsplpp.f plus dependencies
+for	convert B-spline representation to piecewise polynomial
+
+file	bsplvb.f
+for	value of all B-splines, in support
+
+file	bsplvd.f  bsplvd.f plus dependencies
+for	value and derivative, all B-splines in support
+
+file	bvalue.f  bvalue.f plus dependencies
+for	evaluate B-spline or a derivative
+
+file	chol1d.f
+for	tridiagonal matrix formation and solution, see (pppack/smooth)
+
+file	colloc.f  colloc.f plus dependencies
+for	solve ODE by collocation with splines
+
+file	colpnt.f  colpnt.f plus dependencies
+for	compute collocation points, used with (pppack/colloc)
+
+file	cubspl.f
+for	cubic spline interpolant, given data, various end conditions
+
+file	cwidth.f
+for	almost block diagonal linear system
+alg	variation of bandet1 by martin, wilkinson Numer.Math. 9(1976)279-307
+
+file	difequ.f  difequ.f plus dependencies
+for	specify an ODE and side conditions, used with (pppack/colloc)
+
+file	eqblok.f  eqblok.f plus dependencies
+for	set up collocation equations, used by (pppack/colloc)
+
+file	interv.f
+for	determine interval of point in increasing sequence
