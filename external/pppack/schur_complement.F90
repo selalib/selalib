@@ -37,7 +37,6 @@ type :: schur_complement_solver
   real(8), allocatable :: bb(:,:)
   real(8), allocatable :: cc(:,:)
   real(8), allocatable :: dd(:,:)
-  real(8), allocatable :: yy(:,:)
   
   real(8), allocatable :: c1(:)
   real(8), allocatable :: z1(:)
@@ -53,18 +52,19 @@ subroutine schur_complement_fac(s, n, k, q)
   
   integer, intent(in)  :: n
   integer, intent(in)  :: k
-  real(8)              :: q(2*k+1,n)
+  real(8), intent(in)  :: q(2*k+1,n)
   integer              :: i
   integer              :: j
   integer              :: l
   integer              :: info
   integer              :: jpiv(k)
   integer              :: work(k*k)
+  real(8)              :: yy(n-k,k)
   
   integer :: kp1
   
   kp1 = k+1
-  allocate(s%bb(n-k,k  )); s%bb = 0.0_8
+  allocate(s%bb(kp1,k  )); s%bb = 0.0_8
   allocate(s%cc(k  ,n-k)); s%cc = 0.0_8
   allocate(s%dd(k  ,k  )); s%dd = 0.0_8
   allocate(s%z2(n-k))    ; s%z2 = 0.0_8
@@ -74,7 +74,7 @@ subroutine schur_complement_fac(s, n, k, q)
     do j = i, k
       s%bb(i,j) = q(k+kp1-l,n-k+l+i)
       l =l+1
-      s%bb(n-k-k+j,l) = q(i,n-k+l)
+      s%bb(j+1,l) = q(i,n-k+l)
     end do
   end do
   
@@ -101,28 +101,30 @@ subroutine schur_complement_fac(s, n, k, q)
     end do
   end do
   
-  !write(*,*) "B"; call print_matrix(s%bb)
-  !write(*,*) "C"; call print_matrix(s%cc)
-  !write(*,*) "D"; call print_matrix(s%dd)
+  write(*,*) "B"; call print_matrix(s%bb)
+  write(*,*) "C"; call print_matrix(s%cc)
+  write(*,*) "D"; call print_matrix(s%dd)
   
   !Factorize the matrix A
   call banfac ( q(:,1:n-k), k+kp1, n-k, k, k, info )
   
   !Solve A.Y = B
-  allocate(s%yy(n-k,k))
-  s%yy = s%bb
-  do j = 1, k
-    call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%yy(:,j) )
+  yy = 0.0_8
+  do i = 1, k
+    yy(i,i:k) = s%bb(i,i:k)
+    yy(n-k-k+i,1:i) = s%bb(i+1,1:i)
   end do
-  call print_matrix(s%yy)
+  write(*,*) "Y"; call print_matrix(yy)
+  do j = 1, k
+    call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, yy(:,j) )
+  end do
   
   !Compute H= D - C.Y
-  s%dd = s%dd - matmul(s%cc,s%yy)
+  s%dd = s%dd - matmul(s%cc,yy)
   call print_matrix(s%dd)
   call dgetrf(k,k,s%dd,k,jpiv,info)
   call dgetri(k,s%dd,k,jpiv,work,k*k,info)
   
-
 end subroutine schur_complement_fac
 
 subroutine schur_complement_slv(s, n, k, q, x)
@@ -133,6 +135,8 @@ subroutine schur_complement_slv(s, n, k, q, x)
   real(8)             :: q(2*k+1,n)
   integer             :: kp1
   real(8)             :: x(n)
+  integer             :: i
+  integer             :: l
   
   kp1 = k+1
   
@@ -142,7 +146,13 @@ subroutine schur_complement_slv(s, n, k, q, x)
   !Solve H.x2 = b2 - C.z2
   x(n-k+1:n) = matmul(s%dd,x(n-k+1:n) - matmul(s%cc,s%z2))
   !Solve A.x1 = b1 - B.x2
-  x(1:n-k) = x(1:n-k) - matmul(s%bb,x(n-k+1:n))
+
+  do i = 1, k
+    x(i) = x(i) - dot_product(s%bb(i,i:k),x(n-k+i:n))
+    l = n-k-k
+    x(l+i) = x(l+i) - dot_product(s%bb(i+1,1:i),x(n-k+1:n-k+i))
+  end do
+
   call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, x(1:n-k) )
 
 end subroutine schur_complement_slv
