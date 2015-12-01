@@ -31,7 +31,7 @@ implicit none
 
   type,extends(sll_advection_1d_base) :: BSL_1d_advector
   
-    class(sll_interpolator_1d_base), pointer  :: interp
+    class(sll_c_interpolator_1d), pointer  :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: charac_feet
@@ -60,7 +60,7 @@ contains
     eta_coords) &  
     result(adv)      
     type(BSL_1d_advector), pointer :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
@@ -91,7 +91,7 @@ contains
     eta_max, &
     eta_coords)    
     class(BSL_1d_advector), intent(inout) :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min

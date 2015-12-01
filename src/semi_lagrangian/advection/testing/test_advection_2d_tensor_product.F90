@@ -30,8 +30,8 @@ implicit none
   class(sll_advection_2d_base), pointer :: adv
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_x2
-  class(sll_interpolator_1d_base), pointer :: interp_x1
-  class(sll_interpolator_1d_base), pointer :: interp_x2
+  class(sll_c_interpolator_1d), pointer :: interp_x1
+  class(sll_c_interpolator_1d), pointer :: interp_x2
   class(sll_characteristics_1d_base), pointer :: charac_x1
   class(sll_characteristics_1d_base), pointer :: charac_x2
   class(sll_interpolator_2d_base), pointer :: interp

@@ -11,7 +11,7 @@ use sll_m_constants, only : &
 
 implicit none
 
-class(sll_interpolator_1d_base), pointer       :: interp
+class(sll_c_interpolator_1d), pointer       :: interp
 type(sll_cubic_spline_interpolator_1d), target :: spline
 
 sll_real64                            :: error

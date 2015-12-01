@@ -3,7 +3,7 @@
 !> Interpolator with periodic boundary conditions
 !! @details
 !> the following provides an implementation for the abstract interface
-!! sll_interpolator_1d_base
+!! sll_c_interpolator_1d
 !! Define periodic interpolation of values in data define on original grid at
 !! points coordinates
 module sll_m_periodic_interpolator_1d
@@ -16,7 +16,7 @@ implicit none
 private
 
   !> Periodic interpolator
-  type, extends(sll_interpolator_1d_base), public ::  sll_periodic_interpolator_1d
+  type, extends(sll_c_interpolator_1d), public ::  sll_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.

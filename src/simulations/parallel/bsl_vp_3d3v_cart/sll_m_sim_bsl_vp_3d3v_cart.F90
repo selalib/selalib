@@ -1229,7 +1229,7 @@ contains
     sll_real64, intent(in)                      :: delta_v
     sll_int32, intent(in)                       :: num_pts
     sll_real64, dimension(:), intent(inout)     :: f_line
-    class(sll_interpolator_1d_base)             :: f_interp
+    class(sll_c_interpolator_1d)             :: f_interp
     sll_int32  :: i
     sll_real64 :: displacement
 
@@ -1246,7 +1246,7 @@ contains
     sll_real64, dimension(:), intent(in)     :: efield
     sll_int32, intent(in)                    :: num_pts
     sll_real64, dimension(:), intent(inout)  :: f_line
-    class(sll_interpolator_1d_base), pointer :: f_interp
+    class(sll_c_interpolator_1d), pointer :: f_interp
     sll_int32                                :: i
     sll_real64                               :: displacement
 

@@ -25,8 +25,8 @@ program test_const_coef_adv_2d
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
-  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+  class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
+  class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
 
   ! initialize interpolator
   call interp_eta1%initialize( N1, XMIN, XMAX, SLL_PERIODIC )

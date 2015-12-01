@@ -225,10 +225,10 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 
     !for computing advection field from phi
     class(sll_interpolator_2d_base), pointer :: phi_interp_x1x2
-    class(sll_interpolator_1d_base), pointer :: phi_interp_x3
+    class(sll_c_interpolator_1d), pointer :: phi_interp_x3
     class(sll_advection_1d_base),    pointer :: adv_x2
     type(oblic_2d_derivative),       pointer :: deriv
-    !class(sll_interpolator_1d_base), pointer   :: phi_interp_fa !for field aligned interp.
+    !class(sll_c_interpolator_1d), pointer   :: phi_interp_fa !for field aligned interp.
     !should replace phi_interp_x3 in future
 
    contains
@@ -272,8 +272,8 @@ contains
     class(sll_interpolator_2d_base), pointer   :: f_interp2d
 
     !> 1D interpolators (along r) for (r,theta) components of adv. field
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
 
     sll_real64 :: charac2d_tol     !< Tolerance for fixed point iteration
     sll_int32  :: charac2d_maxiter !< Max no. of fixed point iterations
@@ -1595,7 +1595,7 @@ contains
     sll_real64,                      intent(in)  :: phi(:)
     type(sll_cartesian_mesh_1d),     pointer     :: mesh
     sll_real64,                      intent(out) :: A(:)
-    class(sll_interpolator_1d_base), pointer     :: interp
+    class(sll_c_interpolator_1d), pointer     :: interp
 
     sll_int32  :: Nc_x1
     sll_real64 :: x1_min

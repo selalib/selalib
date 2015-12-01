@@ -35,7 +35,7 @@ implicit none
 
   type,extends(sll_advection_1d_base) :: CSL_periodic_1d_advector
   
-    class(sll_interpolator_1d_base), pointer  :: interp
+    class(sll_c_interpolator_1d), pointer  :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: charac_feet
@@ -71,7 +71,7 @@ contains
     csl_degree) &  
     result(adv)      
     type(CSL_periodic_1d_advector), pointer :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
@@ -105,7 +105,7 @@ contains
     eta_coords, &
     csl_degree)    
     class(CSL_periodic_1d_advector), intent(inout) :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
@@ -605,7 +605,7 @@ contains
     feet, &
     output)
     sll_int32, intent(in) :: Npts
-    class(sll_interpolator_1d_base), pointer :: interp 
+    class(sll_c_interpolator_1d), pointer :: interp 
     sll_real64, dimension(:), intent(in) :: origin
     sll_real64, dimension(:), intent(in) :: feet
     sll_real64, dimension(:), intent(out) :: output
@@ -680,7 +680,7 @@ contains
     eta_min, &
     eta_max) &
     result(res)
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     sll_real64, intent(in) :: a
     sll_real64, intent(in) :: b
     sll_real64, intent(in) :: eta_min
@@ -711,7 +711,7 @@ contains
     eta_max, &
     Npts, &
     output)
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     sll_real64, intent(in) :: eta_min
     sll_real64, intent(in) :: eta_max
     sll_int32, intent(in) :: Npts
@@ -774,7 +774,7 @@ contains
 
 
   function compute_quadrature(interp,a,b,w) result(res)
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     sll_real64, intent(in) :: a
     sll_real64, intent(in) :: b
     sll_real64, dimension(4), intent(in) :: w
@@ -866,7 +866,7 @@ contains
     N, &
     eta_min, &
     eta_max)
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     sll_real64, dimension(:,:), intent(out) :: deriv
     sll_int32, intent(in) :: N
     sll_real64, intent(in) :: eta_min    
@@ -914,7 +914,7 @@ contains
     eta_max, &
     output, &
     csl_degree)
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     sll_real64, dimension(:), intent(in) :: input
     sll_real64, dimension(:,:), intent(inout) :: deriv
     sll_real64, dimension(:), intent(in) :: charac

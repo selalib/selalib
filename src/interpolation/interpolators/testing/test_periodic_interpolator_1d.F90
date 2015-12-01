@@ -15,7 +15,7 @@ sll_int32, parameter                       :: N0 = 16
 sll_real64                                 :: u(16*N0+1)
 sll_real64                                 :: u_exact(16*N0+1)
 sll_real64                                 :: u_out(16*N0+1)
-class(sll_interpolator_1d_base), pointer   :: interp
+class(sll_c_interpolator_1d), pointer   :: interp
 sll_real64, parameter :: xmin = 0.0_f64, xmax=3.0_f64   
 sll_real64 :: alpha, error, old_error, L, xi,mode
 sll_int32 :: i, p, N
