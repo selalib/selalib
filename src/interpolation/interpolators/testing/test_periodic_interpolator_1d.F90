@@ -40,7 +40,7 @@ do p=1,4
    print*, 'p=', p
    call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
    interp => interp_per
-   u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+   call interp%interpolate_array_disp( N+1, u(1:N+1), -alpha, u_out(1:N+1))
    old_error = error
    error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
    print *, "error =", error
@@ -63,7 +63,7 @@ do p=1,4
    print*, 'p=', p
    call interp_per%initialize( N+1, xmin, xmax, LAGRANGE, 12)
    interp => interp_per
-   u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+   call interp%interpolate_array_disp(N+1, u(1:N+1), -alpha, u_out(1:N+1))
    old_error = error
    error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
    print *, "error =", error
@@ -90,7 +90,7 @@ end do
 
      call interp_lagrange%initialize( N+1,xmin,xmax,SLL_PERIODIC,6)
      interp => interp_lagrange
-     u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+     call interp%interpolate_array_disp(N+1, u(1:N+1), -alpha, u_out(1:N+1))
 
      old_error = error
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))

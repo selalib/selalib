@@ -43,6 +43,10 @@ contains
    !> Compute the value of the interpolant at all grid points shifted by the given displacement. Does not use a precomputed interpolant.
    procedure(interpolator_1d_array_disp), deferred :: &
         interpolate_array_disp
+   !> Compute the value of the interpolant at all grid points shifted by the given displacement. Does not use a precomputed interpolant.
+   procedure(interpolator_1d_array_disp_inplace), deferred :: &
+        interpolate_array_disp_inplace
+
 
 end type sll_c_interpolator_1d
 
@@ -148,7 +152,7 @@ end type sll_c_interpolator_1d
 
 
 
-  !> Signature of interpolate_array_displaced_values
+  !> Signature of interpolate_array_disp
   abstract interface
      subroutine interpolator_1d_array_disp( &
        this, &
@@ -166,6 +170,24 @@ end type sll_c_interpolator_1d
        sll_real64,                      intent(out)    :: output_array(num_pts) !< interpolated values
 
      end subroutine interpolator_1d_array_disp
+  end interface
+
+  !> Signature of interpolate_array_disp
+  abstract interface
+     subroutine interpolator_1d_array_disp_inplace( &
+       this, &
+       num_pts, &
+       data, &
+       alpha)
+
+       use sll_m_working_precision
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
+       sll_int32,                       intent(in)     :: num_pts    !< size of output array
+       sll_real64,                      intent(inout)  :: data(num_pts)  !< data to be interpolated
+       sll_real64,                      intent(in)     :: alpha !< displacement
+
+     end subroutine interpolator_1d_array_disp_inplace
   end interface
 
 

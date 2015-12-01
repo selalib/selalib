@@ -45,6 +45,8 @@ private
      !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
      !>PLEASE ADD DOCUMENTATION
+     procedure, pass:: interpolate_array_disp_inplace => per_interpolate1d_disp_inplace
+     !>PLEASE ADD DOCUMENTATION
      !procedure, pass:: reconstruct_array
      !>PLEASE ADD DOCUMENTATION
      procedure, pass :: set_coefficients => set_coefficients_per1d
@@ -126,10 +128,30 @@ contains  ! ****************************************************************
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
     call periodic_interp(this%per_interp, output_array, data, &
-         alpha/this%cell_size)
+         -alpha/this%cell_size)
     ! complete by periodicity
     output_array(num_pts) = output_array(1)
   end subroutine per_interpolate1d_disp
+
+
+  subroutine per_interpolate1d_disp_inplace(this, num_pts, data, alpha)
+    class(sll_periodic_interpolator_1d),  intent(in)       :: this
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64,  intent(in)   :: alpha
+    sll_real64, dimension(num_pts), intent(inout)   :: data
+
+    ! local variable
+    sll_real64 :: tmp(num_pts)
+    ! Be careful here. For consistency with the other interpolators
+    ! num_points is the number of nodes (including both boundaries)
+    ! and not the number of cells as used in the periodic interpolator module.
+    call periodic_interp(this%per_interp, tmp, data, &
+         -alpha/this%cell_size)
+    ! complete by periodicity
+    data = tmp
+    data(num_pts) = tmp(1)
+  end subroutine per_interpolate1d_disp_inplace
+
 
   ! Both versions F03 and F95 of compute_interpolants_per1d should have the
   ! same name. In the F95 we should add a generic interface around this
