@@ -80,6 +80,8 @@ contains
   procedure :: interpolate_array => interpolate_array_ad1d
   !> Interpolate an array after displacement
   procedure :: interpolate_array_disp => interpolate_1d_array_disp_ad1d
+  !> Interpolate an array after displacement overwriting the input
+  procedure :: interpolate_array_disp_inplace => interpolate_1d_array_disp_inplace_ad1d
   !> Get splines coefficients
   procedure :: get_coefficients => get_coefficients_ad1d
   !> Not implemented
@@ -804,6 +806,23 @@ print *, 'interpolate_1d_array_disp_ad1d: not implemented.'
 output_array = -1000000._f64*alpha*data*this%spline_degree
 
 end subroutine interpolate_1d_array_disp_ad1d
+
+subroutine interpolate_1d_array_disp_inplace_ad1d( &
+     this,        &
+     num_pts, &
+     data,     &
+     alpha)
+
+class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)    :: this
+sll_int32, intent(in)                          :: num_pts
+sll_real64, dimension(num_pts), intent(inout)         :: data
+sll_real64, intent(in)         :: alpha
+
+print *, 'interpolate_1d_array_disp_inplace_ad1d: not implemented.'
+
+end subroutine interpolate_1d_array_disp_inplace_ad1d
+
+
 
 function get_coefficients_ad1d(interpolator)
 

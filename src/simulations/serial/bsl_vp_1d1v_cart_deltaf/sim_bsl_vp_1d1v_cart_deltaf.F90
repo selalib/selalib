@@ -327,9 +327,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
   ! half time step advection in v
   do istep = 1, nbiter
      do i = istartx, iendx
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        alpha = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -342,9 +342,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      !$omp barrier
 
      do j =  jstartv, jendv
-        alpha = (vmin + (j-1) * delta_v) * dt
+        alpha = -(vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        call interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
      !$omp barrier
 
@@ -366,9 +366,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      endif
      !$omp end single
      do i = istartx, iendx
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        alpha = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1

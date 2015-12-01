@@ -294,10 +294,11 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    adv%buf1d_out = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       Npts, &
       adv%buf1d, &
-      adv%charac_feet_i)      
+      adv%charac_feet_i, &
+      adv%buf1d_out)      
 
     !adv%buf1d_out(1:Npts) = adv%buf1d_out(1:Npts)/(adv%eta_coords(Npts)-adv%eta_coords(1))
 
@@ -356,10 +357,11 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    output = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       adv%Npts, &
       input, &
-      adv%charac_feet)      
+      -adv%charac_feet, &
+      output)      
 
     SLL_DEALLOCATE_ARRAY(A1,ierr)
 

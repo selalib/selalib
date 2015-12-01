@@ -205,8 +205,8 @@ subroutine advection_x1(dt)
       eta3 = eta3_min
       do i3 = 1, nc_eta3+1
          do i2 = 1, nc_eta2+1
-            f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
-                            f(:,i2,i3,i4),dt*eta3)
+            call interp_1%interpolate_array_disp(nc_eta1+1, &
+                 f(:,i2,i3,i4),-dt*eta3)
          end do
          eta3 = eta3 + delta_eta3
       end do
@@ -223,8 +223,8 @@ subroutine advection_x2(dt)
    do i4 = 1, nc_eta4+1
       do i3 = 1, nc_eta3+1
          do i1 = 1, nc_eta1+1
-            f(i1,:,i3,i4) = interp_2%interpolate_array_disp(nc_eta2+1, &
-                            f(i1,:,i3,i4),dt*eta4)
+            call interp_2%interpolate_array_disp(nc_eta2+1, &
+                 f(i1,:,i3,i4),-dt*eta4)
          end do
       end do
       eta4 = eta4 + delta_eta4
@@ -239,8 +239,8 @@ subroutine advection_v1(dt)
    do i4 = 1, nc_eta4+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
-      f(i1,i2,:,i4) = interp_3%interpolate_array_disp(nc_eta3+1, &
-                      f(i1,i2,:,i4),ex(i1,i2)*dt)
+      call interp_3%interpolate_array_disp(nc_eta3+1, &
+           f(i1,i2,:,i4),-ex(i1,i2)*dt)
    end do
    end do
    end do
@@ -254,8 +254,8 @@ subroutine advection_v2(dt)
    do i3 = 1, nc_eta3+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
-      f(i1,i2,i3,:) = interp_4%interpolate_array_disp(nc_eta4+1, &
-                      f(i1,i2,i3,:),ey(i1,i2)*dt)
+      call interp_4%interpolate_array_disp(nc_eta4+1, &
+           f(i1,i2,i3,:),-ey(i1,i2)*dt)
    end do
    end do
    end do

@@ -471,10 +471,7 @@ subroutine displace_on_stripe_periodic(interpolator,displacement,dim, max_level)
      interpolator%stripe_out(1) = interpolator%stripe(1)
   else
      interpolator%stripe(size) = interpolator%stripe(1);
-     interpolator%stripe_out(1:size)=&
-          interpolator%interp_per(dim,max_level)%&
-          interpolate_array_disp(&
-          size, interpolator%stripe(1:size), -displacement);
+     call interpolator%interp_per(dim,max_level)%interpolate_array_disp(size, interpolator%stripe(1:size), displacement, interpolator%stripe_out(1:size))
   end if
 
 end subroutine displace_on_stripe_periodic
