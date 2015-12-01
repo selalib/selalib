@@ -17,10 +17,10 @@ Modules required
 #
 from __future__ import print_function
 import re
-from fparser    import statements, typedecl_statements, block_statements
-from fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
-                                logical_operators, logical_constants, \
-                                relational_operators)
+from .fparser   import statements, typedecl_statements, block_statements
+from .fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
+                                 logical_operators, logical_constants, \
+                                 relational_operators)
 
 __all__ = ['compute_local_symbols','compute_external_symbols']
 __docformat__ = 'reStructuredText'
