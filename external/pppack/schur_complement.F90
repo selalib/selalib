@@ -53,7 +53,6 @@ real(8), allocatable :: bb(:,:)
 real(8), allocatable :: cc(:,:)
 real(8), allocatable :: dd(:,:)
 real(8), allocatable :: yy(:,:)
-real(8), allocatable :: hh(:,:)
 
 real(8), allocatable :: x1(:)
 real(8), allocatable :: x2(:)
@@ -142,13 +141,12 @@ write(*,*) "Y ="
 call print_matrix(yy)
 
 !Compute H= D - C.Y
-allocate(hh(k,k))
-hh = dd - matmul(cc,yy)
+dd = dd - matmul(cc,yy)
 write(*,*) "H ="
-call print_matrix(hh)
-call dgetrf(k,k,hh,k,jpiv,info)
-call dgetri(k,hh,k,jpiv,work,k*k,info)
-print*,'H^(-1) =';call print_matrix(hh)
+call print_matrix(dd)
+call dgetrf(k,k,dd,k,jpiv,info)
+call dgetri(k,dd,k,jpiv,work,k*k,info)
+print*,'H^(-1) =';call print_matrix(dd)
 
 !Solve A.z2 = b1
 allocate(z2(n-k))
@@ -163,7 +161,7 @@ c2 = b2 - matmul(cc,z2)
 write(*,*) " c2 = "
 call print_vector(c2)
 !Solve H.x2 = c2
-x2 = matmul(hh,c2)
+x2 = matmul(dd,c2)
 write(*,*) " x2 = "
 call print_vector(x2)
 !Solve A.x1 = b1 - B.x2
