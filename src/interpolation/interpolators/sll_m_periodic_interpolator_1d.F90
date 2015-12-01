@@ -30,22 +30,22 @@ private
      !>PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_per1d
      !>PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_value => interpolate_value_per1d
+     procedure :: interpolate_from_interpolant_value => interpolate_value_per1d
      !>PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_per1d
+     procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_per1d
      !>PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_array_values => interpolate_values_per1d
+     procedure :: interpolate_from_interpolant_array => interpolate_values_per1d
      !>PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_pointer_values => interpolate_pointer_values_per1d
+     !procedure :: interpolate_pointer_values => interpolate_pointer_values_per1d
      !>PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_pointer_derivatives => &
-          interpolate_pointer_derivatives_per1d
+     !procedure :: interpolate_pointer_derivatives => &
+     !     interpolate_pointer_derivatives_per1d
      !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array => per_interpolate1d
      !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
      !>PLEASE ADD DOCUMENTATION
-     procedure, pass:: reconstruct_array
+     !procedure, pass:: reconstruct_array
      !>PLEASE ADD DOCUMENTATION
      procedure, pass :: set_coefficients => set_coefficients_per1d
      !>PLEASE ADD DOCUMENTATION
@@ -95,43 +95,41 @@ contains  ! ****************************************************************
 
 
 
-  function per_interpolate1d(this, num_points, data, coordinates) &
-       result(data_out)
+  subroutine per_interpolate1d(this, num_pts, data, coordinates, output_array)
     class(sll_periodic_interpolator_1d),  intent(in)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: coordinates
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(num_pts), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+    sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! local variables
     !sll_int32 :: ierr
     ! periodic interpolation only implemented for constant displacement
     print*, 'periodic_interpolate1d: periodic interpolation not implemented', &
          ' for array of displacements'
-    data_out = -1000000._f64
-    print *,num_points
+    output_array = -1000000._f64
+    print *,num_pts
     print *,maxval(coordinates)
     print *,maxval(data)
-    print *,maxval(data_out)
+    print *,maxval(output_array)
     print *,this%num_points
     stop
-  end function
+  end subroutine per_interpolate1d
 
-  function per_interpolate1d_disp(this, num_points, data, alpha) &
-       result(data_out)
+  subroutine per_interpolate1d_disp(this, num_pts, data, alpha, output_array)
     class(sll_periodic_interpolator_1d),  intent(in)       :: this
-    sll_int32,  intent(in)                 :: num_points
+    sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+    sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
-    call periodic_interp(this%per_interp, data_out, data, &
+    call periodic_interp(this%per_interp, output_array, data, &
          alpha/this%cell_size)
     ! complete by periodicity
-    data_out(num_points) = data_out(1)
-  end function
+    output_array(num_pts) = output_array(1)
+  end subroutine per_interpolate1d_disp
 
   ! Both versions F03 and F95 of compute_interpolants_per1d should have the
   ! same name. In the F95 we should add a generic interface around this
@@ -171,8 +169,8 @@ contains  ! ****************************************************************
     output_array )
     class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(num_pts), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = -1000000._f64
     print*, 'interpolate_values_per1d:', &

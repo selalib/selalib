@@ -32,24 +32,24 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => wrap_compute_interpolants_hermite_1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_array_derivatives => interpolate_array_derivatives_hi1d
+   !procedure :: interpolate_array_derivatives => interpolate_array_derivatives_hi1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => wrap_interpolate_array_hermite_1d
 
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => interpolate_array_disp_hi1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_hi1d
+   !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_hi1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_derivative_eta1 => interpolate_derivative_eta1_hi1d
+   procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_hi1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_pointer_values => interpolate_pointer_values_hi1d
+   !procedure :: interpolate_pointer_values => interpolate_pointer_values_hi1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_array_values => interpolate_array_values_hi1d
+   procedure :: interpolate_from_interpolant_array => interpolate_array_values_hi1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_value => wrap_interpolate_value_hermite_1d
+   procedure :: interpolate_from_interpolant_value => wrap_interpolate_value_hermite_1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: reconstruct_array => reconstruct_array_hi1d
+   !procedure :: reconstruct_array => reconstruct_array_hi1d
    !> PLEASE ADD DOCUMENTATION
    procedure, pass :: set_coefficients => set_coefficients_hi1d
    !> PLEASE ADD DOCUMENTATION
@@ -185,42 +185,42 @@ contains  !**********************************************************
   end function wrap_interpolate_value_hermite_1d
 
 
-  function wrap_interpolate_array_hermite_1d( &
+  subroutine wrap_interpolate_array_hermite_1d( &
     this, &
-    num_points, &
+    num_pts, &
     data, &
-    coordinates) &
-    result(data_out)
+    coordinates, &
+    output_array)
     class(sll_hermite_interpolator_1d),  intent(in) :: this
-    sll_int32,  intent(in)                           :: num_points
-    sll_real64, dimension(:), intent(in)           :: coordinates
+    sll_int32,  intent(in)                           :: num_pts
+    sll_real64, dimension(num_pts), intent(in)           :: coordinates
     sll_real64, dimension(:), intent(in)           :: data
-    sll_real64, dimension(num_points)   :: data_out
+    sll_real64, dimension(num_pts), intent(out)   :: output_array
     sll_int32 :: i
     call compute_interpolants_hermite_1d( this%hermite, data )
-    do i = 1, num_points
-      data_out(i) = this%interpolate_value(coordinates(i))
+    do i = 1, num_pts
+      output_array(i) = this%interpolate_from_interpolant_value(coordinates(i))
     end do
-  end function wrap_interpolate_array_hermite_1d
+  end subroutine wrap_interpolate_array_hermite_1d
 
 
 
 
-function interpolate_array_disp_hi1d(this, num_points, data, alpha) result(data_out)
+subroutine interpolate_array_disp_hi1d(this, num_pts, data, alpha, output_array)
   class(sll_hermite_interpolator_1d), intent(in)     :: this
   sll_real64, intent(in) :: alpha
-  sll_int32, intent(in)  :: num_points    ! size of output array
+  sll_int32, intent(in)  :: num_pts    ! size of output array
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
-  sll_real64, dimension(1:num_points)    :: data_out
+  sll_real64, dimension(1:num_pts), intent(out) :: output_array
 
 !call interpolate_array_values(data,alpha,this%hermite)
 !data_out=this%hermite%data_out
-    print*, 'interpolate_array_disp_hi1d:', &
-         ' not implemented for hermite interpolation'
-    SLL_ASSERT(this%npts>0)
-    data_out = 0.0_f64 * alpha + data
+  print*, 'interpolate_array_disp_hi1d:', &
+       ' not implemented for hermite interpolation'
+  SLL_ASSERT(this%npts>0)
+  output_array = 0.0_f64 * alpha + data
 
-end function
+end subroutine interpolate_array_disp_hi1d
 
 !PN DEFINED BUT NOT USED
 !subroutine delete_hi1d (obj)
@@ -238,8 +238,8 @@ subroutine interpolate_array_values_hi1d( &
     output_array )
     class(sll_hermite_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(num_pts), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = 0.0_f64
     print*, 'interpolate_array_values:', &
@@ -273,26 +273,26 @@ subroutine interpolate_array_derivatives_hi1d( &
     stop
     SLL_ASSERT(interpolator%npts>0)
 end subroutine interpolate_array_derivatives_hi1d
-
-subroutine interpolate_pointer_derivatives_hi1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_hermite_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)              :: num_pts
-    sll_real64, dimension(:), pointer   :: vals_to_interpolate
-    sll_real64, dimension(:), pointer   :: output
-    !sll_int32 :: ierr
-    print*, 'interpolate_pointer_derivatives_hi1d:  ', &
-         'not implemented for hermite interpolation'
-    !print *,interpolator%bc_type
-    print *,num_pts
-    print *,maxval(vals_to_interpolate)
-    print *,maxval(output)
-    stop
-    SLL_ASSERT(interpolator%npts>0)
-end subroutine interpolate_pointer_derivatives_hi1d
+!!$
+!!$subroutine interpolate_pointer_derivatives_hi1d( &
+!!$    interpolator, &
+!!$    num_pts, &
+!!$    vals_to_interpolate, &
+!!$    output )
+!!$    class(sll_hermite_interpolator_1d),  intent(in) :: interpolator
+!!$    sll_int32,  intent(in)              :: num_pts
+!!$    sll_real64, dimension(num_pts), pointer   :: vals_to_interpolate
+!!$    sll_real64, dimension(num_pts), pointer   :: output
+!!$    !sll_int32 :: ierr
+!!$    print*, 'interpolate_pointer_derivatives_hi1d:  ', &
+!!$         'not implemented for hermite interpolation'
+!!$    !print *,interpolator%bc_type
+!!$    print *,num_pts
+!!$    print *,maxval(vals_to_interpolate)
+!!$    print *,maxval(output)
+!!$    stop
+!!$    SLL_ASSERT(interpolator%npts>0)
+!!$end subroutine interpolate_pointer_derivatives_hi1d
 
   function interpolate_derivative_eta1_hi1d( interpolator, eta1 ) result(val)
     class(sll_hermite_interpolator_1d), intent(in) :: interpolator

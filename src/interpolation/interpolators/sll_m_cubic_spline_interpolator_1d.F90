@@ -79,31 +79,29 @@ contains  ! ****************************************************************
 
 
 
-  function spline_interpolate1d(this, num_points, data, coordinates) &
-       result(data_out)
+  subroutine spline_interpolate1d(this, num_pts, data, coordinates, output_array)
 
     class(sll_cubic_spline_interpolator_1d),  intent(in)       :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: coordinates
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(num_pts), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+    sll_real64, dimension(num_pts), intent(out)  :: output_array
     
     call compute_cubic_spline_1D( data, this%spline )
-    call interpolate_array_values( coordinates, data_out, num_points, &
+    call interpolate_array_values( coordinates, output_array, num_pts, &
          this%spline )
 
-  end function
+  end subroutine spline_interpolate1d
 
-  function spline_interpolate1d_disp(this, num_points, data, alpha) &
-       result(data_out)
+  subroutine spline_interpolate1d_disp(this, num_pts, data, alpha, output_array)
     class(sll_cubic_spline_interpolator_1d),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
+    sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+    sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! local variables
-    sll_real64, dimension(num_points)      :: coordinates
+    sll_real64, dimension(num_pts)      :: coordinates
     sll_real64 :: length, delta
     sll_real64 :: xmin, xmax
     sll_int32 :: i
@@ -122,7 +120,7 @@ contains  ! ****************************************************************
        if( alpha == 0.0_f64 ) then
           coordinates(:) = this%interpolation_points(:)
        else ! alpha != 0.0
-          do i = 1, num_points
+          do i = 1, num_pts
              coordinates(i) = xmin + &
                   modulo(this%interpolation_points(i) - xmin - alpha, length)
 !!$             write (*,'(a,z,f21.16,a,i,a,z,f21.16)') 'xmin = ', &
@@ -134,20 +132,20 @@ contains  ! ****************************************************************
        end if
     else ! any other BC? better a case statement
        if (alpha > 0 ) then
-          do i = 1, num_points
+          do i = 1, num_pts
              coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        else
-          do i = 1, num_points
+          do i = 1, num_pts
              coordinates(i) = min(this%interpolation_points(i) - alpha, xmax)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        endif
     end if
-    call interpolate_array_values( coordinates, data_out, num_points, &
+    call interpolate_array_values( coordinates, output_array, num_pts, &
          this%spline )
-  end function
+  end subroutine spline_interpolate1d_disp
 
   subroutine compute_interpolants_cs1d( interpolator, data_array,&
        eta_coords, &
@@ -178,8 +176,8 @@ contains  ! ****************************************************************
     output_array )
     class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(num_pts), intent(out)  :: output_array
     call interpolate_array_values( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d

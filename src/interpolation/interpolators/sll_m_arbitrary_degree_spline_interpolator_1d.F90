@@ -65,17 +65,17 @@ contains
   !> Compute interpolants
   procedure :: compute_interpolants => compute_interpolants_ad1d
   !> Interpolate single value
-  procedure :: interpolate_value => interpolate_value_ad1d
+  procedure :: interpolate_from_interpolant_value => interpolate_value_ad1d
   !> Interpolate an array 
-  procedure :: interpolate_array_values => interpolate_values_ad1d
+  procedure :: interpolate_from_interpolant_array => interpolate_values_ad1d
   !> Interpolate a pointer to array 
-  procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
+  !procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
   !> Compute derivatives
-  procedure :: interpolate_derivative_eta1 => interpolate_derivative_ad1d
+  procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_ad1d
   !> Compute derivatives array
-  procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
+  !procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
   !> Compute derivatives array pointer
-  procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_ad1d
+  !procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_ad1d
   !> Interpolate an array
   procedure :: interpolate_array => interpolate_array_ad1d
   !> Interpolate an array after displacement
@@ -83,7 +83,7 @@ contains
   !> Get splines coefficients
   procedure :: get_coefficients => get_coefficients_ad1d
   !> Not implemented
-  procedure :: reconstruct_array
+  !procedure :: reconstruct_array
   !> Destory the derived type and free memory
   procedure :: delete => delete_arbitrary_degree_1d_interpolator
 
@@ -758,24 +758,25 @@ val = bvalue( interpolator%deboor,          &
 
 end function interpolate_derivative_ad1d
 
-function interpolate_array_ad1d( this,         &
-                                 num_points,   &
+subroutine interpolate_array_ad1d( this,         &
+                                 num_pts,   &
                                  data,         &
-                                 coordinates) result(res)
+                                 coordinates, &
+                                 output_array)
 
 class(sll_arbitrary_degree_spline_interpolator_1d), intent(in) :: this
 
-sll_int32,  intent(in)               :: num_points
-sll_real64, dimension(:), intent(in) :: coordinates
+sll_int32,  intent(in)               :: num_pts
+sll_real64, dimension(num_pts), intent(in) :: coordinates
 sll_real64, dimension(:), intent(in) :: data
-sll_real64, dimension(num_points)    :: res
+sll_real64, dimension(num_pts),intent(out)    :: output_array
 sll_int32                            :: i
 
-SLL_ASSERT(size(data) == num_points)
-SLL_ASSERT(size(coordinates) == num_points)
-do i = 1, num_points
+SLL_ASSERT(size(data) == num_pts)
+SLL_ASSERT(size(coordinates) == num_pts)
+do i = 1, num_pts
 
-  res(i) = bvalue( this%deboor,          &
+  output_array(i) = bvalue( this%deboor,          &
                    this%t,               &
                    this%coeff_splines,   &
                    this%size_coeffs,     &
@@ -784,24 +785,25 @@ do i = 1, num_points
                    0)
 end do
 
-end function interpolate_array_ad1d
+end subroutine interpolate_array_ad1d
 
-function interpolate_1d_array_disp_ad1d( &
+subroutine interpolate_1d_array_disp_ad1d( &
      this,        &
-     num_points, &
+     num_pts, &
      data,     &
-     alpha) result(res)
+     alpha, &
+     output_array)
 
 class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)    :: this
-sll_int32, intent(in)                          :: num_points
+sll_int32, intent(in)                          :: num_pts
 sll_real64, dimension(:), intent(in)         :: data
 sll_real64, intent(in)         :: alpha
-sll_real64, dimension(num_points) :: res
+sll_real64, dimension(num_pts), intent(out) :: output_array
 
 print *, 'interpolate_1d_array_disp_ad1d: not implemented.'
-res = -1000000._f64*alpha*data*this%spline_degree
+output_array = -1000000._f64*alpha*data*this%spline_degree
 
-end function interpolate_1d_array_disp_ad1d
+end subroutine interpolate_1d_array_disp_ad1d
 
 function get_coefficients_ad1d(interpolator)
 
@@ -819,8 +821,8 @@ subroutine interpolate_values_ad1d( interpolator,        &
 
 class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
 sll_int32,  intent(in)                 :: num_pts
-sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-sll_real64, dimension(:), intent(out)  :: output_array
+sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
+sll_real64, dimension(num_pts), intent(out)  :: output_array
 sll_int32 :: idx
 
 SLL_ASSERT(num_pts==size(vals_to_interpolate))
