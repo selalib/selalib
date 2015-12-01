@@ -110,7 +110,7 @@ end do
 do i = 1, k
   l = 0
   do j = n-k-k+i,n-k
-    cc(i,j) = q(kp1+k-l,k+i+l)
+    cc(i,j) = q(kp1+k-l,n-k-k+l+i)
     l=l+1
   end do
 end do
