@@ -65,7 +65,7 @@ subroutine schur_complement_fac(s, n, k, q)
   
   kp1 = k+1
   allocate(s%bb(kp1,k  )); s%bb = 0.0_8
-  allocate(s%cc(k  ,n-k)); s%cc = 0.0_8
+  allocate(s%cc(k  ,kp1)); s%cc = 0.0_8
   allocate(s%dd(k  ,k  )); s%dd = 0.0_8
   allocate(s%z2(n-k))    ; s%z2 = 0.0_8
   
@@ -87,7 +87,7 @@ subroutine schur_complement_fac(s, n, k, q)
   end do
   do i = 1, k
     l = 0
-    do j = n-k-k+i,n-k
+    do j = i+1,kp1
       s%cc(i,j) = q(kp1+k-l,n-k-k+l+i)
       l=l+1
     end do
@@ -120,7 +120,16 @@ subroutine schur_complement_fac(s, n, k, q)
   end do
   
   !Compute H= D - C.Y
-  s%dd = s%dd - matmul(s%cc,yy)
+
+  l = n-k-k
+  do i = 1, k
+    do j = 1, k
+     s%dd(i,j) = s%dd(i,j) &
+                 - dot_product(s%cc(i,1:i),yy(1:i,j)) &
+                 - dot_product(s%cc(i,i+1:kp1),yy(l+i:n-k,j))
+    end do
+  end do
+
   call print_matrix(s%dd)
   call dgetrf(k,k,s%dd,k,jpiv,info)
   call dgetri(k,s%dd,k,jpiv,work,k*k,info)
@@ -144,7 +153,14 @@ subroutine schur_complement_slv(s, n, k, q, x)
   s%z2 = x(1:n-k)
   call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%z2 )
   !Solve H.x2 = b2 - C.z2
-  x(n-k+1:n) = matmul(s%dd,x(n-k+1:n) - matmul(s%cc,s%z2))
+
+  do i = 1,k
+    x(n-k+i) = x(n-k+i)  &
+               - dot_product(s%cc(i,1:i),s%z2(1:i)) &
+               - dot_product(s%cc(i,i+1:kp1),s%z2(n-k-k+i:n-k))
+  end do
+  x(n-k+1:n) = matmul(s%dd,x(n-k+1:n))
+
   !Solve A.x1 = b1 - B.x2
 
   do i = 1, k
