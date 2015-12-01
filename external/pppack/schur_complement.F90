@@ -39,9 +39,6 @@ type :: schur_complement_solver
   real(8), allocatable :: dd(:,:)
   real(8), allocatable :: yy(:,:)
   
-  real(8), allocatable :: x2(:)
-  real(8), allocatable :: b1(:)
-  real(8), allocatable :: b2(:)
   real(8), allocatable :: c1(:)
   real(8), allocatable :: c2(:)
   real(8), allocatable :: z1(:)
@@ -68,9 +65,6 @@ subroutine schur_complement_fac(s, n, k, q)
   integer :: kp1
   
   kp1 = k+1
-  allocate(s%b1(n-k))    ; s%b1 = 0.0_8
-  allocate(s%b2(k))      ; s%b2 = 0.0_8
-  allocate(s%x2(k))      ; s%x2 = 0.0_8
   allocate(s%bb(n-k,k  )); s%bb = 0.0_8
   allocate(s%cc(k  ,n-k)); s%cc = 0.0_8
   allocate(s%dd(k  ,k  )); s%dd = 0.0_8
