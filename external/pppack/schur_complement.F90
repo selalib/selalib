@@ -59,7 +59,7 @@ subroutine schur_complement_fac(s, n, k, q)
   integer              :: info
   integer              :: jpiv(k)
   integer              :: work(k*k)
-  real(8)              :: yy(n-k,k)
+  real(8), allocatable :: yy(:,:)
   
   integer :: kp1
   
@@ -101,20 +101,20 @@ subroutine schur_complement_fac(s, n, k, q)
     end do
   end do
   
-  write(*,*) "B"; call print_matrix(s%bb)
-  write(*,*) "C"; call print_matrix(s%cc)
-  write(*,*) "D"; call print_matrix(s%dd)
+  !write(*,*) "B"; call print_matrix(s%bb)
+  !write(*,*) "C"; call print_matrix(s%cc)
+  !write(*,*) "D"; call print_matrix(s%dd)
   
   !Factorize the matrix A
   call banfac ( q(:,1:n-k), k+kp1, n-k, k, k, info )
   
   !Solve A.Y = B
+  allocate(yy(n-k,k))
   yy = 0.0_8
   do i = 1, k
     yy(i,i:k) = s%bb(i,i:k)
     yy(n-k-k+i,1:i) = s%bb(i+1,1:i)
   end do
-  write(*,*) "Y"; call print_matrix(yy)
   do j = 1, k
     call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, yy(:,j) )
   end do
@@ -130,9 +130,9 @@ subroutine schur_complement_fac(s, n, k, q)
     end do
   end do
 
-  call print_matrix(s%dd)
   call dgetrf(k,k,s%dd,k,jpiv,info)
   call dgetri(k,s%dd,k,jpiv,work,k*k,info)
+  !call print_matrix(s%dd)
   
 end subroutine schur_complement_fac
 
