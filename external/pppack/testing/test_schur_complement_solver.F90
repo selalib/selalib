@@ -36,6 +36,7 @@ use schur_complement
 
 implicit none
 
+type(schur_complement_solver) :: s
 integer, parameter :: n = 9
 integer, parameter :: k = 3
 integer, parameter :: kp1 = k+1
@@ -112,7 +113,7 @@ write(*,*) "Banded matrix M stored in Q:"
 
 x = b
 
-call schur_complement_fac(n, k, q, x)
+call schur_complement_fac(s, n, k, q, x)
 
 print*, ' x = '
 call print_vector(x)

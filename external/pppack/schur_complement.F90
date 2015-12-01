@@ -34,11 +34,25 @@ implicit none
 
 type :: schur_complement_solver
 
+  real(8), allocatable :: bb(:,:)
+  real(8), allocatable :: cc(:,:)
+  real(8), allocatable :: dd(:,:)
+  real(8), allocatable :: yy(:,:)
+  
+  real(8), allocatable :: x2(:)
+  real(8), allocatable :: b1(:)
+  real(8), allocatable :: b2(:)
+  real(8), allocatable :: c1(:)
+  real(8), allocatable :: c2(:)
+  real(8), allocatable :: z1(:)
+  real(8), allocatable :: z2(:)
+
 end type schur_complement_solver
 
 contains
 
-subroutine schur_complement_fac(n, k, q, x)
+subroutine schur_complement_fac(s, n, k, q, x)
+type(schur_complement_solver) :: s
 
 integer, intent(in) :: n
 integer, intent(in) :: k
@@ -48,18 +62,6 @@ real(8)             :: m(n,n)
 real(8) :: x(n)
 real(8) :: b(n)
 
-real(8), allocatable :: bb(:,:)
-real(8), allocatable :: cc(:,:)
-real(8), allocatable :: dd(:,:)
-real(8), allocatable :: yy(:,:)
-
-real(8), allocatable :: x2(:)
-real(8), allocatable :: b1(:)
-real(8), allocatable :: b2(:)
-real(8), allocatable :: c1(:)
-real(8), allocatable :: c2(:)
-real(8), allocatable :: z1(:)
-real(8), allocatable :: z2(:)
 
 integer :: i
 integer :: j
@@ -78,21 +80,21 @@ integer :: kp1
 kp1 = k+1
 b = x
 
-allocate(b1(n-k)); b1 = b(1:n-k)
-allocate(b2(k));   b2 = b(n-k+1:n)
-allocate(x2(k));   x2 = 0.0_8
+allocate(s%b1(n-k)); s%b1 = b(1:n-k)
+allocate(s%b2(k));   s%b2 = b(n-k+1:n)
+allocate(s%x2(k));   s%x2 = 0.0_8
 
 
-allocate(bb(n-k,k  )); bb = 0.0_8
-allocate(cc(k  ,n-k)); cc = 0.0_8
-allocate(dd(k  ,k  )); dd = 0.0_8
+allocate(s%bb(n-k,k  )); s%bb = 0.0_8
+allocate(s%cc(k  ,n-k)); s%cc = 0.0_8
+allocate(s%dd(k  ,k  )); s%dd = 0.0_8
 
 do i = 1, k
   l = 0
   do j = i, k
-    bb(i,j) = q(k+kp1-l,n-k+l+i)
+    s%bb(i,j) = q(k+kp1-l,n-k+l+i)
     l =l+1
-    bb(n-k-k+j,l) = q(i,n-k+l)
+    s%bb(n-k-k+j,l) = q(i,n-k+l)
   end do
 end do
 
@@ -100,13 +102,13 @@ do j = 1, k
   l = 0
   do i = j, k
     l =l+1
-    cc(i,j) = q(l,j)
+    s%cc(i,j) = q(l,j)
   end do
 end do
 do i = 1, k
   l = 0
   do j = n-k-k+i,n-k
-    cc(i,j) = q(kp1+k-l,n-k-k+l+i)
+    s%cc(i,j) = q(kp1+k-l,n-k-k+l+i)
     l=l+1
   end do
 end do
@@ -115,47 +117,47 @@ do i = 1, k
   l = 0
   do j = 1, k
     l=l+1
-    dd(i,j) = q(kp1-l+i,n-k+l)
+    s%dd(i,j) = q(kp1-l+i,n-k+l)
   end do
 end do
 
-write(*,*) "B"; call print_matrix(bb)
-write(*,*) "C"; call print_matrix(cc)
-write(*,*) "D"; call print_matrix(dd)
+write(*,*) "B"; call print_matrix(s%bb)
+write(*,*) "C"; call print_matrix(s%cc)
+write(*,*) "D"; call print_matrix(s%dd)
 
 !Factorize the matrix A
 call banfac ( q(:,1:n-k), k+kp1, n-k, k, k, info )
 
 !Solve A.Y = B
-allocate(yy(n-k,k))
-yy = bb
+allocate(s%yy(n-k,k))
+s%yy = s%bb
 do j = 1, k
-  call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, yy(:,j) )
+  call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%yy(:,j) )
 end do
-call print_matrix(yy)
+call print_matrix(s%yy)
 
 !Compute H= D - C.Y
-dd = dd - matmul(cc,yy)
-call print_matrix(dd)
-call dgetrf(k,k,dd,k,jpiv,info)
-call dgetri(k,dd,k,jpiv,work,k*k,info)
+s%dd = s%dd - matmul(s%cc,s%yy)
+call print_matrix(s%dd)
+call dgetrf(k,k,s%dd,k,jpiv,info)
+call dgetri(k,s%dd,k,jpiv,work,k*k,info)
 
 !Solve A.z2 = b1
-allocate(z2(n-k))
-z2 = b1
-call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, z2 )
+allocate(s%z2(n-k))
+s%z2 = s%b1
+call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%z2 )
 
 !compute c2 = b2 - C.z2
-allocate(c2(k))
-c2 = b2 - matmul(cc,z2)
+allocate(s%c2(k))
+s%c2 = s%b2 - matmul(s%cc,s%z2)
 !Solve H.x2 = c2
-x2 = matmul(dd,c2)
+s%x2 = matmul(s%dd,s%c2)
 !Solve A.x1 = b1 - B.x2
-b1 = b1 - matmul(bb,x2)
-call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, b1 )
+s%b1 = s%b1 - matmul(s%bb,s%x2)
+call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%b1 )
 
-x(1:n-k)   = b1
-x(n-k+1:n) = x2
+x(1:n-k)   = s%b1
+x(n-k+1:n) = s%x2
 
 
 end subroutine schur_complement_fac
