@@ -533,7 +533,7 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1   
-   cx_array(i,j)= cxx_interp%interpolate_derivative_eta1(eta1,eta2)+ &
+   cx_array(i,j)= cxx_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
                   a21_interp%interpolate_derivative_eta2(eta1,eta2)                         
  enddo
 enddo 
@@ -551,7 +551,7 @@ do j=1,ny
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1    
    cy_array(i,j)= cyy_interp%interpolate_derivative_eta2(eta1,eta2)+ &
-                  a12_interp%interpolate_derivative_eta1(eta1,eta2)                         
+                  a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefy_array
@@ -561,19 +561,19 @@ end subroutine coefy_array
 subroutine coefcr(x,y,cxx,cxy,cyy,cx,cy,ce)
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
-cxx = cxx_interp%interpolate_value(x,y)
-cxy = cxy_interp%interpolate_value(x,y) 
-cyy = cyy_interp%interpolate_value(x,y) 
-cx  = cx_interp%interpolate_value(x,y)
-cy  = cy_interp%interpolate_value(x,y) 
-ce  = ce_interp%interpolate_value(x,y)
+cxx = cxx_interp%interpolate_from_interpolant_value(x,y)
+cxy = cxy_interp%interpolate_from_interpolant_value(x,y) 
+cyy = cyy_interp%interpolate_from_interpolant_value(x,y) 
+cx  = cx_interp%interpolate_from_interpolant_value(x,y)
+cy  = cy_interp%interpolate_from_interpolant_value(x,y) 
+ce  = ce_interp%interpolate_from_interpolant_value(x,y)
 end subroutine coefcr
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0_8  !cxx_interp%interpolate_value(x)
+cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
 cx  = 0.0_8 + x - x
 cex = 0.0_8
 end subroutine cofx

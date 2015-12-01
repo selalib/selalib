@@ -221,7 +221,7 @@ contains
             x2_i = x2  
           endif                      
           x2 = 0.5_f64*(input(j)+input(j+1)) &
-            -0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+            -0.5_f64*dt*(charac%A_interp%interpolate_from_interpolant_value(x2_i)+A(j))
         end do
         if (iter==charac%maxiter .and. abs(x2_old-x2)>charac%tol) then
           print*,'#not enough iterations for compute_trapezoid_conservative_1d_charac',&

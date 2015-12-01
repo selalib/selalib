@@ -1892,7 +1892,7 @@ contains
             vpar   = max(min(vpar,sim%vpar_max),sim%vpar_min)
 
             sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
-              sim%interp1d_f_vpar%interpolate_value(vpar)             
+              sim%interp1d_f_vpar%interpolate_from_interpolant_value(vpar)             
           end do
         end do
       end do
@@ -1940,7 +1940,7 @@ contains
             eta3    = sim%eta3_grid(ieta3) - alpha3
 
             sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
-              sim%interp1d_f_eta3%interpolate_value(eta3)
+              sim%interp1d_f_eta3%interpolate_from_interpolant_value(eta3)
           end do
         end do
       end do
@@ -2008,14 +2008,14 @@ contains
             if (eta1 < sim%cartesian_mesh4d%eta1_min) then 
                !print*, 'value point', eta1
                eta1 = sim%cartesian_mesh4d%eta1_min
-               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_from_interpolant_value(eta1,eta2)
             else if ( eta1> sim%cartesian_mesh4d%eta1_max) then 
                !print*, 'value point', eta1
                eta1 = sim%cartesian_mesh4d%eta1_max
-               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_from_interpolant_value(eta1,eta2)
             end if
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
-              sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+              sim%interp2d_f_eta1eta2%interpolate_from_interpolant_value(eta1,eta2)
 
           end do
         end do

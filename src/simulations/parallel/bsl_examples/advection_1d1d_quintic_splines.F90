@@ -171,7 +171,7 @@ contains
      call interp_eta1%compute_interpolants(f_eta1(:,j))
      do i = 1, loc_sz_i
        eta1 = eta1_min + (i-1)*delta_eta1 - alpha
-       f_eta1(i,j) =  interp_eta1%interpolate_value(eta1) 
+       f_eta1(i,j) =  interp_eta1%interpolate_from_interpolant_value(eta1) 
      end do
 
   end do
@@ -190,7 +190,7 @@ contains
     call interp_eta2%compute_interpolants(f_eta2(i,:))
     do j=1,loc_sz_j
        eta2 = eta2_min + (j-1)*delta_eta2 - alpha
-       f_eta2(i,j) =  interp_eta2%interpolate_value(eta2) 
+       f_eta2(i,j) =  interp_eta2%interpolate_from_interpolant_value(eta2) 
     end do
   end do
 

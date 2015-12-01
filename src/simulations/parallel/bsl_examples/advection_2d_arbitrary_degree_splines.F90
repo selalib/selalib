@@ -79,7 +79,7 @@ do i_step=1, 3*n_step
      eta2 = eta2_min + (j-1)*delta_eta2 - alpha1
      do i = 1, nc_eta1+1
         eta1 = eta1_min + (i-1)*delta_eta1 - alpha2
-        f(i,j) = interp%interpolate_value(eta1,eta2)
+        f(i,j) = interp%interpolate_from_interpolant_value(eta1,eta2)
      end do
   end do
 

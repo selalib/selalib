@@ -420,7 +420,7 @@ contains
                    eta2 = eta2+eta2_min-eta2_max
                 end if
                 
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_from_interpolant_value(eta1,eta2)
 
              end do
           end do

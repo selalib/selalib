@@ -150,7 +150,7 @@ implicit none
               eta2 = eta2 - y_max + y_min
            end if
 
-           df(i,j,k,l) = interp_xy%interpolate_value(eta1,eta2)
+           df(i,j,k,l) = interp_xy%interpolate_from_interpolant_value(eta1,eta2)
         end do
         end do
   
@@ -179,7 +179,7 @@ implicit none
 !           eta2 = vy_min + (l-1)*delta_vy
 !           eta1 = vx_min + modulo(eta1-vx_min-dvx,vx_max-vx_min)
 !           eta2 = vy_min + modulo(eta2-vy_min-dvy,vy_max-vy_min)
-!           df(i,j,k,l) = interp_vxvy%interpolate_value(eta1,eta2)
+!           df(i,j,k,l) = interp_vxvy%interpolate_from_interpolant_value(eta1,eta2)
 !        end do
 !        end do
 !

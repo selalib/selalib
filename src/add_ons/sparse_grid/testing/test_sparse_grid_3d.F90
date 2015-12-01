@@ -88,7 +88,7 @@ program test_interpolation_3d
              eta_max(3)-eta_min(3));
         dx(2) = interp%hierarchy(j)%coordinate(2);
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -128,7 +128,7 @@ program test_interpolation_3d
              eta_max(2)-eta_min(2));
         dx(1) = interp%hierarchy(j)%coordinate(1);
         dx(3) = interp%hierarchy(j)%coordinate(3);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error

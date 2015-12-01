@@ -468,10 +468,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-             transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+             transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x1_node_nurbs
   
@@ -495,10 +495,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
 
   end function x2_node_nurbs
@@ -528,10 +528,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64 )
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
     
   end function x1_cell_nurbs
@@ -558,10 +558,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
     
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
     
   end function x2_cell_nurbs
@@ -580,10 +580,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-             transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+             transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x1_nurbs
 
@@ -601,10 +601,10 @@ contains
     
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x2_nurbs
 
@@ -718,9 +718,9 @@ contains
     
     if (transf%is_rational == 0) then ! IN the case of SPLINE
        
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
        j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
        j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
 
        jacobian_matrix(1,1) = j11
@@ -730,15 +730,15 @@ contains
        
     else 
 
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
        value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
        value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
        value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
+       value_3  = transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
        ratio_value_3_square = 1.0_f64/(value_3)**2
        
        j11 = value_11*value_3- value_31*value_1

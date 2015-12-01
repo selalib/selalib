@@ -968,7 +968,7 @@ contains
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
         A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)/x1
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)/x1
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(x1,x2)/x1
       end do
     end do
     

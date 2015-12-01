@@ -66,7 +66,7 @@ test_passed = .true.
   call interpolator_tester_1d_prdc( &
        mycos, &
        mycos, &
-       interpolate_value, &
+       interpolate_from_interpolant_value, &
        0.0_f64, &
        2.0_f64*sll_pi, &
        33, &

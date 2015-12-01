@@ -77,8 +77,8 @@ normL2 = 0.0_f64
 normH1 = 0.0_f64
 do j=1,NPTS2
   do i=1,NPTS1
-    g_int(i,j)     = interpolator%interpolate_value(x(i,j),y(i,j))
-    dg_dx_int(i,j) = interpolator%interpolate_derivative_eta1(x(i,j),y(i,j))
+    g_int(i,j)     = interpolator%interpolate_from_interpolant_value(x(i,j),y(i,j))
+    dg_dx_int(i,j) = interpolator%interpolate_from_interpolant_derivative_eta1(x(i,j),y(i,j))
     dg_dy_int(i,j) = interpolator%interpolate_derivative_eta2(x(i,j),y(i,j))
     write(10,*) x(i,j), y(i,j), g_int(i,j), g_ref(i,j)
     write(11,*) x(i,j), y(i,j), dg_dx_int(i,j), dg_dx_ref(i,j)

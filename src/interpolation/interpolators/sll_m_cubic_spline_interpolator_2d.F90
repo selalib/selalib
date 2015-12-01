@@ -56,9 +56,9 @@ private
     !> PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_cs2d
     !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_value => interpolate_value_cs2d
+     procedure :: interpolate_from_interpolant_value => interpolate_value_cs2d
     !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs2d
+     procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs2d
     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_derivative_eta2 => interpolate_deriv2_cs2d
     !> PLEASE ADD DOCUMENTATION
@@ -298,7 +298,7 @@ contains
     call compute_cubic_spline_2D( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
-        data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
+        data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))
     end do
     end do
 
@@ -350,7 +350,7 @@ contains
                   modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
              eta2 = eta2_min + &
                   modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
-             data_out(i,j) = this%interpolate_value(eta1,eta2)
+             data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
           end do
        end do
 
@@ -365,7 +365,7 @@ contains
              eta2 = min(eta2,eta2_max)
              eta1 = max(eta1,eta1_min)
              eta2 = max(eta2,eta2_min)
-             data_out(i,j) = this%interpolate_value(eta1,eta2)
+             data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
           end do
        end do
       
@@ -378,7 +378,7 @@ contains
              eta2 = eta2_min + (j-1)*delta_eta2 - alpha2(i,j)
              SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
              SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
-             data_out(i,j) = this%interpolate_value(eta1,eta2)
+             data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
           end do
        end do
     end if

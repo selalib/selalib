@@ -31,7 +31,7 @@ diff=0.0_f64
 
 l_i => new_lagrange_interpolation_1D(num_points,xmin,xmax,SLL_PERIODIC,d)
 call compute_lagrange_interpolation_1D(l_i)
-call interpolate_array_values(fi,-alpha,l_i)
+call interpolate_from_interpolant_array(fi,-alpha,l_i)
 do i=1,num_points
  !print*,"interpolated value = ", l_i%data_out(i), " , Correct value = ",f(coord(i),num_points)
  diff=max(diff,abs(f(coord(i),num_points)-l_i%data_out(i)))
