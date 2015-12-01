@@ -43,7 +43,6 @@ subroutine schur_complement_fac(n, k, q, x)
 integer, intent(in) :: n
 integer, intent(in) :: k
 real(8)             :: q(2*k+1,n)
-real(8)             :: qq(2*k+1,n-k)
 real(8)             :: m(n,n)
 
 real(8) :: x(n)
@@ -124,16 +123,14 @@ write(*,*) "B"; call print_matrix(bb)
 write(*,*) "C"; call print_matrix(cc)
 write(*,*) "D"; call print_matrix(dd)
 
-qq = q(:,1:n-k)
-
 !Factorize the matrix A
-call banfac ( qq, k+kp1, n-k, k, k, info )
+call banfac ( q(:,1:n-k), k+kp1, n-k, k, k, info )
 
 !Solve A.Y = B
 allocate(yy(n-k,k))
 yy = bb
 do j = 1, k
-  call banslv ( qq, k+kp1, n-k, k, k, yy(:,j) )
+  call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, yy(:,j) )
 end do
 call print_matrix(yy)
 
@@ -146,7 +143,7 @@ call dgetri(k,dd,k,jpiv,work,k*k,info)
 !Solve A.z2 = b1
 allocate(z2(n-k))
 z2 = b1
-call banslv ( qq, k+kp1, n-k, k, k, z2 )
+call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, z2 )
 
 !compute c2 = b2 - C.z2
 allocate(c2(k))
@@ -155,7 +152,7 @@ c2 = b2 - matmul(cc,z2)
 x2 = matmul(dd,c2)
 !Solve A.x1 = b1 - B.x2
 b1 = b1 - matmul(bb,x2)
-call banslv ( qq, k+kp1, n-k, k, k, b1 )
+call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, b1 )
 
 x(1:n-k)   = b1
 x(n-k+1:n) = x2
