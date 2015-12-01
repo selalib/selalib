@@ -84,7 +84,7 @@ end type sll_c_interpolator_1d
        use sll_m_working_precision
        import :: sll_c_interpolator_1d
        class(sll_c_interpolator_1d), intent(in) :: interpolator !< interpolator object
-       sll_real64, dimension(:), pointer           :: get_coeffs_1d !< coefficients
+       sll_real64, dimension(:), pointer           :: interpolator_1d_get_coeffs !< coefficients
      end function interpolator_1d_get_coeffs
   end interface
 
@@ -126,8 +126,8 @@ end type sll_c_interpolator_1d
        import :: sll_c_interpolator_1d
        class(sll_c_interpolator_1d), intent(in) :: interpolator !< interpolator object
        sll_int32,                       intent(in) :: num_pts      !< size of output array
-       sll_real64,                      intent(in) :: vals_to_interpolate(:) !< abscissae where to interpolate (size num_pts)
-       sll_real64,                      intent(out):: output_array(:) !< interpolated values at \a vals_to_interpolate
+       sll_real64,                      intent(in) :: vals_to_interpolate(num_pts) !< abscissae where to interpolate (size num_pts)
+       sll_real64,                      intent(out):: output_array(num_pts) !< interpolated values at \a vals_to_interpolate
      end subroutine interpolator_1d_array_interpolant
   end interface
 
@@ -141,8 +141,8 @@ end type sll_c_interpolator_1d
        class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
        sll_int32,                       intent(in)     :: num_pts    !< size of output array
        sll_real64,                      intent(in)     :: data(:)  !< function values at grid points
-       sll_real64,                      intent(in)     :: coordinates(:) !<  points where output is desired (size num_pts)
-       sll_real64,                      intent(out)    :: output_array(:) !< interpolated values at \a coordinates
+       sll_real64,                      intent(in)     :: coordinates(num_pts) !<  points where output is desired (size num_pts)
+       sll_real64,                      intent(out)    :: output_array(num_pts) !< interpolated values at \a coordinates
      end subroutine interpolator_1d_array
   end interface
 
@@ -152,18 +152,18 @@ end type sll_c_interpolator_1d
   abstract interface
      subroutine interpolator_1d_array_disp( &
        this, &
-       num_points, &
+       num_pts, &
        data, &
        alpha, &
-       output)
+       output_array)
 
        use sll_m_working_precision
        import :: sll_c_interpolator_1d
        class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
-       sll_int32,                       intent(in)     :: num_points    !< size of output array
+       sll_int32,                       intent(in)     :: num_pts    !< size of output array
        sll_real64,                      intent(in)     :: data(:)  !< data to be interpolated
        sll_real64,                      intent(in)     :: alpha !< displacement
-       sll_real64,                      intent(out)    :: output(:) !< interpolated values
+       sll_real64,                      intent(out)    :: output_array(num_pts) !< interpolated values
 
      end subroutine interpolator_1d_array_disp
   end interface

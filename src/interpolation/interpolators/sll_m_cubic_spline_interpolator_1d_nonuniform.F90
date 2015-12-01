@@ -27,24 +27,24 @@ private
      !> PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_cs1d
      !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_value => interpolate_value_cs1d
+     procedure :: interpolate_from_interpolant_value => interpolate_value_cs1d
      !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+     procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs1d
      !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_array_values => interpolate_values_cs1d
+     procedure :: interpolate_from_interpolant_array => interpolate_values_cs1d
      !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+     !procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
      !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+     !procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
      !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_pointer_derivatives => &
-          interpolate_pointer_derivatives_cs1d
+     !procedure :: interpolate_pointer_derivatives => &
+     !     interpolate_pointer_derivatives_cs1d
      !> PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array => spline_interpolate1d
      !> PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      !> PLEASE ADD DOCUMENTATION
-     procedure, pass:: reconstruct_array
+     !procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
      !> PLEASE ADD DOCUMENTATION
      procedure, pass :: set_coefficients => set_coefficients_cs1d
@@ -63,62 +63,61 @@ contains  ! ****************************************************************
 
 
 
-  function spline_interpolate1d(this, num_points, data, coordinates) &
-       result(data_out)
+  subroutine spline_interpolate1d(this, num_pts, data, coordinates, output_array)
     class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: coordinates
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(num_pts), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+    sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! compute the interpolating spline coefficients
     call compute_cubic_spline_1D( data, this%spline )
-    call interpolate_array_values( coordinates, data_out, num_points, &
+    call interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
          this%spline )
-  end function
+  end subroutine spline_interpolate1d
 
-  function spline_interpolate1d_disp(this, num_points, data, alpha) &
-       result(data_out)
+  subroutine spline_interpolate1d_disp(this, num_pts, data, alpha, output_array)
     class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
+    sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
-    sll_real64, dimension(num_points)      :: coordinates
+    sll_real64, dimension(num_pts),intent(out)      :: output_array
+
+    sll_real64, dimension(num_pts)      :: coordinates
     sll_real64 :: length, delta
     sll_real64 :: xmin, xmax
     sll_int32 :: i
     ! compute the interpolating spline coefficients
     call compute_cubic_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
-    length = this%interpolation_points(num_points) - &
+    length = this%interpolation_points(num_pts) - &
              this%interpolation_points(1)
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
-    xmax = this%interpolation_points(num_points)
+    xmax = this%interpolation_points(num_pts)
     if (this%bc_type == SLL_PERIODIC) then
-       do i = 1, num_points
+       do i = 1, num_pts
           coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
           SLL_ASSERT(coordinates(i) >= xmin)
           SLL_ASSERT(coordinates(i) <= xmax)
        end do
     else
        if (alpha > 0 ) then
-          do i = 1, num_points
+          do i = 1, num_pts
              coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        else
-          do i = 1, num_points
+          do i = 1, num_pts
              coordinates(i) = min(this%interpolation_points(i) - alpha, xmax)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        endif
     end if
-    call interpolate_array_values( coordinates, data_out, num_points, &
+    call interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
          this%spline )
-  end function
+  end subroutine spline_interpolate1d_disp
 
   ! Both versions F03 and F95 of compute_interpolants_cs1d should have the
   ! same name. In the F95 we should add a generic interface around this
@@ -153,52 +152,52 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output_array )
     class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
-    sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_int32,  intent(in)                       :: num_pts
+    sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(num_pts), intent(out)  :: output_array
     call interpolate_array_values( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
 
-  subroutine interpolate_pointer_values_cs1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
-    sll_int32,  intent(in)            :: num_pts
-    sll_real64, dimension(:), pointer :: vals_to_interpolate
-    sll_real64, dimension(:), pointer :: output
-    call interpolate_pointer_values( vals_to_interpolate, output, &
-         num_pts, interpolator%spline )
-  end subroutine interpolate_pointer_values_cs1d
-
-
-  subroutine interpolate_derivatives_cs1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output_array )
-    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
-    sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
-    call interpolate_array_derivatives( vals_to_interpolate, output_array, &
-         num_pts, interpolator%spline )
-  end subroutine interpolate_derivatives_cs1d
-
-  subroutine interpolate_pointer_derivatives_cs1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
-    sll_int32,  intent(in)              :: num_pts
-    sll_real64, dimension(:), pointer   :: vals_to_interpolate
-    sll_real64, dimension(:), pointer   :: output
-    call interpolate_pointer_derivatives( vals_to_interpolate, output, &
-         num_pts, interpolator%spline )
-  end subroutine interpolate_pointer_derivatives_cs1d
+!!$  subroutine interpolate_pointer_values_cs1d( &
+!!$    interpolator, &
+!!$    num_pts, &
+!!$    vals_to_interpolate, &
+!!$    output )
+!!$    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
+!!$    sll_int32,  intent(in)            :: num_pts
+!!$    sll_real64, dimension(:), pointer :: vals_to_interpolate
+!!$    sll_real64, dimension(:), pointer :: output
+!!$    call interpolate_pointer_values( vals_to_interpolate, output, &
+!!$         num_pts, interpolator%spline )
+!!$  end subroutine interpolate_pointer_values_cs1d
+!!$
+!!$
+!!$  subroutine interpolate_derivatives_cs1d( &
+!!$    interpolator, &
+!!$    num_pts, &
+!!$    vals_to_interpolate, &
+!!$    output_array )
+!!$    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
+!!$    sll_int32,  intent(in)                 :: num_pts
+!!$    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
+!!$    sll_real64, dimension(:), intent(out)  :: output_array
+!!$    call interpolate_array_derivatives( vals_to_interpolate, output_array, &
+!!$         num_pts, interpolator%spline )
+!!$  end subroutine interpolate_derivatives_cs1d
+!!$
+!!$  subroutine interpolate_pointer_derivatives_cs1d( &
+!!$    interpolator, &
+!!$    num_pts, &
+!!$    vals_to_interpolate, &
+!!$    output )
+!!$    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
+!!$    sll_int32,  intent(in)              :: num_pts
+!!$    sll_real64, dimension(:), pointer   :: vals_to_interpolate
+!!$    sll_real64, dimension(:), pointer   :: output
+!!$    call interpolate_pointer_derivatives( vals_to_interpolate, output, &
+!!$         num_pts, interpolator%spline )
+!!$  end subroutine interpolate_pointer_derivatives_cs1d
 
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
     class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
