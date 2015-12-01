@@ -2,7 +2,7 @@
 !> @brief
 !> Interpolator class and methods of Lagrange 1D interpolator
 !> @details
-!> Implements the sll_interpolator_1d_base interface.
+!> Implements the sll_c_interpolator_1d interface.
 module sll_m_lagrange_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -14,7 +14,7 @@ implicit none
 private
 
  !> Interpolator class of Lagrange 1D interpolator
- type,extends(sll_interpolator_1d_base), public :: sll_lagrange_interpolator_1d
+ type,extends(sll_c_interpolator_1d), public :: sll_lagrange_interpolator_1d
    !> PLEASE ADD DOCUMENTATION
    type(sll_lagrange_interpolation_1D), pointer :: lagrange
    !> PLEASE ADD DOCUMENTATION

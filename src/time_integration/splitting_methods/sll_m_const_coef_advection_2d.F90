@@ -16,9 +16,9 @@ module sll_m_const_coef_advection_2d
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, extends(operator_splitting) :: const_coef_advection_2d
      !> interpolator object in first direction
-     class(sll_interpolator_1d_base), pointer    :: interp1
+     class(sll_c_interpolator_1d), pointer    :: interp1
      !> interpolator object in second direction
-     class(sll_interpolator_1d_base), pointer    :: interp2 
+     class(sll_c_interpolator_1d), pointer    :: interp2 
      !> function do be evolved
      sll_real64, dimension(:,:), pointer :: data
      !> dimension in first direction
@@ -45,8 +45,8 @@ contains
     sll_int32, intent(in)  :: n2   !< dimension in second direction
     sll_real64, intent(in) :: a1   !< advection coeeficient in first direction
     sll_real64, intent(in) :: a2   !< advection coeeficient in first direction
-    class(sll_interpolator_1d_base), pointer    :: interp1  !< interpolator for first direction
-    class(sll_interpolator_1d_base), pointer    :: interp2  !< interpolator for second direction
+    class(sll_c_interpolator_1d), pointer    :: interp1  !< interpolator for first direction
+    class(sll_c_interpolator_1d), pointer    :: interp2  !< interpolator for second direction
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
@@ -70,8 +70,8 @@ contains
     sll_int32, intent(in)  :: n2   !< dimension in second direction
     sll_real64, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_interpolator_1d_base), pointer    :: interp1  !< interpolator for first direction
-    class(sll_interpolator_1d_base), pointer    :: interp2  !< interpolator for second direction
+    class(sll_c_interpolator_1d), pointer    :: interp1  !< interpolator for first direction
+    class(sll_c_interpolator_1d), pointer    :: interp2  !< interpolator for second direction
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps

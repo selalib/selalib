@@ -1,6 +1,6 @@
 !> @ingroup interpolators
 !> @brief
-!> Finite differences implementation of sll_interpolator_1d_base
+!> Finite differences implementation of sll_c_interpolator_1d
 !> @details
 !! This is an experimental type meant to solve the following problem:
 !! We are used to fields coming with their own means of interpolation.
@@ -24,7 +24,7 @@ private
 
 
   !> Finite differences implementation of 1d interpolator
-  type, extends(sll_interpolator_1d_base) :: sll_finite_difference_interpolator_1d
+  type, extends(sll_c_interpolator_1d) :: sll_finite_difference_interpolator_1d
      sll_int32  :: num_points
      sll_real64 :: delta      ! cell size, distance between data points
      sll_real64 :: r_delta    ! reciprocal of the cell size

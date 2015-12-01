@@ -23,8 +23,8 @@ sll_real64, dimension(:,:), allocatable :: df
 sll_real64, dimension(:,:), allocatable :: advfield_x
 sll_real64, dimension(:,:), allocatable :: advfield_v
 
-class(sll_interpolator_1d_base), pointer     :: interp_x
-class(sll_interpolator_1d_base), pointer     :: interp_v
+class(sll_c_interpolator_1d), pointer     :: interp_x
+class(sll_c_interpolator_1d), pointer     :: interp_v
 
 type(sll_cubic_spline_interpolator_1d), target   :: spline_x
 type(sll_cubic_spline_interpolator_1d), target   :: spline_v

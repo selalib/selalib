@@ -100,8 +100,8 @@ contains
     initializer )
 
     class(sll_coordinate_transformation_2d_base), pointer :: transf
-    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     type(sll_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass

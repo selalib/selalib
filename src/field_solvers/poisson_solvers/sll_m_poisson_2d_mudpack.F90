@@ -109,17 +109,17 @@ private
     !> PLEASE ADD DOCUMENTATION
     class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cxx_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cxx_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cyy_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cyy_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cx_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cx_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cy_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cy_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cex_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cex_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cey_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cey_1d_interp
 
     sll_real64, dimension(:), pointer :: work !< array for tmp data
     sll_int32  :: mgopt(4) !< Option to control multigrid

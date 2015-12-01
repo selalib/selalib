@@ -96,8 +96,8 @@ module sll_m_sim_bsl_ad_2d0v_curv
    class(sll_advection_1d_base), pointer    :: advect2_1d
    class(sll_characteristics_1d_base), pointer :: charac1
    class(sll_characteristics_1d_base), pointer :: charac2
-   class(sll_interpolator_1d_base), pointer   :: interp1
-   class(sll_interpolator_1d_base), pointer   :: interp2
+   class(sll_c_interpolator_1d), pointer   :: interp1
+   class(sll_c_interpolator_1d), pointer   :: interp2
 
 
    procedure(sll_scalar_initializer_2d), nopass, pointer :: phi_func
@@ -253,11 +253,11 @@ contains
     !class(sll_characteristics_1d_base), pointer :: charac1d_x2
     class(sll_interpolator_2d_base), pointer   :: A1_interp2d
     class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    !class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    !class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    !class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    !class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     !class(sll_advection_1d_base), pointer    :: advect_1d_x1
     !class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr

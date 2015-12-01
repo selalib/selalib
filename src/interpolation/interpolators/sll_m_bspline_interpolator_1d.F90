@@ -33,7 +33,7 @@ implicit none
 private
 
 !> Class for arbitrary degree spline 1d interpolator
-type, public, extends(sll_interpolator_1d_base) :: sll_bspline_interpolator_1d
+type, public, extends(sll_c_interpolator_1d) :: sll_bspline_interpolator_1d
 
   type(sll_bspline_1d), pointer :: bspline    !< bspline data
   sll_int32                     :: num_pts

@@ -2,7 +2,7 @@
 !> @brief
 !> Interpolator class and methods of hermite 1D interpolator
 !> @details
-!> Implements the sll_interpolator_1d_base interface.
+!> Implements the sll_c_interpolator_1d interface.
 module sll_m_hermite_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -21,7 +21,7 @@ private
 !! Where the diverse interpolators diverge is in the way to initialize them.
 
  !> Interpolator class of Hermite 1D interpolator
- type,extends(sll_interpolator_1d_base), public :: sll_hermite_interpolator_1d
+ type,extends(sll_c_interpolator_1d), public :: sll_hermite_interpolator_1d
    !> PLEASE ADD DOCUMENTATION
    type(sll_hermite_interpolation_1d), pointer :: hermite
    !> PLEASE ADD DOCUMENTATION
