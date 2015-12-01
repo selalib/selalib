@@ -803,8 +803,8 @@ contains
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
-                alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                alpha3 = sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha3 )
@@ -840,8 +840,8 @@ contains
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
-                alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                alpha4 = sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+                call sim%interp_x4%interpolate_array_disp_inplace( &
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
                      alpha4 )
@@ -1308,10 +1308,10 @@ contains
     sll_real64 :: displacement
 
     do i=1, num_pts
-       displacement = (vmin + real(i-1,f64)*delta_v)*dt
+       displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_x_1d
 
@@ -1325,8 +1325,8 @@ contains
     sll_real64                               :: displacement
 
     do i=1, num_pts
-       displacement = -efield(i)*0.5_f64*dt
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       displacement = efield(i)*0.5_f64*dt
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_v_1d
 
