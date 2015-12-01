@@ -113,7 +113,8 @@ write(*,*) "Banded matrix M stored in Q:"
 
 x = b
 
-call schur_complement_fac(s, n, k, q, x)
+call schur_complement_fac(s, n, k, q)
+call schur_complement_slv(s, n, k, q, x)
 
 print*, ' x = '
 call print_vector(x)
