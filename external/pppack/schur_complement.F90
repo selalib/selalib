@@ -40,7 +40,6 @@ type :: schur_complement_solver
   real(8), allocatable :: yy(:,:)
   
   real(8), allocatable :: c1(:)
-  real(8), allocatable :: c2(:)
   real(8), allocatable :: z1(:)
   real(8), allocatable :: z2(:)
 
@@ -69,7 +68,6 @@ subroutine schur_complement_fac(s, n, k, q)
   allocate(s%cc(k  ,n-k)); s%cc = 0.0_8
   allocate(s%dd(k  ,k  )); s%dd = 0.0_8
   allocate(s%z2(n-k))    ; s%z2 = 0.0_8
-  allocate(s%c2(k))      ; s%c2 = 0.0_8
   
   do i = 1, k
     l = 0
@@ -103,9 +101,9 @@ subroutine schur_complement_fac(s, n, k, q)
     end do
   end do
   
-  write(*,*) "B"; call print_matrix(s%bb)
-  write(*,*) "C"; call print_matrix(s%cc)
-  write(*,*) "D"; call print_matrix(s%dd)
+  !write(*,*) "B"; call print_matrix(s%bb)
+  !write(*,*) "C"; call print_matrix(s%cc)
+  !write(*,*) "D"; call print_matrix(s%dd)
   
   !Factorize the matrix A
   call banfac ( q(:,1:n-k), k+kp1, n-k, k, k, info )
@@ -141,10 +139,8 @@ subroutine schur_complement_slv(s, n, k, q, x)
   !Solve A.z2 = b1
   s%z2 = x(1:n-k)
   call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%z2 )
-  !compute c2 = b2 - C.z2
-  s%c2 = x(n-k+1:n) - matmul(s%cc,s%z2)
-  !Solve H.x2 = c2
-  x(n-k+1:n) = matmul(s%dd,s%c2)
+  !Solve H.x2 = b2 - C.z2
+  x(n-k+1:n) = matmul(s%dd,x(n-k+1:n) - matmul(s%cc,s%z2))
   !Solve A.x1 = b1 - B.x2
   x(1:n-k) = x(1:n-k) - matmul(s%bb,x(n-k+1:n))
   call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, x(1:n-k) )
