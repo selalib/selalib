@@ -30,9 +30,9 @@ module sll_m_particle_group_4d
   implicit none
 
   type :: sll_particle_group_4d
-     sll_int32  :: number_particles! peut etre a faire en SLL_PRIV
-     sll_int32  :: active_particles! tout ça doit passer en 32
-     sll_int32  :: guard_list_size! tout ça doit passer en 32
+     sll_int32  :: number_particles
+     sll_int32  :: active_particles
+     sll_int32  :: guard_list_size
      ! an array indexed by the thread number, of the number of particles
      ! to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles
