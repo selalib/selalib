@@ -25,23 +25,23 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_array_derivatives => interpolate_array_derivatives_li1d
+   !procedure :: interpolate_array_derivatives => interpolate_array_derivatives_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => interpolate_array_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => interpolate_array_disp_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_li1d
+   !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_derivative_eta1 => interpolate_derivative_eta1_li1d
+   procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_pointer_values => interpolate_pointer_values_li1d
+   !procedure :: interpolate_pointer_values => interpolate_pointer_values_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_array_values => interpolate_array_values_li1d
+   procedure :: interpolate_from_interpolant_array => interpolate_array_values_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_value => interpolate_value_li1d
+   procedure :: interpolate_from_interpolant_value => interpolate_value_li1d
    !> PLEASE ADD DOCUMENTATION
-   procedure :: reconstruct_array => reconstruct_array_li1d
+   !procedure :: reconstruct_array => reconstruct_array_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure, pass :: set_coefficients => set_coefficients_li1d
    !> PLEASE ADD DOCUMENTATION
@@ -120,17 +120,17 @@ function new_lagrange_interpolator_1d( &
 
 
 
-function interpolate_array_disp_li1d(this, num_points, data, alpha) result(data_out)
+subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
   class(sll_lagrange_interpolator_1d), intent(in)     :: this
   sll_real64, intent(in) :: alpha
-  sll_int32, intent(in)  :: num_points    ! size of output array
+  sll_int32, intent(in)  :: num_pts    ! size of output array
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
-  sll_real64, dimension(1:num_points)    :: data_out
+  sll_real64, dimension(1:num_pts), intent(out)    :: output_array
 
-call interpolate_array_values(data,alpha,this%lagrange)
-data_out=this%lagrange%data_out
+  call interpolate_from_interpolant_array(data,alpha,this%lagrange)
+  output_array=this%lagrange%data_out
 
-end function
+end subroutine interpolate_array_disp_li1d
 
 !PN DEFINED BUT NOT USED
 !subroutine delete_li1d (obj)
@@ -146,8 +146,8 @@ subroutine interpolate_array_values_li1d( &
     output_array )
     class(sll_lagrange_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(num_pts), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = 0.0_f64
     print*, 'interpolate_array_values:', &
@@ -255,14 +255,13 @@ end subroutine interpolate_pointer_values_li1d
        res(:) = 0.0_f64
   end function reconstruct_array_li1d
 
-  function interpolate_array_li1d(this, num_points, data, coordinates) &
-       result(data_out)
+  subroutine interpolate_array_li1d(this, num_pts, data, coordinates, output_array)
     class(sll_lagrange_interpolator_1d),  intent(in)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: coordinates
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(num_pts), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+    sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! local variables
     !sll_int32 :: ierr
     ! lagrange interpolation only implemented for constant displacement
@@ -271,9 +270,9 @@ end subroutine interpolate_pointer_values_li1d
     print *,maxval(coordinates)
     print *,maxval(data)
     print *,this%bc_type
-    data_out = 0._f64
+    output_array = 0._f64
     stop
-  end function
+  end subroutine interpolate_array_li1d
 
     subroutine compute_interpolants_li1d( interpolator, data_array,&
          eta_coords, &
