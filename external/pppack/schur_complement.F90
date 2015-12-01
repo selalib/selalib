@@ -144,19 +144,16 @@ subroutine schur_complement_slv(s, n, k, q, x)
   
   kp1 = k+1
   
-  s%b2 = x(n-k+1:n)
-  
   !Solve A.z2 = b1
   s%z2 = x(1:n-k)
   call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%z2 )
   !compute c2 = b2 - C.z2
-  s%c2 = s%b2 - matmul(s%cc,s%z2)
+  s%c2 = x(n-k+1:n) - matmul(s%cc,s%z2)
   !Solve H.x2 = c2
-  s%x2 = matmul(s%dd,s%c2)
+  x(n-k+1:n) = matmul(s%dd,s%c2)
   !Solve A.x1 = b1 - B.x2
-  x(1:n-k) = x(1:n-k) - matmul(s%bb,s%x2)
+  x(1:n-k) = x(1:n-k) - matmul(s%bb,x(n-k+1:n))
   call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, x(1:n-k) )
-  x(n-k+1:n) = s%x2
 
 end subroutine schur_complement_slv
 
