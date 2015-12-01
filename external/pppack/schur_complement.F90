@@ -54,7 +54,6 @@ real(8), allocatable :: cc(:,:)
 real(8), allocatable :: dd(:,:)
 real(8), allocatable :: yy(:,:)
 
-real(8), allocatable :: x1(:)
 real(8), allocatable :: x2(:)
 real(8), allocatable :: b1(:)
 real(8), allocatable :: b2(:)
@@ -82,7 +81,6 @@ b = x
 
 allocate(b1(n-k)); b1 = b(1:n-k)
 allocate(b2(k));   b2 = b(n-k+1:n)
-allocate(x1(n-k)); x1 = 0.0_8
 allocate(x2(k));   x2 = 0.0_8
 
 
@@ -137,41 +135,29 @@ yy = bb
 do j = 1, k
   call banslv ( qq, k+kp1, n-k, k, k, yy(:,j) )
 end do
-write(*,*) "Y ="
 call print_matrix(yy)
 
 !Compute H= D - C.Y
 dd = dd - matmul(cc,yy)
-write(*,*) "H ="
 call print_matrix(dd)
 call dgetrf(k,k,dd,k,jpiv,info)
 call dgetri(k,dd,k,jpiv,work,k*k,info)
-print*,'H^(-1) =';call print_matrix(dd)
 
 !Solve A.z2 = b1
 allocate(z2(n-k))
 z2 = b1
 call banslv ( qq, k+kp1, n-k, k, k, z2 )
-write(*,*) " z2 = "
-call print_vector(z2)
 
 !compute c2 = b2 - C.z2
 allocate(c2(k))
 c2 = b2 - matmul(cc,z2)
-write(*,*) " c2 = "
-call print_vector(c2)
 !Solve H.x2 = c2
 x2 = matmul(dd,c2)
-write(*,*) " x2 = "
-call print_vector(x2)
 !Solve A.x1 = b1 - B.x2
+b1 = b1 - matmul(bb,x2)
+call banslv ( qq, k+kp1, n-k, k, k, b1 )
 
-x1 = b1 - matmul(bb,x2)
-call banslv ( qq, k+kp1, n-k, k, k, x1 )
-write(*,*) " x1 = "
-call print_vector(x1)
-
-x(1:n-k)   = x1
+x(1:n-k)   = b1
 x(n-k+1:n) = x2
 
 
