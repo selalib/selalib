@@ -28,6 +28,36 @@
 !Resoudre H x_2 = c2 puis A x1 = b1- B x2
 
 
+!> A=
+!> |  11  12  13  14   0   0  17  18  19 |
+!> |  21  22  23  24  25   0   0  28  29 |
+!> |  31  32  33  34  35  36   0   0  39 |
+!> |  41  42  43  44  45  46  47   0   0 |
+!> |   0  52  53  54  55  56  57  58   0 |
+!> |   0   0  63  64  65  66  67  68  69 |
+!> |  71   0   0  74  75  76  77  78  79 |
+!> |  81  82   0   0  85  86  87  88  89 |
+!> |  91  92  93   0   0  96  97  98  99 |
+!> 
+!>  Banded matrix A stored in Q:
+!> |  71  82  93  14  25  36  47  58  69 |
+!> |  81  92  13  24  35  46  57  68  79 |
+!> |  91  12  23  34  45  56  67  78  89 |
+!> |  11  22  33  44  55  66  77  88  99 |
+!> |  21  32  43  54  65  76  87  98  19 |
+!> |  31  42  53  64  75  86  97  18  29 |
+!> |  41  52  63  74  85  96  17  28  39 |
+!> We use the loop 
+!> <code>
+!> do j = 1, n
+!>   l = 0
+!>   do i = -k,k
+!>     l = l+1
+!>     Q(l,j) = A(modulo(i+j-1,n)+1,j)
+!>   end do
+!> end do
+!> </code>
+
 module schur_complement
 
 implicit none
@@ -39,7 +69,6 @@ type :: schur_complement_solver
   real(8), allocatable :: dd(:,:)
   
   real(8), allocatable :: c1(:)
-  real(8), allocatable :: z1(:)
   real(8), allocatable :: z2(:)
 
 end type schur_complement_solver
@@ -77,7 +106,6 @@ subroutine schur_complement_fac(s, n, k, q)
       s%bb(j+1,l) = q(i,n-k+l)
     end do
   end do
-  
   do j = 1, k
     l = 0
     do i = j, k
@@ -92,7 +120,6 @@ subroutine schur_complement_fac(s, n, k, q)
       l=l+1
     end do
   end do
-  
   do i = 1, k
     l = 0
     do j = 1, k
