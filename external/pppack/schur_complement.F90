@@ -51,16 +51,13 @@ end type schur_complement_solver
 
 contains
 
-subroutine schur_complement_fac(s, n, k, q, x)
+subroutine schur_complement_fac(s, n, k, q)
 type(schur_complement_solver) :: s
 
 integer, intent(in) :: n
 integer, intent(in) :: k
 real(8)             :: q(2*k+1,n)
-real(8)             :: m(n,n)
 
-real(8) :: x(n)
-real(8) :: b(n)
 
 
 integer :: i
@@ -78,10 +75,8 @@ integer              :: work(k*k)
 integer :: kp1
 
 kp1 = k+1
-b = x
-
-allocate(s%b1(n-k)); s%b1 = b(1:n-k)
-allocate(s%b2(k));   s%b2 = b(n-k+1:n)
+allocate(s%b1(n-k))
+allocate(s%b2(k))
 allocate(s%x2(k));   s%x2 = 0.0_8
 
 
@@ -142,25 +137,41 @@ call print_matrix(s%dd)
 call dgetrf(k,k,s%dd,k,jpiv,info)
 call dgetri(k,s%dd,k,jpiv,work,k*k,info)
 
-!Solve A.z2 = b1
 allocate(s%z2(n-k))
+
+allocate(s%c2(k))
+
+
+
+end subroutine schur_complement_fac
+
+subroutine schur_complement_slv(s, n, k, q, x)
+type(schur_complement_solver) :: s
+integer, intent(in) :: n
+integer, intent(in) :: k
+real(8)             :: q(2*k+1,n)
+integer             :: kp1
+real(8) :: x(n)
+
+kp1 = k+1
+
+s%b1 = x(1:n-k)
+s%b2 = x(n-k+1:n)
+
+!Solve A.z2 = b1
 s%z2 = s%b1
 call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%z2 )
-
 !compute c2 = b2 - C.z2
-allocate(s%c2(k))
 s%c2 = s%b2 - matmul(s%cc,s%z2)
 !Solve H.x2 = c2
 s%x2 = matmul(s%dd,s%c2)
 !Solve A.x1 = b1 - B.x2
 s%b1 = s%b1 - matmul(s%bb,s%x2)
 call banslv ( q(:,1:n-k), k+kp1, n-k, k, k, s%b1 )
-
 x(1:n-k)   = s%b1
 x(n-k+1:n) = s%x2
 
-
-end subroutine schur_complement_fac
+end subroutine schur_complement_slv
 
 subroutine print_vector(v)
 
