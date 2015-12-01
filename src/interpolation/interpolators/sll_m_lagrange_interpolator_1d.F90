@@ -150,7 +150,7 @@ subroutine interpolate_array_values_li1d( &
     sll_real64, dimension(num_pts), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = 0.0_f64
-    print*, 'interpolate_array_values:', &
+    print*, 'interpolate_from_interpolant_array:', &
          ' not implemented for lagrange interpolation'
     print *,num_pts
     print *,maxval(vals_to_interpolate)

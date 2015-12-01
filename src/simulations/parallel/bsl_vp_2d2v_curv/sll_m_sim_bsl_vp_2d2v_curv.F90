@@ -1010,7 +1010,7 @@ contains
                    eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
                 end if
                 
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_from_interpolant_value(eta1,eta2)
 
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64

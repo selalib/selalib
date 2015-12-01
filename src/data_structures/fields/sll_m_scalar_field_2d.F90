@@ -713,7 +713,7 @@ function value_at_pt_discrete( field, eta1, eta2 )
   sll_real64, intent(in) :: eta2
   sll_real64             :: value_at_pt_discrete
 
-  value_at_pt_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+  value_at_pt_discrete = field%interp_2d%interpolate_from_interpolant_value(eta1,eta2)
 
 end function value_at_pt_discrete
 
@@ -729,7 +729,7 @@ function value_at_index_discrete( field, i, j )
   lm => field%get_cartesian_mesh()
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-  value_at_index_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+  value_at_index_discrete = field%interp_2d%interpolate_from_interpolant_value(eta1,eta2)
 end function value_at_index_discrete
 
 function first_deriv_eta1_value_at_pt_discrete( field, eta1, eta2 )
@@ -739,7 +739,7 @@ function first_deriv_eta1_value_at_pt_discrete( field, eta1, eta2 )
   sll_real64             :: first_deriv_eta1_value_at_pt_discrete
     
   first_deriv_eta1_value_at_pt_discrete = &
-       field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+       field%interp_2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
 end function first_deriv_eta1_value_at_pt_discrete
 
 function first_deriv_eta2_value_at_pt_discrete( field, eta1, eta2 )
@@ -765,7 +765,7 @@ function first_deriv_eta1_value_at_index_discrete( field, i, j )
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
   first_deriv_eta1_value_at_index_discrete = &
-        field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+        field%interp_2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
 
 end function first_deriv_eta1_value_at_index_discrete
 

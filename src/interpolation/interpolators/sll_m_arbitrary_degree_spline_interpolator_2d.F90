@@ -85,8 +85,8 @@ contains
   procedure :: set_coefficients            => set_coefficients_ad2d
   procedure :: coefficients_are_set        => coefficients_are_set_ad2d
   procedure :: compute_interpolants        => compute_interpolants_ad2d
-  procedure :: interpolate_value           => interpolate_value_ad2d
-  procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
+  procedure :: interpolate_from_interpolant_value           => interpolate_value_ad2d
+  procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative1_ad2d
   procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
   procedure :: interpolate_array           => interpolate_array_ad2d
   procedure :: interpolate_array_disp      => interpolate_2d_array_disp_ad2d

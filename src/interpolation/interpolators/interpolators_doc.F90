@@ -18,12 +18,12 @@
 !!
 !! Methods:
 !! - compute_interpolants(...)
-!! - interpolate_value(...)
-!! - interpolate_derivative_eta1(...)
+!! - interpolate_from_interpolant_value(...)
+!! - interpolate_from_interpolant_derivative_eta1(...)
 !! - interpolate_array(...)
 !! - interpolate_array_disp(...)
 !! - reconstruct_array(...)
-!! - interpolate_array_values(...)
+!! - interpolate_from_interpolant_array(...)
 !! - interpolate_pointer_values(...)
 !! - interpolate_array_derivatives(...)
 !! - interpolate_pointer_derivatives(...)

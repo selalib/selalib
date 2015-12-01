@@ -376,7 +376,7 @@ contains
           else
             x1_i = x1  
           endif            
-          x1 = input1(i)-0.5_f64*dt*charac%A1_interp_x1%interpolate_value(x1_i)
+          x1 = input1(i)-0.5_f64*dt*charac%A1_interp_x1%interpolate_from_interpolant_value(x1_i)
           iter=iter+1
         end do
         if (iter==charac%x1_maxiter .and. abs(x1_old-x1)>charac%x1_tol) then
@@ -400,8 +400,8 @@ contains
           else
             x2_i = x2  
           endif                      
-          x2 = input2(j)-0.5_f64*dt*(charac%A2_interp_x1x2%interpolate_value(x1, x2_i)&
-            +charac%A2_interp_x1%interpolate_value( x1))
+          x2 = input2(j)-0.5_f64*dt*(charac%A2_interp_x1x2%interpolate_from_interpolant_value(x1, x2_i)&
+            +charac%A2_interp_x1%interpolate_from_interpolant_value( x1))
           iter=iter+1
         end do
         if (iter==charac%x2_maxiter .and. abs(x2_old-x2)>charac%x2_tol) then
@@ -414,7 +414,7 @@ contains
         endif                      
         
         !Xn = y_j-A1(X*,Yn)*dt/2
-        x1 = x1-0.5_f64*dt*charac%A1_interp_x1x2%interpolate_value( x1, x2)
+        x1 = x1-0.5_f64*dt*charac%A1_interp_x1x2%interpolate_from_interpolant_value( x1, x2)
         if((x1<=charac%eta1_min).or.(x1>=charac%eta1_max))then
           x1 = charac%process_outside_point1(x1,charac%eta1_min,charac%eta1_max)
         endif            

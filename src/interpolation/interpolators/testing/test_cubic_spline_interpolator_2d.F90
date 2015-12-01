@@ -91,10 +91,10 @@ implicit none
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
-        node_val   = cs2d%interpolate_value(eta1,eta2)
+        node_val   = cs2d%interpolate_from_interpolant_value(eta1,eta2)
         ref        = x1_polar_f(eta1,eta2,params)
         acc        = acc + abs(node_val-ref)
-        deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
+        deriv1_val = cs2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
         ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
         acc1       = acc1 + abs(deriv1_val-ref)
         deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)

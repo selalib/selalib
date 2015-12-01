@@ -114,7 +114,7 @@ contains
         eta = x_min + (i-1)*delta_x - dt*advfield_x(i,j)
         eta = max(eta, x_min)
         eta = min(eta, x_max)
-        df(i,j) = interp_x%interpolate_value(eta)
+        df(i,j) = interp_x%interpolate_from_interpolant_value(eta)
      end do
    end do
 
@@ -130,7 +130,7 @@ contains
         eta = v_min + (j-1)*delta_v - dt*advfield_v(i,j)
         eta = max(eta, v_min)
         eta = min(eta, v_max)
-        df(i,j) = interp_v%interpolate_value(eta)
+        df(i,j) = interp_v%interpolate_from_interpolant_value(eta)
      end do
    end do
 

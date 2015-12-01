@@ -698,7 +698,7 @@ contains
         nodes(j,1), &
         eta_min, &
         eta_max)
-      nodes(j,2) = interp%interpolate_value(eta)
+      nodes(j,2) = interp%interpolate_from_interpolant_value(eta)
     enddo
     res = nodes(1,2)+4._f64*nodes(2,2)+nodes(3,2) 
     res = res*(b-a)/6._f64
@@ -785,7 +785,7 @@ contains
     res = 0._f64
     do i=1,4
       eta = a+(real(i-1,f64)/3._f64)*(b-a)
-      res = res+ w(i)*interp%interpolate_value(eta)
+      res = res+ w(i)*interp%interpolate_from_interpolant_value(eta)
     enddo
       
   end function compute_quadrature
@@ -1112,7 +1112,7 @@ contains
       output(i) = evaluate_hermite_1d(eta,dof)
       eta = charac(i)
       eta = process_outside_point_periodic(eta,eta_min,eta_max)
-      res = output(i)-interp%interpolate_value(eta)
+      res = output(i)-interp%interpolate_from_interpolant_value(eta)
       if(abs(res)>1.e-10)then
         print *,'#problem detected'
         print *,'#dof=',dof

@@ -41,11 +41,11 @@ implicit none
 
    !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_two_arg_msg),  &
-          deferred, pass(interpolator) :: interpolate_value
+          deferred, pass(interpolator) :: interpolate_from_interpolant_value
      
    !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_two_arg_msg),  &
-          deferred, pass(interpolator) :: interpolate_derivative_eta1
+          deferred, pass(interpolator) :: interpolate_from_interpolant_derivative_eta1
 
    !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_two_arg_msg),  &

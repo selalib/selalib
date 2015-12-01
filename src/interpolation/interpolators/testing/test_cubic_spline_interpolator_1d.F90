@@ -54,7 +54,7 @@ interp => spline
 call interp%compute_interpolants(pdata)
 
 do i = 1, m
-   fdata(i) = interp%interpolate_value(point(i))
+   fdata(i) = interp%interpolate_from_interpolant_value(point(i))
 end do
 
 error = maxval(abs(gdata-fdata))

@@ -1219,38 +1219,38 @@ contains
   !> input x dependent coefficients
   subroutine mudpack_cofx(x,cxx,cx,cex)
     real(8)  :: x,cxx,cx,cex
-    cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
-    cx  = mudpack_wrapper%cx_1d_interp%interpolate_value(x)
-    cex = mudpack_wrapper%cex_1d_interp%interpolate_value(x)
+    cxx = mudpack_wrapper%cxx_1d_interp%interpolate_from_interpolant_value(x)
+    cx  = mudpack_wrapper%cx_1d_interp%interpolate_from_interpolant_value(x)
+    cex = mudpack_wrapper%cex_1d_interp%interpolate_from_interpolant_value(x)
   end subroutine mudpack_cofx
 
   !> input y dependent coefficients
   subroutine mudpack_cofy(y,cyy,cy,cey)
     real(8)  :: y,cyy,cy,cey
-    cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
-    cy  = mudpack_wrapper%cy_1d_interp%interpolate_value(y)
-    cey = mudpack_wrapper%cey_1d_interp%interpolate_value(y)
+    cyy = mudpack_wrapper%cyy_1d_interp%interpolate_from_interpolant_value(y)
+    cy  = mudpack_wrapper%cy_1d_interp%interpolate_from_interpolant_value(y)
+    cey = mudpack_wrapper%cey_1d_interp%interpolate_from_interpolant_value(y)
   end subroutine mudpack_cofy
 
   subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
     real(8)  :: x,cxx,cx
     real(8)  :: y,cyy,cy,ce
-    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
-    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
-    cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
-    cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
-    ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
+    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+    cx  = mudpack_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cy  = mudpack_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+    ce  = mudpack_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
   end subroutine mudpack_cof
 
   subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
     real(8)  :: x,cxx,cx,cxy
     real(8)  :: y,cyy,cy,ce
-    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
-    cxy = mudpack_wrapper%cxy_2d_interp%interpolate_value(x,y)
-    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
-    cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
-    cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
-    ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
+    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cxy = mudpack_wrapper%cxy_2d_interp%interpolate_from_interpolant_value(x,y)
+    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+    cx  = mudpack_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cy  = mudpack_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+    ce  = mudpack_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
   end subroutine mudpack_cofcr
 
   !> input mixed derivative b.c. to mud2sp

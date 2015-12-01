@@ -185,8 +185,8 @@ module sll_m_cubic_splines
            compute_cubic_spline_1d,           &
            compute_cubic_spline_2d,           &
            interpolate_derivative,            &
-           interpolate_value,                 &
-           interpolate_array_values,          &
+           interpolate_from_interpolant_value,                 &
+           interpolate_from_interpolant_array,          &
            interpolate_pointer_values,        &
            interpolate_array_derivatives,     &
            interpolate_pointer_derivatives,   &
@@ -895,8 +895,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> @param[in] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D subroutine.
   !> @returns the value of the interpolated image of the abscissa x,
-  function interpolate_value( x, spline )
-    sll_real64                         :: interpolate_value
+  function interpolate_from_interpolant_value( x, spline )
+    sll_real64                         :: interpolate_from_interpolant_value
     intrinsic                          :: associated, int, real
     sll_real64, intent(in)             :: x
     type(sll_cubic_spline_1D), pointer :: spline
@@ -911,8 +911,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     xmin = spline%xmin
     rh   = spline%rdelta
     coeffs => spline%coeffs(0:spline%n_points+2)
-    interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
-  end function interpolate_value
+    interpolate_from_interpolant_value = interpolate_value_aux( x, xmin, rh, coeffs )
+  end function interpolate_from_interpolant_value
 
   !> @brief returns the values of the images of a collection of abscissae,
   !> represented by a 1D array in another output array. The spline coefficients
@@ -925,7 +925,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> interpolated.
   !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
-  subroutine interpolate_array_values( a_in, a_out, n, spline )
+  subroutine interpolate_from_interpolant_array( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
@@ -975,9 +975,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
        t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
        a_out(i) = (1.0_f64/6.0_f64)*(t2 + t4)
-       !print*,'interpolate_array_values', i, a_out(i)
+       !print*,'interpolate_from_interpolant_array', i, a_out(i)
     end do
-  end subroutine interpolate_array_values
+  end subroutine interpolate_from_interpolant_array
 
 
   ! FIXME: The following function is not in the unit test.

@@ -155,7 +155,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                       :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array
-    call interpolate_array_values( vals_to_interpolate, output_array, &
+    call interpolate_from_interpolant_array( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
 
@@ -203,7 +203,7 @@ contains  ! ****************************************************************
     class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
-    val = interpolate_value( eta1, interpolator%spline )
+    val = interpolate_from_interpolant_value( eta1, interpolator%spline )
   end function
 
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
