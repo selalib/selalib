@@ -14,7 +14,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 27 Nov 2015
+# Last revision: 30 Nov 2015
 #
 import re
 
@@ -253,11 +253,218 @@ def find_all_used_modules( lines ):
 #        lines.append( line )
 #    return lines
 
+
 #==============================================================================
-# MAIN FUNCTION
+# CLASS: handles replacement of interface
 #==============================================================================
 
-def process_interface_sections( original_root, preproc_root ):
+class LineSelector( object ):
+
+    pattern = {}
+    pattern['module']        = r'\s*module\s+[a-zA-Z]\w*'
+    pattern['program']       = r'\s*program\s+[a-zA-Z]\w*'
+    pattern['use']           = r'\s*use\s+[a-zA-Z]\w*'
+    pattern['use intrinsic'] = r'\s*use\s*,\s*intrinsic\b'
+    pattern['implicit none'] = r'\s*implicit\s+none\b'
+    pattern['public']        = r'\s*public\b'
+    pattern['private']       = r'\s*private\b'
+    pattern['intrinsic']     = r'\s*intrinsic\b'
+    pattern['contains']      = r'\s*contains\b'
+    pattern['access-spec']   = r'.*(,\s*\b(?:public|private)\b).*::'
+    pattern['type-block']    = r'^\s*((?:\bend\b)?\s*\btype\b)\s*(?![\s\(])'
+    regex = { k:re.compile( v, re.I ) for k,v in pattern.items() }
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def line_is_split( line ):
+        i = line.find( '&' )
+        if i == -1:
+            return False
+        else:
+            j = line.find( '!' )
+            if j == -1:
+                return True
+            else:
+                return i < j
+
+#==============================================================================
+class CleanupHandler( LineSelector ):
+    """ ONLY FOR MODULES """
+
+    #--------------------------------------------------------------------------
+    def __init__( self ):
+        self.cleanup = False
+        self.remove  = False
+        self.stop    = False
+        self.in_type = False
+
+    #--------------------------------------------------------------------------
+    def status( self, line ):
+
+        if self.stop:
+            return 'keep'
+        elif not self.in_type:
+            self.stop = self.regex['contains'].match( line )
+
+        if not self.cleanup:
+            self.cleanup = self.regex['private'].match( line )
+            return 'keep'
+
+        match_type = self.regex['type-block'].match( line )
+        if self.in_type:
+            if match_type and match_type.group( 1 ) == 'end type':
+                self.in_type = False
+                print("END TYPE")
+            return 'keep'
+        else:
+            if match_type and match_type.group( 1 ) == 'type':
+                self.in_type = True
+                print("BEGIN TYPE")
+                match_access_spec = self.regex['access-spec'].match( line )
+                if match_access_spec:
+                    return 'strip', match_access_spec.group( 1 )
+                else:
+                    return 'keep'
+            else:
+                match_access_spec = self.regex['access-spec'].match( line )
+                if match_access_spec:
+                    return 'strip', match_access_spec.group( 1 )
+
+        # cleanup == True: search for match
+        if self.regex['public'].match( line ) or \
+                self.regex['private'].match( line ) or self.remove:
+            self.remove = self.line_is_split( line )
+            return 'remove'
+
+        match_access_spec = self.regex['access-spec'].match( line )
+        if self.regex['access-spec'].match( line ):
+            print( "REMOVE LINE" )
+            print( line.rstrip('\n') )
+            print( self.regex['access-spec'].match( line ).group( 1 ) )
+            print()
+
+        # No match
+        return 'keep'
+
+#==============================================================================
+
+class InterfaceHandler( LineSelector ):
+
+    #--------------------------------------------------------------------------
+    def __init__( self ):
+        self.interface = False
+        self.split     = False
+
+    #--------------------------------------------------------------------------
+    def status( self, line ):
+        if not self.interface:
+            if self.regex['module'].match( line ) or \
+                    self.regex['program'].match( line ):
+                self.interface = True
+            return 'keep'
+
+        if line[0] == '#':
+            return 'remove'
+
+        if line.strip() == '':
+            self.split = False
+            return 'remove'
+
+        if line.lstrip()[0] == '!':
+            return 'keep'
+
+        if self.split:
+            self.split = self.line_is_split( line )
+            return 'remove'
+
+        self.split = self.line_is_split( line )
+        opts = ['use','use intrinsic','implicit none', \
+                'public','private','intrinsic']
+        for key in opts:
+            if self.regex[key].match( line ):
+                return 'remove'
+
+        # Line does not match any of the patterns: stop processing
+        return 'stop'
+
+#==============================================================================
+# FUNCTION: replace interface in source file
+#==============================================================================
+
+def replace_interface_section( src_fpath, int_fpath, overwrite=False ):
+
+    # Create new object that decides what to do with each line
+    selector = InterfaceHandler()
+
+    # New temporary file for output
+    out_fpath = src_fpath + '.new_interface'
+
+    # Read source and interface files, and write merged result to new file
+    with open( src_fpath, 'r' ) as src_f, \
+            open( out_fpath, 'w' ) as out_f:
+        for src_line in src_f:
+            status = selector.status( src_line )
+            if status == 'remove':
+                continue  # skip line
+            elif status == 'keep':
+                print( src_line, file=out_f, end='' )
+            elif status == 'stop':
+                break
+
+        # Insert interface
+        with open( int_fpath, 'r' ) as int_f:
+            for int_line in int_f:
+                print( int_line, file=out_f, end='' )
+
+        # Print remaining lines from source file
+        print( '', file=out_f )
+        print( src_line, file=out_f, end='' )
+        for src_line in src_f:
+            print( src_line, file=out_f, end='' )
+
+    # Overwrite original file, if requested
+    if overwrite:
+        from os import rename
+        rename( out_fpath, src_fpath )
+
+#==============================================================================
+# FUNCTION: remove multiple access specification statements
+#==============================================================================
+
+def remove_repeated_access_spec_stmt( src_fpath, overwrite=False ):
+
+    # Create new object that decides what to do with each line
+    selector = CleanupHandler()
+
+    # New temporary file for output
+    out_fpath = src_fpath + '.cleanup'
+
+    with open( src_fpath, 'r' ) as src_f, \
+            open( out_fpath, 'w' ) as out_f:
+        for src_line in src_f:
+            status = selector.status( src_line )
+            if status == 'remove':
+                continue  # skip line
+            elif status == 'keep':
+                print( src_line, file=out_f, end='' )
+            elif status[0] == 'strip':
+                string = status[1]
+                line = src_line.replace( string, '', 1 )
+                print( line, file=out_f, end='' )
+            else:
+                print( "ERROR: unknown status" )
+                raise SystemExit()
+
+    # Overwrite original file, if requested
+    if overwrite:
+        from os import rename
+        rename( out_fpath, src_fpath )
+
+#==============================================================================
+# MAIN FUNCTION: process interface
+#==============================================================================
+
+def process_interface_sections( original_root, preproc_root, replace=False ):
 
     from maintenance_tools import recursive_file_search
 
@@ -340,6 +547,11 @@ def process_interface_sections( original_root, preproc_root ):
         with open( new_fpath, 'w' ) as new_f:
             print( '\n'.join( lines ), file=new_f )
 
+        # Replace interface section into original file
+        # WARNING: dry-run for now
+        if replace:
+            replace_interface_section( fpath_orig, new_fpath, overwrite=True )
+            remove_repeated_access_spec_stmt( fpath_orig, overwrite=True )
         #----------------------------------------------------------------------
 
 #    # Some statistics
@@ -371,6 +583,10 @@ def parse_input():
           dest    = 'preproc_root',
           help    = 'relative path of root directory with preprocessed files' )
 
+  parser.add_argument( '-r', '--replace',
+          action  = 'store_true',
+          help    = 'change interface section of original file' )
+
   return parser.parse_args()
 
 #==============================================================================
@@ -386,7 +602,10 @@ def main():
     print('')
 
     # Walk directory tree and post-process all interface sections
-    process_interface_sections( args.original_root, args.preproc_root )
+    process_interface_sections(
+            args.original_root,
+            args.preproc_root,
+            args.replace )
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':

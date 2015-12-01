@@ -13,14 +13,14 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 20 Nov 2015
+# Last revision: 01 Dec 2015
 #
 from __future__ import print_function
 import re
-from fparser    import statements, typedecl_statements, block_statements
-from fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
-                                logical_operators, logical_constants, \
-                                relational_operators)
+from .fparser   import statements, typedecl_statements, block_statements
+from .fortran_intrinsics import (intrinsic_types, intrinsic_procedures,\
+                                 logical_operators, logical_constants, \
+                                 relational_operators)
 
 __all__ = ['compute_local_symbols','compute_external_symbols']
 __docformat__ = 'reStructuredText'
@@ -344,6 +344,12 @@ def compute_all_used_symbols( content ):
             # WHERE block
             elif isinstance( item, block_statements.Where ):
                 text = item.item.apply_map( item.expr )
+            # SELECT CASE block
+            elif isinstance( item, block_statements.Select ):
+                text = item.item.apply_map( item.expr )
+            # CASE statement
+            elif isinstance( item, statements.Case ):
+                text = ','.join( s for c in item.items for s in c )
             # SELECT TYPE block
             elif isinstance( item, block_statements.SelectType ):
                 text = item.selector
