@@ -668,7 +668,7 @@ contains
 !    sll_real64, dimension(:), intent(in) :: phi
 !    sll_real64, dimension(:), intent(out) :: A
 !    type(sll_cartesian_mesh_1d), pointer :: mesh
-!    class(sll_interpolator_1d_base), pointer   :: interp
+!    class(sll_c_interpolator_1d), pointer   :: interp
 !    sll_int32 :: Nc_x1
 !    sll_real64 :: x1_min
 !    sll_real64 :: delta_x1

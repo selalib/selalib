@@ -16,8 +16,8 @@ use iso_fortran_env, only: &
 
   implicit none
 
-  class(sll_interpolator_1d_base), pointer   :: interp_eta1
-  class(sll_interpolator_1d_base), pointer   :: interp_eta2
+  class(sll_c_interpolator_1d), pointer   :: interp_eta1
+  class(sll_c_interpolator_1d), pointer   :: interp_eta2
   type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
   type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
   sll_real64, dimension(:,:),  pointer       :: f_eta1

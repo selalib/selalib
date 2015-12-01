@@ -30,7 +30,7 @@ implicit none
 private
 
 !> Class for arbitrary degree spline 1d interpolator
-type, public, extends(sll_interpolator_1d_base) :: &
+type, public, extends(sll_c_interpolator_1d) :: &
   sll_arbitrary_degree_spline_interpolator_1d
 
   sll_int32                         :: num_pts       !< nodes number

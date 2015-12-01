@@ -20,7 +20,7 @@ program VP1d_BSL_time_split
   implicit none
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
-  class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
   type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau

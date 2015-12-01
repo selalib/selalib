@@ -77,7 +77,7 @@ module sll_m_scalar_field_1d
      !sll_int32                            :: sz_coeff2
      character(len=64)                    :: name
      !     sll_int32                            :: plot_counter
-     class(sll_interpolator_1d_base), pointer :: interp_1d !!! a implementer
+     class(sll_c_interpolator_1d), pointer :: interp_1d !!! a implementer
      sll_real64, dimension(:), pointer :: point
      !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
@@ -358,7 +358,7 @@ contains   ! *****************************************************************
     type(sll_scalar_field_1d_discrete), pointer :: obj
 !    sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_1d_base), target        :: interpolator_1d ! a implementer
+    class(sll_c_interpolator_1d), target        :: interpolator_1d ! a implementer
      type(sll_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32, optional :: sz_point
@@ -395,7 +395,7 @@ contains   ! *****************************************************************
     class(sll_scalar_field_1d_discrete)         :: field
    ! sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_1d_base), target        :: interpolator_1d
+    class(sll_c_interpolator_1d), target        :: interpolator_1d
     type(sll_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32,optional :: sz_point

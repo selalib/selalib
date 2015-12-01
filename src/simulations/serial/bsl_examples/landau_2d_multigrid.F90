@@ -43,10 +43,10 @@ sll_real64, dimension(:,:), allocatable :: rho
 !Poisson solver
 type(sll_mudpack_solver) :: poisson
 
-class(sll_interpolator_1d_base), pointer       :: interp_1
-class(sll_interpolator_1d_base), pointer       :: interp_2
-class(sll_interpolator_1d_base), pointer       :: interp_3
-class(sll_interpolator_1d_base), pointer       :: interp_4
+class(sll_c_interpolator_1d), pointer       :: interp_1
+class(sll_c_interpolator_1d), pointer       :: interp_2
+class(sll_c_interpolator_1d), pointer       :: interp_3
+class(sll_c_interpolator_1d), pointer       :: interp_4
 
 type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
 type(sll_cubic_spline_interpolator_1d), target :: spl_eta2

@@ -39,7 +39,7 @@ implicit none
 private
 
 !> Quintic spline interpolator 1d
-type, extends(sll_interpolator_1d_base), public :: sll_quintic_spline_interpolator_1d
+type, extends(sll_c_interpolator_1d), public :: sll_quintic_spline_interpolator_1d
 
   sll_real64, dimension(:),   pointer  :: x          !< points position
   sll_int32                            :: n          !< number of points

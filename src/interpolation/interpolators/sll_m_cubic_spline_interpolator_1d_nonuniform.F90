@@ -1,6 +1,6 @@
 !> @ingroup interpolators
 !> @brief
-!> Implements sll_interpolator_1d_base with cubic splines on non uniform mesh
+!> Implements sll_c_interpolator_1d with cubic splines on non uniform mesh
 !> @details
 !> Define spline interpolation of values in data define on original grid at
 !> points coordinates
@@ -15,7 +15,7 @@ implicit none
 private
 
   !> sll_interpolator_1d implemented with cubic splines on non uniform mesh
-  type, public, extends(sll_interpolator_1d_base) :: sll_cubic_spline_interpolator_1d_nonuniform
+  type, public, extends(sll_c_interpolator_1d) :: sll_cubic_spline_interpolator_1d_nonuniform
      sll_real64, dimension(:), pointer      :: interpolation_points !< points
      sll_int32                              :: num_points     !< size
      sll_int32                              :: bc_type        !< boundary condition

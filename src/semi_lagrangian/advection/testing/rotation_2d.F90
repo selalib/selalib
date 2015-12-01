@@ -60,8 +60,8 @@ implicit none
   class(sll_characteristics_2d_base), pointer :: charac
   class(sll_interpolator_2d_base), pointer   :: A1_interp_x1x2
   class(sll_interpolator_2d_base), pointer   :: A2_interp_x1x2
-  class(sll_interpolator_1d_base), pointer   :: A1_interp_x1
-  class(sll_interpolator_1d_base), pointer   :: A2_interp_x1
+  class(sll_c_interpolator_1d), pointer   :: A1_interp_x1
+  class(sll_c_interpolator_1d), pointer   :: A2_interp_x1
   
   
   nb_step = 1000

@@ -43,7 +43,7 @@ module sll_m_sparse_grid_interpolator
 
 
   type :: interpolator_base_ptr
-     class(sll_interpolator_1d_base), pointer :: ptr
+     class(sll_c_interpolator_1d), pointer :: ptr
   end type interpolator_base_ptr
 
 
@@ -77,7 +77,7 @@ module sll_m_sparse_grid_interpolator
     ! type(odd_degree_spline_1d_interpolator),dimension(:,:), pointer :: interp_v
      !type(lagrange_1d_interpolator),dimension(:,:), pointer :: interpl_v
      type(interpolator_base_ptr), dimension(:,:), pointer  :: interp !< \a interp is the interpolator object for the 1d interpolations along the stripes
-     !type(sll_interpolator_1d_base), dimension(:,:), pointer  :: interp
+     !type(sll_c_interpolator_1d), dimension(:,:), pointer  :: interp
      sll_int32, dimension(:), pointer :: level_mapping !< \a level_mapping is an index pointing the the start of each level
 
    contains
