@@ -213,7 +213,7 @@ subroutine interpolate_array_disp_hi1d(this, num_pts, data, alpha, output_array)
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
   sll_real64, dimension(1:num_pts), intent(out) :: output_array
 
-!call interpolate_array_values(data,alpha,this%hermite)
+!call interpolate_from_interpolant_array(data,alpha,this%hermite)
 !data_out=this%hermite%data_out
   print*, 'interpolate_array_disp_hi1d:', &
        ' not implemented for hermite interpolation'
@@ -242,7 +242,7 @@ subroutine interpolate_array_values_hi1d( &
     sll_real64, dimension(num_pts), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = 0.0_f64
-    print*, 'interpolate_array_values:', &
+    print*, 'interpolate_from_interpolant_array:', &
          ' not implemented for hermite interpolation'
     print *,num_pts
     print *,maxval(vals_to_interpolate)

@@ -683,7 +683,7 @@ contains
 !
 !    do i1=1,Nc_x1+1
 !      x1=x1_min+real(i1-1,f64)*delta_x1
-!      A(i1)=interp%interpolate_derivative_eta1(x1)
+!      A(i1)=interp%interpolate_from_interpolant_derivative_eta1(x1)
 !    end do
 !  end subroutine compute_field_from_phi_cartesian_1d
 

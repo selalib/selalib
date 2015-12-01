@@ -89,7 +89,7 @@ subroutine compute_lagrange_interpolation_1D(lagrange)
 end subroutine compute_lagrange_interpolation_1D
 
 !> This function computes the value at the grid points displacement by -alpha
-subroutine interpolate_array_values(fi,alpha,lagrange)
+subroutine interpolate_from_interpolant_array(fi,alpha,lagrange)
 type(sll_lagrange_interpolation_1D), pointer :: lagrange !< \a lagrange is the lagrange interpolator object
 sll_real64, intent(in) :: alpha !< \a alpha is the (negative) displacement
 sll_int32 ::i,j,index_gap
@@ -163,7 +163,7 @@ case default
 end select
 end if
 
-end subroutine interpolate_array_values 
+end subroutine interpolate_from_interpolant_array 
  
  
 subroutine delete_lagrange_interpolation_1D( sll_m_lagrange_interpolation )

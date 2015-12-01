@@ -224,7 +224,7 @@ contains
           else
             x2_i = x2  
           endif                      
-          x2 = input(j)-0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+          x2 = input(j)-0.5_f64*dt*(charac%A_interp%interpolate_from_interpolant_value(x2_i)+A(j))
           iter = iter+1
           !if(j==1)then
           !  print *,'#x2=',x2

@@ -753,7 +753,7 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1   
-   cx_array(i,j)= cxx_2d_interp%interpolate_derivative_eta1(eta1,eta2)+ &
+   cx_array(i,j)= cxx_2d_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
                   a21_interp%interpolate_derivative_eta2(eta1,eta2)                         
  enddo
 enddo 
@@ -774,7 +774,7 @@ do j=1,ny
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1    
    cy_array(i,j)= cyy_2d_interp%interpolate_derivative_eta2(eta1,eta2)+ &
-                  a12_interp%interpolate_derivative_eta1(eta1,eta2)                         
+                  a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefy_array  
@@ -782,23 +782,23 @@ end subroutine coefy_array
 subroutine mudpack_curvilinear_cof(x,y,cxx,cyy,cx,cy,ce)
 real(8)  :: x,cxx,cx
 real(8)  :: y,cyy,cy,ce
-cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
+cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
 return
 end subroutine
 
 subroutine mudpack_curvilinear_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
-cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cxy = mudpack_curvilinear_wrapper%cxy_2d_interp%interpolate_value(x,y)
-cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
+cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+cxy = mudpack_curvilinear_wrapper%cxy_2d_interp%interpolate_from_interpolant_value(x,y)
+cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
 
 return
 end subroutine

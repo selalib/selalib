@@ -137,7 +137,7 @@ subroutine test_process_1d(bc_type)
   print*, "-------------------------------------------------"
   print*, " values error = ", err1 / n
   print*, " derivatives error = ", err2 / n
-  print*, ' time spent in interpolate_value      : ', t1-t0
+  print*, ' time spent in interpolate_from_interpolant_value      : ', t1-t0
   print*, ' time spent in interpolate_derivative : ', t2-t1
   print*, "-------------------------------------------------"
 
@@ -270,7 +270,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   print*, "CPU TIME USING POINT VALUE FUCNTION ----------------------"
   print*, "----------------------------------------------------------"
   print*, ' compute interpolants      : ', t1-t0
-  print*, ' interpolate_value         : ', t2-t1
+  print*, ' interpolate_from_interpolant_value         : ', t2-t1
   print*, ' interpolate_x1_derivative : ', t3-t2
   print*, ' interpolate_x2_derivative : ', t4-t3
   print*, "----------------------------------------------------------"

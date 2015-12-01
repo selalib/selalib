@@ -390,7 +390,7 @@ end subroutine interpolate_from_interpolant_array
 !!$  sll_int32                       :: i
 !!$
 !!$  do i = 1, num_pts
-!!$    output(i) = interpolate_value(interpolator,vals_to_interpolate(i))
+!!$    output(i) = interpolate_from_interpolant_value(interpolator,vals_to_interpolate(i))
 !!$  end do
 !!$
 !!$end subroutine interpolate_pointer_values

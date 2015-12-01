@@ -481,7 +481,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in) :: eta
     sll_real64             :: value_at_pt_discrete_1d
     
-    value_at_pt_discrete_1d = field%interp_1d%interpolate_value(eta)
+    value_at_pt_discrete_1d = field%interp_1d%interpolate_from_interpolant_value(eta)
   end function value_at_pt_discrete_1d
   
   function value_at_index_discrete_1d( field, i )
@@ -490,7 +490,7 @@ contains   ! *****************************************************************
     sll_real64            :: eta
     sll_real64            :: value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
+    value_at_index_discrete_1d = field%interp_1d%interpolate_from_interpolant_value(eta) 
   end function value_at_index_discrete_1d
   
   function derivative_value_at_pt_discrete_1d( field, eta )
@@ -499,7 +499,7 @@ contains   ! *****************************************************************
     sll_real64             :: derivative_value_at_pt_discrete_1d
     
     derivative_value_at_pt_discrete_1d = &
-         field%interp_1d%interpolate_derivative_eta1(eta)
+         field%interp_1d%interpolate_from_interpolant_derivative_eta1(eta)
   end function derivative_value_at_pt_discrete_1d
   
   function derivative_value_at_index_discrete_1d( field, i )
@@ -509,7 +509,7 @@ contains   ! *****************************************************************
     sll_real64            :: derivative_value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     derivative_value_at_index_discrete_1d = &
-         field%interp_1d%interpolate_derivative_eta1(eta)
+         field%interp_1d%interpolate_from_interpolant_derivative_eta1(eta)
   end function derivative_value_at_index_discrete_1d
 
   subroutine write_to_file_discrete_1d( field, tag )

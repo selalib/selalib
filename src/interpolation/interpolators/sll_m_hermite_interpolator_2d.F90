@@ -60,9 +60,9 @@ private
     !> PLEASE ADD DOCUMENTATION
     procedure :: compute_interpolants => wrap_compute_interpolants_hermite_2d
     !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_value => wrap_interpolate_value_hermite_2d
+    procedure :: interpolate_from_interpolant_value => wrap_interpolate_value_hermite_2d
     !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
+    procedure :: interpolate_from_interpolant_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
     !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
     !> PLEASE ADD DOCUMENTATION
@@ -314,7 +314,7 @@ contains
     call compute_interpolants_hermite_2d( this%hermite, data_in )
     do j = 1, num_points2
       do i = 1, num_points1
-        data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
+        data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))
       end do
     end do
     !print *,'#wrap_interpolate_array_hermite_2d'

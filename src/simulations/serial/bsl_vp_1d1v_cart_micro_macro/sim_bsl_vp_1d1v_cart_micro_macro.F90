@@ -328,7 +328,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   do i=1,Ncx+1
      !compute splines coef associated to fg and evalute splines on the fine mesh vh_array --> ff1
      call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
-     call interpolate_array_values(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
+     call interpolate_from_interpolant_array(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
 
      !compute ff:=deltaf on the fine mesh: ff(v_j)=f(v_j)-ff1(v_j), v_j\in vh_array
      mass=0._f64
@@ -412,13 +412,13 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               vg_array(j)=vmax
            endif
         enddo
-        call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
-        call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
         !compute fg on the fine mesh -> ff1
-        call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
         !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
         mass=0._f64
@@ -441,7 +441,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
            endif
         enddo
 
-        call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        call interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
         ff(i,:)=ff2(i,:)+ff(i,:)
@@ -468,7 +468,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               xg_array(i)=xg_array(i)-xmax
            endif
         enddo
-        call interpolate_array_values(xg_array, fg(:,j), Ncx+1, interp_spline_x)
+        call interpolate_from_interpolant_array(xg_array, fg(:,j), Ncx+1, interp_spline_x)
      enddo
 
 
@@ -486,7 +486,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               xg_array(i)=xg_array(i)-xmax
            endif
         enddo
-        call interpolate_array_values(xg_array, ff(:,j), Ncx+1, interp_spline_x)
+        call interpolate_from_interpolant_array(xg_array, ff(:,j), Ncx+1, interp_spline_x)
 
      enddo
 
@@ -533,14 +533,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               vg_array(j)=vmax
            endif
         enddo
-        call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
       
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
-        call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
         !compute fg on the fine mesh -> ff1
-        call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
         !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
         mass=0._f64
@@ -563,7 +563,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
            endif
         enddo
 
-        call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        call interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
 
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
@@ -639,7 +639,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !compute fg on the fine mesh -> ff1 (for diagnostic)
   do i=1,Ncx+1
      call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
-     call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+     call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
   enddo
 
   open(12, file="ffinalh")
