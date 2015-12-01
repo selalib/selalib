@@ -183,13 +183,13 @@ program sim_bsl_vp_1d1v_cart_serial
      do i = 1, Ncx+1
         alpha = efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        call interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
      end do
      ! full time step advection in x
      do j = 1, Ncv+1
         alpha = -(vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
-        call interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        call interp_x%interpolate_array_disp_inplace(Ncx+1, f1d, alpha)
      end do
      ! compute rho and electric field
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
@@ -198,7 +198,7 @@ program sim_bsl_vp_1d1v_cart_serial
      do i = 1, Ncx+1
         alpha = efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        call interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
      end do
      ! diagnostics
      time = istep*dt
