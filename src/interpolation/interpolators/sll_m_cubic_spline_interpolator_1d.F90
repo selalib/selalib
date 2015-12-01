@@ -55,6 +55,7 @@ contains
    !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
    procedure :: interpolate_array => spline_interpolate1d
    procedure :: interpolate_array_disp => spline_interpolate1d_disp
+   procedure :: interpolate_array_disp_inplace => spline_interpolate1d_disp_inplace
    !procedure :: reconstruct_array => reconstruct_array 
    procedure :: set_coefficients => set_coefficients_cs1d
    procedure :: get_coefficients => get_coefficients_cs1d
@@ -122,7 +123,7 @@ contains  ! ****************************************************************
        else ! alpha != 0.0
           do i = 1, num_pts
              coordinates(i) = xmin + &
-                  modulo(this%interpolation_points(i) - xmin - alpha, length)
+                  modulo(this%interpolation_points(i) - xmin + alpha, length)
 !!$             write (*,'(a,z,f21.16,a,i,a,z,f21.16)') 'xmin = ', &
 !!$                  xmin, xmin, '  coordinates(',i,') = ', coordinates(i), &
 !!$                  coordinates(i)
@@ -131,14 +132,14 @@ contains  ! ****************************************************************
           end do
        end if
     else ! any other BC? better a case statement
-       if (alpha > 0 ) then
+       if (alpha < 0 ) then
           do i = 1, num_pts
-             coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
+             coordinates(i) = max(this%interpolation_points(i) + alpha, xmin)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        else
           do i = 1, num_pts
-             coordinates(i) = min(this%interpolation_points(i) - alpha, xmax)
+             coordinates(i) = min(this%interpolation_points(i) + alpha, xmax)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        endif
@@ -146,6 +147,61 @@ contains  ! ****************************************************************
     call interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d_disp
+
+  subroutine spline_interpolate1d_disp_inplace(this, num_pts, data, alpha)
+    class(sll_cubic_spline_interpolator_1d),  intent(in)       :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64,  intent(in)   :: alpha
+    sll_real64, dimension(num_pts), intent(inout)   :: data
+
+    ! local variables
+    sll_real64, dimension(num_pts)      :: coordinates
+    sll_real64 :: length, delta
+    sll_real64 :: xmin, xmax
+    sll_int32 :: i
+    ! compute the interpolating spline coefficients
+    call compute_cubic_spline_1D( data, this%spline )
+    ! compute array of coordinates where interpolation is performed from displacement
+    length = this%interpolation_points(this%num_points) - &
+             this%interpolation_points(1)
+    delta = this%interpolation_points(2) - this%interpolation_points(1)
+    xmin = this%interpolation_points(1)
+    xmax = this%interpolation_points(this%num_points)
+    if (this%bc_type == SLL_PERIODIC) then
+       ! The case alpha = 0.0 is problematic. We need to further try to make
+       ! this computation in general m re efficient, minimize the use of modulo
+       ! and even explore a uniform grid representation...
+       if( alpha == 0.0_f64 ) then
+          coordinates(:) = this%interpolation_points(:)
+       else ! alpha != 0.0
+          do i = 1, num_pts
+             coordinates(i) = xmin + &
+                  modulo(this%interpolation_points(i) - xmin + alpha, length)
+!!$             write (*,'(a,z,f21.16,a,i,a,z,f21.16)') 'xmin = ', &
+!!$                  xmin, xmin, '  coordinates(',i,') = ', coordinates(i), &
+!!$                  coordinates(i)
+             SLL_ASSERT(coordinates(i) >= xmin)
+             SLL_ASSERT(coordinates(i) <= xmax)
+          end do
+       end if
+    else ! any other BC? better a case statement
+       if (alpha < 0 ) then
+          do i = 1, num_pts
+             coordinates(i) = max(this%interpolation_points(i) + alpha, xmin)
+             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
+          end do
+       else
+          do i = 1, num_pts
+             coordinates(i) = min(this%interpolation_points(i) + alpha, xmax)
+             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
+          end do
+       endif
+    end if
+    call interpolate_from_interpolant_array( coordinates, data, num_pts, &
+         this%spline )
+  end subroutine spline_interpolate1d_disp_inplace
+
 
   subroutine compute_interpolants_cs1d( interpolator, data_array,&
        eta_coords, &

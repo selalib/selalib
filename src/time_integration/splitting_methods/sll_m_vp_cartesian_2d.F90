@@ -62,9 +62,9 @@ contains
     vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
     delta_v = (vmax - vmin) /  mesh%num_cells2
     do j = 1, this%Ncv+1
-       displacement = (vmin + (j-1) * delta_v) * dt
+       displacement = -(vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
-       f1d = this%interpx%interpolate_array_disp(this%Ncx+1, f1d, displacement)
+       call this%interpx%interpolate_array_disp(this%Ncx+1, f1d, displacement)
     end do
   end subroutine 
 
@@ -108,9 +108,9 @@ contains
     endif
     ! do advection for given electric field
     do i = 1, this%Ncx+1
-        displacement = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        displacement = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(this%dist_func) (i,:) 
-        f1d = this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement)
+        call this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement)
      end do
   end subroutine
 

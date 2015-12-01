@@ -105,9 +105,9 @@ contains
     sll_int32 :: j
     
     do j = 1, this%n2
-       displacement = this%a1 * dt
+       displacement = -this%a1 * dt
        f1d => this%data(:,j)
-       f1d = this%interp1%interpolate_array_disp(this%n1, f1d, displacement)
+       call this%interp1%interpolate_array_disp(this%n1, f1d, displacement)
     end do
   end subroutine
 
@@ -121,9 +121,9 @@ contains
     sll_int32 :: i
     
     do i = 1, this%n1
-       displacement = this%a2 * dt
+       displacement = -this%a2 * dt
        f1d => this%data(i,:)
-       f1d = this%interp2%interpolate_array_disp(this%n2, f1d, displacement)
+       call this%interp2%interpolate_array_disp(this%n2, f1d, displacement)
     end do
   end subroutine
 

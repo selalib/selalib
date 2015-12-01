@@ -69,6 +69,7 @@ contains
   !procedure :: interpolate_pointer_derivatives  !< Return a pointer to derivatives
   procedure :: interpolate_array                !< Interpolate an array
   procedure :: interpolate_array_disp           !< Return an array after displacement
+  procedure :: interpolate_array_disp_inplace           !< Return an array after displacement
   !procedure :: reconstruct_array                !< Not implemented
   procedure :: set_coefficients                 !< Not implemented
   procedure :: get_coefficients                 !< Not implemented
@@ -497,5 +498,26 @@ subroutine interpolate_array_disp( this,        &
   SLL_ERROR( this_fun_name, 'Not implemented.' )
 
 end subroutine interpolate_array_disp
+
+!---------------------------------------------------------------------------
+
+subroutine interpolate_array_disp_inplace( this,        &
+     num_pts,  &
+     data,        &
+     alpha)
+
+  sll_interpolator, intent(in)    :: this
+  sll_int32,        intent(in)    :: num_pts
+  sll_real64,       intent(inout) :: data(num_pts)
+  sll_real64,       intent(in)    :: alpha
+  
+  character(len=*), parameter  :: this_fun_name = 'interpolate_array_disp'
+
+  !print*, this%n
+  !print*, size(data), alpha, size(output_array), num_pts
+  
+  SLL_ERROR( this_fun_name, 'Not implemented.' )
+
+end subroutine interpolate_array_disp_inplace
 
 end module sll_m_quintic_spline_interpolator_1d

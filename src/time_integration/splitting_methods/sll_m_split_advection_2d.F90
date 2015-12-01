@@ -602,10 +602,11 @@ contains
       enddo  
 
 
-      this%output1(1:n1) = this%interp1%interpolate_array( &
+      call this%interp1%interpolate_array( &
         n1, &
         this%input1(1:n1), &
-        this%feet_inside1(1:n1))      
+        -this%feet_inside1(1:n1),&
+        this%output1(1:n1))      
       
       
       if(this%advection_form==SLL_CONSERVATIVE)then      
@@ -744,10 +745,11 @@ contains
           eta2_min, &
           eta2_max)
       enddo  
-      this%output2(1:n2) = this%interp2%interpolate_array( &
-        n2, &
-        this%input2(1:n2), &
-        this%feet_inside2(1:n2))      
+      call this%interp2%interpolate_array( &
+           n2, &
+           this%input2(1:n2), &
+           -this%feet_inside2(1:n2), &
+           this%output2(1:n2))      
       
       
       if(this%advection_form==SLL_CONSERVATIVE)then      

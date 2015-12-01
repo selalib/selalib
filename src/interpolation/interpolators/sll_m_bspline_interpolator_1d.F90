@@ -74,6 +74,8 @@ contains
   procedure :: interpolate_array => interpolate_array_bs1d
   !> Interpolate an array after displacement
   procedure :: interpolate_array_disp => interpolate_1d_array_disp_bs1d
+  !> Interpolate an array after displacement
+  procedure :: interpolate_array_disp_inplace => interpolate_1d_array_disp_inplace_bs1d
   !> Get splines coefficients
   procedure :: get_coefficients => get_coefficients_bs1d
   !> Not implemented
@@ -422,6 +424,22 @@ output_array = -1000000._f64*alpha*data*this%spl_deg
 stop 'interpolate_1d_array_disp_bs1d: not implemented.'
 
 end subroutine interpolate_1d_array_disp_bs1d
+
+
+subroutine interpolate_1d_array_disp_inplace_bs1d( this,       &
+                                         num_pts, &
+                                         data,       &
+                                         alpha)
+
+class(sll_bspline_interpolator_1d), intent(in) :: this
+sll_int32,                          intent(in) :: num_pts
+sll_real64, dimension(num_pts),           intent(inout) :: data
+sll_real64, intent(in)                         :: alpha
+
+stop 'interpolate_1d_array_disp_bs1d: not implemented.'
+
+end subroutine interpolate_1d_array_disp_inplace_bs1d
+
 
 function get_coefficients_bs1d(interpolator)
 

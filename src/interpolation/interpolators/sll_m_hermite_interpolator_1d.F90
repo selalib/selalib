@@ -39,6 +39,8 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => interpolate_array_disp_hi1d
    !> PLEASE ADD DOCUMENTATION
+   procedure :: interpolate_array_disp_inplace => interpolate_array_disp_inplace_hi1d
+   !> PLEASE ADD DOCUMENTATION
    !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_hi1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_hi1d
@@ -221,6 +223,23 @@ subroutine interpolate_array_disp_hi1d(this, num_pts, data, alpha, output_array)
   output_array = 0.0_f64 * alpha + data
 
 end subroutine interpolate_array_disp_hi1d
+
+
+
+subroutine interpolate_array_disp_inplace_hi1d(this, num_pts, data, alpha)
+  class(sll_hermite_interpolator_1d), intent(in)     :: this
+  sll_real64, intent(in) :: alpha
+  sll_int32, intent(in)  :: num_pts    ! size of output array
+  sll_real64, dimension(num_pts), intent(inout) :: data  ! data to be interpolated points where output is desired
+
+!call interpolate_from_interpolant_array(data,alpha,this%hermite)
+!data_out=this%hermite%data_out
+  print*, 'interpolate_array_disp_inplace_hi1d:', &
+       ' not implemented for hermite interpolation'
+  SLL_ASSERT(this%npts>0)
+
+end subroutine interpolate_array_disp_inplace_hi1d
+
 
 !PN DEFINED BUT NOT USED
 !subroutine delete_hi1d (obj)

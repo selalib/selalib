@@ -31,6 +31,8 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => interpolate_array_disp_li1d
    !> PLEASE ADD DOCUMENTATION
+   procedure :: interpolate_array_disp_inplace => interpolate_array_disp_inplace_li1d
+   !> PLEASE ADD DOCUMENTATION
    !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_li1d
@@ -127,10 +129,24 @@ subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
   sll_real64, dimension(1:num_pts), intent(out)    :: output_array
 
-  call interpolate_from_interpolant_array(data,alpha,this%lagrange)
+  call interpolate_from_interpolant_array(data,-alpha,this%lagrange)
   output_array=this%lagrange%data_out
 
 end subroutine interpolate_array_disp_li1d
+
+
+subroutine interpolate_array_disp_inplace_li1d(this, num_pts, data, alpha)
+  class(sll_lagrange_interpolator_1d), intent(in)     :: this
+  sll_real64, intent(in) :: alpha
+  sll_int32, intent(in)  :: num_pts    ! size of output array
+  sll_real64, dimension(num_pts), intent(inout) :: data  ! data to be interpolated points where output is desired
+
+  call interpolate_from_interpolant_array(data,-alpha,this%lagrange)
+  data=this%lagrange%data_out
+
+end subroutine interpolate_array_disp_inplace_li1d
+
+
 
 !PN DEFINED BUT NOT USED
 !subroutine delete_li1d (obj)

@@ -44,6 +44,8 @@ private
      !> PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      !> PLEASE ADD DOCUMENTATION
+     procedure, pass:: interpolate_array_disp_inplace => spline_interpolate1d_disp_inplace
+     !> PLEASE ADD DOCUMENTATION
      !procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
      !> PLEASE ADD DOCUMENTATION
@@ -103,14 +105,14 @@ contains  ! ****************************************************************
           SLL_ASSERT(coordinates(i) <= xmax)
        end do
     else
-       if (alpha > 0 ) then
+       if (alpha < 0 ) then
           do i = 1, num_pts
-             coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
+             coordinates(i) = max(this%interpolation_points(i) + alpha, xmin)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        else
           do i = 1, num_pts
-             coordinates(i) = min(this%interpolation_points(i) - alpha, xmax)
+             coordinates(i) = min(this%interpolation_points(i) + alpha, xmax)
              SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
           end do
        endif
@@ -118,6 +120,51 @@ contains  ! ****************************************************************
     call interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d_disp
+
+ subroutine spline_interpolate1d_disp_inplace(this, num_pts, data, alpha)
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in)       :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64,  intent(in)   :: alpha
+    sll_real64, dimension(num_pts), intent(inout)   :: data
+
+    sll_real64, dimension(num_pts)      :: coordinates
+    sll_real64 :: length, delta
+    sll_real64 :: xmin, xmax
+    sll_int32 :: i
+    ! compute the interpolating spline coefficients
+    call compute_cubic_spline_1D( data, this%spline )
+    ! compute array of coordinates where interpolation is performed from displacement
+    length = this%interpolation_points(num_pts) - &
+             this%interpolation_points(1)
+    delta = this%interpolation_points(2) - this%interpolation_points(1)
+    xmin = this%interpolation_points(1)
+    xmax = this%interpolation_points(num_pts)
+    if (this%bc_type == SLL_PERIODIC) then
+       do i = 1, num_pts
+          coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
+          SLL_ASSERT(coordinates(i) >= xmin)
+          SLL_ASSERT(coordinates(i) <= xmax)
+       end do
+    else
+       if (alpha < 0 ) then
+          do i = 1, num_pts
+             coordinates(i) = max(this%interpolation_points(i) + alpha, xmin)
+             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
+          end do
+       else
+          do i = 1, num_pts
+             coordinates(i) = min(this%interpolation_points(i) + alpha, xmax)
+             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
+          end do
+       endif
+    end if
+    call interpolate_from_interpolant_array( coordinates, data, num_pts, &
+         this%spline )
+  end subroutine spline_interpolate1d_disp_inplace
+
+
+
 
   ! Both versions F03 and F95 of compute_interpolants_cs1d should have the
   ! same name. In the F95 we should add a generic interface around this
