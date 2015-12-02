@@ -358,7 +358,7 @@ do j=1,NPTS2
     deriv1_val      = ad2d%interpolate_from_interpolant_derivative_eta1(eta1(i),eta2(j))   
     acc_der1(k)     = acc_der1(k) + abs(deriv1_val-df_eta1(i,j))
     normH1(k)       = normH1(k) + (deriv1_val-df_eta1(i,j))**2 *h1*h2
-    deriv2_val      = ad2d%interpolate_derivative_eta2(eta1(i),eta2(j))
+    deriv2_val      = ad2d%interpolate_from_interpolant_derivative_eta2(eta1(i),eta2(j))
     acc_der2(k)     = acc_der2(k) + abs(deriv2_val-df_eta2(i,j))
     normH1(k)       = normH1(k) + (deriv2_val-df_eta2(i,j))**2 *h1*h2
   end do

@@ -534,7 +534,7 @@ do j=1,ny
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1   
    cx_array(i,j)= cxx_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
-                  a21_interp%interpolate_derivative_eta2(eta1,eta2)                         
+                  a21_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefx_array
@@ -550,7 +550,7 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1    
-   cy_array(i,j)= cyy_interp%interpolate_derivative_eta2(eta1,eta2)+ &
+   cy_array(i,j)= cyy_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)+ &
                   a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)                         
  enddo
 enddo 
