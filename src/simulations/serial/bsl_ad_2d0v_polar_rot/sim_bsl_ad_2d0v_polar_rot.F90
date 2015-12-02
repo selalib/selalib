@@ -370,12 +370,13 @@ program sim_bsl_ad_2d0v_polar_rot
 !      xx = x*cosdt - y*sindt
 !      yy = x*sindt + y*cosdt
 !    enddo 
-    rho_tn1 = interp2d%interpolate_array( &
+    call interp2d%interpolate_array( &
       num_cells1+1, &
       num_cells2+1, &
       rho_tn, &
       charac_feet1, &
-      charac_feet2)      
+      charac_feet2, &
+      rho_tn1)      
 
 
  
