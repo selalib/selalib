@@ -13,7 +13,7 @@ If you want to set gitlab as primary repository, do:
 git remote set-url origin git@gitlab.mpcdf.mpg.de/selalib/selalib.git
 ```
 
-Check your repositories with:
+To check your configuration of remote repositories, use:
 ```
 git remote -v
 ```
@@ -129,9 +129,11 @@ git push --tags
 
 ## For Bug Fixing
 
-This part concerns every developer and bug should be reported and assigned through the “Issues” tab of Gitlab.
-Create a maintenance branch off of master, fixes the issue with as many commits as necessary,
-then merges it directly back into master.
+This part concerns every developer. If you find a bug, please report it through 
+the "Issues" tab of Gitlab. The issue should be labeled as "bug report".
+In order to fix the bug, create a maintenance branch off of master, fix the 
+issue with as many commits as necessary, then merge it directly back
+into master.
 ```
 git checkout -b issue-#001 master
 ```
