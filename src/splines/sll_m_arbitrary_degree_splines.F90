@@ -19,8 +19,11 @@
 !> @brief 
 !> Low level arbitrary degree splines
 !> @details
-!> This module attempts to replace the functionalities of the arbitrary
-!> degree spline functions by deBoor. 
+!> This module defines low level algorithms of the arbitrary
+!> degree spline.
+!> It is a selalib implemnation of the classical algorithms
+!> found in the de Boor book "Practical guide to splines"
+!> or the NURBS book by Piegl and Tiller.  
 module sll_m_arbitrary_degree_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -55,16 +58,18 @@ module sll_m_arbitrary_degree_splines
      module procedure delete_arbitrary_order_spline_1d
   end interface sll_delete
 
-  public :: sll_delete,                           &
-            find_cell,                            &
-            b_splines_at_x,                       &
-            b_splines_and_derivs_at_x,            &
-            uniform_b_splines_at_x,               &
-            new_arbitrary_degree_spline_1d,       &
-            b_spline_derivatives_at_x,            &
-            uniform_b_spline_derivatives_at_x,    &
-            uniform_b_splines_and_derivs_at_x,    &
-            eval_uniform_periodic_spline_curve
+  public :: sll_delete,                      &
+       find_cell,                            &
+       b_splines_at_x,                       &
+       b_splines_and_derivs_at_x,            &
+       uniform_b_splines_at_x,               &
+       new_arbitrary_degree_spline_1d,       &
+       b_spline_derivatives_at_x,            &
+       uniform_b_spline_derivatives_at_x,    &
+       uniform_b_splines_and_derivs_at_x,    &
+       eval_uniform_periodic_spline_curve,   &
+       compute_b_spline_at_x_mm,             &
+       compute_b_spline_and_deriv_at_x_mm
 
 contains
   !> @brief
@@ -108,14 +113,14 @@ contains
             ' order and that each cell length is at least 1.e-10.'
     end if
     select case( bc_type )
-       case(:-1)
-          print *, 'ERROR. new_arbitrary_degree_spline_1d(): ', &
-               'invalid boundary condition type supplied.'
-          STOP
-       case(2:)
-          print *, 'ERROR. new_arbitrary_degree_spline_1d(): ', &
-               'invalid boundary condition type supplied.'
-          STOP
+    case(:-1)
+       print *, 'ERROR. new_arbitrary_degree_spline_1d(): ', &
+            'invalid boundary condition type supplied.'
+       STOP
+    case(2:)
+       print *, 'ERROR. new_arbitrary_degree_spline_1d(): ', &
+            'invalid boundary condition type supplied.'
+       STOP
     end select
 
     SLL_ALLOCATE( new_arbitrary_degree_spline_1d, ierr )
@@ -147,66 +152,67 @@ contains
     ! Fill out the extra points at both ends of the local knot array with
     ! values proper to the boundary condition requested.
     select case( bc_type )
-       case(PERIODIC_ARBITRARY_DEG_SPLINE)
-          ! The logic behind the periodic boundary condition is the following.
-          ! The given grid array has minimum (grid(1)) and maximum (grid(n))
-          ! values at either end. This defines a length 'L'. If interpreted 
-          ! as a periodic space, this is also the period. Thus, as we extend
-          ! the number of knots at both ends of the given array, we use the
-          ! periodicity condition to fill out the new values:
-          !
-          !                    .
-          !                    .
-          !                    .
-          !           knots(-1) = knots(n-2) - L
-          !           knots( 0) = knots(n-1) - L
-          !                    .
-          !                    .
-          !                    .
-          !           knots(n+1) = knots(1) + L
-          !           knots(n+2) = knots(2) + L
-          !                    .
-          !                    .
-          !                    .
-          !
+    case(PERIODIC_ARBITRARY_DEG_SPLINE)
+       ! The logic behind the periodic boundary condition is the following.
+       ! The given grid array has minimum (grid(1)) and maximum (grid(n))
+       ! values at either end. This defines a length 'L'. If interpreted 
+       ! as a periodic space, this is also the period. Thus, as we extend
+       ! the number of knots at both ends of the given array, we use the
+       ! periodicity condition to fill out the new values:
+       !
+       !                    .
+       !                    .
+       !                    .
+       !           knots(-1) = knots(n-2) - L
+       !           knots( 0) = knots(n-1) - L
+       !                    .
+       !                    .
+       !                    .
+       !           knots(n+1) = knots(1) + L
+       !           knots(n+2) = knots(2) + L
+       !                    .
+       !                    .
+       !                    .
+       !
 
-          ! Check that there are enough grid points for a given degree
-          if (num_pts < degree) then
-             print *, 'ERROR. new_arbitrary_degree_spline_1d(): ', &
+       ! Check that there are enough grid points for a given degree
+       if (num_pts < degree) then
+          print *, 'ERROR. new_arbitrary_degree_spline_1d(): ', &
                'new at leas ', degree, 'grid points for a periodic spline', &
                'of degree', degree
-             stop 
-          end if
-          do i=1,degree
-             ! Fill out the extra nodes on the left
-             new_arbitrary_degree_spline_1d%knots(1-i) = &
-                  grid(num_pts-i) - period
-             ! Fill out the extra nodes on the right
-             new_arbitrary_degree_spline_1d%knots(num_pts+i) = &
-                  grid(i+1) + period
-          end do
+          stop 
+       end if
+       do i=1,degree
+          ! Fill out the extra nodes on the left
+          new_arbitrary_degree_spline_1d%knots(1-i) = &
+               grid(num_pts-i) - period
+          ! Fill out the extra nodes on the right
+          new_arbitrary_degree_spline_1d%knots(num_pts+i) = &
+               grid(i+1) + period
+       end do
 
-       case(OPEN_ARBITRARY_DEG_SPLINE)
-          ! The 'open' boundary condition simply extends the new values
-          ! of the local array at both ends with repeated endpoint values.
-          ! That is
-          !
-          !     ... = knots(-2) = knots(-1) = knots(0) = knots(1)
-          !
-          ! and
-          !
-          !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
-          do i=1-degree,0
-             new_arbitrary_degree_spline_1d%knots(i) = grid(1)
-          end do
-          do i=num_pts+1,num_pts+degree
-             new_arbitrary_degree_spline_1d%knots(i) = grid(num_pts)
-          end do
+    case(OPEN_ARBITRARY_DEG_SPLINE)
+       ! The 'open' boundary condition simply extends the new values
+       ! of the local array at both ends with repeated endpoint values.
+       ! That is
+       !
+       !     ... = knots(-2) = knots(-1) = knots(0) = knots(1)
+       !
+       ! and
+       !
+       !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
+       do i=1-degree,0
+          new_arbitrary_degree_spline_1d%knots(i) = grid(1)
+       end do
+       do i=num_pts+1,num_pts+degree
+          new_arbitrary_degree_spline_1d%knots(i) = grid(num_pts)
+       end do
     end select
   end function new_arbitrary_degree_spline_1d
 
-  !>@brief find cell returns the index 'i' of the grid cell such that:
-  !>                  spline_obj%knots(i) <= x <= spline_obj%knots(i+1)
+  !>@brief find cell returns the index i of the grid cell such that:
+  !> spline_obj%knots(i) <= x <= spline_obj%knots(i+1).
+  !>
   !>@detail
   !> If x is not between spline_obj%knots(1) and 
   !> spline_obj%knots(spline_obj%num_pts),  then the value -1 is returned.
@@ -236,20 +242,19 @@ contains
        return
     end if
 
-  low  = 1
-  high = n
-  find_cell = (low + high) / 2
-  do while (x < spline_obj%knots(find_cell) &
-       .or. x >= spline_obj%knots(find_cell+1))
-     if (x < spline_obj%knots(find_cell)) then
-        high = find_cell
-     else
-        low  = find_cell
-     end if
-     find_cell = (low + high) / 2
-  end do
+    low  = 1
+    high = n
+    find_cell = (low + high) / 2
+    do while (x < spline_obj%knots(find_cell) &
+         .or. x >= spline_obj%knots(find_cell+1))
+       if (x < spline_obj%knots(find_cell)) then
+          high = find_cell
+       else
+          low  = find_cell
+       end if
+       find_cell = (low + high) / 2
+    end do
   end function find_cell
-
 
   ! b_splines_at_x() returns the values of all the B-splines of a given 
   ! degree that have support in cell 'cell' and evaluated at the point 'x'. 
@@ -263,7 +268,8 @@ contains
   !
   ! The algorithm is based on Algorithm A2.2 from 
   ! (L. Piegl, W. Tiller, The NURBS book p. 70)
-  ! A variant of the same Algorithm is implemented in the de Boor splines
+  ! A variant of the same Algorithm is implemented in the de Boor splines.
+  ! It is known as the Cox - de Boor algorithm
 
   !> @brief
   !> Evaluates B-spline values at a point x in a given cell.
@@ -273,6 +279,9 @@ contains
   !> which is supposed to be in cell. The spline object should have already
   !> been initialized and will contain information on the spline degree
   !> to use and the type of boundary condition desired.
+  !> The algorithm implemented is numerically stable and known as The
+  !> Cox - de Boor algorithm, which is a generalisation to splines of the
+  !> de Casteljau algorithm for Bezier curves.
   !> @return b_spline_at_x B-spline values
   function b_splines_at_x( spline_obj, icell, x )
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
@@ -332,11 +341,11 @@ contains
   !> \f]
   !> where 'deg' is the degree of the spline.
   !> @return b_spline_derivatives_at_x B-spline derivatives
-  function b_spline_derivatives_at_x( spline_obj, icell, x )
+  function b_spline_derivatives_at_x( spline_obj, icell, x ) result(bsdx)
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
     sll_int32, intent(in)                          :: icell
     sll_real64, intent(in)                         :: x
-    sll_real64, dimension(1:spline_obj%degree+1)   :: b_spline_derivatives_at_x
+    sll_real64, dimension(0:spline_obj%degree)     :: bsdx !b_spline_derivatives_at_x
     ! local variables
     sll_int32                                      :: deg
     sll_int32                                      :: num_pts
@@ -344,6 +353,7 @@ contains
     sll_int32                                      :: j
     sll_real64                                     :: saved
     sll_real64                                     :: temp
+    sll_real64                                     :: rdeg
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -359,44 +369,43 @@ contains
        STOP
     end if
     deg = spline_obj%degree
+    rdeg = real(deg,f64)
     num_pts = spline_obj%num_pts
 
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! First part of Algorithm  A3.2 of NURBS book 
-      spline_obj%ndu(0,0) = 1.0_f64
-      do j = 1, deg
-         spline_obj%left(j)  = x - spline_obj%knots(icell+1-j)
-         spline_obj%right(j) = spline_obj%knots(icell+j) - x
-         saved = 0.0_f64
-         do r = 0, j-1
-            ! compute and save knot differences
-            spline_obj%ndu(j,r) = spline_obj%right(r+1) + spline_obj%left(j-r)
-            ! compute and save bspline values
-            temp = spline_obj%ndu(r,j-1) / spline_obj%ndu(j,r)
-            spline_obj%ndu(r,j) = saved + spline_obj%right(r+1) * temp
-            saved = spline_obj%left(j-r) * temp
-         end do
-         spline_obj%ndu(j,j) = saved
-      end do
+    bsdx(0) = 1.0_f64
+    do j = 1, deg - 1
+       spline_obj%left(j)  = x - spline_obj%knots(icell+1-j)
+       spline_obj%right(j) = spline_obj%knots(icell+j) - x
+       saved = 0.0_f64
+       do r = 0, j-1
+          ! compute and save bspline values
+          temp = bsdx(r)/(spline_obj%right(r+1) + spline_obj%left(j-r))
+          bsdx(r) = saved + spline_obj%right(r+1) * temp
+          saved = spline_obj%left(j-r) * temp
+       end do
+       bsdx(j) = saved
+    end do
+    ! Compute derivatives at x using values stored in ndu and formula
+    ! formula for spline derivative based on difference of splines of 
+    ! degree deg-1
+    ! -------
+    ! j = 0
+    saved = rdeg *bsdx(0) / &
+         (spline_obj%knots(icell+1) - spline_obj%knots(icell+1-deg)) 
+    bsdx(0) = -saved
+    do j = 1, deg-1
+       temp = saved 
+       saved =  rdeg*bsdx(j) / &
+            (spline_obj%knots(icell+j+1) - spline_obj%knots(icell+j+1-deg))
+       bsdx(j) = temp - saved
+    end do
+    ! j = deg
+    bsdx(deg) =  saved
 
-      ! Compute derivatives at x using values stored in ndu and formula
-      ! formula for spline derivative based on difference of splines of 
-      ! degree deg-1
-      ! -------
-
-      ! j = 0
-      b_spline_derivatives_at_x(deg+1) = deg*spline_obj%ndu(deg-1,deg-1) / &
-           spline_obj%ndu(deg,deg-1)
-      do j = 1, deg-1
-         b_spline_derivatives_at_x(deg+1-j) = &
-              deg*(spline_obj%ndu(deg-1-j,deg-1)/spline_obj%ndu(deg,deg-1-j) &
-              - spline_obj%ndu(deg-j,deg-1) / spline_obj%ndu(deg,deg-j))
-      end do
-      ! j = deg
-      b_spline_derivatives_at_x(1) = &
-           - deg * spline_obj%ndu(0,deg-1) / spline_obj%ndu(deg,0)
-   end function b_spline_derivatives_at_x
+  end function b_spline_derivatives_at_x
 
 
   !> @brief 
@@ -404,11 +413,11 @@ contains
   !> @details
   !> See b_spline_derivatives_at_x and  b_splines_at_x
   !> @return b_spline_and_derivs_at_x B-spline values and derivatives
-  function b_splines_and_derivs_at_x( spline_obj, icell, x )
+  function b_splines_and_derivs_at_x( spline_obj, icell, x ) result(bsdx)
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
     sll_int32, intent(in)                          :: icell
     sll_real64, intent(in)                         :: x
-    sll_real64, dimension(2,spline_obj%degree+1)   :: b_splines_and_derivs_at_x
+    sll_real64, dimension(2,0:spline_obj%degree)   :: bsdx
     ! local variables
     sll_int32                                      :: deg
     sll_int32                                      :: num_pts
@@ -416,6 +425,7 @@ contains
     sll_int32                                      :: j
     sll_real64                                     :: saved
     sll_real64                                     :: temp
+    sll_real64                                     :: rdeg
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -432,47 +442,142 @@ contains
     end if
     deg = spline_obj%degree
     num_pts = spline_obj%num_pts
+    rdeg = real(deg,f64) 
 
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! First part of Algorithm  A3.2 of NURBS book 
-      spline_obj%ndu(0,0) = 1.0_f64
-      do j = 1, deg
-         spline_obj%left(j)  = x - spline_obj%knots(icell+1-j)
-         spline_obj%right(j) = spline_obj%knots(icell+j) - x
-         saved = 0.0_f64
-         do r = 0, j-1
-            ! compute and save knot differences
-            spline_obj%ndu(j,r) = spline_obj%right(r+1) + spline_obj%left(j-r)
-            ! compute and save bspline values
-            temp = spline_obj%ndu(r,j-1) / spline_obj%ndu(j,r)
-            spline_obj%ndu(r,j) = saved + spline_obj%right(r+1) * temp
-            saved = spline_obj%left(j-r) * temp
-         end do
-         spline_obj%ndu(j,j) = saved
-      end do
-      ! export bspline values
-      b_splines_and_derivs_at_x(1,:) = spline_obj%ndu(:,deg)
+    bsdx(1,0) = 1.0_f64
+    do j = 1, deg - 1
+       spline_obj%left(j)  = x - spline_obj%knots(icell+1-j)
+       spline_obj%right(j) = spline_obj%knots(icell+j) - x
+       saved = 0.0_f64
+       do r = 0, j-1
+          ! compute and save knot differences
+          temp = bsdx(1,r)/(spline_obj%right(r+1) + spline_obj%left(j-r))
+          bsdx(1,r) = saved + spline_obj%right(r+1) * temp
+          saved = spline_obj%left(j-r) * temp
+       end do
+       bsdx(1,j) = saved
+    end do
 
-      ! Compute derivatives at x using values stored in ndu and formula
-      ! formula for spline derivative based on difference of splines of 
-      ! degree deg-1
-      ! -------
-      ! j = 0
-      b_splines_and_derivs_at_x(2,deg+1) = &
-           deg * spline_obj%ndu(deg-1,deg-1) / spline_obj%ndu(deg,deg-1)
-      do j = 1, deg-1
-         b_splines_and_derivs_at_x(2,deg+1-j) = &
-              deg*(spline_obj%ndu(deg-1-j,deg-1)/spline_obj%ndu(deg,deg-1-j) &
-              - spline_obj%ndu(deg-j,deg-1) / spline_obj%ndu(deg,deg-j))
-      end do
-      ! j = deg
-      b_splines_and_derivs_at_x(2,1) = &
-           - deg * spline_obj%ndu(0,deg-1) / spline_obj%ndu(deg,0)
-  
+    ! Compute derivatives at x using values stored in ndu and formula
+    ! formula for spline derivative based on difference of splines of 
+    ! degree deg-1
+    ! -------
+    ! j = 0
+    saved = rdeg * bsdx(1,0) / &
+         (spline_obj%knots(icell+1) - spline_obj%knots(icell+1-deg)) 
+    bsdx(2,0) = -saved
+    do j = 1, deg-1
+       temp = saved 
+       saved =  rdeg*bsdx(1,j) / &
+            (spline_obj%knots(icell+j+1) - spline_obj%knots(icell+j+1-deg))
+       bsdx(2,j) = temp - saved
+    end do
+    ! j = deg
+    bsdx(2,deg) =  saved  
+    ! Compute values of splines of degree deg
+    !----------------------------------------
+    j = deg
+    spline_obj%left(j)  = x - spline_obj%knots(icell+1-j)
+    spline_obj%right(j) = spline_obj%knots(icell+j) - x
+    saved = 0.0_f64
+    do r = 0, j-1
+       ! compute and save knot differences
+       temp = bsdx(1,r)/(spline_obj%right(r+1) + spline_obj%left(j-r))
+       bsdx(1,r) = saved + spline_obj%right(r+1) * temp
+       saved = spline_obj%left(j-r) * temp
+    end do
+    bsdx(1,j) = saved 
   end function b_splines_and_derivs_at_x
 
-  
+  !> @brief Alternative direct implentation of recursion formula. 
+  !>
+  !> @detail
+  !> This provides an evaluation of B-splines directly based on the recurrence
+  !> formula. It is about 80% faster than the classical Cox - de Boor formula 
+  !> that is implented in b_splines_at_x, but can have numerical stability issues.
+  !>For this reason the Cox - de Boor formula should be the default implementation 
+  subroutine compute_b_spline_at_x_mm( &
+       knots, &
+       cell, &
+       x, &
+       degree, &
+       out)
+    sll_int32, intent(in) :: degree
+    sll_real64, dimension(1-degree:), intent(in) :: knots
+    sll_int32, intent(in) :: cell
+    sll_real64, intent(in) :: x
+    sll_real64, dimension(:), intent(out) :: out
+
+    sll_real64 :: tmp1
+    sll_real64 :: tmp2
+    sll_int32 :: ell
+    sll_int32 :: k
+
+    out(1) = 1._f64
+    do ell=1,degree
+       tmp1 = (x-knots(cell+1-ell))/(knots(cell+1)-knots(cell+1-ell))*out(1)
+       out(1) = out(1) -tmp1
+       do k=2,ell
+          tmp2 = (x-knots(cell+k-ell))/(knots(cell+k)-knots(cell+k-ell))*out(k)
+          out(k) = out(k)+tmp1-tmp2
+          tmp1 = tmp2
+       enddo
+       out(ell+1) = tmp1
+    enddo
+
+  end subroutine compute_b_spline_at_x_mm
+
+  !> @brief Alternative direct implentation of recursion formula. 
+  !>
+  !> @detail
+  !> This provides an evaluation of B-splines directly based on the recurrence
+  !> formula. It is about 80% faster than the classical Cox - de Boor formula 
+  !> that is implented in b_splines_at_x, but can have numerical stability issues.
+  !> For this reason the Cox - de Boor formula should be the default implementation
+  subroutine compute_b_spline_and_deriv_at_x_mm( &
+       knots, &
+       cell, &
+       x, &
+       degree, &
+       out)
+    sll_int32, intent(in) :: degree
+    sll_real64, dimension(1-degree:), intent(in) :: knots
+    sll_int32, intent(in) :: cell
+    sll_real64, intent(in) :: x
+    sll_real64, dimension(:,:), intent(out) :: out
+
+    sll_real64 :: tmp1
+    sll_real64 :: tmp2
+    sll_int32 :: ell
+    sll_int32 :: k
+
+    out(1,1) = 1._f64
+    do ell=1,degree
+       tmp1 = (x-knots(cell+1-ell))/(knots(cell+1)-knots(cell+1-ell))*out(1,1)
+       out(1,1) = out(1,1) -tmp1
+       do k=2,ell
+          tmp2 = (x-knots(cell+k-ell))/(knots(cell+k)-knots(cell+k-ell))*out(1,k)
+          out(1,k) = out(1,k)+tmp1-tmp2
+          tmp1 = tmp2
+       enddo
+       out(2,ell+1) = tmp1
+       if(ell==degree-1)then
+          !compute the derivatives
+          tmp1 = real(degree,f64)/(knots(cell+1)-knots(cell+1-degree))*out(1,1)
+          out(2,1) = -tmp1
+          do k=2,degree
+             out(2,k) = tmp1
+             tmp1 = real(degree,f64)/(knots(cell+k)-knots(cell+k-degree))*out(2,k)
+             out(2,k) = out(2,k)-tmp1
+          enddo
+          out(2,degree+1) = tmp1
+       endif
+    enddo
+  end subroutine compute_b_spline_and_deriv_at_x_mm
+
   subroutine delete_arbitrary_order_spline_1d( spline )
     type(arbitrary_degree_spline_1d), pointer :: spline
     sll_int32                    :: ierr
@@ -492,6 +597,7 @@ contains
   ! *************************************************************************
 
   !> @brief Evaluate all non vanishing uniform B-Splines in unit cell. 
+  !>
   !> @detail Returns an array with the values of the b-splines of the 
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, thus the offset given must be a number
@@ -509,7 +615,7 @@ contains
   !> where xx=1-normalized_offset
   function uniform_b_splines_at_x( spline_degree, normalized_offset ) &
        result(bspl)
-    
+
     implicit none
     sll_int32, intent(in)                      :: spline_degree
     sll_real64, intent(in)                     :: normalized_offset
@@ -525,7 +631,7 @@ contains
     SLL_ASSERT( spline_degree >= 0 )
     SLL_ASSERT( normalized_offset >= 0.0_f64 )
     SLL_ASSERT( normalized_offset <= 1.0_f64 )
- 
+
     x = normalized_offset
     bspl(0) = 1.0_f64
     do j = 1, spline_degree
@@ -545,6 +651,7 @@ contains
 
   !> @brief Evaluate all derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
+  !>
   !> @detail
   !> Returns an array with the values of the b-spline derivatives of the 
   !> requested degree, evaluated at a given cell offset. The cell size is
@@ -598,6 +705,7 @@ contains
 
   !> @brief Evaluate all values and derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
+  !>
   !> @detail
   !> returns an array with the values of the b-spline derivatives of the 
   !> requested degree, evaluated at a given cell offset. The cell size is
