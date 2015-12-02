@@ -10,6 +10,8 @@ program test_pic_initializers
   use sll_m_particle_initializers_4d
   use sll_m_cartesian_meshes
 
+  implicit none
+
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
 #define GUARD_SIZE 10000_i32
@@ -23,9 +25,7 @@ program test_pic_initializers
 #define YMIN 0._f64
 #define YMAX 1._f64
 #define QoverM 1._f64
-
   
-  implicit none
   type(sll_particle_group_4d), pointer :: init_group
   type(sll_particle_group_2d), pointer :: init_group_GC
   type(sll_cartesian_mesh_2d),   pointer :: m2d
