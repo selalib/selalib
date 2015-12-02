@@ -40,6 +40,7 @@ module sll_m_fft
      sll_real64, dimension(:), pointer :: twiddles => null()
      ! twiddles factors real case
      sll_real64, dimension(:), pointer :: twiddles_n => null()
+
      sll_int32                        :: style
      sll_int32                        :: library
      logical                          :: normalized !< Boolean telling whether or not values of the FFT should be normalized by \a problem_shape
@@ -111,6 +112,58 @@ contains
 
   end function fft_allocate_aligned_real
 
+! TODO: We want this ordering.
+!!$  !> Function to reconstruct the complex FFT mode from the data of a r2r transform
+!!$  function fft_get_mode_r2c_1d(plan,data,k) result(mode)
+!!$    type(sll_fft_plan), pointer, intent(in) :: plan !< FFT plan
+!!$    sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
+!!$    sll_int32, intent(in)                   :: k    !< mode to be extracted
+!!$    sll_comp64                              :: mode !< Complex value of kth mode
+!!$
+!!$    sll_int32                   :: n_2, n
+!!$
+!!$
+!!$    n = plan%problem_shape(1)
+!!$    n_2 = n/2 !ishft(n,-1)
+!!$
+!!$      if( k .eq. 0 ) then
+!!$        mode = cmplx(data(0),0.0_f64,kind=f64)
+!!$      else if( k .eq. n_2 ) then
+!!$        mode = cmplx(data(n_2),0.0_f64,kind=f64)
+!!$      else if( k .gt. n_2 ) then
+!!$        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
+!!$        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
+!!$      else
+!!$        mode = cmplx( data(k) , data(n-k) ,kind=f64)
+!!$      endif
+!!$  end function
+!!$
+
+!!$  !> Function to set a complex mode to the real representation of r2r.
+!!$  subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
+!!$    type(sll_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
+!!$    sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
+!!$    sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
+!!$    sll_int32, intent(in)                    :: k !< mode to be set
+!!$
+!!$    sll_int32 :: n_2, n!, index_mode
+!!$
+!!$    n = plan%problem_shape(1)
+!!$    n_2 = n/2 !ishft(n,-1)
+!!$
+!!$      if( k .eq. 0 ) then
+!!$        data(0) = real(new_value,kind=f64)
+!!$      else if( k .eq. n_2 ) then
+!!$        data(n_2) = real(new_value,kind=f64)
+!!$      else if( k .gt. n_2 ) then
+!!$        data(n-k) = real(new_value,kind=f64)
+!!$        data(k) = -aimag(new_value)
+!!$      else
+!!$        data(k) = real(new_value,kind=f64)
+!!$        data(n-k) = aimag(new_value)
+!!$      endif
+!!$  end subroutine 
+!!$
 
   function fft_get_mode_r2c_1d(plan,data,k) result(mode)
     type(sll_fft_plan), pointer :: plan
@@ -155,14 +208,6 @@ contains
       endif
   end subroutine
 
-  !> return the index mode of ith stored mode
-  function fft_ith_stored_mode(plan,i)
-    type(sll_fft_plan), pointer :: plan
-    sll_int32                   :: i, fft_ith_stored_mode
-
-    SLL_ASSERT(associated(plan%scramble_index))
-    fft_ith_stored_mode = plan%scramble_index(i)
-  end function fft_ith_stored_mode
 
 
 ! COMPLEX
@@ -254,10 +299,10 @@ contains
 
     ! This does not look good.
     ! 1. Error checking like this should be permanent, not with assertions.
-    SLL_ASSERT(size(array_in,dim=1).ge.NX)
-    SLL_ASSERT(size(array_in,dim=2).ge.NY)
-    SLL_ASSERT(size(array_out,dim=1).ge.NX)
-    SLL_ASSERT(size(array_out,dim=2).ge.NY)
+    SLL_ASSERT(size(array_in,dim=1).ge.nx)
+    SLL_ASSERT(size(array_in,dim=2).ge.ny)
+    SLL_ASSERT(size(array_out,dim=1).ge.nx)
+    SLL_ASSERT(size(array_out,dim=2).ge.ny)
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
@@ -270,7 +315,23 @@ contains
 
     plan%problem_rank = 2
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
-    plan%problem_shape = (/ NX , NY /)
+    plan%problem_shape = (/ nx , ny /)
+
+    SLL_ALLOCATE(plan%t(1:nx/2 + ny/2),ierr)
+
+    call compute_twiddles(nx,plan%t(1:nx/2))
+    if ( direction == FFT_FORWARD ) then
+       plan%t(1:nx/2) = conjg(plan%t(1:nx/2))
+    end if
+    call bit_reverse(nx/2,plan%t(1:nx/2))
+
+
+    call compute_twiddles(ny,plan%t(nx/2+1:nx/2 + ny/2))
+    if ( direction == FFT_FORWARD ) then
+       plan%t(ny/2+1:ny/2 + ny/2) = conjg(plan%t(nx/2+1:nx/2 + ny/2))
+    end if
+    call bit_reverse(ny/2,plan%t(nx/2+1:nx/2 + ny/2))
+
 
   end function fft_new_plan_c2c_2d
 
@@ -291,7 +352,6 @@ contains
     fft_shape(1:2) = plan%problem_shape(1:2)
     nx = fft_shape(1)
     ny = fft_shape(2)
-
 
     do i=0,ny-1
        call fft_dit_nr(array_out(0:nx-1,i),nx,plan%t(1:nx/2),plan%direction)
