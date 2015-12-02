@@ -86,9 +86,8 @@ subroutine schur_complement_fac(s, n, k, q)
   integer              :: j
   integer              :: l
   integer              :: info
-  integer              :: jpiv(k)
-  integer              :: work(k*k)
   real(8), allocatable :: yy(:,:)
+  real(8), allocatable :: qq(:,:)
   
   integer :: kp1
   
@@ -158,10 +157,28 @@ subroutine schur_complement_fac(s, n, k, q)
     end do
   end do
 
-  call dgetrf(k,k,s%dd,k,jpiv,info)
-  call dgetri(k,s%dd,k,jpiv,work,k*k,info)
-  !call print_matrix(s%dd)
-  
+  !Inverse H
+  allocate(qq(k+k-1,k)); qq = 0.0_8
+  do j = 1, k
+    l = 0
+    do i = -k+1,k-1
+      l=l+1
+      if(i+j >=1 .and. i+j<=k) qq(l,j) = s%dd(i+j,j)
+    end do
+  end do
+
+  call banfac ( qq, k+k-1, k, k-1, k-1, info )
+  do j = 1, k
+    do i = 1, k
+      if ( i==j) then
+        s%dd(i,j) = 1.0_8
+      else
+        s%dd(i,j) = 0.0_8
+      end if
+    end do
+    call banslv ( qq, k+k-1, k, k-1, k-1, s%dd(:,j) )
+  end do
+
 end subroutine schur_complement_fac
 
 subroutine schur_complement_slv(s, n, k, q, x)
