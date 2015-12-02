@@ -49,14 +49,14 @@ program test_maxwell_1d_fem
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: sval
 
-  sll_int32                               :: i, j
+  sll_int32                               :: i!, j
   sll_real64                              :: time
   sll_int32                               :: istep, nstep
   sll_real64                              :: err_ex
   sll_real64                              :: err_ey
   sll_real64                              :: err_bz
   sll_real64                              :: dt
-  sll_real64                              :: cfl = 0.5
+  !sll_real64                              :: cfl = 0.5_f64
   sll_real64                              :: Lx
   sll_real64                              :: xi
   sll_real64, dimension(2)                :: domain
@@ -111,7 +111,7 @@ program test_maxwell_1d_fem
   ! Test Maxwell on By and Ez 
   !--------------------------
   ! Set time stepping parameters
-  time  = 0.
+  time  = 0.0_f64
   dt = .5 * delta_eta1
   nstep = 10
 

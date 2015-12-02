@@ -459,7 +459,7 @@ do while( nbpres > 0 )
      
          adv%coef(4,ip) = pa2x*ey(jp) - pa2y*ex(jp)
 
-         adv%itest(ip) = 1 + max(0,nint(sign(1d0,adv%coef(4,ip))))
+         adv%itest(ip) = 1 + max(0,nint(sign(1.0_f64,adv%coef(4,ip))))
          adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
@@ -472,7 +472,7 @@ do while( nbpres > 0 )
  
          adv%coef(4,ip) = pa3x*ey(jp) - pa3y*ex(jp)
 
-         adv%itest(ip) = 2 + max(0,nint(sign(1d0,adv%coef(4,ip))))
+         adv%itest(ip) = 2 + max(0,nint(sign(1.0_f64,adv%coef(4,ip))))
          adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
@@ -485,7 +485,7 @@ do while( nbpres > 0 )
 
          adv%coef(4,ip) = pa1x*ey(jp) - pa1y*ex(jp)
 
-         adv%itest(ip) = 1 +mod(2+max(0,nint(sign(1d0,adv%coef(4,ip)))),3)
+         adv%itest(ip) = 1 +mod(2+max(0,nint(sign(1.0_f64,adv%coef(4,ip)))),3)
          adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
@@ -578,7 +578,7 @@ adv%f_out = 0.0_f64
 
 do it = 1 , adv%mesh%num_triangles
       
-   xm11 = 0.; xm12 = 0.; xm13 = 0.
+   xm11 = 0.0_f64; xm12 = 0.0_f64; xm13 = 0.0_f64
 
    !nbpama(it)  !Nombre de particules dans la maille numero it
             

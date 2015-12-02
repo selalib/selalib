@@ -131,28 +131,32 @@ contains   ! *****************************************************************
     this%plot_counter = 0
   end subroutine initialize_scalar_field_2d
 
-  ! The following pair of subroutines are tricky. We want them as general 
-  ! services by the fields, hence we need this subroutine interface, yet
-  ! we would also like a flexibility in how the derivatives are computed.
-  ! A general interpolator interface would cover most of the cases, maybe
-  ! all. It could be that a finite difference scheme would also work, if
-  ! we ignore some of the interpolator services, like the ability to return
-  ! values anywhere instead of at the nodes.
-  ! For now, this interface would permit to have multiple implementations.
-  subroutine compute_eta1_derivative_on_col( field2d, ith_col, deriv_out )
-    type(scalar_field_2d), intent(in)    :: field2d
-    sll_int32, intent(in)                :: ith_col
-    sll_real64, dimension(:),intent(out) :: deriv_out
-  end subroutine compute_eta1_derivative_on_col
+!PN DEFINED BUT NOT USED
+! ! The following pair of subroutines are tricky. We want them as general 
+! ! services by the fields, hence we need this subroutine interface, yet
+! ! we would also like a flexibility in how the derivatives are computed.
+! ! A general interpolator interface would cover most of the cases, maybe
+! ! all. It could be that a finite difference scheme would also work, if
+! ! we ignore some of the interpolator services, like the ability to return
+! ! values anywhere instead of at the nodes.
+! ! For now, this interface would permit to have multiple implementations.
+! subroutine compute_eta1_derivative_on_col( field2d, ith_col, deriv_out )
+!   type(scalar_field_2d), intent(in)    :: field2d
+!   sll_int32, intent(in)                :: ith_col
+!   sll_real64, dimension(:),intent(out) :: deriv_out
+!   deriv_out = 0.0_f64 * ith_col
+!   SLL_ASSERT(associated(field2d%transf))
+! end subroutine compute_eta1_derivative_on_col
 
-  ! need to do something about deallocating the field proper, when allocated
-  ! in the heap...
-  subroutine delete_scalar_field_2d( this )
-    type(scalar_field_2d), pointer :: this
-    sll_int32                      :: ierr
-    nullify(this%transf)
-    SLL_DEALLOCATE(this%data, ierr)
-  end subroutine delete_scalar_field_2d
+!PN DEFINED BUT NOT USED
+! ! need to do something about deallocating the field proper, when allocated
+! ! in the heap...
+! subroutine delete_scalar_field_2d( this )
+!   type(scalar_field_2d), pointer :: this
+!   sll_int32                      :: ierr
+!   nullify(this%transf)
+!   SLL_DEALLOCATE(this%data, ierr)
+! end subroutine delete_scalar_field_2d
 
   subroutine write_scalar_field_2d( &
     scalar_field, &

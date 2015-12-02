@@ -9,35 +9,46 @@ GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER_ID:${CMAKE_Fortran_COMPILER_ID}")
 
 IF (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "-v" OUTPUT_VARIABLE source_path)
   MESSAGE(STATUS "${source_path}")
   STRING(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+
 ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES PGI)
+
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
   STRING(REGEX MATCH "1[0-9]\\.[0-9][0-9]\\-[0-9]" Fortran_COMPILER_VERSION ${source_path})
   SET(CMAKE_Fortran_FLAGS_DEBUG "-Mbounds -O0 -g")
   SET(CMAKE_Fortran_FLAGS_RELEASE "-acc -Minfo=accel -fast ")
+
 ELSE()
+
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
   STRING(REGEX MATCH "[4-5]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+
 ENDIF()
+
 MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 
-
 IF(Fortran_COMPILER_NAME MATCHES gfortran)
+
   ADD_DEFINITIONS(-DGFORTRAN)
   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC")
-#  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2008 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow -O0 -fcheck-array-temporaries")
   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+
+  SET(UNUSED_DUMMY_WARNING_ENABLED OFF CACHE BOOL   "Add -Wunused-dummy-argument flag to gfortran")
+  IF(NOT UNUSED_DUMMY_WARNING_ENABLED)
+    SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
+  ENDIF()
 
 ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 
   SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic")
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
+  SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
 
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
+  SET(CMAKE_Fortran_FLAGS_DEBUG   "-qextname=flush -qxlf2003=polymorphic")
   SET(CMAKE_Fortran_FLAGS_RELEASE "-qnosave -qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
@@ -46,6 +57,9 @@ ELSE()
 
 ENDIF()
 
+SET(ADDITIONAL_COMPILER_FLAGS "" CACHE STRING "The user can define additional compiler flags here")
+SET(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} ${ADDITIONAL_COMPILER_FLAGS}")
+SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${ADDITIONAL_COMPILER_FLAGS}")
 
 IF(OPENMP_ENABLED)
   FIND_PACKAGE(OpenMP_Fortran)
@@ -53,23 +67,27 @@ IF(OPENMP_ENABLED)
   SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${OpenMP_Fortran_FLAGS}")
 ENDIF()
 
-SET(F2008 FALSE)
+SET(FULL_FORTRAN2003 FALSE)
 
 if(Fortran_COMPILER_NAME STREQUAL "gfortran")
   if(Fortran_COMPILER_VERSION VERSION_LESS "4.8.0")
-    message(STATUS "Insufficient gfortran version for F2008")
+    message(STATUS "Insufficient gfortran version for the Fortran 2003 Standard")
   else()
-    message(STATUS "GNU fortran version OK for F2008")
-    SET(F2008 TRUE)
+    message(STATUS "GNU fortran version OK for the Fortran 2003 standard")
+    SET(FULL_FORTRAN2003 TRUE)
   endif()
 elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
   if(Fortran_COMPILER_VERSION VERSION_LESS "14.0.0")
-    message(STATUS "Insufficient ifort version for F2008")
+    message(STATUS "Insufficient ifort version for the F2003 standard")
   else()
-    message(STATUS "Intel fortran version OK for F2008")
-    SET(F2008 TRUE)
+    message(STATUS "Intel fortran version OK for the F2003 standard")
+    SET(FULL_FORTRAN2003 TRUE)
   endif()
 endif()
+
+IF(FULL_FORTRAN2003)
+  ADD_DEFINITIONS(-DFULL_FORTRAN2003)
+ENDIF(FULL_FORTRAN2003)
 
 MARK_AS_ADVANCED(CLEAR CMAKE_Fortran_COMPILER)
 MARK_AS_ADVANCED(CLEAR CMAKE_C_COMPILER)

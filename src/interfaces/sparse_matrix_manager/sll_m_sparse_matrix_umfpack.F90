@@ -22,6 +22,7 @@ module sll_m_sparse_matrix
 #include "sll_assert.h"
 use sll_m_umfpack
 use sll_m_qsort_partition
+use iso_fortran_env, only: output_unit
 
 
 !> @brief type for CSR format
@@ -658,7 +659,7 @@ end subroutine initialize_csr_matrix_classic
                         !end if
                         !print *,'api_columns(li_A_1,0)=',api_columns(li_A_1,0)
                         !print *,'lpi_size(2)=',lpi_size(2)
-                        call flush()
+                        flush( output_unit )
                         api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
 
 

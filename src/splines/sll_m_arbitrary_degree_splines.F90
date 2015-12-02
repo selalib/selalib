@@ -254,8 +254,8 @@ contains
     ! Build the zeroth-order splines. The middle cell of the splines array
     ! corresponds to the 'cell' given as argument. So, 
     ! splines(spline_degree+1) = 1.0.
-    splines(:)     = 0.0
-    splines(deg+1) = 1.0
+    splines(:)     = 0.0_f64
+    splines(deg+1) = 1.0_f64
 
     ! Build the higher order splines. 
     last = 2*deg
@@ -411,8 +411,8 @@ contains
     ! Build the zeroth-order splines. The middle cell of the splines array
     ! corresponds to the 'cell' given as argument. So, 
     ! splines(deg+1) = 1.0.
-    splines(:)     = 0.0
-    splines(deg+1) = 1.0
+    splines(:)     = 0.0_f64
+    splines(deg+1) = 1.0_f64
 
     ! Build the higher order splines.
     last = 2*deg  
@@ -549,8 +549,8 @@ contains
     ! Build the zeroth-order splines. The middle cell of the splines array
     ! corresponds to the 'cell' given as argument. So, 
     ! splines(deg+1) = 1.0.
-    splines(:)     = 0.0
-    splines(deg+1) = 1.0
+    splines(:)     = 0.0_f64
+    splines(deg+1) = 1.0_f64
 
     ! Build the higher order splines.
     last = 2*deg  
@@ -950,7 +950,7 @@ contains
     sll_int32  :: degree   ! spline degree
     !sll_int32  :: npoints  ! number of points where spline is evaluated
     sll_real64 :: scoef(:) 
-    sll_real64, pointer :: sval(:) 
+    sll_real64, allocatable :: sval(:) 
     ! local variables
     sll_real64 :: bspl(degree+1)
     sll_real64 :: val 

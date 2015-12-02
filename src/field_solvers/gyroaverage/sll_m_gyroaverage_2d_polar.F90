@@ -193,8 +193,8 @@ contains
           x(2) = eta(1)*sin(eta(2))+rho*gyro%points(2,k)
           eta_star(1)=sqrt(x(1)**2+x(2)**2)
           call localize_nat(ii(1),eta_star(1),gyro%eta_min(1),gyro%eta_max(1),gyro%Nc(1))
-          eta_star(2)=modulo(datan2(x(2),x(1)),2._f64*sll_pi)
-          !eta_star(2)=modulo(datan2(x(2),x(1))+real(j-1,f64)*delta_eta(2),2._f64*M_PI) &
+          eta_star(2)=modulo(atan2(x(2),x(1)),2._f64*sll_pi)
+          !eta_star(2)=modulo(atan2(x(2),x(1))+real(j-1,f64)*delta_eta(2),2._f64*M_PI) &
           ! to uncomment for compatibility with precompute
           call localize_per(ii(2),eta_star(2),gyro%eta_min(2),gyro%eta_max(2),gyro%Nc(2))
           call interpolate_hermite_c1(gyro%deriv,ii,eta_star,fval,gyro%Nc)
@@ -241,7 +241,7 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
          x(2)=eta(1)*sin(eta(2))+rho*gyro%points(2,k)
          eta_star(1)=sqrt(x(1)**2+x(2)**2)
          call localize_nat(ii(1),eta_star(1),gyro%eta_min(1),gyro%eta_max(1),gyro%Nc(1))
-         angle=datan2(x(2),x(1))
+         angle=atan2(x(2),x(1))
          do j=0,gyro%Nc(2)-1
             eta_star(2)=modulo(angle+real(j,f64)*delta_eta(2),2._f64*sll_pi)
             call localize_per(ii(2),eta_star(2),gyro%eta_min(2),gyro%eta_max(2),gyro%Nc(2))
@@ -567,8 +567,8 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
              x(1) = eta(1)*cos(eta(2))+rho*gyro%points(1,k)
              x(2) = eta(1)*sin(eta(2))+rho*gyro%points(2,k)
              xx(1)=sqrt(x(1)**2+x(2)**2)
-             xx(2)=modulo(datan2(x(2),x(1)),2._f64*sll_pi)
-             !xx(2)=modulo(datan2(x(2),x(1))+real(j-1,f64)*delta_eta(2),2._f64*M_PI) & 
+             xx(2)=modulo(atan2(x(2),x(1)),2._f64*sll_pi)
+             !xx(2)=modulo(atan2(x(2),x(1))+real(j-1,f64)*delta_eta(2),2._f64*M_PI) & 
              ! to uncomment for compatibility with precompute
              call splnatper2d(pointer_f_bords,xx(1),gyro%eta_min(1),gyro%eta_max(1),&
                   xx(2),gyro%eta_min(2),gyro%eta_max(2),fval,gyro%Nc(1),gyro%Nc(2))
@@ -645,7 +645,7 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
          x(1)=eta(1)*cos(eta(2))+rho*gyro%points(1,k)
          x(2)=eta(1)*sin(eta(2))+rho*gyro%points(2,k)
          xx(1)=sqrt(x(1)**2+x(2)**2)
-         xx(2)=datan2(x(2),x(1))
+         xx(2)=atan2(x(2),x(1))
          do j=0,gyro%Nc(2)-1
             call splnat1d(buf(:,j),xx(1),gyro%eta_min(1),gyro%eta_max(1),buf2(j),gyro%Nc(1))
          enddo
@@ -1055,13 +1055,13 @@ subroutine compute_gyroaverage_pade_polar(gyro,f,rho)
   !***POISSON
   do k=1,gyro%Nc(2)
      do i=1,gyro%Nc(1)
-        diagm1(i+1)=-(rho**2/4)*(1/dr**2-1/(2*dr*(gyro%eta_min(1)+ &
+        diagm1(i+1)=-(rho**2/4._f64)*(1._f64/dr**2-1._f64/(2._f64*dr*(gyro%eta_min(1)+ &
              (gyro%eta_max(1)-gyro%eta_min(1))*real(i,f64)&
              /real(gyro%Nc(1),f64))))
-        diag(i)=1-(rho**2/4)*(-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+        diag(i)=1._f64-(rho**2/4._f64)*(-(2._f64/dr**2)-(real(floor(k/2._f64),kind=f64)/ &
              (gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*&
              real(i-1,f64)/real(gyro%Nc(1),f64)))**2)
-        diagp1(i)=-(rho**2/4)*(1/dr**2+1/(2*dr*(gyro%eta_min(1)+ &
+        diagp1(i)=-(rho**2/4._f64)*(1._f64/dr**2+1._f64/(2._f64*dr*(gyro%eta_min(1)+ &
              (gyro%eta_max(1)-gyro%eta_min(1))*real(i-1,f64)&
              /real(gyro%Nc(1),f64))))
      enddo
@@ -1150,7 +1150,7 @@ subroutine compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
   
   !***POISSON
   do k=1,gyro%Nc(2)
-     nfloat=floor(k/2._f64)*1._f64
+     nfloat=real(floor(k/2._f64),kind=f64)
      do i=1,gyro%Nc(1)-1
         ri=gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*real(i-1,f64)/real(gyro%Nc(1),f64)
         rip1=gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*real(i,f64)/real(gyro%Nc(1),f64)
@@ -1508,7 +1508,7 @@ subroutine localize_polar(x,eta_min,eta_max,ii,eta,N)
     
   eta(1)=sqrt(x(1)**2+x(2)**2)
   call localize_nat(ii(1),eta(1),eta_min(1),eta_max(1),N(1))
-  eta(2)=datan2(x(2),x(1))
+  eta(2)=atan2(x(2),x(1))
   call localize_per(ii(2),eta(2),eta_min(2),eta_max(2),N(2))
 end subroutine localize_polar
 

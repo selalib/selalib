@@ -135,7 +135,6 @@ contains
   subroutine allocate_memory_df_4d_mp( df )
     class(sll_distribution_function_4d_multipatch), intent(inout) :: df
     sll_int32 :: ierr
-    sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: ip
     sll_int32 :: np_x1
@@ -150,7 +149,6 @@ contains
     sll_int32 :: col_size
     sll_int32 :: imax
     sll_int32 :: jmax
-    type(sll_cartesian_mesh_2d), pointer :: lm
 
     np_x3 = df%mesh_v%num_cells1+1
     np_x4 = df%mesh_v%num_cells2+1
@@ -547,7 +545,6 @@ contains
     sll_real64 :: rho_ij
     sll_real64, dimension(4) :: eta
     sll_real64 :: jacobian
-    sll_int32 :: ierr
 
     num_patches =  df%num_patches
     accumulator =  0.0_f64
@@ -604,7 +601,6 @@ contains
     sll_int32 :: loc_sz4
     sll_real64, dimension(4) :: eta
     sll_real64 :: jacobian
-    sll_int32 :: ierr
 
     num_patches =  df%num_patches
     accumulator =  0.0_f64
@@ -663,12 +659,10 @@ contains
     sll_int32 :: loc_sz2
     sll_int32 :: loc_sz3
     sll_int32 :: loc_sz4
-    sll_real64 :: rho_ij
     sll_real64, dimension(4) :: eta
     sll_real64 :: jacobian
     sll_real64 :: v2
     sll_real64 :: metric
-    sll_int32 :: ierr
 
     num_patches =  df%num_patches
     accumulator =  0.0_f64
@@ -731,7 +725,6 @@ contains
     sll_real64, dimension(4) :: eta
     sll_real64 :: jacobian
     sll_real64 :: metric
-    sll_int32  :: ierr
 
     num_patches  =  df%num_patches
     accumulator1 =  0.0_f64

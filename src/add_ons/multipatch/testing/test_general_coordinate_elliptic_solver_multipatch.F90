@@ -16,6 +16,10 @@ use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_timer
 use sll_m_general_coordinate_elliptic_solver_multipatch
 
+
+use m_multipatch_helper_functions, only : &
+     func_zero, func_one
+
 implicit none
 
 #define SPLINE_DEG1       3
@@ -58,12 +62,6 @@ sll_real64 :: delta2
 sll_real64 :: x1
 sll_real64 :: x2
 
-real(8), external    :: func_zero
-real(8), external    :: func_one
-real(8), external    :: func_epsi
-real(8), external    :: source_term_perdir
-real(8), external    :: source_term_dirper
-sll_real64, external :: sol_exacte_perdir
 
 T => new_coordinate_transformation_multipatch_2d("circle_mp5_pts12")
 
@@ -116,7 +114,7 @@ do ipatch= 0,num_patches-1
        val_b1   = func_zero( x1, x2)
        val_b2   = func_zero( x1, x2)
        val_c    = func_zero( x1, x2)
-       val_rho  = -4*9*exp(-9*(x1**2+x2**2))+(2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))
+       val_rho  = -4.0_f64*9.0_f64*exp(-9*(x1**2+x2**2))+(2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))
        val_phi  = 0.0_f64
        val_phi_exacte = exp(-9*(x1**2+x2**2))
        call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 

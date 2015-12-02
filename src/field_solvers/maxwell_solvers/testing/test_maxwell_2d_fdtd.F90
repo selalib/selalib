@@ -58,7 +58,7 @@ sll_int32                               :: istep, nstep
 sll_real64                              :: err_te
 sll_real64                              :: err_tm
 sll_real64                              :: dt
-sll_real64                              :: cfl = 0.5
+sll_real64                              :: cfl = 0.5_f64
 
 sll_int32,  parameter                   :: mode = 2
 
@@ -79,7 +79,7 @@ call sll_create(maxwell_TM, 1, nc_eta1+1, 1,  &
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
 
-time  = 0.
+time  = 0.0_f64
 
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)

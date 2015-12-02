@@ -8,7 +8,7 @@ program test_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
 use sll_m_constants
 
 use sll_m_maxwell_2d_pstd
@@ -30,7 +30,7 @@ sll_real64                         :: time
 sll_int32                          :: istep, nstep
 sll_real64                         :: err_tm, err_te
 sll_real64                         :: dt
-sll_real64                         :: cfl = 0.5
+sll_real64                         :: cfl = 0.5_f64
 
 sll_int32,  parameter              :: mode = 2
 
@@ -78,7 +78,7 @@ end do
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 nstep = 100
 
-time  = 0.
+time  = 0._f64
 
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)

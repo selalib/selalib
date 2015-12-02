@@ -83,8 +83,8 @@ contains
     sll_int32,  intent(in) :: i_cell_x, i_cell_y
     sll_real32, intent(in) :: offset_x, offset_y
 
-    x = m2d%eta1_min + m2d%delta_eta1*( offset_x + real(i_cell_x-1, f64) )
-    y = m2d%eta2_min + m2d%delta_eta2*( offset_y + real(i_cell_y-1, f64) )
+    x = m2d%eta1_min + m2d%delta_eta1*( real(offset_x + i_cell_x-1, f64) )
+    y = m2d%eta2_min + m2d%delta_eta2*( real(offset_y + i_cell_y-1, f64) )
 
   end subroutine cell_offset_to_global_extended
 
@@ -164,6 +164,9 @@ contains
     ! here, k_aux = (j_x-1)
     j_x = k_aux + 1
 
+    return
+    SLL_ASSERT(n_parts_x>0)
+
   end subroutine
 
 
@@ -234,17 +237,17 @@ contains
     sll_real64 :: x_aux
     sll_real64 :: res
 
-    res = 0
+    res = 0.0_f64
     if ( degree == 1 ) then
         ! pw affine spline
        if ( x <= -1 .or. x >= 1 ) then
             return
         end if
         if ( x < 0 ) then
-            res = x+1
+            res = x+1.0_f64
             return
         end if
-        res = 1-x
+        res = 1.0_f64-x
         return
     end if
     if ( degree == 3 ) then
@@ -270,7 +273,7 @@ contains
     if ( degree == 5 ) then
         x_aux = x+3
         if ( x_aux <= 0 .or. x_aux >= 6 ) then
-            res = 0
+            res = 0.0_f64
             return
         end if
         if ( x_aux < 1 ) then

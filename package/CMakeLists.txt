@@ -85,8 +85,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/quadrature/sll_m_trapz_integration.F90
     ${SLL_DIR}/quadrature/sll_m_gauss_legendre_integration.F90
     ${SLL_DIR}/quadrature/sll_m_gauss_lobatto_integration.F90
-    ${SLL_DIR}/simulations/sim_serial/sim_CG_polar/sll_polar_operators.F90
-    ${SLL_DIR}/simulations/sim_serial/sim_CG_polar/sll_advection_polar.F90
+    #${SLL_DIR}/simulations/serial/sim_CG_polar/sll_polar_operators.F90
+    #${SLL_DIR}/simulations/serial/sim_CG_polar/sll_advection_polar.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_m_qsort_partition.F90
     ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_m_sparse_matrix.F90
     ${SLL_DIR}/time_integration/splitting_methods/sll_m_time_splitting_coeff.F90
@@ -114,8 +114,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_gaussian.F90
     ${SLL_DIR}/particle_methods/random_deviate_generators/sll_m_hammersley.F90
     ${SLL_DIR}/particle_methods/random_deviate_generators/moment_matching/sll_m_moment_matching.F90
-    ${SLL_DIR}/particle_methods/random_deviate_generators/sobol/sll_m_sobol.F90
-    ${SLL_DIR}/particle_methods/random_deviate_generators/prob/sll_m_prob.F90
+    ${SLL_DIR}/../external/burkardt/sobol/sll_m_sobol.F90
+    ${SLL_DIR}/../external/burkardt/sobol/sobol.f90
+    ${SLL_DIR}/../external/burkardt/prob/sll_m_prob.F90
+    ${SLL_DIR}/../external/burkardt/prob/prob.f90
 )
 
 IF(F2008)
@@ -134,11 +136,11 @@ ELSE()
 ENDIF()
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/fftpack/sll_fft.F90)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/sll_m_fft_fftpack.F90)
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/fftw3/sll_fft.F90) 
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/sll_m_fft_fftw3.F90) 
 ELSE()
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/sllfft/sll_fft.F90)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/sll_m_fft_sllfft.F90)
 ENDIF()
 
 IF(FFTW_ENABLED)
@@ -168,8 +170,8 @@ IF(MPI_ENABLED)
   ${SLL_DIR}/field_solvers/poisson_solvers_parallel/sll_m_poisson_2d_periodic_cartesian_par.F90
   ${SLL_DIR}/field_solvers/poisson_solvers_parallel/sll_m_poisson_polar_parallel.F90
   ${SLL_DIR}/simulations/simulation_base_class.F90
-  ${SLL_DIR}/parallelization/parallel_utilities/sll_m_common_array_initializers.F90
-  ${SLL_DIR}/parallelization/parallel_utilities/sll_m_parallel_array_initializer.F90
+  ${SLL_DIR}/initialization_tools/function_initialization/sll_m_common_array_initializers.F90
+  ${SLL_DIR}/parallelization/parallel_array_utilities/sll_m_parallel_array_initializer.F90
   ${SLL_DIR}/parallelization/parallel_utilities/sll_m_buffer_loader_utilities.F90
   ${SLL_DIR}/io/file_io_parallel/sll_m_gnuplot_parallel.F90)
 ENDIF(MPI_ENABLED)
@@ -180,11 +182,11 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   ${SLL_DIR}/io/file_io_parallel/sll_m_hdf5_io_parallel.F90
   ${SLL_DIR}/io/file_io_parallel/sll_m_xdmf_parallel.F90
   ${SLL_DIR}/add_ons/multipatch/sll_m_distribution_function_4d_multipatch.F90
-  ${SLL_DIR}/simulations/sim_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/simulations/sim_parallel/sim_sl_va_1d1v_cart_spectral/simulation_2d_vlasov_ampere_cartesian.F90
-  ${SLL_DIR}/simulations/sim_parallel/sim_sl_vp_2d2v_cart_multipatch/simulation_4d_qns_general_multipatch.F90
-  ${SLL_DIR}/simulations/sim_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
-  ${SLL_DIR}/simulations/sim_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)
+  ${SLL_DIR}/simulations/parallel/bsl_vp_1d1v_cart/sll_m_sim_bsl_vp_1d1v_cart.F90
+  ${SLL_DIR}/simulations/parallel/bsl_va_1d1v_cart_spectral/sll_m_sim_bsl_va_1d1v_cart_spectral.F90
+  ${SLL_DIR}/simulations/parallel/bsl_vp_2d2v_cart_multipatch/sll_m_sim_bsl_vp_2d2v_cart_multipatch.F90
+  ${SLL_DIR}/simulations/parallel/bsl_dk_3d1v_curv/sll_m_sim_bsl_dk_3d1v_curv.F90
+  ${SLL_DIR}/simulations/parallel/bsl_dk_3d1v_polar/sll_m_sim_bsl_dk_3d1v_polar.F90)
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 

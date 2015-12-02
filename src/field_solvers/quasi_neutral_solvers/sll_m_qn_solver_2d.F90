@@ -158,7 +158,7 @@ contains
        call fft_apply_plan( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
-    phi = real(hat_phi, f64)/NP_theta
+    phi = real(hat_phi, f64)/real(NP_theta,f64)
 
   end subroutine solve_qn_solver_2d
 
@@ -192,7 +192,7 @@ contains
     dr = (rmax-rmin)/(NP_r+1)
     dtheta = 2*sll_pi / NP_theta        
 
-    a_resh = 0.d0
+    a_resh = 0._f64
 
     do i=1,NP_r
        r = rmin + i*dr
@@ -220,7 +220,7 @@ contains
     dr = (rmax-rmin)/(NP_r-1)
     dtheta = 2*sll_pi / NP_theta
 
-    a_resh = 0.d0
+    a_resh = 0._f64
 
     a_resh(2) = 2/dr**2 + 1/(Zi*Te(1)) + (k/rmin)**2
     a_resh(3) = -2/dr**2

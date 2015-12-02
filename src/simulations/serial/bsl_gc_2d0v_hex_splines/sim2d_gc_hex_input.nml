@@ -1,0 +1,66 @@
+!ctest --verbose -R sim2d_gc_hex
+!or
+!./bin/test_2d_gc_hex_splines ../selalib/src/simulations/simulations_sequential/sim2d_gc_hex_input.nml
+!gnuplot ../selalib/src/simulations/simulations_sequential/plot_diagnostics.gnu
+
+
+&geometry
+ center_mesh_x1 = 0.0 ! mesh origin, fist coordinate
+ center_mesh_x2 = 0.0 ! mesh origin, second coordinate
+ radius = 14.0        ! mesh radius
+ ! If you want to compare different space discretizations :
+ ! cells_min = smallest discretization number of cells on a hex edge
+ ! cells_max = largest discretization number of cells on a hex edge
+ ! cells_stp = step of incrementation between cells_min and cells_max
+ ! ie. cells_min = 20 cells_max = 60 cells_step = 20
+ ! => 3 simulation w/ num_cells = 20, 40 and 60
+ ! ie2. cells_min = cells_max (and cells_step = any number)
+ ! => 1 simulation w num_cells = cells_mins = cells_max 
+ cells_min = 30
+ cells_max = 30
+ cells_stp = 20
+/
+
+&test_case
+  ! Different models can be done with this simulation
+  ! choices are:
+  !        - "CIRCULAR" (for the circular advection)
+  !        - "GC" (for the guiding center model)
+  model_name="GC"
+/
+
+&initial_function
+  ! For the GC test-case:
+  epsilon = 0.001
+  ! For the Circular advection test-case:
+  gauss_x1  = 2.0
+  gauss_x2  = 2.0
+  ! The default value for gauss_sig (the width of the gaussian pulse)
+  ! is gauss_sig = 1.0/(2. * sqrt(2.)), as name list cannot sqrt, I
+  ! commented this part, but you can still edit this parameter:
+  !  gauss_sig = 1.0
+  gauss_amp = 1.0
+/
+
+&time_iterations
+  dt = 0.1
+  tmax = 10
+/
+
+&interpolation
+  ! The interpolation method you can choose by executing the right
+  ! executable file (ie. test_2d_gc_hex_splines or test_2d_gc_hex_hermite)
+  ! but here you can specify some details for the method
+
+  ! For the spline interpolation:
+  spline_degree = 2
+  
+  ! For the hermite interpolation:
+  ! Different hermite elements have been implemented, the following notations are used
+  !    Zienkiewicz with 9  degree of freedom => 9
+  !    Zienkiewicz with 10 degree of freedom => 10
+  !    Hsieh-Clough-Tocher (reduced)  => 11
+  !    Hsieh-Clough-Tocher (complete) => 12
+  !    Ganev-Dimitrov => 15
+  hermite_method = 9 
+/

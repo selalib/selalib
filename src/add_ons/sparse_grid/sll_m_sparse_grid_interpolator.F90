@@ -13,11 +13,9 @@ module sll_m_sparse_grid_interpolator
   use sll_m_constants
   use sll_m_periodic_interpolator_1d
   use sll_m_lagrange_interpolation_1d
-  use, intrinsic :: iso_c_binding
+  use sll_m_fftw3
   implicit none
   private
-
-  include 'fftw3.f03'
 
   !> class to hold values for hierarchical fft computations
   type, public :: fft_hierarchical
@@ -128,7 +126,7 @@ contains
     interpolation, &
     interpolation_type, &
     eta_min, &
-    eta_max)	
+    eta_max)
     class(sparse_grid_interpolator), intent(inout) :: interpolator
 
     sll_real64, dimension(:), intent(in)          :: eta_min !< \a eta_min defines the lower bound of the domain
@@ -275,7 +273,7 @@ contains
 !!!! Functions to build hierarchical surplus !!!!
 
 ! Public function to be called
- subroutine compute_hierarchical_surplus( interpolator, data_array )	
+ subroutine compute_hierarchical_surplus( interpolator, data_array )
     class(sparse_grid_interpolator), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(inout) :: data_array
     sll_int32                              :: i
@@ -297,7 +295,7 @@ contains
   end subroutine compute_linear_hierarchical_surplus
 
 ! Public function to be called
- subroutine compute_dehierarchical( interpolator, data_array )	
+ subroutine compute_dehierarchical( interpolator, data_array )
     class(sparse_grid_interpolator), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(inout) :: data_array
     sll_int32                              :: i
@@ -485,7 +483,7 @@ end subroutine displace_on_stripe_periodic
 ! Interpolator functions in 1D
 
 ! Interpolate along dimension dim only (periodic boundary conditions), interpolation at a displaced function value
-subroutine interpolate_disp_1d_periodic(interpolator,displacement,dim,max_level,index,data_in,data_out,hiera)	
+subroutine interpolate_disp_1d_periodic(interpolator,displacement,dim,max_level,index,data_in,data_out,hiera)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
@@ -511,7 +509,7 @@ subroutine interpolate_disp_1d_periodic(interpolator,displacement,dim,max_level,
 
 end subroutine interpolate_disp_1d_periodic
 
-recursive subroutine interpolate_disp_recursive(interpolator,no_dims,dim,node_index, displacement,data_in, data_out,hiera)	
+recursive subroutine interpolate_disp_recursive(interpolator,no_dims,dim,node_index, displacement,data_in, data_out,hiera)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64, intent(in) :: displacement
   sll_real64, dimension(:), intent(in) :: data_in
@@ -642,7 +640,7 @@ subroutine interpolate_disp_1d_periodic_for_neighbor(interpolator,displacement,f
 end subroutine interpolate_disp_1d_periodic_for_neighbor
 
 
-subroutine interpolate_disp_1d_periodic_self(interpolator,displacement,dim,max_level,index,data_in,data_out)	
+subroutine interpolate_disp_1d_periodic_self(interpolator,displacement,dim,max_level,index,data_in,data_out)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
@@ -713,7 +711,7 @@ end subroutine extract_recursive
 
 
 
-subroutine insert_periodic(sparsegrid,dim,max_level,index,data_in,data_out)	
+subroutine insert_periodic(sparsegrid,dim,max_level,index,data_in,data_out)
   class(sparse_grid_interpolator), intent(in) :: sparsegrid
   sll_int32, intent(in) :: dim,max_level,index
   sll_int32             :: n_points,index_running
@@ -758,7 +756,7 @@ recursive subroutine insert_recursive(sparsegrid,index_stripe,stride,index_sg,di
 end subroutine insert_recursive
 
 
-subroutine insert_periodic_additive(sparsegrid,factor,dim,max_level,index,data_in,data_out)	
+subroutine insert_periodic_additive(sparsegrid,factor,dim,max_level,index,data_in,data_out)
   class(sparse_grid_interpolator), intent(in) :: sparsegrid
   sll_real64, intent(in) :: factor
   sll_int32, intent(in) :: dim,max_level,index
@@ -981,7 +979,7 @@ end subroutine dehierarchical_order_d_dimension
 
 !!! (De)hierarchization functions on a 1D stripe
 
-subroutine hierarchical_stripe(sparsegrid,data,max_level)	
+subroutine hierarchical_stripe(sparsegrid,data,max_level)
   class(sparse_grid_interpolator), intent(inout) :: sparsegrid
   sll_real64, dimension(:), intent(inout) :: data
   sll_int32, intent(in) :: max_level
@@ -1166,7 +1164,7 @@ end subroutine dehierarchical_part_order_d_dimension
 
 ! Dehierarchization from linear hierarchical surplus only applied to parts of the dimensions. 
 ! Dimensions dehiearchized: dorder(dmin:dmax)
-subroutine dehierarchical_part(interpolator,data,dmax,dmin,dorder)	
+subroutine dehierarchical_part(interpolator,data,dmax,dmin,dorder)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout)   :: data
   sll_int32, intent(in) :: dmax,dmin
@@ -1241,7 +1239,7 @@ end subroutine hierarchical_part
 
 ! Hierarchization to higher order hierarchical surplus only applied to parts of the dimensions. 
 ! Dimensions hiearchized: dorder(dmin:dmax)
-subroutine hierarchical_part_order(interpolator,data,dmax,dmin,dorder,order)	
+subroutine hierarchical_part_order(interpolator,data,dmax,dmin,dorder,order)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout)   :: data
   sll_int32, intent(in) :: dmax,dmin,order
@@ -1300,7 +1298,7 @@ subroutine integrate_trapezoidal( interpolator,data_in,val)
 end subroutine integrate_trapezoidal
 
 !!!! Trapezoidal integrator on sparse grid working with the semi-hierarchical surplus (hierarchical in (d-1) dimensions, nodal along one dimension). Note this functions should usually not be used since it is only working if the maximum number of levels along the nodal dimension is the maximum total levels
-subroutine integrate_trapezoidal2( interpolator,dorder,data_in,val)	
+subroutine integrate_trapezoidal2( interpolator,dorder,data_in,val)
   class(sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64,intent(inout) :: val
   sll_real64, dimension(:), intent(inout)   :: data_in
@@ -1490,31 +1488,32 @@ recursive subroutine insert_recursive_fourier(sparsegrid,index_sg,ind,level,max_
   end if
 end subroutine insert_recursive_fourier
 
-subroutine sort_hiera_1d(max_level,data_in,data_out)
-  sll_int32, intent(in) :: max_level
-  sll_real64,dimension(:),intent(in) :: data_in
-  sll_real64,dimension(:),intent(inout) :: data_out
-  sll_int32 :: size,l,j,initial,stride,counter
-
-  size = 2**max_level;
-
-  counter = 1
-  data_out(1) = data_in(1);
-  if(max_level>1) then
-     data_out(2) = data_in(size/2+1)
-     initial = size/4
-     stride = size/2
-     do l=2,max_level
-        do j=0,2**(l-1)
-           data_out(counter) = data_in(initial+1+j*stride)
-           counter = counter +1
-        end do
-        initial = initial/2
-        stride = stride/2
-     end do
-  end if
-
-end subroutine sort_hiera_1d
+!PN DEFINED BUT NOT USED
+!subroutine sort_hiera_1d(max_level,data_in,data_out)
+!  sll_int32, intent(in) :: max_level
+!  sll_real64,dimension(:),intent(in) :: data_in
+!  sll_real64,dimension(:),intent(inout) :: data_out
+!  sll_int32 :: size,l,j,initial,stride,counter
+!
+!  size = 2**max_level;
+!
+!  counter = 1
+!  data_out(1) = data_in(1);
+!  if(max_level>1) then
+!     data_out(2) = data_in(size/2+1)
+!     initial = size/4
+!     stride = size/2
+!     do l=2,max_level
+!        do j=0,2**(l-1)
+!           data_out(counter) = data_in(initial+1+j*stride)
+!           counter = counter +1
+!        end do
+!        initial = initial/2
+!        stride = stride/2
+!     end do
+!  end if
+!
+!end subroutine sort_hiera_1d
 
 subroutine insert_comp_to_real(sparsegrid,dim,max_level,index,data_in,data_out)
   class(sparse_grid_interpolator), intent(in) :: sparsegrid
@@ -1664,7 +1663,9 @@ subroutine fft_initialize(fft_object,levels)
   class(fft_hierarchical), dimension(:),pointer :: fft_object
   sll_int32,intent(in) :: levels 
   sll_int32 :: l,size
+#ifndef FFTW_F2003
   sll_int32 :: ierr
+#endif
 
   size = 1
   do l=1,levels+1
@@ -1696,17 +1697,18 @@ subroutine fft_initialize(fft_object,levels)
 
 end subroutine fft_initialize
 
-subroutine fft_finalize(fft_object,levels)
-  class(fft_hierarchical), dimension(:),pointer :: fft_object
-  sll_int32, intent(in) :: levels
-  sll_int32 :: l
- 
-  do l=1,levels+1
-     call fftw_destroy_plan(fft_object(l)%fw)
-     call fftw_destroy_plan(fft_object(l)%bw)
-  end do
-
-end subroutine fft_finalize
+!PN DEFINED BUT NOT USED
+!subroutine fft_finalize(fft_object,levels)
+!  class(fft_hierarchical), dimension(:),pointer :: fft_object
+!  sll_int32, intent(in) :: levels
+!  sll_int32 :: l
+! 
+!  do l=1,levels+1
+!     call fftw_destroy_plan(fft_object(l)%fw)
+!     call fftw_destroy_plan(fft_object(l)%bw)
+!  end do
+!
+!end subroutine fft_finalize
 
 !> Compute Fourier coefficients on sparse grid along dimension \a dim. 
 subroutine ToHierarchical1D(interpolator,dim,max_level,index,data_in,data_out)

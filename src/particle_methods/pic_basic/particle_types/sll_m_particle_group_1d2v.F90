@@ -186,6 +186,12 @@ contains
     class( sll_particle_group_1d2v ), intent( inout ) :: self !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x !< common weight
+
+#ifdef DEBUG 
+    sll_int32 :: dummy
+    dummy = i+storage_size(self)+int(x,i32)
+#endif
+    
     
   end subroutine set_common_weight_1d2v
 

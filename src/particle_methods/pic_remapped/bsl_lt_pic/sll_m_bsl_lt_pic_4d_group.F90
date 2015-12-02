@@ -27,11 +27,11 @@ module sll_m_bsl_lt_pic_4d_group
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_accumulators.h"
 #include "sll_errors.h"
 
 ! #include "particle_representation.h"   NEEDED?
 
+  use sll_m_accumulators
   use sll_m_constants, only: sll_pi
   use sll_m_working_precision
   use sll_m_cartesian_meshes
@@ -183,13 +183,12 @@ contains
     sll_real64 :: r(3)
 
     ! get x
-    r(1) = self%space_mesh_2d%eta1_min + self%space_mesh_2d%delta_eta1*(                            &
-                self%particle_list(i)%offset_x + real(self%particle_list(i)%i_cell_x - 1, f64)      &
-            )
+    r(1) = self%space_mesh_2d%eta1_min + &
+           self%space_mesh_2d%delta_eta1*(                            &
+           real(self%particle_list(i)%offset_x + self%particle_list(i)%i_cell_x - 1, f64)      )
     ! get y
-    r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*(                            &
-                self%particle_list(i)%offset_y + real(self%particle_list(i)%i_cell_y - 1, f64)      &
-            )
+    r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*( &
+           real(self%particle_list(i)%offset_y + self%particle_list(i)%i_cell_y - 1, f64)      )
 
   end function bsl_lt_pic_4d_get_x
 
@@ -295,7 +294,7 @@ contains
     class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects"
+    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects", s, storage_size(self)
     stop
 
   end subroutine bsl_lt_pic_4d_set_common_weight
@@ -337,16 +336,16 @@ contains
     type(sll_cartesian_mesh_4d),    pointer :: dummy_grid_4d        ! todo: make this argument optional in function below
     sll_real64, dimension(:,:),     pointer :: dummy_array_2d       ! todo: make this argument optional in function below
 
-    type(sll_bsl_lt_pic_4d_particle), pointer :: particle
+    !type(sll_bsl_lt_pic_4d_particle), pointer :: particle
 
-    sll_real64    :: total_charge
-    logical       :: scenario_is_deposition
-    logical       :: use_remapping_grid
+    !sll_real64  :: total_charge
+    logical     :: scenario_is_deposition
+    logical     :: use_remapping_grid
 
-    sll_int32       :: i_part, i_cell
-    sll_real64      :: xy_part(3)
-    sll_real64      :: particle_charge
-    sll_real64      :: dx, dy
+    !sll_int32   :: i_cell
+    !sll_real64  :: xy_part(3)
+    !sll_real64  :: particle_charge
+    !sll_real64  :: dx!, dy
 
     scenario_is_deposition = .true.
     use_remapping_grid = .false.
@@ -400,7 +399,7 @@ contains
     class( sll_bsl_lt_pic_4d_group ),   intent( inout ) :: self
     character(len=*),                   intent(in)      :: array_name !< field name
     sll_int32,                          intent(in)      :: iplot      !< plot counter
-    character(len=4)                                    :: cplot
+    !character(len=4)                                    :: cplot
 
     sll_real64                  :: plot_grid_x_min
     sll_real64                  :: plot_grid_x_max
@@ -640,9 +639,9 @@ contains
     !> store the quasi-interpolation coefficients used in the remappings and initialisation, in the case of cubic spline particles
     if( spline_degree == 3) then
         SLL_ALLOCATE( res%lt_pic_interpolation_coefs(-1:1), ierr )
-           res%lt_pic_interpolation_coefs(-1) = -1./6.
-           res%lt_pic_interpolation_coefs(0)  =  8./6.
-           res%lt_pic_interpolation_coefs(1)  =  -1./6.
+           res%lt_pic_interpolation_coefs(-1) = -1.0_f64/6.0_f64
+           res%lt_pic_interpolation_coefs(0)  =  8.0_f64/6.0_f64
+           res%lt_pic_interpolation_coefs(1)  = -1.0_f64/6.0_f64
     end if
 
     end function sll_bsl_lt_pic_4d_group_new
@@ -654,12 +653,17 @@ contains
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
-    sll_int32                       :: ierr
+    !sll_int32                       :: ierr
 
     call self%bsl_lt_pic_4d_initializer_landau_f0 (     &
       self%thermal_speed, self%alpha, self%k_landau     &
     )        ! -> these parameters should be members of the initializer object
 
+    return !PN ADD TO PREVENT WARNING
+    SLL_ASSERT(present(rank))
+    SLL_ASSERT(present(world_size))
+    SLL_ASSERT(present(rand_seed))
+    print*, initial_density_identifier
   end subroutine bsl_lt_pic_4d_initializer
 
   ! initialize the bsl_lt_pic group with the landau f0 distribution
@@ -719,7 +723,7 @@ contains
     sll_real64 :: y_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
-    sll_real64 :: f_x, f_y, f_vx, f_vy
+    sll_real64 :: f_x, f_vx, f_vy
 
     number_particles = p_group%number_particles
     one_over_thermal_velocity = 1./thermal_speed
@@ -799,7 +803,7 @@ contains
     sll_real64 :: y_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
-    sll_real64 :: f_x, f_y, f_vx, f_vy
+    !sll_real64 :: f_x, f_y, f_vx, f_vy
 
     number_particles = p_group%number_particles
 
@@ -904,7 +908,7 @@ contains
 
     SLL_ALLOCATE( particle_indices(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
     particle_indices(:,:,:,:) = 0
-    coords(:) = 0
+    coords(:) = 0.0_f64
 
     ! compute the particle weights from the values of f0 on the (cartesian, phase-space) remapping grid
     k_temp_debug = 0
@@ -927,9 +931,9 @@ contains
             SLL_ASSERT(k == k_temp_debug)
 
             if( p_group%spline_degree == 1 )then
-                w_k = d_vol * real( p_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
+                w_k = real(d_vol * p_group%target_values(j_x,j_y,j_vx,j_vy) ,f64)
             else if( p_group%spline_degree == 3 )then
-                w_k = 0
+                w_k = 0.0_f64
                 do l_x = -1, 1
                     j_aux_x = j_x + l_x
                     if( p_group%domain_is_periodic(1) )then
@@ -960,7 +964,7 @@ contains
                                                     p_group%lt_pic_interpolation_coefs(l_y )  *  &
                                                     p_group%lt_pic_interpolation_coefs(l_vx)  *  &
                                                     p_group%lt_pic_interpolation_coefs(l_vy)  *  &
-                                                    p_group%target_values(j_aux_x,j_aux_y,j_aux_vx,j_aux_vy) ,f32)
+                                                    p_group%target_values(j_aux_x,j_aux_y,j_aux_vx,j_aux_vy) ,f64)
                                             end if
                                         end do
                                     end if
@@ -1272,7 +1276,7 @@ contains
     ! working space
 
     sll_real64 :: tmp, tmp1, tmp2
-    sll_real32 :: tmp_offset_x, tmp_offset_y
+    !sll_real32 :: tmp_offset_x, tmp_offset_y
 
 
     ! index of particle closest to the center of each virtual cell.
@@ -1285,7 +1289,7 @@ contains
     sll_int32 :: i ! x dimension
     sll_int32 :: j ! y dimension
     sll_int32 :: k,kprime ! particle index
-    sll_int32 :: neighbour ! particle index for local use
+    !sll_int32 :: neighbour ! particle index for local use
     sll_int32 :: l ! vx dimension
     sll_int32 :: m ! vy dimension
 
@@ -1345,8 +1349,8 @@ contains
     sll_real64 :: offset_x_in_virtual_cell
     sll_real64 :: offset_y_in_virtual_cell
 
-    sll_real64 :: x_center_virtual_cell
-    sll_real64 :: y_center_virtual_cell
+    !sll_real64 :: x_center_virtual_cell
+    !sll_real64 :: y_center_virtual_cell
 
     sll_real64 :: f_value_on_virtual_particle
     sll_real64 :: virtual_charge
@@ -1371,7 +1375,7 @@ contains
     sll_real64 :: vx_aux
     sll_real64 :: vy_aux
 
-    sll_real64 :: length
+    !sll_real64 :: length
 
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
@@ -1381,16 +1385,16 @@ contains
 
 
     ! pw-affine approximations of exp and cos for fast (?) evaluations
-    sll_int32 :: i_table, ncells_table
-    sll_real64, dimension(:),allocatable :: cos_table, exp_table
-    sll_real64 :: s, s_aux
-    sll_real64 :: hs_cos_table, hs_exp_table
-    sll_real64 :: ds_table
-    sll_real64 :: smin_cos_table, smax_cos_table
-    sll_real64 :: smin_exp_table, smax_exp_table
-    sll_real64 :: si_cos, si_exp
+    !sll_int32 :: ncells_table
+    !sll_real64, dimension(:),allocatable :: exp_table
+    !sll_real64 :: s, s_aux
+    !sll_real64 :: hs_exp_table
+    !sll_real64 :: ds_table
+    !sll_real64 :: smin_cos_table, smax_cos_table
+    !sll_real64 :: smin_exp_table, smax_exp_table
+    !sll_real64 :: si_cos, si_exp
 
-    sll_real64 :: cos_approx, exp_approx
+    !sll_real64 :: exp_approx
 
     ! --- end of declarations
 
@@ -1459,7 +1463,7 @@ contains
                                    )
 
         if( present(target_total_charge) )then
-            deposited_charge = 0
+            deposited_charge = 0.0_f64
         end if
 
     else ! test scenario_is_deposition
@@ -1482,7 +1486,7 @@ contains
 
 
             ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
-            p_group%target_values(:,:,:,:) = 0
+            p_group%target_values(:,:,:,:) = 0.0_f64
 
             !print *, "6453 before remap -> DEBUG: ", p_group%number_parts_x/2,    &
             !                               p_group%number_parts_y/2,    &
@@ -1518,7 +1522,7 @@ contains
             ! for now we assume that given_array_2d is in (x, vx) space
             SLL_ASSERT(size(given_array_2d,1) == number_virtual_particles_x)
             SLL_ASSERT(size(given_array_2d,2) == number_virtual_particles_vx)
-            given_array_2d(:,:) = 0
+            given_array_2d(:,:) = 0.0_f64
 
             ! print *, "WRITE F AA -- B2"
 
@@ -1537,7 +1541,7 @@ contains
     closest_particle(:,:,:,:) = 0
 
     SLL_ALLOCATE(closest_particle_distance(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
-    closest_particle_distance(:,:,:,:) = 0
+    closest_particle_distance(:,:,:,:) = 0.0_f64
 
     ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
 
@@ -1593,7 +1597,7 @@ contains
     ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
     ! virtual cell
 
-    closest_particle_distance_to_first_corner = 1e30
+    closest_particle_distance_to_first_corner = 1d30
     k_particle_closest_to_first_corner = 0
 
     do k=1, p_group%number_particles ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
@@ -1657,8 +1661,8 @@ contains
       mesh_period_x = p_group%space_mesh_2d%eta1_max - p_group%space_mesh_2d%eta1_min
       inv_period_x = 1./mesh_period_x
     else
-      mesh_period_x = 0
-      inv_period_x = 0
+      mesh_period_x = 0.0_f64
+      inv_period_x = 0.0_f64
     end if
 
     if(p_group%domain_is_periodic(2)) then
@@ -1666,8 +1670,8 @@ contains
       mesh_period_y = p_group%space_mesh_2d%eta2_max - p_group%space_mesh_2d%eta2_min
       inv_period_y = 1./mesh_period_y
     else
-      mesh_period_y = 0
-      inv_period_y = 0
+      mesh_period_y = 0.0_f64
+      inv_period_y = 0.0_f64
     end if
 
     ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
@@ -2073,7 +2077,7 @@ contains
                               ! If we end up with kprime == 0, it means that we have not found a cell that contains
                               ! the particle so we just set that (virtual) particle value to zero
 
-                              f_value_on_virtual_particle = 0
+                              f_value_on_virtual_particle = 0.0_f64
 
                               if (kprime /= 0) then
 
@@ -2311,8 +2315,8 @@ contains
     ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-p_list]]
     type(sll_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
 
-    sll_int32 :: ngb_dim_right_index
-    sll_int32 :: ngb_dim_left_index
+    !sll_int32 :: ngb_dim_right_index
+    !sll_int32 :: ngb_dim_left_index
     sll_real64 :: h_parts_dim
     sll_int32 :: kprime
     sll_int32 :: j,jumps
@@ -2499,7 +2503,7 @@ contains
         domain_is_x_periodic = p_group%domain_is_periodic(1)
         domain_is_y_periodic = p_group%domain_is_periodic(2)
 
-        coords(:) = 0
+        coords(:) = 0.0_f64
 
         coords = p_group%get_x(k)
         x_k = coords(1)

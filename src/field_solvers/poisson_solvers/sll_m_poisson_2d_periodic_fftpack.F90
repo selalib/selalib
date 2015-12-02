@@ -70,12 +70,13 @@ interface delete
    module procedure free_poisson_2d_periodic_fftpack
 end interface
 
-interface fft
-   module procedure doubfft, doubcfft
-end interface
-interface fftinv
-   module procedure doubfftinv,  doubcfftinv
-end interface
+!PN DEFINED BUT NOT USED
+!PN interface fft
+!PN    module procedure doubfft, doubcfft
+!PN end interface
+!PN interface fftinv
+!PN    module procedure doubfftinv,  doubcfftinv
+!PN end interface
 
 public :: initialize, new, solve, delete
 
@@ -159,8 +160,8 @@ subroutine initialize_poisson_2d_periodic_fftpack( &
    this%x_max = x_max
    this%y_min = y_min
    this%y_max = y_max
-   this%dx   = (x_max-x_min) / nc_x
-   this%dy   = (y_max-y_min) / nc_y
+   this%dx   = (x_max-x_min) / real(nc_x, f64)
+   this%dy   = (y_max-y_min) / real(nc_y, f64)
 
    SLL_ALLOCATE(this%rhst(nc_y,nc_x/2+1), error)
    SLL_ALLOCATE(this%ext (nc_y,nc_x/2+1), error)
@@ -217,7 +218,7 @@ subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
       call dfftb( nc_x, sol(1:nc_x,j),  this%fftx%coefd )
    end do
 
-   sol(1:nc_x,1:nc_y) = sol(1:nc_x,1:nc_y) / (nc_x*nc_y)     ! normalize FFTs
+   sol(1:nc_x,1:nc_y) = sol(1:nc_x,1:nc_y) / real(nc_x*nc_y, f64)     ! normalize FFTs
 
    if (size(sol,1) == nc_x+1) sol(nc_x+1,:) = sol(1,:)
    if (size(sol,2) == nc_y+1) sol(:,nc_y+1) = sol(:,1)
@@ -241,9 +242,9 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
    nc_x = this%nc_x
    nc_y = this%nc_y
 
-   this%rhst = 0.0_f64
-   this%ext  = 0.0_f64
-   this%eyt  = 0.0_f64
+   this%rhst = cmplx(0.0_f64,0.0,kind=f64)
+   this%ext  = cmplx(0.0_f64,0.0,kind=f64)
+   this%eyt  = cmplx(0.0_f64,0.0,kind=f64)
    field_x   = 0.0_f64
    field_y   = 0.0_f64
 
@@ -257,8 +258,8 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
       call zfftf( nc_y, this%rhst(:,i), this%ffty%coefcd)
    end do
 
-   this%ext(1,1) = 0.0_f64
-   this%eyt(1,1) = 0.0_f64
+   this%ext(1,1) = (0.0_f64,0.0_f64)
+   this%eyt(1,1) = (0.0_f64,0.0_f64)
    this%ext = -cmplx(0.0_f64,this%kx/this%k2,kind=f64)*this%rhst
    this%eyt = -cmplx(0.0_f64,this%ky/this%k2,kind=f64)*this%rhst
 
@@ -362,7 +363,7 @@ subroutine transpose_c2r(comp_array, real_array)
       real_array(1,j) = real(comp_array(j,1),kind=f64)
       do i=2,n1/2
          real_array(2*i-2,j) = real(comp_array(j,i),kind=f64)
-         real_array(2*i-1,j) = dimag(comp_array(j,i))
+         real_array(2*i-1,j) = aimag(comp_array(j,i))
       end do
       real_array(n1,j) = real(comp_array(j,n1/2+1),kind=f64)
    end do
@@ -389,57 +390,58 @@ subroutine initcfft(this,l)
 
 end subroutine initcfft
 
-subroutine doubfft(this,array)
-
-   type(fftclass) :: this
-   sll_real64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call dfftf( this%n, array(:,i), this%coefd)
-   end do
-
-   array = array /this%n      ! normalize FFT
-
-end subroutine doubfft
-
-subroutine doubcfft(this,array)
-
-   type(fftclass) :: this
-   sll_comp64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call zfftf( this%n, array(:,i), this%coefcd)
-   end do
-
-   array = array /this%n      ! normalize FFT
-
-end subroutine doubcfft
-
-subroutine doubfftinv(this,array)
-
-   type(fftclass) :: this
-   sll_real64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call dfftb( this%n, array(:,i),  this%coefd )
-   end do
-
-end subroutine doubfftinv
-
-subroutine doubcfftinv(this,array)
-
-   type(fftclass) :: this
-   sll_comp64, dimension(:,:) :: array
-   sll_int32 :: i
-
-   do i=1, size(array,2)   ! number of 1d transforms
-      call zfftb( this%n, array(:,i),  this%coefcd )
-   end do
-
-end subroutine doubcfftinv
+!PN DEFINED BUT NOT USED
+!PN subroutine doubfft(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_real64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call dfftf( this%n, array(:,i), this%coefd)
+!PN    end do
+!PN 
+!PN    array = array /this%n      ! normalize FFT
+!PN 
+!PN end subroutine doubfft
+!PN 
+!PN subroutine doubcfft(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_comp64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call zfftf( this%n, array(:,i), this%coefcd)
+!PN    end do
+!PN 
+!PN    array = array /this%n      ! normalize FFT
+!PN 
+!PN end subroutine doubcfft
+!PN 
+!PN subroutine doubfftinv(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_real64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call dfftb( this%n, array(:,i),  this%coefd )
+!PN    end do
+!PN 
+!PN end subroutine doubfftinv
+!PN 
+!PN subroutine doubcfftinv(this,array)
+!PN 
+!PN    type(fftclass) :: this
+!PN    sll_comp64, dimension(:,:) :: array
+!PN    sll_int32 :: i
+!PN 
+!PN    do i=1, size(array,2)   ! number of 1d transforms
+!PN       call zfftb( this%n, array(:,i),  this%coefcd )
+!PN    end do
+!PN 
+!PN end subroutine doubcfftinv
 
 end module sll_m_poisson_2d_periodic_fftpack
 

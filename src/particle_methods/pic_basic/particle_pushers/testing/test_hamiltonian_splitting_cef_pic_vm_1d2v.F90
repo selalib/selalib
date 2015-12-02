@@ -16,6 +16,11 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   use sll_m_constants, only : &
        sll_pi
 
+  implicit none
+
+  ! Tolerance for comparison of real numbers: set it here!
+  sll_real64, parameter :: EQV_TOL = 1.0e-14_f64
+
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
   ! Specific particle group
@@ -54,6 +59,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   sll_real64 :: xi(3)
   logical    :: passed
   sll_real64 :: error
+  sll_int32  :: ierr   ! error code for SLL_ALLOCATE
 
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
@@ -86,7 +92,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
 
   SLL_ALLOCATE(particle_info_ref(n_particles,4), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([11.780972450961723D0,        5.4977871437821380D0,       -1.5341205443525459D0,       0.15731068461017067D0,       0.15731068461017067D0,       -1.5341205443525459D0,        6.8636759376074723D0,        5.7026946767517002D0   ], [n_particles, 4])
+  particle_info_ref = reshape([11.780972450961723_f64,        5.4977871437821380_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        6.8636759376074723_f64,        5.7026946767517002_f64   ], [n_particles, 4])
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -132,21 +138,21 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([  11.627560396526469D0,        5.5135182122431550D0,       -1.5341205443525459D0,       0.15731068461017067D0,       0.15731068461017067D0,       -1.5341205443525459D0,        6.8636759376074723D0,        5.7026946767517002D0     ], [n_particles, 4])
+  particle_info_ref = reshape([  11.627560396526469_f64,        5.5135182122431550_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        6.8636759376074723_f64,        5.7026946767517002_f64     ], [n_particles, 4])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,1))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi = particle_group%get_v(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,2))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi(1:1) = particle_group%get_charge(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
      end if
   end do
@@ -156,21 +162,21 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   call propagator%operatorHE(delta_t)
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.627560396526469D0,        5.5135182122431550D0,       -1.4007142828624286D0,       0.25441596552957291D0,       0.25438068275455678D0,       -1.4104377250793367D0,        6.8636759376074723D0,        5.7026946767517002D0    ], [n_particles, 4])
+  particle_info_ref = reshape([   11.627560396526469_f64,        5.5135182122431550_f64,       -1.4007142828624286_f64,       0.25441596552957291_f64,       0.25438068275455678_f64,       -1.4104377250793367_f64,        6.8636759376074723_f64,        5.7026946767517002_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,1))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi = particle_group%get_v(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,2))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi(1:1) = particle_group%get_charge(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
      end if
   end do
@@ -180,38 +186,38 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([  11.627560396526469D0,        5.5135182122431550D0,       -1.3683192894303602D0,       0.11227480640273069D0,       0.39295337655538259D0,       -1.4287954464130088D0,        6.8636759376074723D0,        5.7026946767517002D0    ], [n_particles, 4])
+  particle_info_ref = reshape([  11.627560396526469_f64,        5.5135182122431550_f64,       -1.3683192894303602_f64,       0.11227480640273069_f64,       0.39295337655538259_f64,       -1.4287954464130088_f64,        6.8636759376074723_f64,        5.7026946767517002_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,1))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi = particle_group%get_v(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,2))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,3))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi(1:1) = particle_group%get_charge(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,4))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
      end if
   end do
 
-  bfield_ref = [ 0.99819008852299340D0,       0.99241234971657222D0,       0.98838969093169826D0,        1.0023321692551928D0,        1.0118169182044585D0,        1.0057521726101171D0,        1.0016358135685306D0,        1.0014153888891870D0,       0.99955401601159288D0,       0.99850139228965729D0 ] 
+  bfield_ref = [ 0.99819008852299340_f64,       0.99241234971657222_f64,       0.98838969093169826_f64,        1.0023321692551928_f64,        1.0118169182044585_f64,        1.0057521726101171_f64,        1.0016358135685306_f64,        1.0014153888891870_f64,       0.99955401601159288_f64,       0.99850139228965729_f64 ] 
 
-  efield_ref = reshape([1.0139333322572233D0,       0.99694980433046210D0,       0.98105828960960473D0,       0.96702117187072789D0,       0.98564985298325469D0,        1.0000855014667056D0,        1.0477798381501124D0,        1.2387410309599800D0,        1.3810186780785210D0,        1.1543013648190512D0,        1.0152805152929967D0,        1.1106903616633781D0,        1.2546884206799935D0,        1.2259034757779683D0,        1.0789193162085262D0,        1.0062750756095262D0,       0.98537165227992685D0,       0.96780452240085313D0,       0.97331093901524457D0,       0.99202671628832617D0   ],[num_cells,2])
+  efield_ref = reshape([1.0139333322572233_f64,       0.99694980433046210_f64,       0.98105828960960473_f64,       0.96702117187072789_f64,       0.98564985298325469_f64,        1.0000855014667056_f64,        1.0477798381501124_f64,        1.2387410309599800_f64,        1.3810186780785210_f64,        1.1543013648190512_f64,        1.0152805152929967_f64,        1.1106903616633781_f64,        1.2546884206799935_f64,        1.2259034757779683_f64,        1.0789193162085262_f64,        1.0062750756095262_f64,       0.98537165227992685_f64,       0.96780452240085313_f64,       0.97331093901524457_f64,       0.99202671628832617_f64   ],[num_cells,2])
 
   error = maxval(bfield-bfield_ref)
 
-  if (error> 1E-14) then
+  if (error > EQV_TOL) then
      passed = .FALSE.
   end if
 
   error = maxval(efield-efield_ref)
 
-  if (error> 1E-14) then
+  if (error > EQV_TOL) then
      passed = .FALSE.
   end if
 

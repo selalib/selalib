@@ -124,7 +124,7 @@ contains
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
     ! correspondant a k=0 sont nulles
-    field(1) = 0.
+    field(1) = 0.0_f64
 
     ! Calcul des autres composantes de Fourier
     do ik=1,(this%nc_eta1-2)/2 
@@ -136,7 +136,7 @@ contains
        this%work(2*ik+1) = 1/k2*this%work(2*ik+1)
     end do
 
-    field(this%nc_eta1)= 0.          ! because Im(rhs/2)=0
+    field(this%nc_eta1)= 0.0_f64          ! because Im(rhs/2)=0
  
     ! Backward FFT 
 

@@ -491,73 +491,74 @@ end subroutine Interpolate_disp_nconst_in_2d
 
 
 
-! Note dorder should contain: dorder(1) dimension with displacement (1 or 2), dorder(2) dimension where displacement is non-constant (3 or 4), dorder(3) other of 1 or 2, dorder(4) other of 3 or 4
-subroutine displace_disp_nconst1(interpolator, surplus,  data, dorder,displacement)
-  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(in) :: surplus
-  sll_real64, dimension(:), intent(out) :: data
-  sll_int32, dimension(:), intent(in) :: dorder
-  sll_real64, dimension(:), intent(in) :: displacement
-  sll_int32 :: i3, i4, i2, i1, k1,k2,k3,k4, counter
-  sll_int32, dimension(4) :: ind_order,l
-  sll_real64, dimension(2) :: eta
-  sll_int32, dimension(4) :: no
-  sll_int32, dimension(:,:), allocatable :: ind
-
-  SLL_ALLOCATE(ind(interpolator%max_level,4), i1);
-
-
-  ind_order(dorder(1)) = 0
-  do i3 = 0,interpolator%levels(dorder(3))
-     ind_order(dorder(3)) = i3
-     l(dorder(3)) = i3
-     no(dorder(3)) = max(2**(i3-1),1);
-     do i4 = 0,min(interpolator%max_level - i3,interpolator%levels(dorder(4)))
-        ind_order(dorder(4)) = i4
-        l(dorder(4)) = i4
-        no(dorder(4)) = max(2**(i4-1),1);
-        do i2 = 0,min(interpolator%max_level - i3 -i4,interpolator%levels(dorder(2)))
-           ind_order(dorder(2)) = i2
-           no(dorder(2)) = max(2**(i2-1),1);
-           do i1 = 0,min(interpolator%max_level - i3 - i4 -i2,interpolator%levels(dorder(1)))
-              ind_order(dorder(1)) = i1
-              no(dorder(1)) = max(2**(i1-1),1);
-              do k1 = 0,max(2**(ind_order(dorder(1))-1),1)-1
-                 ind(ind_order(dorder(1))+1,dorder(1)) = k1;
-                 do k2 = 0,max(2**(ind_order(dorder(2))-1),1)-1
-                     ind(ind_order(dorder(2))+1,dorder(2)) = k2;
-                    do k3 = 0,max(2**(ind_order(dorder(3))-1),1)-1
-                       ind(ind_order(dorder(3))+1,dorder(3)) = k3;
-                       do k4 = 0,max(2**(ind_order(dorder(4))-1),1)-1
-                          ind(ind_order(dorder(4))+1,dorder(4)) = k4;
-                          counter = interpolator%index(&
-                               ind_order(1),ind_order(2),ind_order(3),ind_order(4))+&
-                               ind(ind_order(1)+1,1)*no(2)*no(3)*no(4)&
-                               +ind(ind_order(2)+1,2)*no(3)*no(4)+&
-                               ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
-                          eta(1) = interpolator%hierarchy(counter)%coordinate(dorder(1))+&
-                          displacement(2**(i2-1)+k2)
-                          eta(2) = interpolator%hierarchy(counter)%coordinate(dorder(2))
-
-                          l(dorder(2)) = ind_order(dorder(2))
-                          data(counter) =  interpolate_from_2D_hierarchical_surplus( &
-                               interpolator,surplus, eta, dorder, no, ind, l );
-                       end do
-                    end do
-                 end do
-              end do
-           end do
-        end do
-     end do
-  end do
-
-  call interpolator%sparse_grid_interpolator%hierarchical_part(data,2,1,dorder)
-
-
-  call interpolator%sparse_grid_interpolator%dehierarchical(data)
-
-
-end subroutine displace_disp_nconst1
+!PN DEFINED BUT NOT USED
+!! Note dorder should contain: dorder(1) dimension with displacement (1 or 2), dorder(2) dimension where displacement is non-constant (3 or 4), dorder(3) other of 1 or 2, dorder(4) other of 3 or 4
+!subroutine displace_disp_nconst1(interpolator, surplus,  data, dorder,displacement)
+!  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+!  sll_real64, dimension(:), intent(in) :: surplus
+!  sll_real64, dimension(:), intent(out) :: data
+!  sll_int32, dimension(:), intent(in) :: dorder
+!  sll_real64, dimension(:), intent(in) :: displacement
+!  sll_int32 :: i3, i4, i2, i1, k1,k2,k3,k4, counter
+!  sll_int32, dimension(4) :: ind_order,l
+!  sll_real64, dimension(2) :: eta
+!  sll_int32, dimension(4) :: no
+!  sll_int32, dimension(:,:), allocatable :: ind
+!
+!  SLL_ALLOCATE(ind(interpolator%max_level,4), i1);
+!
+!
+!  ind_order(dorder(1)) = 0
+!  do i3 = 0,interpolator%levels(dorder(3))
+!     ind_order(dorder(3)) = i3
+!     l(dorder(3)) = i3
+!     no(dorder(3)) = max(2**(i3-1),1);
+!     do i4 = 0,min(interpolator%max_level - i3,interpolator%levels(dorder(4)))
+!        ind_order(dorder(4)) = i4
+!        l(dorder(4)) = i4
+!        no(dorder(4)) = max(2**(i4-1),1);
+!        do i2 = 0,min(interpolator%max_level - i3 -i4,interpolator%levels(dorder(2)))
+!           ind_order(dorder(2)) = i2
+!           no(dorder(2)) = max(2**(i2-1),1);
+!           do i1 = 0,min(interpolator%max_level - i3 - i4 -i2,interpolator%levels(dorder(1)))
+!              ind_order(dorder(1)) = i1
+!              no(dorder(1)) = max(2**(i1-1),1);
+!              do k1 = 0,max(2**(ind_order(dorder(1))-1),1)-1
+!                 ind(ind_order(dorder(1))+1,dorder(1)) = k1;
+!                 do k2 = 0,max(2**(ind_order(dorder(2))-1),1)-1
+!                     ind(ind_order(dorder(2))+1,dorder(2)) = k2;
+!                    do k3 = 0,max(2**(ind_order(dorder(3))-1),1)-1
+!                       ind(ind_order(dorder(3))+1,dorder(3)) = k3;
+!                       do k4 = 0,max(2**(ind_order(dorder(4))-1),1)-1
+!                          ind(ind_order(dorder(4))+1,dorder(4)) = k4;
+!                          counter = interpolator%index(&
+!                               ind_order(1),ind_order(2),ind_order(3),ind_order(4))+&
+!                               ind(ind_order(1)+1,1)*no(2)*no(3)*no(4)&
+!                               +ind(ind_order(2)+1,2)*no(3)*no(4)+&
+!                               ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
+!                          eta(1) = interpolator%hierarchy(counter)%coordinate(dorder(1))+&
+!                          displacement(2**(i2-1)+k2)
+!                          eta(2) = interpolator%hierarchy(counter)%coordinate(dorder(2))
+!
+!                          l(dorder(2)) = ind_order(dorder(2))
+!                          data(counter) =  interpolate_from_2D_hierarchical_surplus( &
+!                               interpolator,surplus, eta, dorder, no, ind, l );
+!                       end do
+!                    end do
+!                 end do
+!              end do
+!           end do
+!        end do
+!     end do
+!  end do
+!
+!  call interpolator%sparse_grid_interpolator%hierarchical_part(data,2,1,dorder)
+!
+!
+!  call interpolator%sparse_grid_interpolator%dehierarchical(data)
+!
+!
+!end subroutine displace_disp_nconst1
 
 
 ! helper functions
@@ -626,67 +627,68 @@ end subroutine displace_disp_nconst1
 
 
 
- function interpolate_from_2D_hierarchical_surplus( interpolator, surplus,eta, dorder,no_in,ind,l ) result(val)
-   class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
-   sll_real64, dimension(:), intent(in) :: surplus
-    sll_int32 :: j,l1,l2,level
-    sll_real64 :: val
-    sll_real64,dimension(:), intent(in) :: eta
-    sll_int32, dimension(:), intent(in) ::dorder
-    sll_real64,dimension(4) :: eta_norm
-    sll_real64,dimension(4) :: phi
-    sll_int32, dimension(:), intent(inout) :: l
-    sll_int32, dimension(:), intent(in) :: no_in
-    sll_int32, dimension(4) :: no
-    sll_int32,dimension(:,:), intent(inout) :: ind
-    sll_real64 :: scale
-    sll_int32 :: index,maxl2
-
-    val = 0.0_f64
-    ind(1:2,1:4) = 0
-    no(dorder(3)) = no_in(dorder(3));
-    no(dorder(4)) = no_in(dorder(4));
-
-! Note this could be organized more efficiently by reusing data
-    do j=1,2
-       eta_norm(j) = (eta(j)-interpolator%eta_min(dorder(j)))/interpolator%length(dorder(j))
-       eta_norm(j) = modulo(eta_norm(j),1.0_f64)
-       scale = 0.5_f64
-       do level = 0, interpolator%max_level
-          ind(level+1,dorder(j)) = ind(level,dorder(j))*2
-
-          if (eta_norm(j)> scale*(ind(level+1,dorder(j))+1)) then
-             ind(level+1,dorder(j)) = ind(level+1,dorder(j))+1
-          end if
-          scale = scale*0.5_f64
-       end do
-    end do
-
-
-
-    maxl2 = l(dorder(2));
-    do l1 = 0, min(interpolator%max_level-l(dorder(3))-l(dorder(4)),interpolator%levels(dorder(1)))
-       l(dorder(1)) = l1
-       no(dorder(1)) = max(2**(l1-1),1)
-       do l2 = 0,min(maxl2,interpolator%max_level-l(dorder(3))-l(dorder(4))-l1)
-          l(dorder(2)) = l2
-          no(dorder(2)) = max(2**(l2-1),1)
-          index = interpolator%index(l(1),l(2),l(3),l(4))+ind(l(1)+1,1)*no(2)*no(3)*no(4)&
-               +ind(l(2)+1,2)*no(3)*no(4)+ind(l(3)+1,3)*no(4)+ind(l(4)+1,4)
-          do j=1,2
-             call interpolator%basis_function(real(2**(max(l(dorder(j)),1)),f64)*eta_norm(j)&
-                  -real(2*ind(l(dorder(j))+1,dorder(j)),f64)-1.0_f64, phi(j),&
-                  interpolator%hierarchy(index)%function_type(dorder(j)))
-          end do
-          val = val + surplus(index)&
-               *phi(1)*phi(2)
-          !print*, index, val, phi(1)
-
-       end do
-    end do
-
-
-  end function interpolate_from_2D_hierarchical_surplus
+!PN DEFINED BUT NOT USED
+! function interpolate_from_2D_hierarchical_surplus( interpolator, surplus,eta, dorder,no_in,ind,l ) result(val)
+!   class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+!   sll_real64, dimension(:), intent(in) :: surplus
+!    sll_int32 :: j,l1,l2,level
+!    sll_real64 :: val
+!    sll_real64,dimension(:), intent(in) :: eta
+!    sll_int32, dimension(:), intent(in) ::dorder
+!    sll_real64,dimension(4) :: eta_norm
+!    sll_real64,dimension(4) :: phi
+!    sll_int32, dimension(:), intent(inout) :: l
+!    sll_int32, dimension(:), intent(in) :: no_in
+!    sll_int32, dimension(4) :: no
+!    sll_int32,dimension(:,:), intent(inout) :: ind
+!    sll_real64 :: scale
+!    sll_int32 :: index,maxl2
+!
+!    val = 0.0_f64
+!    ind(1:2,1:4) = 0
+!    no(dorder(3)) = no_in(dorder(3));
+!    no(dorder(4)) = no_in(dorder(4));
+!
+!! Note this could be organized more efficiently by reusing data
+!    do j=1,2
+!       eta_norm(j) = (eta(j)-interpolator%eta_min(dorder(j)))/interpolator%length(dorder(j))
+!       eta_norm(j) = modulo(eta_norm(j),1.0_f64)
+!       scale = 0.5_f64
+!       do level = 0, interpolator%max_level
+!          ind(level+1,dorder(j)) = ind(level,dorder(j))*2
+!
+!          if (eta_norm(j)> scale*(ind(level+1,dorder(j))+1)) then
+!             ind(level+1,dorder(j)) = ind(level+1,dorder(j))+1
+!          end if
+!          scale = scale*0.5_f64
+!       end do
+!    end do
+!
+!
+!
+!    maxl2 = l(dorder(2));
+!    do l1 = 0, min(interpolator%max_level-l(dorder(3))-l(dorder(4)),interpolator%levels(dorder(1)))
+!       l(dorder(1)) = l1
+!       no(dorder(1)) = max(2**(l1-1),1)
+!       do l2 = 0,min(maxl2,interpolator%max_level-l(dorder(3))-l(dorder(4))-l1)
+!          l(dorder(2)) = l2
+!          no(dorder(2)) = max(2**(l2-1),1)
+!          index = interpolator%index(l(1),l(2),l(3),l(4))+ind(l(1)+1,1)*no(2)*no(3)*no(4)&
+!               +ind(l(2)+1,2)*no(3)*no(4)+ind(l(3)+1,3)*no(4)+ind(l(4)+1,4)
+!          do j=1,2
+!             call interpolator%basis_function(real(2**(max(l(dorder(j)),1)),f64)*eta_norm(j)&
+!                  -real(2*ind(l(dorder(j))+1,dorder(j)),f64)-1.0_f64, phi(j),&
+!                  interpolator%hierarchy(index)%function_type(dorder(j)))
+!          end do
+!          val = val + surplus(index)&
+!               *phi(1)*phi(2)
+!          !print*, index, val, phi(1)
+!
+!       end do
+!    end do
+!
+!
+!  end function interpolate_from_2D_hierarchical_surplus
 
 
 
@@ -893,20 +895,21 @@ end subroutine set_hierarchy_info
 !------------------------------------------------------------------------------!
 
 !------------------------------------------------------------------------------!
-!> Functions to evaluate fg on sg and sg on fg
-subroutine fg_to_sg(interpolator,fg_values,sg_values)
-sll_real64, dimension(:,:,:,:), intent(in) :: fg_values
-sll_real64, dimension(:), intent(out) :: sg_values
-class(sparse_grid_interpolator_4d), intent(in) :: interpolator
-sll_int32 :: j
-sll_int32, dimension(4) :: fg_ind
-
-do j=1,interpolator%size_basis
-   fg_ind = fg_index(interpolator,j);
-   sg_values(j) = fg_values(fg_ind(1),fg_ind(2),fg_ind(3), fg_ind(4));
-end do
-
-end subroutine fg_to_sg
+!PN DEFINED BUT NOT USED
+!!> Functions to evaluate fg on sg and sg on fg
+!subroutine fg_to_sg(interpolator,fg_values,sg_values)
+!sll_real64, dimension(:,:,:,:), intent(in) :: fg_values
+!sll_real64, dimension(:), intent(out) :: sg_values
+!class(sparse_grid_interpolator_4d), intent(in) :: interpolator
+!sll_int32 :: j
+!sll_int32, dimension(4) :: fg_ind
+!
+!do j=1,interpolator%size_basis
+!   fg_ind = fg_index(interpolator,j);
+!   sg_values(j) = fg_values(fg_ind(1),fg_ind(2),fg_ind(3), fg_ind(4));
+!end do
+!
+!end subroutine fg_to_sg
 
 
 !> Compute the index of a sparse grid node on level "level" with index "index_on_level" on full grid with of max_level

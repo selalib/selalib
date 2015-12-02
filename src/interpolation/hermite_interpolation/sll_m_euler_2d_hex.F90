@@ -405,6 +405,11 @@ module  sll_m_euler_2d_hex
     sll_real64              :: dxuxn_loc,dyuxn_loc,dxuyn_loc,dyuyn_loc
     sll_real64              :: dxuxn_1_loc,dyuxn_1_loc,dxuyn_1_loc,dyuyn_1_loc
     
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = dxuxn(1)+dxuyn(1)+dyuxn(1)+dyuyn(1)
+#endif
+
     
     uxn1 = 3._f64*uxn(i) - 3._f64*uxn_1(i) + uxn_2(i)
     uyn1 = 3._f64*uyn(i) - 3._f64*uyn_1(i) + uyn_2(i)
@@ -476,6 +481,10 @@ module  sll_m_euler_2d_hex
     sll_real64              :: dxuxn_loc,dyuxn_loc,dxuyn_loc,dyuyn_loc
     sll_real64              :: dxuxn_1_loc,dyuxn_1_loc,dxuyn_1_loc,dyuyn_1_loc
     sll_real64              :: dxuxn_2_loc,dyuxn_2_loc,dxuyn_2_loc,dyuyn_2_loc
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = dxuxn(1)+dxuyn(1)+dyuxn(1)+dyuyn(1)+uyn_3(1)
+#endif
 
 
     uxn1 = 4._f64*uxn(i) - 6._f64*uxn_1(i) + 4._f64*uxn_2(i) - uxn_3(i)

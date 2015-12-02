@@ -88,7 +88,7 @@ contains
     sll_int32, intent(in)  :: N_points  
     sll_real64, dimension(:), intent(in)  :: lambda
     sll_real64, dimension(:), intent(in)  :: T_i
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
 
 
           qn%quasineutral => new_plan_qn_polar_splines( &

@@ -18,7 +18,6 @@ module sll_m_finite_difference_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_interpolators_1d_base_macros.h"
 use sll_m_interpolators_1d_base
 implicit none
 private

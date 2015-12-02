@@ -6,7 +6,7 @@ program validation
 integer, parameter :: lda = 500, ldstrt = 40
 integer, parameter :: lwork = ldstrt**2 + ldstrt*(lda+5) + 5*lda + 1
 integer, parameter :: matvec=1, precondLeft=2, precondRight=3, dotProd=4
-real(8), parameter :: ZERO = 0.0d0, ONE = 1.0d0
+real(8), parameter :: ZERO = 0.0_8, ONE = 1.0_8
 
 integer :: i, j, n, m
 integer :: revcom, colx, coly, colz, nbscal
@@ -38,11 +38,11 @@ endif
 
 a = ZERO
 do i = 1,n
-  a(i,i) = 4.0d0
+  a(i,i) = 4.0_8
 enddo
 do i = 1,n-1
-  a(i,i+1) = -2.0d0
-  a(i+1,i) = -1.0d0
+  a(i,i+1) = -2.0_8
+  a(i+1,i) = -1.0_8
 enddo
 
 !*********************************
@@ -80,7 +80,7 @@ work(1:n) = ONE
 
 call dgemv('N',n,n,ONE,A,lda,work(1),1,ZERO,work(n+1),1)
 do j = 1,n
-  work(j) = ONE/2.0
+  work(j) = ONE/2.0_8
 enddo
 !*****************************************
 !** Reverse communication implementation

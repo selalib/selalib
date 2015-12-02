@@ -27,10 +27,10 @@ module sll_m_simple_pic_4d_group
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_accumulators.h"
 
 ! #include "particle_representation.h"   NEEDED?
 
+use sll_m_accumulators
   use sll_m_working_precision
   use sll_m_simple_pic_4d_particle
   use sll_m_cartesian_meshes
@@ -120,6 +120,10 @@ contains
     class( sll_simple_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
+#ifdef DEBUG
+    sll_int32 :: dummy
+    dummy = i
+#endif
 
     ! same charge for all particles
     r = self%species%q * self%common_weight
@@ -132,6 +136,10 @@ contains
     class( sll_simple_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
+#ifdef DEBUG
+    sll_int32 :: dummy
+    dummy = i
+#endif
 
     ! same mass for all particles
     r = self%species%m * self%common_weight
@@ -147,11 +155,11 @@ contains
 
     ! get x
     r(1) = self%space_mesh_2d%eta1_min + self%space_mesh_2d%delta_eta1*(                            &
-                self%particle_list(i)%offset_x + real(self%particle_list(i)%i_cell_x - 1, f64)      &
+                real(self%particle_list(i)%offset_x + self%particle_list(i)%i_cell_x - 1, f64)      &
             )
     ! get y
     r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*(                            &
-                self%particle_list(i)%offset_y + real(self%particle_list(i)%i_cell_y - 1, f64)      &
+                real(self%particle_list(i)%offset_y + self%particle_list(i)%i_cell_y - 1, f64)      &
             )
 
   end function simple_pic_4d_get_x
@@ -266,6 +274,7 @@ contains
     sll_real64                      , intent( in    ) :: s
 
     print*, "Error (8654354237645) -- this subroutine is not implemented for simple_pic_4d_group objects"
+    print*, i, s, storage_size(self)
     stop
 
   end subroutine simple_pic_4d_set_particle_weight
@@ -291,7 +300,7 @@ contains
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
-    sll_int32                       :: ierr
+    !sll_int32                       :: ierr
 
     ! for the moment we only use the landau damping initial density
     ! so we don't use the initial_density_identifier, but eventually it should say which initial density is used
@@ -303,6 +312,9 @@ contains
       self%number_particles,                                    &
       rand_seed, rank, world_size                               &
     )
+   return
+   !PN ADD TO PREVENT WARNING
+   print*, initial_density_identifier
 
    end subroutine simple_pic_4d_initializer
 
@@ -322,14 +334,14 @@ contains
 
     call reset_charge_accumulator_to_zero ( charge_accumulator )
 
-    deposited_charge = 0
+    deposited_charge = 0.0_f64
 
     particle_charge = simple_pic_4d_get_common_charge(self)
     do i_part = 1, self%number_particles
 
       particle => self%particle_list( i_part )
-      dx = particle%offset_x
-      dy = particle%offset_y
+      dx = real(particle%offset_x,f64)
+      dy = real(particle%offset_y,f64)
       i_cell = self%get_cell_index(i_part)
       charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
 
@@ -370,6 +382,7 @@ contains
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
     print*, " WARNING (765764768675) -- remap routine called for a group of simple_pic_4d particles has no effect...              "
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
+    print*, storage_size(self)
 
   end subroutine simple_pic_4d_remap
 
@@ -379,11 +392,12 @@ contains
     class( sll_simple_pic_4d_group ),   intent( inout ) :: self
     character(len=*),                   intent(in)      :: array_name !< field name
     sll_int32,                          intent(in)      :: iplot      !< plot counter
-    character(len=4)                                    :: cplot
+    !character(len=4)                                    :: cplot
 
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
     print*, " WARNING (956542375763) -- this function (simple_pic_4d_visualize_f_slice_x_vx) does nothing, need to be implemented!"
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
+    print*, len(array_name), iplot, storage_size(self)
 
   end subroutine simple_pic_4d_visualize_f_slice_x_vx
 

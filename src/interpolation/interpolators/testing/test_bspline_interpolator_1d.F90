@@ -58,10 +58,10 @@ normL2 = sum((y_int-y_ref)**2*h)
 normH1 = sum((dy_int-dy_ref)**2*h)
   
 print*,'--------------------------------------------'
-print*,' Average error in nodes', sum(abs(y_int-y_ref))/NPTS
+print*,' Average error in nodes', sum(abs(y_int-y_ref))/real(NPTS,f64)
 print*,' Max     error in nodes', maxval(abs(y_int-y_ref))
 print*,'--------------------------------------------'
-print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/NPTS
+print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/real(NPTS,f64)
 print*,' Max     error in nodes first derivative',maxval(abs(dy_int-dy_ref))
 print*,'--------------------------------------------'
 print*,' Norm L2 error ', sqrt(normL2), h**(SPL_DEG)
@@ -86,7 +86,7 @@ contains
     sll_real64 :: x
     sll_real64 :: f
   
-    f = sin(2.0_f64*sll_pi*x)+1
+    f = sin(2.0_f64*sll_pi*x)+1.0_f64
   
   end function f
   

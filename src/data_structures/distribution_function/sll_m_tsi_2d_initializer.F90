@@ -97,10 +97,10 @@ contains
              print*, 'f_x1x2_tsi_2d:',  init_obj%data_position, 'not defined'
           end if
           if (init_obj%is_delta_f==0) then ! delta_f code
-             data_out(i,j) = (1+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
+             data_out(i,j) = (1.0_f64+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
                *(exp(-.5_f64*(v-v0)**2)+ exp(-.5_f64*(v+v0)**2))
           else 
-             data_out(i,j) = (1+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
+             data_out(i,j) = (1.0_f64+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
                   *(exp(-.5_f64*(v-v0)**2)+ exp(-.5_f64*(v+v0)**2))
           end if
        end do

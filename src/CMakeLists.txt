@@ -5,6 +5,7 @@ ENDIF( MPI_ENABLED )
 ADD_SUBDIRECTORY( add_ons )
 ADD_SUBDIRECTORY( data_structures )
 ADD_SUBDIRECTORY( field_solvers )
+ADD_SUBDIRECTORY( initialization_tools )
 ADD_SUBDIRECTORY( interfaces )
 ADD_SUBDIRECTORY( interpolation )
 ADD_SUBDIRECTORY( io )
@@ -29,6 +30,3 @@ IF( BUILD_SIMULATIONS )
     "simulations install dir")
   ADD_SUBDIRECTORY( simulations )
 ENDIF( BUILD_SIMULATIONS )
-
-# Other directories
-ADD_SUBDIRECTORY( namelist_initialization ) # A new project. Discussion is needed

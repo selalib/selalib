@@ -18,9 +18,13 @@
 module sll_m_fdistribu4d_dk
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
 
   use sll_m_constants
   use sll_m_boundary_condition_descriptors
+  use sll_m_cubic_splines
+  use sll_m_common_coordinate_transformations, only : &
+    polar_eta1, polar_eta2
 
   implicit none
 
@@ -241,8 +245,9 @@ module sll_m_fdistribu4d_dk
     sll_real64, intent(in) :: n0_r
     sll_real64, intent(in) :: Ti_r
 
+    SLL_ASSERT(r >= 0.0)
     val = n0_r/sqrt(2._f64*sll_pi*Ti_r) * &
-      exp(-0.5_f64*vpar**2/Ti_r)
+      exp(-0.5_f64*vpar**2/Ti_r) 
   end function compute_feq_val
 
 
@@ -282,9 +287,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_r(r_grid,func_r, &
     xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
     sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
@@ -323,10 +325,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_rtheta(r_grid,theta_grid, &
     func_rtheta,xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_constants
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1, polar_eta2
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: theta_grid
     sll_real64, dimension(:,:), intent(in)  :: func_rtheta
@@ -386,7 +384,7 @@ module sll_m_fdistribu4d_dk
     sll_int32 :: ix, iy, ivpar
 
     Npt1  = size(xgrid_2d,1)
-    Npt2  = size(xgrid_2d,2)
+    Npt2  = size(ygrid_2d,2)
     Nvpar = size(vpar_grid,1)
 
     do ivpar = 1,Nvpar

@@ -199,7 +199,7 @@ contains
     character(len=*)      , intent(in   ) :: field_path
 
     character(len=:), allocatable    :: dims_str
-    type(sll_t_xml_element), pointer :: grid, field, dataitem
+    type(sll_t_xml_element), pointer :: field, dataitem
 
     ! Prepare strings with data
     call sll_s_ints_to_string( self%grids( grid_id )%dims, dims_str )

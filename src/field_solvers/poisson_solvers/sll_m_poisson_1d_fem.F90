@@ -178,7 +178,8 @@ contains
 
         !FFT--------------------------------------------------------------------------------------
         !To get the same output as in the MATLAB example use
-        SLL_CLEAR_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
         this%forward_fftplan => fft_new_plan(this%num_cells,this%fem_solution,this%stiffn_matrix_first_line_fourier, &
             FFT_FORWARD+FFT_NORMALIZE)
         this%backward_fftplan=>fft_new_plan(this%num_cells,this%stiffn_matrix_first_line_fourier,this%fem_solution, &
@@ -192,13 +193,15 @@ contains
         call sll_poisson_1d_fem_assemble_stiffn_matrix(this,ierr)
         !prepare fourier transformation for stiffness matrix
 
-        SLL_CLEAR_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        this%stiffn_matrix_first_line_fourier=(0._f64,0._f64)
         call sll_poisson_1d_fft_precomputation(this,this%stiffn_matrix_first_line, &
             this%stiffn_matrix_first_line_fourier, ierr)
         !Assemble mass matrix for L2-Norm
         call sll_poisson_1d_fem_assemble_mass_matrix(this, ierr)
 
-        SLL_CLEAR_ALLOCATE(this%mass_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        SLL_ALLOCATE(this%mass_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        this%mass_matrix_first_line_fourier=(0._f64,0._f64)
         call sll_poisson_1d_fft_precomputation(this,this%mass_matrix_first_line, &
             this%mass_matrix_first_line_fourier, ierr)
 
@@ -213,7 +216,7 @@ contains
 
         this%fem_solution=solution_vector
         !Since the solution has been set we have to reset the seminorm
-        this%seminorm=-1
+        this%seminorm=-1._f64
     endsubroutine
 
     !<Calculates the inhomogenity b={<f, \phi_i>, i =1, ... N} with given function f
@@ -233,12 +236,12 @@ contains
         sll_real64,dimension(2) :: cellmargin
         sll_int32 :: ierr=0
         !Set right hand side to zero
-        rhs=0
+        rhs=0._f64
         !Get Gauss Legendre points and weights to be exact for the selected spline degree
         !Note a Bspline is a piecewise polynom
         if ( .not. present(n_quadrature_points_user)) then
             !Gauss Legendre, 2m-1
-            n_quadrature_points=ceiling(0.5_f64*real(2*this%spline_degree+1))
+            n_quadrature_points=ceiling(0.5_f64*real(2*this%spline_degree+1,8))
             !            !Gauss Lobatto, 2m-3
             !            n_quadrature_points=ceiling(0.5_f64*real(2*spline_degree+3))
         else
@@ -318,7 +321,7 @@ contains
         !this is the first line of the matrix
         ! (c_1  0 0  0  .... c_4   c_3  c_2)
         !Note this only works because the period is symmetric
-        circulantvector=0
+        circulantvector=0._f64
         circulantvector(1)=circulant_matrix_first_line(1)
         circulantvector(2:N)=circulant_matrix_first_line(N:2:-1)
         circulantvector=circulantvector
@@ -372,7 +375,7 @@ contains
         !Get Gauss Legendre points and weights to be exact for the selected spline degree
         !Note a Bspline is a piecewise polynom
         if ( .not. present(quadrature_points)) then
-            quadrature_npoints=ceiling(0.5_f64*real(2*degree+1))
+            quadrature_npoints=ceiling(0.5_f64*real(2*degree+1,8))
             !!!JUST FOR DEBUGGING
             !quadrature_npoints=10
         else
@@ -501,11 +504,11 @@ contains
     subroutine solve_poisson_1d_fem_rhs_dirichlet(this, rhs)
         class(poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in)      :: rhs
-        sll_real64, dimension(size(rhs)) :: rhs_bc
+        !sll_real64, dimension(size(rhs)) :: rhs_bc
         sll_real64, dimension(this%spline_degree+1) :: femperiod
         sll_int32 :: N ,KD
         sll_real64, dimension(this%spline_degree*3 +1, this%num_cells):: AB
-        sll_int32 :: idx,jdx ,ierr
+        sll_int32 :: idx,ierr
         sll_int32, dimension( this%num_cells ) :: IPIV
 
        femperiod=sll_gen_fem_bspline_matrix_period ( this%bspline , &
@@ -514,12 +517,12 @@ contains
         KD=this%spline_degree
         this%fem_solution =rhs
 
-        AB=0
+        AB=0._f64
         !Set up the diaognal for dirichlet
         AB(2*KD+1,1)=1.0_f64
-         this%fem_solution(1)=0
+         this%fem_solution(1)=0._f64
         AB(2*KD+1,N)=1.0_f64
-         this%fem_solution(N)=0
+         this%fem_solution(N)=0._f64
         AB(2*KD+1,2:N-1)=femperiod(1)
 
 
@@ -590,15 +593,17 @@ contains
 
         !Determine dimension of problem
 
-        SLL_CLEAR_ALLOCATE(constant_factor_fourier(1:N/2+1), ierr)
-        SLL_CLEAR_ALLOCATE(data_complex(1:N/2+1),ierr)
-        constant_factor=0
+        SLL_ALLOCATE(constant_factor_fourier(1:N/2+1), ierr)
+        constant_factor_fourier = (0._f64,0._f64)
+        SLL_ALLOCATE(data_complex(1:N/2+1),ierr)
+        data_complex = (0._f64,0._f64)
+        constant_factor=0._f64
         constant_factor=rightside
 
         call fft_apply_plan(this%forward_fftplan,constant_factor,constant_factor_fourier)
         !constant_factor_fourier(1)=0
         data_complex=constant_factor_fourier/(matrix_fl_fourier)
-        data_complex(1)=0
+        data_complex(1)=(0._f64,0._f64)
         SLL_DEALLOCATE_ARRAY(constant_factor_fourier,ierr)
 
         call fft_apply_plan(this%backward_fftplan,data_complex,solution)
@@ -637,13 +642,13 @@ contains
         SLL_ASSERT( size(knots_eval)==size(realvals))
         SLL_ASSERT( this%num_cells==size(bspline_vector))
 
-        realvals=0
+        realvals=0._f64
 
         cell=sll_cell(this%cartesian_mesh, knots_eval)
         !cell= bspline_fem_solver_1d_cell_number(knots_mesh, knots_eval(eval_idx))
         !Loop over all points to evaluate
         !This should be vectorizzed
-        do eval_idx=1,size(knots_eval)
+        do eval_idx=1,int(size(knots_eval),i64)
             !Get the values for the spline at the eval point
             b_contribution(:,eval_idx)=interpolfun(this%bspline,cell(eval_idx), knots_eval(eval_idx))
         enddo
@@ -740,7 +745,7 @@ contains
 
         call fft_apply_plan(this%forward_fftplan,rhs,data_complex)
         data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
-        data_complex(1)=0.0_f64
+        data_complex(1)=(0._f64,0._f64)
         call fft_apply_plan(this%backward_fftplan,data_complex,rhs)
 
         !!!
@@ -824,7 +829,7 @@ contains
     subroutine poisson_1d_fem_tr_stiffinv_massm(this)
               class(poisson_1d_fem),intent(inout) :: this
         sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
-         sll_int32 :: ierr
+         !sll_int32 :: ierr
 
 
 !        call sll_poisson_1d_fft_precomputation&
@@ -837,7 +842,7 @@ contains
 !             stop
         data_complex=this%mass_matrix_first_line_fourier/this%stiffn_matrix_first_line_fourier
         !Remove the offset
-        data_complex(1)=0
+        data_complex(1)=(0._f64,0._f64)
 
 
         !The factor two comes from the real to complex fourier transform and
@@ -866,7 +871,7 @@ contains
 
         call fft_apply_plan(this%forward_fftplan,solution,data_complex)
         data_complex=data_complex*(this%mass_matrix_first_line_fourier)
-        data_complex(1)=0.0_f64
+        data_complex(1)=(0._f64,0._f64)
         call fft_apply_plan(this%backward_fftplan,data_complex,solution)
         solution=solution/(N)
         l2norm=dot_product(this%fem_solution, solution )
@@ -920,7 +925,7 @@ contains
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
         sll_int :: b_idx
         sll_int :: b_contrib_idx
-        rhs=0
+        rhs=0._f64
 
         SLL_ASSERT( (size(pweight)==size(ppos) .OR. size(pweight)==1))
         !        if (present(interpolfun_user)) then
@@ -975,8 +980,8 @@ contains
         enddo
 
         if (  this%boundarycondition==SLL_DIRICHLET ) then
-            rhs(1:this%bspline%degree+1)=0
-            rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0
+            rhs(1:this%bspline%degree+1)=0._f64
+            rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0._f64
         endif
     endfunction
 

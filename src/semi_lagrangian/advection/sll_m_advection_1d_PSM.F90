@@ -380,6 +380,9 @@ contains
     
     !this version is not optimized
     
+    return
+    SLL_ASSERT(storage_size(adv)>0)
+    output = input + A * dt
 
           
   end subroutine PSM_advect_1d_constant

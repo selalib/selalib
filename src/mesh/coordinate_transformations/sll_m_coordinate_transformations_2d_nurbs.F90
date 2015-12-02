@@ -23,6 +23,7 @@ module sll_m_coordinate_transformations_2d_nurbs
   use sll_m_cubic_spline_interpolator_2d
   use sll_m_gnuplot
   use sll_m_interpolators_2d_base
+  use sll_m_arbitrary_degree_spline_interpolator_2d
   use sll_m_coordinate_transformation_2d_base
   use sll_m_deboor_splines_2d
   use sll_m_constants, only : &
@@ -122,7 +123,6 @@ contains
   end function new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_m_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
@@ -511,10 +511,10 @@ contains
     sll_int32, intent(in) :: j
     sll_real64  :: eta1
     sll_real64  :: eta2
-    sll_real64  :: delta1
-    sll_real64  :: delta2
-    sll_real64  :: eta1_min
-    sll_real64  :: eta2_min
+    !sll_real64  :: delta1
+    !sll_real64  :: delta2
+    !sll_real64  :: eta1_min
+    !sll_real64  :: eta2_min
     
     lm => transf%get_cartesian_mesh()
     SLL_ASSERT( i <= lm%num_cells1 )

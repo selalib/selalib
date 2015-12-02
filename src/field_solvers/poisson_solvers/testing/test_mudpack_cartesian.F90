@@ -34,17 +34,17 @@ SLL_CLEAR_ALLOCATE(phi( 1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(rhs( 1:nc_eta1+1,1:nc_eta2+1),error)
 
 !set end points of solution rectangle in (x,y) space
-eta1_min = 0.0
-eta1_max = 4.0
-eta2_min = 0.0
-eta2_max = 4.0
+eta1_min = 0.0_f64
+eta1_max = 4.0_f64
+eta2_min = 0.0_f64
+eta2_max = 4.0_f64
 
-delta_eta1 = (eta1_max-eta1_min)/float(nc_eta1)
-delta_eta2 = (eta2_max-eta2_min)/float(nc_eta2)
+delta_eta1 = (eta1_max-eta1_min)/dble(nc_eta1)
+delta_eta2 = (eta2_max-eta2_min)/dble(nc_eta2)
 do i=1,nc_eta1+1
    do j=1,nc_eta2+1
-      eta1(i,j) = eta1_min+float(i-1)*delta_eta1
-      eta2(i,j) = eta2_min+float(j-1)*delta_eta2
+      eta1(i,j) = eta1_min+dble(i-1)*delta_eta1
+      eta2(i,j) = eta2_min+dble(j-1)*delta_eta2
    end do
 end do
 
@@ -73,17 +73,17 @@ call delete_mudpack_cartesian(periodic)
 
 print*,"PASSED"
 
-eta1_min = -5.0
-eta1_max =  5.0
-eta2_min = -5.0
-eta2_max =  5.0
+eta1_min = -5.0_f64
+eta1_max =  5.0_f64
+eta2_min = -5.0_f64
+eta2_max =  5.0_f64
 
-delta_eta1 = (eta1_max-eta1_min)/float(nc_eta1)
-delta_eta2 = (eta2_max-eta2_min)/float(nc_eta2)
+delta_eta1 = (eta1_max-eta1_min)/dble(nc_eta1)
+delta_eta2 = (eta2_max-eta2_min)/dble(nc_eta2)
 do i=1,nc_eta1+1
    do j=1,nc_eta2+1
-      eta1(i,j) = eta1_min+float(i-1)*delta_eta1
-      eta2(i,j) = eta2_min+float(j-1)*delta_eta2
+      eta1(i,j) = eta1_min+dble(i-1)*delta_eta1
+      eta2(i,j) = eta2_min+dble(j-1)*delta_eta2
    end do
 end do
      

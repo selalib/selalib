@@ -5,6 +5,9 @@ program remap_test_4d
 #include "sll_working_precision.h"
   use sll_m_utilities, only : &
        is_power_of_two
+  use iso_fortran_env, only: &
+       output_unit
+
   implicit none
 
   ! Test of the 4D remapper takes a 4D array whose global size N1*N2*N3*N4,
@@ -61,7 +64,7 @@ program remap_test_4d
      print *, '--------------- REMAP 4D test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -72,7 +75,7 @@ program remap_test_4d
 
   ok = 1
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -216,7 +219,7 @@ program remap_test_4d
                     print*, 'program stopped by failure'
                     stop
                  end if
-                 call flush(6)
+                 flush( output_unit )
               end do
            end do
         end do
@@ -238,9 +241,9 @@ program remap_test_4d
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   

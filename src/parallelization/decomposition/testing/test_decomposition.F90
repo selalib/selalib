@@ -111,20 +111,20 @@ program test_decomposition
    val = real(topology%neighbors(1), kind=f64)
    check(1) = &
       all( f6d(decomposition%local%lo(1):decomposition%local%mn(1)-1, &
-			      decomposition%local%mn(2):decomposition%local%mx(2),   &
-			      decomposition%local%mn(3):decomposition%local%mx(3),   &
-			      decomposition%local%mn(4):decomposition%local%mx(4),   &
-   			   decomposition%local%mn(5):decomposition%local%mx(5),   &
-	   		   decomposition%local%mn(6):decomposition%local%mx(6)) == val )
+            decomposition%local%mn(2):decomposition%local%mx(2),   &
+            decomposition%local%mn(3):decomposition%local%mx(3),   &
+            decomposition%local%mn(4):decomposition%local%mx(4),   &
+            decomposition%local%mn(5):decomposition%local%mx(5),   &
+            decomposition%local%mn(6):decomposition%local%mx(6)) == val )
    ! 4b --- first dimension, right neighbor
    val = real(topology%neighbors(2), kind=f64)
    check(2) = &
       all( f6d(decomposition%local%mx(1)+1:decomposition%local%hi(1), &
-			      decomposition%local%mn(2):decomposition%local%mx(2),   &
-			      decomposition%local%mn(3):decomposition%local%mx(3),   &
-			      decomposition%local%mn(4):decomposition%local%mx(4),   &
-   			   decomposition%local%mn(5):decomposition%local%mx(5),   &
-	   		   decomposition%local%mn(6):decomposition%local%mx(6)) == val )
+            decomposition%local%mn(2):decomposition%local%mx(2),   &
+            decomposition%local%mn(3):decomposition%local%mx(3),   &
+            decomposition%local%mn(4):decomposition%local%mx(4),   &
+            decomposition%local%mn(5):decomposition%local%mx(5),   &
+            decomposition%local%mn(6):decomposition%local%mx(6)) == val )
    ! 4c --- second dimension, left neighbor
    val = real(topology%neighbors(3), kind=f64)
    check(3) = &

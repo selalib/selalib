@@ -4,7 +4,6 @@ use sll_m_descriptors
 
 implicit none
 
-sll_int32 :: idx
 type(sll_vlasovpoisson_sim) :: testcase
 
 

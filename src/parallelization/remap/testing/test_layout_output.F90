@@ -26,6 +26,8 @@ program test_layout_output
   use sll_m_hdf5_io_parallel
   use sll_m_utilities, only : &
        is_power_of_two
+  use iso_fortran_env, only: &
+       output_unit
 
   implicit none
 
@@ -57,14 +59,14 @@ program test_layout_output
   character(len=9), parameter               :: filename = "layout.h5"
 
   sll_int32, parameter :: rank = 3
-  integer(HSIZE_T),  dimension(rank) :: dims = (/ni,nj,nk/)
+  integer(HSIZE_T),  dimension(rank) :: dims = (/int(ni,HSIZE_T),int(nj,HSIZE_T),int(nk,HSIZE_T)/)
   sll_int32, dimension(:,:,:), allocatable :: array
 
   integer(HSSIZE_T), dimension(rank) :: offset 
 
   ! Boot parallel environment
   call sll_boot_collective()
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   tcpu1 = MPI_WTIME()
@@ -74,7 +76,7 @@ program test_layout_output
      print *, '--------------- layout output test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -105,9 +107,9 @@ program test_layout_output
  
   array = myrank
 
-  offset(1) = get_layout_i_min( layout, myrank ) - 1
-  offset(2) = get_layout_j_min( layout, myrank ) - 1
-  offset(3) = get_layout_k_min( layout, myrank ) - 1
+  offset(1) = int(get_layout_i_min( layout, myrank ) - 1,HSIZE_T)
+  offset(2) = int(get_layout_j_min( layout, myrank ) - 1,HSIZE_T)
+  offset(3) = int(get_layout_k_min( layout, myrank ) - 1,HSIZE_T)
 
   comm   = sll_world_collective%comm
   call sll_hdf5_file_create('layout3d.h5',comm,file_id,error)

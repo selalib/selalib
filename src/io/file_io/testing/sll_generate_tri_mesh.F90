@@ -52,7 +52,7 @@ real(8) :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
 real(8) :: alx, aly
 real(8) :: x_min, x_max, y_min, y_max
 
-ndd = max0(nbox,nboy)
+ndd = max(nbox,nboy)
 alx = x_max-x_min
 aly = y_max-y_min
 

@@ -116,17 +116,17 @@ contains
     matb = 0._f64
     
     do j = 0,N+2
-    	matb(j,j) = 6._f64
+      matb(j,j) = 6._f64
     enddo
     
     do i = 1,N+1
       do j = 0,N+2
-    	matb(i,j) = matb(i,j)-lnat(i-1)*matb(i-1,j)
+        matb(i,j) = matb(i,j)-lnat(i-1)*matb(i-1,j)
       enddo
     enddo
     
     do j = 0,N+2
-    	matb(N+2,j) = (matb(N+2,j)-lnat(N+1)*matb(N+1,j)-lnat(N+2)*matb(N,j))/dnat(N+2)
+      matb(N+2,j) = (matb(N+2,j)-lnat(N+1)*matb(N+1,j)-lnat(N+2)*matb(N,j))/dnat(N+2)
     enddo
 
     do i = N+1,2,-1
@@ -153,23 +153,23 @@ contains
     sll_int32,intent(in)::N
     sll_real64,dimension(0:N-1,0:N-1),intent(inout) :: mat
     sll_real64,dimension(0:N+2),intent(in)::dper,lper,mper
-    sll_int32 :: err,i,j
+    sll_int32 :: i,j
 
     mat = 0._f64
     
     do j = 0,N-1
-    	mat(j,j) = 6._f64
+      mat(j,j) = 6._f64
     enddo
 
     do i = 1,N-1
       do j = 0,N-1
-    	mat(i,j) = mat(i,j)-lper(i-1)*mat(i-1,j)
+      mat(i,j) = mat(i,j)-lper(i-1)*mat(i-1,j)
       enddo
     enddo
 
     do i = 0,N-2
       do j = 0,N-1
-    	mat(N-1,j) = mat(N-1,j)-mper(i)*mat(i,j)
+      mat(N-1,j) = mat(N-1,j)-mper(i)*mat(i,j)
       enddo
     enddo
     
@@ -252,7 +252,7 @@ contains
     else
       do i = 1,NxA
         do j = 1,NyB
-          result = 0._f64
+          result = (0.0_f64,0.0_f64)
           do k = 1,NyA
             result = result + A(i,k)*B(k,j)
           enddo
@@ -280,7 +280,7 @@ contains
     else
       do i = 0,NxA-1
         do j = 0,NyB-1
-          result = 0._f64
+          result = (0._f64,0.0_f64)
           do k = 0,NyA-1
             result = result + A(i,k)*B(k,j)
           enddo
@@ -298,8 +298,8 @@ contains
     sll_real64,dimension(0:Ntheta-1,0:NxB-1,0:NyB-1),intent(in)::B
     sll_real64,dimension(0:Ntheta-1,0:NxA-1,0:NyB-1),intent(inout) :: prod
     sll_real64,dimension(:,:),allocatable :: mat_stock,mat_stock_sum 
-    sll_int32 :: i,j,k,error,max_nb
-    sll_real64 :: result
+    sll_int32 :: i,j,error
+    !sll_real64 :: result
 
     SLL_ALLOCATE(mat_stock(0:NxA-1,0:NyB-1),error)
     SLL_ALLOCATE(mat_stock_sum(0:NxA-1,0:NyB-1),error)
@@ -446,7 +446,7 @@ contains
     sll_int32,dimension(:),allocatable :: IPIV
     sll_comp64,dimension(:),allocatable :: WORK
     sll_real64 :: mode
-    sll_comp64 :: exp_comp,result
+    sll_comp64 :: exp_comp
     sll_int32 :: INFO
     sll_int32 :: Nr,Ntheta
     sll_int32 :: error
@@ -485,11 +485,11 @@ contains
     
  ! Pointeurs    
     pointer_dnat => dnat
-	pointer_lnat => lnat
-	pointer_dper => dper
-	pointer_lper => lper
-	pointer_mper => mper	
-	pointer_mat_nat => mat_nat
+  pointer_lnat => lnat
+  pointer_dper => dper
+  pointer_lper => lper
+  pointer_mper => mper  
+  pointer_mat_nat => mat_nat
     pointer_mat_per => mat_per
     pointer_mat_spl2D_circ => mat_spl2D_circ
     pointer_mat_contribution_circ => mat_contribution_circ
@@ -516,12 +516,12 @@ contains
     enddo  
 
  ! Matrices D^{spl} et D^{contr}
-    D_spl2D = 0._f64
-    D_contr = 0._f64  
+    D_spl2D = (0.0_f64,0.0_f64)
+    D_contr = (0.0_f64,0.0_f64)
     do m=0,Ntheta-1
       do j=0,Ntheta-1
         mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-        exp_comp=dcmplx(dcos(mode),dsin(mode))
+        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
         D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
         do p=1,N_mu
           D_contr(p,m,:,:) = D_contr(p,m,:,:) + pointer_mat_contribution_circ(p,j,:,:)*exp_comp
@@ -544,7 +544,10 @@ contains
           mat_stock2(i,i) =   mat_stock2(i,i) - quasineutral%lambda(i+1)*(1._f64,0._f64)
         enddo
         do i=0,Nr
-          quasineutral%mat_qn_inverse(m,i,:) = quasineutral%mat_qn_inverse(m,i,:) - mu_weights(p)*mat_stock2(i,:)*dexp(-mu_points(p)/quasineutral%T_i(i+1))
+          quasineutral%mat_qn_inverse(m,i,:) = &
+          quasineutral%mat_qn_inverse(m,i,:)   &
+          - mu_weights(p)*mat_stock2(i,:)*  &
+          cmplx(exp(-mu_points(p)/quasineutral%T_i(i+1)),0._f64,f64)
         enddo
       enddo 
     enddo     
@@ -585,15 +588,15 @@ contains
     sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
     sll_comp64,dimension(:,:),allocatable :: phi_comp,phi_old
     sll_real64,dimension(:),allocatable::buf_fft
-    sll_int32,dimension(:),allocatable :: IPIV
-    sll_comp64,dimension(:),allocatable :: WORK
-    sll_real64 :: mode
-    sll_comp64 :: exp_comp,result
-    sll_int32 :: INFO
+    !sll_int32,dimension(:),allocatable :: IPIV
+    !sll_comp64,dimension(:),allocatable :: WORK
+    !sll_real64 :: mode
+    sll_comp64 :: result
+    !sll_int32 :: INFO
     sll_int32 :: Nr,Ntheta
     sll_int32 :: error
-    sll_int32 :: i,j,k,m,p,s
-    sll_int32 :: ii(2)
+    sll_int32 :: i,j,m
+    !sll_int32 :: ii(2)
   
  ! Taille du maillage  
     Nr = quasineutral%Nc(1)
@@ -608,14 +611,14 @@ contains
     phi_comp=phi*(1._f64,0._f64)
     call zffti(Ntheta,buf_fft)
     do i=1,Nr+1
-	  call zfftf(Ntheta,phi_comp(i,:),buf_fft)
+    call zfftf(Ntheta,phi_comp(i,:),buf_fft)
     enddo   
 
  ! Produit matrice/vecteur 
     phi_old=phi_comp
     do m = 1,Ntheta
       do i = 1,Nr+1
-        result = 0._f64
+        result = (0._f64,0.0_f64)
         do j = 1,Nr+1
           result = result + quasineutral%mat_qn_inverse(m-1,i-1,j-1)*phi_old(j,m)
         enddo
@@ -626,9 +629,9 @@ contains
     
  ! FFT^-1
     do i=1,Nr+1
-		call zfftb(Ntheta,phi_comp(i,:),buf_fft)
-	enddo
-	phi=real(phi_comp/real(Ntheta,f64))
+    call zfftb(Ntheta,phi_comp(i,:),buf_fft)
+  enddo
+  phi=real(phi_comp,f64)/real(Ntheta,f64)
     
  ! Sorties     
  !   print *,"phi_min : ",minval(phi)
@@ -658,7 +661,7 @@ contains
   sll_real64,dimension(:),allocatable :: gamma0
   sll_real64  :: tmp1
   sll_real64 :: eps,rho2d(2),mu2dmax(2),error(3)
-  sll_int32 :: i,j,ierr,p
+  sll_int32 :: i,ierr,p
   
   SLL_ALLOCATE(gamma0(1:Nc(1)+1),ierr)
   
@@ -669,7 +672,7 @@ contains
   mu2dmax(1) = maxval(mu_points)
   mu2dmax(2) = maxval(mu_points)
   
-  eps=1.e-10
+  eps=1.d-10
   gamma0 = 0._f64
   
   call compute_N_bounds_polar_circle(N_min(1),N_max(1),Nc(1),2._f64*sqrt(2._f64*mu2dmax),eta_min(1),eta_max(1))
@@ -679,7 +682,7 @@ contains
     rho2d(2) = sqrt(2._f64*mu_points(p))
     call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
     do i = 1, Nc(1)+1
-      gamma0(i) = gamma0(i) + mu_weights(p)*dexp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
+      gamma0(i) = gamma0(i) + mu_weights(p)*exp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
     enddo
   enddo
   do i = 1, Nc(1)+1
@@ -739,13 +742,15 @@ contains
       rho2d(1) = sqrt(2._f64*mu_points(p))
       rho2d(2) = sqrt(2._f64*mu_points(p))
       call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-      !gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(1._f64-tmp1**2)
+      !gamma0 = gamma0 + mu_weights(p)*exp(-mu_points(p))*(1._f64-tmp1**2)
       gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
       !gamma0 = gamma0 + mu_weights(p)*(tmp1**2)
      enddo
     
     !gamma0 = 1._f64-gamma0
 
+    return
+    print*, nc
     
   end function compute_gamma0_quadrature 
   
@@ -778,15 +783,15 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
  ! FFT(PHI)
   call zffti(Ntheta,buf_fft)
   do i=1,Nr+1
-	call zfftf(Ntheta,sol_comp(i,:),buf_fft)
+  call zfftf(Ntheta,sol_comp(i,:),buf_fft)
   enddo   
 
  ! Matrices Dm  
-    Dm = 0._f64  
+    Dm = (0._f64  ,0.0_f64)
     do m=0,Ntheta-1
       do j=0,Ntheta-1
         mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-        exp_comp=dcmplx(dcos(mode),dsin(mode))
+        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
         Dm(m,:,:) = Dm(m,:,:) + mat_circ(j,:,:)*exp_comp
       enddo
       
@@ -799,7 +804,7 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     sol_old=sol_comp
     do m = 1,Ntheta
       do i = 1,Nr+1
-        result = 0._f64
+        result = (0._f64,0.0_f64)
         do j = 1,Nr+1
           result = result + Dm(m-1,i-1,j-1)*sol_old(j,m)
         enddo
@@ -809,10 +814,10 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     
     ! FFT^-1
     do i=1,Nr+1
-		call zfftb(Ntheta,sol_comp(i,:),buf_fft)
-	enddo
-	
-	sol=real(sol_comp/real(Ntheta,f64))
+    call zfftb(Ntheta,sol_comp(i,:),buf_fft)
+  enddo
+  
+  sol=real(sol_comp/cmplx(Ntheta,0._f64,f64),f64)
 
 end subroutine solve_circulant_system
 
@@ -824,7 +829,7 @@ end subroutine solve_circulant_system
     sll_real64,dimension(0:Ntheta-1,0:Nr,0:Nr),intent(in) :: mat
     sll_real64,dimension(:,:,:),allocatable :: inv,test_id
     sll_real64,dimension(:,:),allocatable :: phi
-    sll_int32 :: i,j,k,m,error
+    sll_int32 :: i,j,m, error
 
 
     SLL_ALLOCATE(inv(0:Ntheta-1,0:Nr,0:Nr),error)
@@ -875,7 +880,7 @@ subroutine hermite_coef_nat_per(f,buf3d,N,d)
     sll_real64 ::w_left_1(-d(1)/2:(d(1)+1)/2),w_right_1((-d(1)+1)/2:d(1)/2+1)
     sll_real64 ::w_left_2(-d(2)/2:(d(2)+1)/2),w_right_2((-d(2)+1)/2:d(2)/2+1)
     sll_real64 ::tmp
-    sll_int32  ::i,j,r,s,ii,r_left(2),r_right(2),s_left(2),s_right(2),ind 
+    sll_int32  ::i,j,ii,r_left(2),r_right(2),s_left(2),s_right(2),ind 
     r_left=-d/2
     s_left=(d+1)/2
     r_right=(-d+1)/2
@@ -975,7 +980,7 @@ subroutine hermite_coef_nat_per(f,buf3d,N,d)
     sll_real64,dimension(4,N(1)+1,N(2)+1),intent(out)::buf3d
     sll_real64,dimension(:),allocatable ::w_left_1,w_left_2
     sll_real64 ::tmp
-    sll_int32::i,j,r,s,ii,r_left(2),s_left(2),ind,dd(2) 
+    sll_int32::i,j,ii,r_left(2),s_left(2),ind,dd(2) 
     sll_int32::error
     dd(1)=2*((d(1)+1)/2)
     dd(2)=2*((d(2)+1)/2)
@@ -1028,8 +1033,8 @@ subroutine hermite_coef_nat_per(f,buf3d,N,d)
 
     buf3d(:,:,N(2)+1)=buf3d(:,:,1)
     
-	SLL_DEALLOCATE_ARRAY(w_left_1,error)
-	SLL_DEALLOCATE_ARRAY(w_left_2,error)
+  SLL_DEALLOCATE_ARRAY(w_left_1,error)
+  SLL_DEALLOCATE_ARRAY(w_left_2,error)
     
   end subroutine hermite_c1_coef_nat_per
 
@@ -1123,7 +1128,7 @@ subroutine compute_w_hermite(w,r,s)
     
     eta(1)=sqrt(x(1)**2+x(2)**2)
     call localize_nat(ii(1),eta(1),eta_min(1),eta_max(1),N(1))
-    eta(2)=datan2(x(2),x(1))
+    eta(2)=atan2(x(2),x(1))
     call localize_per(ii(2),eta(2),eta_min(2),eta_max(2),N(2))
   end subroutine localize_polar
 
@@ -1271,7 +1276,7 @@ subroutine compute_w_hermite(w,r,s)
   subroutine contribution_hermite_c1(x,val)
     sll_real64,intent(in)::x(0:1)
     sll_real64,intent(out)::val(4,0:1,0:1)
-    sll_int32::i,ell1,ell2,s
+    sll_int32::s
     sll_real64::w(0:3,0:1)!,tmp(0:3)
     do s=0,1
       w(0,s)=(2._f64*x(s)+1)*(1._f64-x(s))*(1._f64-x(s));
@@ -1316,7 +1321,7 @@ subroutine compute_w_hermite(w,r,s)
     do s=0,1
       w(-1,s)=(1._f64/6._f64)*(1._f64-x(s))*(1._f64-x(s))*(1._f64-x(s));
       w(0,s)=1._f64/6._f64+0.5_f64*(1._f64-x(s))*(-(1._f64-x(s))*&
-    	 (1._f64-x(s))+(1._f64-x(s))+1._f64);
+       (1._f64-x(s))+(1._f64-x(s))+1._f64);
       w(1,s)=1._f64/6._f64+0.5_f64*x(s)*(-x(s)*x(s)+x(s)+1._f64);
       w(2,s)=(1._f64/6._f64)*x(s)*x(s)*x(s);
     enddo
@@ -1459,13 +1464,13 @@ subroutine splcoefnatper2d(f,buf,dnatx,lnatx,dpery,lpery,mpery,Nx,Ny)
 
     wx(0)=(1._f64/6._f64)*(1._f64-x)*(1._f64-x)*(1._f64-x);
     wx(1)=1._f64/6._f64+0.5_f64*(1._f64-x)*(-(1._f64-x)*&
-    	 (1._f64-x)+(1._f64-x)+1._f64);
+       (1._f64-x)+(1._f64-x)+1._f64);
     wx(2)=1._f64/6._f64+0.5_f64*x*(-x*x+x+1._f64);
     wx(3)=(1._f64/6._f64)*x*x*x;
 
     wy(0)=(1._f64/6._f64)*(1._f64-y)*(1._f64-y)*(1._f64-y);
     wy(1)=1._f64/6._f64+0.5_f64*(1._f64-y)*(-(1._f64-y)*&
-    	 (1._f64-y)+(1._f64-y)+1._f64);
+       (1._f64-y)+(1._f64-y)+1._f64);
     wy(2)=1._f64/6._f64+0.5_f64*y*(-y*y+y+1._f64);
     wy(3)=(1._f64/6._f64)*y*y*y;
 
@@ -1511,7 +1516,7 @@ subroutine splper1d(f,xx,xmin,xmax,fval,N)
     x=x-real(i,f64)
     w(0)=(1._f64/6._f64)*(1._f64-x)*(1._f64-x)*(1._f64-x);
     w(1)=1._f64/6._f64+0.5_f64*(1._f64-x)*(-(1._f64-x)*&
-    	 (1._f64-x)+(1._f64-x)+1._f64);
+       (1._f64-x)+(1._f64-x)+1._f64);
     w(2)=1._f64/6._f64+0.5_f64*x*(-x*x+x+1._f64);
     w(3)=(1._f64/6._f64)*x*x*x;
     fval=w(0)*f(mod(i+N-1,N))+w(1)*f(i)+w(2)*f(mod(i+1,N))+w(3)*f(mod(i+2,N))
@@ -1536,7 +1541,7 @@ subroutine splper1d(f,xx,xmin,xmax,fval,N)
 
     w(0)=(1._f64/6._f64)*(1._f64-x)*(1._f64-x)*(1._f64-x);
     w(1)=1._f64/6._f64+0.5_f64*(1._f64-x)*(-(1._f64-x)*&
-    	 (1._f64-x)+(1._f64-x)+1._f64);
+       (1._f64-x)+(1._f64-x)+1._f64);
     w(2)=1._f64/6._f64+0.5_f64*x*(-x*x+x+1._f64);
     w(3)=(1._f64/6._f64)*x*x*x;
     fval=w(0)*f(i)+w(1)*f(i+1)+w(2)*f(i+2)+w(3)*f(i+3)
@@ -1649,7 +1654,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
   
   subroutine solve_tridiag(a,b,c,v,x,n)
 ! Using Thomas' Algorithm
-	implicit none
+  implicit none
 !        a - sub-diagonal (means it is the diagonal below the main diagonal)
 !        b - the main diagonal
 !        c - sup-diagonal (means it is the diagonal above the main diagonal)
@@ -1657,28 +1662,28 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !        x - the answer
 !        n - number of equations
  
-	sll_int32,intent(in) :: n
-	sll_real64,dimension(n),intent(in) :: a,b,c,v
-	sll_real64,dimension(n),intent(out) :: x
-	sll_real64,dimension(n) :: bp,vp
-	sll_real64 :: m
-	sll_int32 i
+  sll_int32,intent(in) :: n
+  sll_real64,dimension(n),intent(in) :: a,b,c,v
+  sll_real64,dimension(n),intent(out) :: x
+  sll_real64,dimension(n) :: bp,vp
+  sll_real64 :: m
+  sll_int32 i
  
-	! Make copies of the b and v variables so that they are unaltered by this sub
-	bp(1) = b(1)
-	vp(1) = v(1)
+  ! Make copies of the b and v variables so that they are unaltered by this sub
+  bp(1) = b(1)
+  vp(1) = v(1)
  
-	!The first pass (setting coefficients):
+  !The first pass (setting coefficients):
     firstpass: do i = 2,n
-	m = a(i)/bp(i-1)
-	bp(i) = b(i) - m*c(i-1)
-	vp(i) = v(i) - m*vp(i-1)
+  m = a(i)/bp(i-1)
+  bp(i) = b(i) - m*c(i-1)
+  vp(i) = v(i) - m*vp(i-1)
     end do firstpass
  
-	x(n) = vp(n)/bp(n)
-	!The second pass (back-substition)
+  x(n) = vp(n)/bp(n)
+  !The second pass (back-substition)
     backsub:do i = n-1, 1, -1
-	x(i) = (vp(i) - c(i)*x(i+1))/bp(i)
+  x(i) = (vp(i) - c(i)*x(i+1))/bp(i)
     end do backsub
 
   end subroutine solve_tridiag
@@ -1783,9 +1788,9 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     sll_real64,intent(in)::rho(2),eta_min(2),eta_max(2)
     sll_int32,intent(in)::mode(2)
     sll_real64,intent(out)::val
-    sll_real64::alpha,tmp
-    integer::mode_max(2),i,j
-    logical::is_file
+    sll_real64::tmp
+    !integer::i
+    !logical::is_file
     val=0._f64
     if(abs(rho(1)-rho(2))>1.e-12)then
       print *,'#for the moment rho(1)=rho(2) is needed'
@@ -1801,9 +1806,9 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     sll_real64,intent(in)::eta_min(2),eta_max(2)
     sll_int32,intent(in)::mode(2)
     sll_real64,intent(out)::val
-    sll_real64::tmp,mu,delta_x,sum1,sum2,mu_max
-    integer::mode_max(2),i,N_approx
-    logical::is_file
+    sll_real64::tmp!,mu,mu_max
+    !integer::N_approx
+    !logical::is_file
 !    N_approx = 2**15
 !    mu_max = 50._f64
 !    sum1=0._f64
@@ -1823,13 +1828,13 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !    delta_x=real(real(mu_max,f64)/real(N_approx,f64),f64)
 !    do i=1,N_approx/2-1
 !      mu = real(2._f64*real(i,f64)*delta_x,f64)
-!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
 !    do i=1,N_approx/2
 !      mu = real((2._f64*real(i,f64)-1._f64)*delta_x,f64)
-!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
-!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*dexp(-mu_max)
+!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*exp(-mu_max)
 !    val = val*real(delta_x/3._f64,f64)
   end subroutine compute_gamma0
 
@@ -1933,7 +1938,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         do i=1,N_mu_for_phi
           quasineutral%mu_points_for_phi(i) = mu_max_for_phi*real(i-1,f64)/real(N_mu_for_phi-1,f64)
         enddo     
-        h = mu_max_for_phi/(3*real(N_mu_for_phi,f64))
+        h = mu_max_for_phi/(3._f64*real(N_mu_for_phi,f64))
         quasineutral%mu_weights_for_phi(1) = h
         do i=1,(N_mu_for_phi-1)/2-1
           quasineutral%mu_weights_for_phi(2*i) = 4._f64*h
