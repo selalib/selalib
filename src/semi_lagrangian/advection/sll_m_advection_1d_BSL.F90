@@ -167,7 +167,7 @@ contains
     call adv%interp%interpolate_array( &
       adv%Npts, &
       input, &
-      -adv%charac_feet, &
+      adv%charac_feet, &
       output)      
           
   end subroutine BSL_advect_1d
