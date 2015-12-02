@@ -1,7 +1,3 @@
-IF( MPI_ENABLED )
-   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF( MPI_ENABLED )
-
 ADD_SUBDIRECTORY( add_ons )
 ADD_SUBDIRECTORY( data_structures )
 ADD_SUBDIRECTORY( field_solvers )
@@ -20,6 +16,7 @@ ADD_SUBDIRECTORY( splines )
 
 # Parallelization tools
 IF( MPI_ENABLED )
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_SUBDIRECTORY( parallelization )
 ENDIF( MPI_ENABLED )
 

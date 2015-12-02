@@ -1,6 +1,6 @@
 !> @ingroup interpolators
-!> @author
-!> @contact Klaus Reuter, MPCDF
+!> @author Klaus Reuter, MPCDF
+!> @contact Katharina Kormann, IPP
 !> @brief
 !> Module for 1D Lagrange interpolation on a uniform grid (only odd order)
 !> @details
