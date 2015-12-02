@@ -228,7 +228,7 @@ contains
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
-    type(sll_fft_plan), pointer                   :: plan
+    type(sll_fft_plan), pointer                   :: plan !< initialized planner object
  
     sll_int32                                     :: ierr
     sll_int32                                     :: flag_fftw
@@ -530,7 +530,7 @@ contains
     SLL_ALLOCATE(plan,ierr)
     plan%library = FFTW_MOD
     plan%direction = 0
- if( present(normalized) ) then
+    if( present(normalized) ) then
        plan%normalized = normalized
     else
        plan%normalized = .false.
