@@ -36,7 +36,6 @@ TARGET_LINK_LIBRARIES( sll_advection
                        sll_periodic_interpolation
                        sll_splines
                        sll_fft
-                       sll_boundary_condition_descriptors
                        sll_utilities)
 
 IF(BUILD_TESTING)
