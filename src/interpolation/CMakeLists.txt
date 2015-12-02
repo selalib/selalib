@@ -1,5 +1,4 @@
 ADD_SUBDIRECTORY(lagrange_interpolation)
-ADD_SUBDIRECTORY(lagrange_fast)
 ADD_SUBDIRECTORY(hermite_interpolation)
 ADD_SUBDIRECTORY(periodic_interpolation)
 ADD_SUBDIRECTORY(interpolators)
