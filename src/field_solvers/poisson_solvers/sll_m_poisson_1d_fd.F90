@@ -190,7 +190,7 @@ contains
         SLL_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%fd_matrix_first_line_fourier = (0._f64,0._f64)
         this%forward_fftplan => fft_new_plan_r2c_1d(this%num_cells, &
-             this%fd_solution,this%fd_matrix_first_line_fourier,normalized = .TRUE.)
+             this%fd_solution,this%fd_matrix_first_line_fourier)
         this%backward_fftplan=>fft_new_plan_c2r_1d(this%num_cells, &
              this%fd_matrix_first_line_fourier,this%fd_solution)!  + FFT_NORMALIZE_INVERSE)
         SLL_DEALLOCATE_ARRAY(this%fd_matrix_first_line_fourier, ierr)
