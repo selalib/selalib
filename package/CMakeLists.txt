@@ -36,8 +36,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_2d_base.F90
     ${SLL_DIR}/linear_solvers/sll_m_tridiagonal.F90
     ${SLL_DIR}/linear_solvers/sll_m_penta_diagonal.F90
-    ${SLL_DIR}/../external/deboor/banfac.f90
-    ${SLL_DIR}/../external/deboor/banslv.f90
+    ${SLL_DIR}/../external/pppack/banfac.f90
+    ${SLL_DIR}/../external/pppack/banslv.f90
     ${SLL_DIR}/interpolation/lagrange_interpolation/sll_m_lagrange_interpolation_1d.F90
     ${SLL_DIR}/io/file_io/sll_m_binary_io.F90
     ${SLL_DIR}/io/file_io/sll_m_gnuplot.F90
@@ -81,6 +81,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_polar_wrapper.F90
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_base.F90
     ${SLL_DIR}/interfaces/fft/sll_m_fft_utils.F90
+    ${SLL_DIR}/interfaces/mpi/sll_mpi.F90
     ${SLL_DIR}/quadrature/sll_m_rectangle_integration.F90
     ${SLL_DIR}/quadrature/sll_m_trapz_integration.F90
     ${SLL_DIR}/quadrature/sll_m_gauss_legendre_integration.F90

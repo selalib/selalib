@@ -14,6 +14,7 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_boundary_condition_descriptors
   sll_meshes
   sll_linear_solvers
+  sll_timer
   pppack
   ${LAPACK_LIBRARIES} )
 

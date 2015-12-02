@@ -4,12 +4,12 @@ module m_maxwell_helper_functions
   use sll_m_constants, only : &
        sll_pi
      
+implicit none
 
 #define MODE_X 2
 #define MODE_Y 2
 #define OMEGA sqrt((MODE_X*sll_pi)**2+(MODE_Y*sll_pi)**2)
 
-implicit none
 
  contains
 
