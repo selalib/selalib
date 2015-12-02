@@ -1,4 +1,4 @@
-!> @ingroup interpolators
+!> @ingroup lagrange_interpolation
 !> @author Klaus Reuter, MPCDF
 !> @contact Katharina Kormann, IPP
 !> @brief
@@ -15,23 +15,23 @@ module sll_m_lagrange_fast
   private
 
   ! --- compile-time constants to avoid run-time division
-  sll_real64, parameter :: inv_6       = 1./6.
-  sll_real64, parameter :: inv_12      = 1./12.
-  sll_real64, parameter :: inv_24      = 1./24.
-  sll_real64, parameter :: inv_36      = 1./36.
-  sll_real64, parameter :: inv_48      = 1./48.
-  sll_real64, parameter :: inv_120     = 1./120.
-  sll_real64, parameter :: inv_576     = 1./576.
-  sll_real64, parameter :: inv_720     = 1./720.
-  sll_real64, parameter :: inv_1440    = 1./1440.
-  sll_real64, parameter :: inv_5040    = 1./5040.
-  sll_real64, parameter :: inv_14400   = 1./14400.
-  sll_real64, parameter :: inv_17280   = 1./17280.
-  sll_real64, parameter :: inv_30240   = 1./30240.
-  sll_real64, parameter :: inv_40320   = 1./40320.
-  sll_real64, parameter :: inv_80640   = 1./80640.
-  sll_real64, parameter :: inv_362880  = 1./362880.
-  sll_real64, parameter :: inv_3628800 = 1./3628800.
+  sll_real64, parameter :: inv_6       = 1._f64/6._f64
+  sll_real64, parameter :: inv_12      = 1._f64/12._f64
+  sll_real64, parameter :: inv_24      = 1._f64/24._f64
+  sll_real64, parameter :: inv_36      = 1._f64/36._f64
+  sll_real64, parameter :: inv_48      = 1._f64/48._f64
+  sll_real64, parameter :: inv_120     = 1._f64/120._f64
+  sll_real64, parameter :: inv_576     = 1._f64/576._f64
+  sll_real64, parameter :: inv_720     = 1._f64/720._f64
+  sll_real64, parameter :: inv_1440    = 1._f64/1440._f64
+  sll_real64, parameter :: inv_5040    = 1._f64/5040._f64
+  sll_real64, parameter :: inv_14400   = 1._f64/14400._f64
+  sll_real64, parameter :: inv_17280   = 1._f64/17280._f64
+  sll_real64, parameter :: inv_30240   = 1._f64/30240._f64
+  sll_real64, parameter :: inv_40320   = 1._f64/40320._f64
+  sll_real64, parameter :: inv_80640   = 1._f64/80640._f64
+  sll_real64, parameter :: inv_362880  = 1._f64/362880._f64
+  sll_real64, parameter :: inv_3628800 = 1._f64/3628800._f64
 
 contains
 
@@ -109,6 +109,8 @@ contains
     sll_real64, intent(in) :: f2  !< known function values at point 2 (relative to where we want to interpolate)
     sll_real64, intent(in) :: p   !< displacement in units of grid spacing
 
+    sll_real64 :: pp(5)
+
     call lagr_5pt_coeff(pp, p)
     lagr_5pt = pp(1) * fm2 &
       + pp(2) * fm1 &
@@ -127,6 +129,7 @@ contains
 
     sll_real64 :: pp(5)
     sll_int32 :: i, n
+
     call lagr_5pt_coeff(pp, p)
     n = size(fi)
     do i=3, n-2
