@@ -28,7 +28,7 @@ implicit none
   type(integer_oblic_2d_advector), pointer :: adv
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_aligned
-  class(sll_interpolator_2d_base), pointer :: interp
+  class(sll_c_interpolator_2d), pointer :: interp
   class(sll_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max

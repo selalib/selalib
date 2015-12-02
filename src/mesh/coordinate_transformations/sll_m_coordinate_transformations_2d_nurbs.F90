@@ -46,11 +46,11 @@ module sll_m_coordinate_transformations_2d_nurbs
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x1_interp =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x2_interp =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x3_interp =>null()
      !> PLEASE ADD DOCUMENTATION
      sll_int32 :: is_rational
      !> PLEASE ADD DOCUMENTATION

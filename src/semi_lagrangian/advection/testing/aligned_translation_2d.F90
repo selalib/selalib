@@ -110,7 +110,7 @@ implicit none
   sll_real64 :: dt_max4
   sll_real64 :: err3  
   sll_real64 :: err4  
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p

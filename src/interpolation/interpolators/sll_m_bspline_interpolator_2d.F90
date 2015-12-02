@@ -17,9 +17,9 @@
 
 !> @ingroup interpolators
 !> @brief
-!> Class for the bspline inmplementation of sll_interpolator_2d_base
+!> Class for the bspline inmplementation of sll_c_interpolator_2d
 !> @details
-!> Implements the sll_interpolator_2d_base interface
+!> Implements the sll_c_interpolator_2d interface
 module sll_m_bspline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -37,7 +37,7 @@ private
 !> All interpolators share a common interface with
 !> respect to their use, as described by the interpolator_2d_base class.
 !> Where the diverse interpolators diverge is in the way to initialize them.
-type, extends(sll_interpolator_2d_base), public :: sll_bspline_interpolator_2d
+type, extends(sll_c_interpolator_2d), public :: sll_bspline_interpolator_2d
 
   sll_int32                      :: npts1    !< Number of points along x direction
   sll_int32                      :: npts2    !< Number of points along y direction
