@@ -1049,10 +1049,11 @@ contains
                 ! advection module and not the deprecated ones from the
                 ! interpolators!
                 line => f_mp%get_x3_line_pointer(ip, i,j,l)
-                call sim%interp_x3%interpolate_array_disp_inplace( &
+                call sim%interp_x3%interpolate_array_disp( &
                   nc_x3 + 1, &
                   line(:), &
-                  alpha3 )
+                  alpha3, &
+                  line(:) )
                   ! Extra work to calculate the electric field energy. Where
                   ! does this formula come from?
                   efield_energy_total = efield_energy_total + delta1*delta2* &
@@ -1126,10 +1127,11 @@ contains
                 ! Add correction in case that external field is used
                 ! alpha4 = alpha4 -sim%dt*(elec_field_ext_2%value_at_point(x,y))
                 line => f_mp%get_x4_line_pointer(ip,i,j,k)
-                call sim%interp_x4%interpolate_array_disp_inplace( &
+                call sim%interp_x4%interpolate_array_disp( &
                   nc_x4 + 1, &
                   line(:), &
-                  alpha4 )
+                  alpha4, &
+                  line(:) )
              end do
              ! Check this calculation, why is this not multiplied by the deltas
              ! in velocity space?? Fix this, because it it wrong even...

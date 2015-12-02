@@ -560,10 +560,11 @@ contains
                       alpha = ex*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed.
-                      call sim%interp_x4%interpolate_array_disp_inplace( &
+                      call sim%interp_x4%interpolate_array_disp( &
                              sim%nc_x4, &
                              sim%f_x4x5x6(i,j,k,:,m,n), &
-                             alpha )
+                             alpha, &
+                             sim%f_x4x5x6(i,j,k,:,m,n) )
                    end do
                 end do
              end do
@@ -580,10 +581,11 @@ contains
                       alpha = ey*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      call sim%interp_x5%interpolate_array_disp_inplace( &
+                      call sim%interp_x5%interpolate_array_disp( &
                              sim%nc_x5, &
                              sim%f_x4x5x6(i,j,k,l,:,n), &
-                             alpha )
+                             alpha , &
+                             sim%f_x4x5x6(i,j,k,l,:,n))
                    end do
                 end do
              end do
@@ -600,10 +602,11 @@ contains
                       alpha = ez*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      call     sim%interp_x6%interpolate_array_disp_inplace( &
+                      call     sim%interp_x6%interpolate_array_disp( &
                              sim%nc_x6, &
                              sim%f_x4x5x6(i,j,k,l,m,:), &
-                             alpha )
+                             alpha, &
+                             sim%f_x4x5x6(i,j,k,l,m,:) )
                    end do
                 end do
              end do
@@ -629,10 +632,11 @@ contains
                       vmin = sim%mesh6d%x4_min
                       delta = sim%mesh6d%delta_x4
                       alpha = -(vmin + (k-1)*delta)*sim%dt
-                      call sim%interp_x1%interpolate_array_disp_inplace( &
+                      call sim%interp_x1%interpolate_array_disp( &
                              sim%nc_x1, &
                              sim%f_x1x2x3(:,j,k,l,m,n), &
-                             alpha )
+                             alpha, &
+                             sim%f_x1x2x3(:,j,k,l,m,n) )
                    end do
                 end do
              end do
@@ -648,10 +652,11 @@ contains
                       vmin = sim%mesh6d%x5_min
                       delta = sim%mesh6d%delta_x5
                       alpha = -(vmin + (l-1)*delta)*sim%dt
-                      call     sim%interp_x2%interpolate_array_disp_inplace( &
+                      call     sim%interp_x2%interpolate_array_disp( &
                              sim%nc_x2, &
                              sim%f_x1x2x3(i,:,k,l,m,n), &
-                             alpha )
+                             alpha, &
+                             sim%f_x1x2x3(i,:,k,l,m,n) )
                    end do
                 end do
              end do
@@ -741,10 +746,11 @@ contains
                       alpha = ex*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      call sim%interp_x4%interpolate_array_disp_inplace( &
+                      call sim%interp_x4%interpolate_array_disp( &
                              sim%nc_x4, &
                              sim%f_x4x5x6(i,j,k,:,m,n), &
-                             alpha )
+                             alpha, &
+                             sim%f_x4x5x6(i,j,k,:,m,n) )
                    end do
                 end do
              end do
@@ -761,10 +767,11 @@ contains
                       alpha = ey*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      call  sim%interp_x5%interpolate_array_disp_inplace( &
+                      call  sim%interp_x5%interpolate_array_disp( &
                              sim%nc_x5, &
                              sim%f_x4x5x6(i,j,k,l,:,n), &
-                             alpha )
+                             alpha, &
+                             sim%f_x4x5x6(i,j,k,l,:,n) )
                    end do
                 end do
              end do
@@ -781,10 +788,11 @@ contains
                       alpha = ez*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      call  sim%interp_x6%interpolate_array_disp_inplace( &
+                      call  sim%interp_x6%interpolate_array_disp( &
                              sim%nc_x6, &
                              sim%f_x4x5x6(i,j,k,l,m,:), &
-                             alpha )
+                             alpha, &
+                             sim%f_x4x5x6(i,j,k,l,m,:) )
                    end do
                 end do
              end do
@@ -1229,7 +1237,7 @@ contains
        displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
     end do
   end subroutine advection_x_1d
 
@@ -1245,7 +1253,7 @@ contains
     do i=1, num_pts
        ! Why is the negative sign there?
        displacement = efield(i)*0.5_f64*dt
-       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
     end do
   end subroutine advection_v_1d
 

@@ -116,14 +116,14 @@ contains
    subroutine advection_x(dt)
     sll_real64, intent(in) :: dt
     do j = 1, nc_eta2+1
-      call interp_x%interpolate_array_disp_inplace(nc_eta1+1,df(:,j),-dt*eta2(j))
+      call interp_x%interpolate_array_disp(nc_eta1+1,df(:,j),-dt*eta2(j), df(:,j))
     end do
    end subroutine advection_x
 
    subroutine advection_v(dt)
     sll_real64, intent(in) :: dt
     do i = 1, nc_eta1+1
-      call interp_v%interpolate_array_disp_inplace(nc_eta2+1,df(i,:),-dt*ex(i))
+      call interp_v%interpolate_array_disp(nc_eta2+1,df(i,:),-dt*ex(i), df(i,:))
     end do
    end subroutine advection_v
 

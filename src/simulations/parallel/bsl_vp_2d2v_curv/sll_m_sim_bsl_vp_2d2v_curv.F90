@@ -804,10 +804,11 @@ contains
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
                 alpha3 = sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-                call sim%interp_x3%interpolate_array_disp_inplace( &
+                call sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
-                     alpha3 )
+                     alpha3, &
+                     sim%f_x3x4(i,j,:,l) )
                 ! Extra work to calculate the electric field energy. We should 
                 ! consider placing this somewhere else, probably at greater
                 ! expense.
@@ -841,10 +842,11 @@ contains
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
                 alpha4 = sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-                call sim%interp_x4%interpolate_array_disp_inplace( &
+                call sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
-                     alpha4 )
+                     alpha4 , &
+                     sim%f_x3x4(i,j,k,:))
              end do
           end do
        end do
@@ -1311,7 +1313,7 @@ contains
        displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
     end do
   end subroutine advection_x_1d
 
@@ -1326,7 +1328,7 @@ contains
 
     do i=1, num_pts
        displacement = efield(i)*0.5_f64*dt
-       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
     end do
   end subroutine advection_v_1d
 
