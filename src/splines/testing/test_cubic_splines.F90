@@ -3,8 +3,6 @@ program test_cubic_splines
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-#define PRINT_SPLINE_COEFFS 0
-
 use util_constants
 use test_processes_module
 implicit none

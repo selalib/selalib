@@ -11,9 +11,9 @@ use sll_m_collective
        is_power_of_two
   use iso_fortran_env, only: &
        output_unit
-#define MPI_MASTER 0
-
 implicit none
+
+#define MPI_MASTER 0
 
 class(sll_interpolator_1d_base), pointer   :: interp_eta1
 class(sll_interpolator_1d_base), pointer   :: interp_eta2
