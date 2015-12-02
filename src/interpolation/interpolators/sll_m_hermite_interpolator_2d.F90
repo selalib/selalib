@@ -64,7 +64,7 @@ private
     !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_from_interpolant_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
     !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
+    procedure :: interpolate_from_interpolant_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
     !> PLEASE ADD DOCUMENTATION
     procedure, pass :: interpolate_array => wrap_interpolate_array_hermite_2d
     !> PLEASE ADD DOCUMENTATION

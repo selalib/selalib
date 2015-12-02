@@ -710,9 +710,9 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
     j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-    j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-    j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -738,9 +738,9 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
     j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-    j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-    j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -763,9 +763,9 @@ contains
     sll_real64             :: r_jac ! reciprocal of the jacobian
     r_jac = 1.0_f64/transf%jacobian( eta1, eta2 )
     inv_j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-    inv_j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+    inv_j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     inv_j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-    inv_j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    inv_j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12

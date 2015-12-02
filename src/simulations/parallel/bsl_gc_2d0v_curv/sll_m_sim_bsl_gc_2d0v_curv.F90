@@ -1789,7 +1789,7 @@ contains
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
         A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
     end do
@@ -2650,8 +2650,8 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          ddphi_eta12 = 4._f64*(1._f64-eta1)*(pi2*0.4_f64*cos(4._f64*pi2*eta2))   
                   
          cx_array(i,j)  = (a11_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
-                           a12_interp%interpolate_derivative_eta2(eta1,eta2))
-         cy_array(i,j)  = (a22_interp%interpolate_derivative_eta2(eta1,eta2)+ &
+                           a12_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2))
+         cy_array(i,j)  = (a22_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)+ &
                            a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2))  
          write(202,*) eta1,eta2,cx_array(i,j),cy_array(i,j)                                     
          rho = (cxx_array(i,j)*ddphi_eta11 + cyy_array(i,j)*ddphi_eta22 + &

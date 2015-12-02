@@ -59,7 +59,7 @@ contains
   !> Interpolate first derivative from last inteprolants computed
   procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_bs2d
   !> Interpolate first derivative from last inteprolants computed
-  procedure :: interpolate_derivative_eta2 => interpolate_deriv2_bs2d
+  procedure :: interpolate_from_interpolant_derivative_eta2 => interpolate_deriv2_bs2d
   !> PLEASE ADD DOCUMENTATION
   procedure, pass :: interpolate_array => spline_interpolate2d
   !> PLEASE ADD DOCUMENTATION
