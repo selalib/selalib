@@ -17,9 +17,9 @@ module sll_parallel_array_output_module
   use sll_m_hdf5_io_parallel
 #endif
 
-#define MPI_MASTER 0
-
   implicit none
+
+#define MPI_MASTER 0
 
 contains
 
