@@ -32,7 +32,7 @@ module sll_m_gnuplot_parallel
 #include "sll_assert.h"
 use sll_m_ascii_io, only: sll_ascii_file_create
 use sll_m_utilities, only: sll_new_file_id, int2string
-use mpi
+use sll_mpi
 
 implicit none
 

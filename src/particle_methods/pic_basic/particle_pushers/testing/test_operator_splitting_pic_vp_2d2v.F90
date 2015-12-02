@@ -16,6 +16,8 @@ program test_operator_splitting_pic_vp_2d2v
   use sll_m_constants, only : &
        sll_pi
 
+  implicit none
+
   ! Tolerance for comparison of real numbers: set it here!
   sll_real64, parameter :: EQV_TOL = 1.0e-14_f64
 
@@ -50,6 +52,7 @@ program test_operator_splitting_pic_vp_2d2v
   sll_int32  :: i_part
   sll_real64 :: xi(3)
   logical    :: passed
+  sll_int32  :: ierr   ! error code for SLL_ALLOCATE
 
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)

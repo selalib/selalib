@@ -7,13 +7,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-!#include "sll_field_2d.h"
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
-!  use sll_m_constants
-!  use sll_m_cartesian_meshes  
-!  use sll_m_advection_1d_periodic
-!  use sll_m_interpolators_1d_base
+
   use sll_m_fft
   use sll_m_advection_2d_base
   use sll_m_characteristics_1d_explicit_euler
@@ -23,12 +18,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_characteristics_2d_verlet
   use sll_m_advection_1d_BSL
   use sll_m_advection_1d_CSL_periodic
-  !use sll_m_advection_1d_CSL
-  !use sll_m_advection_1d_PSM
-!  use sll_m_characteristics_1d_explicit_euler
   use sll_m_characteristics_1d_trapezoid
-  !use sll_m_characteristics_1d_explicit_euler_conservative
-  !use sll_m_characteristics_1d_trapezoid_conservative
   use sll_m_reduction
   use sll_m_sim_base
  
@@ -40,14 +30,13 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_hermite_interpolator_1d
   use sll_m_arbitrary_degree_spline_interpolator_2d
 
-!  use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
   use sll_m_common_coordinate_transformations
   use sll_m_common_array_initializers
   use sll_m_parallel_array_initializer
 
   use sll_m_xdmf
-  
+
 #ifdef MUDPACK
  !use sll_m_mudpack_curvilinear
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
@@ -115,8 +104,6 @@ module sll_m_sim_bsl_gc_2d0v_curv
    
    !poisson solver
    class(sll_poisson_2d_base), pointer   :: poisson
-   !type(poisson_2d_periodic), pointer   :: poisson
-   !type(sll_plan_poisson_polar), pointer :: poisson 
 #ifdef MUDPACK
     type(mudpack_2d) :: poisson2
 #endif    
@@ -173,8 +160,6 @@ contains
     SLL_ALLOCATE(sim,ierr)
     
     call initialize_guiding_center_2d_curvilinear(sim,filename,num_run)
-    
-  
   
   end function new_guiding_center_2d_curvilinear
   
@@ -269,21 +254,6 @@ contains
     sll_int32 :: Nc_eta2
     sll_real64 :: r_minus
     sll_real64 :: r_plus
-!!$    class(sll_interpolator_2d_base), pointer :: f_interp2d
-!!$    class(sll_interpolator_2d_base), pointer :: phi_interp2d
-!!$    class(sll_characteristics_2d_base), pointer :: charac2d
-!!$    class(sll_characteristics_1d_base), pointer :: charac1d_x1
-!!$    class(sll_characteristics_1d_base), pointer :: charac1d_x2
-!!$    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-!!$    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-!!$    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-!!$    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-!!$    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-!!$    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-!!$    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-!!$    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
-!!$    class(sll_advection_1d_base), pointer    :: advect_1d_x1
-!!$    class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
     sll_real64, dimension(9) :: params_mesh_DSG
@@ -371,10 +341,7 @@ contains
       bc_eta2_right   
 
 
-
-
-    
-        !! set default parameters
+    !! set default parameters
     
     !geometry
     mesh_case="SLL_LANDAU_MESH"
@@ -442,7 +409,6 @@ contains
     eps_penalization = 0._f64
     zero_mean = .true.
      
-    !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
 #ifdef MUDPACK
     print *,'#MUDPACK IS ON'
     mudpack_method = SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS  

@@ -5,22 +5,23 @@ module sll_m_poisson_2d_periodic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+
 use sll_m_poisson_2d_base
+
 #ifdef FFTW
 use sll_m_poisson_2d_periodic_fftw
+#define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
 use sll_m_poisson_2d_periodic_fftpack
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
+
 implicit none
 
-  type,extends(sll_poisson_2d_base) :: poisson_2d_periodic_solver     
-  
-#ifdef FFTW
-  type(poisson_2d_periodic_fftw), pointer    :: poiss
-#else
-  type(poisson_2d_periodic_fftpack), pointer :: poiss
-#endif
-  
+  type,extends(sll_poisson_2d_base) :: poisson_2d_periodic_solver
+
+    type(poisson_2d_periodic), pointer :: poiss
+
   contains
 
     procedure, pass(poisson) :: initialize => &

@@ -1,8 +1,15 @@
-program test_poisson_2d
+program test_poisson_2d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_poisson_solvers.h"
+
+#ifdef FFTW
+use sll_m_poisson_2d_periodic_fftw
+#define poisson_2d_periodic poisson_2d_periodic_fftw
+#else
+use sll_m_poisson_2d_periodic_fftpack
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#endif
 
   use sll_m_constants, only : &
        sll_pi
@@ -23,11 +30,7 @@ program test_poisson_2d
    sll_real64, dimension(:,:),allocatable      :: phi
    sll_real64, dimension(:,:),allocatable      :: phi_exact
 
-#ifdef FFTW
-   type(poisson_2d_periodic_fftw) :: poisson
-#else
-   type(poisson_2d_periodic_fftpack) :: poisson
-#endif
+   type(poisson_2d_periodic) :: poisson
 
    sll_real64                         :: x1, x2
    sll_int32                          :: mode
@@ -82,4 +85,4 @@ program test_poisson_2d
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
 
-end program test_poisson_2d
+ end program test_poisson_2d_periodic

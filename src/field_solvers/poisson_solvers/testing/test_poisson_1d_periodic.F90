@@ -1,4 +1,4 @@
-program test_poisson_1d
+program test_poisson_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -55,4 +55,4 @@ program test_poisson_1d
   end if
 
 
-end program test_poisson_1d
+end program test_poisson_1d_periodic
