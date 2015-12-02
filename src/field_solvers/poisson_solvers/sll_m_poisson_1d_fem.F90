@@ -181,8 +181,7 @@ contains
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
         this%forward_fftplan => fft_new_plan_r2c_1d(this%num_cells, &
-             this%fem_solution,this%stiffn_matrix_first_line_fourier,  &
-             normalized = .TRUE.) !KK: Is this normalization really correct? The flags used before where strange.
+             this%fem_solution,this%stiffn_matrix_first_line_fourier)
         this%backward_fftplan=>fft_new_plan_c2r_1d(this%num_cells, &
              this%stiffn_matrix_first_line_fourier,this%fem_solution)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
