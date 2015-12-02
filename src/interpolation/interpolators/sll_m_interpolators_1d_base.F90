@@ -37,10 +37,10 @@ contains
 
 
    ! Procedures including whole interpolation process
-   !> Compute the value of the interpolant at several given abscissae given as an array from the precomputed coefficients of the interpolator.
+   !> Compute the value of the interpolant at several given abscissae given as an array from given function values. Does not use a precomputed interpolant.
    procedure(interpolator_1d_array), deferred :: &
         interpolate_array
-   !> Compute the value of the interpolant at all grid points shifted by the given displacement. Does not use a precomputed interpolant.
+   !> Compute the value of the interpolant at all grid points shifted by the given displacement from function values. Does not use a precomputed interpolant.
    procedure(interpolator_1d_array_disp), deferred :: &
         interpolate_array_disp
    !> Compute the value of the interpolant at all grid points shifted by the given displacement. Does not use a precomputed interpolant.
