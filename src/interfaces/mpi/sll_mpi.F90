@@ -108,8 +108,8 @@ module sll_mpi
 
 #ifndef __INTEL_COMPILER
   public ::              &
-    mpi_finalize,        &
-    mpi_waitall
+    mpi_finalize!,        &
+    !mpi_waitall
 #endif /* __INTEL_COMPILER */
 
   private
