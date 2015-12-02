@@ -26,6 +26,7 @@
 #   - 22 Oct 2015: only preprocess files (Yaman Güçlü [YG], IPP Garching).
 #   - 02 Nov 2015: also preprocess executable sources (YG).
 #   - 26 Nov 2015: add OpenMP flag (YG).
+#   - 02 Dec 2015: fix dependency bug (YG).
 
 if(__add_all_preproc)
    return()
@@ -165,7 +166,8 @@ function(add_preprocessor_target)
     list(REMOVE_AT _cpp_preproc_sources 0)
     add_custom_command(OUTPUT "${_preproc_src}"
         COMMAND ${CMAKE_Fortran_COMPILER} ${incflags} ${defflags} ${preprocessor_only_flags} ${_src} > ${_preproc_src}
-        IMPLICIT_DEPENDS Fortran "${_source}"
+##        IMPLICIT_DEPENDS Fortran "${_source}"
+        DEPENDS "${_src}"
         COMMENT "Preprocessing ${_src}"
         VERBATIM
       )
