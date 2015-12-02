@@ -306,12 +306,13 @@ print*,"iota=",iota
   f_classic = f_init
   err = 0._f64
   do iter=1,nb_iter
-    f = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Npts_theta, &
       Npts_phi, &
       f_classic, &
       charac_theta, &
-      charac_phi)
+      charac_phi, &
+      f)
     f_classic = f
     
     call compute_feet_analytic( &
