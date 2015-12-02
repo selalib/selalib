@@ -3,8 +3,6 @@ program test_cubic_splines
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-#define PRINT_SPLINE_COEFFS 0
-
 use util_constants
 use test_processes_module
 implicit none
@@ -327,7 +325,7 @@ contains
          SLL_PERIODIC, SLL_PERIODIC )
 
     call compute_cubic_spline_2d( data_2d, s )
-    acc_2D = 0.0
+    acc_2D = 0.0_f64
     do j=1, npts2
        do i=1, npts1
           x1 = coordinates_i(i)
