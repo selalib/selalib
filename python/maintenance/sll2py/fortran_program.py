@@ -13,12 +13,12 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 24 Nov 2015
+# Last revision: 01 Dec 2015
 #
-from __future__        import print_function
-from content_extractor import compute_local_symbols, compute_external_symbols
-from fortran_units     import FortranUnit
-from fparser           import statements, block_statements
+from __future__         import print_function
+from .content_extractor import compute_local_symbols, compute_external_symbols
+from .fortran_units     import FortranUnit
+from .fparser           import statements, block_statements
 
 __all__ = ['FortranProgram']
 __docformat__ = 'reStructuredText'
