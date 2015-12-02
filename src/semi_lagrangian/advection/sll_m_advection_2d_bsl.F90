@@ -223,12 +223,13 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    output = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       adv%Npts1, &
       adv%Npts2, &
       input, &
       adv%charac_feet1, &
-      adv%charac_feet2)      
+      adv%charac_feet2, &
+      output)      
           
   end subroutine BSL_advect_2d
 

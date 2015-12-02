@@ -137,7 +137,7 @@ subroutine test_interpolator_2d()
      xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
   end do
   end do
-  data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
+  call interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2, data_out)
 
   print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
 end subroutine test_interpolator_2d

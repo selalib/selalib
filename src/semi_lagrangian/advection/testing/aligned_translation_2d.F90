@@ -536,12 +536,12 @@ do istep = 1,num_dt1
 
 
   do step =1,nb_step
-    f_new = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Nc_x1+1, &
       Nc_x2+1, &
       f, &
       feet_x1, &
-      feet_x2)
+      feet_x2, f_new)
     f = f_new      
   enddo
 
