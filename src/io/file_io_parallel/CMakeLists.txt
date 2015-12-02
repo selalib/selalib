@@ -8,7 +8,8 @@ ENDIF()
 
 ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
 
-TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective
+TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_mpi
+                                           sll_collective
                                            sll_file_io
                                            sll_assert 
                                            sll_utilities

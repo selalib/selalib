@@ -48,7 +48,7 @@ module sll_m_decomposition
 #include "sll_memory.h"
 #include "sll_assert.h"
    use sll_m_collective
-   use mpi
+   use sll_mpi
 
    implicit none
 

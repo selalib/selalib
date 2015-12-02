@@ -1,5 +1,5 @@
 ADD_EXECUTABLE(test_io_serial_blocks test_serial_blocks.F90)
-TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_file_io_parallel )
+TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_mpi sll_file_io_parallel )
 
 SET(ARGS " ")
 SET(PROCS  4)

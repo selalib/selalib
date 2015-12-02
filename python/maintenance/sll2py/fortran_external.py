@@ -1,14 +1,14 @@
 import re
-import fortran_iso_c_binding
-import fortran_iso_fortran_env
-import fortran_deboor
-import fortran_fftpack
-import fortran_fishpack
-import fortran_mudpack
-import fortran_lapack
-import fortran_blas
-import fortran_hdf5
-import fortran_openmp
+from . import fortran_iso_c_binding
+from . import fortran_iso_fortran_env
+from . import fortran_deboor
+from . import fortran_fftpack
+from . import fortran_fishpack
+from . import fortran_mudpack
+from . import fortran_lapack
+from . import fortran_blas
+from . import fortran_hdf5
+from . import fortran_openmp
 
 #==============================================================================
 # Fortran extension modules
