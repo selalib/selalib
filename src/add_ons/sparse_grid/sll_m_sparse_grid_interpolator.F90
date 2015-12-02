@@ -9,6 +9,7 @@ module sll_m_sparse_grid_interpolator
 #include "sll_assert.h"
 #include "sll_fftw.h" 
 
+  use iso_c_binding
   use sll_m_interpolators_1d_base
   use sll_m_constants
   use sll_m_periodic_interpolator_1d
