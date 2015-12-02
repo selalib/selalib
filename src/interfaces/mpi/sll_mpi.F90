@@ -53,14 +53,14 @@ module sll_mpi
 ! Module interface
 
   public ::              &
-    mpi_allgather,       &
-    mpi_allreduce,       &
-    mpi_alltoall,        &
-    mpi_alltoallv,       &
+    !mpi_allgather,       &
+    !mpi_allreduce,       &
+    !mpi_alltoall,        &
+    !mpi_alltoallv,       &
     mpi_any_source,      &
     mpi_any_tag,         &
     mpi_barrier,         &
-    mpi_bcast,           &
+    !mpi_bcast,           &
     mpi_character,       &
     mpi_comm_free,       &
     mpi_comm_rank,       &
@@ -71,16 +71,16 @@ module sll_mpi
     mpi_double,          &
     mpi_double_complex,  &
     mpi_double_precision,&
-    mpi_gather,          &
-    mpi_iallreduce,      &
+    !mpi_gather,          &
+    !mpi_iallreduce,      &
     mpi_in_place,        &
     mpi_info_null,       &
     mpi_init,            &
     mpi_init_thread,     &
     mpi_integer,         &
     mpi_integer8,        &
-    mpi_irecv,           &
-    mpi_isend,           &
+    !mpi_irecv,           &
+    !mpi_isend,           &
     mpi_land,            &
     mpi_logical,         &
     mpi_lor,             &
@@ -89,11 +89,11 @@ module sll_mpi
     mpi_prod,            &
     mpi_real,            &
     mpi_real8,           &
-    mpi_recv,            &
-    mpi_reduce,          &
+    !mpi_recv,            &
+    !mpi_reduce,          &
     mpi_request_null,    &
-    mpi_send,            &
-    mpi_sendrecv,        &
+    !mpi_send,            &
+    !mpi_sendrecv,        &
     mpi_source,          &
     mpi_status_ignore,   &
     mpi_status_size,     &
