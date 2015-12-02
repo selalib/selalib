@@ -47,7 +47,7 @@ contains
     sll_int32                               :: NP_r, NP_theta
     sll_int32                               :: NP_r_loc, NP_theta_loc
     sll_int32                               :: ierr
-    sll_int64                               :: colsz
+    sll_int32                               :: colsz
     type(qn_solver_2d_parallel), pointer    :: plan
 
     colsz  = sll_get_collective_size(sll_world_collective)
@@ -129,7 +129,7 @@ contains
     sll_int32, dimension(plan%NP_r)      :: ipiv
     sll_real64, dimension(3*plan%NP_r)   :: a_resh ! 3*n
     sll_real64, dimension(7*plan%NP_r)   :: cts ! 7*n allocation
-    sll_int64                            :: colsz ! collective size
+    sll_int32                            :: colsz ! collective size
     sll_int32, dimension(1:3)            :: global
     sll_int32                            :: ind
 
@@ -183,12 +183,12 @@ contains
     call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%array_lin_sys ) 
 
     do i=1,NP_r_loc
-       plan%array_fft(i,:,1) = c(i)
+       plan%array_fft(i,:,1) = cmplx(c(i),0.0_f64,f64)
     enddo
     call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%c_remap )
 
     do i=1,NP_r_loc
-       plan%array_fft(i,:,1) = Te(i)
+       plan%array_fft(i,:,1) = cmplx(Te(i),0.0_f64,f64)
     enddo
     call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%Te_remap )
 
@@ -223,7 +223,7 @@ contains
                                                   plan%array_fft(i,:,1) ) 
     enddo
 
-    phi = real(plan%array_fft(:,:,1), f64)/NP_theta
+    phi = real(plan%array_fft(:,:,1), f64)/real(NP_theta,f64)
 
   end subroutine solve_qn_solver_2d_parallel
 

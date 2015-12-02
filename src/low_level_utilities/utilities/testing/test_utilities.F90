@@ -21,8 +21,8 @@ program utils_tester
   sll_int64  :: largest_int32
   sll_int64  :: acc64
 
-  re64 = 3.2
-  re32 = 1.0
+  re64 = 3.2_f64
+  re32 = 1.0_f32
   in64 =  transfer(z'7fffffff',in64) ! largest 32-bit int, 2**31-1
   !largest 64-bit integer 2**63-1
   largest_int64 = transfer(z'7fffffffffffffff',largest_int64)

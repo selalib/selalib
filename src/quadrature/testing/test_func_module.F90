@@ -5,10 +5,10 @@ implicit none
 contains
 
   function test_func(x)
-    intrinsic :: dcos
+    intrinsic :: cos
     sll_real64 :: test_func
     sll_real64, intent(in) :: x
-    test_func = x*x*dcos(x)
+    test_func = x*x*cos(x)
   end function test_func
 
   function one(x)
@@ -18,12 +18,12 @@ contains
   end function one
 
   function test_func_2d(x,y)
-    intrinsic  :: dcos
-    intrinsic  :: dsin
+    intrinsic  :: cos
+    intrinsic  :: sin
     sll_real64 :: test_func_2d
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
-    test_func_2d = x*y*dcos(x)*dsin(y)
+    test_func_2d = x*y*cos(x)*sin(y)
   end function test_func_2d
 
   function one_2d(x, y)

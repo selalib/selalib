@@ -22,6 +22,8 @@ module sll_m_arbitrary_degree_spline_interpolator_2d
 #include "sll_assert.h" 
 use sll_m_interpolators_2d_base
 use sll_m_utilities
+use sll_m_deboor_splines_1d, only: &
+  deboor_type, bsplvb, bsplvd, interv, bvalue, splint_der
 use sll_m_arbitrary_degree_spline_interpolator_1d
 
 implicit none
@@ -2334,7 +2336,7 @@ case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
 case (585) ! 4. dirichlet in all sides
 case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
 
-  interpolator%slope_min1 = 0.0
+  interpolator%slope_min1 = 0.0_f64
   interpolator%compute_slope_min1= .FALSE.
   if ( present( slope_max1)) then 
      interpolator%slope_max1 = slope_max1
@@ -3244,8 +3246,7 @@ sll_real64, dimension(ny)                 :: work_y
 sll_real64, dimension(ny,nx),     target  :: bwork
 sll_real64, dimension(:,:),       pointer :: pwork
 
-sll_int32 :: i, j, flag
-sll_int32 :: ierr
+sll_int32 :: i, flag
 
 ! *** set up knots and interpolate between knots
 
@@ -3614,268 +3615,4 @@ end do
 
 end subroutine spli2d_custom_derder
 
-
-!*************************************************************************
-!
-!! SPLINT_der produces the B-spline coefficients BCOEF of an 
-! interpolating spline with the values of a derivative in points
-!
-!  Discussion:
-!
-!    The spline is of order K with knots T(1:N+K+M), and takes on the 
-!    value GTAU(I) at TAU(I), for I = 1 to N and 
-!    value of the derivative GTAU_der(I) at TAU_der(I), for I = 1 to M
-!
-!    The I-th equation of the linear system 
-!
-!      A  * BCOEF = B
-!      A' * BCOEF = B'
-!
-!    for the B-spline coefficients of the interpolant enforces interpolation
-!    at TAU(1:N) and the derivative at TAU_der(I).
-!
-!    Hence, B(I) = GTAU(I) and B'(I) = GTAU_der(I) , for all I,
-!    and A is a band matrix with 2*K-1
-!    bands, if it is invertible.
-!
-!    The matrix A is generated row by row and stored, diagonal by diagonal,
-!    in the rows of the array Q, with the main diagonal going
-!    into row K.  See comments in the program.
-!
-!    The banded system is then solved by a call to BANFAC, which 
-!    constructs the triangular factorization for A and stores it again in
-!    Q, followed by a call to BANSLV, which then obtains the solution
-!    BCOEF by substitution.
-!
-!    BANFAC does no pivoting, since the total positivity of the matrix
-!    A makes this unnecessary.
-!
-!    The linear system to be solved is (theoretically) invertible if
-!    and only if
-!      T(I) < TAU(I) < TAU(I+K), for all I.
-!    Violation of this condition is certain to lead to IFLAG = 2.
-!
-!  Modified:
-!
-!    10 April 2014
-!
-!  Author:
-!
-!    Aurore Back
-!
-!
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) TAU(N), the data point abscissas.The entries in
-!    TAU should be strictly increasing.
-!
-!    Input, integer ( kind = 8 ) TAU_der(M), the node index to evaluate the derivative.
-!
-!    Input, real ( kind = 8 ) GTAU(N), the data ordinates.
-!
-!    Input, real ( kind = 8 ) GTAU_der(M), the data ordinates.
-!
-!    Input, real ( kind = 8 ) T(N+K+M), the knot sequence.
-!
-!    Input, integer ( kind = 4 ) N, the number of data points for the interpolation.
-!
-!    Input, integer ( kind = 4 ) M, the number of data points for the derivative.
-!
-!    Input, integer ( kind = 4 ) K, the order of the spline.
-!
-!    Output, real ( kind = 8 ) Q((2*K-1)*(N+M)), the triangular factorization
-!    of the coefficient matrix of the linear system for the B-coefficients 
-!    of the spline interpolant.  The B-coefficients for the interpolant 
-!    of an additional data set can be obtained without going through all 
-!    the calculations in this routine, simply by loading HTAU into BCOEF 
-!    and then executing the call:
-!      call banslv ( q, 2*k-1, n+m, k-1, k-1, bcoef )
-!
-!    Output, real ( kind = 8 ) BCOEF(N+M), the B-spline coefficients of 
-!    the interpolant.
-!
-!    Output, integer ( kind = 4 ) IFLAG, error flag.
-!    1, = success.
-!    2, = failure.
-!
-subroutine splint_der( db,            &
-                       tau,           &
-                       gtau,          &
-                       tau_der,       &
-                       gtau_der,      &
-                       t,             &
-                       n,             &
-                       m,             &
-                       k,             &
-                       q,             &
-                       bcoef_spline,  &
-                       iflag )
-    
-type(deboor_type)                                  :: db
-sll_int32                            , intent(in)  :: n
-sll_int32                            , intent(in)  :: m
-sll_int32                            , intent(in)  :: k
-sll_real64, dimension(n)             , intent(in)  :: tau
-sll_real64, dimension(n)             , intent(in)  :: gtau 
-sll_int32,  dimension(m)             , intent(in)  :: tau_der
-sll_real64, dimension(m)             , intent(in)  :: gtau_der
-sll_real64, dimension(n+k+m)         , intent(in)  :: t
-sll_real64, dimension((2*k-1)*(n+m)) , intent(out) :: q
-sll_real64, dimension(n+m)           , intent(out) :: bcoef_spline 
-sll_int32                            , intent(out) :: iflag
-
-
-
-sll_real64, dimension(n+m)           :: bcoef 
-sll_int32 :: i
-sll_int32 :: mflag
-sll_int32 :: j,l
-sll_int32 :: jj
-sll_int32 :: kpkm2
-sll_int32 :: left
-sll_real64:: taui,taui_der
-sll_real64, dimension(k,k):: a
-sll_real64,dimension(k,2) :: bcoef_der
-
-kpkm2 = 2 * ( k - 1 )
-left = k
-q(1:(2*k-1)*(n+m)) = 0.0_f64
-a(1:k,1:k) = 0.0_f64
-bcoef_der(1:k,1:2) = 0.0_f64
-
-! we must suppose that m is <= than n 
-if (m > n) then
-   print*, 'problem m must be < = at n'
-   print*, 'value m =', m, 'value n =', n
-   stop
-end if
-l = 1 ! index for the derivative
-!
-!  Loop over I to construct the N interpolation equations.
-!
-do i = 1, n-1
-   
-  taui = tau(i)
-  
-  !
-  !  Find LEFT in the closed interval (I,I+K-1) such that
-  !
-  !    T(LEFT) <= TAU(I) < T(LEFT+1)
-  !
-  !  The matrix is singular if this is not possible.
-  !  With help of the Schoenberg-Whitney theorem 
-  !  we can prove that if the diagonal of the 
-  !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
-
-  call interv( db, t, n+m+k, taui, left, mflag )
-
-  !
-  !  The I-th equation enforces interpolation at TAUI, hence for all J,
-  !
-  !    A(I,J) = B(J,K,T)(TAUI).
-  !
-  !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-  !
-  !These K numbers are returned, in BCOEF 
-  ! (used for temporary storage here),
-  !  by the following.
-  !
-  
-  call bsplvb ( db, t, k, 1, taui, left, bcoef )
-  
-  !
-  !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-  !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-  !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-  !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-  !  BANFAC.
-  !
-  !  In the present program, we treat Q as an equivalent
-  !  one-dimensional array, because of fortran restrictions on
-  !  dimension statements.
-  !
-  !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-  !
-  !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-  !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
-  !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-  !
-  jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-  
-  do j = 1, k
-     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-     q(jj) = bcoef(j)
-  end do
-
-  bcoef_spline(i+ l-1) = gtau(i)
-  if ( tau_der(l) == i ) then   
-     taui_der = taui
-     
-     call bsplvd( db, t, k, taui_der, left, a, bcoef_der, 2)
-
-     l = l + 1
-     jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-  
-     do j = 1, k
-        jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-        q(jj) = bcoef_der(j,2)
-     end do
-  bcoef_spline(i+ l-1) = gtau_der(l-1)
-  end if
-  
-end do
-
-taui = tau(n)
-call interv( db, t, n+m+k, taui, left, mflag )
-
-if ( tau_der(l)== n ) then   
-
-  taui_der = taui
-  
-  call bsplvd( db, t, k, taui_der, left, a, bcoef_der, 2)
-
-  
-  jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-
-  do j = 1, k
-     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-     q(jj) = bcoef_der(j,2)
-  end do
-  bcoef_spline(n+ l-1) = gtau_der(l)
-  l = l + 1
-      
-end if
-
-call bsplvb ( db, t, k, 1, taui, left, bcoef )
-jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
-do j = 1, k
-  jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-  q(jj) = bcoef(j)
-end do
-bcoef_spline(n+l-1) = gtau(n)
-
-!
-!  Obtain factorization of A, stored again in Q.
-!
-call banfac ( q, k+k-1, n+m, k-1, k-1, iflag )
-
-if ( iflag == 2 ) then
-   write ( *, '(a)' ) ' '
-   write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-   write ( *, '(a)' ) '  The linear system is not invertible!'
-   return
-end if
-!
-!  Solve 
-!
-!    A * BCOEF = GTAU
-!
-!  by back substitution.
-!
-call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
-
-end subroutine splint_der
-
-  
 end module sll_m_arbitrary_degree_spline_interpolator_2d

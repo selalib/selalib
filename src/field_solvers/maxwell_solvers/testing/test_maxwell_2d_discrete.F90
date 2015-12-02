@@ -21,6 +21,9 @@ use sll_m_dg_fields
 use sll_m_maxwell_solvers_base
 use sll_m_maxwell_2d_diga
 
+use m_maxwell_helper_functions, only : &
+     sol_bz
+
 implicit none
   
 #define NPTS1 33
@@ -51,8 +54,6 @@ type(sll_dg_field_2d), pointer      :: bz_a, dz_a
 type(sll_dg_field_2d), pointer      :: ex_d, dx_d
 type(sll_dg_field_2d), pointer      :: ey_d, dy_d
 type(sll_dg_field_2d), pointer      :: bz_d, dz_d
-
-sll_real64, external :: sol_ex, sol_ey, sol_bz
   
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64

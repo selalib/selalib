@@ -68,7 +68,7 @@ function l2norm_sll_pif_fieldsolver(this, solution) result(l2norm)
  
  SLL_ASSERT(size(solution)==this%problemsize())
  
- l2norm=sqrt(dot_product(solution, solution))
+ l2norm=real(sqrt(dot_product(solution, solution)),f64)
  
 end function l2norm_sll_pif_fieldsolver
 
@@ -93,7 +93,7 @@ subroutine sll_pif_fieldsolver_init(this,maxmode)
  SLL_ALLOCATE(this%rhs_one(1:this%problemsize()),ierr)
  do idx=1,size(this%allmodes,2)
    if (sum(abs(this%allmodes(:,idx)))==0) then
-      this%rhs_one(idx)=product((2*sll_pi/this%unitmode))
+      this%rhs_one(idx)=cmplx(product((2*sll_pi/this%unitmode)),0.,f64)
    endif
  end do
 end subroutine  sll_pif_fieldsolver_init
@@ -169,12 +169,12 @@ end function get_fourier_modes2_chunk
   sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
   sll_comp64, dimension(:),intent(out) :: fouriermodes
   sll_int32, intent(in) :: chunksize
-  sll_int32 :: num, ierr, chunk
+  sll_int32 :: num, chunk
   sll_comp64,  dimension(size(fouriermodes)) :: fmodechunk
 
   
   num=size(particle,2)
-  fouriermodes=0
+  fouriermodes=(0.0_f64,0.0_f64)
 do chunk=1,ceiling(real(num/chunksize,8))
   call this%calc_fourier_modes2&
       (particle(:, (chunk-1)*chunksize+1:min(chunk*chunksize,num)), fmodechunk)
@@ -193,20 +193,19 @@ subroutine calc_fourier_modes2(this, particle,fouriermodes)
  !sll_real64, dimension(size(particle,2)) :: weight
  sll_comp64, dimension(this%dimx,size(particle,2)) :: unitmodes
  sll_comp64, dimension(:),intent(out) :: fouriermodes
- sll_int32 :: idx,ierr
+ sll_int32 :: idx!,ierr
  !Calculate unit fourier modes first
- unitmodes=exp(-sll_i1*diag_dot_matrix_real64(this%unitmode, particle(1:this%dimx,:)));
+ unitmodes=exp(cmplx(0.0,-diag_dot_matrix_real64(this%unitmode, particle(1:this%dimx,:)),f64));
  !Extract weights from particle array
  !weight=particle(this%dimx+1,:)
  
  do idx=1, this%problemsize()
-  fouriermodes(idx)=sum( product(array_exponent_comp64( unitmodes,this%allmodes(:,idx)),1)*particle(this%dimx+1,:))
+  fouriermodes(idx) =  &
+  sum(product(array_exponent_comp64(unitmodes,this%allmodes(:,idx)),1)*cmplx(particle(this%dimx+1,:),0.0,f64))
  end do
  
 end subroutine calc_fourier_modes2
 
- 
- 
  
 !please apply this chuncked
 function get_fourier_modes2(this, particle) result(fouriermodes)
@@ -233,10 +232,11 @@ function sll_pif_fieldsolver_solve_poisson(this, rhs) result(solution)
  do idx=1,size(rhs)
  !intermit constant mode
   if (sum(abs(this%allmodes(:,idx)))/=0) then
-   solution(idx)=rhs(idx)/sum((this%allmodes(:,idx)*this%unitmode(:))**2)&
-                 *product(this%unitmode/sll_pi/2)
+   solution(idx)=rhs(idx)                               &
+     / cmplx(sum((this%allmodes(:,idx)*this%unitmode(:))**2)  &
+     *       product(this%unitmode/sll_pi/2.0_f64),0.0,f64)
   else
-       solution(idx)=0
+       solution(idx)=(0.0_f64,0.0_f64)
   endif
  end do
  
@@ -261,15 +261,15 @@ function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solutio
  do idx=1,size(rhs)
  !intermit constant mode
   if (sum(abs(this%allmodes(:,idx)))/=0) then
-   solution(idx)=rhs(idx)*product(this%unitmode/sll_pi/2)
+   solution(idx)=rhs(idx)*cmplx(product(this%unitmode/sll_pi/2),0.0,f64)
   else
-       solution(idx)=0
+       solution(idx)=(0.0_f64,0.0_f64)
   endif
   
   if (this%dimx==3) then
   !remove Zonal flow in zonaldim
   if (this%allmodes(zonaldim,idx)==0) then
-    solution(idx)=0
+    solution(idx)=(0.0_f64,0.0_f64)
   endif
   endif
   
@@ -297,7 +297,7 @@ function sll_pif_fieldsolver_solve_mass(this, rhs) result(solution)
  
  SLL_ASSERT(size(rhs)==this%problemsize())
  
- solution=rhs*product(this%unitmode/sll_pi/2)
+ solution=rhs*cmplx(product(this%unitmode/sll_pi/2),0.0_f64,f64)
  do idx=1,this%problemsize()
   if ( .not. this%allmodes(1,idx)==0) then
    solution(idx)=solution(idx)*2
@@ -314,7 +314,7 @@ function sll_pif_fieldsolver_solve_quasineutral(this, rhs) result(solution)
  
  SLL_ASSERT(size(rhs)==this%problemsize())
  
- solution=rhs*product(this%unitmode/sll_pi/2)
+ solution=rhs*cmplx(product(this%unitmode/sll_pi/2),0.0,f64)
  do idx=1,this%problemsize()
   if ( .not. this%allmodes(1,idx)==0) then
    solution(idx)=solution(idx)*2
@@ -322,7 +322,7 @@ function sll_pif_fieldsolver_solve_quasineutral(this, rhs) result(solution)
   
   !Remove constant mode, could also be a dimensional average
   if (all(this%allmodes(:,idx)==0)) then
-    solution(idx)=0
+    solution(idx)=(0.0_f64,0.0_f64)
   endif
  end do
 end function sll_pif_fieldsolver_solve_quasineutral
@@ -335,22 +335,22 @@ function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradie
  !sll_comp64 :: partmode
  sll_comp64, dimension(size(pos,2)) :: partmode
  sll_int32 :: idx, jdx
- gradient=0
+ gradient=0.0_f64
  
 !   do jdx=1,size(pos,2)
 !   
 !    do idx=1,this%problemsize()
 !        partmode=sll_i1*exp(sll_i1*(dot_product(this%allmodes(:,idx)*this%unitmode(:),pos(1:this%dimx,jdx))  ))
 !  
-!        gradient(:,jdx)=gradient(:,jdx)+(real(partmode)*real(fouriermodes(idx))-imag(partmode)*imag(fouriermodes(idx)))*&
+!        gradient(:,jdx)=gradient(:,jdx)+(real(partmode)*real(fouriermodes(idx))-aimag(partmode)*aimag(fouriermodes(idx)))*&
 !                               (this%allmodes(:,idx)*this%unitmode(:))
 !    end do
 !  end do
  
  do idx=1,this%problemsize()
- partmode=sll_i1*exp(sll_i1*matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)))
+ partmode=sll_i1*exp(cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)),f64))
  do jdx=1,size(partmode)
-      gradient(:,jdx)=gradient(:,jdx)+(real(partmode(jdx))*real(fouriermodes(idx))-imag(partmode(jdx))*imag(fouriermodes(idx)))*&
+      gradient(:,jdx)=gradient(:,jdx)+(real(partmode(jdx))*real(fouriermodes(idx))-aimag(partmode(jdx))*aimag(fouriermodes(idx)))*&
                              (this%allmodes(:,idx)*this%unitmode(:))
   end do
  end do
@@ -363,11 +363,11 @@ function sll_pif_fieldsolver_eval_solution(this, pos,fouriermodes) result(fun)
  sll_comp64, dimension(:), intent(in) :: fouriermodes
  sll_real64, dimension(size(pos,2)) ::  fun
  sll_comp64, dimension(size(pos,2)) :: partmode
- sll_int32 :: idx, jdx
- fun=0
+ sll_int32 :: idx!, jdx
+ fun=0.0_f64
  do idx=1,this%problemsize()
- partmode=exp(sll_i1*matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)))
-      fun(:)=fun(:)+(real(partmode(:))*real(fouriermodes(idx))-imag(partmode(:))*imag(fouriermodes(idx)))
+   partmode=exp(cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)),f64))
+   fun(:)=fun(:)+(real(partmode(:))*real(fouriermodes(idx))-aimag(partmode(:))*aimag(fouriermodes(idx)))
  end do
 end function sll_pif_fieldsolver_eval_solution
 
@@ -384,7 +384,7 @@ function get_fourier_modes_chunk(this, particle, chunksize) result(fouriermodes)
    SLL_ALLOCATE(fouriermodes(1:this%problemsize()),ierr)
 
   num=size(particle,2)
-  fouriermodes=0
+  fouriermodes=(0.0_f64,0.0_f64)
 do chunk=1,ceiling(real(num/chunksize,8))
   call this%calc_fourier_modes&
       (particle(:, (chunk-1)*chunksize+1:min(chunk*chunksize,num)), fmodechunk)
@@ -401,7 +401,7 @@ subroutine calc_fourier_modes(this, particle, fouriermodes)
  sll_int32 :: idx
 
 do idx=1, this%problemsize()
-  fouriermodes(idx)=sum(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
+  fouriermodes(idx)=sum(exp(-cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)),f64))*cmplx(particle(this%dimx+1,:),0.0,f64))
  end do
  
 end subroutine calc_fourier_modes
@@ -410,9 +410,9 @@ function kahan_sum_comp64(summands) result(sum)
  sll_comp64, dimension(:), intent(in) :: summands
  sll_comp64 :: sum, c,t,y
  sll_int32 :: idx
- sum=0
- c=0
- t=0
+ sum=(0.0_f64,0.0_f64)
+ c=(0.0_f64,0.0_f64)
+ t=(0.0_f64,0.0_f64)
     do idx = 1,size(summands)
         y = summands(idx) - c  
         t = sum + y         
@@ -426,9 +426,9 @@ function kahan_sum_real64(summands) result(sum)
  sll_real64, dimension(:), intent(in) :: summands
  sll_real64 :: sum, c,t,y
  sll_int32 :: idx
- sum=0
- c=0
- t=0
+ sum=0.0_f64
+ c=0.0_f64
+ t=0.0_f64
     do idx = 1,size(summands)
         y = summands(idx) - c  
         t = sum + y         

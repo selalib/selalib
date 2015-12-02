@@ -103,10 +103,14 @@ subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
   adv%delta_eta1 = (eta1_max-eta1_min) / nc_eta1
 
   SLL_CLEAR_ALLOCATE(adv%d_dx(1:nc_eta1), error)
-  SLL_CLEAR_ALLOCATE(adv%fk(1:nc_eta1/2+1), error)
-  SLL_CLEAR_ALLOCATE(adv%ek(1:nc_eta1/2+1), error)
-  SLL_CLEAR_ALLOCATE(adv%r0(1:nc_eta1/2+1), error)
-  SLL_CLEAR_ALLOCATE(adv%r1(1:nc_eta1/2+1), error)
+  SLL_ALLOCATE(adv%fk(1:nc_eta1/2+1), error)
+  SLL_ALLOCATE(adv%ek(1:nc_eta1/2+1), error)
+  SLL_ALLOCATE(adv%r0(1:nc_eta1/2+1), error)
+  SLL_ALLOCATE(adv%r1(1:nc_eta1/2+1), error)
+  adv%fk = (0.0_f64, 0.0_f64)
+  adv%ek = (0.0_f64, 0.0_f64)
+  adv%r0 = (0.0_f64, 0.0_f64)
+  adv%r1 = (0.0_f64, 0.0_f64)
 
   adv%fwx => fft_new_plan(nc_eta1, adv%d_dx,  adv%fk)
   adv%bwx => fft_new_plan(nc_eta1, adv%fk, adv%d_dx)

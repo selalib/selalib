@@ -57,9 +57,9 @@ module test_func_module
            phase = real(function_num-13,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
                    !real(i-1-12,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN)
            if ( abs(x-phase) < 1.0e-15 .or. abs(x-(phase+(XMAX-XMIN))) < 1.0e-15 ) then
-              f = 1.d0
+              f = 1._f64
            else
-              f = 0.d0
+              f = 0._f64
            endif
 
       end select function_test
@@ -99,7 +99,7 @@ module test_func_module
         case(12)
            fprime = sin(2._f64*x)
         case default
-           fprime = 0.d0
+           fprime = 0._f64
            ! This is just for fprime(XiMIN) and fprime(XiMAX)
            ! We have not necessary fprime(x)=0 for all x
       end select function_test

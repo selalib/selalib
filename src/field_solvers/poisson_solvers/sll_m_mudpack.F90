@@ -90,9 +90,6 @@ sll_int32 :: i
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-!declare coefficient and boundary condition input subroutines external
-external cofx,cofy,bndsp
-
 nx = nc_eta1+1
 ny = nc_eta2+1
 
@@ -154,7 +151,7 @@ yc = eta2_min
 yd = eta2_max
 
 !set for no error control flag
-tolmax = 0.0
+tolmax = 0.0_f64
 
 #ifdef DEBUG
 write(*,101) (iprm(i),i=1,15)
@@ -218,9 +215,6 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-!declare coefficient and boundary condition input subroutines external
-external cofx,cofy,bndsp
-
 !set initial guess because solve should be called every time step in a
 !time dependent problem and the elliptic operator does not depend on time.
 if (this%iguess == 0) then
@@ -237,7 +231,7 @@ write(*,106) intl,method,iguess
 #endif
 
 if ( nxa == 0 .and. nyc == 0 ) &
-   rhs = rhs - sum(rhs) / (nx*ny)
+   rhs = rhs - sum(rhs) / real(nx*ny,f64)
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
@@ -247,7 +241,7 @@ if (error > 0) call exit(0)
 #endif
 
 if ( nxa == 0 .and. nyc == 0 ) &
-   phi = phi - sum(phi) / (nx*ny)
+   phi = phi - sum(phi) / real(nx*ny,f64)
 
 iguess = 1
 ! attempt to improve approximation to fourth order
@@ -344,9 +338,6 @@ sll_real64 :: fprm(6)
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-! declare coefficient and boundary condition input subroutines external
-external coef_polar,bndcr
-
 nx = nr
 ny = nth
 
@@ -409,7 +400,7 @@ yc = theta_min
 yd = theta_max
 
 ! set for no error control flag
-tolmax = 0.0
+tolmax = 0.0_f64
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
@@ -472,9 +463,6 @@ common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-! declare coefficient and boundary condition input subroutines external
-external coef_polar,bndcr
-
 icall = 1
 intl  = 1
 write(*,106) intl,method,iguess
@@ -488,30 +476,23 @@ SLL_ASSERT(ierror == 0)
 106 format(/' approximation call to mud2cr', &
     /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 
-return
 end subroutine solve_mudpack_polar
-
-end module sll_m_mudpack
-
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 subroutine coef_polar(x,y,cxx,cxy,cyy,cx,cy,ce)
-implicit none
 real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
-cxx = 1.0 +0.0*y
-cxy = 0.0 
-cyy = 1.0 / (x*x) 
-cx  = 1.0 / x 
-cy  = 0.0 
-ce  = 0.0 
-return
-end subroutine
+cxx = 1.0_8 +0.0_8*y
+cxy = 0.0_8 
+cyy = 1.0_8 / (x*x) 
+cx  = 1.0_8 / x 
+cy  = 0.0_8 
+ce  = 0.0_8 
+end subroutine coef_polar
 
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,beta,gama,gbdy
 
@@ -522,16 +503,14 @@ if (kbdy.eq.2) then
    ! where x = yorx.   alfa,beta,gama,gbdy corresponding to alfyd(x),
    ! betyd(x),gamyd(x),gbdyd(y) must be output.
 
-   alfa = 1.0+0.0*xory
-   beta = 0.0
-   gama = 0.0
-   gbdy = 0.0
+   alfa = 1.0_8+0.0_8*xory
+   beta = 0.0_8
+   gama = 0.0_8
+   gbdy = 0.0_8
 
 end if
 
-return
-end subroutine
-
+end subroutine bndcr
 
 !the form of the pde solved is:
 !
@@ -550,27 +529,22 @@ end subroutine
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
-implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0 +0.0*x 
-cx  = 0.0
-cex = 0.0
-return
-end
+cxx = 1.0_8 +0.0_8*x 
+cx  = 0.0_8
+cex = 0.0_8
+end subroutine cofx
 
 !> input y dependent coefficients
 subroutine cofy(y,cyy,cy,cey)
-implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0 +0.0*y
-cy  = 0.0
-cey = 0.0
-return
-end
+cyy = 1.0_8 +0.0_8*y
+cy  = 0.0_8
+cey = 0.0_8
+end subroutine cofy
 
 !> input mixed derivative b.c. to mud2sp
 subroutine bndsp(kbdy,xory,alfa,gbdy)
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
@@ -580,7 +554,7 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0
+   alfa = -1.0_8
    gbdy = px + alfa*pe
    return
 end if
@@ -588,10 +562,12 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0
+   alfa = 1.0_8
    gbdy = py + alfa*pe
    return
 end if
-end
+end subroutine bndsp
+
+end module sll_m_mudpack
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

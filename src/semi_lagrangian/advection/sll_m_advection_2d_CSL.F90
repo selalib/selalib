@@ -259,6 +259,8 @@ contains
     sll_int32 :: maxfl
     
     
+    !PN ADDED TO AVOID WARNING
+    SLL_ASSERT(size(input,1) > 0)
     
     Nc_x1 = adv%Npts1-1 
     Nc_x2 = adv%Npts2-1 
@@ -388,8 +390,8 @@ contains
               adv%cell(2,s,ell)=adv%cell(2,s-1,ell)
               adv%tcell(s,ell)=adv%tt(sx,1)
               adv%intx(2*adv%cell(1,s-1,ell)+(dirx-1)/2-2*imin)=yA+adv%tt(sx,1)*(yB-yA)
-              adv%dir(s,1)=1
-              adv%dir(s,2)=dirx  
+              adv%dir(s,1)=1.0_f64
+              adv%dir(s,2)=real(dirx,f64)
               sx=sx+1
             else
               s=s+1
@@ -397,8 +399,8 @@ contains
               adv%cell(2,s,ell)=adv%cell(2,s-1,ell)+diry
               adv%tcell(s,ell)=adv%tt(sy,2)
               adv%inty(2*adv%cell(2,s-1,ell)+(diry-1)/2-2*jmin)=xA+adv%tt(sy,2)*(xB-xA)
-              adv%dir(s,1)=2
-              adv%dir(s,2)=diry
+              adv%dir(s,1)=2.0_f64
+              adv%dir(s,2)=real(diry,f64)
               sy=sy+1
             endif
           enddo
@@ -408,8 +410,8 @@ contains
             adv%cell(2,s,ell)=adv%cell(2,s-1,ell)
             adv%tcell(s,ell)=adv%tt(sx,1)
             adv%intx(2*adv%cell(1,s-1,ell)+(dirx-1)/2-2*imin)=yA+adv%tt(sx,1)*(yB-yA)
-            adv%dir(s,1)=1
-            adv%dir(s,2)=dirx
+            adv%dir(s,1)=1.0_f64
+            adv%dir(s,2)=real(dirx,f64)
             sx=sx+1
           enddo  
           do while(sy<=nby(ell))
@@ -418,8 +420,8 @@ contains
             adv%cell(2,s,ell)=adv%cell(2,s-1,ell)+diry
             adv%tcell(s,ell)=adv%tt(sy,2)
             adv%inty(2*adv%cell(2,s-1,ell)+(diry-1)/2-2*jmin)=xA+adv%tt(sy,2)*(xB-xA)
-            adv%dir(s,1)=2
-            adv%dir(s,2)=diry
+            adv%dir(s,1)=2.0_f64
+            adv%dir(s,2)=real(diry,f64)
             sy=sy+1
           enddo        
 
@@ -679,6 +681,13 @@ contains
     !sll_real64, dimension(:), allocatable :: w_x2
     sll_real64, dimension(:), allocatable :: ww_x2
     sll_int32 :: ierr
+    
+    !PN ADDED TO AVOID WARNING
+    output = 0.0_f64
+    SLL_ASSERT(N_x1 > 0)
+    SLL_ASSERT(N_x2 > 0)
+    SLL_ASSERT(size(input,1)>0)
+    SLL_ASSERT(size(input,2)>0)
     
     !SLL_ALLOCATE(w_x1(r_x1,s_x1),ierr)
     !SLL_ALLOCATE(w_x2(r_x2,s_x2),ierr)

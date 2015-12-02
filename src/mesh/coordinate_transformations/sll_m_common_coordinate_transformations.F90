@@ -119,6 +119,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_x1 = eta2
     identity_x1 = eta1
   end function identity_x1
@@ -129,6 +133,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_x2 = eta1
     identity_x2 = eta2
   end function identity_x2
@@ -139,6 +147,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_eta1 = x2
     identity_eta1 = x1
   end function identity_eta1
@@ -149,6 +161,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_eta2 = x1
     identity_eta2 = x2
   end function identity_eta2
@@ -159,6 +175,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_jac11 = eta1 + eta2
     identity_jac11 = 1.0_f64
   end function identity_jac11
@@ -169,6 +189,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_jac12 = eta1 + eta2
     identity_jac12 = 0.0_f64
   end function identity_jac12
@@ -179,6 +203,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_jac21 = eta1 + eta2
     identity_jac21 = 0.0_f64
   end function identity_jac21
@@ -189,6 +217,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_jac22 = eta1 + eta2
     identity_jac22 = 1.0_f64
   end function identity_jac22
@@ -199,6 +231,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     identity_jac = eta1 + eta2
     identity_jac = 1.0_f64
   end function identity_jac
@@ -622,6 +658,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_x1 = eta1 * cos( eta2 )
   end function polar_x1
 
@@ -631,6 +671,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_x2 = eta1 * sin( eta2 )
   end function polar_x2
 
@@ -640,6 +684,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_eta1 = sqrt( x1*x1 + x2*x2 )
   end function polar_eta1
 
@@ -649,6 +697,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_eta2 = atan( x2 / x1 ) 
   end function polar_eta2
 
@@ -658,6 +710,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_jac11 = eta1
     polar_jac11 = cos ( eta2 ) 
   end function polar_jac11
@@ -668,6 +724,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_jac12 = - eta1 * sin( eta2 )
   end function polar_jac12
 
@@ -677,6 +737,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_jac21 = eta1
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
@@ -687,6 +751,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_jac22 = eta1 * cos ( eta2 )
   end function polar_jac22
 
@@ -696,6 +764,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_jac = eta2
     polar_jac = eta1
   end function polar_jac
@@ -810,6 +882,10 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     polar_shear_jac = eta2
     polar_shear_jac = eta1
   end function polar_shear_jac
@@ -839,6 +915,7 @@ contains
     
     sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_int32  :: eta2i
     sll_real64 :: eps
     sll_real64 :: num_sides
     
@@ -847,7 +924,8 @@ contains
     eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
     eta2r = eta2+sll_pi/num_sides
     eta2r = eta2r*0.5_f64*num_sides/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    eta2i = floor(eta2r)
+    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
     polygonal_x1 = eta1*cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r)
   end function polygonal_x1
 
@@ -860,6 +938,7 @@ contains
     
     sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_int32  :: eta2i
     sll_real64 :: eps
     sll_real64 :: num_sides
 
@@ -868,7 +947,8 @@ contains
     eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
     eta2r = eta2+sll_pi/num_sides
     eta2r = eta2r*0.5_f64*num_sides/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    eta2i = floor(eta2r)
+    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
     polygonal_x2 = eta1*cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r)
   end function polygonal_x2
 
@@ -882,6 +962,7 @@ contains
     
     sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_int32  :: eta2i
     sll_real64 :: eps
     sll_real64 :: num_sides
 
@@ -890,7 +971,8 @@ contains
     eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
     eta2r = eta2+sll_pi/num_sides
     eta2r = eta2r*0.5_f64*num_sides/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    eta2i = floor(eta2r)
+    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
     polygonal_jac11 = eta1
     polygonal_jac11 = cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r) 
   end function polygonal_jac11
@@ -904,6 +986,7 @@ contains
 
     sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_int32  :: eta2i
     sll_real64 :: eps
     sll_real64 :: num_sides
     sll_real64 :: a
@@ -913,7 +996,8 @@ contains
     eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
     eta2r = eta2+sll_pi/num_sides
     eta2r = eta2r*0.5_f64*num_sides/sll_pi
-    a = floor(eta2r)*sll_pi/(0.5_f64*num_sides) 
+    eta2i = floor(eta2r)
+    a = eta2i*sll_pi/(0.5_f64*num_sides) 
     eta2r = sqrt((eta2-a)**2+eps**2)
     polygonal_jac12 = -eta1*cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r) &
       +eta1*cos(sll_pi/num_sides)*cos(eta2_shift) &
@@ -929,6 +1013,7 @@ contains
 
     sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_int32  :: eta2i
     sll_real64 :: eps
     sll_real64 :: num_sides
 
@@ -937,7 +1022,8 @@ contains
     eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
     eta2r = eta2+sll_pi/num_sides
     eta2r = eta2r*0.5_f64*num_sides/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    eta2i = floor(eta2r)
+    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
     polygonal_jac21 = eta1
     polygonal_jac21 = cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r)
   end function polygonal_jac21
@@ -951,6 +1037,7 @@ contains
 
     sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_int32  :: eta2i
     sll_real64 :: eps
     sll_real64 :: num_sides
     sll_real64 :: a
@@ -961,7 +1048,8 @@ contains
     
     eta2r = eta2+sll_pi/num_sides
     eta2r = eta2r*0.5_f64*num_sides/sll_pi
-    a = floor(eta2r)*sll_pi/(0.5_f64*num_sides)
+    eta2i = floor(eta2r)
+    a = eta2i*sll_pi/(0.5_f64*num_sides)
     eta2r = sqrt((eta2-a)**2+eps**2)
     polygonal_jac22 = eta1*cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r) &
       +eta1*cos(sll_pi/num_sides)*sin(eta2_shift) &
@@ -976,11 +1064,17 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
 
+    sll_int32  :: eta2i
     sll_real64 :: eta2r
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)+eta1
+#endif
 
     eta2r = eta2+sll_pi/6._f64
     eta2r = eta2r*3._f64/sll_pi
-    eta2r = abs(eta2-floor(eta2r)*sll_pi/3._f64)
+    eta2i = floor(eta2r)
+    eta2r = abs(eta2-eta2i*sll_pi/3._f64)
     polygonal_jac = eta2
 !    polygonal_jac = polygonal_jac11( eta1, eta2, params ) * &
 !      polygonal_jac22( eta1, eta2, params ) &
@@ -1126,6 +1220,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), optional, intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
     sinprod_gen_eta1 = x2
@@ -1139,6 +1237,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), optional, intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
     sinprod_gen_eta2 = x1
@@ -1416,6 +1518,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), optional, intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
     sinprod_eta1 = x2
@@ -1429,6 +1535,10 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), optional, intent(in) :: params
+#ifdef DEBUG
+    sll_real64 :: dummy
+    dummy = params(1)
+#endif
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
     sinprod_eta2 = x1

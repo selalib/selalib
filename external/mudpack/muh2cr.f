@@ -324,8 +324,8 @@ c
 c
 c      error control
 c
-        relmax = 0.0
-        phmax = 0.0
+        relmax = 0d0
+        phmax = 0d0
         do j=1,nfy
           jj = j*(nfx+2)
           do i=1,nfx
@@ -592,9 +592,9 @@ c
       dlxy4 = dlxy2+dlxy2
       dyox = dly/dlx
       dxoy = dlx/dly
-      cmin = 1.0
-      alfmax = 0.0
-      cemax = 0.0
+      cmin = 1d0
+      alfmax = 0d0
+      cemax = 0d0
 c
 c     compute discretization coefficients on interior and
 c     nonspecified boundaries
@@ -610,8 +610,8 @@ c
 c     flag hyperbolic pde
 c
         if (klevel.eq.ngrid) then
-          if (abs(cx)*dlx.gt.2*abs(cxx) .or.
-     +          abs(cy)*dly.gt.2*abs(cyy)) then
+          if (abs(cx)*dlx.gt.2d0*abs(cxx) .or.
+     +          abs(cy)*dly.gt.2d0*abs(cyy)) then
             ier = -4
           end if
         end if
@@ -643,52 +643,52 @@ c
       call coef(xa,yc,cxx,cxy,cyy,cx,cy,ce)
       c4=-cxy/dlxy2
       cf(1,1,1)=cf(1,1,1)-c4
-      cf(1,1,2)=0.0
+      cf(1,1,2)=0d0
       cf(1,1,3)=cf(1,1,3)-c4
       cf(1,1,4)=c4
       cf(1,1,5)=cf(1,1,5)-c4
-      cf(1,1,6)=0.0
+      cf(1,1,6)=0d0
       cf(1,1,7)=cf(1,1,7)-c4
       cf(1,1,8)=c4
-      cf(1,1,9)=cf(1,1,9)+2.0*c4
+      cf(1,1,9)=cf(1,1,9)+2d0*c4
       call coef(xb,yc,cxx,cxy,cyy,cx,cy,ce)
       c2=cxy/dlxy2
       cf(nx,1,1)=cf(nx,1,1)-c2
       cf(nx,1,2)=c2
       cf(nx,1,3)=cf(nx,1,3)-c2
-      cf(nx,1,4)=0.0
+      cf(nx,1,4)=0d0
       cf(nx,1,5)=cf(nx,1,5)-c2
       cf(nx,1,6)=c2
       cf(nx,1,7)=cf(nx,1,7)-c2
-      cf(nx,1,8)=0.0
-      cf(nx,1,9)=cf(nx,1,9)+2.0*c2
+      cf(nx,1,8)=0d0
+      cf(nx,1,9)=cf(nx,1,9)+2d0*c2
       call coef(xa,yd,cxx,cxy,cyy,cx,cy,ce)
       c2=cxy/dlxy2
       cf(1,ny,1)=cf(1,ny,1)-c2
       cf(1,ny,2)=c2
       cf(1,ny,3)=cf(1,ny,3)-c2
-      cf(1,ny,4)=0.0
+      cf(1,ny,4)=0d0
       cf(1,ny,5)=cf(1,ny,5)-c2
       cf(1,ny,6)=c2
       cf(1,ny,7)=cf(1,ny,7)-c2
-      cf(1,ny,8)=0.0
-      cf(1,ny,9)=cf(1,ny,9)+2.0*c2
+      cf(1,ny,8)=0d0
+      cf(1,ny,9)=cf(1,ny,9)+2d0*c2
       call coef(xb,yd,cxx,cxy,cyy,cx,cy,ce)
       i = nx
       c4=-cxy/dlxy2
       cf(nx,ny,1)=cf(nx,ny,1)-c4
-      cf(nx,ny,2)=0.0
+      cf(nx,ny,2)=0d0
       cf(nx,ny,3)=cf(nx,ny,3)-c4
       cf(nx,ny,4)=c4
       cf(nx,ny,5)=cf(nx,ny,5)-c4
-      cf(nx,ny,6)=0.0
+      cf(nx,ny,6)=0d0
       cf(nx,ny,7)=cf(nx,ny,7)-c4
       cf(nx,ny,8)=c4
-      cf(nx,ny,9)=cf(nx,ny,9)+2.0*c4
+      cf(nx,ny,9)=cf(nx,ny,9)+2d0*c4
 c
 c     adjust discretization for mixed derivative b.c.
 c
-      gammax = 0.0
+      gammax = 0d0
       if (nxa.eq.2) then
       kbdy = 1
       x = xa
@@ -716,9 +716,9 @@ c
         cf(1,jc,3)=cf(1,jc,3)+c6*(-betjm1/alfjm1*dxoy)+
      +    c5*(betj/alfj*dxoy)+c4*(3.*betjp1/alfjp1*dxoy+dlx2*gamjp1/
      +    alfjp1)
-        cf(1,jc,4)=0.0
-        cf(1,jc,5)=0.0
-        cf(1,jc,6)=0.0
+        cf(1,jc,4)=0d0
+        cf(1,jc,5)=0d0
+        cf(1,jc,6)=0d0
         cf(1,jc,7)=cf(1,jc,7)+c6*(-3.*betjm1/alfjm1*dxoy+dlx2*gamjm1/
      +    alfjm1)+c5*(-betj/alfj*dxoy)+c4*(betjp1/alfjp1*dxoy)
         cf(1,jc,8)=cf(1,jc,8)+c6
@@ -750,25 +750,25 @@ c
 c
 c     check for illegal tangential derivative b.c.
 c
-        if (alfjm1*alfj*alfjp1.eq.0.0) then
+        if (alfjm1*alfj*alfjp1.eq.0d0) then
           ier = 13
           return
         end if
         c1=cf(nx,jc,1)
         c2=cf(nx,jc,2)
         c8=cf(nx,jc,8)
-        cf(nx,jc,1)=0.0
-        cf(nx,jc,2)=0.0
+        cf(nx,jc,1)=0d0
+        cf(nx,jc,2)=0d0
         cf(nx,jc,3)=cf(nx,jc,3)-c8*(-betjm1/alfjm1*dxoy)-c1*(betj/
-     +    alfj*dxoy)-c2*(3.0*betjp1/alfjp1*dxoy+dlx2*gamjp1/alfjp1)
+     +    alfj*dxoy)-c2*(3d0*betjp1/alfjp1*dxoy+dlx2*gamjp1/alfjp1)
         cf(nx,jc,4)=cf(nx,jc,4)+c2
         cf(nx,jc,5)=cf(nx,jc,5)+c1
         cf(nx,jc,6)=cf(nx,jc,6)+c8
-        cf(nx,jc,7)=cf(nx,jc,7)+c8*(3.0*betjm1/alfjm1*dxoy-dlx2*gamjm1
+        cf(nx,jc,7)=cf(nx,jc,7)+c8*(3d0*betjm1/alfjm1*dxoy-dlx2*gamjm1
      +    /alfjm1)+c1*(betj/alfj*dxoy)+c2*(-betjp1/alfjp1*dxoy)
-        cf(nx,jc,8)=0.0
-        cf(nx,jc,9)=cf(nx,jc,9)-c8*(4.0*betjm1/alfjm1*dxoy)-
-     +    c1*(dlx2*gamj/alfj)-c2*(-4.0*betjp1/alfjp1*dxoy)
+        cf(nx,jc,8)=0d0
+        cf(nx,jc,9)=cf(nx,jc,9)-c8*(4d0*betjm1/alfjm1*dxoy)-
+     +    c1*(dlx2*gamj/alfj)-c2*(-4d0*betjp1/alfjp1*dxoy)
         alfjm1 = alfj
         betjm1 = betj
         gamjm1 = gamj
@@ -794,7 +794,7 @@ c
 c
 c     check for illegal tangential derivative b.c.
 c
-        if (betim1*beti*betip1.eq.0.0) then
+        if (betim1*beti*betip1.eq.0d0) then
           ier = 13
           return
         end if
@@ -802,17 +802,17 @@ c
         c7=cf(i,jc,7)
         c8=cf(i,jc,8)
         cf(i,jc,1)=cf(i,jc,1)+c6*(-alfim1/betim1*dyox)+c7*(alfi/beti*
-     +    dyox)+c8*(3.0*alfip1/betip1*dyox+dly2*gamip1/betip1)
+     +    dyox)+c8*(3d0*alfip1/betip1*dyox+dly2*gamip1/betip1)
         cf(i,jc,2)=cf(i,jc,2)+c8
         cf(i,jc,3)=cf(i,jc,3)+c7
         cf(i,jc,4)=cf(i,jc,4)+c6
-        cf(i,jc,5)=cf(i,jc,5)+c6*(-3.0*alfim1/betim1*dyox+dly2*gamim1/
+        cf(i,jc,5)=cf(i,jc,5)+c6*(-3d0*alfim1/betim1*dyox+dly2*gamim1/
      +    betim1)+c7*(-alfi/beti*dyox)+c8*(alfip1/betip1*dyox)
-        cf(i,jc,6)=0.0
-        cf(i,jc,7)=0.0
-        cf(i,jc,8)=0.0
-        cf(i,jc,9)=cf(i,jc,9)+c6*(4.0*alfim1/betim1*dyox)+c7*dly2*gami
-     +    /beti+c8*(-4.0*alfip1/betip1*dyox)
+        cf(i,jc,6)=0d0
+        cf(i,jc,7)=0d0
+        cf(i,jc,8)=0d0
+        cf(i,jc,9)=cf(i,jc,9)+c6*(4d0*alfim1/betim1*dyox)+c7*dly2*gami
+     +    /beti+c8*(-4d0*alfip1/betip1*dyox)
 c     advance scalars for next pass
          alfim1=alfi
          betim1=beti
@@ -841,7 +841,7 @@ c     advance scalars for next pass
 c
 c     check for illegal tangential derivative b.c.
 c
-        if (betim1*beti*betip1.eq.0.0) then
+        if (betim1*beti*betip1.eq.0d0) then
           ier = 13
           return
         end if
@@ -851,10 +851,10 @@ c
         cf(i,jc,1)=cf(i,jc,1)+c4*(alfim1/betim1*dyox)+c3*(-alfi/beti*
      +    dyox)+c2*(-3.*alfip1/betip1*dyox-dly2*gamip1/betip1)
 c     set virtual point coefficients to zero
-        cf(i,jc,2)=0.0
-        cf(i,jc,3)=0.0
-        cf(i,jc,4)=0.0
-        cf(i,jc,5)=cf(i,jc,5)+c4*(3.0*alfim1/betim1*dyox-dly2*gamim1/
+        cf(i,jc,2)=0d0
+        cf(i,jc,3)=0d0
+        cf(i,jc,4)=0d0
+        cf(i,jc,5)=cf(i,jc,5)+c4*(3d0*alfim1/betim1*dyox-dly2*gamim1/
      +    betim1)+c3*(alfi/beti*dyox)+c2*(-alfip1/betip1*dyox)
         cf(i,jc,6)=cf(i,jc,6)+c4
         cf(i,jc,7)=cf(i,jc,7)+c3
@@ -874,7 +874,7 @@ c     set virtual point coefficients to zero
 c
 c     flag singular pde
 c
-      if (cemax.eq.0.0.and.alfmax.eq.0.0) then
+      if (cemax.eq.0d0.and.alfmax.eq.0d0) then
         if (nxa.eq.0.or.(nxa.eq.2.and.nxb.eq.2)) then
           if (nyc.eq.0.or.(nyc.eq.2.and.nyd.eq.2)) then
             ier = -3
@@ -884,7 +884,7 @@ c
 c
 c     flag non-ellipticity
 c
-      if (cmin.le.0.0) then
+      if (cmin.le.0d0) then
       ier = -2
       end if
 c
@@ -903,15 +903,15 @@ c
         c7=cf(1,jc,7)
         c8=cf(1,jc,8)
         cf(1,jc,1)=cf(1,jc,1)+c7*(alfi/beti*dyox)+
-     +    c8*(3.0*alfip1/betip1*dyox+dly2*gamip1/betip1)
+     +    c8*(3d0*alfip1/betip1*dyox+dly2*gamip1/betip1)
         cf(1,jc,2)=cf(1,jc,2)+c8
         cf(1,jc,3)=cf(1,jc,3)+c7
         cf(1,jc,5)=cf(1,jc,5)+c7*(-alfi/beti*dyox)+
      +    c8*(alfip1/betip1*dyox)
-        cf(1,jc,6)=0.0
-        cf(1,jc,7)=0.0
-        cf(1,jc,8)=0.0
-        cf(1,jc,9)=cf(1,jc,9)+c8*(-4.0*alfip1/betip1*dyox)+c7*(
+        cf(1,jc,6)=0d0
+        cf(1,jc,7)=0d0
+        cf(1,jc,8)=0d0
+        cf(1,jc,9)=cf(1,jc,9)+c8*(-4d0*alfip1/betip1*dyox)+c7*(
      +    dly2*gami/beti)
 c
 c     adjust periodic-mixed at (xb,yc)
@@ -924,12 +924,12 @@ c
      +    *dyox)
         cf(nx,jc,3)=cf(nx,jc,3)+c7
         cf(nx,jc,4)=cf(nx,jc,4)+c6
-        cf(nx,jc,5)=cf(nx,jc,5)+c6*(-3.0*alfim1/betim1*dyox+dly2*
+        cf(nx,jc,5)=cf(nx,jc,5)+c6*(-3d0*alfim1/betim1*dyox+dly2*
      +    gamim1/betim1)+c7*(-alfi/beti*dyox)
-        cf(nx,jc,6)=0.0
-        cf(nx,jc,7)=0.0
-        cf(nx,jc,8)=0.0
-        cf(nx,jc,9)=cf(nx,jc,9)+c6*(4.0*alfim1/betim1*dyox)+c7*
+        cf(nx,jc,6)=0d0
+        cf(nx,jc,7)=0d0
+        cf(nx,jc,8)=0d0
+        cf(nx,jc,9)=cf(nx,jc,9)+c6*(4d0*alfim1/betim1*dyox)+c7*
      +    (dly2*gami/beti)
       else if (nxa.eq.2) then
 c
@@ -942,18 +942,18 @@ c     phase 1
         call bndyc(kbdy,yc+dly,alfaa,betaa,gamaa,gbdya)
         c4=cf(1,jc,4)
         c8=cf(1,jc,8)
-        cf(1,jc,1)=cf(1,jc,1)+c8*(3.0*alfac/betac*dyox+dly2*gamac/
+        cf(1,jc,1)=cf(1,jc,1)+c8*(3d0*alfac/betac*dyox+dly2*gamac/
      +    betac)
         cf(1,jc,2)=cf(1,jc,2)+c8 +c4
-        cf(1,jc,3)=cf(1,jc,3)+c4*(3.0*betaa/alfaa*dxoy+dlx2*gamaa
+        cf(1,jc,3)=cf(1,jc,3)+c4*(3d0*betaa/alfaa*dxoy+dlx2*gamaa
      +    /alfaa)
-        cf(1,jc,4)=0.0
+        cf(1,jc,4)=0d0
         cf(1,jc,5)=cf(1,jc,5)+c8*(alfac/betac*dyox)
-        cf(1,jc,6)=0.0
+        cf(1,jc,6)=0d0
         cf(1,jc,7)=cf(1,jc,7)+c4*(betaa/alfaa*dxoy)
-        cf(1,jc,8)=0.0
-        cf(1,jc,9)=cf(1,jc,9)+c8*(-4.0*alfac/betac*dyox)+
-     +    c4*(-4.0*betaa/alfaa*dxoy)
+        cf(1,jc,8)=0d0
+        cf(1,jc,9)=cf(1,jc,9)+c8*(-4d0*alfac/betac*dyox)+
+     +    c4*(-4d0*betaa/alfaa*dxoy)
 c     phase 2
         c5=cf(1,jc,5)
         c7=cf(1,jc,7)
@@ -962,14 +962,14 @@ c     phase 2
         kbdy = 1
         call bndyc(kbdy,yc,alfaa,betaa,gamaa,gbdya)
         det=alfaa*betac-betaa*alfac
-        if (det.eq.0.0) then
+        if (det.eq.0d0) then
           ier = 14
           return
         end if
         cf(1,jc,1)=cf(1,jc,1)+c5
         cf(1,jc,3)=cf(1,jc,3)+c7
-        cf(1,jc,5)=0.0
-        cf(1,jc,7)=0.0
+        cf(1,jc,5)=0d0
+        cf(1,jc,7)=0d0
         cf(1,jc,9)=cf(1,jc,9)+c5*(dlx2*(gamaa*betac-betaa*gamac)/det)+
      +    c7*(dly2*(alfaa*gamac-gamaa*alfac)/det)
       end if
@@ -986,33 +986,33 @@ c
         c2=cf(nx,jc,2)
         c6=cf(nx,jc,6)
         cf(nx,jc,1)=cf(nx,jc,1)+c6*(-alfac/betac*dyox)
-        cf(nx,jc,2)=0.0
-        cf(nx,jc,3)=cf(nx,jc,3)+c2*(-3.0*betab/alfab*dxoy-dlx2*
+        cf(nx,jc,2)=0d0
+        cf(nx,jc,3)=cf(nx,jc,3)+c2*(-3d0*betab/alfab*dxoy-dlx2*
      +    gamab/alfab)
         cf(nx,jc,4)=cf(nx,jc,4)+c6+c2
-        cf(nx,jc,5)=cf(nx,jc,5)+c6*(-3.0*alfac/betac*dyox+dly2*
+        cf(nx,jc,5)=cf(nx,jc,5)+c6*(-3d0*alfac/betac*dyox+dly2*
      +    gamac/betac)
-        cf(nx,jc,6)=0.0
+        cf(nx,jc,6)=0d0
         cf(nx,jc,7)=cf(nx,jc,7)-c2*(betab/alfab*dxoy)
-        cf(nx,jc,8)=0.0
-        cf(nx,jc,9)=cf(nx,jc,9)+c6*(4.0*alfac/betac*dyox)+
-     +    c2*( 4.0*betab/alfab*dxoy)
+        cf(nx,jc,8)=0d0
+        cf(nx,jc,9)=cf(nx,jc,9)+c6*(4d0*alfac/betac*dyox)+
+     +    c2*( 4d0*betab/alfab*dxoy)
 c     phase 2
         kbdy=3
         call bndyc(kbdy,xb,alfac,betac,gamac,gbdyc)
         kbdy=2
         call bndyc(kbdy,yc,alfab,betab,gamab,gbdyb)
         det=betac*alfab-alfac*betab
-        if (det.eq.0.0) then
+        if (det.eq.0d0) then
           ier = 14
           return
         end if
         c1=cf(nx,jc,1)
         c7=cf(nx,jc,7)
-        cf(nx,jc,1)=0.0
+        cf(nx,jc,1)=0d0
         cf(nx,jc,3)=cf(nx,jc,3)+c7
         cf(nx,jc,5)=cf(nx,jc,5)+c1
-        cf(nx,jc,7)=0.0
+        cf(nx,jc,7)=0d0
         cf(nx,jc,9)=cf(nx,jc,9)+c1*(dlx2*(betab*gamac-gamab*betac)/
      +    det)+c7*(dly2*(alfab*gamac-gamab*alfac)/det)
       end if
@@ -1029,30 +1029,30 @@ c     periodic-mixed at (xa,yd) and (xb,yd)
         c2=cf(1,jc,2)
         c3=cf(1,jc,3)
         cf(1,jc,1)=cf(1,jc,1)+c3*(-alfi/beti*dyox)+
-     +    c2*(-3.0*alfip1/betip1*dyox-dly2*gamip1/betip1)
-        cf(1,jc,2) = 0.0
-        cf(1,jc,3) = 0.0
-        cf(1,jc,4) = 0.0
+     +    c2*(-3d0*alfip1/betip1*dyox-dly2*gamip1/betip1)
+        cf(1,jc,2) = 0d0
+        cf(1,jc,3) = 0d0
+        cf(1,jc,4) = 0d0
         cf(1,jc,5)=cf(1,jc,5)+c3*(alfi/beti*dyox)+
      +    c2*(-alfip1/betip1*dyox)
         cf(1,jc,7)=cf(1,jc,7)+c3
         cf(1,jc,8)=cf(1,jc,8)+c2
         cf(1,jc,9) = cf(1,jc,9)+c3*(-dly2*gami/beti)+
-     +    c2*(4.0*alfip1/betip1*dyox)
+     +    c2*(4d0*alfip1/betip1*dyox)
         call bndyc(kbdy,xb-dlx,alfim1,betim1,gamim1,gbdim1)
         call bndyc(kbdy,xb,alfi,beti,gami,gbdi)
         c3=cf(nx,jc,3)
         c4=cf(nx,jc,4)
         cf(nx,jc,1)=cf(nx,jc,1)+c4*(alfim1/betim1*dyox)+
      +    c3*(-alfi/beti*dyox)
-        cf(nx,jc,2)=0.0
-        cf(nx,jc,3)=0.0
-        cf(nx,jc,4)=0.0
-        cf(nx,jc,5)=cf(nx,jc,5)+c4*(3.0*alfim1/betim1*dyox-dly2*
+        cf(nx,jc,2)=0d0
+        cf(nx,jc,3)=0d0
+        cf(nx,jc,4)=0d0
+        cf(nx,jc,5)=cf(nx,jc,5)+c4*(3d0*alfim1/betim1*dyox-dly2*
      +    gamim1/betim1)+c3*(alfi/beti*dyox)
         cf(nx,jc,6)=cf(nx,jc,6)+c4
         cf(nx,jc,7)=cf(nx,jc,7)+c3
-        cf(nx,jc,9)=cf(nx,jc,9)+c4*(-4.0*alfim1/betim1*dyox)+
+        cf(nx,jc,9)=cf(nx,jc,9)+c4*(-4d0*alfim1/betim1*dyox)+
      +    c3*(-dly2*gami/beti)
       else if (nxa.eq.2) then
 c     mixed-mixed at (xa,yd)
@@ -1063,33 +1063,33 @@ c     phase 1
         call bndyc(kbdy,yd-dly,alfaa,betaa,gamaa,gbdya)
         c2=cf(1,jc,2)
         c6=cf(1,jc,6)
-        cf(1,jc,1)=cf(1,jc,1)+c2*(-3.0*alfad/betad*dyox-dly2*
+        cf(1,jc,1)=cf(1,jc,1)+c2*(-3d0*alfad/betad*dyox-dly2*
      +    gamad/betad)
-        cf(1,jc,2)=0.0
+        cf(1,jc,2)=0d0
         cf(1,jc,3)=cf(1,jc,3)+c6*(-betaa/alfaa*dxoy)
-        cf(1,jc,4)=0.0
+        cf(1,jc,4)=0d0
         cf(1,jc,5)=cf(1,jc,5)+c2*(-alfad/betad*dyox)
-        cf(1,jc,6)=0.0
-        cf(1,jc,7)=cf(1,jc,7)+c6*(-3.0*betaa/alfaa*dxoy+dlx2*
+        cf(1,jc,6)=0d0
+        cf(1,jc,7)=cf(1,jc,7)+c6*(-3d0*betaa/alfaa*dxoy+dlx2*
      +    gamaa/alfaa)
         cf(1,jc,8)=cf(1,jc,8)+c6+c2
-        cf(1,jc,9)=cf(1,jc,9)+c2*(4.0*alfad/betad*dyox)+
-     +    c6*(4.0*betaa/alfaa*dxoy)
+        cf(1,jc,9)=cf(1,jc,9)+c2*(4d0*alfad/betad*dyox)+
+     +    c6*(4d0*betaa/alfaa*dxoy)
 c     phase 2
         kbdy=1
         call bndyc(kbdy,yd,alfaa,betaa,gamaa,gbdya)
         kbdy=4
         call bndyc(kbdy,xa,alfad,betad,gamad,gbdyd)
         det=alfad*betaa-betad*alfaa
-        if (det.eq.0.0) then
+        if (det.eq.0d0) then
           ier = 14
           return
         end if
         c3=cf(1,jc,3)
         c5=cf(1,jc,5)
         cf(1,jc,1)=cf(1,jc,1)+c5
-        cf(1,jc,3)=0.0
-        cf(1,jc,5)=0.0
+        cf(1,jc,3)=0d0
+        cf(1,jc,5)=0d0
         cf(1,jc,7)=cf(1,jc,7)+c3
         cf(1,jc,9)=cf(1,jc,9)+c5*(dlx2*(betaa*gamad-gamaa*betad)/det)+
      +    c3*(dly2*(alfaa*gamad-gamaa*alfad)/det)
@@ -1104,31 +1104,31 @@ c     mixed-mixed at (xb,yd)
         c4=cf(nx,jc,4)
         c8=cf(nx,jc,8)
         cf(nx,jc,1)=cf(nx,jc,1)+c4*(alfad/betad*dyox)
-        cf(nx,jc,2) = 0.0
+        cf(nx,jc,2) = 0d0
         cf(nx,jc,3) = cf(nx,jc,3)+c8*(betab/alfab*dxoy)
-        cf(nx,jc,4) = 0.0
-        cf(nx,jc,5) = cf(nx,jc,5)+c4*(3.0*alfad/betad*dyox-dly2*
+        cf(nx,jc,4) = 0d0
+        cf(nx,jc,5) = cf(nx,jc,5)+c4*(3d0*alfad/betad*dyox-dly2*
      +    gamad/betad)
         cf(nx,jc,6) = cf(nx,jc,6)+c4+c8
-        cf(nx,jc,7) = cf(nx,jc,7)+c8*(3.0*betab/alfab*dxoy-dlx2*
+        cf(nx,jc,7) = cf(nx,jc,7)+c8*(3d0*betab/alfab*dxoy-dlx2*
      +    gamab/alfab)
-        cf(nx,jc,8) = 0.0
-        cf(nx,jc,9) = cf(nx,jc,9)+c4*(-4.0*alfad/betad*dyox)+
-     +    c8*(-4.0*betab/alfab*dxoy)
+        cf(nx,jc,8) = 0d0
+        cf(nx,jc,9) = cf(nx,jc,9)+c4*(-4d0*alfad/betad*dyox)+
+     +    c8*(-4d0*betab/alfab*dxoy)
 c     phase 2
         kbdy=4
         call bndyc(kbdy,xb,alfad,betad,gamad,gbdyd)
         kbdy=2
         call bndyc(kbdy,yd,alfab,betab,gamab,gbdyb)
         det=alfad*betab-betad*alfab
-        if (det.eq.0.0) then
+        if (det.eq.0d0) then
           ier = 14
           return
         end if
         c1=cf(nx,jc,1)
         c3=cf(nx,jc,3)
-        cf(nx,jc,1)=0.0
-        cf(nx,jc,3)=0.0
+        cf(nx,jc,1)=0d0
+        cf(nx,jc,3)=0d0
         cf(nx,jc,5)=cf(nx,jc,5)+c1
         cf(nx,jc,7)=cf(nx,jc,7)+c3
         cf(nx,jc,9)=cf(nx,jc,9)+c1*(dlx2*(betad*gamab-gamad*betab)/
@@ -1151,9 +1151,9 @@ c
       cf(1,1,1) = cf(1,1,1)+c5
       cf(1,1,7) = cf(1,1,7)+c5*(-betj/alfj*dxoy)+
      +  c4*(betjp1/alfjp1*dxoy)
-      cf(1,1,6) = 0.0
-      cf(1,1,5) = 0.0
-      cf(1,1,4) = 0.0
+      cf(1,1,6) = 0d0
+      cf(1,1,5) = 0d0
+      cf(1,1,4) = 0d0
       cf(1,1,9) = cf(1,1,9)+c4*(-4.*betjp1/alfjp1*dxoy)+c5*(dlx2*
      +  gamj/alfj)
 c
@@ -1169,9 +1169,9 @@ c
       cf(1,ny,8) = cf(1,ny,8)+c6
       cf(1,ny,7) = cf(1,ny,7)+c6*(-3.*betjm1/alfjm1*dxoy+dlx2*
      +  gamjm1/alfjm1)+c5*(-betj/alfj*dxoy)
-      cf(1,ny,6) = 0.0
-      cf(1,ny,5) = 0.0
-      cf(1,ny,4) = 0.0
+      cf(1,ny,6) = 0d0
+      cf(1,ny,5) = 0d0
+      cf(1,ny,4) = 0d0
       cf(1,ny,9) = cf(1,ny,9)+c6*(4.*betjm1/alfjm1*dxoy)+c5*
      +  (dlx2*gamj/alfj)
       end if
@@ -1187,9 +1187,9 @@ c
       c1 = cf(nx,1,1)
       cf(nx,1,3) = cf(nx,1,3)+c1*(-betj/alfj*dxoy)+
      +  c2*(-3.*betjp1/alfjp1*dxoy-dlx2*gamjp1/alfjp1)
-      cf(nx,1,2) = 0.0
-      cf(nx,1,1) = 0.0
-      cf(nx,1,8) = 0.0
+      cf(nx,1,2) = 0d0
+      cf(nx,1,1) = 0d0
+      cf(nx,1,8) = 0d0
       cf(nx,1,7) = cf(nx,1,7)+c1*(betj/alfj*dxoy)+
      +  c2*(-betjp1/alfjp1*dxoy)
       cf(nx,1,5) = cf(nx,1,5)+c1
@@ -1202,9 +1202,9 @@ c
       c8 = cf(nx,ny,8)
       cf(nx,ny,3) = cf(nx,ny,3)+c8*(betjm1/alfjm1*dxoy)+
      +  c1*(-betj/alfj*dxoy)
-      cf(nx,ny,2) = 0.0
-      cf(nx,ny,1) = 0.0
-      cf(nx,ny,8) = 0.0
+      cf(nx,ny,2) = 0d0
+      cf(nx,ny,1) = 0d0
+      cf(nx,ny,8) = 0d0
       cf(nx,ny,7) = cf(nx,ny,7)+c8*(3.*betjm1/alfjm1*dxoy-dlx2*
      +  gamjm1/alfjm1)+c1*(betj/alfj*dxoy)
       cf(nx,ny,6) = cf(nx,ny,6)+c8
@@ -1219,36 +1219,36 @@ c
       i = 1
       do j=1,ny
         do l=1,9
-          cf(i,j,l) = 0.0
+          cf(i,j,l) = 0d0
         end do
-        cf(i,j,9) = 1.0
+        cf(i,j,9) = 1d0
       end do
       end if
       if (nxb.eq.1) then
       i = nx
       do j=1,ny
         do l=1,9
-          cf(i,j,l) = 0.0
+          cf(i,j,l) = 0d0
         end do
-        cf(i,j,9) = 1.0
+        cf(i,j,9) = 1d0
       end do
       end if
       if (nyc.eq.1) then
       j = 1
       do i=1,nx
         do l=1,9
-          cf(i,j,l) = 0.0
+          cf(i,j,l) = 0d0
         end do
-        cf(i,j,9) = 1.0
+        cf(i,j,9) = 1d0
       end do
       end if
       if (nyd.eq.1) then
       j = ny
       do i=1,nx
         do l=1,9
-          cf(i,j,l) = 0.0
+          cf(i,j,l) = 0d0
         end do
-        cf(i,j,9) = 1.0
+        cf(i,j,9) = 1d0
       end do
       end if
       if (klevel .eq. 1) then
@@ -1381,7 +1381,7 @@ c
       call setbcr(nx,ny,cof,beta,jcur,nxa)
       do i=1,nx
         do l=1,nx
-          sum = 0.0
+          sum = 0d0
           lm1=max0(1,l-1)
           lp1=min0(l+1,nx)
           do k=lm1,lp1
@@ -1392,7 +1392,7 @@ c
             else if (k .eq. l-1) then
       	gama = cof(k,jcur-1,2)
             else
-      	gama=0.0
+      	gama=0d0
             end if
             sum = sum+alfa(i,k,jcur)*gama
           end do
@@ -1445,7 +1445,7 @@ c
       end do
       do j=2,ny
       do i=1,nx
-        sum=0.0
+        sum=0d0
         do l=1,nx
           sum=sum+alfa(i,l,j)*phi(l,j-1)
         end do
@@ -1524,7 +1524,7 @@ c
       call setbcr(nx,ny,cof,beta,jcur,nxa)
       do i=1,nx
         do l=1,nx
-          sum = 0.0
+          sum = 0d0
           lm1=max0(1,l-1)
           lp1=min0(l+1,nx)
           do k=lm1,lp1
@@ -1535,7 +1535,7 @@ c
             else if (k .eq. l-1) then
       	gama = cof(k,jcur-1,2)
             else
-      	gama=0.0
+      	gama=0d0
             end if
             sum = sum+alfa(i,k,jcur)*gama
           end do
@@ -1559,7 +1559,7 @@ c     set dmat(jcur) = -alfa(jcur)*dmat(jcur-1)
 c
       do i=1,nx
         do j=1,nx
-          dmat(i,j,jcur) = 0.0
+          dmat(i,j,jcur) = 0d0
           do l=1,nx
             dmat(i,j,jcur) = dmat(i,j,jcur)-alfa(i,l,jcur)*
      +                         dmat(l,j,jcur-1)
@@ -1599,12 +1599,12 @@ c
       zmat(1,1,1) = cof(1,ny-1,3)
       zmat(1,2,1) = cof(1,ny-1,2)
       do l=3,nx
-      zmat(1,l,1) = 0.0
+      zmat(1,l,1) = 0d0
       end do
 
       do i=2,nx-1
       do l=1,nx
-        zmat(i,l,1) = 0.0
+        zmat(i,l,1) = 0d0
       end do
       zmat(i,i,1) = cof(i,ny-1,3)
       zmat(i,i+1,1) = cof(i,ny-1,2)
@@ -1613,7 +1613,7 @@ c
       zmat(nx,nx-1,1) = cof(nx,ny-1,4)
       zmat(nx,nx,1) = cof(nx,ny-1,3)
       do l=1,nx-2
-      zmat(nx,l,1) = 0.0
+      zmat(nx,l,1) = 0d0
       end do
 c
 c     adjust for periodic x b.c.
@@ -1711,7 +1711,7 @@ c
       call setbcr(nx,ny,cof,beta,ny-1,nxa)
       do i=1,nx
       do j=1,nx
-        sum = 0.0
+        sum = 0d0
         do jcur=1,ny-2
           do l=1,nx
             sum = sum + zmat(i,l,jcur)*dmat(l,j,jcur)
@@ -1758,7 +1758,7 @@ c     backward sweep
       end do
       do jcur=2,ny-2
       do i=1,nx
-        sum=0.0
+        sum=0d0
         do l=1,nx
           sum=sum+alfa(i,l,jcur)*phi(l,jcur-1)
         end do
@@ -1770,7 +1770,7 @@ c     solve:
 c     zmat(1)*phi(1)+...+zmat(ny-2)*phi(ny-2) + phi(ny-1) = f(ny-1)
 c
       do i=1,nx
-      sum = 0.0
+      sum = 0d0
       do k=1,ny-2
         do l=1,nx
           sum = sum + zmat(i,l,k)*phi(l,k)
@@ -1794,7 +1794,7 @@ c
 c     solve beta(ny-2)*phi(ny-2) = phi(ny-2)-dmat(ny-2)*phi(ny-1)
 c
       do i=1,nx
-      sum = 0.0
+      sum = 0d0
       do l=1,nx
         sum = sum + dmat(i,l,ny-2)*phi(l,ny-1)
       end do
@@ -1807,14 +1807,14 @@ c     k=ny-3,...,1
 c
       do kb=4,ny
       k = ny-kb+1
-      sum = 0.0
+      sum = 0d0
       do l=1,nx
         sum = sum+dmat(1,l,k)*phi(l,ny-1)
       end do
       phi(1,k) = phi(1,k)-sum - (  cof(1,k,3)*phi(1,k+1) +
      +                               cof(1,k,2)*phi(2,k+1))
       do i=2,nx-1
-        sum = 0.0
+        sum = 0d0
         do  l=1,nx
           sum = sum+dmat(i,l,k)*phi(l,ny-1)
         end do
@@ -1822,7 +1822,7 @@ c
      +                               cof(i,k,3)*phi(i,k+1)   +
      +                               cof(i,k,2)*phi(i+1,k+1))
       end do
-      sum = 0.0
+      sum = 0d0
       do l=1,nx
         sum = sum+dmat(nx,l,k)*phi(l,ny-1)
       end do
@@ -1855,7 +1855,7 @@ c
       real(8) cof(nx,ny,10),beta(nx,nx,*)
       do i=1,nx
       do l=1,nx
-        beta(i,l,jcur)=0.0
+        beta(i,l,jcur)=0d0
       end do
       end do
       do i=1,nx
@@ -1880,7 +1880,7 @@ c
       real(8) cof(nx,ny,10),alfa(nx,nx,*)
       do i=1,nx
       do j=1,nx
-        alfa(i,j,jcur)=0.0
+        alfa(i,j,jcur)=0d0
       end do
       end do
       do i=2,nx
@@ -1991,7 +1991,7 @@ c
         c7=cyy/dlyy-cy/dly2-c4
         c5=c5+c8*(alfac/betac*dyox)
         c7=c7+c4*(betaa/alfaa*dxoy)
-        cf(1,1,10)=cf(1,1,10)+2.0*(c8*dly*gbdyc/betac+c4*dlx*gbdya/
+        cf(1,1,10)=cf(1,1,10)+2d0*(c8*dly*gbdyc/betac+c4*dlx*gbdya/
      +    alfaa)
         kbdy=3
         call bndyc(kbdy,xa,alfac,betac,gamac,gbdyc)
@@ -2268,7 +2268,7 @@ c     set phic zero
 c
       do jc=0,ncy+1
       do ic=0,ncx+1
-        phic(ic,jc) = 0.0
+        phic(ic,jc) = 0d0
       end do
       end do
 c
@@ -2505,7 +2505,7 @@ c
 c     x direction periodic
 c
       do j=1,ny
-        sum(j) = 0.0
+        sum(j) = 0d0
         phi(0,j) = phi(nx-1,j)
         phi(nx+1,j) = phi(2,j)
       end do
@@ -2691,7 +2691,7 @@ c
 c     y direction periodic
 c
       do i=1,nx
-        sum(i) = 0.0
+        sum(i) = 0d0
         phi(i,0) = phi(i,ny-1)
         phi(i,ny) = phi(i,1)
         phi(i,ny+1) = phi(i,2)

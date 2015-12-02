@@ -5,7 +5,6 @@ program test_adv_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_2d.h"
   use sll_m_split_advection_2d
   use sll_m_advection_1d_BSL
   use sll_m_characteristics_1d_explicit_euler

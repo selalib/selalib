@@ -30,19 +30,32 @@ use mpi
 #ifndef NOHDF5
 
   use hdf5
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close !< Close HDF5 file (parallel version unchanged)
+
   implicit none
 
-  !> Write array in hdf5 file
-  interface sll_hdf5_write_array
-     module procedure sll_hdf5_write_array_1d
-     module procedure sll_hdf5_write_array_2d
-     module procedure sll_hdf5_write_array_3d
-     module procedure sll_hdf5_write_array_6d
+  !> Create new HDF5 file
+  interface sll_hdf5_file_create
+    module procedure sll_hdf5_par_file_create
   end interface
 
-  !> Read array form hdf5 file
+  !> Open existing HDF5 file
+  interface sll_hdf5_file_open
+    module procedure sll_hdf5_par_file_open
+  end interface
+
+  !> Write array in HDF5 file
+  interface sll_hdf5_write_array
+     module procedure sll_hdf5_par_write_dble_array_1d
+     module procedure sll_hdf5_par_write_dble_array_2d
+     module procedure sll_hdf5_par_write_dble_array_3d
+     module procedure sll_hdf5_par_write_dble_array_6d
+  end interface
+
+  !> Read array form HDF5 file
   interface sll_hdf5_read_array
-     module procedure sll_hdf5_read_array_6d
+     module procedure sll_hdf5_par_read_array_6d
   end interface sll_hdf5_read_array
 
 contains
@@ -50,7 +63,7 @@ contains
   !> Create HDF5 file
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
-  subroutine sll_hdf5_file_create(filename, comm, file_id, error)
+  subroutine sll_hdf5_par_file_create(filename, comm, file_id, error)
 
     character(len=*), intent(in)  :: filename   !< file name
     integer,          intent(in)  :: comm       !< MPI comm
@@ -72,12 +85,12 @@ contains
     call h5pclose_f(plist_id, error)
     SLL_ASSERT(error==0)
 
-  end subroutine sll_hdf5_file_create
+  end subroutine sll_hdf5_par_file_create
 
   !> Open HDF5 file
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
-  subroutine sll_hdf5_file_open(file_id,filename,comm,error)
+  subroutine sll_hdf5_par_file_open(file_id,filename,comm,error)
 
     character(len=*) , intent(in)  :: filename    !< file name
     integer(hid_t)                 :: file_id     !< file unit number
@@ -99,24 +112,24 @@ contains
     call h5pclose_f(plist_id, error)
     SLL_ASSERT(error==0)
 
-  end subroutine sll_hdf5_file_open
+  end subroutine sll_hdf5_par_file_open
 
-  !> Close HDF5 file 
-  subroutine sll_hdf5_file_close(file_id,error)
-    integer(hid_t), intent(in)     :: file_id   !< file unit number
-    integer, intent(out)           :: error     !< error code
-
-    !
-    ! Close property list and the file.
-    !
-    call h5fclose_f(file_id, error)
-    SLL_ASSERT(error==0)
-    !
-    ! Close FORTRAN interface
-    !
-    call h5close_f(error)
-    SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_file_close
+!  !> Close HDF5 file
+!  subroutine sll_hdf5_file_close(file_id,error)
+!    integer(hid_t), intent(in)     :: file_id   !< file unit number
+!    integer, intent(out)           :: error     !< error code
+!
+!    !
+!    ! Close property list and the file.
+!    !
+!    call h5fclose_f(file_id, error)
+!    SLL_ASSERT(error==0)
+!    !
+!    ! Close FORTRAN interface
+!    !
+!    call h5close_f(error)
+!    SLL_ASSERT(error==0)
+!  end subroutine sll_hdf5_file_close
 
   
   
@@ -200,7 +213,8 @@ contains
   !> - Create a dataspace with 1 dimensions
   !> - Write the dataset
   !> - Close dataset and dataspace
-  subroutine sll_hdf5_write_array_1d(file_id,global_size,offset,array,dsetname,error)
+  subroutine sll_hdf5_par_write_dble_array_1d( &
+      file_id, global_size, offset, array, dsetname, error )
     integer, parameter           :: dspace_dims=1
     character(len=*), intent(in) :: dsetname
     integer(hsize_t), intent(in) :: global_size(dspace_dims)
@@ -221,7 +235,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -269,7 +283,8 @@ contains
   !> - Create a dataspace with 2 dimensions
   !> - Write the dataset
   !> - Close dataset and dataspace
-  subroutine sll_hdf5_write_array_2d(file_id,global_size,offset,array,dsetname,error)
+  subroutine sll_hdf5_par_write_dble_array_2d( &
+      file_id, global_size, offset, array, dsetname, error )
     integer, parameter           :: dspace_dims=2
     character(len=*), intent(in) :: dsetname
     integer(hsize_t), intent(in) :: global_size(dspace_dims)
@@ -290,7 +305,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -338,7 +353,8 @@ contains
   !> - Create a dataspace with 3 dimensions
   !> - Write the dataset
   !> - Close dataset and dataspace
-  subroutine sll_hdf5_write_array_3d(file_id,global_size,offset,array,dsetname,error)
+  subroutine sll_hdf5_par_write_dble_array_3d( &
+      file_id, global_size, offset, array, dsetname, error )
     integer, parameter           :: dspace_dims=3
     character(len=*), intent(in) :: dsetname
     integer(hsize_t), intent(in) :: global_size(dspace_dims)
@@ -359,7 +375,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -409,7 +425,8 @@ contains
   !> - Create a dataspace with 6 dimensions
   !> - Write the dataset
   !> - Close dataset and dataspace
-  subroutine sll_hdf5_write_array_6d(file_id,global_size,offset,array,dsetname,error)
+  subroutine sll_hdf5_par_write_dble_array_6d( &
+      file_id, global_size, offset, array, dsetname, error )
     integer, parameter           :: dspace_dims=6
     character(len=*), intent(in) :: dsetname
     integer(hsize_t), intent(in) :: global_size(dspace_dims)
@@ -430,7 +447,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)
@@ -477,7 +494,8 @@ contains
 
 
   !> Read from a 6D array of float in double precision from a HDF5 file into a six-dimensional array
-  subroutine sll_hdf5_read_array_6d(file_id,global_size,offset,array,dsetname,error)
+  subroutine sll_hdf5_par_read_array_6d( &
+      file_id, global_size, offset, array, dsetname, error )
     integer, parameter           :: dspace_dims=6
     character(len=*), intent(in) :: dsetname
     integer(hsize_t), intent(in) :: global_size(dspace_dims)
@@ -498,7 +516,7 @@ contains
 
     rank = dspace_dims
     do i = 1, rank
-      array_dims(i) = size(array,i)
+      array_dims(i) = int(size(array,i),HSIZE_T)
     end do
     dimsfi = global_size
     call h5screate_simple_f(rank, global_size, filespace, error)

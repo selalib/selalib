@@ -60,7 +60,7 @@ contains
     sll_int32,                          intent(in), optional    :: rank, world_size
 
     sll_int32  :: i_part, ii
-    sll_int32  :: ncx, ic_x, ic_y
+    sll_int32  :: ncx!, ic_x, ic_y
     sll_int32  :: effective_world_size
     sll_real64 :: x_min, y_min, x_max, y_max, rdx, rdy
     sll_real64 :: weight
@@ -93,8 +93,8 @@ contains
     weight = (x_max - x_min) * (y_max - y_min) / real(effective_world_size * number_particles,f64)
     call particle_group%set_common_weight( weight )     ! if the particle group has no common weight, this will raise an error
 
-    x = 0
-    v = 0
+    x = 0.0_f64
+    v = 0.0_f64
 
     i_part = 1
     ii = 1
@@ -119,6 +119,12 @@ contains
         i_part = i_part + 1
        end if
     end do
+
+   return
+   
+   !PN ADDED TO AVOID WARNING
+   SLL_ASSERT(present(rank)) 
+   
   end subroutine sll_pic_4d_random_unweighted_initializer_landau_f0
 
 

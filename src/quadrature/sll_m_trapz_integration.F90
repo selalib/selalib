@@ -51,7 +51,7 @@ contains
     sll_int32                 :: k
     sll_real64                :: ans
 
-    ans = 0.0
+    ans = 0.0_f64
     do k=1,n-1
        ans = ans + 0.5*(f(x(k))+f(x(k+1)))*(x(k+1)-x(k))
     end do

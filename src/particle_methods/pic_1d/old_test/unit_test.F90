@@ -25,8 +25,8 @@ program unit_test
 
 
 
-    CHARACTER(LEN=255) :: string  ! stores command line argument
-    CHARACTER(LEN=255) :: message           ! use for I/O error messages
+    character(len=255) :: string  ! stores command line argument
+    character(len=255) :: message           ! use for I/O error messages
     integer :: ios, IO_stat
 
     !---------------------------------------------------------------------------
@@ -46,9 +46,9 @@ program unit_test
     !
     sll_real64 :: boxlenpi=4.0_f64
 
-    CHARACTER(LEN=255) :: ppusher!='lfrog'  !Particle pusher  euler
-    CHARACTER(LEN=255) :: psolver='fem'
-    CHARACTER(LEN=255) :: scenario='landau'
+    character(len=255) :: ppusher!='lfrog'  !Particle pusher  euler
+    character(len=255) :: psolver='fem'
+    character(len=255) :: scenario='landau'
 
     !Streams
     sll_int32 :: nstreams=1
@@ -70,7 +70,7 @@ program unit_test
     !Choices are rk4, euler, verlet, lfrog, v_lfrog
     sll_int32 :: ppusher_int=0, psolver_int=0
 
-    CHARACTER(LEN=255) :: path="./"
+    character(len=255) :: path="./"
     character(len=256) :: filename
     integer :: gpinline=0
     logical :: pi_unit
@@ -96,7 +96,7 @@ NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
 
 !**************************************************************
     ! Read input data from file
-    call getarg(1,filename)
+    call get_command_argument(1,filename)
     open(unit=input_file, file=trim(filename), IOStat=IO_stat)
     if( IO_stat /= 0 ) then
         print *, 'init_file() failed to open file ', filename

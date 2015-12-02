@@ -183,12 +183,14 @@ contains
 
     this%layout_r => layout_r
     call compute_local_sizes(layout_r,nr_loc,na_loc)
-    SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
+    SLL_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
+    this%f_r = (0.0_f64,0.0_f64)
 
     ! Layout and local sizes for FFTs in theta-direction
     this%layout_a => layout_a
     call compute_local_sizes(layout_a,nr_loc,na_loc)
-    SLL_CLEAR_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
+    SLL_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
+    this%f_a = (0.0_f64,0.0_f64)
 
     this%rmp_ra => new_remap_plan(this%layout_r, this%layout_a, this%f_r)
     this%rmp_ar => new_remap_plan(this%layout_a, this%layout_r, this%f_a)
@@ -299,7 +301,7 @@ contains
 
       enddo
 
-      this%phik=0.0_f64
+      this%phik=(0.0_f64,0.0_f64)
 
       !boundary condition at rmin
       if (bc(1)==SLL_DIRICHLET) then !Dirichlet
@@ -336,27 +338,27 @@ contains
 
       !boundary condition at rmin
       if(bc(1)==SLL_DIRICHLET)then !Dirichlet
-        this%phik(1)=0.0_f64
+        this%phik(1)=(0.0_f64,0.0_f64)
       else if (bc(1)==SLL_NEUMANN) then
         this%phik(1)=this%phik(2) !Neumann
       else if (bc(1)==SLL_NEUMANN_MODE_0) then 
         if (k==0) then!Neumann for mode zero
           this%phik(1)=this%phik(2)
         else !Dirichlet for other modes
-          this%phik(1)=0.0_f64
+          this%phik(1)=(0.0_f64,0.0_f64)
         endif
       endif
 
       !boundary condition at rmax
       if (bc(2)==SLL_DIRICHLET) then !Dirichlet
-        this%phik(nr+1)=0.0_f64
+        this%phik(nr+1)=(0.0_f64,0.0_f64)
       else if (bc(2)==SLL_NEUMANN) then
         this%phik(nr+1)=this%phik(nr) !Neumann
       else if (bc(2)==SLL_NEUMANN_MODE_0) then 
         if(k==0)then!Neumann for mode zero
           this%phik(nr+1)=this%phik(nr)
         else !Dirichlet for other modes
-          this%phik(nr+1)=0.0_f64
+          this%phik(nr+1)=(0.0_f64,0.0_f64)
         endif
       endif
 
@@ -368,7 +370,7 @@ contains
          !   this%f_r(i,2) = real(this%phik(i),kind=f64)
          !else
          !   this%f_r(i,j) = real(this%phik(i),kind=f64)
-         !   this%f_r(i,j+1) = dimag(this%phik(i))
+         !   this%f_r(i,j+1) = aimag(this%phik(i))
          !endif
 
       end do

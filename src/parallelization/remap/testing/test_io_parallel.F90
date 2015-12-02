@@ -14,6 +14,8 @@ use sll_m_remapper
 #include "sll_working_precision.h"
 use sll_m_utilities, only : &
      is_power_of_two
+use iso_fortran_env, only: &
+     output_unit
 
 implicit none
 
@@ -36,7 +38,7 @@ character(len=8), parameter :: zdset = "zdataset" !< z dataset name
 ! Boot parallel environment
 call sll_boot_collective(MPI_THREAD_SINGLE)
 
-colsz  = sll_get_collective_size(sll_world_collective)
+colsz  = int(sll_get_collective_size(sll_world_collective),i64)
 myrank = sll_get_collective_rank(sll_world_collective)
 comm   = sll_world_collective%comm
 info   = MPI_INFO_NULL
@@ -46,7 +48,7 @@ if( myrank .eq. 0) then
    print *, '--------------- HDF5 parallel test ---------------------'
    print *, ' '
    print"('Running a test on ',i4,' processes')", colsz
-   call flush(6)
+   flush( output_unit )
 end if
 
 if (.not. is_power_of_two(colsz)) then     
@@ -77,8 +79,6 @@ contains
 !> @internal [example]
  subroutine plot_layout2d()
 
-  sll_int32 , parameter    :: nx = 64
-  sll_int32 , parameter    :: ny = 32
   sll_int32                :: mx, my    ! Local sizes
   sll_int32                :: npi, npj
   sll_int32                :: gi, gj
@@ -88,9 +88,11 @@ contains
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
   sll_int32      :: xml_id
+  sll_int32, parameter    :: nx = 64
+  sll_int32, parameter    :: ny = 32
 #ifndef NOHDF5
   integer(HID_T) :: file_id
-  integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
+  integer(HSIZE_T), dimension(2) :: datadims = (/int(nx,HSIZE_T),int(ny,HSIZE_T)/)
   integer(HSSIZE_T), dimension(2) :: offset 
 #else
   sll_int32, dimension(2) :: offset 
@@ -121,14 +123,17 @@ contains
         global_indices =  local_to_global( layout, (/i, j/) )
         gi = global_indices(1)
         gj = global_indices(2)
-        xdata(i,j) = myrank !float(gi-1)!/(nx-1)
-        ydata(i,j) = float(gj-1)!/(ny-1)
+        xdata(i,j) = real(myrank,f64) !float(gi-1)!/(nx-1)
+        ydata(i,j) = real(gj-1,f64)!/(ny-1)
         zdata(i,j) = (myrank+1) * xdata(i,j) * ydata(i,j)
      end do
   end do
   
-  offset(1) =  get_layout_i_min( layout, myrank ) - 1
-  offset(2) =  get_layout_j_min( layout, myrank ) - 1
+#ifdef NOHDF5
+#define HSSIZE_T i32
+#endif
+  offset(1) =  int(get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(2) =  int(get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
 
   !Gnuplot output
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
@@ -196,9 +201,6 @@ contains
   sll_real64, dimension(:,:,:), allocatable :: local_array
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
-  sll_int32 , parameter                       :: ni = 32
-  sll_int32 , parameter                       :: nj = 64
-  sll_int32 , parameter                       :: nk = 128
   ! Local sizes
   sll_int32                                   :: loc_sz_i_init
   sll_int32                                   :: loc_sz_j_init
@@ -216,9 +218,12 @@ contains
 
   sll_int32      :: xml_id
   sll_int32, PARAMETER :: rank = 3
+  sll_int32 , parameter                       :: ni = 32
+  sll_int32 , parameter                       :: nj = 64
+  sll_int32 , parameter                       :: nk = 128
 #ifndef NOHDF5
   integer(HID_T) :: file_id       ! File identifier 
-  integer(HSIZE_T), dimension(3) :: datadims = (/ni,nj,nk/) ! Dataset dimensions.
+  integer(HSIZE_T), dimension(3) :: datadims = (/int(ni,HSIZE_T),int(nj,HSIZE_T),int(nk,HSIZE_T)/) ! Dataset dimensions.
   integer(HSSIZE_T), dimension(rank) :: offset 
 #else
   sll_int32, dimension(rank) :: offset 
@@ -255,18 +260,21 @@ contains
            gi = global_indices(1)
            gj = global_indices(2)
            gk = global_indices(3)
-           local_array(i,j,k) = myrank !gi + (gj-1)*ni + (gk-1)*ni*nj
-           xdata(i,j,k) = float(gi-1) / (ni-1)
-           ydata(i,j,k) = float(gj-1) / (nj-1)
-           zdata(i,j,k) = float(gk-1) / (nk-1)
+           local_array(i,j,k) = real(myrank,f64) !gi + (gj-1)*ni + (gk-1)*ni*nj
+           xdata(i,j,k) = dble(gi-1) / dble(ni-1)
+           ydata(i,j,k) = dble(gj-1) / dble(nj-1)
+           zdata(i,j,k) = dble(gk-1) / dble(nk-1)
         enddo
      enddo
   enddo
 
+#ifdef NOHDF5
+#define HSSIZE_T i32
+#endif
 
-  offset(1) = get_layout_i_min( layout, myrank ) - 1
-  offset(2) = get_layout_j_min( layout, myrank ) - 1
-  offset(3) = get_layout_k_min( layout, myrank ) - 1
+  offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(3) = int(get_layout_k_min( layout, myrank ) - 1, HSSIZE_T)
 
 #ifndef NOHDF5
 

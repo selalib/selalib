@@ -20,6 +20,9 @@ program test_maxwell_2d_diga_wave
   use sll_m_maxwell_2d_diga
   use sll_m_maxwell_solvers_base
 
+  use m_maxwell_helper_functions, only : &
+       gaussian
+
     implicit none
 
     !=====================================!
@@ -47,11 +50,9 @@ program test_maxwell_2d_diga_wave
     sll_real64  :: time
     sll_int32   :: istep
     sll_real64  :: dt
-    sll_real64  :: cfl = 0.5
+    sll_real64  :: cfl = 0.5_f64
     sll_int32   :: itest
     !character(len=4) :: cstep
-    !init functions
-    sll_real64, external :: sll_m_gaussian
 
     mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
@@ -184,7 +185,7 @@ program test_maxwell_2d_diga_wave
    
         ex  => sll_new(degree,tau)
         ey  => sll_new(degree,tau)
-        bz  => sll_new(degree,tau,sll_m_gaussian)
+        bz  => sll_new(degree,tau,gaussian)
    
         ex0 => sll_new(degree,tau)
         ey0 => sll_new(degree,tau)
@@ -245,7 +246,7 @@ program test_maxwell_2d_diga_wave
         end do ! next time step
    
         if (sqrt(sum(bz%array*bz%array)) &
-            / (nc_eta1*nc_eta2*(degree+1)*(degree+1)) < 0.001) then
+            / real(nc_eta1*nc_eta2*(degree+1)*(degree+1),f64) < 0.001) then
         print"(a)", 'PASSED'
     else
     stop 'FAILED'

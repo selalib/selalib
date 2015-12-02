@@ -234,8 +234,10 @@ contains
                 this%num_fourier_modes=spline_degree
                 this%problemsize=this%num_fourier_modes
                 this%fouriersolver=>new_poisson_1d_fourier(this%mesh,   this%num_fourier_modes,this%boundary_type, ierr)
-                SLL_CLEAR_ALLOCATE(this%inhomogenity_comp(this%num_fourier_modes),ierr)
-                SLL_CLEAR_ALLOCATE(this%inhomogenity_comp_steady(this%num_fourier_modes),ierr)
+                SLL_ALLOCATE(this%inhomogenity_comp(this%num_fourier_modes),ierr)
+                this%inhomogenity_comp=(0.0_f64,0.0_f64)
+                SLL_ALLOCATE(this%inhomogenity_comp_steady(this%num_fourier_modes),ierr)
+                this%inhomogenity_comp_steady=(0.0_f64,0.0_f64)
             case(SLL_SOLVER_SPECTRAL)
                 !All Knots, for boundary set first and last knot to zero
                 this%problemsize=num_cells+1 !FIXED
@@ -415,7 +417,7 @@ contains
         sll_real64, dimension(:),intent(in) :: ppos
         sll_real64, dimension(:),intent(in)  :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
-        this%inhomogenity=0
+        this%inhomogenity=0.0_f64
         call pic_1d_field_solver_add_particles_weighted(this,&
             ppos, pweight)
     endsubroutine
@@ -457,48 +459,59 @@ contains
 
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FOURIER)
-                this%inhomogenity_comp=0.0_f64
+                this%inhomogenity_comp=(0.0_f64,0.0_f64)
                     !!!TODO variance calculation
             case default
                 this%inhomogenity=0.0_f64
                 if (this%variance_calculation .eqv. .true.) then
-                    this%inhomogenity_scndmom=0
+                    this%inhomogenity_scndmom=0.0_f64
                 endif
         endselect
     endsubroutine
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
     !>@param this pointer to a pic_1d_field_solver object.
-    subroutine pic_1d_field_solver_add_species(this,&
-            pspecies)
-        class(pic_1d_field_solver), intent(inout) :: this
-        type(sll_particle_1d_group), intent(in) :: pspecies
+    subroutine pic_1d_field_solver_add_species(this, pspecies)
 
-        selectcase(this%poisson_solver)
-            case(SLL_SOLVER_FEM)
-                this%inhomogenity=this%inhomogenity + sign(1.0_f64, pspecies%qm)*&
-                            this%femsolver%get_rhs_from_klimontovich_density_weighted(&
-                    this%BC(pspecies%particle%dx), pspecies%particle%weight )
+      class(pic_1d_field_solver),  intent(inout) :: this
+      type(sll_particle_1d_group), intent(in)    :: pspecies
 
-                if (this%variance_calculation .eqv. .true.) then
-                    this%inhomogenity_scndmom=this%inhomogenity_scndmom + &
-                        sign(1.0_f64, pspecies%qm)*this%femsolver%get_rhs_from_klimontovich_density_weighted( &
-                        this%BC(pspecies%particle%dx), pspecies%particle%weight)
-                endif
-            case(SLL_SOLVER_FD)
-                this%inhomogenity=this%inhomogenity + &
-                    sign(1.0_f64, pspecies%qm)*&
-                    this%fdsolver%get_rhs_klimontovich( this%BC(pspecies%particle%dx), pspecies%particle%weight)
-            case(SLL_SOLVER_SPECTRAL)
-                this%inhomogenity=this%inhomogenity + &
-                    sign(1.0_f64, pspecies%qm)*this%get_rhs_cic( this%BC(pspecies%particle%dx),pspecies%particle%weight)
-            case(SLL_SOLVER_FOURIER)
-                this%inhomogenity_comp=this%inhomogenity_comp+ &
-                sign(1.0_f64, pspecies%qm)*this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
-                this%BC(pspecies%particle%dx), pspecies%particle%weight )
+      selectcase(this%poisson_solver)
+
+        case(SLL_SOLVER_FEM)
+
+          this%inhomogenity=this%inhomogenity + sign(1.0_f64, pspecies%qm)*&
+            this%femsolver%get_rhs_from_klimontovich_density_weighted(&
+            this%BC(pspecies%particle%dx), pspecies%particle%weight )
+
+          if (this%variance_calculation .eqv. .true.) then
+            this%inhomogenity_scndmom=this%inhomogenity_scndmom + &
+            sign(1.0_f64, pspecies%qm) * &
+            this%femsolver%get_rhs_from_klimontovich_density_weighted( &
+            this%BC(pspecies%particle%dx), pspecies%particle%weight)
+          endif
+
+        case(SLL_SOLVER_FD)
+
+          this%inhomogenity=this%inhomogenity + &
+            sign(1.0_f64, pspecies%qm)*&
+            this%fdsolver%get_rhs_klimontovich( this%BC(pspecies%particle%dx), pspecies%particle%weight)
+
+        case(SLL_SOLVER_SPECTRAL)
+
+          this%inhomogenity=this%inhomogenity + &
+          sign(1.0_f64, pspecies%qm)*this%get_rhs_cic( this%BC(pspecies%particle%dx),pspecies%particle%weight)
+
+        case(SLL_SOLVER_FOURIER)
+
+          this%inhomogenity_comp=this%inhomogenity_comp+ &
+          cmplx(sign(1.0_f64, pspecies%qm),0.0_f64,f64)*  &
+          this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
+          this%BC(pspecies%particle%dx), pspecies%particle%weight )
 
         endselect
-    endsubroutine
+
+    end subroutine
 
 
     !<@brief Takes an array of all species and sets them as the foreground for the field solve
@@ -594,7 +607,7 @@ contains
 
          selectcase(this%poisson_solver)
         case(SLL_SOLVER_FOURIER)
-            this%inhomogenity_comp_steady=0.0_f64
+            this%inhomogenity_comp_steady=(0.0_f64,0.0_f64)
         case default
         this%inhomogenity_steady=const
 
@@ -727,7 +740,7 @@ contains
             result(energy)
         class(pic_1d_field_solver) , intent(inout) :: this
         sll_real64 :: energy
-        energy=0
+        energy=0.0_f64
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FEM)
                 energy=this%femsolver%H1seminorm_solution()
@@ -764,7 +777,7 @@ contains
 
         pw=(ppos-eta_min)*(num_cells)/(eta_max-eta_min)
 
-        knotsvals=0
+        knotsvals=0.0_f64
 
         !Left side
         pidx=floor(pw)

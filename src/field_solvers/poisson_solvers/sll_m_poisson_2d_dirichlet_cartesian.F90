@@ -92,18 +92,18 @@ contains
        p=p+1
        plan%indi(p)=k
        plan%indj(p)=k
-       plan%val(p)=4
+       plan%val(p)=4.0_f64
     end do
     do ii=1,nn-1
        do jj=1,nn
           p=p+1
           i=ii+(jj-1)*nn
           j=ii+1+(jj-1)*nn
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=i
           plan%indj(p)=j
           p=p+1
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=j
           plan%indj(p)=i
        end do
@@ -113,11 +113,11 @@ contains
           i=ii+(jj-1)*nn
           j=ii+jj*nn
           p=p+1
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=i
           plan%indj(p)=j
           p=p+1
-          plan%val(p)=-1
+          plan%val(p)=-1.0_f64
           plan%indi(p)=j
           plan%indj(p)=i
        end do
@@ -139,8 +139,8 @@ contains
     SLL_ALLOCATE(plan%vkgs(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgi(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgd(n),ierr)
-    plan%vkgs=0.d0
-    plan%vkgi=0.d0
+    plan%vkgs=0._f64
+    plan%vkgi=0._f64
     !definir vkgs,vkgi,vkgd
     do l=1,ch
        i=plan%indi(l)

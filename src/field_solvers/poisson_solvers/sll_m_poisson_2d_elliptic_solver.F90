@@ -34,6 +34,8 @@ module sll_m_poisson_2d_elliptic_solver
   use sll_m_scalar_field_2d_base
   use sll_m_scalar_field_2d
   use sll_m_cubic_spline_interpolator_2d
+  use iso_fortran_env, only: output_unit
+
 implicit none
 
   sll_int32, parameter :: SLL_NO_SOLVE_ELLIPTIC_SOLVER = 0 
@@ -230,7 +232,7 @@ contains
              spline_degree_eta2)
          case default
            print *,'interp_rho_case=',interp_rho_case
-           call flush()
+           flush( output_unit )
            SLL_ERROR('initialize_poisson_2d_elliptic_solver','bad interp_rho_case')    
        end select
      else

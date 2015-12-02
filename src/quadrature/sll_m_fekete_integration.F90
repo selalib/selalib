@@ -190,7 +190,7 @@ contains
     sll_real64, dimension(3, n) :: xyw_copy
     sll_int32  :: i
     sll_int32  :: low_left
-    sll_real64 :: min_x
+    !sll_real64 :: min_x
 
     ! we start by making a copy of the points
     xyw_copy(1:2, 1:n) = xy(1:2, 1:n)
@@ -768,7 +768,7 @@ contains
   function fekete_points_and_weights(node_xy2, rule) result(xyw)
     sll_real64, dimension(2,3), intent(in) :: node_xy2
     sll_int32,  intent(in) :: rule
-    sll_int32  :: order
+    !sll_int32  :: order
     sll_int32  :: order_num
     sll_int32  :: ierr
     sll_real64, allocatable :: xy(:,:)

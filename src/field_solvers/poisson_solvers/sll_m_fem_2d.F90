@@ -64,7 +64,6 @@ sll_real64, dimension(4,4)  :: Axelem
 sll_real64, dimension(4,4)  :: Ayelem
 sll_real64, dimension(4,4)  :: Mmelem
 sll_real64, dimension(2,2)  :: Mfelem
-sll_real64                  :: dum
 sll_int32, dimension(4)     :: isom
 sll_int32                   :: i
 sll_int32                   :: j
@@ -73,11 +72,7 @@ sll_int32                   :: nx
 sll_int32                   :: ny
 sll_int32                   :: error
 
-sll_real64                  :: hx_by_hy
-sll_real64                  :: hy_by_hx
-sll_real64                  :: hx_hy
 sll_int32                   :: kd
-sll_int32                   :: lda
 sll_int32                   :: nd
 sll_int32                   :: n
 
@@ -185,7 +180,7 @@ if (nx<5) call sll_display(this%A, 'f5.2')
 
 do i = 1, this%nd
   k = this%id(i)
-  this%A(k,k) = 1e20
+  this%A(k,k) = 1d20
 end do
 
 if (nx < 5) call sll_display(this%A, 'f5.2')
@@ -279,7 +274,7 @@ if (nx < 5) call sll_display(b, 'f5.2')
 
 call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 
-rho = 0.0
+rho = 0.0_8
 k = 0
 do j=1,ny+1
 do i=1,nx+1

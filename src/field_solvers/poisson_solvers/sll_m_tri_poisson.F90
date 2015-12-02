@@ -84,7 +84,7 @@ public :: sll_delete
 !        nmxcol - nombre de classes des elements                
 !        nclcol - nombre d'elements dans chaque classe         
 !
-sll_real64, parameter :: grandx = 1.e+20
+sll_real64, parameter :: grandx = 1.d+20
 
 !>@brief
 !> Derived type for Poisson solver on unstructured mesh with triangles.
@@ -200,7 +200,7 @@ character(len=*), parameter :: this_sub_name = 'read_data_solver'
 
 NAMELIST/nlcham/ntypfr,potfr
 
-call getarg( 1, argv); write(*,'(1x, a)') argv
+call get_command_argument( 1, argv); write(*,'(1x, a)') argv
 
 !------------------------------------------------------------!
 !     Reads in default parameters from input file (.inp)        !
@@ -230,7 +230,7 @@ end if
 write(6,900)
 
 ntypfr = 1  
-potfr  = 0.
+potfr  = 0.0_f64
 
 !--- 2.0 --- Lecture des donnees --------------------------------------
 
@@ -338,10 +338,10 @@ endif
 this%ntypfr = ntypfr
 this%potfr  = potfr
 
-allocate(this%sv1(mesh%nbtcot));    this%sv1    = 0.
-allocate(this%sv2(mesh%nbtcot));    this%sv2    = 0.
-allocate(this%vtantx(mesh%nbtcot)); this%vtantx = 0.
-allocate(this%vtanty(mesh%nbtcot)); this%vtanty = 0.
+allocate(this%sv1(mesh%nbtcot));    this%sv1    = 0.0_f64
+allocate(this%sv2(mesh%nbtcot));    this%sv2    = 0.0_f64
+allocate(this%vtantx(mesh%nbtcot)); this%vtantx = 0.0_f64
+allocate(this%vtanty(mesh%nbtcot)); this%vtanty = 0.0_f64
 
 allocate(this%mors1(mesh%num_nodes+1)); this%mors1 = 0
 
@@ -380,14 +380,14 @@ call profil(mesh%nodes,     &
 !======================================================================
  
 !matrice de masse diagonalisee
-allocate(this%amass(mesh%num_nodes)); this%amass = 0.0 
+allocate(this%amass(mesh%num_nodes)); this%amass = 0.0_f64 
  
 !matrice "grad-grad" stockee sous forme profil.
-allocate(this%grgr(this%iprof(mesh%num_nodes+1))); this%grgr = 0.0
+allocate(this%grgr(this%iprof(mesh%num_nodes+1))); this%grgr = 0.0_f64
  
 !gradx et grady 
-allocate(this%gradx(this%mors1(mesh%num_nodes+1))); this%gradx = 0.0
-allocate(this%grady(this%mors1(mesh%num_nodes+1))); this%grady = 0.0
+allocate(this%gradx(this%mors1(mesh%num_nodes+1))); this%gradx = 0.0_f64
+allocate(this%grady(this%mors1(mesh%num_nodes+1))); this%grady = 0.0_f64
 
 !--- Tableau relatif aux frontieres Dirichlet -------------------------
 
@@ -422,7 +422,7 @@ call poismc(this)
 
 !Calcul de la matrice B tel que B*Bt = A dans le cas Cholesky
 
-allocate(tmp1(this%iprof(mesh%num_nodes+1))); tmp1 = 0.0
+allocate(tmp1(this%iprof(mesh%num_nodes+1))); tmp1 = 0.0_f64
 
 !write(*,"(//5x,a)")" *** Appel Choleski pour Poisson ***  "
 call choles(this%iprof,this%grgr,tmp1)
@@ -893,7 +893,7 @@ sll_int32 :: i
 
 !!$ ... Boucle sur les cotes frontieres pour construire les normales aux
 !!$ ... noeuds "Dirichlet"
-this%vnx=0.; this%vny=0.; this%naux= .false.
+this%vnx=0.0_f64; this%vny=0.0_f64; this%naux= .false.
 
 do ict=1,this%mesh%nctfrt
 
@@ -940,7 +940,7 @@ end do
 ! ... Initialisation des normales aux noeuds et du tableau indiquant 
 ! ... les noeuds appartenant a la frontiere consideree
 !
-this%vnx=0.; this%vny=0.; this%naux= .false.
+this%vnx=0.0_f64; this%vny=0.0_f64; this%naux= .false.
 
 ! ... Boucle sur les cotes frontieres pour construire les normales aux
 ! ... noeuds "Neumann"

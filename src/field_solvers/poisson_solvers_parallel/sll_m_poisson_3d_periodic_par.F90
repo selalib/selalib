@@ -84,9 +84,9 @@ contains
     sll_int32, dimension(3,3)                    :: loc_sizes
 
     collective => get_layout_collective(start_layout)
-    colsz      = sll_get_collective_size(collective)
+    colsz      = int(sll_get_collective_size(collective),i64)
 
-    if ( colsz > min(ncx,ncy,ncz) ) then     
+    if ( int(colsz,i32) > min(ncx,ncy,ncz) ) then
        print *, 'This test needs to run in a number of processes which',  &
                 ' is less than or equal', min(ncx,ncy,ncz), ' in order to ', &
                 'be able properly split the arrays.'
@@ -95,7 +95,7 @@ contains
     end if
     if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
          (.not.is_power_of_two(int(ncy,i64))) .and. &
-         (.not.is_power_of_two(int(ncz,i64))) ) then     
+         (.not.is_power_of_two(int(ncz,i64))) ) then
        print *, 'This test needs to run on numbers of cells which are',  &
                 'powers of 2.'
        print *, 'Exiting...'
@@ -281,13 +281,13 @@ contains
                    ind_z = real(nz-(gk-1),f64)
                 endif
 !!$           if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
-!!$               if ( rho(i,j,k) /= 0.d0 ) then     
+!!$               if ( rho(i,j,k) /= 0._f64 ) then
 !!$                  print *,'3D: periodic poisson cannot be solved without', &
 !!$                                                      ' global_rho(1,1,1)=0'
 !!$                  print *, 'Exiting...'
 !!$                  stop
 !!$              endif
-!!$              plan%array_z(i,j,k) = 0.d0
+!!$              plan%array_z(i,j,k) = 0._f64
 !!$           else
                 plan%array_z(i,j,k) = plan%array_z(i,j,k)/(4*sll_pi**2 * &
                             ((ind_x/Lx)**2 + (ind_y/Ly)**2+(ind_z/Lz)**2))

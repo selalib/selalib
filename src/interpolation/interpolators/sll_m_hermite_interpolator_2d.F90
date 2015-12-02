@@ -273,10 +273,11 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = 0._f64
+    val = 0._f64+eta1+eta2
     print *,'#wrap_interpolate_deriv1_hermite_2d'
     print *,'#not implemented for the moment'
     stop
+    SLL_ASSERT(interpolator%npts1>0)
     !interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
   end function wrap_interpolate_deriv1_hermite_2d
 
@@ -285,10 +286,11 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = 0._f64
+    val = 0._f64+eta1+eta2
     print *,'#wrap_interpolate_deriv1_hermite_2d'
     print *,'#not implemented for the moment'
     stop
+    SLL_ASSERT(interpolator%npts1>0)
     !interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
   end function wrap_interpolate_deriv2_hermite_2d
 
@@ -337,8 +339,11 @@ contains
     sll_real64, dimension(num_points1,num_points2) :: data_out
     print *,'#wrap_interpolate2d_disp_hermite_2d'
     print *,'#not implemented for the moment'
-    data_out = 0.0_f64
+    data_out = 0.0_f64 * data_in
     stop
+    SLL_ASSERT(size(alpha1,1) == num_points1)
+    SLL_ASSERT(size(alpha2,1) == num_points1)
+    SLL_ASSERT(this%npts1     == num_points1)
   end function wrap_interpolate2d_disp_hermite_2d
 
   
@@ -416,6 +421,7 @@ contains
     class(sll_hermite_interpolator_2d), intent(inout) :: interpolator    
     print *,'#warning delete_sll_hermite_interpolator_2d'
     print *,'#not implemented for the moment'     
+    SLL_ASSERT(interpolator%npts1>0)
   end subroutine delete_sll_hermite_interpolator_2d  
 
 

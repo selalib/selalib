@@ -133,11 +133,13 @@ contains
       
     call periodic_interp( &
       adv%per_interp, &
-      output, &
-      input, &
+      output(1:num_cells), &
+      input(1:num_cells), &
       shift)
     ! complete by periodicity
-    output(num_cells+1) = output(1)
+    if(size(output)>num_cells)then
+      output(num_cells+1) = output(1)
+    endif  
       
   end subroutine periodic_advect_1d_constant
 
@@ -167,6 +169,7 @@ contains
 
   subroutine delete_periodic_1d_advector( adv )
     class(periodic_1d_advector), intent(inout) :: adv
+    SLL_ASSERT(storage_size(adv)>0)
   end subroutine delete_periodic_1d_advector
 
 

@@ -815,20 +815,21 @@ end do
 
 end subroutine fg_to_sg
 
-! Complex version of \a fg_to_sg
-subroutine sg_to_fg_complex(interpolator,sg_values,fg_values)
-sll_comp64, dimension(:,:), intent(out) :: fg_values
-sll_comp64, dimension(:), intent(in) :: sg_values
-class(sparse_grid_interpolator_2d), intent(in) :: interpolator
-sll_int32 :: j
-sll_int32, dimension(2) :: fg_ind
-
-do j=1,interpolator%size_basis
-   fg_ind = fg_index(interpolator,j);
-   fg_values(fg_ind(1),fg_ind(2)) = sg_values(j);
-end do
-
-end subroutine sg_to_fg_complex
+!PN DEFINED BUT NOT USED
+!! Complex version of \a fg_to_sg
+!subroutine sg_to_fg_complex(interpolator,sg_values,fg_values)
+!sll_comp64, dimension(:,:), intent(out) :: fg_values
+!sll_comp64, dimension(:), intent(in) :: sg_values
+!class(sparse_grid_interpolator_2d), intent(in) :: interpolator
+!sll_int32 :: j
+!sll_int32, dimension(2) :: fg_ind
+!
+!do j=1,interpolator%size_basis
+!   fg_ind = fg_index(interpolator,j);
+!   fg_values(fg_ind(1),fg_ind(2)) = sg_values(j);
+!end do
+!
+!end subroutine sg_to_fg_complex
 
 
 !> Compute the index of a sparse grid node on level "level" with index "index_on_level" on full grid with of max_level
@@ -998,34 +999,35 @@ subroutine displace(interpolator,dim,displacement,data)
 
 end subroutine displace
 
-subroutine DisplaceVar(interpolator,alpha1,alpha2,data)
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_comp64, dimension(:), intent(inout) :: data
-  sll_real64,dimension(:) ,intent(in) :: alpha1,alpha2
-  sll_int32 :: i,j,counter
-  
-! Maybe possible with index in index to make dimension independent
-  counter = 1
-  do i = 0,interpolator%levels(2)
-     do j = interpolator%index(0,i),&
-          interpolator%index(0,i) + max(2**(i-1),1)-1
-        call interpolator%Displace1D(1,interpolator%levels(1)-i,&
-             j,alpha1(counter),data)
-        counter = counter +1
-     end do
-  end do
-  counter = 1
-  do i = 0,interpolator%levels(1)
-     do j = interpolator%index(i,0),&
-          interpolator%index(i,0) + max(2**(i-1),1)-1
-        call interpolator%Displace1D(2,interpolator%levels(2)-i,&
-             j,alpha2(counter),data)
-        counter = counter +1 
-     end do
-  end do
-
-
-end subroutine DISPLACEVAR
+!PN DEFINED BUT NOT USED
+!subroutine DisplaceVar(interpolator,alpha1,alpha2,data)
+!  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
+!  sll_comp64, dimension(:), intent(inout) :: data
+!  sll_real64,dimension(:) ,intent(in) :: alpha1,alpha2
+!  sll_int32 :: i,j,counter
+!  
+!! Maybe possible with index in index to make dimension independent
+!  counter = 1
+!  do i = 0,interpolator%levels(2)
+!     do j = interpolator%index(0,i),&
+!          interpolator%index(0,i) + max(2**(i-1),1)-1
+!        call interpolator%Displace1D(1,interpolator%levels(1)-i,&
+!             j,alpha1(counter),data)
+!        counter = counter +1
+!     end do
+!  end do
+!  counter = 1
+!  do i = 0,interpolator%levels(1)
+!     do j = interpolator%index(i,0),&
+!          interpolator%index(i,0) + max(2**(i-1),1)-1
+!        call interpolator%Displace1D(2,interpolator%levels(2)-i,&
+!             j,alpha2(counter),data)
+!        counter = counter +1 
+!     end do
+!  end do
+!
+!
+!end subroutine DISPLACEVAR
 
 !> Fourier transform on sparse grid
 subroutine SPFFT(interpolator,data_in,data_out)
@@ -1104,18 +1106,19 @@ subroutine filter(interpolator, data)
 
 end subroutine filter
 
-subroutine filter_oscillations(interpolator, data)
-  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(inout) :: data
-  sll_int32 :: j
-
-  call interpolator%compute_hierarchical_surplus(data);
-  do j=interpolator%level_mapping(interpolator%max_level)+1, interpolator%size_basis,2
-     data(j) = data(j)*0.5_f64;
-  end do
-  call interpolator%compute_dehierarchical(data);
-
-end subroutine filter_oscillations
+!PN DEFINED BUT NOT USED
+!subroutine filter_oscillations(interpolator, data)
+!  class(sparse_grid_interpolator_2d), intent(inout) :: interpolator
+!  sll_real64, dimension(:), intent(inout) :: data
+!  sll_int32 :: j
+!
+!  call interpolator%compute_hierarchical_surplus(data);
+!  do j=interpolator%level_mapping(interpolator%max_level)+1, interpolator%size_basis,2
+!     data(j) = data(j)*0.5_f64;
+!  end do
+!  call interpolator%compute_dehierarchical(data);
+!
+!end subroutine filter_oscillations
 
 
 subroutine linear_filter(interpolator, data, hs, width)

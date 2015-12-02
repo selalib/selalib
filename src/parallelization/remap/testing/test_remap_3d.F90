@@ -1,4 +1,3 @@
-
 !****************************************************************************
 !
 ! Selalib      
@@ -18,8 +17,11 @@ program remap_test
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-    use sll_m_utilities, only : &
-         is_power_of_two
+  use sll_m_utilities, only : &
+    is_power_of_two
+
+  use iso_fortran_env, only: &
+    output_unit
 
   implicit none
 
@@ -66,7 +68,7 @@ program remap_test
   ! Boot parallel environment
   call sll_boot_collective()
 !  end_result = .true.
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   if( myrank .eq. 0) then
@@ -74,7 +76,7 @@ program remap_test
      print *, '--------------- REMAP test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -85,7 +87,7 @@ program remap_test
 
   ok = 1
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -123,7 +125,7 @@ program remap_test
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
-              local_array1(i,j,k) = gi + (gj-1)*ni + (gk-1)*ni*nj
+              local_array1(i,j,k) = real(gi + (gj-1)*ni + (gk-1)*ni*nj, f64)
            enddo
         enddo
      enddo
@@ -207,7 +209,7 @@ program remap_test
                  print*, 'program stopped by failure'
                  stop
               end if
-              call flush(6)
+              flush( output_unit )
            end do
         end do
      end do
@@ -228,9 +230,9 @@ program remap_test
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   

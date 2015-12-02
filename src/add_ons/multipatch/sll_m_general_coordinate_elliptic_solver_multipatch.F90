@@ -422,12 +422,12 @@ sll_real64 :: val_a11
 sll_real64 :: val_a12
 sll_real64 :: val_a21
 sll_real64 :: val_a22
-sll_real64 :: val_b1=0
-sll_real64 :: val_b1_der1=0
-sll_real64 :: val_b1_der2=0
-sll_real64 :: val_b2=0
-sll_real64 :: val_b2_der1=0
-sll_real64 :: val_b2_der2=0
+sll_real64 :: val_b1=0.0_f64
+sll_real64 :: val_b1_der1=0.0_f64
+sll_real64 :: val_b1_der2=0.0_f64
+sll_real64 :: val_b2=0.0_f64
+sll_real64 :: val_b2_der1=0.0_f64
+sll_real64 :: val_b2_der2=0.0_f64
 
 sll_real64, dimension(2,2) :: jac_mat
 sll_real64, allocatable    :: work1(:,:)
@@ -444,6 +444,7 @@ sll_int32 :: li_A, li_Aprime
 sll_int32 :: nbsp,nbsp1
 sll_int32 :: index_coef1,index_coef2,index
 sll_real64 :: elt_mat_global
+type(deboor_type) :: deboor
 
 call sll_set_time_mark(t0)
 
@@ -507,10 +508,13 @@ do patch = 1,es_mp%T%number_patches
       wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
       gtmp2 = gpt2
       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
-      call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
+      call interv(deboor, &
+        es_mp%knots2(patch,:), &
+        size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
       if (mflag_y .eq. -1) stop "Problem : interv2 returned flag = -1"
     
-      call bsplvd( es_mp%knots2(patch,:),        &
+      call bsplvd( deboor,                       &
+                   es_mp%knots2(patch,:),        &
                    es_mp%spline_degree2(patch)+1,&
                    gtmp2,                        &
                    left_y,                       &
@@ -525,9 +529,11 @@ do patch = 1,es_mp%T%number_patches
         wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
         gtmp1   = gpt1
         local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
-        call interv(es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
+        call interv(deboor, &
+         es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
 
-        call bsplvd( es_mp%knots1(patch,:),        &
+        call bsplvd( deboor,                       &
+                     es_mp%knots1(patch,:),        &
                      es_mp%spline_degree1(patch)+1,&
                      gtmp1,                        &
                      left_x,                       &
@@ -785,14 +791,11 @@ type(sll_cartesian_mesh_2d), pointer                         :: lm
 sll_int32 :: i,k
 sll_int32 :: j,ierr
 sll_int32 :: patch,sz_coef2,sz_coef1
-type(sll_time_mark)  :: t0 
-double precision :: time
 sll_int32 :: num_pts_g1, num_pts_g2
 class(sll_scalar_field_multipatch_2d),pointer  :: base_field_pointer
 sll_real64, dimension(:,:), pointer :: coeff_rho
 sll_real64, dimension(:), pointer :: rho_coeff_1d
 sll_real64, dimension(:), pointer :: tmp_phi_vec
-sll_int32, dimension(2) :: connectivity
 sll_int32 :: num_coef,i_spline_tot,index
 
 num_pts_g1 = size(es_mp%gauss_pts1,2)
@@ -855,7 +858,7 @@ do patch = 1,es_mp%T%number_patches
       index = es_mp%T%get_spline_global_index(i_spline_tot)
 
       if ( index == 0) then 
-         tmp_phi_vec(num_coef) = 0
+         tmp_phi_vec(num_coef) = 0.0_f64
       else 
          tmp_phi_vec(num_coef) = es_mp%phi_vec(index)
       end if

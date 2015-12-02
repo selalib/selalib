@@ -220,6 +220,7 @@ contains
 
   subroutine delete_particle_sorter_2d( sorter )
     type(sll_particle_sorter_2d), pointer :: sorter
+    SLL_ASSERT(associated(sorter))
   end subroutine delete_particle_sorter_2d
 
 

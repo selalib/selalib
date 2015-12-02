@@ -380,164 +380,165 @@ end subroutine bc_periodic_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!> Set periodic bounday conditions
-subroutine bc_metallic_2d_fdtd(this, fx, fy, fz, side)
-
-type(sll_maxwell_2d_fdtd) :: this !< maxwell object
-sll_int32, intent(in) :: side !< which domain edge
-sll_real64, dimension(:,:), target  :: fx !< Ex or Bx
-sll_real64, dimension(:,:), target  :: fy !< Ey or By
-sll_real64, dimension(:,:), target  :: fz !< Bz or Ez
-sll_real64, dimension(:,:), pointer :: bx, by, ez
-sll_real64, dimension(:,:), pointer :: ex, ey, bz
-sll_int32 :: i1, j1, i2, j2
-
-i1 = this%i1
-j1 = this%j1
-i2 = this%i2
-j2 = this%j2
-
-if (this%polarization == TE_POLARIZATION) then
-   ex => fx; ey => fy; bz => fz
-   select case(side)
-   case(SOUTH)
-      ex(i1:j1,i2) = 0.d0
-   case(NORTH)
-      bz(i1:j1,j2) = bz(i1:j1,j2-1)
-   case(WEST)
-      ey(i1,i2:j2) = 0.d0
-   case(EAST)
-      bz(j1,i2:j2) = bz(j1-1,i2:j2)
-   end select
-end if
-
-if (this%polarization == TM_POLARIZATION) then
-   bx => fx; by => fy; ez => fz
-   select case(side)
-   case(SOUTH)
-      bx(i1:j1,i2) = 0.0_f64
-   case(NORTH)
-      ez(i1:j1,j2) = ez(i1:j1,j2-1)
-   case(WEST)
-      by(i1,i2:j2) = 0.d0
-   case(EAST)
-      ez(j1,i2:j2) = ez(j1-1,i2:j2)
-   end select
-end if
-
-end subroutine bc_metallic_2d_fdtd
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!> Bundary conditions
-subroutine bc_silver_muller_2d_fdtd( this, ex, ey, bz, ccall, dt )
-
-type(sll_maxwell_2d_fdtd) :: this !< maxwell object
-sll_int32, intent(in) :: ccall !< domain edge (N,S,E,W)
-sll_int32 :: i1, j1, i2, j2
-sll_real64 :: a11,a12,a21,a22,b1,b2,dis
-sll_int32 :: i, j
-sll_real64, intent(in) :: dt !< time step
-sll_real64 :: dx, dy, c, csq
-sll_real64, dimension(:,:), pointer :: ex !< x electric field
-sll_real64, dimension(:,:), pointer :: ey !< y electric field
-sll_real64, dimension(:,:), pointer :: bz !< z magnetic field
-
-c   = this%c
-csq = c * c
-dx  = this%dx
-dy  = this%dy
-
-i1 = this%i1
-j1 = this%j1
-i2 = this%i2
-j2 = this%j2
-
-!Conditions de Silver-Muller
-!------------------------------------
-!Ey = -c Bz sur la frontiere ouest
-!Ey =  c Bz sur la frontiere est
-!Ex = -c Bz sur la frontiere nord
-!Ex =  c Bz sur la frontiere sud
-   
-!On effectue le calcul de B sur les points fictifs du maillage
-!simultanement avec la prise en compte des conditions limites sur
-!E. Pour cela, on resout sur les points frontieres, l'equation de la
-!condition limite en moyennant en temps pour E et en espace pour B puis
-!l'equation d'Ampere
-
-select case (ccall)
-
-case (NORTH)
-   !Frontiere Nord : Ex = -c Bz 
-   do i = i1, j1
-         
-      a11 = 1.; a12 = + c
-      a21 = 1./dt; a22 = - csq / dy
-      b1  = - ex(i,j2) - c * bz(i,j2-1)
-      b2  =   ex(i,j2)/dt - csq/dy*bz(i,j2-1)
-         
-      dis = a11*a22-a21*a12 
-         
-      !ex(i,j2) = (b1*a22-b2*a12)/dis
-      bz(i,j2) = (a11*b2-a21*b1)/dis
-         
-   end do
-      
-case (SOUTH)
-
-   !Frontiere Sud : Ex =  c Bz
-   do i = i1, j1
-         
-      a11 = 1.; a12 = - c
-      a21 = 1./dt; a22 = csq / dy
-      b1  = - ex(i,i2) + c * bz(i,i2+1)
-      b2  = ex(i,i2)/dt + csq / dy * bz(i,i2+1) 
-         
-      dis = a11*a22-a21*a12 
-         
-      ex(i,i2) = (b1*a22-b2*a12)/dis
-      !bz(i,i2) = (a11*b2-a21*b1)/dis
-         
-   end do
-      
-case (EAST)
-
-   !Frontiere Est : Ey =  c Bz
-   do j = i2, j2
-         
-      a11 = 1.; a12 = - c
-      a21 = 1./dt; a22 = + csq / dx
-      b1  = - ey(j1,j) + c * bz(j1-1,j)
-      b2  = ey(j1,j)/dt + csq/dx*bz(j1-1,j) 
-         
-      dis = a11*a22-a21*a12 
-         
-      !ey(j1,j) = (b1*a22-b2*a12)/dis
-      bz(j1,j) = (a11*b2-a21*b1)/dis
-      
-   end do
-      
-case (WEST)
-
-   !Frontiere Ouest : Ey = -c Bz
-   do j = i2, j2
-      
-      a11 = 1.; a12 = + c
-      a21 = 1./dt; a22 = - csq / dx
-      b1  = - ey(i1,j) - c * bz(i1+1,j)
-      b2  =   ey(i1,j)/dt - csq/dx*bz(i1+1,j) 
-      
-      dis = a11*a22-a21*a12 
-   
-      ey(i1,j) = (b1*a22-b2*a12)/dis
-      !bz(i1,j) = (a11*b2-a21*b1)/dis
-      
-   end do
-
-end select
-
-end subroutine bc_silver_muller_2d_fdtd
+!PN DEFINED BUT NOT USED
+!PN !> Set periodic bounday conditions
+!PN subroutine bc_metallic_2d_fdtd(this, fx, fy, fz, side)
+!PN 
+!PN type(sll_maxwell_2d_fdtd) :: this !< maxwell object
+!PN sll_int32, intent(in) :: side !< which domain edge
+!PN sll_real64, dimension(:,:), target  :: fx !< Ex or Bx
+!PN sll_real64, dimension(:,:), target  :: fy !< Ey or By
+!PN sll_real64, dimension(:,:), target  :: fz !< Bz or Ez
+!PN sll_real64, dimension(:,:), pointer :: bx, by, ez
+!PN sll_real64, dimension(:,:), pointer :: ex, ey, bz
+!PN sll_int32 :: i1, j1, i2, j2
+!PN 
+!PN i1 = this%i1
+!PN j1 = this%j1
+!PN i2 = this%i2
+!PN j2 = this%j2
+!PN 
+!PN if (this%polarization == TE_POLARIZATION) then
+!PN    ex => fx; ey => fy; bz => fz
+!PN    select case(side)
+!PN    case(SOUTH)
+!PN       ex(i1:j1,i2) = 0._f64
+!PN    case(NORTH)
+!PN       bz(i1:j1,j2) = bz(i1:j1,j2-1)
+!PN    case(WEST)
+!PN       ey(i1,i2:j2) = 0._f64
+!PN    case(EAST)
+!PN       bz(j1,i2:j2) = bz(j1-1,i2:j2)
+!PN    end select
+!PN end if
+!PN 
+!PN if (this%polarization == TM_POLARIZATION) then
+!PN    bx => fx; by => fy; ez => fz
+!PN    select case(side)
+!PN    case(SOUTH)
+!PN       bx(i1:j1,i2) = 0.0_f64
+!PN    case(NORTH)
+!PN       ez(i1:j1,j2) = ez(i1:j1,j2-1)
+!PN    case(WEST)
+!PN       by(i1,i2:j2) = 0._f64
+!PN    case(EAST)
+!PN       ez(j1,i2:j2) = ez(j1-1,i2:j2)
+!PN    end select
+!PN end if
+!PN 
+!PN end subroutine bc_metallic_2d_fdtd
+!PN 
+!PN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!PN 
+!PN !> Bundary conditions
+!PN subroutine bc_silver_muller_2d_fdtd( this, ex, ey, bz, ccall, dt )
+!PN 
+!PN type(sll_maxwell_2d_fdtd) :: this !< maxwell object
+!PN sll_int32, intent(in) :: ccall !< domain edge (N,S,E,W)
+!PN sll_int32 :: i1, j1, i2, j2
+!PN sll_real64 :: a11,a12,a21,a22,b1,b2,dis
+!PN sll_int32 :: i, j
+!PN sll_real64, intent(in) :: dt !< time step
+!PN sll_real64 :: dx, dy, c, csq
+!PN sll_real64, dimension(:,:), pointer :: ex !< x electric field
+!PN sll_real64, dimension(:,:), pointer :: ey !< y electric field
+!PN sll_real64, dimension(:,:), pointer :: bz !< z magnetic field
+!PN 
+!PN c   = this%c
+!PN csq = c * c
+!PN dx  = this%dx
+!PN dy  = this%dy
+!PN 
+!PN i1 = this%i1
+!PN j1 = this%j1
+!PN i2 = this%i2
+!PN j2 = this%j2
+!PN 
+!PN !Conditions de Silver-Muller
+!PN !------------------------------------
+!PN !Ey = -c Bz sur la frontiere ouest
+!PN !Ey =  c Bz sur la frontiere est
+!PN !Ex = -c Bz sur la frontiere nord
+!PN !Ex =  c Bz sur la frontiere sud
+!PN    
+!PN !On effectue le calcul de B sur les points fictifs du maillage
+!PN !simultanement avec la prise en compte des conditions limites sur
+!PN !E. Pour cela, on resout sur les points frontieres, l'equation de la
+!PN !condition limite en moyennant en temps pour E et en espace pour B puis
+!PN !l'equation d'Ampere
+!PN 
+!PN select case (ccall)
+!PN 
+!PN case (NORTH)
+!PN    !Frontiere Nord : Ex = -c Bz 
+!PN    do i = i1, j1
+!PN          
+!PN       a11 = 1.0_f64; a12 = + c
+!PN       a21 = 1.0_f64/dt; a22 = - csq / dy
+!PN       b1  = - ex(i,j2) - c * bz(i,j2-1)
+!PN       b2  =   ex(i,j2)/dt - csq/dy*bz(i,j2-1)
+!PN          
+!PN       dis = a11*a22-a21*a12 
+!PN          
+!PN       !ex(i,j2) = (b1*a22-b2*a12)/dis
+!PN       bz(i,j2) = (a11*b2-a21*b1)/dis
+!PN          
+!PN    end do
+!PN       
+!PN case (SOUTH)
+!PN 
+!PN    !Frontiere Sud : Ex =  c Bz
+!PN    do i = i1, j1
+!PN          
+!PN       a11 = 1.0_f64; a12 = - c
+!PN       a21 = 1.0_f64/dt; a22 = csq / dy
+!PN       b1  = - ex(i,i2) + c * bz(i,i2+1)
+!PN       b2  = ex(i,i2)/dt + csq / dy * bz(i,i2+1) 
+!PN          
+!PN       dis = a11*a22-a21*a12 
+!PN          
+!PN       ex(i,i2) = (b1*a22-b2*a12)/dis
+!PN       !bz(i,i2) = (a11*b2-a21*b1)/dis
+!PN          
+!PN    end do
+!PN       
+!PN case (EAST)
+!PN 
+!PN    !Frontiere Est : Ey =  c Bz
+!PN    do j = i2, j2
+!PN          
+!PN       a11 = 1.0_f64; a12 = - c
+!PN       a21 = 1.0_f64/dt; a22 = + csq / dx
+!PN       b1  = - ey(j1,j) + c * bz(j1-1,j)
+!PN       b2  = ey(j1,j)/dt + csq/dx*bz(j1-1,j) 
+!PN          
+!PN       dis = a11*a22-a21*a12 
+!PN          
+!PN       !ey(j1,j) = (b1*a22-b2*a12)/dis
+!PN       bz(j1,j) = (a11*b2-a21*b1)/dis
+!PN       
+!PN    end do
+!PN       
+!PN case (WEST)
+!PN 
+!PN    !Frontiere Ouest : Ey = -c Bz
+!PN    do j = i2, j2
+!PN       
+!PN       a11 = 1.0_f64; a12 = + c
+!PN       a21 = 1.0_f64/dt; a22 = - csq / dx
+!PN       b1  = - ey(i1,j) - c * bz(i1+1,j)
+!PN       b2  =   ey(i1,j)/dt - csq/dx*bz(i1+1,j) 
+!PN       
+!PN       dis = a11*a22-a21*a12 
+!PN    
+!PN       ey(i1,j) = (b1*a22-b2*a12)/dis
+!PN       !bz(i1,j) = (a11*b2-a21*b1)/dis
+!PN       
+!PN    end do
+!PN 
+!PN end select
+!PN 
+!PN end subroutine bc_silver_muller_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

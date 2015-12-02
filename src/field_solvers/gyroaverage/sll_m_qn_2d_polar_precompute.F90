@@ -35,8 +35,8 @@ contains
     sll_int32, dimension(:), intent(out) :: pre_compute_N
     sll_int32, intent(out) :: size_pre_compute
     sll_int32,dimension(:,:),allocatable :: buf
-    sll_int32 ::i,j,k,p,ell_1,ell_2,ii(2),s,nb,ind(2)
-    sll_real64::val(-1:2,-1:2),eta_star(2),eta(2),delta_eta(2),x(2)
+    sll_int32 ::i,k,ell_1,ell_2,ii(2),s,nb,ind(2)
+    sll_real64::eta_star(2),eta(2),delta_eta(2),x(2)
     sll_int32 ::error,max_nb
     sll_real64 :: eta_min(2), eta_max(2)
     sll_int32 :: Nc(2)
@@ -118,9 +118,9 @@ contains
     sll_int32, dimension(:,:), intent(out) :: pre_compute_index
     sll_real, dimension(:), intent(out) :: pre_compute_coeff_spl
     sll_int32,dimension(:,:),allocatable :: buf
-    sll_int32 ::i,j,k,p,ell_1,ell_2,ii(2),s,nb,ind(2)
+    sll_int32 ::i,j,k,ell_1,ell_2,ii(2),s,nb,ind(2)
     sll_real64::val(-1:2,-1:2),eta_star(2),eta(2),delta_eta(2),x(2)
-    sll_int32 ::error,max_nb
+    sll_int32 ::error
     sll_real64 :: eta_min(2), eta_max(2)
     sll_int32 :: Nc(2)
     
@@ -183,6 +183,8 @@ contains
 
       
     SLL_DEALLOCATE_ARRAY(buf,error)
+    return
+    print*, size_pre_compute
   
   end subroutine precompute_double_gyroaverage_coeff_polar_splines  
 
@@ -217,6 +219,8 @@ contains
           pre_compute_coeff_spl(s) 
       enddo
     enddo         
+    return
+    print*, size_pre_compute
   end subroutine compute_contribution_matrix
 
   subroutine compute_D_spl2D( &
@@ -237,9 +241,9 @@ contains
     sll_real64,dimension(:,:,:),allocatable,target::mat_spl2D_circ
     sll_real64,dimension(:,:,:),pointer::pointer_mat_spl2D_circ
     sll_int32 :: j
-    sll_int32 :: m
-    sll_comp64 :: exp_comp
-    sll_real64 :: mode
+    !sll_int32 :: m
+    !sll_comp64 :: exp_comp
+    !sll_real64 :: mode
     sll_comp64, dimension(:), allocatable :: fft_array
     sll_real64, dimension(:), allocatable :: buf_fft
     sll_int32 :: k
@@ -263,11 +267,11 @@ contains
 
 
     pointer_dnat => dnat
-	pointer_lnat => lnat
-	pointer_dper => dper
-	pointer_lper => lper
-	pointer_mper => mper	
-	pointer_mat_nat => mat_nat
+    pointer_lnat => lnat
+    pointer_dper => dper
+    pointer_lper => lper
+    pointer_mper => mper    
+    pointer_mat_nat => mat_nat
     pointer_mat_per => mat_per
     pointer_mat_spl2D_circ => mat_spl2D_circ
 
@@ -285,9 +289,9 @@ contains
     do k=0,Nr
       do j=0,Nr+2
         fft_array(1:Ntheta)=pointer_mat_spl2D_circ(0:Ntheta-1,j,k)*(1._f64,0._f64)
-	    call zfftf(Ntheta,fft_array(1:Ntheta),buf_fft)
-	    D_spl2D(1:Ntheta,j+1,k+1) = fft_array(1:Ntheta)
-	  enddo  
+    call zfftf(Ntheta,fft_array(1:Ntheta),buf_fft)
+    D_spl2D(1:Ntheta,j+1,k+1) = fft_array(1:Ntheta)
+    enddo  
     enddo   
 
 
@@ -297,7 +301,7 @@ contains
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
 !        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !        D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo
@@ -318,10 +322,10 @@ contains
     sll_int32 :: Nr
     sll_int32 :: Ntheta
     sll_comp64, dimension(:,:,:), intent(out) :: D_contr
-    sll_int32 :: m
+    !sll_int32 :: m
     sll_int32 :: j
-    sll_real64 :: mode
-    sll_comp64 :: exp_comp
+    !sll_real64 :: mode
+    !sll_comp64 :: exp_comp
     sll_comp64, dimension(:), allocatable :: fft_array
     sll_real64, dimension(:), allocatable :: buf_fft
     sll_int32 :: k
@@ -339,9 +343,9 @@ contains
     do k=0,Nr+2
       do j=0,Nr
         fft_array(1:Ntheta)=pointer_mat_contribution_circ(1:Ntheta,j+1,k+1)*(1._f64,0._f64)
-	    call zfftf(Ntheta,fft_array(1:Ntheta),buf_fft)
-	    D_contr(1:Ntheta,j+1,k+1) = fft_array(1:Ntheta)
-	  enddo  
+    call zfftf(Ntheta,fft_array(1:Ntheta),buf_fft)
+    D_contr(1:Ntheta,j+1,k+1) = fft_array(1:Ntheta)
+    enddo  
     enddo   
 
 
@@ -350,7 +354,7 @@ contains
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
 !        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !          D_contr(m,:,:) = D_contr(m,:,:) + pointer_mat_contribution_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo
@@ -586,9 +590,9 @@ contains
     SLL_ALLOCATE(mat_C(Nr+1,Nr+1), ierr)
     
      
-    mat = (0._f64,0._f64)
+    mat = 0._f64
     do m=1,Ntheta
-      mat_stock1 = (0._f64,0._f64)
+      mat_stock1 = 0._f64
       mat_A(1:Nr+1,1:Nr+3) = D_contr(m,:,:)
       mat_B(1:Nr+3,1:Nr+1) = D_spl2D(m,:,:)
       !A MxK
@@ -621,7 +625,7 @@ contains
 !        Nr+1, &
 !        mat_stock1)
       
-      mat_stock2 = (0._f64,0._f64)
+      mat_stock2 = 0._f64
       mat_stock1(:,:) = mat_C(1:Nr+1,1:Nr+1)
       CALL DGEMM( &
         'T', &
@@ -648,7 +652,7 @@ contains
 !        Nr+1, &
 !        mat_stock2)
       do i=1,Nr+1
-        mat_stock2(i,i) =  mat_stock2(i,i) - (1._f64,0._f64)
+        mat_stock2(i,i) =  mat_stock2(i,i) - 1._f64
       enddo
       mat(m,:,:) = -mat_stock2
     enddo     
@@ -683,9 +687,9 @@ contains
     sll_comp64, dimension(:,:,:), allocatable :: D_spl2D 
     sll_comp64, dimension(:,:,:), allocatable :: D_contr
     sll_int32 :: ierr 
-    sll_real64, dimension(:,:,:), allocatable :: real_mat
-    sll_real64, dimension(:,:,:), allocatable :: real_D_spl2D 
-    sll_real64, dimension(:,:,:), allocatable :: real_D_contr
+    !sll_real64, dimension(:,:,:), allocatable :: real_mat
+    !sll_real64, dimension(:,:,:), allocatable :: real_D_spl2D 
+    !sll_real64, dimension(:,:,:), allocatable :: real_D_contr
 
 
 
@@ -840,26 +844,26 @@ contains
       enddo  
    enddo
 
-	do m=1,num_cells_theta
-	  call ZGETRF( &
-		num_cells_r+1, &
-		num_cells_r+1, &
-		mat(m,:,:), &
-		num_cells_r+1, &
-		IPIV, &
-		INFO)
-	  call ZGETRI( &
-		num_cells_r+1, &
-		mat(m,:,:), &
-		num_cells_r+1, &
-		IPIV, &
-		WORK, &
-		(num_cells_r+1)**2, &
-		INFO)
-	enddo
+    do m=1,num_cells_theta
+    call ZGETRF( &
+    num_cells_r+1, &
+    num_cells_r+1, &
+    mat(m,:,:), &
+    num_cells_r+1, &
+    IPIV, &
+    INFO)
+    call ZGETRI( &
+    num_cells_r+1, &
+    mat(m,:,:), &
+    num_cells_r+1, &
+    IPIV, &
+    WORK, &
+    (num_cells_r+1)**2, &
+    INFO)
+    enddo
 
-	print *,'#here is INFO'
-	print *,INFO
+    print *,'#here is INFO'
+    print *,INFO
 
 
   end subroutine compute_qns_inverse_polar_splines
@@ -896,7 +900,7 @@ contains
     phi_comp=phi*(1._f64,0._f64)
     call zffti(Ntheta,buf_fft)
     do i=1,Nr+1
-	  call zfftf(Ntheta,phi_comp(i,:),buf_fft)
+    call zfftf(Ntheta,phi_comp(i,:),buf_fft)
     enddo   
 
  ! Produit matrice/vecteur 
@@ -913,9 +917,9 @@ contains
     
  ! FFT^-1
     do i=1,Nr+1
-		call zfftb(Ntheta,phi_comp(i,:),buf_fft)
-	enddo
-	phi=real(phi_comp/real(Ntheta,f64))
+    call zfftb(Ntheta,phi_comp(i,:),buf_fft)
+    enddo
+    phi=real(phi_comp,f64)/real(Ntheta,f64)
     
  ! Sorties     
  !   print *,"phi_min : ",minval(phi)
@@ -929,29 +933,29 @@ contains
   end subroutine solve_qns_polar_splines
   
   
-  subroutine precompute_matrix( &
-    Ti, &
-    r_min, &
-    r_max, &
-    num_cells_r, &
-    num_cells_theta, &
-    mu_points, &
-    mu_weights, &
-    N_mu, &
-    N_points, &
-    mat)
-    sll_real64,dimension(:),intent(in) :: Ti
-    sll_real64, intent(in) :: r_min
-    sll_real64, intent(in) :: r_max
-    sll_int32, intent(in) :: num_cells_r
-    sll_int32, intent(in) :: num_cells_theta
-    sll_real64, dimension(:), intent(in) :: mu_points
-    sll_real64, dimension(:), intent(in) :: mu_weights
-    sll_int32, intent(in) :: N_mu
-    sll_int32, intent(in) :: N_points
-    sll_real64, dimension(:,:,:), intent(out) :: mat
-    
-    
-  end subroutine precompute_matrix
+!PN  subroutine precompute_matrix( &
+!PN    Ti, &
+!PN    r_min, &
+!PN    r_max, &
+!PN    num_cells_r, &
+!PN    num_cells_theta, &
+!PN    mu_points, &
+!PN    mu_weights, &
+!PN    N_mu, &
+!PN    N_points, &
+!PN    mat)
+!PN    sll_real64,dimension(:),intent(in) :: Ti
+!PN    sll_real64, intent(in) :: r_min
+!PN    sll_real64, intent(in) :: r_max
+!PN    sll_int32, intent(in) :: num_cells_r
+!PN    sll_int32, intent(in) :: num_cells_theta
+!PN    sll_real64, dimension(:), intent(in) :: mu_points
+!PN    sll_real64, dimension(:), intent(in) :: mu_weights
+!PN    sll_int32, intent(in) :: N_mu
+!PN    sll_int32, intent(in) :: N_points
+!PN    sll_real64, dimension(:,:,:), intent(out) :: mat
+!PN    
+!PN    
+!PN  end subroutine precompute_matrix
 
 end module sll_m_qn_2d_polar_precompute

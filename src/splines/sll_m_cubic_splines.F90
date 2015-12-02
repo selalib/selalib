@@ -45,37 +45,37 @@ module sll_m_cubic_splines
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, public  ::  sll_cubic_spline_1D
-     sll_int32 SLL_PRIV                   :: n_points !< size
-     sll_real64 SLL_PRIV                  :: delta    !< discretization step
-     sll_real64 SLL_PRIV                  :: rdelta   !< reciprocal of delta
-     sll_real64 SLL_PRIV                  :: xmin     !< left boundary
-     sll_real64 SLL_PRIV                  :: xmax     !< right boundary
-     sll_int32 SLL_PRIV                   :: bc_type  !< periodic, hermite
-     !> scratch space D (L*D=F); refer to the algorithm below. Size depends on 
+     sll_int32, private                   :: n_points !< size
+     sll_real64, private                  :: delta    !< discretization step
+     sll_real64, private                  :: rdelta   !< reciprocal of delta
+     sll_real64, private                  :: xmin     !< left boundary
+     sll_real64, private                  :: xmax     !< right boundary
+     sll_int32, private                   :: bc_type  !< periodic, hermite
+     !> scratch space D (L*D=F), refer to the algorithm below. Size depends on 
      !> BCs.
-     sll_real64, dimension(:), pointer SLL_PRIV :: d =>null() 
+     sll_real64, dimension(:), pointer, private :: d =>null() 
      !> the spline coeffs
-     sll_real64, dimension(:), pointer SLL_PRIV :: coeffs=>null() 
+     sll_real64, dimension(:), pointer, private :: coeffs=>null() 
      !> left slope, for Hermite:
-     sll_real64 SLL_PRIV                        :: slope_L  
+     sll_real64, private                        :: slope_L  
      !> right slope, for Hermite
-     sll_real64 SLL_PRIV                        :: slope_R 
+     sll_real64, private                        :: slope_R 
      !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV                           :: compute_slope_L
+     logical, private                           :: compute_slope_L
      !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV                           :: compute_slope_R
+     logical, private                           :: compute_slope_R
      !> Data required for the 'slow' algorithm based on a standard
      !> tridiagonal system solution. Note that we use the same nomenclature
      !> as in the sll_m_tridiagonal module.
-     logical SLL_PRIV                           :: use_fast_algorithm
+     logical, private                           :: use_fast_algorithm
      !> Tridiagonal solver data
-     sll_real64, dimension(:), pointer SLL_PRIV :: a => null()
+     sll_real64, dimension(:), pointer, private :: a => null()
      !> Tridiagonal solver data
-     sll_real64, dimension(:), pointer SLL_PRIV :: cts => null()
+     sll_real64, dimension(:), pointer, private :: cts => null()
      !> Tridiagonal solver data
-     sll_int32, dimension(:), pointer SLL_PRIV  :: ipiv => null()
+     sll_int32, dimension(:), pointer, private  :: ipiv => null()
      !> Hermite needs extended f array:
-     sll_real64, dimension(:), pointer SLL_PRIV :: f_aux => null() 
+     sll_real64, dimension(:), pointer, private :: f_aux => null() 
   end type sll_cubic_spline_1D
 
 
@@ -85,37 +85,37 @@ module sll_m_cubic_splines
   !> This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, public :: sll_cubic_spline_2D
-    sll_int32  SLL_PRIV   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
-    sll_int32  SLL_PRIV   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_delta    !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_delta    !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_min      !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_max      !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_min      !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_max      !< PLEASE ADD DOCUMENTATION
-    sll_int32  SLL_PRIV   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
-    sll_int32  SLL_PRIV   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_delta    !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_delta    !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_min      !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_max      !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_min      !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_max      !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
     ! if data is not used, it should be deleted make a decision...
-    sll_real64, pointer SLL_PRIV :: data(:,:) => null()  !< data for the spline fit
-    sll_real64, pointer SLL_PRIV :: d1(:) => null()      !< scratch space D (L*D = F), 
+    sll_real64, pointer, private :: data(:,:) => null()  !< data for the spline fit
+    sll_real64, pointer, private :: d1(:) => null()      !< scratch space D (L*D = F), 
                                                          !< refer to algorithm below. 
                                                          !< Size depends on BCs.
-    sll_real64, pointer SLL_PRIV :: d2(:) => null()      !< Second scratch space: 
-    sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()!< the spline coefficients:
-    sll_real64, pointer SLL_PRIV :: x1_min_slopes(:) => null() 
-    sll_real64, pointer SLL_PRIV :: x1_max_slopes(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_min_slopes(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_max_slopes(:) => null()
-    sll_real64, pointer SLL_PRIV :: x1_min_slopes_coeffs(:) => null()
-    sll_real64, pointer SLL_PRIV :: x1_max_slopes_coeffs(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_min_slopes_coeffs(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_max_slopes_coeffs(:) => null()
-    logical SLL_PRIV             :: compute_slopes_x1_min
-    logical SLL_PRIV             :: compute_slopes_x1_max
-    logical SLL_PRIV             :: compute_slopes_x2_min
-    logical SLL_PRIV             :: compute_slopes_x2_max
+    sll_real64, pointer, private :: d2(:) => null()      !< Second scratch space: 
+    sll_real64, pointer, private :: coeffs(:,:) => null()!< the spline coefficients:
+    sll_real64, pointer, private :: x1_min_slopes(:) => null() 
+    sll_real64, pointer, private :: x1_max_slopes(:) => null()
+    sll_real64, pointer, private :: x2_min_slopes(:) => null()
+    sll_real64, pointer, private :: x2_max_slopes(:) => null()
+    sll_real64, pointer, private :: x1_min_slopes_coeffs(:) => null()
+    sll_real64, pointer, private :: x1_max_slopes_coeffs(:) => null()
+    sll_real64, pointer, private :: x2_min_slopes_coeffs(:) => null()
+    sll_real64, pointer, private :: x2_max_slopes_coeffs(:) => null()
+    logical, private             :: compute_slopes_x1_min
+    logical, private             :: compute_slopes_x1_max
+    logical, private             :: compute_slopes_x2_min
+    logical, private             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
   !> @brief 
@@ -219,7 +219,7 @@ MAKE_GET_SLOT_FUNCTION(get_delta_cs1d,   sll_cubic_spline_1d, delta,sll_real64)
 
 MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d,  sll_cubic_spline_2d, x1_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_cubic_spline_2d, x1_max, sll_real64)
-MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_cubic_spline_2d, x2_min, sll_real64)
+!MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_cubic_spline_2d, x2_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d,  sll_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_cubic_spline_2d,x1_delta,sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64)
@@ -296,8 +296,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        else
           ! Assign some value, but this value should never be used in the
           ! periodic case anyway.
-          new_cubic_spline_1D%slope_L = 0.0
-          new_cubic_spline_1D%slope_R = 0.0
+          new_cubic_spline_1D%slope_L = 0.0_f64
+          new_cubic_spline_1D%slope_R = 0.0_f64
        end if
        if( new_cubic_spline_1D%use_fast_algorithm .eqv. .false. ) then
           SLL_ALLOCATE(new_cubic_spline_1D%a(3*num_points),ierr)
@@ -333,14 +333,14 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
           new_cubic_spline_1D%slope_L = sl
           new_cubic_spline_1D%compute_slope_L = .false.
        else
-          new_cubic_spline_1D%slope_L = 0.0           ! just a filler value
+          new_cubic_spline_1D%slope_L = 0.0_f64           ! just a filler value
           new_cubic_spline_1D%compute_slope_L = .true.
        end if
        if( present(sr) ) then
           new_cubic_spline_1D%slope_R = sr
           new_cubic_spline_1D%compute_slope_R = .false.
        else
-          new_cubic_spline_1D%slope_R = 0.0           ! just a filler value
+          new_cubic_spline_1D%slope_R = 0.0_f64           ! just a filler value
           new_cubic_spline_1D%compute_slope_R = .true.
        end if
        if( new_cubic_spline_1D%use_fast_algorithm .eqv. .false. ) then
@@ -392,7 +392,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   ! Fast spline algorithm description:
   !
   ! - data: the array whose data must be fit with the cubic spline.
-  ! - np: (number of points; length of the data array that must be fit with 
+  ! - np: (number of points, length of the data array that must be fit with 
   !   the spline.
   ! - bc_type: an integer flag describing the type of boundary conditions 
   !   desired.
@@ -658,7 +658,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     end do
     coeffs(1)    = coeffs(3)  - 2.0 * delta * slope_l
     coeffs(np+2) = coeffs(np) + 2.0 * delta * slope_r
-    coeffs(np+3) = 0.0 !coeffs(np-2)  ! not used
+    coeffs(np+3) = 0.0_f64 !coeffs(np-2)  ! not used
   end subroutine compute_spline_1D_hermite_aux
 
 
@@ -870,7 +870,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x
     t0        = (x-xmin)*rh
     cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
+    dx        = t0 - real(cell-1,f64)
     cdx       = 1.0_f64 - dx
     cim1      = coeffs(cell)
     ci        = coeffs(cell+1)
@@ -963,7 +963,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh
        cell     = int(t0) + 1
-       dx       = t0 - real(cell-1)
+       dx       = t0 - real(cell-1,f64)
        cdx      = 1.0_f64 - dx
        !  write (*,'(a,i15, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
        cim1     = coeffs(cell-1)
@@ -1032,7 +1032,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh
        cell     = int(t0) + 1
-       dx       = t0 - real(cell-1)
+       dx       = t0 - real(cell-1,f64)
        cdx      = 1.0_f64 - dx
        !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
        cim1     = coeffs(cell-1)
@@ -1071,7 +1071,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x
     t0        = (x-xmin)*rh
     cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
+    dx        = t0 - real(cell-1,f64)
     ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     cim1      = coeffs(cell)
     ci        = coeffs(cell+1)
@@ -2187,13 +2187,13 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
         ! find the cell and offset for x1
         t1          = (x1(i1,i2)-x1_min)*rh1
         cell1       = floor(t1) + 1
-        dx1         = t1- real(cell1-1)
+        dx1         = t1- real(cell1-1,f64)
         cdx1        = 1.0_f64 - dx1
 		
         ! find the cell and offset for x2
         t2         = (x2(i1,i2)-x2_min)*rh2
         cell2      = floor(t2) + 1
-        dx2        = t2 - real(cell2-1)
+        dx2        = t2 - real(cell2-1,f64)
         cdx2       = 1.0_f64 - dx2
       
         ! checking if the particle is well localized
@@ -2419,7 +2419,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x2
     t0         = (x2-x2_min)*rh2
     cell       = int(t0) + 1
-    dx         = t0 - real(cell-1)
+    dx         = t0 - real(cell-1,f64)
     cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     ! interpolate the coefficients along the line of constant x1. These 
@@ -2503,7 +2503,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x2
     t0         = (x2-x2_min)*rh2
     cell       = int(t0) + 1
-    dx         = t0 - real(cell-1)
+    dx         = t0 - real(cell-1,f64)
     cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     ! interpolate the coefficients along the line of constant x1. These 
@@ -2588,7 +2588,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! find the cell and offset for x2
     t0         = (x2-x2_min)*rh2
     cell       = int(t0) + 1
-    dx         = t0 - real(cell-1)
+    dx         = t0 - real(cell-1,f64)
     cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     ! interpolate the coefficients along the line of constant x1. These 

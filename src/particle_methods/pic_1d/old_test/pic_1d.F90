@@ -90,7 +90,7 @@ module sll_m_pic_1d
     sll_int32 :: particle_pusher, poisson_solver
 
 
-    CHARACTER(LEN=255) :: root_path
+    character(len=255) :: root_path
     
     sll_int32 :: timesteps 
     sll_real64 :: timestepwidth

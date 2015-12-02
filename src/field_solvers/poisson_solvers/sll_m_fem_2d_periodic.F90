@@ -81,29 +81,29 @@ do j=1,this%ny
 end do
 
 !** Construction des matrices elementaires
-Axelem(1,:) = (/  2, -2, -1,  1 /)
-Axelem(2,:) = (/ -2,  2,  1, -1 /)
-Axelem(3,:) = (/ -1,  1,  2, -2 /)
-Axelem(4,:) = (/  1, -1, -2,  2 /)
+Axelem(1,:) = (/  2.0_f64, -2.0_f64, -1.0_f64,  1.0_f64 /)
+Axelem(2,:) = (/ -2.0_f64,  2.0_f64,  1.0_f64, -1.0_f64 /)
+Axelem(3,:) = (/ -1.0_f64,  1.0_f64,  2.0_f64, -2.0_f64 /)
+Axelem(4,:) = (/  1.0_f64, -1.0_f64, -2.0_f64,  2.0_f64 /)
 
-Axelem = 1.d0/6.d0 * Axelem
+Axelem = 1._f64/6._f64 * Axelem
 
-Ayelem(1,:) = (/  2,  1, -1, -2 /)
-Ayelem(2,:) = (/  1,  2, -2, -1 /)
-Ayelem(3,:) = (/ -1, -2,  2,  1 /)
-Ayelem(4,:) = (/ -2, -1,  1,  2 /)
+Ayelem(1,:) = (/  2.0_f64,  1.0_f64, -1.0_f64, -2.0_f64 /)
+Ayelem(2,:) = (/  1.0_f64,  2.0_f64, -2.0_f64, -1.0_f64 /)
+Ayelem(3,:) = (/ -1.0_f64, -2.0_f64,  2.0_f64,  1.0_f64 /)
+Ayelem(4,:) = (/ -2.0_f64, -1.0_f64,  1.0_f64,  2.0_f64 /)
 
-Ayelem = 1.d0/6.d0 * Ayelem
+Ayelem = 1._f64/6._f64 * Ayelem
 
-Melem(1,:) = (/ 4, 2, 1, 2/)
-Melem(2,:) = (/ 2, 4, 2, 1/)
-Melem(3,:) = (/ 1, 2, 4, 2/)
-Melem(4,:) = (/ 2, 1, 2, 4/)
+Melem(1,:) = (/ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64/)
+Melem(2,:) = (/ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64/)
+Melem(3,:) = (/ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64/)
+Melem(4,:) = (/ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64/)
 
-Melem = 1.d0/36.d0 * Melem
+Melem = 1._f64/36._f64 * Melem
 
-this%A = 0.d0
-this%M = 0.d0
+this%A = 0._f64
+this%M = 0._f64
 
 !***  Interior mesh ***
 do j=1,this%ny-1
@@ -148,7 +148,7 @@ call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 SLL_ALLOCATE(this%ipiv(nxy),error)
 
-this%A(1,1) = 1.0e7
+this%A(1,1) = 1.0d7
 call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 
 end subroutine initialize_poisson_2d_periodic_fem
@@ -219,11 +219,11 @@ do i=1,this%nx
 end do
 
 b = matmul(this%M,b)
-b(1) = 1
+b(1) = 1.0_f64
 
 call DGETRS('N',nxy,1,this%A,nxy,this%ipiv,b,nxy,error)
 
-bmoy = sum(b) / nxy
+bmoy = sum(b) / real(nxy,f64)
 
 k=0
 do i=1,this%nx

@@ -142,10 +142,10 @@ sll_int32                                :: jj
 sll_int32                                :: row
 sll_int32                                :: col
 sll_int32                                :: i
-sll_int32                                :: flag
+!sll_int32                                :: flag
 sll_int32                                :: sz
-sll_int32                                :: result
-sll_int32                                :: lpi_size(2)
+!sll_int32                                :: result
+!sll_int32                                :: lpi_size(2)
 logical                                  :: ll_done
 
 print *,'#initialize_csr_matrix'
@@ -260,6 +260,7 @@ subroutine sll_factorize_csr_matrix(mat)
 type(sll_csr_matrix), intent(inout) :: mat
 
 print *,'#sll_factorize_csr_matrix does nothing here'
+SLL_ASSERT(associated(mat%val))
 
 end subroutine sll_factorize_csr_matrix
 
@@ -375,7 +376,7 @@ sll_real64 :: eps
 sll_real64, dimension(:), allocatable :: Ad
 sll_real64, dimension(:), allocatable :: d
 
-logical    :: ll_continue
+!logical    :: ll_continue
 sll_real64 :: Norm2r1
 sll_real64 :: Norm2r0
 sll_real64 :: NormInfb
@@ -385,7 +386,7 @@ sll_real64 :: beta
 sll_real64 :: alpha
 sll_int32  :: iter
 sll_int32  :: err
-sll_int32  :: flag
+!sll_int32  :: flag
 
 eps = 1.d-13
 maxIter = 10000
@@ -395,7 +396,7 @@ if ( mat%num_rows /= mat%num_cols ) then
   stop
 end if
 
-if ((dabs(maxval(B)) < eps) .AND. (dabs(minval(B)) < eps)) then
+if ((abs(maxval(B)) < eps) .AND. (abs(minval(B)) < eps)) then
   U = 0.0_8
   return
 end if
@@ -438,7 +439,7 @@ do iter = 1, maxiter
   !     pour le test d'arret                              !
   ! (b) extraction de la norme euclidienne du residu rk+1 !
   !-------------------------------------------------------!
-  NormInfr = maxval(dabs(B))
+  NormInfr = maxval(abs(B))
   Norm2r1  = dot_product(B,B)
 
   !==================================================!
@@ -487,7 +488,7 @@ sll_real64 :: beta
 sll_real64 :: alpha
 sll_int32  :: iter
 sll_int32  :: err
-sll_int32  :: flag
+!sll_int32  :: flag
 logical    :: ll_continue
 
 maxIter = 100000
@@ -498,7 +499,7 @@ if ( this%num_rows /= this%num_cols ) then
   stop
 end if
 
-if ((dabs(maxval(B)) < eps ) .AND. (dabs(MINVAL(B)) < eps )) then
+if ((abs(maxval(B)) < eps ) .AND. (abs(MINVAL(B)) < eps )) then
   U = 0.0_8
   return
 end if
@@ -510,14 +511,14 @@ SLL_ALLOCATE(Ux(this%num_rows),err)
 SLL_ALLOCATE(one(this%num_rows),err)
 
 U(:)  = 0.0_8
-one(:) = 1.
+one(:) = 1.0_f64
 Ux(:) = U(:)
 iter = 0
 call sll_mult_csr_matrix_vector( this , Ux , Ad )
 Ad = Ad - dot_product(Masse_tot, Ux)
 r       = B - Ad
 Norm2r0  = DOT_PRODUCT( r , r )
-NormInfb = maxval( dabs( B ) )
+NormInfb = maxval( abs( B ) )
 
 d = r
 
@@ -551,7 +552,7 @@ do while(ll_continue)
   !     pour le test d'arret                              !
   ! (b) extraction de la norme euclidienne du residu rk+1 !
   !-------------------------------------------------------!
-  NormInfr = maxval(dabs( r ))
+  NormInfr = maxval(abs( r ))
   Norm2r1 = DOT_PRODUCT( r , r )
          
   !==================================================!

@@ -203,27 +203,28 @@ contains  ! ****************************************************************
   end subroutine interpolate_pointer_values_per1d
 
 
-  subroutine interpolate_derivatives_per1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output_array )
+!PN DEFINED BUT NOT USED
+! subroutine interpolate_derivatives_per1d( &
+!   interpolator, &
+!   num_pts, &
+!   vals_to_interpolate, &
+!   output_array )
 
 
-    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
-    !sll_int32 :: ierr
+!   class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
+!   sll_int32,  intent(in)                 :: num_pts
+!   sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
+!   sll_real64, dimension(:), intent(out)  :: output_array
+!   !sll_int32 :: ierr
 
-    print*, 'interpolate_array_derivatives: ', &
-         'not implemented for periodic interpolation'
-    output_array = -1000000._f64
-    print *,interpolator%num_points
-    print *,num_pts
-    print *,maxval(vals_to_interpolate)
-    stop
-  end subroutine interpolate_derivatives_per1d
+!   print*, 'interpolate_array_derivatives: ', &
+!        'not implemented for periodic interpolation'
+!   output_array = -1000000._f64
+!   print *,interpolator%num_points
+!   print *,num_pts
+!   print *,maxval(vals_to_interpolate)
+!   stop
+! end subroutine interpolate_derivatives_per1d
 
   subroutine interpolate_pointer_derivatives_per1d( &
     interpolator, &
@@ -269,17 +270,18 @@ contains  ! ****************************************************************
     stop
   end function interpolate_deriv1_per1d
 
-  function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
-    sll_real64 :: val
-    sll_real64, intent(in) :: eta1
-     print*, 'interpolate_derivative_f95: ', &
-         'not implemented for periodic interpolation'
-    val = -1000000._f64
-    print *,eta1
-    print *,interpolator%num_points
-    stop
-  end function interpolate_derivative_f95
+!PN DEFINED BUT NOT USED
+! function interpolate_derivative_f95( interpolator, eta1 ) result(val)
+!   class(sll_periodic_interpolator_1d), intent(in) :: interpolator
+!   sll_real64 :: val
+!   sll_real64, intent(in) :: eta1
+!    print*, 'interpolate_derivative_f95: ', &
+!        'not implemented for periodic interpolation'
+!   val = -1000000._f64
+!   print *,eta1
+!   print *,interpolator%num_points
+!   stop
+! end function interpolate_derivative_f95
 
 
   ! Why is the name of this function changing depending on the standard?
