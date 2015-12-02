@@ -92,12 +92,13 @@ subroutine schur_complement_fac(s, n, k, q)
   
   integer :: kp1
   
+  ! allocate small blocks
   kp1 = k+1
   allocate(s%bb(kp1,k  )); s%bb = 0.0_8
   allocate(s%cc(k  ,kp1)); s%cc = 0.0_8
   allocate(s%dd(k  ,k  )); s%dd = 0.0_8
   allocate(s%z2(n-k))    ; s%z2 = 0.0_8
-  
+  ! assmble small blocks
   do i = 1, k
     l = 0
     do j = i, k
