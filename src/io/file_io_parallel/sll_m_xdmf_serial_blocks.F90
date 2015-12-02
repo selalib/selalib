@@ -27,7 +27,7 @@ module sll_m_xdmf_serial_blocks
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
-  use mpi
+  use sll_mpi
   use sll_m_utilities
 #ifndef NOHDF5
   use hdf5

@@ -2,7 +2,7 @@
 !data stored in local array spread in several processors.
 program local_to_global
 
-use mpi
+use sll_mpi
 use iso_fortran_env, only: output_unit
 
 implicit none
