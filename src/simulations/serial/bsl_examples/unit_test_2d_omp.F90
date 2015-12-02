@@ -31,8 +31,8 @@ implicit none
   sll_real64, dimension(:),       allocatable :: vx, vy
   sll_real64, dimension(:,:,:,:), allocatable :: df
 
-  class(sll_interpolator_2d_base), pointer    :: interp_xy
-  class(sll_interpolator_2d_base), pointer    :: interp_vxvy
+  class(sll_c_interpolator_2d), pointer    :: interp_xy
+  class(sll_c_interpolator_2d), pointer    :: interp_vxvy
 
   type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
   type(sll_cubic_spline_interpolator_2d), target  :: spline_vxvy

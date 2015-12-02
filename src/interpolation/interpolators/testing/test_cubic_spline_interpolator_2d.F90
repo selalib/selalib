@@ -12,7 +12,7 @@ implicit none
 #define NPTS2 65 
 
   !type(sll_cubic_spline_interpolator_2d) :: cs2d
-  class(sll_interpolator_2d_base), pointer :: cs2d
+  class(sll_c_interpolator_2d), pointer :: cs2d
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
   sll_real64, dimension(:), allocatable      :: x1_eta1_max
@@ -112,7 +112,7 @@ implicit none
 contains
 
 subroutine test_interpolator_2d()
-  class(sll_interpolator_2d_base),    pointer   :: interp
+  class(sll_c_interpolator_2d),    pointer   :: interp
   type(sll_cubic_spline_interpolator_2d), target    :: spline
   sll_real64, dimension(NPTS1,NPTS2) :: xx1
   sll_real64, dimension(NPTS1,NPTS2) :: xx2

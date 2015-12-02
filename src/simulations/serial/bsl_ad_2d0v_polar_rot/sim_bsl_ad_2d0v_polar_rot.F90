@@ -85,7 +85,7 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64 :: delta2
   sll_real64 :: rmin
   sll_real64 :: rmax
-  class(sll_interpolator_2d_base), pointer :: interp2d
+  class(sll_c_interpolator_2d), pointer :: interp2d
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   sll_int32 :: j

@@ -213,7 +213,7 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_real64, pointer :: x4_node(:)
 
     class(sll_advection_2d_base), pointer :: adv_x1x2
-    !class(sll_interpolator_2d_base), pointer :: interp_x1x2
+    !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_characteristics_2d_base), pointer :: charac_x1x2
     class(sll_advection_1d_base), pointer :: adv_x3
     class(sll_advection_1d_base), pointer :: adv_x4
@@ -224,7 +224,7 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     class(sll_poisson_3d_base), pointer :: poisson3d
 
     !for computing advection field from phi
-    class(sll_interpolator_2d_base), pointer :: phi_interp_x1x2
+    class(sll_c_interpolator_2d), pointer :: phi_interp_x1x2
     class(sll_c_interpolator_1d), pointer :: phi_interp_x3
     class(sll_advection_1d_base),    pointer :: adv_x2
     type(oblic_2d_derivative),       pointer :: deriv
@@ -263,13 +263,13 @@ contains
     class(sll_characteristics_2d_base), pointer :: charac2d   ! computation of characteristics
 
     !> 2D interpolator (in poloidal plane) for r component of adv. field
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d 
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d 
 
     !> 2D interpolator (in poloidal plane) for theta component of adv. field
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
 
     !> 2D interpolator (in poloidal plane) for distribution function
-    class(sll_interpolator_2d_base), pointer   :: f_interp2d
+    class(sll_c_interpolator_2d), pointer   :: f_interp2d
 
     !> 1D interpolators (along r) for (r,theta) components of adv. field
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
@@ -1556,7 +1556,7 @@ contains
     type(sll_cartesian_mesh_1d),     pointer     :: mesh2
     sll_real64,                      intent(out) :: A1(:,:)
     sll_real64,                      intent(out) :: A2(:,:)
-    class(sll_interpolator_2d_base), pointer     :: interp2d
+    class(sll_c_interpolator_2d), pointer     :: interp2d
     sll_real64,                      intent(in)  :: B0
 
     sll_int32  :: Nc_x1

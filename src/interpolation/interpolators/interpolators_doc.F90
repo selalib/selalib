@@ -32,7 +32,7 @@
 !!
 !> Classes available are:
 !!  - sll_m_interpolators_1d_base::sll_c_interpolator_1d
-!!  - sll_m_interpolators_2d_base::sll_interpolator_2d_base
+!!  - sll_m_interpolators_2d_base::sll_c_interpolator_2d
 !!  - sll_m_cubic_spline_interpolator_1d::sll_cubic_spline_interpolator_1d
 !!  - sll_m_cubic_spline_interpolator_1d_nonuniform::sll_cubic_spline_interpolator_1d_nonuniform
 !!  - sll_m_cubic_spline_interpolator_2d::sll_cubic_spline_interpolator_2d

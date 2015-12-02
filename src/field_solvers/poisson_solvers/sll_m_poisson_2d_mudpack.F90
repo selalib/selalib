@@ -97,17 +97,17 @@ private
     !> PLEASE ADD DOCUMENTATION
     sll_int32  :: mudpack_case
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cxy_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cx_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cy_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: ce_2d_interp
     !> PLEASE ADD DOCUMENTATION
     class(sll_c_interpolator_1d), pointer   :: cxx_1d_interp
     !> PLEASE ADD DOCUMENTATION

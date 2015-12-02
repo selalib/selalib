@@ -47,7 +47,7 @@ private
 !! respect to their use, as described by the interpolator_2d_base class.
 !! Where the diverse interpolators diverge is in the way to initialize them.
 !! We basically copy the analog for cubic splines
-  type, extends(sll_interpolator_2d_base), public :: sll_hermite_interpolator_2d
+  type, extends(sll_c_interpolator_2d), public :: sll_hermite_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
     type(sll_hermite_interpolation_2d), pointer :: hermite
     !> PLEASE ADD DOCUMENTATION

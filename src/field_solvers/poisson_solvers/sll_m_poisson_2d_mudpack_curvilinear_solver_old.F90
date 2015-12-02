@@ -59,16 +59,16 @@ implicit none
   sll_real64, dimension(:,:), pointer :: cy_2d
   sll_real64, dimension(:,:), pointer :: ce_2d
   sll_real64, dimension(:,:), pointer :: rho
-  class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: a11_interp
-  class(sll_interpolator_2d_base), pointer   :: a22_interp
-  class(sll_interpolator_2d_base), pointer   :: a12_interp
-  class(sll_interpolator_2d_base), pointer   :: a21_interp
+  class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cxy_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cx_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cy_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: ce_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: a11_interp
+  class(sll_c_interpolator_2d), pointer   :: a22_interp
+  class(sll_c_interpolator_2d), pointer   :: a12_interp
+  class(sll_c_interpolator_2d), pointer   :: a21_interp
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   sll_int32  :: mudpack_curvilinear_case
   sll_real64, dimension(:), pointer :: work !< array for tmp data
@@ -745,8 +745,8 @@ subroutine coefx_array(eta1_min,eta2_min, &
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: cx_array
-    class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
-    class(sll_interpolator_2d_base), pointer   :: a21_interp
+    class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: a21_interp
     
     
 do j=1,ny
@@ -766,8 +766,8 @@ subroutine coefy_array(eta1_min,eta2_min, &
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: cy_array
-    class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
-    class(sll_interpolator_2d_base), pointer   :: a12_interp
+    class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: a12_interp
     
 do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2

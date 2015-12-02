@@ -67,13 +67,13 @@ module sll_m_sim_bsl_gc_2d0v_curv
    class(sll_coordinate_transformation_2d_base), pointer :: transformation
   
    ! Simulation should carry the pointers to the heap-allocated objects itself
-    class(sll_interpolator_2d_base), pointer :: f_interp2d => null()
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d => null()
+    class(sll_c_interpolator_2d), pointer :: f_interp2d => null()
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d => null()
     class(sll_characteristics_2d_base), pointer :: charac2d => null()
     class(sll_characteristics_1d_base), pointer :: charac1d_x1 => null()
     class(sll_characteristics_1d_base), pointer :: charac1d_x2 => null()
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d => null()
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d => null()
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d => null()
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d => null()
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1 => null()
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1 => null()
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2 => null()
@@ -92,7 +92,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-!   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+!   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
    !coef
    sll_real64, dimension(:,:), pointer :: b11
    sll_real64, dimension(:,:), pointer :: b12
@@ -230,7 +230,7 @@ contains
     character(len=256) ::  interp_rho_case
     sll_int32 :: rho_degree1
     sll_int32 :: rho_degree2
-    class(sll_interpolator_2d_base), pointer   :: interp_rho
+    class(sll_c_interpolator_2d), pointer   :: interp_rho
     logical :: precompute_rhs
     logical :: with_constraint
     logical :: with_constraint_loc    
@@ -1763,7 +1763,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -1805,7 +1805,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32, intent(in) :: d1
     sll_int32, intent(in) :: d2
     sll_int32 :: Nc_eta1

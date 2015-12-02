@@ -214,7 +214,7 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
 
 
     class(sll_advection_2d_base), pointer :: adv_x1x2
-    !class(sll_interpolator_2d_base), pointer :: interp_x1x2
+    !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_characteristics_2d_base), pointer :: charac_x1x2
     class(sll_advection_1d_base), pointer :: adv_x3
     class(sll_advection_1d_base), pointer :: adv_x4
@@ -227,7 +227,7 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
 
 
     !for computing advection field from phi
-    class(sll_interpolator_2d_base), pointer   :: phi_interp_x1x2
+    class(sll_c_interpolator_2d), pointer   :: phi_interp_x1x2
     class(sll_c_interpolator_1d), pointer   :: phi_interp_x3
 
 
@@ -257,11 +257,11 @@ contains
     sll_int32            :: IO_stat
     sll_int32, parameter :: input_file = 99
     class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_2d_base), pointer   :: f_interp2d
+    class(sll_c_interpolator_2d), pointer   :: f_interp2d
     sll_real64 :: charac2d_tol
     sll_int32 :: charac2d_maxiter
     sll_real64 :: eta_min_gyro(2)
@@ -1323,7 +1323,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_1d), pointer :: mesh1
     type(sll_cartesian_mesh_1d), pointer :: mesh2
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min

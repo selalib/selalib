@@ -31,7 +31,7 @@ private
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
-type, extends(sll_interpolator_2d_base) :: &
+type, extends(sll_c_interpolator_2d) :: &
   sll_arbitrary_degree_spline_interpolator_2d           
 
   sll_int32                           :: num_pts1

@@ -35,7 +35,7 @@ implicit none
   
   
   !> Base class/basic interface for 2D interpolators
-  type, abstract :: sll_interpolator_2d_base
+  type, abstract :: sll_c_interpolator_2d
 
    contains
      
@@ -83,7 +83,7 @@ implicit none
  
     ! generic, public :: delete => del !operator(delete) => del!
      
-  end type sll_interpolator_2d_base
+  end type sll_c_interpolator_2d
   
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -92,9 +92,9 @@ implicit none
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
 
        use sll_m_working_precision
-       import sll_interpolator_2d_base
+       import sll_c_interpolator_2d
        sll_real64                                  :: val
-       class(sll_interpolator_2d_base), intent(in) :: interpolator
+       class(sll_c_interpolator_2d), intent(in) :: interpolator
        sll_real64, intent(in)                      :: eta1
        sll_real64, intent(in)                      :: eta2
 
@@ -108,8 +108,8 @@ implicit none
      subroutine interpolator_2d_array_msg( interpolator, data_array )
 
        use sll_m_working_precision
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(inout) :: interpolator
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(inout) :: interpolator
        sll_real64, dimension(:,:), intent(in)         :: data_array
 
      end subroutine interpolator_2d_array_msg
@@ -128,8 +128,8 @@ implicit none
           data_out)
 
        use sll_m_working_precision
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(in)    :: this
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(in)    :: this
        sll_int32,                       intent(in)    :: num_points1 
        sll_int32,                       intent(in)    :: num_points2 
        sll_real64,                      intent(in)    :: data_in(:,:)
@@ -153,8 +153,8 @@ implicit none
           data_out)
 
        use sll_m_working_precision
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(in)    :: this
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(in)    :: this
        sll_int32,                       intent(in)    :: num_points1  
        sll_int32,                       intent(in)    :: num_points2 
        sll_real64,                      intent(in)    :: data_in(:,:)
@@ -179,8 +179,8 @@ implicit none
           knots2,&
           size_knots2)
        use sll_m_working_precision
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(inout) :: interpolator
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(inout) :: interpolator
        ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
        ! for more flexibility for the children classes.
        sll_real64, dimension(:), intent(in), optional   :: coeffs_1d
@@ -198,8 +198,8 @@ implicit none
   !> Check interpolator is computed
   abstract interface
      function interpolator_2d_logical_query( interpolator ) result(res)
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(in) :: interpolator
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(in) :: interpolator
        logical :: res
      end function interpolator_2d_logical_query
   end interface
@@ -213,8 +213,8 @@ implicit none
           eta2_coords, &
           size_eta2_coords )
        use sll_m_working_precision
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(inout)  :: interpolator
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(inout)  :: interpolator
        sll_real64, dimension(:,:), intent(in)          :: data_array
        sll_real64, dimension(:), intent(in),optional   :: eta1_coords
        sll_real64, dimension(:), intent(in),optional   :: eta2_coords
@@ -227,8 +227,8 @@ implicit none
   abstract interface 
      function get_coeffs_2d(interpolator)
        use sll_m_working_precision
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(in) :: interpolator
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(in) :: interpolator
        sll_real64, dimension(:,:), pointer         :: get_coeffs_2d     
      end function get_coeffs_2d
   end interface
@@ -236,8 +236,8 @@ implicit none
   !> Deallocate the interpolator object
   abstract interface 
      subroutine delete_interpolator_2d(interpolator)
-       import sll_interpolator_2d_base
-       class(sll_interpolator_2d_base), intent(inout) :: interpolator
+       import sll_c_interpolator_2d
+       class(sll_c_interpolator_2d), intent(inout) :: interpolator
      end subroutine delete_interpolator_2d
   end interface
 

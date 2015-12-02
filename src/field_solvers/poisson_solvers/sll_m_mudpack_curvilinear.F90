@@ -35,21 +35,21 @@ integer, parameter, public :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type 
 integer, parameter, public :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
 
 !> Interpolator to compute derivative xx
-class(sll_interpolator_2d_base), pointer :: cxx_interp
+class(sll_c_interpolator_2d), pointer :: cxx_interp
 !> Interpolator to compute derivative yy
-class(sll_interpolator_2d_base), pointer :: cyy_interp
+class(sll_c_interpolator_2d), pointer :: cyy_interp
 !> Interpolator to compute derivative xy
-class(sll_interpolator_2d_base), pointer :: cxy_interp
+class(sll_c_interpolator_2d), pointer :: cxy_interp
 !> Interpolator to compute derivative x
-class(sll_interpolator_2d_base), pointer :: cx_interp
+class(sll_c_interpolator_2d), pointer :: cx_interp
 !> Interpolator to compute derivative y
-class(sll_interpolator_2d_base), pointer :: cy_interp
+class(sll_c_interpolator_2d), pointer :: cy_interp
 !> Interpolator to compute rhs coefficient
-class(sll_interpolator_2d_base), pointer :: ce_interp
+class(sll_c_interpolator_2d), pointer :: ce_interp
 !> PLEASE ADD DOCUMENTATION
-class(sll_interpolator_2d_base), pointer :: a12_interp
+class(sll_c_interpolator_2d), pointer :: a12_interp
 !> PLEASE ADD DOCUMENTATION
-class(sll_interpolator_2d_base), pointer :: a21_interp
+class(sll_c_interpolator_2d), pointer :: a21_interp
 
 !> Coordinate transformation of the mesh
 class(sll_coordinate_transformation_2d_base), pointer :: transformation

@@ -17,9 +17,9 @@
 
 !> @ingroup interpolators
 !> @brief
-!> Class for the cubic spline sll_interpolator_2d_base
+!> Class for the cubic spline sll_c_interpolator_2d
 !> @details
-!> Implements the sll_interpolator_2d_base interface
+!> Implements the sll_c_interpolator_2d interface
 module sll_m_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -37,7 +37,7 @@ private
   !> All interpolators share a common interface with
   !> respect to their use, as described by the interpolator_2d_base class.
   !> Where the diverse interpolators diverge is in the way to initialize them.
-  type, extends(sll_interpolator_2d_base), public :: sll_cubic_spline_interpolator_2d
+  type, extends(sll_c_interpolator_2d), public :: sll_cubic_spline_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: npts1
     !> PLEASE ADD DOCUMENTATION
