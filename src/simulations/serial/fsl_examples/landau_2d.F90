@@ -220,7 +220,7 @@ do i4 = 1, nc_eta4+1
   eta3 = eta3_min
   do i3 = 1, nc_eta3+1
     do i2 = 1, nc_eta2+1
-      call interp_1%interpolate_array_disp_inplace(nc_eta1+1,f(:,i2,i3,i4),-dt*eta3)
+      call interp_1%interpolate_array_disp(nc_eta1+1,f(:,i2,i3,i4),-dt*eta3,f(:,i2,i3,i4))
     end do
     eta3 = eta3 + delta_eta3
   end do
@@ -237,7 +237,7 @@ eta4 = eta4_min
 do i4 = 1, nc_eta4+1
   do i3 = 1, nc_eta3+1
     do i1 = 1, nc_eta1+1
-      call interp_2%interpolate_array_disp_inplace(nc_eta2+1,f(i1,:,i3,i4),-dt*eta4)
+      call interp_2%interpolate_array_disp(nc_eta2+1,f(i1,:,i3,i4),-dt*eta4,f(i1,:,i3,i4))
     end do
   end do
   eta4 = eta4 + delta_eta4
@@ -252,7 +252,7 @@ sll_real64, intent(in) :: dt
 do i4 = 1, nc_eta4+1
   do i2 = 1, nc_eta2+1
     do i1 = 1, nc_eta1+1
-       call interp_3%interpolate_array_disp_inplace(nc_eta3+1,f(i1,i2,:,i4),-ex(i1,i2)*dt)
+       call interp_3%interpolate_array_disp(nc_eta3+1,f(i1,i2,:,i4),-ex(i1,i2)*dt,f(i1,i2,:,i4))
     end do
   end do
 end do
@@ -266,7 +266,7 @@ sll_real64, intent(in) :: dt
 do i3 = 1, nc_eta3+1
   do i2 = 1, nc_eta2+1
     do i1 = 1, nc_eta1+1
-       call interp_4%interpolate_array_disp_inplace(nc_eta4+1,f(i1,i2,i3,:),-ey(i1,i2)*dt)
+       call interp_4%interpolate_array_disp(nc_eta4+1,f(i1,i2,i3,:),-ey(i1,i2)*dt,f(i1,i2,i3,:))
     end do
   end do
 end do

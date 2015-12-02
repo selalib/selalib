@@ -90,7 +90,7 @@ subroutine advection_x(dt)
 sll_real64, intent(in) :: dt
 
 do j = 1, nc_v
-   call interp_x%interpolate_array_disp_inplace(nc_x+1,df(:,j),-dt*advfield_x)
+   call interp_x%interpolate_array_disp(nc_x+1,df(:,j),-dt*advfield_x,df(:,j))
 end do
 
 end subroutine advection_x
@@ -99,7 +99,7 @@ subroutine advection_v(dt)
 sll_real64, intent(in) :: dt
 
 do i = 1, nc_x
-   call interp_v%interpolate_array_disp_inplace(nc_v+1,df(i,:),-dt*advfield_v)
+   call interp_v%interpolate_array_disp(nc_v+1,df(i,:),-dt*advfield_v, df(i,:))
 end do
 
 end subroutine advection_v
