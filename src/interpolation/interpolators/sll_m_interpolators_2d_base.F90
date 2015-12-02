@@ -87,34 +87,21 @@ implicit none
   
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-  !> Signature for interpolating function
+  !> Signature of interpolate_from_interpolant_value
   abstract interface
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
 
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       sll_real64                                  :: val
-       class(sll_c_interpolator_2d), intent(in) :: interpolator
-       sll_real64, intent(in)                      :: eta1
-       sll_real64, intent(in)                      :: eta2
+       sll_real64                                  :: val  !< interpolated value
+       class(sll_c_interpolator_2d), intent(in) :: interpolator !< interpolator object
+       sll_real64, intent(in)                      :: eta1 !< first coordinate of point where to interpolate
+       sll_real64, intent(in)                      :: eta2 !< second coordinate of point where to interpolate
 
      end function interpolator_two_arg_msg
 
   end interface
 
-  !> Compute interpolated values of n*m points
-  abstract interface
-
-     subroutine interpolator_2d_array_msg( interpolator, data_array )
-
-       use sll_m_working_precision
-       import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(inout) :: interpolator
-       sll_real64, dimension(:,:), intent(in)         :: data_array
-
-     end subroutine interpolator_2d_array_msg
-
-  end interface
 
   !> Compute interpolated values of n*m points
   abstract interface
@@ -129,19 +116,19 @@ implicit none
 
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(in)    :: this
-       sll_int32,                       intent(in)    :: num_points1 
-       sll_int32,                       intent(in)    :: num_points2 
-       sll_real64,                      intent(in)    :: data_in(:,:)
-       sll_real64,                      intent(in)    :: eta1(:,:)
-       sll_real64,                      intent(in)    :: eta2 (:,:) 
-       sll_real64,                      intent(out)   :: data_out(num_points1,num_points2)
+       class(sll_c_interpolator_2d), intent(in)    :: this !< interpolator object
+       sll_int32,                       intent(in)    :: num_points1 !< number of points along first dimension
+       sll_int32,                       intent(in)    :: num_points2 !< number of points along second dimension
+       sll_real64,                      intent(in)    :: data_in(:,:) !< function values
+       sll_real64,                      intent(in)    :: eta1(:,:)  !< values of the first coordinate for interpolation points
+       sll_real64,                      intent(in)    :: eta2 (:,:) !< values of the second coordinate for interpolation points
+       sll_real64,                      intent(out)   :: data_out(num_points1,num_points2) !< interpolated values
 
      end subroutine interpolate_2d_array
 
   end interface
 
-  !> Signature for interpolating function
+  !> Signature of interpolate_array_disp
   abstract interface
 
      subroutine interpolate_2d_array_disp(this,        &
@@ -154,19 +141,19 @@ implicit none
 
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(in)    :: this
-       sll_int32,                       intent(in)    :: num_points1  
-       sll_int32,                       intent(in)    :: num_points2 
-       sll_real64,                      intent(in)    :: data_in(:,:)
-       sll_real64,                      intent(in)    :: alpha1(:,:)
-       sll_real64,                      intent(in)    :: alpha2(:,:)  
-       sll_real64,                      intent(out)   :: data_out(num_points1,num_points2)
+       class(sll_c_interpolator_2d), intent(in)    :: this !< interpolator object
+       sll_int32,                       intent(in)    :: num_points1  !< values of the first coordinate for interpolation points
+       sll_int32,                       intent(in)    :: num_points2 !< values of the second coordinate for interpolation points
+       sll_real64,                      intent(in)    :: data_in(:,:) !< function values
+       sll_real64,                      intent(in)    :: alpha1(:,:) !< displacements along first dimension
+       sll_real64,                      intent(in)    :: alpha2(:,:)  !< displacement along second dimesion
+       sll_real64,                      intent(out)   :: data_out(num_points1,num_points2) !< interpolated values
 
      end subroutine interpolate_2d_array_disp
 
   end interface
 
-  !> Set the splines coefficients
+  !> Signature of set_coefficients (Set the splines coefficients)
   abstract interface
      subroutine interpolator_2d_set_coeffs( &
           interpolator,&
@@ -180,31 +167,31 @@ implicit none
           size_knots2)
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(inout) :: interpolator
+       class(sll_c_interpolator_2d), intent(inout) :: interpolator !< interpolator object
        ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
        ! for more flexibility for the children classes.
-       sll_real64, dimension(:), intent(in), optional   :: coeffs_1d
-       sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
+       sll_real64, dimension(:), intent(in), optional   :: coeffs_1d !< coefficients spezified in 1D array
+       sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d !< coefficients spezified as 2D array
        ! size coeffs 2D 
-       sll_int32, intent(in), optional :: coeff2d_size1
-       sll_int32, intent(in), optional :: coeff2d_size2
-       sll_real64, dimension(:), intent(in), optional   :: knots1
-       sll_real64, dimension(:), intent(in), optional   :: knots2
-       sll_int32, intent(in), optional :: size_knots1
-       sll_int32, intent(in), optional :: size_knots2
+       sll_int32, intent(in), optional :: coeff2d_size1 !< size of 2D coeffs, first dimension
+       sll_int32, intent(in), optional :: coeff2d_size2 !< size of 2D coeffs, second dimension
+       sll_real64, dimension(:), intent(in), optional   :: knots1 !< knots first dimension
+       sll_real64, dimension(:), intent(in), optional   :: knots2 !< knots second dimension
+       sll_int32, intent(in), optional :: size_knots1 !< no. of knots first dimension
+       sll_int32, intent(in), optional :: size_knots2 !< no. of knots second dimension
      end subroutine interpolator_2d_set_coeffs
   end interface
 
-  !> Check interpolator is computed
+  !> Signature of coefficients_are_set (Check interpolator is computed)
   abstract interface
      function interpolator_2d_logical_query( interpolator ) result(res)
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(in) :: interpolator
-       logical :: res
+       class(sll_c_interpolator_2d), intent(in) :: interpolator !< interpolator object
+       logical :: res !< logical to specify if coefficients are set yes/no
      end function interpolator_2d_logical_query
   end interface
 
-  !> Compute splines coefficients
+  !> Signature of compute_interpolants (Compute splines coefficients)
   abstract interface
      subroutine compute_coeffs_2d(interpolator, &
           data_array, &
@@ -214,30 +201,30 @@ implicit none
           size_eta2_coords )
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(inout)  :: interpolator
-       sll_real64, dimension(:,:), intent(in)          :: data_array
-       sll_real64, dimension(:), intent(in),optional   :: eta1_coords
-       sll_real64, dimension(:), intent(in),optional   :: eta2_coords
-       sll_int32, intent(in), optional                 :: size_eta1_coords
-       sll_int32, intent(in),optional                  :: size_eta2_coords
+       class(sll_c_interpolator_2d), intent(inout)  :: interpolator !< interpolator object
+       sll_real64, dimension(:,:), intent(in)          :: data_array !< function values
+       sll_real64, dimension(:), intent(in),optional   :: eta1_coords !< first coordinates of the grid points
+       sll_real64, dimension(:), intent(in),optional   :: eta2_coords !< seoncd coordinates of the grid points
+       sll_int32, intent(in), optional                 :: size_eta1_coords !< size of eta1_coords
+       sll_int32, intent(in),optional                  :: size_eta2_coords !< size of eta2_coords
      end subroutine compute_coeffs_2d
   end interface
   
-  !> Get splines coefficients
+  !> Signature of get_coefficients (Get splines coefficients)
   abstract interface 
      function get_coeffs_2d(interpolator)
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(in) :: interpolator
-       sll_real64, dimension(:,:), pointer         :: get_coeffs_2d     
+       class(sll_c_interpolator_2d), intent(in) :: interpolator !< intepolator object
+       sll_real64, dimension(:,:), pointer         :: get_coeffs_2d  !< value of the coefficients  
      end function get_coeffs_2d
   end interface
 
-  !> Deallocate the interpolator object
+  !> Signature of delete (Deallocate the interpolator object)
   abstract interface 
      subroutine delete_interpolator_2d(interpolator)
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(inout) :: interpolator
+       class(sll_c_interpolator_2d), intent(inout) :: interpolator !< interpolator object
      end subroutine delete_interpolator_2d
   end interface
 
