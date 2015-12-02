@@ -1745,8 +1745,6 @@ contains
   !        write the density on the (phase-space) remapping grid, using the method described
   !        in the "BSL-remapping" notes (version of december 2, 2014)
   !
-  !        -- this function should be a faster alternative to [[bsl_lt_pic_4d_write_f_on_remapping_grid]] --
-  !
   !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
   !        particle group (in particular if the (x,y) domain is not periodic)
   !
@@ -1883,8 +1881,8 @@ contains
 
 
     ! the flow cells are the cells where the flow will be linearized    ---   note: previous name "virtual cells" was too abstract
-    ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
-    ! same as \delta{x,y,vx,vy} in [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
+    ! cf [[file:~/maltpic/ltpic-bsl.tex::N*]]
+    ! same as \delta{x,y,vx,vy} in [[file:~/maltpic/ltpic-bsl.tex::h_parts_x]]
 
     sll_real64 :: h_flow_grid_x
     sll_real64 :: h_flow_grid_y
@@ -1902,7 +1900,7 @@ contains
     sll_real64 :: flow_grid_vy_min
 
     ! the markers are initially distributed on a cartesian grid, then pushed forward to represent (and approximate) the flow
-    ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
+    ! cf [[file:~/maltpic/ltpic-bsl.tex::h_parts_x]]
 
     sll_real64 :: h_markers_x
     sll_real64 :: h_markers_y
@@ -2375,7 +2373,7 @@ contains
     !>   - C.3 reconstruct f on these points (using the affine backward flow and the interpolation tool for the remapped_f)
     !>   - C.4 write the resulting f value or deposit the deposition particle just created (depending on the scenario)
 
-    ! <<loop_on_flow_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
+    ! <<loop_on_flow_cells>> [[file:~/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
 
     ! cell size of the initial_markers_grid, for finite differencing of the flow  - same as in [[write_f_on_remap_grid-h_parts_x]]
     h_markers_x    = p_group%initial_markers_grid%delta_eta1
@@ -2399,7 +2397,7 @@ contains
         do j_vx = 1,flow_grid_num_cells_vx
           do j_vy = 1,flow_grid_num_cells_vy
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
+            ! [[file:~/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
             ! which is closest to the flow cell center.  Note: speed-wise, it may be necessary to find a way not to scan
             ! all the markers for every cell.  We avoid scanning all the markers for each cell by using the
             ! precomputed array [[closest_marker]]. Flow cells which do not contain any marker are skipped.
@@ -2441,7 +2439,7 @@ contains
 
             !>   - C.1 linearize the flow using the position of the markers
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] In this flow cell we will use the
+            ! [[file:~/maltpic/ltpic-bsl.tex::hat-bz*]] In this flow cell we will use the
             ! k-th backward flow, obtained with the deformation matrix for the k-th marker see [[get_ltp_deformation_matrix]].
             ! Call below uses parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
 
@@ -2476,10 +2474,10 @@ contains
 
             ! comment below (and pointers) should be udated
             ! <<loop_on_virtual_particles_in_one_flow_cell>>
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
+            ! [[file:~/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
             ! flow particles in the cell to compute the value of f0 at that point (Following
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
+            ! [[file:~/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
+            ! [[file:~/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
             ! virtual particles inside the cell.
 
             !>  - C.2 find the relevant points (x, y, vx, vy) where f should be reconstructed
