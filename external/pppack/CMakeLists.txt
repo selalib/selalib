@@ -3,6 +3,7 @@ ADD_LIBRARY( pppack STATIC
   banslv.f90  
   bsplvb.f90
   woodbury.F90
+  schur_complement.F90
 )
 
 ADD_SUBDIRECTORY(testing)

@@ -34,47 +34,47 @@ module sll_m_remapper
   
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_2D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
+  type, private :: box_2D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
   end type box_2D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_3D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
+  type, private :: box_3D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
   end type box_3D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_4D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
+  type, private :: box_4D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
   end type box_4D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_5D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
-     sll_int32 SLL_PRIV :: m_min, m_max
+  type, private :: box_5D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
+     sll_int32, private :: m_min, m_max
   end type box_5D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_6D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
-     sll_int32 SLL_PRIV :: m_min, m_max
-     sll_int32 SLL_PRIV :: n_min, n_max
+  type, private :: box_6D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
+     sll_int32, private :: m_min, m_max
+     sll_int32, private :: n_min, n_max
   end type box_6D
 
   
@@ -85,10 +85,10 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_2D
-     type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer, private     :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     type(box_2D), dimension(:), pointer, private :: boxes
   end type layout_2D
 
   !> @brief Information on a collective and an
@@ -98,11 +98,11 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_3D
-     type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer, private     :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     type(box_3D), dimension(:), pointer, private :: boxes
   end type layout_3D
 
   !> @brief Information on a collective and an
@@ -112,12 +112,12 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_4D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     type(box_4D), dimension(:), pointer, private :: boxes
   end type layout_4D
 
   !> @brief Information on a collective and an
@@ -127,13 +127,13 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_5D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     sll_int32 SLL_PRIV                           :: global_sz5 !< size
-     type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
+     type(sll_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     sll_int32, private                           :: global_sz5 !< size
+     type(box_5D), dimension(:), pointer, private:: boxes
   end type layout_5D
 
   !> @brief Information on a collective and an
@@ -143,14 +143,14 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_6D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     sll_int32 SLL_PRIV                           :: global_sz5 !< size
-     sll_int32 SLL_PRIV                           :: global_sz6 !< size
-     type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     sll_int32, private                           :: global_sz5 !< size
+     sll_int32, private                           :: global_sz6 !< size
+     type(box_6D), dimension(:), pointer, private :: boxes
   end type layout_6D
 
 #define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
@@ -188,18 +188,18 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
 
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
   type, public :: type_name;                                             \
-     type(layout_type), pointer SLL_PRIV            :: initial_layout=>null();\
-     type(layout_type), pointer SLL_PRIV            :: final_layout=>null();  \
-     integer, dimension(:), pointer SLL_PRIV        :: send_displs=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: send_counts=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_displs=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_counts=>null();   \
-     type(box_type), dimension(:), pointer SLL_PRIV :: send_boxes=>null();    \
-     type(box_type), dimension(:), pointer SLL_PRIV :: recv_boxes=>null();    \
-     type(sll_collective_t), pointer SLL_PRIV       :: collective=>null();    \
-     data_type, dimension(:), pointer SLL_PRIV      :: send_buffer=>null();   \
-     data_type, dimension(:), pointer SLL_PRIV      :: recv_buffer=>null();   \
-     logical SLL_PRIV                               :: is_uniform=.false.;    \
+     type(layout_type), pointer, private            :: initial_layout=>null();\
+     type(layout_type), pointer, private            :: final_layout=>null();  \
+     integer, dimension(:), pointer, private        :: send_displs=>null();   \
+     integer, dimension(:), pointer, private        :: send_counts=>null();   \
+     integer, dimension(:), pointer, private        :: recv_displs=>null();   \
+     integer, dimension(:), pointer, private        :: recv_counts=>null();   \
+     type(box_type), dimension(:), pointer, private :: send_boxes=>null();    \
+     type(box_type), dimension(:), pointer, private :: recv_boxes=>null();    \
+     type(sll_collective_t), pointer, private       :: collective=>null();    \
+     data_type, dimension(:), pointer, private      :: send_buffer=>null();   \
+     data_type, dimension(:), pointer, private      :: recv_buffer=>null();   \
+     logical, private                               :: is_uniform=.false.;    \
   end type type_name
 
 
