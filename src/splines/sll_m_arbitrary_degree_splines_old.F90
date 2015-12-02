@@ -19,8 +19,6 @@
 !> @brief 
 !> Low level arbitrary degree splines
 !> @details
-!> This module attempts to replace the functionalities of the arbitrary
-!> degree spline functions by deBoor. 
 module sll_m_arbitrary_degree_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"

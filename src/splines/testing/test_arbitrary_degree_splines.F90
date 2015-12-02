@@ -600,8 +600,8 @@ contains
     ! Test performance of nonuniform arbitrary degree spline evaluation
     num_pts   = 10
     min_val = 0.0_f64
-    degree    = 5
-    num_tests = 1000
+    degree    = 7
+    num_tests = 100000
     print *, "Test performance of spline evaluation for"
     print *, " Spline degree = ", degree
     print *, " -----------------------------------------------------" 
@@ -612,7 +612,7 @@ contains
     SLL_ALLOCATE(answer1(degree+1),ierr)
     SLL_ALLOCATE(answer2(degree+1),ierr)
     SLL_ALLOCATE(answer3(2,degree+1),ierr)
-    
+
 
     ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
     ! Creating non uniform mesh....
@@ -646,6 +646,14 @@ contains
     end do
     time = sll_time_elapsed_since(t0)
     print *, 'Computing time for  b_splines_at_x: ', time
+
+    call sll_set_time_mark(t0)
+    do j=1,num_tests
+       call compute_b_spline_at_x_mm(spline%knots, cells(j), x(j), degree, &
+            answer1)
+    end do
+    time = sll_time_elapsed_since(t0)
+    print *, 'Computing time for  compute_b_splines_at_x_mm: ', time
     ! computing all non zero spline derivatives at point x:
     call sll_set_time_mark(t0)
     do j=1,num_tests
@@ -653,6 +661,15 @@ contains
     end do
     time = sll_time_elapsed_since(t0)
     print *, 'Computing time for  b_spline_derivatives_at_x: ', time
+
+    call sll_set_time_mark(t0)
+    do j=1,num_tests
+       call compute_b_spline_and_deriv_at_x_mm(spline%knots, cells(j), x(j), &
+            degree, answer3)
+    end do
+    time = sll_time_elapsed_since(t0)
+    print *, 'Computing time for  compute_b_splines_at_x_mm: ', time
+
     ! computing both all non zero splines and derivatives at point x:
     call sll_set_time_mark(t0)
     do j=1,num_tests
@@ -681,7 +698,7 @@ contains
     end do
     time = sll_time_elapsed_since(t0)
     print *, 'Computing time for  uniform_b_splines_and_derivs_at_x: ', time
-    
+
   end subroutine test_cpu_time
 
 end program test_arbitrary_degree_splines
