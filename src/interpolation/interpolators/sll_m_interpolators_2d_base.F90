@@ -119,48 +119,50 @@ implicit none
   !> Compute interpolated values of n*m points
   abstract interface
 
-     function interpolate_2d_array(this,             &
-                                   num_points1,      &
-                                   num_points2,      &
-                                   data_in,          &
-                                   eta1,             &
-                                   eta2) result(res)
+     subroutine interpolate_2d_array(this,             &
+          num_points1,      &
+          num_points2,      &
+          data_in,          &
+          eta1,             &
+          eta2,             &
+          data_out)
 
        use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(in)    :: this
-       sll_int32, intent(in)                          :: num_points1 
-       sll_int32, intent(in)                          :: num_points2 
-       sll_real64, dimension(:,:), intent(in)         :: data_in
-       sll_real64, dimension(:,:), intent(in)         :: eta1
-       sll_real64, dimension(:,:), intent(in)         :: eta2  
-       sll_real64, dimension(num_points1,num_points2) :: res
+       sll_int32,                       intent(in)    :: num_points1 
+       sll_int32,                       intent(in)    :: num_points2 
+       sll_real64,                      intent(in)    :: data_in(:,:)
+       sll_real64,                      intent(in)    :: eta1(:,:)
+       sll_real64,                      intent(in)    :: eta2 (:,:) 
+       sll_real64,                      intent(out)   :: data_out(num_points1,num_points2)
 
-     end function interpolate_2d_array
+     end subroutine interpolate_2d_array
 
   end interface
 
   !> Signature for interpolating function
   abstract interface
 
-     function interpolate_2d_array_disp(this,        &
-                                        num_points1, &
-                                        num_points2, &
-                                        data_in,     &
-                                        alpha1,      &
-                                        alpha2) result(res)
+     subroutine interpolate_2d_array_disp(this,        &
+          num_points1, &
+          num_points2, &
+          data_in,     &
+          alpha1,      &
+          alpha2,      &
+          data_out)
 
        use sll_m_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(in)    :: this
-       sll_int32, intent(in)                          :: num_points1  
-       sll_int32, intent(in)                          :: num_points2 
-       sll_real64, dimension(:,:), intent(in)         :: data_in
-       sll_real64, dimension(:,:), intent(in)         :: alpha1
-       sll_real64, dimension(:,:), intent(in)         :: alpha2  
-       sll_real64, dimension(num_points1,num_points2) :: res
+       sll_int32,                       intent(in)    :: num_points1  
+       sll_int32,                       intent(in)    :: num_points2 
+       sll_real64,                      intent(in)    :: data_in(:,:)
+       sll_real64,                      intent(in)    :: alpha1(:,:)
+       sll_real64,                      intent(in)    :: alpha2(:,:)  
+       sll_real64,                      intent(out)   :: data_out(num_points1,num_points2)
 
-     end function interpolate_2d_array_disp
+     end subroutine interpolate_2d_array_disp
 
   end interface
 

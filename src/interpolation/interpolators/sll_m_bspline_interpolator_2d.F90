@@ -296,12 +296,13 @@ contains
 
   end function
 
-  function spline_interpolate2d(this,              &
+  subroutine spline_interpolate2d(this,              &
                                 num_points1,       &
                                 num_points2,       &
                                 data_in,           &
                                 eta1,              &
-                                eta2) result(data_out)
+                                eta2,              &
+                                data_out) 
 
     class(sll_bspline_interpolator_2d),  intent(in) :: this
     sll_int32,  intent(in)                          :: num_points1
@@ -309,7 +310,7 @@ contains
     sll_real64, dimension(:,:),          intent(in) :: eta1
     sll_real64, dimension(:,:),          intent(in) :: eta2
     sll_real64, dimension(:,:),          intent(in) :: data_in
-    sll_real64, dimension(num_points1,num_points2)  :: data_out
+    sll_real64,                          intent(out):: data_out(num_points1,num_points2)
 
     sll_int32 :: i
     sll_int32 :: j
@@ -322,14 +323,15 @@ contains
       end do
     end do
 
-  end function spline_interpolate2d
+  end subroutine spline_interpolate2d
 
-  function spline_interpolate2d_disp(this,        &
+  subroutine spline_interpolate2d_disp(this,        &
                                      num_points1, &
                                      num_points2, &
                                      data_in,     &
                                      alpha1,      &
-                                     alpha2) result(data_out)
+                                     alpha2,      &
+                                     data_out)
 
     class(sll_bspline_interpolator_2d),  intent(in) :: this
 
@@ -338,7 +340,7 @@ contains
     sll_real64, dimension(:,:), intent(in)         :: alpha1
     sll_real64, dimension(:,:), intent(in)         :: alpha2
     sll_real64, dimension(:,:), intent(in)         :: data_in
-    sll_real64, dimension(num_points1,num_points2) :: data_out
+    sll_real64,                 intent(out)        :: data_out(num_points1,num_points2)
     sll_real64                                     :: eta1
     sll_real64                                     :: eta1_min
     sll_real64                                     :: eta1_max
@@ -402,7 +404,7 @@ contains
           end do
        end do
     end if
-  end function 
+  end subroutine spline_interpolate2d_disp
 
   subroutine set_coefficients_bs2d(  &
        interpolator,                 &
