@@ -113,20 +113,20 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
-  external ::       &
-    mpi_allgather,  &
-    mpi_allreduce,  &
-    mpi_alltoall,   &
-    mpi_alltoallv,  &
-    mpi_bcast,      &
-    mpi_gather,     &
-    mpi_iallreduce, &
-    mpi_isend,      &
-    mpi_irecv,      &
-    mpi_recv,       &
-    mpi_reduce,     &
-    mpi_send,       &
-    mpi_sendrecv
+!  external ::       &
+    !mpi_allgather,  &
+    !mpi_allreduce,  &
+    !mpi_alltoall,   &
+    !mpi_alltoallv,  &
+    !mpi_bcast,      &
+    !mpi_gather,     &
+    !mpi_iallreduce, &
+    !mpi_isend,      &
+    !mpi_irecv,      &
+    !mpi_recv,       &
+    !mpi_reduce,     &
+    !mpi_send,       &
+    !mpi_sendrecv
 
 !-----------------------------------------------------------------------
 end module sll_mpi
