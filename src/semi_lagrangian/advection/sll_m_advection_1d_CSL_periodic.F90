@@ -359,7 +359,7 @@ contains
     call adv%interp%interpolate_array( &
       adv%Npts, &
       input, &
-      -adv%charac_feet, &
+      adv%charac_feet, &
       output)      
 
     SLL_DEALLOCATE_ARRAY(A1,ierr)
