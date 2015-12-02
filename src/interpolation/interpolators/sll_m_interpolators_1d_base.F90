@@ -43,21 +43,9 @@ contains
    !> Compute the value of the interpolant at all grid points shifted by the given displacement from function values. Does not use a precomputed interpolant.
    procedure(interpolator_1d_array_disp), deferred :: &
         interpolate_array_disp
-   !> Compute the value of the interpolant at all grid points shifted by the given displacement. Does not use a precomputed interpolant.
-   procedure(interpolator_1d_array_disp_inplace), deferred :: &
-        interpolate_array_disp_inplace
 
 
 end type sll_c_interpolator_1d
-
-
-!!$  ! Flags for boundary conditions (TODO: Check with descriptors)
-!!$
-!!$  sll_int32, parameter :: INTERP_PERIODIC_BC  = 0 !< Flag to specify periodic boundary conditions
-!!$  sll_int32, parameter :: INTERP_DIRICHLET_BC = 1 !< Flag to specify Dirichlet boundary conditions
-!!$  sll_int32, parameter :: INTERP_NEUMANN_BC   = 2 !< Flag to specify Neumann boundary conditions
-!!$  sll_int32, parameter :: INTERP_ONE_SIDED    = 3 !< Flag to specify one-sided interpolation
-!!$  sll_int32, parameter :: INTERP_HALO         = 4 !< Flag to specify no boundary conditions since halo cells are provided with data outside the boundary
 
   ! Flags for way how to choose the Lagrange points
   sll_int32, parameter :: SLL_D_INTERP_LAGRANGE_CENTERED = 0 !< Flag to specify 
@@ -151,7 +139,6 @@ end type sll_c_interpolator_1d
   end interface
 
 
-
   !> Signature of interpolate_array_disp
   abstract interface
      subroutine interpolator_1d_array_disp( &
@@ -165,29 +152,11 @@ end type sll_c_interpolator_1d
        import :: sll_c_interpolator_1d
        class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
        sll_int32,                       intent(in)     :: num_pts    !< size of output array
-       sll_real64,                      intent(in)     :: data(:)  !< data to be interpolated
-       sll_real64,                      intent(in)     :: alpha !< displacement
-       sll_real64,                      intent(out)    :: output_array(num_pts) !< interpolated values
-
-     end subroutine interpolator_1d_array_disp
-  end interface
-
-  !> Signature of interpolate_array_disp
-  abstract interface
-     subroutine interpolator_1d_array_disp_inplace( &
-       this, &
-       num_pts, &
-       data, &
-       alpha)
-
-       use sll_m_working_precision
-       import :: sll_c_interpolator_1d
-       class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
-       sll_int32,                       intent(in)     :: num_pts    !< size of output array
        sll_real64,                      intent(inout)  :: data(num_pts)  !< data to be interpolated
        sll_real64,                      intent(in)     :: alpha !< displacement
+       sll_real64,                      intent(inout)  :: output_array(num_pts) !< interpolated values
 
-     end subroutine interpolator_1d_array_disp_inplace
+     end subroutine interpolator_1d_array_disp
   end interface
 
 
