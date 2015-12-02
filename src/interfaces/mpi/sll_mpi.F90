@@ -71,7 +71,6 @@ module sll_mpi
     mpi_double,          &
     mpi_double_complex,  &
     mpi_double_precision,&
-    mpi_finalize,        &
     mpi_gather,          &
     mpi_iallreduce,      &
     mpi_in_place,        &
@@ -105,28 +104,35 @@ module sll_mpi
     mpi_thread_single,   &
     mpi_undefined,       &
     mpi_wait,            &
-    mpi_waitall,         &
     mpi_wtime
+
+#ifndef __INTEL_COMPILER
+  public ::              &
+    mpi_finalize,        &
+    mpi_waitall          &
+#endif /* __INTEL_COMPILER */
 
   private
 
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
-!  external ::       &
-    !mpi_allgather,  &
-    !mpi_allreduce,  &
-    !mpi_alltoall,   &
-    !mpi_alltoallv,  &
-    !mpi_bcast,      &
-    !mpi_gather,     &
-    !mpi_iallreduce, &
-    !mpi_isend,      &
-    !mpi_irecv,      &
-    !mpi_recv,       &
-    !mpi_reduce,     &
-    !mpi_send,       &
-    !mpi_sendrecv
+#ifdef __INTEL_COMPILER
+  external ::       &
+    mpi_allgather,  &
+    mpi_allreduce,  &
+    mpi_alltoall,   &
+    mpi_alltoallv,  &
+    mpi_bcast,      &
+    mpi_gather,     &
+    mpi_iallreduce, &
+    mpi_isend,      &
+    mpi_irecv,      &
+    mpi_recv,       &
+    mpi_reduce,     &
+    mpi_send,       &
+    mpi_sendrecv
+#endif /* __INTEL_COMPILER */
 
 !-----------------------------------------------------------------------
 end module sll_mpi
