@@ -29,7 +29,6 @@ ADD_LIBRARY(sll_fft STATIC sll_m_fft_utils.F90 ${FFT_SRC})
 TARGET_LINK_LIBRARIES( sll_fft sll_utilities 
                                sll_memory 
                                sll_assert 
-                               sll_constants
                                ${DEPENDENCIES} )
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY( testing )

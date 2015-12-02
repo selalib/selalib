@@ -75,4 +75,4 @@ TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_poisson_solvers
   ${BLAS_LIBRARIES})
 
 ADD_EXECUTABLE( test_hex_poisson test_hex_poisson.F90 )
-TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_utilities sll_constants )
+TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_utilities )

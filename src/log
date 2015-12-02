@@ -1,0 +1,10 @@
+vi data_structures/boundary_condition_descriptors/CMakeLists.txt
+vi field_solvers/general_coordinate_elliptic_solvers/CMakeLists.txt
+vi field_solvers/maxwell_solvers/CMakeLists.txt
+vi field_solvers/maxwell_solvers/CMakeLists.txt
+vi interpolation/hermite_interpolation/CMakeLists.txt
+vi interpolation/lagrange_interpolation/CMakeLists.txt
+vi mesh/meshes/CMakeLists.txt
+vi particle_methods/pic_1d/CMakeLists.txt
+vi semi_lagrangian/advection/CMakeLists.txt
+vi splines/CMakeLists.txt

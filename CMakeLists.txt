@@ -172,8 +172,8 @@ IF(BUILD_SPRNG)
      SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
      BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
      #UPDATE_COMMAND autoreconf -if
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
-     BUILD_COMMAND ${MAKE} 
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --enable-silent-rules --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
+     BUILD_COMMAND "${MAKE} V=0"
      INSTALL_COMMAND ""
   )
 ENDIF()
