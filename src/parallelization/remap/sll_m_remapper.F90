@@ -27,53 +27,54 @@ module sll_m_remapper
 #include "sll_utilities.h"
   use sll_m_utilities, only : is_even, is_power_of_two, int2string
   use sll_m_collective
+  use iso_fortran_env, only: output_unit
 
   implicit none
   private
   
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_2D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
+  type, private :: box_2D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
   end type box_2D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_3D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
+  type, private :: box_3D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
   end type box_3D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_4D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
+  type, private :: box_4D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
   end type box_4D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_5D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
-     sll_int32 SLL_PRIV :: m_min, m_max
+  type, private :: box_5D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
+     sll_int32, private :: m_min, m_max
   end type box_5D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_6D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
-     sll_int32 SLL_PRIV :: m_min, m_max
-     sll_int32 SLL_PRIV :: n_min, n_max
+  type, private :: box_6D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
+     sll_int32, private :: m_min, m_max
+     sll_int32, private :: n_min, n_max
   end type box_6D
 
   
@@ -84,10 +85,10 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_2D
-     type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer, private     :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     type(box_2D), dimension(:), pointer, private :: boxes
   end type layout_2D
 
   !> @brief Information on a collective and an
@@ -97,11 +98,11 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_3D
-     type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer, private     :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     type(box_3D), dimension(:), pointer, private :: boxes
   end type layout_3D
 
   !> @brief Information on a collective and an
@@ -111,12 +112,12 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_4D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     type(box_4D), dimension(:), pointer, private :: boxes
   end type layout_4D
 
   !> @brief Information on a collective and an
@@ -126,13 +127,13 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_5D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     sll_int32 SLL_PRIV                           :: global_sz5 !< size
-     type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
+     type(sll_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     sll_int32, private                           :: global_sz5 !< size
+     type(box_5D), dimension(:), pointer, private:: boxes
   end type layout_5D
 
   !> @brief Information on a collective and an
@@ -142,14 +143,14 @@ module sll_m_remapper
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type, public :: layout_6D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     sll_int32 SLL_PRIV                           :: global_sz5 !< size
-     sll_int32 SLL_PRIV                           :: global_sz6 !< size
-     type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
+     type(sll_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     sll_int32, private                           :: global_sz5 !< size
+     sll_int32, private                           :: global_sz6 !< size
+     type(box_6D), dimension(:), pointer, private :: boxes
   end type layout_6D
 
 #define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
@@ -187,18 +188,18 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
 
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
   type, public :: type_name;                                             \
-     type(layout_type), pointer SLL_PRIV            :: initial_layout=>null();\
-     type(layout_type), pointer SLL_PRIV            :: final_layout=>null();  \
-     integer, dimension(:), pointer SLL_PRIV        :: send_displs=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: send_counts=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_displs=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_counts=>null();   \
-     type(box_type), dimension(:), pointer SLL_PRIV :: send_boxes=>null();    \
-     type(box_type), dimension(:), pointer SLL_PRIV :: recv_boxes=>null();    \
-     type(sll_collective_t), pointer SLL_PRIV       :: collective=>null();    \
-     data_type, dimension(:), pointer SLL_PRIV      :: send_buffer=>null();   \
-     data_type, dimension(:), pointer SLL_PRIV      :: recv_buffer=>null();   \
-     logical SLL_PRIV                               :: is_uniform=.false.;    \
+     type(layout_type), pointer, private            :: initial_layout=>null();\
+     type(layout_type), pointer, private            :: final_layout=>null();  \
+     integer, dimension(:), pointer, private        :: send_displs=>null();   \
+     integer, dimension(:), pointer, private        :: send_counts=>null();   \
+     integer, dimension(:), pointer, private        :: recv_displs=>null();   \
+     integer, dimension(:), pointer, private        :: recv_counts=>null();   \
+     type(box_type), dimension(:), pointer, private :: send_boxes=>null();    \
+     type(box_type), dimension(:), pointer, private :: recv_boxes=>null();    \
+     type(sll_collective_t), pointer, private       :: collective=>null();    \
+     data_type, dimension(:), pointer, private      :: send_buffer=>null();   \
+     data_type, dimension(:), pointer, private      :: recv_buffer=>null();   \
+     logical, private                               :: is_uniform=.false.;    \
   end type type_name
 
 
@@ -1838,6 +1839,7 @@ contains  !******************************************************************
     sll_int64                       :: acc; \
     if( (.not. associated(initial)) .or. (.not. associated(final)) ) then; \
        print *, 'ERROR: un-initialized arguments given to sll_new_remap_plan'; \
+       print *, size(array); \
        stop; \
     end if; \
     coli => get_layout_collective(initial); \
@@ -2120,7 +2122,7 @@ contains  !******************************************************************
   ! about the layouts, since the global_to_local function only has meaning 
   ! in the context of the global layout. I find this 'mixing' very unpleasant, 
   ! and it might invite confusing those two collectives (the parent and the
-  ! reduced); for now see no clean & easy way to fix this. Fortunately, at 
+  ! reduced), for now see no clean & easy way to fix this. Fortunately, at 
   ! least, the reference to the larger collective is hidden inside the 'layout' 
   ! information and used only by 'global_to_local()'.
 #define MAKE_REMAP_OPTIMIZER( fname, remap_type, box_type ) \
@@ -2469,7 +2471,7 @@ end subroutine fname
     print *, plan%send_displs(:)
     print *, plan%recv_counts(:)
     print *, plan%recv_displs(:)
-    call flush(6)
+    flush( output_unit )
 #endif
   end subroutine optimize_remap_plan_3D
 #endif
@@ -2564,18 +2566,18 @@ end subroutine fname
   ! For apply_remap_XD_int(), we use this approach as a test case, even though
   ! it is not necessary since 'integer' is also a native MPI type.
 
-  subroutine convert_into_integer_sizes( sz, ai, n, bi )
-    sll_int32, intent(in)                :: sz   ! in integer-size
-    sll_int32, intent(in), dimension(:)  :: ai   ! array to convert
-    sll_int32, intent(in)                :: n    ! size of array
-    sll_int32, intent(out), dimension(:) :: bi   ! output
-    sll_int32                            :: i
-    SLL_ASSERT( n <= size(ai) )
-    SLL_ASSERT( n <= size(bi) )
-    do i=1,n
-       bi(i) = ai(i)*sz
-    end do
-  end subroutine convert_into_integer_sizes
+  !subroutine convert_into_integer_sizes( sz, ai, n, bi )
+  !  sll_int32, intent(in)                :: sz   ! in integer-size
+  !  sll_int32, intent(in), dimension(:)  :: ai   ! array to convert
+  !  sll_int32, intent(in)                :: n    ! size of array
+  !  sll_int32, intent(out), dimension(:) :: bi   ! output
+  !  sll_int32                            :: i
+  !  SLL_ASSERT( n <= size(ai) )
+  !  SLL_ASSERT( n <= size(bi) )
+  !  do i=1,n
+  !     bi(i) = ai(i)*sz
+  !  end do
+  !end subroutine convert_into_integer_sizes
 
   ! **********************************************************************
   !
@@ -2663,7 +2665,7 @@ end subroutine fname
     
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
-!    call flush(6)
+!    flush( output_unit )
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -2680,7 +2682,7 @@ end subroutine fname
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2783,7 +2785,7 @@ end subroutine fname
 !!$    print *, 'sdispi', sdispi(:)
 !!$    print *, 'rcntsi', rcntsi(:)
 !!$    print *, 'rdispi', rdispi(:)
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$#endif
 
     ! load the send buffer
@@ -2801,7 +2803,7 @@ end subroutine fname
 !!$                  'i = ', i, ' displs(i) = ', sdispi(i)
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2841,9 +2843,9 @@ end subroutine fname
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
+    ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+    !    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -2869,7 +2871,7 @@ end subroutine fname
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2963,7 +2965,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2997,9 +2999,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
@@ -3021,7 +3023,7 @@ print *, 'remap 2d complex:'
     ! Comment when not debugging:
 !!$    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3126,7 +3128,7 @@ print *, 'remap 2d complex:'
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush(6)
+    flush( output_unit )
 #endif
     
     ! load the send buffer
@@ -3142,7 +3144,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3174,9 +3176,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
+    ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+    !    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -3195,7 +3197,7 @@ print *, 'remap 2d complex:'
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3281,7 +3283,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3319,9 +3321,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
  !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
   !  print *, sb(0:(size(sb)-1))
-   ! call flush(6)
+   ! flush( output_unit )
 !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!    call flush(6)
+!    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scnts(0:col_sz-1), &
@@ -3337,7 +3339,7 @@ print *, 'remap 2d complex:'
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3423,7 +3425,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3465,9 +3467,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
+    ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+    !    flush( output_unit )
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scnts(0:col_sz-1), &
@@ -3483,7 +3485,7 @@ print *, 'remap 2d complex:'
     end if
     !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
     !    print *, rb(0:size(rb)-1)
-    !    call flush(6)
+    !    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3604,7 +3606,7 @@ print *, 'remap 2d complex:'
     
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
-!    call flush(6)
+!    flush( output_unit )
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3621,7 +3623,7 @@ print *, 'remap 2d complex:'
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush(6)
+!    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3709,7 +3711,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3754,9 +3756,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3774,7 +3776,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3866,7 +3868,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3920,10 +3922,10 @@ print *, 'remap 2d complex:'
 !!$       print *, 'rcntsi: ', rcntsi(:)
 !!$       print *, 'rdispi: ', rdispi(:)
 !!$       print *, 'uniformity: ', plan%is_uniform
-!!$       call flush(6)
+!!$       flush( output_unit )
 !!$    end if
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3941,7 +3943,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
@@ -4041,7 +4043,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -4090,9 +4092,9 @@ print *, 'remap 2d complex:'
     ! Comment the following when not debugging    
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush(6)
+!!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -4110,7 +4112,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -4204,7 +4206,7 @@ print *, 'remap 2d complex:'
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush(6)
+             flush( output_unit )
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -4262,10 +4264,10 @@ print *, 'remap 2d complex:'
 !!$       print *, 'rcntsi: ', rcntsi(:)
 !!$       print *, 'rdispi: ', rdispi(:)
 !!$       print *, 'uniformity: ', plan%is_uniform
-!!$       call flush(6)
+!!$       flush( output_unit )
 !!$    end if
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -4283,7 +4285,7 @@ print *, 'remap 2d complex:'
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush(6)
+!!$    flush( output_unit )
 
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
@@ -4779,7 +4781,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_2D(get_layout_2D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_2D
 
 
@@ -4792,7 +4794,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_3D(get_layout_3D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_3D
 
   subroutine sll_view_lims_4D( layout )
@@ -4804,7 +4806,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_4D(get_layout_4D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_4D
 
   subroutine sll_view_lims_5D( layout )
@@ -4816,7 +4818,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_5D(get_layout_5D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_5D
 
 
@@ -4829,7 +4831,7 @@ print *, 'remap 2d complex:'
     do i=0,sz-1
        call view_box_6D(get_layout_6D_box( layout, i ))
     end do
-    call flush(6)
+    flush( output_unit )
   end subroutine sll_view_lims_6D
 
 

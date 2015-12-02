@@ -365,7 +365,7 @@ contains
 
       enddo
       
-      plan%phik=0.0_f64
+      plan%phik=(0.0_f64,0.0_f64)
 
       !boundary condition at rmin
       if(bc(1)==SLL_DIRICHLET)then !Dirichlet
@@ -406,7 +406,7 @@ contains
 
       !boundary condition at rmin
       if(bc(1)==SLL_DIRICHLET)then !Dirichlet
-        plan%phik(1)=0.0_f64
+        plan%phik(1)=(0.0_f64,0.0_f64)
       endif
       if(bc(1)==SLL_NEUMANN)then
         plan%phik(1)=plan%phik(2) !Neumann
@@ -415,13 +415,13 @@ contains
         if(k==0)then!Neumann for mode zero
           plan%phik(1)=plan%phik(2)
         else !Dirichlet for other modes
-          plan%phik(1)=0.0_f64
+          plan%phik(1)=(0.0_f64,0.0_f64)
         endif
       endif
 
       !boundary condition at rmax
       if(bc(2)==SLL_DIRICHLET)then !Dirichlet
-        plan%phik(nr+1)=0.0_f64
+        plan%phik(nr+1)=(0.0_f64,0.0_f64)
       endif
       if(bc(2)==SLL_NEUMANN)then
         plan%phik(nr+1)=plan%phik(nr) !Neumann
@@ -430,7 +430,7 @@ contains
         if(k==0)then!Neumann for mode zero
           plan%phik(nr+1)=plan%phik(nr)
         else !Dirichlet for other modes
-          plan%phik(nr+1)=0.0_f64
+          plan%phik(nr+1)=(0.0_f64,0.0_f64)
         endif
       endif
 
@@ -517,7 +517,7 @@ contains
         plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
       enddo
 
-      plan%phik=0.0_f64
+      plan%phik=(0.0_f64,0.0_f64)
 
       !boundary condition at rmin
       if(bc(1)==SLL_DIRICHLET)then !Dirichlet
@@ -558,7 +558,7 @@ contains
 
       !boundary condition at rmin
       if(bc(1)==SLL_DIRICHLET)then !Dirichlet
-        plan%phik(1)=0.0_f64
+        plan%phik(1)=(0.0_f64,0.0_f64)
       endif
       if(bc(1)==SLL_NEUMANN)then
         plan%phik(1)=plan%phik(2) !Neumann
@@ -567,13 +567,13 @@ contains
         if(k==0)then!Neumann for mode zero
           plan%phik(1)=plan%phik(2)
         else !Dirichlet for other modes
-          plan%phik(1)=0.0_f64
+          plan%phik(1)=(0.0_f64,0.0_f64)
         endif
       endif
 
       !boundary condition at rmax
       if(bc(2)==SLL_DIRICHLET)then !Dirichlet
-        plan%phik(nr+1)=0.0_f64
+        plan%phik(nr+1)=(0.0_f64,0.0_f64)
       endif
       if(bc(2)==SLL_NEUMANN)then
         plan%phik(nr+1)=plan%phik(nr) !Neumann
@@ -582,7 +582,7 @@ contains
         if(k==0)then!Neumann for mode zero
           plan%phik(nr+1)=plan%phik(nr)
         else !Dirichlet for other modes
-          plan%phik(nr+1)=0.0_f64
+          plan%phik(nr+1)=(0.0_f64,0.0_f64)
         endif
       endif
 

@@ -59,7 +59,7 @@ contains
  pure function name_vlasovpoisson_sim( self ) result( r )
    class( sll_vlasovpoisson_sim ), intent( in ) :: self
    character(len=10)     :: r
-   r = self%pname
+   r = self%pname(1:10)
  end function name_vlasovpoisson_sim  
   
  pure function sll_vlasovpoisson_sim_compare(bc1,bc2) result(compare)
@@ -103,7 +103,7 @@ contains
  pure function name_boundary( self ) result( r )
    class( sll_boundary ), intent( in ) :: self
    character(len=10)     :: r
-   r = self%pname
+   r = self%pname(1:10)
  end function name_boundary  
   
  pure function sll_boundary_compare(bc1,bc2) result(compare)

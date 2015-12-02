@@ -126,7 +126,7 @@ common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
-sll_int32  :: i,j,ierror
+sll_int32  :: i,ierror
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 sll_real64,dimension(:,:),allocatable :: cxx_array
@@ -139,11 +139,9 @@ sll_real64,dimension(:,:),allocatable :: a12_array
 sll_real64,dimension(:,:),allocatable :: a21_array
 sll_real64 :: delta1,delta2
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
+
 equivalence(intl,iprm)
 equivalence(xa,fprm)
-
-! declare coefficient and boundary condition input subroutines external
-external coefcr,bndcr,cofx,cofy
 
 nx = nc_eta1+1
 ny = nc_eta2+1
@@ -313,14 +311,13 @@ yc = eta2_min
 yd = eta2_max
 
 ! set for no error control flag
-tolmax = 0.0
+tolmax = 0.0_8
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
 write(*,102) (this%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
-
 
 !call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
  call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
@@ -345,14 +342,11 @@ if (ierror > 0) call exit(0)
 104 format(/' discretization call to mud2cr', ' intl = ', i2)
 200 format(' ierror = ',i2, ' minimum work space = ',i7)
 
-return
 end subroutine initialize_poisson_curvilinear_mudpack
 
 
 !> Solve the Poisson equation and get the potential
 subroutine solve_poisson_curvilinear_mudpack(this, phi, rho)
-implicit none
-
 ! set grid size params
 type(mudpack_2d) :: this  !< solver data object
 sll_int32 :: icall
@@ -380,16 +374,12 @@ common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-!    
-! declare coefficient and boundary condition input subroutines external
-external coefcr,bndcr,cofx,cofy
-
 allocate(rhs(nx,ny))
 rhs=0._f64
     do i2=1,ny
-      eta2=yc+real(i2-1,f64)*(yd-yc)/(ny-1)
+      eta2=yc+real(i2-1,f64)*(yd-yc)/real(ny-1,8)
       do i1=1,nx
-        eta1=xa+real(i1-1,f64)*(xb-xa)/(nx-1)
+        eta1=xa+real(i1-1,f64)*(xb-xa)/real(nx-1,8)
         rhs(i1,i2)=-rho(i1,i2)*transformation%jacobian(eta1,eta2)
       end do
     end do
@@ -503,7 +493,6 @@ enddo
 end subroutine coefxy_array
 
 subroutine a12_a21_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,a12_array,a21_array)
-  implicit none                     
     sll_real64                :: eta1,eta1_min,eta2_min
     sll_real64                :: eta2,delta1,delta2
     sll_real64                :: a12,a21
@@ -534,7 +523,6 @@ end subroutine a12_a21_array
 
 subroutine coefx_array(eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cx_array)
-  implicit none                     
     sll_real64                :: eta1,eta1_min,eta2_min
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
@@ -550,9 +538,9 @@ do j=1,ny
  enddo
 enddo 
 end subroutine coefx_array
+
 subroutine coefy_array(eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cy_array)
-  implicit none                     
     sll_real64                :: eta1,eta1_min,eta2_min
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
@@ -567,14 +555,10 @@ do j=1,ny
  enddo
 enddo 
 end subroutine coefy_array
-end module sll_m_mudpack_curvilinear
-
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 subroutine coefcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_m_mudpack_curvilinear
-implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
 cxx = cxx_interp%interpolate_value(x,y)
@@ -583,31 +567,28 @@ cyy = cyy_interp%interpolate_value(x,y)
 cx  = cx_interp%interpolate_value(x,y)
 cy  = cy_interp%interpolate_value(x,y) 
 ce  = ce_interp%interpolate_value(x,y)
-return
-end subroutine
+end subroutine coefcr
+
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0  !cxx_interp%interpolate_value(x)
-cx  = 0.0
-cex = 0.0
-return
-end
+cxx = 1.0_8  !cxx_interp%interpolate_value(x)
+cx  = 0.0_8 + x - x
+cex = 0.0_8
+end subroutine cofx
 
 !> input y dependent coefficients
 subroutine cofy(y,cyy,cy,cey)
-implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0
-cy  = 0.0
-cey = 0.0
-return
-end
+cyy = 1.0_8
+cy  = 0.0_8 + y - y
+cey = 0.0_8
+end subroutine cofy
+
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,beta,gama,gbdy
 
@@ -618,10 +599,10 @@ if (kbdy.eq.2) then
    ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxb(y),
    ! betxb(y),gamxb(y),gbdxb(y) must be output.
 
-   alfa = 0.0+0*xory
-   beta = 0.0
-   gama = 1.0
-   gbdy = 0.0
+   alfa = 0.0_8+0_8*xory
+   beta = 0.0_8
+   gama = 1.0_8
+   gbdy = 0.0_8
 
 end if
 
@@ -632,14 +613,15 @@ if (kbdy.eq.1) then
    ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxa(y),
    ! betxa(y),gamxa(y),gbdxa(y) must be output.
 
-   alfa = 0.0
-   beta = 0.0
-   gama = 1.0
-   gbdy = 0.0
+   alfa = 0.0_8
+   beta = 0.0_8
+   gama = 1.0_8
+   gbdy = 0.0_8
 
 end if
 
-return
-end subroutine
+end subroutine bndcr
+
+end module sll_m_mudpack_curvilinear
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -35,7 +35,7 @@
 
 
 ! Enable the SLL_ASSERT() calls locally during development.
-#define DEBUG
+!#define DEBUG
 
 
 !> @ingroup decomposition

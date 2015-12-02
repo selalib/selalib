@@ -38,6 +38,9 @@ use sll_m_maxwell_2d_diga
 use sll_m_maxwell_solvers_base
 use sll_m_cartesian_meshes
 
+use m_maxwell_helper_functions, only : &
+     sol_bz, sol_ex, sol_ey
+
 implicit none
 
 !=====================================!
@@ -66,10 +69,8 @@ type(sll_dg_field_2d), pointer :: exact
 sll_real64  :: time
 sll_int32   :: istep
 sll_real64  :: dt
-sll_real64  :: cfl = 0.1
+sll_real64  :: cfl = 0.1_f64
 sll_real64  :: error
-!init functions
-sll_real64, external :: sol_bz, sol_ex, sol_ey, linear_x, linear_y
 
 #ifdef DEBUG
 sll_int32 :: i, j

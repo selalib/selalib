@@ -286,6 +286,9 @@ contains
     li_result = SUM(api_occ(1: ai_nR))
     
     sll_count_non_zero_elts_mp = li_result
+
+    return
+    SLL_ASSERT(ai_nc>0)
   end function sll_count_non_zero_elts_mp
   
   
@@ -383,6 +386,12 @@ contains
        end do
        
     end do
+
+    return
+    SLL_ASSERT(ai_nc > 0)
+    SLL_ASSERT(ai_nr > 0)
+    print*, size(lm_rows,1)
+    print*, nen_r
     
   end subroutine sll_init_SparseMatrix_mp
 

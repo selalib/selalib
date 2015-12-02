@@ -8,11 +8,10 @@ module sll_m_maxwell_1d_base
 #include "sll_working_precision.h"
 
   use sll_m_utilities, only : int2string
-  use sll_m_gauss_legendre_integration, only: function_1d_legendre
 
   implicit none
   private
-  public :: sll_plot_two_fields_1d
+  public :: sll_plot_two_fields_1d, function_1d_real64
   
   type, public, abstract :: sll_maxwell_1d_base
 
@@ -50,14 +49,25 @@ module sll_m_maxwell_1d_base
 
 !---------------------------------------------------------------------------!
   abstract interface
+     !> 1d real function
+     function function_1d_real64(x)
+       use sll_m_working_precision ! can't pass a header file because the
+                                 ! preprocessor prevents double inclusion.
+                                 ! This is very rare.
+       sll_real64             :: function_1d_real64
+       sll_real64, intent(in) :: x
+     end function function_1d_real64
+  end interface
+!---------------------------------------------------------------------------!
+  abstract interface
      subroutine update_dofs_function(this, func, degree, coefs_dofs)
        use sll_m_working_precision
        import sll_maxwell_1d_base
-       import function_1d_legendre
-       class( sll_maxwell_1d_base)                    :: this !< Maxwell solver object.
-       procedure(function_1d_legendre)                :: func !< Function to be projected.
-       sll_int32, intent(in)                          :: degree !< Degree of the basis function that should be used for projection.
-       sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+       import function_1d_real64
+       class( sll_maxwell_1d_base)    :: this !< Maxwell solver object.
+       procedure(function_1d_real64)  :: func !< Function to be projected.
+       sll_int32, intent(in)          :: degree !< Degree of the basis function that should be used for projection.
+       sll_real64, intent(out)        :: coefs_dofs(:) !< Coefficients of the projection.
      end subroutine update_dofs_function
   end interface
   
@@ -104,7 +114,7 @@ contains
     sll_int32,                    intent(in) :: iplot !< plot counter
     sll_real64,                   intent(in) :: time  !< step time
 
-    integer          :: i, j
+    integer          :: i
     character(len=4) :: cplot
 
     call int2string(iplot, cplot)

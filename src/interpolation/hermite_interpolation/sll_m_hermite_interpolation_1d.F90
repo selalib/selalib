@@ -104,7 +104,7 @@ contains  !*********************************************************************
     sll_real64, dimension(:),intent(in), optional :: eta_max_slopes
     sll_int32 :: ierr
     sll_int32 :: deriv_size
-    sll_int32 :: i
+    !sll_int32 :: i
     
     interp%Nc = npts-1
     interp%degree = degree    
@@ -122,6 +122,10 @@ contains  !*********************************************************************
           print *,'#bad value for hermite_continuity',interp%continuity
           print *,'#in initialize_hermite_interpolation_1d'
           stop       
+          SLL_ASSERT(present(const_eta_min_slope))
+          SLL_ASSERT(present(const_eta_max_slope))
+          SLL_ASSERT(present(eta_min_slopes))
+          SLL_ASSERT(present(eta_max_slopes))
       end select
       deriv_size = interp%deriv_size
  
@@ -259,7 +263,7 @@ subroutine hermite_coef_per_1d(f,buf2d,N,d)
     sll_real64,dimension(3,N+1),intent(out)::buf2d
     sll_real64 ::w_left(-d/2:(d+1)/2),w_right((-d+1)/2:d/2+1)
     sll_real64 ::tmp
-    sll_int32  ::i,j,ii,r_left,r_right,s_left,s_right,ind 
+    sll_int32  ::i,ii,r_left,r_right,s_left,s_right,ind 
     r_left=-d/2
     s_left=(d+1)/2
     r_right=(-d+1)/2
@@ -304,7 +308,7 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
     sll_real64,dimension(3,N+1),intent(out)::buf2d
     sll_real64 ::w_left(-d/2:(d+1)/2),w_right((-d+1)/2:d/2+1)
     sll_real64 ::tmp
-    sll_int32  ::i,j,ii,r_left,r_right,s_left,s_right,ind 
+    sll_int32  ::i,ii,r_left,r_right,s_left,s_right,ind 
     r_left=-d/2
     s_left=(d+1)/2
     r_right=(-d+1)/2
@@ -400,8 +404,8 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
     sll_real64,intent(out)::fval
     sll_real64,dimension(0:2,0:N)::f
     !integer::i(2),i1(2),s
-    sll_int32::i1,s
-    sll_real64::w(0:3),tmp(0:3)
+    sll_int32::i1!,s
+    sll_real64::w(0:3)!,tmp(0:3)
     sll_real64::g(0:3)
     
     !fval =f(0,i(1),i(2))!real(i(1),f64)

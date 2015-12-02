@@ -98,7 +98,7 @@ c
       do j=0,ny+1
       do i=0,nx+1
         ij = j*(nx+2)+i
-        wk(ipf+ij) = 0.0
+        wk(ipf+ij) = 0d0
       end do
       end do
       do kb=2,ngrid
@@ -117,7 +117,7 @@ c
       do jc=0,ncy+1
         do ic=0,ncx+1
           icjc = jc*(ncx+2)+ic
-          wk(ipc+icjc) = 0.0
+          wk(ipc+icjc) = 0d0
         end do
       end do
 c
@@ -206,7 +206,7 @@ c    preset truncation estimate to zero
 c
       do j=1,ny
       do  i=1,nx
-        frhs(i,j) = 0.0
+        frhs(i,j) = 0d0
       end do
       end do
 c
@@ -223,11 +223,11 @@ c
       dlyy=dly*dly
       dlxy2=dlxy+dlxy
       dlxy4=dlxy2+dlxy2
-      dxxxy4=4.0*dlx**3*dly
-      dxyyy4=4.0*dlx*dly**3
+      dxxxy4=4d0*dlx**3*dly
+      dxyyy4=4d0*dlx*dly**3
       dxxyy=dlxx*dlyy
-      tdlx3=2.0*dlx**3
-      tdly3=2.0*dly**3
+      tdlx3=2d0*dlx**3
+      tdly3=2d0*dly**3
       dlx4=dlx**4
       dly4=dly**4
       dlxxx=dlx**3
@@ -269,11 +269,11 @@ c
         jj = j
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txx=cxx*dlxx*px4/12.0
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
-        tyy=cyy*dlyy*py4/12.0
-        tx=cx*dlxx*px3/6.0
-        ty=cy*dlyy*py3/6.0
+        txx=cxx*dlxx*px4/12d0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
+        tyy=cyy*dlyy*py4/12d0
+        tx=cx*dlxx*px3/6d0
+        ty=cy*dlyy*py3/6d0
         frhs(i,j) = txx+txy+tyy+tx+ty
       end do
       do j=ny-1,jfnl
@@ -283,11 +283,11 @@ c
         jj = j
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txx=cxx*dlxx*px4/12.0
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
-        tyy=cyy*dlyy*py4/12.0
-        tx=cx*dlxx*px3/6.0
-        ty=cy*dlyy*py3/6.0
+        txx=cxx*dlxx*px4/12d0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
+        tyy=cyy*dlyy*py4/12d0
+        tx=cx*dlxx*px3/6d0
+        ty=cy*dlyy*py3/6d0
         frhs(i,j) = txx+txy+tyy+tx+ty
       end do
       end do
@@ -300,11 +300,11 @@ c
         jj = j
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txx=cxx*dlxx*px4/12.0
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
-        tyy=cyy*dlyy*py4/12.0
-        tx=cx*dlxx*px3/6.0
-        ty=cy*dlyy*py3/6.0
+        txx=cxx*dlxx*px4/12d0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
+        tyy=cyy*dlyy*py4/12d0
+        tx=cx*dlxx*px3/6d0
+        ty=cy*dlyy*py3/6d0
         frhs(i,j) = txx+txy+tyy+tx+ty
       end do
       do i=nx-1,ifnl
@@ -314,11 +314,11 @@ c
          jj = j
          call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
          call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-         txx=cxx*dlxx*px4/12.0
-         txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
-         tyy=cyy*dlyy*py4/12.0
-         tx=cx*dlxx*px3/6.0
-         ty=cy*dlyy*py3/6.0
+         txx=cxx*dlxx*px4/12d0
+         txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
+         tyy=cyy*dlyy*py4/12d0
+         tx=cx*dlxx*px3/6d0
+         ty=cy*dlyy*py3/6d0
          frhs(i,j) = txx+txy+tyy+tx+ty
       end do
       end do
@@ -340,21 +340,21 @@ c
       call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
       call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
       do i=2,nx-1
-        x=xa+float(i-1)*dlx
+        x=xa+(i-1)*dlx
         call bndyc(kbdy,x+dlx,alfip1,betip1,gamip1,gbdip1)
         call coef(x,yc,cxx,cxy,cyy,cx,cy,ce)
         c6=cxy/dlxy4
         c7=cyy/dlyy-cy/dly2
         c8=-c6
-        tim1=-alfim1*dlxx*px3im1/3.0+betim1*dlyy*py3im1/6.0
+        tim1=-alfim1*dlxx*px3im1/3d0+betim1*dlyy*py3im1/6d0
         px3im1=px3
         py3im1=py3
-        ti=alfi*dlxx*px3/6.0+beti*dlyy*py3/6.0
+        ti=alfi*dlxx*px3/6d0+beti*dlyy*py3/6d0
         ii = i+1
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tip1=-alfip1*dlxx*px3/3.0+betip1*dlyy*py3/6.0
+        tip1=-alfip1*dlxx*px3/3d0+betip1*dlyy*py3/6d0
 c     add adjustment to standard truncation error
         frhs(i,1)=frhs(i,1)+dly2*(c6/betim1*tim1+c7/beti*ti+c8/betip1*
      +    tip1)
@@ -376,16 +376,16 @@ c     periodic in x direction
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
 c     adjust truncation error from cross derivative at cornor
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(1,1)=frhs(1,1)-txy
-        txy=cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(1,1)=frhs(1,1)+txy
-        ti=alfi*dlxx*px3/6.0+beti*dlyy*py3/6.0
+        ti=alfi*dlxx*px3/6d0+beti*dlyy*py3/6d0
         ii = 2
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tip1=-alfip1*dlxx*px3/3.0+betip1*dlyy*py3/6.0
+        tip1=-alfip1*dlxx*px3/3d0+betip1*dlyy*py3/6d0
         frhs(1,1)=frhs(1,1)+dly2*(c7/beti*ti+c8/betip1*tip1)
 c     at (xb,yc)
         kbdy = 3
@@ -396,16 +396,16 @@ c     at (xb,yc)
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(nx,1)=frhs(nx,1)-txy
-        txy=-cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=-cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(nx,1)=frhs(nx,1)+txy
-        ti=alfi*dlxx*px3/6.0+beti*dlyy*py3/6.0
+        ti=alfi*dlxx*px3/6d0+beti*dlyy*py3/6d0
         ii = nx-1
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tim1=-alfim1*dlxx*px3im1/3.0+betim1*dlyy*py3im1/6.0
+        tim1=-alfim1*dlxx*px3im1/3d0+betim1*dlyy*py3im1/6d0
         c6=cxy/dlxy2
         c7=cyy/dlyy-cy/dly2-c6
         frhs(nx,1)=frhs(nx,1)+dly2*(c6/betim1*tim1+c7/beti*ti)
@@ -421,23 +421,23 @@ c     mixed-mixed at (xa,yc)
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tip1=-alfac*dlxx*px3/3.0+betac*dlyy*py3/6.0
+        tip1=-alfac*dlxx*px3/3d0+betac*dlyy*py3/6d0
         kbdy=1
         call bndyc(kbdy,yc+dly,alfaa,betaa,gamaa,gbdya)
         ii = 1
         jj = 2
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjp1=alfaa*dlxx*px3/6.0-betaa*dlyy*py3/3.0
+        tjp1=alfaa*dlxx*px3/6d0-betaa*dlyy*py3/3d0
         frhs(1,1)=frhs(1,1)+dly2*c8/betac*tip1+dlx2*c4/alfaa*tjp1
 c     adjust cross derivative truncation error at cornor
         ii = 1
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(1,1)=frhs(1,1)-txy
-        txy=cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*py3/6.0)
+        txy=cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*py3/6d0)
         frhs(1,1)=frhs(1,1)+txy
 c     phase 2
         c5=cxx/dlxx-cx/dlx2-c4+c8*(alfac/betac*dyox)
@@ -446,8 +446,8 @@ c     phase 2
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        ta =-dlyyy*py3/3.0
-        tc =-dlxxx*px3/3.0
+        ta =-dlyyy*py3/3d0
+        tc =-dlxxx*px3/3d0
         frhs(1,1)=frhs(1,1)-c5*ta-c7*tc
       end if
       if (nxb.eq.2) then
@@ -461,23 +461,23 @@ c     mixed-mixed at (xb,yc)
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tim1=-alfac*dlxx*px3/3.0+betac*dlyy*py3/6.0
+        tim1=-alfac*dlxx*px3/3d0+betac*dlyy*py3/6d0
         kbdy=2
         call bndyc(kbdy,yc+dly,alfab,betab,gamab,gbdyb)
         ii = nx
         jj = 2
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjp1=alfab*dlxx*px3/6.0-betab*dlyy*py3/3.0
+        tjp1=alfab*dlxx*px3/6d0-betab*dlyy*py3/3d0
         frhs(nx,1)=frhs(nx,1)+dly2*c6/betac*tim1-dlx2*c2/alfab*tjp1
 c     phase 2
         ii = nx
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(nx,1)=frhs(nx,1)-txy
-        txy=-cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=-cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(nx,1)=frhs(nx,1)+txy
         kbdy=3
         call bndyc(kbdy,xb,alfac,betac,gamac,gbdyc)
@@ -485,8 +485,8 @@ c     phase 2
         call bndyc(kbdy,yc,alfab,betab,gamab,gbdyb)
         c1=cxx/dlxx+cx/dlx2+c6*(-alfac/betac*dyox)-c2
         c7=cyy/dlyy-cy/dly2-c2*(betab/alfab*dxoy)-c2
-        tb=dlyyy*py3/3.0
-        tc=-dlxxx*px3/3.0
+        tb=dlyyy*py3/3d0
+        tc=-dlxxx*px3/3d0
         frhs(nx,1)=frhs(nx,1)-c1*tb-c7*tc
       end if
       end if
@@ -505,21 +505,21 @@ c     phase 2
       call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
       call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
       do j=2,ny-1
-        y=yc+float(j-1)*dly
+        y=yc+(j-1)*dly
         call bndyc(kbdy,y+dly,alfjp1,betjp1,gamjp1,gbdjp1)
         call coef(xb,y,cxx,cxy,cyy,cx,cy,ce)
         c2=cxy/dlxy4
         c1=cxx/dlxx+cx/dlx2
         c8=-c2
-        tjm1=alfjm1*dlxx*px3jm1/6.0-betjm1*dlyy*py3jm1/3.0
+        tjm1=alfjm1*dlxx*px3jm1/6d0-betjm1*dlyy*py3jm1/3d0
         px3jm1=px3
         py3jm1=py3
-        tj=(alfj*dlxx*px3+betj*dlyy*py3)/6.0
+        tj=(alfj*dlxx*px3+betj*dlyy*py3)/6d0
         ii = nx
         jj = j+1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjp1=alfjp1*dlxx*px3/6.0-betjp1*dlyy*py3/3.0
+        tjp1=alfjp1*dlxx*px3/6d0-betjp1*dlyy*py3/3d0
         frhs(nx,j)=frhs(nx,j)-dlx2*(c8/alfjm1*tjm1+c1/alfj*tj+c2/
      +    alfjp1*tj)
         alfjm1=alfj
@@ -542,16 +542,16 @@ c     adjust truncation error from cross derivative at cornor
         jj = 1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(nx,1)=frhs(nx,1)-txy
-        txy=-cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=-cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(nx,1)=frhs(nx,1)+txy
-        tj=alfj*dlxx*px3/6.0+betj*dlyy*py3/6.0
+        tj=alfj*dlxx*px3/6d0+betj*dlyy*py3/6d0
         ii = nx
         jj = 2
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjp1=alfjp1*dlxx*px3/3.0-betjp1*dlyy*py3/6.0
+        tjp1=alfjp1*dlxx*px3/3d0-betjp1*dlyy*py3/6d0
         frhs(nx,1)=frhs(nx,1)-dlx2*(c3/alfj*tj+c2/alfjp1*tjp1)
 c     at (xb,yd)
         call bndyc(kbdy,yd-dly,alfjm1,betjm1,gamjm1,gbdjm1)
@@ -561,16 +561,16 @@ c     at (xb,yd)
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(nx,ny)=frhs(nx,ny)-txy
-        txy=cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(nx,ny)=frhs(nx,ny)+txy
-        tj=alfj*dlxx*px3/6.0+betj*dlyy*py3/6.0
+        tj=alfj*dlxx*px3/6d0+betj*dlyy*py3/6d0
         ii = nx
         jj = ny-1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjm1=-alfjm1*dlxx*px3/3.0+betjm1*dlyy*py3/6.0
+        tjm1=-alfjm1*dlxx*px3/3d0+betjm1*dlyy*py3/6d0
         c4=-cxy/dlxy2
         c3=cxx/dlxx+cx/dlx2-c4
         frhs(nx,ny)=frhs(nx,ny)-dlx2*(c4/alfjm1*tjm1+c3/alfj*tj)
@@ -588,21 +588,21 @@ c     mixed-mixed at (xb,yd)
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tim1=alfad*dlxx*px3/3.0+betad*dlyy*py3/6.0
+        tim1=alfad*dlxx*px3/3d0+betad*dlyy*py3/6d0
         ii = nx
         jj = ny-1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjm1=alfab*dlxx*px3/6.0+betab*dlyy*py3/3.0
+        tjm1=alfab*dlxx*px3/6d0+betab*dlyy*py3/3d0
         frhs(nx,ny)=frhs(nx,ny)-dly2*c4/betad*tim1-dlx2*c8/alfab*tjp1
 c     phase 2
         ii = nx
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(nx,ny)=frhs(nx,ny)-txy
-        txy=cxy*(dlxx*px3/6.0-dlxy*px2y2/4.0+dlyy*py3/6.0)
+        txy=cxy*(dlxx*px3/6d0-dlxy*px2y2/4d0+dlyy*py3/6d0)
         frhs(nx,ny)=frhs(nx,ny)+txy
         kbdy=2
         call bndyc(kbdy,yd,alfab,betab,gamab,gbdyb)
@@ -610,8 +610,8 @@ c     phase 2
         call bndyc(kbdy,xb,alfad,betad,gamad,gbdyd)
         c1=cxx/dlxx+cx/dlx2-c4+c4*(alfad/betad*dyox)
         c3=cyy/dlyy+cy/dly2-c4+c8*(betab/alfab*dxoy)
-        tb=dlyyy*py3/3.0
-        td=dlxxx*px3/3.0
+        tb=dlyyy*py3/3d0
+        td=dlxxx*px3/3d0
         frhs(nx,ny)=frhs(nx,ny)-c1*tb-c3*td
       end if
       end if
@@ -632,21 +632,21 @@ c     adjust at y=yd when mixed
       call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
       call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
       do i=2,nx-1
-        x=xa+float(i-1)*dlx
+        x=xa+(i-1)*dlx
         call bndyc(kbdy,x+dlx,alfip1,betip1,gamip1,gbdip1)
         call coef(x,yd,cxx,cxy,cyy,cx,cy,ce)
         c2=cxy/dlxy4
         c3=cyy/dlyy+cy/dly2
         c4=-c2
-        tim1=-alfim1*dlxx*px3im1/3.0+betim1*dlyy*py3im1/6.0
+        tim1=-alfim1*dlxx*px3im1/3d0+betim1*dlyy*py3im1/6d0
         px3im1=px3
         py3im1=py3
-        ti=(alfi*dlxx*px3+beti*dlyy*py3)/6.0
+        ti=(alfi*dlxx*px3+beti*dlyy*py3)/6d0
         ii = i+1
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tip1=-alfip1*dlxx*px3/3.0+betip1*dlyy*py3/6.0
+        tip1=-alfip1*dlxx*px3/3d0+betip1*dlyy*py3/6d0
         frhs(i,ny)=frhs(i,ny)-dly2*(c4/betim1*tim1+c3/beti*ti+c2/
      +    betip1*tip1)
         alfim1=alfi
@@ -667,16 +667,16 @@ c     adjust truncation error from cross derivative at cornor
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(1,ny)=frhs(1,ny)-txy
-        txy=-cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=-cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(1,ny)=frhs(1,ny)+txy
-        ti=alfi*dlxx*px3/6.0+beti*dlyy*py3/6.0
+        ti=alfi*dlxx*px3/6d0+beti*dlyy*py3/6d0
         ii = 2
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tip1=-alfip1*dlxx*px3/3.0+betip1*dlyy*py3/6.0
+        tip1=-alfip1*dlxx*px3/3d0+betip1*dlyy*py3/6d0
         frhs(1,ny)=frhs(1,ny)-dly2*(c3/beti*ti+c2/betip1*tip1)
 c     at (xb,yd)
         call bndyc(kbdy,xb-dlx,alfim1,betim1,gamim1,gbdim1)
@@ -686,16 +686,16 @@ c     at (xb,yd)
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(nx,ny)=frhs(nx,ny)-txy
-        txy=cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(nx,ny)=frhs(nx,ny)+txy
-        ti=alfi*dlxx*px3/6.0+beti*dlyy*py3/6.0
+        ti=alfi*dlxx*px3/6d0+beti*dlyy*py3/6d0
         ii = nx-1
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tim1=-alfim1*dlxx*px3im1/3.0+betim1*dlyy*py3im1/6.0
+        tim1=-alfim1*dlxx*px3im1/3d0+betim1*dlyy*py3im1/6d0
         c4=-cxy/dlxy2
         c3=cyy/dlyy+cy/dly2-c4
         frhs(nx,ny)=frhs(nx,ny)-dly2*(c4/betim1*tim1+c3/beti*ti)
@@ -717,25 +717,25 @@ c     phase 1
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tip1=-alfad*dlxx*px3/3.0+betad*dlxx*dlyy*py3/6.0
+        tip1=-alfad*dlxx*px3/3d0+betad*dlxx*dlyy*py3/6d0
         ii = 1
         jj = ny-1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjm1=alfaa*dlxx*px3/6.0-betaa*dlyy*py3/3.0
+        tjm1=alfaa*dlxx*px3/6d0-betaa*dlyy*py3/3d0
         frhs(1,ny)=frhs(1,ny)-dly2*c2/betad*tip1+dlx2*c6/alfaa*tjm1
 c     adjust cornor truncation error from skewed difference formula
         ii = 1
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(1,ny)=frhs(1,ny)-txy
-        txy=-cxy*(dlxx*px3/6.0-dlxy*px2y2/4.0+dlyy*py3/6.0)
+        txy=-cxy*(dlxx*px3/6d0-dlxy*px2y2/4d0+dlyy*py3/6d0)
         frhs(1,ny)=frhs(1,ny)+txy
 c     phase 2
-        ta=-dlyyy*py3/3.0
-        td=dlxxx*px3/3.0
+        ta=-dlyyy*py3/3d0
+        td=dlxxx*px3/3d0
         frhs(1,ny)=frhs(1,ny)-c5*ta-c3*td
       end if
       end if
@@ -756,21 +756,21 @@ c     adjust truncation error along x=xa if mixed
       call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
       call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
       do j=2,ny-1
-        y=yc+float(j-1)*dly
+        y=yc+(j-1)*dly
         call bndyc(kbdy,y+dly,alfjp1,betjp1,gamjp1,gbdjp1)
         call coef(xa,y,cxx,cxy,cyy,cx,cy,ce)
         c4=-cxy/dlxy4
         c5=cxx/dlxx-cx/dlx2
         c6=-c4
-        tjm1=alfjm1*dlxx*px3jm1/6.0-betjm1*dlyy*py3jm1/3.0
+        tjm1=alfjm1*dlxx*px3jm1/6d0-betjm1*dlyy*py3jm1/3d0
         px3jm1=px3
         py3jm1=py3
-        tj=(alfj*dlxx*px3+betj*dlyy*py3)/6.0
+        tj=(alfj*dlxx*px3+betj*dlyy*py3)/6d0
         ii = 1
         jj = j+1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjp1=alfjp1*dlxx*px3/6.0-betjp1*dlyy*py3/3.0
+        tjp1=alfjp1*dlxx*px3/6d0-betjp1*dlyy*py3/3d0
         frhs(1,j)=frhs(1,j)+dlx2*(c6/alfjm1*tjm1+c5/alfj*tj+c4/
      +    alfjp1*tjp1)
         alfjm1=alfj
@@ -793,16 +793,16 @@ c
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
 c     adjust truncation error from cross derivative at cornor
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(1,1)=frhs(1,1)-txy
-        txy=cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(1,1)=frhs(1,1)+txy
-        tj=alfj*dlxx*px3/6.0+betj*dlyy*py3/6.0
+        tj=alfj*dlxx*px3/6d0+betj*dlyy*py3/6d0
         ii = 1
         jj = 2
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjp1=alfjp1*dlxx*px3/3.0-betjp1*dlyy*py3/6.0
+        tjp1=alfjp1*dlxx*px3/3d0-betjp1*dlyy*py3/6d0
         frhs(1,1)=frhs(1,1)+dlx2*(c7/alfj*tj+c8/alfjp1*tjp1)
 c     at (xa,yd)
         kbdy = 1
@@ -813,16 +813,16 @@ c     at (xa,yd)
         jj = ny
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
         frhs(1,ny)=frhs(1,ny)-txy
-        txy=-cxy*(dlxx*px3y/6.0-dlxy*px2y2/4.0+dlyy*pxy3/6.0)
+        txy=-cxy*(dlxx*px3y/6d0-dlxy*px2y2/4d0+dlyy*pxy3/6d0)
         frhs(1,ny)=frhs(1,ny)+txy
-        tj=alfj*dlxx*px3/6.0+betj*dlyy*py3/6.0
+        tj=alfj*dlxx*px3/6d0+betj*dlyy*py3/6d0
         ii = 1
         jj = ny-1
         call pde2(nx,ny,phi,ii,jj,px3,px4,py3,py4,nxa,nyc)
         call pde2cr(nx,ny,phi,ii,jj,px3y,pxy3,px2y2)
-        tjm1=-alfjm1*dlxx*px3/3.0+betim1*dlyy*py3/6.0
+        tjm1=-alfjm1*dlxx*px3/3d0+betim1*dlyy*py3/6d0
         c6=cxy/dlxy2
         c7=cxx/dlxx-cx/dlx2-c6
         frhs(1,ny)=frhs(1,ny)+dlx2*(c6/alfjm1*tjm1+c7/alfj*tj)
@@ -857,11 +857,11 @@ c
 c
 c     estimate partial derivatives
 c
-        px3 = (-u(i-2,j)+2.0*u(i-1,j)-2.0*u(i+1,j)+u(i+2,j))/tdlx3
-        px4 = (u(i-2,j)-4.0*u(i-1,j)+6.0*u(i,j)-4.0*u(i+1,j)+u(i+2,j))
+        px3 = (-u(i-2,j)+2d0*u(i-1,j)-2d0*u(i+1,j)+u(i+2,j))/tdlx3
+        px4 = (u(i-2,j)-4d0*u(i-1,j)+6d0*u(i,j)-4d0*u(i+1,j)+u(i+2,j))
      +          /dlx4
-        py3 = (-u(i,j-2)+2.0*u(i,j-1)-2.0*u(i,j+1)+u(i,j+2))/tdly3
-        py4 = (u(i,j-2)-4.0*u(i,j-1)+6.0*u(i,j)-4.0*u(i,j+1)+u(i,j+2))
+        py3 = (-u(i,j-2)+2d0*u(i,j-1)-2d0*u(i,j+1)+u(i,j+2))/tdly3
+        py4 = (u(i,j-2)-4d0*u(i,j-1)+6d0*u(i,j)-4d0*u(i,j+1)+u(i,j+2))
      +          /dly4
         px3y = (u(i-2,j-1)-2*u(i-1,j-1)+2*u(i+1,j-1) -u(i+2,j-1)-
      +    u(i-2,j+1)+2*u(i-1,j+1)-2*u(i+1,j+1)+u(i+2,j+1))/dxxxy4
@@ -876,11 +876,11 @@ c
         cyy = 0.5*dlyy*(cof(i,j,3)+cof(i,j,7))
         cx = dlx*(cof(i,j,1)-cof(i,j,5))
         cy = dly*(cof(i,j,3)-cof(i,j,7))
-        txx=cxx*dlxx*px4/12.0
-        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6.0
-        tyy=cyy*dlyy*py4/12.0
-        tx=cx*dlxx*px3/6.0
-        ty=cy*dlyy*py3/6.0
+        txx=cxx*dlxx*px4/12d0
+        txy=cxy*(dlxx*px3y+dlyy*pxy3)/6d0
+        tyy=cyy*dlyy*py4/12d0
+        tx=cx*dlxx*px3/6d0
+        ty=cy*dlyy*py3/6d0
         frhs(i,j) = txx+txy+tyy+tx+ty
       end do
       end do

@@ -32,7 +32,7 @@ module sll_m_quintic_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-implicit double precision (a-h,o-z)
+implicit none
 
 contains
 
@@ -50,6 +50,15 @@ sll_int32,  intent(in)    :: indn      !< boundary conditions switches at x=n.
                                        !< = 0 type 2
                                        !< =-1 type 3
 sll_real64, intent(out)   :: h(6*n-3)  !< auxiliary vector
+
+sll_real64 :: a, as, det, di1, di2, di3, di4
+sll_real64 :: dp1, dp2, dp3, dp4, dpd1, dpd2
+sll_real64 :: ds1, ds2, ds3, ds4
+sll_real64 :: fp, fp3, fp4
+sll_real64 :: p1, p2, p3, q1, q2
+sll_real64 :: sf1, sf2
+sll_int32  :: i, im, k
+
 
 h = 0.0_f64
 
@@ -84,10 +93,10 @@ goto 15
 
 15 continue
 
-   dp1 = 64*p3
-   dp2 = 12*p2*q1*a
+   dp1 = 64.0_f64*p3
+   dp2 = 12.0_f64*p2*q1*a
    dp3 = dp2
-   dp4 = 3*p1*q2*as
+   dp4 = 3.0_f64*p1*q2*as
 
    if (i >= n) then !boundary condition at xn
 
@@ -130,15 +139,15 @@ goto 15
    end if
 
    fp = cf(1,i)-cf(1,i+1)
-   fp3= 20*p3*fp
-   fp4=  6*p1*fp3
-   dp1= dp1+64*p3
-   dp2= dp2-12*p3*a
+   fp3= 20.0_f64*p3*fp
+   fp4=  6.0_f64*p1*fp3
+   dp1= dp1+64.0_f64*p3
+   dp2= dp2-12.0_f64*p3*a
    dp3= dp2
-   dp4= dp4+3*p3*as
-   ds1=-56*p3
-   ds2= 8*p3*a
-   ds3= -8*p2*q1*a
+   dp4= dp4+3.0_f64*p3*as
+   ds1=-56.0_f64*p3
+   ds2= 8.0_f64*p3*a
+   ds3= -8.0_f64*p2*q1*a
    ds4=    p2*q1*as
    sf1=sf1+fp4
    sf2=sf2-fp3*p1*a
@@ -200,6 +209,7 @@ goto 15
 
    if(i>=n) goto 65
 
+
    h(im+3)=(+dp4*ds1-dp3*ds2)/det
    h(im+4)=(-dp2*ds1+dp1*ds2)/det
    h(im+5)=(+dp4*ds3-dp3*ds4)/det
@@ -245,6 +255,11 @@ sll_real64, intent(out) :: f          !< 0: value of the interpolating function
                                       !< 1: value of its first derivative
                                       !< 2: value of its second derivative
 
+sll_real64 :: cc, h, u, w, y
+sll_real64 :: xn, xr1, xr2, xr3
+sll_int32  :: i
+
+
 f = 0.0_f64
 
 xn = (xx-x(1))/(x(n)-x(1))*(n-1)
@@ -268,11 +283,11 @@ else
 
   case(0)
 
-    y = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6*xr1))
+    y = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6.0_f64*xr1))
     
     w = cf(2,i-1)*xr1 &
-       +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3*xr1)) &
-       -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3*xr1))
+       +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3.0_f64*xr1)) &
+       -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3.0_f64*xr1))
     
     u = cf(3,i-1)*xr2 &
        +cf(3,i-1)*xr3*(-3.0_f64+xr1*(+3.0_f64-  xr1)) &
@@ -282,23 +297,23 @@ else
   
   case(1) 
   
-    y =      30*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
+    y =      30.0_f64*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
     
     w = cf(2,i-1)     &
-       +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15*xr1)) &
-       -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15*xr1))
+       +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15.0_f64*xr1)) &
+       -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15.0_f64*xr1))
     
     u = cf(3,i-1)*xr1*2.0_f64 &
-       +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5*xr1)) &
-       +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5*xr1)) 
+       +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5.0_f64*xr1)) &
+       +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5.0_f64*xr1)) 
     
     f = y/h+w+h*u*0.5_f64
   
   case(2)
   
-    xn= 10*xr1
+    xn= 10.0_f64*xr1
   
-    y = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2*xr1))
+    y = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2.0_f64*xr1))
     
     w = +cf(2,i-1)*(-6.0_f64+xr1*(+16.0_f64-xn)) &
         -cf(2,i  )*(+4.0_f64+xr1*(-14.0_f64+xn))
@@ -322,6 +337,13 @@ sll_real64, intent(in)    :: dx         !< vector of abscissae
 sll_real64, intent(inout) :: cf(1:3,n)  !< ordinates, first and second derivatives
 sll_real64, intent(out)   :: h(6*n-3)   !< auxiliary vector
 
+sll_real64 :: a, as, det, di1, di2, di3, di4
+sll_real64 :: dp1, dp2, dp3, dp4, dpd1, dpd2
+sll_real64 :: ds1, ds2, ds3, ds4
+sll_real64 :: fp, fp3, fp4
+sll_real64 :: p1, p2, p3, q1, q2
+sll_real64 :: sf1, sf2
+sll_int32  :: i, i1, i2, im, k
 
 h = 0.0_f64
 
@@ -358,10 +380,10 @@ do i = 1, n
    end if
 
 
-   dp1 = 64*p3
-   dp2 = 12*p2*q1*a
+   dp1 = 64.0_f64*p3
+   dp2 = 12.0_f64*p2*q1*a
    dp3 = dp2
-   dp4 = 3*p1*q2*as
+   dp4 = 3.0_f64*p1*q2*as
 
    if (i >= n) then !boundary condition at xn
 
@@ -389,15 +411,15 @@ do i = 1, n
    i1 = modulo(i-1,n-1)+1
    i2 = modulo(i,n-1)+1
    fp = cf(1,i1)-cf(1,i2)
-   fp3= 20*p3*fp
-   fp4=  6*p1*fp3
-   dp1= dp1+64*p3
-   dp2= dp2-12*p3*a
+   fp3= 20.0_f64*p3*fp
+   fp4=  6.0_f64*p1*fp3
+   dp1= dp1+64.0_f64*p3
+   dp2= dp2-12.0_f64*p3*a
    dp3= dp2
-   dp4= dp4+3*p3*as
-   ds1=-56*p3
-   ds2= 8*p3*a
-   ds3= -8*p2*q1*a
+   dp4= dp4+3.0_f64*p3*as
+   ds1=-56.0_f64*p3
+   ds2= 8.0_f64*p3*a
+   ds3= -8.0_f64*p2*q1*a
    ds4=    p2*q1*as
    sf1=sf1+fp4
    sf2=sf2-fp3*p1*a

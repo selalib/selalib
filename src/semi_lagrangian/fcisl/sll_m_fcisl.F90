@@ -125,6 +125,10 @@ contains
     sll_int32 :: i_val    
     sll_int32 :: val
     sll_int32 :: spaghetti_size_new
+
+    SLL_ASSERT(Nc_x1>0)
+    SLL_ASSERT(Nc_x2>0)
+
     s = 0
     val = 2*Nc_x1
     do i=-Nc_x1,Nc_x1
@@ -215,6 +219,8 @@ contains
     sll_int32, dimension(:), allocatable ::  check
     sll_int32 :: ierr
     
+    SLL_ASSERT(Nc_x1>0)
+    SLL_ASSERT(Nc_x2>0)
     SLL_ALLOCATE(check(Nc_x1+1),ierr)
     !0, shift,2*shift, Nc_x1*shift
     !while(modulo(k*shift,Nc_x1) .ne. 0)
@@ -431,6 +437,7 @@ contains
       print *,'#bad size for phi'
     endif
     
+    D_phi = 0.0_f64
     print *,size(buf,1),size(buf,2)
        
    

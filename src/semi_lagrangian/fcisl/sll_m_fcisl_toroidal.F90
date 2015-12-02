@@ -62,8 +62,8 @@ subroutine compute_euler_field( &
   sll_real64 :: dt
   
   sll_real64 :: bigr
-  sll_real64 :: ph
-  sll_real64 :: th
+  !sll_real64 :: ph
+  !sll_real64 :: th
   sll_int32 :: i
   
   theta(1) = theta0
@@ -105,9 +105,9 @@ subroutine compute_rk4_field( &
   procedure(sll_scalar_initializer_2d), pointer :: func2
   sll_real64 :: params2(3)
   sll_real64 :: dt  
-  sll_real64 :: bigr
-  sll_real64 :: ph
-  sll_real64 :: th
+  !sll_real64 :: bigr
+  !sll_real64 :: ph
+  !sll_real64 :: th
   sll_int32 :: i
   sll_real64 :: k1(4)
   sll_real64 :: k2(4)
@@ -148,6 +148,8 @@ function toroidal_1(theta,phi,params) result(res)
   smallr = params(1)
   psipr = params(2)
   res = -psipr/smallr  
+  return !PN ADD TO PREVENT WARNING
+  print*, phi, theta
 end function toroidal_1
 
 function toroidal_2(theta,phi,params) result(res)
@@ -166,6 +168,9 @@ function toroidal_2(theta,phi,params) result(res)
   F0 = params(3)
   bigr = R0+smallr*cos(theta)
   res=F0/bigr
+
+  return !PN ADD TO PREVENT WARNING
+  print*, phi
 end function toroidal_2
 
 
@@ -191,11 +196,11 @@ subroutine compute_analytic_field( &
   sll_real64, dimension(:), intent(out) :: phi
   sll_real64, intent(in) :: theta0
   sll_real64, intent(in) :: phi0
-  sll_real64 :: dt
+  !sll_real64 :: dt
   
-  sll_real64 :: bigr
-  sll_real64 :: ph
-  sll_real64 :: th
+  !sll_real64 :: bigr
+  !sll_real64 :: ph
+  !sll_real64 :: th
   sll_int32 :: i
 
   
@@ -220,7 +225,7 @@ function compute_invR_integral(R0,smallr,x) result(res)
   !we suppose that R0>r
   
   xx = 0.5_f64+x/(2._f64*sll_pi)
-  k = floor(xx)
+  k = real(floor(xx),f64)
   alpha = xx-k
   if(alpha<1.e-12)then 
     res = -0.5_f64*sll_pi
@@ -248,7 +253,7 @@ function compute_inverse_invR_integral(R0,smallr,x) result(res)
   
   xx = 0.5_f64*x*sqrt(R0**2-smallr**2)
   xx = 0.5_f64+xx/sll_pi
-  k = floor(xx)
+  k = real(floor(xx),f64)
   alpha = xx-k
   if(alpha<1.e-12)then 
     res = -0.5_f64*sll_pi
@@ -268,7 +273,7 @@ subroutine compute_modulo(x,L)
   sll_real64, intent(in) :: L
   
   x = x/L+1._f64
-  x = x-floor(x)
+  x = x-real(floor(x),f64)
   x = L*x
   
 end subroutine compute_modulo
@@ -363,8 +368,8 @@ subroutine compute_feet_euler(theta_in,phi_in,num_points1,num_points2,dt,params,
   sll_real64 :: smallr
 
   sll_real64 :: bigr
-  sll_real64 :: ph
-  sll_real64 :: th
+  !sll_real64 :: ph
+  !sll_real64 :: th
   sll_int32 :: i
   sll_int32 :: j
 
@@ -407,9 +412,9 @@ subroutine compute_feet_rk4(theta_in,phi_in,num_points1,num_points2,dt,params,th
   sll_real64 :: F0
   sll_real64 :: smallr
 
-  sll_real64 :: bigr
-  sll_real64 :: ph
-  sll_real64 :: th
+  !sll_real64 :: bigr
+  !sll_real64 :: ph
+  !sll_real64 :: th
   sll_int32 :: i
   sll_int32 :: j
 
@@ -479,8 +484,8 @@ subroutine compute_feet_analytic(theta_in,phi_in,num_points1,num_points2,dt,para
   sll_real64 :: smallr
 
   sll_real64 :: bigr
-  sll_real64 :: ph
-  sll_real64 :: th
+  !sll_real64 :: ph
+  !sll_real64 :: th
   sll_int32 :: i
   sll_int32 :: j
 
@@ -542,8 +547,8 @@ function interpolate2d_toroidal( &
   sll_real64 :: eta1_max
   sll_real64 :: eta2_min
   sll_real64 :: eta2_max
-  sll_real64 :: eta1_star
-  sll_real64 :: eta2_star
+  !sll_real64 :: eta1_star
+  !sll_real64 :: eta2_star
   sll_real64, dimension(:), allocatable :: lag_buf
   sll_real64, dimension(:), allocatable :: lag_x
   sll_real64 :: eta1_loc 
@@ -653,7 +658,7 @@ subroutine compute_w_hermite_aligned( &
   sll_real64, intent(in) :: eta1_min
   sll_real64, intent(in) :: eta1_max
   sll_int32 :: i
-  sll_int32 :: j
+  !sll_int32 :: j
   sll_int32 :: ell
   sll_real64 :: w_loc_tmp(r:s)
   sll_real64 :: w_loc(s-r)
@@ -774,6 +779,11 @@ subroutine compute_hermite_derivatives_aligned( &
 
   !then compute \partial_aligned f(eta1_i,eta2_j)
 
+  return !PN ADD TO PREVENT WARNING
+  print*, w_aligned_left,       &
+          w_cell_aligned_left,  &
+          w_aligned_right,      &
+          w_cell_aligned_right
   
 end subroutine compute_hermite_derivatives_aligned
 

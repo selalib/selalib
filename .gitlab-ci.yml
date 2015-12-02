@@ -1,0 +1,31 @@
+stages:
+  - ctest
+  
+ubuntu:
+  stage: ctest
+  script: 
+    - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - ubuntu
+    
+mavericks:
+  stage: ctest
+  script: 
+    - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - osx
+    
+fedora:
+  stage: ctest
+  script: 
+    - "source /etc/profile.d/modules.sh"
+    - "module load mpi"
+    - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora

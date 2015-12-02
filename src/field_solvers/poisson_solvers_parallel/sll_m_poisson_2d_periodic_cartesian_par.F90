@@ -86,7 +86,7 @@ contains
 
     ! The collective to be used is the one that comes with the given layout.
     collective => get_layout_collective( start_layout )
-    colsz      = sll_get_collective_size( collective )
+    colsz      = int(sll_get_collective_size( collective ),i64)
 
     if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
          (.not.is_power_of_two(int(ncy,i64))) ) then     
@@ -136,7 +136,7 @@ contains
 
     ! Layout and local sizes for FFTs in y-direction (x2)
     plan%layout_seq_x2 => new_layout_2D( collective )
-    nprocx1 = int(colsz,kind=2)
+    nprocx1 = int(colsz,kind=4)
     nprocx2 = 1
 
     call initialize_layout_with_distributed_array( &
@@ -214,7 +214,7 @@ contains
 
     ! The collective to be used is the one that comes with the given layout.
     collective => get_layout_collective( start_layout )
-    colsz      = sll_get_collective_size( collective )
+    colsz      = int(sll_get_collective_size( collective ),i64)
 
     if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
          (.not.is_power_of_two(int(ncy,i64))) ) then     
@@ -264,7 +264,7 @@ contains
 
     ! Layout and local sizes for FFTs in y-direction (x2)
     plan%layout_seq_x2 => new_layout_2D( collective )
-    nprocx1 = int(colsz,kind=2)
+    nprocx1 = int(colsz,kind=4)
     nprocx2 = 1
 
     call initialize_layout_with_distributed_array( &

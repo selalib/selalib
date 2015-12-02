@@ -37,7 +37,7 @@ module sll_m_box_splines
   !> boundary condition, and the spline coefficients
   type sll_box_spline_2d
      type(sll_hex_mesh_2d), pointer  :: mesh !< Hexagonal mesh
-     sll_int32 SLL_PRIV :: bc_type !< Boundary conditions definition
+     sll_int32, private :: bc_type !< Boundary conditions definition
      sll_real64, dimension(:), pointer :: coeffs !< Spline coefficients
 
    contains
@@ -142,7 +142,7 @@ contains  ! ****************************************************************
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: k
     sll_int32  :: i
-    sll_int32  :: ierr
+    !sll_int32  :: ierr
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
     sll_real64 :: filter
@@ -197,7 +197,7 @@ contains  ! ****************************************************************
     sll_int32  :: i
 
     print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC NOT &
-         & YET IMPLEMENTED'
+         & YET IMPLEMENTED', deg
     num_pts_tot = spline%mesh%num_pts_tot
     do i = 1, num_pts_tot
        spline%coeffs(i) = real(0,f64)*data(i)
@@ -221,7 +221,7 @@ contains  ! ****************************************************************
     sll_int32  :: i
 
     print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC NOT &
-         & YET IMPLEMENTED'
+         & YET IMPLEMENTED', deg
     num_pts_tot = spline%mesh%num_pts_tot
     do i = 1, num_pts_tot
        spline%coeffs(i) = real(0,f64)*data(i)
@@ -606,7 +606,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: cell_index
     sll_int32               :: index_nZ(3*deg*deg)
-    sll_int32               :: ierr
+    !sll_int32               :: ierr
     sll_int32               :: nei_point
     sll_int32               :: non_Zero
     sll_int32               :: distance
@@ -954,13 +954,13 @@ contains  ! ****************************************************************
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
     sll_int32                      :: nZ_indices(3*deg*deg)
     sll_int32  :: num_ele
-    sll_int32  :: ele_contained
+    !sll_int32  :: ele_contained
     sll_int32  :: non_zero
-    sll_int32  :: ierr
+    !sll_int32  :: ierr
     sll_int32  :: i
-    sll_int32  :: s2
-    sll_int32  :: s3
-    sll_int32  :: dist
+    !sll_int32  :: s2
+    !sll_int32  :: s3
+    !sll_int32  :: dist
     sll_int32  :: val
 
     ! Number of non Zero splines depends on the degree
@@ -1010,6 +1010,9 @@ contains  ! ****************************************************************
     call write_connectivity(mesh, deg)
     !call write_basis_values(deg, rule)
     !call write_quadrature(rule)
+#ifdef DEBUG
+    print*, 'write_all_django_files rule=', rule
+#endif
 
   end subroutine write_all_django_files
 

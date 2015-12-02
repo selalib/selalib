@@ -36,7 +36,7 @@ real(8) :: r2, r22, r2a1, r2a13, xm
 real(8) :: a1, a12, a122
 real(8) :: time
 
-dpi   = 8.0 * atan( 1.0 )
+dpi   = 8.0_f64 * atan( 1.0_f64 )
 
 a1    = delta
 a12   = a1*a1
@@ -44,7 +44,7 @@ a122  = a12*a12
 
 do k = 1, nbpart/2
    
-   usum = 0.0; vsum = 0.0
+   usum = 0.0_f64; vsum = 0.0_f64
    xo = xp(k); yo = yp(k)
   
    do j = 1 , nbpart/2
@@ -55,7 +55,7 @@ do k = 1, nbpart/2
          r22   = r2 * r2
          r2a1  = r2 + a12
          r2a13 = r2a1 * r2a1 * r2a1
-         xm    = (r22+3.0*a12*r2+4.0*a122) / r2a13
+         xm    = (r22+3.0_f64*a12*r2+4.0_f64*a122) / r2a13
          usum  = usum + dy * op(j) * xm
          vsum  = vsum - dx * op(j) * xm
       end if
@@ -109,13 +109,11 @@ end subroutine centres
 !> compute real time
 function getRealTimer()
 implicit none
-real(8) :: out, getRealTimer
+real(8) :: getRealTimer
 sll_int64  :: count, count_rate
 call system_clock(count, count_rate)
 count = count - 1254348000*count_rate
-out = count
-out = out / count_rate
-getRealTimer = out
+getRealTimer = real(count,f64) / real(count_rate,f64)
 end function getRealTimer
 
 !> initialize particles positions
@@ -139,12 +137,12 @@ integer  :: k
 integer  :: error, file_id
 
 nstep = 200
-dt    = 0.02
+dt    = 0.02_f64
 imov  = 1
-amach = 0.1 !0.56
+amach = 0.1_f64 !0.56
 nray  = 10 !50
-r0    = 0.5
-delta = 0.01
+r0    = 0.5_f64
+delta = 0.01_f64
 
 !open(10, file = "input" )
 !read(10,donnees)
@@ -152,15 +150,15 @@ delta = 0.01
 
 u0 = amach 
 
-gam0   = u0 * 2.0 * sll_pi / 0.7 * r0!gaussienne
+gam0   = u0 * 2.0_f64 * sll_pi / 0.7_f64 * r0!gaussienne
 !gam0   = 2. * sll_pi * r0 * u0	!constant
 !gam0   = 2. * sll_pi / 10.0
 
 aom    = gam0 / ( sll_pi * r0**2 )  ! Amplitude du vortex
-tau    = 8.0 * sll_pi**2 / gam0     ! Periode de co-rotation
-gomeg  = gam0/ (4.0*sll_pi)         ! Vitesse angulaire
+tau    = 8.0_f64 * sll_pi**2 / gam0     ! Periode de co-rotation
+gomeg  = gam0/ (4.0_f64*sll_pi)         ! Vitesse angulaire
 ur     = gomeg                  ! Vitesse tangentielle du vortex
-al     = 0.5 * tau              ! Longeur d'onde
+al     = 0.5_f64 * tau              ! Longeur d'onde
 
 call sll_new_file_id(file_id, error)
 open(file_id, file="particles.out")
@@ -197,10 +195,10 @@ SLL_ALLOCATE(op(nbpart),error)
 
 do k = 1, nr
    xp( k    ) = rf( k ) 
-   yp( k    ) = zf( k ) + 1.
+   yp( k    ) = zf( k ) + 1._f64
    op( k    ) = gam( k )
    xp( k+nr ) = rf( k ) 
-   yp( k+nr ) = zf( k ) - 1.
+   yp( k+nr ) = zf( k ) - 1._f64
    op( k+nr ) = gam( k )
 end do
 
@@ -242,19 +240,19 @@ integer :: file_id, error
 !     surf  : surface de la section
 !     nsec  : nombre de points dans la premiere couronne
 
-dr      = ray / ( nray + 0.5 )
-dray    = 0.5 * dr                !rayon de la section centrale
+dr      = ray / ( nray + 0.5_f64 )
+dray    = 0.5_f64 * dr                !rayon de la section centrale
 surf    = sll_pi * ray * ray 
-dteta   = 2.0 * sll_pi / float( nsec0)
+dteta   = 2.0_f64 * sll_pi / real(nsec0,f64)
 
 k       = 1
-rf(  1) = 0.0
-zf(  1) = 0.0
+rf(  1) = 0.0_f64
+zf(  1) = 0.0_f64
 ds(  1) = sll_pi * dray * dray
 
 if ( gauss ) then
-   gamt = gam0 / ( 1. - exp( -1.0 ) )
-   cir( 1) = gamt * ( 1.-exp(-(dray/ray)**2)) !gauss
+   gamt = gam0 / ( 1._f64 - exp( -1.0_f64 ) )
+   cir( 1) = gamt * ( 1._f64-exp(-(dray/ray)**2)) !gauss
 else
    cir( 1) = gam0 * ds( 1 ) / surf   !uniforme
 end if
@@ -270,16 +268,16 @@ nsec  = 0
 
 !cpn   *** parametre de l'ellipse ***
 !c      eps = 0.01		! 0.0 --> disque
-      eps = 0.0
+      eps = 0.0_f64
 !cpn   ******************************
 
 do i = 1, nray
 
    nsec  = nsec + nsec0
-   dteta = 2.0 * sll_pi / float(nsec)
-   r     = float( i ) * dr 
+   dteta = 2.0_f64 * sll_pi / real(nsec,f64)
+   r     = real( i, f64 ) * dr 
 
-   r2  = r + 0.5 * dr
+   r2  = r + 0.5_f64 * dr
    s2  = sll_pi * r2**2 
    dss = s2 - s1
    s1  = s2
@@ -289,15 +287,15 @@ do i = 1, nray
       k = k + 1
       if( k .gt. idm ) stop ' !! idm < Nr !! '
 
-      teta    = float( j ) * dteta 
-      sigma   = r * ( 1.0 + eps * cos( 2.0*teta ) )
+      teta    = real( j, f64 ) * dteta 
+      sigma   = r * ( 1.0_f64 + eps * cos( 2.0_f64*teta ) )
       rf( k ) = sigma * cos( teta )
       zf( k ) = sigma * sin( teta )
 
-      ds(  k ) = dss / float( nsec )
+      ds(  k ) = dss / real( nsec, f64 )
 
       if ( gauss ) then
-         q       = 0.5 * (exp(-(r1/ray)**2)-exp(-(r2/ray)**2) )
+         q       = 0.5_f64 * (exp(-(r1/ray)**2)-exp(-(r2/ray)**2) )
          cir( k ) = gamt * dteta / sll_pi * q    ! gauss
       else
          cir( k ) = gam0 * ds( k ) / surf    ! uniforme

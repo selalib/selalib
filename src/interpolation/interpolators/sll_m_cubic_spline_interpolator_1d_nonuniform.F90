@@ -214,12 +214,13 @@ contains  ! ****************************************************************
     val = interpolate_derivative(eta1,interpolator%spline)
   end function
 
-  function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
-    sll_real64 :: val
-    sll_real64, intent(in) :: eta1
-    val = interpolate_derivative(eta1,interpolator%spline)
-  end function
+!PN DEFINED BUT NOT USED
+!  function interpolate_derivative_f95( interpolator, eta1 ) result(val)
+!    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
+!    sll_real64 :: val
+!    sll_real64, intent(in) :: eta1
+!    val = interpolate_derivative(eta1,interpolator%spline)
+!  end function
 
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!

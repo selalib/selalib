@@ -271,7 +271,7 @@ program test_bsl_lt_pic_4d
     remap_type = 'bsl_ltp'
   else
     ! called as an executable, with an argument
-    call getarg(1,remap_type)
+    call get_command_argument(1,remap_type)
   end if
 
   call sll_set_time_mark(remapstart)

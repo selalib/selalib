@@ -104,12 +104,12 @@ contains
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
-    sll_int32 :: i_part, i_grid, i_mod, ind, j
+    sll_int32 :: i_part, ind
     sll_real64 :: xi, x_new(3), vi(3), wi(1)
     sll_int32  :: n_cells
     sll_real64 :: r_new, r_old
     sll_int32 :: index_new, index_old
-    sll_real64 :: primitive_1(3)
+    !sll_real64 :: primitive_1(3)
 
     this%j_dofs_local = 0.0_f64
     n_cells = this%kernel_smoother_0%n_dofs
@@ -229,131 +229,132 @@ contains
 
  end subroutine update_jv
 
- !> Alternative implementation of the Hp1 operator based on the primal function of the spline
- subroutine operatorHp1_pic_vm_1d2v_prim(this, dt)
-    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
-
-    !local variables
-    sll_int32 :: i_part, i_grid, i_mod, ind, j
-    sll_real64 :: xi, x_new(3), vi(3), wi(1)
-    sll_int32  :: n_cells
-    sll_real64 :: r_new, r_old
-    sll_int32 :: index_new, index_old
-    sll_real64 :: primitive_1(3)
-    sll_real64 :: qm
-
-    this%j_dofs_local = 0.0_f64
-    n_cells = this%kernel_smoother_0%n_dofs    
-    qm = this%particle_group%species%q_over_m()
-
-    ! Here we have to accumulate j and integrate over the time interval.
-    ! At each k=1,...,n_grid, we have for s \in [0,dt]:
-    ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
-    ! where h is the grid spacing and N the normalized B-spline
-    ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
-    ! j_k(s) = \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i) v_k.
-    ! Now, we want the integral 
-    ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
-
-
-    ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
-    ! Then update particle position:  X_new = X_old + dt * V
-    do i_part=1,this%particle_group%n_particles  
-       ! Read out particle position and velocity
-       x_new = this%particle_group%get_x(i_part)
-       vi = this%particle_group%get_v(i_part)
-       ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
-       index_old = floor(xi)
-       r_old = xi - real(index_old,f64)
-
-       ! Then update particle position:  X_new = X_old + dt * V
-       x_new = modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
-       call this%particle_group%set_x(i_part, x_new)
-
-       ! Compute the new box index index_new and normalized position r_old.
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
-       index_new = floor(xi)
-       r_new = xi - real(index_new ,f64) 
-
-       ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_charge(i_part)
-
-       ! Compute the primitives at r_old for each interval
-       primitive_1 = -primitive_uniform_quadratic_b_spline_at_x( r_old )
-       ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
-       if (index_old < index_new) then
-          primitive_1 = primitive_1 + this%cell_integrals_1
-       end if
-       ! Now, we loop through the DoFs and add the contributions.
-       ind = 1
-       do i_grid = index_old - this%spline_degree + 1, index_old
-          i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-               primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
-          ind = ind + 1
-       end do      
-       ! Now contribution from r_new in the same way but different sign
-       primitive_1 = primitive_uniform_quadratic_b_spline_at_x( r_new )
-       if (index_old > index_new) then
-          primitive_1 = primitive_1 - this%cell_integrals_1
-       end if 
-
-       ind = 1
-       do i_grid = index_new - this%spline_degree + 1, index_new
-          i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-               primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
-          ind = ind + 1
-       end do
-       ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
-       ! First if index_old<index_new-1: Add the whole integrals.
-       do j = index_old+1, index_new-1
-          ind = 1
-          do i_grid = j - this%spline_degree + 1, j
-             i_mod = modulo(i_grid, n_cells ) + 1
-             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-                  this%cell_integrals_1(ind)*wi(1)
-             vi(2) = vi(2) - &
-                  qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
-             ind = ind + 1
-          end do
-       end do
-       ! Then if index_old>index_new-1: Subtract the whole integrals.
-       do j = index_new+1, index_old-1
-          ind = 1
-          do i_grid = j - this%spline_degree + 1, j
-             i_mod = modulo(i_grid, n_cells ) + 1
-             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
-                  this%cell_integrals_1(ind)*wi(1)
-             vi(2) = vi(2) + qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
-             ind = ind + 1
-          end do
-       end do 
-
-       call this%particle_group%set_v(i_part, vi)
-
-    end do
-
-    this%j_dofs = 0.0_f64
-    ! MPI to sum up contributions from each processor
-    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
-         n_cells, MPI_SUM, this%j_dofs(:,1))
-
-    ! Update the electric field. Also, we still need to scale with 1/Lx
-    this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x
-    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
-
-    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
-   call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
-   call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
-
- end subroutine operatorHp1_pic_vm_1d2v_prim
+!PN DEFINED BUT NOT USED
+!PN !> Alternative implementation of the Hp1 operator based on the primal function of the spline
+!PN subroutine operatorHp1_pic_vm_1d2v_prim(this, dt)
+!PN    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+!PN    sll_real64, intent(in) :: dt   !< time step
+!PN
+!PN    !local variables
+!PN    sll_int32 :: i_part, i_grid, i_mod, ind, j
+!PN    sll_real64 :: xi, x_new(3), vi(3), wi(1)
+!PN    sll_int32  :: n_cells
+!PN    sll_real64 :: r_new, r_old
+!PN    sll_int32 :: index_new, index_old
+!PN    sll_real64 :: primitive_1(3)
+!PN    sll_real64 :: qm
+!PN
+!PN    this%j_dofs_local = 0.0_f64
+!PN    n_cells = this%kernel_smoother_0%n_dofs    
+!PN    qm = this%particle_group%species%q_over_m()
+!PN
+!PN    ! Here we have to accumulate j and integrate over the time interval.
+!PN    ! At each k=1,...,n_grid, we have for s \in [0,dt]:
+!PN    ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
+!PN    ! where h is the grid spacing and N the normalized B-spline
+!PN    ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
+!PN    ! j_k(s) = \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i) v_k.
+!PN    ! Now, we want the integral 
+!PN    ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
+!PN
+!PN
+!PN    ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
+!PN    ! Then update particle position:  X_new = X_old + dt * V
+!PN    do i_part=1,this%particle_group%n_particles  
+!PN       ! Read out particle position and velocity
+!PN       x_new = this%particle_group%get_x(i_part)
+!PN       vi = this%particle_group%get_v(i_part)
+!PN       ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
+!PN       xi = (x_new(1) - this%x_min) /&
+!PN            this%delta_x
+!PN       index_old = floor(xi)
+!PN       r_old = xi - real(index_old,f64)
+!PN
+!PN       ! Then update particle position:  X_new = X_old + dt * V
+!PN       x_new = modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
+!PN       call this%particle_group%set_x(i_part, x_new)
+!PN
+!PN       ! Compute the new box index index_new and normalized position r_old.
+!PN       xi = (x_new(1) - this%x_min) /&
+!PN            this%delta_x
+!PN       index_new = floor(xi)
+!PN       r_new = xi - real(index_new ,f64) 
+!PN
+!PN       ! Scale vi by weight to combine both factors for accumulation of integral over j
+!PN       wi = this%particle_group%get_charge(i_part)
+!PN
+!PN       ! Compute the primitives at r_old for each interval
+!PN       primitive_1 = -primitive_uniform_quadratic_b_spline_at_x( r_old )
+!PN       ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
+!PN       if (index_old < index_new) then
+!PN          primitive_1 = primitive_1 + this%cell_integrals_1
+!PN       end if
+!PN       ! Now, we loop through the DoFs and add the contributions.
+!PN       ind = 1
+!PN       do i_grid = index_old - this%spline_degree + 1, index_old
+!PN          i_mod = modulo(i_grid, n_cells ) + 1
+!PN          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+!PN               primitive_1(ind)*wi(1)
+!PN          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+!PN          ind = ind + 1
+!PN       end do      
+!PN       ! Now contribution from r_new in the same way but different sign
+!PN       primitive_1 = primitive_uniform_quadratic_b_spline_at_x( r_new )
+!PN       if (index_old > index_new) then
+!PN          primitive_1 = primitive_1 - this%cell_integrals_1
+!PN       end if 
+!PN
+!PN       ind = 1
+!PN       do i_grid = index_new - this%spline_degree + 1, index_new
+!PN          i_mod = modulo(i_grid, n_cells ) + 1
+!PN          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+!PN               primitive_1(ind)*wi(1)
+!PN          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+!PN          ind = ind + 1
+!PN       end do
+!PN       ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
+!PN       ! First if index_old<index_new-1: Add the whole integrals.
+!PN       do j = index_old+1, index_new-1
+!PN          ind = 1
+!PN          do i_grid = j - this%spline_degree + 1, j
+!PN             i_mod = modulo(i_grid, n_cells ) + 1
+!PN             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+!PN                  this%cell_integrals_1(ind)*wi(1)
+!PN             vi(2) = vi(2) - &
+!PN                  qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+!PN             ind = ind + 1
+!PN          end do
+!PN       end do
+!PN       ! Then if index_old>index_new-1: Subtract the whole integrals.
+!PN       do j = index_new+1, index_old-1
+!PN          ind = 1
+!PN          do i_grid = j - this%spline_degree + 1, j
+!PN             i_mod = modulo(i_grid, n_cells ) + 1
+!PN             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
+!PN                  this%cell_integrals_1(ind)*wi(1)
+!PN             vi(2) = vi(2) + qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+!PN             ind = ind + 1
+!PN          end do
+!PN       end do 
+!PN
+!PN       call this%particle_group%set_v(i_part, vi)
+!PN
+!PN    end do
+!PN
+!PN    this%j_dofs = 0.0_f64
+!PN    ! MPI to sum up contributions from each processor
+!PN    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+!PN         n_cells, MPI_SUM, this%j_dofs(:,1))
+!PN
+!PN    ! Update the electric field. Also, we still need to scale with 1/Lx
+!PN    this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x
+!PN    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
+!PN
+!PN    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
+!PN   call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
+!PN   call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
+!PN
+!PN end subroutine operatorHp1_pic_vm_1d2v_prim
 
 
 
@@ -479,8 +480,8 @@ contains
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
-    sll_int32 :: i_part
-    sll_real64 :: v_old(3), v_new(3)
+    !sll_int32 :: i_part
+    !sll_real64 :: v_old(3), v_new(3)
 
     
     ! Update efield2
@@ -543,42 +544,42 @@ contains
 
   end function sll_new_hamiltonian_splitting_pic_vm_1d2v
 
-
-  !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
-  function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
-    sll_real64, intent(in)  :: x !< position where to evaluate the primitive
-    sll_real64 :: primitive(4) !< value of the primitive for each of the four intervals.
-
-    sll_real64 :: xx(3)
-
-    xx(1) = x**2
-    xx(2) = x*xx(1)
-    xx(3) = x*xx(2)
-
-    primitive(4) = xx(3)/24.0_f64
-    primitive(3) = (x + 1.5_f64*xx(1) + xx(2) - 0.75_f64* xx(3))/6.0_f64
-    primitive(2) = (4.0_f64*x - 2.0_f64* xx(2) + 0.75_f64* xx(3))/6.0_f64
-    primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
-
-  end function primitive_uniform_cubic_b_spline_at_x
-
-  !> Compute the primitive of the quadratic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for quadratic.
-  function primitive_uniform_quadratic_b_spline_at_x( x) result(primitive)
-    sll_real64, intent(in)  :: x !< position where to evaluate the primitive
-    sll_real64 :: primitive(3) !< value of the primitive for each of the three intervals.
-
-    sll_real64 :: xx(2)
-
-    xx(1) = x**2
-    xx(2) = x*xx(1)
-
-    primitive(3) = xx(2)/6.0_f64
-    primitive(2) = (x + xx(1))*0.5_f64-xx(2)/3.0_f64
-    primitive(1) = (1.0_f64 - (1.0_f64-x)**3)/6.0_f64
-
-  end function primitive_uniform_quadratic_b_spline_at_x
-
-
-
+!PN DEFINED BUT NOT USED
+!PN   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
+!PN   function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
+!PN     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
+!PN     sll_real64 :: primitive(4) !< value of the primitive for each of the four intervals.
+!PN 
+!PN     sll_real64 :: xx(3)
+!PN 
+!PN     xx(1) = x**2
+!PN     xx(2) = x*xx(1)
+!PN     xx(3) = x*xx(2)
+!PN 
+!PN     primitive(4) = xx(3)/24.0_f64
+!PN     primitive(3) = (x + 1.5_f64*xx(1) + xx(2) - 0.75_f64* xx(3))/6.0_f64
+!PN     primitive(2) = (4.0_f64*x - 2.0_f64* xx(2) + 0.75_f64* xx(3))/6.0_f64
+!PN     primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
+!PN 
+!PN   end function primitive_uniform_cubic_b_spline_at_x
+!PN 
+!PN   !> Compute the primitive of the quadratic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for quadratic.
+!PN   function primitive_uniform_quadratic_b_spline_at_x( x) result(primitive)
+!PN     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
+!PN     sll_real64 :: primitive(3) !< value of the primitive for each of the three intervals.
+!PN 
+!PN     sll_real64 :: xx(2)
+!PN 
+!PN     xx(1) = x**2
+!PN     xx(2) = x*xx(1)
+!PN 
+!PN     primitive(3) = xx(2)/6.0_f64
+!PN     primitive(2) = (x + xx(1))*0.5_f64-xx(2)/3.0_f64
+!PN     primitive(1) = (1.0_f64 - (1.0_f64-x)**3)/6.0_f64
+!PN 
+!PN   end function primitive_uniform_quadratic_b_spline_at_x
+!PN 
+!PN 
+!PN 
 
 end module sll_m_hamiltonian_splitting_pic_vm_1d2v

@@ -235,6 +235,8 @@ contains
     sll_real64, dimension(:,:), intent(out) :: output      
     
     print *,'#oblic_advect_2d not implemented for the moment'
+    print*, size(input,1), size(input,2), storage_size(adv)
+    output = 0.0_f64 + A1*A2*dt
           
   end subroutine oblic_advect_2d
 

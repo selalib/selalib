@@ -1,0 +1,5 @@
+ADD_LIBRARY(nufft STATIC dirft1d.f dirft2d.f next235.f nufft1df90.f nufft2df90.f dfftpack.f)
+ADD_EXECUTABLE(test_nufft1d nufft1d_demof90.f)
+TARGET_LINK_LIBRARIES(test_nufft1d nufft)
+ADD_EXECUTABLE(test_nufft2d nufft2d_demof90.f)
+TARGET_LINK_LIBRARIES(test_nufft2d nufft)

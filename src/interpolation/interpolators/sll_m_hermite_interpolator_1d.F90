@@ -56,10 +56,11 @@ private
    procedure, pass :: get_coefficients => get_coefficients_hi1d
  end type sll_hermite_interpolator_1d
 
- !> Deallocate the class interpolator
- interface sll_delete
-   module procedure delete_hi1d
- end interface
+!PN DEFINED BUT NOT USED
+! !> Deallocate the class interpolator
+! interface sll_delete
+!   module procedure delete_hi1d
+! end interface
 
  public new_hermite_interpolator_1d
 
@@ -216,14 +217,18 @@ function interpolate_array_disp_hi1d(this, num_points, data, alpha) result(data_
 !data_out=this%hermite%data_out
     print*, 'interpolate_array_disp_hi1d:', &
          ' not implemented for hermite interpolation'
+    SLL_ASSERT(this%npts>0)
+    data_out = 0.0_f64 * alpha + data
 
 end function
 
-subroutine delete_hi1d (obj)
-  class(sll_hermite_interpolator_1d) :: obj
-  !should be fixed; for the moment just commented
-  !call delete(obj%hermite)
-end subroutine delete_hi1d
+!PN DEFINED BUT NOT USED
+!subroutine delete_hi1d (obj)
+!  class(sll_hermite_interpolator_1d) :: obj
+!  !should be fixed; for the moment just commented
+!  !call delete(obj%hermite)
+!    SLL_ASSERT(obj%npts>0)
+!end subroutine delete_hi1d
 
 
 subroutine interpolate_array_values_hi1d( &
@@ -236,7 +241,7 @@ subroutine interpolate_array_values_hi1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     !sll_int32 :: ierr
-    output_array = 0.0
+    output_array = 0.0_f64
     print*, 'interpolate_array_values:', &
          ' not implemented for hermite interpolation'
     print *,num_pts
@@ -244,6 +249,7 @@ subroutine interpolate_array_values_hi1d( &
     output_array = 0._f64
     !print *,interpolator%bc_type
     stop
+    SLL_ASSERT(interpolator%npts>0)
 end subroutine interpolate_array_values_hi1d
 
 
@@ -257,7 +263,7 @@ subroutine interpolate_array_derivatives_hi1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     !sll_int32 :: ierr
-    output_array = 0.0
+    output_array = 0.0_f64
     print*, 'interpolate_array_derivatives: ', &
          'not implemented for hermite interpolation'
     print *,num_pts
@@ -265,6 +271,7 @@ subroutine interpolate_array_derivatives_hi1d( &
     print *,maxval(output_array)
     !print *,interpolator%bc_type
     stop
+    SLL_ASSERT(interpolator%npts>0)
 end subroutine interpolate_array_derivatives_hi1d
 
 subroutine interpolate_pointer_derivatives_hi1d( &
@@ -284,6 +291,7 @@ subroutine interpolate_pointer_derivatives_hi1d( &
     print *,maxval(vals_to_interpolate)
     print *,maxval(output)
     stop
+    SLL_ASSERT(interpolator%npts>0)
 end subroutine interpolate_pointer_derivatives_hi1d
 
   function interpolate_derivative_eta1_hi1d( interpolator, eta1 ) result(val)
@@ -296,6 +304,7 @@ end subroutine interpolate_pointer_derivatives_hi1d
     print *,eta1
     val = 0._f64
     stop
+    SLL_ASSERT(interpolator%npts>0)
   end function
 
 subroutine interpolate_pointer_values_hi1d( &
@@ -315,19 +324,21 @@ subroutine interpolate_pointer_values_hi1d( &
     print *,maxval(output)
     !print *,interpolator%bc_type
     stop
+    SLL_ASSERT(interpolator%npts>0)
 end subroutine interpolate_pointer_values_hi1d
 
-  function interpolate_value_hi1d( interpolator, eta1 ) result(val)
-    class(sll_hermite_interpolator_1d), intent(in) :: interpolator
-    sll_real64 :: val
-    sll_real64, intent(in) :: eta1
-     print*, 'interpolate_value_hi1d: ', &
-         'not implemented for hermite interpolation'
-    val = 0._f64
-    print *,eta1
-    !print *,interpolator%bc_type
-    stop
-  end function
+!PN DEFINED BUT NOT USED
+!  function interpolate_value_hi1d( interpolator, eta1 ) result(val)
+!    class(sll_hermite_interpolator_1d), intent(in) :: interpolator
+!    sll_real64 :: val
+!    sll_real64, intent(in) :: eta1
+!     print*, 'interpolate_value_hi1d: ', &
+!         'not implemented for hermite interpolation'
+!    val = 0._f64
+!    print *,eta1
+!    !print *,interpolator%bc_type
+!    stop
+!  end function
 
   function reconstruct_array_hi1d(this, num_points, data) result(res)
     ! dummy procedure
@@ -340,46 +351,49 @@ end subroutine interpolate_pointer_values_hi1d
        print *,maxval(data)
        !print *,this%bc_type
        res(:) = 0.0_f64
+    SLL_ASSERT(this%npts>0)
   end function reconstruct_array_hi1d
 
-  function interpolate_array_hi1d(this, num_points, data, coordinates) &
-       result(data_out)
-    class(sll_hermite_interpolator_1d),  intent(in)       :: this
-    !class(sll_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: coordinates
-    sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
-    ! local variables
-    !sll_int32 :: ierr
-    print*, 'interpolate_array_hi1d: ', &
-         'not implemented for hermite interpolation'
-    print *,maxval(coordinates)
-    print *,maxval(data)
-    !print *,this%bc_type
-    data_out = 0._f64
-    stop
-  end function
+!PN DEFINED BUT NOT USED
+!  function interpolate_array_hi1d(this, num_points, data, coordinates) &
+!       result(data_out)
+!    class(sll_hermite_interpolator_1d),  intent(in)       :: this
+!    !class(sll_spline_1D),  intent(in)      :: this
+!    sll_int32,  intent(in)                 :: num_points
+!    sll_real64, dimension(:), intent(in)   :: coordinates
+!    sll_real64, dimension(:), intent(in)   :: data
+!    sll_real64, dimension(num_points)      :: data_out
+!    ! local variables
+!    !sll_int32 :: ierr
+!    print*, 'interpolate_array_hi1d: ', &
+!         'not implemented for hermite interpolation'
+!    print *,maxval(coordinates)
+!    print *,maxval(data)
+!    !print *,this%bc_type
+!    data_out = 0._f64
+!    stop
+!  end function
 
-    subroutine compute_interpolants_hi1d( interpolator, data_array,&
-         eta_coords, &
-         size_eta_coords)
-      class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
-    sll_real64, dimension(:), intent(in)               :: data_array
-    sll_real64, dimension(:), intent(in),optional  :: eta_coords
-    sll_int32, intent(in),optional                 :: size_eta_coords
-    print*, 'compute_interpolants_hi1d:', &
-         ' not implemented for hermite interpolation'
-    if(present(eta_coords))then
-      print *,'eta_coords present but not used'
-    endif
-    if(present(size_eta_coords))then
-      print *,'size_eta_coords present but not used'
-    endif
-    print *,maxval(data_array)
-    !print *,interpolator%bc_type
-    stop
-  end subroutine
+!PN DEFINED BUT NOT USED
+!   subroutine compute_interpolants_hi1d( interpolator, data_array,&
+!        eta_coords, &
+!        size_eta_coords)
+!     class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
+!   sll_real64, dimension(:), intent(in)               :: data_array
+!   sll_real64, dimension(:), intent(in),optional  :: eta_coords
+!   sll_int32, intent(in),optional                 :: size_eta_coords
+!   print*, 'compute_interpolants_hi1d:', &
+!        ' not implemented for hermite interpolation'
+!   if(present(eta_coords))then
+!     print *,'eta_coords present but not used'
+!   endif
+!   if(present(size_eta_coords))then
+!     print *,'size_eta_coords present but not used'
+!   endif
+!   print *,maxval(data_array)
+!   !print *,interpolator%bc_type
+!   stop
+! end subroutine
 
   subroutine set_coefficients_hi1d( interpolator, coeffs )
     class(sll_hermite_interpolator_1d),  intent(inout) :: interpolator
@@ -391,6 +405,7 @@ end subroutine interpolate_pointer_values_hi1d
     endif
     !print *,interpolator%bc_type
     stop
+    SLL_ASSERT(interpolator%npts > 0)
   end subroutine set_coefficients_hi1d
 
 
@@ -400,7 +415,7 @@ end subroutine interpolate_pointer_values_hi1d
 
     print *, 'get_coefficients_hi1d(): ERROR: This function has not been ', &
          'implemented yet.'
-    !print *,interpolator%bc_type
+    SLL_ASSERT(interpolator%npts>0)
     get_coefficients_hi1d => null()
     stop
   end function get_coefficients_hi1d

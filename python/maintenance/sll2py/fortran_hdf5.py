@@ -1,0 +1,38 @@
+kind_type_parameters = [ \
+'HID_T',
+'HSIZE_T',
+'HSSIZE_T',
+'SIZE_T',
+]
+
+datatypes = [ \
+'H5T_NATIVE_INTEGER',
+'H5T_NATIVE_REAL',
+'H5T_NATIVE_DOUBLE',
+'H5T_NATIVE_CHARACTER',
+'H5T_STD_REF_OBJ',
+'H5T_STD_REF_DSETREG',
+'H5T_IEEE_F32BE',
+'H5T_IEEE_F32LE',
+'H5T_IEEE_F64BE',
+'H5T_IEEE_F64LE',
+'H5T_STD_I8BE',
+'H5T_STD_I8LE',
+'H5T_STD_I16BE',
+'H5T_STD_I16LE',
+'H5T_STD_I32BE',
+'H5T_STD_I32LE',
+'H5T_STD_I64BE',
+'H5T_STD_I64LE',
+'H5T_STD_U8BE',
+'H5T_STD_U8LE',
+'H5T_STD_U16BE',
+'H5T_STD_U16LE',
+'H5T_STD_U32BE',
+'H5T_STD_U32LE',
+'H5T_STD_U64BE',
+'H5T_STD_U64LE',
+]
+
+symbols_list    = kind_type_parameters + datatypes
+symbols_pattern = r'h5\w+_f'

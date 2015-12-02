@@ -25,12 +25,15 @@ end function new_hermite_aligned_interpolation_2d
 
 subroutine initialize_hermite_aligned_interpolation_2d( interp )
   type(sll_hermite_aligned_interpolation_2d) :: interp
-  sll_int32 :: r1 
-  sll_int32 :: s1 
-  sll_int32 :: r2 
-  sll_int32 :: s2
-  sll_int32 :: num_cells_x1 
-  sll_int32 :: num_cells_x2 
+! sll_int32 :: r1 
+! sll_int32 :: s1 
+! sll_int32 :: r2 
+! sll_int32 :: s2
+! sll_int32 :: num_cells_x1 
+! sll_int32 :: num_cells_x2 
+  return
+  SLL_ASSERT(interp%eta_max(1)>=interp%eta_min(1))
+  SLL_ASSERT(interp%eta_max(2)>=interp%eta_min(2))
    
 end subroutine initialize_hermite_aligned_interpolation_2d 
 

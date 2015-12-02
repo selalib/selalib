@@ -1,0 +1,52 @@
+program sim_pic_vp_1d1v_cart
+
+#include "sll_working_precision.h"
+    
+    use sll_m_sim_pic_vp_1d1v_cart, only: &
+      sll_simulation_pic1d1v_vp_periodic, &
+      sll_delete
+    
+    use sll_m_collective, only: &
+      sll_world_collective,   &
+      sll_collective_barrier, &
+      sll_boot_collective,    &
+      sll_get_collective_rank,&
+      sll_halt_collective
+    
+    implicit none
+!==============================================================================
+
+  character(len=256) :: filename
+  character(len=256) :: filename_local
+  sll_int32          :: coll_rank
+
+  type( sll_simulation_pic1d1v_vp_periodic ) :: simulation
+
+!==============================================================================
+
+  call sll_boot_collective()
+  coll_rank = sll_get_collective_rank( sll_world_collective )
+  if( coll_rank == 0 ) print *, '#Booting parallel environment...'
+
+  ! In this test, the name of the file to open is provided as a command line
+  ! argument.
+  call get_command_argument(1, filename)
+  filename_local = trim(filename)
+
+  call simulation%init_from_file( filename_local )
+  if( coll_rank == 0 ) print *, 'simulation initialized from file'
+
+  call simulation%new_pic()
+  if( coll_rank == 0 ) print *, 'parallel PIC ready to run'
+
+  call simulation%run( )
+  if( coll_rank == 0 ) print *, 'run completed'
+
+!  call sll_delete( simulation )
+
+  if( coll_rank == 0 ) print *, 'reached end of pic1d1v_vp_periodic test'
+  if( coll_rank == 0 ) print *, 'PASSED'
+
+  call sll_halt_collective()
+
+end program sim_pic_vp_1d1v_cart

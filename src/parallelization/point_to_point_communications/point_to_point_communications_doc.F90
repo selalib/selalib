@@ -14,6 +14,8 @@
 !> Draft for domain partitioning. 
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
+!> @contact
+!> Laurent Navoret, IRMA
 !> @details
 !> Should be deleted and will be replaced by new implementation. However, eulerian-finite-volume.
 !>

@@ -1,3 +1,4 @@
+!Old test for general elliptic solver made by Aurore
 program test_general_elliptic_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -10,6 +11,51 @@ use sll_m_constants
 use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_m_timer
 use sll_m_deboor_splines_2d
+use m_init_functions, only: &
+  func_zero, &
+  func_four, &
+  func_one, &
+  func_epsi, &
+  source_term_perper, &
+  source_term_perdir, &
+  source_term_dirper, &
+  source_term_chgt_perper, &
+  source_term_chgt_perdir, &
+  source_term_chgt_dirper, &
+  source_term_chgt_dirdir, &
+  f_sin, u_sin, u_sin_der1, u_sin_der2, &
+  f_cos, u_cos, u_cos_der1, u_cos_der2, &
+  sol_exacte_perper, &
+  sol_exacte_perper_der1, &
+  sol_exacte_perper_der2, &
+  sol_exacte_perdir  , &
+  sol_exacte_perdir_der1, &
+  sol_exacte_perdir_der2, &
+  sol_exacte_dirper, &
+  sol_exacte_dirper_der1, &
+  sol_exacte_dirper_der2, &
+  sol_exacte_chgt_perper, &
+  sol_exacte_chgt_perper_der1, &
+  sol_exacte_chgt_perper_der2, &
+  sol_exacte_chgt_perdir  , &
+  sol_exacte_chgt_perdir_der1, &
+  sol_exacte_chgt_perdir_der2, &
+  sol_exacte_chgt_dirper, &
+  sol_exacte_chgt_dirper_der1, &
+  sol_exacte_chgt_dirper_der2, &
+  sol_exacte_chgt_dirdir, &
+  sol_exacte_chgt_dirdir_der1, &
+  sol_exacte_chgt_dirdir_der2, &
+  adimension_chgt_x, &
+  adimension_chgt_y, &
+  jac11_adimension_chgt, &
+  jac12_adimension_chgt, &
+  jac21_adimension_chgt, &
+  jac22_adimension_chgt, &
+  sol_exacte_chgt_adim, &
+  source_term_chgt_adim
+
+
 
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack
@@ -47,21 +93,6 @@ type(sll_scalar_field_2d_discrete), pointer               :: phi
 type(sll_time_mark)                                       :: t_reference
 
 sll_real64 :: ti(16), te(16)
-
-real(8), external :: func_zero
-real(8), external :: func_four
-real(8), external :: func_one
-real(8), external :: func_epsi
-real(8), external :: source_term_perper
-real(8), external :: source_term_perdir
-real(8), external :: source_term_dirper
-real(8), external :: source_term_chgt_perper
-real(8), external :: source_term_chgt_perdir
-real(8), external :: source_term_chgt_dirper
-real(8), external :: source_term_chgt_dirdir
-real(8), external :: f_sin, u_sin, u_sin_der1, u_sin_der2
-real(8), external :: f_cos, u_cos, u_cos_der1, u_cos_der2
-
 sll_real64 :: acc(16)    
 sll_real64 :: normL2(16)
 sll_real64 :: normH1(16)
@@ -77,46 +108,16 @@ sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
 sll_int32  :: npts1,npts2
-sll_int32  :: ierr
-
-real(8), external :: sol_exacte_perper
-real(8), external :: sol_exacte_perper_der1
-real(8), external :: sol_exacte_perper_der2
-real(8), external :: sol_exacte_perdir  
-real(8), external :: sol_exacte_perdir_der1
-real(8), external :: sol_exacte_perdir_der2
-real(8), external :: sol_exacte_dirper
-real(8), external :: sol_exacte_dirper_der1
-real(8), external :: sol_exacte_dirper_der2
-real(8), external :: sol_exacte_chgt_perper
-real(8), external :: sol_exacte_chgt_perper_der1
-real(8), external :: sol_exacte_chgt_perper_der2
-real(8), external :: sol_exacte_chgt_perdir  
-real(8), external :: sol_exacte_chgt_perdir_der1
-real(8), external :: sol_exacte_chgt_perdir_der2
-real(8), external :: sol_exacte_chgt_dirper
-real(8), external :: sol_exacte_chgt_dirper_der1
-real(8), external :: sol_exacte_chgt_dirper_der2
-real(8), external :: sol_exacte_chgt_dirdir
-real(8), external :: sol_exacte_chgt_dirdir_der1
-real(8), external :: sol_exacte_chgt_dirdir_der2
-real(8), external :: adimension_chgt_x
-real(8), external :: adimension_chgt_y
-real(8), external :: jac11_adimension_chgt
-real(8), external :: jac12_adimension_chgt
-real(8), external :: jac21_adimension_chgt
-real(8), external :: jac22_adimension_chgt
-real(8), external :: sol_exacte_chgt_adim
-real(8), external :: source_term_chgt_adim
+!sll_int32  :: ierr
 
 real(8) :: integral_solution
 real(8) :: integral_exact_solution
 
-CHARACTER(len=10) :: cmd
+character(len=10) :: cmd
 integer           :: itest1
 integer           :: itest2
 character(len=4)  :: ccase
-sll_int32         :: file_id
+!sll_int32         :: file_id
 
 
 sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
@@ -668,7 +669,7 @@ do k = itest1, itest2
 
   do j=1,npts2
     do i=1,npts1
-      tab_rho(i,j) = source_term_perper(eta1(i),eta2(j))
+      tab_rho(i,j) = source_term_perper( eta1(i), eta2(j), whatever )
     end do
   end do
   
@@ -701,7 +702,7 @@ do k = itest1, itest2
     grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
     grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
     reference(i,j) = ref
-    val_jac = 1.0
+    val_jac = 1.0_f64
     if(PRINT_COMPARISON) call printout_comparison()
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val * h1*h2
@@ -741,12 +742,12 @@ do k = itest1, itest2
   
   do j=1,npts2
   do i=1,npts1
-    tab_rho(i,j) = source_term_chgt_perper(eta1(i),eta2(j))
+    tab_rho(i,j) = source_term_chgt_perper( eta1(i), eta2(j), whatever )
   end do
   end do
   
   rhs_interp => interp_2d_rhs
-  tab_rho(:,:) = tab_rho - sum(tab_rho)/(NUM_CELLS1*NUM_CELLS2)
+  tab_rho(:,:) = tab_rho - sum(tab_rho)/real(NUM_CELLS1*NUM_CELLS2,f64)
 
   rho => new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
@@ -821,7 +822,7 @@ do k = itest1, itest2
 
   do j=1,npts2
   do i=1,npts1
-    tab_rho(i,j) = source_term_chgt_perdir(eta1(i),eta2(j))
+    tab_rho(i,j) = source_term_chgt_perdir( eta1(i), eta2(j), whatever )
   end do
   end do
 
@@ -902,7 +903,7 @@ do k = itest1, itest2
 
   do j=1,npts2
   do i=1,npts1
-    tab_rho(i,j)  = source_term_chgt_dirdir(eta1(i),eta2(j))
+    tab_rho(i,j)  = source_term_chgt_dirdir( eta1(i), eta2(j), whatever )
   end do
   end do
 
@@ -984,7 +985,7 @@ do k = itest1, itest2
 
   do j=1,npts2
      do i=1,npts1
-        tab_rho(i,j)  = source_term_chgt_dirper(eta1(i),eta2(j))
+        tab_rho(i,j)  = source_term_chgt_dirper( eta1(i), eta2(j), whatever )
      end do
   end do
   
@@ -1073,7 +1074,7 @@ do k = itest1, itest2
 
   do j = 1, npts2
   do i = 1, npts1
-    values(i,j) = u_sin(eta1(i),eta2(j))
+    values(i,j) = u_sin( eta1(i), eta2(j) )
   end do
   end do
 
@@ -1507,7 +1508,7 @@ subroutine check_error(icase)
 integer, intent(in) :: icase
 print"('integral solution       =',g15.3)", integral_solution
 print"('integral exact solution =',g15.3)", integral_exact_solution
-acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
+acc(icase) = sum(abs(calculated-reference))/real(npts1*npts2,f64)
 if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
     (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-2))) then     
    print"('test:',i2,4x,'error=',g15.3, 4x, 'OK' )", icase, acc(icase)

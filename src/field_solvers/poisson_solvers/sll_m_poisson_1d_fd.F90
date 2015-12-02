@@ -187,7 +187,8 @@ contains
 
         !FFT--------------------------------------------------------------------------------------
         !To get the same output as in the MATLAB example use
-        SLL_CLEAR_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        SLL_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        this%fd_matrix_first_line_fourier = (0._f64,0._f64)
         this%forward_fftplan => fft_new_plan(this%num_cells,this%fd_solution,this%fd_matrix_first_line_fourier, &
             FFT_FORWARD+FFT_NORMALIZE)
         this%backward_fftplan=>fft_new_plan(this%num_cells,this%fd_matrix_first_line_fourier,this%fd_solution, &
@@ -197,7 +198,8 @@ contains
         !------------------------------------------------------------------------------------------
         !prepare fourier transformation for stiffness matrix
 
-        SLL_CLEAR_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        SLL_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
+        this%fd_matrix_first_line_fourier = (0._f64,0._f64)
 
         call sll_poisson_1d_fd_assemble_fd_matrix(this,ierr)
 
@@ -221,7 +223,7 @@ contains
         class(poisson_1d_fd),intent(in) :: this     !< Solver data structure
         procedure (poisson_1d_fd_rhs_function) :: eval_function
         sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
-        sll_int32 :: ierr=0
+        !sll_int32 :: ierr=0
         sll_real64, dimension(this%num_cells+1) :: evalpoints
         evalpoints=eval_function(this%cartesian_mesh%eta1_nodes())
         !Map to right hand side according to boundary condition
@@ -230,7 +232,7 @@ contains
         selectcase(this%boundarycondition)
             case(SLL_PERIODIC)
             case(SLL_DIRICHLET)
-                rhs(1)=0
+                rhs(1)=0._f64
         endselect
 
     endfunction
@@ -257,7 +259,7 @@ contains
         !this is the first line of the matrix
         ! (c_1  0 0  0  .... c_4   c_3  c_2)
         !Note this only works because the period is symmetric
-        circulantvector=0
+        circulantvector=0._f64
         !circulantvector(1)=circulant_matrix_first_line(1)
         !circulantvector(2:N)=circulant_matrix_first_line(N:2:-1)
 !        circulantvector=circulantvector
@@ -282,8 +284,8 @@ contains
         class(poisson_1d_fd),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out)                :: ierr    !< error code
 
-        sll_real64, dimension(this%fd_degree*3) :: period
-        sll_int32 :: periodlen
+        !sll_real64, dimension(this%fd_degree*3) :: period
+        !sll_int32 :: periodlen
 
         SLL_CLEAR_ALLOCATE(this%fd_matrix_first_line(1:this%num_cells),ierr)
         this%fd_matrix_first_line=0.0_f64
@@ -322,7 +324,7 @@ contains
 
 
         if (  this%boundarycondition==SLL_DIRICHLET ) then
-            this%fd_solution(1)=0
+            this%fd_solution(1)=0._f64
         endif
 
             this%fd_solution=this%fd_solution*this%cartesian_mesh%delta_eta*2
@@ -377,15 +379,17 @@ contains
 
         !Determine dimension of problem
 
-        SLL_CLEAR_ALLOCATE(constant_factor_fourier(1:N/2+1), ierr)
-        SLL_CLEAR_ALLOCATE(data_complex(1:N/2+1),ierr)
-        constant_factor=0
+        SLL_ALLOCATE(constant_factor_fourier(1:N/2+1), ierr)
+        constant_factor_fourier = (0._f64,0._f64)
+        SLL_ALLOCATE(data_complex(1:N/2+1),ierr)
+        data_complex = (0._f64,0._f64)
+        constant_factor=0._f64
         constant_factor=rightside
 
         call fft_apply_plan(this%forward_fftplan,constant_factor,constant_factor_fourier)
         !constant_factor_fourier(1)=0
         data_complex=constant_factor_fourier/(matrix_fl_fourier)
-        data_complex(1)=0
+        data_complex(1)=(0._f64,0._f64)
         SLL_DEALLOCATE_ARRAY(constant_factor_fourier,ierr)
 
         call fft_apply_plan(this%backward_fftplan,data_complex,solution)
@@ -424,13 +428,13 @@ contains
         SLL_ASSERT( size(knots_eval)==size(realvals))
         SLL_ASSERT( this%num_cells==size(bspline_vector))
 
-        realvals=0
+        realvals=0._f64
 
         cell=sll_cell(this%cartesian_mesh, knots_eval)
         !cell= bspline_fem_solver_1d_cell_number(knots_mesh, knots_eval(eval_idx))
         !Loop over all points to evaluate
         !This should be vectorizzed
-        do eval_idx=1,size(knots_eval)
+        do eval_idx=1,int(size(knots_eval),i64)
             !Get the values for the spline at the eval point
             b_contribution(:,eval_idx)=interpolfun(this%bspline,cell(eval_idx), knots_eval(eval_idx))
         enddo
@@ -486,10 +490,11 @@ contains
         class(poisson_1d_fd),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
-        sll_real64, dimension(this%bspline%degree+1) :: b_contribution
-        sll_real64 :: celldx
-        sll_int :: b_idx, idx
-        sll_int :: b_contrib_idx
+        !sll_real64, dimension(this%bspline%degree+1) :: b_contribution
+        !sll_real64 :: celldx
+        !sll_int :: b_idx
+        !sll_int :: idx
+        !sll_int :: b_contrib_idx
       
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
@@ -516,7 +521,7 @@ contains
             N=size(this%fd_solution)
 
             !This is a really bad way to do it
-            seminorm=sum(this%fd_solution_deriv**2)/N**2 !&
+            seminorm=sum(this%fd_solution_deriv**2)/real(N**2,8) !&
                             !/(this%cartesian_mesh%eta_max -this%cartesian_mesh%eta_min))/N
                             !+(this%fd_solution(1:N-1)-this%fd_solution(2:N))
         endfunction
@@ -564,12 +569,12 @@ contains
         SLL_ASSERT(size(ppos)==size(pweight))
 
         knots=this%cartesian_mesh%eta1_nodes()
-        knotsvals=0
+        knotsvals=0._f64
         do idx=1,npart
             knotsvals=shf(ppos(idx), knots)*pweight(idx)
         enddo
 
-        rhs=0
+        rhs=0._f64
         selectcase(this%boundarycondition)
             case(SLL_PERIODIC)
                 !Last knot is identical with the first knot
@@ -594,13 +599,13 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
         sll_real64, dimension(:), intent(in) :: solution
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
         sll_real64 :: celldx
-        sll_int :: b_idx, idx, jdx
+        sll_int :: b_idx, idx!, jdx
         sll_int :: b_contrib_idx
       
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
          print *, b_splines_at_x(this%bspline,1, this%cartesian_mesh%delta_eta*0)
 
-         eval_solution=0
+         eval_solution=0._f64
  
         do idx=1,size(knots_eval)
 
@@ -640,12 +645,12 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%num_cells) :: rhs
          sll_int32 :: idx
-        sll_int32, dimension( size(ppos) ) :: cell
+        !sll_int32, dimension( size(ppos) ) :: cell
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
         sll_real64 :: celldx
         sll_int :: b_idx
         sll_int :: b_contrib_idx
-        rhs=0
+        rhs=0._f64
 
         SLL_ASSERT( (size(pweight)==size(ppos) .OR. size(pweight)==1))
  
@@ -719,7 +724,7 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
         class(poisson_1d_fd),intent(in) :: this     !< Solver data structure
         procedure (poisson_1d_fd_rhs_function) :: eval_function
         sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
-        sll_int32 :: idx 
+        !sll_int32 :: idx 
         sll_real64, dimension(this%num_cells +1)  :: knots
         
         
@@ -739,33 +744,33 @@ subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
  SELECT CASE (order)
  CASE (2)
       ! Order = 2 
-this%stenw_dx=(/-1/2, 0, 1/2/)
-this%stenw_dxdx=(/1, -2, 1/)
+this%stenw_dx=(/-1._f64/2._f64, 0._f64, 1._f64/2._f64/)
+this%stenw_dxdx=(/1._f64, -2._f64, 1._f64/)
 
 CASE (4)
   ! Order = 4
-this%stenw_dx=(/1/12, -2/3, 0, 2/3, -1/12/)
-this%stenw_dxdx=(/-1/12, 4/3, -5/2, 4/3, -1/12/)
+this%stenw_dx=(/1._f64/12._f64, -2._f64/3._f64, 0._f64, 2._f64/3._f64, -1._f64/12._f64/)
+this%stenw_dxdx=(/-1._f64/12._f64, 4._f64/3._f64, -5._f64/2._f64, 4._f64/3._f64, -1._f64/12._f64/)
     
    CASE (6)
     ! Order = 6
-this%stenw_dx=(/-1/60, 3/20, -3/4, 0, 3/4, -3/20, 1/60/)
-this%stenw_dxdx=(/1/90, -3/20, 3/2, -49/18, 3/2, -3/20, 1/90/)
+this%stenw_dx=(/-1._f64/60._f64, 3._f64/20._f64, -3._f64/4._f64, 0._f64, 3._f64/4._f64, -3._f64/20._f64, 1._f64/60._f64/)
+this%stenw_dxdx=(/1._f64/90._f64, -3._f64/20._f64, 3._f64/2._f64, -49._f64/18._f64, 3._f64/2._f64, -3._f64/20._f64, 1._f64/90._f64/)
 
 CASE (8)
 ! Order = 8
-this%stenw_dx=(/1/280, -4/105, 1/5, -4/5, 0, 4/5, -1/5, 4/105, -1/280/)
-this%stenw_dxdx=(/-1/560, 8/315, -1/5, 8/5, -205/72, 8/5, -1/5, 8/315, -1/560/)
+this%stenw_dx=(/1._f64/280._f64, -4._f64/105._f64, 1._f64/5._f64, -4._f64/5._f64, 0._f64, 4._f64/5._f64, -1._f64/5._f64, 4._f64/105._f64, -1._f64/280._f64/)
+this%stenw_dxdx=(/-1._f64/560._f64, 8._f64/315._f64, -1._f64/5._f64, 8._f64/5._f64, -205._f64/72._f64, 8._f64/5._f64, -1._f64/5._f64, 8._f64/315._f64, -1._f64/560._f64/)
 
 CASE(10)
 ! Order = 10
-this%stenw_dx=(/-1/1260, 5/504, -5/84, 5/21, -5/6, 0, 5/6, -5/21, 5/84, -5/504, 1/1260/)
-this%stenw_dxdx=(/1/3150, -5/1008, 5/126, -5/21, 5/3, -5269/1800, 5/3, -5/21, 5/126, -5/1008, 1/3150/)
+this%stenw_dx=(/-1._f64/1260._f64, 5._f64/504._f64, -5._f64/84._f64, 5._f64/21._f64, -5._f64/6._f64, 0._f64, 5._f64/6._f64, -5._f64/21._f64, 5._f64/84._f64, -5._f64/504._f64, 1._f64/1260._f64/)
+this%stenw_dxdx=(/1._f64/3150._f64, -5._f64/1008._f64, 5._f64/126._f64, -5._f64/21._f64, 5._f64/3._f64, -5269._f64/1800._f64, 5._f64/3._f64, -5._f64/21._f64, 5._f64/126._f64, -5._f64/1008._f64, 1._f64/3150._f64/)
 
 CASE(12)
 ! Order = 12
-this%stenw_dx=(/1/5544, -1/385, 1/56, -5/63, 15/56, -6/7, 0, 6/7, -15/56, 5/63, -1/56, 1/385, -1/5544/)
-this%stenw_dxdx=(/-1/16632, 2/1925, -1/112, 10/189, -15/56, 12/7, -5369/1800, 12/7, -15/56, 10/189, -1/112, 2/1925, -1/16632/)
+this%stenw_dx=(/1._f64/5544._f64, -1._f64/385._f64, 1._f64/56._f64, -5._f64/63._f64, 15._f64/56._f64, -6._f64/7._f64, 0._f64, 6._f64/7._f64, -15._f64/56._f64, 5._f64/63._f64, -1._f64/56._f64, 1._f64/385._f64, -1._f64/5544._f64/)
+this%stenw_dxdx=(/-1._f64/16632._f64, 2._f64/1925._f64, -1._f64/112._f64, 10._f64/189._f64, -15._f64/56._f64, 12._f64/7._f64, -5369._f64/1800._f64, 12._f64/7._f64, -15._f64/56._f64, 10._f64/189._f64, -1._f64/112._f64, 2._f64/1925._f64, -1._f64/16632._f64/)
    CASE DEFAULT
       
 END SELECT

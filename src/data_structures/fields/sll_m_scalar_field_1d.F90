@@ -430,6 +430,10 @@ contains   ! *****************************************************************
 !!$         array_1d, &
 !!$         point_1d, &
 !!$         sz_point )
+
+    return
+    SLL_ASSERT(present(point_1d))
+    SLL_ASSERT(present(sz_point))
     
   end subroutine initialize_scalar_field_1d_discrete
   

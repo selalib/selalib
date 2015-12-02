@@ -10,3 +10,6 @@ TARGET_LINK_LIBRARIES( sll_quadrature sll_splines
                                       sll_meshes
                                       sll_memory
                                       sll_utilities)
+IF(BUILD_TESTING)
+  ADD_SUBDIRECTORY( testing )
+ENDIF(BUILD_TESTING)

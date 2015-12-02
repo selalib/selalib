@@ -1,6 +1,7 @@
 module sll_m_lobatto_poisson
 
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 
   use sll_m_coordinate_transformation_2d_base
   use sll_m_coordinate_transformations_2d
@@ -65,6 +66,7 @@ subroutine solve_lobatto_poisson(this, rhs, ex, ey)
   type(sll_dg_field_2d)        :: ex
   type(sll_dg_field_2d)        :: ey
 
+  SLL_ASSERT(this%order>0)
   call assemb_rhs(rhs%array)
   call compute_phi()
   call compute_electric_field(ex%array, ey%array)
@@ -77,6 +79,7 @@ subroutine delete_lobatto_poisson(this)
 
   call plotgmsh()
   call release()
+  SLL_ASSERT(this%order>0)
 
 end subroutine delete_lobatto_poisson
 

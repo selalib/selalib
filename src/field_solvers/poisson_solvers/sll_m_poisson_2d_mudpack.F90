@@ -309,6 +309,7 @@ contains
     sll_real64, intent(in), optional  :: cy
     sll_real64, intent(in), optional  :: ce
     sll_int32 :: ierr
+
     !!!! begin variables for mudpack 
     sll_int32,  parameter   :: iixp = 2 , jjyq = 2
     sll_int32               :: icall, iiex, jjey, llwork
@@ -328,12 +329,7 @@ contains
     common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
     equivalence(intl,iprm)
     equivalence(xa,fprm)
-    !declare coefficient and boundary condition input subroutines external
-    external mudpack_cofx,mudpack_cofy,mudpack_bndsp
-    external mudpack_cof,mudpack_cofcr
     !!!! end variables for mudpack 
-
-
 
     nx = nc_eta1+1
     ny = nc_eta2+1
@@ -396,7 +392,7 @@ contains
     yd = eta2_max
 
     !set for no error control flag
-    tolmax = 0.0
+    tolmax = 0.0_f64
 
 !    write(*,101) (iprm(i),i=1,15)
 !    write(*,102) (poisson%mgopt(i),i=1,4)
@@ -405,13 +401,6 @@ contains
 
 !call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
-
-
-
-
-
-
-        
     poisson%mudpack_case = mudpack_case 
 
     poisson%cxx_2d_interp => null()
@@ -1059,7 +1048,6 @@ contains
         stop 
     end select
 
-        
   end subroutine initialize_poisson_2d_mudpack
   
   ! solves \Delta phi = -rho in 2d
@@ -1086,9 +1074,6 @@ contains
     equivalence(intl,iprm)
     equivalence(xa,fprm)
 
-    !declare coefficient and boundary condition input subroutines external
-    external mudpack_cofx,mudpack_cofy,mudpack_bndsp
-    external mudpack_cof,mudpack_cofcr
     !set initial guess because solve should be called every time step in a
     !time dependent problem and the elliptic operator does not depend on time.
     iguess = poisson%iguess
@@ -1231,80 +1216,67 @@ contains
       
   end subroutine compute_E_from_rho_2d_mudpack
   
+  !> input x dependent coefficients
+  subroutine mudpack_cofx(x,cxx,cx,cex)
+    real(8)  :: x,cxx,cx,cex
+    cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
+    cx  = mudpack_wrapper%cx_1d_interp%interpolate_value(x)
+    cex = mudpack_wrapper%cex_1d_interp%interpolate_value(x)
+  end subroutine mudpack_cofx
+
+  !> input y dependent coefficients
+  subroutine mudpack_cofy(y,cyy,cy,cey)
+    real(8)  :: y,cyy,cy,cey
+    cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
+    cy  = mudpack_wrapper%cy_1d_interp%interpolate_value(y)
+    cey = mudpack_wrapper%cey_1d_interp%interpolate_value(y)
+  end subroutine mudpack_cofy
+
+  subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
+    real(8)  :: x,cxx,cx
+    real(8)  :: y,cyy,cy,ce
+    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
+    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
+    cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
+    cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
+    ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
+  end subroutine mudpack_cof
+
+  subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
+    real(8)  :: x,cxx,cx,cxy
+    real(8)  :: y,cyy,cy,ce
+    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
+    cxy = mudpack_wrapper%cxy_2d_interp%interpolate_value(x,y)
+    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
+    cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
+    cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
+    ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
+  end subroutine mudpack_cofcr
+
+  !> input mixed derivative b.c. to mud2sp
+  subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
+    integer  :: kbdy
+    real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
+    real(8)  :: xa,xb,yc,yd,tolmax,relmax
+    common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+
+    pe = 0.0_8
+    !subroutine not used in periodic case
+    if (kbdy == 1) then  ! x=xa boundary
+       y = xory
+       x = xa
+       alfa = -1.0_8
+       gbdy = px + alfa*pe
+       return
+    end if
+
+    if (kbdy == 4) then  ! y=yd boundary
+       y = yd
+       x = xory
+       alfa = 1.0_8
+       gbdy = py + alfa*pe
+       return
+    end if
+  end subroutine mudpack_bndsp
+
 end module sll_m_poisson_2d_mudpack
-
-!> input x dependent coefficients
-subroutine mudpack_cofx(x,cxx,cx,cex)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: x,cxx,cx,cex
-cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
-cx  = mudpack_wrapper%cx_1d_interp%interpolate_value(x)
-cex = mudpack_wrapper%cex_1d_interp%interpolate_value(x)
-return
-end
-
-!> input y dependent coefficients
-subroutine mudpack_cofy(y,cyy,cy,cey)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: y,cyy,cy,cey
-cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
-cy  = mudpack_wrapper%cy_1d_interp%interpolate_value(y)
-cey = mudpack_wrapper%cey_1d_interp%interpolate_value(y)
-return
-end
-
-subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: x,cxx,cx
-real(8)  :: y,cyy,cy,ce
-cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
-return
-end
-
-subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: x,cxx,cx,cxy
-real(8)  :: y,cyy,cy,ce
-cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cxy = mudpack_wrapper%cxy_2d_interp%interpolate_value(x,y)
-cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
-return
-end
-!> input mixed derivative b.c. to mud2sp
-subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
-use sll_m_poisson_2d_mudpack
-implicit none
-integer  :: kbdy
-real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
-real(8)  :: xa,xb,yc,yd,tolmax,relmax
-common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
-
-pe = 0.0
-!subroutine not used in periodic case
-if (kbdy == 1) then  ! x=xa boundary
-   y = xory
-   x = xa
-   alfa = -1.0
-   gbdy = px + alfa*pe
-   return
-end if
-
-if (kbdy == 4) then  ! y=yd boundary
-   y = yd
-   x = xory
-   alfa = 1.0
-   gbdy = py + alfa*pe
-   return
-end if
-end

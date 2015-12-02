@@ -1,3 +1,5 @@
+!Test for new version of general coordinates elliptic solver
+!made by Adnane and Michel
 program test_gces_full_periodic_prototype
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -15,39 +17,34 @@ use sll_m_general_coordinate_elliptic_solver
 use sll_m_cubic_spline_interpolator_2d
 implicit none
 
-type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
-class(sll_coordinate_transformation_2d_base), pointer     :: tau
-type(general_coordinate_elliptic_solver)                  :: es
-!type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
-class(sll_interpolator_2d_base), pointer :: interp_rho
-
-class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a12_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a21_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a22_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: b1_field_vect
-class(sll_scalar_field_2d_base), pointer                  :: b2_field_vect
-class(sll_scalar_field_2d_base), pointer                  :: c_field
-class(sll_scalar_field_2d_base), pointer                  :: rho
+type(sll_cartesian_mesh_2d),                  pointer :: mesh_2d
+class(sll_coordinate_transformation_2d_base), pointer :: tau
+type(general_coordinate_elliptic_solver)              :: es
+class(sll_interpolator_2d_base),              pointer :: interp_rho
+class(sll_scalar_field_2d_base),              pointer :: a11_field_mat
+class(sll_scalar_field_2d_base),              pointer :: a12_field_mat
+class(sll_scalar_field_2d_base),              pointer :: a21_field_mat
+class(sll_scalar_field_2d_base),              pointer :: a22_field_mat
+class(sll_scalar_field_2d_base),              pointer :: b1_field_vect
+class(sll_scalar_field_2d_base),              pointer :: b2_field_vect
+class(sll_scalar_field_2d_base),              pointer :: c_field
+class(sll_scalar_field_2d_base),              pointer :: rho
 
 sll_real64 :: acc
 sll_real64 :: normL2
-sll_real64 :: normH1
 
 sll_real64, dimension(:,:), allocatable :: values
 sll_real64, dimension(:,:), allocatable :: calculated
 sll_real64, dimension(:,:), allocatable :: reference
 
-
 sll_int32  :: i, j, k
+sll_int32  :: npts1,npts2
 sll_real64 :: h1,h2,node_val,ref
 sll_real64, dimension(:), allocatable  :: eta1
 sll_real64, dimension(:), allocatable  :: eta2
-sll_int32  :: npts1,npts2
-sll_int32  :: cell 
 
-real(8) :: integral_solution
-real(8) :: integral_exact_solution
+sll_real64 :: integral_solution
+sll_real64 :: integral_exact_solution
 sll_real64 :: x1 
 sll_real64 :: x2 
 
@@ -92,41 +89,41 @@ character(len=256) :: rho_interp2d_case
     rho_interp2d_case
 
 !default values
-num_cells1 = 128
-num_cells2 = 128
-spline_degree1 = 3
-spline_degree2 = 3
-eta1_min = 0._f64
-eta1_max = 1._f64
-eta2_min = 0._f64
-eta2_max = 1._f64
-alpha1 = 0._f64
-alpha2 = 0._f64
-mode1 = 1
-mode2 = 1
-rho_case = "SLL_ANALYTIC" 
+num_cells1        = 128
+num_cells2        = 128
+spline_degree1    = 3
+spline_degree2    = 3
+eta1_min          = 0._f64
+eta1_max          = 1._f64
+eta2_min          = 0._f64
+eta2_max          = 1._f64
+alpha1            = 0._f64
+alpha2            = 0._f64
+mode1             = 1
+mode2             =  1
+rho_case          = "SLL_ANALYTIC" 
 rho_interp2d_case = "SLL_CUBIC_SPLINES"
 
 call get_command_argument(1, filename)
-  if (len_trim(filename) .ne. 0)then
-      filename_loc = filename
-      filename_loc = adjustl(filename_loc)
-      open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
-        if( IO_stat /= 0 ) then
-          print *, '#failed to open file ', &
-          trim(filename)//'.nml'
-          STOP
-        end if
-      read(input_file, params) 
-      close(input_file)
-    else
-      print *,'#initialization with default parameters'    
-    endif
+
+if (len_trim(filename) .ne. 0)then
+  filename_loc = filename
+  filename_loc = adjustl(filename_loc)
+  open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
+    if( IO_stat /= 0 ) then
+      print *, '#failed to open file ', &
+      trim(filename)//'.nml'
+      STOP
+    end if
+  read(input_file, params) 
+  close(input_file)
+else
+  print *,'#initialization with default parameters'    
+endif
 
 print *,"#min of jacobian is ", &
   1._f64-alpha1*sll_pi/(eta1_max-eta1_min) &
   -alpha2*sll_pi/(eta2_max-eta2_min)
-
 
 params_mesh(1:4) = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
 params_rhs(1:4) = params_mesh(1:4)
@@ -136,15 +133,14 @@ SLL_ALLOCATE(values(num_cells1+1,num_cells2+1),ierr)
 SLL_ALLOCATE(calculated(num_cells1+1,num_cells2+1),ierr)
 SLL_ALLOCATE(reference(num_cells1+1,num_cells2+1),ierr)
 SLL_ALLOCATE(tab_rho(num_cells1+1,num_cells2+1),ierr)
-
 SLL_ALLOCATE(eta1(num_cells1+1),ierr)
 SLL_ALLOCATE(eta2(num_cells2+1),ierr)
 
 mesh_2d => new_cartesian_mesh_2d( num_cells1, &
                                   num_cells2, &
-                                  eta1_min,    &
-                                  eta1_max,    &
-                                  eta2_min,    &
+                                  eta1_min,   &
+                                  eta1_max,   &
+                                  eta2_min,   &
                                   eta2_max )
 acc   = 0.0_f64
 npts1 =  num_cells1 + 1
@@ -161,33 +157,21 @@ end do
 
 normL2 = 0.0_f64
 
-print*, "-------------------------------------------------------------"
-print*, " test case witout change of coordinates"
-print*, " dirichlet-dirichlet boundary conditions"
-print*, "-------------------------------------------------------------"
+print*, "-----------------------------------------------"
+print*, " test case with change of coordinates sinprod  "
+print*, " dirichlet-dirichlet boundary conditions       "
+print*, "-----------------------------------------------"
 
-!tau => new_coordinate_transformation_2d_analytic( &
-!&      "analytic",                                &
-!&      mesh_2d,                                   &
-!&      identity_x1,                               &
-!&      identity_x2,                               &
-!&      identity_jac11,                            &
-!&      identity_jac12,                            &
-!&      identity_jac21,                            &
-!&      identity_jac22,                            &
-!&      [0.0_f64]                                  )
-
-  tau => new_coordinate_transformation_2d_analytic( &
-       "analytic",                                &
-       mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
-       params_mesh )
-
+tau => new_coordinate_transformation_2d_analytic( &
+     "analytic",                                  &
+     mesh_2d,                                     &
+     sinprod_x1,                                  &
+     sinprod_x2,                                  &
+     sinprod_jac11,                               &
+     sinprod_jac12,                               &
+     sinprod_jac21,                               &
+     sinprod_jac22,                               &
+     params_mesh )
 
 a11_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
@@ -264,49 +248,57 @@ c_field => new_scalar_field_2d_analytic(       &
   [0.0_f64]  )
 
 select case (rho_interp2d_case)
+
   case ("SLL_CUBIC_SPLINES")
     interp_rho => new_cubic_spline_interpolator_2d( &
-      npts1, &                                
-      npts2, &                                
-      eta1_min, &                                    
-      eta1_max, &                                    
-      eta2_min, &                                    
-      eta2_max, &                                     
-      SLL_PERIODIC, &                                
+      npts1,                                        &                                
+      npts2,                                        &                                
+      eta1_min,                                     &                                    
+      eta1_max,                                     &                                    
+      eta2_min,                                     &                                    
+      eta2_max,                                     &                                     
+      SLL_PERIODIC,                                 &                                
       SLL_PERIODIC)                                
+
   case ("SLL_ARBITRARY_DEGREE_SPLINES")
-    interp_rho => new_arbitrary_degree_spline_interp2d(             &
-      npts1, &
-      npts2, &
-      eta1_min, &
-      eta1_max, &
-      eta2_min, &
-      eta2_max, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC, &
-      spline_degree1, &
+    interp_rho => new_arbitrary_degree_spline_interp2d( &
+      npts1,                                            &
+      npts2,                                            &
+      eta1_min,                                         &
+      eta1_max,                                         &
+      eta2_min,                                         &
+      eta2_max,                                         &
+      SLL_PERIODIC,                                     &
+      SLL_PERIODIC,                                     &
+      SLL_PERIODIC,                                     &
+      SLL_PERIODIC,                                     &
+      spline_degree1,                                   &
       spline_degree2 )
+
   case default
+
     SLL_ERROR("program", "bad value of rho_interp2d_case")
+
 end select
 
-if(rho_case=="SLL_ANALYTIC")then
-rho => new_scalar_field_2d_analytic( &
-&    rhs,                            &
-&    "rho",                          &     
-&    tau,                            &
-&    SLL_PERIODIC,                   &
-&    SLL_PERIODIC,                   &
-&    SLL_PERIODIC,                   &
-&    SLL_PERIODIC,                   &
-&    params_rhs )
-else if (rho_case=="SLL_DISCRETE")then
+if (rho_case=="SLL_ANALYTIC") then
+
+  rho => new_scalar_field_2d_analytic( &
+  &    rhs,                            &
+  &    "rho",                          &     
+  &    tau,                            &
+  &    SLL_PERIODIC,                   &
+  &    SLL_PERIODIC,                   &
+  &    SLL_PERIODIC,                   &
+  &    SLL_PERIODIC,                   &
+  &    params_rhs )
+
+else if (rho_case=="SLL_DISCRETE") then
+
   rho => new_scalar_field_2d_discrete( &
-       "rhototo",                   &
-       interp_rho,                  &
-       tau,                              &
+       "rhototo",                      &
+       interp_rho,                     &
+       tau,                            &
        SLL_PERIODIC,                   &
        SLL_PERIODIC,                   &
        SLL_PERIODIC,                   &
@@ -315,6 +307,7 @@ else if (rho_case=="SLL_DISCRETE")then
        num_cells1,                     &
        eta2,                           &
        num_cells2)  
+
   do j=1,npts2
     do i=1,npts1
       tab_rho(i,j) = rhs(eta1(i),eta2(j), params_rhs)
@@ -327,27 +320,28 @@ else if (rho_case=="SLL_DISCRETE")then
 else
   SLL_ERROR("program","bad value of rho_case")
 endif
-integral_solution = 0.0_f64
+
+integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
 
-call initialize_general_elliptic_solver_prototype( es,                  &
-&                spline_degree1,         &
-&                spline_degree2,         &
-&                npts1-1,          &
-&                npts2-1,          &
-&                ES_GAUSS_LEGENDRE,   &
-&                ES_GAUSS_LEGENDRE,   &
-&                SLL_PERIODIC,        &
-&                SLL_PERIODIC,        &
-&                SLL_PERIODIC,        &
-&                SLL_PERIODIC,        &
-&                eta1_min,             &
-&                eta1_max,             &
-&                eta2_min,             &
-&                eta2_max              )
+call initialize_general_elliptic_solver_prototype( es, &
+&                spline_degree1,                       &
+&                spline_degree2,                       &
+&                npts1-1,                              &
+&                npts2-1,                              &
+&                ES_GAUSS_LEGENDRE,                    &
+&                ES_GAUSS_LEGENDRE,                    &
+&                SLL_PERIODIC,                         &
+&                SLL_PERIODIC,                         &
+&                SLL_PERIODIC,                         &
+&                SLL_PERIODIC,                         &
+&                eta1_min,                             &
+&                eta1_max,                             &
+&                eta2_min,                             &
+&                eta2_max                              )
  
  
-call factorize_mat_es_prototype( es,            &
+call factorize_mat_es_prototype( es,  &
 &                      a11_field_mat, &
 &                      a12_field_mat, &
 &                      a21_field_mat, &
@@ -366,34 +360,22 @@ end do
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
 
-
 normL2 = 0.0_f64
 do j=1,npts2
 do i=1,npts1
-  x1 = tau%x1(eta1(i),eta2(j))
-  x2 = tau%x2(eta1(i),eta2(j))
+  x1              = tau%x1(eta1(i),eta2(j))
+  x2              = tau%x2(eta1(i),eta2(j))
   node_val        = phi(i,j)
   calculated(i,j) = node_val
-  !ref             = cos(2*sll_pi*x1) * cos(2*sll_pi*x2)
-  ref = sol( eta1(i), eta2(j), params_rhs )
+  ref             = sol( eta1(i), eta2(j), params_rhs )
   reference(i,j)  = ref
   normL2          = normL2 + (node_val-ref)**2*h1*h2
 end do
 end do
 
-integral_solution = sum(calculated)*h1*h2
+integral_solution       = sum(calculated)*h1*h2
 integral_exact_solution = sum(reference)*h1*h2
 
-!do j=-50,50
-!do i=-50,50
-!  write(42,*) i, j, phi(i,j) &
-!                  , cos(2*sll_pi*i*0.01_f64)*cos(2*sll_pi*j*0.01_f64)
-!end do
-!write(41,*) 
-!write(42,*) 
-!end do
-
-!call sll_delete(es)
 call rho%delete()
 call c_field%delete()
 call a11_field_mat%delete()
@@ -410,7 +392,7 @@ print*, ' L2 norm :', sqrt(normL2), &
   sqrt(normL2)/h1**(spline_degree1+1), &
   sqrt(normL2)/h1**(spline_degree1+2)
 if (sqrt(normL2) <= h1**(spline_degree1-1) ) then     
-   acc = sum(abs(calculated-reference))/(npts1*npts2)
+   acc = sum(abs(calculated-reference))/real(npts1*npts2,f64)
    print"('L_oo =',g15.3, 4x, 'OK' )", acc
 else
   stop 'FAILED'
@@ -424,6 +406,10 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 1.0_f64
 end function one
 
@@ -432,35 +418,38 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+#ifdef DEBUG
+real(8) :: dummy
+dummy = eta1+eta2+params(1)
+#endif
 res = 0.0_f64
 end function zero
 
 function rhs( eta1, eta2, params ) result(res)
-real(8), intent(in) :: eta1
-real(8), intent(in) :: eta2
+real(8), intent(in)               :: eta1
+real(8), intent(in)               :: eta2
 real(8), dimension(:), intent(in) :: params
-real(8) :: res
-real(8) :: pi
-real(8) :: x1
-real(8) :: x2
-real(8) :: L1
-real(8) :: L2
-real(8) :: mode1
-real(8) :: mode2
+real(8)                           :: res
+real(8)                           :: pi
+real(8)                           :: x1
+real(8)                           :: x2
+real(8)                           :: L1
+real(8)                           :: L2
+real(8)                           :: mode1
+real(8)                           :: mode2
+
 L1 = params(3)
 L2 = params(4)
 mode1 = params(5)
 mode2 = params(6)
 
-
-x1 = sinprod_x1(eta1,eta2, &
-  params)
-x2 = sinprod_x2(eta1,eta2, &
-  params)
-pi = 4d0*atan(1d0)
-res = (mode1*2d0*pi/L1)**2
-res = res+(mode2*2d0*pi/L2)**2
+x1  = sinprod_x1(eta1,eta2, params)
+x2  = sinprod_x2(eta1,eta2, params)
+pi  = 4._f64*atan(1._f64)
+res = (mode1*2.0_f64*pi/L1)**2
+res = res+(mode2*2.0_f64*pi/L2)**2
 res = -res*cos(2*pi*mode1*x1/L1)*cos(2*pi*mode2*x2/L2)
+
 end function rhs
 
 function sol( eta1, eta2, params ) result(res)
@@ -475,16 +464,15 @@ real(8) :: L1
 real(8) :: L2
 real(8) :: mode1
 real(8) :: mode2
+
 L1 = params(3)
 L2 = params(4)
 mode1 = params(5)
 mode2 = params(6)
-x1 = sinprod_x1(eta1,eta2, &
-  params)
-x2 = sinprod_x2(eta1,eta2, &
-  params)
-pi = 4d0*atan(1d0)
-res = cos(2d0*pi*mode1*x1/L1)*cos(2d0*pi*mode2*x2/L2)
+x1 = sinprod_x1(eta1,eta2, params)
+x2 = sinprod_x2(eta1,eta2, params)
+pi = 4._f64*atan(1._f64)
+res = cos(2.0_f64*pi*mode1*x1/L1)*cos(2.0_f64*pi*mode2*x2/L2)
 end function sol
 
 end program test_gces_full_periodic_prototype

@@ -1,8 +1,12 @@
 program comm_unit_test_2d
-  use sll_m_collective
-  use sll_m_point_to_point_comms
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+  use sll_m_collective
+  use sll_m_point_to_point_comms
+  use iso_fortran_env, only: output_unit
+
   implicit none
 
   ! This test takes a 2D array and sends the nodes at the borders to the
@@ -51,7 +55,7 @@ program comm_unit_test_2d
   comm => new_comm_real64( sll_world_collective, 4, BUF_SIZE )
   if(rank == 0) then
      print *, 'created new comm, size = ', col_size
-     call flush(6)
+     flush( output_unit )
   end if
 
   ! In this test the processors in the communicator are organized as a 2D ring,
@@ -67,7 +71,7 @@ program comm_unit_test_2d
 
   if(rank == 0) then
      print *, 'configured the comm as a toroidal surface'
-     call flush(6)
+     flush( output_unit )
   end if
 
   SLL_ALLOCATE(main_array(SZ_X,SZ_Y),ierr)

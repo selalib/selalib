@@ -132,8 +132,8 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
    self%nc_x = nc_x
    self%nc_y = nc_y
 
-   self%dx   = (x_max-x_min) / nc_x
-   self%dy   = (y_max-y_min) / nc_y
+   self%dx   = (x_max-x_min) / real( nc_x, f64)
+   self%dy   = (y_max-y_min) / real( nc_y, f64)
 
 #ifdef DEBUG
    print*, " FFTW version of poisson 2d periodic solver "
@@ -218,11 +218,8 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
    self%rht = self%rht / self%k2
 
    call fftw_execute_dft_c2r(self%bw, self%rht, phi(1:nc_x,1:nc_y))
-
-   nc_x = self%nc_x
-   nc_y = self%nc_y
-
-   phi = phi / (nc_x*nc_y)     ! normalize
+   
+   phi = phi / real(nc_x*nc_y, f64)     ! normalize
 
    !Node centered case
    if(size(phi,1) == nc_x+1) phi(nc_x+1,:) = phi(1,:)
@@ -248,16 +245,16 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    e_x(1:nc_x,1:nc_y) = rho(1:nc_x,1:nc_y)
    call fftw_execute_dft_r2c(self%fw, e_x(1:nc_x,1:nc_y), self%rht)
 
-   self%ext(1,1) = 0.0_f64
-   self%eyt(1,1) = 0.0_f64
+   self%ext(1,1) = (0.0_f64,0.0_f64)
+   self%eyt(1,1) = (0.0_f64,0.0_f64)
    self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%rht
    self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%rht
 
    call fftw_execute_dft_c2r(self%bw, self%ext, e_x(1:nc_x,1:nc_y))
    call fftw_execute_dft_c2r(self%bw, self%eyt, e_y(1:nc_x,1:nc_y))
 
-   e_x = e_x / (nc_x*nc_y)
-   e_y = e_y / (nc_x*nc_y)
+   e_x = e_x / real(nc_x*nc_y, f64)
+   e_y = e_y / real(nc_x*nc_y, f64)
 
    !Node centered case
    if (size(e_x,1) == nc_x+1) e_x(nc_x+1,:) = e_x(1,:)

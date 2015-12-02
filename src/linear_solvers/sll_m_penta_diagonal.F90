@@ -93,7 +93,7 @@ contains
     sll_real64                              :: d, d1, d2
     sll_int32                               :: n, i, sign_of_a=0
 
-    if ( abs(a) <= 2*(abs(b)+abs(c)) ) then   
+    if ( abs(a) <= 2.0_f64*(abs(b)+abs(c)) ) then
       print*, 'a, b, and c must be such that: |a| > 2(|b|+|c|)'
       print*, a, b, c
       print*, 'Exiting...'
@@ -105,28 +105,28 @@ contains
     s = (a/2+c)*(a/2+c) - b*b
     t = a*a/2 - b*b - 2*c*c
 
-    if (a/=0.d0) then
+    if (a/=0.0_f64) then
        sign_of_a = int(a/abs(a))
     endif
 
-    p = (a-2*c)/4 + sign_of_a*sqrt(sign_of_a*(a-2*c)* &
-                     sqrt(s)+t)/2 + sign_of_a*sqrt(s)/2
+    p = (a-2*c)/4 + real(sign_of_a,f64)*sqrt(sign_of_a*(a-2*c)* &
+                     sqrt(s)+t)/2.0_f64 + real(sign_of_a,f64)*sqrt(s)/2.0_f64
     l1 = b/(p+c)
     l2 = c/p
 
     do i=1,n
       plan%y(i) = f(i)/p
-      plan%e1(i) = 0.d0
-      plan%e2(i) = 0.d0
+      plan%e1(i) = 0.0_f64
+      plan%e2(i) = 0.0_f64
     enddo
-    plan%e1(1) = 1.d0
-    plan%e2(2) = 1.d0
+    plan%e1(1) = 1.0_f64
+    plan%e2(2) = 1.0_f64
 
     plan%y = solve_subsystem(l1, l2, plan%y, n)
     plan%z = solve_subsystem(l1, l2, plan%e1,  n)
     plan%w = solve_subsystem(l1, l2, plan%e2,  n)
 
-    d = 1.d0 + l1*l2*(plan%z(2)+plan%w(1)) + l2*l2*(plan%z(1)+plan%w(2)) + &
+    d = 1.0_f64 + l1*l2*(plan%z(2)+plan%w(1)) + l2*l2*(plan%z(1)+plan%w(2)) + &
            l1*l1*plan%z(1) + l2**4*(plan%z(1)*plan%w(2)-plan%z(2)*plan%w(1))
 
     d1 = l2**4*(plan%y(1)*plan%w(2)-plan%y(2)*plan%w(1)) + &
@@ -155,8 +155,8 @@ contains
     
     do i=3,n
       tmp=b(i) - ( l2*y(i-2) + l1*y(i-1) )
-      if(abs(tmp)<1e-30)then
-        tmp=0._f64
+      if(abs(tmp)<1e-30_f64)then
+        tmp=0.0_f64
       endif
       y(i) = tmp
     enddo
@@ -165,8 +165,8 @@ contains
     x(n-1) = y(n-1) - l1*y(n)
     do i=n-2,1,-1
       tmp = y(i) - ( l1*x(i+1) + l2*x(i+2) )
-      if(abs(tmp)<1e-30)then
-        tmp=0._f64
+      if(abs(tmp)<1e-30_f64)then
+        tmp=0.0_f64
       endif      
       x(i) = tmp
     enddo

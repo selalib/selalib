@@ -7,6 +7,7 @@
 module sll_m_hex_pre_filters
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
   use sll_m_hexagonal_meshes
 
   implicit none
@@ -29,6 +30,7 @@ contains
     sll_int32                 :: ierr
     sll_int32                 :: index
 
+    SLL_ASSERT(mesh%num_cells>0)
     num_wei = 3*deg*(deg+1) + 1
     SLL_ALLOCATE(weight_tab(num_wei), ierr)
     weight_tab(:) = 0.0_f64
@@ -267,6 +269,7 @@ contains
     sll_int32, intent(in)     :: deg
     sll_real64                :: weight
 
+    SLL_ASSERT(mesh%num_cells>0)
     select case(deg)
     case(1)
        if (local_index.eq.1) then

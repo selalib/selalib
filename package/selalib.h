@@ -18,20 +18,26 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
-#include "sll_assert.h"
-#include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_utilities.h"
-#include "sll_fft.h"
-#include "sll_interpolators.h"
-#include "sll_splines.h"
-#include "sll_maxwell_solvers.h"
-#include "sll_poisson_solvers.h"
-#include "sll_meshes.h"
-#include "sll_coordinate_transformations.h"
-use sll_m_gnuplot
+#include "sll_memory.h"
+
+use sll_m_cartesian_meshes
+use sll_m_working_precision
+use sll_m_utilities
 use sll_m_constants
+use sll_m_gnuplot
+use sll_m_cubic_splines
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_2d
+use sll_m_interpolators_1d_base
+use sll_m_cubic_splines
+use sll_m_coordinate_transformation_2d_base
+use sll_m_coordinate_transformations_2d
+use sll_m_common_coordinate_transformations
+use sll_m_poisson_1d_periodic
+use sll_m_poisson_2d_periodic_fftpack
+
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
 
 
 #endif

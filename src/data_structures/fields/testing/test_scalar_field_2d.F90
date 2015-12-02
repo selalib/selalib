@@ -57,18 +57,6 @@ program unit_test_2d
   !sll_int32 :: npts1,npts2
   sll_int32 :: i,j
   !sll_int32 :: ierr
-!!$  real(8), external :: test_function_perper
-!!$  real(8), external :: test_function_perper_der1
-!!$  real(8), external :: test_function_perper_der2
-!!$  real(8), external :: test_function_perdir
-!!$  real(8), external :: test_function_perdir_der1
-!!$  real(8), external :: test_function_perdir_der2
-!!$  real(8), external :: test_function_dirper
-!!$  real(8), external :: test_function_dirper_der1
-!!$  real(8), external :: test_function_dirper_der2
-!!$  real(8), external :: test_function_dirdir
-!!$  real(8), external :: test_function_dirdir_der1
-!!$  real(8), external :: test_function_dirdir_der2
   
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
   sll_real64 :: normL2_5,normL2_6,normL2_7,normL2_8
