@@ -22,10 +22,8 @@ integer :: kp1
 
 real(8) :: g(k)
 
-real(8) :: work(k*k)
 integer :: iflag
-integer :: info
-integer :: jpiv(k)
+real(8), allocatable :: qq(:,:)
 
 kp1 = k+1
 
@@ -76,8 +74,27 @@ do i = 1, k
 end do
 s%h = s%h + matmul(transpose(s%v),s%u)
 
-call dgetrf(k,k,s%h,k,jpiv,info)
-call dgetri(k,s%h,k,jpiv,work,k*k,info)
+!Inverse H
+allocate(qq(k+k-1,k)); qq = 0.0_8
+do j = 1, k
+  l = 0
+  do i = -k+1,k-1
+    l=l+1
+    if(i+j >=1 .and. i+j<=k) qq(l,j) = s%h(i+j,j)
+  end do
+end do
+
+call banfac ( qq, k+k-1, k, k-1, k-1, iflag )
+do j = 1, k
+  do i = 1, k
+    if ( i==j) then
+      s%h(i,j) = 1.0_8
+    else
+      s%h(i,j) = 0.0_8
+    end if
+  end do
+  call banslv ( qq, k+k-1, k, k-1, k-1, s%h(:,j) )
+end do
 
 end subroutine woodbury_fac
 
