@@ -1,6 +1,7 @@
 program sim_bsl_ad_2d0v_cart
-  use sll_m_sim_bsl_ad_2d0v_cart, only : &
-              sll_simulation_base_class, new_analytic_field_2d_cartesian
+
+  use sll_m_sim_bsl_ad_2d0v_cart
+
   implicit none
   
   class( sll_simulation_base_class ), pointer :: sim
