@@ -1,7 +1,7 @@
 program test_serial_blocks
 #include "sll_working_precision.h"
-use mpi
 use hdf5
+use sll_mpi
 use sll_m_hdf5_io_serial
 use sll_m_xdmf_serial_blocks
 implicit none
