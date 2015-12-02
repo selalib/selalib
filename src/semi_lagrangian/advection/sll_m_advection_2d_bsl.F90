@@ -31,7 +31,7 @@ implicit none
 
   type,extends(sll_advection_2d_base) :: BSL_2d_advector
   
-    class(sll_interpolator_2d_base), pointer  :: interp
+    class(sll_c_interpolator_2d), pointer  :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
     sll_real64, dimension(:), pointer :: eta2_coords
@@ -65,7 +65,7 @@ contains
     eta2_coords) &  
     result(adv)      
     type(BSL_2d_advector), pointer :: adv
-    class(sll_interpolator_2d_base), pointer :: interp
+    class(sll_c_interpolator_2d), pointer :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
@@ -108,7 +108,7 @@ contains
     eta1_coords, &
     eta2_coords)    
     class(BSL_2d_advector), intent(inout) :: adv
-    class(sll_interpolator_2d_base), pointer :: interp
+    class(sll_c_interpolator_2d), pointer :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2

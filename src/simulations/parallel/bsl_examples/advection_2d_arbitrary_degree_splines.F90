@@ -9,7 +9,7 @@ use sll_m_arbitrary_degree_spline_interpolator_2d
 
 implicit none
 
-class(sll_interpolator_2d_base), pointer                  :: interp
+class(sll_c_interpolator_2d), pointer                  :: interp
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: spl
 
 sll_real64, dimension(:,:),  pointer       :: f

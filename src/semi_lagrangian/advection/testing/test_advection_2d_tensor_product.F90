@@ -34,7 +34,7 @@ implicit none
   class(sll_c_interpolator_1d), pointer :: interp_x2
   class(sll_characteristics_1d_base), pointer :: charac_x1
   class(sll_characteristics_1d_base), pointer :: charac_x2
-  class(sll_interpolator_2d_base), pointer :: interp
+  class(sll_c_interpolator_2d), pointer :: interp
   class(sll_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max

@@ -71,7 +71,7 @@ type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete
   character(len=64)                    :: name
 
   class(sll_coordinate_transformation_2d_base), pointer :: T
-  class(sll_interpolator_2d_base), pointer              :: interp_2d
+  class(sll_c_interpolator_2d), pointer              :: interp_2d
 
   sll_real64, dimension(:), pointer :: point1_1d
   sll_real64, dimension(:), pointer :: point2_1d
@@ -509,7 +509,7 @@ function new_scalar_field_2d_discrete( field_name,      &
 
 type(sll_scalar_field_2d_discrete), pointer  :: obj
 character(len=*), intent(in)                 :: field_name
-class(sll_interpolator_2d_base), target      :: interpolator_2d
+class(sll_c_interpolator_2d), target      :: interpolator_2d
 class(sll_coordinate_transformation_2d_base) :: transformation
 sll_int32, intent(in)                        :: bc1_min
 sll_int32, intent(in)                        :: bc1_max
@@ -559,7 +559,7 @@ subroutine initialize_scalar_field_2d_discrete( field,           &
     
 class(sll_scalar_field_2d_discrete),          intent(inout) :: field
 character(len=*),                             intent(in)    :: field_name
-class(sll_interpolator_2d_base),              target        :: interpolator_2d
+class(sll_c_interpolator_2d),              target        :: interpolator_2d
 class(sll_coordinate_transformation_2d_base), target        :: transformation
 sll_int32,                                    intent(in)    :: bc1_min
 sll_int32,                                    intent(in)    :: bc1_max

@@ -130,9 +130,9 @@ module sll_m_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer               :: x1_interp
+     class(sll_c_interpolator_2d), pointer               :: x1_interp
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer               :: x2_interp
+     class(sll_c_interpolator_2d), pointer               :: x2_interp
      !type(sll_cartesian_mesh_2d), pointer :: mesh => null()
    contains
      !> PLEASE ADD DOCUMENTATION
@@ -794,9 +794,9 @@ contains
     type(sll_cartesian_mesh_2d), pointer    :: mesh_2d
     character(len=*)         , intent(in) :: label
 
-    class(sll_interpolator_2d_base), target  :: x1_interpolator
-    class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
+    class(sll_c_interpolator_2d), target  :: x1_interpolator
+    class(sll_c_interpolator_2d), target  :: x2_interpolator
+    class(sll_c_interpolator_2d), target  :: jacobians_n_interpolator
     sll_real64, dimension(:,:), intent(in), optional :: x1_node
     sll_real64, dimension(:,:), intent(in), optional :: x2_node
     sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
@@ -843,9 +843,9 @@ contains
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     character(len=*), intent(in)     :: label
 
-    class(sll_interpolator_2d_base), target  :: x1_interpolator
-    class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target :: jacobians_n_interpolator
+    class(sll_c_interpolator_2d), target  :: x1_interpolator
+    class(sll_c_interpolator_2d), target  :: x2_interpolator
+    class(sll_c_interpolator_2d), target :: jacobians_n_interpolator
     sll_real64, dimension(:,:), intent(in), optional :: x1_node
     sll_real64, dimension(:,:), intent(in), optional :: x2_node
     sll_real64, dimension(:,:), intent(in), optional :: jacobians_node

@@ -57,7 +57,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: f_exact
   sll_real64, dimension(:), allocatable :: params_aligned
   
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_int32 :: mode_m
   sll_int32 :: mode_n
   sll_int32 :: nb_iter

@@ -40,7 +40,7 @@ use sll_m_boundary_condition_descriptors
 use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
 use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
-use sll_m_interpolators_2d_base, only: sll_interpolator_2d_base
+use sll_m_interpolators_2d_base, only: sll_c_interpolator_2d
 use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_m_deboor_splines_1d, only:        &
