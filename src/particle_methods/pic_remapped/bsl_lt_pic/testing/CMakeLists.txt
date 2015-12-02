@@ -18,6 +18,8 @@
 # [[shell:header\alh 'CMakeLists.txt']] (cf [[file:~/alh/bin/headeralh]])
 # emacs-keywords authors="MCP and ALH" brief="BSL-LT-PIC tests cmakefile" default=0 make selalib start=02/11/15
 
+# <<<<test_bsl_lt_pic_4d>>>> [[file:test_bsl_lt_pic_4d.F90]]
+
 ADD_EXECUTABLE( test_bsl_lt_pic_4d test_bsl_lt_pic_4d.F90 )
 TARGET_LINK_LIBRARIES( test_bsl_lt_pic_4d
   sll_timer
