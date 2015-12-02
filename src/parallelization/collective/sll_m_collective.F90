@@ -130,7 +130,7 @@ module sll_m_collective
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use mpi
+  use sll_mpi
   implicit none
   ! This is the only place in the prototype that should have to include
   ! the mpi header file.

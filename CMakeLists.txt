@@ -171,7 +171,7 @@ IF(BUILD_SPRNG)
      URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
      SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
      BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-     UPDATE_COMMAND autoreconf -if
+     #UPDATE_COMMAND autoreconf -if
      CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
      BUILD_COMMAND ${MAKE} 
      INSTALL_COMMAND ""

@@ -1,10 +1,14 @@
 import re
-import fortran_iso_c_binding
-import fortran_iso_fortran_env
-import fortran_deboor
-import fortran_fftpack
-import fortran_fishpack
-import fortran_mudpack
+from . import fortran_iso_c_binding
+from . import fortran_iso_fortran_env
+from . import fortran_deboor
+from . import fortran_fftpack
+from . import fortran_fishpack
+from . import fortran_mudpack
+from . import fortran_lapack
+from . import fortran_blas
+from . import fortran_hdf5
+from . import fortran_openmp
 
 #==============================================================================
 # Fortran extension modules
@@ -65,38 +69,54 @@ mudpack['match'   ] = lambda s : s.lower() in mudpack['all_syms']
 # Libraries installed on the system
 #==============================================================================
 
+openmp = {}
+openmp['lib_name'] = 'openmp'
+openmp['mod_name'] = 'omp_lib'
+openmp['all_syms'] = fortran_openmp.all_routines
+openmp['match'   ] = lambda s : s.lower() in openmp['all_syms']
+
+blas = {}
+blas['lib_name'] = 'blas'
+blas['mod_name'] = ''
+blas['all_syms'] = set( s.lower() for s in fortran_blas.all_routines )
+blas['match'   ] = lambda s : s.lower() in blas['all_syms']
+
+lapack = {}
+lapack['lib_name'] = 'lapack'
+lapack['mod_name'] = ''
+lapack['match'   ] = \
+        re.compile( r'^{}\Z'.format( fortran_lapack.pattern ), re.I ).match
+
 fftw = {}
 fftw['lib_name'] = 'fftw'
 fftw['mod_name'] = 'sll_m_fftw3'
-fftw['match'   ] = re.compile( '^d?fftw_\w+\Z', re.I ).match
+fftw['match'   ] = re.compile( r'^d?fftw_\w+\Z', re.I ).match
 
 mpi = {}
 mpi['lib_name'] = 'mpi'
 mpi['mod_name'] = 'mpi'
-mpi['match']    = re.compile( '^mpi_\w+\Z', re.I ).match
+mpi['match']    = re.compile( r'^mpi_\w+\Z', re.I ).match
 
 hdf5 = {}
-hdf5['lib_name'] = 'hdf5'
-hdf5['mod_name'] = 'hdf5'
-hdf5['match']    = re.compile( '^h5\w+_f\Z', re.I ).match
+hdf5['lib_name']      = 'hdf5'
+hdf5['mod_name']      = 'hdf5'
+hdf5['match_list'   ] = lambda s : s.upper() in fortran_hdf5.symbols_list
+hdf5['match_pattern'] = \
+  re.compile( r'^{}\Z'.format( fortran_hdf5.symbols_pattern ), re.I ).match
+hdf5['match'] = lambda s: hdf5['match_list']( s ) or hdf5['match_pattern']( s )
 
 #==============================================================================
 # Convenience objects
 #==============================================================================
 
 library_collection = [iso_c_binding, iso_fortran_env, deboor, fftpack,
-        fishpack, mudpack, fftw, mpi, hdf5]
+        fishpack, mudpack, openmp, blas, lapack, fftw, mpi, hdf5]
 
 external_modules = \
         {lib['mod_name'] for lib in library_collection if lib['mod_name']}
 
 external_f77 = \
         {lib['lib_name'] for lib in library_collection if not lib['mod_name']}
-
-# Add 'match' function to dictionaries that do not have it
-for lib in library_collection:
-    if lib.has_key('all_syms') and not lib.has_key('match'):
-        lib['match'] = lambda s : s.lower() in lib['all_syms']
 
 #==============================================================================
 # Convenience functions

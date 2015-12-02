@@ -496,7 +496,7 @@ contains
   !>
   !> @detail
   !> This provides an evaluation of B-splines directly based on the recurrence
-  !> formula. It is about 80% faster than the classical Cox - de Boor formula 
+  !> formula. It is 10% faster than the classical Cox - de Boor formula 
   !> that is implented in b_splines_at_x, but can have numerical stability issues.
   !>For this reason the Cox - de Boor formula should be the default implementation 
   subroutine compute_b_spline_at_x_mm( &

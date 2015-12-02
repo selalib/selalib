@@ -16,6 +16,7 @@ Modifications:
             : modify 'process_item' in 'Call' to avoid failing on arrays (YG)
             : add 'TypeGuard' statement for 'select type' constructs (YG)
             : 'Allocate': warning removed, parsing extended (YG)
+            : fix bug in 'Where' statement: map was not applied to content (YG)
 -----
 """
 
@@ -495,15 +496,17 @@ class Contains(Statement):
 class Allocate( Statement ):
     """
     ALLOCATE ( [ <type-spec> :: ] <allocation-list> [ , <alloc-opt-list> ] )
-    <alloc-opt> = STAT = <stat-variable>
-                | ERRMSG = <errmsg-variable>
+    <alloc-opt> = ERRMSG = <errmsg-variable>
+                | MOLD   = <source-expr>
                 | SOURCE = <source-expr>
+                | STAT   = <stat-variable>
     <allocation> = <allocate-object> [ ( <allocate-shape-spec-list> ) ]
     """
-    _stat   =   r"\bstat\b\s*=\s*[a-zA-Z]\w*\b"
-    _errmsg = r"\berrmsg\b\s*=\s*[a-zA-Z]\w*\b"
-    _source = r"\bsource\b\s*=\s*[a-zA-Z]\w*\b"
-    _alloc_opt = r"^({}|{}|{})\Z".format( _stat, _errmsg, _source )
+    _errmsg = r"\berrmsg\b\s*=.*"
+    _mold   =   r"\bmold\b\s*=.*"
+    _source = r"\bsource\b\s*=.*"
+    _stat   =   r"\bstat\b\s*=.*"
+    _alloc_opt = r"^({}|{}|{}|{})\Z".format( _errmsg, _mold, _source, _stat )
     _match_alloc_opt = re.compile( _alloc_opt, re.I ).match
 
     # Match function is static method that is used to identify statement type
@@ -1989,7 +1992,7 @@ class Where(Statement):
         i = line.index(')')
         self.expr = self.item.apply_map(line[1:i].strip())
         line = line[i+1:].lstrip()
-        newitem = self.item.copy(line)
+        newitem = self.item.copy( line, True )
         cls = Assignment
         if cls.match(line):
             stmt = cls(self, newitem)
