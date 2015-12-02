@@ -60,24 +60,18 @@ contains
   procedure :: interpolate_from_interpolant_value => interpolate_value_bs1d
   !> Interpolate an array (subroutine) 
   procedure :: interpolate_from_interpolant_array => interpolate_values_bs1d
-  !> Interpolate a pointer to array 
-  !procedure :: interpolate_pointer_values => interpolate_pointer_values_bs1d
   !> Compute derivatives
   procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_bs1d
   !> Compute derivatives array
-  !procedure :: interpolate_array_derivatives => interpolate_derivatives_bs1d
+  procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_derivatives_bs1d
   !> Compute derivatives array pointer
   !procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_bs1d
   !> Interpolate an array (function)
   procedure :: interpolate_array => interpolate_array_bs1d
   !> Interpolate an array after displacement
   procedure :: interpolate_array_disp => interpolate_1d_array_disp_bs1d
-  !> Interpolate an array after displacement
-  procedure :: interpolate_array_disp_inplace => interpolate_1d_array_disp_inplace_bs1d
   !> Get splines coefficients
   procedure :: get_coefficients => get_coefficients_bs1d
-  !> Not implemented
-  !procedure :: reconstruct_array
   !> Destory the derived type and free memory
   procedure :: delete => delete_bs1d_interpolator
 
@@ -412,31 +406,17 @@ subroutine interpolate_1d_array_disp_bs1d( this,       &
                                          alpha, &
                                          output_array)
 
-class(sll_bspline_interpolator_1d), intent(in) :: this
-sll_int32,                          intent(in) :: num_pts
-sll_real64, dimension(:),           intent(in) :: data
-sll_real64, intent(in)                         :: alpha
-sll_real64, dimension(num_pts),intent(out)              :: output_array
+class(sll_bspline_interpolator_1d), intent(in)    :: this
+sll_int32,                          intent(in)    :: num_pts
+sll_real64, dimension(num_pts),     intent(inout) :: data
+sll_real64, intent(in)                            :: alpha
+sll_real64, dimension(num_pts),     intent(inout) :: output_array
 
 output_array = -1000000._f64*alpha*data*this%spl_deg
 stop 'interpolate_1d_array_disp_bs1d: not implemented.'
 
 end subroutine interpolate_1d_array_disp_bs1d
 
-
-subroutine interpolate_1d_array_disp_inplace_bs1d( this,       &
-                                         num_pts, &
-                                         data,       &
-                                         alpha)
-
-class(sll_bspline_interpolator_1d), intent(in) :: this
-sll_int32,                          intent(in) :: num_pts
-sll_real64, dimension(num_pts),           intent(inout) :: data
-sll_real64, intent(in)                         :: alpha
-
-stop 'interpolate_1d_array_disp_bs1d: not implemented.'
-
-end subroutine interpolate_1d_array_disp_inplace_bs1d
 
 
 function get_coefficients_bs1d(interpolator)
@@ -465,22 +445,7 @@ call interpolate_array_values_1d(interpolator%bspline, &
 
 end subroutine interpolate_values_bs1d
 
-subroutine interpolate_pointer_values_bs1d( interpolator,        &
-                                            num_pts,             &
-                                            vals_to_interpolate, &
-                                            output )
 
-class(sll_bspline_interpolator_1d),  intent(in) :: interpolator
-sll_int32,                           intent(in) :: num_pts
-sll_real64, dimension(:),            pointer    :: vals_to_interpolate
-sll_real64, dimension(:),            pointer    :: output
-
-call interpolate_array_values_1d(interpolator%bspline, &
-                              num_pts,              &
-                              vals_to_interpolate,  &
-                              output)
-
-end subroutine interpolate_pointer_values_bs1d
 
 subroutine interpolate_derivatives_bs1d( interpolator,        &
                                          num_pts,             &
@@ -499,32 +464,5 @@ call interpolate_array_derivatives_1d(interpolator%bspline, &
 
 end subroutine interpolate_derivatives_bs1d
 
-subroutine interpolate_pointer_derivatives_bs1d( interpolator,        &
-                                                 num_pts,             &
-                                                 vals_to_interpolate, &
-                                                 output )
-
-class(sll_bspline_interpolator_1d), intent(in) :: interpolator
-sll_int32,                          intent(in) :: num_pts
-sll_real64, dimension(:), pointer              :: vals_to_interpolate
-sll_real64, dimension(:), pointer              :: output
-
-call interpolate_array_derivatives_1d( interpolator%bspline, &
-                                    num_pts,              &
-                                    vals_to_interpolate,  &
-                                    output)
-
-end subroutine interpolate_pointer_derivatives_bs1d
-
-function reconstruct_array(this, num_points, data) result(res)
-
-class(sll_bspline_interpolator_1d), intent(in) :: this
-sll_int32,                          intent(in) :: num_points
-sll_real64, dimension(:),           intent(in) :: data      
-sll_real64, dimension(num_points)              :: res
-res(:) = -1000000.0_f64*data*this%spl_deg
-stop  'reconstruct_array 1d not implemented yet'
-
-end function reconstruct_array
 
 end module sll_m_bspline_interpolator_1d
