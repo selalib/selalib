@@ -719,9 +719,9 @@ contains
     if (transf%is_rational == 0) then ! IN the case of SPLINE
        
        j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
        j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
 
        jacobian_matrix(1,1) = j11
        jacobian_matrix(1,2) = j12
@@ -731,11 +731,11 @@ contains
     else 
 
        value_11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
        value_21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
        value_31 = transf%x3_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
        value_3  = transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
        value_2  = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
        value_1  = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)

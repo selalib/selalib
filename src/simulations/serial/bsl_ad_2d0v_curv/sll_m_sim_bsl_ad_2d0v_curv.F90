@@ -2219,7 +2219,7 @@ contains
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
         A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
     end do
@@ -2892,7 +2892,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        div(i1,i2)=div(i1,i2)+interp2d%interpolate_derivative_eta2(eta1,eta2)
+        div(i1,i2)=div(i1,i2)+interp2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
       end do
     end do
 
