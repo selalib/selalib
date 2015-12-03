@@ -10,6 +10,10 @@ module sll_m_lagrange_interpolator_1d
 #include "sll_errors.h"
 use sll_m_interpolators_1d_base
 use sll_m_lagrange_interpolation_1d
+use sll_m_lagrange_fast, only : &
+     lagrange, &
+     lagrange_periodic, &
+     lagrange_halo_cells
 
 implicit none
 private
