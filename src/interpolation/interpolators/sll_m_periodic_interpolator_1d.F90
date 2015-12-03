@@ -36,18 +36,11 @@ private
      !>PLEASE ADD DOCUMENTATION
      procedure :: interpolate_from_interpolant_array => interpolate_values_per1d
      !>PLEASE ADD DOCUMENTATION
-     !procedure :: interpolate_pointer_values => interpolate_pointer_values_per1d
-     !>PLEASE ADD DOCUMENTATION
-     !procedure :: interpolate_pointer_derivatives => &
-     !     interpolate_pointer_derivatives_per1d
-     !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array => per_interpolate1d
      !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
      !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp_inplace => per_interpolate1d_disp_inplace
-     !>PLEASE ADD DOCUMENTATION
-     !procedure, pass:: reconstruct_array
      !>PLEASE ADD DOCUMENTATION
      procedure, pass :: set_coefficients => set_coefficients_per1d
      !>PLEASE ADD DOCUMENTATION
@@ -203,25 +196,6 @@ contains  ! ****************************************************************
     stop
   end subroutine interpolate_values_per1d
 
-  subroutine interpolate_pointer_values_per1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)            :: num_pts
-    sll_real64, dimension(:), pointer :: vals_to_interpolate
-    sll_real64, dimension(:), pointer :: output
-    !sll_int32 :: ierr
-    print*, 'interpolate_pointer_values_per1d: ', &
-         'not implemented for periodic interpolation'
-    output = -1000000._f64
-    print *,interpolator%num_points
-    print *,num_pts
-    print *,maxval(vals_to_interpolate)
-    stop
-  end subroutine interpolate_pointer_values_per1d
-
 
 !PN DEFINED BUT NOT USED
 ! subroutine interpolate_derivatives_per1d( &
@@ -246,25 +220,6 @@ contains  ! ****************************************************************
 !   stop
 ! end subroutine interpolate_derivatives_per1d
 
-  subroutine interpolate_pointer_derivatives_per1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)              :: num_pts
-    sll_real64, dimension(:), pointer   :: vals_to_interpolate
-    sll_real64, dimension(:), pointer   :: output
-    !sll_int32 :: ierr
-    print*, 'interpolate_pointer_derivatives_per1d:  ', &
-      'not implemented for periodic interpolation'
-    output = -1000000._f64
-    print *,interpolator%num_points
-    print *,num_pts
-    print *,maxval(vals_to_interpolate)
-    print *,maxval(output)
-    stop
-  end subroutine interpolate_pointer_derivatives_per1d
 
   function interpolate_value_per1d( interpolator, eta1 ) result(val)
     class(sll_periodic_interpolator_1d), intent(in) :: interpolator
@@ -337,18 +292,6 @@ contains  ! ****************************************************************
          type, order)
   end subroutine
 
-  function reconstruct_array(this, num_points, data) result(res)
-    ! dummy procedure
-    class(sll_periodic_interpolator_1d), intent(in)     :: this
-       sll_int32, intent(in)                :: num_points! size of output array
-       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
-       sll_real64, dimension(num_points)    :: res
-       res(:) = 0.0_f64
-       print *,'#Warning reconstruct_array dummy function'
-       print *,'#',maxval(data)
-       print *,'#',num_points
-       print *,'#',this%num_points
-  end function reconstruct_array
 
   subroutine delete_per1d( obj )
     class(sll_periodic_interpolator_1d) :: obj
