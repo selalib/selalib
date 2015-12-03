@@ -5,7 +5,6 @@ ADD_LIBRARY( sll_remapped_pic_utilities STATIC
 
 TARGET_LINK_LIBRARIES( sll_remapped_pic_utilities
   sll_memory
-  sll_working_precision
   sll_assert
   sll_meshes
   sll_remapped_pic
