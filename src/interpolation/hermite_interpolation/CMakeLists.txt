@@ -7,7 +7,7 @@ ADD_LIBRARY ( sll_hermite_interpolation STATIC
 
 TARGET_LINK_LIBRARIES( sll_hermite_interpolation
                          sll_meshes
-                         sll_utilities sll_descriptors)
+                         sll_utilities)
 
 
 IF(BUILD_TESTING)
