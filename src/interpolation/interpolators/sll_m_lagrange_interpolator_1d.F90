@@ -25,7 +25,7 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_li1d
    !> PLEASE ADD DOCUMENTATION
-   !procedure :: interpolate_array_derivatives => interpolate_array_derivatives_li1d
+   !procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_array_derivatives_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => interpolate_array_li1d
    !> PLEASE ADD DOCUMENTATION
@@ -187,7 +187,7 @@ subroutine interpolate_array_derivatives_li1d( &
     sll_real64, dimension(:), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = 0.0_f64
-    print*, 'interpolate_array_derivatives: ', &
+    print*, 'interpolate_from_interpolant_derivatives_eta1: ', &
          'not implemented for lagrange interpolation'
     print *,num_pts
     print *,maxval(vals_to_interpolate)

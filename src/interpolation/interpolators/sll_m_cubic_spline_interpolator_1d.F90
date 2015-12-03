@@ -50,7 +50,7 @@ contains
    procedure :: interpolate_from_interpolant_value => interpolate_value_cs1d
    procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs1d
    procedure :: interpolate_from_interpolant_array => interpolate_values_cs1d
-   procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+   procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_derivatives_cs1d
    procedure :: interpolate_array => spline_interpolate1d
    procedure :: interpolate_array_disp => spline_interpolate1d_disp
    procedure :: interpolate_array_disp_inplace => spline_interpolate1d_disp_inplace
@@ -245,7 +245,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    call interpolate_array_derivatives( vals_to_interpolate, output_array, &
+    call interpolate_from_interpolant_derivatives_eta1( vals_to_interpolate, output_array, &
          num_pts,  interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
 
