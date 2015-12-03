@@ -40,10 +40,10 @@ SLL_CLEAR_ALLOCATE(phi(1:nc_x+1,1:nc_y+1),error)
 SLL_ALLOCATE(x(1:nc_x+1),error)  
 SLL_ALLOCATE(y(1:nc_y+1),error) 
 
-xmin = -1.0
-xmax =  1.0
-ymin = -1.0
-ymax =  1.0
+xmin = -1.0_f64
+xmax =  1.0_f64
+ymin = -1.0_f64
+ymax =  1.0_f64
 
 dx = (xmax-xmin) / nc_x
 dy = (ymax-ymin) / nc_y
@@ -86,7 +86,7 @@ type( sll_fem_poisson_2d ) :: poisson
 call sll_create(poisson, x, y, nc_x+1, nc_y+1)
 call sll_solve(poisson, e_x, e_y, rho)
 
-errmax = 0.
+errmax = 0._f64
 do j = 1, nc_y+1
   do i = 1, nc_x+1
     errmax = errmax + abs(rho(i,j)-phi(i,j))
@@ -105,7 +105,7 @@ type( sll_fem_poisson_2d_periodic ) :: poisson
 call sll_create(poisson, x, y, nc_x+1, nc_y+1)
 call sll_solve(poisson, e_x, e_y, rho)
 
-errmax = 0.
+errmax = 0._f64
 do j = 1, nc_y+1
   do i = 1, nc_x+1
     errmax = errmax+abs(rho(i,j)-sin(dpi*x(i))*sin(dpi*y(j)))

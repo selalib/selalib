@@ -44,7 +44,7 @@ program test_maxwell_2d_periodic_cart_par
   sll_int32   :: mode = 1
   sll_real32  :: ok 
   sll_real64  :: dt
-  sll_real64  :: time = 0.0
+  sll_real64  :: time = 0.0_f64
   sll_real64  :: omega
   sll_real64  :: err_l2
   sll_real64  :: err_glob
@@ -78,7 +78,7 @@ program test_maxwell_2d_periodic_cart_par
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  psize = sll_get_collective_size(sll_world_collective)
+  psize = int(sll_get_collective_size(sll_world_collective),i64)
   prank = sll_get_collective_rank(sll_world_collective)
 
   dx = Lx/ncx
@@ -86,7 +86,6 @@ program test_maxwell_2d_periodic_cart_par
 
   omega  = sqrt((mode*sll_pi/Lx)**2+(mode*sll_pi/Ly)**2)
 
-  psize  = sll_get_collective_size(sll_world_collective)
   e      = int(log(real(psize))/log(2.))
   print *, 'running on ', 2**e, 'processes'
 
@@ -159,7 +158,7 @@ program test_maxwell_2d_periodic_cart_par
      call faraday_te(plan,dt,ex,ey)
      call write_fields_2d('fields-'//cstep)
 
-     err_l2 = 0.0
+     err_l2 = 0.0_f64
      do j=1,ny_loc
      do i=1,nx_loc
         global = local_to_global( layout_x, (/i, j/))
@@ -205,16 +204,16 @@ contains
     sll_int32                        :: file_id
     integer(HSIZE_T), dimension(1:2) :: offset
 
-    global_dims(:) = (/ ncx,ncy /)
+    global_dims(:) = (/ int(ncx,HSIZE_T),int(ncy,HSIZE_T) /)
 
     call sll_hdf5_file_create(file_name//'.h5',sll_world_collective%comm, &
                               file_id,error)
-    offset(1) = get_layout_i_min(layout_y,prank) - 1
-    offset(2) = get_layout_j_min(layout_y,prank) - 1
+    offset(1) = int(get_layout_i_min(layout_y,prank) - 1,HSIZE_T)
+    offset(2) = int(get_layout_j_min(layout_y,prank) - 1,HSIZE_T)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ex,'ex_values',error)
-    offset(1) = get_layout_i_min(layout_x,prank) - 1
-    offset(2) = get_layout_j_min(layout_x,prank) - 1
+    offset(1) = int(get_layout_i_min(layout_x,prank) - 1,HSIZE_T)
+    offset(2) = int(get_layout_j_min(layout_x,prank) - 1,HSIZE_T)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ey,'ey_values',error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
