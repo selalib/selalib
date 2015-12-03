@@ -969,7 +969,7 @@ contains
     
     SLL_ALLOCATE(int_r(Nc_x2),ierr)
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
-    pfwd => fft_new_plan(Nc_x2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_x2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -1014,10 +1014,10 @@ contains
     l1 = l1*delta_x2
     l2 = sqrt(l2*delta_x2)
     e  = 0.5_f64*e*delta_x2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo

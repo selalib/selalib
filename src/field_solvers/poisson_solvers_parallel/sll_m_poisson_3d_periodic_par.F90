@@ -111,14 +111,14 @@ contains
     plan%Lz  = Lz
 
     ! For FFTs (in each direction)
-    plan%px => fft_new_plan( ncx, x, x, FFT_FORWARD )
-    plan%py => fft_new_plan( ncy, y, y, FFT_FORWARD )
-    plan%pz => fft_new_plan( ncz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan_c2c_1d( ncx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan_c2c_1d( ncy, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan_c2c_1d( ncz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( ncx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ncy, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( ncz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan_c2c_1d( ncx, x, x, FFT_BACKWARD )
+    plan%py_inv => fft_new_plan_c2c_1d( ncy, y, y, FFT_BACKWARD )
+    plan%pz_inv => fft_new_plan_c2c_1d( ncz, z, z, FFT_BACKWARD )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
@@ -221,7 +221,7 @@ contains
     plan%array_x = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
-          call fft_apply_plan(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
+          call fft_apply_plan_c2c_1d(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
        enddo
     enddo
 
@@ -232,7 +232,7 @@ contains
     call apply_remap_3D( plan%rmp3_xy, plan%array_x, plan%array_y ) 
     do k=1,nz_loc
        do i=1,nx_loc
-          call fft_apply_plan(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
+          call fft_apply_plan_c2c_1d(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
        enddo
     enddo
 
@@ -243,7 +243,7 @@ contains
     call apply_remap_3D( plan%rmp3_yz, plan%array_y, plan%array_z ) 
     do j=1,ny_loc
        do i=1,nx_loc
-          call fft_apply_plan(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
+          call fft_apply_plan_c2c_1d(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
        enddo
     enddo
 
@@ -259,11 +259,7 @@ contains
              gj = global(2)
              gk = global(3)
              if( (gi==1) .and. (gj==1) .and. (gk==1) ) then
-                call fft_set_mode( &
-                     plan%pz, &
-                     plan%array_z(1,1,:), &
-                     (0.0_f64,0.0_f64), &
-                     1)
+                plan%array_z(1,1,1) = (0.0_f64,0.0_f64)
              else
                 if (gi<=nx/2) then
                    ind_x = real(gi-1,f64)
@@ -299,7 +295,7 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny_loc
        do i=1,nx_loc
-          call fft_apply_plan( &
+          call fft_apply_plan_c2c_1d( &
                plan%pz_inv, &
                plan%array_z(i,j,:), &
                plan%array_z(i,j,:))
@@ -313,7 +309,7 @@ contains
     call apply_remap_3D( plan%rmp3_zy, plan%array_z, plan%array_y )
     do k=1,nz_loc
        do i=1,nx_loc
-          call fft_apply_plan( &
+          call fft_apply_plan_c2c_1d( &
                plan%py_inv, &
                plan%array_y(i,:,k), &
                plan%array_y(i,:,k) )
@@ -327,7 +323,7 @@ contains
     call apply_remap_3D( plan%rmp3_yx, plan%array_y, plan%array_x ) 
     do k=1,nz_loc
        do j=1,ny_loc
-          call fft_apply_plan( &
+          call fft_apply_plan_c2c_1d( &
                plan%px_inv, &
                plan%array_x(:,j,k), &
                plan%array_x(:,j,k) )
