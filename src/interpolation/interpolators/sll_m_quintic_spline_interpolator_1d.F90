@@ -64,7 +64,7 @@ contains
   procedure :: interpolate_from_interpolant_value              !< Interpolate single value
   procedure :: interpolate_from_interpolant_derivative_eta1      !< Compute derivative
   procedure :: interpolate_from_interpolant_array         !< Interpolate array values
-  procedure :: interpolate_array_derivatives    !< Return derivatives
+  procedure :: interpolate_from_interpolant_derivatives_eta1    !< Return derivatives
   procedure :: interpolate_array                !< Interpolate an array
   procedure :: interpolate_array_disp           !< Return an array after displacement
   procedure :: interpolate_array_disp_inplace           !< Return an array after displacement
@@ -336,7 +336,7 @@ end subroutine interpolate_from_interpolant_array
 
 !---------------------------------------------------------------------------
 
-subroutine interpolate_array_derivatives( interpolator,        &
+subroutine interpolate_from_interpolant_derivatives_eta1( interpolator,        &
                                           num_pts,             &
                                           vals_to_interpolate, &
                                           output_array )
@@ -369,7 +369,7 @@ subroutine interpolate_array_derivatives( interpolator,        &
     call splin5(num_pts, interpolator%x, c, interpolator%x(i), 1, output_array(i))
   end do
 
-end subroutine interpolate_array_derivatives
+end subroutine interpolate_from_interpolant_derivatives_eta1
 
 !---------------------------------------------------------------------------
 

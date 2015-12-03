@@ -25,7 +25,7 @@
 !! - reconstruct_array(...)
 !! - interpolate_from_interpolant_array(...)
 !! - interpolate_pointer_values(...)
-!! - interpolate_array_derivatives(...)
+!! - interpolate_from_interpolant_derivatives_eta1(...)
 !! - interpolate_pointer_derivatives(...)
 !! - set_coefficients(...)
 !! - get_coefficients(...)

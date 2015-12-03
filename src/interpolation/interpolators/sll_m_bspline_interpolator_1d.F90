@@ -63,7 +63,7 @@ contains
   !> Compute derivatives
   procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_bs1d
   !> Compute derivatives array
-  procedure :: interpolate_array_derivatives => interpolate_derivatives_bs1d
+  procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_derivatives_bs1d
   !> Interpolate an array (function)
   procedure :: interpolate_array => interpolate_array_bs1d
   !> Interpolate an array after displacement
