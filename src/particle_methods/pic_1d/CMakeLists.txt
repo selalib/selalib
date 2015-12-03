@@ -6,11 +6,8 @@ ADD_LIBRARY( sll_pic_1d STATIC
   sll_m_pic_1d_distribution.F90 )
 
 TARGET_LINK_LIBRARIES( sll_pic_1d
-  sll_constants
-  sll_working_precision
   sll_memory
   sll_meshes
-  sll_boundary_condition_descriptors
   sll_poisson_solvers 
   sll_fft
   sll_splines
