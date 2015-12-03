@@ -67,6 +67,7 @@ contains
   procedure :: interpolate_from_interpolant_derivatives_eta1    !< Return derivatives
   procedure :: interpolate_array                !< Interpolate an array
   procedure :: interpolate_array_disp           !< Return an array after displacement
+  procedure :: interpolate_array_disp_inplace           !< Return an array after displacement
   procedure :: set_coefficients                 !< Not implemented
   procedure :: get_coefficients                 !< Not implemented
 
@@ -312,7 +313,6 @@ function interpolate_from_interpolant_derivative_eta1( interpolator, eta1 ) resu
 
 end function interpolate_from_interpolant_derivative_eta1
 
-
 !---------------------------------------------------------------------------
 
 subroutine interpolate_from_interpolant_array( interpolator,        &
@@ -422,11 +422,11 @@ subroutine interpolate_array_disp( this,        &
                                  alpha, &
                                  output_array)
 
-  sll_interpolator, intent(in)    :: this
-  sll_int32,        intent(in)    :: num_pts
-  sll_real64,       intent(inout) :: data(num_pts)
-  sll_real64,       intent(in)    :: alpha
-  sll_real64,       intent(inout) :: output_array(num_pts)
+  sll_interpolator, intent(in) :: this
+  sll_int32,        intent(in) :: num_pts
+  sll_real64,       intent(in) :: data(:)
+  sll_real64,       intent(in) :: alpha
+  sll_real64,       intent(out):: output_array(num_pts)
   
   character(len=*), parameter  :: this_fun_name = 'interpolate_array_disp'
 
@@ -437,6 +437,25 @@ subroutine interpolate_array_disp( this,        &
 
 end subroutine interpolate_array_disp
 
+!---------------------------------------------------------------------------
 
+subroutine interpolate_array_disp_inplace( this,        &
+     num_pts,  &
+     data,        &
+     alpha)
+
+  sll_interpolator, intent(in)    :: this
+  sll_int32,        intent(in)    :: num_pts
+  sll_real64,       intent(inout) :: data(num_pts)
+  sll_real64,       intent(in)    :: alpha
+  
+  character(len=*), parameter  :: this_fun_name = 'interpolate_array_disp'
+
+  !print*, this%n
+  !print*, size(data), alpha, size(output_array), num_pts
+  
+  SLL_ERROR( this_fun_name, 'Not implemented.' )
+
+end subroutine interpolate_array_disp_inplace
 
 end module sll_m_quintic_spline_interpolator_1d

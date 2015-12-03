@@ -472,11 +472,10 @@ contains
                 ex    = real(sim%efield_split(i,j),f64)
                 alpha = ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x3%interpolate_array_disp( &
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                      sim%nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
-                     alpha, &
-                     sim%f_x3x4(i,j,:,l) )
+                     alpha )
              end do
           end do
        end do
@@ -488,11 +487,10 @@ contains
                 ey    = aimag(sim%efield_split(i,j))
                 alpha = ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x4%interpolate_array_disp( &
+                call sim%interp_x4%interpolate_array_disp_inplace( &
                      sim%nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
-                     alpha, &
-                     sim%f_x3x4(i,j,k,:) )
+                     alpha )
              end do
           end do
        end do
@@ -504,11 +502,10 @@ contains
                 ex    = real(sim%efield_split(i,j),f64)
                 alpha = ex*0.25_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x3%interpolate_array_disp( &
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                      sim%nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
-                     alpha, &
-                     sim%f_x3x4(i,j,:,l) )
+                     alpha )
              end do
           end do
        end do
@@ -531,11 +528,10 @@ contains
                 alpha = -(vmin + (l-1)*delta)*sim%dt*0.5_f64
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x2%interpolate_array_disp( &
+                call sim%interp_x2%interpolate_array_disp_inplace( &
                      sim%nc_x2+1, &
                      sim%f_x1x2(i,:,k,l), &
-                     alpha, &
-                     sim%f_x1x2(i,:,k,l) )
+                     alpha )
              end do
           end do
        end do
@@ -549,11 +545,10 @@ contains
                 alpha = -(vmin + (k-1)*delta)*sim%dt
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x1%interpolate_array_disp( &
+                call sim%interp_x1%interpolate_array_disp_inplace( &
                      sim%nc_x1+1, &
                      sim%f_x1x2(:,j,k,l), &
-                     alpha, &
-                     sim%f_x1x2(:,j,k,l) )
+                     alpha )
              end do
           end do
        end do
@@ -567,11 +562,10 @@ contains
                 alpha = -(vmin + (l-1)*delta)*sim%dt*0.5_f64
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x2%interpolate_array_disp( &
+                call sim%interp_x2%interpolate_array_disp_inplace( &
                      sim%nc_x2+1, &
                      sim%f_x1x2(i,:,k,l), &
-                     alpha, &
-                     sim%f_x1x2(i,:,k,l) )
+                     alpha )
              end do
           end do
        end do
@@ -591,11 +585,10 @@ contains
                 ex    = real(sim%efield_split(i,j),f64)
                 alpha = ex*0.25_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x3%interpolate_array_disp        ( &
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                      sim%nc_x3, &
                      sim%f_x3x4(i,j,:,l), &
-                     alpha, &
-                     sim%f_x3x4(i,j,:,l) )
+                     alpha )
              end do
           end do
        end do
@@ -607,11 +600,10 @@ contains
                 ey    = aimag(sim%efield_split(i,j))
                 alpha = ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x4%interpolate_array_disp        ( &
+                call sim%interp_x4%interpolate_array_disp_inplace( &
                      sim%nc_x4, &
                      sim%f_x3x4(i,j,k,:), &
-                     alpha, &
-                     sim%f_x3x4(i,j,k,:) )
+                     alpha )
              end do
           end do
        end do
@@ -686,11 +678,10 @@ contains
                 ex    = real(sim%efield_split(i,j),f64)
                 alpha = ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x3%interpolate_array_disp( &
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                      sim%nc_x3, &
                      sim%f_x3x4(i,j,:,l), &
-                     alpha, &
-                     sim%f_x3x4(i,j,:,l) )
+                     alpha )
              end do
           end do
        end do
@@ -702,11 +693,10 @@ contains
                 ey    = real(sim%efield_split(i,j),f64)
                 alpha = ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
-                call sim%interp_x4%interpolate_array_disp( &
+                call sim%interp_x4%interpolate_array_disp_inplace( &
                      sim%nc_x4, &
                      sim%f_x3x4(i,j,k,:), &
-                     alpha, &
-                     sim%f_x3x4(i,j,k,:) )
+                     alpha )
              end do
           end do
        end do
@@ -959,7 +949,7 @@ contains
        displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_x_1d
 
@@ -975,7 +965,7 @@ contains
     do i=1, num_pts
        ! Why is the negative sign there?
        displacement = efield(i)*0.5_f64*dt
-       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_v_1d
 
