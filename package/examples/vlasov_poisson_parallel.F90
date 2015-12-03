@@ -40,10 +40,10 @@ program vlasov_poisson_parallel
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ey = 0.
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: rho = 0.
 
-  class(sll_interpolator_1d_base), pointer   :: interp_eta1
-  class(sll_interpolator_1d_base), pointer   :: interp_eta2
-  class(sll_interpolator_1d_base), pointer   :: interp_eta3
-  class(sll_interpolator_1d_base), pointer   :: interp_eta4
+  class(sll_c_interpolator_1d), pointer   :: interp_eta1
+  class(sll_c_interpolator_1d), pointer   :: interp_eta2
+  class(sll_c_interpolator_1d), pointer   :: interp_eta3
+  class(sll_c_interpolator_1d), pointer   :: interp_eta4
 
   type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
   type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
@@ -236,8 +236,7 @@ contains
      gk = global_indices(3)
      alpha = (eta3_min +(gk-1)*delta_eta3)*dt
      do j=1,loc_sz_j
-        f_x(:,j,k,l) = &
-           interp_eta1%interpolate_array_disp(loc_sz_i,f_x(:,j,k,l),alpha)
+       call interp_eta1%interpolate_array_disp_inplace(loc_sz_i,f_x(:,j,k,l),-alpha)
      end do
   end do
   end do
@@ -260,7 +259,7 @@ contains
     do k=1,loc_sz_k
     do i=1,loc_sz_i
 
-       f_x(i,:,k,l) = interp_eta2%interpolate_array_disp(loc_sz_j,f_x(i,:,k,l),alpha)
+       call interp_eta2%interpolate_array_disp_inplace(loc_sz_j,f_x(i,:,k,l),-alpha)
 
     end do
     end do
@@ -285,7 +284,7 @@ contains
      gj = global_indices(2)
      alpha = ex(gi,gj)*dt
 
-     f_v(i,j,:,l) = interp_eta3%interpolate_array_disp(loc_sz_k,f_v(i,j,:,l),alpha)
+     call interp_eta3%interpolate_array_disp_inplace(loc_sz_k,f_v(i,j,:,l),-alpha)
 
   end do
   end do
@@ -307,7 +306,7 @@ contains
      gi = global_indices(1)
      gj = global_indices(2)
      alpha = ey(gi,gj)*dt
-     f_v(i,j,k,:) = interp_eta4%interpolate_array_disp(loc_sz_l,f_v(i,j,k,:),alpha)
+     call interp_eta4%interpolate_array_disp_inplace(loc_sz_l,f_v(i,j,k,:),-alpha)
 
   end do
   end do
