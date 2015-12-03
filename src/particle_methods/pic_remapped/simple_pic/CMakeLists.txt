@@ -2,7 +2,6 @@ ADD_LIBRARY( sll_simple_pic_4d_particle OBJECT
   sll_m_simple_pic_4d_particle.F90)
 
 ADD_LIBRARY( sll_simple_pic STATIC
-  sll_m_simple_pic_4d_particle.F90
   sll_m_simple_pic_4d_group.F90
   )
 
