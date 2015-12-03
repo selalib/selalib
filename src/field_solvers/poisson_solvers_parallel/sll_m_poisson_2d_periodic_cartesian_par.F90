@@ -311,7 +311,7 @@ contains
     ! Reciprocals of domain lengths.
     sll_real64                        :: r_Lx, r_Ly
     sll_real64                        :: kx, ky
-    sll_comp64                        :: val
+    !sll_comp64                        :: val
     sll_real64                        :: normalization
     type(layout_2D), pointer          :: layout_x
     type(layout_2D), pointer          :: layout_y
@@ -439,7 +439,7 @@ contains
     ! Reciprocals of domain lengths.
     sll_real64                        :: r_Lx, r_Ly
     sll_real64                        :: kx, ky
-    sll_comp64                        :: val
+    !sll_comp64                        :: val
     sll_real64                        :: normalization
     type(layout_2D), pointer          :: layout_x
     type(layout_2D), pointer          :: layout_y
