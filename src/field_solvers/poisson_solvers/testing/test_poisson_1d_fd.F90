@@ -12,7 +12,7 @@ program unit_test_poisson_1d_fd
 
     implicit none
 
-    integer    :: ierr
+    !integer    :: ierr
     sll_int    :: idx, jdx
     sll_real64 :: testfunction_test_mode
 
@@ -76,7 +76,7 @@ contains
     subroutine test_poisson_solver(test_power_two, spline_degree,npart)
         implicit none
         integer :: ierr
-        sll_real64 :: interval_a=0, interval_b=1.0_f64
+        sll_real64 :: interval_a=0.0_f64, interval_b=1.0_f64
         class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
         class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
         class(poisson_1d_fd), pointer :: solver=>null()
@@ -84,10 +84,10 @@ contains
         sll_int32, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
         sll_real64, dimension(test_power_two) :: numerical_error_deriv
-        sll_real64, dimension(test_power_two) :: mode_error
+        !sll_real64, dimension(test_power_two) :: mode_error
         sll_real64 :: num_error_sum
         sll_int32, intent(in) ::  npart !<Number of particles
-        sll_int32 :: idx, jdx,node
+        !sll_int32 :: idx, jdx,node
         sll_int32 :: test_dimension
 
         sll_real64, dimension(:), allocatable :: rhs
@@ -128,7 +128,7 @@ contains
 
             testfunction_test_mode=1.0_f64*(2**(test_mode))
 
-            ww=sll_poisson_1d_fd_testfunction(xx)/npart/(interval_b- interval_a)
+            ww=sll_poisson_1d_fd_testfunction(xx)/real(npart,8)/(interval_b- interval_a)
             
             
             rhs=solver%get_rhs_klimontovich(xx,ww)  !*(solver%bspline_degree+1)
@@ -171,7 +171,7 @@ contains
             print *, "MAX",maxloc(abs( (solution - actual_solution)))
 
             H1seminorm=solver%H1seminorm_solution()
-            residual=0
+            residual=0.0_8
             !residual=sll_bspline_fem_solver_1d_calculate_residual()
 
             print *, "Relative Numerical Error: ", numerical_error(test_mode+1),"  ",numerical_error_deriv(test_mode+1)
@@ -205,21 +205,21 @@ contains
     subroutine test_momentum(test_power_two, spline_degree,npart)
         implicit none
         integer :: ierr
-        sll_real64 :: interval_a=0, interval_b=1.0_f64
+        sll_real64 :: interval_a=0.0_f64, interval_b=1.0_f64
         class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
-        class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
+        !class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
         class(poisson_1d_fd), pointer :: solver=>null()
         sll_int32, intent(in) :: test_power_two
         sll_int32, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
-        sll_real64, dimension(test_power_two) :: numerical_error_deriv
-        sll_real64, dimension(test_power_two) :: mode_error
-        sll_real64 :: num_error_sum
+        !sll_real64, dimension(test_power_two) :: numerical_error_deriv
+        !sll_real64, dimension(test_power_two) :: mode_error
+        !sll_real64 :: num_error_sum
         sll_int32, intent(in) ::  npart !<Number of particles
-        sll_int32 :: idx, jdx,node
+        !sll_int32 :: jdx
         sll_int32 :: test_dimension, test_mode
         sll_real64, dimension(npart) :: xx,ww, Phi, E
-        sll_real64, dimension(2**test_power_two) :: rhs, rhsfun
+        sll_real64, dimension(2**test_power_two) :: rhs
 
         test_dimension=2**test_power_two
 
@@ -246,7 +246,7 @@ contains
             call solver%eval_solution_derivative(xx,E)
             call solver%eval_solution(xx,Phi)
 
-            print *, "Int[E]= ", sum(E*ww)/npart,"	Int[Phi]= ", sum(Phi*ww)/npart
+            print *, "Int[E]= ", sum(E*ww)/real(npart,8),"	Int[Phi]= ", sum(Phi*ww)/real(npart,8)
         enddo
 
         call solver%delete(ierr)
@@ -257,19 +257,19 @@ contains
     subroutine test_monte_carlo(test_power_two, spline_degree,npartmax)
         implicit none
         integer :: ierr
-        sll_real64 :: interval_a=0, interval_b=1.0_f64
+        sll_real64 :: interval_a=0.0_f64, interval_b=1.0_f64
         class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
-        class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
+        !class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
         class(poisson_1d_fd), pointer :: solver=>null()
         sll_int32, intent(in) :: test_power_two
         sll_int32, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
-        sll_real64, dimension(test_power_two) :: numerical_error_deriv
-        sll_real64, dimension(test_power_two) :: mode_error
-        sll_real64 :: num_error_sum
+        !sll_real64, dimension(test_power_two) :: numerical_error_deriv
+        !sll_real64, dimension(test_power_two) :: mode_error
+        !sll_real64 :: num_error_sum
         sll_int32, intent(in) ::  npartmax !<Number of particles
         sll_int32 :: npart
-        sll_int32 :: idx, jdx,node
+        !sll_int32 :: node
         sll_int32 :: test_dimension, test_mode
         sll_real64, dimension(npartmax) :: xx
         sll_real64, dimension(npartmax) :: ww
