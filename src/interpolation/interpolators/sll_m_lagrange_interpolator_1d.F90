@@ -25,7 +25,7 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_li1d
    !> PLEASE ADD DOCUMENTATION
-   !procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_array_derivatives_li1d
+   procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_array_derivatives_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => interpolate_array_li1d
    !> PLEASE ADD DOCUMENTATION
@@ -33,17 +33,11 @@ private
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp_inplace => interpolate_array_disp_inplace_li1d
    !> PLEASE ADD DOCUMENTATION
-   !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_li1d
-   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_li1d
-   !> PLEASE ADD DOCUMENTATION
-   !procedure :: interpolate_pointer_values => interpolate_pointer_values_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_from_interpolant_array => interpolate_array_values_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_from_interpolant_value => interpolate_value_li1d
-   !> PLEASE ADD DOCUMENTATION
-   !procedure :: reconstruct_array => reconstruct_array_li1d
    !> PLEASE ADD DOCUMENTATION
    procedure, pass :: set_coefficients => set_coefficients_li1d
    !> PLEASE ADD DOCUMENTATION
@@ -196,24 +190,6 @@ subroutine interpolate_array_derivatives_li1d( &
     stop
 end subroutine interpolate_array_derivatives_li1d
 
-subroutine interpolate_pointer_derivatives_li1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_lagrange_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)              :: num_pts
-    sll_real64, dimension(:), pointer   :: vals_to_interpolate
-    sll_real64, dimension(:), pointer   :: output
-    !sll_int32 :: ierr
-    print*, 'interpolate_pointer_derivatives_li1d:  ', &
-         'not implemented for lagrange interpolation'
-    print *,interpolator%bc_type
-    print *,num_pts
-    print *,maxval(vals_to_interpolate)
-    print *,maxval(output)
-    stop
-end subroutine interpolate_pointer_derivatives_li1d
 
   function interpolate_derivative_eta1_li1d( interpolator, eta1 ) result(val)
     class(sll_lagrange_interpolator_1d), intent(in) :: interpolator
@@ -227,24 +203,6 @@ end subroutine interpolate_pointer_derivatives_li1d
     stop
   end function
 
-subroutine interpolate_pointer_values_li1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_lagrange_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)            :: num_pts
-    sll_real64, dimension(:), pointer :: vals_to_interpolate
-    sll_real64, dimension(:), pointer :: output
-    !sll_int32 :: ierr
-    print*, 'interpolate_pointer_values_li1d: ', &
-         'not implemented for lagrange interpolation'
-    print *,num_pts
-    print *,maxval(vals_to_interpolate)
-    print *,maxval(output)
-    print *,interpolator%bc_type
-    stop
-end subroutine interpolate_pointer_values_li1d
 
   function interpolate_value_li1d( interpolator, eta1 ) result(val)
     class(sll_lagrange_interpolator_1d), intent(in) :: interpolator
@@ -258,18 +216,6 @@ end subroutine interpolate_pointer_values_li1d
     stop
   end function
 
-  function reconstruct_array_li1d(this, num_points, data) result(res)
-    ! dummy procedure
-    class(sll_lagrange_interpolator_1d), intent(in)     :: this
-       sll_int32, intent(in)                :: num_points! size of output array
-       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
-       sll_real64, dimension(num_points)    :: res
-       print *,'#warning reconstruct_array_li1d dummy function'
-       print *,num_points
-       print *,maxval(data)
-       print *,this%bc_type
-       res(:) = 0.0_f64
-  end function reconstruct_array_li1d
 
   subroutine interpolate_array_li1d(this, num_pts, data, coordinates, output_array)
     class(sll_lagrange_interpolator_1d),  intent(in)       :: this
