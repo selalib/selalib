@@ -124,6 +124,13 @@ subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
   call interpolate_from_interpolant_array(data,-alpha,this%lagrange)
   output_array=this%lagrange%data_out
 
+
+  !select case (this%bc_type)
+  !   case (SLL_PERIODIC)
+  !      call lagrange_periodic(data, output_array, alpha, this%stencil_width)
+  !   end select
+  !call lagrange_halo_cells(data, output_array, alpha, this%stencil_width)
+
 end subroutine interpolate_array_disp_li1d
 
 
