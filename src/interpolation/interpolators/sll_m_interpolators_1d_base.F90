@@ -47,10 +47,6 @@ contains
 
 end type sll_c_interpolator_1d
 
-  ! Flags for way how to choose the Lagrange points
-  sll_int32, parameter :: SLL_D_INTERP_LAGRANGE_CENTERED = 0 !< Flag to specify 
-  sll_int32, parameter :: SLL_D_INTERP_LAGRANGE_FIXED    = 1 !< Flag 
-  
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
