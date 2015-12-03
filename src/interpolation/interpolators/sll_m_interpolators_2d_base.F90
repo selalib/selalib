@@ -86,7 +86,7 @@ implicit none
   end type sll_c_interpolator_2d
   
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
   !> Signature of interpolate_from_interpolant_value
   abstract interface
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
@@ -228,6 +228,5 @@ implicit none
      end subroutine delete_interpolator_2d
   end interface
 
-#endif
 
 end module sll_m_interpolators_2d_base
