@@ -739,6 +739,7 @@ contains
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
 
+    ! <<logE_standPush>>
     if (sim%my_rank ==0) open(65,file='logE_standPush.dat')
     !#ifdef _OPENMP
     !    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
@@ -925,7 +926,7 @@ contains
         plot_np_vx = 30
         plot_np_vy = 5
 
-        ! base class definition of visualize_f_slice_x_vx:
+        ! <<f_slice>> base class definition of visualize_f_slice_x_vx:
         !   [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::visualize_f_slice_x_vx]]
         ! specialized in:
         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
