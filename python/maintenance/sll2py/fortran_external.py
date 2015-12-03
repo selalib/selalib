@@ -94,7 +94,7 @@ fftw['match'   ] = re.compile( r'^d?fftw_\w+\Z', re.I ).match
 
 mpi = {}
 mpi['lib_name'] = 'mpi'
-mpi['mod_name'] = 'mpi'
+mpi['mod_name'] = 'sll_mpi'
 mpi['match']    = re.compile( r'^mpi_\w+\Z', re.I ).match
 
 hdf5 = {}

@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 24 Nov 2015
+# Last revision: 02 Dec 2015
 #
 from __future__ import print_function
 
@@ -267,9 +267,10 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     for i,(name,mmod) in enumerate( src_modules.items() ):
         print("  - interface for module %3d: %s" % (i+1,name) )
         interface = mmod.generate_interface_section()
-        filepath  = mmod.filepath[:-4] + '-interface.txt'
-        with open( filepath, 'w' ) as f:
-            print( interface, file=f )
+        if interface:
+            filepath  = mmod.filepath[:-4] + '-interface.txt'
+            with open( filepath, 'w' ) as f:
+                print( interface, file=f )
 
     print( "----------------------------------------------------------------" )
     for i,(name,mprg) in enumerate( src_programs.items() ):
