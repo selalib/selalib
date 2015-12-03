@@ -107,7 +107,7 @@ contains
     do j = 1, this%n2
        displacement = -this%a1 * dt
        f1d => this%data(:,j)
-       call this%interp1%interpolate_array_disp(this%n1, f1d, displacement, f1d)
+       call this%interp1%interpolate_array_disp_inplace(this%n1, f1d, displacement)
     end do
   end subroutine
 
@@ -123,7 +123,7 @@ contains
     do i = 1, this%n1
        displacement = -this%a2 * dt
        f1d => this%data(i,:)
-       call this%interp2%interpolate_array_disp(this%n2, f1d, displacement, f1d)
+       call this%interp2%interpolate_array_disp_inplace(this%n2, f1d, displacement)
     end do
   end subroutine
 
