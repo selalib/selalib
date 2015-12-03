@@ -48,7 +48,6 @@ contains
 end type sll_c_interpolator_1d
 
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   !> Signature of compute_interpolants
   abstract interface
@@ -157,7 +156,5 @@ end type sll_c_interpolator_1d
 
 
 
-
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 end module sll_m_interpolators_1d_base
