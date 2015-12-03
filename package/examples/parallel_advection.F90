@@ -158,7 +158,7 @@ contains
      global_indices = local_to_global(layout_eta1,(/1,j/)) 
      gj = global_indices(2)
      alpha = dt
-     call interp_eta1%interpolate_array_disp_inplace(loc_sz_i,f_eta1(:,j),alpha)
+     call interp_eta1%interpolate_array_disp_inplace(loc_sz_i,f_eta1(:,j),-alpha)
 
   end do
 
@@ -176,7 +176,7 @@ contains
      global_indices = local_to_global(layout_eta2,(/i,1/)) 
      gi = global_indices(1)
      alpha = dt
-     call interp_eta2%interpolate_array_disp_inplace(loc_sz_j,f_eta2(i,:),alpha)
+     call interp_eta2%interpolate_array_disp_inplace(loc_sz_j,f_eta2(i,:),-alpha)
 
   end do
 
