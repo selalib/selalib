@@ -211,7 +211,7 @@ contains  ! ****************************************************************
 !   sll_real64, dimension(:), intent(out)  :: output_array
 !   !sll_int32 :: ierr
 
-!   print*, 'interpolate_array_derivatives: ', &
+!   print*, 'interpolate_from_interpolant_derivatives_eta1: ', &
 !        'not implemented for periodic interpolation'
 !   output_array = -1000000._f64
 !   print *,interpolator%num_points

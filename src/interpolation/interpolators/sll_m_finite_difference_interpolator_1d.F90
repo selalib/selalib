@@ -40,7 +40,7 @@ private
      procedure :: interpolate_from_interpolant_derivative_eta1 => null_fd_1d_arg_msg
      procedure :: interpolate_from_interpolant_array => null_fd_1d_array_sub
      procedure :: interpolate_pointer_values => null_fd_1d_ptr_sub
-     procedure :: interpolate_array_derivatives => null_fd_1d_array_sub
+     procedure :: interpolate_from_interpolant_derivatives_eta1 => null_fd_1d_array_sub
      procedure :: interpolate_pointer_derivatives => &
           finite_difference_1d_interp_derivatives 
      procedure, pass :: interpolate_array => null_fd_1d_interp_array
