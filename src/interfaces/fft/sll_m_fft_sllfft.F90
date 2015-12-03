@@ -52,13 +52,6 @@ module sll_m_fft
 
 
 
-  !> Bit reversing
-  interface bit_reverse
-     module procedure bit_reverse_complex
-          !bit_reverse_integer32, &
-          !bit_reverse_integer64
-  end interface bit_reverse
-
   !> Set a forward fft
   integer, parameter, public :: FFT_FORWARD = -1
   !> Set a backward fft
@@ -112,64 +105,16 @@ contains
 
   end function fft_allocate_aligned_real
 
-! TODO: We want this ordering.
-!!$  !> Function to reconstruct the complex FFT mode from the data of a r2r transform
-!!$  function fft_get_mode_r2c_1d(plan,data,k) result(mode)
-!!$    type(sll_fft_plan), pointer, intent(in) :: plan !< FFT plan
-!!$    sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
-!!$    sll_int32, intent(in)                   :: k    !< mode to be extracted
-!!$    sll_comp64                              :: mode !< Complex value of kth mode
-!!$
-!!$    sll_int32                   :: n_2, n
-!!$
-!!$
-!!$    n = plan%problem_shape(1)
-!!$    n_2 = n/2 !ishft(n,-1)
-!!$
-!!$      if( k .eq. 0 ) then
-!!$        mode = cmplx(data(0),0.0_f64,kind=f64)
-!!$      else if( k .eq. n_2 ) then
-!!$        mode = cmplx(data(n_2),0.0_f64,kind=f64)
-!!$      else if( k .gt. n_2 ) then
-!!$        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
-!!$        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
-!!$      else
-!!$        mode = cmplx( data(k) , data(n-k) ,kind=f64)
-!!$      endif
-!!$  end function
-!!$
 
-!!$  !> Function to set a complex mode to the real representation of r2r.
-!!$  subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
-!!$    type(sll_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
-!!$    sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
-!!$    sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
-!!$    sll_int32, intent(in)                    :: k !< mode to be set
-!!$
-!!$    sll_int32 :: n_2, n!, index_mode
-!!$
-!!$    n = plan%problem_shape(1)
-!!$    n_2 = n/2 !ishft(n,-1)
-!!$
-!!$      if( k .eq. 0 ) then
-!!$        data(0) = real(new_value,kind=f64)
-!!$      else if( k .eq. n_2 ) then
-!!$        data(n_2) = real(new_value,kind=f64)
-!!$      else if( k .gt. n_2 ) then
-!!$        data(n-k) = real(new_value,kind=f64)
-!!$        data(k) = -aimag(new_value)
-!!$      else
-!!$        data(k) = real(new_value,kind=f64)
-!!$        data(n-k) = aimag(new_value)
-!!$      endif
-!!$  end subroutine 
-!!$
-
+  !> Function to reconstruct the complex FFT mode from the data of a r2r transform
   function fft_get_mode_r2c_1d(plan,data,k) result(mode)
-    type(sll_fft_plan), pointer :: plan
-    sll_real64, dimension(0:)   :: data
-    sll_int32                   :: k, n_2, n
-    sll_comp64                  :: mode
+    type(sll_fft_plan), pointer, intent(in) :: plan !< FFT plan
+    sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
+    sll_int32, intent(in)                   :: k    !< mode to be extracted
+    sll_comp64                              :: mode !< Complex value of kth mode
+
+    sll_int32                   :: n_2, n
+
 
     n = plan%problem_shape(1)
     n_2 = n/2 !ishft(n,-1)
@@ -177,20 +122,24 @@ contains
       if( k .eq. 0 ) then
         mode = cmplx(data(0),0.0_f64,kind=f64)
       else if( k .eq. n_2 ) then
-        mode = cmplx(data(1),0.0_f64,kind=f64)
+        mode = cmplx(data(n_2),0.0_f64,kind=f64)
       else if( k .gt. n_2 ) then
-        mode = cmplx( data(2*(n-k)) , -data(2*(n-k)+1),kind=f64 )
+        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
+        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
       else
-        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)
+        mode = cmplx( data(k) , data(n-k) ,kind=f64)
       endif
   end function
 
 
+  !> Function to set a complex mode to the real representation of r2r.
   subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
-    type(sll_fft_plan), pointer :: plan
-    sll_real64, dimension(0:)   :: data
-    sll_int32                   :: k, n_2, n
-    sll_comp64                  :: new_value
+    type(sll_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
+    sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
+    sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
+    sll_int32, intent(in)                    :: k !< mode to be set
+
+    sll_int32 :: n_2, n!, index_mode
 
     n = plan%problem_shape(1)
     n_2 = n/2 !ishft(n,-1)
@@ -198,15 +147,60 @@ contains
       if( k .eq. 0 ) then
         data(0) = real(new_value,kind=f64)
       else if( k .eq. n_2 ) then
-        data(1) = real(new_value,kind=f64)
+        data(n_2) = real(new_value,kind=f64)
       else if( k .gt. n_2 ) then
-        data(2*(n-k)) = real(new_value,kind=f64)
-        data(2*(n-k)+1) = -aimag(new_value)
+        data(n-k) = real(new_value,kind=f64)
+        data(k) = -aimag(new_value)
       else
-        data(2*k) = real(new_value,kind=f64)
-        data(2*k+1) = aimag(new_value)
+        data(k) = real(new_value,kind=f64)
+        data(n-k) = aimag(new_value)
       endif
-  end subroutine
+  end subroutine 
+
+! THIS IS THE ORDERING THAT SLLFFT R2R PRODUCES WITHOUT THE REORDERING TO FFTW
+!!$
+!!$  function fft_get_mode_r2c_1d(plan,data,k) result(mode)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_real64, dimension(0:)   :: data
+!!$    sll_int32                   :: k, n_2, n
+!!$    sll_comp64                  :: mode
+!!$
+!!$    n = plan%problem_shape(1)
+!!$    n_2 = n/2 !ishft(n,-1)
+!!$
+!!$      if( k .eq. 0 ) then
+!!$        mode = cmplx(data(0),0.0_f64,kind=f64)
+!!$      else if( k .eq. n_2 ) then
+!!$        mode = cmplx(data(1),0.0_f64,kind=f64)
+!!$      else if( k .gt. n_2 ) then
+!!$        mode = cmplx( data(2*(n-k)) , -data(2*(n-k)+1),kind=f64 )
+!!$      else
+!!$        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)
+!!$      endif
+!!$  end function
+!!$
+!!$
+!!$  subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
+!!$    type(sll_fft_plan), pointer :: plan
+!!$    sll_real64, dimension(0:)   :: data
+!!$    sll_int32                   :: k, n_2, n
+!!$    sll_comp64                  :: new_value
+!!$
+!!$    n = plan%problem_shape(1)
+!!$    n_2 = n/2 !ishft(n,-1)
+!!$
+!!$      if( k .eq. 0 ) then
+!!$        data(0) = real(new_value,kind=f64)
+!!$      else if( k .eq. n_2 ) then
+!!$        data(1) = real(new_value,kind=f64)
+!!$      else if( k .gt. n_2 ) then
+!!$        data(2*(n-k)) = real(new_value,kind=f64)
+!!$        data(2*(n-k)+1) = -aimag(new_value)
+!!$      else
+!!$        data(2*k) = real(new_value,kind=f64)
+!!$        data(2*k+1) = aimag(new_value)
+!!$      endif
+!!$  end subroutine
 
 
 
@@ -253,7 +247,7 @@ contains
     if ( direction == FFT_FORWARD ) then
        plan%t = conjg(plan%t)
     end if
-    call bit_reverse(nx/2,plan%t)
+    call bit_reverse_complex(nx/2,plan%t)
   end function
 
   !> Compute fast Fourier transform in complex to complex mode.
@@ -323,14 +317,14 @@ contains
     if ( direction == FFT_FORWARD ) then
        plan%t(1:nx/2) = conjg(plan%t(1:nx/2))
     end if
-    call bit_reverse(nx/2,plan%t(1:nx/2))
+    call bit_reverse_complex(nx/2,plan%t(1:nx/2))
 
 
     call compute_twiddles(ny,plan%t(nx/2+1:nx/2 + ny/2))
     if ( direction == FFT_FORWARD ) then
        plan%t(ny/2+1:ny/2 + ny/2) = conjg(plan%t(nx/2+1:nx/2 + ny/2))
     end if
-    call bit_reverse(ny/2,plan%t(nx/2+1:nx/2 + ny/2))
+    call bit_reverse_complex(ny/2,plan%t(nx/2+1:nx/2 + ny/2))
 
 
   end function fft_new_plan_c2c_2d
@@ -640,7 +634,7 @@ contains
     SLL_ALLOCATE(plan%t(1:ny/2),ierr)
     call compute_twiddles(ny,plan%t)
     plan%t = conjg(plan%t)
-    call bit_reverse(ny/2,plan%t)
+    call bit_reverse_complex(ny/2,plan%t)
 
     SLL_ALLOCATE(plan%twiddles(0:nx/2-1),ierr)
     SLL_ALLOCATE(plan%twiddles_n(0:nx-1),ierr)
@@ -716,7 +710,7 @@ contains
 
     SLL_ALLOCATE(plan%t(1:ny/2),ierr)
     call compute_twiddles(ny,plan%t)
-    call bit_reverse(ny/2,plan%t)
+    call bit_reverse_complex(ny/2,plan%t)
 
     SLL_ALLOCATE(plan%twiddles(0:nx/2-1),ierr)
     SLL_ALLOCATE(plan%twiddles_n(0:nx-1),ierr)
