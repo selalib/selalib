@@ -566,10 +566,6 @@ def process_interface_sections( original_root, preproc_root, replace=False ):
     original_root = original_root.rstrip('/')
     preproc_root  =  preproc_root.rstrip('/')
 
-#    # Counters
-#    num_ifclauses  = 0
-#    num_ifmods     = 0
-
     for fpath in recursive_file_search(
             preproc_root, select_file = is_interface_file ):
 
@@ -605,20 +601,6 @@ def process_interface_sections( original_root, preproc_root, replace=False ):
         if outer_if:
             lines = [outer_if,''] + lines
 
-#        #----------------------------------------------------------------------
-#        # TEST
-#        for c in ifclauses:
-#            print()
-#            print( '\n'.join( c ) )
-#            print()
-#        if ifmods:
-#            print( ifmods )
-#            print()
-#        # Update counters
-#        num_ifclauses  += len( ifclauses  )
-#        num_ifmods     += len( ifmods )
-#        #----------------------------------------------------------------------
-
         # Extract use statements that belong to ifdef clauses
         lines, blocks = extract_use_blocks( lines, *ifmods )
 
@@ -639,6 +621,10 @@ def process_interface_sections( original_root, preproc_root, replace=False ):
                 break
         lines = lines[:i] + iflines + lines[i:]
 
+        # Add divider lines
+        divider = '!' + 79*'+'
+        lines   = [divider] + lines + [divider]
+
         # Save interface to a new file
         new_fpath = fpath[:-4] + '2.txt'
         with open( new_fpath, 'w' ) as new_f:
@@ -650,10 +636,6 @@ def process_interface_sections( original_root, preproc_root, replace=False ):
             replace_interface_section( fpath_orig, new_fpath, overwrite=True )
             remove_repeated_access_spec_stmt( fpath_orig, overwrite=True )
         #----------------------------------------------------------------------
-
-#    # Some statistics
-#    print( "No. of #ifdef/#ifndef clauses = %d" % num_ifclauses  )
-#    print( "No. of effected modules       = %d" % num_ifmods )
 
 #==============================================================================
 # PARSER
