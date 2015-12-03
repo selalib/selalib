@@ -11,6 +11,7 @@ program test_pic_accumulators
   use sll_m_particle_initializers_4d
   use sll_m_cartesian_meshes
 
+  implicit none
 
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
@@ -27,7 +28,6 @@ program test_pic_accumulators
 #define QoverM 1._f64
 
   
-  implicit none
   type(sll_particle_group_4d), pointer :: part_group
   type(sll_cartesian_mesh_2d),   pointer :: m2d
   type(sll_charge_accumulator_2d), pointer :: all_charge

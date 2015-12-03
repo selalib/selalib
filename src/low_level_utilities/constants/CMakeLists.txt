@@ -1,5 +1,4 @@
-ADD_LIBRARY( sll_constants STATIC sll_m_constants.F90 )
-TARGET_LINK_LIBRARIES( sll_constants sll_working_precision )
+ADD_LIBRARY( sll_constants OBJECT sll_m_constants.F90 )
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY( testing )

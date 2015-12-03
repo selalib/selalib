@@ -25,7 +25,7 @@ module sll_m_hdf5_io_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
-use mpi
+use sll_mpi
 
 #ifndef NOHDF5
 
