@@ -1,5 +1,6 @@
 ADD_LIBRARY( sll_constants OBJECT sll_m_constants.F90 )
 
+
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY( testing )
 ENDIF(BUILD_TESTING)
