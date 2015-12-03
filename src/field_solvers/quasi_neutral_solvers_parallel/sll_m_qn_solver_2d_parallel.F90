@@ -88,9 +88,9 @@ contains
     plan%rmin     = rmin
     plan%rmax     = rmax
     
-    plan%fft_plan => fft_new_plan( NP_theta, x, x, FFT_FORWARD )
+    plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
 
-    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
+    plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
 
     plan%layout_fft => new_layout_3D( sll_world_collective )
     call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
@@ -151,12 +151,12 @@ contains
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    call fft_apply_plan( plan%fft_plan, hat_f, hat_f )
-    call fft_apply_plan( plan%fft_plan, hat_g, hat_g )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
 
     do i=1,NP_r_loc
 
-       call fft_apply_plan( plan%fft_plan, plan%array_fft(i,:,1), &
+       call fft_apply_plan_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
                                               plan%array_fft(i,:,1) )
        global = local_to_global( plan%layout_fft, (/i, 1, 1/))
        ind = global(1)
@@ -219,7 +219,7 @@ contains
 
     do i=1,NP_r_loc
        !call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
-       call fft_apply_plan( plan%inv_fft_plan, plan%array_fft(i,:,1), &
+       call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
                                                   plan%array_fft(i,:,1) ) 
     enddo
 

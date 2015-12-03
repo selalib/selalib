@@ -867,7 +867,7 @@ SLL_ALLOCATE(collective_displs(collective_size),ierr)
 SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
 
 SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
 
 layout_x1       => new_layout_2D( sll_world_collective )
 layout_x2       => new_layout_2D( sll_world_collective )    
@@ -1198,9 +1198,9 @@ do i_omp = 1, local_size_x2
   
   sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
 
-  call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%fwx,  &
-                      sim%advect_ampere_x1(tid)%ptr%d_dx, &
-                      sim%advect_ampere_x1(tid)%ptr%fk)
+  call fft_apply_plan_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
+       sim%advect_ampere_x1(tid)%ptr%d_dx, &
+       sim%advect_ampere_x1(tid)%ptr%fk)
 
   sim%advect_ampere_x1(tid)%ptr%r0(2:nc_x1/2+1) =    &
        sim%advect_ampere_x1(tid)%ptr%r0(2:nc_x1/2+1) &
@@ -1217,9 +1217,9 @@ do i_omp = 1, local_size_x2
        sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
      + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
 
-  call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, &
-                      sim%advect_ampere_x1(tid)%ptr%fk,  &
-                      sim%advect_ampere_x1(tid)%ptr%d_dx)
+  call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
+       sim%advect_ampere_x1(tid)%ptr%fk,  &
+       sim%advect_ampere_x1(tid)%ptr%d_dx)
 
   f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
   f1d_omp_out(np_x1, tid)   = f1d_omp_out(1, tid) 
@@ -1232,9 +1232,9 @@ end do
 !$OMP END PARALLEL
 
 sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
-call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
-                    sim%advect_ampere_x1(1)%ptr%d_dx, &
-                    sim%advect_ampere_x1(1)%ptr%ek)
+call fft_apply_plan_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
+     sim%advect_ampere_x1(1)%ptr%d_dx, &
+     sim%advect_ampere_x1(1)%ptr%ek)
 
 #ifdef _OPENMP
 do i = 2, nc_x1/2+1
@@ -1260,9 +1260,9 @@ do i = 2, nc_x1/2+1
      
 end do
 
-call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
-                    sim%advect_ampere_x1(1)%ptr%ek,  &
-                    efield)
+call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
+     sim%advect_ampere_x1(1)%ptr%ek,  &
+     efield)
 
 efield(np_x1) = efield(1)
 efield        = efield/nc_x1

@@ -808,7 +808,7 @@ endif
 
 
 SLL_ALLOCATE(sim%buf_fft(nc_x1),ierr)
-sim%pfwd => fft_new_plan(nc_x1,sim%buf_fft,sim%buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+sim%pfwd => fft_new_plan_r2r_1d(nc_x1,sim%buf_fft,sim%buf_fft,FFT_FORWARD,normalized = .TRUE.)
 SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)      
 SLL_ALLOCATE(sim%efield(np_x1),ierr)
 SLL_ALLOCATE(sim%e_app(np_x1),ierr)
@@ -1048,9 +1048,9 @@ enddo
 potential_energy = 0.5_f64*potential_energy* sim%sp(1)%mesh2d%delta_eta1
 
 sim%buf_fft = sim%sp(1)%rho(1:nc_x1)-sim%sp(2)%rho(1:nc_x1)
-call fft_apply_plan(sim%pfwd,sim%buf_fft,sim%buf_fft)
+call fft_apply_plan_r2r_1d(sim%pfwd,sim%buf_fft,sim%buf_fft)
 do k=0,nb_mode
-  sim%rho_mode(k)=fft_get_mode(sim%pfwd,sim%buf_fft,k)
+  sim%rho_mode(k)=fft_get_mode_r2c_1d(sim%pfwd,sim%buf_fft,k)
 enddo  
 write(sim%th_diag_id,'(f12.5,12g20.12)',advance='no') &
   time,                                               &
