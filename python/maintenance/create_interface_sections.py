@@ -30,6 +30,10 @@ ignored_symbols = [ \
         'mulku',
         ]
 
+permissive_modules = ['sll_m_hdf5_io_parallel']
+
+forced_public_symbols = ['sll_delete']
+
 def ignore_dir( d ):
     """ Return True if subdirectory should be ignored.
     """
@@ -104,8 +108,6 @@ def add_exported_symbols_permissive( self, *symbols ):
                 print( "  symbol '%' is neither defined nor imported here" % s )
                 raise SystemExit()
         self._exported_symbols.add( s )
-
-permissive_modules = ['sll_m_hdf5_io_parallel']
 
 def make_modules_permissive( *modules ):
     from types import MethodType
@@ -261,6 +263,14 @@ def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     for i,(name,mprg) in enumerate( src_programs.items() ):
         print("  - scatter from program %3d: %s" % (i+1,name) )
         mprg.scatter_imported_symbols()
+
+    # Force some symbols to be always public
+    for s in forced_public_symbols:
+        print( "----------------------------------------------------------------" )
+        for i,(name,mmod) in enumerate( src_modules.items() ):
+            if mmod.defines_symbol( s ) and (s not in mmod.exported_symbols):
+                print("  - set '%s' public in module %3d: %s" % (s,i+1,name) )
+                mmod.add_exported_symbols( s )
 
     print( "================================================================" )
     print( "[7] Library modules/programs: Generate interface sections" )
