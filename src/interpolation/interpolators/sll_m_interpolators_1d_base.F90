@@ -43,12 +43,15 @@ contains
    !> Compute the value of the interpolant at all grid points shifted by the given displacement from function values. Does not use a precomputed interpolant.
    procedure(interpolator_1d_array_disp), deferred :: &
         interpolate_array_disp
+   !> Compute the value of the interpolant at all grid points shifted by the given displacement. Does not use a precomputed interpolant.
+   procedure(interpolator_1d_array_disp_inplace), deferred :: &
+        interpolate_array_disp_inplace
 
 
 end type sll_c_interpolator_1d
 
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 
   !> Signature of compute_interpolants
   abstract interface
@@ -135,6 +138,7 @@ end type sll_c_interpolator_1d
   end interface
 
 
+
   !> Signature of interpolate_array_disp
   abstract interface
      subroutine interpolator_1d_array_disp( &
@@ -148,16 +152,32 @@ end type sll_c_interpolator_1d
        import :: sll_c_interpolator_1d
        class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
        sll_int32,                       intent(in)     :: num_pts    !< size of output array
-       sll_real64,                      intent(inout)  :: data(num_pts)  !< data to be interpolated
+       sll_real64,                      intent(in)     :: data(:)  !< data to be interpolated
        sll_real64,                      intent(in)     :: alpha !< displacement
-       sll_real64,                      intent(inout)  :: output_array(num_pts) !< interpolated values
+       sll_real64,                      intent(out)    :: output_array(num_pts) !< interpolated values
 
      end subroutine interpolator_1d_array_disp
   end interface
 
+  !> Signature of interpolate_array_disp
+  abstract interface
+     subroutine interpolator_1d_array_disp_inplace( &
+       this, &
+       num_pts, &
+       data, &
+       alpha)
+
+       use sll_m_working_precision
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
+       sll_int32,                       intent(in)     :: num_pts    !< size of output array
+       sll_real64,                      intent(inout)  :: data(num_pts)  !< data to be interpolated
+       sll_real64,                      intent(in)     :: alpha !< displacement
+
+     end subroutine interpolator_1d_array_disp_inplace
+  end interface
 
 
 
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 end module sll_m_interpolators_1d_base

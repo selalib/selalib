@@ -14,7 +14,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 02 Dec 2015
+# Last revision: 03 Dec 2015
 #
 import re
 
@@ -237,7 +237,6 @@ def find_all_used_modules( lines ):
 #        lines.append( line )
 #    return lines
 
-
 #==============================================================================
 # CLASS: handles replacement of interface
 #==============================================================================
@@ -298,12 +297,12 @@ class CleanupHandler( LineSelector ):
         if self.in_type:
             if match_type and match_type.group( 1 ) == 'end type':
                 self.in_type = False
-                print("END TYPE")
+#                print("END TYPE")
             return 'keep'
         else:
             if match_type and match_type.group( 1 ) == 'type':
                 self.in_type = True
-                print("BEGIN TYPE")
+#                print("BEGIN TYPE")
                 match_access_spec = self.regex['access-spec'].match( line )
                 if match_access_spec:
                     return 'strip', match_access_spec.group( 1 )
@@ -320,12 +319,12 @@ class CleanupHandler( LineSelector ):
             self.remove = self.line_is_split( line )
             return 'remove'
 
-        match_access_spec = self.regex['access-spec'].match( line )
-        if self.regex['access-spec'].match( line ):
-            print( "REMOVE LINE" )
-            print( line.rstrip('\n') )
-            print( self.regex['access-spec'].match( line ).group( 1 ) )
-            print()
+#        match_access_spec = self.regex['access-spec'].match( line )
+#        if self.regex['access-spec'].match( line ):
+#            print( "REMOVE LINE" )
+#            print( line.rstrip('\n') )
+#            print( self.regex['access-spec'].match( line ).group( 1 ) )
+#            print()
 
         # No match
         return 'keep'
@@ -567,16 +566,18 @@ def process_interface_sections( original_root, preproc_root,
     original_root = original_root.rstrip('/')
     preproc_root  =  preproc_root.rstrip('/')
 
+    counter = 0
     for fpath in recursive_file_search(
             preproc_root, select_file = is_interface_file ):
 
+        counter += 1
         fpath_orig = get_original_file( fpath, original_root, preproc_root )
         fpath_orig_int = fpath_orig + '-interface_old.txt'
-#        fpath_prpr = fpath.rpartition( '-interface.txt' )[0] + '.f90'
         print()
+        print( "[%3d]" % counter )
         print( "Post-processing interface: %s" % fpath )
-#        print( "     . pre-processed file: %s" % fpath_prpr )
         print( "   . original source file: %s" % fpath_orig )
+        print( "   . original interface  : %s" % fpath_orig_int )
 
         #----------------------------------------------------------------------
         # Convert some specific modules to headers
@@ -626,23 +627,29 @@ def process_interface_sections( original_root, preproc_root,
         divider = '!' + 79*'+'
         lines   = [divider] + lines + [divider]
 
-        # Save interface to a new file
+        # Save new interface to file
         new_fpath = fpath_orig + '-interface_new.txt'
         with open( new_fpath, 'w' ) as new_f:
             print( '\n'.join( lines ), file=new_f )
+        print( "   . new      interface  : %s" % new_fpath )
 
-        # Replace interface section into original file
+        # Replace interface section into copy of original file
         tmp = fpath_orig + '.new'
         shutil.copy( fpath_orig, tmp )
-        replace_interface_section( fpath_orig, fpath_orig_int, new_fpath )
-        remove_repeated_access_spec_stmt( fpath_orig, overwrite=True )
+        replace_interface_section( tmp, fpath_orig_int, new_fpath )
+        remove_repeated_access_spec_stmt( tmp, overwrite=True )
+        print( "   . new      source file: %s" % tmp )
 
+        # If required, overwrite original file
         if replace:
             os.rename( tmp, fpath_orig )
+            print( "Overwriting original source file" )
 
+        # If required, remove interface files
         if cleanup:
             os.remove( fpath_orig_int )
             os.remove( new_fpath )
+            print( "Removing interface files" )
 
         #----------------------------------------------------------------------
 
