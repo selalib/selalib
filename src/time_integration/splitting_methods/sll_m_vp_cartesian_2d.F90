@@ -64,7 +64,7 @@ contains
     do j = 1, this%Ncv+1
        displacement = -(vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
-       call this%interpx%interpolate_array_disp(this%Ncx+1, f1d, displacement,f1d)
+       call this%interpx%interpolate_array_disp_inplace(this%Ncx+1, f1d, displacement)
     end do
   end subroutine 
 
@@ -110,7 +110,7 @@ contains
     do i = 1, this%Ncx+1
         displacement = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(this%dist_func) (i,:) 
-        call this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement, f1d)
+        call this%interpv%interpolate_array_disp_inplace(this%Ncv+1, f1d, displacement)
      end do
   end subroutine
 
