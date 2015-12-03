@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 02 Dec 2015
+# Last revision: 03 Dec 2015
 #
 from __future__ import print_function
 
@@ -103,6 +103,7 @@ def add_exported_symbols_permissive( self, *symbols ):
                 print( "ERROR processing file '%s':" % self.filepath )
                 print( "  symbol '%' is neither defined nor imported here" % s )
                 raise SystemExit()
+        self._exported_symbols.add( s )
 
 permissive_modules = ['sll_m_hdf5_io_parallel']
 
