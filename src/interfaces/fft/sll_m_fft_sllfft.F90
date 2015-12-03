@@ -431,15 +431,39 @@ contains
     sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
     sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
 
-    sll_int32 :: nx
+    sll_int32 :: nx, k
     sll_real64 :: factor
+    sll_real64 :: tmp(plan%problem_shape(1))
 
     nx = plan%problem_shape(1)
 
     if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
        array_out = array_in
     endif
+
+    ! Change from FFTW ordering back to SLLFFT ordering
+    if (plan%direction .EQ. FFT_BACKWARD) then
+       tmp = array_out
+       do k=1,nx/2-1
+          array_out(2*k+1) = tmp(k+1)
+          array_out(2*k+2) = tmp(nx-k+1)
+       end do
+       array_out(1) = tmp(1)
+       array_out(2) = tmp(nx/2+1)
+    end if
+
+    
     call real_data_fft_dit( array_out, nx, plan%twiddles, plan%twiddles_n, plan%direction )
+    
+    ! Change to FFTW ordering
+    if (plan%direction .EQ. FFT_FORWARD) then
+       tmp = array_out      
+       do k=1,nx/2-1
+          array_out(k+1) = tmp(2*k+1)
+          array_out(nx-k+1) = tmp(2*k+1+1)
+       end do
+       array_out(nx/2+1) = tmp(2)
+    end if
 
     if( plan%normalized .EQV. .TRUE. ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
