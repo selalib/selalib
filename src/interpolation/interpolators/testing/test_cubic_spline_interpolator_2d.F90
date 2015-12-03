@@ -12,7 +12,7 @@ implicit none
 #define NPTS2 65 
 
   !type(sll_cubic_spline_interpolator_2d) :: cs2d
-  class(sll_interpolator_2d_base), pointer :: cs2d
+  class(sll_c_interpolator_2d), pointer :: cs2d
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
   sll_real64, dimension(:), allocatable      :: x1_eta1_max
@@ -91,13 +91,13 @@ implicit none
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
-        node_val   = cs2d%interpolate_value(eta1,eta2)
+        node_val   = cs2d%interpolate_from_interpolant_value(eta1,eta2)
         ref        = x1_polar_f(eta1,eta2,params)
         acc        = acc + abs(node_val-ref)
-        deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
+        deriv1_val = cs2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
         ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
         acc1       = acc1 + abs(deriv1_val-ref)
-        deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
+        deriv2_val = cs2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
         ref        = deriv_x1_polar_f_eta2(eta1,eta2,params)
         acc2       = acc2 + abs(deriv2_val-ref)
      end do
@@ -112,7 +112,7 @@ implicit none
 contains
 
 subroutine test_interpolator_2d()
-  class(sll_interpolator_2d_base),    pointer   :: interp
+  class(sll_c_interpolator_2d),    pointer   :: interp
   type(sll_cubic_spline_interpolator_2d), target    :: spline
   sll_real64, dimension(NPTS1,NPTS2) :: xx1
   sll_real64, dimension(NPTS1,NPTS2) :: xx2
@@ -137,7 +137,7 @@ subroutine test_interpolator_2d()
      xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
   end do
   end do
-  data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
+  call interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2, data_out)
 
   print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
 end subroutine test_interpolator_2d

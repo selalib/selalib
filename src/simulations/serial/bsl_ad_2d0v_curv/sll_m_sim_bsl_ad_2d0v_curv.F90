@@ -96,8 +96,8 @@ module sll_m_sim_bsl_ad_2d0v_curv
    class(sll_advection_1d_base), pointer    :: advect2_1d
    class(sll_characteristics_1d_base), pointer :: charac1
    class(sll_characteristics_1d_base), pointer :: charac2
-   class(sll_interpolator_1d_base), pointer   :: interp1
-   class(sll_interpolator_1d_base), pointer   :: interp2
+   class(sll_c_interpolator_1d), pointer   :: interp1
+   class(sll_c_interpolator_1d), pointer   :: interp2
 
 
    procedure(sll_scalar_initializer_2d), nopass, pointer :: phi_func
@@ -112,7 +112,7 @@ module sll_m_sim_bsl_ad_2d0v_curv
    logical :: csl_2012
    
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
 
     
    !time_iterations
@@ -246,18 +246,18 @@ contains
     sll_int32 :: Nc_eta2
     type(sll_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_cartesian_mesh_1d), pointer :: mesh_x2
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
     !class(sll_characteristics_1d_base), pointer :: charac1d_x1
     !class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    !class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    !class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    !class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    !class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     !class(sll_advection_1d_base), pointer    :: advect_1d_x1
     !class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
@@ -2193,7 +2193,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2219,8 +2219,8 @@ contains
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
     end do
    
@@ -2234,7 +2234,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2280,7 +2280,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2331,7 +2331,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2390,7 +2390,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2443,7 +2443,7 @@ subroutine compute_field_from_phi_2d_fd5_curvilinear(phi,mesh_2d,transformation,
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2499,7 +2499,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32, intent(in) :: d1
     sll_int32, intent(in) :: d2
     sll_int32 :: Nc_eta1
@@ -2572,7 +2572,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear(phi,mesh_2d,tra
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32, intent(in) :: d1
     sll_int32, intent(in) :: d2
     sll_int32 :: Nc_eta1
@@ -2677,7 +2677,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32, intent(in) :: d1
     sll_int32, intent(in) :: d2
     sll_int32 :: Nc_eta1
@@ -2842,7 +2842,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64, dimension(:,:), allocatable :: tmp
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -2876,7 +2876,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        div(i1,i2)=interp2d%interpolate_derivative_eta1(eta1,eta2)
+        div(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
       end do
     end do
 
@@ -2892,7 +2892,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        div(i1,i2)=div(i1,i2)+interp2d%interpolate_derivative_eta2(eta1,eta2)
+        div(i1,i2)=div(i1,i2)+interp2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
       end do
     end do
 
@@ -2908,7 +2908,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64, dimension(:,:), allocatable :: tmp
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min

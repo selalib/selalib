@@ -47,7 +47,7 @@ private
 !! respect to their use, as described by the interpolator_2d_base class.
 !! Where the diverse interpolators diverge is in the way to initialize them.
 !! We basically copy the analog for cubic splines
-  type, extends(sll_interpolator_2d_base), public :: sll_hermite_interpolator_2d
+  type, extends(sll_c_interpolator_2d), public :: sll_hermite_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
     type(sll_hermite_interpolation_2d), pointer :: hermite
     !> PLEASE ADD DOCUMENTATION
@@ -60,11 +60,11 @@ private
     !> PLEASE ADD DOCUMENTATION
     procedure :: compute_interpolants => wrap_compute_interpolants_hermite_2d
     !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_value => wrap_interpolate_value_hermite_2d
+    procedure :: interpolate_from_interpolant_value => wrap_interpolate_value_hermite_2d
     !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
+    procedure :: interpolate_from_interpolant_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
     !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
+    procedure :: interpolate_from_interpolant_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
     !> PLEASE ADD DOCUMENTATION
     procedure, pass :: interpolate_array => wrap_interpolate_array_hermite_2d
     !> PLEASE ADD DOCUMENTATION
@@ -294,49 +294,49 @@ contains
     !interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
   end function wrap_interpolate_deriv2_hermite_2d
 
-  function wrap_interpolate_array_hermite_2d( &
+  subroutine wrap_interpolate_array_hermite_2d( &
     this, &
     num_points1, &
     num_points2, &
     data_in, &
     eta1, &
-    eta2) &
-    result(data_out)
-    class(sll_hermite_interpolator_2d),  intent(in) :: this
+    eta2, &
+    data_out)
+    class(sll_hermite_interpolator_2d),  intent(in)  :: this
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: eta1
     sll_real64, dimension(:,:), intent(in)           :: eta2
     sll_real64, dimension(:,:), intent(in)           :: data_in
-    sll_real64, dimension(num_points1,num_points2)   :: data_out
+    sll_real64,                 intent(out)          :: data_out(num_points1,num_points2) 
     sll_int32 :: i
     sll_int32 :: j
     call compute_interpolants_hermite_2d( this%hermite, data_in )
     do j = 1, num_points2
       do i = 1, num_points1
-        data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
+        data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))
       end do
     end do
     !print *,'#wrap_interpolate_array_hermite_2d'
     !print *,'#not implemented for the moment'
     !stop
-  end function wrap_interpolate_array_hermite_2d
+  end subroutine wrap_interpolate_array_hermite_2d
 
-  function wrap_interpolate2d_disp_hermite_2d( &
-    this, &
-    num_points1, &
-    num_points2, &
-    data_in, &
-    alpha1, &
-    alpha2) &
-    result(data_out)
+  subroutine wrap_interpolate2d_disp_hermite_2d( &
+       this, &
+       num_points1, &
+       num_points2, &
+       data_in, &
+       alpha1, &
+       alpha2, &
+       data_out)
     class(sll_hermite_interpolator_2d), intent(in) :: this
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2
     sll_real64, dimension(:,:), intent(in)         :: alpha1
     sll_real64, dimension(:,:), intent(in)         :: alpha2
     sll_real64, dimension(:,:), intent(in)         :: data_in
-    sll_real64, dimension(num_points1,num_points2) :: data_out
+    sll_real64,                 intent(out)        :: data_out(num_points1,num_points2)
     print *,'#wrap_interpolate2d_disp_hermite_2d'
     print *,'#not implemented for the moment'
     data_out = 0.0_f64 * data_in
@@ -344,7 +344,7 @@ contains
     SLL_ASSERT(size(alpha1,1) == num_points1)
     SLL_ASSERT(size(alpha2,1) == num_points1)
     SLL_ASSERT(this%npts1     == num_points1)
-  end function wrap_interpolate2d_disp_hermite_2d
+  end subroutine wrap_interpolate2d_disp_hermite_2d
 
   
   subroutine wrap_set_coefficients_hermite_2d( &

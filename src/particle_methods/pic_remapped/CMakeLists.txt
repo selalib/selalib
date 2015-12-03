@@ -3,7 +3,6 @@ ADD_LIBRARY( sll_remapped_pic STATIC
   )
 
 TARGET_LINK_LIBRARIES( sll_remapped_pic
-  sll_working_precision
   sll_pic_accumulators
   )
 

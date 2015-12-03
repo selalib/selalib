@@ -87,7 +87,7 @@ program test_interpolation_2d
              -eta_min(1)+disp,&
              eta_max(1)-eta_min(1));
         dx(2) = interp%hierarchy(j)%coordinate(2);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
      end do
      error = 0.0_f64;
      do j=1,interp%size_basis
@@ -125,7 +125,7 @@ program test_interpolation_2d
              -eta_min(2)+disp,&
              eta_max(2)-eta_min(2));
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -184,7 +184,7 @@ print*, 'Non-constant displacement'
              -eta_min(1)+disp*interp%hierarchy(j)%coordinate(2),&
              eta_max(1)-eta_min(1));
         dx(2) = interp%hierarchy(j)%coordinate(2);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
      end do
      error = 0.0_f64;
      do j=1,interp%size_basis
@@ -235,7 +235,7 @@ print*, 'Non-constant displacement'
              -eta_min(2)+disp*interp%hierarchy(j)%coordinate(1),&
              eta_max(2)-eta_min(2));
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error

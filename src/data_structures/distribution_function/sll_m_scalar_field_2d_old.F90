@@ -15,8 +15,8 @@ module sll_m_scalar_field_2d_old
 
   type, public :: scalar_field_2d
      class(sll_coordinate_transformation_2d_base), pointer :: transf
-     class(sll_interpolator_1d_base), pointer :: eta1_interpolator
-     class(sll_interpolator_1d_base), poInter :: eta2_interpolator
+     class(sll_c_interpolator_1d), pointer :: eta1_interpolator
+     class(sll_c_interpolator_1d), poInter :: eta2_interpolator
      sll_real64, dimension(:,:), pointer      :: data
      sll_int32                                :: data_position
      character(len=64)                        :: name
@@ -60,8 +60,8 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                        :: field_name
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_int32, intent(in)                               :: data_position
-    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     
     class(sll_cartesian_mesh_2d), pointer :: mesh

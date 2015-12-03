@@ -11,9 +11,9 @@ use sll_m_coordinate_transformations_2d
 use sll_m_cartesian_meshes
 use iso_fortran_env, only: output_unit
 
-#define MPI_MASTER 0
-
 implicit none
+
+#define MPI_MASTER 0
 
 type(layout_4d),                              pointer :: layout
 type(sll_cartesian_mesh_2d),                  pointer :: mx

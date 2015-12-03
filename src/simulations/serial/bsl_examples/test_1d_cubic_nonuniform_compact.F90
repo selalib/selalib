@@ -24,8 +24,8 @@ sll_real64, dimension(:,:), allocatable :: df
 sll_real64, dimension(:,:), allocatable :: advfield_x
 sll_real64, dimension(:,:), allocatable :: advfield_v
 
-class(sll_interpolator_1d_base), pointer     :: interp_x
-class(sll_interpolator_1d_base), pointer     :: interp_v
+class(sll_c_interpolator_1d), pointer     :: interp_x
+class(sll_c_interpolator_1d), pointer     :: interp_v
 
 type(sll_cubic_spline_interpolator_1d), target   :: spline_x
 type(sll_cubic_spline_interpolator_1d), target   :: spline_v
@@ -114,7 +114,7 @@ contains
         eta = x_min + (i-1)*delta_x - dt*advfield_x(i,j)
         eta = max(eta, x_min)
         eta = min(eta, x_max)
-        df(i,j) = interp_x%interpolate_value(eta)
+        df(i,j) = interp_x%interpolate_from_interpolant_value(eta)
      end do
    end do
 
@@ -130,7 +130,7 @@ contains
         eta = v_min + (j-1)*delta_v - dt*advfield_v(i,j)
         eta = max(eta, v_min)
         eta = min(eta, v_max)
-        df(i,j) = interp_v%interpolate_value(eta)
+        df(i,j) = interp_v%interpolate_from_interpolant_value(eta)
      end do
    end do
 

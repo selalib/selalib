@@ -25,7 +25,7 @@ use sll_m_cubic_spline_interpolator_1d
 implicit none
   
   class(sll_advection_1d_base), pointer :: adv
-  class(sll_interpolator_1d_base), pointer :: interp
+  class(sll_c_interpolator_1d), pointer :: interp
   class(sll_characteristics_1d_base), pointer :: charac
   sll_real64 :: x_min
   sll_real64 :: x_max

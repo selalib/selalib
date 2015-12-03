@@ -1,5 +1,5 @@
 SET( PRECISION_SRC sll_m_working_precision.F90 )
-ADD_LIBRARY( sll_working_precision STATIC ${PRECISION_SRC} )
+ADD_LIBRARY( sll_working_precision OBJECT ${PRECISION_SRC} )
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
