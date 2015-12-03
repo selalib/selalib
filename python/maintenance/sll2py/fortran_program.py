@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 01 Dec 2015
+# Last revision: 02 Dec 2015
 #
 from __future__         import print_function
 from .content_extractor import compute_local_symbols, compute_external_symbols
@@ -71,18 +71,19 @@ class FortranProgram( FortranUnit ):
     def generate_interface_section( self ):
         """ Generate the interface section of a module file.
         """
+        indent  = '  '
+        comment = '! '
         lines = []
         # Use only section
         for name,data in sorted( self._used_modules.items() ):
-            tab = '! ' if name.startswith('F77_') else ''
+            tab = comment if name.startswith('F77_') else indent
             lines.append( tab + "use %s, only: &" % name )
             for m in sorted( data['items'] ):
-                lines.append( tab + "  %s, &" % m )
+                lines.append( tab + indent + "%s, &" % m )
             lines[-1] = lines[-1].rstrip( ', &' )
             lines.append( "" )
         # Implicit none statement
-        lines.append( "implicit none" )
-        lines.append( "" )
+        lines.append( indent + "implicit none" )
         # Concatenate line strings using newline characters
         return "\n".join( lines )
 
