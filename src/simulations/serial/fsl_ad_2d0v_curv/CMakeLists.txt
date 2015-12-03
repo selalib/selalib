@@ -9,7 +9,6 @@ file( GLOB   POST_PROC "*.dat" "*.gnu" )
 ADD_EXECUTABLE( ${EXECUTABLE} ${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE} 
   sll_interpolators
-  sll_constants
   sll_file_io
   sll_utilities )
   

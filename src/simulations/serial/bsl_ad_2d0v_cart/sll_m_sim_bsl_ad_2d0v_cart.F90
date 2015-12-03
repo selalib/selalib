@@ -166,18 +166,18 @@ contains
     sll_int32 :: Nc_x2
     type(sll_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_cartesian_mesh_1d), pointer :: mesh_x2
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
     class(sll_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     class(sll_advection_1d_base), pointer    :: advect_1d_x1
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr

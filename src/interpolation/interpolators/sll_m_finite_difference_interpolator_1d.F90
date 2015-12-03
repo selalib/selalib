@@ -1,6 +1,6 @@
 !> @ingroup interpolators
 !> @brief
-!> Finite differences implementation of sll_interpolator_1d_base
+!> Finite differences implementation of sll_c_interpolator_1d
 !> @details
 !! This is an experimental type meant to solve the following problem:
 !! We are used to fields coming with their own means of interpolation.
@@ -24,7 +24,7 @@ private
 
 
   !> Finite differences implementation of 1d interpolator
-  type, extends(sll_interpolator_1d_base) :: sll_finite_difference_interpolator_1d
+  type, extends(sll_c_interpolator_1d) :: sll_finite_difference_interpolator_1d
      sll_int32  :: num_points
      sll_real64 :: delta      ! cell size, distance between data points
      sll_real64 :: r_delta    ! reciprocal of the cell size
@@ -32,13 +32,13 @@ private
      procedure, pass(interpolator) :: initialize => &
           initialize_finite_difference_1d_interp
      procedure :: compute_interpolants => null_fd_1d_array_msg
-     procedure :: interpolate_value => null_fd_1d_arg_msg
+     procedure :: interpolate_from_interpolant_value => null_fd_1d_arg_msg
      ! FIXME: define is we want this to explicitly state that we are taking
      ! derivatives with respect to eta or whatnot.
-!     procedure :: interpolate_derivative_eta1 => null_interp_one_arg_msg
+!     procedure :: interpolate_from_interpolant_derivative_eta1 => null_interp_one_arg_msg
      ! yes, we are using the null functions more than once.
-     procedure :: interpolate_derivative_eta1 => null_fd_1d_arg_msg
-     procedure :: interpolate_array_values => null_fd_1d_array_sub
+     procedure :: interpolate_from_interpolant_derivative_eta1 => null_fd_1d_arg_msg
+     procedure :: interpolate_from_interpolant_array => null_fd_1d_array_sub
      procedure :: interpolate_pointer_values => null_fd_1d_ptr_sub
      procedure :: interpolate_array_derivatives => null_fd_1d_array_sub
      procedure :: interpolate_pointer_derivatives => &

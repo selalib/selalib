@@ -16,7 +16,7 @@ program sim_bsl_vp_1d1v_cart_serial
   implicit none
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
-  class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
   type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
@@ -181,24 +181,24 @@ program sim_bsl_vp_1d1v_cart_serial
   ! half time step advection in v
   do istep = 1, nbiter
      do i = 1, Ncx+1
-        alpha = -efield(i) * 0.5_f64 * dt
+        alpha = efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp(Ncv+1, f1d, alpha, f1d)
      end do
      ! full time step advection in x
      do j = 1, Ncv+1
-        alpha = (vmin + (j-1) * delta_v) * dt
+        alpha = -(vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        call interp_x%interpolate_array_disp(Ncx+1, f1d, alpha, f1d)
      end do
      ! compute rho and electric field
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
      call solve(poisson_1d, efield, rho)
      ! half time step advection in v
      do i = 1, Ncx+1
-        alpha = -efield(i) * 0.5_f64 * dt
+        alpha = efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp(Ncv+1, f1d, alpha, f1d)
      end do
      ! diagnostics
      time = istep*dt

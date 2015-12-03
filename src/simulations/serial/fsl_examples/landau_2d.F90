@@ -53,10 +53,10 @@ sll_real64, dimension(:,:),     allocatable  :: rho
 
 type(poisson_2d_periodic)                :: poisson
 
-class(sll_interpolator_1d_base), pointer :: interp_1
-class(sll_interpolator_1d_base), pointer :: interp_2
-class(sll_interpolator_1d_base), pointer :: interp_3
-class(sll_interpolator_1d_base), pointer :: interp_4
+class(sll_c_interpolator_1d), pointer :: interp_1
+class(sll_c_interpolator_1d), pointer :: interp_2
+class(sll_c_interpolator_1d), pointer :: interp_3
+class(sll_c_interpolator_1d), pointer :: interp_4
 
 type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
 type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
@@ -220,7 +220,7 @@ do i4 = 1, nc_eta4+1
   eta3 = eta3_min
   do i3 = 1, nc_eta3+1
     do i2 = 1, nc_eta2+1
-      f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1,f(:,i2,i3,i4),dt*eta3)
+      call interp_1%interpolate_array_disp(nc_eta1+1,f(:,i2,i3,i4),-dt*eta3,f(:,i2,i3,i4))
     end do
     eta3 = eta3 + delta_eta3
   end do
@@ -237,7 +237,7 @@ eta4 = eta4_min
 do i4 = 1, nc_eta4+1
   do i3 = 1, nc_eta3+1
     do i1 = 1, nc_eta1+1
-      f(i1,:,i3,i4) = interp_2%interpolate_array_disp(nc_eta2+1,f(i1,:,i3,i4),dt*eta4)
+      call interp_2%interpolate_array_disp(nc_eta2+1,f(i1,:,i3,i4),-dt*eta4,f(i1,:,i3,i4))
     end do
   end do
   eta4 = eta4 + delta_eta4
@@ -252,7 +252,7 @@ sll_real64, intent(in) :: dt
 do i4 = 1, nc_eta4+1
   do i2 = 1, nc_eta2+1
     do i1 = 1, nc_eta1+1
-      f(i1,i2,:,i4) = interp_3%interpolate_array_disp(nc_eta3+1,f(i1,i2,:,i4),ex(i1,i2)*dt)
+       call interp_3%interpolate_array_disp(nc_eta3+1,f(i1,i2,:,i4),-ex(i1,i2)*dt,f(i1,i2,:,i4))
     end do
   end do
 end do
@@ -266,7 +266,7 @@ sll_real64, intent(in) :: dt
 do i3 = 1, nc_eta3+1
   do i2 = 1, nc_eta2+1
     do i1 = 1, nc_eta1+1
-      f(i1,i2,i3,:) = interp_4%interpolate_array_disp(nc_eta4+1,f(i1,i2,i3,:),ey(i1,i2)*dt)
+       call interp_4%interpolate_array_disp(nc_eta4+1,f(i1,i2,i3,:),-ey(i1,i2)*dt,f(i1,i2,i3,:))
     end do
   end do
 end do

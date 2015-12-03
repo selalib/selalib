@@ -85,7 +85,7 @@ program test_interpolation_4d
         dx(2) = interp%hierarchy(j)%coordinate(2);
         dx(3) = interp%hierarchy(j)%coordinate(3);
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -127,7 +127,7 @@ program test_interpolation_4d
         dx(1) = interp%hierarchy(j)%coordinate(1);
         dx(3) = interp%hierarchy(j)%coordinate(3);
         dx(4) = interp%hierarchy(j)%coordinate(4);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -195,7 +195,7 @@ print*, 'Displacement non-constant in 1d'
         dx(2) = interp%hierarchy(j)%coordinate(2);
         dx(3) = interp%hierarchy(j)%coordinate(3);
         dx(4) = interp%hierarchy(j)%coordinate(4);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -244,7 +244,7 @@ print*, 'Displacement non-constant in 1d'
         dx(1) = interp%hierarchy(j)%coordinate(1);
         dx(3) = interp%hierarchy(j)%coordinate(3);
         dx(4) = interp%hierarchy(j)%coordinate(4);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
      end do
      error = 0.0_f64;
      do j=1,interp%size_basis
@@ -335,7 +335,7 @@ print*, 'Displacement non-constant in 2d'
         dx(2) = interp%hierarchy(j)%coordinate(2);
         dx(1) = interp%hierarchy(j)%coordinate(1);
         dx(4) = interp%hierarchy(j)%coordinate(4);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
      end do
      error = 0.0_f64;
      do j=1,interp%size_basis

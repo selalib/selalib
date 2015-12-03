@@ -43,8 +43,8 @@ program unit_test_2d
   ! class(scalar_field_2d_initializer_base), pointer    :: pfinit
   ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
   ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
-  ! class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  ! class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+  ! class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
+  ! class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
   !type(sll_arbitrary_degree_spline_interpolator_2d), target    :: interp_2d_term_source
   !class(sll_scalar_field_2d_base), pointer              :: rho
   !sll_real64, dimension(:,:), allocatable    :: calculated

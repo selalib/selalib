@@ -102,7 +102,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
    !advector
    class(sll_advection_2d_base), pointer    :: advect_2d
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
    sll_real64 :: factor_x1
    sll_real64 :: factor_x2_rho
    sll_real64 :: factor_x2_1
@@ -207,19 +207,19 @@ contains
     type(sll_cartesian_mesh_1d), pointer :: mesh_x2
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
     class(sll_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     class(sll_advection_1d_base), pointer    :: advect_1d_x1
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_real64 :: x1_min_bis
@@ -999,7 +999,7 @@ contains
 
         
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-      pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+      pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
 
@@ -1278,9 +1278,9 @@ contains
         enddo
         potential_energy = 0.5_f64*potential_energy* sim%mesh_2d%delta_eta1
           buf_fft = rho(1:np_x1-1)
-          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
-            rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+            rho_mode(k)=fft_get_mode_r2c_1d(pfwd,buf_fft,k)
           enddo  
           write(th_diag_id,'(f12.5,13g20.12)') &
             time, &

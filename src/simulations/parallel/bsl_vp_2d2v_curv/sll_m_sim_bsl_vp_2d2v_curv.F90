@@ -803,11 +803,12 @@ contains
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
-                alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                alpha3 = sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+                call sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
-                     alpha3 )
+                     alpha3, &
+                     sim%f_x3x4(i,j,:,l) )
                 ! Extra work to calculate the electric field energy. We should 
                 ! consider placing this somewhere else, probably at greater
                 ! expense.
@@ -840,11 +841,12 @@ contains
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
-                alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                alpha4 = sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+                call sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
-                     alpha4 )
+                     alpha4 , &
+                     sim%f_x3x4(i,j,k,:))
              end do
           end do
        end do
@@ -1010,7 +1012,7 @@ contains
                    eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
                 end if
                 
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_from_interpolant_value(eta1,eta2)
 
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
@@ -1303,15 +1305,15 @@ contains
     sll_real64, intent(in)                      :: delta_v
     sll_int32, intent(in)                       :: num_pts
     sll_real64, dimension(:), intent(inout)     :: f_line
-    class(sll_interpolator_1d_base)             :: f_interp
+    class(sll_c_interpolator_1d)             :: f_interp
     sll_int32  :: i
     sll_real64 :: displacement
 
     do i=1, num_pts
-       displacement = (vmin + real(i-1,f64)*delta_v)*dt
+       displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
     end do
   end subroutine advection_x_1d
 
@@ -1320,13 +1322,13 @@ contains
     sll_real64, dimension(:), intent(in)     :: efield
     sll_int32, intent(in)                    :: num_pts
     sll_real64, dimension(:), intent(inout)  :: f_line
-    class(sll_interpolator_1d_base), pointer :: f_interp
+    class(sll_c_interpolator_1d), pointer :: f_interp
     sll_int32                                :: i
     sll_real64                               :: displacement
 
     do i=1, num_pts
-       displacement = -efield(i)*0.5_f64*dt
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       displacement = efield(i)*0.5_f64*dt
+       call f_interp%interpolate_array_disp(num_pts, f_line, displacement, f_line)
     end do
   end subroutine advection_v_1d
 

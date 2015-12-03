@@ -32,7 +32,7 @@ implicit none
 
   type,extends(sll_advection_1d_base) :: CSL_1d_advector
   
-    class(sll_interpolator_1d_base), pointer  :: interp
+    class(sll_c_interpolator_1d), pointer  :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: eta_coords_unit
@@ -72,7 +72,7 @@ contains
     process_outside_point) &
     result(adv)      
     type(CSL_1d_advector), pointer :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
@@ -110,7 +110,7 @@ contains
     bc_type, &
     process_outside_point)
     class(CSL_1d_advector), intent(inout) :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
+    class(sll_c_interpolator_1d), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
@@ -294,10 +294,11 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    adv%buf1d_out = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       Npts, &
       adv%buf1d, &
-      adv%charac_feet_i)      
+      adv%charac_feet_i, &
+      adv%buf1d_out)      
 
     !adv%buf1d_out(1:Npts) = adv%buf1d_out(1:Npts)/(adv%eta_coords(Npts)-adv%eta_coords(1))
 
@@ -356,10 +357,11 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    output = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       adv%Npts, &
       input, &
-      adv%charac_feet)      
+      adv%charac_feet, &
+      output)      
 
     SLL_DEALLOCATE_ARRAY(A1,ierr)
 
