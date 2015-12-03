@@ -73,7 +73,7 @@ module sll_m_sim_bsl_gc_2d0v_polar
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
 
    
    !poisson solver
@@ -172,13 +172,13 @@ contains
     sll_real64 :: x1_max     
     sll_real64 :: x2_min
     sll_real64 :: x2_max     
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
     sll_real64, dimension(:,:), pointer :: b11
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
@@ -885,7 +885,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min
@@ -910,8 +910,8 @@ contains
       x2=x2_min+real(i2-1,f64)*delta_x2
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)/x1
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)/x1
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(x1,x2)/x1
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(x1,x2)/x1
       end do
     end do
     
@@ -969,7 +969,7 @@ contains
     
     SLL_ALLOCATE(int_r(Nc_x2),ierr)
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
-    pfwd => fft_new_plan(Nc_x2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_x2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -1014,10 +1014,10 @@ contains
     l1 = l1*delta_x2
     l2 = sqrt(l2*delta_x2)
     e  = 0.5_f64*e*delta_x2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo

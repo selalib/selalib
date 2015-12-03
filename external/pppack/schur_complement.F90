@@ -1,32 +1,34 @@
-! To solve M.x = b
-!Notre système peut s’écrire sous forme bloc
-!(A B)
-!(C D)
-!où C et B sont des petites matrices. Le système devient
-!A x1 + B x2 = b1
-!C x1 + D x2 = b2
-!On peut alors éliminer x1 de la deuxième equation en soustrayant CA^{-1} 
-!fois la premiere:
-!(D - C A^{-1}B) x2 = b2 -  C A^{-1} b1
-!
-!On note alors H = D - C A^{-1}B,  c2=  b2 -  C A^{-1} b1
-!
-!On obtient donc la solution après avoir assemblé H en résolvant
-!H x_2 = c2
-!A x1 = b1- B x2
-!
-!d’ou l’algorithme:
-!Factorisation:
-!Factoriser A (dgbtrf)
-!Resoudre: A Y = B  (Y=A^{-1}B), Y est une petite matrice. On peut appeler 
-!dgbtrs  avec plusieurs second membres
-!Calculer H = D - CY
-!Factoriser H
-!
-!Solve:
-!Calculer  c2=b2 -  C A^{-1} b1 (en résolvant  A z2=b1, puis b2=C z2) 
-!Resoudre H x_2 = c2 puis A x1 = b1- B x2
+!> We use the Schur complement to solve a linear system
+!! To solve M.x = b
+!! The system can be decomposed into four blocks
+!! (A B)
+!! (C D)
+!! where C et B are sparse matrices.
+!! A x1 + B x2 = b1
+!! C x1 + D x2 = b2
+!! Eliminate x1 in second equation by substract CA^{-1} 
+!! times the first equation
+!! (D - C A^{-1}B) x2 = b2 -  C A^{-1} b1
+!! 
+!! If H = D - C A^{-1}B,  c2=  b2 -  C A^{-1} b1
+!! 
+!! We get the solution after building H by solving 
+!! H.x2 = c2
+!! A.x1 = b1- B.x2
+!! 
+!! Factorization:
+!!  - Factorize banded matrix A 
+!!  - Solve A.Y = B  
+!!  - Compute H = D-CY
+!!  - Inverse H 
+!! 
+!! Solve:
+!!  - Compute c2= b2 - C.A^{-1}.b1 by solving A.z2=b1 and c2=b2-C.z2
+!!  - Compute x_2 = H^{-1}.c2 
+!!  - Solve   A.x1 = b1 - B.x2
 
+!! We use the same memory space for D and H
+!! Do not forget that k << n
 
 !> A=
 !> |  11  12  13  14   0   0  17  18  19 |
@@ -86,18 +88,18 @@ subroutine schur_complement_fac(s, n, k, q)
   integer              :: j
   integer              :: l
   integer              :: info
-  integer              :: jpiv(k)
-  integer              :: work(k*k)
   real(8), allocatable :: yy(:,:)
+  real(8), allocatable :: qq(:,:)
   
   integer :: kp1
   
+  ! allocate small blocks
   kp1 = k+1
   allocate(s%bb(kp1,k  )); s%bb = 0.0_8
   allocate(s%cc(k  ,kp1)); s%cc = 0.0_8
   allocate(s%dd(k  ,k  )); s%dd = 0.0_8
   allocate(s%z2(n-k))    ; s%z2 = 0.0_8
-  
+  ! assemble small blocks
   do i = 1, k
     l = 0
     do j = i, k
@@ -157,10 +159,28 @@ subroutine schur_complement_fac(s, n, k, q)
     end do
   end do
 
-  call dgetrf(k,k,s%dd,k,jpiv,info)
-  call dgetri(k,s%dd,k,jpiv,work,k*k,info)
-  !call print_matrix(s%dd)
-  
+  !Inverse H
+  allocate(qq(k+k-1,k)); qq = 0.0_8
+  do j = 1, k
+    l = 0
+    do i = -k+1,k-1
+      l=l+1
+      if(i+j >=1 .and. i+j<=k) qq(l,j) = s%dd(i+j,j)
+    end do
+  end do
+
+  call banfac ( qq, k+k-1, k, k-1, k-1, info )
+  do j = 1, k
+    do i = 1, k
+      if ( i==j) then
+        s%dd(i,j) = 1.0_8
+      else
+        s%dd(i,j) = 0.0_8
+      end if
+    end do
+    call banslv ( qq, k+k-1, k, k-1, k-1, s%dd(:,j) )
+  end do
+
 end subroutine schur_complement_fac
 
 subroutine schur_complement_slv(s, n, k, q, x)

@@ -110,7 +110,7 @@ implicit none
   sll_real64 :: dt_max4
   sll_real64 :: err3  
   sll_real64 :: err4  
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p
@@ -536,12 +536,12 @@ do istep = 1,num_dt1
 
 
   do step =1,nb_step
-    f_new = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Nc_x1+1, &
       Nc_x2+1, &
       f, &
       feet_x1, &
-      feet_x2)
+      feet_x2, f_new)
     f = f_new      
   enddo
 

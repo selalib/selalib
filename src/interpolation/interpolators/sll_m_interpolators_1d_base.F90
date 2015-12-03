@@ -1,20 +1,3 @@
-!**************************************************************
-!  Copyright INRIA
-!  Authors :
-!     CALVI project team
-!
-!  This code SeLaLib (for Semi-Lagrangian-Library)
-!  is a parallel library for simulating the plasma turbulence
-!  in a tokamak.
-!
-!  This software is governed by the CeCILL-B license
-!  under French law and abiding by the rules of distribution
-!  of free software.  You can  use, modify and redistribute
-!  the software under the terms of the CeCILL-B license as
-!  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info".
-!**************************************************************
-
 !> @ingroup interpolators
 !> @brief
 !> Module for 1D interpolation and reconstruction
@@ -28,198 +11,152 @@ module sll_m_interpolators_1d_base
   implicit none
 
   !>Abstract class for 1D interpolation and reconstruction
-  type, abstract :: sll_interpolator_1d_base
+  type, abstract :: sll_c_interpolator_1d
 
 contains
 
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_1d_array_msg), deferred, pass(interpolator) :: &
+  ! Procedure with precomputation of interpolant(s)
+  !> Compute coefficients of the interpolants and stores it in the interpolation object. 
+   procedure(interpolator_1d_interpolant), deferred :: &
           compute_interpolants
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_one_arg_sub), deferred, pass(interpolator) :: &
-          interpolate_value
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_one_arg_sub), deferred, pass(interpolator) :: &
-          interpolate_derivative_eta1
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolate_1d_array), pass, deferred :: interpolate_array
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolate_1d_array_at_displacement), pass, deferred :: interpolate_array_disp
-  !> PLEASE ADD DOCUMENTATION
-   procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
-     ! The following two are equivalent, and differ only by the type of
-     ! the input and output data, one acts on 1d arrays, the other on 1d
-     ! pointers. This is done for flexibility purposes.
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
-          interpolate_array_values
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_1d_ptr_sub), deferred, pass(interpolator) :: &
-          interpolate_pointer_values
-     ! The following two are equivalent, and differ only by the type of
-     ! the input and output data, oninterpolator_1d_array_sube acts on 1d arrays, the other on 1d
-     ! pointers. This is done for flexibility purposes.
-  ! procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
-  !        interpolate_array_derivatives
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_1d_ptr_sub), deferred, pass(interpolator) :: &
-          interpolate_pointer_derivatives
-     ! Momentarily comment these out until we are actually going to have
-     ! implementations for them.
-     ! procedure(interpolate_1d_array), pass, deferred :: interpolate_array
-     ! procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
-  !> PLEASE ADD DOCUMENTATION
-   procedure(interpolator_1d_set_coeffs), pass, deferred :: set_coefficients
-  !> PLEASE ADD DOCUMENTATION
-   procedure(get_coeffs_1d), pass, deferred :: get_coefficients
-  end type sll_interpolator_1d_base
+   !> Set value of coefficients of the interpolant to the given values.
+   procedure(interpolator_1d_set_coeffs), deferred :: &
+        set_coefficients
+   !> Extract the value of the precomputed coefficients of the interpolation from the interpolator object.
+   procedure(interpolator_1d_get_coeffs), deferred :: &
+        get_coefficients
+   !> Compute the value of the interpolant of at a given abscissa \a x from the precomputed coefficients of the interpolator (stored in the interpolation object) 
+   procedure(interpolator_one_arg_sub), deferred :: &
+          interpolate_from_interpolant_value
+   !>  Compute the value of the derivative of the interpolant of at a given abscissa \a x from the precomputed coefficients of the interpolator (stored in the interpolation object).
+   procedure(interpolator_one_arg_sub), deferred :: &
+          interpolate_from_interpolant_derivative_eta1
+   !> Compute the value of the interpolant at several given abscissae given as an array from the precomputed coefficients of the interpolator.
+   procedure(interpolator_1d_array_interpolant), deferred :: &
+        interpolate_from_interpolant_array
 
-  sll_int32, parameter :: INTERP_PERIODIC_BC  = 0 !< PLEASE ADD DOCUMENTATION
-  sll_int32, parameter :: INTERP_DIRICHLET_BC = 1 !< PLEASE ADD DOCUMENTATION
-  sll_int32, parameter :: INTERP_NEUMANN_BC   = 2 !< PLEASE ADD DOCUMENTATION
 
-  !> Signature of the interpolating function for one point
+   ! Procedures including whole interpolation process
+   !> Compute the value of the interpolant at several given abscissae given as an array from given function values. Does not use a precomputed interpolant.
+   procedure(interpolator_1d_array), deferred :: &
+        interpolate_array
+   !> Compute the value of the interpolant at all grid points shifted by the given displacement from function values. Does not use a precomputed interpolant.
+   procedure(interpolator_1d_array_disp), deferred :: &
+        interpolate_array_disp
+
+
+end type sll_c_interpolator_1d
+
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+  !> Signature of compute_interpolants
   abstract interface
-     function interpolator_one_arg_msg( interpolator, eta1 ) result(val)
-       use sll_m_working_precision
-       import :: sll_interpolator_1d_base
-       sll_real64                                     :: val !< value
-       class(sll_interpolator_1d_base), intent(inout) :: interpolator !< interpolator
-       sll_real64, intent(in)                         :: eta1 !< position
-     end function interpolator_one_arg_msg
-  end interface
-
-  !> Signature of the interpolating function derivative for one point
-  abstract interface
-     function interpolator_one_arg_sub( interpolator, eta1 ) result(val)
-       use sll_m_working_precision
-       import :: sll_interpolator_1d_base
-       sll_real64                                     :: val
-       class(sll_interpolator_1d_base), intent(in) :: interpolator
-       sll_real64, intent(in)                         :: eta1
-     end function interpolator_one_arg_sub
-  end interface
-
-
-  !> Signature of the interpolating function for n points
-  abstract interface
-     subroutine interpolator_1d_array_msg( &
+     subroutine interpolator_1d_interpolant( &
           interpolator, data_array,&
           eta_coords, &
           size_eta_coords)
        use sll_m_working_precision
-       import :: sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(inout) :: interpolator
-       sll_real64, dimension(:), intent(in) :: data_array
-       sll_real64, dimension(:), intent(in),optional  :: eta_coords
-       sll_int32, intent(in),optional                 :: size_eta_coords
-     end subroutine interpolator_1d_array_msg
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(inout)        :: interpolator !< interpolator object
+       sll_real64,                      intent(in)           :: data_array(:)   !< data at the grid points
+       sll_int32,                       intent(in),optional  :: size_eta_coords !< number of coordinates given
+       sll_real64,                      intent(in),optional  :: eta_coords(:)   !< coordinates for which to compute the intepolant (optional argument for local interpolants)
+     end subroutine interpolator_1d_interpolant
   end interface
 
-  !> Signature of the interpolating function derivative for n points
+
+  !> Signature of get_coefficients
   abstract interface
-     subroutine interpolator_1d_array_sub( &
+     function interpolator_1d_get_coeffs(interpolator)
+       use sll_m_working_precision
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(in) :: interpolator !< interpolator object
+       sll_real64, dimension(:), pointer           :: interpolator_1d_get_coeffs !< coefficients
+     end function interpolator_1d_get_coeffs
+  end interface
+
+  !> Signature of set_coefficients
+  abstract interface
+     subroutine interpolator_1d_set_coeffs( interpolator, coeffs )
+       use sll_m_working_precision
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(inout) :: interpolator  !< interpolator
+       ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
+       ! for more flexibility for the children classes.
+       sll_real64, dimension(:), intent(in), optional   :: coeffs !< coefficients to be set
+     end subroutine interpolator_1d_set_coeffs
+  end interface
+
+
+  !> Signature of interpolate_from_interpolant_value and interpolate_from_interpolant_derivative_eta1
+  abstract interface
+     function interpolator_one_arg_sub( interpolator, eta1 ) result(val)
+       use sll_m_working_precision
+       import :: sll_c_interpolator_1d
+       sll_real64                                     :: val  !< interpolated value
+       class(sll_c_interpolator_1d     ), intent(in)    :: interpolator !< interpolator object
+       sll_real64,                      intent(in)    :: eta1 !< abscissa where to interpolate
+     end function interpolator_one_arg_sub
+  end interface
+
+
+
+  !> Signature of interpolate_from_interpolant_value
+  abstract interface
+     subroutine interpolator_1d_array_interpolant( &
        interpolator, &
        num_pts, &
        vals_to_interpolate, &
        output_array )
 
        use sll_m_working_precision
-       import :: sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(in) :: interpolator
-       sll_int32, intent(in)                :: num_pts
-       sll_real64, dimension(:), intent(in) :: vals_to_interpolate
-       sll_real64, dimension(:), intent(out):: output_array
-     end subroutine interpolator_1d_array_sub
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(in) :: interpolator !< interpolator object
+       sll_int32,                       intent(in) :: num_pts      !< size of output array
+       sll_real64,                      intent(in) :: vals_to_interpolate(num_pts) !< abscissae where to interpolate (size num_pts)
+       sll_real64,                      intent(out):: output_array(num_pts) !< interpolated values at \a vals_to_interpolate
+     end subroutine interpolator_1d_array_interpolant
   end interface
 
-  !> Signature of interpolating function
-  abstract interface
-     subroutine interpolator_1d_ptr_sub( &
-       interpolator, &
-       num_pts, &
-       vals_to_interpolate, &
-       output )
 
+
+  !> Signature of interpolate_array
+  abstract interface
+     subroutine interpolator_1d_array(this, num_pts, data, coordinates, output_array) 
        use sll_m_working_precision
-       import :: sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(in) :: interpolator
-       sll_int32, intent(in)                :: num_pts
-       sll_real64, dimension(:), pointer :: vals_to_interpolate
-       sll_real64, dimension(:), pointer :: output
-     end subroutine interpolator_1d_ptr_sub
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
+       sll_int32,                       intent(in)     :: num_pts    !< size of output array
+       sll_real64,                      intent(in)     :: data(:)  !< function values at grid points
+       sll_real64,                      intent(in)     :: coordinates(num_pts) !<  points where output is desired (size num_pts)
+       sll_real64,                      intent(out)    :: output_array(num_pts) !< interpolated values at \a coordinates
+     end subroutine interpolator_1d_array
   end interface
 
-  !> Signature of interpolating function
-  abstract interface
-     function interpolate_1d_array(this, num_points, data, coordinates) &
-          result(res)
 
-       use sll_m_working_precision
-       import sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(in)     :: this
-       sll_int32, intent(in)  :: num_points    ! size of output array
-       sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated
-       ! points where output is desired
-       sll_real64, dimension(:), intent(in) :: coordinates
-       sll_real64, dimension(num_points)    :: res
-     end function interpolate_1d_array
-  end interface
-
-  !> it is a bad practice to return large arrays like this. Must modify.
+  !> Signature of interpolate_array_disp
   abstract interface
-     function interpolate_1d_array_at_displacement( &
+     subroutine interpolator_1d_array_disp( &
        this, &
-       num_points, &
+       num_pts, &
        data, &
-       alpha) result(res)
+       alpha, &
+       output_array)
 
        use sll_m_working_precision
-       import sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(in)     :: this
-       sll_int32, intent(in)  :: num_points    ! size of output array
-       sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated
-       ! points where output is desired
-       sll_real64, intent(in) :: alpha
-       sll_real64, dimension(num_points)    :: res
-     end function interpolate_1d_array_at_displacement
+       import :: sll_c_interpolator_1d
+       class(sll_c_interpolator_1d), intent(in)     :: this !< interpolator object
+       sll_int32,                       intent(in)     :: num_pts    !< size of output array
+       sll_real64,                      intent(inout)  :: data(num_pts)  !< data to be interpolated
+       sll_real64,                      intent(in)     :: alpha !< displacement
+       sll_real64,                      intent(inout)  :: output_array(num_pts) !< interpolated values
+
+     end subroutine interpolator_1d_array_disp
   end interface
 
-  !> Signature of interpolating function
-  abstract interface
-     function reconstruct_1d_array(this, num_points, data) result(res)
-       use sll_m_working_precision
-       import sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(in)     :: this
-       sll_int32, intent(in)     :: num_points    ! size of output array
-       sll_real64, dimension(:), intent(in)  :: data ! data to be interpolated
-       sll_real64, dimension(num_points)     :: res
-     end function reconstruct_1d_array
-  end interface
 
-  !> Signature of interpolating function
-  abstract interface
-     subroutine interpolator_1d_set_coeffs( interpolator, coeffs )
-       use sll_m_working_precision
-       import sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(inout) :: interpolator
-       ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
-       ! for more flexibility for the children classes.
-       sll_real64, dimension(:), intent(in), optional   :: coeffs
-     end subroutine interpolator_1d_set_coeffs
-  end interface
 
-   abstract interface
-  !> Signature of interpolating function
-     function get_coeffs_1d(interpolator)
-       use sll_m_working_precision
-       import sll_interpolator_1d_base
-       class(sll_interpolator_1d_base), intent(in) :: interpolator
-       sll_real64, dimension(:), pointer         :: get_coeffs_1d
-     end function get_coeffs_1d
-  end interface
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

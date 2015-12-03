@@ -37,14 +37,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_remap
                          sll_mesh_calculus
                          sll_quadrature
-                         sll_constants
                          sll_coordinate_transformations
                          sll_meshes
                          sll_utilities
                          sll_timer
                          sll_memory
                          sll_assert
-                         sll_working_precision
                          )
 
     # Variables passed to simulations' CMakeFiles in subdirectories

@@ -15,7 +15,6 @@ add_library( sll_pic_initializers STATIC
 target_link_libraries( sll_pic_initializers
   sll_pic_particles
   sll_meshes
-  sll_working_precision
   sll_assert
   sll_memory
   sll_random_deviate_generators )

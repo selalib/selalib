@@ -313,7 +313,7 @@ module sll_m_fdistribu4d_dk
         y = ygrid_2d(ix,iy)
         r = polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
-        func_xy(ix,iy) = interpolate_value(r,sp1d_r)
+        func_xy(ix,iy) = interpolate_from_interpolant_value(r,sp1d_r)
       end do
     end do
     call sll_delete(sp1d_r)

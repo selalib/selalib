@@ -13,8 +13,8 @@ program test_adv_2d
   use sll_m_hdf5_io_serial
   implicit none
   class(split_advection_2d), pointer :: split
-  class(sll_interpolator_1d_base), pointer :: interp1
-  class(sll_interpolator_1d_base), pointer :: interp2
+  class(sll_c_interpolator_1d), pointer :: interp1
+  class(sll_c_interpolator_1d), pointer :: interp2
   class(sll_characteristics_1d_base), pointer :: charac1
   class(sll_characteristics_1d_base), pointer :: charac2
   sll_real64, dimension(:,:), pointer :: f

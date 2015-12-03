@@ -107,13 +107,13 @@ contains
     print *, 'interpolating individual values from 1 to NP-1:'
     do i=1, NP-1
        x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
-       accumulator1 = accumulator1 + abs(data(i) - interpolate_value(x, sp1))
+       accumulator1 = accumulator1 + abs(data(i) - interpolate_from_interpolant_value(x, sp1))
     end do
     print *, 'checking periodicity:'
     print *, 'difference between values at points 1 and NP: ', &
-         abs(data(1) - interpolate_value(XMAX,sp1))
+         abs(data(1) - interpolate_from_interpolant_value(XMAX,sp1))
     print *, 'interpolating the whole array:'
-    call interpolate_array_values(coordinates, out, NP-1, sp1)
+    call interpolate_from_interpolant_array(coordinates, out, NP-1, sp1)
     do i=1, NP-1
        accumulator3 = accumulator3 + abs(data(i) - out(i))
     end do
@@ -121,9 +121,9 @@ contains
     print *, 'hermite case, NP points: '
     do i=1, NP
        x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
-       accumulator2 = accumulator2 + abs(data(i) - interpolate_value(x, sp2))
+       accumulator2 = accumulator2 + abs(data(i) - interpolate_from_interpolant_value(x, sp2))
     end do
-    call interpolate_array_values(coordinates, out, NP, sp2)
+    call interpolate_from_interpolant_array(coordinates, out, NP, sp2)
     do i=1, NP
        accumulator4 = accumulator4 + abs(data(i) - out(i))
     end do
@@ -137,11 +137,11 @@ contains
     print *, accumulator3/real(NP,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( XMIN,sp1)
+         'interpolated        = ', interpolate_from_interpolant_value( XMIN,sp1)
     
     write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0+XMIN,sp1)
+         'interpolated        = ', interpolate_from_interpolant_value( (XMAX-XMIN)/4.0+XMIN,sp1)
      
     if ( (accumulator1/real(NP,f64) >= 1.0e-15) .or. &
          (accumulator3/real(NP,f64) >= 1.0e-15) ) then 
@@ -157,10 +157,10 @@ contains
     print *, accumulator2/real(NP,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( 0.0_f64,sp2)
+         'interpolated        = ', interpolate_from_interpolant_value( 0.0_f64,sp2)
     write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4+1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0,sp2)
+         'interpolated        = ', interpolate_from_interpolant_value( (XMAX-XMIN)/4.0,sp2)
      print *, 'spline coefficients: '
      
     if ( (accumulator2/real(NP,f64) >= 1.0e-15) .or. &
@@ -568,13 +568,13 @@ contains
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 
-          val = interpolate_value(x1,spline)
+          val = interpolate_from_interpolant_value(x1,spline)
           !print *,'x = ', x1, 'true data: ',data_in(i+1), 'interpolated: ', val
           acc = acc + abs(val-data_in(i+1))  
        end do
        ! Do the last point separately because due to roundoff error, it ends
        ! up out of the range inside the loop.
-       val = interpolate_value(X1MAX, spline)
+       val = interpolate_from_interpolant_value(X1MAX, spline)
        acc = acc + abs(val-data_in(npts))    
 
        average_error = acc/(real(npts,f64))

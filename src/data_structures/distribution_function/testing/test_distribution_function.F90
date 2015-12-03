@@ -14,8 +14,8 @@ program unit_test
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   type(sll_cartesian_mesh_2d), pointer :: m_log
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
-  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+  class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
+  class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
   type(sll_distribution_function_2d)   :: df 
   character(32)  :: name = 'dist_func'
   character(len=4) :: cstep

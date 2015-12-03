@@ -1088,7 +1088,7 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
 
     SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
     SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
     layout_x1       => new_layout_2D( sll_world_collective )
@@ -1395,9 +1395,9 @@ contains
                  
                  sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
                
-                 call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%fwx,  &
-                                     sim%advect_ampere_x1(tid)%ptr%d_dx, &
-                                     sim%advect_ampere_x1(tid)%ptr%fk)
+                 call fft_apply_plan_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1(tid)%ptr%fk)
                  do i = 2, nc_x1/2+1
                    sim%advect_ampere_x1(tid)%ptr%fk(i) = &
                       sim%advect_ampere_x1(tid)%ptr%fk(i) & 
@@ -1411,9 +1411,9 @@ contains
                     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
                     * sim%integration_weight(ig_omp)
                
-                 call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, &
-                                     sim%advect_ampere_x1(tid)%ptr%fk,  &
-                                     sim%advect_ampere_x1(tid)%ptr%d_dx)
+                 call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1(tid)%ptr%d_dx)
                
                  f1d_omp_out(1:nc_x1,tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
                  f1d_omp_out(np_x1,  tid) = f1d_omp_out(1, tid) 
@@ -1439,9 +1439,9 @@ contains
                     sim%advect_ampere_x1(1)%ptr%r1 )
                
                sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
-               call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
-                                   sim%advect_ampere_x1(1)%ptr%d_dx, &
-                                   sim%advect_ampere_x1(1)%ptr%ek)
+               call fft_apply_plan_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
+                    sim%advect_ampere_x1(1)%ptr%d_dx, &
+                    sim%advect_ampere_x1(1)%ptr%ek)
                
                
                do i = 2, nc_x1/2+1
@@ -1451,9 +1451,9 @@ contains
                     / (2*sll_pi*cmplx(0.,i-1,kind=f64))
                end do
                
-               call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
-                                   sim%advect_ampere_x1(1)%ptr%ek,  &
-                                   efield)
+               call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
+                    sim%advect_ampere_x1(1)%ptr%ek,  &
+                    efield)
                
                efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
                efield(np_x1) = efield(1)
@@ -1643,10 +1643,10 @@ contains
           f_hat_x2_loc(1:nb_mode+1) = 0._f64
           do i=1,local_size_x2
              buf_fft = f_x1(1:np_x1-1,i)
-             call fft_apply_plan(pfwd,buf_fft,buf_fft)
+             call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
              do k=0,nb_mode
                 f_hat_x2_loc(k+1) = f_hat_x2_loc(k+1) &
-                     +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+                     +abs(fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
                      *sim%integration_weight(ig+i)
              enddo
           enddo
@@ -1670,10 +1670,10 @@ contains
           if (sll_get_collective_rank(sll_world_collective)==0) then                  
 
              buf_fft = rho(1:np_x1-1)
-             call fft_apply_plan(pfwd,buf_fft,buf_fft)
+             call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
 
              do k=0,nb_mode
-                rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+                rho_mode(k)=fft_get_mode_r2c_1d(pfwd,buf_fft,k)
              enddo
 
              !write(th_diag_id,'(8g20.12)',advance='no') &

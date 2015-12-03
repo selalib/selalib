@@ -18,12 +18,12 @@
 !!
 !! Methods:
 !! - compute_interpolants(...)
-!! - interpolate_value(...)
-!! - interpolate_derivative_eta1(...)
+!! - interpolate_from_interpolant_value(...)
+!! - interpolate_from_interpolant_derivative_eta1(...)
 !! - interpolate_array(...)
 !! - interpolate_array_disp(...)
 !! - reconstruct_array(...)
-!! - interpolate_array_values(...)
+!! - interpolate_from_interpolant_array(...)
 !! - interpolate_pointer_values(...)
 !! - interpolate_array_derivatives(...)
 !! - interpolate_pointer_derivatives(...)
@@ -31,8 +31,8 @@
 !! - get_coefficients(...)
 !!
 !> Classes available are:
-!!  - sll_m_interpolators_1d_base::sll_interpolator_1d_base
-!!  - sll_m_interpolators_2d_base::sll_interpolator_2d_base
+!!  - sll_m_interpolators_1d_base::sll_c_interpolator_1d
+!!  - sll_m_interpolators_2d_base::sll_c_interpolator_2d
 !!  - sll_m_cubic_spline_interpolator_1d::sll_cubic_spline_interpolator_1d
 !!  - sll_m_cubic_spline_interpolator_1d_nonuniform::sll_cubic_spline_interpolator_1d_nonuniform
 !!  - sll_m_cubic_spline_interpolator_2d::sll_cubic_spline_interpolator_2d
