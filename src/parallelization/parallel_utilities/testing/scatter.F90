@@ -1,6 +1,6 @@
 program scatter
 
-use mpi
+use sll_mpi
 implicit none
 
 integer, parameter :: gridsize = 6    ! size of array

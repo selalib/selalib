@@ -13,7 +13,6 @@ target_link_libraries( sll_pic_utilities
   sll_meshes
   sll_memory
   sll_timer
-  sll_working_precision
   sll_file_io )
 
 # Tests
