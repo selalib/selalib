@@ -460,13 +460,14 @@ def extract_interface_section( f ):
 # FUNCTION: replace interface in source file
 #==============================================================================
 
-def replace_interface_section( src_fpath, int_fpath, overwrite=False ):
+def replace_interface_section( src_fpath, src_int_fpath, int_fpath ):
+
+    from os import rename
 
     # New temporary file for output
     out_fpath = src_fpath + '.new_interface'
 
     # Read old interface file
-    src_int_fpath = src_fpath + '-interface_old.txt'
     with open( src_int_fpath, 'r' ) as f:
         top_line = f.readline().strip('\n')
         num_start_line, num_lines = \
@@ -492,10 +493,8 @@ def replace_interface_section( src_fpath, int_fpath, overwrite=False ):
             else:
                 print( src_line, file=out_f, end='' )
 
-    # Overwrite original file, if requested
-    if overwrite:
-        from os import rename
-        rename( out_fpath, src_fpath )
+    # Overwrite original file
+    rename( out_fpath, src_fpath )
 
 #==============================================================================
 # FUNCTION: remove multiple access specification statements
@@ -559,8 +558,10 @@ def extract_old_interface_sections( original_root, preproc_root ):
 # MAIN FUNCTION: process interface
 #==============================================================================
 
-def process_interface_sections( original_root, preproc_root, replace=False ):
+def process_interface_sections( original_root, preproc_root,
+        replace=False, cleanup=False ):
 
+    import os, shutil
     from maintenance_tools import recursive_file_search
 
     original_root = original_root.rstrip('/')
@@ -626,15 +627,23 @@ def process_interface_sections( original_root, preproc_root, replace=False ):
         lines   = [divider] + lines + [divider]
 
         # Save interface to a new file
-        new_fpath = fpath[:-4] + '2.txt'
+        new_fpath = fpath_orig + '-interface_new.txt'
         with open( new_fpath, 'w' ) as new_f:
             print( '\n'.join( lines ), file=new_f )
 
         # Replace interface section into original file
-        # WARNING: dry-run for now
+        tmp = fpath_orig + '.new'
+        shutil.copy( fpath_orig, tmp )
+        replace_interface_section( fpath_orig, fpath_orig_int, new_fpath )
+        remove_repeated_access_spec_stmt( fpath_orig, overwrite=True )
+
         if replace:
-            replace_interface_section( fpath_orig, new_fpath, overwrite=True )
-            remove_repeated_access_spec_stmt( fpath_orig, overwrite=True )
+            os.rename( tmp, fpath_orig )
+
+        if cleanup:
+            os.remove( fpath_orig_int )
+            os.remove( new_fpath )
+
         #----------------------------------------------------------------------
 
 #==============================================================================
@@ -664,7 +673,11 @@ def parse_input():
 
   parser.add_argument( '-r', '--replace',
           action  = 'store_true',
-          help    = 'change interface section of original file' )
+          help    = 'replace original file' )
+
+  parser.add_argument( '-c', '--cleanup',
+          action  = 'store_true',
+          help    = 'remove temporary files' )
 
   return parser.parse_args()
 
@@ -687,7 +700,8 @@ def main():
     process_interface_sections(
             args.original_root,
             args.preproc_root,
-            args.replace )
+            args.replace,
+            args.cleanup )
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
