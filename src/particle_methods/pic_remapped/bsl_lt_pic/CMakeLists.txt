@@ -6,7 +6,6 @@ ADD_LIBRARY( sll_bsl_lt_pic STATIC
 
 TARGET_LINK_LIBRARIES( sll_bsl_lt_pic
   sll_memory
-  sll_working_precision
   sll_assert
   sll_meshes
   # sll_pic_interface

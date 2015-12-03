@@ -4,7 +4,7 @@ SET( SRC_UTILITIES
 )
 
 ADD_LIBRARY( sll_utilities STATIC ${SRC_UTILITIES} )
-TARGET_LINK_LIBRARIES( sll_utilities sll_errors sll_memory sll_assert sll_working_precision )
+TARGET_LINK_LIBRARIES( sll_utilities sll_errors sll_memory sll_assert )
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
