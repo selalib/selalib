@@ -11,7 +11,6 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_interpolators
   sll_fft
   sll_distribution_function
-  sll_constants
   sll_file_io
   sll_utilities
   sll_poisson_solvers
