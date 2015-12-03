@@ -188,7 +188,7 @@ module sll_m_cubic_splines
            interpolate_from_interpolant_value,                 &
            interpolate_from_interpolant_array,          &
            interpolate_pointer_values,        &
-           interpolate_array_derivatives,     &
+           interpolate_from_interpolant_derivatives_eta1,     &
            interpolate_pointer_derivatives,   &
            interpolate_value_2d,              &
            interpolate_x1_derivative_2D,      &
@@ -1120,7 +1120,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> @param[in] num_pts the number of elements of the input array.
   !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
-  subroutine interpolate_array_derivatives( &
+  subroutine interpolate_from_interpolant_derivatives_eta1( &
     array_in, &
     array_out, &
     num_pts, &
@@ -1143,10 +1143,10 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        array_out(i) = interpolate_derivative_aux( &
             array_in(i), spline%xmin, spline%rdelta, coeffs )
     end do
-  end subroutine interpolate_array_derivatives
+  end subroutine interpolate_from_interpolant_derivatives_eta1
 
   ! FIXME: The following subroutine is not in the unit test
-  !> @brief analogous to the interpolate_array_derivatives() subroutine but
+  !> @brief analogous to the interpolate_from_interpolant_derivatives_eta1() subroutine but
   !> its input and output arrays are pointers.
   !> @param[in] ptr_in input double-precison element array pointer containing the 
   !> abscissae at which the derivatives are wanted.
