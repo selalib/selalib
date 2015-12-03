@@ -50,13 +50,10 @@ contains
    procedure :: interpolate_from_interpolant_value => interpolate_value_cs1d
    procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs1d
    procedure :: interpolate_from_interpolant_array => interpolate_values_cs1d
-   !procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
    procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
-   !procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
    procedure :: interpolate_array => spline_interpolate1d
    procedure :: interpolate_array_disp => spline_interpolate1d_disp
    procedure :: interpolate_array_disp_inplace => spline_interpolate1d_disp_inplace
-   !procedure :: reconstruct_array => reconstruct_array 
    procedure :: set_coefficients => set_coefficients_cs1d
    procedure :: get_coefficients => get_coefficients_cs1d
 
@@ -238,19 +235,6 @@ contains  ! ****************************************************************
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
 
-  subroutine interpolate_pointer_values_cs1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)            :: num_pts
-    sll_real64, dimension(:), pointer :: vals_to_interpolate
-    sll_real64, dimension(:), pointer :: output
-    call interpolate_pointer_values( vals_to_interpolate, output, &
-         num_pts, interpolator%spline )
-  end subroutine interpolate_pointer_values_cs1d
-
 
   subroutine interpolate_derivatives_cs1d( &
     interpolator, &
@@ -265,18 +249,6 @@ contains  ! ****************************************************************
          num_pts,  interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
 
-  subroutine interpolate_pointer_derivatives_cs1d( &
-    interpolator, &
-    num_pts, &
-    vals_to_interpolate, &
-    output )
-    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)              :: num_pts
-    sll_real64, dimension(:), pointer   :: vals_to_interpolate
-    sll_real64, dimension(:), pointer   :: output
-    call interpolate_pointer_derivatives( vals_to_interpolate, output, &
-         num_pts, interpolator%spline )
-  end subroutine interpolate_pointer_derivatives_cs1d
 
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
     class(sll_cubic_spline_interpolator_1d), intent(in) :: interpolator
@@ -375,19 +347,6 @@ contains  ! ****************************************************************
     end if
 
   end subroutine
-
-  function reconstruct_array(this, num_points, data) result(res)
-    ! dummy procedure
-    class(sll_cubic_spline_interpolator_1d), intent(in)     :: this
-       sll_int32, intent(in)                :: num_points! size of output array
-       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
-       sll_real64, dimension(num_points)    :: res
-       res(:) = 0.0_f64
-       print *,'#warning reconstruct_array is dummy'
-       print *,'#', this%num_points
-       print *,maxval(data)
-
-  end function reconstruct_array
 
   subroutine delete_cs1d( obj )
     class(sll_cubic_spline_interpolator_1d) :: obj
