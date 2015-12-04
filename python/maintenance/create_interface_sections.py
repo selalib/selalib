@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 03 Dec 2015
+# Last revision: 04 Dec 2015
 #
 from __future__ import print_function
 
@@ -32,7 +32,13 @@ ignored_symbols = [ \
 
 permissive_modules = ['sll_m_hdf5_io_parallel']
 
-forced_public_symbols = ['sll_delete']
+forced_public_symbols = [ \
+        'sll_new',
+        'sll_create',
+        'sll_solve',
+        'sll_delete',
+        'operator(*)',
+        ]
 
 def ignore_dir( d ):
     """ Return True if subdirectory should be ignored.
