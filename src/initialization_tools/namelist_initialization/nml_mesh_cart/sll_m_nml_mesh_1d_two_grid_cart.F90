@@ -132,19 +132,9 @@ module sll_m_nml_mesh_1d_two_grid_cart
 #include "sll_errors.h"
 
   use sll_m_utilities, only : &
-    sll_new_file_id
-
-  !-----------------------------------------------------------------
-  !  SPECIFIC INCLUDE (BEGIN)
-  !-----------------------------------------------------------------
-
-  use sll_m_utilities, only : &
+    sll_new_file_id, &
     compute_bloc, &
     compute_mesh_from_bloc
-
-  !-----------------------------------------------------------------
-  !  SPECIFIC INCLUDE (END)
-  !-----------------------------------------------------------------
 
   implicit none
 
