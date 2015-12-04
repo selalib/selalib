@@ -1,4 +1,4 @@
-program test_hex_hermite
+program test_hex_hermite_circ
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"

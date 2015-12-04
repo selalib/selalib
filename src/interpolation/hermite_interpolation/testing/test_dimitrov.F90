@@ -1,4 +1,4 @@
-program test_hctc
+program test_dimitrov
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
