@@ -3,9 +3,7 @@ ADD_LIBRARY( sll_pif STATIC sll_m_pif_fieldsolver.F90
 TARGET_LINK_LIBRARIES( sll_pif
   sll_memory
   sll_assert
-  sll_working_precision
   sll_collective
-  sll_constants
   sll_utilities)
 					      
 

@@ -1,13 +1,14 @@
 import re
-import fortran_iso_c_binding
-import fortran_iso_fortran_env
-import fortran_deboor
-import fortran_fftpack
-import fortran_fishpack
-import fortran_mudpack
-import fortran_lapack
-import fortran_blas
-import fortran_hdf5
+from . import fortran_iso_c_binding
+from . import fortran_iso_fortran_env
+from . import fortran_deboor
+from . import fortran_fftpack
+from . import fortran_fishpack
+from . import fortran_mudpack
+from . import fortran_lapack
+from . import fortran_blas
+from . import fortran_hdf5
+from . import fortran_openmp
 
 #==============================================================================
 # Fortran extension modules
@@ -68,6 +69,12 @@ mudpack['match'   ] = lambda s : s.lower() in mudpack['all_syms']
 # Libraries installed on the system
 #==============================================================================
 
+openmp = {}
+openmp['lib_name'] = 'openmp'
+openmp['mod_name'] = 'omp_lib'
+openmp['all_syms'] = fortran_openmp.all_routines
+openmp['match'   ] = lambda s : s.lower() in openmp['all_syms']
+
 blas = {}
 blas['lib_name'] = 'blas'
 blas['mod_name'] = ''
@@ -87,7 +94,7 @@ fftw['match'   ] = re.compile( r'^d?fftw_\w+\Z', re.I ).match
 
 mpi = {}
 mpi['lib_name'] = 'mpi'
-mpi['mod_name'] = 'mpi'
+mpi['mod_name'] = 'sll_mpi'
 mpi['match']    = re.compile( r'^mpi_\w+\Z', re.I ).match
 
 hdf5 = {}
@@ -103,7 +110,7 @@ hdf5['match'] = lambda s: hdf5['match_list']( s ) or hdf5['match_pattern']( s )
 #==============================================================================
 
 library_collection = [iso_c_binding, iso_fortran_env, deboor, fftpack,
-        fishpack, mudpack, blas, lapack, fftw, mpi, hdf5]
+        fishpack, mudpack, openmp, blas, lapack, fftw, mpi, hdf5]
 
 external_modules = \
         {lib['mod_name'] for lib in library_collection if lib['mod_name']}

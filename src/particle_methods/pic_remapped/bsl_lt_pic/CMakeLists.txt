@@ -1,12 +1,13 @@
+ADD_LIBRARY( sll_bsl_lt_pic_4d_particle OBJECT sll_m_bsl_lt_pic_4d_particle.F90)
+
 ADD_LIBRARY( sll_bsl_lt_pic STATIC
-  sll_m_bsl_lt_pic_4d_particle.F90
   sll_m_bsl_lt_pic_4d_group.F90
   sll_m_bsl_lt_pic_4d_utilities.F90
   )
+ADD_DEPENDENCIES( sll_bsl_lt_pic sll_bsl_lt_pic_4d_particle )
 
 TARGET_LINK_LIBRARIES( sll_bsl_lt_pic
   sll_memory
-  sll_working_precision
   sll_assert
   sll_meshes
   # sll_pic_interface

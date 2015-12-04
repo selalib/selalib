@@ -13,6 +13,8 @@ module sll_m_xdmf_light_parallel
 
 #include "sll_working_precision.h"
 
+  use sll_mpi
+
   use sll_m_collective, only:  &
     sll_collective_t,        &
     sll_get_collective_size, &
@@ -131,17 +133,6 @@ contains
   subroutine t_xdmf_parallel__add_field( self, &
       grid_id, field_name, field_path, &
       to_file )
-
-    use mpi
-!    use mpi, only: &
-!      mpi_status_size, &
-!      mpi_integer,     &
-!      mpi_character,   &
-!      mpi_source,      &
-!      mpi_any_source,  &
-!      mpi_any_tag,     &
-!      mpi_send,        &
-!      mpi_recv
 
     class(sll_t_xdmf_parallel_file), intent(inout) :: self
     sll_int32                      , intent(in   ) :: grid_id

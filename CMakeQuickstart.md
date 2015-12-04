@@ -1,7 +1,3 @@
-/I wrote this thanks to Trilinos CMake Quickstart/
-
-Pierre
-
 ------------------------------------------------------------------------------
                          SeLaLib CMake Quickstart
 ------------------------------------------------------------------------------
@@ -15,7 +11,6 @@ A) Getting set up to use CMake
   Download and install the binary (currently version 2.8 is required) from:
 
     http://www.cmake.org/cmake/resources/software.html
-
 
 (*) Installing CMake from source [Recommended for SeLaLib developers and
     experienced SeLaLib users]:
@@ -142,7 +137,6 @@ C) Configuring (Makefile Generator)
        -D HDF5_ENABLE:BOOL=ON \
        -D FFTW_ENABLED:BOOL=OFF
   
-
 (*) Selecting compiler and linker options:
 
   NOTE: The SeLaLib CMake build system will set up default compile options
@@ -272,7 +266,6 @@ C) Configuring (Makefile Generator)
         Other command-line arguments that must come *after* the numprocs
         argument.  The default is empty "".
 
-
 (*) Configuring SeLaLib for OpenMP support:
 
   To enable OpenMP support you must set
@@ -289,49 +282,15 @@ C) Configuring (Makefile Generator)
   NOTE: The above option will result in all shared libraries to be build on
   all systems (i.e. *.so on Unix/Linux systems, *.dylib on Mac OS X).
 
-
 (*) Building static libraries and exectables:
 
    To build static libraries, turn off the shared library support:
   
     -D BUILD_SHARED_LIBS:BOOL=OFF
 
-
-(*) Enabling support for optional BLAS/LAPACK:
-
-<TODO>
-  The headers, libraries, and library directories can then be specified with
-  the input cache variables:
-
-      Example:
-
-        -D BLAS_LIBRARY_NAMES:STRING="blas;gfortran"
-
-    BLAS_LIBRARY_DIRS:PATH: The list of directories where the
-      library files can be found.
-
-      Example:
-
-        -D BLAS_LIBRARY_DIRS:PATH=/usr/local/blas
-</TODO>
-
-
-(*) Disabling tentatively enabled TPLs:
-
-    -D BLAS_ENABLE_<TPLNAME>:BOOL=OFF
-
-  NOTE: Some libraries in SeLaLib are always tentatively enabled (e.g. Lapack)
-  and if all of the components are found (e.g. headers and libraries) then support will be enabled,
-  otherwise it will be disabled.  
-  It is possible that the enable process for the library may pass, but the
-  library may not work correctly on the given platform.  In this case, one would
-  also want to explicitly disable the TPL as shown above.
-
-
 (*) Getting verbose output from the makefile:
 
     $ ./do_configure -D CMAKE_VERBOSE_MAKEFILE:BOOL=TRUE
-
 
 (*) Reconfiguring from scratch
   
@@ -358,23 +317,18 @@ D) Building (Makefile generator)
 
    (where N is the number of processes to use)
 
-
 (*) Discovering what targets are available to build after configuration:
 
      $ make help
-
 
 (*) Building with verbose output without reconfiguring:
 
     $ make [<SOME_TARGET>] VERBOSE=1
 
-
 (*) Every executables are build in $BUILD_DIR/bin directory.
-
 
 E) Testing with CTest
 ---------------------
-
 
 (*) [Recommended] Testing using 'ctest'
 
@@ -389,7 +343,6 @@ E) Testing with CTest
   See detailed test output with:
 
     $ ctest -j4 -VV
-
 
 (*) Only running tests for a single package
 
@@ -418,18 +371,14 @@ E) Testing with CTest
   seem to work.  You have to run them from the base build directory and then
   use -R '^<TEST>_' with ctest in order to run your packages tests.
 
-
 (*) Testing using 'make test'
 
     $ make test
 
   NOTE: This is equivalent to just running 'ctest' without any arguments.
 
-
-
 F) Installing
 -------------
-
 
 (*) Setting the install prefix at configure time
 
@@ -440,23 +389,18 @@ F) Installing
   NOTE: The script 'do-configure' is just a simple shell script that calls
   CMake as shown above.
 
-
 (*) Installing after configuration
 
     $ make install
 
     (will build all of the targets needed before the install)
 
-
 (*) Uninstall
 
     $ make uninstall
 
-
-
 G) Packaging
 ------------
-
 
 (*) Creating a tarball of the source tree:
 
@@ -470,7 +414,6 @@ G) Packaging
 
    NOTE: You can control what gets put into the tarball by setting the cache
    variable CPACK_SOURCE_IGNORE_FILES when configuring with CMake.
-
 
 H) Dashboard submissions
 ------------------------
@@ -489,5 +432,3 @@ Then, invoke the build, test and submit with:
 
 This invokes the advanced CTest script to do an experimental build
 for all of the tests that you are enabled.  
-
-*/

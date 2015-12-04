@@ -31,8 +31,8 @@ program test_poisson_2d_dirichlet_cartesian
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  dx = Lx/ncx
-  dy = Ly/ncy
+  dx = Lx/real(ncx,f64)
+  dy = Ly/real(ncy,f64)
 
   plan => new_poisson_2d_dirichlet_cartesian_plan(ncx, ncy, Lx, Ly)
 
@@ -52,7 +52,7 @@ program test_poisson_2d_dirichlet_cartesian
 
   call sll_solve(plan, rho, phi)
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
   flush( output_unit ); print*, ' ------------------'
   flush( output_unit ); print*, ' myrank ', myrank
@@ -77,7 +77,7 @@ program test_poisson_2d_dirichlet_cartesian
 !!$       size(rho,1), size(rho,2), &
 !!$       rho, "rho", 1, error)  
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
   flush( output_unit ); print*, ' ------------------'
   flush( output_unit ); print*, ' myrank ', myrank

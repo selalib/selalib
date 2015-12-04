@@ -420,7 +420,7 @@ contains
                    eta2 = eta2+eta2_min-eta2_max
                 end if
                 
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_from_interpolant_value(eta1,eta2)
 
              end do
           end do
@@ -448,9 +448,9 @@ contains
              jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
              ex     =  sim%efields_x2(i,j,1)
              ey     =  sim%efields_x2(i,j,2)
-             alpha3 = -deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-             sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
-                                   sim%nc_x3+1, sim%f_x3x4(i,j,:,l), alpha3 )
+             alpha3 = deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+             call sim%interp_x3%interpolate_array_disp_inplace( &
+                  sim%nc_x3+1, sim%f_x3x4(i,j,:,l), alpha3 )
           end do
        end do
     end do
@@ -475,9 +475,9 @@ contains
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
              ex     =  sim%efields_x2(i,j,1)
              ey     =  sim%efields_x2(i,j,2)
-             alpha4 = -deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-             sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
-                                   sim%nc_x4+1, sim%f_x3x4(i,j,k,:), alpha4 )
+             alpha4 = deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+             call sim%interp_x4%interpolate_array_disp_inplace( &
+                  sim%nc_x4+1, sim%f_x3x4(i,j,k,:), alpha4 )
           end do
        end do
     end do

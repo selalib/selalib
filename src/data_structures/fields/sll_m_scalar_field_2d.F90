@@ -71,7 +71,7 @@ type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete
   character(len=64)                    :: name
 
   class(sll_coordinate_transformation_2d_base), pointer :: T
-  class(sll_interpolator_2d_base), pointer              :: interp_2d
+  class(sll_c_interpolator_2d), pointer              :: interp_2d
 
   sll_real64, dimension(:), pointer :: point1_1d
   sll_real64, dimension(:), pointer :: point2_1d
@@ -509,7 +509,7 @@ function new_scalar_field_2d_discrete( field_name,      &
 
 type(sll_scalar_field_2d_discrete), pointer  :: obj
 character(len=*), intent(in)                 :: field_name
-class(sll_interpolator_2d_base), target      :: interpolator_2d
+class(sll_c_interpolator_2d), target      :: interpolator_2d
 class(sll_coordinate_transformation_2d_base) :: transformation
 sll_int32, intent(in)                        :: bc1_min
 sll_int32, intent(in)                        :: bc1_max
@@ -559,7 +559,7 @@ subroutine initialize_scalar_field_2d_discrete( field,           &
     
 class(sll_scalar_field_2d_discrete),          intent(inout) :: field
 character(len=*),                             intent(in)    :: field_name
-class(sll_interpolator_2d_base),              target        :: interpolator_2d
+class(sll_c_interpolator_2d),              target        :: interpolator_2d
 class(sll_coordinate_transformation_2d_base), target        :: transformation
 sll_int32,                                    intent(in)    :: bc1_min
 sll_int32,                                    intent(in)    :: bc1_max
@@ -713,7 +713,7 @@ function value_at_pt_discrete( field, eta1, eta2 )
   sll_real64, intent(in) :: eta2
   sll_real64             :: value_at_pt_discrete
 
-  value_at_pt_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+  value_at_pt_discrete = field%interp_2d%interpolate_from_interpolant_value(eta1,eta2)
 
 end function value_at_pt_discrete
 
@@ -729,7 +729,7 @@ function value_at_index_discrete( field, i, j )
   lm => field%get_cartesian_mesh()
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-  value_at_index_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+  value_at_index_discrete = field%interp_2d%interpolate_from_interpolant_value(eta1,eta2)
 end function value_at_index_discrete
 
 function first_deriv_eta1_value_at_pt_discrete( field, eta1, eta2 )
@@ -739,7 +739,7 @@ function first_deriv_eta1_value_at_pt_discrete( field, eta1, eta2 )
   sll_real64             :: first_deriv_eta1_value_at_pt_discrete
     
   first_deriv_eta1_value_at_pt_discrete = &
-       field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+       field%interp_2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
 end function first_deriv_eta1_value_at_pt_discrete
 
 function first_deriv_eta2_value_at_pt_discrete( field, eta1, eta2 )
@@ -749,7 +749,7 @@ function first_deriv_eta2_value_at_pt_discrete( field, eta1, eta2 )
   sll_real64             :: first_deriv_eta2_value_at_pt_discrete
     
   first_deriv_eta2_value_at_pt_discrete = &
-       field%interp_2d%interpolate_derivative_eta2(eta1,eta2)
+       field%interp_2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
 end function first_deriv_eta2_value_at_pt_discrete
   
 function first_deriv_eta1_value_at_index_discrete( field, i, j )
@@ -765,7 +765,7 @@ function first_deriv_eta1_value_at_index_discrete( field, i, j )
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
   first_deriv_eta1_value_at_index_discrete = &
-        field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+        field%interp_2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
 
 end function first_deriv_eta1_value_at_index_discrete
 
@@ -782,7 +782,7 @@ function first_deriv_eta2_value_at_index_discrete( field, i, j )
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
   first_deriv_eta2_value_at_index_discrete = &
-       field%interp_2d%interpolate_derivative_eta2(eta1,eta2)
+       field%interp_2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
 end function first_deriv_eta2_value_at_index_discrete
 
 subroutine write_to_file_discrete_2d( field, tag )

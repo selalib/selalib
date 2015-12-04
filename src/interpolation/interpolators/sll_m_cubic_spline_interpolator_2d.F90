@@ -17,9 +17,9 @@
 
 !> @ingroup interpolators
 !> @brief
-!> Class for the cubic spline sll_interpolator_2d_base
+!> Class for the cubic spline sll_c_interpolator_2d
 !> @details
-!> Implements the sll_interpolator_2d_base interface
+!> Implements the sll_c_interpolator_2d interface
 module sll_m_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -37,7 +37,7 @@ private
   !> All interpolators share a common interface with
   !> respect to their use, as described by the interpolator_2d_base class.
   !> Where the diverse interpolators diverge is in the way to initialize them.
-  type, extends(sll_interpolator_2d_base), public :: sll_cubic_spline_interpolator_2d
+  type, extends(sll_c_interpolator_2d), public :: sll_cubic_spline_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: npts1
     !> PLEASE ADD DOCUMENTATION
@@ -56,11 +56,11 @@ private
     !> PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_cs2d
     !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_value => interpolate_value_cs2d
+     procedure :: interpolate_from_interpolant_value => interpolate_value_cs2d
     !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs2d
+     procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs2d
     !> PLEASE ADD DOCUMENTATION
-     procedure :: interpolate_derivative_eta2 => interpolate_deriv2_cs2d
+     procedure :: interpolate_from_interpolant_derivative_eta2 => interpolate_deriv2_cs2d
     !> PLEASE ADD DOCUMENTATION
      procedure, pass :: interpolate_array => spline_interpolate2d
     !> PLEASE ADD DOCUMENTATION
@@ -281,9 +281,8 @@ contains
 
   end function
 
-  function spline_interpolate2d(this, num_points1, num_points2, data_in, &
-                                eta1, eta2) &
-       result(data_out)
+  subroutine spline_interpolate2d(this, num_points1, num_points2, data_in, &
+                                eta1, eta2, data_out)
 
     class(sll_cubic_spline_interpolator_2d),  intent(in) :: this
     sll_int32,  intent(in)                           :: num_points1
@@ -291,25 +290,26 @@ contains
     sll_real64, dimension(:,:), intent(in)           :: eta1
     sll_real64, dimension(:,:), intent(in)           :: eta2
     sll_real64, dimension(:,:), intent(in)           :: data_in
-    sll_real64, dimension(num_points1,num_points2)   :: data_out
+    sll_real64,                 intent(out)          :: data_out(num_points1,num_points2)
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
     call compute_cubic_spline_2D( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
-        data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
+        data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))
     end do
     end do
 
-  end function !spline_interpolate2d
+  end subroutine spline_interpolate2d  
 
-  function spline_interpolate2d_disp(this,        &
+  subroutine spline_interpolate2d_disp(this,        &
                                      num_points1, &
                                      num_points2, &
                                      data_in,     &
                                      alpha1,      &
-                                     alpha2) result(data_out)
+                                     alpha2,      &
+                                     data_out)
 
     class(sll_cubic_spline_interpolator_2d),  intent(in) :: this
 
@@ -318,7 +318,7 @@ contains
     sll_real64, dimension(:,:), intent(in)         :: alpha1
     sll_real64, dimension(:,:), intent(in)         :: alpha2
     sll_real64, dimension(:,:), intent(in)         :: data_in
-    sll_real64, dimension(num_points1,num_points2) :: data_out
+    sll_real64,                 intent(out)        :: data_out(num_points1,num_points2)
     sll_real64                                     :: eta1
     sll_real64                                     :: eta1_min
     sll_real64                                     :: eta1_max
@@ -347,10 +347,10 @@ contains
              eta1 = eta1_min + (i-1)*delta_eta1
              eta2 = eta2_min + (j-1)*delta_eta2
              eta1 = eta1_min + &
-                  modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
+                  modulo(eta1-eta1_min+alpha1(i,j),eta1_max-eta1_min)
              eta2 = eta2_min + &
-                  modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
-             data_out(i,j) = this%interpolate_value(eta1,eta2)
+                  modulo(eta2-eta2_min+alpha2(i,j),eta2_max-eta2_min)
+             data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
           end do
        end do
 
@@ -359,13 +359,13 @@ contains
        
        do j = 1, num_points2
           do i = 1, num_points1
-             eta1 = eta1_min + (i-1)*delta_eta1 - alpha1(i,j)
-             eta2 = eta2_min + (j-1)*delta_eta2 - alpha2(i,j)
+             eta1 = eta1_min + (i-1)*delta_eta1 + alpha1(i,j)
+             eta2 = eta2_min + (j-1)*delta_eta2 + alpha2(i,j)
              eta1 = min(eta1,eta1_max)
              eta2 = min(eta2,eta2_max)
              eta1 = max(eta1,eta1_min)
              eta2 = max(eta2,eta2_min)
-             data_out(i,j) = this%interpolate_value(eta1,eta2)
+             data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
           end do
        end do
       
@@ -374,15 +374,15 @@ contains
 
        do j = 1, num_points2
           do i = 1, num_points1
-             eta1 = eta1_min + (i-1)*delta_eta1 - alpha1(i,j)
-             eta2 = eta2_min + (j-1)*delta_eta2 - alpha2(i,j)
+             eta1 = eta1_min + (i-1)*delta_eta1 + alpha1(i,j)
+             eta2 = eta2_min + (j-1)*delta_eta2 + alpha2(i,j)
              SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
              SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
-             data_out(i,j) = this%interpolate_value(eta1,eta2)
+             data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
           end do
        end do
     end if
-  end function 
+  end subroutine spline_interpolate2d_disp
 
   subroutine set_coefficients_cs2d( &
        interpolator,&

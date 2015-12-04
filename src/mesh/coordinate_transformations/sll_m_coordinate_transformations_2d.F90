@@ -130,9 +130,9 @@ module sll_m_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer               :: x1_interp
+     class(sll_c_interpolator_2d), pointer               :: x1_interp
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer               :: x2_interp
+     class(sll_c_interpolator_2d), pointer               :: x2_interp
      !type(sll_cartesian_mesh_2d), pointer :: mesh => null()
    contains
      !> PLEASE ADD DOCUMENTATION
@@ -689,7 +689,7 @@ contains
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = transf%x1_interp%interpolate_value(eta1, eta2)
+    val = transf%x1_interp%interpolate_from_interpolant_value(eta1, eta2)
   end function x1_discrete
 
   function x2_discrete( transf, eta1, eta2 ) result(val)
@@ -697,7 +697,7 @@ contains
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = transf%x2_interp%interpolate_value(eta1, eta2)
+    val = transf%x2_interp%interpolate_from_interpolant_value(eta1, eta2)
   end function x2_discrete
 
   function jacobian_2d_discrete( transf, eta1, eta2 ) result(jac)
@@ -709,10 +709,10 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-    j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-    j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-    j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-    j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+    j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+    j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+    j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -737,10 +737,10 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-    j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-    j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-    j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-    j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+    j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+    j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+    j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -762,10 +762,10 @@ contains
     sll_real64             :: inv_j22
     sll_real64             :: r_jac ! reciprocal of the jacobian
     r_jac = 1.0_f64/transf%jacobian( eta1, eta2 )
-    inv_j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-    inv_j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-    inv_j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-    inv_j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    inv_j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+    inv_j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+    inv_j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+    inv_j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -794,9 +794,9 @@ contains
     type(sll_cartesian_mesh_2d), pointer    :: mesh_2d
     character(len=*)         , intent(in) :: label
 
-    class(sll_interpolator_2d_base), target  :: x1_interpolator
-    class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
+    class(sll_c_interpolator_2d), target  :: x1_interpolator
+    class(sll_c_interpolator_2d), target  :: x2_interpolator
+    class(sll_c_interpolator_2d), target  :: jacobians_n_interpolator
     sll_real64, dimension(:,:), intent(in), optional :: x1_node
     sll_real64, dimension(:,:), intent(in), optional :: x2_node
     sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
@@ -843,9 +843,9 @@ contains
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     character(len=*), intent(in)     :: label
 
-    class(sll_interpolator_2d_base), target  :: x1_interpolator
-    class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target :: jacobians_n_interpolator
+    class(sll_c_interpolator_2d), target  :: x1_interpolator
+    class(sll_c_interpolator_2d), target  :: x2_interpolator
+    class(sll_c_interpolator_2d), target :: jacobians_n_interpolator
     sll_real64, dimension(:,:), intent(in), optional :: x1_node
     sll_real64, dimension(:,:), intent(in), optional :: x2_node
     sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
@@ -1012,9 +1012,9 @@ contains
           do i=0, npts1 - 1
              eta_1 = eta_1_min + real(i,f64)*delta_eta_1
              transf%x1_node(i+1,j+1) = &
-                  x1_interpolator%interpolate_value(eta_1,eta_2)
+                  x1_interpolator%interpolate_from_interpolant_value(eta_1,eta_2)
              transf%x2_node(i+1,j+1) = &
-                  x2_interpolator%interpolate_value(eta_1,eta_2)
+                  x2_interpolator%interpolate_from_interpolant_value(eta_1,eta_2)
           end do
        end do
     end if

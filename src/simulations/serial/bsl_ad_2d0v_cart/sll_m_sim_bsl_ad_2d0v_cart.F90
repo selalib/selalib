@@ -15,7 +15,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
+
   use sll_m_constants
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
@@ -41,16 +41,6 @@ module sll_m_sim_bsl_ad_2d0v_cart
   use sll_m_xdmf
   use sll_m_hdf5_io_serial
   
-#ifdef MUDPACK
-!  use sll_m_mudpack_curvilinear
-!  use sll_m_poisson_2d_mudpack
-!  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-#endif
-!  use sll_m_poisson_2d_elliptic_solver
-!  use sll_m_timer
-!  use sll_m_fft
-!  use sll_m_poisson_2d_periodic_solver
-
   implicit none
 
   
@@ -176,18 +166,18 @@ contains
     sll_int32 :: Nc_x2
     type(sll_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_cartesian_mesh_1d), pointer :: mesh_x2
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
     class(sll_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     class(sll_advection_1d_base), pointer    :: advect_1d_x1
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr

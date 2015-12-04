@@ -15,7 +15,7 @@ sll_int32, parameter                       :: N0 = 16
 sll_real64                                 :: u(16*N0+1)
 sll_real64                                 :: u_exact(16*N0+1)
 sll_real64                                 :: u_out(16*N0+1)
-class(sll_interpolator_1d_base), pointer   :: interp
+class(sll_c_interpolator_1d), pointer   :: interp
 sll_real64, parameter :: xmin = 0.0_f64, xmax=3.0_f64   
 sll_real64 :: alpha, error, old_error, L, xi,mode
 sll_int32 :: i, p, N
@@ -40,7 +40,7 @@ do p=1,4
    print*, 'p=', p
    call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
    interp => interp_per
-   u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+   call interp%interpolate_array_disp( N+1, u(1:N+1), -alpha, u_out(1:N+1))
    old_error = error
    error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
    print *, "error =", error
@@ -63,7 +63,7 @@ do p=1,4
    print*, 'p=', p
    call interp_per%initialize( N+1, xmin, xmax, LAGRANGE, 12)
    interp => interp_per
-   u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+   call interp%interpolate_array_disp(N+1, u(1:N+1), -alpha, u_out(1:N+1))
    old_error = error
    error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
    print *, "error =", error
@@ -90,7 +90,7 @@ end do
 
      call interp_lagrange%initialize( N+1,xmin,xmax,SLL_PERIODIC,6)
      interp => interp_lagrange
-     u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+     call interp%interpolate_array_disp(N+1, u(1:N+1), -alpha, u_out(1:N+1))
 
      old_error = error
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))

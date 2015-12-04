@@ -31,7 +31,7 @@ private
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
-type, extends(sll_interpolator_2d_base) :: &
+type, extends(sll_c_interpolator_2d) :: &
   sll_arbitrary_degree_spline_interpolator_2d           
 
   sll_int32                           :: num_pts1
@@ -85,9 +85,9 @@ contains
   procedure :: set_coefficients            => set_coefficients_ad2d
   procedure :: coefficients_are_set        => coefficients_are_set_ad2d
   procedure :: compute_interpolants        => compute_interpolants_ad2d
-  procedure :: interpolate_value           => interpolate_value_ad2d
-  procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
-  procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
+  procedure :: interpolate_from_interpolant_value           => interpolate_value_ad2d
+  procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative1_ad2d
+  procedure :: interpolate_from_interpolant_derivative_eta2 => interpolate_derivative2_ad2d
   procedure :: interpolate_array           => interpolate_array_ad2d
   procedure :: interpolate_array_disp      => interpolate_2d_array_disp_ad2d
   procedure :: get_coefficients            => get_coefficients_ad2d
@@ -2227,12 +2227,13 @@ deallocate(coef)
 end function interpolate_derivative2_ad2d
 
   
-function interpolate_array_ad2d( this,            &
+subroutine interpolate_array_ad2d( this,            &
                                  num_points1,     &
                                  num_points2,     &
                                  data_in,         &
                                  eta1,            &
-                                 eta2 ) result(res)
+                                 eta2,            &
+                                 data_out)
   
 class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
 
@@ -2242,10 +2243,10 @@ sll_real64, dimension(:,:), intent(in) :: data_in
 sll_int32,                  intent(in) :: num_points1
 sll_int32,                  intent(in) :: num_points2
 
-sll_real64, dimension(num_points1,num_points2) :: res
+sll_real64,                 intent(out):: data_out(num_points1, num_points2)
 
 print *, '#interpolate_array_ad2d: not implemented'
-res = -1000000._f64
+data_out = -1000000._f64
 print *,this%num_pts1
 print *,maxval(eta1)
 print *,maxval(eta2)
@@ -2253,14 +2254,15 @@ print *,maxval(data_in)
 print *,num_points1
 print *,num_points2
 stop
-end function !interpolate_array_ad2d
+end subroutine interpolate_array_ad2d  !interpolate_array_ad2d
   
-function interpolate_2d_array_disp_ad2d( this,        &
+subroutine interpolate_2d_array_disp_ad2d( this,        &
                                          num_points1, &
                                          num_points2, &
                                          data_in,     &
                                          alpha1,      &
-                                         alpha2) result(res)
+                                         alpha2,      &
+                                         data_out)
     
 class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
 
@@ -2269,7 +2271,7 @@ sll_int32,                  intent(in)         :: num_points2
 sll_real64, dimension(:,:), intent(in)         :: data_in
 sll_real64, dimension(:,:), intent(in)         :: alpha1
 sll_real64, dimension(:,:), intent(in)         :: alpha2  
-sll_real64, dimension(num_points1,num_points2) :: res
+sll_real64,                 intent(out)        :: data_out(num_points1,num_points2)
 
 print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
 !for preventing warning of unused objects
@@ -2279,10 +2281,10 @@ print *,num_points2
 print *,maxval(data_in)
 print *,alpha1
 print *,alpha2     
-res = -1000000._f64
+data_out = -1000000._f64
 stop
   
-end function !interpolate_2d_array_disp_ad2d
+end subroutine interpolate_2d_array_disp_ad2d  !interpolate_2d_array_disp_ad2d
     
 function get_coefficients_ad2d(interpolator)
 class(sll_arbitrary_degree_spline_interpolator_2d), intent(in) :: interpolator

@@ -3,7 +3,6 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 #include "sll_maxwell_solvers_macros.h"
 
 use sll_m_constants
@@ -11,6 +10,14 @@ use sll_m_interpolators_1d_base
 use sll_m_cubic_spline_interpolator_1d
 use sll_m_utilities, only: int2string
 use sll_m_maxwell_2d_pstd
+
+#ifdef FFTW
+use sll_m_poisson_2d_periodic_fftw
+#define poisson_2d_periodic poisson_2d_periodic_fftw
+#else
+use sll_m_poisson_2d_periodic_fftpack
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#endif
 
 implicit none
   
@@ -45,10 +52,10 @@ sll_real64, dimension(:,:), allocatable :: rho
 type(poisson_2d_periodic) :: poisson
 type(sll_maxwell_2d_pstd) :: maxwell
 
-class(sll_interpolator_1d_base), pointer    :: interp_1
-class(sll_interpolator_1d_base), pointer    :: interp_2
-class(sll_interpolator_1d_base), pointer    :: interp_3
-class(sll_interpolator_1d_base), pointer    :: interp_4
+class(sll_c_interpolator_1d), pointer    :: interp_1
+class(sll_c_interpolator_1d), pointer    :: interp_2
+class(sll_c_interpolator_1d), pointer    :: interp_3
+class(sll_c_interpolator_1d), pointer    :: interp_4
 
 type(sll_cubic_spline_interpolator_1d), target  :: spl_eta1
 type(sll_cubic_spline_interpolator_1d), target  :: spl_eta2
@@ -232,8 +239,8 @@ subroutine advection_x1(dt)
       eta3 = eta3_min
       do i3 = 1, nc_eta3+1
          do i2 = 1, nc_eta2+1
-            f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
-                            f(:,i2,i3,i4),dt*eta3)
+            call interp_1%interpolate_array_disp_inplace(nc_eta1+1, &
+                 f(:,i2,i3,i4),dt*eta3)
          end do
          eta3 = eta3 + delta_eta3
       end do
@@ -250,8 +257,8 @@ subroutine advection_x2(dt)
    do i4 = 1, nc_eta4+1
       do i3 = 1, nc_eta3+1
          do i1 = 1, nc_eta1+1
-            f(i1,:,i3,i4) = interp_2%interpolate_array_disp(nc_eta2+1, &
-                            f(i1,:,i3,i4),dt*eta4)
+            call interp_2%interpolate_array_disp_inplace(nc_eta2+1, &
+                 f(i1,:,i3,i4),dt*eta4)
          end do
       end do
       eta4 = eta4 + delta_eta4
@@ -266,8 +273,8 @@ subroutine advection_v1(dt)
    do i4 = 1, nc_eta4+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
-      f(i1,i2,:,i4) = interp_3%interpolate_array_disp(nc_eta3+1, &
-                      f(i1,i2,:,i4),ex(i1,i2)*dt)
+      call interp_3%interpolate_array_disp_inplace(nc_eta3+1, &
+           f(i1,i2,:,i4),ex(i1,i2)*dt)
    end do
    end do
    end do
@@ -281,8 +288,8 @@ subroutine advection_v2(dt)
    do i3 = 1, nc_eta3+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
-      f(i1,i2,i3,:) = interp_4%interpolate_array_disp(nc_eta4+1, &
-                      f(i1,i2,i3,:),ey(i1,i2)*dt)
+      call interp_4%interpolate_array_disp_inplace(nc_eta4+1, &
+           f(i1,i2,i3,:),ey(i1,i2)*dt)
    end do
    end do
    end do

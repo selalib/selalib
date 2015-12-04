@@ -57,5 +57,3 @@ SET_TESTS_PROPERTIES( arbitrary_degree_splines PROPERTIES
 ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
 TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
-# Ctests
-#...........................................
