@@ -104,11 +104,11 @@ def contains_exactly_1_module( filepath, verbose=False ):
 def add_exported_symbols_permissive( self, *symbols ):
     for s in symbols:
         if not self.defines_symbol( s ):
-            origin = self.find_symbol_def( s )
-            if origin:
+            mod_name, mod_obj = self.find_symbol_def( s )
+            if mod_name:
                 print( "WARNING processing file '%s':" % self.filepath )
                 print( "  symbol '%s' is imported but not defined here" % s )
-                print( "  original definition in module '%s'" % origin )
+                print( "  original definition in module '%s'" % mod_name )
             else:
                 print( "ERROR processing file '%s':" % self.filepath )
                 print( "  symbol '%' is neither defined nor imported here" % s )
