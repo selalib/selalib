@@ -1,5 +1,5 @@
-installation
-************
+Installation
+------------
        
 Change the variable CMAKE_BUILD_TYPE to "Release".
 
@@ -8,56 +8,42 @@ Set the variable CMAKE_INSTALL_PREFIX to the path where you want to install sela
 Set the variable BUILD_PACKAGE to "ON" to reduce the building time.
 
 Fortran modules, header files and library will be installed to this path.
-Just type::
-
+Just type:
+~~~
    mkdir build; cd build
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DBUILD_PACKAGE=1 ../src
+         -DBUILD_PACKAGE=1 ../
    make 
    make install
+~~~
 
+Use Selalib
+-----------
 
-Use selalib
-===========
-
-To use the sequential version of selalib just add::
-
+To use the sequential version of selalib just add:
+~~~
    #include "selalib.h"
-
-and link your program with flag *-lselalib*. Or to use the parallel version of selalib just add::
-
+~~~
+and link your program with flag *-lselalib*. Or to use the parallel version 
+of selalib just add:
+~~~
    #include "selalib-mpi.h"
-
+~~~
 and link your program with flag *-lselalib-mpi*. 
-You can also use one of selalib capabilities separately, headers file available are::
-
-   #include "sll_working_precision.h"
-   #include "sll_memory.h"
-   #include "sll_assert.h"
-   #include "sll_splines.h"
-   #include "sll_constants.h"
-   #include "sll_utilities.h"
-   #include "sll_interpolators.h"
-
-To use solvers::
-
-   #include "sll_poisson_solvers.h"
-   #include "sll_maxwell_solvers.h"
 
 Be careful, you could have to link with HDF5, FFTW, LAPACK, etc ...
 
-Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, just add
-the compilation flag *-ffree-line-length-none*.
+Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, 
+just add the compilation flag *-ffree-line-length-none*.
 
-Find this example in directory : src/package/examples
-
+Find this example in directory : package/examples
 
 CMakeLists.txt
-==============
+--------------
 
-Find config files for selalib and fftpack in directory called "cmake"::
-
+Find config files for selalib and fftpack in directory called "cmake":
+```cmake
    PROJECT(Landau)
    ENABLE_LANGUAGE(Fortran)
    CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -70,13 +56,13 @@ Find config files for selalib and fftpack in directory called "cmake"::
    ADD_EXECUTABLE(landau landau.F90)
    TARGET_LINK_LIBRARIES(landau ${SELALIB_LIBRARIES} 
                                 ${FFTPACK_LIBRARIES})
-
+```
 
 Makefile
-========
+--------
 
-SLL_ROOT is the path equal to the variable CMAKE_INSTALL_PREFIX::
-
+SLL_ROOT is the path equal to the variable CMAKE_INSTALL_PREFIX:
+```
    SLL_ROOT=/usr/local
    F90 = gfortran
    OPT = -O3
@@ -102,12 +88,12 @@ SLL_ROOT is the path equal to the variable CMAKE_INSTALL_PREFIX::
 
    .mod.o:
        $(F90) $(F90FLAGS) -c $*.F90
-
+```
 SConstruct
-==========
+----------
 
-If selalib is installed in /usr/local::
-
+If selalib is installed in /usr/local:
+```python
    import os
 
    SLL_ROOT='/usr/local'
@@ -116,8 +102,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-                      F90PATH = [SLL_ROOT+'/usr/include'],
+                      F90PATH = [SLL_ROOT+'/usr/include/selalib'],
                       LINK='ifort',
                       LIBPATH = [SLL_ROOT+'/usr/lib'])
 
    env.Program('landau', ['landau.F90'])
+```

@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_poisson_1d_polar_solver
+program test_poisson_1d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -40,7 +40,7 @@ implicit none
   sll_int32 :: ierr
   sll_int32 :: i
   
-  x1_min = -1_f64
+  x1_min = -1._f64
   x1_max = 1._f64
 
   

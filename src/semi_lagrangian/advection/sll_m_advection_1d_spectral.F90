@@ -124,8 +124,8 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
 #else
 
   SLL_CLEAR_ALLOCATE(adv%fk(1:num_cells/2+1), error)
-  adv%fwx => fft_new_plan(num_cells, adv%d_dx,  adv%fk)
-  adv%bwx => fft_new_plan(num_cells, adv%fk, adv%d_dx)
+  adv%fwx => fft_new_plan_r2c_1d(num_cells, adv%d_dx,  adv%fk)
+  adv%bwx => fft_new_plan_c2r_1d(num_cells, adv%fk, adv%d_dx)
 
 #endif
 
@@ -175,7 +175,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 #ifdef FFTW_F2003
   call fftw_execute_dft_r2c(adv%fwx, adv%d_dx, adv%fk)
 #else
-  call fft_apply_plan(adv%fwx, adv%d_dx, adv%fk)
+  call fft_apply_plan_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
 #endif
 
   !f = f^n exp(-i kx vx dt)
@@ -187,7 +187,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 #ifdef FFTW_F2003
   call fftw_execute_dft_c2r(adv%bwx, adv%fk, adv%d_dx)
 #else
-  call fft_apply_plan(adv%bwx, adv%fk, adv%d_dx)
+  call fft_apply_plan_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 #endif
 
   output(1:num_cells)= adv%d_dx / num_cells

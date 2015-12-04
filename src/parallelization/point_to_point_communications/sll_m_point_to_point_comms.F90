@@ -3,7 +3,7 @@ module sll_m_point_to_point_comms
 #include "sll_memory.h"
 #include "sll_working_precision.h"
   use sll_m_collective
-  use mpi  !could this be sent back to the collective module?
+  use sll_mpi
   implicit none
 
   ! ************************************************************************

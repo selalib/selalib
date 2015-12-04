@@ -57,7 +57,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: f_exact
   sll_real64, dimension(:), allocatable :: params_aligned
   
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_int32 :: mode_m
   sll_int32 :: mode_n
   sll_int32 :: nb_iter
@@ -306,12 +306,13 @@ print*,"iota=",iota
   f_classic = f_init
   err = 0._f64
   do iter=1,nb_iter
-    f = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Npts_theta, &
       Npts_phi, &
       f_classic, &
       charac_theta, &
-      charac_phi)
+      charac_phi, &
+      f)
     f_classic = f
     
     call compute_feet_analytic( &

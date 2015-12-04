@@ -392,10 +392,10 @@ sp%kinetic_energy = 0.5_f64 * tmp(5) * sp%mesh2d%delta_eta1
 sp%f_hat_x2_loc(1:nb_mode+1) = 0._f64
 do i=1,local_size_x2
   buf_fft = sp%f_x1(1:sp%mesh2d%num_cells1,i)
-  call fft_apply_plan(pfwd,buf_fft,buf_fft)
+  call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
   do k=0,nb_mode
      sp%f_hat_x2_loc(k+1) = sp%f_hat_x2_loc(k+1)   &
-       +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+       +abs(fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
        *sp%integration_weight(ig+i)
   enddo
 enddo

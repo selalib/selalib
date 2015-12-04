@@ -35,21 +35,21 @@ integer, parameter, public :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type 
 integer, parameter, public :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
 
 !> Interpolator to compute derivative xx
-class(sll_interpolator_2d_base), pointer :: cxx_interp
+class(sll_c_interpolator_2d), pointer :: cxx_interp
 !> Interpolator to compute derivative yy
-class(sll_interpolator_2d_base), pointer :: cyy_interp
+class(sll_c_interpolator_2d), pointer :: cyy_interp
 !> Interpolator to compute derivative xy
-class(sll_interpolator_2d_base), pointer :: cxy_interp
+class(sll_c_interpolator_2d), pointer :: cxy_interp
 !> Interpolator to compute derivative x
-class(sll_interpolator_2d_base), pointer :: cx_interp
+class(sll_c_interpolator_2d), pointer :: cx_interp
 !> Interpolator to compute derivative y
-class(sll_interpolator_2d_base), pointer :: cy_interp
+class(sll_c_interpolator_2d), pointer :: cy_interp
 !> Interpolator to compute rhs coefficient
-class(sll_interpolator_2d_base), pointer :: ce_interp
+class(sll_c_interpolator_2d), pointer :: ce_interp
 !> PLEASE ADD DOCUMENTATION
-class(sll_interpolator_2d_base), pointer :: a12_interp
+class(sll_c_interpolator_2d), pointer :: a12_interp
 !> PLEASE ADD DOCUMENTATION
-class(sll_interpolator_2d_base), pointer :: a21_interp
+class(sll_c_interpolator_2d), pointer :: a21_interp
 
 !> Coordinate transformation of the mesh
 class(sll_coordinate_transformation_2d_base), pointer :: transformation
@@ -533,8 +533,8 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1   
-   cx_array(i,j)= cxx_interp%interpolate_derivative_eta1(eta1,eta2)+ &
-                  a21_interp%interpolate_derivative_eta2(eta1,eta2)                         
+   cx_array(i,j)= cxx_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
+                  a21_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefx_array
@@ -550,8 +550,8 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1    
-   cy_array(i,j)= cyy_interp%interpolate_derivative_eta2(eta1,eta2)+ &
-                  a12_interp%interpolate_derivative_eta1(eta1,eta2)                         
+   cy_array(i,j)= cyy_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)+ &
+                  a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefy_array
@@ -561,19 +561,19 @@ end subroutine coefy_array
 subroutine coefcr(x,y,cxx,cxy,cyy,cx,cy,ce)
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
-cxx = cxx_interp%interpolate_value(x,y)
-cxy = cxy_interp%interpolate_value(x,y) 
-cyy = cyy_interp%interpolate_value(x,y) 
-cx  = cx_interp%interpolate_value(x,y)
-cy  = cy_interp%interpolate_value(x,y) 
-ce  = ce_interp%interpolate_value(x,y)
+cxx = cxx_interp%interpolate_from_interpolant_value(x,y)
+cxy = cxy_interp%interpolate_from_interpolant_value(x,y) 
+cyy = cyy_interp%interpolate_from_interpolant_value(x,y) 
+cx  = cx_interp%interpolate_from_interpolant_value(x,y)
+cy  = cy_interp%interpolate_from_interpolant_value(x,y) 
+ce  = ce_interp%interpolate_from_interpolant_value(x,y)
 end subroutine coefcr
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0_8  !cxx_interp%interpolate_value(x)
+cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
 cx  = 0.0_8 + x - x
 cex = 0.0_8
 end subroutine cofx

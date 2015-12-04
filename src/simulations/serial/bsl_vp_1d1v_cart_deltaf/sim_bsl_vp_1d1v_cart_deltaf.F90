@@ -28,7 +28,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
   type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
   type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
-  class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
   type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
@@ -327,9 +327,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
   ! half time step advection in v
   do istep = 1, nbiter
      do i = istartx, iendx
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        alpha = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -342,9 +342,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      !$omp barrier
 
      do j =  jstartv, jendv
-        alpha = (vmin + (j-1) * delta_v) * dt
+        alpha = -(vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        call interp_x%interpolate_array_disp_inplace(Ncx+1, f1d, alpha)
      end do
      !$omp barrier
 
@@ -366,9 +366,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      endif
      !$omp end single
      do i = istartx, iendx
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        alpha = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1

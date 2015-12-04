@@ -53,14 +53,14 @@ implicit none
     class(sll_scalar_field_2d_base), pointer                :: b1_field
     class(sll_scalar_field_2d_base), pointer                :: b2_field
     class(sll_scalar_field_2d_base), pointer                :: c_field
-    class(sll_interpolator_2d_base), pointer                :: interp_rho
-    class(sll_interpolator_2d_base), pointer                :: interp_a11
-    class(sll_interpolator_2d_base), pointer                :: interp_a12
-    class(sll_interpolator_2d_base), pointer                :: interp_a21
-    class(sll_interpolator_2d_base), pointer                :: interp_a22
-    class(sll_interpolator_2d_base), pointer                :: interp_b1
-    class(sll_interpolator_2d_base), pointer                :: interp_b2
-    class(sll_interpolator_2d_base), pointer                :: interp_c
+    class(sll_c_interpolator_2d), pointer                :: interp_rho
+    class(sll_c_interpolator_2d), pointer                :: interp_a11
+    class(sll_c_interpolator_2d), pointer                :: interp_a12
+    class(sll_c_interpolator_2d), pointer                :: interp_a21
+    class(sll_c_interpolator_2d), pointer                :: interp_a22
+    class(sll_c_interpolator_2d), pointer                :: interp_b1
+    class(sll_c_interpolator_2d), pointer                :: interp_b2
+    class(sll_c_interpolator_2d), pointer                :: interp_c
     !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
     !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
 !    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
@@ -144,7 +144,7 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
-   class(sll_interpolator_2d_base), pointer, optional :: interp_rho
+   class(sll_c_interpolator_2d), pointer, optional :: interp_rho
    character(len=256), optional  :: interp_rho_case
    sll_int32, intent(in), optional :: control
    logical, intent(in), optional :: precompute_rhs
@@ -672,7 +672,7 @@ contains
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32, intent(in), optional     :: control
-   class(sll_interpolator_2d_base), pointer, optional :: interp_rho
+   class(sll_c_interpolator_2d), pointer, optional :: interp_rho
    character(len=256), optional  :: interp_rho_case
    logical, intent(in), optional     :: precompute_rhs
    logical, intent(in), optional     :: with_constraint

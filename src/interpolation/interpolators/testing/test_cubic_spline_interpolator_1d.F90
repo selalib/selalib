@@ -11,7 +11,7 @@ use sll_m_constants, only : &
 
 implicit none
 
-class(sll_interpolator_1d_base), pointer       :: interp
+class(sll_c_interpolator_1d), pointer       :: interp
 type(sll_cubic_spline_interpolator_1d), target :: spline
 
 sll_real64                            :: error
@@ -54,7 +54,7 @@ interp => spline
 call interp%compute_interpolants(pdata)
 
 do i = 1, m
-   fdata(i) = interp%interpolate_value(point(i))
+   fdata(i) = interp%interpolate_from_interpolant_value(point(i))
 end do
 
 error = maxval(abs(gdata-fdata))

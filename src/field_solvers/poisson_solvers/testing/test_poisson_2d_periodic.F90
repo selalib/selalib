@@ -1,8 +1,15 @@
-program test_poisson_2d
+program test_poisson_2d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_poisson_solvers.h"
+
+#ifdef FFTW
+use sll_m_poisson_2d_periodic_fftw
+#define poisson_2d_periodic poisson_2d_periodic_fftw
+#else
+use sll_m_poisson_2d_periodic_fftpack
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#endif
 
   use sll_m_constants, only : &
        sll_pi
@@ -23,11 +30,7 @@ program test_poisson_2d
    sll_real64, dimension(:,:),allocatable      :: phi
    sll_real64, dimension(:,:),allocatable      :: phi_exact
 
-#ifdef FFTW
-   type(poisson_2d_periodic_fftw) :: poisson
-#else
-   type(poisson_2d_periodic_fftpack) :: poisson
-#endif
+   type(poisson_2d_periodic) :: poisson
 
    sll_real64                         :: x1, x2
    sll_int32                          :: mode
@@ -59,10 +62,10 @@ program test_poisson_2d
       do j = 1, nc_eta2+1
          x1 = (i-1)*(eta1_max-eta1_min)/nc_eta1
          x2 = (j-1)*(eta2_max-eta2_min)/nc_eta2
-         phi_exact(i,j) = mode * sin(mode*x1) * cos(mode*x2)
-         ex_exact(i,j)  =  1_f64*mode**2*cos(mode*x1)*cos(mode*x2)
-         ey_exact(i,j)  = -1_f64*mode**2*sin(mode*x1)*sin(mode*x2)
-         rho(i,j) = -2_f64 * mode**3 * sin(mode*x1)*cos(mode*x2)
+         phi_exact(i,j) = real(mode,f64) * sin(mode*x1) * cos(mode*x2)
+         ex_exact(i,j)  =  1._f64*real(mode,f64)**2*cos(mode*x1)*cos(mode*x2)
+         ey_exact(i,j)  = -1._f64*real(mode,f64)**2*sin(mode*x1)*sin(mode*x2)
+         rho(i,j) = -2._f64 * real(mode,f64)**3 * sin(mode*x1)*cos(mode*x2)
          write(14,*) x1, x2, rho(i,j)
       end do
    end do
@@ -82,4 +85,4 @@ program test_poisson_2d
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
 
-end program test_poisson_2d
+ end program test_poisson_2d_periodic

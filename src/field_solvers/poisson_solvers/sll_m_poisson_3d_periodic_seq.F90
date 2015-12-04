@@ -67,14 +67,14 @@ contains
     plan%Lz = Lz
 
     ! For FFTs (in each direction)
-    plan%px => fft_new_plan( nx, x, x, FFT_FORWARD )
-    plan%py => fft_new_plan( ny, y, y, FFT_FORWARD )
-    plan%pz => fft_new_plan( nz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( nx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ny, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( nz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan_c2c_1d( nx, x, x, FFT_BACKWARD )
+    plan%py_inv => fft_new_plan_c2c_1d( ny, y, y, FFT_BACKWARD )
+    plan%pz_inv => fft_new_plan_c2c_1d( nz, z, z, FFT_BACKWARD )
 
   end function new_poisson_3d_periodic_plan_seq
 
@@ -107,21 +107,21 @@ contains
     plan%hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz
        do j=1,ny
-          call fft_apply_plan( plan%px, plan%hat_rho(:,j,k), plan%hat_rho(:,j,k) )
+          call fft_apply_plan_c2c_1d( plan%px, plan%hat_rho(:,j,k), plan%hat_rho(:,j,k) )
        enddo
     enddo
 
     ! FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call fft_apply_plan( plan%py, plan%hat_rho(i,:,k), plan%hat_rho(i,:,k) )
+          call fft_apply_plan_c2c_1d( plan%py, plan%hat_rho(i,:,k), plan%hat_rho(i,:,k) )
        enddo
     enddo
 
     ! FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call fft_apply_plan( plan%pz, plan%hat_rho(i,j,:), plan%hat_rho(i,j,:) )
+          call fft_apply_plan_c2c_1d( plan%pz, plan%hat_rho(i,j,:), plan%hat_rho(i,j,:) )
        enddo
     enddo
 
@@ -160,21 +160,21 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call fft_apply_plan( plan%pz_inv, plan%hat_phi(i,j,:), plan%hat_phi(i,j,:) )
+          call fft_apply_plan_c2c_1d( plan%pz_inv, plan%hat_phi(i,j,:), plan%hat_phi(i,j,:) )
        enddo
     enddo
 
     ! Inverse FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call fft_apply_plan( plan%py_inv, plan%hat_phi(i,:,k), plan%hat_phi(i,:,k) )
+          call fft_apply_plan_c2c_1d( plan%py_inv, plan%hat_phi(i,:,k), plan%hat_phi(i,:,k) )
        enddo
     enddo
 
     ! Inverse FFTs in x-direction
     do k=1,nz
        do j=1,ny
-          call fft_apply_plan( plan%px_inv, plan%hat_phi(:,j,k), plan%hat_phi(:,j,k) )
+          call fft_apply_plan_c2c_1d( plan%px_inv, plan%hat_phi(:,j,k), plan%hat_phi(:,j,k) )
        enddo
     enddo
 

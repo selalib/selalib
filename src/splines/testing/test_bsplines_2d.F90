@@ -38,7 +38,7 @@ bspline_2d => new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, SLL_PERIODIC, &
 taux => bspline_2d%bs1%tau
 tauy => bspline_2d%bs2%tau
 
-! generate and print out function valpes
+! generate and print out function values
 print 620,(tauy(i),i=1,ny)
 do i=1,nx
   do j=1,ny

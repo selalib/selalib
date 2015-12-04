@@ -668,7 +668,7 @@ contains
 !    sll_real64, dimension(:), intent(in) :: phi
 !    sll_real64, dimension(:), intent(out) :: A
 !    type(sll_cartesian_mesh_1d), pointer :: mesh
-!    class(sll_interpolator_1d_base), pointer   :: interp
+!    class(sll_c_interpolator_1d), pointer   :: interp
 !    sll_int32 :: Nc_x1
 !    sll_real64 :: x1_min
 !    sll_real64 :: delta_x1
@@ -683,7 +683,7 @@ contains
 !
 !    do i1=1,Nc_x1+1
 !      x1=x1_min+real(i1-1,f64)*delta_x1
-!      A(i1)=interp%interpolate_derivative_eta1(x1)
+!      A(i1)=interp%interpolate_from_interpolant_derivative_eta1(x1)
 !    end do
 !  end subroutine compute_field_from_phi_cartesian_1d
 

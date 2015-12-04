@@ -34,7 +34,7 @@ implicit none
   sll_int32 :: i
   sll_real64 :: dt
   sll_real64 :: err
-  class(sll_interpolator_1d_base), pointer   :: A_interp
+  class(sll_c_interpolator_1d), pointer   :: A_interp
 
   
   

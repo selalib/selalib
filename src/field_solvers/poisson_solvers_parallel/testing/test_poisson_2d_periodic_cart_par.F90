@@ -50,13 +50,13 @@ program test_poisson_2d_periodic_cart_par
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   dx = Lx/ncx
   dy = Ly/ncy
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   e      = int(log(real(colsz))/log(2.))
   print *, 'running on ', 2**e, 'processes'
 
@@ -102,7 +102,7 @@ program test_poisson_2d_periodic_cart_par
   call parallel_hdf5_write_array_2d( 'phi_computed.h5',   &
      ncx, ncy, phi, 'phi', layout_alt)
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
   flush( output_unit ); print*, ' ------------------'
   flush( output_unit ); print*, ' myrank ', myrank
@@ -163,7 +163,7 @@ program test_poisson_2d_periodic_cart_par
                                     size(rho,1), size(rho,2), &
                                     rho, "rho", 1, error)  
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
   flush( output_unit ); print*, ' ------------------'
   flush( output_unit ); print*, ' myrank ', myrank
@@ -227,10 +227,10 @@ contains
     SLL_ASSERT( associated(layout) )
     col => get_layout_collective( layout )
     myrank = sll_get_collective_rank( col )
-    global_dims(:) = (/ n_pts1,n_pts2 /)
+    global_dims(:) = [int(n_pts1,HSIZE_T),int(n_pts2,HSIZE_T)]
     
-    offset(1) = get_layout_i_min( layout, myrank ) - 1
-    offset(2) = get_layout_j_min( layout, myrank ) - 1
+    offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
+    offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
 
     comm   = sll_world_collective%comm
     call sll_hdf5_file_create(filename,comm,file_id,error)
