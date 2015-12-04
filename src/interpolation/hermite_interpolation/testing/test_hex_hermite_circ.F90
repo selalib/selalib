@@ -514,7 +514,7 @@ contains
   end subroutine compute_hex_fields
 
 
-end program test_hex_hermite
+end program test_hex_hermite_circ
 
 
 
