@@ -166,6 +166,7 @@ intrinsic_procedures = { \
 'sin', # Sine function
 'sinh', # Hyperbolic sine function
 'size', # Determine the size of an array
+'sleep', # Causes the process to pause for Seconds seconds (GCC and ifort)
 'sngl', # Convert double precision real to default real
 'spacing', # Smallest distance between two numbers of a given type
 'spread', # Add a dimension to an array
