@@ -1040,7 +1040,7 @@ contains
 
                 !sim%values_ex (global_indices(1),global_indices(2) ) = ex
                 !sim%values_ey (global_indices(1),global_indices(2) ) = ey
-                alpha3 = -deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+                alpha3 = deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 ! Add correction in case of external applied electric field:
                 !alpha3 = alpha3 -sim%dt*(elec_field_ext_1%value_at_point(x,y) )
 
@@ -1049,7 +1049,7 @@ contains
                 ! advection module and not the deprecated ones from the
                 ! interpolators!
                 line => f_mp%get_x3_line_pointer(ip, i,j,l)
-                line(:) = sim%interp_x3%interpolate_array_disp( &
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                   nc_x3 + 1, &
                   line(:), &
                   alpha3 )
@@ -1122,11 +1122,11 @@ contains
                 jac_mat = transf%jacobian_matrix(eta(1),eta(2),ip)
                 ex = - phi%first_deriv_eta1_value_at_point(eta(1),eta(2),ip)
                 ey = - phi%first_deriv_eta2_value_at_point(eta(1),eta(2),ip)
-                alpha4 = -deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+                alpha4 = deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 ! Add correction in case that external field is used
                 ! alpha4 = alpha4 -sim%dt*(elec_field_ext_2%value_at_point(x,y))
                 line => f_mp%get_x4_line_pointer(ip,i,j,k)
-                line(:) = sim%interp_x4%interpolate_array_disp( &
+                call sim%interp_x4%interpolate_array_disp_inplace( &
                   nc_x4 + 1, &
                   line(:), &
                   alpha4 )

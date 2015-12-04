@@ -180,10 +180,10 @@ contains
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
-        this%forward_fftplan => fft_new_plan(this%num_cells,this%fem_solution,this%stiffn_matrix_first_line_fourier, &
-            FFT_FORWARD+FFT_NORMALIZE)
-        this%backward_fftplan=>fft_new_plan(this%num_cells,this%stiffn_matrix_first_line_fourier,this%fem_solution, &
-            FFT_INVERSE  + FFT_NORMALIZE_INVERSE)
+        this%forward_fftplan => fft_new_plan_r2c_1d(this%num_cells, &
+             this%fem_solution,this%stiffn_matrix_first_line_fourier)
+        this%backward_fftplan=>fft_new_plan_c2r_1d(this%num_cells, &
+             this%stiffn_matrix_first_line_fourier,this%fem_solution)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
 
         !------------------------------------------------------------------------------------------
@@ -332,7 +332,7 @@ contains
         !        SLL_CLEAR_ALLOCATE(circulant_matrix_first_line_fourier(1:N/2+1), ierr)
 
         !Fourier transform the circulant seed
-        call fft_apply_plan(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
 
         !circulant_matrix_first_line_fourier(1)=1.0_f64
         !        sll_real64:: matrix_condition
@@ -600,13 +600,13 @@ contains
         constant_factor=0._f64
         constant_factor=rightside
 
-        call fft_apply_plan(this%forward_fftplan,constant_factor,constant_factor_fourier)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,constant_factor,constant_factor_fourier)
         !constant_factor_fourier(1)=0
         data_complex=constant_factor_fourier/(matrix_fl_fourier)
         data_complex(1)=(0._f64,0._f64)
         SLL_DEALLOCATE_ARRAY(constant_factor_fourier,ierr)
 
-        call fft_apply_plan(this%backward_fftplan,data_complex,solution)
+        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
         SLL_DEALLOCATE_ARRAY(data_complex,ierr)
         !Somehow the normalization does not do what it should do:
         solution=solution/N
@@ -743,10 +743,10 @@ contains
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan(this%forward_fftplan,rhs,data_complex)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,rhs,data_complex)
         data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
         data_complex(1)=(0._f64,0._f64)
-        call fft_apply_plan(this%backward_fftplan,data_complex,rhs)
+        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,rhs)
 
         !!!
         !Somehow the normalization does not do what it should do:
@@ -869,10 +869,10 @@ contains
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan(this%forward_fftplan,solution,data_complex)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,solution,data_complex)
         data_complex=data_complex*(this%mass_matrix_first_line_fourier)
         data_complex(1)=(0._f64,0._f64)
-        call fft_apply_plan(this%backward_fftplan,data_complex,solution)
+        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
         solution=solution/(N)
         l2norm=dot_product(this%fem_solution, solution )
     endfunction

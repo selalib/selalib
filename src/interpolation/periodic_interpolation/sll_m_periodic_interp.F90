@@ -2,14 +2,11 @@ module sll_m_periodic_interp
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_fft.h"
+use sll_m_fft
 use sll_m_arbitrary_degree_splines
 use sll_m_constants
 
   implicit none
-
-  sll_real64, parameter ::    pi = 3.1415926535897932385_f64
-  sll_real64, parameter :: twopi = 6.2831853071795864769_f64
 
   sll_int32,  parameter :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
   sll_int32,  parameter :: TRIGO_REAL = 4
@@ -89,11 +86,11 @@ contains
        this%buf=>NULL()
        biatx = uniform_b_splines_at_x(p, 0.0_f64 )
        do i=1, N
-          this%modes(i-1) = exp(ii_64*twopi*(i-1)/N)
+          this%modes(i-1) = exp(ii_64*sll_twopi*(i-1)/N)
           this%eigenvalues_Minv(i) = biatx((p+1)/2)
           do j = 1,(p+1)/2
              this%eigenvalues_Minv(i) = this%eigenvalues_Minv(i) &
-                  + biatx(j+(p+1)/2)*2*cos(j*twopi*(i-1)/N)
+                  + biatx(j+(p+1)/2)*2*cos(j*sll_twopi*(i-1)/N)
           end do
           this%eigenvalues_Minv(i) = 1.0_f64 / this%eigenvalues_Minv(i)
        end do
@@ -109,8 +106,8 @@ contains
        this%sizebuf=N
        SLL_ALLOCATE(this%buf(this%sizebuf),ierr)          
        !SLL_ALLOCATE(buf(N),ierr)
-       this%pfwd => fft_new_plan(N,this%buf,this%buf,FFT_FORWARD,FFT_NORMALIZE)
-       this%pinv => fft_new_plan(N,this%buf,this%buf,FFT_INVERSE)
+       this%pfwd => fft_new_plan_r2r_1d(N,this%buf,this%buf,FFT_FORWARD,normalized = .TRUE.)
+       this%pinv => fft_new_plan_r2r_1d(N,this%buf,this%buf,FFT_BACKWARD)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
        print*, 'sll_m_periodic_interp:interpolator ',interpolator, ' not implemented'
@@ -168,15 +165,15 @@ contains
        end do
        call zfftf(this%N, this%ufft, this%wsave)
        this%eigenvalues_S(1) = (1.0_f64, 0.0_f64)
-       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*pi*alpha)
+       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*sll_pi*alpha)
        do k=1, this%N/2-1
           !filter = 0.5_8*(1+tanh(100*(.35_8*this%N/2-k)/(this%N/2))) !F1
           !filter = 0.5_8*(1+tanh(100*(.25_8*this%N/2-k)/(this%N/2))) !F2
           !filter = 0.5_8*(1+tanh(50*(.25_8*this%N/2-k)/(this%N/2))) !F3
           filter = (1.0_f64, 0.0_f64)
 
-          this%eigenvalues_S(k+1) = exp(-ii_64*twopi*k*alpha/this%N) * filter
-          this%eigenvalues_S(this%N-k+1) = exp(ii_64*twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(k+1) = exp(-ii_64*sll_twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(this%N-k+1) = exp(ii_64*sll_twopi*k*alpha/this%N) * filter
        end do
        this%ufft = this%ufft*this%eigenvalues_S
        ! Perform inverse FFT and normalized
@@ -225,21 +222,20 @@ contains
             
     case (TRIGO_FFT_SELALIB)
        u_out = u
-       call fft_apply_plan(this%pfwd,u_out,u_out)
+       call fft_apply_plan_r2r_1d(this%pfwd,u_out,u_out)
        n=this%N
        tmp2=-ii_64*2._f64*sll_pi/n*alpha
 
-         GET_MODE0(tmp,u_out)
-         !tmp=tmp*exp(tmp2*real(0,f64))
-         SET_MODE0(tmp,u_out)
        do i=1,n/2-1
-         GET_MODE_LT_N_2(tmp,u_out,i,n)
+         tmp = cmplx( u_out(2*i+1) , u_out(2*i+2) ,kind=f64)
          tmp=tmp*exp( tmp2*cmplx(i,0.0_f64,f64) )
-         SET_MODE_LT_N_2(tmp,u_out,i,n)
+         u_out(2*i+1) = real(tmp, kind=f64)
+         u_out(2*i+2) = aimag(tmp)
        enddo
-         GET_MODE_N_2(tmp,u_out,n)
-         tmp=tmp*exp( tmp2*cmplx(0.5_f64*n,0.0_f64,f64) )
-         SET_MODE_N_2(tmp,u_out,n)
+       tmp = cmplx(u_out(n/2+1),0.0_f64,kind=f64)
+       tmp=tmp*exp( tmp2*cmplx(0.5_f64*n,0.0_f64,f64) )
+       u_out(n/2+1) = real(tmp, kind=f64) 
+       
 
 !*** Without macro
       ! do i=0,this%N/2
@@ -253,7 +249,7 @@ contains
       !   !print *,i,tmp
       ! enddo
 
-       call fft_apply_plan(this%pinv,u_out,u_out)        
+       call fft_apply_plan_r2r_1d(this%pinv,u_out,u_out)        
     case default
        print*, 'sll_m_periodic_interp:interpolator ',this%interpolator, ' not implemented'
        stop

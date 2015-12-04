@@ -80,7 +80,7 @@ class(sll_coordinate_transformation_2d_base), pointer     :: T
 type(general_coordinate_elliptic_solver)                  :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d_rhs
-class(sll_interpolator_2d_base), pointer                  :: rhs_interp
+class(sll_c_interpolator_2d), pointer                  :: rhs_interp
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
 class(sll_scalar_field_2d_base), pointer                  :: a12_field_mat
 class(sll_scalar_field_2d_base), pointer                  :: a21_field_mat

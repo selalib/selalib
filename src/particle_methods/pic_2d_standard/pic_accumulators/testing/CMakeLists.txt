@@ -6,7 +6,6 @@ TARGET_LINK_LIBRARIES( test_pic_accumulators
   sll_pic_accumulators
   sll_pic_particles
   sll_meshes
-  sll_assert
-  sll_constants )
+  sll_assert)
 ADD_TEST( NAME pic_accumulators COMMAND test_pic_accumulators )
 SET_TESTS_PROPERTIES( pic_accumulators PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

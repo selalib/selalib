@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_poisson_polar_parallel_solver
+program unit_test_poisson_2d_polar_parallel_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -206,7 +206,7 @@ implicit none
    f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
            + ((r-r_max)*(r-r_min)*cos(n*theta)  &
            + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
-           + 2*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
+           + 2.0_f64*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
            + r*cos(n*theta))*r)/r
 
 
@@ -225,7 +225,7 @@ implicit none
    f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
          + ((r-r_max)*(r-r_min)*sin(n*theta) &
          + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
-         + 2*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
+         + 2.0_f64*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
          + r*sin(n*theta))*r)/r
 
   end function f_sin

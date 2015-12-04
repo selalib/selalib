@@ -14,7 +14,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
+
   use sll_m_constants
   use sll_m_cartesian_meshes  
   use sll_m_advection_1d_periodic
@@ -73,7 +73,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
 
    
    !poisson solver
@@ -164,19 +164,19 @@ contains
     sll_int32 :: Nc_x2
     sll_real64 :: x1_max
     sll_real64 :: x2_max     
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
     class(sll_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     class(sll_advection_1d_base), pointer    :: advect_1d_x1
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_real64 :: x1_min_bis
@@ -1155,7 +1155,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min
@@ -1180,8 +1180,8 @@ contains
       x2=x2_min+real(i2-1,f64)*delta_x2
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(x1,x2)
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(x1,x2)
       end do
     end do
     

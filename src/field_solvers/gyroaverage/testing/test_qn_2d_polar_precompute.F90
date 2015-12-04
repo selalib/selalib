@@ -56,12 +56,12 @@ implicit none
   sll_int32 :: j
   sll_int32 :: m
   sll_int32 :: mat_id
-  sll_int32 :: nml_id
+  !sll_int32 :: nml_id
   sll_real64 :: lambda_coeff
   character(len=256) :: quadrature_case
   sll_int32 :: quadrature_points_per_cell
-  sll_int32 :: num_cells
-  sll_int32 :: s
+  !sll_int32 :: num_cells
+  !sll_int32 :: s
   sll_int32 :: mode_r
   sll_int32 :: mode_theta
   sll_real64 :: eta_min(2)
@@ -82,11 +82,11 @@ implicit none
   sll_real64 :: num_buffer_cell
   sll_int32  :: hermite_case
   sll_int32  :: interp_degree(2)
-  class(sll_gyroaverage_2d_base), pointer :: gyroaverage
+  !class(sll_gyroaverage_2d_base), pointer :: gyroaverage
   sll_int32 :: interp_x1
   sll_int32 :: interp_x2
-  sll_real64 :: mass 
-  sll_real64 :: vol
+  !sll_real64 :: mass 
+  !sll_real64 :: vol
     
   namelist /params/ &
     r_min, &

@@ -21,8 +21,8 @@ program bsl_1d_cubic_periodic
 
   sll_real64 :: advfield_x, advfield_v
 
-  class(sll_interpolator_1d_base), pointer    :: interp_x
-  class(sll_interpolator_1d_base), pointer    :: interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x
+  class(sll_c_interpolator_1d), pointer    :: interp_v
 
   type(sll_cubic_spline_interpolator_1d), target  :: spline_x
   type(sll_cubic_spline_interpolator_1d), target  :: spline_v
@@ -93,7 +93,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do j = 1, nc_v
-        df(:,j) = interp_x%interpolate_array_disp(nc_x+1,df(:,j),dt*advfield_x)
+        call interp_x%interpolate_array_disp_inplace(nc_x+1,df(:,j),-dt*advfield_x)
      end do
 
    end subroutine advection_x
@@ -102,7 +102,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do i = 1, nc_x
-        df(i,:) = interp_v%interpolate_array_disp(nc_v+1,df(i,:),dt*advfield_v)
+        call interp_v%interpolate_array_disp_inplace(nc_v+1,df(i,:),-dt*advfield_v)
      end do
 
    end subroutine advection_v

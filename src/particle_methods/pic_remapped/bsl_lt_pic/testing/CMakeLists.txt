@@ -1,8 +1,6 @@
 ADD_EXECUTABLE( test_bsl_lt_pic_4d test_bsl_lt_pic_4d.F90 )
 TARGET_LINK_LIBRARIES( test_bsl_lt_pic_4d
   sll_timer
-  sll_constants
-  sll_working_precision
   sll_assert
   sll_remapped_pic
   sll_bsl_lt_pic

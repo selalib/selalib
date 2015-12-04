@@ -12,8 +12,7 @@ add_library( sll_pic_accumulators STATIC sll_m_accumulators.F90 )
 target_link_libraries( sll_pic_accumulators
   sll_meshes
   sll_memory
-  sll_assert
-  sll_working_precision )
+  sll_assert)
 
 # Tests
 if( BUILD_TESTING )
@@ -24,6 +23,4 @@ endif( BUILD_TESTING )
 add_executable( particle_fourier_modes_test  particle_fourier_modes_test.F90 )
 target_link_libraries( particle_fourier_modes_test sll_memory 
 						sll_assert
-						sll_working_precision
-						sll_timer
-            sll_constants )
+						sll_timer)

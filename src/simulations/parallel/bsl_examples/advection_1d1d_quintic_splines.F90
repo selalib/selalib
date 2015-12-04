@@ -16,8 +16,8 @@ use iso_fortran_env, only: output_unit
 
 implicit none
 
-class(sll_interpolator_1d_base), pointer   :: interp_eta1
-class(sll_interpolator_1d_base), pointer   :: interp_eta2
+class(sll_c_interpolator_1d), pointer   :: interp_eta1
+class(sll_c_interpolator_1d), pointer   :: interp_eta2
 
 type(sll_quintic_spline_interpolator_1d), target :: spl_eta1
 type(sll_quintic_spline_interpolator_1d), target :: spl_eta2
@@ -171,7 +171,7 @@ contains
      call interp_eta1%compute_interpolants(f_eta1(:,j))
      do i = 1, loc_sz_i
        eta1 = eta1_min + (i-1)*delta_eta1 - alpha
-       f_eta1(i,j) =  interp_eta1%interpolate_value(eta1) 
+       f_eta1(i,j) =  interp_eta1%interpolate_from_interpolant_value(eta1) 
      end do
 
   end do
@@ -190,7 +190,7 @@ contains
     call interp_eta2%compute_interpolants(f_eta2(i,:))
     do j=1,loc_sz_j
        eta2 = eta2_min + (j-1)*delta_eta2 - alpha
-       f_eta2(i,j) =  interp_eta2%interpolate_value(eta2) 
+       f_eta2(i,j) =  interp_eta2%interpolate_from_interpolant_value(eta2) 
     end do
   end do
 

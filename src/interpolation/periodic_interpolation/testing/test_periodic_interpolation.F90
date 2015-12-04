@@ -23,8 +23,8 @@ program test_periodic_interpolation
      ! Interpolate non trivial smooth periodic function
      mode = 3
      do  i=0, N-1
-        u(i+1)       = 1.0_f64 / (2.0_f64 + sin(mode*twopi*i/N))
-        u_exact(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*twopi*(i-alpha)/N))
+        u(i+1)       = 1.0_f64 / (2.0_f64 + sin(mode*sll_twopi*i/N))
+        u_exact(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*sll_twopi*(i-alpha)/N))
         !u(i+1) = cos(mode*twopi*i/N)
         !u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do

@@ -21,6 +21,7 @@ module sll_m_charge_to_density
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_accumulators.h"
+  use sll_m_accumulators
   use sll_m_cartesian_meshes
   implicit none
   

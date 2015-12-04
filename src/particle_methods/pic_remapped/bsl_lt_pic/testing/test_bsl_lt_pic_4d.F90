@@ -41,6 +41,8 @@ program test_bsl_lt_pic_4d
   use sll_m_timer
   use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
 
+  implicit none
+  
 #define SPECIES_CHARGE  1._f64
 #define SPECIES_MASS    1._f64
 #define particle_group_id 1_i32
@@ -99,8 +101,6 @@ program test_bsl_lt_pic_4d
 #define X4_PLOT_CST 0._f64
 
 
-  implicit none
-  
   type(sll_bsl_lt_pic_4d_group),        pointer     :: particle_group
   type(sll_cartesian_mesh_2d),          pointer     :: mesh_2d
   type(sll_cartesian_mesh_2d),          pointer     :: plotting_mesh_2d

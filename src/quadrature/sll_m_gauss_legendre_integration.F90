@@ -183,7 +183,7 @@ contains
   end function gauss_legendre_integral_1d
 
   ! Consider changing this into a function that simply receives as an
-  ! argument the spline_1d object and internally calls the interpolate_value()
+  ! argument the spline_1d object and internally calls the interpolate_from_interpolant_value()
   ! function. This would have a simpler interface. Although, there could be
   ! some advantages to have the interpolating function parametrized also, like
   ! in this case.

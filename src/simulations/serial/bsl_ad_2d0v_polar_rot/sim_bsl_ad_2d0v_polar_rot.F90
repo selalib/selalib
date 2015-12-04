@@ -85,7 +85,7 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64 :: delta2
   sll_real64 :: rmin
   sll_real64 :: rmax
-  class(sll_interpolator_2d_base), pointer :: interp2d
+  class(sll_c_interpolator_2d), pointer :: interp2d
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   sll_int32 :: j
@@ -370,12 +370,13 @@ program sim_bsl_ad_2d0v_polar_rot
 !      xx = x*cosdt - y*sindt
 !      yy = x*sindt + y*cosdt
 !    enddo 
-    rho_tn1 = interp2d%interpolate_array( &
+    call interp2d%interpolate_array( &
       num_cells1+1, &
       num_cells2+1, &
       rho_tn, &
       charac_feet1, &
-      charac_feet2)      
+      charac_feet2, &
+      rho_tn1)      
 
 
  

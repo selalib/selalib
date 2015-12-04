@@ -54,7 +54,7 @@ delta = (x_max - x_min ) / real(m-1,f64)
 do i=1,m
   point(i) = x_min + (i-1)*delta
   gdata(i) = f(point(i))
-  fdata(i) = spline%interpolate_value(point(i))
+  fdata(i) = spline%interpolate_from_interpolant_value(point(i))
   write(47,*) point(i), fdata(i), gdata(i)
 end do
 

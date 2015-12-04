@@ -20,7 +20,7 @@ implicit none
 type(sll_cartesian_mesh_2d),                  pointer :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 type(general_coordinate_elliptic_solver)              :: es
-class(sll_interpolator_2d_base),              pointer :: interp_rho
+class(sll_c_interpolator_2d),              pointer :: interp_rho
 class(sll_scalar_field_2d_base),              pointer :: a11_field_mat
 class(sll_scalar_field_2d_base),              pointer :: a12_field_mat
 class(sll_scalar_field_2d_base),              pointer :: a21_field_mat
