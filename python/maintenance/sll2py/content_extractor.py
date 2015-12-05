@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 01 Dec 2015
+# Last revision: 03 Dec 2015
 #
 from __future__ import print_function
 import re
@@ -114,8 +114,8 @@ has_interface_types = \
 # Regex patterns
 patterns = {}
 patterns['name']      = r"(?<!\d\.)\b([a-zA-Z]\w*)\b"
-patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"\s*(?![\s\(])"
-patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"\s*\("
+patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"(?!(?:\s*(?=\()))"
+patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"(?=(?:\s*(?=\()))"
 patterns['extends']   = r"extends\s*\("  + patterns['name'] + r"\s*\)"
 patterns['dimension'] = r"dimension\s*\("+ patterns['name'] + r"\s*\)"
 
