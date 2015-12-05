@@ -22,9 +22,7 @@ mavericks:
 fedora:
   stage: ctest
   script: 
-    - "source /etc/profile.d/modules.sh"
-    - "module load mpi"
-    - "scripts/selalib-ci.sh"
+    - "scripts/fedora-ci.sh"
   only:
     - develop
   tags:
