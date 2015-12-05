@@ -16,45 +16,51 @@ use sll_m_poisson_2d_periodic_fftpack
 
    implicit none
 
-   sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
-   sll_int32   :: nc_eta1, nc_eta2
-   sll_int32   :: error
+   sll_int32   :: nc_eta1
+   sll_int32   :: nc_eta2
+   sll_int32   :: info
+   sll_real64  :: eta1_max
+   sll_real64  :: eta1_min
+   sll_real64  :: eta2_max
+   sll_real64  :: eta2_min
+   sll_real64  :: error
 
-
-   sll_real64, dimension(:,:),allocatable      :: ex
-   sll_real64, dimension(:,:),allocatable      :: ey
-   sll_real64, dimension(:,:),allocatable      :: ex_exact
-   sll_real64, dimension(:,:),allocatable      :: ey_exact
-   sll_real64, dimension(:,:),allocatable      :: rho
-   sll_real64, dimension(:,:),allocatable      :: rhs
-   sll_real64, dimension(:,:),allocatable      :: phi
-   sll_real64, dimension(:,:),allocatable      :: phi_exact
+   sll_real64, dimension(:,:), allocatable :: ex
+   sll_real64, dimension(:,:), allocatable :: ey
+   sll_real64, dimension(:,:), allocatable :: ex_exact
+   sll_real64, dimension(:,:), allocatable :: ey_exact
+   sll_real64, dimension(:,:), allocatable :: rho
+   sll_real64, dimension(:,:), allocatable :: rhs
+   sll_real64, dimension(:,:), allocatable :: phi
+   sll_real64, dimension(:,:), allocatable :: phi_exact
 
    type(poisson_2d_periodic) :: poisson
 
-   sll_real64                         :: x1, x2
-   sll_int32                          :: mode
-   sll_int32                          :: i, j
+   sll_real64                :: x1
+   sll_real64                :: x2
+   sll_int32                 :: mode
+   sll_int32                 :: i
+   sll_int32                 :: j
 
    eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
    eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
 
    nc_eta1 = 127; nc_eta2 = 127
 
-   SLL_CLEAR_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(ex_exact(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(ey_exact(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(rhs(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),error)
-   SLL_CLEAR_ALLOCATE(phi_exact(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(ex_exact(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(ey_exact(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(rhs(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),info)
+   SLL_CLEAR_ALLOCATE(phi_exact(nc_eta1+1,nc_eta2+1),info)
 
    write(*,*) " eta1_min, eta1_max, nc_eta1 ", eta1_min, eta1_max, nc_eta1
    write(*,*) " eta2_min, eta2_max, nc_eta2 ", eta2_min, eta2_max, nc_eta2
 
    call initialize( poisson, eta1_min, eta1_max, nc_eta1, &
-                    eta2_min, eta2_max, nc_eta2, error) 
+                    eta2_min, eta2_max, nc_eta2, info) 
 
    open(14, file="test_poisson_2d_rho.dat")
    mode = 2
@@ -72,17 +78,31 @@ use sll_m_poisson_2d_periodic_fftpack
 
    rhs = rho
    call solve( poisson, phi, rhs)
-   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   error =  maxval(abs(phi_exact+phi))
+   write(*,*) " Po Error = " , error
+   if (error > 1e-14) stop 'FAILED'
    rhs = rho
    call solve( poisson, phi, rhs)
-   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   error = maxval(abs(phi_exact+phi))
+   write(*,*) " Po Error = " ,  error
+   if (error > 1e-14) stop 'FAILED'
    rhs = rho
    call solve( poisson, ex, ey, rhs)
-   write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
-   write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
+   error = maxval(abs(ex_exact-ex))
+   write(*,*) " Ex Error = " , error
+   if (error > 1e-14) stop 'FAILED'
+   error = maxval(abs(ey_exact-ey))
+   write(*,*) " Ey Error = " , error
+   if (error > 1e-14) stop 'FAILED'
    rhs = rho
    call solve( poisson, ex, ey, rhs)
-   write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
-   write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
+   error = maxval(abs(ex_exact-ex))
+   write(*,*) " Ex Error = " , error
+   if (error > 1e-14) stop 'FAILED'
+   error = maxval(abs(ey_exact-ey))
+   write(*,*) " Ey Error = " , error
+   if (error > 1e-14) stop 'FAILED'
+
+   write(*,*) 'PASSED'
 
  end program test_poisson_2d_periodic
