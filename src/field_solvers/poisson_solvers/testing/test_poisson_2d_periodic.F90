@@ -80,28 +80,28 @@ use sll_m_poisson_2d_periodic_fftpack
    call solve( poisson, phi, rhs)
    error =  maxval(abs(phi_exact+phi))
    write(*,*) " Po Error = " , error
-   if (error > 1e-14) stop 'FAILED'
+   if (error > 1e-13) stop 'FAILED'
    rhs = rho
    call solve( poisson, phi, rhs)
    error = maxval(abs(phi_exact+phi))
    write(*,*) " Po Error = " ,  error
-   if (error > 1e-14) stop 'FAILED'
+   if (error > 1e-13) stop 'FAILED'
    rhs = rho
    call solve( poisson, ex, ey, rhs)
    error = maxval(abs(ex_exact-ex))
    write(*,*) " Ex Error = " , error
-   if (error > 1e-14) stop 'FAILED'
+   if (error > 1e-13) stop 'FAILED'
    error = maxval(abs(ey_exact-ey))
    write(*,*) " Ey Error = " , error
-   if (error > 1e-14) stop 'FAILED'
+   if (error > 1e-13) stop 'FAILED'
    rhs = rho
    call solve( poisson, ex, ey, rhs)
    error = maxval(abs(ex_exact-ex))
    write(*,*) " Ex Error = " , error
-   if (error > 1e-14) stop 'FAILED'
+   if (error > 1e-13) stop 'FAILED'
    error = maxval(abs(ey_exact-ey))
    write(*,*) " Ey Error = " , error
-   if (error > 1e-14) stop 'FAILED'
+   if (error > 1e-13) stop 'FAILED'
 
    write(*,*) 'PASSED'
 
