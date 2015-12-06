@@ -1,5 +1,6 @@
 Dear selalib developers,
 
+Newcomers should read the [Git Quickstart Guide for SeLaLib](GitQuickstart.md).
 
 To work with gitlab you don’t need to clone again the repository.
 
@@ -17,7 +18,6 @@ repository with:
 ```
 git remote add gitlab git@gitlab.mpcdf.mpg.de/selalib/selalib.git
 ```
-
 
 To check your configuration of remote repositories, use:
 ```
@@ -55,7 +55,7 @@ With this new gitlab server, we change the way we use git.
 I describe this process, you can find the long version with figures here
  (https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
 I added some git commands but branch creation and merge could be done through 
-the gitlab interface.
+the gitlab interface. 
 
 
 ## New rules
