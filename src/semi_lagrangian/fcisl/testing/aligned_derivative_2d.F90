@@ -11,7 +11,7 @@ program aligned_derivative_2d
   
   type(oblic_2d_derivative), pointer :: deriv
   class(sll_advection_1d_base), pointer :: adv_x1
-  class(sll_advection_1d_base), pointer :: adv_x2
+  !class(sll_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
   sll_int32 :: i2
   sll_int32 :: Nc_x1
@@ -43,11 +43,11 @@ program aligned_derivative_2d
   sll_real64 :: x2_max
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
-  sll_int32 :: step
+  !sll_int32 :: step
   sll_real64 :: err
-  sll_real64 :: alpha
-  sll_int32 :: i0
-  sll_real64 :: dt_loc
+  !sll_real64 :: alpha
+  !sll_int32 :: i0
+  !sll_real64 :: dt_loc
   sll_real64, dimension(:,:), allocatable :: buf
   sll_int32 :: d
   sll_int32 :: r
@@ -57,7 +57,7 @@ program aligned_derivative_2d
   sll_real64, dimension(:), allocatable :: x1_array
   sll_real64, dimension(:), allocatable :: x2_array
   sll_int32 :: ell
-  sll_int32 :: i2_loc
+  !sll_int32 :: i2_loc
   character(len=256) :: filename
   sll_int32 :: IO_stat
   sll_int32, parameter  :: input_file = 99
@@ -73,8 +73,8 @@ program aligned_derivative_2d
   sll_real64 :: A
   character(len=256) :: advector_x1
   sll_int32 :: order_x1
-  character(len=256) :: advector_x2
-  sll_int32 :: order_x2
+  !character(len=256) :: advector_x2
+  !sll_int32 :: order_x2
   
   
   ! namelists for data input
