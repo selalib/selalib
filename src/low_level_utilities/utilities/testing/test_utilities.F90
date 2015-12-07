@@ -1,9 +1,15 @@
 program utils_tester
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
-  use sll_m_utilities
+  use sll_m_utilities, only: &
+    byte_size, &
+    is_power_of_two, &
+    sll_factorial
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64 :: re64
   sll_real32 :: re32

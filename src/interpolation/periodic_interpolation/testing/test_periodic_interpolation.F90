@@ -1,8 +1,18 @@
 program test_periodic_interpolation
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_periodic_interp
-  use sll_m_fft
-  implicit none 
+
+  use sll_m_constants, only: &
+    sll_twopi
+
+  use sll_m_periodic_interp, only: &
+    initialize_periodic_interp, &
+    periodic_interp, &
+    periodic_interp_work, &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32, parameter    :: N0 = 16
   sll_real64               :: u(16*N0), u_exact(16*N0), u_out(16*N0)

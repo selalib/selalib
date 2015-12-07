@@ -1,8 +1,27 @@
 module helper_functions
 
-  use sll_m_constants, only: sll_pi
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_constants, only: &
+    sll_pi
 
   implicit none
+
+  public :: &
+    test_function_dirdir, &
+    test_function_dirdir_der1, &
+    test_function_dirdir_der2, &
+    test_function_dirper, &
+    test_function_dirper_der1, &
+    test_function_dirper_der2, &
+    test_function_perdir, &
+    test_function_perdir_der1, &
+    test_function_perdir_der2, &
+    test_function_perper, &
+    test_function_perper_der1, &
+    test_function_perper_der2
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! This module was made necessary because the assumed-shape dummy argument 
   ! params requires an explicit interface for the functions, so the usual

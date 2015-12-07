@@ -7,12 +7,22 @@
 !> v(t)= -x(0)\omega\sin (\omega t) + v(0)\cos (\omega t) \f]
 
 module sll_m_linear_pendulum_operators
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  
-  use sll_m_operator_splitting
-  implicit none 
+#include "sll_working_precision.h"
+
+  use sll_m_operator_splitting, only: &
+    do_split_steps, &
+    initialize_operator_splitting, &
+    operator_splitting
+
+  implicit none
+
+  public :: &
+    check_order
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 
   !> Simple operator splitting type for linear pendulum

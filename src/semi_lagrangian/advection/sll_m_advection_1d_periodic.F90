@@ -19,14 +19,26 @@
 
 
 module sll_m_advection_1d_periodic
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_periodic_interp
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_periodic_interp, only: &
+    initialize_periodic_interp, &
+    periodic_interp, &
+    periodic_interp_work
+
+  implicit none
+
+  public :: &
+    new_periodic_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_advection_1d_base) :: periodic_1d_advector
 

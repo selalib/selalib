@@ -17,17 +17,50 @@
 
 !> Class of arbitrary degree version of 2d irnterpolator
 module sll_m_arbitrary_degree_spline_interpolator_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_assert.h" 
-use sll_m_interpolators_2d_base
-use sll_m_utilities
-use sll_m_deboor_splines_1d, only: &
-  deboor_type, bsplvb, bsplvd, interv, bvalue, splint_der
-use sll_m_arbitrary_degree_spline_interpolator_1d
+#include "sll_working_precision.h"
 
-implicit none
-private
+! use F77_deboor, only: &
+!   banfac, &
+!   banslv
+
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    new_arbitrary_degree_1d_interpolator, &
+    set_values_at_boundary1d, &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_periodic
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvb, &
+    bsplvd, &
+    bvalue, &
+    deboor_type, &
+    interv, &
+    splint_der
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    initialize_ad2d_interpolator, &
+    new_arbitrary_degree_spline_interp2d, &
+    set_slope2d, &
+    sll_arbitrary_degree_spline_interpolator_2d, &
+    sll_arbitrary_degree_spline_interpolator_2d_ptr, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
@@ -109,13 +142,6 @@ interface sll_delete
    module procedure delete_arbitrary_degree_2d_interpolator
 end interface sll_delete
 
-public sll_arbitrary_degree_spline_interpolator_2d           
-public sll_arbitrary_degree_spline_interpolator_2d_ptr
-public sll_delete
-public new_arbitrary_degree_spline_interp2d
-public set_slope2d
-public initialize_ad2d_interpolator
-public set_coeff_splines_values_1d
 
 contains
 

@@ -56,16 +56,42 @@ self%d_dy = self%d_dy / nc_y
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 module sll_m_maxwell_2d_pstd
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_fftw3
-  use sll_m_constants, only : &
-       sll_pi
+  use iso_c_binding, only: &
+    c_associated, &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_destroy_plan, &
+    fftw_execute_dft_c2r, &
+    fftw_execute_dft_r2c, &
+    fftw_free, &
+    fftw_patient, &
+    fftw_plan_dft_c2r_1d, &
+    fftw_plan_dft_r2c_1d
+
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_delete, &
+    sll_maxwell_2d_pstd, &
+    sll_solve, &
+    sll_solve_ampere
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 
@@ -73,7 +99,7 @@ implicit none
 !> @details
 !> We solve Maxwell system with PSTD numerical method. The type contains
 !> information about FFT, mesh and physical properties.
-type, public :: sll_maxwell_2d_pstd
+type :: sll_maxwell_2d_pstd
 
    private
    sll_int32           :: nc_eta1      !< x cells number
@@ -130,13 +156,7 @@ interface sll_delete
  module procedure free_maxwell_2d_pstd
 end interface sll_delete
 
-public sll_create
-public sll_delete
-public sll_solve_faraday
-public sll_solve_ampere
-public sll_solve
 
-private
 
 contains
 

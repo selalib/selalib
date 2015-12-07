@@ -12,18 +12,55 @@
 !****************************************************************************
 
 program remap_test
-  use sll_m_collective
-  use sll_m_remapper
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-
-  use sll_m_utilities, only : &
-    is_power_of_two
 
   use iso_fortran_env, only: &
     output_unit
 
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    compute_local_sizes, &
+    get_layout_i_max, &
+    get_layout_i_min, &
+    get_layout_j_max, &
+    get_layout_j_min, &
+    get_layout_k_max, &
+    get_layout_k_min, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_remap_plan, &
+    remap_plan_3d_real64, &
+    set_layout_i_max, &
+    set_layout_i_min, &
+    set_layout_j_max, &
+    set_layout_j_min, &
+    set_layout_k_max, &
+    set_layout_k_min, &
+    sll_delete, &
+    sll_get_num_nodes, &
+    sll_view_lims
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_prod
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.

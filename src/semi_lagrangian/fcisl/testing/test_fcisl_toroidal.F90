@@ -1,15 +1,42 @@
 program test_fcisl_toroidal
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fcisl_toroidal
-  use sll_m_constants
-  use sll_m_interpolators_2d_base
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_ascii_io
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create, &
+    sll_ascii_write_array_1d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fcisl_toroidal, only: &
+    compute_analytic_field, &
+    compute_euler_field, &
+    compute_feet_analytic, &
+    compute_feet_euler, &
+    compute_feet_rk4, &
+    compute_inverse_invr_integral, &
+    compute_invr_integral, &
+    compute_linspace, &
+    compute_modulo_vect, &
+    compute_modulo_vect2d_inplace, &
+    compute_rk4_field, &
+    compute_time_points, &
+    interpolate2d_toroidal
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64 :: R0
   sll_real64 :: dt

@@ -4,21 +4,26 @@
 !> @details <DETAILED_DESCRIPTION>
 
 module sll_m_sparse_grid_4d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_periodic_interpolator_1d
-use sll_m_arbitrary_degree_splines
-use sll_m_lagrange_interpolator_1d
-use sll_m_sparse_grid_interpolator
-use sll_m_constants, only: sll_pi
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
-private
+  use sll_m_sparse_grid_interpolator, only: &
+    sparse_grid_interpolator
+
+  implicit none
+
+  public :: &
+    sparse_grid_interpolator_4d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Sparse grid object for 4d with interpolation routines. Note in 4d we have only an implementation of a standard sparse grid with periodic boundary conditions, i.e. modified=0, boundary=0 compared to 2d and 3d).
-type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_4d
+type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_4d
 sll_int32, dimension(:,:,:,:), pointer  :: index !< 4d mapping: for each 4d index l on the sparse grid, \a index gives the index of the first node belonging to this level  
 
 contains

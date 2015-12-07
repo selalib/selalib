@@ -1,12 +1,9 @@
 program test_pic_particles
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_particle_group_4d
-  use sll_m_particle_group_2d
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NUM_PARTICLES 1000000_i64
 #define GUARD_SIZE    100000_i64

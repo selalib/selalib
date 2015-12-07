@@ -3,10 +3,18 @@
 !>\author 
 !>\date created: 
 module sll_m_gaussian
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    gaussian_deviate, &
+    gaussian_deviate_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains 
 

@@ -1,15 +1,22 @@
 !> This fortran module is dedicated to advection on
 !> triangular mesh.
 module sll_m_advection_2d_tri_mesh
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_meshes_base
-use sll_m_triangular_meshes
+  use sll_m_triangular_meshes, only: &
+    sll_triangular_mesh_2d
 
-implicit none
+  implicit none
+
+  public :: &
+    advection_2d, &
+    new_advection_2d_tri_mesh, &
+    sll_advection_tri_mesh
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 2d advection on triangular mesh

@@ -6,40 +6,57 @@
 
 
 module sll_m_pic_1d_field_solver
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
 
-!    use sll_arbitrary_degree_spline_interpolator_1d_module
-!    use sll_m_arbitrary_degree_splines
-!    use sll_m_gauss_lobatto_integration
-!    use sll_m_fft
-!    use sll_m_constants
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
 
-    use sll_m_collective, only: &
-      sll_collective_t, &
-      sll_get_collective_size, &
-      sll_get_collective_rank, &
-      sll_collective_bcast_real64, &
-      sll_collective_globalsum, &
-      sll_collective_globalsum_array_comp64, &
-      sll_collective_globalsum_array_real64
+  use sll_m_collective, only: &
+    sll_collective_bcast_real64, &
+    sll_collective_globalsum, &
+    sll_collective_globalsum_array_comp64, &
+    sll_collective_globalsum_array_real64, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size
 
-!    use sll_m_poisson_1d_periodic_solver
-    use sll_m_poisson_1d_fem, only: &
-      poisson_1d_fem, &
-      poisson_1d_fem_rhs_function ,&
-      new_poisson_1d_fem         !Finite Element Bspline
-  
-    use sll_m_cartesian_meshes, only: sll_cartesian_mesh_1d, new_cartesian_mesh_1d 
-!we work in 1d so all 2d - 3d 4d modules are not used here
-    use sll_m_poisson_1d_fd!Finite difference solver
-    use sll_m_poisson_1d_periodic, only: poisson_1d_periodic, new, solve
-    use sll_m_poisson_1d_fourier,  only: poisson_1d_fourier, new_poisson_1d_fourier
-    use sll_m_particle_1d_description
+  use sll_m_particle_1d_description, only: &
+    sll_particle_1d_group
 
-    implicit none
+  use sll_m_poisson_1d_fd, only: &
+    new_poisson_1d_fd, &
+    poisson_1d_fd
+
+  use sll_m_poisson_1d_fem, only: &
+    new_poisson_1d_fem, &
+    poisson_1d_fem, &
+    poisson_1d_fem_rhs_function
+
+  use sll_m_poisson_1d_fourier, only: &
+    new_poisson_1d_fourier, &
+    poisson_1d_fourier
+
+  use sll_m_poisson_1d_periodic, only: &
+    new, &
+    poisson_1d_periodic, &
+    solve
+
+  implicit none
+
+  public :: &
+    new_pic_1d_field_solver, &
+    pic_1d_field_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !initialize
     !solve
     !interpolate_solution
@@ -137,28 +154,28 @@ module sll_m_pic_1d_field_solver
     end type pic_1d_field_solver
 
 
-    integer, private :: ierr !!!FIX THIS , DECIDE THIS
+    integer :: ierr !!!FIX THIS , DECIDE THIS
 
 
 
-    !    sll_int, private :: n_knots
-    !    sll_int, private :: n_cells
+    !    sll_int :: n_knots
+    !    sll_int :: n_cells
     !    sll_int, protected :: n_steadyparticles
-    !    type(arbitrary_degree_spline_1d), pointer, private :: bspline_arbitrary_degree
+    !    type(arbitrary_degree_spline_1d), pointer :: bspline_arbitrary_degree
     !
     !    sll_int, protected :: n_particles !number of particles
     !    sll_real64, dimension(:), allocatable, protected :: fem_inhomogenity_steady
-    !    sll_real64, dimension(:), allocatable, private :: fem_inhomogenity
-    !    !sll_real64, dimension(:), allocatable, private :: particleweights
+    !    sll_real64, dimension(:), allocatable :: fem_inhomogenity
+    !    !sll_real64, dimension(:), allocatable :: particleweights
     !
-    !    sll_real64, private :: scale_matrix_equation    !<Scale for the stiffnes matrix and the inhomogenity
+    !    sll_real64 :: scale_matrix_equation    !<Scale for the stiffnes matrix and the inhomogenity
     !
     !    !Boundary Description handeled by the solver
-    !    sll_int32, private :: sll_bspline_fem_solver_boundary_type = SLL_PERIODIC
+    !    sll_int32 :: sll_bspline_fem_solver_boundary_type = SLL_PERIODIC
     !
     !
     !    !Poisson Finite Differences Solver
-    !    type (poisson_1d_periodic),pointer,private           :: poissonsolverFD => null()
+    !    type (poisson_1d_periodic),pointer           :: poissonsolverFD => null()
     !
 
 
@@ -169,7 +186,7 @@ module sll_m_pic_1d_field_solver
     !    endinterface
 
 
-    !  integer, private :: startsbefore=0
+    !  integer :: startsbefore=0
 
 contains
 

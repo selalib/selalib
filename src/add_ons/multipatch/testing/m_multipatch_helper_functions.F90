@@ -1,6 +1,17 @@
 module m_multipatch_helper_functions
 
-  use sll_m_constants
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+
+  public :: &
+    func_one, &
+    func_zero
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

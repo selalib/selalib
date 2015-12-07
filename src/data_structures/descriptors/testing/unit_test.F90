@@ -1,8 +1,11 @@
 program test_descriptors
-#include "sll_working_precision.h"
-use sll_m_descriptors
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_descriptors, only: &
+    sll_landau_diag, &
+    sll_vlasovpoisson_sim
 
-implicit none
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_vlasovpoisson_sim) :: testcase
 

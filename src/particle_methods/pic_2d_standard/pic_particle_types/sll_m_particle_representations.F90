@@ -17,13 +17,22 @@
 
 
 module sll_m_particle_representations
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_particle_2d, &
+    sll_particle_2d_guard, &
+    sll_particle_2d_guard_ptr, &
+    sll_particle_4d, &
+    sll_particle_4d_guard, &
+    sll_particle_4d_guard_ptr
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type :: sll_particle_4d
      sll_int32  :: ic   ! cell index, linearly arranged

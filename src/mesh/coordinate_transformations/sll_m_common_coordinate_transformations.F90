@@ -103,13 +103,91 @@
 !!
 !<
 module sll_m_common_coordinate_transformations
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
+  implicit none
+
+  public :: &
+    affine_jac11, &
+    affine_jac12, &
+    affine_jac21, &
+    affine_jac22, &
+    affine_x1, &
+    affine_x2, &
+    d_sharped_geo_jac11, &
+    d_sharped_geo_jac12, &
+    d_sharped_geo_jac21, &
+    d_sharped_geo_jac22, &
+    d_sharped_geo_x1, &
+    d_sharped_geo_x2, &
+    deriv1_jacobian_polar_f, &
+    deriv_x1_polar_f_eta1, &
+    deriv_x1_polar_f_eta2, &
+    deriv_x2_polar_f_eta1, &
+    deriv_x2_polar_f_eta2, &
+    homography_jac11, &
+    homography_jac12, &
+    homography_jac21, &
+    homography_jac22, &
+    homography_x1, &
+    homography_x2, &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    jacobian_polar_f, &
+    polar_eta1, &
+    polar_eta2, &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_shear_jac11, &
+    polar_shear_jac12, &
+    polar_shear_jac21, &
+    polar_shear_jac22, &
+    polar_shear_x1, &
+    polar_shear_x2, &
+    polar_x1, &
+    polar_x2, &
+    polygonal_jac11, &
+    polygonal_jac12, &
+    polygonal_jac21, &
+    polygonal_jac22, &
+    polygonal_x1, &
+    polygonal_x2, &
+    rubber_sheeting_jac11, &
+    rubber_sheeting_jac12, &
+    rubber_sheeting_jac21, &
+    rubber_sheeting_jac22, &
+    rubber_sheeting_x1, &
+    rubber_sheeting_x2, &
+    sinprod_gen_jac, &
+    sinprod_gen_jac11, &
+    sinprod_gen_jac12, &
+    sinprod_gen_jac21, &
+    sinprod_gen_jac22, &
+    sinprod_gen_x1, &
+    sinprod_gen_x2, &
+    sinprod_jac, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2, &
+    x1_polar_f, &
+    x2_polar_f
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 

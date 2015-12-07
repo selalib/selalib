@@ -9,13 +9,27 @@
 ! ---
 
 program test_decomposition
-  use sll_m_collective
-  use sll_m_decomposition
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-   implicit none
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_decomposition, only: &
+    apply_halo_exchange, &
+    cartesian_topology_6d, &
+    decomposition_6d, &
+    new_cartesian_domain_decomposition, &
+    new_cartesian_topology
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    ! --- variable section
 

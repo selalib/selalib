@@ -2,15 +2,34 @@
 !> @brief Unit test for operator splitting. Constant coefficient advection.
 !> 
 program test_const_coef_adv_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_const_coef_advection_2d
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
-  use sll_m_hdf5_io_serial
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_const_coef_advection_2d, only: &
+    const_coef_advection_2d, &
+    new_const_coef_advection_2d
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    do_split_steps, &
+    sll_strang_tvt
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define N1 50
 #define N2 60
 #define XMIN (-1.0_f64)

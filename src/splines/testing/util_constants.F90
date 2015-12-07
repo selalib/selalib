@@ -13,9 +13,29 @@
 !*********************************************************
 
 module util_constants
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_constants
+
+  use sll_m_constants, only: &
+    sll_pi
+
   implicit none
+
+  public :: &
+    np, &
+    npx1, &
+    npx2, &
+    r1, &
+    r2, &
+    x1max, &
+    x1min, &
+    x2max, &
+    x2min, &
+    xmax, &
+    xmin
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32,  parameter :: NP    =  65
   sll_int32,  parameter :: NPX1  =  129

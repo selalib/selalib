@@ -16,12 +16,26 @@
 !**************************************************************
 
 program test_advection_2d_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_2d_oblic
-use sll_m_advection_1d_periodic
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_advection_2d_oblic, only: &
+    new_oblic_2d_advector, &
+    oblic_2d_advector, &
+    oblic_advect_2d_constant
+
+  use sll_m_periodic_interp, only: &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   type(oblic_2d_advector), pointer :: adv
   sll_int32 :: Nc_x1
   sll_real64 :: x1_min

@@ -8,13 +8,34 @@
 !> You have to download and install mudpack 
 !> http://www2.cisl.ucar.edu/resources/legacy/mudpack
 module sll_m_mudpack
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
 
-implicit none
+! use F77_mudpack, only: &
+!   mud24cr, &
+!   mud24sp, &
+!   mud2cr, &
+!   mud2sp
+
+  implicit none
+
+  public :: &
+    delete_mudpack_cartesian, &
+    initialize_mudpack_cartesian, &
+    initialize_mudpack_polar, &
+    sll_create, &
+    sll_delete, &
+    sll_mudpack_solver, &
+    sll_solve, &
+    solve_mudpack_cartesian, &
+    solve_mudpack_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Mudpack solver cartesian 2d
-type, public :: sll_mudpack_solver
+type :: sll_mudpack_solver
 
    sll_real64, dimension(:), allocatable :: work !< array for tmp data
    sll_int32  :: mgopt(4)           !< Option to control multigrid
@@ -25,10 +46,10 @@ type, public :: sll_mudpack_solver
 
 end type sll_mudpack_solver
 
-integer, parameter, public :: CARTESIAN_2D = 2    !< geometry parameter
-integer, parameter, public :: CARTESIAN_3D = 3    !< geometry parameter
-integer, parameter, public :: POLAR        = 11   !< geometry parameter
-integer, parameter, public :: CYLINDRICAL  = 12   !< geometry parameter
+integer, parameter :: CARTESIAN_2D = 2    !< geometry parameter
+integer, parameter :: CARTESIAN_3D = 3    !< geometry parameter
+integer, parameter :: POLAR        = 11   !< geometry parameter
+integer, parameter :: CYLINDRICAL  = 12   !< geometry parameter
 
 interface sll_create
   module procedure initialize_mudpack_cartesian

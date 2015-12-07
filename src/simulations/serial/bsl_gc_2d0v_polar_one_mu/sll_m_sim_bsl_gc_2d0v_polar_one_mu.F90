@@ -9,45 +9,126 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
 
 !contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
 !         Adnane Hamiaz (hamiaz@math.unistra.fr)
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  !use sll_logical_meshes 
-  use sll_m_cartesian_meshes  
-  use sll_m_advection_1d_periodic
-  use sll_m_advection_2d_bsl
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  !use sll_poisson_2d_periodic  
-  use sll_m_fft
-  use sll_m_reduction
-  use sll_m_sim_base
-  !use sll_cubic_spline_interpolator_2d
-  !use sll_cubic_spline_interpolator_1d
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  use sll_m_poisson_2d_polar_wrapper
-  use sll_m_poisson_2d_elliptic_solver
-  use sll_m_scalar_field_2d_base
-  !use sll_m_scalar_field_2d_alternative
-  use sll_m_parallel_array_initializer
-  use sll_m_gyroaverage_2d_polar_hermite_solver
-  use sll_m_gyroaverage_2d_polar_splines_solver
-  use sll_m_gyroaverage_2d_polar_pade_solver
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_common_array_initializers, only: &
+    sll_diocotron_initializer_2d, &
+    sll_scalar_initializer_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
+
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar_hermite_solver, only: &
+    new_gyroaverage_2d_polar_hermite_solver
+
+  use sll_m_gyroaverage_2d_polar_pade_solver, only: &
+    new_gyroaverage_2d_polar_pade_solver
+
+  use sll_m_gyroaverage_2d_polar_splines_solver, only: &
+    new_gyroaverage_2d_polar_splines_solver
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_wrapper, only: &
+    new_poisson_2d_polar
+
+  use sll_m_reduction, only: &
+    compute_integral_trapezoid_1d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
 #ifdef MUDPACK
   use sll_m_poisson_2d_mudpack
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
+    new_poisson_2d_mudpack_curvilinear_solver
+
 #endif
-
-  
-  !use sll_m_parallel_array_initializer
-
   implicit none
+
+  public :: &
+    new_guiding_center_2d_polar_one_mu
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !#define OLD_POISSON  
 !#define NEW_POISSON  

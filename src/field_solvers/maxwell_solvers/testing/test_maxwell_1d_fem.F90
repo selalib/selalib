@@ -14,18 +14,30 @@ program test_maxwell_1d_fem
   !------------------------------------------------------------------------
   !  test 1D Maxwell spline finite element solver on a periodic grid
   !------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_maxwell_1d_base
-  use sll_m_maxwell_1d_fem
-  use sll_m_arbitrary_degree_splines
+  use sll_m_arbitrary_degree_splines, only: &
+    eval_uniform_periodic_spline_curve
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_maxwell_1d_base, only: &
+    sll_plot_two_fields_1d
+
+  use sll_m_maxwell_1d_fem, only: &
+    compute_b_from_e_1d_fem, &
+    compute_e_from_b_1d_fem, &
+    compute_e_from_rho_1d_fem, &
+    compute_fem_rhs, &
+    sll_maxwell_1d_fem, &
+    sll_new_maxwell_1d_fem
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !  type(arbitrary_degree_spline_1d), pointer :: aspl
   !  sll_real64, dimension(:), allocatable :: knots

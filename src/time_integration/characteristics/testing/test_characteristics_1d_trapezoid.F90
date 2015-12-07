@@ -16,12 +16,26 @@
 !**************************************************************
 
 program test_characteristics_1d_trapezoid
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_trapezoid
-use sll_m_boundary_condition_descriptors
-use sll_m_cubic_spline_interpolator_1d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_trapezoid, only: &
+    new_trapezoid_1d_charac
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_characteristics_1d_base),pointer :: trap
 

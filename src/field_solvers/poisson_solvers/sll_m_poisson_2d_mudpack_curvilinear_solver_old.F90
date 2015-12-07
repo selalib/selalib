@@ -31,20 +31,45 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_mudpack_curvilinear_solver_old
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-!use sll_m_boundary_condition_descriptors
-use sll_m_constants
-use sll_m_poisson_2d_base
-use sll_m_mudpack_curvilinear
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
-!use sll_m_poisson_2d_polar
-implicit none
+#include "sll_working_precision.h"
+
+! use F77_mudpack, only: &
+!   mud2, &
+!   mud24, &
+!   mud24cr, &
+!   mud2cr
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_non_separable_with_cross_terms, &
+    sll_non_separable_without_cross_terms
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_mudpack_curvilinear_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   

@@ -1,12 +1,18 @@
 program test_tri_mesh
 
-use sll_m_working_precision
-use sll_m_tri_mesh_xmf
-use sll_generate_tri_mesh
-use sll_m_constants, only : &
-     sll_pi
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_generate_tri_mesh, only: &
+    plaqx, &
+    plaqy
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_tri_mesh_xmf, only: &
+    write_tri_mesh_xmf
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer :: nbox, nboy
 real(8), dimension(:,:), pointer :: coor1, coor2
@@ -23,8 +29,8 @@ write(6,*) 'Mesh Generation on a square '
 write(6,*)
 write(6,*) '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-x_min = 0.0_f64; x_max = 1.0_f64
-y_min = 0.0_f64; y_max = 1.0_f64
+x_min = 0.0_8; x_max = 1.0_8
+y_min = 0.0_8; y_max = 1.0_8
 
 nbox = 33; nboy = 33
 

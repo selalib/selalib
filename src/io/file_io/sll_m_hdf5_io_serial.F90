@@ -21,18 +21,45 @@
 !> @note 
 !> link with sll_file_io
 module sll_m_hdf5_io_serial
-#include "sll_assert.h"
-#include "sll_working_precision.h"
-  
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #ifndef NOHDF5
 
-use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
-                h5fopen_f, H5F_ACC_RDONLY_F, H5F_ACC_TRUNC_F, &
-                h5dcreate_f, h5dwrite_f, h5dclose_f, h5open_f, h5close_f, &
-                h5screate_f, h5sclose_f, h5fclose_f, h5fcreate_f, &
-                H5F_ACC_RDWR_F, H5T_NATIVE_INTEGER
-  
+#include "sll_assert.h"
+#include "sll_working_precision.h"
+
+  use hdf5, only: &
+    h5close_f, &
+    h5dclose_f, &
+    h5dcreate_f, &
+    h5dwrite_f, &
+    h5f_acc_rdonly_f, &
+    h5f_acc_rdwr_f, &
+    h5f_acc_trunc_f, &
+    h5fclose_f, &
+    h5fcreate_f, &
+    h5fopen_f, &
+    h5open_f, &
+    h5sclose_f, &
+    h5screate_f, &
+    h5screate_simple_f, &
+    h5t_native_double, &
+    h5t_native_integer, &
+    hid_t, &
+    hsize_t
+
   implicit none
+
+  public :: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_file_open, &
+    sll_hdf5_write_array, &
+    sll_hdf5_write_array_1d, &
+    sll_hdf5_write_array_2d, &
+    sll_hdf5_write_array_3d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Create new HDF5 file
   interface sll_hdf5_file_create

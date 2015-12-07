@@ -5,20 +5,26 @@
 !> @details <DETAILED_DESCRIPTION>
 
 module sll_m_sparse_grid_3d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_periodic_interpolator_1d
-use sll_m_arbitrary_degree_splines
-use sll_m_lagrange_interpolator_1d
-use sll_m_sparse_grid_interpolator
-use sll_m_constants, only: sll_pi
-implicit none
-private
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_sparse_grid_interpolator, only: &
+    sparse_grid_interpolator
+
+  implicit none
+
+  public :: &
+    sparse_grid_interpolator_3d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Sparse grid object for 3d with interpolation routines.
-type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
+type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
 sll_int32, dimension(:,:,:), pointer  :: index !< 3d mapping: for each 3d index l on the sparse grid, \a index gives the index of the first node belonging to this level  
 
 contains

@@ -1,14 +1,21 @@
 program test_hex_hermite_circ
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_interpolation_hex_hermite
-  !use sll_m_euler_2d_hex
+  use sll_m_hexagonal_meshes, only: &
+    delete_hex_mesh_2d, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    der_finite_difference, &
+    hermite_interpolation, &
+    print_method
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:,:), allocatable :: deriv
 

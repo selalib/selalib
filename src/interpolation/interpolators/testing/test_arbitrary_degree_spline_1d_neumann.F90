@@ -1,13 +1,21 @@
 program arbitrary_degree_splines_1d_neumann
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_m_boundary_condition_descriptors
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    set_values_at_boundary1d, &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_neumann
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS 65
 #define SPL_DEG 3

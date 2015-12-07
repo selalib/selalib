@@ -2,23 +2,53 @@
 !> Contains bsplines implementation
 module sll_m_bsplines
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_fornberg
-use sll_m_deboor_splines_1d
+! use F77_deboor, only: &
+!   banfac, &
+!   banslv
 
-implicit none 
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-private
+  use sll_m_deboor_splines_1d, only: &
+    bsplvb, &
+    bsplvd, &
+    deboor_type, &
+    interv
+
+  use sll_m_fornberg, only: &
+    apply_fd
+
+  implicit none
+
+  public :: &
+    compute_bspline_1d, &
+    compute_bspline_2d, &
+    delete_bspline_1d, &
+    interpolate_array_derivatives_1d, &
+    interpolate_array_values_1d, &
+    interpolate_array_values_2d, &
+    interpolate_derivative_1d, &
+    interpolate_value_1d, &
+    interpolate_value_2d, &
+    new_bspline_1d, &
+    new_bspline_2d, &
+    sll_bspline_1d, &
+    sll_bspline_2d, &
+    update_bspline_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !> @brief 
 !> basic type for one-dimensional B-spline data. 
 !> @details This should be
 !> treated as an opaque type. It is better to use it through interpolator
-type, public :: sll_bspline_1d
+type :: sll_bspline_1d
 
   sll_int32                 :: n
   sll_int32                 :: k
@@ -48,7 +78,7 @@ end type sll_bspline_1d
 !> basic type for two-dimensional B-spline data. 
 !> @details 
 !> treated as an opaque type. No access to its internals is directly allowed.
-type, public :: sll_bspline_2d
+type :: sll_bspline_2d
 
   type(sll_bspline_1d), pointer :: bs1
   type(sll_bspline_1d), pointer :: bs2
@@ -65,22 +95,6 @@ interface compute_bspline_2d
   module procedure compute_bspline_2d_with_variable_slopes
 end interface compute_bspline_2d
 
-public :: new_bspline_1d
-public :: new_bspline_2d
-public :: delete_bspline_1d
-public :: delete_bspline_2d
-public :: compute_bspline_1d
-public :: compute_bspline_2d
-public :: update_bspline_1d
-public :: update_bspline_2d
-public :: interpolate_value_1d
-public :: interpolate_derivative_1d
-public :: interpolate_array_values_1d
-public :: interpolate_array_derivatives_1d
-public :: interpolate_array_values_2d
-public :: interpolate_value_2d
-public :: interpolate_array_x1_derivatives_2d
-public :: interpolate_array_x2_derivatives_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains

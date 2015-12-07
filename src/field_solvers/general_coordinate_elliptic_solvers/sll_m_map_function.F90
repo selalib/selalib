@@ -1,6 +1,20 @@
 module sll_m_map_function
 
-use sll_m_coordinate_transformation_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  implicit none
+
+  public :: &
+    map, &
+    set_map_function
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class(sll_coordinate_transformation_2d_base),pointer :: tau
 

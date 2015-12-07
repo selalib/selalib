@@ -126,12 +126,86 @@
 ! ***************************************************************************
 
 module sll_m_collective
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_mpi
+  use sll_mpi, only: &
+    mpi_allgather, &
+    mpi_allgatherv, &
+    mpi_allreduce, &
+    mpi_alltoall, &
+    mpi_alltoallv, &
+    mpi_barrier, &
+    mpi_bcast, &
+    mpi_comm_rank, &
+    mpi_comm_size, &
+    mpi_comm_split, &
+    mpi_comm_world, &
+    mpi_complex, &
+    mpi_double_complex, &
+    mpi_double_precision, &
+    mpi_finalize, &
+    mpi_gather, &
+    mpi_gatherv, &
+    mpi_init_thread, &
+    mpi_integer, &
+    mpi_integer8, &
+    mpi_logical, &
+    mpi_real, &
+    mpi_real8, &
+    mpi_reduce, &
+    mpi_scatter, &
+    mpi_scatterv, &
+    mpi_success, &
+    mpi_sum, &
+    mpi_thread_funneled
+
   implicit none
+
+  public :: &
+    collectives_are_same, &
+    sll_boot_collective, &
+    sll_collective_allgather, &
+    sll_collective_allgatherv, &
+    sll_collective_allgatherv_real64, &
+    sll_collective_allreduce, &
+    sll_collective_allreduce_logical, &
+    sll_collective_allreduce_real32, &
+    sll_collective_alltoall, &
+    sll_collective_alltoall_int, &
+    sll_collective_alltoallv, &
+    sll_collective_alltoallv_double, &
+    sll_collective_alltoallv_int, &
+    sll_collective_alltoallv_int_simple, &
+    sll_collective_alltoallv_real, &
+    sll_collective_barrier, &
+    sll_collective_bcast, &
+    sll_collective_bcast_real64, &
+    sll_collective_gather, &
+    sll_collective_gatherv_real, &
+    sll_collective_gatherv_real64, &
+    sll_collective_globalsum, &
+    sll_collective_globalsum_array_comp64, &
+    sll_collective_globalsum_array_real64, &
+    sll_collective_reduce, &
+    sll_collective_reduce_int, &
+    sll_collective_reduce_logical, &
+    sll_collective_reduce_real32, &
+    sll_collective_reduce_real64, &
+    sll_collective_scatter, &
+    sll_collective_scatterv_real, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_new_collective, &
+    sll_test_mpi_error, &
+    sll_world_collective
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! This is the only place in the prototype that should have to include
   ! the mpi header file.
   !include 'mpif.h'

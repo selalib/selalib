@@ -8,26 +8,45 @@
 !> * Periodic boundary conditions.
 module sll_m_maxwell_2d_diga
 
-#include "sll_maxwell_solvers_macros.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
+#include "sll_maxwell_solvers_macros.h"
 
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_maxwell_solvers_base
-use sll_m_dg_fields
-use sll_m_boundary_condition_descriptors
-use sll_m_cartesian_meshes
-use sll_m_gauss_lobatto_integration, only : &
-       gauss_lobatto_points, &
-       gauss_lobatto_weights, &
-       gauss_lobatto_derivative_matrix
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_conductor, &
+    sll_interior, &
+    sll_silver_muller
 
-implicit none
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_derivative_matrix, &
+    gauss_lobatto_points, &
+    gauss_lobatto_weights
+
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_maxwell_2d_diga, &
+    sll_new, &
+    sll_solve, &
+    sll_uncentered
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Local type with edge properties
-type, private :: edge_type
+type :: edge_type
 
    sll_real64                            :: length 
    sll_real64, dimension(:,:), pointer   :: vec_norm
@@ -36,7 +55,7 @@ type, private :: edge_type
 end type edge_type
 
 !> Information about a mesh cell
-type, private :: cell_type
+type :: cell_type
 
    sll_int32                           :: i,j         !< indices 
    sll_real64                          :: eta1_min    !< left side
@@ -51,7 +70,7 @@ type, private :: cell_type
 end type cell_type
 
 !> DG method in 2D with general coordinates
-type, public :: sll_maxwell_2d_diga
+type :: sll_maxwell_2d_diga
    private
    sll_int32                           :: nc_eta1      !< x cells number
    sll_int32                           :: nc_eta2      !< y cells number
@@ -98,13 +117,11 @@ interface sll_solve
 end interface sll_solve
 
 !> Flux parameter
-sll_int32, parameter, public :: SLL_CENTERED       = 20
+sll_int32, parameter :: SLL_CENTERED       = 20
 !> Flux parameter
-sll_int32, parameter, public :: SLL_UNCENTERED     = 21
+sll_int32, parameter :: SLL_UNCENTERED     = 21
 
-public sll_new, sll_create, sll_solve
 
-private
 
 contains
 

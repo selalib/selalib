@@ -21,17 +21,24 @@
 !> This module contains common subroutines for  Maxwell solvers
 module sll_m_maxwell_solvers_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
-  use sll_m_utilities, only : int2string
-use sll_m_boundary_condition_descriptors
 
-implicit none
+  use sll_m_utilities, only: &
+    int2string
+
+  implicit none
+
+  public :: &
+    sll_plot_two_fields
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Parent object of all Maxwell solvers
-  type, public :: sll_maxwell_solver
+  type :: sll_maxwell_solver
 
    sll_int32  :: nc_eta1      !< x cells number
    sll_int32  :: nc_eta2      !< y cells number
