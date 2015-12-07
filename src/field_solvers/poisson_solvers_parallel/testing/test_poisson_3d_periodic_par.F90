@@ -59,7 +59,7 @@ program test_poisson_3d_periodic_par
   Ly = 2*sll_pi
   Lz = 2*sll_pi
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective), i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
 
@@ -67,7 +67,6 @@ program test_poisson_3d_periodic_par
   dy = Ly/ny
   dz = Lz/nz
 
-  colsz  = sll_get_collective_size(sll_world_collective)
   e = int(log(real(colsz))/log(2.))
 
   ! Layout and local sizes for FFTs in x-direction
@@ -108,7 +107,7 @@ program test_poisson_3d_periodic_par
      if (i_test==1) then
         phi_an = cos(x)*sin(y)*cos(z)
      else if (i_test == 2) then
-        phi_an = (4/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz)) &
+        phi_an = (4.0_f64/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz)) &
              * exp(-.5*(x-Lx/2)**2)                   &
              * exp(-.5*(y-Ly/2)**2) * sin(z)
      end if

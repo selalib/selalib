@@ -51,7 +51,7 @@ integer, parameter :: k = 6
 real(8) :: bcoef(n)
 real(8) :: gtau(n)
 real(8) :: tau(n)
-real(8) :: z(n)
+!real(8) :: z(n)
 real(8) :: taui
 real(8) :: q( 2*k-1,n)
 real(8) :: t(n+k)
@@ -67,12 +67,12 @@ integer :: j
 integer :: km1
 integer :: left
 integer :: lenq
-real(8) :: fact
-real(8) :: alpha, beta, gamma
+!real(8) :: fact
+!real(8) :: alpha, beta, gamma
 
 do i = 1, n
   tau(i)  = tau_min + (i-1)*(tau_max-tau_min)/(n-1)
-  gtau(i) = 1.0
+  gtau(i) = 1.0_8
 end do
 
 t(1:k) = tau_min
@@ -163,9 +163,5 @@ call banslv ( q, k+km1, n, km1, km1, bcoef )
 !end do
 
 write(*,"(' bcoef = ', 11f7.3)") bcoef
-
-do i = 1, n
-   write(17,*) tau(i), bcoef(i)
-end do
 
 end program test_pppack

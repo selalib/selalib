@@ -91,7 +91,7 @@ do itime = 1, nbiter
          eta1 = eta1_min + modulo(eta1 - eta1_min - alpha1, eta1_max-eta1_min)
          eta2 = eta2_min + modulo(eta2 - eta2_min - alpha2, eta2_max-eta2_min)
 
-         f(i,j) = spline_xy%interpolate_value(eta1,eta2)
+         f(i,j) = spline_xy%interpolate_from_interpolant_value(eta1,eta2)
 
       end do
    end do

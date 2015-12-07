@@ -39,12 +39,16 @@ intrinsic_procedures = { \
 'ble', # Bitwise less than or equal to
 'blt', # Bitwise less than
 'btest', # Bit test function
-'c_associated', # Status of a C pointer
-'c_funloc', # Obtain the C address of a procedure
-'c_f_procpointer', # Convert C into Fortran procedure pointer
-'c_f_pointer', # Convert C into Fortran pointer
-'c_loc', # Obtain the C address of an object
-'c_sizeof', # Size in bytes of an expression
+#------------------------------------------------------------------------------
+# Following symbols come from module 'iso_c_binding', they should not be here!
+#------------------------------------------------------------------------------
+# 'c_associated',    # Status of a C pointer
+# 'c_funloc',        # Obtain the C address of a procedure
+# 'c_f_procpointer', # Convert C into Fortran procedure pointer
+# 'c_f_pointer',     # Convert C into Fortran pointer
+# 'c_loc',           # Obtain the C address of an object
+# 'c_sizeof',        # Size in bytes of an expression
+#------------------------------------------------------------------------------
 'ceiling', # Integer ceiling function
 'char', # Character conversion function
 'cmplx', # Complex conversion function
@@ -162,6 +166,7 @@ intrinsic_procedures = { \
 'sin', # Sine function
 'sinh', # Hyperbolic sine function
 'size', # Determine the size of an array
+'sleep', # Causes the process to pause for Seconds seconds (GCC and ifort)
 'sngl', # Convert double precision real to default real
 'spacing', # Smallest distance between two numbers of a given type
 'spread', # Add a dimension to an array

@@ -23,6 +23,7 @@
 #define fftw_plan type(C_PTR) 
 #define fftw_comp complex(C_DOUBLE_COMPLEX)
 #define fftw_int  integer(C_SIZE_T)
+#define fftw_real real(C_DOUBLE)
 
 #define FFTW_ALLOCATE(array,array_size,sz_array,p_array)     \
 sz_array = int(array_size,C_SIZE_T);                         \
@@ -85,6 +86,7 @@ call dfftw_plan_dft_c2r_2d(plan,n1,n2,in,out,FFTW_PATIENT)
 #define fftw_plan  sll_int64
 #define fftw_comp  sll_comp64
 #define fftw_int   sll_int32
+#define fftw_real  sll_real64
 
 #define fftw_plan_dft_1d     dfftw_plan_dft_1d
 #define fftw_plan_dft_c2r_1d dfftw_plan_dft_c2r_1d

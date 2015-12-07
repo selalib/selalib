@@ -511,19 +511,24 @@ subroutine compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
   node_positions(N+1)   = 1._f64
   
   !piecewise linear mapping (maybe enhanced like in complete mesh)
-  dx=bloc_coord(1)/real(bloc_index(1),f64)
-  do i=2,bloc_index(1)
-     node_positions(i) = (real(i,f64)-1._f64)*dx
-  enddo
-  dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
-  do i=2,bloc_index(2)
-    node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
-  enddo
-  dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
-  do i=2,bloc_index(3)
-    node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
-  enddo
-        
+  if(bloc_index(1).ne. 0)then
+    dx=bloc_coord(1)/real(bloc_index(1),f64)
+    do i=2,bloc_index(1)
+      node_positions(i) = (real(i,f64)-1._f64)*dx
+    enddo
+  endif
+  if(bloc_index(2).ne.0)then  
+    dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
+    do i=2,bloc_index(2)
+      node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
+    enddo
+  endif
+  if(bloc_index(3).ne.0)then  
+    dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
+    do i=2,bloc_index(3)
+      node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
+    enddo
+  endif      
 end subroutine compute_mesh_from_bloc
 
 

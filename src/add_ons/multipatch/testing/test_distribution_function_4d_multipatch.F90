@@ -4,6 +4,13 @@ program unit_test_2d
   use sll_m_distribution_function_4d_multipatch
   use sll_m_collective
   use sll_m_common_array_initializers
+
+  ! MISSING
+  use sll_m_scalar_field_2d_multipatch
+  use sll_m_cartesian_meshes
+  use sll_m_constants
+  use sll_m_utilities
+
   implicit none
 
   type(sll_coordinate_transformation_multipatch_2d)      :: t_mp
