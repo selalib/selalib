@@ -17,10 +17,22 @@
 program test_lagrange_fast_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_lagrange_fast
-  use sll_m_collective
-  use sll_m_decomposition
+  use sll_m_constants, only : sll_pi
+  use sll_m_lagrange_fast, only : &
+       sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
+  use sll_m_collective, only : &
+       sll_boot_collective, &
+       sll_get_collective_rank, &
+       sll_get_collective_size, &
+       sll_halt_collective, &
+       sll_world_collective
+       
+  use sll_m_decomposition, only : &
+       apply_halo_exchange, &
+       cartesian_topology_6d, &
+       decomposition_6d, &
+       new_cartesian_domain_decomposition, &
+       new_cartesian_topology
 
   implicit none
 
@@ -107,10 +119,10 @@ program test_lagrange_fast_parallel
   fp = 0.0_f64
 
   ! --- offset from grid points
-  alpha = 0.21
+  alpha = 0.21_f64
 
   do i = decomposition%local%mn(1), decomposition%local%mx(1)
-    xi(i,1,1,1,1,1) = i - 1
+    xi(i,1,1,1,1,1) = real(i - 1, f64)
     fi(i,1,1,1,1,1) = f(xi(i,1,1,1,1,1), global_grid_points_per_dimension(1))
     xp(i,1,1,1,1,1) = xi(i,1,1,1,1,1) + alpha
   end do
@@ -121,7 +133,7 @@ program test_lagrange_fast_parallel
 
   ! --- apply interpolation
   stencil = 2 * halo_width_per_dimension(1) + 1
-  call lagrange_halo_cells(fi(:,1,1,1,1,1), fp(:,1,1,1,1,1), alpha, stencil)
+  call sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(fi(:,1,1,1,1,1), fp(:,1,1,1,1,1), alpha, stencil)
 
 
   ! --- write out original values
