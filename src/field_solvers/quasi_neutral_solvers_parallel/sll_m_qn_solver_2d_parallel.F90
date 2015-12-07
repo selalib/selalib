@@ -46,6 +46,12 @@ module sll_m_qn_solver_2d_parallel
 
   implicit none
 
+  public :: &
+    qn_solver_2d_parallel, &
+    new_qn_solver_2d_parallel, &
+    solve_qn_solver_2d_parallel, &
+    delete_qn_solver_2d_parallel
+
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
