@@ -29,6 +29,8 @@ make install
 Problems in building any of the modules should be related with how to 
 locate the right libraries for your system, as explained in the next section.
 
+For cmake configuration see [CMake Quickstart](CMakeQuickstart.md).
+
 EXTERNAL LIBRARY DEPENDENCIES
 -----------------------------
 
