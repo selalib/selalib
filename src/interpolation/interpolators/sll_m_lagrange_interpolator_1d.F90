@@ -11,9 +11,9 @@ module sll_m_lagrange_interpolator_1d
 use sll_m_interpolators_1d_base
 use sll_m_lagrange_interpolation_1d
 use sll_m_lagrange_fast, only : &
-     lagrange, &
-     lagrange_periodic, &
-     lagrange_halo_cells
+     sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
+     sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
+     sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
 implicit none
 private
