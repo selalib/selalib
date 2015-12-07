@@ -65,18 +65,18 @@ implicit none
   sll_real64 :: ph
   sll_int32 :: iter
   sll_int32 :: hermite_p
-  sll_int32 :: hermite_r_left
-  sll_int32 :: hermite_r_right
-  sll_int32 :: hermite_s_left
-  sll_int32 :: hermite_s_right
+  !sll_int32 :: hermite_r_left
+  !sll_int32 :: hermite_r_right
+  !sll_int32 :: hermite_s_left
+  !sll_int32 :: hermite_s_right
   sll_int32 :: lag_p
   sll_int32 :: lag_r
   sll_int32 :: lag_s
   sll_real64 :: iota  
-  sll_real64, dimension(:,:,:), allocatable :: hermite_w_aligned
-  sll_int32, dimension(:,:), allocatable :: hermite_w_cell_aligned
-  sll_real64, dimension(:,:), allocatable :: theta_pos_left
-  sll_real64, dimension(:,:,:), allocatable :: buf
+  !sll_real64, dimension(:,:,:), allocatable :: hermite_w_aligned
+  !sll_int32, dimension(:,:), allocatable :: hermite_w_cell_aligned
+  !sll_real64, dimension(:,:), allocatable :: theta_pos_left
+  !sll_real64, dimension(:,:,:), allocatable :: buf
   
   
   nb_iter = 10

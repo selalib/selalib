@@ -16,15 +16,15 @@ implicit none
 
 
     
-sll_real64 ::time
+!sll_real64 ::time
 sll_int32 :: ierr
 sll_int32 :: npart !number of particles
-sll_real64, dimension(:,:), allocatable :: x,y !particle coordinate
+sll_real64, dimension(:,:), allocatable :: x!,y !particle coordinate
  type(sll_time_mark)  :: tstart, tstop
-sll_int32 :: maxmode=10
-sll_comp64, dimension(:), allocatable :: fmodes
-sll_comp64, dimension(:), allocatable :: modeone
-sll_int32, dimension(:,:), allocatable :: modes
+!sll_int32 :: maxmode=10
+!sll_comp64, dimension(:), allocatable :: fmodes
+!sll_comp64, dimension(:), allocatable :: modeone
+!sll_int32, dimension(:,:), allocatable :: modes
 sll_int32 :: idx, dimx
 sll_real64 :: boxlen=2*sll_pi
 type(pif_fieldsolver) :: SOLVER
@@ -63,7 +63,7 @@ call SOLVER%init(15)
  call display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
 
 
-npart=1e5
+npart=int(1e5,i32)
 
 call speed_test()
 
@@ -82,8 +82,8 @@ sll_real64, dimension(:), allocatable :: y1, y2
 sll_real64, dimension(:,:), allocatable :: grad
 sll_int32, intent(in) :: modeidx
 sll_real64, dimension(dimx) :: mode
-sll_real64 :: alpha=0.5
-sll_int32 :: idx, jdx
+sll_real64 :: alpha=0.5_f64
+sll_int32 :: idx!, jdx
 
 mode=(SOLVER%allmodes(:,modeidx)*SOLVER%unitmode(:))
 
@@ -94,12 +94,12 @@ SLL_CLEAR_ALLOCATE(xw(1:dimx+1, 1:npart), ierr)
 call random_number(xw(1:dimx,:));
 xw=xw*boxlen
 
-xw(dimx+1,:)=0
+xw(dimx+1,:)=0.0_f64
 !  do idx=1,dimx
 !   xw(dimx+1,:)=xw(dimx+1,:)+ sin(xw(idx,:)*mode(idx))
 !  end do
 
- xw(dimx+1,:)=1+alpha*cos(matmul(mode, xw(1:dimx,:))+boxlen/3)
+ xw(dimx+1,:)=1.0_f64+alpha*cos(matmul(mode, xw(1:dimx,:))+boxlen/3)
 
 !scale weight
 xw(dimx+1,:)=xw(dimx+1,:)*boxlen**dimx
@@ -118,11 +118,11 @@ sol=SOLVER%solve_mass(rhs)
 SLL_CLEAR_ALLOCATE(y1(size(testx,2)), ierr)
 SLL_CLEAR_ALLOCATE(y2(size(testx,2)), ierr)
 
-y1=1+alpha*cos(matmul(mode, testx(1:dimx,:))+boxlen/3)
+y1=1.0_f64+alpha*cos(matmul(mode, testx(1:dimx,:))+boxlen/3)
 y2=SOLVER%eval_solution(testx, sol)
 
 print *, abs(sol(modeidx))
-print *,"RHO L2:", sum((y1-y2)**2)/size(testx)
+print *,"RHO L2:", sum((y1-y2)**2)/real(size(testx),f64)
 
 
 !Test components of gradient
@@ -130,7 +130,7 @@ SLL_CLEAR_ALLOCATE(grad(3,size(testx,2)), ierr)
 grad=SOLVER%eval_gradient(testx,sol)
 do idx=1,dimx
 y1=-alpha*sin(matmul(mode, testx(1:dimx,:))+boxlen/3)*mode(idx)
-print *,"NABLA RHO L2:",idx,sum((y1-grad(idx,:))**2)/size(testx)
+print *,"NABLA RHO L2:",idx,sum((y1-grad(idx,:))**2)/real(size(testx),f64)
 end do
 
 
@@ -139,7 +139,7 @@ sol=SOLVER%solve_poisson(rhs)
 
 y1=alpha*cos(matmul(mode, testx(1:dimx,:))+boxlen/3)/sum((mode(:)**2))
 y2=SOLVER%eval_solution(testx, sol)
-print *,"PHI L2:", sum((y1-y2)**2)/size(testx)
+print *,"PHI L2:", sum((y1-y2)**2)/real(size(testx),f64)
 
 
 end subroutine 
@@ -150,12 +150,12 @@ sll_int32 :: npart, chunksize
 sll_comp64, dimension(:), allocatable :: rhs1,rhs2,rhs3,rhs4
 
 print *,"Test for small number of particles"
-npart=1e5
+npart=int(1e5,i32)
 SLL_CLEAR_ALLOCATE(x(2*dimx+1, 1:npart), ierr)
 call random_number(x);
 x=x*boxlen
 
-x(stenw,:)=(1+0.5_f64*sin(1*x(1,:)-x(2,:)))*boxlen**dimx
+x(stenw,:)=(1.0_f64+0.5_f64*sin(1*x(1,:)-x(2,:)))*boxlen**dimx
 !+sin(2*x(1,:))+sin(2*x(3,:))
 
 SLL_ALLOCATE(rhs1(SOLVER%problemsize()),ierr)

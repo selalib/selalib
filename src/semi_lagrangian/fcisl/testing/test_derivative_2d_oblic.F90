@@ -36,7 +36,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: output
   sll_int32 :: ierr
   sll_real64 :: err
-  sll_real64 :: iota
+  !sll_real64 :: iota
   sll_real64 :: A1  
   sll_real64 :: A2
   sll_real64 :: dt  
@@ -52,7 +52,7 @@ implicit none
   stencil_s = 2
   
   !iota = 0.43 ! !A1/A2
-  dt = 0.1
+  dt = 0.1_f64
   A1 = 1._f64
   A2 = 2._f64
   

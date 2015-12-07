@@ -76,7 +76,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(xmin+modulo(2.0_f64*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
      !print*, i, x*exp(-deltat**2/2), xout(i)
   end do
   print*,'     error=', error
@@ -87,7 +87,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(xmin+modulo(2.0_f64*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error
@@ -151,7 +151,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error, abs(modulo(x*exp(-deltat**2/2), xmax-xmin) - xout(i)))
+     error = max(error, abs(modulo(x*exp(-deltat**2/2.0_f64), xmax-xmin) - xout(i)))
      !print*, i, modulo(xmin+(i-1)*deltax - deltat, xmax-xmin), xout(i)
   end do
   print*,'     error=', error
@@ -168,7 +168,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
+     error = max(error,abs(2.0_f64*atan(tan(x/2)*exp(-deltat))-xout(i)))
   end do
   print*,'     error=', error
 
@@ -178,7 +178,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
+     error = max(error,abs(2.0_f64*atan(tan(x/2.0_f64)*exp(-deltat))-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error
