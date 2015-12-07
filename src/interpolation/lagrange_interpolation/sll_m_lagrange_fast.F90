@@ -10,7 +10,9 @@ module sll_m_lagrange_fast
 #include "sll_working_precision.h"
   implicit none
 
-  public :: lagrange, lagrange_periodic, lagrange_halo_cells
+  public :: sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
+       sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
+       sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
   private
 
@@ -370,7 +372,7 @@ contains
   !> @param [out] fp(:)      output array of length n
   !> @param [in]  p          offset in units of dx
   !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
-  subroutine lagrange(fi, fp, p, stencil)
+  subroutine sll_s_interpolate_array_disp_lagrange_fixed_no_bc(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in)   :: fi(:)   
     sll_real64, intent(out)  :: fp(:)  
@@ -403,7 +405,7 @@ contains
         write(*,*) "Lagrange stencil not implemented."
     end select
 
-  end subroutine lagrange
+  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_no_bc
 
 
 !------------------------------------------------------------------------------!
@@ -412,7 +414,7 @@ contains
   !> @param [out] fp(:)      output array of length n
   !> @param [in]  p          offset in units of dx
   !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
-  subroutine lagrange_periodic(fi, fp, p, stencil)
+  subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
@@ -439,7 +441,7 @@ contains
       case default
         write(*,*) "Lagrange stencil not implemented."
     end select
-  end subroutine lagrange_periodic
+  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic
 
 
 
@@ -454,7 +456,7 @@ contains
   !>            (ie boundaries of half stencil width are untouched)
   !> @param [in] p          offset in units of dx
   !> @param [in] stencil    number of points {3,5,7,9,11} in fi used for interpolation
-  subroutine lagrange_halo_cells(fi, fp, p, stencil)
+  subroutine sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
@@ -481,7 +483,7 @@ contains
         write(*,*) "Lagrange stencil not implemented."
     end select
 
-  end subroutine lagrange_halo_cells
+  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
 
 end module sll_m_lagrange_fast
