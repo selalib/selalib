@@ -31,20 +31,53 @@
 !> More details by following the link sll_m_cubic_splines
 
 module sll_m_cubic_splines
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
-  use sll_m_tridiagonal  ! Used for 'slow' algorithm implementation
-  use sll_m_boundary_condition_descriptors
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag_double
+
   implicit none
+
+  public :: &
+    compute_cubic_spline_1d, &
+    compute_cubic_spline_2d, &
+    deposit_value_2d, &
+    get_coeff_cubic_spline_2d, &
+    get_x1_delta, &
+    get_x1_max, &
+    get_x1_min, &
+    get_x2_delta, &
+    get_x2_max, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_array, &
+    interpolate_from_interpolant_derivatives_eta1, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    interpolate_x1_derivative_2d, &
+    interpolate_x2_derivative_2d, &
+    new_cubic_spline_1d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_1d, &
+    sll_cubic_spline_2d, &
+    sll_delete
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> @brief 
   !> basic type for one-dimensional cubic spline data. 
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type, public  ::  sll_cubic_spline_1D
+  type  ::  sll_cubic_spline_1D
      sll_int32, private                   :: n_points !< size
      sll_real64, private                  :: delta    !< discretization step
      sll_real64, private                  :: rdelta   !< reciprocal of delta
@@ -84,7 +117,7 @@ module sll_m_cubic_splines
   !> @details
   !> This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type, public :: sll_cubic_spline_2D
+  type :: sll_cubic_spline_2D
     sll_int32 , private   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
     sll_int32 , private   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
     sll_real64, private   :: x1_delta    !< PLEASE ADD DOCUMENTATION
@@ -179,27 +212,6 @@ module sll_m_cubic_splines
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-    public sll_delete,                        &
-           new_cubic_spline_1d,               &
-           new_cubic_spline_2d,               &
-           compute_cubic_spline_1d,           &
-           compute_cubic_spline_2d,           &
-           interpolate_derivative,            &
-           interpolate_from_interpolant_value,                 &
-           interpolate_from_interpolant_array,          &
-           interpolate_pointer_values,        &
-           interpolate_from_interpolant_derivatives_eta1,     &
-           interpolate_pointer_derivatives,   &
-           interpolate_value_2d,              &
-           interpolate_x1_derivative_2D,      &
-           interpolate_x2_derivative_2D,      &
-           get_x1_min,                        &
-           get_x1_max,                        &
-           get_x1_delta,                      &
-           get_x2_max,                        &
-           get_x2_delta,                      &
-           deposit_value_2d,                  &
-           get_coeff_cubic_spline_2d
 
 contains  ! ****************************************************************
 

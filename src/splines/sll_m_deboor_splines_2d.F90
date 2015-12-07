@@ -1,10 +1,22 @@
 module sll_m_deboor_splines_2d
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_deboor_splines_1d
-  
-implicit none 
+
+! use F77_deboor, only: &
+!   banfac, &
+!   banslv
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvb, &
+    deboor_type, &
+    splint_der
+
+  implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
   

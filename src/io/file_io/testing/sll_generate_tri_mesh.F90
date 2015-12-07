@@ -1,7 +1,14 @@
 module sll_generate_tri_mesh
 
-implicit none
-private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  implicit none
+
+  public :: &
+    plaqx, &
+    plaqy
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer :: i
 
@@ -9,9 +16,8 @@ integer, parameter :: iout = 6
 
 integer :: nmxsd   ! nb de sous domaines references
 
-logical, public :: PERIODIC_BC = .false.
+logical :: PERIODIC_BC = .false.
 
-public :: plaqx, plaqy
 
 CONTAINS
 

@@ -1,12 +1,22 @@
 program unit_test
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_constants, only : &
-     sll_pi
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 64
 #define NPTS2 64 

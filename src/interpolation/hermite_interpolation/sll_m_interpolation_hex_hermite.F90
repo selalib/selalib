@@ -1,11 +1,26 @@
 module sll_m_interpolation_hex_hermite
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_hexagonal_meshes
-  use sll_m_hermite_interpolation_2d
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite
+
+  use sll_m_hexagonal_meshes, only: &
+    get_cell_vertices_index, &
+    get_edge_index, &
+    get_triangle_index, &
+    sll_hex_mesh_2d
+
   implicit none
+
+  public :: &
+    der_finite_difference, &
+    hermite_interpolation, &
+    print_method
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

@@ -9,16 +9,28 @@
 !> * Linear system solve with lapack (Choleski)
 !> This solver is not fully tested, please use it carefully.
 module sll_m_fem_2d_periodic
-#include "sll_poisson_solvers_macros.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_poisson_solvers_macros.h"
 
-implicit none
-private
+! use F77_lapack, only: &
+!   dgetrf, &
+!   dgetrs
+
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_fem_poisson_2d_periodic, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Structure to solve Poisson equation on 2d irregular cartesian mesh
 !> with finite element numerical method
-type, public :: sll_fem_poisson_2d_periodic
+type :: sll_fem_poisson_2d_periodic
    sll_int32                           :: nx    !< cells number along x
    sll_int32                           :: ny    !< cells number along y
    sll_real64, dimension(:,:), pointer :: A     !< Mass matrix
@@ -38,7 +50,6 @@ interface sll_solve
    module procedure solve_poisson_2d_periodic_fem
 end interface sll_solve
 
-public :: sll_create, sll_solve
 
 contains
 

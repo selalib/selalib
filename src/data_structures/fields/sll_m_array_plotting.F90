@@ -1,9 +1,27 @@
 module sll_m_array_plotting
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_cartesian_meshes
-use sll_m_gnuplot
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_4d
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  implicit none
+
+  public :: &
+    sll_x1x2, &
+    sll_x1x3, &
+    sll_x1x4, &
+    sll_x2x3, &
+    sll_x2x4, &
+    sll_x3x4, &
+    write_projection_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32, parameter :: SLL_X1X2 = 0
 sll_int32, parameter :: SLL_X1X3 = 1

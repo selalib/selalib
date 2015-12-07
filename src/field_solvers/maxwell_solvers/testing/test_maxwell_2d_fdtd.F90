@@ -19,17 +19,24 @@ program test_maxwell_2d_fdtd
 !------------------------------------------------------------------------
 !  test 2D Maxwell solver based on finite differences on a staggered grid
 !------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_maxwell_solvers_base
-  use sll_m_maxwell_2d_fdtd
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
+  use sll_m_maxwell_2d_fdtd, only: &
+    sll_create, &
+    sll_maxwell_2d_fdtd, &
+    sll_solve
+
+  use sll_m_maxwell_solvers_base, only: &
+    sll_plot_two_fields
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min

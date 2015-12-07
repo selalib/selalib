@@ -12,12 +12,22 @@
 !****************************************************
 
 module test_func_module
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use util_constants
 
-! Test functions modules
+  use util_constants, only: &
+    np, &
+    xmax, &
+    xmin
 
   implicit none
+
+  public :: &
+    f, &
+    fprime
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   contains
 
 

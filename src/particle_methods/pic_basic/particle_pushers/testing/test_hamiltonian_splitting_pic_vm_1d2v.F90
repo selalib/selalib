@@ -1,22 +1,44 @@
 ! TODO: Use input from file to initialize and compare
 
 program test_hamiltonian_splitting_pic_1d2v_vm
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
-  use sll_m_particle_initializer
-  use sll_m_particle_group_1d2v
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_1d
-  use sll_m_hamiltonian_splitting_pic_vm_1d2v
-  use sll_m_maxwell_1d_base
-  use sll_m_maxwell_1d_fem
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
+    sll_new_hamiltonian_splitting_pic_vm_1d2v, &
+    sll_t_hamiltonian_splitting_pic_vm_1d2v
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_galerkin, &
+    sll_kernel_smoother_base
+
+  use sll_m_kernel_smoother_spline_1d, only: &
+    sll_kernel_smoother_spline_1d, &
+    sll_new_smoother_spline_1d
+
+  use sll_m_maxwell_1d_base, only: &
+    sll_maxwell_1d_base
+
+  use sll_m_maxwell_1d_fem, only: &
+    sll_maxwell_1d_fem, &
+    sll_new_maxwell_1d_fem
+
+  use sll_m_particle_group_1d2v, only: &
+    sll_new_particle_group_1d2v, &
+    sll_particle_group_1d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_particle_initializer, only: &
+    sll_particle_initialize_sobol_landau_1d2v
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Tolerance for comparison of real numbers: set it here!
   sll_real64, parameter :: EQV_TOL = 1.0e-14_f64

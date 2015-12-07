@@ -1,18 +1,38 @@
 program test_hex_hermite
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_interpolation_hex_hermite
-  use sll_m_euler_2d_hex
-  use sll_m_hex_poisson
-  use sll_m_pivotbande
+  use sll_m_euler_2d_hex, only: &
+    compute_characteristic_adams2_2d_hex, &
+    compute_characteristic_euler_2d_hex
+
+  use sll_m_hex_poisson, only: &
+    compute_hex_fields, &
+    hex_matrix_poisson, &
+    hex_second_terme_poisson
+
+  use sll_m_hexagonal_meshes, only: &
+    delete_hex_mesh_2d, &
+    get_cell_vertices_index, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    der_finite_difference, &
+    hermite_interpolation, &
+    print_method
+
+  use sll_m_pivotbande, only: &
+    factolub_bande, &
+    solvlub_bande
+
   use sll_m_utilities, only: &
-       int2string
+    int2string
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !*************************************************************
   ! Test computing the solution of the guiding centre model for

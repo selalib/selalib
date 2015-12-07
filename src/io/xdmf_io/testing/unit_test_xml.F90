@@ -1,15 +1,17 @@
 program test_xml
 
-  use sll_m_xml, only:  &
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_io_utilities, only: &
+    sll_f_check_empty_file, &
+    sll_f_check_equal_files, &
+    sll_s_remove_file
+
+  use sll_m_xml, only: &
     sll_t_xml_document, &
     sll_t_xml_element
 
-  use sll_m_io_utilities, only: &
-    sll_f_check_equal_files,    &
-    sll_f_check_empty_file,     &
-    sll_s_remove_file
-
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !----------------------------------------------------------------------------
   ! VARIABLES DECLARATION

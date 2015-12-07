@@ -39,19 +39,58 @@ plan%d_dy = plan%d_dy / plan%ncy
 !> Selalib periodic 2D maxwell solver for cartesian coordinates.
 !>   
 module sll_m_maxwell_2d_periodic_cartesian_par
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_m_utilities,  only : is_power_of_two
-use sll_m_remapper
-use sll_m_collective
-use sll_m_constants, only : &
-     sll_pi
-use sll_m_fftw3
+  use iso_c_binding, only: &
+    c_associated, &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
 
-implicit none
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_destroy_plan, &
+    fftw_execute_dft_c2r, &
+    fftw_execute_dft_r2c, &
+    fftw_free, &
+    fftw_patient, &
+    fftw_plan_dft_c2r_1d, &
+    fftw_plan_dft_r2c_1d
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_real64, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  implicit none
+
+  public :: &
+    ampere_te, &
+    delete_maxwell_2d_periodic_plan_cartesian_par, &
+    faraday_te, &
+    maxwell_2d_periodic_plan_cartesian_par, &
+    new_maxwell_2d_periodic_plan_cartesian_par
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Maxwell solver 2D object, PSTD scheme
 type maxwell_2d_periodic_plan_cartesian_par

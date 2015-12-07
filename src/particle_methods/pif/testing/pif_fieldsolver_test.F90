@@ -3,16 +3,26 @@
 !**************************************************************
 
 program pif_fieldsolver_test
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
+  use sll_m_constants, only: &
+    sll_pi
 
-use sll_m_pif_fieldsolver
-use sll_m_timer
-use sll_m_utilities, only : &
-     display_matrix_2d_integer
-implicit none
+  use sll_m_pif_fieldsolver, only: &
+    pif_fieldsolver
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    display_matrix_2d_integer
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
     

@@ -1,14 +1,18 @@
 program test_poisson_1d_periodic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_cubic_splines
-  use sll_m_poisson_1d_periodic
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_1d_periodic, only: &
+    initialize, &
+    poisson_1d_periodic, &
+    solve
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:), allocatable :: ex
   sll_real64, dimension(:), allocatable :: ex_exact

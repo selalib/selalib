@@ -1,10 +1,41 @@
 program test_serial_blocks
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use hdf5
-use sll_mpi
-use sll_m_hdf5_io_serial
-use sll_m_xdmf_serial_blocks
-implicit none
+
+  use hdf5, only: &
+    hid_t, &
+    hsize_t
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_utilities, only: &
+    int2string, &
+    mpe_decomp1d
+
+  use sll_m_xdmf_serial_blocks, only: &
+    sll_xdmf_array_2d_serial_blocks, &
+    sll_xdmf_close_serial_blocks, &
+    sll_xdmf_open_serial_blocks
+
+  use sll_mpi, only: &
+    mpi_barrier, &
+    mpi_cart_coords, &
+    mpi_cart_create, &
+    mpi_cart_shift, &
+    mpi_comm_rank, &
+    mpi_comm_size, &
+    mpi_comm_world, &
+    mpi_dims_create, &
+    mpi_finalize, &
+    mpi_init, &
+    mpi_proc_null, &
+    mpi_wtime
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32 :: i, j
 sll_int32 :: nx, ny, sx, ex, sy, ey

@@ -1,11 +1,19 @@
 program particle_fourier_modes_test
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-    use sll_m_constants
-    use sll_m_timer
-    
-    implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_i1, &
+    sll_pi
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
     

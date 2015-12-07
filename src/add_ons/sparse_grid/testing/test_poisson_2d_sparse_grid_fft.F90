@@ -1,17 +1,19 @@
 program test_poisson_2d_sparse_grid_fft
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-   !-------------------------------------------------------------------
-   !  test 2D Poisson solver based on FFT on sparse grid
-   !-------------------------------------------------------------------
+  use sll_m_constants, only: &
+    sll_pi
 
-   use sll_m_poisson_2d_sparse_grid_fft
-   use sll_m_sparse_grid_2d
-   use sll_m_constants, only : sll_pi
+  use sll_m_poisson_2d_sparse_grid_fft, only: &
+    sll_fft_derivative
 
-   implicit none
+  use sll_m_sparse_grid_2d, only: &
+    sparse_grid_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    sll_real64, dimension(2)  :: eta_max, eta_min
    sll_int32   :: nc_eta1, nc_eta2

@@ -1,14 +1,11 @@
 program test_dimitrov
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  use sll_m_constants
-
-! small test to verify each part of the computation of an interpolation using 
-! the hctc hermite finite element
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   sll_int32    :: i, num_degree 
   sll_real64   :: x1, x2, x3, y1, y2, y3, f,sol,step
   sll_real64   :: x1x,x2x,x3x,y1y,y2y,y3y, aire,a2

@@ -6,10 +6,16 @@
 !> that applies the 
 !> Rectangle method to compute numeric integrals.
 module sll_m_rectangle_integration
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  
-implicit none
+
+  implicit none
+
+  public :: &
+    rectangle_integrate_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface

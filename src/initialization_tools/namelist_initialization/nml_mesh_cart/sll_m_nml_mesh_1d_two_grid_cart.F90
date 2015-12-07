@@ -126,23 +126,23 @@
   !-----------------------------------------------------------------
 
 module sll_m_nml_mesh_1d_two_grid_cart
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_utilities, only : &
-    sll_new_file_id, &
+  use sll_m_utilities, only: &
     compute_bloc, &
-    compute_mesh_from_bloc
+    compute_mesh_from_bloc, &
+    sll_new_file_id
 
   implicit none
 
   public :: &
-    sll_s_nml_mesh_1d_two_grid_cart, &
-    sll_t_nml_mesh_1d_two_grid_cart
+    sll_s_nml_mesh_1d_two_grid_cart
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type :: sll_t_nml_mesh_1d_two_grid_cart
     sll_int32 :: num_cells

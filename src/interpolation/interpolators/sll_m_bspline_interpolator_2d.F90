@@ -21,14 +21,33 @@
 !> @details
 !> Implements the sll_c_interpolator_2d interface
 module sll_m_bspline_interpolator_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_interpolators_2d_base
-use sll_m_bsplines
-implicit none
-private
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_bsplines, only: &
+    compute_bspline_2d, &
+    interpolate_value_2d, &
+    new_bspline_2d, &
+    sll_bspline_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    new_bspline_interpolator_2d, &
+    sll_bspline_interpolator_2d, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !> @brief
 !> The spline-based interpolator is only a wrapper around the capabilities
@@ -37,7 +56,7 @@ private
 !> All interpolators share a common interface with
 !> respect to their use, as described by the interpolator_2d_base class.
 !> Where the diverse interpolators diverge is in the way to initialize them.
-type, extends(sll_c_interpolator_2d), public :: sll_bspline_interpolator_2d
+type, extends(sll_c_interpolator_2d) :: sll_bspline_interpolator_2d
 
   sll_int32                      :: npts1    !< Number of points along x direction
   sll_int32                      :: npts2    !< Number of points along y direction
@@ -86,8 +105,6 @@ interface sll_delete
   module procedure delete_bspline_interpolator_2d
 end interface sll_delete
 
-public new_bspline_interpolator_2d
-public sll_delete
 
 contains
 

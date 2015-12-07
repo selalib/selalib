@@ -1,7 +1,15 @@
 module sll_m_initial_distribution_functions
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_constants
+
+  use sll_m_constants, only: &
+    sll_kx, &
+    sll_pi
+
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains 
   elemental function landau(x, v)

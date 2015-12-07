@@ -1,12 +1,24 @@
 program sim_fsl_ad_2d0v_curv
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cubic_splines
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_2d, &
+    deposit_value_2d, &
+    interpolate_value_2d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case

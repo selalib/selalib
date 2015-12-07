@@ -16,11 +16,26 @@
 !**************************************************************
 
 program test_derivative_2d_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_derivative_2d_oblic
-use sll_m_advection_1d_periodic
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_derivative_2d_oblic, only: &
+    compute_oblic_derivative_2d, &
+    new_oblic_2d_derivative, &
+    oblic_2d_derivative
+
+  use sll_m_periodic_interp, only: &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(oblic_2d_derivative), pointer :: deriv
   sll_int32 :: Nc_x1

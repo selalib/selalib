@@ -1,13 +1,34 @@
 program aligned_derivative_2d
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_fcisl
-  use sll_m_constants
-  use sll_m_advection_1d_periodic
-  use sll_m_derivative_2d_oblic
-  
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_derivative_2d_oblic, only: &
+    compute_oblic_derivative_2d, &
+    new_oblic_2d_derivative, &
+    oblic_2d_derivative
+
+  use sll_m_fcisl, only: &
+    compute_derivative_periodic, &
+    compute_spaghetti, &
+    compute_spaghetti_and_shift_from_guess, &
+    compute_w_hermite
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type(oblic_2d_derivative), pointer :: deriv
   class(sll_advection_1d_base), pointer :: adv_x1

@@ -1,17 +1,29 @@
 module sll_m_pic_1d_distribution
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_pic_visu, only: compute_df_cic
-  use sll_m_utilities, only: int2string
-  use sll_m_xdmf
+  use sll_m_pic_visu, only: &
+    compute_df_cic
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_corect2d_nodes
 
   implicit none
 
+  public :: &
+    pic1d_eulerian_distribution
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 !==============================================================================
 
-  type, public :: pic1d_eulerian_distribution
+  type :: pic1d_eulerian_distribution
 
     sll_real64, allocatable :: f(:,:)
     sll_real64, allocatable :: n(:), nu(:), nke(:)

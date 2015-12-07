@@ -1,13 +1,29 @@
 program test_pic_visu
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_constants
-use sll_m_pic_visu
-use sll_m_utilities
-use biot_savart
+#include "sll_working_precision.h"
 
-implicit none
+  use biot_savart, only: &
+    deplace, &
+    getrealtimer, &
+    initialize, &
+    vitesse
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_pic_visu, only: &
+    distribution_gnuplot, &
+    distribution_m4_gnuplot, &
+    distribution_tsc_gnuplot, &
+    distribution_xdmf, &
+    particles_center_gnuplot, &
+    particles_center_gnuplot_inline, &
+    plot_format_points3d, &
+    plot_format_xmdv
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 sll_int32  :: nbpart
 
 nbpart = 100

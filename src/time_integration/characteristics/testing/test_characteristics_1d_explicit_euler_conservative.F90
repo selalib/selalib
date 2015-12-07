@@ -16,11 +16,20 @@
 !**************************************************************
 
 program test_characteristics_1d_explicit_euler_conservative
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_explicit_euler_conservative
-use sll_m_boundary_condition_descriptors
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler_conservative, only: &
+    new_explicit_euler_conservative_1d_charac
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_characteristics_1d_base), pointer :: euler 
   

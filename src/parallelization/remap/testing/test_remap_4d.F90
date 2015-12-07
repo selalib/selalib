@@ -1,14 +1,57 @@
 program remap_test_4d
-  use sll_m_collective
-  use sll_m_remapper
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-  use sll_m_utilities, only : &
-       is_power_of_two
+
   use iso_fortran_env, only: &
-       output_unit
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_remapper, only: &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    get_layout_i_max, &
+    get_layout_i_min, &
+    get_layout_j_max, &
+    get_layout_j_min, &
+    get_layout_k_max, &
+    get_layout_k_min, &
+    get_layout_l_max, &
+    get_layout_l_min, &
+    initialize_layout_with_distributed_array, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_4d_real64, &
+    set_layout_i_max, &
+    set_layout_i_min, &
+    set_layout_j_max, &
+    set_layout_j_min, &
+    set_layout_k_max, &
+    set_layout_k_min, &
+    set_layout_l_max, &
+    set_layout_l_min, &
+    sll_delete, &
+    sll_get_num_nodes, &
+    sll_view_lims
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_prod
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Test of the 4D remapper takes a 4D array whose global size N1*N2*N3*N4,
   ! distributed among NPi*NPj*NPk*NPl processors.

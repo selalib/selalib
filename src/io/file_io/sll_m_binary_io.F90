@@ -25,10 +25,23 @@
 !> This is controlled by the variable <code>HDF5_ENABLE</code>.
 !>
 module sll_m_binary_io
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_binary_file_close, &
+    sll_binary_file_create, &
+    sll_binary_read_array_0d, &
+    sll_binary_read_array_2d, &
+    sll_binary_write_array_0d, &
+    sll_binary_write_array_1d, &
+    sll_binary_write_array_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Write a nD array in a binary file
   !> \param[in] file_id file unit number

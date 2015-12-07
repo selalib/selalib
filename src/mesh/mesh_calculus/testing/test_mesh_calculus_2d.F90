@@ -1,11 +1,41 @@
 program test_mesh_calculus
-#include "sll_working_precision.h" 
-#include "sll_assert.h"
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_cartesian_meshes
-  use sll_m_mesh_calculus_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    deriv_x1_polar_f_eta1, &
+    deriv_x1_polar_f_eta2, &
+    deriv_x2_polar_f_eta1, &
+    deriv_x2_polar_f_eta2, &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    x1_polar_f, &
+    x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_mesh_calculus_2d, only: &
+    cell_volume, &
+    edge_length_eta1_minus, &
+    edge_length_eta1_plus, &
+    edge_length_eta2_minus, &
+    edge_length_eta2_plus, &
+    normal_integral_eta1_plus
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NCELLS1 128
 #define NCELLS2 128

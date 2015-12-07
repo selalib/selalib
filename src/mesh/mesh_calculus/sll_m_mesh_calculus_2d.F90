@@ -1,13 +1,30 @@
 module sll_m_mesh_calculus_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes
-  use sll_m_triangular_meshes
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gauss_legendre_integration
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
   implicit none
+
+  public :: &
+    cell_volume, &
+    edge_length_eta1_minus, &
+    edge_length_eta1_plus, &
+    edge_length_eta2_minus, &
+    edge_length_eta2_plus, &
+    normal_integral_eta1_plus
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! --------------------------------------------------------------------------
   !

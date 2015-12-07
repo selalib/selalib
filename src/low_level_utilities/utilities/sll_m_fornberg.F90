@@ -30,12 +30,17 @@
 !Ondřej Čertík 
 
 module sll_m_fornberg
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-implicit none
+  implicit none
 
-private
-public apply_fd, populate_weights
+  public :: &
+    apply_fd, &
+    populate_weights
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

@@ -1,8 +1,16 @@
 
 module sll_m_pic_postprocessing
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-    implicit none
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    det_landau_damping
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 
 

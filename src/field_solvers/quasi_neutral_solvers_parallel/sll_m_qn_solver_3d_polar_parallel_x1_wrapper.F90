@@ -20,19 +20,28 @@
 !> here it is a specification of 3d poisson solver
 
 module sll_m_qn_solver_3d_polar_parallel_x1_wrapper
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_boundary_condition_descriptors
-  use sll_m_remapper, only: &
-    layout_2D
-  use sll_m_poisson_3d_base
+#include "sll_working_precision.h"
+
+  use sll_m_poisson_3d_base, only: &
+    sll_poisson_3d_base
+
   use sll_m_qn_solver_3d_polar_parallel_x1, only: &
-    sll_qn_solver_3d_polar_parallel_x1, &
     new, &
+    sll_qn_solver_3d_polar_parallel_x1, &
     solve_qns3d_polar
 
-implicit none
+  use sll_m_remapper, only: &
+    layout_2d
+
+  implicit none
+
+  public :: &
+    new_qn_solver_3d_polar_parallel_x1_wrapper
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type,extends(sll_poisson_3d_base) :: qn_solver_3d_polar_parallel_x1_wrapper     

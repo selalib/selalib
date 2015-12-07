@@ -21,15 +21,23 @@
 
 
 module sll_m_advection_2d_tensor_product
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_2d_base
-use sll_m_advection_1d_base
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  implicit none
+
+  public :: &
+    new_tensor_product_2d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_advection_2d_base) :: tensor_product_2d_advector
     

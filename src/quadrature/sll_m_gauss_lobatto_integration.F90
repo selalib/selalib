@@ -6,10 +6,20 @@
 !> that applies the 
 !> Gauss-Lobatto method to compute numeric integrals.
 module sll_m_gauss_lobatto_integration
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  
-implicit none
+
+  implicit none
+
+  public :: &
+    gauss_lobatto_derivative_matrix, &
+    gauss_lobatto_integrate_1d, &
+    gauss_lobatto_points, &
+    gauss_lobatto_points_and_weights, &
+    gauss_lobatto_weights
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
@@ -29,7 +39,6 @@ interface gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
 end interface
 
-private :: dlob, dgauss
 
 contains
 
