@@ -27,6 +27,6 @@ program test_qn_solver_3d_polar_parallel_x1
 
 implicit none
 
-  print *,'#PASSED'
+  print *,'#FAILED'
 
 end program test_qn_solver_3d_polar_parallel_x1
