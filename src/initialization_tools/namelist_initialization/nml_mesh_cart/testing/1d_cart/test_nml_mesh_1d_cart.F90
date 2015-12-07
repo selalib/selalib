@@ -43,7 +43,7 @@ use sll_m_nml_mesh_1d_two_grid_cart, only : &
   sll_real64, pointer :: array(:)
   sll_real64, pointer :: array_1(:)
   sll_real64, pointer :: array_2(:)
-  type(sll_cartesian_mesh_1d), pointer :: mesh_landau
+  !type(sll_cartesian_mesh_1d), pointer :: mesh_landau
   sll_real64 :: err
   sll_real64 :: err_loc
   character(len=256) :: filename

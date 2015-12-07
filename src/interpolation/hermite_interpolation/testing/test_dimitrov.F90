@@ -14,8 +14,8 @@ program test_dimitrov
   sll_real64   :: x1x,x2x,x3x,y1y,y2y,y3y, aire,a2
   sll_real64   :: l1, l2, l3
   sll_real64   :: x, y
-  sll_real64   :: dfni_1, dfni, dfni1, dfni2 
-  sll_real64,dimension(2) :: dfi_1, dfi, dfi1, dfi2 
+  !sll_real64   :: dfni_1, dfni, dfni1, dfni2 
+  !sll_real64,dimension(2) :: dfi_1, dfi, dfi1, dfi2 
   sll_real64,dimension(2) :: n1_r_r,n2_r_r,n3_r_r,n1_r_l,n2_r_l,n3_r_l
   sll_real64,dimension(2) :: df, h1,h2,h3,n1_l,n2_l,n3_l,n1_r,n2_r,n3_r
   sll_real64,dimension(:),allocatable :: freedom, base

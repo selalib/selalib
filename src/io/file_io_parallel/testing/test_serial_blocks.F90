@@ -114,7 +114,7 @@ do j=sy,ey
    end do
 end do
 
-z = prank
+z = real(prank,f64)
 
 call int2string(prank,my_proc)
 field_label = "xdmf2d"
@@ -127,7 +127,7 @@ coordNames(2) = "/Y"
 !Write separate coordinate arrays for the x and y coordinates.
 nx = ex-sx+1
 ny = ey-sy+1
-data_dims = (/nx,ny/)
+data_dims = [int(nx,HSIZE_T),int(ny,HSIZE_T)]
 
 iplot = iplot+1
 call int2string(iplot,cplot)
