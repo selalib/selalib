@@ -229,7 +229,7 @@ contains
 
             case(SLL_SOLVER_FD)
                 this%problemsize=num_cells
-                this%fdsolver=>new(this%mesh,2,spline_degree,this%boundary_type,ierr)
+                this%fdsolver=>new_poisson_1d_fd(this%mesh,2,spline_degree,this%boundary_type,ierr)
             case(SLL_SOLVER_FOURIER)
                 this%num_fourier_modes=spline_degree
                 this%problemsize=this%num_fourier_modes

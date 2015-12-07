@@ -109,10 +109,6 @@ module sll_m_poisson_1d_fd
         module procedure sll_delete_poisson_1d_fd
     endinterface
 
-    interface new
-         module procedure new_poisson_1d_fd
-    endinterface
-
 contains
 
     !>Destructor
