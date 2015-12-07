@@ -284,7 +284,7 @@ contains
     !charac1d_x2_case = "SLL_TRAPEZOID"
     f_interp1d_x1_case = "SLL_CUBIC_SPLINES"
     f_interp1d_x2_case = "SLL_CUBIC_SPLINES"
-    time_period = 1.5
+    time_period = 1.5_f64
 
    
     

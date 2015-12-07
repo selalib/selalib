@@ -328,7 +328,7 @@ program sim_bsl_ad_2d0v_polar_rot
       do i=1,num_cells1+1
         charac_feet1(i,j) = rmin+real(i-1,f64)*delta1
         charac_feet2(i,j) = (real(j-1,f64)*delta2+dt)/(2._f64*sll_pi)
-        charac_feet2(i,j) = charac_feet2(i,j)-floor(charac_feet2(i,j))
+        charac_feet2(i,j) = charac_feet2(i,j)-real(floor(charac_feet2(i,j)),f64)
         charac_feet2(i,j) = charac_feet2(i,j)*(2._f64*sll_pi)                
       enddo
     enddo
