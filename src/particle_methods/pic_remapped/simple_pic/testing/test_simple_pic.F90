@@ -32,8 +32,8 @@ logical :: DOMAIN_IS_X_PERIODIC
 logical :: DOMAIN_IS_Y_PERIODIC
 
 particle_group_id = 0
-SPECIES_CHARGE = 1.
-SPECIES_MASS = 1.
+SPECIES_CHARGE = 1.0_f64
+SPECIES_MASS = 1.0_f64
 DOMAIN_IS_X_PERIODIC = .true.
 DOMAIN_IS_Y_PERIODIC = .true.
 
@@ -42,11 +42,11 @@ NC_Y = 10
 
 number_particles = 10000
 
-XMIN = 0.
-XMAX = 1.
+XMIN = 0.0_f64
+XMAX = 1.0_f64
 
-YMIN = 0.
-YMAX = 1.
+YMIN = 0.0_f64
+YMAX = 1.0_f64
 
 mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, XMIN, XMAX, YMIN, YMAX )
 

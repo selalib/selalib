@@ -115,7 +115,7 @@ implicit none
       endif
 
       tmp = input2(j)-dt*A2(i,j)
-      tmp = tmp-floor(tmp)
+      tmp = tmp-real(floor(tmp),f64)
       tmp=abs(tmp-output2(i,j))
       if(tmp>err)then
         err=tmp

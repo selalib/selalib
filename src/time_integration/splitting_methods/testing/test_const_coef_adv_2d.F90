@@ -49,7 +49,7 @@ program test_const_coef_adv_2d
        interp_eta1_ptr, interp_eta2_ptr, SLL_STRANG_TVT)
 
   ! do some steps of lie_splitting
-  dt = 0.5
+  dt = 0.5_f64
   call do_split_steps(split, dt, 4)
 
   ! save results

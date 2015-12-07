@@ -51,12 +51,12 @@ program test_ode_integrators
 
   ! Error handling
   character(len=*), parameter :: this_prog_name = "test_ode_integrators"
-  character(len=128)          :: err_msg
+  !character(len=128)          :: err_msg
 
   ! Other variables
   sll_real64                                    :: h_max, tend
   sll_real64                                    :: h, t
-  sll_int32                                     :: i
+  !sll_int32                                     :: i
   sll_real64, target                            :: z(2), znew(2)
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err
