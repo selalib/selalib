@@ -40,6 +40,7 @@ module sll_m_poisson_2d_periodic_fftw
   use sll_m_constants, only: &
     sll_pi
 
+#ifdef FFTW_F2003
   use sll_m_fftw3, only: &
     fftw_alloc_complex, &
     fftw_alloc_real, &
@@ -50,6 +51,10 @@ module sll_m_poisson_2d_periodic_fftw
     fftw_free, &
     fftw_plan_dft_c2r_2d, &
     fftw_plan_dft_r2c_2d
+#else
+  use sll_m_fftw3, only : &
+       fftw_estimate
+#endif
 
   implicit none
 

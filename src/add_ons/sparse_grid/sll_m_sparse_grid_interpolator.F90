@@ -15,6 +15,7 @@ module sll_m_sparse_grid_interpolator
     c_ptr, &
     c_size_t
 
+#ifdef FFTW_F2003
   use sll_m_fftw3, only: &
     fftw_alloc_complex, &
     fftw_backward, &
@@ -22,6 +23,12 @@ module sll_m_sparse_grid_interpolator
     fftw_forward, &
     fftw_measure, &
     fftw_plan_dft_1d
+#else
+  use sll_m_fftw3, only: &
+       fftw_backward, &
+       fftw_forward, &
+       fftw_measure
+#endif
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
