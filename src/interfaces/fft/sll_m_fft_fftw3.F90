@@ -363,7 +363,7 @@ contains
 #ifdef FFTW_F2003
     call fftw_execute_r2r(plan%fftw, array_in, array_out)
 #else
-    SLL_ERROR('fft_apply_plan_r2r_1d','R2HC not supported by MKL-FFTW.')
+    SLL_ERROR('fft_apply_plan_r2r_1d','R2HC not supported without FFTW_F2003.')
 #endif
 
     if( plan%normalized .EQV. .TRUE. ) then
