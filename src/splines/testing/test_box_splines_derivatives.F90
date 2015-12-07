@@ -46,7 +46,7 @@ program test_box_splines_derivatives
   sll_real64, dimension(:), allocatable :: f
   sll_real64, dimension(:), allocatable :: dxf
   sll_real64, dimension(:), allocatable :: dyf
-  sll_real64, dimension(:), allocatable :: splines_on_support
+  !sll_real64, dimension(:), allocatable :: splines_on_support
 
   print *, " ************************************************** "
   print *, "       Testing arbitrary degree box-splines"

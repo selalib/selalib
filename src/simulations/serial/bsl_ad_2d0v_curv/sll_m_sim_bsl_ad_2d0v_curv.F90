@@ -262,8 +262,8 @@ contains
     !class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
-    sll_real64 :: eta1_min_bis
-    sll_real64 :: eta1_max_bis
+    !sll_real64 :: eta1_min_bis
+    !sll_real64 :: eta1_max_bis
     !sll_real64 :: eta2_min_bis
     !sll_real64 :: eta2_max_bis
     !sll_int32  :: Nc_eta1_bis
@@ -1952,8 +1952,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+          eta1 = eta1_min+real(i-1,f64)*deta1
+          eta2 = eta2_min+real(j-1,f64)*deta2
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -3010,7 +3010,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64 :: linf
     sll_real64 :: l1
     sll_real64 :: l2
-    sll_real64 :: e
+    !sll_real64 :: e
     
     sll_real64, dimension(:), allocatable :: mass_array
     sll_real64, dimension(:), allocatable  :: l1_array
@@ -3366,7 +3366,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
       sll_real64 :: eta_out
 
       eta_out = (eta-eta_min)/(eta_max-eta_min)      
-      eta_out = eta_out-floor(eta_out)
+      eta_out = eta_out-real(floor(eta_out),f64)
       if(eta_out==1._f64)then
         eta_out = 0._f64
       endif      
