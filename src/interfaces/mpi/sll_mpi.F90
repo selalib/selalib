@@ -62,11 +62,11 @@ module sll_mpi
     mpi_any_tag,         &
     mpi_barrier,         &
     mpi_bcast,           &
+    mpi_cart_coords,     &
     mpi_cart_create,     &
     mpi_cart_get,        &
     mpi_cart_shift,      &
     mpi_character,       &
-    mpi_cart_coords,     &
     mpi_comm_free,       &
     mpi_comm_rank,       &
     mpi_comm_size,       &
@@ -77,6 +77,7 @@ module sll_mpi
     mpi_double,          &
     mpi_double_complex,  &
     mpi_double_precision,&
+    mpi_finalize,        &
     mpi_gather,          &
     mpi_gatherv,         &
     mpi_get_count,       &
@@ -117,11 +118,6 @@ module sll_mpi
     mpi_wait,            &
     mpi_wtime
 
-#ifndef __INTEL_COMPILER
-  public ::              &
-    mpi_finalize!,        &
-    !mpi_waitall
-#endif /* __INTEL_COMPILER */
 
   private
 
@@ -131,18 +127,22 @@ module sll_mpi
   external ::       &
 #ifdef __INTEL_COMPILER
     mpi_iallreduce, &
-#else
-    mpi_allgatherv, &
-    mpi_gatherv,    &
-    mpi_scatter,    &
-    mpi_scatterv,   &
+    mpi_cart_coords,     &
+    mpi_cart_create,     &
+    mpi_cart_get,        &
+    mpi_dims_create,     &
+    mpi_finalize,        &
 #endif /* __INTEL_COMPILER */
     mpi_bcast,      &
     mpi_allgather,  &
+    mpi_allgatherv, &
     mpi_allreduce,  &
     mpi_alltoall,   &
     mpi_alltoallv,  &
     mpi_gather,     &
+    mpi_gatherv,    &
+    mpi_scatter,    &
+    mpi_scatterv,   &
     mpi_isend,      &
     mpi_irecv,      &
     mpi_reduce,     &
