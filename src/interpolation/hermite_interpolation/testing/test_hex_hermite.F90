@@ -18,7 +18,7 @@ program test_hex_hermite
   character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
-  sll_real64   :: r_min
+  !sll_real64   :: r_min
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
   sll_real64   :: gauss_sig
@@ -27,8 +27,8 @@ program test_hex_hermite
   sll_real64   :: dioco_rplus
   sll_real64   :: dioco_eps
   sll_real64   :: dioco_kmode
-  sll_real64   :: dioco_r
-  sll_real64   :: dioco_theta
+  !sll_real64   :: dioco_r
+  !sll_real64   :: dioco_theta
   sll_real64,dimension(:),allocatable :: x1
   sll_real64,dimension(:),allocatable :: x2
   sll_real64,dimension(:),allocatable :: f_init
@@ -62,9 +62,9 @@ program test_hex_hermite
   ! character(len = 4) :: number
   logical      :: inside
   type(sll_hex_mesh_2d), pointer :: mesh
-  character(len = 50) :: filename
-  character(len = 50) :: filename2
-  character(len = 4)  :: filenum
+  !character(len = 50) :: filename
+  !character(len = 50) :: filename2
+  !character(len = 4)  :: filenum
 
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -686,9 +686,9 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: uxn, uyn, phi,dxux,dyux,dxuy,dyuy
     sll_int32,          intent(in) :: type
-    sll_int32  :: i,h1,h2
-    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
-    sll_real64 :: uh1, uh2
+    sll_int32  :: i!,h1,h2
+    !sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+    !sll_real64 :: uh2
 
     
     if (type==1) then

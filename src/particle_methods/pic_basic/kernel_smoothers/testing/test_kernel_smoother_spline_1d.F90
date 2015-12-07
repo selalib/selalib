@@ -62,7 +62,7 @@ program test_kernel_smoother_spline_1d
   do i_part = 1,n_particles
      xi(1) = x_vec(i_part)
      call specific_particle_group%set_x(i_part, xi)
-     call specific_particle_group%set_weights(i_part, [1/real(n_particles,f64)])
+     call specific_particle_group%set_weights(i_part, [1.0_f64/real(n_particles,f64)])
      xi(1:2) = v_vec(i_part,:)
      call specific_particle_group%set_v(i_part, xi)
   end do
@@ -87,8 +87,7 @@ program test_kernel_smoother_spline_1d
   values_grid(:,1,2) = [7.0312500000000000E-002_f64,  0.61197916666666663_f64, &
        0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
 
-  error = maxval(abs(index_grid-kernel%index_grid))
-  if (error > 1.e-14) then
+  if (maxval(abs(index_grid-kernel%index_grid)) > 0) then
      passed = .FALSE.
   end if
 

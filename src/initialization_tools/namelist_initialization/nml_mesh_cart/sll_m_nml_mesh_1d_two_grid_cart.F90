@@ -196,7 +196,7 @@ contains
     
     type(sll_t_nml_mesh_1d_two_grid_cart) :: self
     sll_int32 :: ierr
-    sll_int32 :: i
+    !sll_int32 :: i
     sll_int32 :: num_cells
     sll_real64 :: eta_min
     sll_real64 :: eta_max

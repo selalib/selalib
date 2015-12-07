@@ -70,15 +70,15 @@ program test_hex_hermite
   sll_int32                               :: width_band1_2,width_band2_2
   sll_int32                               :: n_points2
 
-  sll_int32    :: i,j, k1, k2, index_tab, type
+  sll_int32    :: i, k1, k2, index_tab, type
   sll_int32    :: i1,i2,i3
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   sll_real64   :: dt, cfl
   sll_real64   :: tmax
   sll_real64   :: t
   sll_real64   :: t_init, t_end
-  sll_real64   :: t1,t2,t3,t4,t5,t6
-  sll_real64   :: step , aire, h1, h2, f_min, x ,y,xx, yy
+  sll_real64   :: t3
+  sll_real64   :: step , aire, h1, h2, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
 
   sll_int32    :: p = 6!-> degree of the approximation for the derivative 
@@ -811,7 +811,7 @@ contains
     sll_real64,dimension(:)        :: f_tn, center_values_tn, edge_values_tn
     sll_int32  :: num_method
     sll_real64 :: x, y, epsilon = 0.001_f64
-    sll_real64 :: rho
+    !sll_real64 :: rho
     sll_real64 :: r
     sll_int32  :: i
 
@@ -924,7 +924,7 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               :: i,h1,h2,m1,m2,k1,k2,ne,ns, index_tab
-    sll_real64              :: eps = 1.e-6
+    !sll_real64              :: eps = 1.d-6
 
 
     do i = 1,mesh2%num_pts_tot 
@@ -945,13 +945,13 @@ contains
        call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
-       if ( abs(m1) > eps .and. abs(m2) > eps ) then
+       if ( abs(m1) > 0 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(2,ns)
           rho2(i) = rho_edge(ne) 
-       elseif( abs(m1) < eps .and. abs(m2) > eps ) then
+       elseif( abs(m1) < 1 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(1,ns)
           rho2(i) = rho_edge(ne)
-       elseif( abs(m1) > eps .and. abs(m2) < eps ) then 
+       elseif( abs(m1) > 0 .and. abs(m2) < 1 ) then 
           ne =  mesh%edge_center_index(3,ns)
           rho2(i) = rho_edge(ne)
        else
@@ -970,7 +970,7 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               ::i,h1,h2,m1,m2,k1,k2,ne,ns
-    sll_real64              :: eps = 1.e-6
+    !sll_real64              :: eps = 1.d-6
 
 
     do i = 1,mesh2%num_pts_tot 
@@ -990,13 +990,13 @@ contains
        call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
-       if ( abs(m1) > eps .and. abs(m2) > eps ) then
+       if ( abs(m1) > 0 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(2,ns)
           rho_edge(ne) = rho2(i)
-       elseif( abs(m1) < eps .and. abs(m2) > eps ) then
+       elseif( abs(m1) < 1 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(1,ns)
           rho_edge(ne) = rho2(i)
-       elseif( abs(m1) > eps .and. abs(m2) < eps ) then 
+       elseif( abs(m1) > 0 .and. abs(m2) < 1 ) then 
           ne =  mesh%edge_center_index(3,ns)
           rho_edge(ne) = rho2(i)
        else

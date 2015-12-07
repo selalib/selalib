@@ -175,8 +175,8 @@ do i=0,NPTS1-1
   reference(i+1)     = cos(2.0_f64*sll_pi*eta1)
 end do
 
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -214,8 +214,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -253,8 +253,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -292,8 +292,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -331,8 +331,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
