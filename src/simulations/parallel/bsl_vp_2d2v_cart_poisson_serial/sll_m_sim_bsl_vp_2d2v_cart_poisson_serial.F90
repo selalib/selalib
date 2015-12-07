@@ -134,7 +134,11 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
 
 #define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
-  use sll_m_poisson_2d_periodic_fftpack
+  use sll_m_poisson_2d_periodic_fftpack, only: &
+    initialize, &
+    poisson_2d_periodic_fftpack, &
+    solve
+
 #define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
   implicit none
