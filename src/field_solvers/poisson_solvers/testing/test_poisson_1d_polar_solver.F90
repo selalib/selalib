@@ -40,7 +40,7 @@ implicit none
   sll_int32 :: ierr
   sll_int32 :: i
   
-  x1_min = -1_f64
+  x1_min = -1._f64
   x1_max = 1._f64
 
   

@@ -1544,21 +1544,21 @@ if(es%precompute_rhs .eqv. .false.)then
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
 
-  !$OMP PARALLEL &
-  !$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
-  !$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
-  !$OMP              tid, nthreads)                      &
-  !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
-  !$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
-  !$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
-  !$OMP         valfj,jac_mat)
-  !$ tid = omp_get_thread_num()
-  !$ nthreads = omp_get_num_threads()
-  !$OMP MASTER
-  !$ print *, 'Number of threads = ', nthreads
-  !$OMP END MASTER
-  
-  !$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
+  !!$OMP PARALLEL &
+  !!$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
+  !!$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
+  !!$OMP              tid, nthreads)                      &
+  !!$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
+  !!$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
+  !!$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
+  !!$OMP         valfj,jac_mat)
+  !!$ tid = omp_get_thread_num()
+  !!$ nthreads = omp_get_num_threads()
+  !!$OMP MASTER
+  !!$ print *, 'Number of threads = ', nthreads
+  !!$OMP END MASTER
+  !
+  !!$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
   do j=1, nc_2
     do i=1, nc_1
       M_rho_loc = 0.0_f64
@@ -1618,7 +1618,7 @@ if(es%precompute_rhs .eqv. .false.)then
     end do
   end do
 
-  !$OMP END PARALLEL
+  !!$OMP END PARALLEL
 
   !PN fix bug found by Michel
   !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac

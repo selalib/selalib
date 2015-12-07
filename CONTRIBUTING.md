@@ -1,39 +1,45 @@
 Dear selalib developers,
 
+Newcomers should read the [Git Quickstart Guide for SeLaLib](GitQuickstart.md).
 
 To work with gitlab you don’t need to clone again the repository.
+
+In order to move your repositories to gitlab, set gitlab as your primary repository
+```
+git remote set-url origin git@gitlab.mpcdf.mpg.de/selalib/selalib.git
+```
+You can also keep the INRIA gforge as a remote repository using:
+```
+git remote add inria <YOUR_LOGIN>@scm.gforge.inria.fr//gitroot//selalib/selalib.git
+```
+
 If you want to keep INRIA gforge as primary repository, add the gitlab 
 repository with:
 ```
 git remote add gitlab git@gitlab.mpcdf.mpg.de/selalib/selalib.git
 ```
 
-If you want to set gitlab as primary repository, do:
-```
-git remote set-url origin git@gitlab.mpcdf.mpg.de/selalib/selalib.git
-```
-
-Check your repositories with:
+To check your configuration of remote repositories, use:
 ```
 git remote -v
 ```
 
 After this, you can push your local branch on gitlab with
 ```
-git push gitlab your_branch
+git push origin your_branch
 ```
 
 Your branch will be available on gitlab interface to file a merge 
 request. If this branch is changed on gitlab, you can update it with:
 ```
-git fetch gitlab
+git fetch origin
 git checkout your_branch
-git merge gitlab/your_branch
+git merge origin/your_branch
 ```
 
-To push to the INRIA gorge as primary repository:
+To push to the INRIA gforge use:
 ```
-git push origin your_branch
+git push inria your_branch
 ```
 
 If you merge your branch with the develop branch on gitlab, don’t forget to 
@@ -49,7 +55,7 @@ With this new gitlab server, we change the way we use git.
 I describe this process, you can find the long version with figures here
  (https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
 I added some git commands but branch creation and merge could be done through 
-the gitlab interface.
+the gitlab interface. 
 
 
 ## New rules
@@ -129,9 +135,11 @@ git push --tags
 
 ## For Bug Fixing
 
-This part concerns every developer and bug should be reported and assigned through the “Issues” tab of Gitlab.
-Create a maintenance branch off of master, fixes the issue with as many commits as necessary,
-then merges it directly back into master.
+This part concerns every developer. If you find a bug, please report it through 
+the "Issues" tab of Gitlab. The issue should be labeled as "bug report".
+In order to fix the bug, create a maintenance branch off of master, fix the 
+issue with as many commits as necessary, then merge it directly back
+into master.
 ```
 git checkout -b issue-#001 master
 ```

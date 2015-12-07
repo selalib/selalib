@@ -28,7 +28,7 @@ use sll_m_general_coordinate_elliptic_solver
 implicit none
 
   type(poisson_2d_curvilinear), pointer :: poisson
-  type(general_coordinate_elliptic_solver), pointer :: poisson_gen
+  !type(general_coordinate_elliptic_solver), pointer :: poisson_gen
   sll_int32 :: num_cells1
   sll_int32 :: num_cells2
   character(len=256) :: bc_min1_str

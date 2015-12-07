@@ -4,8 +4,8 @@ program parallel_advection
 
   implicit none
 
-  class(sll_interpolator_1d_base), pointer   :: interp_eta1
-  class(sll_interpolator_1d_base), pointer   :: interp_eta2
+  class(sll_c_interpolator_1d), pointer   :: interp_eta1
+  class(sll_c_interpolator_1d), pointer   :: interp_eta2
   type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
   type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
   sll_real64, dimension(:,:),  pointer       :: f_eta1
@@ -158,7 +158,7 @@ contains
      global_indices = local_to_global(layout_eta1,(/1,j/)) 
      gj = global_indices(2)
      alpha = dt
-     f_eta1(:,j) = interp_eta1%interpolate_array_disp(loc_sz_i,f_eta1(:,j),alpha)
+     call interp_eta1%interpolate_array_disp_inplace(loc_sz_i,f_eta1(:,j),-alpha)
 
   end do
 
@@ -176,7 +176,7 @@ contains
      global_indices = local_to_global(layout_eta2,(/i,1/)) 
      gi = global_indices(1)
      alpha = dt
-     f_eta2(i,:) = interp_eta2%interpolate_array_disp(loc_sz_j,f_eta2(i,:),alpha)
+     call interp_eta2%interpolate_array_disp_inplace(loc_sz_j,f_eta2(i,:),-alpha)
 
   end do
 
