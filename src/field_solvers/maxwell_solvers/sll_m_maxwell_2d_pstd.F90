@@ -71,6 +71,7 @@ module sll_m_maxwell_2d_pstd
   use sll_m_constants, only: &
     sll_pi
 
+#ifdef FFTW_F2003
   use sll_m_fftw3, only: &
     fftw_alloc_complex, &
     fftw_destroy_plan, &
@@ -80,6 +81,10 @@ module sll_m_maxwell_2d_pstd
     fftw_patient, &
     fftw_plan_dft_c2r_1d, &
     fftw_plan_dft_r2c_1d
+#else
+  use sll_m_fftw3, only: &
+       fftw_patient
+#endif
 
   implicit none
 
