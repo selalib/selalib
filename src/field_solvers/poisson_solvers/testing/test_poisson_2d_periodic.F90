@@ -14,7 +14,11 @@ program test_poisson_2d_periodic
 
 #define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
-use sll_m_poisson_2d_periodic_fftpack
+use sll_m_poisson_2d_periodic_fftpack, only: &
+    initialize, &
+    poisson_2d_periodic_fftpack, &
+    solve
+
 #define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
   implicit none
