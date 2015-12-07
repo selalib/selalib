@@ -8,6 +8,7 @@ program test_fftw3
     c_ptr, &
     c_size_t
 
+#ifdef FFTW_F2003
   use sll_m_fftw3, only: &
     fftw_alloc_complex, &
     fftw_destroy_plan, &
@@ -17,6 +18,7 @@ program test_fftw3
     fftw_measure, &
     fftw_plan_dft_c2r_2d, &
     fftw_plan_dft_r2c_2d
+#endif
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
