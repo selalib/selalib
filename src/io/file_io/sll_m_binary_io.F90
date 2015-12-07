@@ -36,6 +36,7 @@ module sll_m_binary_io
     sll_binary_file_create, &
     sll_binary_read_array_0d, &
     sll_binary_read_array_2d, &
+    sll_binary_write_array, &
     sll_binary_write_array_0d, &
     sll_binary_write_array_1d, &
     sll_binary_write_array_2d

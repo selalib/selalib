@@ -41,7 +41,11 @@ module sll_m_xdmf
     sll_xml_grid_geometry
 
 #ifdef NOHDF5
-use sll_m_binary_io
+  use sll_m_binary_io, only: &
+    sll_binary_file_create, &
+    sll_binary_file_close, &
+    sll_binary_write_array
+
 #else
   use sll_m_hdf5_io_serial, only: &
     sll_hdf5_file_close, &
