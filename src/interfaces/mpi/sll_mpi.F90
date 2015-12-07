@@ -124,6 +124,7 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
+#ifndef HOMEBREW
   external ::       &
 #ifdef __INTEL_COMPILER
     mpi_iallreduce, &
@@ -149,6 +150,7 @@ module sll_mpi
     mpi_recv,       &
     mpi_send,       &
     mpi_sendrecv!,   &
+#endif /* HOMEBREW */
 
 !-----------------------------------------------------------------------
 end module sll_mpi
