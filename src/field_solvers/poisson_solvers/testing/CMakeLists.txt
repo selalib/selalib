@@ -24,6 +24,8 @@ TARGET_LINK_LIBRARIES( test_poisson_1d_periodic sll_poisson_solvers )
 
 ADD_EXECUTABLE( test_poisson_2d_periodic test_poisson_2d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_periodic sll_poisson_solvers )
+ADD_TEST( NAME poisson_2d_periodic  COMMAND test_poisson_2d_periodic     )
+SET_TESTS_PROPERTIES( poisson_2d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_2d_curvilinear test_poisson_2d_curvilinear.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_curvilinear sll_poisson_solvers )

@@ -80,7 +80,7 @@ real(8) function sol_exacte_perper_der2(eta1,eta2)
   dummy = eta1+eta2
   
   !real(8), dimension(:), intent(in), optional :: params
-  sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
+  sol_exacte_perper_der2 = 0.0_8!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der2
 
 !----------------------------------------------------------
@@ -214,8 +214,8 @@ real(8) function source_term_chgt_perper(eta1,eta2) ! in the path
   real(8) :: x, y
   ! real(8), dimension(:), intent(in), optional :: params
   
-  x =   eta1 + 0.1_f64*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-  y =   eta2 + 0.1_f64*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+  x =   eta1 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   source_term_chgt_perper = -8.0*sll_pi**2*cos(2*sll_pi*x)*cos(2*sll_pi*y) 
   
@@ -241,7 +241,7 @@ real(8) function sol_exacte_chgt_perper_der1(eta1,eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   sol_exacte_chgt_perper_der1 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)&
-       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       * ( 1.0_8 + 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )&
        -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)&
        * ( 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
   
@@ -259,7 +259,7 @@ real(8) function sol_exacte_chgt_perper_der2(eta1,eta2)
   sol_exacte_chgt_perper_der2 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)&
        * ( 0.1*2*sll_pi*sin(2* sll_pi*eta1) * cos(2*sll_pi*eta2) )&
        -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)&
-       * ( 1.0_f64 + 0.1*2*sll_pi*sin(2* sll_pi*eta1)*cos(2*sll_pi*eta2) )
+       * ( 1.0_8 + 0.1*2*sll_pi*sin(2* sll_pi*eta1)*cos(2*sll_pi*eta2) )
 end function sol_exacte_chgt_perper_der2
 
 
@@ -300,7 +300,7 @@ real(8) function sol_exacte_chgt_perdir_der1(eta1,eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   sol_exacte_chgt_perdir_der1 = -2*sll_pi*sin(2*sll_pi*x)*sin(2*sll_pi*y)&
-       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       * ( 1.0_8 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
        + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
        * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
   
@@ -316,7 +316,7 @@ real(8) function sol_exacte_chgt_perdir_der2(eta1,eta2)
   sol_exacte_chgt_perdir_der2 = -2*sll_pi*sin(2*sll_pi*x)*sin(2*sll_pi*y)&
        * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2) ) &
        + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
-       * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
+       * ( 1.0_8 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
   
 end function sol_exacte_chgt_perdir_der2
 
@@ -363,7 +363,7 @@ real(8) function sol_exacte_chgt_dirdir_der1(eta1,eta2)
   
   
   sol_exacte_chgt_dirdir_der1 = 2*sll_pi*cos(2* sll_pi*x)*sin(2* sll_pi*y)&
-       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       * ( 1.0_8 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
        + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
        * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
 end function sol_exacte_chgt_dirdir_der1
@@ -379,7 +379,7 @@ real(8) function sol_exacte_chgt_dirdir_der2(eta1,eta2)
   sol_exacte_chgt_dirdir_der2 =  2*sll_pi*cos(2* sll_pi*x)*sin(2* sll_pi*y)&
        * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2)  )&
        + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
-       * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) )
+       * ( 1.0_8 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) )
   
 end function sol_exacte_chgt_dirdir_der2
 
@@ -423,7 +423,7 @@ real(8) function sol_exacte_chgt_dirper_der1(eta1,eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   sol_exacte_chgt_dirper_der1 = 2*sll_pi*cos(2* sll_pi*x)*cos(2* sll_pi*y) &
-       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       * ( 1.0_8 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
        - 2*sll_pi*sin(2* sll_pi*x)*sin(2* sll_pi*y)&
        * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
 end function sol_exacte_chgt_dirper_der1
@@ -438,7 +438,7 @@ real(8) function sol_exacte_chgt_dirper_der2(eta1,eta2)
   sol_exacte_chgt_dirper_der2 = 2*sll_pi*cos(2* sll_pi*x)*cos(2* sll_pi*y) &
        * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2)  )&
        - 2*sll_pi*sin(2* sll_pi*x)*sin(2* sll_pi*y)&
-       * (1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
+       * (1.0_8 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
   
 end function sol_exacte_chgt_dirper_der2
 
@@ -448,45 +448,45 @@ end function sol_exacte_chgt_dirper_der2
 real(8) function adimension_chgt_x(eta1,eta2)
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  adimension_chgt_x = 2_f64*sll_pi*eta1 !+ eta2)
+  adimension_chgt_x = 2_8*sll_pi*eta1 !+ eta2)
 end function adimension_chgt_x
 
 real(8) function adimension_chgt_y(eta1,eta2)
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  adimension_chgt_y = 2_f64*sll_pi*eta2
+  adimension_chgt_y = 2_8*sll_pi*eta2
 end function adimension_chgt_y
 
 real(8) function jac11_adimension_chgt(eta1,eta2)
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac11_adimension_chgt = 2_f64*sll_pi
+  jac11_adimension_chgt = 2_8*sll_pi
 end function jac11_adimension_chgt
 
 real(8) function jac12_adimension_chgt(eta1,eta2)
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac12_adimension_chgt = 0.0_f64!sll_pi
+  jac12_adimension_chgt = 0.0_8!sll_pi
 end function jac12_adimension_chgt
 
 real(8) function jac21_adimension_chgt(eta1,eta2)
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac21_adimension_chgt = 0.0_f64!2*sll_pi!0.0
+  jac21_adimension_chgt = 0.0_8!2*sll_pi!0.0
 end function jac21_adimension_chgt
 
 real(8) function jac22_adimension_chgt(eta1,eta2)
   real(8) :: eta1,eta2
   print*, eta1, eta2
-  jac22_adimension_chgt = 2_f64*sll_pi
+  jac22_adimension_chgt = 2_8*sll_pi
 end function jac22_adimension_chgt
 
 real(8) function sol_exacte_chgt_adim(eta1,eta2)
   real(8) :: eta1,eta2
   real(8) :: x,y
   
-  x =   2_f64*sll_pi*eta1!+eta2)
-  y =   2_f64* sll_pi*eta2
+  x =   2_8*sll_pi*eta1!+eta2)
+  y =   2_8* sll_pi*eta2
   
   sol_exacte_chgt_adim = cos(x)*cos(y)
   
@@ -499,7 +499,7 @@ real(8) function source_term_chgt_adim(eta1,eta2)
   x =   2*sll_pi*eta1 !+eta2)
   y =   2* sll_pi*eta2
   
-  source_term_chgt_adim = -2.0_f64*cos(x)*cos(y)
+  source_term_chgt_adim = -2.0_8*cos(x)*cos(y)
   
 end function source_term_chgt_adim
 

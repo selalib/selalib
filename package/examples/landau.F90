@@ -24,8 +24,8 @@ integer  :: error
 real(8), dimension(:), allocatable :: eta1
 real(8), dimension(:), allocatable :: eta2
 
-class(sll_interpolator_1d_base), pointer :: interp_x
-class(sll_interpolator_1d_base), pointer :: interp_v
+class(sll_c_interpolator_1d), pointer :: interp_x
+class(sll_c_interpolator_1d), pointer :: interp_v
 
 type(sll_cubic_spline_interpolator_1d), target :: spline_x
 type(sll_cubic_spline_interpolator_1d), target :: spline_v
@@ -119,14 +119,14 @@ contains
    subroutine advection_x(dt)
     real(8), intent(in) :: dt
     do j = 1, nc_eta2+1
-      df(:,j) = interp_x%interpolate_array_disp(nc_eta1+1,df(:,j),dt*eta2(j))
+      call interp_x%interpolate_array_disp_inplace(nc_eta1+1,df(:,j),-dt*eta2(j))
     end do
    end subroutine advection_x
 
    subroutine advection_v(dt)
     real(8), intent(in) :: dt
     do i = 1, nc_eta1+1
-      df(i,:) = interp_v%interpolate_array_disp(nc_eta2+1,df(i,:),dt*ex(i))
+      call interp_v%interpolate_array_disp_inplace(nc_eta2+1,df(i,:),-dt*ex(i))
     end do
    end subroutine advection_v
 
