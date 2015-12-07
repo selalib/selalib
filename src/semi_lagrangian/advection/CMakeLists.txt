@@ -1,9 +1,3 @@
-IF(HDF5_ENABLED)
-#hdf5 is parallel and inside aligned_translation_2d.F90
-#hdf5 is used
-#so the compiler should be parallel
-#should be changed
- 
 IF(MPI_ENABLED)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF()
@@ -43,5 +37,3 @@ IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
 
 ENDIF(BUILD_TESTING)
-
-ENDIF(HDF5_ENABLED)
