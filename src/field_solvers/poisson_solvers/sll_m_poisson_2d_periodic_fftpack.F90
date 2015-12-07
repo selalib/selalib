@@ -25,6 +25,12 @@ module sll_m_poisson_2d_periodic_fftpack
 
   implicit none
 
+  public :: &
+    initialize, &
+    new, &
+    poisson_2d_periodic_fftpack, &
+    solve
+
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
