@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 04 Dec 2015
+# Last revision: 07 Dec 2015
 #
 from __future__ import print_function
 import re
@@ -93,7 +93,9 @@ def remove_fortran_logicals( text ):
     text = text.lower()
     for s in    logical_operators:  text = text.replace( s, ' ' )
     for s in    logical_constants:  text = text.replace( s, ' ' )
-    for s in relational_operators:  text = text.replace( s, ' ' )
+    for s in relational_operators:  text = text.replace( s, ' ' )  # first
+    for s in  '<=','==','/=','>=':  text = text.replace( s, ' ' )  # next!
+    for s in              '<','>':  text = text.replace( s, ' ' )  # last!
     return text
 
 #==============================================================================
