@@ -42,7 +42,7 @@ program test_pic_accumulators
 
   call sll_initial_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, &
- 	NUM_PARTICLES, part_group )
+        NUM_PARTICLES, part_group )
 
   all_charge => new_charge_accumulator_2d( m2d )
 

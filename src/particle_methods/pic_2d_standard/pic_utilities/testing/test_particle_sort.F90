@@ -43,8 +43,8 @@ program particle_sorter
   sorter => sll_new_particle_sorter_2d( m )
 ! the arguments to new_particle_group should be 32bit ints... change
 
-  weight = (m%eta1_max - m%eta1_min) * &
-           (m%eta2_max - m%eta2_min)/real(num_particles,f32) 
+  weight = real(m%eta1_max - m%eta1_min,f32) * &
+           real(m%eta2_max - m%eta2_min,f32)/real(num_particles,f32) 
   rdx = 1._f64/m%delta_eta1
   rdy = 1._f64/m%delta_eta2
   xmin = m%eta1_min

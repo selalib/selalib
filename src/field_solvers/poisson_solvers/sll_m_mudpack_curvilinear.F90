@@ -569,23 +569,23 @@ cy  = cy_interp%interpolate_from_interpolant_value(x,y)
 ce  = ce_interp%interpolate_from_interpolant_value(x,y)
 end subroutine coefcr
 
-!> input x dependent coefficients
-subroutine cofx(x,cxx,cx,cex)
-implicit none
-real(8)  :: x,cxx,cx,cex
-cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
-cx  = 0.0_8 + x - x
-cex = 0.0_8
-end subroutine cofx
-
-!> input y dependent coefficients
-subroutine cofy(y,cyy,cy,cey)
-real(8)  :: y,cyy,cy,cey
-cyy = 1.0_8
-cy  = 0.0_8 + y - y
-cey = 0.0_8
-end subroutine cofy
-
+!!> input x dependent coefficients
+!subroutine cofx(x,cxx,cx,cex)
+!implicit none
+!real(8)  :: x,cxx,cx,cex
+!cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
+!cx  = 0.0_8 + x - x
+!cex = 0.0_8
+!end subroutine cofx
+!
+!!> input y dependent coefficients
+!subroutine cofy(y,cyy,cy,cey)
+!real(8)  :: y,cyy,cy,cey
+!cyy = 1.0_8
+!cy  = 0.0_8 + y - y
+!cey = 0.0_8
+!end subroutine cofy
+!
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)

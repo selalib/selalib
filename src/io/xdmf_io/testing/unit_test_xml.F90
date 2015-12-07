@@ -18,7 +18,7 @@ program test_xml
   type(sll_t_xml_document)         :: xml_doc
   type(sll_t_xml_element), pointer :: root, domain, grid1, grid2
   type(sll_t_xml_element), pointer :: time, topology, geometry, dataitem, field
-  character(len=256)               :: header
+  !character(len=256)               :: header
 
   character(len=256)               :: reference_filename
   logical                          :: file_exists, equal, empty

@@ -14,8 +14,8 @@ program utils_tester
 
 
   ! for factorial
-  sll_int32  :: n1
-  sll_int64  :: n2
+  !sll_int32  :: n1
+  !sll_int64  :: n2
   logical    :: test_passed
   sll_int64  :: largest_int64
   sll_int64  :: largest_int32

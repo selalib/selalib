@@ -239,7 +239,7 @@ contains
     sll_int32, intent(in), optional :: proc_id !< optional id of proc
     
     type(sll_t_nml_mesh_1d_landau_cart) :: self
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     sll_int32 :: num_cells
     sll_real64 :: eta_min
     sll_real64 :: eta_max

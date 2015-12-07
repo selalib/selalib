@@ -20,7 +20,7 @@ nhinv=500
 iter=50
 !
 !       tolerance on relative residual norm
-tol=1.e-6
+tol=1.d-6
 !
 !       unit number for output messages: 6 => standard output
 iprint=6
