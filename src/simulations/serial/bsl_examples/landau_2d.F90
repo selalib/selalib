@@ -1,23 +1,37 @@
 program landau_4d
 
-#include "sll_assert.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_constants
-use sll_m_interpolators_1d_base
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_utilities, only: int2string
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_utilities, only: &
+    int2string
 
 #ifdef FFTW
-use sll_m_poisson_2d_periodic_fftw
+  use sll_m_poisson_2d_periodic_fftw, only: &
+    initialize, &
+    poisson_2d_periodic_fftw, &
+    solve
+
 #define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
 use sll_m_poisson_2d_periodic_fftpack
 #define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
-
-implicit none
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !Geometry
 sll_real64 :: eta1, eta2, eta3, eta4

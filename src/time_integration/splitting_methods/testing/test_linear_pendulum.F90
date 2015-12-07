@@ -3,11 +3,25 @@
 !> 
 
 program test_linear_pendulum
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  
-  use sll_m_linear_pendulum_operators
+#include "sll_working_precision.h"
+
+  use sll_m_linear_pendulum_operators, only: &
+    check_order
+
+  use sll_m_operator_splitting, only: &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_tvt, &
+    sll_order6_vtv, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
   ! variables
   logical :: test_passed

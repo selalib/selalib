@@ -6,10 +6,20 @@
 !> that applies the 
 !> Gauss-Legendre method to compute numeric integrals.
 module sll_m_gauss_legendre_integration
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!  use sll_splines
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    gauss_legendre_integrate_1d, &
+    gauss_legendre_points, &
+    gauss_legendre_points_and_weights, &
+    gauss_legendre_weights
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! The following interface is supposed to represent any function of one
   ! real argument that returns a real value (double precision).

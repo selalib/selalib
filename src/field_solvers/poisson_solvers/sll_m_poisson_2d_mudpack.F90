@@ -43,22 +43,52 @@
 !>      A_{1,1}\partial_{1,1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} = \hat{\rho}
 !> \f]
 module sll_m_poisson_2d_mudpack
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_poisson_2d_base
-use sll_m_mudpack_curvilinear
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_interpolators_1d_base
-use sll_m_interpolators_2d_base
+! use F77_mudpack, only: &
+!   mud2, &
+!   mud24, &
+!   mud24cr, &
+!   mud24sp, &
+!   mud2cr, &
+!   mud2sp
 
-implicit none
-private
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_non_separable_with_cross_terms, &
+    sll_non_separable_without_cross_terms, &
+    sll_separable
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_mudpack
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Derived type to solve Poisson equation on 2d curvilinear mesh
-  type, public, extends(sll_poisson_2d_base) :: poisson_2d_mudpack
+  type, extends(sll_poisson_2d_base) :: poisson_2d_mudpack
   
     !> PLEASE ADD DOCUMENTATION
     sll_real64, dimension(:,:), pointer :: cxx_2d
@@ -139,9 +169,8 @@ private
   end type poisson_2d_mudpack
 
   !> PLEASE ADD DOCUMENTATION
-  class(poisson_2d_mudpack), public, pointer :: mudpack_wrapper => null()
+  class(poisson_2d_mudpack), pointer :: mudpack_wrapper => null()
 
-  public :: new_poisson_2d_mudpack
 
 contains
 

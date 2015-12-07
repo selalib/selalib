@@ -1,10 +1,18 @@
 program test_ode_solvers
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_ode_solvers
-  use sll_m_constants
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_ode_solvers, only: &
+    compact_ode, &
+    implicit_ode_nonuniform, &
+    periodic_ode
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32 :: i, ncells, ierr, order
   sll_real64 :: xmin, xmax, deltax, deltat, x, error, a

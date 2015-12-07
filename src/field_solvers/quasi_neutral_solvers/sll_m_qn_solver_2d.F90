@@ -16,15 +16,41 @@
 !***************************************************************************
 
 module sll_m_qn_solver_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_boundary_condition_descriptors
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_neumann
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    delete, &
+    dirichlet_matrix, &
+    neumann_matrix, &
+    new, &
+    qn_solver_2d, &
+    solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type qn_solver_2d
      sll_int32                   :: BC ! Boundary_conditions

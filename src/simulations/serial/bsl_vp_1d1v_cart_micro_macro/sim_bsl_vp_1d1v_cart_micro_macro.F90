@@ -6,24 +6,52 @@
 !> be performed
 
 program sim_bsl_vp_1d1v_cart_micro_macro
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cubic_splines
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_periodic_interpolator_1d
-  use sll_m_landau_2d_initializer
-  use sll_m_tsi_2d_initializer
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
-  use sll_m_timer
-  use omp_lib
-  use sll_m_hdf5_io_serial
-  use sll_m_periodic_interp
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
   use sll_m_constants, only: &
-       sll_pi
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    interpolate_from_interpolant_array, &
+    new_cubic_spline_1d, &
+    sll_cubic_spline_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_periodic_interpolator_1d, only: &
+    sll_periodic_interpolator_1d
+
+  use sll_m_poisson_1d_periodic, only: &
+    initialize, &
+    poisson_1d_periodic, &
+    solve
+
+  use sll_m_utilities, only: &
+    int2string, &
+    pfenvelope
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
   type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x

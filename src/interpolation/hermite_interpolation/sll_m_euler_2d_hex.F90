@@ -1,10 +1,16 @@
 module  sll_m_euler_2d_hex
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  !use sll_m_characteristics_2d_base
+
   implicit none
+
+  public :: &
+    compute_characteristic_adams2_2d_hex, &
+    compute_characteristic_euler_2d_hex
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !   type,extends(sll_characteristics_2d_base) :: euler_2d_hex_charac_computer
 !   sll_int32                               :: Num_cells ! num_cells is the step used for a hexagonal mesh

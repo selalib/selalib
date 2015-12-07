@@ -3,21 +3,47 @@
 !> Implements the field descriptor types
 module sll_m_scalar_field_2d
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_scalar_field_2d_base
-use sll_m_constants
-use sll_m_interpolators_2d_base
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_boundary_condition_descriptors
-use sll_m_gnuplot
-use sll_m_utilities, only: sll_new_file_id, int2string
-use sll_m_xdmf
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-implicit none
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_curv2d_nodes
+
+  implicit none
+
+  public :: &
+    new_scalar_field_2d_analytic, &
+    new_scalar_field_2d_discrete, &
+    sll_delete, &
+    sll_scalar_field_2d_analytic, &
+    sll_scalar_field_2d_discrete, &
+    sll_scalar_field_2d_discrete_ptr, &
+    two_var_parametrizable_function
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic
 

@@ -1,8 +1,14 @@
 program test_tridiag
-  use sll_m_tridiagonal
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_real64, dimension(:), pointer :: a
   sll_real64, allocatable, dimension(:) :: x

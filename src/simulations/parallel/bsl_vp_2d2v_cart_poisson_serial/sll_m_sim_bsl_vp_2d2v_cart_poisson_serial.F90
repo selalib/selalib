@@ -25,44 +25,127 @@
 
 module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_buffer_loader_utilities
-  use sll_m_constants
-  !for mesh
-  use sll_m_cartesian_meshes
-  
-  use sll_m_gnuplot_parallel
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  use sll_m_parallel_array_initializer
-  use sll_m_hermite_interpolation_2d
-  
-  use sll_m_advection_1d_periodic
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
 
-  use sll_m_fft
-  use sll_m_reduction
-  
-  use sll_m_xdmf
-  use sll_m_sim_base
-  use sll_m_time_splitting_coeff
-  use sll_m_utilities, only: int2string
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create
+
+  use sll_m_binary_io, only: &
+    sll_binary_file_create, &
+    sll_binary_write_array_2d
+
+  use sll_m_buffer_loader_utilities, only: &
+    compute_displacements_array_2d, &
+    load_buffer_2d, &
+    receive_counts_array_2d, &
+    unload_buffer_2d
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_collective, only: &
+    sll_collective_allgatherv_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_landau_mode_initializer_4d, &
+    sll_landau_mode_initializer_cos_sum_4d, &
+    sll_scalar_initializer_4d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_4d_parallel_array_initializer_cartesian
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_reduction, only: &
+    compute_reduction_2d_to_0d, &
+    compute_reduction_4d_to_2d_direction34, &
+    compute_reduction_diag_4d_to_2d_direction12
+
+  use sll_m_remapper, only: &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_4d_real64
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_time_splitting_coeff, only: &
+    new_time_splitting_coeff, &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_tvt, &
+    sll_order6_vtv, &
+    sll_order6vp2d_vtv, &
+    sll_order6vp_tvt, &
+    sll_order6vp_vtv, &
+    sll_order6vpnew1_vtv, &
+    sll_order6vpnew2_vtv, &
+    sll_order6vpnew_tvt, &
+    sll_order6vpot_vtv, &
+    sll_order6vpotnew1_vtv, &
+    sll_order6vpotnew2_vtv, &
+    sll_order6vpotnew3_vtv, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv, &
+    splitting_coeff
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_even
 
 #ifdef FFTW
-  use sll_m_poisson_2d_periodic_fftw
+  use sll_m_poisson_2d_periodic_fftw, only: &
+    new, &
+    poisson_2d_periodic_fftw, &
+    solve
+
 #define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
   use sll_m_poisson_2d_periodic_fftpack
 #define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
-
   implicit none
+
+  public :: &
+    delete_vp4d_par_cart, &
+    new_vlasov_par_poisson_seq_cart, &
+    sll_simulation_4d_vlasov_par_poisson_seq_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type, extends(sll_simulation_base_class) :: &

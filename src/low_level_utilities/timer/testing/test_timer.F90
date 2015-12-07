@@ -1,6 +1,13 @@
 program unit_test
-  use sll_m_timer
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define MARGIN 0.1
 
   type(sll_time_mark)  :: t0 

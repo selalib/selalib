@@ -18,10 +18,28 @@
 !> @ingroup utilities
 !> Some common numerical utilities
 module sll_m_utilities
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    byte_size, &
+    compute_bloc, &
+    compute_mesh_from_bloc, &
+    display_matrix_2d_integer, &
+    int2string, &
+    is_even, &
+    is_power_of_two, &
+    mpe_decomp1d, &
+    pfenvelope, &
+    sll_display, &
+    sll_factorial, &
+    sll_new_file_id
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !  intrinsic :: selected_int_kind ! this line gives an error, why?
 
   ! Tentative implementation of a standard-compliant way to get the
@@ -58,7 +76,7 @@ module sll_m_utilities
   end interface sll_display
 
   !> @param logical variable used to print time history
-  logical, private :: flag = .true.
+  logical :: flag = .true.
 
   !> Return factorial
   interface sll_factorial

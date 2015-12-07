@@ -20,16 +20,29 @@
 ! we use a shift that corresponds to a mesh point
 
 module sll_m_advection_2d_integer_oblic
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-!use sll_m_fcisl
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    integer_oblic_2d_advector, &
+    integer_oblic_advect_2d, &
+    new_integer_oblic_2d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type  :: integer_oblic_2d_advector
   

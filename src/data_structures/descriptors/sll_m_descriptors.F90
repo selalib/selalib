@@ -16,7 +16,19 @@
 
 
 module sll_m_descriptors
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_landau_diag, &
+    sll_landau_prod, &
+    sll_landau_sum, &
+    sll_vlasovpoisson_sim
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 type sll_vlasovpoisson_sim 
     sll_int32                  :: id
     character(len=32), private :: pname

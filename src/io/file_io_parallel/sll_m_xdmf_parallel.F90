@@ -28,18 +28,42 @@
 !> offset values before calling sll_m_gnuplot_parallel subroutines.
 !> @snippet remap/unit_test_parallel.F90 example
 module sll_m_xdmf_parallel
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  
-  use sll_m_collective
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_world_collective
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close
+
+  use sll_m_xml_io, only: &
+    sll_xml_field, &
+    sll_xml_file_close, &
+    sll_xml_file_create, &
+    sll_xml_grid_geometry
+
 #ifndef NOHDF5
-  use hdf5
-  use sll_m_hdf5_io_parallel
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
 #endif
-  use sll_m_ascii_io
-  use sll_m_xml_io
-  
   implicit none
+
+  public :: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !>Create the xdmf file
   interface sll_xdmf_open

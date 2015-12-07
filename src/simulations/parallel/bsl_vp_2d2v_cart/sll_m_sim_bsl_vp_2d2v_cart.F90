@@ -1,19 +1,91 @@
 module sll_m_sim_bsl_vp_2d2v_cart
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_distribution_function_initializer_4d
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_interpolators_1d_base
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
-  use sll_m_xdmf
+#include "sll_working_precision.h"
+
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_distribution_function_initializer_4d, only: &
+    init_test_4d_par, &
+    load_test_4d_initializer, &
+    new_cartesian_4d_mesh, &
+    simple_cartesian_4d_mesh
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_poisson_2d_periodic_cartesian_par, only: &
+    new_poisson_2d_periodic_plan_cartesian_par, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_2d_comp64, &
+    remap_plan_2d_real64, &
+    remap_plan_4d_real64, &
+    sll_delete
+
+  use sll_m_scalar_field_initializers_base, only: &
+    node_centered_field
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_even
+
+  use sll_m_xml_io, only: &
+    sll_xml_field, &
+    sll_xml_file_close, &
+    sll_xml_file_create, &
+    sll_xml_grid_geometry
+
+  use sll_mpi, only: &
+    mpi_wtime
 
   implicit none
+
+  public :: &
+    delete_vp4d_par_cart, &
+    sll_delete, &
+    sll_simulation_4d_vlasov_poisson_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: &
        sll_simulation_4d_vlasov_poisson_cart

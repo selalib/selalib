@@ -1,15 +1,30 @@
 program test_advection_2d_tri_mesh
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d, &
-       new_hex_mesh_2d
-use sll_m_triangular_meshes
-use sll_m_advection_2d_tri_mesh
-use sll_m_gnuplot
-use sll_m_mesh_calculus_2d
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_2d_tri_mesh, only: &
+    advection_2d, &
+    new_advection_2d_tri_mesh, &
+    sll_advection_tri_mesh
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_triangular_meshes, only: &
+    analyze_triangular_mesh, &
+    map_to_circle, &
+    new_triangular_mesh_2d, &
+    sll_delete, &
+    sll_triangular_mesh_2d, &
+    write_triangular_mesh_mtv
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_triangular_mesh_2d), pointer :: t_mesh
 type(sll_hex_mesh_2d), pointer        :: h_mesh

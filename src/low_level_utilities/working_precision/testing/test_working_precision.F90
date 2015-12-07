@@ -1,8 +1,9 @@
 program working_precision_tester
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  ! use, intrinsic :: ieee_arithmetic ! Why is this module not loading???
-  ! because gfortran is not standard compliant... 
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
   ! **************************************************************************
   ! Basically all we want to know is if the integer values have representations

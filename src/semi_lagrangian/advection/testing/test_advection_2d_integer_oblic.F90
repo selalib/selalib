@@ -16,14 +16,41 @@
 !**************************************************************
 
 program test_advection_2d_integer_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_2d_integer_oblic
-use sll_m_characteristics_2d_explicit_euler
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_advection_1d_periodic
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_advection_2d_integer_oblic, only: &
+    integer_oblic_2d_advector, &
+    integer_oblic_advect_2d, &
+    new_integer_oblic_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type(integer_oblic_2d_advector), pointer :: adv
   class(sll_advection_1d_base), pointer :: adv_x1

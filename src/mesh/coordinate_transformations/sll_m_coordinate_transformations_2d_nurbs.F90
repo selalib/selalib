@@ -12,30 +12,59 @@
 !> This needs to be present to answer questions like T%x_node(i,j). 
 !> We set this logical mesh outside of the read_from_file routine.
 module sll_m_coordinate_transformations_2d_nurbs
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
 
-  use sll_m_xdmf
-  use sll_m_meshes_base
-  use sll_m_cartesian_meshes
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_gnuplot
-  use sll_m_interpolators_2d_base
-  use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_deboor_splines_2d
-  use sll_m_constants, only : &
-       sll_epsilon_0
-  use sll_m_plotmtv
-  use sll_m_utilities, only: sll_new_file_id
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_epsilon_0
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_mtv, &
+    sll_io_xdmf
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_meshes_base, only: &
+    sll_mesh_2d_base
+
+  use sll_m_plotmtv, only: &
+    sll_plotmtv_write
+
+  use sll_m_utilities, only: &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
 
   implicit none
+
+  public :: &
+    new_nurbs_2d_transformation_from_file, &
+    sll_coordinate_transformation_2d_nurbs, &
+    sll_coordinate_transformation_2d_nurbs_ptr, &
+    sll_delete
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Nurbs-based coordinate transformation 
-  type, extends(sll_coordinate_transformation_2d_base), public :: &
+  type, extends(sll_coordinate_transformation_2d_base) :: &
        sll_coordinate_transformation_2d_nurbs
      !> \f$ x_1(i,j) \f$
      sll_real64, dimension(:,:), pointer :: x1_node =>null()  
@@ -98,7 +127,7 @@ module sll_m_coordinate_transformations_2d_nurbs
      procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
-  type, public :: sll_coordinate_transformation_2d_nurbs_ptr
+  type :: sll_coordinate_transformation_2d_nurbs_ptr
      !> Pointer to class
      class(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
@@ -107,8 +136,6 @@ module sll_m_coordinate_transformations_2d_nurbs
      module procedure delete_transformation_2d_nurbs
   end interface sll_delete
 
-  public sll_delete
-  public new_nurbs_2d_transformation_from_file
 
   
 contains

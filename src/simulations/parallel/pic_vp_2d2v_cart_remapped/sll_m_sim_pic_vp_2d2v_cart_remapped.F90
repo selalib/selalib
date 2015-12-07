@@ -18,33 +18,90 @@
 
 module sll_m_sim_pic_vp_2d2v_cart_remapped
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_accumulators.h" 
+#include "sll_working_precision.h"
+#include "sll_accumulators.h"
 #include "particle_representation.h"
 
+  use sll_m_accumulators, only: &
+    electric_field_accumulator, &
+    electric_field_accumulator_cs, &
+    field_accumulator_cell, &
+    new_charge_accumulator_2d, &
+    new_field_accumulator_2d, &
+    reset_charge_accumulator_to_zero, &
+    reset_field_accumulator_to_zero, &
+    sll_charge_accumulator_2d, &
+    sll_charge_accumulator_2d_cs_ptr, &
+    sll_charge_accumulator_2d_ptr, &
+    sum_accumulators
 
-  use sll_m_constants
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_timer
-  use sll_m_poisson_2d_fft
-  use sll_m_poisson_2d_base
-  use sll_m_gnuplot
-  use sll_m_collective
-  use sll_m_ascii_io
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
 
-  use sll_m_remapped_pic_base
-  use sll_m_simple_pic_4d_group
-  use sll_m_bsl_lt_pic_4d_group
-  ! use sll_m_particle_initializers_4d
-  ! use sll_m_particle_sort
-  use sll_m_charge_to_density
-  use sll_m_pic_utilities
-  ! use sll_m_representation_conversion
+  use sll_m_bsl_lt_pic_4d_group, only: &
+    sll_bsl_lt_pic_4d_group, &
+    sll_bsl_lt_pic_4d_group_new
+
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    get_poisson_cell_index, &
+    global_to_cell_offset_extended
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_charge_to_density, only: &
+    sll_accumulate_field, &
+    sll_convert_charge_to_rho_2d_per_per
+
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_poisson_2d_fft, only: &
+    new_poisson_2d_fft_solver, &
+    poisson_2d_fft_solver
+
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group
+
+  use sll_m_remapped_pic_utilities, only: &
+    apply_periodic_bc_on_cartesian_mesh_2d, &
+    x_is_in_domain_2d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_simple_pic_4d_group, only: &
+    sll_simple_pic_4d_group, &
+    sll_simple_pic_4d_group_new
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
+
+  public :: &
+    sll_delete, &
+    sll_simulation_4d_vp_generic_pic_cartesian
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! uses [[selalib:src/simulations/simulation_base_class.F90::sll_simulation_base_class]], called by
   ! [[file:unit_test_4d_vp_generic_pic_cartesian.F90::unit_test_4d_vp_generic_pic_cartesian]]. We have chosen to store

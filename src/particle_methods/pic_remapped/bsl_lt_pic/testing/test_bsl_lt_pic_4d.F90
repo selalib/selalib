@@ -27,21 +27,35 @@
 program test_bsl_lt_pic_4d
 
   ! [[file:../working_precision/sll_m_working_precision.h]]
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  ! [[file:../memory/sll_m_memory.h]]
-#include "sll_memory.h"
+  use sll_m_bsl_lt_pic_4d_group, only: &
+    sll_bsl_lt_pic_4d_group, &
+    sll_bsl_lt_pic_4d_group_new
 
-  ! [[file:../assert/sll_m_assert.h]]
-#include "sll_assert.h"
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    eval_hat_function
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_bsl_lt_pic_4d_group
-  use sll_m_cartesian_meshes
-  use sll_m_timer
-  use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_remapped_pic_utilities, only: &
+    apply_periodic_bc_on_cartesian_mesh_2d, &
+    x_is_in_domain_2d
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 #define SPECIES_CHARGE  1._f64
 #define SPECIES_MASS    1._f64

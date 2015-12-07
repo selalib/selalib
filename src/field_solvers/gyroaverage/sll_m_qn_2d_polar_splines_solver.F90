@@ -18,13 +18,28 @@
 
 
 module sll_m_qn_2d_polar_splines_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_timer
-use sll_m_qn_2d_base
-use sll_m_qn_2d_polar
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_qn_2d_base, only: &
+    sll_qn_2d_base
+
+  use sll_m_qn_2d_polar, only: &
+    new_plan_qn_polar_splines, &
+    precompute_gyroaverage_index, &
+    precompute_inverse_qn_matrix_polar_splines, &
+    sll_plan_qn_polar, &
+    solve_qn_polar_splines
+
+  implicit none
+
+  public :: &
+    new_qn_2d_polar_splines_solver, &
+    qn_2d_polar_splines_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type,extends(sll_qn_2d_base) :: qn_2d_polar_splines_solver     

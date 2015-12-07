@@ -21,9 +21,28 @@
 !> @details
 !> In this module, all variables must be protected
 module sll_m_constants
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_c, &
+    sll_e_charge, &
+    sll_e_mass, &
+    sll_epsilon_0, &
+    sll_g, &
+    sll_i1, &
+    sll_kb, &
+    sll_kx, &
+    sll_mu_0, &
+    sll_pi, &
+    sll_proton_mass, &
+    sll_sqrt3, &
+    sll_twopi
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @param PI number
 sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64 

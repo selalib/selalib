@@ -5,11 +5,26 @@
 ! - parallel
 
 program sim_bsl_gk_3d1v_polar_multi_mu
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_gk_3d1v_polar_multi_mu
-  use sll_m_collective
-  use sll_m_timer
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_bsl_gk_3d1v_polar_multi_mu, only: &
+    delete_dk4d_polar, &
+    sll_simulation_4d_drift_kinetic_polar_multi_mu
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local

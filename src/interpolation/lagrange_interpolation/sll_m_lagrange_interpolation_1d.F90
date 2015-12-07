@@ -1,10 +1,23 @@
 module sll_m_lagrange_interpolation_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  implicit none
+
+  public :: &
+    compute_lagrange_interpolation_1d, &
+    interpolate_from_interpolant_array, &
+    new_lagrange_interpolation_1d, &
+    sll_lagrange_interpolation_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
  type :: sll_lagrange_interpolation_1D
    sll_int32                            :: d !half of stencil

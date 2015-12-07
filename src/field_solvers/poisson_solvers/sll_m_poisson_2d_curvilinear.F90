@@ -3,19 +3,38 @@
 !> @details This solver works with geometry defined on gauss points
 
 module sll_m_poisson_2d_curvilinear
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_boundary_condition_descriptors
-use sll_m_sparse_matrix
-use sll_m_deboor_splines_1d
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
 
-implicit none
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
 
-type, public :: poisson_2d_curvilinear
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points_and_weights
+
+  use sll_m_sparse_matrix, only: &
+    new_csr_matrix, &
+    sll_csr_matrix, &
+    sll_factorize_csr_matrix
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_curvilinear, &
+    poisson_2d_curvilinear, &
+    poisson_gauss_legendre, &
+    sll_poisson_open_knots, &
+    sll_poisson_periodic_knots
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type :: poisson_2d_curvilinear
 
   private
   sll_int32 :: num_cells1
@@ -47,19 +66,17 @@ type, public :: poisson_2d_curvilinear
 end type poisson_2d_curvilinear
 
 !> For the integration mode.  
-sll_int32, parameter, public :: POISSON_GAUSS_LEGENDRE = 0
+sll_int32, parameter :: POISSON_GAUSS_LEGENDRE = 0
 !> For the integration mode.  
-sll_int32, parameter, public :: POISSON_GAUSS_LOBATTO = 1
+sll_int32, parameter :: POISSON_GAUSS_LOBATTO = 1
 
 !> For the knots defined on the boundary  
-sll_int32, parameter, public :: SLL_POISSON_PERIODIC_KNOTS = 0
+sll_int32, parameter :: SLL_POISSON_PERIODIC_KNOTS = 0
 !> For the knots defined on the boundary  
-sll_int32, parameter, public :: SLL_POISSON_OPEN_KNOTS = 1
+sll_int32, parameter :: SLL_POISSON_OPEN_KNOTS = 1
 
 
-public new_poisson_2d_curvilinear
 
-private
 
 ! *******************************************************************
 

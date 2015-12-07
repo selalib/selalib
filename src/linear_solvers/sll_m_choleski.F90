@@ -1,7 +1,15 @@
 module sll_m_choleski
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    choles, &
+    desrem
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

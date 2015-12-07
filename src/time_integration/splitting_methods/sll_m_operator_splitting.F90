@@ -18,11 +18,28 @@
 !> and a specific implementation of the two operators
 !>
 module sll_m_operator_splitting
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    do_split_steps, &
+    initialize_operator_splitting, &
+    operator_splitting, &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_tvt, &
+    sll_order6_vtv, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! global variables 
   sll_int32, parameter :: SLL_USER_DEFINED      = 0 !< user defined splitting

@@ -1,19 +1,45 @@
 !> @ingroup operator_splitting
 !> @brief Implements split operators for constant coefficient advection
 module sll_m_split_advection_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-  use sll_m_characteristics_1d_base
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
-  use sll_m_cartesian_meshes  
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_cubic_non_uniform_splines
-  use sll_m_ode_solvers
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    signature_process_outside_point_1d, &
+    sll_characteristics_1d_base
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    cubic_nonunif_spline_1d, &
+    new_cubic_nonunif_spline_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    initialize_operator_splitting, &
+    operator_splitting
 
   implicit none
+
+  public :: &
+    new_split_advection_2d, &
+    sll_advective, &
+    sll_conservative, &
+    split_advection_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_ADVECTIVE    = 0
   sll_int32, parameter :: SLL_CONSERVATIVE = 1

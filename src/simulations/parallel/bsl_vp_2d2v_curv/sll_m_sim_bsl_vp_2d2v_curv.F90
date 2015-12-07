@@ -1,25 +1,84 @@
 module sll_m_sim_bsl_vp_2d2v_curv
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_interpolators_1d_base
-  use sll_m_interpolators_2d_base
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_parallel_array_initializer
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gnuplot_parallel
-  use sll_m_xdmf
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_collective_reduce_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_4d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_cubic_spline_interpolator_2d, &
+    sll_delete
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_rect_2d_parallel
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_4d_parallel_array_initializer
+
+  use sll_m_poisson_2d_periodic_cartesian_par, only: &
+    new_poisson_2d_periodic_plan_cartesian_par, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_2d_comp64, &
+    remap_plan_2d_real64, &
+    remap_plan_4d_real64, &
+    sll_delete
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    is_even, &
+    sll_new_file_id
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
+
+  public :: &
+    initialize_vp4d_general, &
+    sll_delete, &
+    sll_simulation_4d_vp_general
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_general
   

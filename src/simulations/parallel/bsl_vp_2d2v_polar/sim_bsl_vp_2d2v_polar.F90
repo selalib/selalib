@@ -6,17 +6,44 @@
 ! - parallel
 
 program sim_bsl_vp_2d2v_polar
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_sim_bsl_vp_2d2v_polar
-  use sll_m_collective
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_halt_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_periodic_gaussian_initializer_4d
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_sim_bsl_vp_2d2v_polar, only: &
+    initialize_vp4d_polar, &
+    sll_delete, &
+    sll_simulation_4d_vp_polar
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256)                  :: filename
   type(sll_simulation_4d_vp_polar)    :: simulation

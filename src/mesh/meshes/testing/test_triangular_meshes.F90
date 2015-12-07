@@ -1,10 +1,23 @@
 !> @internal [example]
 program test_triangular_meshes
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_hexagonal_meshes
-  use sll_m_triangular_meshes
+
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_triangular_meshes, only: &
+    map_to_circle, &
+    new_triangular_mesh_2d, &
+    read_from_file, &
+    sll_delete, &
+    sll_display, &
+    sll_triangular_mesh_2d, &
+    write_triangular_mesh_mtv
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_triangular_mesh_2d), pointer :: t_mesh
   type(sll_hex_mesh_2d), pointer        :: h_mesh

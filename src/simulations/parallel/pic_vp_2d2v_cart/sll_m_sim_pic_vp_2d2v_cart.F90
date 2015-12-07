@@ -4,24 +4,66 @@
 
 module sll_m_sim_pic_vp_2d2v_cart
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_collective
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_particle_group_base
-  use sll_m_particle_initializer
-  use sll_m_particle_group_2d2v
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_2d
-  use sll_m_poisson_2d_fft ! TODO: Use generic interface
-  use sll_m_poisson_2d_base
-  use sll_m_operator_splitting
-  use sll_m_operator_splitting_pic_vp_2d2v
-  use sll_m_ascii_io
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation, &
+    sll_kernel_smoother_base
+
+  use sll_m_kernel_smoother_spline_2d, only: &
+    sll_kernel_smoother_spline_2d, &
+    sll_new_smoother_spline_2d
+
+  use sll_m_operator_splitting, only: &
+    operator_splitting
+
+  use sll_m_operator_splitting_pic_vp_2d2v, only: &
+    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_t_operator_splitting_pic_vp_2d2v
+
+  use sll_m_particle_group_2d2v, only: &
+    sll_new_particle_group_2d2v, &
+    sll_particle_group_2d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_particle_initializer, only: &
+    sll_particle_initialize_random_landau_2d2v, &
+    sll_particle_initialize_sobol_landau_2d2v
+
+  use sll_m_poisson_2d_fft, only: &
+    new_poisson_2d_fft_solver, &
+    poisson_2d_fft_solver
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  implicit none
+
+  public :: &
+    sll_delete, &
+    sll_t_sim_pic_vp_2d2v_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_INIT_RANDOM=0
   sll_int32, parameter :: SLL_INIT_SOBOL=1

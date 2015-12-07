@@ -1,18 +1,40 @@
 module sll_m_lobatto_poisson
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_map_function, only: set_map_function
-  use sll_m_lobalap
-  use sll_m_dg_fields
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d
+
+  use sll_m_lobalap, only: &
+    assemb, &
+    assemb_rhs, &
+    compute_electric_field, &
+    compute_phi, &
+    computelu, &
+    init, &
+    plotgmsh, &
+    release
+
+  use sll_m_map_function, only: &
+    set_map_function
 
   implicit none
+
+  public :: &
+    lobatto_poisson_solver, &
+    sll_create, &
+    sll_delete, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type, public :: lobatto_poisson_solver
+  type :: lobatto_poisson_solver
     sll_transformation, pointer :: tau
     sll_int32                   :: order
   end type lobatto_poisson_solver
@@ -29,9 +51,7 @@ module sll_m_lobatto_poisson
     module procedure delete_lobatto_poisson
   end interface sll_delete
 
-  public :: sll_create, sll_solve, sll_delete
 
-  private
 
 contains
 

@@ -95,20 +95,45 @@
 !>\endcode
 
 module sll_m_poisson_2d_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann, &
+    sll_neumann_mode_0
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    fft_set_mode_c2r_1d, &
+    sll_fft_plan
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    new_plan_poisson_polar, &
+    poisson_solve_polar, &
+    sll_create, &
+    sll_delete, &
+    sll_plan_poisson_polar, &
+    sll_solve, &
+    solve_poisson_polar
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>type for the Poisson solver in polar coordinate
-  type, public :: sll_plan_poisson_polar
+  type :: sll_plan_poisson_polar
 
      sll_real64                          :: rmin   !< r min
      sll_real64                          :: rmax   !< r max
@@ -144,9 +169,6 @@ module sll_m_poisson_2d_polar
      module procedure delete_plan_poisson_polar
   end interface sll_delete
 
-  public :: sll_create, sll_solve, sll_delete
-  public :: new_plan_poisson_polar
-  public :: poisson_solve_polar, solve_poisson_polar
 
 contains
 

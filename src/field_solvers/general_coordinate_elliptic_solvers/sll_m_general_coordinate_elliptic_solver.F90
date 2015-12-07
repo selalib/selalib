@@ -31,42 +31,81 @@
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
 module sll_m_general_coordinate_elliptic_solver
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
-use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
-                                      sll_scalar_field_2d_discrete
-use sll_m_interpolators_2d_base, only: sll_c_interpolator_2d
-use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
-  sll_arbitrary_degree_spline_interpolator_2d
-use sll_m_deboor_splines_1d, only:        &
-  interv, deboor_type, bsplvd
-use sll_m_cubic_splines  
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_sparse_matrix, only : sll_csr_matrix,                 &
-                                     new_csr_matrix,                 &
-                                     new_csr_matrix_with_constraint, &
-                                     csr_add_one_constraint,         &
-                                     sll_factorize_csr_matrix,       &
-                                     sll_add_to_csr_matrix,          &
-                                     sll_mult_csr_matrix_vector,     &
-                                     sll_solve_csr_matrix,           &
-                                     sll_delete
+  use iso_fortran_env, only: &
+    output_unit
 
-use iso_fortran_env, only: output_unit
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_2d, &
+    get_coeff_cubic_spline_2d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_2d
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvd, &
+    deboor_type, &
+    interv
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points_and_weights
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_scalar_field_2d, only: &
+    sll_scalar_field_2d_analytic, &
+    sll_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  use sll_m_sparse_matrix, only: &
+    csr_add_one_constraint, &
+    new_csr_matrix, &
+    new_csr_matrix_with_constraint, &
+    sll_add_to_csr_matrix, &
+    sll_csr_matrix, &
+    sll_delete, &
+    sll_factorize_csr_matrix, &
+    sll_mult_csr_matrix_vector, &
+    sll_solve_csr_matrix
 
 #ifdef _OPENMP
 use omp_lib
 #endif
+  implicit none
 
-implicit none
+  public :: &
+    es_gauss_legendre, &
+    es_gauss_lobatto, &
+    factorize_mat_es, &
+    factorize_mat_es_prototype, &
+    general_coordinate_elliptic_solver, &
+    initialize_general_elliptic_solver_prototype, &
+    new_general_elliptic_solver, &
+    new_general_elliptic_solver_prototype, &
+    set_rho_coefficients_coordinates_elliptic_eq_prototype, &
+    sll_create, &
+    sll_delete, &
+    sll_solve, &
+    solve_general_coordinates_elliptic_eq_prototype
 
-private
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
 !> General coordinate elliptic solver derived type
@@ -75,7 +114,7 @@ private
 !> splines in array global_indices depends on the boundary conditions.
 !> local_indices includes the changes resulting from the boundary conditions.
 !> local_to_lobal_indices(i,j) = global_indices(local_indices(i,j))
-type, public :: general_coordinate_elliptic_solver
+type :: general_coordinate_elliptic_solver
 
   private
   sll_int32,  public :: num_cells1
@@ -137,9 +176,9 @@ type, public :: general_coordinate_elliptic_solver
 end type general_coordinate_elliptic_solver
 
 !> For the integration mode.  
-sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
+sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0
 !> For the integration mode.  
-sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
+sll_int32, parameter :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
   module procedure delete_elliptic
@@ -153,16 +192,6 @@ interface sll_solve
   module procedure solve_general_coordinates_elliptic_eq
 end interface sll_solve
 
-public sll_delete,                          &
-       sll_create,                          &
-       sll_solve,                           &
-       new_general_elliptic_solver,         &
-       factorize_mat_es,                    &
-       solve_general_coordinates_elliptic_eq_prototype, &
-       initialize_general_elliptic_solver_prototype, &
-       new_general_elliptic_solver_prototype,         &
-       factorize_mat_es_prototype, &
-       set_rho_coefficients_coordinates_elliptic_eq_prototype
 contains 
 
 ! *******************************************************************

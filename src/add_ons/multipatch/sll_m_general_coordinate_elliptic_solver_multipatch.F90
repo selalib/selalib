@@ -1,18 +1,60 @@
 module sll_m_general_coordinate_elliptic_solver_multipatch
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_timer 
-use sll_m_sparse_matrix
-use sll_m_sparse_matrix_mp
-use sll_m_scalar_field_2d_multipatch
-use sll_m_general_coordinate_elliptic_solver
-use sll_m_deboor_splines_1d
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-implicit none
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvd, &
+    deboor_type, &
+    interv
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points_and_weights
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre, &
+    es_gauss_lobatto
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    sll_delete, &
+    sll_scalar_field_multipatch_2d
+
+  use sll_m_sparse_matrix, only: &
+    sll_add_to_csr_matrix, &
+    sll_csr_matrix, &
+    sll_mult_csr_matrix_vector, &
+    sll_solve_csr_matrix
+
+  use sll_m_sparse_matrix_mp, only: &
+    new_csr_matrix_mp, &
+    sll_delete
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+
+  public :: &
+    factorize_mat_es_mp, &
+    general_coordinate_elliptic_solver_mp, &
+    initialize_general_elliptic_solver_mp, &
+    new_general_elliptic_solver_mp, &
+    sll_solve_mp, &
+    solve_general_coordinates_elliptic_eq_mp
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer, parameter :: KNOTS_PERIODIC = 0, KNOTS_DIRICHLET = 1
 

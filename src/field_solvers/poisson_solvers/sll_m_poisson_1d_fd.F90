@@ -1,22 +1,50 @@
 
 !> Module to solve Poisson equation on one dimensional mesh using Finite Elements
 module sll_m_poisson_1d_fd
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-    use sll_m_constants
-    use sll_m_cartesian_meshes
-    use sll_m_arbitrary_degree_splines
-    use sll_m_boundary_condition_descriptors
-    use sll_m_arbitrary_degree_spline_interpolator_1d
-    use sll_m_fft
-    implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    new_arbitrary_degree_1d_interpolator, &
+    sll_arbitrary_degree_spline_interpolator_1d
+
+  use sll_m_arbitrary_degree_splines, only: &
+    arbitrary_degree_spline_1d, &
+    b_splines_at_x, &
+    new_arbitrary_degree_spline_1d, &
+    periodic_arbitrary_deg_spline
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d, &
+    sll_cell
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_delete_plan, &
+    fft_new_plan_c2r_1d, &
+    fft_new_plan_r2c_1d, &
+    sll_fft_plan
+
+  implicit none
+
+  public :: &
+    new_poisson_1d_fd, &
+    poisson_1d_fd
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !  private
     !  public :: initialize, new, solve
 
     !  !> Solver data structure
-    !  type, public :: poisson_1d_periodic
+    !  type :: poisson_1d_periodic
     !     sll_int32                         :: nc_eta1 !< number of cells
     !     sll_real64                        :: eta1_min !< left corner
     !     sll_real64                        :: eta1_max !< right corner

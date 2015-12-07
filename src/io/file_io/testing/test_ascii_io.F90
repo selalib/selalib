@@ -1,10 +1,21 @@
 !>@internal [example] 
 program test_ascii_io
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_ascii_io
-use sll_m_xml_io
-use sll_m_constants
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_write_array
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_close, &
+    sll_xml_file_create
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32 :: i, j             !< indices
 sll_int32 :: error            !< error code

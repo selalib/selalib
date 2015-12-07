@@ -1,16 +1,58 @@
 program unit_test_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_coordinate_transformations_2d_nurbs
-  use sll_m_common_coordinate_transformations
-  use sll_m_cartesian_meshes
-  use sll_m_constants
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_boundary_condition_descriptors
-  
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_common_coordinate_transformations, only: &
+    deriv1_jacobian_polar_f, &
+    deriv_x1_polar_f_eta1, &
+    deriv_x1_polar_f_eta2, &
+    deriv_x2_polar_f_eta1, &
+    deriv_x2_polar_f_eta2, &
+    jacobian_polar_f, &
+    sinprod_gen_jac, &
+    sinprod_gen_jac11, &
+    sinprod_gen_jac12, &
+    sinprod_gen_jac21, &
+    sinprod_gen_jac22, &
+    sinprod_gen_x1, &
+    sinprod_gen_x2, &
+    sinprod_jac, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2, &
+    x1_polar_f, &
+    x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_io_mtv
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic, &
+    sll_coordinate_transformation_2d_analytic, &
+    sll_coordinate_transformation_2d_discrete, &
+    sll_delete
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_coordinate_transformation_2d_nurbs, &
+    sll_delete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_cubic_spline_interpolator_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 33
 #define NPTS2 33 

@@ -20,13 +20,40 @@
 
 module sll_m_pic_visu
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_gnuplot
-use sll_m_utilities, only: sll_new_file_id, int2string
-use sll_m_xdmf
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_corect2d_nodes
+
+  implicit none
+
+  public :: &
+    compute_df_cic, &
+    distribution_gnuplot, &
+    distribution_m4_gnuplot, &
+    distribution_tsc_gnuplot, &
+    distribution_xdmf, &
+    electricpotential_gnuplot_inline, &
+    energies_electrostatic_gnuplot_inline, &
+    particles_center_gnuplot, &
+    particles_center_gnuplot_inline, &
+    plot_format_points3d, &
+    plot_format_xmdv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> plot particles centers with gnuplot
 interface particles_center_gnuplot

@@ -27,8 +27,14 @@
 !> @brief
 !> Implements the error testing function and other related functionalities.
 module sll_m_memory
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   implicit none
-  intrinsic :: merge
+
+  public :: &
+    test_error_code
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! Useful for 'alternative implementation'. Ignore for now.
 #if 0

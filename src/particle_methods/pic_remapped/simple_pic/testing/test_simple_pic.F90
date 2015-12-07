@@ -6,14 +6,20 @@
 
 program simple_pic_4d_group_tester
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_simple_pic_4d_group
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_simple_pic_4d_group, only: &
+    sll_simple_pic_4d_group, &
+    sll_simple_pic_4d_group_new
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 type(sll_cartesian_mesh_2d),    pointer     :: mesh_2d

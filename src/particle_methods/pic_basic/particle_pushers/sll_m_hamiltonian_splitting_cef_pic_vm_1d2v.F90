@@ -3,28 +3,43 @@
 !> @brief Particle pusher based on operator splitting for 1d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
 module sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
+#include "sll_working_precision.h"
 
+  use sll_m_arbitrary_degree_splines, only: &
+    uniform_b_splines_at_x
 
- 
-  use sll_m_particle_group_base
-  use sll_m_kernel_smoother_base
-  use sll_m_collective
-  use sll_m_arbitrary_degree_splines
-  use sll_m_hamiltonian_splitting_base
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_world_collective
 
-  use sll_m_maxwell_1d_base
+  use sll_m_hamiltonian_splitting_base, only: &
+    sll_t_hamiltonian_splitting_base
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_kernel_smoother_base
+
+  use sll_m_maxwell_1d_base, only: &
+    sll_maxwell_1d_base
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
-  private
 
-  public :: sll_new_hamiltonian_splitting_cef_pic_vm_1d2v
+  public :: &
+    sll_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
+    sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Operator splitting type for Vlasov-Maxwell 1d2v
-  type, public, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
+  type, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
      class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother_1  !< Kernel smoother (order p)

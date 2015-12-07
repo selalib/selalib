@@ -20,23 +20,28 @@
 !> and prevent from too long initializations of a simulation
 
 program test_nml_mesh_1d_cart
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_cartesian_meshes, only : &
+  use sll_m_cartesian_meshes, only: &
     sll_cartesian_mesh_1d
-use sll_m_nml_mesh_1d_cart, only : &
+
+  use sll_m_nml_mesh_1d_cart, only: &
     sll_s_nml_mesh_1d_cart
-use sll_m_nml_mesh_1d_landau_cart, only : &
+
+  use sll_m_nml_mesh_1d_landau_cart, only: &
     sll_s_nml_mesh_1d_landau_cart
-use sll_m_nml_mesh_1d_unif_cart, only : &
-    sll_s_nml_mesh_1d_unif_cart
-use sll_m_nml_mesh_1d_two_grid_cart, only : &
+
+  use sll_m_nml_mesh_1d_two_grid_cart, only: &
     sll_s_nml_mesh_1d_two_grid_cart
 
+  use sll_m_nml_mesh_1d_unif_cart, only: &
+    sll_s_nml_mesh_1d_unif_cart
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_cartesian_mesh_1d), pointer :: mesh
   type(sll_cartesian_mesh_1d), pointer :: mesh_1
