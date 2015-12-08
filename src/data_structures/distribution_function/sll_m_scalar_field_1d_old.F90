@@ -30,16 +30,25 @@
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_1d_old
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_scalar_field_initializers_base
-  use sll_m_gnuplot
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_write
+
+  use sll_m_scalar_field_initializers_base, only: &
+    cell_centered_field, &
+    node_centered_field
 
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !I removed this line because, it not exists in 2d version
   !should be in base module

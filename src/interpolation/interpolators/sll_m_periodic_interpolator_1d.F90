@@ -7,16 +7,30 @@
 !! Define periodic interpolation of values in data define on original grid at
 !! points coordinates
 module sll_m_periodic_interpolator_1d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_interpolators_1d_base
-use sll_m_periodic_interp
-implicit none
-private
+#include "sll_working_precision.h"
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_periodic_interp, only: &
+    delete, &
+    initialize_periodic_interp, &
+    periodic_interp, &
+    periodic_interp_work
+
+  implicit none
+
+  public :: &
+    sll_delete, &
+    sll_periodic_interpolator_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Periodic interpolator
-  type, extends(sll_c_interpolator_1d), public ::  sll_periodic_interpolator_1d
+  type, extends(sll_c_interpolator_1d) ::  sll_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
@@ -53,9 +67,6 @@ private
      module procedure delete_per1d
   end interface sll_delete
 
-  public new_periodic_1d_interpolator
-  public initialize_per1d_interpolator
-  public sll_delete
 
 contains  ! ****************************************************************
 

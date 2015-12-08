@@ -11,19 +11,28 @@
 !------------------------------------------------------------------------------
 module sll_m_xdmf_light_parallel
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_mpi
-
-  use sll_m_collective, only:  &
-    sll_collective_t,        &
-    sll_get_collective_size, &
+  use sll_m_collective, only: &
+    sll_collective_bcast, &
+    sll_collective_gather, &
+    sll_collective_t, &
     sll_get_collective_rank, &
-    sll_collective_bcast,    &
-    sll_collective_gather
+    sll_get_collective_size
 
   use sll_m_xdmf_light_serial, only: &
     sll_t_xdmf_file
+
+  use sll_mpi, only: &
+    mpi_any_source, &
+    mpi_any_tag, &
+    mpi_character, &
+    mpi_integer, &
+    mpi_recv, &
+    mpi_send, &
+    mpi_source, &
+    mpi_status_size
 
   implicit none
 
@@ -31,6 +40,7 @@ module sll_m_xdmf_light_parallel
     sll_t_xdmf_parallel_file
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !==============================================================================
 

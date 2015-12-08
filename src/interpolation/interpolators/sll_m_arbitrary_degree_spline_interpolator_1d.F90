@@ -17,20 +17,44 @@
 
 !> Class interpolator and methods for arbitrary degree spline 1D interpolator
 module sll_m_arbitrary_degree_spline_interpolator_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_deboor_splines_1d
-use sll_m_interpolators_1d_base
-use sll_m_fornberg
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_periodic
 
-implicit none
-private
+  use sll_m_deboor_splines_1d, only: &
+    bvalue, &
+    deboor_type, &
+    splint, &
+    splint_der
+
+  use sll_m_fornberg, only: &
+    apply_fd
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    initialize_ad1d_interpolator, &
+    new_arbitrary_degree_1d_interpolator, &
+    set_values_at_boundary1d, &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Class for arbitrary degree spline 1d interpolator
-type, public, extends(sll_c_interpolator_1d) :: &
+type, extends(sll_c_interpolator_1d) :: &
   sll_arbitrary_degree_spline_interpolator_1d
 
   sll_int32                         :: num_pts       !< nodes number
@@ -90,10 +114,6 @@ interface sll_delete
    module procedure delete_arbitrary_degree_1d_interpolator
 end interface sll_delete
 
-public sll_delete 
-public new_arbitrary_degree_1d_interpolator
-public set_values_at_boundary1d
-public initialize_ad1d_interpolator
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains

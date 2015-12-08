@@ -1,12 +1,35 @@
 module sll_m_parallel_array_initializer
-  use sll_m_remapper
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_common_array_initializers, only : &
-       sll_scalar_initializer_2d, sll_scalar_initializer_4d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_4d
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_2d, &
+    sll_scalar_initializer_4d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global
+
   implicit none
+
+  public :: &
+    sll_2d_parallel_array_initializer_cartesian, &
+    sll_4d_parallel_array_initializer, &
+    sll_4d_parallel_array_initializer_cartesian, &
+    sll_4d_parallel_array_initializer_finite_volume
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! The parallel array initializer module helps initialize multidimensional
   ! arrays that are distributed among multiple processors. Their distribution

@@ -16,17 +16,27 @@
 !**************************************************************
 
 program test_advection_1d_ampere
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base
-use sll_m_advection_1d_ampere
-use sll_m_boundary_condition_descriptors
-use sll_m_gnuplot
+  use sll_m_advection_1d_ampere, only: &
+    new_ampere_1d_advector
 
-!$ use omp_lib
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base_ptr
 
-implicit none
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_1d
+
+#ifdef _OPENMP
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
+
+#endif
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 type(sll_advection_1d_base_ptr), pointer  :: adv(:)
 

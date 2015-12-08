@@ -1,11 +1,19 @@
 module sll_m_reduction
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  implicit none
 
-use sll_m_cartesian_meshes
-implicit none
+  public :: &
+    compute_integral_trapezoid_1d, &
+    compute_reduction_2d_to_0d, &
+    compute_reduction_4d_to_2d_direction34, &
+    compute_reduction_4d_to_3d_direction4, &
+    compute_reduction_diag_4d_to_2d_direction12
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   abstract interface
      function sll_integration_discrete_1d( data, Npts, delta, params ) result(res)

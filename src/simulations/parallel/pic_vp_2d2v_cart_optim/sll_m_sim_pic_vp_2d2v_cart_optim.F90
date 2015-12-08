@@ -1,32 +1,99 @@
 !> @brief Earlier PIC implementation
 module sll_m_sim_pic_vp_2d2v_cart_optim
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_accumulators.h" 
+#include "sll_working_precision.h"
+#include "sll_accumulators.h"
 #include "particle_representation.h"
 
+  use sll_m_accumulators, only: &
+    electric_field_accumulator, &
+    electric_field_accumulator_cs, &
+    field_accumulator_cell, &
+    field_accumulator_cs, &
+    new_charge_accumulator_2d, &
+    new_charge_accumulator_2d_cs, &
+    new_field_accumulator_2d, &
+    new_field_accumulator_cs_2d, &
+    reset_charge_accumulator_to_zero, &
+    reset_charge_accumulator_to_zero_cs, &
+    reset_field_accumulator_cs_to_zero, &
+    reset_field_accumulator_to_zero, &
+    sll_charge_accumulator_2d, &
+    sll_charge_accumulator_2d_cs, &
+    sll_charge_accumulator_2d_cs_ptr, &
+    sll_charge_accumulator_2d_ptr, &
+    sum_accumulators, &
+    sum_accumulators_cs
 
-  use sll_m_constants
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_timer
-  use sll_m_particle_group_4d
-  use sll_m_particle_initializers_4d
-  use sll_m_particle_sort
-  use sll_m_charge_to_density
-  use sll_m_pic_utilities
-  use sll_m_poisson_2d_fft
-  use sll_m_poisson_2d_base
-  use sll_m_representation_conversion
-  use sll_m_gnuplot
-  use sll_m_timer
-  use sll_m_collective 
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_charge_to_density, only: &
+    sll_accumulate_field, &
+    sll_accumulate_field_cs, &
+    sll_convert_charge_to_rho_2d_per_per, &
+    sll_convert_charge_to_rho_2d_per_per_cs
+
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_particle_group_4d, only: &
+    new_particle_4d_group, &
+    sll_particle_group_4d
+
+  use sll_m_particle_initializers_4d, only: &
+    sll_initial_particles_4d
+
+  use sll_m_particle_representations, only: &
+    sll_particle_4d, &
+    sll_particle_4d_guard
+
+  use sll_m_particle_sort, only: &
+    sll_new_particle_sorter_2d, &
+    sll_particle_sorter_2d, &
+    sll_sort_particles_2d
+
+  use sll_m_pic_utilities, only: &
+    sll_first_charge_accumulation_2d, &
+    sll_first_charge_accumulation_2d_cs
+
+  use sll_m_poisson_2d_fft, only: &
+    new_poisson_2d_fft_solver, &
+    poisson_2d_fft_solver
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_mpi, only: &
+    mpi_sum
+
 #ifdef _OPENMP
-  use omp_lib
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num, &
+    omp_get_wtime
+
 #endif
   implicit none
+
+  public :: &
+    sll_delete, &
+    sll_pic_simulation_4d_cartesian
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: sll_pic_simulation_4d_cartesian
      ! Physics/numerical parameters

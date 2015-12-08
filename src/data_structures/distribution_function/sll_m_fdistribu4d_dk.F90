@@ -16,17 +16,45 @@
 !>@details
 !-----------------------------------------------------------
 module sll_m_fdistribu4d_dk
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_cubic_splines
-  use sll_m_common_coordinate_transformations, only : &
-    polar_eta1, polar_eta2
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_eta1, &
+    polar_eta2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    compute_cubic_spline_2d, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    new_cubic_spline_1d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_1d, &
+    sll_cubic_spline_2d, &
+    sll_delete
 
   implicit none
+
+  public :: &
+    function_xy_from_rtheta, &
+    init_brtheta, &
+    init_exact_profile_r, &
+    init_fequilibrium, &
+    init_fequilibrium_xy, &
+    profil_xy_exacte
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(1) :: whatever  ! dummy params array
 

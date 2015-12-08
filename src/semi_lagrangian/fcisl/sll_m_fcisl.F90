@@ -1,10 +1,34 @@
 module sll_m_fcisl
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_cartesian_meshes
-  use sll_m_advection_1d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  implicit none
+
+  public :: &
+    compute_at_aligned, &
+    compute_derivative_periodic, &
+    compute_iota_from_shift, &
+    compute_oblic_shift, &
+    compute_spaghetti, &
+    compute_spaghetti_and_shift_from_guess, &
+    compute_spaghetti_size_from_shift, &
+    compute_w_hermite, &
+    load_spaghetti, &
+    new_oblic_derivative, &
+    sll_oblic_derivative, &
+    unload_spaghetti
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! a direction is chosen for interpolation
 ! derivative computation and advection

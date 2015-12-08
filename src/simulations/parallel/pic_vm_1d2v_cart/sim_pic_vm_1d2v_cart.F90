@@ -1,7 +1,18 @@
 program sim_pic_vm_1d2v_cart
 
-#include "sll_working_precision.h"
-  use sll_m_sim_pic_vm_1d2v_cart
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_pic_vm_1d2v_cart, only: &
+    sll_t_sim_pic_vm_1d2v_cart
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type(sll_t_sim_pic_vm_1d2v_cart)  :: sim
   character(len=256)                               :: filename

@@ -4,20 +4,25 @@
 !> @details ...
 module sll_m_particle_group_1d2v
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_working_precision
-  use sll_m_particle_group_base
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base, &
+    species_new
 
   implicit none
-  private
 
-  public :: sll_new_particle_group_1d2v
+  public :: &
+    sll_new_particle_group_1d2v, &
+    sll_particle_group_1d2v
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Simple version of a PIC particle group in 1d2v
-type, public, extends(sll_particle_group_base) :: sll_particle_group_1d2v
+type, extends(sll_particle_group_base) :: sll_particle_group_1d2v
    !sll_int32               :: n_particles !< number of particle
    sll_real64, pointer :: particle_array(:,:) !< array of particles
 

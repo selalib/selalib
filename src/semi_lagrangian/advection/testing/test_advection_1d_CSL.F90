@@ -16,14 +16,39 @@
 !**************************************************************
 
 program test_advection_1d_CSL
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_1d_CSL
-use sll_m_advection_1d_PSM
-use sll_m_characteristics_1d_trapezoid_conservative
-use sll_m_cubic_spline_interpolator_1d
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_csl, only: &
+    new_csl_1d_advector
+
+  use sll_m_advection_1d_psm, only: &
+    new_psm_1d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_trapezoid_conservative, only: &
+    new_trapezoid_conservative_1d_charac
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_advection_1d_base), pointer :: adv
   class(sll_advection_1d_base), pointer :: adv_ref

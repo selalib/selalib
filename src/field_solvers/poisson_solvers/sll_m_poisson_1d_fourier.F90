@@ -4,19 +4,32 @@
 
 !> Module to solve Poisson equation on one dimensional mesh using Finite Elements
 module sll_m_poisson_1d_fourier
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-    use sll_m_constants
-    use sll_m_cartesian_meshes
-    use sll_m_boundary_condition_descriptors
-    implicit none
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d
+
+  use sll_m_constants, only: &
+    sll_i1, &
+    sll_kx, &
+    sll_pi
+
+  implicit none
+
+  public :: &
+    new_poisson_1d_fourier, &
+    poisson_1d_fourier
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !  private
     !  public :: initialize, new, solve
 
     !  !> Solver data structure
-    !  type, public :: poisson_1d_periodic
+    !  type :: poisson_1d_periodic
     !     sll_int32                         :: nc_eta1 !< number of cells
     !     sll_real64                        :: eta1_min !< left corner
     !     sll_real64                        :: eta1_max !< right corner

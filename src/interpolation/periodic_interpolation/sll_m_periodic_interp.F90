@@ -1,12 +1,45 @@
 module sll_m_periodic_interp
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
-use sll_m_fft
-use sll_m_arbitrary_degree_splines
-use sll_m_constants
+#include "sll_working_precision.h"
+
+! use F77_fftpack, only: &
+!   dfftb, &
+!   dfftf, &
+!   dffti, &
+!   zfftb, &
+!   zfftf, &
+!   zffti
+
+  use sll_m_arbitrary_degree_splines, only: &
+    uniform_b_splines_at_x
+
+  use sll_m_constants, only: &
+    sll_pi, &
+    sll_twopi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_backward, &
+    fft_forward, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
 
   implicit none
+
+  public :: &
+    delete, &
+    initialize_periodic_interp, &
+    lagrange, &
+    periodic_interp, &
+    periodic_interp_work, &
+    spline, &
+    trigo, &
+    trigo_fft_selalib
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32,  parameter :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
   sll_int32,  parameter :: TRIGO_REAL = 4

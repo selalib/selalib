@@ -1,17 +1,62 @@
 program test_poisson_2d_periodic_cart_par
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_collective
-  use hdf5
-  use sll_m_hdf5_io_parallel
-  use sll_m_gnuplot_parallel
-  use iso_fortran_env, only: output_unit
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use hdf5, only: &
+    hid_t, &
+    hsize_t
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_rect_2d_parallel
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close
+
+  use sll_m_poisson_2d_periodic_cartesian_par, only: &
+    delete_poisson_2d_periodic_plan_cartesian_par, &
+    new_poisson_2d_periodic_plan_cartesian_par, &
+    new_poisson_2d_periodic_plan_cartesian_par_alt, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par_alt
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_collective, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    sll_view_lims
+
+  use sll_mpi, only: &
+    mpi_prod
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
   type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan_alt

@@ -16,12 +16,29 @@
 !**************************************************************
 
 module sll_m_characteristics_2d_explicit_euler_conservative
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_2d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic, &
+    sll_set_to_limit, &
+    sll_user_defined
+
+  use sll_m_characteristics_2d_base, only: &
+    process_outside_point_periodic, &
+    process_outside_point_set_to_limit, &
+    signature_process_outside_point, &
+    sll_characteristics_2d_base
+
+  implicit none
+
+  public :: &
+    new_explicit_euler_conservative_2d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_characteristics_2d_base) :: &
     explicit_euler_conservative_2d_charac_computer

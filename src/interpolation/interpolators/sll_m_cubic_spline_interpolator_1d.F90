@@ -25,18 +25,39 @@
 !!
 module sll_m_cubic_spline_interpolator_1d
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_interpolators_1d_base
-use sll_m_cubic_splines
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-implicit none
-private
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_array, &
+    interpolate_from_interpolant_derivatives_eta1, &
+    interpolate_from_interpolant_value, &
+    new_cubic_spline_1d, &
+    sll_cubic_spline_1d, &
+    sll_delete
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    new_cubic_spline_interpolator_1d, &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Cubic spline interpolator 1d regular grid.
-type, extends(sll_c_interpolator_1d), public :: sll_cubic_spline_interpolator_1d
+type, extends(sll_c_interpolator_1d) :: sll_cubic_spline_interpolator_1d
 
    sll_real64, dimension(:), pointer  :: interpolation_points !< points position
    sll_int32                          :: num_points           !< size
@@ -71,8 +92,6 @@ interface sll_delete
    module procedure delete_cs1d
 end interface sll_delete
 
-public new_cubic_spline_interpolator_1d
-public sll_delete
 contains  ! ****************************************************************
 
 

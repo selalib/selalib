@@ -13,7 +13,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 03 Dec 2015
+# Last revision: 07 Dec 2015
 #
 from __future__ import print_function
 import re
@@ -93,7 +93,9 @@ def remove_fortran_logicals( text ):
     text = text.lower()
     for s in    logical_operators:  text = text.replace( s, ' ' )
     for s in    logical_constants:  text = text.replace( s, ' ' )
-    for s in relational_operators:  text = text.replace( s, ' ' )
+    for s in relational_operators:  text = text.replace( s, ' ' )  # first
+    for s in  '<=','==','/=','>=':  text = text.replace( s, ' ' )  # next!
+    for s in              '<','>':  text = text.replace( s, ' ' )  # last!
     return text
 
 #==============================================================================
@@ -113,11 +115,11 @@ has_interface_types = \
 #------------------------------------------------------------------------------
 # Regex patterns
 patterns = {}
-patterns['name']      = r"(?<!\d\.)\b([a-zA-Z]\w*)\b"
-patterns['variable']  = r"(?<![%\s])\s*" + patterns['name'] + r"(?!(?:\s*(?=\()))"
-patterns['call']      = r"(?<![%\s])\s*" + patterns['name'] + r"(?=(?:\s*(?=\()))"
-patterns['extends']   = r"extends\s*\("  + patterns['name'] + r"\s*\)"
-patterns['dimension'] = r"dimension\s*\("+ patterns['name'] + r"\s*\)"
+patterns['name'] = name = r"(?<!\d\.)\b([a-zA-Z]\w*)\b"
+patterns['variable']    = r"(?<![%\s])\s*"     + name + r"(?!(?:\s*(?=\()))"
+patterns['call']        = r"(?<![%\s])\s*"     + name + r"(?=(?:\s*(?=\()))"
+patterns['extends']     = r"extends\s*\(\s*"   + name + r"\s*\)"
+patterns['dimension']   = r"dimension\s*\(\s*" + name + r"\s*\)"
 
 re_engines = {}
 for key,val in patterns.items():

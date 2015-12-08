@@ -4,14 +4,45 @@
 ! - parallel
 
 program sim_bsl_dk_3d1v_curv
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_dk_3d1v_curv
-  use sll_m_collective
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_common_coordinate_transformations
-  use sll_m_coordinate_transformations_2d
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    new_cartesian_mesh_4d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_4d, &
+    sll_delete
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_common_coordinate_transformations, only: &
+    deriv_x1_polar_f_eta1, &
+    deriv_x1_polar_f_eta2, &
+    deriv_x2_polar_f_eta1, &
+    deriv_x2_polar_f_eta2, &
+    x1_polar_f, &
+    x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_sim_bsl_dk_3d1v_curv, only: &
+    first_step_4d_dk_hybrid, &
+    initialize, &
+    sll_simulation_4d_dk_hybrid, &
+    sll_delete
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32 :: world_size
   sll_int32 :: my_rank

@@ -1,13 +1,57 @@
 program unit_test_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_cartesian_meshes
-  use sll_m_constants
-  use sll_m_scalar_field_2d
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use helper_functions
+#include "sll_working_precision.h"
+
+  use helper_functions, only: &
+    test_function_dirdir, &
+    test_function_dirdir_der1, &
+    test_function_dirdir_der2, &
+    test_function_dirper, &
+    test_function_dirper_der1, &
+    test_function_dirper_der2, &
+    test_function_perdir, &
+    test_function_perdir_der1, &
+    test_function_perdir_der2, &
+    test_function_perper, &
+    test_function_perper_der1, &
+    test_function_perper_der2
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    initialize_ad2d_interpolator, &
+    sll_arbitrary_degree_spline_interpolator_2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_analytic, &
+    new_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define SPLINE_DEG1 3
 #define SPLINE_DEG2 3

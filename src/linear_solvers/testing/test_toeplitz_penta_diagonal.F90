@@ -15,10 +15,18 @@
 
 program test_sll_penta_diagonal
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_penta_diagonal
+
+  use sll_m_penta_diagonal, only: &
+    sll_create, &
+    sll_delete, &
+    sll_penta_diagonal_solver, &
+    sll_solve
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   sll_int32                               :: n_max, nb_test

@@ -1,10 +1,32 @@
 program test_scalar_field_1d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_cartesian_meshes
-use sll_m_constants
-use sll_m_scalar_field_1d
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    initialize_ad1d_interpolator, &
+    sll_arbitrary_degree_spline_interpolator_1d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_scalar_field_1d, only: &
+    new_scalar_field_1d_analytic, &
+    new_scalar_field_1d_discrete
+
+  use sll_m_scalar_field_1d_base, only: &
+    sll_scalar_field_1d_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 #define SPLINE_DEG1 3
 #define NUM_CELLS1  64

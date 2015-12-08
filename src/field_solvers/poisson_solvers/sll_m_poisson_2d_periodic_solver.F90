@@ -2,21 +2,35 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_periodic_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_poisson_2d_base
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
 
 #ifdef FFTW
-use sll_m_poisson_2d_periodic_fftw
+  use sll_m_poisson_2d_periodic_fftw, only: &
+    new, &
+    poisson_2d_periodic_fftw, &
+    solve
+
 #define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
-use sll_m_poisson_2d_periodic_fftpack
+use sll_m_poisson_2d_periodic_fftpack, only: &
+    new, &
+    poisson_2d_periodic_fftpack, &
+    solve
+
 #define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
+  implicit none
 
-implicit none
+  public :: &
+    new_poisson_2d_periodic_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_periodic_solver
 

@@ -36,6 +36,11 @@ IF(Fortran_COMPILER_NAME MATCHES gfortran)
   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC")
   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
 
+  SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
+  IF(NOT UNUSED_FUNCTION_WARNING_ENABLED)
+    SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-function")
+  ENDIF()
+
   SET(UNUSED_DUMMY_WARNING_ENABLED OFF CACHE BOOL   "Add -Wunused-dummy-argument flag to gfortran")
   IF(NOT UNUSED_DUMMY_WARNING_ENABLED)
     SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")

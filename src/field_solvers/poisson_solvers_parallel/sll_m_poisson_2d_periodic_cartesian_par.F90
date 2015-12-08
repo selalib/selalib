@@ -16,17 +16,53 @@
 !> There might be ways around this, like using 'reshape'...
 module sll_m_poisson_2d_periodic_cartesian_par
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_utilities,  only : is_power_of_two
-  use sll_m_remapper
-  use sll_m_fft
-  use sll_m_constants
-  use sll_m_collective
+  use sll_m_collective, only: &
+    sll_collective_t, &
+    sll_get_collective_size
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_apply_plan_c2c_2d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    get_layout_collective, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_comp64, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    is_power_of_two
 
   implicit none
+
+  public :: &
+    delete_poisson_2d_periodic_plan_cartesian_par, &
+    new_poisson_2d_periodic_plan_cartesian_par, &
+    new_poisson_2d_periodic_plan_cartesian_par_alt, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par_alt
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to store data from Poisson solver. This
   !> solver is parallel on structured cartesian mesh. Numerical method

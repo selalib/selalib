@@ -1,11 +1,22 @@
 program test_lagrange_interpolation
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
- use sll_m_lagrange_interpolation_1d
- use sll_m_constants
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_lagrange_interpolation_1d, only: &
+    compute_lagrange_interpolation_1d, &
+    interpolate_from_interpolant_array, &
+    new_lagrange_interpolation_1d, &
+    sll_lagrange_interpolation_1d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32  :: i,d,num_points
 sll_real64 :: diff,alpha,xmin,xmax,l

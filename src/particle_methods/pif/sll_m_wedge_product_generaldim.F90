@@ -5,12 +5,18 @@
 !such that it is possible to define Vlasov equation with a kind of
 !v x B term for any dimension
 module sll_m_wedge_product_generaldim
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-    
- implicit none
+  implicit none
+
+  public :: &
+    cross_product_2d, &
+    cross_product_3d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
  contains
 

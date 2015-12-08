@@ -7,14 +7,27 @@
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
 module sll_m_fem_2d
-#include "sll_poisson_solvers_macros.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_poisson_solvers_macros.h"
 
-use sll_m_utilities, only : sll_display
+! use F77_lapack, only: &
+!   dpbtrf, &
+!   dpbtrs
 
-implicit none
-private
+  use sll_m_utilities, only: &
+    sll_display
+
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_fem_poisson_2d, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
 !> Structure to solve Poisson equation on 2d domain. Mesh is cartesian and
@@ -22,7 +35,7 @@ private
 !> @details
 !> finite element numerical method with
 !> Compact boundary conditions
-type, public :: sll_fem_poisson_2d
+type :: sll_fem_poisson_2d
    sll_real64, dimension(:,:), pointer :: A   !< Mass matrix
    sll_real64, dimension(:,:), pointer :: M   !< Stiffness matrix
    sll_real64, dimension(:,:), pointer :: mat !< Matrix solve by Lapack
@@ -46,7 +59,6 @@ interface sll_solve
    module procedure solve_poisson_2d_fem
 end interface sll_solve
 
-public :: sll_create, sll_solve
 
 contains
 

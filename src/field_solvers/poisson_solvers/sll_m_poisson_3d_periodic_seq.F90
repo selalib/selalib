@@ -5,14 +5,32 @@
 
 module sll_m_poisson_3d_periodic_seq
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_fft
-  use sll_m_constants
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
 
   implicit none
+
+  public :: &
+    delete_poisson_3d_periodic_plan_seq, &
+    new_poisson_3d_periodic_plan_seq, &
+    poisson_3d_periodic_plan_seq, &
+    solve_poisson_3d_periodic_seq
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to solve Poisson equation on 3d domain. Mesh is cartesian and
   !> all boundary conditions are periodic. Numerical method is FFT based.

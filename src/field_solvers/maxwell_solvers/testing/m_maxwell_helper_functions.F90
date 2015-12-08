@@ -1,10 +1,20 @@
 module m_maxwell_helper_functions
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-     
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+
+  public :: &
+    gaussian, &
+    sol_bz, &
+    sol_ex, &
+    sol_ey
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define MODE_X 2
 #define MODE_Y 2

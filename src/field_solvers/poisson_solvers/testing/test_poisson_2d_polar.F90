@@ -1,14 +1,21 @@
 program test_poisson_2d_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_poisson_2d_polar
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_2d_polar, only: &
+    sll_create, &
+    sll_plan_poisson_polar, &
+    solve_poisson_polar
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_plan_poisson_polar) :: poisson_fft
 sll_real64, dimension(:,:), allocatable :: rhs

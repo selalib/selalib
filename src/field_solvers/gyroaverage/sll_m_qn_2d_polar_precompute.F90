@@ -1,17 +1,42 @@
 module sll_m_qn_2d_polar_precompute
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_timer
-  use sll_m_qn_2d_polar
+! use F77_blas, only: &
+!   dgemm, &
+!   zgemm
+
+! use F77_fftpack, only: &
+!   zfftb, &
+!   zfftf, &
+!   zffti
+
+! use F77_lapack, only: &
+!   zgetrf, &
+!   zgetri
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_qn_2d_polar, only: &
+    compute_splines_coefs_matrix_nat_1d, &
+    compute_splines_coefs_matrix_per_1d, &
+    contribution_spl, &
+    localize_polar, &
+    matrix_product_compf, &
+    splcoefnat1d0old, &
+    splcoefper1d0old
 
   implicit none
+
+  public :: &
+    compute_qns_inverse_polar_splines, &
+    compute_qns_matrix_polar_splines, &
+    solve_qns_polar_splines
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

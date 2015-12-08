@@ -1,8 +1,63 @@
 module m_init_functions
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_constants, only: &
+    sll_pi
 
-  use sll_m_constants, only: sll_pi
+  implicit none
+
+  public :: &
+    adimension_chgt_x, &
+    adimension_chgt_y, &
+    f_cos, &
+    f_sin, &
+    func_epsi, &
+    func_four, &
+    func_one, &
+    func_zero, &
+    jac11_adimension_chgt, &
+    jac12_adimension_chgt, &
+    jac21_adimension_chgt, &
+    jac22_adimension_chgt, &
+    sol_exacte_chgt_adim, &
+    sol_exacte_chgt_dirdir, &
+    sol_exacte_chgt_dirdir_der1, &
+    sol_exacte_chgt_dirdir_der2, &
+    sol_exacte_chgt_dirper, &
+    sol_exacte_chgt_dirper_der1, &
+    sol_exacte_chgt_dirper_der2, &
+    sol_exacte_chgt_perdir, &
+    sol_exacte_chgt_perdir_der1, &
+    sol_exacte_chgt_perdir_der2, &
+    sol_exacte_chgt_perper, &
+    sol_exacte_chgt_perper_der1, &
+    sol_exacte_chgt_perper_der2, &
+    sol_exacte_dirper, &
+    sol_exacte_dirper_der1, &
+    sol_exacte_dirper_der2, &
+    sol_exacte_perdir, &
+    sol_exacte_perdir_der1, &
+    sol_exacte_perdir_der2, &
+    sol_exacte_perper, &
+    sol_exacte_perper_der1, &
+    sol_exacte_perper_der2, &
+    source_term_chgt_adim, &
+    source_term_chgt_dirdir, &
+    source_term_chgt_dirper, &
+    source_term_chgt_perdir, &
+    source_term_chgt_perper, &
+    source_term_dirper, &
+    source_term_perdir, &
+    source_term_perper, &
+    u_cos, &
+    u_cos_der1, &
+    u_cos_der2, &
+    u_sin, &
+    u_sin_der1, &
+    u_sin_der2
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
@@ -89,7 +144,7 @@ contains
     real(8), intent(in) :: eta1
     real(8), intent(in) :: eta2
 
-    sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
+    sol_exacte_perper_der2 = 0.0_8!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
   end function sol_exacte_perper_der2
 
   !----------------------------------------------------------
@@ -237,8 +292,8 @@ contains
 
     real(8) :: x, y
     
-    x =   eta1 + 0.1_f64*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-    y =   eta2 + 0.1_f64*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+    x =   eta1 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+    y =   eta2 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
     
     source_term_chgt_perper = -8.0*sll_pi**2*cos(2*sll_pi*x)*cos(2*sll_pi*y) 
     
@@ -267,7 +322,7 @@ contains
     y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
     
     sol_exacte_chgt_perper_der1 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)&
-         * ( 1.0_f64 + 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+         * ( 1.0_8 + 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )&
          -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)&
          * ( 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
  
@@ -287,7 +342,7 @@ contains
     sol_exacte_chgt_perper_der2 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)&
          * ( 0.1*2*sll_pi*sin(2* sll_pi*eta1) * cos(2*sll_pi*eta2) )&
          -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)&
-         * ( 1.0_f64 + 0.1*2*sll_pi*sin(2* sll_pi*eta1)*cos(2*sll_pi*eta2) )
+         * ( 1.0_8 + 0.1*2*sll_pi*sin(2* sll_pi*eta1)*cos(2*sll_pi*eta2) )
   end function sol_exacte_chgt_perper_der2
 
   !----------------------------------------------------------
@@ -332,7 +387,7 @@ contains
     y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
     
     sol_exacte_chgt_perdir_der1 = -2*sll_pi*sin(2*sll_pi*x)*sin(2*sll_pi*y)&
-         * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+         * ( 1.0_8 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
          + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
          * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
     
@@ -350,7 +405,7 @@ contains
     sol_exacte_chgt_perdir_der2 = -2*sll_pi*sin(2*sll_pi*x)*sin(2*sll_pi*y)&
          * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2) ) &
          + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
-         * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
+         * ( 1.0_8 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
     
   end function sol_exacte_chgt_perdir_der2
 
@@ -400,7 +455,7 @@ contains
     y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
 
     sol_exacte_chgt_dirdir_der1 = 2*sll_pi*cos(2* sll_pi*x)*sin(2* sll_pi*y)&
-         * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+         * ( 1.0_8 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
          + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
          * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
   end function sol_exacte_chgt_dirdir_der1
@@ -417,7 +472,7 @@ contains
     sol_exacte_chgt_dirdir_der2 =  2*sll_pi*cos(2* sll_pi*x)*sin(2* sll_pi*y)&
          * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2)  )&
          + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
-         * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) )
+         * ( 1.0_8 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) )
     
   end function sol_exacte_chgt_dirdir_der2
 
@@ -468,7 +523,7 @@ contains
     y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
     
     sol_exacte_chgt_dirper_der1 = 2*sll_pi*cos(2* sll_pi*x)*cos(2* sll_pi*y) &
-         * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+         * ( 1.0_8 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
          - 2*sll_pi*sin(2* sll_pi*x)*sin(2* sll_pi*y)&
          * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
   end function sol_exacte_chgt_dirper_der1
@@ -486,7 +541,7 @@ contains
     sol_exacte_chgt_dirper_der2 = 2*sll_pi*cos(2* sll_pi*x)*cos(2* sll_pi*y) &
          * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2)  )&
          - 2*sll_pi*sin(2* sll_pi*x)*sin(2* sll_pi*y)&
-         * (1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
+         * (1.0_8 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
     
   end function sol_exacte_chgt_dirper_der2
 
@@ -526,7 +581,7 @@ contains
     real(8), intent(in) :: params(:)
 
     print*, eta1, eta2
-    jac12_adimension_chgt = 0.0_f64!sll_pi
+    jac12_adimension_chgt = 0.0_8!sll_pi
   end function jac12_adimension_chgt
 
   real(8) function jac21_adimension_chgt( eta1, eta2, params )
@@ -535,7 +590,7 @@ contains
     real(8), intent(in) :: params(:)
 
     print*, eta1, eta2
-    jac21_adimension_chgt = 0.0_f64!2*sll_pi!0.0
+    jac21_adimension_chgt = 0.0_8!2*sll_pi!0.0
   end function jac21_adimension_chgt
 
   real(8) function jac22_adimension_chgt( eta1, eta2, params )
@@ -568,10 +623,10 @@ contains
 
     real(8) :: x,y
     
-    x =   2.0_f64*sll_pi*eta1 !+eta2)
-    y =   2.0_f64*sll_pi*eta2
+    x =   2.0_8*sll_pi*eta1 !+eta2)
+    y =   2.0_8*sll_pi*eta2
     
-    source_term_chgt_adim = -2.0_f64*cos(x)*cos(y)
+    source_term_chgt_adim = -2.0_8*cos(x)*cos(y)
     
   end function source_term_chgt_adim
 
@@ -593,12 +648,12 @@ contains
     integer :: n = N_MOD 
 
     r = eta1 * (R_MAX-R_MIN) + R_MIN
-    theta = eta2 * 2.0_f64 * sll_pi
+    theta = eta2 * 2.0_8 * sll_pi
 
     f_cos = -(r-R_MAX)*(r-R_MIN)*n*n*cos(n*theta)/r &
             + ((r-R_MAX)*(r-R_MIN)*cos(n*theta)  &
             + (r-R_MAX)*r*cos(n*theta) + (r-R_MIN)*r*cos(n*theta) &
-            + 2.0_f64*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
+            + 2.0_8*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
             + r*cos(n*theta))*r)/r
 
   end function f_cos
@@ -622,7 +677,7 @@ contains
     f_sin = -(r-R_MAX)*(r-R_MIN)*n*n*sin(n*theta)/r &
           + ((r-R_MAX)*(r-R_MIN)*sin(n*theta) &
           + (r-R_MAX)*r*sin(n*theta) + (r-R_MIN)*r*sin(n*theta) &
-          + 2.0_f64*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
+          + 2.0_8*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
           + r*sin(n*theta))*r)/r
 
   end function f_sin
@@ -661,7 +716,7 @@ contains
     integer :: n = N_MOD 
     
     r = eta1 + R_MIN
-    theta = eta2 * 2.0_f64 * sll_pi
+    theta = eta2 * 2.0_8 * sll_pi
 
     u_sin_der2 = n*(r - R_MAX)*(r - R_MIN)*r*cos(n*theta)
 

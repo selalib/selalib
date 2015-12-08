@@ -23,10 +23,16 @@
 !>
 !> http://www.phy.ornl.gov/csep/CSEP/CORNELL/TUTORIAL/PLOTMTV/OVERVIEW.html
 module sll_m_plotmtv
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_plotmtv_write
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Create the mtv file to plot a structured mesh (cartesian or curvilinear)
 interface sll_plotmtv_write

@@ -1,16 +1,47 @@
 !>Unit test program for xdmf outputs
 program test_io
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-  use sll_m_xdmf
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
-  use sll_m_constants
-  use sll_m_utilities, only: int2string
 
+  use hdf5, only: &
+    hid_t
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_write_array
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_plot_f, &
+    sll_xdmf_close, &
+    sll_xdmf_corect2d_nodes, &
+    sll_xdmf_corect3d_nodes, &
+    sll_xdmf_curv2d_nodes, &
+    sll_xdmf_curv3d_nodes, &
+    sll_xdmf_open, &
+    sll_xdmf_rect2d_nodes, &
+    sll_xdmf_rect3d_nodes, &
+    sll_xdmf_write_array
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_close, &
+    sll_xml_file_create
+
+#ifndef NOHDF5
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+#endif
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !==============================================================================
 ! Run tests
