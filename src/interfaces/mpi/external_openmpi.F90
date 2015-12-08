@@ -2,8 +2,8 @@
   external :: &
 #if OMPI_V_MINOR < 8
     mpi_bcast,      &
-#endif
     mpi_allgather,  &
+#endif
     mpi_allgatherv, &
     mpi_allreduce,  &
     mpi_alltoall,   &
