@@ -1,6 +1,7 @@
 #!/bin/bash
 source /etc/profile.d/modules.sh
-module load mpi
+module purge
+module load mpi/mpich-x86_64
 rm -rf build
 mkdir build
 cd build; {
