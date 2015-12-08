@@ -1,9 +1,38 @@
 program collective_test
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_collective
+#include "sll_working_precision.h"
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_allgather, &
+    sll_collective_allgatherv, &
+    sll_collective_allreduce_logical, &
+    sll_collective_allreduce_real32, &
+    sll_collective_alltoall_int, &
+    sll_collective_alltoallv_int_simple, &
+    sll_collective_alltoallv_real, &
+    sll_collective_barrier, &
+    sll_collective_bcast, &
+    sll_collective_gather, &
+    sll_collective_gatherv_real, &
+    sll_collective_globalsum, &
+    sll_collective_reduce_int, &
+    sll_collective_reduce_logical, &
+    sll_collective_reduce_real32, &
+    sll_collective_scatter, &
+    sll_collective_scatterv_real, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_mpi, only: &
+    mpi_land, &
+    mpi_sum
+
   implicit none
-  intrinsic :: int
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! NOTE: some poor choices were made when implementing this test. For example,
   ! the sendbuf, recvbuf, etc. arrays are continually allocated and

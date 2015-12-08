@@ -1,31 +1,89 @@
 module sll_m_sim_bsl_vp_2d2v_cart_multipatch
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes
-  use sll_m_scalar_field_2d_multipatch
-  use sll_m_general_coordinate_elliptic_solver_multipatch
-  use sll_m_coordinate_transformation_multipatch
-  use sll_m_distribution_function_4d_multipatch
-!  use sll_m_collective
-!  use sll_m_remapper
-!  use sll_m_constants
-  use sll_m_cubic_spline_interpolator_1d
-!  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_sim_base
-!  use sll_m_cartesian_meshes
-  use sll_m_parallel_array_initializer
-!  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gnuplot_parallel
-  use sll_m_general_coordinate_elliptic_solver
-  use sll_m_common_array_initializers
-!  use sll_m_scalar_field_2d_base
-!  use sll_m_scalar_field_2d
-!  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_m_timer
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_collective_reduce_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_4d
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_coordinate_transformation_2d_nurbs
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_distribution_function_4d_multipatch, only: &
+    compute_charge_density_multipatch, &
+    sll_distribution_function_4d_multipatch, &
+    sll_new_distribution_function_4d_multipatch
+
+  use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
+    factorize_mat_es_mp, &
+    general_coordinate_elliptic_solver_mp, &
+    new_general_elliptic_solver_mp, &
+    sll_solve_mp
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array_1d, &
+    sll_hdf5_write_array_2d
+
+  use sll_m_remapper, only: &
+    layout_2d, &
+    layout_4d, &
+    remap_plan_2d_comp64, &
+    remap_plan_2d_real64, &
+    remap_plan_4d_real64, &
+    sll_delete
+
+  use sll_m_scalar_field_2d, only: &
+    two_var_parametrizable_function
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    new_scalar_field_multipatch_2d, &
+    sll_scalar_field_multipatch_2d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_timer, only: &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    is_even, &
+    sll_new_file_id
+
+  use sll_mpi, only: &
+    mpi_sum
+
   implicit none
+
+  public :: &
+    initialize_4d_qns_gen_mp, &
+    run_4d_qns_general_mp, &
+    sll_delete, &
+    sll_simulation_4d_qns_general_multipatch
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general_multipatch
      ! Parallel environment parameters

@@ -5,20 +5,52 @@
 !> depends on sll_m_remapper
 module sll_m_poisson_3d_periodic_par
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  
-  use sll_m_utilities, only : &
-       is_power_of_two, is_even
-  use sll_m_fft
-  use sll_m_collective
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_remapper
+  use sll_m_collective, only: &
+    sll_collective_t, &
+    sll_get_collective_size
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    compute_local_sizes, &
+    get_layout_collective, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_remap_plan, &
+    remap_plan_3d_comp64, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    is_even, &
+    is_power_of_two
 
   implicit none
+
+  public :: &
+    delete_poisson_3d_periodic_plan_par, &
+    new_poisson_3d_periodic_plan_par, &
+    poisson_3d_periodic_plan_par, &
+    solve_poisson_3d_periodic_par
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to solve Poisson equation on 3d mesh with periodic boundary
   !> conditions. Solver is parallel and numerical method is based on fft 

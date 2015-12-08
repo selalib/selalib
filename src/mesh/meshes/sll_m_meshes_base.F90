@@ -1,7 +1,17 @@
 module sll_m_meshes_base
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_mesh_1d_base, &
+    sll_mesh_2d_base, &
+    sll_mesh_3d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 1D logical mesh
   type, abstract :: sll_mesh_1d_base

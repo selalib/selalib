@@ -16,13 +16,18 @@
 !**************************************************************
 
 program test_poisson_1d_polar_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_poisson_1d_polar_solver
-!use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_poisson_1d_base, only: &
+    sll_poisson_1d_base
+
+  use sll_m_poisson_1d_polar_solver, only: &
+    new_poisson_1d_polar_solver
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_poisson_1d_base), pointer :: poisson 
   sll_real64 :: err

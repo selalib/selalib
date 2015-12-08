@@ -1,10 +1,17 @@
 module sll_m_errors
 
-  use, intrinsic :: iso_fortran_env, only: error_unit
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use iso_fortran_env, only: &
+    error_unit
+
   implicit none
 
-  public :: sll_error_handler, sll_warning_handler
+  public :: &
+    sll_error_handler, &
+    sll_warning_handler
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

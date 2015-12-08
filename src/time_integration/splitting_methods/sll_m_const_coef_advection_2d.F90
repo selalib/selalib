@@ -1,13 +1,25 @@
 !> @ingroup operator_splitting
 !> @brief Implements split operators for constant coefficient advection
 module sll_m_const_coef_advection_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
+#include "sll_working_precision.h"
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    initialize_operator_splitting, &
+    operator_splitting
 
   implicit none
+
+  public :: &
+    const_coef_advection_2d, &
+    new_const_coef_advection_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 
   !> Simple operator splitting type for 2D constant coefficient advection

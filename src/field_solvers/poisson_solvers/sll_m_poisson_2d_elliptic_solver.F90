@@ -24,19 +24,53 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_elliptic_solver
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-!use sll_m_boundary_condition_descriptors
-  use sll_m_poisson_2d_base
-  use sll_m_general_coordinate_elliptic_solver
-  use sll_m_scalar_field_2d_base
-  use sll_m_scalar_field_2d
-  use sll_m_cubic_spline_interpolator_2d
-  use iso_fortran_env, only: output_unit
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    factorize_mat_es_prototype, &
+    general_coordinate_elliptic_solver, &
+    new_general_elliptic_solver_prototype, &
+    set_rho_coefficients_coordinates_elliptic_eq_prototype, &
+    solve_general_coordinates_elliptic_eq_prototype
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_elliptic_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_NO_SOLVE_ELLIPTIC_SOLVER = 0 
   sll_int32, parameter :: SLL_SOLVE_ELLIPTIC_SOLVER = 1 

@@ -1,10 +1,18 @@
 module sll_m_ode_solvers
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!#include "sll_field_2d.h"
-  
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    compact_ode, &
+    implicit_ode_nonuniform, &
+    periodic_ode
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   integer, parameter :: PERIODIC_ODE = 0, COMPACT_ODE = 1
 

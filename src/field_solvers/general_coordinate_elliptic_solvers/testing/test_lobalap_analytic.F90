@@ -1,15 +1,39 @@
 program test_lobalap
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_common_coordinate_transformations
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  !use sll_m_map_function, only: set_map_function
-  use sll_m_lobatto_poisson
-  use sll_m_dg_fields
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete, &
+    sll_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  use sll_m_lobatto_poisson, only: &
+    lobatto_poisson_solver, &
+    sll_create, &
+    sll_solve, &
+    sll_delete
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(lobatto_poisson_solver)                          :: solver
   type(sll_cartesian_mesh_2d), pointer                  :: mesh

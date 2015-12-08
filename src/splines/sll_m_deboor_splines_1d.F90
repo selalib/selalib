@@ -1,19 +1,34 @@
 module sll_m_deboor_splines_1d
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-use sll_m_boundary_condition_descriptors
+! use F77_deboor, only: &
+!   banfac, &
+!   banslv
 
-implicit none 
+  implicit none
+
+  public :: &
+    bsplvb, &
+    bsplvd, &
+    bvalue, &
+    deboor_type, &
+    interv, &
+    splint, &
+    splint_der
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !this derived type is created to avoid the save attribute you found
 !in module deboor splines 1d
 !Some deboor functions are clone copied because we don't want to have
 !side effects with general coordinates elliptic solver that uses
 !module deboor splines
-type, public :: deboor_type
+type :: deboor_type
    sll_int32 :: ilo = 1
    sll_int32 :: j   = 1
    sll_real64, dimension(20) :: deltal

@@ -1,9 +1,27 @@
 program test_fftw3
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_fftw.h"
-use iso_c_binding
-use sll_m_fftw3
 
-implicit none
+  use iso_c_binding, only: &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
+
+#ifdef FFTW_F2003
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_destroy_plan, &
+    fftw_execute_dft_c2r, &
+    fftw_execute_dft_r2c, &
+    fftw_free, &
+    fftw_measure, &
+    fftw_plan_dft_c2r_2d, &
+    fftw_plan_dft_r2c_2d
+#endif
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifdef FFTW_F2003
 

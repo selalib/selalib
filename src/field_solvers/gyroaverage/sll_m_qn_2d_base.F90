@@ -1,6 +1,14 @@
 module sll_m_qn_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_qn_2d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, abstract :: sll_qn_2d_base 
   contains

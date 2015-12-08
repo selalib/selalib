@@ -24,10 +24,20 @@
 
 !>@defgroup fields  sll_m_scalar_field_initializers_base
 module sll_m_scalar_field_initializers_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_coordinate_transformation_2d_base
 
   implicit none
+
+  public :: &
+    cell_centered_field, &
+    node_centered_field, &
+    scalar_field_2d_initializer_base, &
+    scalar_field_4d_initializer_base, &
+    scalar_field_6d_initializer_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
 

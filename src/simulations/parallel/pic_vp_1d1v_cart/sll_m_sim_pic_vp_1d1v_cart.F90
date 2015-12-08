@@ -1,49 +1,85 @@
 module sll_m_sim_pic_vp_1d1v_cart
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_errors.h"
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
 
-  use sll_m_sim_base , only: sll_simulation_base_class
-    
-  use sll_m_constants , only : sll_pi
-  
-  use sll_m_utilities , only : sll_new_file_id, int2string
-  
-  use sll_m_pic_visu  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
-    
-  use sll_m_collective , only :       sll_world_collective , sll_collective_barrier ,&
-     sll_boot_collective, sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&
-     sll_collective_globalsum_array_real64
-     
-  use sll_m_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
-  
-  use sll_m_particle_1d_description, only: sll_particle_1d_group
-  
-  use sll_m_pic_1d_field_solver    , only: pic_1d_field_solver, new_pic_1d_field_solver
-  
-  use sll_m_pic_postprocessing , only : det_landau_damping 
-  
-  use sll_m_pic_1d_particle_loading, only : & 
-         sll_initialize_intrinsic_mpi_random ,&   
-         load_particle_species ,&
-         set_loading_parameters, &
-         sll_pic1d_ensure_boundary_conditions_species  ,&
-         sll_pic1d_ensure_boundary_conditions ,&
-         sll_pic1d_ensure_periodicity  ,& 
-         control_variate_xv ,& 
-         num_species , enable_deltaf , &  ! TODO these should be read from sim
-         SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, &
-         SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS ,SLL_PIC1D_TESTCASE_QUIET ,&
-         SLL_PIC1D_TESTCASE_BUMPONTAIL
-  use sll_m_pic_1d_distribution 
-  
-  use sll_m_xdmf
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_collective_bcast_real64, &
+    sll_collective_globalsum, &
+    sll_collective_globalsum_array_comp64, &
+    sll_collective_globalsum_array_real64, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_particle_1d_description, only: &
+    sll_particle_1d_group
+
+  use sll_m_pic_1d_distribution, only: &
+    pic1d_eulerian_distribution
+
+  use sll_m_pic_1d_field_solver, only: &
+    new_pic_1d_field_solver, &
+    pic_1d_field_solver
+
+  use sll_m_pic_1d_particle_loading, only: &
+    control_variate_xv, &
+    enable_deltaf, &
+    load_particle_species, &
+    num_species, &
+    set_loading_parameters, &
+    sll_initialize_intrinsic_mpi_random, &
+    sll_pic1d_ensure_boundary_conditions, &
+    sll_pic1d_ensure_boundary_conditions_species, &
+    sll_pic1d_ensure_periodicity, &
+    sll_pic1d_testcase_bumpontail, &
+    sll_pic1d_testcase_ionbeam, &
+    sll_pic1d_testcase_ionbeam_electrons, &
+    sll_pic1d_testcase_landau, &
+    sll_pic1d_testcase_quiet
+
+  use sll_m_pic_postprocessing, only: &
+    det_landau_damping
+
+  use sll_m_pic_visu, only: &
+    distribution_xdmf, &
+    electricpotential_gnuplot_inline, &
+    energies_electrostatic_gnuplot_inline, &
+    particles_center_gnuplot_inline
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
 
   implicit none
+
+  public :: &
+    sll_delete, &
+    sll_simulation_pic1d1v_vp_periodic
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    
 !==============================================================================
   

@@ -22,18 +22,58 @@
 !> With HDF5 you can store several datasets in a single file.
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 module sll_m_hdf5_io_parallel
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-  
-use sll_mpi
-
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #ifndef NOHDF5
 
-  use hdf5
+#include "sll_assert.h"
+#include "sll_working_precision.h"
+
+  use hdf5, only: &
+    h5dclose_f, &
+    h5dcreate_f, &
+    h5dget_space_f, &
+    h5dopen_f, &
+    h5dread_f, &
+    h5dwrite_f, &
+    h5f_acc_rdonly_f, &
+    h5f_acc_trunc_f, &
+    h5fcreate_f, &
+    h5fd_mpio_collective_f, &
+    h5fopen_f, &
+    h5open_f, &
+    h5p_dataset_create_f, &
+    h5p_dataset_xfer_f, &
+    h5p_file_access_f, &
+    h5pclose_f, &
+    h5pcreate_f, &
+    h5pset_chunk_f, &
+    h5pset_dxpl_mpio_f, &
+    h5pset_fapl_mpio_f, &
+    h5s_select_and_f, &
+    h5s_select_set_f, &
+    h5sclose_f, &
+    h5screate_simple_f, &
+    h5sselect_hyperslab_f, &
+    h5t_native_double, &
+    hid_t, &
+    hsize_t, &
+    hssize_t
+
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close !< Close HDF5 file (parallel version unchanged)
+    sll_hdf5_file_close
+
+  use sll_mpi, only: &
+    mpi_info_null
 
   implicit none
+
+  public :: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Create new HDF5 file
   interface sll_hdf5_file_create

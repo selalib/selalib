@@ -23,45 +23,53 @@
 !> and prevent from too long initializations of a simulation
 
 module sll_m_dk_curv_mesh
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_utilities, only : &
-    sll_new_file_id
-
-  use sll_m_cartesian_meshes, only : &
-    sll_cartesian_mesh_2d, &
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
     new_cartesian_mesh_2d, &
     sll_cartesian_mesh_1d, &
-    new_cartesian_mesh_1d
+    sll_cartesian_mesh_2d
 
-  use sll_m_coordinate_transformation_2d_base, only : &
-    sll_coordinate_transformation_2d_base
-
-  use sll_m_coordinate_transformations_2d, only : &
-    new_coordinate_transformation_2d_analytic
-
-  use sll_m_common_coordinate_transformations, only : &
-    polar_x1, &
-    polar_x2, &
+  use sll_m_common_coordinate_transformations, only: &
+    d_sharped_geo_jac11, &
+    d_sharped_geo_jac12, &
+    d_sharped_geo_jac21, &
+    d_sharped_geo_jac22, &
+    d_sharped_geo_x1, &
+    d_sharped_geo_x2, &
     polar_jac11, &
     polar_jac12, &
     polar_jac21, &
     polar_jac22, &
-    polar_shear_x1, &
-    polar_shear_x2, &
     polar_shear_jac11, &
     polar_shear_jac12, &
     polar_shear_jac21, &
     polar_shear_jac22, &
-    D_sharped_Geo_x1, &
-    D_sharped_Geo_x2, &
-    D_sharped_Geo_jac11, &
-    D_sharped_Geo_jac12, &
-    D_sharped_Geo_jac21, &
-    D_sharped_Geo_jac22
+    polar_shear_x1, &
+    polar_shear_x2, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_utilities, only: &
+    sll_new_file_id
+
+  implicit none
+
+  public :: &
+    init_dk_curv_mesh
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 

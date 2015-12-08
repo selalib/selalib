@@ -1,13 +1,24 @@
 program test_poisson_2d_fem
-#include "sll_poisson_solvers_macros.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_poisson_solvers_macros.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-use sll_m_fem_2d
-use sll_m_fem_2d_periodic
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fem_2d, only: &
+    sll_fem_poisson_2d, &
+    sll_create, &
+    sll_solve
+
+  use sll_m_fem_2d_periodic, only: &
+    sll_fem_poisson_2d_periodic, &
+    sll_create, &
+    sll_solve
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32                           :: i
 sll_int32                           :: j

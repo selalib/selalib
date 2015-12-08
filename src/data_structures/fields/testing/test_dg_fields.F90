@@ -1,16 +1,42 @@
 program test_dg_fields
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
 
-use sll_m_dg_fields
-use sll_m_coordinate_transformation_2d_base
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformations_2d
-use sll_m_cartesian_meshes
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
 
-implicit none
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_gmsh, &
+    sll_io_gnuplot, &
+    sll_io_mtv, &
+    sll_io_xdmf
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !=====================================!
 ! Simulation parameters               !

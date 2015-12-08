@@ -16,15 +16,29 @@
 !**************************************************************
 
 module sll_m_lagrange_interpolation
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
   implicit none
+
+  public :: &
+    compact_derivative_weight, &
+    compute_stencil_plus, &
+    lagrange_interpolate, &
+    weight_product_x1
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   integer, parameter :: SLL_SIZE_STENCIL_MAX = 30
   integer, parameter :: SLL_SIZE_STENCIL_MIN = -30
 !    
-  type, public :: finite_diff_1d_plan
+  type :: finite_diff_1d_plan
     sll_real64 ::   w(SLL_SIZE_STENCIL_MIN:SLL_SIZE_STENCIL_MIN) !< weights
     sll_int32  ::   r,s       !< stencil
     sll_int32  ::   bc_type   !< SLL_PERIODIC or SLL_DIRICHLET     

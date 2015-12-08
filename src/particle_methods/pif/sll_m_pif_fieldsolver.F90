@@ -3,12 +3,23 @@
 !**************************************************************
 
 module sll_m_pif_fieldsolver
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-    use sll_m_constants
-implicit none
+  use sll_m_constants, only: &
+    sll_i1, &
+    sll_pi
+
+  implicit none
+
+  public :: &
+    diag_dot_matrix_real64, &
+    pif_fieldsolver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
     type :: pif_fieldsolver

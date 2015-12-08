@@ -2,14 +2,33 @@ program test_arbitrary_degree_splines
 !-----------------
 ! Contact: Eric Sonnendrucker
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_arbitrary_degree_splines
-  use sll_m_timer
+  use sll_m_arbitrary_degree_splines, only: &
+    arbitrary_degree_spline_1d, &
+    b_spline_derivatives_at_x, &
+    b_splines_and_derivs_at_x, &
+    b_splines_at_x, &
+    compute_b_spline_and_deriv_at_x_mm, &
+    compute_b_spline_at_x_mm, &
+    find_cell, &
+    new_arbitrary_degree_spline_1d, &
+    open_arbitrary_deg_spline, &
+    periodic_arbitrary_deg_spline, &
+    sll_delete, &
+    uniform_b_spline_derivatives_at_x, &
+    uniform_b_splines_and_derivs_at_x, &
+    uniform_b_splines_at_x
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   logical                                :: passed_test
   passed_test = .true.

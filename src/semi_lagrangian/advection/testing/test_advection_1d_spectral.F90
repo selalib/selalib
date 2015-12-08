@@ -16,16 +16,24 @@
 !**************************************************************
 
 program test_advection_1d_spectral
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base
-use sll_m_advection_1d_spectral
-use sll_m_boundary_condition_descriptors
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base_ptr
 
-!$ use omp_lib
+  use sll_m_advection_1d_spectral, only: &
+    new_spectral_1d_advector
 
-implicit none
+#ifdef _OPENMP
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
+
+#endif
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 type(sll_advection_1d_base_ptr), pointer  :: adv(:)
 

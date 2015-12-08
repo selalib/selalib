@@ -1,10 +1,23 @@
 !> @internal [example]
 program test_cartesian_meshes
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    new_cartesian_mesh_2d, &
+    new_cartesian_mesh_3d, &
+    new_cartesian_mesh_4d, &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_3d, &
+    sll_cartesian_mesh_4d, &
+    sll_delete, &
+    sll_display, &
+    operator(*)
 
-implicit none
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 type(sll_cartesian_mesh_2d), pointer :: m2d

@@ -27,19 +27,34 @@
 !!
 module sll_m_quintic_spline_interpolator_1d
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_interpolators_1d_base
-use sll_m_quintic_splines
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-implicit none
-private
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_quintic_splines, only: &
+    inspl5, &
+    splin5
+
+  implicit none
+
+  public :: &
+    set_values_at_boundary, &
+    sll_delete, &
+    sll_quintic_spline_interpolator_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Quintic spline interpolator 1d
-type, extends(sll_c_interpolator_1d), public :: sll_quintic_spline_interpolator_1d
+type, extends(sll_c_interpolator_1d) :: sll_quintic_spline_interpolator_1d
 
   sll_real64, dimension(:),   pointer  :: x          !< points position
   sll_int32                            :: n          !< number of points
@@ -83,9 +98,6 @@ interface sll_delete
    module procedure delete_1d
 end interface sll_delete
 
-public new_quintic_spline_interpolator_1d
-public sll_delete
-public set_values_at_boundary
 
 contains  ! ****************************************************************
 

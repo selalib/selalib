@@ -1,22 +1,23 @@
 program sim_bsl_dk_3d1v_curv_field_aligned
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_sim_bsl_dk_3d1v_curv_field_aligned, only : &
-    sll_t_sim_sl_dk_3d1v_curv_field_aligned
-    
-
-  use sll_m_collective, only : &
-    sll_world_collective, &
+  use sll_m_collective, only: &
     sll_boot_collective, &
     sll_get_collective_rank, &
-    sll_halt_collective
-    
-  use sll_m_timer, only : &
-    sll_time_mark, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_bsl_dk_3d1v_curv_field_aligned, only: &
+    sll_t_sim_sl_dk_3d1v_curv_field_aligned
+
+  use sll_m_timer, only: &
     sll_set_time_mark, &
-    sll_time_elapsed_since
-  
-  implicit none    
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_t_sim_sl_dk_3d1v_curv_field_aligned) :: sim
   character(len=256)                            :: filename

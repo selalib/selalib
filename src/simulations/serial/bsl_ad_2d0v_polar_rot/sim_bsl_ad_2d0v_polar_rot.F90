@@ -1,21 +1,57 @@
 program sim_bsl_ad_2d0v_polar_rot
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
-  use sll_m_common_coordinate_transformations
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_ascii_io
-  use sll_m_boundary_condition_descriptors
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_interpolators_2d_base
-  use sll_m_constants
-  use sll_m_hermite_interpolator_2d
-  use sll_m_hermite_interpolation_2d
-  use sll_m_xdmf
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_hermite_interpolation_2d, only: &
+    sll_hermite_c0, &
+    sll_hermite_dirichlet, &
+    sll_hermite_periodic
+
+  use sll_m_hermite_interpolator_2d, only: &
+    new_hermite_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_xdmf, only: &
+    sll_plot_f
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   sll_int32 :: num_cells1
@@ -328,7 +364,7 @@ program sim_bsl_ad_2d0v_polar_rot
       do i=1,num_cells1+1
         charac_feet1(i,j) = rmin+real(i-1,f64)*delta1
         charac_feet2(i,j) = (real(j-1,f64)*delta2+dt)/(2._f64*sll_pi)
-        charac_feet2(i,j) = charac_feet2(i,j)-floor(charac_feet2(i,j))
+        charac_feet2(i,j) = charac_feet2(i,j)-real(floor(charac_feet2(i,j)),f64)
         charac_feet2(i,j) = charac_feet2(i,j)*(2._f64*sll_pi)                
       enddo
     enddo

@@ -55,8 +55,18 @@
 !>          solve_cyclic_tridiag(cts, ipiv, b, n, b)
 !>
 module sll_m_tridiagonal
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-implicit none
+
+  implicit none
+
+  public :: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag, &
+    solve_cyclic_tridiag_double
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Solve tridiagonal system (double or complex)
   interface solve_cyclic_tridiag

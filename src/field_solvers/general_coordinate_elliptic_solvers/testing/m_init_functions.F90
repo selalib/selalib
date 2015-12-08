@@ -1,8 +1,63 @@
 module m_init_functions
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_constants, only: &
+    sll_pi
 
-  use sll_m_constants, only: sll_pi
+  implicit none
+
+  public :: &
+    adimension_chgt_x, &
+    adimension_chgt_y, &
+    f_cos, &
+    f_sin, &
+    func_epsi, &
+    func_four, &
+    func_one, &
+    func_zero, &
+    jac11_adimension_chgt, &
+    jac12_adimension_chgt, &
+    jac21_adimension_chgt, &
+    jac22_adimension_chgt, &
+    sol_exacte_chgt_adim, &
+    sol_exacte_chgt_dirdir, &
+    sol_exacte_chgt_dirdir_der1, &
+    sol_exacte_chgt_dirdir_der2, &
+    sol_exacte_chgt_dirper, &
+    sol_exacte_chgt_dirper_der1, &
+    sol_exacte_chgt_dirper_der2, &
+    sol_exacte_chgt_perdir, &
+    sol_exacte_chgt_perdir_der1, &
+    sol_exacte_chgt_perdir_der2, &
+    sol_exacte_chgt_perper, &
+    sol_exacte_chgt_perper_der1, &
+    sol_exacte_chgt_perper_der2, &
+    sol_exacte_dirper, &
+    sol_exacte_dirper_der1, &
+    sol_exacte_dirper_der2, &
+    sol_exacte_perdir, &
+    sol_exacte_perdir_der1, &
+    sol_exacte_perdir_der2, &
+    sol_exacte_perper, &
+    sol_exacte_perper_der1, &
+    sol_exacte_perper_der2, &
+    source_term_chgt_adim, &
+    source_term_chgt_dirdir, &
+    source_term_chgt_dirper, &
+    source_term_chgt_perdir, &
+    source_term_chgt_perper, &
+    source_term_dirper, &
+    source_term_perdir, &
+    source_term_perper, &
+    u_cos, &
+    u_cos_der1, &
+    u_cos_der2, &
+    u_sin, &
+    u_sin_der1, &
+    u_sin_der2
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

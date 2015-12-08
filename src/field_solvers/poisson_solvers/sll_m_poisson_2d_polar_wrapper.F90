@@ -35,14 +35,27 @@
 !> <b> Example </b>
 !> @snippet poisson_solvers/test_poisson_2d_polar.F90 example
 module sll_m_poisson_2d_polar_wrapper
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar, only: &
+    new_plan_poisson_polar, &
+    poisson_solve_polar, &
+    sll_plan_poisson_polar, &
+    solve_poisson_polar
+
   implicit none
+
+  public :: &
+    new_poisson_2d_polar, &
+    sll_poisson_drift_kinetic
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Classic Poisson solver
   sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
@@ -50,7 +63,7 @@ module sll_m_poisson_2d_polar_wrapper
   sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1
 
   !> Poisson solver in polar coordinates
-  type, public, extends(sll_poisson_2d_base) :: poisson_2d_polar_solver     
+  type, extends(sll_poisson_2d_base) :: poisson_2d_polar_solver     
 
     !> PLEASE ADD DOCUMENTATION
     type(sll_plan_poisson_polar), pointer :: solver
@@ -72,8 +85,6 @@ module sll_m_poisson_2d_polar_wrapper
 
   end type poisson_2d_polar_solver
 
-  public :: new_poisson_2d_polar
-  public :: SLL_POISSON_DRIFT_KINETIC
 
 contains
 

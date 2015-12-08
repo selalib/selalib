@@ -1,8 +1,14 @@
 program example_tridiag
-  use sll_m_tridiagonal
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !Declaration
   sll_real64, dimension(:), pointer     :: a
@@ -24,9 +30,9 @@ program example_tridiag
   SLL_ALLOCATE(ipiv(n),ierr)
 
   !Fill a
-  a(2:3*n-1) = 1.0
+  a(2:3*n-1) = 1.0_f64
   !Fill b
-  b(:) = 1.0
+  b(:) = 1.0_f64
   
   ! Solve ax=b and put the result in x
   ! You can change x by b for use only one vector.

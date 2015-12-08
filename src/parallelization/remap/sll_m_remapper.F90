@@ -21,27 +21,115 @@
 !> @brief
 !> Module for remapping
 module sll_m_remapper
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "sll_utilities.h"
-  use sll_m_utilities, only : is_even, is_power_of_two, int2string
-  use sll_m_collective
-  use iso_fortran_env, only: output_unit
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    collectives_are_same, &
+    sll_collective_allgather, &
+    sll_collective_allreduce, &
+    sll_collective_alltoall, &
+    sll_collective_alltoallv, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_new_collective
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_even, &
+    is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_land
 
   implicit none
+
+  public :: &
+    apply_remap_2d, &
+    apply_remap_3d, &
+    apply_remap_4d, &
+    apply_remap_5d, &
+    apply_remap_6d, &
+    compute_local_sizes, &
+    get_layout_collective, &
+    get_layout_global_size_j, &
+    get_layout_global_size_k, &
+    get_layout_global_size_l, &
+    get_layout_i_max, &
+    get_layout_i_min, &
+    get_layout_j_max, &
+    get_layout_j_min, &
+    get_layout_k_max, &
+    get_layout_k_min, &
+    get_layout_l_max, &
+    get_layout_l_min, &
+    get_layout_m_max, &
+    get_layout_m_min, &
+    get_layout_n_max, &
+    get_layout_n_min, &
+    global_to_local, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_2d_ptr, &
+    layout_3d, &
+    layout_4d, &
+    layout_4d_ptr, &
+    layout_5d, &
+    layout_6d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_2d_from_layout_4d, &
+    new_layout_3d, &
+    new_layout_3d_from_layout_4d, &
+    new_layout_4d, &
+    new_layout_5d, &
+    new_layout_6d, &
+    new_remap_plan, &
+    remap_plan_2d_comp64, &
+    remap_plan_2d_real64, &
+    remap_plan_2d_real64_ptr, &
+    remap_plan_3d_comp64, &
+    remap_plan_3d_real64, &
+    remap_plan_4d_real64, &
+    remap_plan_4d_real64_ptr, &
+    remap_plan_5d_real64, &
+    remap_plan_6d_real64, &
+    set_layout_i_max, &
+    set_layout_i_min, &
+    set_layout_j_max, &
+    set_layout_j_min, &
+    set_layout_k_max, &
+    set_layout_k_min, &
+    set_layout_l_max, &
+    set_layout_l_min, &
+    set_layout_m_max, &
+    set_layout_m_min, &
+    set_layout_n_max, &
+    set_layout_n_min, &
+    sll_delete, &
+    sll_get_num_nodes, &
+    sll_view_lims
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> @brief Index limits contained        
   !> in a given processor.
-  type, private :: box_2D
+  type :: box_2D
      sll_int32, private :: i_min, i_max
      sll_int32, private :: j_min, j_max
   end type box_2D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type, private :: box_3D
+  type :: box_3D
      sll_int32, private :: i_min, i_max
      sll_int32, private :: j_min, j_max
      sll_int32, private :: k_min, k_max
@@ -49,7 +137,7 @@ module sll_m_remapper
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type, private :: box_4D
+  type :: box_4D
      sll_int32, private :: i_min, i_max
      sll_int32, private :: j_min, j_max
      sll_int32, private :: k_min, k_max
@@ -58,7 +146,7 @@ module sll_m_remapper
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type, private :: box_5D
+  type :: box_5D
      sll_int32, private :: i_min, i_max
      sll_int32, private :: j_min, j_max
      sll_int32, private :: k_min, k_max
@@ -68,7 +156,7 @@ module sll_m_remapper
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type, private :: box_6D
+  type :: box_6D
      sll_int32, private :: i_min, i_max
      sll_int32, private :: j_min, j_max
      sll_int32, private :: k_min, k_max
@@ -84,7 +172,7 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_2D
+  type :: layout_2D
      type(sll_collective_t), pointer, private     :: collective
      sll_int32, private                           :: global_sz1 !< size
      sll_int32, private                           :: global_sz2 !< size
@@ -97,7 +185,7 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_3D
+  type :: layout_3D
      type(sll_collective_t), pointer, private     :: collective
      sll_int32, private                           :: global_sz1 !< size
      sll_int32, private                           :: global_sz2 !< size
@@ -111,7 +199,7 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_4D
+  type :: layout_4D
      type(sll_collective_t), pointer , private    :: collective
      sll_int32, private                           :: global_sz1 !< size
      sll_int32, private                           :: global_sz2 !< size
@@ -126,7 +214,7 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_5D
+  type :: layout_5D
      type(sll_collective_t), pointer , private    :: collective
      sll_int32, private                           :: global_sz1 !< size
      sll_int32, private                           :: global_sz2 !< size
@@ -142,7 +230,7 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_6D
+  type :: layout_6D
      type(sll_collective_t), pointer , private    :: collective
      sll_int32, private                           :: global_sz1 !< size
      sll_int32, private                           :: global_sz2 !< size
@@ -154,7 +242,7 @@ module sll_m_remapper
   end type layout_6D
 
 #define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
-  type, public :: name; \
+  type :: name; \
     type(layout_type), pointer :: l; \
   end type name
 
@@ -165,7 +253,7 @@ MAKE_LAYOUT_POINTER_CONTAINER( layout_5d_ptr, layout_5D )
 MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, layout_6D )
 
 #define MAKE_REMAP_POINTER_CONTAINER( name, plan_type ) \
-  type, public :: name; \
+  type :: name; \
     type(plan_type), pointer :: r; \
   end type name
 
@@ -187,7 +275,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   ! then replace the call to alltoallv by a call to alltoall.
 
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
-  type, public :: type_name;                                             \
+  type :: type_name;                                             \
      type(layout_type), pointer, private            :: initial_layout=>null();\
      type(layout_type), pointer, private            :: final_layout=>null();  \
      integer, dimension(:), pointer, private        :: send_displs=>null();   \
@@ -607,46 +695,6 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
      module procedure initialize_layout_with_distributed_6d_array
   end interface initialize_layout_with_distributed_array
 
-  public :: initialize_layout_with_distributed_array
-  public :: sll_delete
-  public :: sll_view_lims
-  public :: sll_get_num_nodes
-  public :: new_remap_plan
-  public :: compute_local_sizes
-  public :: new_layout_2d
-  public :: new_layout_3d
-  public :: new_layout_4d
-  public :: new_layout_5d
-  public :: new_layout_6d
-  public :: local_to_global
-  public :: global_to_local
-  public :: get_layout_i_min, set_layout_i_min
-  public :: get_layout_i_max, set_layout_i_max
-  public :: get_layout_j_min, set_layout_j_min
-  public :: get_layout_j_max, set_layout_j_max
-  public :: get_layout_k_min, set_layout_k_min
-  public :: get_layout_k_max, set_layout_k_max
-  public :: get_layout_l_min, set_layout_l_min
-  public :: get_layout_l_max, set_layout_l_max
-  public :: get_layout_m_min, set_layout_m_min
-  public :: get_layout_m_max, set_layout_m_max
-  public :: get_layout_n_min, set_layout_n_min
-  public :: get_layout_n_max, set_layout_n_max
-  public :: apply_remap_2d
-  public :: apply_remap_3d
-  public :: apply_remap_4d
-  public :: apply_remap_5d
-  public :: apply_remap_6d
-  public :: get_layout_collective
-  public :: new_layout_2D_from_layout_4D
-  public :: new_layout_3D_from_layout_4D
-  public :: write_to_file
-  public :: get_layout_global_size_i
-  public :: get_layout_global_size_j
-  public :: get_layout_global_size_k
-  public :: get_layout_global_size_l
-  public :: get_layout_global_size_m
-  public :: get_layout_global_size_n
 
 contains  !******************************************************************
 

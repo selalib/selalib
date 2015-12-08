@@ -1,8 +1,15 @@
 program test_fishpack
 
-use sll_m_fishpack
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_fishpack, only: &
+    cartesian_2d, &
+    cartesian_3d, &
+    fishpack_2d, &
+    fishpack_3d, &
+    polar_2d
 
-implicit none
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 integer :: l, m, n, mp1, np1
 integer :: i, j, k
 

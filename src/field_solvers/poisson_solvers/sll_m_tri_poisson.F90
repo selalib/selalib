@@ -4,15 +4,31 @@
 ! Traduit en Fortran 90 a partir de M2V ou DEGAS2D
 !
 module sll_m_tri_poisson
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-use sll_m_triangular_meshes
-use sll_m_choleski
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_choleski, only: &
+    choles, &
+    desrem
 
-private
+  use sll_m_triangular_meshes, only: &
+    sll_triangular_mesh_2d
+
+  implicit none
+
+  public :: &
+    new_triangular_poisson_2d, &
+    sll_compute_e_from_phi, &
+    sll_compute_e_from_rho, &
+    sll_compute_phi_from_rho, &
+    sll_create, &
+    sll_delete, &
+    sll_triangular_poisson_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 interface sll_create
   module procedure initialize_poisson_solver
@@ -23,12 +39,6 @@ interface sll_delete
   module procedure delete_tri_poisson
 end interface sll_delete
 
-public :: new_triangular_poisson_2d
-public :: sll_create
-public :: sll_compute_phi_from_rho
-public :: sll_compute_e_from_rho
-public :: sll_compute_e_from_phi 
-public :: sll_delete 
 
 !    Caracteristiques du maillage triangulaire:         
 !
@@ -91,7 +101,7 @@ sll_real64, parameter :: grandx = 1.d+20
 !> @details
 !> We using here P1-conformin finite element method.
 !> This program is derived from F. Assous and J. Segre code M2V.
-type, public :: sll_triangular_poisson_2d
+type :: sll_triangular_poisson_2d
 
   private
   sll_real64, dimension(:), allocatable :: vnx    !< normal vector on node

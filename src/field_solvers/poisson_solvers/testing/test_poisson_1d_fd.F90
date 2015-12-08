@@ -3,14 +3,26 @@
 #endif
 
 program unit_test_poisson_1d_fd
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-    use sll_m_poisson_1d_fd
-    use sll_m_cartesian_meshes
-    use sll_m_constants
+#include "sll_working_precision.h"
 
-    implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_constants, only: &
+    sll_kx
+
+  use sll_m_poisson_1d_fd, only: &
+    new_poisson_1d_fd, &
+    poisson_1d_fd
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     !integer    :: ierr
     sll_int    :: idx, jdx

@@ -1,8 +1,14 @@
 program test_tridiag
-  use sll_m_tridiagonal
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_real64, dimension(:), pointer :: a
   sll_real64, allocatable, dimension(:) :: x
@@ -62,7 +68,7 @@ program test_tridiag
         i = n
         b(i) = b(i) - (a(3*i)*x(1) + a(3*i-1)*x(i) + a(3*i-2)*x(i-1))
 
-        resid = 0.0
+        resid = 0.0_f64
         do i=1,n
            resid = resid + b(i)*b(i)
         end do
@@ -82,7 +88,7 @@ program test_tridiag
         call random_number(a)
         call random_number(b)
         do i=1,max_n
-          b_complex(i) = cmplx(b(i),1._f64)
+          b_complex(i) = cmplx(b(i),1._f64,kind=f64)
         enddo
  !       print *, 'array a:'
  !       print *, a(:)
@@ -105,7 +111,7 @@ program test_tridiag
         i = n
         b_complex(i) = b_complex(i) - (a(3*i)*x_complex(1) + a(3*i-1)*x_complex(i) + a(3*i-2)*x_complex(i-1))
 
-        resid_complex = 0.0
+        resid_complex = cmplx(0.0,0.0, kind=f64)
         do i=1,n
            resid_complex = resid_complex + b_complex(i)*conjg(b_complex(i))
         end do
