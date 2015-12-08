@@ -3,7 +3,6 @@
 #if OMPI_V_MINOR < 8
     mpi_bcast,      &
     mpi_allgather,  &
-#endif
     mpi_allgatherv, &
     mpi_allreduce,  &
     mpi_alltoall,   &
@@ -18,4 +17,5 @@
     mpi_recv,       &
     mpi_send,       &
     mpi_sendrecv
+#endif
 #endif
