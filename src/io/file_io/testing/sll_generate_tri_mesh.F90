@@ -16,7 +16,7 @@ integer, parameter :: iout = 6
 
 integer :: nmxsd   ! nb de sous domaines references
 
-logical :: PERIODIC_BC = .false.
+!logical :: PERIODIC_BC = .false.
 
 
 CONTAINS
