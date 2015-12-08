@@ -28,7 +28,7 @@ fedora-openmpi:
   tags:
     - fedora
 
-fedora-openmpi:
+fedora-mpich:
   stage: ctest
   script: 
     - "scripts/fedora-mpich-ci.sh"
