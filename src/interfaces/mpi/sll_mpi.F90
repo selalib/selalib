@@ -124,32 +124,11 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
-#ifndef HOMEBREW
-  external ::       &
 #ifdef __INTEL_COMPILER
-    mpi_iallreduce, &
-    mpi_cart_coords,     &
-    mpi_cart_create,     &
-    mpi_cart_get,        &
-    mpi_dims_create,     &
-#endif /* __INTEL_COMPILER */
-    mpi_bcast,      &
-    mpi_allgather,  &
-    mpi_allgatherv, &
-    mpi_allreduce,  &
-    mpi_alltoall,   &
-    mpi_alltoallv,  &
-    mpi_gather,     &
-    mpi_gatherv,    &
-    mpi_scatter,    &
-    mpi_scatterv,   &
-    mpi_isend,      &
-    mpi_irecv,      &
-    mpi_reduce,     &
-    mpi_recv,       &
-    mpi_send,       &
-    mpi_sendrecv!,   &
-#endif /* HOMEBREW */
+include "external_intel.F90"
+#else
+include "external_openmpi.F90"
+#endif
 
 !-----------------------------------------------------------------------
 end module sll_mpi
