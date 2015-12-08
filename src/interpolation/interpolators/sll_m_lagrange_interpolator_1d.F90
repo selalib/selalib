@@ -6,7 +6,13 @@
 module sll_m_lagrange_interpolator_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_d_one_sided, &
+    sll_d_halo, &
+    sll_periodic
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
