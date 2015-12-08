@@ -67,7 +67,9 @@ FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3
 #ENDIF()
 
 IF(USE_MKL)
-   MESSAGE("WARNING: Intel MKL wrappers to FFTW in use. F2003 interface not available, falling back to FFTW F77 interface...")
+   IF(FFTW_F2003)
+      MESSAGE("WARNING: Intel MKL wrappers to FFTW in use. F2003 interface not available, falling back to FFTW F77 interface...")
+   ENDIF()
    FIND_PATH(FFTW_INCLUDE_DIRS NAMES fftw3.f 
                               HINTS $ENV{MKLROOT}/include
                               PATH_SUFFIXES fftw)
