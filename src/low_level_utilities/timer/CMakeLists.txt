@@ -1,5 +1,5 @@
 ADD_LIBRARY( sll_timer STATIC sll_m_timer.F90 )
-ADD_DEPENDENCIES(sll_time sll_working_precision)
+ADD_DEPENDENCIES(sll_timer sll_working_precision)
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
