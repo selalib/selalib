@@ -7,9 +7,9 @@ else()
 endif()
 
 # Specific operations for OpenMPI
-if( MPI_LIB EQUAL "openmpi" )
+if( ${MPI_LIB} STREQUAL "openmpi" )
   execute_process( COMMAND ompi_info OUTPUT_VARIABLE OMPI_INFO )
-  string( REGEX MATCH "Open MPI: ([0-9])\\.([0-9])\\.([0-9])" OMPI_VERSION ${OMPI_INFO} )
+  string( REGEX MATCH "Open MPI: ([0-9]+)\\.([0-9]+)\\.([0-9]+)" OMPI_VERSION ${OMPI_INFO} )
   set( OMPI_V_MAJOR ${CMAKE_MATCH_1} )
   set( OMPI_V_MINOR ${CMAKE_MATCH_2} )
   set( OMPI_V_REVSN ${CMAKE_MATCH_3} )
