@@ -16,12 +16,20 @@
 !**************************************************************
 
 program test_characteristics_1d_explicit_euler
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_base
-use sll_m_characteristics_1d_explicit_euler
-use sll_m_boundary_condition_descriptors
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    new_explicit_euler_1d_charac
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_characteristics_1d_base), pointer :: euler 
   
@@ -82,7 +90,7 @@ implicit none
   
   do i=1,Npts   
     tmp = input(i)-dt*A(i)
-    tmp = tmp-floor(tmp)
+    tmp = tmp-real(floor(tmp),f64)
     tmp=abs(tmp-output(i))
     if(tmp>err)then
         err=tmp

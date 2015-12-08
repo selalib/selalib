@@ -1,11 +1,14 @@
 program test_particle_group_1d2v
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_particle_group_1d2v
+  use sll_m_particle_group_1d2v, only: &
+    sll_new_particle_group_1d2v, &
+    sll_particle_group_1d2v
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   
   class(sll_particle_group_1d2v), pointer :: particle_group

@@ -1,12 +1,68 @@
 module sll_m_common_array_initializers
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_working_precision.h"
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_constants, only: &
+    sll_pi
 
   implicit none
+
+  public :: &
+    sll_beam_initializer_2d, &
+    sll_bump_on_tail_initializer_2d, &
+    sll_constant_time_initializer_1d, &
+    sll_cos_bell0_initializer_2d, &
+    sll_cos_bell_initializer_2d, &
+    sll_cos_sin_initializer_2d, &
+    sll_diocotron_initializer_2d, &
+    sll_diocotron_initializer_2d2, &
+    sll_dsg_2d, &
+    sll_galaxy_1d_xvx_initializer_v1v2x1x2, &
+    sll_galaxy_2d_initializer_v1v2x1x2, &
+    sll_gaussian_beam_initializer_4d, &
+    sll_gaussian_initializer_2d, &
+    sll_khp1_2d, &
+    sll_landau_1d_xvx_initializer_v1v2x1x2, &
+    sll_landau_1d_yvy_initializer_v1v2x1x2, &
+    sll_landau_2d_initializer_v1v2x1x2, &
+    sll_landau_initializer_2d, &
+    sll_landau_initializer_4d, &
+    sll_landau_mode_initializer_4d, &
+    sll_landau_mode_initializer_cos_sum_4d, &
+    sll_one_initializer_2d, &
+    sll_periodic_gaussian_initializer_4d, &
+    sll_rotation_a1_exact_charac_2d, &
+    sll_rotation_a1_initializer_2d, &
+    sll_rotation_a2_exact_charac_2d, &
+    sll_rotation_a2_initializer_2d, &
+    sll_rotation_phi_initializer_2d, &
+    sll_scalar_initializer_1d, &
+    sll_scalar_initializer_2d, &
+    sll_scalar_initializer_4d, &
+    sll_sdf_a1_exact_charac_2d, &
+    sll_sdf_a1_initializer_2d, &
+    sll_sdf_a2_exact_charac_2d, &
+    sll_sdf_a2_initializer_2d, &
+    sll_sdf_phi_initializer_2d, &
+    sll_sdf_time_initializer_1d, &
+    sll_test_vx_transport_initializer_v1v2x1x2, &
+    sll_test_vy_transport_initializer_v1v2x1x2, &
+    sll_test_x_transport_initializer_v1v2x1x2, &
+    sll_test_xvx_transport_initializer_v1v2x1x2, &
+    sll_test_y_transport_initializer_v1v2x1x2, &
+    sll_test_yvy_transport_initializer_v1v2x1x2, &
+    sll_translation_a1_exact_charac_2d, &
+    sll_translation_a1_initializer_2d, &
+    sll_translation_a2_exact_charac_2d, &
+    sll_translation_a2_initializer_2d, &
+    sll_translation_phi_initializer_2d, &
+    sll_two_stream_instability_initializer_2d, &
+    sll_twostream_1d_xvx_initializer_v1v2x1x2
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! The functions specified here are meant to have the specific signature
   ! described in the sll_m_parallel_array_initializer. Else, they could

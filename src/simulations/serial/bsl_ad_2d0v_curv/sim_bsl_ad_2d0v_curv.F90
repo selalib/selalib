@@ -1,7 +1,14 @@
 program sim_bsl_ad_2d0v_curv
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_ad_2d0v_curv
+
+  use sll_m_sim_bsl_ad_2d0v_curv, only: &
+    delete_analytic_field_2d_curvilinear, &
+    new_analytic_field_2d_curvilinear, &
+    sll_simulation_2d_analytic_field_curvilinear
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   class(sll_simulation_2d_analytic_field_curvilinear), pointer :: sim  
   character(len=256) :: filename
   character(len=256) :: filename_local

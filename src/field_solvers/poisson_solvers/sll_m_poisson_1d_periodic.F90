@@ -21,19 +21,32 @@
 !> transform.
 module sll_m_poisson_1d_periodic
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
+! use F77_fftpack, only: &
+!   dfftb, &
+!   dfftf, &
+!   dffti
+
+  use sll_m_constants, only: &
+    sll_pi
 
   implicit none
+
+  public :: &
+    initialize, &
+    new, &
+    poisson_1d_periodic, &
+    solve
+
   private
-  public :: initialize, new, solve
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Solver data structure
-  type, public :: poisson_1d_periodic
+  type :: poisson_1d_periodic
      sll_int32                         :: nc_eta1 !< number of cells
      sll_real64                        :: eta1_min !< left corner
      sll_real64                        :: eta1_max !< right corner

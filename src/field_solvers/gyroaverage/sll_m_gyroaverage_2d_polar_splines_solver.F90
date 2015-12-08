@@ -18,12 +18,30 @@
 
 
 module sll_m_gyroaverage_2d_polar_splines_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_gyroaverage_2d_base
-use sll_m_gyroaverage_2d_polar
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar, only: &
+    compute_gyroaverage_points_polar_spl, &
+    compute_gyroaverage_points_polar_with_invar_spl, &
+    compute_gyroaverage_pre_compute_polar_spl, &
+    compute_gyroaverage_pre_compute_polar_spl_fft, &
+    new_plan_gyroaverage_polar_splines, &
+    pre_compute_gyroaverage_polar_spl, &
+    pre_compute_gyroaverage_polar_spl_fft, &
+    sll_plan_gyroaverage_polar
+
+  implicit none
+
+  public :: &
+    new_gyroaverage_2d_polar_splines_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type,extends(sll_gyroaverage_2d_base) :: gyroaverage_2d_polar_splines_solver     

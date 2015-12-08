@@ -18,20 +18,52 @@
 
 
 module sll_m_qn_2d_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_timer
-  use sll_m_gnuplot
-  use sll_m_gyroaverage_utilities
+! use F77_fftpack, only: &
+!   zfftb, &
+!   zfftf, &
+!   zffti
+
+! use F77_lapack, only: &
+!   zgetrf, &
+!   zgetri
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_gyroaverage_utilities, only: &
+    compute_shape_circle, &
+    zero_bessel_dir_dir
 
   implicit none
+
+  public :: &
+    compute_error, &
+    compute_gamma0, &
+    compute_gamma0_quadrature, &
+    compute_splines_coefs_matrix_nat_1d, &
+    compute_splines_coefs_matrix_per_1d, &
+    contribution_spl, &
+    initialize_mu_quadr_for_phi, &
+    localize_polar, &
+    matrix_product_compf, &
+    new_plan_qn_polar_splines, &
+    precompute_gyroaverage_index, &
+    precompute_inverse_qn_matrix_polar_splines, &
+    sll_plan_qn_polar, &
+    solve_qn_polar_splines, &
+    splcoefnat1d0old, &
+    splcoefper1d0old, &
+    test_solve_qn_polar_splines
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type sll_plan_qn_polar
      

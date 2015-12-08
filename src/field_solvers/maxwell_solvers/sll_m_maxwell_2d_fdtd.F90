@@ -40,13 +40,20 @@
 !>
 module sll_m_maxwell_2d_fdtd
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_m_maxwell_solvers_base
-implicit none
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_maxwell_2d_fdtd, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d with FDTD scheme
 interface sll_create
@@ -66,11 +73,10 @@ interface sll_solve_faraday
  module procedure ampere_2d_fdtd
 end interface sll_solve_faraday
 
-public :: sll_create, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
-type, public :: sll_maxwell_2d_fdtd
+type :: sll_maxwell_2d_fdtd
   private
   sll_int32  :: nc_eta1      !< x cells number
   sll_int32  :: nc_eta2      !< y cells number
@@ -92,7 +98,6 @@ type, public :: sll_maxwell_2d_fdtd
   sll_real64 :: dy           !< step size along dimension 2
 end type sll_maxwell_2d_fdtd
 
-private
 
 contains
 

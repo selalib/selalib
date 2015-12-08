@@ -7,18 +7,35 @@
 !> This module uses FFTPACK library
 module sll_m_poisson_2d_periodic_fftpack
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
+! use F77_fftpack, only: &
+!   dfftb, &
+!   dfftf, &
+!   dffti, &
+!   zfftb, &
+!   zfftf, &
+!   zffti
 
-implicit none
-private
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+
+  public :: &
+    initialize, &
+    new, &
+    poisson_2d_periodic_fftpack, &
+    solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> fft type use to do fft with fftpack library
-type, public :: fftclass
+type :: fftclass
    sll_real64, dimension(:), pointer :: coefc !< data for complex fft
    sll_real64, dimension(:), pointer :: work  !< work data for fft
    sll_real64, dimension(:), pointer :: workc !< workc complex
@@ -30,7 +47,7 @@ end type fftclass
 
 !> Object with data to solve Poisson equation on 2d domain with
 !> periodic boundary conditions
-type, public :: poisson_2d_periodic_fftpack
+type :: poisson_2d_periodic_fftpack
   sll_int32   :: nc_x  !< number of cells direction x
   sll_int32   :: nc_y  !< number of cells direction y
   sll_real64  :: x_min !< left corner direction x
@@ -78,7 +95,6 @@ end interface
 !PN    module procedure doubfftinv,  doubcfftinv
 !PN end interface
 
-public :: initialize, new, solve, delete
 
 contains
 

@@ -6,9 +6,16 @@
 !> @todo
 !> delete function for this type
 module sll_m_interpolators_1d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_boundary_condition_descriptors
+
   implicit none
+
+  public :: &
+    sll_c_interpolator_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>Abstract class for 1D interpolation and reconstruction
   type, abstract :: sll_c_interpolator_1d

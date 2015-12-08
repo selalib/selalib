@@ -3,9 +3,21 @@
  !> @brief Descriptors for particle methods
  !> @details Should be replaced by sll_m_descriptors
 module sll_m_particle_method_descriptors
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_collisions_none, &
+    sll_controlvariate_maxwellian, &
+    sll_controlvariate_none, &
+    sll_controlvariate_standard, &
+    sll_moment_match_initial, &
+    sll_moment_match_none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !-------------- CONTROL VARIATE / DELTA F -------------------------
   !> Descriptors concerning simulations with control variate

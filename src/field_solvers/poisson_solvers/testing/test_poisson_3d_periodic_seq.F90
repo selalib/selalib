@@ -15,13 +15,21 @@
 !***************************************************************************
 
 program test_poisson_3d_periodic_seq
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_poisson_3d_periodic_seq
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_3d_periodic_seq, only: &
+    delete_poisson_3d_periodic_plan_seq, &
+    new_poisson_3d_periodic_plan_seq, &
+    poisson_3d_periodic_plan_seq, &
+    solve_poisson_3d_periodic_seq
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32  :: nx, ny, nz
   sll_real64 :: Lx, Ly, Lz

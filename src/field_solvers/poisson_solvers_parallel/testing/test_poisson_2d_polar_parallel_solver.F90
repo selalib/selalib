@@ -16,18 +16,41 @@
 !**************************************************************
 
 program unit_test_poisson_2d_polar_parallel_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_poisson_2d_polar_parallel_solver
-  !use sll_m_boundary_condition_descriptors
-  use sll_m_collective
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_gnuplot_parallel
+#include "sll_working_precision.h"
 
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
 
-implicit none
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_2d_parallel
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_parallel_solver, only: &
+    new_poisson_2d_polar_parallel_solver
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_poisson_2d_base), pointer :: poisson 
   sll_int32 :: psize

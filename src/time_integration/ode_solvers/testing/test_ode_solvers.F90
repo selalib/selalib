@@ -1,10 +1,18 @@
 program test_ode_solvers
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_ode_solvers
-  use sll_m_constants
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_ode_solvers, only: &
+    compact_ode, &
+    implicit_ode_nonuniform, &
+    periodic_ode
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32 :: i, ncells, ierr, order
   sll_real64 :: xmin, xmax, deltax, deltat, x, error, a
@@ -76,7 +84,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(xmin+modulo(2.0_f64*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
      !print*, i, x*exp(-deltat**2/2), xout(i)
   end do
   print*,'     error=', error
@@ -87,7 +95,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(xmin+modulo(2.0_f64*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error
@@ -151,7 +159,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error, abs(modulo(x*exp(-deltat**2/2), xmax-xmin) - xout(i)))
+     error = max(error, abs(modulo(x*exp(-deltat**2/2.0_f64), xmax-xmin) - xout(i)))
      !print*, i, modulo(xmin+(i-1)*deltax - deltat, xmax-xmin), xout(i)
   end do
   print*,'     error=', error
@@ -168,7 +176,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
+     error = max(error,abs(2.0_f64*atan(tan(x/2)*exp(-deltat))-xout(i)))
   end do
   print*,'     error=', error
 
@@ -178,7 +186,7 @@ print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
+     error = max(error,abs(2.0_f64*atan(tan(x/2.0_f64)*exp(-deltat))-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error

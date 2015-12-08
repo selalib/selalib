@@ -30,11 +30,17 @@
 !Ondřej Čertík
 
 program main
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_constants, only : &
-       sll_pi
-  use test_fornberg
-  use sll_m_fornberg
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fornberg, only: &
+    apply_fd
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: n_pts = 65
   sll_int32, parameter  :: maxorder = 1

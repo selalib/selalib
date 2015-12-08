@@ -1,14 +1,39 @@
 !> @ingroup parallel_utilities
 
 module sll_m_buffer_loader_utilities
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_collective
-use sll_m_remapper
+  use sll_m_collective, only: &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size
 
-implicit none
+  use sll_m_remapper, only: &
+    get_layout_collective, &
+    get_layout_i_max, &
+    get_layout_i_min, &
+    get_layout_j_max, &
+    get_layout_j_min, &
+    get_layout_k_max, &
+    get_layout_k_min, &
+    layout_2d, &
+    layout_3d
+
+  implicit none
+
+  public :: &
+    compute_displacements_array_2d, &
+    load_buffer32_2d, &
+    load_buffer_2d, &
+    load_buffer_3d, &
+    receive_counts_array_2d, &
+    unload_buffer_2d, &
+    unload_buffer_3d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

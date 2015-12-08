@@ -18,14 +18,43 @@
 !> Cartesian mesh basic types
 !> @ingroup meshes
 module sll_m_cartesian_meshes
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_meshes_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_meshes_base, only: &
+    sll_mesh_1d_base, &
+    sll_mesh_2d_base, &
+    sll_mesh_3d_base
+
+  implicit none
+
+  public :: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    new_cartesian_mesh_2d, &
+    new_cartesian_mesh_3d, &
+    new_cartesian_mesh_4d, &
+    operator(*), &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d_ptr, &
+    sll_cartesian_mesh_3d, &
+    sll_cartesian_mesh_4d, &
+    sll_cell, &
+    sll_cell_margin, &
+    sll_delete, &
+    sll_display, &
+    sll_mesh_area, &
+    sll_new, &
+    tensor_product_1d_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 1D cartesian mesh
-  type, public, extends(sll_mesh_1d_base) :: sll_cartesian_mesh_1d
+  type, extends(sll_mesh_1d_base) :: sll_cartesian_mesh_1d
      sll_int32  :: num_cells
      sll_real64 :: eta_min
      sll_real64 :: eta_max
@@ -45,7 +74,7 @@ implicit none
 
 
   !> @brief 2D cartesian mesh
-  type, public, extends(sll_mesh_2d_base) :: sll_cartesian_mesh_2d
+  type, extends(sll_mesh_2d_base) :: sll_cartesian_mesh_2d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_real64 :: eta1_min   !< minimum value of eta, direction 1
@@ -66,12 +95,12 @@ implicit none
   end type sll_cartesian_mesh_2d
 
   !> 2d cartesian mesh pointer
-  type, public :: sll_cartesian_mesh_2d_ptr
+  type :: sll_cartesian_mesh_2d_ptr
      type(sll_cartesian_mesh_2d), pointer :: lm
   end type sll_cartesian_mesh_2d_ptr
 
   !> @brief 3D cartesian mesh
-  type, public, extends(sll_mesh_3d_base) :: sll_cartesian_mesh_3d
+  type, extends(sll_mesh_3d_base) :: sll_cartesian_mesh_3d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3 
@@ -96,7 +125,7 @@ implicit none
   end type sll_cartesian_mesh_3d
 
   !> 4D cartesian mesh
-  type, public :: sll_cartesian_mesh_4d
+  type :: sll_cartesian_mesh_4d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3
@@ -185,13 +214,6 @@ implicit none
      module procedure area_cartesian_mesh_4d
   end interface
   
-public sll_delete, sll_display, sll_new
-public new_cartesian_mesh_1d
-public new_cartesian_mesh_2d
-public new_cartesian_mesh_3d
-public new_cartesian_mesh_4d
-public operator(*)
-public get_node_positions
 
 
 contains

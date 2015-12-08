@@ -1,12 +1,21 @@
 module sll_m_hex_poisson
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d, &
-       new_hex_mesh_2d
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
   implicit none
+
+  public :: &
+    compute_hex_fields, &
+    hex_matrix_poisson, &
+    hex_second_terme_poisson
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !***********************************************************
   ! this module is used to solve the Poison equation on a hexagonal mesh

@@ -1,23 +1,43 @@
 program test_integration
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_rectangle_integration
-use sll_m_trapz_integration
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_fekete_integration
-use sll_m_box_splines, only: &
-     write_connectivity
-use test_function_module, only: &
-     one, &
-     test_func, &
-     one_2D, &
-     test_func_2D
-use sll_m_constants, only : &
-     sll_pi
-implicit none
+  use sll_m_box_splines, only: &
+    write_connectivity
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fekete_integration, only: &
+    fekete_order_num, &
+    fekete_points_and_weights
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_integrate_1d, &
+    gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_derivative_matrix, &
+    gauss_lobatto_integrate_1d, &
+    gauss_lobatto_points, &
+    gauss_lobatto_weights
+
+  use sll_m_rectangle_integration, only: &
+    rectangle_integrate_1d
+
+  use sll_m_trapz_integration, only: &
+    trapz_integrate_1d
+
+  use test_function_module, only: &
+    one, &
+    one_2d, &
+    test_func, &
+    test_func_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer :: i,j,n
 sll_int32 :: ierr

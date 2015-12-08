@@ -4,13 +4,27 @@
 !> @details
 !> Implements the sll_c_interpolator_1d interface.
 module sll_m_hermite_interpolator_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_interpolators_1d_base
-use sll_m_hermite_interpolation_1d
-implicit none
-private
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_hermite_interpolation_1d, only: &
+    compute_interpolants_hermite_1d, &
+    interpolate_value_hermite_1d, &
+    new_hermite_interpolation_1d, &
+    sll_hermite_interpolation_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    new_hermite_interpolator_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
 !> The hermite-based interpolator is only a wrapper around the capabilities
@@ -21,7 +35,7 @@ private
 !! Where the diverse interpolators diverge is in the way to initialize them.
 
  !> Interpolator class of Hermite 1D interpolator
- type,extends(sll_c_interpolator_1d), public :: sll_hermite_interpolator_1d
+ type,extends(sll_c_interpolator_1d) :: sll_hermite_interpolator_1d
    !> PLEASE ADD DOCUMENTATION
    type(sll_hermite_interpolation_1d), pointer :: hermite
    !> PLEASE ADD DOCUMENTATION
@@ -58,7 +72,6 @@ private
 !   module procedure delete_hi1d
 ! end interface
 
- public new_hermite_interpolator_1d
 
 contains  !**********************************************************
 

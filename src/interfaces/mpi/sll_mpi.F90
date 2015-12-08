@@ -53,14 +53,19 @@ module sll_mpi
 ! Module interface
 
   public ::              &
-    !mpi_allgather,       &
-    !mpi_allreduce,       &
-    !mpi_alltoall,        &
-    !mpi_alltoallv,       &
+    mpi_allgather,       &
+    mpi_allgatherv,      &
+    mpi_allreduce,       &
+    mpi_alltoall,        &
+    mpi_alltoallv,       &
     mpi_any_source,      &
     mpi_any_tag,         &
     mpi_barrier,         &
-    !mpi_bcast,           &
+    mpi_bcast,           &
+    mpi_cart_coords,     &
+    mpi_cart_create,     &
+    mpi_cart_get,        &
+    mpi_cart_shift,      &
     mpi_character,       &
     mpi_comm_free,       &
     mpi_comm_rank,       &
@@ -68,10 +73,14 @@ module sll_mpi
     mpi_comm_split,      &
     mpi_comm_world,      &
     mpi_complex,         &
+    mpi_dims_create,     &
     mpi_double,          &
     mpi_double_complex,  &
     mpi_double_precision,&
-    !mpi_gather,          &
+    mpi_finalize,        &
+    mpi_gather,          &
+    mpi_gatherv,         &
+    mpi_get_count,       &
     !mpi_iallreduce,      &
     mpi_in_place,        &
     mpi_info_null,       &
@@ -79,8 +88,8 @@ module sll_mpi
     mpi_init_thread,     &
     mpi_integer,         &
     mpi_integer8,        &
-    !mpi_irecv,           &
-    !mpi_isend,           &
+    mpi_irecv,           &
+    mpi_isend,           &
     mpi_land,            &
     mpi_logical,         &
     mpi_lor,             &
@@ -89,11 +98,14 @@ module sll_mpi
     mpi_prod,            &
     mpi_real,            &
     mpi_real8,           &
-    !mpi_recv,            &
-    !mpi_reduce,          &
+    mpi_recv,            &
+    mpi_reduce,          &
     mpi_request_null,    &
-    !mpi_send,            &
-    !mpi_sendrecv,        &
+    mpi_request_free,    &
+    mpi_send,            &
+    mpi_sendrecv,        &
+    mpi_scatter,         &
+    mpi_scatterv,        &
     mpi_source,          &
     mpi_status_ignore,   &
     mpi_status_size,     &
@@ -106,33 +118,39 @@ module sll_mpi
     mpi_wait,            &
     mpi_wtime
 
-#ifndef __INTEL_COMPILER
-  public ::              &
-    mpi_finalize!,        &
-    !mpi_waitall
-#endif /* __INTEL_COMPILER */
 
   private
 
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
-#ifdef __INTEL_COMPILER
+#ifndef HOMEBREW
   external ::       &
+#ifdef __INTEL_COMPILER
+    mpi_iallreduce, &
+    mpi_cart_coords,     &
+    mpi_cart_create,     &
+    mpi_cart_get,        &
+    mpi_dims_create,     &
+    mpi_finalize,        &
+#endif /* __INTEL_COMPILER */
+    mpi_bcast,      &
     mpi_allgather,  &
+    mpi_allgatherv, &
     mpi_allreduce,  &
     mpi_alltoall,   &
     mpi_alltoallv,  &
-    mpi_bcast,      &
     mpi_gather,     &
-    mpi_iallreduce, &
+    mpi_gatherv,    &
+    mpi_scatter,    &
+    mpi_scatterv,   &
     mpi_isend,      &
     mpi_irecv,      &
-    mpi_recv,       &
     mpi_reduce,     &
+    mpi_recv,       &
     mpi_send,       &
-    mpi_sendrecv
-#endif /* __INTEL_COMPILER */
+    mpi_sendrecv!,   &
+#endif /* HOMEBREW */
 
 !-----------------------------------------------------------------------
 end module sll_mpi

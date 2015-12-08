@@ -4,12 +4,21 @@
 !PN This test is dedicated for debug not for continuous integration
 program test_bsplines_2d
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_bsplines
-use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_bsplines, only: &
+    compute_bspline_2d, &
+    interpolate_array_values_2d, &
+    new_bspline_2d, &
+    sll_bspline_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32, parameter    :: nx=14
 sll_int32, parameter    :: kx=3

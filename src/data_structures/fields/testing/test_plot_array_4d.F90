@@ -1,21 +1,31 @@
 !> @internal [example]
 program unit_test_meshes
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_constants     , only: sll_pi
-use sll_m_array_plotting, only: &
-  write_projection_2d, &
-  SLL_X1X2, &
-  SLL_X1X3, &
-  SLL_X1X4, &
-  SLL_X2X3, &
-  SLL_X2X4, &
-  SLL_X3X4
+  use sll_m_array_plotting, only: &
+    sll_x1x2, &
+    sll_x1x3, &
+    sll_x1x4, &
+    sll_x2x3, &
+    sll_x2x4, &
+    sll_x3x4, &
+    write_projection_2d
 
-use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_4d, &
+    sll_delete, &
+    sll_display, &
+    operator(*)
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_cartesian_mesh_2d), pointer :: mx
 type(sll_cartesian_mesh_2d), pointer :: mv

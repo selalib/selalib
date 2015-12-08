@@ -1,9 +1,27 @@
 program unit_test_fields_multipatch
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_scalar_field_2d_multipatch
-  use sll_m_coordinate_transformation_multipatch
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    new_coordinate_transformation_multipatch_2d, &
+    sll_coordinate_transformation_multipatch_2d, &
+    sll_delete
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_coordinate_transformation_2d_nurbs
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    new_scalar_field_multipatch_2d, &
+    set_slope_mp, &
+    sll_delete, &
+    sll_scalar_field_multipatch_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T

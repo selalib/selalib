@@ -5,12 +5,21 @@
 !> box splines on a hexagonal mesh subdivided in equilateral triangles
 !> Reference : Condat2006 "Three-directional box splines"
 module sll_m_hex_pre_filters
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_hexagonal_meshes
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_hexagonal_meshes, only: &
+    sll_hex_mesh_2d
 
   implicit none
+
+  public :: &
+    pre_filter_pfir
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

@@ -1,9 +1,15 @@
 program utils_tester
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
-  use sll_m_utilities
+  use sll_m_utilities, only: &
+    byte_size, &
+    is_power_of_two, &
+    sll_factorial
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64 :: re64
   sll_real32 :: re32
@@ -14,8 +20,8 @@ program utils_tester
 
 
   ! for factorial
-  sll_int32  :: n1
-  sll_int64  :: n2
+  !sll_int32  :: n1
+  !sll_int64  :: n2
   logical    :: test_passed
   sll_int64  :: largest_int64
   sll_int64  :: largest_int32

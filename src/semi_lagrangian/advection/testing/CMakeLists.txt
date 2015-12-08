@@ -121,7 +121,7 @@
   SET_TESTS_PROPERTIES( advection_2d_tensor_product PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 
-  IF(MPI_ENABLED)
+  IF(MPI_ENABLED AND HDF5_ENABLED)
 
      #ADD_EXECUTABLE(
      #  test_aligned_translation_2d_spaghetti
@@ -145,7 +145,7 @@
        sll_utilities
        sll_fcisl)
 
-  ENDIF(MPI_ENABLED)
+  ENDIF(MPI_ENABLED AND HDF5_ENABLED)
 
   ADD_EXECUTABLE( test_rotation_2d rotation_2d.F90)
   TARGET_LINK_LIBRARIES( test_rotation_2d sll_advection)

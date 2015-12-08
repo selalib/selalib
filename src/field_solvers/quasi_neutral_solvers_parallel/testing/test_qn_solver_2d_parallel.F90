@@ -14,17 +14,45 @@
 !                                  
 !***************************************************************************
 program test_qn_solver_2d_parallel
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_collective
-  use sll_m_qn_solver_2d_parallel
-  use sll_m_boundary_condition_descriptors
-  use iso_fortran_env, only: output_unit
 
-implicit none
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_mpi, only : &
+    mpi_prod
+
+  use sll_m_qn_solver_2d_parallel, only: &
+    qn_solver_2d_parallel, &
+    new_qn_solver_2d_parallel, &
+    delete_qn_solver_2d_parallel, &
+    solve_qn_solver_2d_parallel
+
+  use sll_m_remapper, only: &
+    layout_3d, &
+    new_layout_3d, &
+    local_to_global, &
+    initialize_layout_with_distributed_array
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32                             :: BC ! Boundary_conditions
   sll_int32                             :: NP_r, NP_theta

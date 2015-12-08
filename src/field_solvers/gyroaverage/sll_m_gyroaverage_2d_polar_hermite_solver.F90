@@ -16,12 +16,29 @@
 !**************************************************************
 
 module sll_m_gyroaverage_2d_polar_hermite_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_gyroaverage_2d_base
-use sll_m_gyroaverage_2d_polar
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar, only: &
+    compute_gyroaverage_points_polar_hermite, &
+    compute_gyroaverage_points_polar_hermite_c1, &
+    compute_gyroaverage_points_polar_with_invar_hermite_c1, &
+    compute_gyroaverage_pre_compute_polar_hermite_c1, &
+    new_plan_gyroaverage_polar_hermite, &
+    pre_compute_gyroaverage_polar_hermite_c1, &
+    sll_plan_gyroaverage_polar
+
+  implicit none
+
+  public :: &
+    new_gyroaverage_2d_polar_hermite_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type,extends(sll_gyroaverage_2d_base) :: gyroaverage_2d_polar_hermite_solver     

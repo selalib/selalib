@@ -11,25 +11,34 @@
 
 module sll_m_rk_explicit
 
-#include "sll_working_precision.h"
-#include "sll_errors.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-
-  use sll_m_vector_space_base, only: &
-    sll_vector_space_base
+#include "sll_working_precision.h"
 
   use sll_m_ode_integrator_base, only: &
     sll_ode_base, &
     sll_ode_integrator_base
- 
+
+  use sll_m_vector_space_base, only: &
+    sll_vector_space_base
+
   implicit none
-!  public :: sll_fwd_euler
+
+  public :: &
+    sll_rk1e_fwd_euler, &
+    sll_rk2e_heun, &
+    sll_rk2e_midpoint, &
+    sll_rk2e_ralston, &
+    sll_rk3e_heun3, &
+    sll_rk4e_classic
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !----------------------------------------------------------------------------
   ! Explicit Euler method
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_integrator_base ) :: sll_rk1e_fwd_euler
+  type, extends( sll_ode_integrator_base ) :: sll_rk1e_fwd_euler
 
   contains
     procedure :: init  =>  init__rk1e_fwd_euler
@@ -41,7 +50,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! Explicit midpoint method
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_integrator_base ) :: sll_rk2e_midpoint
+  type, extends( sll_ode_integrator_base ) :: sll_rk2e_midpoint
 
   contains
     procedure :: init  =>  init__rk2e_midpoint
@@ -53,7 +62,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! Explicit trapezoidal rule (Heun's method)
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_integrator_base ) :: sll_rk2e_heun
+  type, extends( sll_ode_integrator_base ) :: sll_rk2e_heun
 
   contains
     procedure :: init  =>  init__rk2e_heun
@@ -65,7 +74,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! Ralston's method
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_integrator_base ) :: sll_rk2e_ralston
+  type, extends( sll_ode_integrator_base ) :: sll_rk2e_ralston
 
   contains
     procedure :: init  =>  init__rk2e_ralston
@@ -77,7 +86,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! 3rd-order method by Heun
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_integrator_base ) :: sll_rk3e_heun3
+  type, extends( sll_ode_integrator_base ) :: sll_rk3e_heun3
 
   contains
     procedure :: init  =>  init__rk3e_heun3
@@ -89,7 +98,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! The 'classic' 4th-order RK
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_integrator_base ) :: sll_rk4e_classic
+  type, extends( sll_ode_integrator_base ) :: sll_rk4e_classic
 
   contains
     procedure :: init  =>  init__rk4e_classic

@@ -1,16 +1,41 @@
 program test_tri_poisson
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_hexagonal_meshes
-use sll_m_tri_poisson
-use sll_m_triangular_meshes
-use sll_m_mesh_calculus_2d
-use sll_m_gnuplot
-use sll_m_timer
+#include "sll_working_precision.h"
 
-!----------------------------------------------------------------------
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_mark
+
+  use sll_m_tri_poisson, only: &
+    new_triangular_poisson_2d, &
+    sll_compute_e_from_phi, &
+    sll_compute_e_from_rho, &
+    sll_compute_phi_from_rho, &
+    sll_triangular_poisson_2d, &
+    sll_delete
+
+  use sll_m_triangular_meshes, only: &
+    analyze_triangular_mesh, &
+    map_to_circle, &
+    new_triangular_mesh_2d, &
+    sll_delete, &
+    sll_triangular_mesh_2d, &
+    write_triangular_mesh_mtv
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_time_mark)     ::  t0
 type(sll_time_mark)     ::  t1

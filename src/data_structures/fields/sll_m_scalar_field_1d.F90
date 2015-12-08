@@ -26,20 +26,29 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_scalar_field_1d_base
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_interpolators_1d_base
-  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_m_utilities
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gnuplot
-!  use sll_m_scalar_field_initializers_base
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_scalar_field_1d_base, only: &
+    sll_scalar_field_1d_base
+
   implicit none
+
+  public :: &
+    new_scalar_field_1d_analytic, &
+    new_scalar_field_1d_discrete, &
+    sll_scalar_field_1d_discrete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_analytic
      procedure(one_var_parametrizable_function), pointer, nopass :: func

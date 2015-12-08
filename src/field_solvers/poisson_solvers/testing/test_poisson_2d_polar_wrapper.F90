@@ -17,15 +17,22 @@
 
 !> @internal [example]
 program test_poisson_2d_polar_wrapper
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_poisson_2d_base
-use sll_m_poisson_2d_polar_wrapper
-use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann_mode_0
 
-implicit none
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_wrapper, only: &
+    new_poisson_2d_polar
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_poisson_2d_base), pointer     :: poisson 
   sll_real64                              :: err
