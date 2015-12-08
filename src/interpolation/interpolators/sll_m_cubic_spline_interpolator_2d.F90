@@ -21,14 +21,41 @@
 !> @details
 !> Implements the sll_c_interpolator_2d interface
 module sll_m_cubic_spline_interpolator_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_interpolators_2d_base
-use sll_m_cubic_splines
-implicit none
-private
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_2d, &
+    get_x1_delta, &
+    get_x1_max, &
+    get_x1_min, &
+    get_x2_delta, &
+    get_x2_max, &
+    interpolate_value_2d, &
+    interpolate_x1_derivative_2d, &
+    interpolate_x2_derivative_2d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_2d, &
+    sll_delete
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    new_cubic_spline_interpolator_2d, &
+    sll_cubic_spline_interpolator_2d, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> @brief
   !> The spline-based interpolator is only a wrapper around the capabilities
@@ -37,7 +64,7 @@ private
   !> All interpolators share a common interface with
   !> respect to their use, as described by the interpolator_2d_base class.
   !> Where the diverse interpolators diverge is in the way to initialize them.
-  type, extends(sll_c_interpolator_2d), public :: sll_cubic_spline_interpolator_2d
+  type, extends(sll_c_interpolator_2d) :: sll_cubic_spline_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: npts1
     !> PLEASE ADD DOCUMENTATION
@@ -87,8 +114,6 @@ private
      module procedure delete_sll_cubic_spline_interpolator_2d
   end interface sll_delete
 
-public new_cubic_spline_interpolator_2d
-public sll_delete
 
 contains
 

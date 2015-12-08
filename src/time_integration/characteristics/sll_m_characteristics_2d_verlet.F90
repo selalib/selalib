@@ -16,15 +16,34 @@
 !**************************************************************
 
 module sll_m_characteristics_2d_verlet
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-use sll_m_interpolators_1d_base
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_characteristics_2d_base, only: &
+    process_outside_point_periodic, &
+    process_outside_point_set_to_limit, &
+    signature_process_outside_point, &
+    sll_characteristics_2d_base
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    new_verlet_2d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_characteristics_2d_base) :: verlet_2d_charac_computer
     sll_int32                               :: Npts1

@@ -18,9 +18,25 @@
 ! example a flag like SLL_DIRICHLET_NEUMANN could indicate two BC's along
 ! a particular dimension...
 module sll_m_boundary_condition_descriptors
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_conductor, &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_interior, &
+    sll_neumann, &
+    sll_neumann_mode_0, &
+    sll_periodic, &
+    sll_set_to_limit, &
+    sll_silver_muller, &
+    sll_user_defined
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> User defined boundary condition
   sll_int32, parameter :: SLL_USER_DEFINED   = -1 

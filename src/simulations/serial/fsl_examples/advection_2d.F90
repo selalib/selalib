@@ -4,16 +4,34 @@
 !plot 'Conv_collela_rot_f3.dat' u 1:2 w lp title 'BSL', 'Conv_collela_rot_f3.dat' u 1:3 w lp title 'BSL NC', 'Conv_collela_rot_f3.dat' u 1:4 w lp title 'FSL', 'Conv_collela_rot_f3.dat' u 1:5 w lp title 'FSL NC'
 
 program test_deposit_cubic_splines
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_cubic_splines
-use sll_m_constants
-use sll_m_boundary_condition_descriptors
-use sll_m_fft
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_2d, &
+    deposit_value_2d, &
+    interpolate_value_2d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_2d
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_delete_plan, &
+    fft_new_plan_c2r_1d, &
+    fft_new_plan_r2c_1d, &
+    sll_fft_plan
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_cubic_spline_2D), pointer :: spl_bsl
 type(sll_cubic_spline_2D), pointer :: spl_fsl

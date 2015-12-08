@@ -1,15 +1,26 @@
 !test example to visualize particles
 module biot_savart
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_utilities, only : &
-       sll_new_file_id
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
+  use sll_m_utilities, only: &
+    sll_new_file_id
+
+  implicit none
+
+  public :: &
+    deplace, &
+    getrealtimer, &
+    initialize, &
+    vitesse
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> vortex circulation
 real(8) :: gam0

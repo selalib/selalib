@@ -16,11 +16,20 @@
 !**************************************************************
 
 program test_advection_1d_periodic
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_advection_1d_base
-use sll_m_advection_1d_periodic
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_periodic_interp, only: &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_advection_1d_base), pointer :: adv
   sll_real64 :: xmin

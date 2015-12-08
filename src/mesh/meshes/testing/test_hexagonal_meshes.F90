@@ -1,15 +1,19 @@
 program test_hexagonal_meshes
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d, &
-       new_hex_mesh_2d, &
-       delete
-  use sll_m_constants, only : &
-       sll_pi
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hexagonal_meshes, only: &
+    delete, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_hex_mesh_2d), pointer  :: mesh
   sll_int32                   :: num_cells

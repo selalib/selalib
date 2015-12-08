@@ -5,12 +5,20 @@
 
 module sll_m_sim_eul_vp_1d1v_cart_fe_ft
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_sim_base
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
   implicit none
+
+  public :: &
+    sll_simulation_vp1d_fourier_fem
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_vp1d_fourier_fem

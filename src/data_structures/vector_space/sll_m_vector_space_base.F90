@@ -12,19 +12,24 @@
 !------------------------------------------------------------------------------
 module sll_m_vector_space_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
   implicit none
-!  public :: sll_vector_space_base
+
+  public :: &
+    sll_vector_space_base
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   ! Abstract type definition
   !============================================================================
 
   !> @brief   Abstract base class for all vector spaces
-  type, public, abstract :: sll_vector_space_base
+  type, abstract :: sll_vector_space_base
 
   contains
     !> @name Basic operations (abstract methods)
@@ -116,7 +121,6 @@ module sll_m_vector_space_base
   end interface
 
   !++++++++++++++++++++++++++++++++++
-  private :: add__base  ! for Doxygen
   !++++++++++++++++++++++++++++++++++
 
   contains

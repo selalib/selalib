@@ -1,7 +1,17 @@
 program unit_test
-use sll_m_constants
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_constants, only: &
+    sll_c, &
+    sll_e_charge, &
+    sll_e_mass, &
+    sll_epsilon_0, &
+    sll_g, &
+    sll_mu_0, &
+    sll_pi, &
+    sll_proton_mass
 
-implicit none
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 print *,"pi=",sll_pi
 

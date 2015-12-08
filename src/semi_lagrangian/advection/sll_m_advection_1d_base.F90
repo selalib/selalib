@@ -21,10 +21,17 @@
 !> @details
 !> Solves \f$ \partial_t f + A \partial_x f = 0 \f$
 module sll_m_advection_1d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_advection_1d_base, &
+    sll_advection_1d_base_ptr
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type, abstract :: sll_advection_1d_base 
 

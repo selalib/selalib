@@ -1,15 +1,34 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 module sll_m_vp_cartesian_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_field_2d.h"
-  use sll_m_interpolators_1d_base
-  use sll_m_time_splitting
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_distribution_function, only: &
+    sll_distribution_function_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_poisson_1d_periodic, only: &
+    poisson_1d_periodic, &
+    solve
+
+  use sll_m_time_splitting, only: &
+    time_splitting
+
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type :: app_field_params
      sll_real64 :: Edrmax, tflat, tL, tR, twL, twR, t0

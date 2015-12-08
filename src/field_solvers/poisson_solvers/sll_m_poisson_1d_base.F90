@@ -6,8 +6,16 @@
 !>   - compute_phi_from_rho
 !>   - compute_e_from_rho
 module sll_m_poisson_1d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_poisson_1d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type, abstract :: sll_poisson_1d_base 
   contains

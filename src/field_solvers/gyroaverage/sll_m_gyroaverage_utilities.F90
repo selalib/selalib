@@ -1,13 +1,29 @@
 module sll_m_gyroaverage_utilities
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
-use sll_m_constants
-use sll_m_gauss_lobatto_integration
-use sll_m_gauss_legendre_integration
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points, &
+    gauss_legendre_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points, &
+    gauss_lobatto_weights
+
+  implicit none
+
+  public :: &
+    compute_init_f_polar, &
+    compute_mu, &
+    compute_shape_circle, &
+    zero_bessel_dir_dir
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

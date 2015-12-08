@@ -1,7 +1,17 @@
 !> @ingroup utilities
 !> Functions to compute primitive of 1d function.
 module sll_m_primitives
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    function_to_primitive, &
+    primitive_to_function
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

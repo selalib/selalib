@@ -24,19 +24,45 @@
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
 module sll_m_xdmf_serial_blocks
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  
-  use sll_mpi
-  use sll_m_utilities
+#include "sll_working_precision.h"
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_close, &
+    sll_xml_file_create
+
+  use sll_mpi, only: &
+    mpi_comm_rank, &
+    mpi_comm_size, &
+    mpi_comm_world, &
+    mpi_integer, &
+    mpi_recv, &
+    mpi_send, &
+    mpi_status_size
+
 #ifndef NOHDF5
-  use hdf5
-  use sll_m_hdf5_io_serial
+  use hdf5, only: &
+    hid_t
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
 #endif
-  use sll_m_ascii_io
-  use sll_m_xml_io
-  
   implicit none
+
+  public :: &
+    sll_xdmf_array_2d_serial_blocks, &
+    sll_xdmf_close_serial_blocks, &
+    sll_xdmf_open_serial_blocks
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Create a new xmdf file to plot parallel array using hdf5 serial library
   interface sll_xdmf_open

@@ -4,22 +4,48 @@
 !> @details
 !> Implements the sll_m_sparse_grid_interpolator interface
 module sll_m_sparse_grid_interpolator
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_fftw.h" 
+#include "sll_working_precision.h"
+#include "sll_fftw.h"
 
-  use iso_c_binding
-  use sll_m_interpolators_1d_base
-  use sll_m_constants
-  use sll_m_periodic_interpolator_1d
-  use sll_m_lagrange_interpolation_1d
-  use sll_m_fftw3
+  use iso_c_binding, only: &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
+
+#ifdef FFTW_F2003
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_backward, &
+    fftw_execute_dft, &
+    fftw_forward, &
+    fftw_measure, &
+    fftw_plan_dft_1d
+#else
+  use sll_m_fftw3, only: &
+       fftw_backward, &
+       fftw_forward, &
+       fftw_measure
+#endif
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_periodic_interpolator_1d, only: &
+    sll_periodic_interpolator_1d
+
   implicit none
+
+  public :: &
+    sparse_grid_interpolator
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> class to hold values for hierarchical fft computations
-  type, public :: fft_hierarchical
+  type :: fft_hierarchical
      type(C_PTR)  :: fw
      type(C_PTR)  :: bw
      complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: in
@@ -49,7 +75,7 @@ module sll_m_sparse_grid_interpolator
 
 
 !> Class defining the sparse grid data structure
-  type, public :: sparse_grid_interpolator
+  type :: sparse_grid_interpolator
      sll_int32                          :: dim !< \a dim defines the dimension of the sparse grid 
      sll_real64,dimension(:), pointer    :: eta_min !< \a eta_min defines the lower bound of the computational domain
      sll_real64, dimension(:), pointer            :: eta_max !< \a eta_max defines the upper bound of the computational domain

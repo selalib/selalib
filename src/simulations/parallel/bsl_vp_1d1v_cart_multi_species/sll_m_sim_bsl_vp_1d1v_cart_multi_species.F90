@@ -26,36 +26,109 @@
 
 module sll_m_sim_bsl_vp_1d1v_cart_multi_species
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_memory.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_collective
-use sll_m_remapper
-use sll_m_buffer_loader_utilities
-use sll_m_constants
-use sll_m_cartesian_meshes  
-use sll_m_gnuplot_parallel
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_common_array_initializers
-use sll_m_parallel_array_initializer
-use sll_m_advection_1d_periodic
-use sll_m_advection_1d_non_uniform_cubic_splines
-use sll_m_fft
-use sll_m_sim_base
-use sll_m_xdmf
-use sll_m_time_splitting_coeff
-use sll_m_poisson_1d_periodic  
-use sll_m_poisson_1d_periodic_solver
-use sll_m_poisson_1d_polar_solver
-use sll_m_advection_1d_ampere
-use sll_m_primitives
-use sll_m_species
+  use sll_m_advection_1d_non_uniform_cubic_splines, only: &
+    new_non_uniform_cubic_splines_1d_advector
 
-implicit none
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create
+
+  use sll_m_cartesian_meshes, only: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d, &
+    tensor_product_1d_1d
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_poisson_1d_base, only: &
+    sll_poisson_1d_base
+
+  use sll_m_poisson_1d_periodic_solver, only: &
+    new_poisson_1d_periodic_solver
+
+  use sll_m_poisson_1d_polar_solver, only: &
+    new_poisson_1d_polar_solver
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_species, only: &
+    advection_x1, &
+    advection_x2, &
+    compute_rho, &
+    diagnostics, &
+    initialize_species, &
+    read_restart_file, &
+    set_initial_function, &
+    sll_advective, &
+    sll_conservative, &
+    species, &
+    write_f, &
+    write_restart_file
+
+  use sll_m_time_splitting_coeff, only: &
+    new_time_splitting_coeff, &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_vtv, &
+    sll_order6vp_tvt, &
+    sll_order6vp_vtv, &
+    sll_order6vpnew1_vtv, &
+    sll_order6vpnew2_vtv, &
+    sll_order6vpnew_tvt, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv, &
+    splitting_coeff
+
+  use sll_m_utilities, only: &
+    int2string, &
+    pfenvelope, &
+    sll_new_file_id
+
+#ifdef _OPENMP
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
+
+#endif
+  implicit none
+
+  public :: &
+    delete_vp2d_par_cart_multi_species, &
+    new_vp2d_par_cart_multi_species, &
+    sll_simulation_2d_vlasov_poisson_cart_multi_species
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 type, extends(sll_simulation_base_class) :: &

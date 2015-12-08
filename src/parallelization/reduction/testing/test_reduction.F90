@@ -1,9 +1,13 @@
 program test_reduction
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_reduction
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_reduction, only: &
+    compute_reduction_4d_to_3d_direction4
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:,:,:,:), allocatable   :: data_4d
   sll_real64, dimension(:,:,:), allocatable   :: data_3d

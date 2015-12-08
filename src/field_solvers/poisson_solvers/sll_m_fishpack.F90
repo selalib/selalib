@@ -17,17 +17,32 @@
 !> @snippet poisson_solvers/test_fishpack.F90 example_polar
 module sll_m_fishpack
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
+! use F77_fishpack, only: &
+!   hw3crt, &
+!   hwscrt, &
+!   hwsplr
 
-implicit none
-private
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  implicit none
+
+  public :: &
+    cartesian_2d, &
+    cartesian_3d, &
+    fishpack_2d, &
+    fishpack_3d, &
+    polar_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Fishpack solver cartesian 2d
-type, public :: fishpack_2d
+type :: fishpack_2d
    sll_int32           :: nc_eta1  !< number of cells
    sll_int32           :: nc_eta2  !< number of cells
    sll_real64          :: eta1_min !< geometry parameter
@@ -52,7 +67,7 @@ contains
 end type fishpack_2d
 
 !> Fishpack solver cartesian 3d
-type, public :: fishpack_3d
+type :: fishpack_3d
    sll_int32           :: nc_eta1  !< number of cells
    sll_int32           :: nc_eta2  !< number of cells
    sll_int32           :: nc_eta3  !< number of cells
@@ -83,11 +98,11 @@ contains
 end type fishpack_3d
 
 !> Parameter to solve poisson equation on cartesian mesh 2d
-sll_int32, parameter, public :: CARTESIAN_2D = 0
+sll_int32, parameter :: CARTESIAN_2D = 0
 !> Parameter to solve poisson equation on polar mesh 2d
-sll_int32, parameter, public :: POLAR_2D     = 1
+sll_int32, parameter :: POLAR_2D     = 1
 !> Parameter to solve poisson equation on cartesian mesh 3d
-sll_int32, parameter, public :: CARTESIAN_3D = 2
+sll_int32, parameter :: CARTESIAN_3D = 2
 
 contains
 

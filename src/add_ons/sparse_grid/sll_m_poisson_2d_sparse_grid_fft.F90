@@ -6,20 +6,27 @@
 
 module sll_m_poisson_2d_sparse_grid_fft
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_sparse_grid_2d
+  use sll_m_constants, only: &
+    sll_pi
 
-  use, intrinsic :: iso_c_binding
-  use sll_m_constants, only: sll_pi
+  use sll_m_sparse_grid_2d, only: &
+    sparse_grid_interpolator_2d
+
   implicit none
+
+  public :: &
+    sll_fft_derivative
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> \a sll_fft_derivative is the Poisson solver object to solve Poisson's problem in 2d with pseudospectral on a sparse grid
-type,public:: sll_fft_derivative
+type:: sll_fft_derivative
    sll_real64,dimension(:),pointer :: kx  !< Fourier coefficients for first derivative along x
    sll_real64,dimension(:),pointer :: ky !< Fourier coefficients for first derivative along y
    sll_real64,dimension(:),pointer :: kpot !< Fourier coefficient to compute potential

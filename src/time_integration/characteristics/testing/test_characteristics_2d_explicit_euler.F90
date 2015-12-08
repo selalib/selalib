@@ -16,11 +16,21 @@
 !**************************************************************
 
 program test_characteristics_2d_explicit_euler
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_2d_explicit_euler
-use sll_m_boundary_condition_descriptors
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_characteristics_2d_base), pointer :: euler 
   
@@ -115,7 +125,7 @@ implicit none
       endif
 
       tmp = input2(j)-dt*A2(i,j)
-      tmp = tmp-floor(tmp)
+      tmp = tmp-real(floor(tmp),f64)
       tmp=abs(tmp-output2(i,j))
       if(tmp>err)then
         err=tmp

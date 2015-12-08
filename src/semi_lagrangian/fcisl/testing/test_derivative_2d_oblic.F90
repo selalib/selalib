@@ -16,11 +16,26 @@
 !**************************************************************
 
 program test_derivative_2d_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_derivative_2d_oblic
-use sll_m_advection_1d_periodic
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_derivative_2d_oblic, only: &
+    compute_oblic_derivative_2d, &
+    new_oblic_2d_derivative, &
+    oblic_2d_derivative
+
+  use sll_m_periodic_interp, only: &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(oblic_2d_derivative), pointer :: deriv
   sll_int32 :: Nc_x1
@@ -36,7 +51,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: output
   sll_int32 :: ierr
   sll_real64 :: err
-  sll_real64 :: iota
+  !sll_real64 :: iota
   sll_real64 :: A1  
   sll_real64 :: A2
   sll_real64 :: dt  
@@ -52,7 +67,7 @@ implicit none
   stencil_s = 2
   
   !iota = 0.43 ! !A1/A2
-  dt = 0.1
+  dt = 0.1_f64
   A1 = 1._f64
   A2 = 2._f64
   

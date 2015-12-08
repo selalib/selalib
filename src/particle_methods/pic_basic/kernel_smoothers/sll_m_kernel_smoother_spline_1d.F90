@@ -4,20 +4,31 @@
 !> @details Spline with index i starts at point i
 module sll_m_kernel_smoother_spline_1d
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base
-  use sll_m_particle_group_base
-  use sll_m_arbitrary_degree_splines
-  
+  use sll_m_arbitrary_degree_splines, only: &
+    uniform_b_splines_at_x
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation, &
+    sll_kernel_smoother_base
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
   implicit none
-  private
 
-  public :: sll_new_smoother_spline_1d
+  public :: &
+    sll_kernel_smoother_spline_1d, &
+    sll_new_smoother_spline_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>  Spline kernel smoother in1d.
-  type, public, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_1d
+  type, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_1d
 
      ! Information about the 1d mesh
      sll_real64 :: delta_x(1)  !< Value of grid spacing along both directions.

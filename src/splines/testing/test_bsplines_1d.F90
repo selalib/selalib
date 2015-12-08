@@ -1,16 +1,34 @@
 !PN This is a general test for bsplines 1d and 2d
 !PN This test is used to test performance and precision
 program test_bsplines_1d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_bsplines
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
 
-implicit none
+  use sll_m_bsplines, only: &
+    compute_bspline_1d, &
+    compute_bspline_2d, &
+    interpolate_array_derivatives_1d, &
+    interpolate_array_values_1d, &
+    interpolate_array_values_2d, &
+    interpolate_derivative_1d, &
+    interpolate_value_1d, &
+    interpolate_value_2d, &
+    new_bspline_1d, &
+    new_bspline_2d, &
+    sll_bspline_1d, &
+    sll_bspline_2d, &
+    update_bspline_1d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_bspline_1d), pointer :: bspline_1d
 type(sll_bspline_2d), pointer :: bspline_2d

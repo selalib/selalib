@@ -1,9 +1,28 @@
 module sll_m_tsi_2d_initializer
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_scalar_field_initializers_base
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_scalar_field_initializers_base, only: &
+    node_centered_field, &
+    scalar_field_2d_initializer_base
+
   implicit none
+
+  public :: &
+    init_tsi_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(scalar_field_2d_initializer_base) :: init_tsi_2d
     !class(sll_mapped_mesh_2d_base), pointer :: mesh

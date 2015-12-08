@@ -16,11 +16,18 @@
 !**************************************************************
 
 program test_advection_1d_PSM
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_1d_PSM
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_psm, only: &
+    new_psm_1d_advector
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_advection_1d_base), pointer :: adv
   sll_real64 :: x_min

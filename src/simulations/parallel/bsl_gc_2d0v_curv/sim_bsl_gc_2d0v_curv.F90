@@ -1,11 +1,25 @@
 program sim_bsl_gc_2d0v_curv
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_sim_bsl_gc_2d0v_curv
-  use sll_m_collective
-  use sll_m_timer
-  use sll_m_constants
+#include "sll_working_precision.h"
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_world_collective
+
+  use sll_m_sim_bsl_gc_2d0v_curv, only: &
+    delete_guiding_center_2d_curvilinear, &
+    new_guiding_center_2d_curvilinear, &
+    sll_simulation_2d_guiding_center_curvilinear
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !class(sll_simulation_base_class), pointer :: sim
   class(sll_simulation_2d_guiding_center_curvilinear), pointer :: sim  

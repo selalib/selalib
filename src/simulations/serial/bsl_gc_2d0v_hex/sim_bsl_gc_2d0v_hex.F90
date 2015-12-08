@@ -4,28 +4,57 @@ program sim_bsl_gc_2d0v_hex
   ! on hexagonal mesh
   ! one priority is to test the mitchell
   ! element which is not tested elsewhere
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
 
-  use sll_m_boundary_condition_descriptors
-  use sll_m_ascii_io
-  use sll_m_utilities, only : &
-       int2string
-  use sll_m_constants, only : &
-       sll_sqrt3
-  use sll_m_euler_2d_hex
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d
-  use sll_m_hex_poisson
-  use sll_m_pivotbande
-  use sll_m_box_splines, only : &
-       sll_box_spline_2d, &
-       new_box_spline_2d, &
-       hex_interpolate_value
-  use sll_m_interpolation_hex_hermite
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_box_splines, only: &
+    hex_interpolate_value, &
+    new_box_spline_2d, &
+    sll_box_spline_2d
+
+  use sll_m_constants, only: &
+    sll_sqrt3
+
+  use sll_m_euler_2d_hex, only: &
+    compute_characteristic_adams2_2d_hex, &
+    compute_characteristic_euler_2d_hex
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite
+
+  use sll_m_hex_poisson, only: &
+    compute_hex_fields, &
+    hex_matrix_poisson, &
+    hex_second_terme_poisson
+
+  use sll_m_hexagonal_meshes, only: &
+    delete_hex_mesh_2d, &
+    display_hex_mesh_2d, &
+    get_cell_vertices_index, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    der_finite_difference, &
+    hermite_interpolation
+
+  use sll_m_pivotbande, only: &
+    factolub_bande, &
+    solvlub_bande
+
+  use sll_m_utilities, only: &
+    int2string
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   sll_int32, parameter :: SLL_HEX_SPLINES = 2
   sll_int32, parameter :: SLL_HEX_Z9 = 9
   sll_int32, parameter :: SLL_HEX_Z10 = 10

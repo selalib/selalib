@@ -1,22 +1,38 @@
 ! TODO: Use input from file to initialize and compare
 
 program test_operator_splitting_pic_vp_2d2v
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
-  use sll_m_particle_initializer
-  use sll_m_particle_group_2d2v
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_2d
-  use sll_m_operator_splitting_pic_vp_2d2v
-  use sll_m_poisson_2d_fft
-  use sll_m_poisson_2d_base
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation, &
+    sll_kernel_smoother_base
+
+  use sll_m_kernel_smoother_spline_2d, only: &
+    sll_kernel_smoother_spline_2d, &
+    sll_new_smoother_spline_2d
+
+  use sll_m_operator_splitting_pic_vp_2d2v, only: &
+    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_t_operator_splitting_pic_vp_2d2v
+
+  use sll_m_particle_group_2d2v, only: &
+    sll_new_particle_group_2d2v, &
+    sll_particle_group_2d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_poisson_2d_fft, only: &
+    new_poisson_2d_fft_solver, &
+    poisson_2d_fft_solver
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Tolerance for comparison of real numbers: set it here!
   sll_real64, parameter :: EQV_TOL = 1.0e-14_f64

@@ -1,9 +1,20 @@
 program sim_bsl_vp_1d1v_cart_no_split
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_sim_bsl_vp_1d1v_cart_no_split
-  use sll_m_timer
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_sim_bsl_vp_1d1v_cart_no_split, only: &
+    new_vp2d_no_split
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   class(sll_simulation_base_class), pointer :: sim
   character(len=256) :: filename

@@ -1,17 +1,19 @@
 program test_poisson_3d_sparsegrid_fft
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-   !-------------------------------------------------------------------
-   !  test 3D Poisson solver based on FFT on sparse grid
-   !-------------------------------------------------------------------
+  use sll_m_constants, only: &
+    sll_pi
 
-   use sll_m_poisson_3d_sparse_grid_fft
-   use sll_m_sparse_grid_3d
-   use sll_m_constants, only : sll_pi
+  use sll_m_poisson_3d_sparse_grid_fft, only: &
+    sll_fft3d_derivative
 
-   implicit none
+  use sll_m_sparse_grid_3d, only: &
+    sparse_grid_interpolator_3d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    sll_real64                    :: eta_max(3), eta_min(3)
    sll_int32                    :: error

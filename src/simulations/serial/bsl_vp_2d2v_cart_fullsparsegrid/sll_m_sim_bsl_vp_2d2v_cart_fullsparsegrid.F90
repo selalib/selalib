@@ -7,25 +7,38 @@
 !------------------------------------------------------------------------------
 
 module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
-#include "sll_assert.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_sparse_grid_2d
-  use sll_m_sparse_grid_4d
-  use sll_m_poisson_2d_sparse_grid_fft
-  use sll_m_sim_base
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_2d_sparse_grid_fft, only: &
+    sll_fft_derivative
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_sparse_grid_2d, only: &
+    sparse_grid_interpolator_2d
+
+  use sll_m_sparse_grid_4d, only: &
+    sparse_grid_interpolator_4d
 
   implicit none
+
+  public :: &
+    sll_t_sim_sl_vp_2d2v_cart_fullsparsegrid
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_LANDAU = 0
   sll_int32, parameter :: SLL_TSI = 1
 
-  private
   
-  type, public, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_2d2v_cart_fullsparsegrid
+  type, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_2d2v_cart_fullsparsegrid
      logical     :: is_mdeltaf
      sll_int32   :: test_case
      sll_int32   :: levelxv

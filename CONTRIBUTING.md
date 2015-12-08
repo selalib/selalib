@@ -1,13 +1,15 @@
 Dear selalib developers,
 
 Newcomers should read the [Git Quickstart Guide for SeLaLib](GitQuickstart.md).
+Please also refer to the [developer's guide](https://gitlab.mpcdf.mpg.de/selalib/sll_docs/blob/master/dev_guide/developers_guide.pdf).
 
 To work with gitlab you don’t need to clone again the repository.
 
 In order to move your repositories to gitlab, set gitlab as your primary repository
 ```
-git remote set-url origin git@gitlab.mpcdf.mpg.de/selalib/selalib.git
+git remote set-url origin git@gitlab.mpcdf.mpg.de:selalib/selalib.git
 ```
+Please make sure you have added your ssh key on GitLab (SSH Keys section in your profile settings).
 You can also keep the INRIA gforge as a remote repository using:
 ```
 git remote add inria <YOUR_LOGIN>@scm.gforge.inria.fr//gitroot//selalib/selalib.git
@@ -16,13 +18,22 @@ git remote add inria <YOUR_LOGIN>@scm.gforge.inria.fr//gitroot//selalib/selalib.
 If you want to keep INRIA gforge as primary repository, add the gitlab 
 repository with:
 ```
-git remote add gitlab git@gitlab.mpcdf.mpg.de/selalib/selalib.git
+git remote add gitlab git@gitlab.mpcdf.mpg.de:selalib/selalib.git
 ```
 
 To check your configuration of remote repositories, use:
 ```
 git remote -v
 ```
+
+
+In order to checkout the new development branch for the first time, use:
+```
+git fetch origin
+git checkout -b develop origin/develop
+```
+Of course, you need to replace origin by gitlab if you choose to keep inria as your origin.
+
 
 After this, you can push your local branch on gitlab with
 ```

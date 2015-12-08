@@ -17,18 +17,35 @@
 
 !> @ingroup poisson_solvers
 module sll_m_quasi_neutral_3d_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!use sll_m_boundary_condition_descriptors
-use sll_m_poisson_3d_base
-use sll_m_poisson_2d_base
-use sll_m_remapper
-use sll_m_collective
-use sll_m_utilities, only : &
-     is_even
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_collective, only: &
+    sll_collective_t, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_3d_base, only: &
+    sll_poisson_3d_base
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_collective, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    new_layout_3d
+
+  use sll_m_utilities, only: &
+    is_even
+
+  implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_poisson_3d_base) :: quasi_neutral_3d_solver     
   
