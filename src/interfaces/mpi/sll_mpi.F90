@@ -132,7 +132,6 @@ module sll_mpi
     mpi_cart_create,     &
     mpi_cart_get,        &
     mpi_dims_create,     &
-    mpi_finalize,        &
 #endif /* __INTEL_COMPILER */
     mpi_bcast,      &
     mpi_allgather,  &
