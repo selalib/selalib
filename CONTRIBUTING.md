@@ -6,7 +6,7 @@ To work with gitlab you don’t need to clone again the repository.
 
 In order to move your repositories to gitlab, set gitlab as your primary repository
 ```
-git remote set-url origin git@gitlab.mpcdf.mpg.de/selalib/selalib.git
+git remote set-url origin git@gitlab.mpcdf.mpg.de:selalib/selalib.git
 ```
 You can also keep the INRIA gforge as a remote repository using:
 ```
@@ -16,7 +16,7 @@ git remote add inria <YOUR_LOGIN>@scm.gforge.inria.fr//gitroot//selalib/selalib.
 If you want to keep INRIA gforge as primary repository, add the gitlab 
 repository with:
 ```
-git remote add gitlab git@gitlab.mpcdf.mpg.de/selalib/selalib.git
+git remote add gitlab git@gitlab.mpcdf.mpg.de:selalib/selalib.git
 ```
 
 To check your configuration of remote repositories, use:
