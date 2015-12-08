@@ -1,6 +1,6 @@
 # Detect MPI library. A similar if-elseif-else block is placed in "sll_mpi.F90"
 # TODO: use CMake variables to detect Intel-MPI, MPICH, OpenMPI
-if( DEFINED __INTEL_COMPILER )
+if( Fortran_COMPILER_NAME MATCHES ifort )
   set( MPI_LIB "intel-mpi" )
 else()
   set( MPI_LIB "openmpi" )
