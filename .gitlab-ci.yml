@@ -19,10 +19,19 @@ mavericks:
   tags:
     - osx
     
-fedora:
+fedora-openmpi:
   stage: ctest
   script: 
-    - "scripts/fedora-ci.sh"
+    - "scripts/fedora-openmpi-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora
+
+fedora-openmpi:
+  stage: ctest
+  script: 
+    - "scripts/fedora-mpich-ci.sh"
   only:
     - develop
   tags:
