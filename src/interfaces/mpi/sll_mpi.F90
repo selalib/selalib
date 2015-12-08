@@ -126,9 +126,9 @@ module sll_mpi
 ! These are the subroutines that are not defined in module "mpi"
 
 #ifdef __INTEL_COMPILER
-include "external_intel.F90"
+#include "external_intel.F90"
 #else
-include "external_openmpi.F90"
+#include "external_openmpi.F90"
 #endif
 
 !-----------------------------------------------------------------------
