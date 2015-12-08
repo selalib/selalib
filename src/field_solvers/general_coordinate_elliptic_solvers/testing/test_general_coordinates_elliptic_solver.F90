@@ -1,69 +1,131 @@
 !Old test for general elliptic solver made by Aurore
 program test_general_elliptic_solver
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_cartesian_meshes
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_scalar_field_2d
-use sll_m_constants
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_timer
-use sll_m_deboor_splines_2d
-use m_init_functions, only: &
-  func_zero, &
-  func_four, &
-  func_one, &
-  func_epsi, &
-  source_term_perper, &
-  source_term_perdir, &
-  source_term_dirper, &
-  source_term_chgt_perper, &
-  source_term_chgt_perdir, &
-  source_term_chgt_dirper, &
-  source_term_chgt_dirdir, &
-  f_sin, u_sin, u_sin_der1, u_sin_der2, &
-  f_cos, u_cos, u_cos_der1, u_cos_der2, &
-  sol_exacte_perper, &
-  sol_exacte_perper_der1, &
-  sol_exacte_perper_der2, &
-  sol_exacte_perdir  , &
-  sol_exacte_perdir_der1, &
-  sol_exacte_perdir_der2, &
-  sol_exacte_dirper, &
-  sol_exacte_dirper_der1, &
-  sol_exacte_dirper_der2, &
-  sol_exacte_chgt_perper, &
-  sol_exacte_chgt_perper_der1, &
-  sol_exacte_chgt_perper_der2, &
-  sol_exacte_chgt_perdir  , &
-  sol_exacte_chgt_perdir_der1, &
-  sol_exacte_chgt_perdir_der2, &
-  sol_exacte_chgt_dirper, &
-  sol_exacte_chgt_dirper_der1, &
-  sol_exacte_chgt_dirper_der2, &
-  sol_exacte_chgt_dirdir, &
-  sol_exacte_chgt_dirdir_der1, &
-  sol_exacte_chgt_dirdir_der2, &
-  adimension_chgt_x, &
-  adimension_chgt_y, &
-  jac11_adimension_chgt, &
-  jac12_adimension_chgt, &
-  jac21_adimension_chgt, &
-  jac22_adimension_chgt, &
-  sol_exacte_chgt_adim, &
-  source_term_chgt_adim
+  use m_init_functions, only: &
+    adimension_chgt_x, &
+    adimension_chgt_y, &
+    f_cos, &
+    f_sin, &
+    func_epsi, &
+    func_four, &
+    func_one, &
+    func_zero, &
+    jac11_adimension_chgt, &
+    jac12_adimension_chgt, &
+    jac21_adimension_chgt, &
+    jac22_adimension_chgt, &
+    sol_exacte_chgt_adim, &
+    sol_exacte_chgt_dirdir, &
+    sol_exacte_chgt_dirdir_der1, &
+    sol_exacte_chgt_dirdir_der2, &
+    sol_exacte_chgt_dirper, &
+    sol_exacte_chgt_dirper_der1, &
+    sol_exacte_chgt_dirper_der2, &
+    sol_exacte_chgt_perdir, &
+    sol_exacte_chgt_perdir_der1, &
+    sol_exacte_chgt_perdir_der2, &
+    sol_exacte_chgt_perper, &
+    sol_exacte_chgt_perper_der1, &
+    sol_exacte_chgt_perper_der2, &
+    sol_exacte_dirper, &
+    sol_exacte_dirper_der1, &
+    sol_exacte_dirper_der2, &
+    sol_exacte_perdir, &
+    sol_exacte_perdir_der1, &
+    sol_exacte_perdir_der2, &
+    sol_exacte_perper, &
+    sol_exacte_perper_der1, &
+    sol_exacte_perper_der2, &
+    source_term_chgt_adim, &
+    source_term_chgt_dirdir, &
+    source_term_chgt_dirper, &
+    source_term_chgt_perdir, &
+    source_term_chgt_perper, &
+    source_term_dirper, &
+    source_term_perdir, &
+    source_term_perper, &
+    u_cos, &
+    u_cos_der1, &
+    u_cos_der2, &
+    u_sin, &
+    u_sin_der1, &
+    u_sin_der2
 
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    initialize_ad2d_interpolator, &
+    sll_arbitrary_degree_spline_interpolator_2d
 
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_common_coordinate_transformations, only: &
+    deriv_x1_polar_f_eta1, &
+    deriv_x1_polar_f_eta2, &
+    deriv_x2_polar_f_eta1, &
+    deriv_x2_polar_f_eta2, &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2, &
+    x1_polar_f, &
+    x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_analytic, &
+    new_scalar_field_2d_discrete, &
+    sll_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    int2string
 
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack
 #else
-  use sll_m_general_coordinate_elliptic_solver
-#endif
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre, &
+    factorize_mat_es, &
+    general_coordinate_elliptic_solver, &
+    sll_create, &
+    sll_solve, &
+    sll_delete
 
-implicit none
+#endif
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3

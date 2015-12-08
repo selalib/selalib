@@ -16,19 +16,39 @@
 !**************************************************************
 
 program test_qn_2d_polar_precompute
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_qn_2d_polar_precompute
-use sll_m_timer
-use sll_m_ascii_io
-use sll_m_gauss_lobatto_integration
-use sll_m_gauss_legendre_integration
-use sll_m_gnuplot
-use sll_m_qn_2d_polar
-use sll_m_gyroaverage_2d_polar_hermite_solver
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gyroaverage_utilities, only: &
+    compute_init_f_polar, &
+    compute_mu, &
+    compute_shape_circle
+
+  use sll_m_qn_2d_polar, only: &
+    compute_error, &
+    compute_gamma0, &
+    compute_gamma0_quadrature
+
+  use sll_m_qn_2d_polar_precompute, only: &
+    compute_qns_inverse_polar_splines, &
+    compute_qns_matrix_polar_splines, &
+    solve_qns_polar_splines
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32 :: ierr
   sll_real64,dimension(:), allocatable :: Ti

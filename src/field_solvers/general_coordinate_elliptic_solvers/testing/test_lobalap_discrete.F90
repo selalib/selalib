@@ -1,18 +1,49 @@
 program test_lobalap_discrete
 !YG #include "selalib.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_common_coordinate_transformations
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_boundary_condition_descriptors
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_map_function, only: set_map_function
-  use sll_m_lobatto_poisson
-  use sll_m_dg_fields
-  use sll_m_cartesian_meshes
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d, &
+    sll_delete, &
+    sll_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    deriv1_jacobian_polar_f, &
+    deriv_x1_polar_f_eta1, &
+    deriv_x2_polar_f_eta1, &
+    jacobian_polar_f, &
+    x1_polar_f, &
+    x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_discrete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_cubic_spline_interpolator_2d
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  use sll_m_lobatto_poisson, only: &
+    lobatto_poisson_solver, &
+    sll_create, &
+    sll_solve, &
+    sll_delete
+
+  use sll_m_map_function, only: &
+    set_map_function
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(lobatto_poisson_solver)          :: solver
   type(sll_cartesian_mesh_2d), pointer  :: mesh

@@ -1,23 +1,62 @@
 !> @ingroup fields
 module sll_parallel_array_output_module
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_xml_io
-  use sll_m_cartesian_meshes
-  use sll_m_utilities, only : &
-       int2string
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_4d
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_world_collective
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_global_size_j, &
+    get_layout_global_size_k, &
+    get_layout_global_size_l, &
+    get_layout_j_min, &
+    get_layout_k_min, &
+    get_layout_l_min, &
+    layout_4d
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_create
+
+  use sll_mpi, only: &
+    mpi_real8, &
+    mpi_reduce, &
+    mpi_sum
 
 #ifndef NOHDF5
-  use hdf5, only: hid_t, hssize_t, hsize_t
-  use sll_m_hdf5_io_serial
-  use sll_m_hdf5_io_parallel
-#endif
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
 
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+#endif
   implicit none
+
+  public :: &
+    write_mesh_4d, &
+    write_xmf_file
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define MPI_MASTER 0
 

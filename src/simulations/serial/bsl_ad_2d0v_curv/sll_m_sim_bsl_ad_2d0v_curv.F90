@@ -4,51 +4,189 @@ module sll_m_sim_bsl_ad_2d0v_curv
 !contact: Adnane Hamiaz (hamiaz@math.unistra.fr
 !         Michel Mehrenberger (mehrenbe@math.unistra.fr)
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_memory.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_cartesian_meshes  
-  use sll_m_advection_1d_periodic
-  use sll_m_advection_2d_bsl
-  use sll_m_advection_2d_tensor_product
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  use sll_m_advection_1d_BSL
-  use sll_m_advection_1d_CSL
-  use sll_m_advection_1d_CSL_periodic
-  use sll_m_advection_1d_PSM
-  use sll_m_characteristics_1d_explicit_euler
-  use sll_m_characteristics_1d_trapezoid
-  use sll_m_characteristics_1d_explicit_euler_conservative
-  use sll_m_characteristics_1d_trapezoid_conservative
-  use sll_m_reduction
-  use sll_m_sim_base
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  !use sll_m_mudpack_curvilinear
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_bsl, only: &
+    new_bsl_1d_advector
+
+  use sll_m_advection_1d_csl_periodic, only: &
+    new_csl_periodic_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_advection_2d_tensor_product, only: &
+    new_tensor_product_2d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_cartesian_meshes, only: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    operator(*)
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    new_explicit_euler_1d_charac
+
+  use sll_m_characteristics_1d_trapezoid, only: &
+    new_trapezoid_1d_charac
+
+  use sll_m_characteristics_2d_base, only: &
+    signature_process_outside_point, &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_common_array_initializers, only: &
+    sll_constant_time_initializer_1d, &
+    sll_cos_bell0_initializer_2d, &
+    sll_cos_bell_initializer_2d, &
+    sll_cos_sin_initializer_2d, &
+    sll_gaussian_initializer_2d, &
+    sll_khp1_2d, &
+    sll_one_initializer_2d, &
+    sll_rotation_a1_exact_charac_2d, &
+    sll_rotation_a1_initializer_2d, &
+    sll_rotation_a2_exact_charac_2d, &
+    sll_rotation_a2_initializer_2d, &
+    sll_rotation_phi_initializer_2d, &
+    sll_scalar_initializer_1d, &
+    sll_scalar_initializer_2d, &
+    sll_scalar_initializer_4d, &
+    sll_sdf_a1_exact_charac_2d, &
+    sll_sdf_a1_initializer_2d, &
+    sll_sdf_a2_exact_charac_2d, &
+    sll_sdf_a2_initializer_2d, &
+    sll_sdf_phi_initializer_2d, &
+    sll_sdf_time_initializer_1d, &
+    sll_translation_a1_exact_charac_2d, &
+    sll_translation_a1_initializer_2d, &
+    sll_translation_a2_exact_charac_2d, &
+    sll_translation_a2_initializer_2d, &
+    sll_translation_phi_initializer_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hermite_interpolation_1d, only: &
+    sll_hermite_1d_c0
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite, &
+    sll_hermite_c0, &
+    sll_hermite_periodic
+
+  use sll_m_hermite_interpolator_1d, only: &
+    new_hermite_interpolator_1d
+
+  use sll_m_hermite_interpolator_2d, only: &
+    new_hermite_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_operator_splitting, only: &
+    do_split_steps, &
+    sll_strang_tvt
+
+  use sll_m_reduction, only: &
+    compute_integral_trapezoid_1d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_split_advection_2d, only: &
+    new_split_advection_2d, &
+    sll_advective, &
+    sll_conservative, &
+    split_advection_2d
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
 #ifdef MUDPACK
   use sll_m_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-!  use sll_m_poisson_2d_elliptic_solver
-!  use sll_m_timer
-!  use sll_m_fft
-!  use sll_m_poisson_2d_periodic_solver
-  use sll_m_parallel_array_initializer
-  use sll_m_hermite_interpolation_2d
-  use sll_m_hermite_interpolator_2d
-  use sll_m_hermite_interpolation_1d
-  use sll_m_hermite_interpolator_1d
-  use sll_m_operator_splitting
-  use sll_m_split_advection_2d
-  
   implicit none
+
+  public :: &
+    delete_analytic_field_2d_curvilinear, &
+    new_analytic_field_2d_curvilinear, &
+    sll_simulation_2d_analytic_field_curvilinear
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   
   sll_int32, parameter :: SLL_EULER = 0 
@@ -262,8 +400,8 @@ contains
     !class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
-    sll_real64 :: eta1_min_bis
-    sll_real64 :: eta1_max_bis
+    !sll_real64 :: eta1_min_bis
+    !sll_real64 :: eta1_max_bis
     !sll_real64 :: eta2_min_bis
     !sll_real64 :: eta2_max_bis
     !sll_int32  :: Nc_eta1_bis
@@ -1952,8 +2090,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+          eta1 = eta1_min+real(i-1,f64)*deta1
+          eta2 = eta2_min+real(j-1,f64)*deta2
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -3010,7 +3148,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
     sll_real64 :: linf
     sll_real64 :: l1
     sll_real64 :: l2
-    sll_real64 :: e
+    !sll_real64 :: e
     
     sll_real64, dimension(:), allocatable :: mass_array
     sll_real64, dimension(:), allocatable  :: l1_array
@@ -3366,7 +3504,7 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
       sll_real64 :: eta_out
 
       eta_out = (eta-eta_min)/(eta_max-eta_min)      
-      eta_out = eta_out-floor(eta_out)
+      eta_out = eta_out-real(floor(eta_out),f64)
       if(eta_out==1._f64)then
         eta_out = 0._f64
       endif      

@@ -23,9 +23,20 @@
 !> More details about this example
 !> @snippet file_io/unit_test_ascii.F90 example
 module sll_m_ascii_io
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
+
   implicit none
+
+  public :: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create, &
+    sll_ascii_write_array, &
+    sll_ascii_write_array_1d, &
+    sll_ascii_write_array_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !> Write nD array in ascii file 
 !> \param[in] file_id file unit number

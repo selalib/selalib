@@ -5,17 +5,41 @@
 !> Define spline interpolation of values in data define on original grid at
 !> points coordinates
 module sll_m_cubic_spline_interpolator_1d_nonuniform
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_interpolators_1d_base
-use sll_m_cubic_non_uniform_splines
-use sll_m_cubic_splines
-implicit none
-private
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    cubic_nonunif_spline_1d
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_array, &
+    interpolate_from_interpolant_derivatives_eta1, &
+    interpolate_from_interpolant_value, &
+    new_cubic_spline_1d, &
+    sll_cubic_spline_1d, &
+    sll_delete
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    sll_cubic_spline_interpolator_1d_nonuniform, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> sll_interpolator_1d implemented with cubic splines on non uniform mesh
-  type, public, extends(sll_c_interpolator_1d) :: sll_cubic_spline_interpolator_1d_nonuniform
+  type, extends(sll_c_interpolator_1d) :: sll_cubic_spline_interpolator_1d_nonuniform
      sll_real64, dimension(:), pointer      :: interpolation_points !< points
      sll_int32                              :: num_points     !< size
      sll_int32                              :: bc_type        !< boundary condition
@@ -54,7 +78,6 @@ private
      module procedure delete_cs1d
   end interface sll_delete
 
-public sll_delete
 
 contains  ! ****************************************************************
 

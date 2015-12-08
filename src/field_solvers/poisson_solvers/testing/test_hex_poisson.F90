@@ -1,14 +1,25 @@
 program test_hex_poisson
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_hex_poisson
-  use sll_m_pivotbande
+  use sll_m_hex_poisson, only: &
+    compute_hex_fields, &
+    hex_matrix_poisson, &
+    hex_second_terme_poisson
+
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_pivotbande, only: &
+    factolub_bande, &
+    residue_bande, &
+    solvlub_bande
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_hex_mesh_2d), pointer          :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end

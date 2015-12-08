@@ -11,7 +11,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Nov 2015 - IPP Garching
 #
-# Last revision: 24 Nov 2015
+# Last revision: 04 Dec 2015
 #
 
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -85,12 +85,27 @@ class FortranUnit( FortranUnitBase ):
     # Implemented methods
     #--------------------------------------------------------------------------
     def find_symbol_def( self, symbol ):
-        """ Find name of module where symbol is defined (recursive search).
+        """
+        Find module where symbol is defined (recursive search).
+
+        Parameters
+        ----------
+        symbol : str
+          Symbol to be searched
+
+        Returns
+        -------
+        mod_name : str
+          Name of module where symbol is defined (None if not found)
+
+        mod_obj : FortranModule
+          Module where symbol is defined (None if not available)
+
         """
         # Search in current unit
         if self.defines_symbol( symbol ):
             # Symbol is defined locally
-            return self.name
+            return self.name, self
 
         # Search in used modules
         for name,data in self.used_modules.items():
@@ -98,17 +113,17 @@ class FortranUnit( FortranUnitBase ):
             if data['isonly']:
                 if symbol in data['items']:
                     # Symbol is found in "use [], only:" list
-                    return name
+                    return name, data['object']
                 continue
             # Recursively call same function in "use all" modules (if linked!)
             if data['object']:
-                mod_name = data['object'].find_symbol_def( symbol )
+                mod_name, mod_obj = data['object'].find_symbol_def( symbol )
                 if mod_name:
                     # Symbol is found in some other module in the use hierarchy
-                    return mod_name
+                    return mod_name, mod_obj
 
         # Nothing was found
-        return None
+        return None, None
 
     #--------------------------------------------------------------------------
     def link_used_modules( self, modules, externals={} ):
@@ -118,8 +133,7 @@ class FortranUnit( FortranUnitBase ):
 
             if name in externals:
                 print( "WARNING: skipping external module %s" % name )
-                data['object']   = None
-                data['external'] = True
+                data['object'] = None
                 continue
 
             objects = [m for m in modules if m.name == name]
@@ -128,8 +142,7 @@ class FortranUnit( FortranUnitBase ):
                 print( "ERROR: missing link for module %s" % name )
                 raise SystemExit()
             elif len( objects ) == 1:
-                data['object']   = objects[0]
-                data['external'] = False
+                data['object'] = objects[0]
             else:
                 print( "ERROR: multiple modules with name %s" % name )
                 raise SystemExit()
@@ -145,7 +158,7 @@ class FortranUnit( FortranUnitBase ):
         for s in self.imported_symbols:
 
             # Recursively search for symbol in used modules
-            mod_name = self.find_symbol_def( s )
+            mod_name, mod_obj = self.find_symbol_def( s )
 
             # Symbol was NOT FOUND. If available, search in external libraries
             if (mod_name is None) and (find_external_library is not None):
@@ -176,7 +189,7 @@ class FortranUnit( FortranUnitBase ):
                 if s not in item_list:
                     item_list.append( s )
             else:
-                new_mod = { 'isonly': True, 'items': [s], 'object': None }
+                new_mod = { 'isonly': True, 'items': [s], 'object': mod_obj }
                 self.used_modules[mod_name] = new_mod
 
     #--------------------------------------------------------------------------

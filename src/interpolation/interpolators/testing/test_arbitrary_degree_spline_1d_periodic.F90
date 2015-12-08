@@ -1,12 +1,19 @@
 program arbitrary_degree_splines_1d_periodic
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_arbitrary_degree_spline_interpolator_1d
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS 65
 #define SPL_DEG 3
@@ -55,10 +62,10 @@ normL2 = sum((y_int-y_ref)**2*h)
 normH1 = sum((dy_int-dy_ref)**2*h)
   
 print*,'--------------------------------------------'
-print*,' Average error in nodes', sum(abs(y_int-y_ref))/NPTS
+print*,' Average error in nodes', sum(abs(y_int-y_ref))/REAL(NPTS,f64)
 print*,' Max     error in nodes', maxval(abs(y_int-y_ref))
 print*,'--------------------------------------------'
-print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/NPTS
+print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/REAL(NPTS,f64)
 print*,' Max     error in nodes first derivative',maxval(abs(dy_int-dy_ref))
 print*,'--------------------------------------------'
 print*,' Norm L2 error ', sqrt(normL2), h**(SPL_DEG)

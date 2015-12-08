@@ -1,12 +1,17 @@
 program test_vector_space
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_vector_space_base, only: sll_vector_space_base
+
+  use sll_m_vector_space_base, only: &
+    sll_vector_space_base
+
   use sll_m_vector_space_real_arrays, only: &
     sll_vector_space_real_1d, &
     sll_vector_space_real_2d
- 
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64,             target, allocatable :: a1(:), a2(:,:)
   type( sll_vector_space_real_1d )            :: v1

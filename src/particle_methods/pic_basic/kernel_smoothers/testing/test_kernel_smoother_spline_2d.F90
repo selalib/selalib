@@ -1,11 +1,24 @@
 program test_kernel_smoother_spline_2d
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_2d  
-  use sll_m_particle_group_base
-  use sll_m_particle_group_2d2v
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation
+
+  use sll_m_kernel_smoother_spline_2d, only: &
+    sll_kernel_smoother_spline_2d, &
+    sll_new_smoother_spline_2d
+
+  use sll_m_particle_group_2d2v, only: &
+    sll_new_particle_group_2d2v, &
+    sll_particle_group_2d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
   class(sll_kernel_smoother_spline_2d),pointer :: kernel
@@ -67,7 +80,8 @@ program test_kernel_smoother_spline_2d
   do i_part = 1,n_particles
      xi(1:2) = x_vec(i_part,:)
      call specific_particle_group%set_x(i_part, xi)
-     call specific_particle_group%set_weights(i_part, [1/real(n_particles,f64)])
+     call specific_particle_group%set_weights(i_part, &
+       [1.0_f64/real(n_particles,f64)])
      xi(1:2) = v_vec(i_part,:)
      call specific_particle_group%set_v(i_part, xi)
   end do
@@ -97,8 +111,7 @@ program test_kernel_smoother_spline_2d
   values_grid(3,2,:) = 2.0_f64/3.0_f64
   values_grid(4,2,:) = 1.0_f64/6.0_f64
 
-  error = maxval(abs(index_grid-kernel%index_grid))
-  if (error > 1.e-14) then
+  if (maxval(abs(index_grid-kernel%index_grid)) > 0) then
      passed = .FALSE.
   end if
 

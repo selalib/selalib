@@ -1,6 +1,14 @@
 module sll_m_gyroaverage_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_gyroaverage_2d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, abstract :: sll_gyroaverage_2d_base 
   contains

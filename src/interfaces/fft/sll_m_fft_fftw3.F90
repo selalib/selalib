@@ -21,6 +21,7 @@ module sll_m_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_errors.h"
 #include "sll_fftw.h"
 
   use sll_m_fftw3
@@ -78,9 +79,13 @@ contains
     
     type(C_PTR) :: ptr_data         ! C pointer needed for allocation
    
-
+#ifdef FFTW_F2003
     ptr_data = fftw_alloc_complex(int(n,kind=C_SIZE_T))
     call c_f_pointer(ptr_data, data, [n])
+#else
+    allocate(data(n))
+    SLL_WARNING('fft_allocate_aligned_complex', 'Aligned allocation only supported by F2003. Usual allocation.')
+#endif
 
   end function fft_allocate_aligned_complex
 
@@ -92,9 +97,13 @@ contains
     
     type(C_PTR) :: ptr_data         ! C pointer needed for allocation
    
-
+#ifdef FFTW_F2003
     ptr_data = fftw_alloc_real(int(n,kind=C_SIZE_T))
     call c_f_pointer(ptr_data, data, [n])
+#else
+    allocate(data(n))
+    SLL_WARNING('fft_allocate_aligned_real','Aligned allocation only supported by F2003. Usual allocation.')
+#endif
 
   end function fft_allocate_aligned_real
 
@@ -354,7 +363,7 @@ contains
 #ifdef FFTW_F2003
     call fftw_execute_r2r(plan%fftw, array_in, array_out)
 #else
-    call errout( 6, 'W', __FILE__,__LINE__, "R2HC not supported by MKL-FFTW" )
+    SLL_ERROR('fft_apply_plan_r2r_1d','R2HC not supported without FFTW_F2003.')
 #endif
 
     if( plan%normalized .EQV. .TRUE. ) then

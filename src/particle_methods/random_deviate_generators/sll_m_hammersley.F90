@@ -3,10 +3,17 @@
 !>\author 
 !>\date created: 
 module sll_m_hammersley
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    suite_hamm
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains 
 

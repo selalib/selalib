@@ -21,23 +21,70 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_distribution_function_4d_multipatch
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_coordinate_transformation_multipatch
-  use sll_m_constants
-  use sll_m_remapper
-  use sll_m_collective
-  use sll_m_interpolators_2d_base
-  use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_m_utilities
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gnuplot
-  use sll_m_parallel_array_initializer
-  use sll_m_scalar_field_2d_multipatch
-  use sll_m_timer
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_4d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    multipatch_data_2d_real, &
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_4d_parallel_array_initializer
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d_ptr, &
+    layout_4d, &
+    layout_4d_ptr, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_2d_from_layout_4d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_2d_real64_ptr, &
+    remap_plan_4d_real64_ptr, &
+    set_layout_i_max, &
+    set_layout_i_min, &
+    set_layout_j_max, &
+    set_layout_j_min, &
+    sll_delete
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    sll_scalar_field_multipatch_2d
+
+  use sll_mpi, only: &
+    mpi_sum
+
   implicit none
+
+  public :: &
+    compute_charge_density_multipatch, &
+    sll_delete, &
+    sll_distribution_function_4d_multipatch, &
+    sll_new_distribution_function_4d_multipatch
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type ::  sll_distribution_function_4d_multipatch

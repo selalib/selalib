@@ -12,23 +12,52 @@
 !>     \@Condat2006 "Three-directional box splines"
 
 module sll_m_box_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_utilities, only : sll_factorial
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_epsilon_0, &
+    sll_sqrt3
+
   use sll_m_hex_pre_filters, only: &
-       pre_filter_pfir
-  use sll_m_hexagonal_meshes
-  use sll_m_constants, only : &
-       sll_sqrt3, &
-       sll_epsilon_0
-!  use sll_m_fekete_integration
-!  use sll_m_gauss_triangle_integration
+    pre_filter_pfir
 
+  use sll_m_hexagonal_meshes, only: &
+    cart_to_hex1, &
+    cart_to_hex2, &
+    cells_to_origin, &
+    change_elements_notation, &
+    delete, &
+    get_cell_vertices_index, &
+    local_to_global, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d, &
+    write_caid_files
+
+  use sll_m_utilities, only: &
+    sll_factorial
 
   implicit none
+
+  public :: &
+    boxspline_x1_derivative, &
+    boxspline_x2_derivative, &
+    compute_box_spline, &
+    hex_interpolate_value, &
+    new_box_spline_2d, &
+    sll_box_spline_2d, &
+    sll_delete, &
+    write_all_django_files, &
+    write_connectivity
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief
   !> basic type for 2 dimensional box splines dara

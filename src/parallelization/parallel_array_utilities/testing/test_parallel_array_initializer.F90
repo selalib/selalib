@@ -1,17 +1,55 @@
 program unit_test_initializers_4d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_collective
-use sll_m_parallel_array_initializer
-use sll_parallel_array_output_module
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_cartesian_meshes
-use iso_fortran_env, only: output_unit
+  use iso_fortran_env, only: &
+    output_unit
 
-implicit none
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_4d, &
+    sll_display, &
+    operator(*)
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_4d, &
+    sll_view_lims
+
+  use sll_parallel_array_output_module, only: &
+    write_mesh_4d, &
+    write_xmf_file
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define MPI_MASTER 0
 

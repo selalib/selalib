@@ -26,38 +26,148 @@
 
 module sll_m_sim_bsl_vp_1d1v_cart_two_species
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-use sll_m_collective
-use sll_m_remapper
-use sll_m_buffer_loader_utilities
-use sll_m_constants
-use sll_m_cartesian_meshes  
-use sll_m_gnuplot
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_common_array_initializers
-use sll_m_parallel_array_initializer
-use sll_m_advection_1d_periodic
-use sll_m_advection_1d_non_uniform_cubic_splines
-use sll_m_fft
-use sll_m_sim_base
-use sll_m_time_splitting_coeff
-use sll_m_poisson_1d_periodic  
-use sll_m_poisson_1d_periodic_solver
-use sll_m_poisson_1d_polar_solver
-use sll_m_advection_1d_ampere
-use sll_m_primitives
-use sll_m_xdmf
-!#ifdef _OPENMP
-!use omp_lib
-!#endif
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base_ptr
+
+  use sll_m_advection_1d_non_uniform_cubic_splines, only: &
+    new_non_uniform_cubic_splines_1d_advector
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create
+
+  use sll_m_binary_io, only: &
+    sll_binary_file_close, &
+    sll_binary_file_create, &
+    sll_binary_read_array_0d, &
+    sll_binary_read_array_2d, &
+    sll_binary_write_array_0d, &
+    sll_binary_write_array_2d
+
+  use sll_m_buffer_loader_utilities, only: &
+    compute_displacements_array_2d, &
+    load_buffer_2d, &
+    receive_counts_array_2d
+
+  use sll_m_cartesian_meshes, only: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    tensor_product_1d_1d
+
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_collective_gatherv_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_beam_initializer_2d, &
+    sll_bump_on_tail_initializer_2d, &
+    sll_landau_initializer_2d, &
+    sll_scalar_initializer_2d, &
+    sll_two_stream_instability_initializer_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_2d_parallel_array_initializer_cartesian
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_poisson_1d_base, only: &
+    sll_poisson_1d_base
+
+  use sll_m_poisson_1d_periodic_solver, only: &
+    new_poisson_1d_periodic_solver
+
+  use sll_m_poisson_1d_polar_solver, only: &
+    new_poisson_1d_polar_solver
+
+  use sll_m_primitives, only: &
+    function_to_primitive, &
+    primitive_to_function
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_real64
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_time_splitting_coeff, only: &
+    new_time_splitting_coeff, &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_vtv, &
+    sll_order6vp_tvt, &
+    sll_order6vp_vtv, &
+    sll_order6vpnew1_vtv, &
+    sll_order6vpnew2_vtv, &
+    sll_order6vpnew_tvt, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv, &
+    splitting_coeff
+
+  use sll_m_utilities, only: &
+    int2string, &
+    pfenvelope, &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
+
+  public :: &
+    change_initial_function_vp2d_par_cart_two_species, &
+    delete_vp2d_par_cart_two_species, &
+    new_vp2d_par_cart_two_species, &
+    sll_simulation_2d_vlasov_poisson_cart_two_species
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   integer, parameter :: SLL_ADVECTIVE = 0
   integer, parameter :: SLL_CONSERVATIVE = 1

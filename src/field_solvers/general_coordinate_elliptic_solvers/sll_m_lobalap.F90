@@ -5,10 +5,26 @@
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
 module sll_m_lobalap
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_map_function, only : map
-  
+
+  use sll_m_map_function, only: &
+    map
+
   implicit none
+
+  public :: &
+    assemb, &
+    assemb_rhs, &
+    compute_electric_field, &
+    compute_phi, &
+    computelu, &
+    init, &
+    plotgmsh, &
+    release
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! ordre de l'interpolation élément fini
   integer :: order
   ! nombre de noeuds locaux dans chaque élément

@@ -19,11 +19,26 @@
 !> the different 'flavors' of coordinate transformations (analytic, discrete)
 !> should implement.
 module sll_m_coordinate_transformation_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
   implicit none
+
+  public :: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_gmsh, &
+    sll_io_gnuplot, &
+    sll_io_mtv, &
+    sll_io_vtk, &
+    sll_io_xdmf, &
+    transformation_func_nopass
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32, parameter ::  SLL_IO_XDMF    = 0 
   sll_int32, parameter ::  SLL_IO_VTK     = 1

@@ -10,13 +10,14 @@
 !>  [2] http://math2.uncc.edu/~shaodeng/TEACHING/math5172/Lectures/Lect_15.PDF
 module sll_m_gauss_triangle_integration
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_hexagonal_meshes
+#include "sll_working_precision.h"
 
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

@@ -25,23 +25,54 @@ program test_maxwell_2d_diga_periodic
 !--------------------------------------------------------------------------
 !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
 !--------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_dg_fields
-use sll_m_maxwell_2d_diga
-use sll_m_maxwell_solvers_base
-use sll_m_cartesian_meshes
+  use m_maxwell_helper_functions, only: &
+    sol_bz, &
+    sol_ex, &
+    sol_ey
 
-use m_maxwell_helper_functions, only : &
-     sol_bz, sol_ex, sol_ey
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-implicit none
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_mtv
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  use sll_m_maxwell_2d_diga, only: &
+    sll_create, &
+    sll_maxwell_2d_diga, &
+    sll_solve, &
+    sll_uncentered
+
+  use sll_m_maxwell_solvers_base, only: &
+    sll_plot_two_fields
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !=====================================!
 ! Simulation parameters               !

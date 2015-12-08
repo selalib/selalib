@@ -1,13 +1,34 @@
 program comm_unit_test_2d
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_point_to_point_comms
-  use iso_fortran_env, only: output_unit
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_point_to_point_comms, only: &
+    comm_receive_real64, &
+    comm_send_real64, &
+    delete_comm_real64, &
+    get_buffer, &
+    new_comm_real64, &
+    sll_configure_comm_real64_torus_2d, &
+    sll_p2p_comm_real64
+
+  use sll_mpi, only: &
+    mpi_land
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! This test takes a 2D array and sends the nodes at the borders to the
   ! neighboring processors, mimicking the type of operations that one would do

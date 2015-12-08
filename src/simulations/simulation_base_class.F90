@@ -1,12 +1,17 @@
 !> @ingroup simulations
 !> Parent class module for simulation
 module sll_m_sim_base
-  use sll_m_ascii_io
-  use sll_m_gnuplot
-  use sll_m_binary_io
-  use sll_m_utilities, only: int2string
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_utilities, only: &
+    int2string
 
   implicit none
+
+  public :: &
+    sll_simulation_base_class
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Basic signature for all simulations. These can be declared, initialized,
   ! executed and deleted. This abstract class provides the general interface

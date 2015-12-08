@@ -1,8 +1,25 @@
 module sll_m_hermite_interpolation_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    compute_hermite_derivatives_periodic1, &
+    compute_interpolants_hermite_2d, &
+    compute_w_hermite, &
+    interpolate_value_hermite_2d, &
+    localize_per, &
+    new_hermite_interpolation_2d, &
+    sll_hermite_c0, &
+    sll_hermite_dirichlet, &
+    sll_hermite_interpolation_2d, &
+    sll_hermite_periodic
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !Hermite interpolation in 2d
 !derivatives are given with finite stencil formulae of order p

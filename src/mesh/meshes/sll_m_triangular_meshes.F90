@@ -17,18 +17,37 @@
 !>  Triangular mesh
 !------------------------------------------------------------------------------
 module sll_m_triangular_meshes
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_hexagonal_meshes
-use sll_m_tri_mesh_xmf
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hexagonal_meshes, only: &
+    get_cell_vertices_index, &
+    sll_hex_mesh_2d
+
+  implicit none
+
+  public :: &
+    analyze_triangular_mesh, &
+    map_to_circle, &
+    new_triangular_mesh_2d, &
+    read_from_file, &
+    sll_create, &
+    sll_delete, &
+    sll_display, &
+    sll_triangular_mesh_2d, &
+    write_triangular_mesh_mtv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 2d hexagonal mesh

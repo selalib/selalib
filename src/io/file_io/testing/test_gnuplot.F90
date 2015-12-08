@@ -1,10 +1,17 @@
 !>@internal [example]
 program test_io_gnuplot
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_gnuplot
-use sll_m_constants
-implicit none
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32 :: i, j     
 sll_int32 :: error 

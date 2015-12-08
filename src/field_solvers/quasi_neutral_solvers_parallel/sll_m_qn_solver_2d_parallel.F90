@@ -1,20 +1,59 @@
 module sll_m_qn_solver_2d_parallel
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_fft
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_boundary_condition_descriptors
-  use sll_m_qn_solver_2d, only: dirichlet_matrix, neumann_matrix
-  use sll_m_tridiagonal
-  use sll_m_utilities, only : &
-       is_power_of_two
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_neumann
+
+  use sll_m_collective, only: &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_qn_solver_2d, only: &
+    dirichlet_matrix, &
+    neumann_matrix
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_remap_plan, &
+    remap_plan_3d_comp64, &
+    sll_delete
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
+
+  use sll_m_utilities, only: &
+    is_power_of_two
 
   implicit none
+
+  public :: &
+    qn_solver_2d_parallel, &
+    new_qn_solver_2d_parallel, &
+    solve_qn_solver_2d_parallel, &
+    delete_qn_solver_2d_parallel
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type qn_solver_2d_parallel

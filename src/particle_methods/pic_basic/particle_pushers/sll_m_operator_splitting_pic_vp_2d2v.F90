@@ -3,27 +3,40 @@
 !> @brief Particle pusher based on operator splitting for 2d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries.
 module sll_m_operator_splitting_pic_vp_2d2v
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
+#include "sll_working_precision.h"
 
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_world_collective
 
- 
-  use sll_m_particle_group_base
-  use sll_m_kernel_smoother_base
-  use sll_m_operator_splitting
-  use sll_m_collective
-  
-  use sll_m_poisson_2d_fft
+  use sll_m_kernel_smoother_base, only: &
+    sll_kernel_smoother_base
+
+  use sll_m_operator_splitting, only: &
+    operator_splitting
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_poisson_2d_fft, only: &
+    poisson_2d_fft_solver
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
-  private
 
-  public :: sll_new_hamiltonian_splitting_pic_vp_2d2v
+  public :: &
+    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_t_operator_splitting_pic_vp_2d2v
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Operator splitting type for 2d2v Vlasov-Poisson
-  type, public, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
+  type, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
      class(poisson_2d_fft_solver), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
      class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
      class(sll_particle_group_base), pointer  :: particle_group    !< Particle group

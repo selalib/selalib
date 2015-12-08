@@ -26,17 +26,23 @@
 !> @image html gnuplot.png
 module sll_m_gnuplot
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
-! use sll_m_ascii_io                                      !OLD VERSION
-! use sll_m_utilities, only: sll_new_file_id, int2string  !OLD VERSION
-use sll_m_utilities, only: int2string
+  use sll_m_utilities, only: &
+    int2string
 
-implicit none
+  implicit none
 
-private
+  public :: &
+    sll_gnuplot_1d, &
+    sll_gnuplot_2d, &
+    sll_gnuplot_write
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> write file plotable by gnuplot to visualize 2d field
 interface sll_gnuplot_1d
@@ -54,7 +60,6 @@ interface sll_gnuplot_2d
    module procedure write_unstructured_field
 end interface
 
-public sll_gnuplot_1d, sll_gnuplot_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains  

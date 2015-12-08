@@ -44,25 +44,81 @@
 
 module sll_m_sim_bsl_vp_2d2v_polar
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_collective
-use sll_m_remapper
-use sll_m_constants
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_poisson_2d_polar
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_sim_base
-use sll_m_cartesian_meshes
-use sll_m_parallel_array_initializer
-use sll_m_coordinate_transformation_2d_base
-use sll_m_gnuplot_parallel
-use sll_m_poisson_polar_parallel
-use iso_fortran_env, only: output_unit
+  use iso_fortran_env, only: &
+    output_unit
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_4d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_cubic_spline_interpolator_2d, &
+    sll_delete
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_2d_parallel
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_4d_parallel_array_initializer
+
+  use sll_m_poisson_polar_parallel, only: &
+    sll_poisson_polar, &
+    initialize, &
+    solve
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_2d_real64, &
+    remap_plan_4d_real64, &
+    sll_view_lims, &
+    sll_delete
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    sll_new_file_id
+
+  implicit none
+
+  public :: &
+    initialize_vp4d_polar, &
+    sll_delete, &
+    sll_simulation_4d_vp_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> vp4d polar simulation class extended from sll_simulation_base_class
 type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
@@ -124,18 +180,18 @@ interface initialize
 end interface initialize
 
 !> Local variables
-sll_int32,  private :: i, j, k, l
-sll_int32,  private :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
-sll_int32,  private :: global_indices(4)
-sll_int32,  private :: gi, gj, gk, gl
-sll_real64, private :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
-sll_real64, private :: alpha1, alpha2, alpha3, alpha4
-sll_real64, private :: eta1, eta2, eta3, eta4
-sll_int32,  private :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
-sll_real64, private :: jac_m(2,2), inv_j(2,2)
-sll_int32,  private :: itime, error
-sll_real64, private :: eta1_min, eta2_min, eta3_min, eta4_min
-sll_real64, private :: eta1_max, eta2_max, eta3_max, eta4_max
+sll_int32 :: i, j, k, l
+sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
+sll_int32 :: global_indices(4)
+sll_int32 :: gi, gj, gk, gl
+sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
+sll_real64 :: alpha1, alpha2, alpha3, alpha4
+sll_real64 :: eta1, eta2, eta3, eta4
+sll_int32 :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
+sll_real64 :: jac_m(2,2), inv_j(2,2)
+sll_int32 :: itime, error
+sll_real64 :: eta1_min, eta2_min, eta3_min, eta4_min
+sll_real64 :: eta1_max, eta2_max, eta3_max, eta4_max
 
 contains
 

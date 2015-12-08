@@ -21,17 +21,30 @@
 
 module sll_m_pic_random_initializers
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!#include "particle_representation.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_cartesian_meshes
-  use sll_m_remapped_pic_base
-  use sll_m_gaussian
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gaussian, only: &
+    gaussian_deviate_2d
+
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group
 
   implicit none
+
+  public :: &
+    sll_pic_4d_random_unweighted_initializer_landau_f0
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 
 contains

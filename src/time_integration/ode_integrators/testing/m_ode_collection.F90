@@ -1,21 +1,31 @@
 module m_ode_collection
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
-  use sll_m_vector_space_base       , only: sll_vector_space_base
-  use sll_m_vector_space_real_arrays, only: sll_vector_space_real_1d
-  use sll_m_ode_integrator_base     , only: sll_ode_base
+  use sll_m_ode_integrator_base, only: &
+    sll_ode_base
+
+  use sll_m_vector_space_base, only: &
+    sll_vector_space_base
+
+  use sll_m_vector_space_real_arrays, only: &
+    sll_vector_space_real_1d
 
   implicit none
-!  public :: harmonic_oscillator
+
+  public :: &
+    harmonic_oscillator
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !----------------------------------------------------------------------------
   ! Harmonic oscillator
   !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_base ) :: harmonic_oscillator
+  type, extends( sll_ode_base ) :: harmonic_oscillator
     sll_int32  :: ndof  = 2
     sll_real64 :: omega = 1.0_f64
   contains

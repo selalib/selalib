@@ -16,18 +16,32 @@
 !**************************************************************
 
 module sll_m_particle_initializers_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "particle_representation.h"
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_particle_group_2d
-  use sll_m_cartesian_meshes
-!  use sll_m_gaussian
-  use sll_m_hammersley
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hammersley, only: &
+    suite_hamm
+
+  use sll_m_particle_group_2d, only: &
+    sll_particle_group_2d
 
   implicit none
+
+  public :: &
+    sll_initial_particles_2d, &
+    sll_initial_particles_2d_kh
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 

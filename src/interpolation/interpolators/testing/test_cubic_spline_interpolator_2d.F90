@@ -1,12 +1,23 @@
 program unit_test_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d, &
+    sll_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 65 
 #define NPTS2 65 
@@ -102,9 +113,9 @@ implicit none
         acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
-  print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
-  print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
-  print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
+  print *, 'Average error in nodes, x1 transformation = ', acc/real(NPTS1*NPTS2,f64)
+  print *, 'Average error, x1 deriv eta1 = ', acc1/real(NPTS1*NPTS2,f64)
+  print *, 'Average error, x1 deriv eta2 = ', acc2/real(NPTS1*NPTS2,f64)
   print *, 'PASSED'
 
   call test_interpolator_2d()
@@ -125,16 +136,16 @@ subroutine test_interpolator_2d()
   interp =>  spline
   do j = 1, NPTS2
   do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1-1)
-     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2-1)
+     xx1(i,j) = 2.*sll_pi*real(i-1,f64)/real(NPTS1-1,f64)
+     xx2(i,j) = 2.*sll_pi*real(j-1,f64)/real(NPTS2-1,f64)
   end do
   end do
   data_in = cos(xx1)*sin(xx2)
 
   do j = 1, NPTS2
   do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1)
-     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
+     xx1(i,j) = 2.*sll_pi*real(i-1,f64)/real(NPTS1,f64)
+     xx2(i,j) = 2.*sll_pi*real(j-1,f64)/real(NPTS2,f64)
   end do
   end do
   call interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2, data_out)

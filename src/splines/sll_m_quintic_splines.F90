@@ -28,11 +28,18 @@
 !> Periodic boundary conditions are not implemented. You must set function value
 !> and its derivative a the boundary
 module sll_m_quintic_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    inspl5, &
+    splin5
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

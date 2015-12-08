@@ -1,14 +1,54 @@
 program unit_test
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_constants
-  use sll_m_distribution_function
-  use sll_m_common_coordinate_transformations
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformations_2d
-  use sll_m_landau_2d_initializer
-  use sll_m_cubic_spline_interpolator_1d
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_distribution_function, only: &
+    initialize_distribution_function_2d, &
+    sll_distribution_function_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_landau_2d_initializer, only: &
+    init_landau_2d
+
+  use sll_m_scalar_field_2d_old, only: &
+    write_scalar_field_2d
+
+  use sll_m_scalar_field_initializers_base, only: &
+    cell_centered_field, &
+    scalar_field_2d_initializer_base
+
+  use sll_m_utilities, only: &
+    int2string
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
   sll_int32 :: nc_eta1, nc_eta2
   class(sll_coordinate_transformation_2d_base), pointer   :: m

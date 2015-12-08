@@ -1,26 +1,40 @@
 program test_general_elliptic_solver_multipatch
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use m_multipatch_helper_functions, only: &
+    func_one, &
+    func_zero
 
-use sll_m_cartesian_meshes
-use sll_m_cartesian_meshes_multipatch
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_multipatch
-use sll_m_scalar_field_2d
-use sll_m_scalar_field_2d_multipatch
-use sll_m_constants
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_timer
-use sll_m_general_coordinate_elliptic_solver_multipatch
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
+  use sll_m_coordinate_transformation_multipatch, only: &
+    new_coordinate_transformation_multipatch_2d, &
+    sll_coordinate_transformation_multipatch_2d, &
+    sll_delete
 
-use m_multipatch_helper_functions, only : &
-     func_zero, func_one
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_coordinate_transformation_2d_nurbs
 
-implicit none
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre
+
+  use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
+    factorize_mat_es_mp, &
+    general_coordinate_elliptic_solver_mp, &
+    initialize_general_elliptic_solver_mp, &
+    solve_general_coordinates_elliptic_eq_mp
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    new_scalar_field_multipatch_2d, &
+    sll_delete, &
+    sll_scalar_field_multipatch_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3

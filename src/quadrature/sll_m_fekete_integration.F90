@@ -8,13 +8,18 @@
 !> http://people.sc.fsu.edu/~jburkardt/f_src/triangle_fekete_rule/
 module sll_m_fekete_integration
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_hexagonal_meshes
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    fekete_order_num, &
+    fekete_points_and_weights
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
   abstract interface

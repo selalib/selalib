@@ -21,8 +21,20 @@
 !> @details
 !> With XDMF file you can describe data to plot them with VisIt
 module sll_m_xml_io
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_xml_field, &
+    sll_xml_file_close, &
+    sll_xml_file_create, &
+    sll_xml_grid_geometry
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
  !> write a data item in the xml file
  interface sll_xml_dataitem

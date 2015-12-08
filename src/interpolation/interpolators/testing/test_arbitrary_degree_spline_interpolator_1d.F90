@@ -1,11 +1,23 @@
 program unit_test
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-use sll_m_arbitrary_degree_spline_interpolator_1d
-use sll_m_boundary_condition_descriptors
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    set_values_at_boundary1d, &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 31
 #define NPTS2 31 
@@ -175,8 +187,8 @@ do i=0,NPTS1-1
   reference(i+1)     = cos(2.0_f64*sll_pi*eta1)
 end do
 
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -214,8 +226,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -253,8 +265,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -292,8 +304,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -331,8 +343,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 

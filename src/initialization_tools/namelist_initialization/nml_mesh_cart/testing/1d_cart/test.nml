@@ -1,0 +1,86 @@
+!ctest --verbose -R nml_mesh_1d_cart
+
+&mesh_1d_landau_cart
+  num_cells = 32
+  eta_min = 0.
+  nbox = 1
+  kmode = 0.5
+/
+
+&mesh_1d_landau_cart_1
+  num_cells_1 = 32
+  eta_min_1 = 0.
+  nbox_1 = 1
+  kmode_1 = 0.5
+/
+
+&mesh_1d_landau_cart_2
+  num_cells_2 = 32
+  eta_min_2 = 0.
+  nbox_2 = 1
+  kmode_2 = 0.5
+/
+
+
+&mesh_1d_unif_cart
+  num_cells = 32
+  eta_min = 0.
+  eta_max = 1.
+/
+
+&mesh_1d_unif_cart_1
+  num_cells_1 = 32
+  eta_min_1 = 0.
+  eta_max_1 = 1.
+/
+
+&mesh_1d_unif_cart_2
+  num_cells_2 = 32
+  eta_min_2 = 0.
+  eta_max_2 = 1.
+/
+
+&mesh_1d_two_grid_cart
+  num_cells = 32
+  eta_min = -6.
+  eta_max = 6.
+  eta_in_min = 0.
+  eta_in_max = 1.
+  density_out_min = 1.
+  density_in = 1.
+  density_out_max = 1.
+/
+
+&mesh_1d_two_grid_cart_1
+  num_cells_1 = 32
+  eta_min_1 = -6.
+  eta_max_1 = 6.
+  eta_in_min_1 = 0.
+  eta_in_max_1 = 1.
+  density_out_min_1 = 1.
+  density_in_1 = 1.
+  density_out_max_1 = 1.
+/
+
+&mesh_1d_two_grid_cart_2
+  num_cells_2 = 32
+  eta_min_2 = -6.
+  eta_max_2 = 6.
+  eta_in_min_2 = 0.
+  eta_in_max_2 = 1.
+  density_out_min_2 = 1.
+  density_in_2 = 1.
+  density_out_max_2 = 1.
+/
+
+&mesh_1d_cart
+  choice = "unif"
+/
+
+&mesh_1d_cart_1
+  choice_1 = "landau"
+/
+
+&mesh_1d_cart_2
+  choice_2 = "two_grid"
+/

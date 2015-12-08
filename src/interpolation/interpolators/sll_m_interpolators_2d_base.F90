@@ -23,9 +23,16 @@
 !> Function names should be reviewed and improved. What is the best way to
 !> express that a derivative is in a particular direction? Why eta???
 module sll_m_interpolators_2d_base
-#include "sll_working_precision.h" 
-use sll_m_boundary_condition_descriptors
-implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_c_interpolator_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !*************************************************************************
   !

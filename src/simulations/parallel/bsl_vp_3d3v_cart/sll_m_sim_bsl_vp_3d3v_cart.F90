@@ -1,24 +1,99 @@
 module sll_m_sim_bsl_vp_3d3v_cart
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_interpolators_1d_base
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_distribution_function_6d_initializer
-  use sll_m_poisson_3d_periodic_par
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
 
-  use sll_m_xml_io
-  use sll_m_xdmf_parallel
-  use sll_m_hdf5_io_parallel
-  use hdf5
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_distribution_function_6d_initializer, only: &
+    init_test_6d_par, &
+    load_test_6d_initializer, &
+    new_cartesian_6d_mesh, &
+    simple_cartesian_6d_mesh
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_poisson_3d_periodic_par, only: &
+    new_poisson_3d_periodic_plan_par, &
+    poisson_3d_periodic_plan_par, &
+    solve_poisson_3d_periodic_par
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    apply_remap_6d, &
+    compute_local_sizes, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    get_layout_k_min, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    layout_6d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_layout_6d, &
+    new_remap_plan, &
+    remap_plan_3d_real64, &
+    remap_plan_6d_real64, &
+    sll_delete
+
+  use sll_m_scalar_field_initializers_base, only: &
+    node_centered_field
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_power_of_two
+
+  use sll_m_xdmf_parallel, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  use sll_m_xml_io, only: &
+    sll_xml_field, &
+    sll_xml_file_close, &
+    sll_xml_file_create, &
+    sll_xml_grid_geometry
+
+  use sll_mpi, only: &
+    mpi_wtime
 
   implicit none
+
+  public :: &
+    delete_vp6d_par_cart, &
+    sll_delete, &
+    sll_simulation_6d_vlasov_poisson_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: &
      sll_simulation_6d_vlasov_poisson_cart

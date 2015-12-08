@@ -1,17 +1,32 @@
 program landau_4d_multigrid
 
-#include "sll_assert.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_constants
-use sll_m_interpolators_1d_base
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_utilities, only: int2string
-use sll_m_mudpack
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_mudpack, only: &
+    delete_mudpack_cartesian, &
+    initialize_mudpack_cartesian, &
+    sll_mudpack_solver, &
+    solve_mudpack_cartesian
+
+  use sll_m_utilities, only: &
+    int2string
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !Geometry
 sll_real64 :: eta1, eta2, eta3, eta4

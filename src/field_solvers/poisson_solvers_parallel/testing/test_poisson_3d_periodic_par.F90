@@ -15,16 +15,42 @@
 !************************************************************************
 
 program test_poisson_3d_periodic_par
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_poisson_3d_periodic_par
-  use sll_m_collective
-  use iso_fortran_env, only: output_unit
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_3d_periodic_par, only: &
+    delete_poisson_3d_periodic_plan_par, &
+    new_poisson_3d_periodic_plan_par, &
+    poisson_3d_periodic_plan_par, &
+    solve_poisson_3d_periodic_par
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d
+
+  use sll_mpi, only: &
+    mpi_prod
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32                                    :: nx, ny, nz
   sll_int32                                    :: nx_loc, ny_loc, nz_loc

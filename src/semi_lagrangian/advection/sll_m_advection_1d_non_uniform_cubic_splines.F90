@@ -18,14 +18,25 @@
 ! for the moment mimic of sll_m_periodic_interpolator_1d.F90
 
 module sll_m_advection_1d_non_uniform_cubic_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_cubic_non_uniform_splines
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    compute_spline_nonunif_1d_periodic_aux2, &
+    interpolate_array_value_nonunif_aux, &
+    setup_spline_nonunif_1d_periodic_aux
+
+  implicit none
+
+  public :: &
+    new_non_uniform_cubic_splines_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_advection_1d_base) :: non_uniform_cubic_splines_1d_advector
 

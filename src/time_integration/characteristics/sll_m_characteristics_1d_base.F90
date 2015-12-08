@@ -16,9 +16,20 @@
 !**************************************************************
 
 module sll_m_characteristics_1d_base
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    process_outside_point_periodic, &
+    process_outside_point_set_to_limit, &
+    signature_process_outside_point_1d, &
+    sll_characteristics_1d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! For computing the characteristics in 1d
   type, abstract :: sll_characteristics_1d_base 

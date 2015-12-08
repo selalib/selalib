@@ -11,20 +11,25 @@
 !------------------------------------------------------------------------------
 module sll_m_hdf5_serial
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #ifndef NOHDF5
 
 #include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
     sll_hdf5_file_create, &
     sll_hdf5_file_open, &
-    sll_hdf5_file_close, &
     sll_hdf5_write_array
 
   implicit none
-  public :: sll_t_hdf5_serial
+
+  public :: &
+    sll_t_hdf5_serial
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Maximum length of non-allocatable strings in module
   integer, parameter :: maxlen = 256
