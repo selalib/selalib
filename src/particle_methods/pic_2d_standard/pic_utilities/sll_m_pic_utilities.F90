@@ -54,7 +54,7 @@ module sll_m_pic_utilities
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #ifdef _OPENMP
-   logical :: openmp_st
+!   logical :: openmp_st
 #endif
 !!    !$ openmp_st = OMP_IN_PARALLEL()
 !!    print*, 'USE of omp', openmp_st
