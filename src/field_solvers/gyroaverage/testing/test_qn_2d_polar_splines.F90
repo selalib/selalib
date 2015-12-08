@@ -16,13 +16,28 @@
 !**************************************************************
 
 program test_qn_2d_polar_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
-use sll_m_qn_2d_polar_splines_solver
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gyroaverage_utilities, only: &
+    compute_init_f_polar
+
+  use sll_m_qn_2d_base, only: &
+    sll_qn_2d_base
+
+  use sll_m_qn_2d_polar, only: &
+    compute_gamma0, &
+    test_solve_qn_polar_splines
+
+  use sll_m_qn_2d_polar_splines_solver, only: &
+    new_qn_2d_polar_splines_solver
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_qn_2d_base), pointer :: qn 
   sll_real64 :: err,mu_max

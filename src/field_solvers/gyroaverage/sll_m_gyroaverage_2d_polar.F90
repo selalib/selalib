@@ -17,18 +17,45 @@
 
 
 module sll_m_gyroaverage_2d_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gyroaverage_utilities
-!  use mod_sparse
+! use F77_fftpack, only: &
+!   dfftb, &
+!   dfftf, &
+!   dffti
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gyroaverage_utilities, only: &
+    compute_shape_circle
 
   implicit none
+
+  public :: &
+    compute_gyroaverage_pade_high_order_polar, &
+    compute_gyroaverage_pade_polar, &
+    compute_gyroaverage_points_polar_hermite, &
+    compute_gyroaverage_points_polar_hermite_c1, &
+    compute_gyroaverage_points_polar_spl, &
+    compute_gyroaverage_points_polar_with_invar_hermite_c1, &
+    compute_gyroaverage_points_polar_with_invar_spl, &
+    compute_gyroaverage_pre_compute_polar_hermite_c1, &
+    compute_gyroaverage_pre_compute_polar_spl, &
+    compute_gyroaverage_pre_compute_polar_spl_fft, &
+    new_plan_gyroaverage_polar_hermite, &
+    new_plan_gyroaverage_polar_pade, &
+    new_plan_gyroaverage_polar_splines, &
+    penta, &
+    pre_compute_gyroaverage_polar_hermite_c1, &
+    pre_compute_gyroaverage_polar_spl, &
+    pre_compute_gyroaverage_polar_spl_fft, &
+    sll_plan_gyroaverage_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type sll_plan_gyroaverage_polar
      

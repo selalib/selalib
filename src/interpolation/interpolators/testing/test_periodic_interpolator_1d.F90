@@ -1,13 +1,28 @@
 program periodic_interpolation
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_interpolators_1d_base
-use sll_m_constants
-use sll_m_periodic_interpolator_1d
-use sll_m_lagrange_interpolator_1d
-use sll_m_lagrange_interpolation_1d
-use sll_m_periodic_interp
 
-implicit none 
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_lagrange_interpolator_1d, only: &
+    sll_lagrange_interpolator_1d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_periodic_interpolator_1d, only: &
+    sll_periodic_interpolator_1d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 type(sll_periodic_interpolator_1d), target :: interp_per
 type(sll_lagrange_interpolator_1d),     target :: interp_lagrange

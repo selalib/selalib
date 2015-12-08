@@ -1,21 +1,60 @@
 !Test for new version of general coordinates elliptic solver
 !made by Adnane and Michel
 program test_gces_full_periodic_prototype
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_errors.h"
 
-use sll_m_cartesian_meshes
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_scalar_field_2d
-use sll_m_constants, only : &
-     sll_pi
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_deboor_splines_2d
-use sll_m_general_coordinate_elliptic_solver
-use sll_m_cubic_spline_interpolator_2d
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre, &
+    factorize_mat_es_prototype, &
+    general_coordinate_elliptic_solver, &
+    initialize_general_elliptic_solver_prototype, &
+    solve_general_coordinates_elliptic_eq_prototype
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_analytic, &
+    new_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_cartesian_mesh_2d),                  pointer :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer :: tau

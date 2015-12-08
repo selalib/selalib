@@ -24,16 +24,48 @@
 !> This module uses fftw library
 module sll_m_poisson_2d_periodic_fftw
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_fftw.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_fftw3
+  use iso_c_binding, only: &
+    c_associated, &
+    c_double, &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+#ifdef FFTW_F2003
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_alloc_real, &
+    fftw_destroy_plan, &
+    fftw_estimate, &
+    fftw_execute_dft_c2r, &
+    fftw_execute_dft_r2c, &
+    fftw_free, &
+    fftw_plan_dft_c2r_2d, &
+    fftw_plan_dft_r2c_2d
+#else
+  use sll_m_fftw3, only : &
+       fftw_estimate
+#endif
+
+  implicit none
+
+  public :: &
+    initialize, &
+    new, &
+    poisson_2d_periodic_fftw, &
+    solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Create a new poisson solver on 1d mesh
 interface new
@@ -58,7 +90,7 @@ end interface
 
 !> derived type to solve the Poisson equation on 2d regular cartesian mesh 
 !> with periodic boundary conditions on both sides
-type, public :: poisson_2d_periodic_fftw
+type :: poisson_2d_periodic_fftw
 
    private
    sll_real64, dimension(:,:), pointer :: kx       !< wave number in x
@@ -79,7 +111,6 @@ type, public :: poisson_2d_periodic_fftw
 
 end type poisson_2d_periodic_fftw
 
-public initialize, new, solve, delete
 
 contains
 

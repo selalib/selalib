@@ -20,18 +20,41 @@
 
 
 module sll_m_advection_1d_CSL_periodic
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_characteristics_1d_base
-use sll_m_interpolators_1d_base
-use sll_m_hermite_interpolation_1d
-use sll_m_gauss_legendre_integration
-use sll_m_lagrange_interpolation
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+! use F77_fftpack, only: &
+!   dfftb, &
+!   dfftf
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_characteristics_1d_base, only: &
+    process_outside_point_periodic, &
+    sll_characteristics_1d_base
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_hermite_interpolation_1d, only: &
+    compute_w_hermite_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_lagrange_interpolation, only: &
+    lagrange_interpolate
+
+  implicit none
+
+  public :: &
+    new_csl_periodic_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_advection_1d_base) :: CSL_periodic_1d_advector
   

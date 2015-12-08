@@ -25,24 +25,45 @@
 !> found in the de Boor book "Practical guide to splines"
 !> or the NURBS book by Piegl and Tiller.  
 module sll_m_arbitrary_degree_splines
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    arbitrary_degree_spline_1d, &
+    b_spline_derivatives_at_x, &
+    b_splines_and_derivs_at_x, &
+    b_splines_at_x, &
+    compute_b_spline_and_deriv_at_x_mm, &
+    compute_b_spline_at_x_mm, &
+    eval_uniform_periodic_spline_curve, &
+    find_cell, &
+    new_arbitrary_degree_spline_1d, &
+    open_arbitrary_deg_spline, &
+    periodic_arbitrary_deg_spline, &
+    sll_delete, &
+    uniform_b_spline_derivatives_at_x, &
+    uniform_b_splines_and_derivs_at_x, &
+    uniform_b_splines_at_x
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! With these read-only parameters, we mimic the behavior of an enumerator
   ! or object macros. These are the alternatives with a different 
   ! implementation.
   ! This should be in sll_m_boundary_condition_descriptors ?
   !> Spline constructed from a grid with periodic boundary conditions
-  sll_int32, parameter, public :: PERIODIC_ARBITRARY_DEG_SPLINE = 0
+  sll_int32, parameter :: PERIODIC_ARBITRARY_DEG_SPLINE = 0
   !> Spline constructed from a grid with open boundary conditions
   !> This means that the end points are duplicated so as to have multiplicity
   !> degree + 1 in the knot sequence, which are otherwise the grid points
-  sll_int32, parameter, public :: OPEN_ARBITRARY_DEG_SPLINE     = 1 
+  sll_int32, parameter :: OPEN_ARBITRARY_DEG_SPLINE     = 1 
 
-  type, public :: arbitrary_degree_spline_1d
+  type :: arbitrary_degree_spline_1d
      sll_int32  :: num_pts
      sll_int32  :: bc_type
      sll_int32  :: degree
@@ -58,18 +79,6 @@ module sll_m_arbitrary_degree_splines
      module procedure delete_arbitrary_order_spline_1d
   end interface sll_delete
 
-  public :: sll_delete,                      &
-       find_cell,                            &
-       b_splines_at_x,                       &
-       b_splines_and_derivs_at_x,            &
-       uniform_b_splines_at_x,               &
-       new_arbitrary_degree_spline_1d,       &
-       b_spline_derivatives_at_x,            &
-       uniform_b_spline_derivatives_at_x,    &
-       uniform_b_splines_and_derivs_at_x,    &
-       eval_uniform_periodic_spline_curve,   &
-       compute_b_spline_at_x_mm,             &
-       compute_b_spline_and_deriv_at_x_mm
 
 contains
   !> @brief

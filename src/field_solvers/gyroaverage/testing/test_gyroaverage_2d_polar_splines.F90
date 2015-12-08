@@ -16,12 +16,21 @@
 !**************************************************************
 
 program test_gyroaverage_2d_polar_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_gyroaverage_2d_polar_splines_solver
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar_splines_solver, only: &
+    new_gyroaverage_2d_polar_splines_solver
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_gyroaverage_2d_base), pointer :: gyroaverage 
   sll_real64 :: err

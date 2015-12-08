@@ -1,13 +1,22 @@
 program test_poisson_2d_dirichlet_cartesian
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_poisson_2d_dirichlet_cartesian
-  use sll_m_gnuplot
-  use iso_fortran_env, only: output_unit
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_2d_dirichlet_cartesian, only: &
+    new_poisson_2d_dirichlet_cartesian_plan, &
+    poisson_2d_dirichlet_cartesian, &
+    sll_delete, &
+    sll_solve
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type (poisson_2d_dirichlet_cartesian), pointer :: plan
 

@@ -17,21 +17,37 @@
 
 module sll_m_bsl_lt_pic_4d_utilities
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!#include "sll_m_accumulators.h"
-!#include "particle_representation.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_cartesian_meshes
-  use sll_m_working_precision
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-  use sll_m_timer
-  use sll_m_utilities, only: sll_new_file_id, int2string
-  use sll_m_gnuplot
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none 
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
+  implicit none
+
+  public :: &
+    apply_periodic_bc_x, &
+    apply_periodic_bc_y, &
+    eval_hat_function, &
+    eval_landau_fx, &
+    get_initial_position_on_cartesian_grid_from_particle_index, &
+    get_particle_index_from_initial_position_on_cartesian_grid, &
+    get_poisson_cell_index, &
+    global_to_cell_offset_extended, &
+    sll_pic_shape, &
+    update_closest_particle_arrays
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

@@ -6,10 +6,17 @@
 module sll_m_time_composition
 
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    comp_coeff_sym_sym
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Symmetric Composition of Symmetric Methods
   type comp_coeff_sym_sym

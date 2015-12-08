@@ -5,14 +5,17 @@
 !Transform samples of random distributions such that certain moments are
 !exactly matched
 module sll_m_moment_matching
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_constants
+  implicit none
 
+  public :: &
+    match_moment_1d_weight_linear_real64
 
-implicit none
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
  !> @brief !Match mean E[X] and E[X^2]  = first and second order moment
   interface match_moment_1D_linear

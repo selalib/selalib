@@ -4,21 +4,28 @@
 !> @details This base class gives an abstract interface to the basic functions for accumulation of charge and current densities as well as the evaluation of a function at particle positions.
 module sll_m_kernel_smoother_base
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
 
   implicit none
-  private
 
-  public :: SLL_GALERKIN, SLL_COLLOCATION
+  public :: &
+    sll_collocation, &
+    sll_galerkin, &
+    sll_kernel_smoother_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! Define parameters to set if Galerkin or collocation scaling should be used in accumulation routines
   sll_int32, parameter :: SLL_GALERKIN = 0
   sll_int32, parameter :: SLL_COLLOCATION = 1
 
   !> Basic type of a kernel smoother used for PIC simulations
-  type, public, abstract :: sll_kernel_smoother_base
+  type, abstract :: sll_kernel_smoother_base
      sll_int32              :: n_dofs  !< Number of degrees of freedom of the smoothing kernels.
      sll_int32, allocatable :: n_grid(:) !< Number of grid points per dimension for use on tensor product grid based smoothing kernels.
      

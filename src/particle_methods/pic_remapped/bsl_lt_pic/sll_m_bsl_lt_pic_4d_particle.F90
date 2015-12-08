@@ -23,13 +23,17 @@
 
 module sll_m_bsl_lt_pic_4d_particle
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_bsl_lt_pic_4d_particle
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! <<sll_bsl_lt_pic_4d_particle>>
   type :: sll_bsl_lt_pic_4d_particle

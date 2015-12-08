@@ -26,22 +26,61 @@
 !we use a lot of points in x1 and few points in x2
 
 program aligned_translation_2d
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_1d_base
-use sll_m_advection_1d_periodic
-use sll_m_lagrange_interpolation
-use sll_m_advection_2d_oblic
-use sll_m_timer
-use sll_m_fcisl_toroidal
-use sll_m_constants
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_xdmf
-use sll_m_hdf5_io_serial
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_advection_2d_oblic, only: &
+    new_oblic_2d_advector, &
+    oblic_2d_advector, &
+    oblic_advect_2d_constant
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fcisl_toroidal, only: &
+    compute_modulo_vect2d_inplace, &
+    interpolate2d_toroidal
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(oblic_2d_advector), pointer :: adv  
   class(sll_advection_1d_base), pointer :: adv_x1

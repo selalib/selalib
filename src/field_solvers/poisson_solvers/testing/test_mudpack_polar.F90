@@ -1,14 +1,22 @@
 program test_mudpack_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_mudpack
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_mudpack, only: &
+    initialize_mudpack_polar, &
+    sll_mudpack_solver, &
+    solve_mudpack_polar
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_mudpack_solver) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs

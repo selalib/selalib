@@ -1,13 +1,25 @@
 program test_mudpack_cartesian
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 
-  use sll_m_mudpack
-  use sll_m_boundary_condition_descriptors
-  use sll_m_constants, only : sll_pi
-  use sll_m_gnuplot
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_mudpack, only: &
+    delete_mudpack_cartesian, &
+    initialize_mudpack_cartesian, &
+    sll_mudpack_solver, &
+    solve_mudpack_cartesian
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer :: nc_eta1
 integer :: nc_eta2

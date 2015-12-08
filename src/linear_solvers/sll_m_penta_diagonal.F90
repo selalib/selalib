@@ -21,10 +21,20 @@
 !> @details
 !> This module are not fully tested, please use it carefully.
 module sll_m_penta_diagonal
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-implicit none
-private
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_delete, &
+    sll_penta_diagonal_solver, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Initialize the penta diagonal solver
   type sll_penta_diagonal_solver  
@@ -49,10 +59,6 @@ interface sll_delete
    module procedure delete_penta_diagonal
 end interface sll_delete
 
-public :: sll_create, &
-          sll_delete, &
-          sll_penta_diagonal_solver, &
-          sll_solve
 
 contains 
 

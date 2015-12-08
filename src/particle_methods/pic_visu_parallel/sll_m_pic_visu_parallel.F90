@@ -21,14 +21,33 @@
 
 module sll_m_pic_visu_parallel
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-use sll_m_pic_visu
-use sll_m_collective
+  use sll_m_collective, only: &
+    sll_collective_reduce, &
+    sll_collective_t, &
+    sll_get_collective_rank
 
+  use sll_m_pic_visu, only: &
+    compute_df_cic
 
-implicit none
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_corect2d_nodes
+
+  use sll_mpi, only: &
+    mpi_sum
+
+  implicit none
+
+  public :: &
+    distribution_xdmf_coll
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

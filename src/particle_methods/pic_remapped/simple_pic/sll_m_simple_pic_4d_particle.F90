@@ -31,13 +31,17 @@
 
 module sll_m_simple_pic_4d_particle
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_simple_pic_4d_particle
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! <<sll_simple_pic_4d_particle>>
 

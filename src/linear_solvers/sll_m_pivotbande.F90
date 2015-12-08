@@ -1,8 +1,17 @@
 module sll_m_pivotbande
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
+
   implicit none
+
+  public :: &
+    factolub_bande, &
+    residue_bande, &
+    solvlub_bande
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 
   subroutine searchband(a,n,l1,l2)

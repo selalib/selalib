@@ -3,29 +3,79 @@
 
 module sll_m_sim_pic_vm_1d2v_cart
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_collective
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_particle_group_base
-  use sll_m_particle_initializer
-  use sll_m_particle_group_1d2v
-  use sll_m_hamiltonian_splitting_base
-  use sll_m_hamiltonian_splitting_pic_vm_1d2v
-  use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
-  use sll_m_ascii_io
-  
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_1d
-  use sll_m_maxwell_1d_base
-  use sll_m_maxwell_1d_fem
-  use sll_m_arbitrary_degree_splines
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_collective_reduce_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hamiltonian_splitting_base, only: &
+    sll_t_hamiltonian_splitting_base
+
+  use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v, only: &
+    sll_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
+    sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
+
+  use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
+    sll_new_hamiltonian_splitting_pic_vm_1d2v, &
+    sll_t_hamiltonian_splitting_pic_vm_1d2v
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_galerkin, &
+    sll_kernel_smoother_base
+
+  use sll_m_kernel_smoother_spline_1d, only: &
+    sll_kernel_smoother_spline_1d, &
+    sll_new_smoother_spline_1d
+
+  use sll_m_maxwell_1d_base, only: &
+    sll_maxwell_1d_base
+
+  use sll_m_maxwell_1d_fem, only: &
+    sll_maxwell_1d_fem, &
+    sll_new_maxwell_1d_fem
+
+  use sll_m_particle_group_1d2v, only: &
+    sll_new_particle_group_1d2v, &
+    sll_particle_group_1d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_particle_initializer, only: &
+    sll_particle_initialize_random_landau_1d2v, &
+    sll_particle_initialize_sobol_landau_1d2v
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
+
+  public :: &
+    sll_delete, &
+    sll_t_sim_pic_vm_1d2v_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_INIT_RANDOM=0
   sll_int32, parameter :: SLL_INIT_SOBOL=1

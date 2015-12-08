@@ -1,14 +1,24 @@
 program test_qn_solver_2d
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_qn_solver_2d
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_qn_solver_2d, only: &
+    delete, &
+    new, &
+    qn_solver_2d, &
+    solve
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32                    :: BC ! Boundary_conditions
   sll_int32                             :: NP_r, NP_theta

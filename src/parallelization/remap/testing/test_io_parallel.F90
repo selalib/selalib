@@ -1,23 +1,74 @@
 !> Unit test for parallel output
 program test_io_parallel
 
-#ifndef NOHDF5
-use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
-#endif
-use sll_m_collective
-use sll_m_hdf5_io_parallel
-use sll_m_xdmf_parallel
-use sll_m_xml_io
-use sll_m_gnuplot_parallel
-use sll_m_remapper
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_utilities, only : &
-     is_power_of_two
-use iso_fortran_env, only: &
-     output_unit
 
-implicit none
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_curv_2d_parallel, &
+    sll_gnuplot_rect_2d_parallel
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    get_layout_k_min, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_3d, &
+    sll_delete, &
+    sll_view_lims
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  use sll_m_xdmf_parallel, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  use sll_m_xml_io, only: &
+    sll_xml_field, &
+    sll_xml_file_close, &
+    sll_xml_file_create, &
+    sll_xml_grid_geometry
+
+  use sll_mpi, only: &
+    mpi_info_null, &
+    mpi_thread_single, &
+    mpi_wtime
+
+#ifndef NOHDF5
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
+
+#endif
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32   :: myrank
 sll_int64   :: colsz 

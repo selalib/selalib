@@ -38,34 +38,130 @@
 
 
 module sll_m_sim_bsl_dk_3d1v_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  !use sll_m_test_4d_initializer
-  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
-  use sll_m_fdistribu4d_dk
-  use sll_m_cartesian_meshes
-  use sll_m_reduction
-  use sll_m_advection_2d_bsl
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_advection_1d_periodic
-  use sll_m_poisson_2d_polar_wrapper
-  use sll_m_hermite_interpolation_2d
-  use sll_m_hdf5_io_serial
-  use sll_m_ascii_io
-  use sll_m_gnuplot
-  use sll_m_xdmf
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_neumann_mode_0, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_cartesian_meshes, only: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fdistribu4d_dk, only: &
+    init_fequilibrium
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_1d, &
+    sll_gnuplot_2d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array, &
+    sll_hdf5_write_array_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_wrapper, only: &
+    new_poisson_2d_polar, &
+    sll_poisson_drift_kinetic
+
+  use sll_m_reduction, only: &
+    compute_reduction_2d_to_0d, &
+    compute_reduction_4d_to_3d_direction4
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_3d_real64, &
+    remap_plan_4d_real64
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_even
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
 
   implicit none
+
+  public :: &
+    delete_dk4d_polar, &
+    sll_simulation_4d_drift_kinetic_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !! choice of QNS solver
 !! should be else where

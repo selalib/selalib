@@ -12,19 +12,21 @@
 !------------------------------------------------------------------------------
 module sll_m_vector_space_real_arrays
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
-  use sll_m_vector_space_base, only: sll_vector_space_base
+  use sll_m_vector_space_base, only: &
+    sll_vector_space_base
 
   implicit none
 
-!  public :: &
-!    sll_vector_space_real_1d, &
-!    sll_vector_space_real_2d, &
-!    sll_vector_space_real_3d
+  public :: &
+    sll_vector_space_real_1d, &
+    sll_vector_space_real_2d
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   ! Generic interface for real arrays - assumes contiguous array storage
@@ -82,7 +84,7 @@ module sll_m_vector_space_real_arrays
   !---------
   !> Simple vector space for 1D Fortran arrays (double precision float).
   !============================================================================
-  type, public, extends( sll_vector_space_real ) :: sll_vector_space_real_1d
+  type, extends( sll_vector_space_real ) :: sll_vector_space_real_1d
 
     sll_real64, pointer, contiguous :: array(:) => null()      !< 1D real array
 
@@ -98,7 +100,7 @@ module sll_m_vector_space_real_arrays
   !---------
   !> Simple vector space for 2D Fortran arrays (double precision float).
   !============================================================================
-  type, public, extends( sll_vector_space_real ) :: sll_vector_space_real_2d
+  type, extends( sll_vector_space_real ) :: sll_vector_space_real_2d
 
     sll_real64, pointer, contiguous :: array(:,:) => null()    !< 2D real array
 
@@ -114,7 +116,7 @@ module sll_m_vector_space_real_arrays
   !---------
   !> Simple vector space for 3D Fortran arrays (double precision float).
   !============================================================================
-  type, public, extends( sll_vector_space_real ) :: sll_vector_space_real_3d
+  type, extends( sll_vector_space_real ) :: sll_vector_space_real_3d
 
     sll_real64, pointer, contiguous :: array(:,:,:) => null()  !< 3D real array
 

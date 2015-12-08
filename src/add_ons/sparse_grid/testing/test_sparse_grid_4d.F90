@@ -2,15 +2,21 @@
 !  test 4D sparse grid
 !-------------------------------------------------------------------
 program test_interpolation_4d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_sparse_grid_4d
-  use sll_m_sparse_grid_2d
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_sparse_grid_2d, only: &
+    sparse_grid_interpolator_2d
+
+  use sll_m_sparse_grid_4d, only: &
+    sparse_grid_interpolator_4d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, dimension(:), allocatable :: order
   sll_int32 :: levels

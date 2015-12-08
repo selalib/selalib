@@ -1,22 +1,86 @@
 module sll_m_sim_eul_vp_2d2v_cart_fv
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  !use 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_sim_base
-  use sll_m_parallel_array_initializer  
-  use sll_m_cartesian_meshes
-  use sll_m_mesh_calculus_2d
-  use sll_m_gnuplot_parallel
-  use sll_m_timer
-  use sll_m_point_to_point_comms
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_collective_reduce_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_4d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_rect_2d_parallel
+
+  use sll_m_mesh_calculus_2d, only: &
+    cell_volume, &
+    edge_length_eta1_minus, &
+    edge_length_eta1_plus, &
+    edge_length_eta2_minus, &
+    edge_length_eta2_plus
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_4d_parallel_array_initializer_finite_volume
+
+  use sll_m_point_to_point_comms, only: &
+    comm_receive_real64, &
+    comm_send_real64, &
+    get_buffer, &
+    new_comm_real64, &
+    sll_configure_comm_real64_torus_2d, &
+    sll_p2p_comm_real64
+
+  use sll_m_poisson_2d_periodic_cartesian_par, only: &
+    new_poisson_2d_periodic_plan_cartesian_par_alt, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par_alt
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_2d_real64, &
+    sll_delete
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    sll_new_file_id
+
+  use sll_mpi, only: &
+    mpi_allreduce, &
+    mpi_comm_world, &
+    mpi_double_precision, &
+    mpi_sum
+
   implicit none
+
+  public :: &
+    initialize_vp4d, &
+    sll_delete, &
+    sll_simulation_4d_vp_eulerian_cart_finite_volume
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: &
        sll_simulation_4d_vp_eulerian_cart_finite_volume

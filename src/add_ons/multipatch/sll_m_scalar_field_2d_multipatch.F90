@@ -26,21 +26,50 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_2d_multipatch
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_scalar_field_2d
-  use sll_m_coordinate_transformation_multipatch
-  use sll_m_constants
-  use sll_m_interpolators_2d_base
-  use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_m_utilities
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gnuplot
-  use sll_m_utilities, only: sll_new_file_id, int2string
-  use sll_m_xdmf
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d, &
+    set_slope2d, &
+    sll_arbitrary_degree_spline_interpolator_2d, &
+    sll_arbitrary_degree_spline_interpolator_2d_ptr, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    multipatch_data_2d_real, &
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_coordinate_transformation_2d_nurbs
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_discrete, &
+    sll_scalar_field_2d_discrete_ptr, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
   implicit none
+
+  public :: &
+    new_scalar_field_multipatch_2d, &
+    set_slope_mp, &
+    sll_delete, &
+    sll_scalar_field_multipatch_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type ::  sll_scalar_field_multipatch_2d

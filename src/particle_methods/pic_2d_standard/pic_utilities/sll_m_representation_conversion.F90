@@ -17,13 +17,18 @@
 
 
 module sll_m_representation_conversion
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 

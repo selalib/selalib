@@ -4,9 +4,16 @@
 !> @details
 !> Contains the abstract class to create a Poisson solver in 3D.
 module sll_m_poisson_3d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_poisson_3d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Abstract class for Poisson solver in 3 dimensions
   type, abstract :: sll_poisson_3d_base 

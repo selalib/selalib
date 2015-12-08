@@ -1,13 +1,84 @@
 module test_processes_module
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_cubic_splines
-  use sll_m_constants
-  use util_constants
-  use test_func_module
-  use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    compute_cubic_spline_2d, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_array, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    new_cubic_spline_1d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_1d, &
+    sll_cubic_spline_2d, &
+    sll_delete
+
+  use test_func_module, only: &
+    f, &
+    fprime
+
+  use util_constants, only: &
+    np, &
+    npx1, &
+    npx2, &
+    r1, &
+    r2, &
+    x1max, &
+    x1min, &
+    x2max, &
+    x2min, &
+    xmax, &
+    xmin
+
   implicit none
+
+  public :: &
+    coscos, &
+    deriv1_polar_x, &
+    deriv1_polar_y, &
+    deriv2_polar_x, &
+    deriv2_polar_y, &
+    dmycos, &
+    fxy, &
+    interpolator_tester_1d_hrmt, &
+    interpolator_tester_1d_prdc, &
+    interpolator_tester_2d_hrmt_prdc, &
+    interpolator_tester_2d_prdc_prdc, &
+    line, &
+    mcossin, &
+    msincos, &
+    mycos, &
+    plane, &
+    plane2, &
+    plane2_deriv, &
+    plane3, &
+    plane3_deriv_x, &
+    plane3_deriv_y, &
+    plane_deriv, &
+    polar_x, &
+    polar_y, &
+    sincos_prod, &
+    sinsin, &
+    test_2d_spline_hrmt_hrmt, &
+    test_2d_spline_hrmt_hrmt_no_slopes, &
+    test_2d_spline_hrmt_prdc, &
+    test_2d_spline_hrmt_prdc_no_slopes, &
+    test_2d_spline_prdc_hrmt, &
+    test_2d_spline_prdc_hrmt_no_slopes, &
+    test_spline_1d_hrmt
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   abstract interface
      function fx(x)

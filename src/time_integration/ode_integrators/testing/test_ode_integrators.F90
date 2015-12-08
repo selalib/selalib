@@ -1,29 +1,29 @@
 program test_ode_integrators
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-  use sll_m_working_precision
-  use sll_m_errors
+#include "sll_working_precision.h"
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_vector_space_real_1d
-
-  use sll_m_rk_explicit, only: &
-    sll_rk1e_fwd_euler, &
-    sll_rk2e_midpoint , &
-    sll_rk2e_heun     , &
-    sll_rk2e_ralston  , &
-    sll_rk3e_heun3    , &
-    sll_rk4e_classic
+  use m_ode_collection, only: &
+    harmonic_oscillator
 
   use sll_m_ode_integrator_base, only: &
     sll_ode_base, &
     sll_ode_integrator_base
 
-  use m_ode_collection, only: &
-    harmonic_oscillator
+  use sll_m_rk_explicit, only: &
+    sll_rk1e_fwd_euler, &
+    sll_rk2e_heun, &
+    sll_rk2e_midpoint, &
+    sll_rk2e_ralston, &
+    sll_rk3e_heun3, &
+    sll_rk4e_classic
+
+  use sll_m_vector_space_real_arrays, only: &
+    sll_vector_space_real_1d
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !----------------------------------------------------------------------------
   ! Input arguments
@@ -51,12 +51,12 @@ program test_ode_integrators
 
   ! Error handling
   character(len=*), parameter :: this_prog_name = "test_ode_integrators"
-  character(len=128)          :: err_msg
+  !character(len=128)          :: err_msg
 
   ! Other variables
   sll_real64                                    :: h_max, tend
   sll_real64                                    :: h, t
-  sll_int32                                     :: i
+  !sll_int32                                     :: i
   sll_real64, target                            :: z(2), znew(2)
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err

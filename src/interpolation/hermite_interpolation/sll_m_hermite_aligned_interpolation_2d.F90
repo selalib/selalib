@@ -1,8 +1,17 @@
 module sll_m_hermite_aligned_interpolation_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    new_hermite_aligned_interpolation_2d, &
+    sll_hermite_aligned_interpolation_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type :: sll_hermite_aligned_interpolation_2d
   sll_real64 :: eta_min(2) !< eta1 min and eta2 min

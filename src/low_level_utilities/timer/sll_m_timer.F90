@@ -39,9 +39,19 @@
 !> 
 module sll_m_timer
 
-  use sll_m_working_precision
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Kind parameter defined here determines clock resolution
   !> (e.g. see 'system_clock' intrinsic subroutine in gfortran docs)

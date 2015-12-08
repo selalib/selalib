@@ -18,12 +18,26 @@
 
 
 module sll_m_gyroaverage_2d_polar_pade_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_gyroaverage_2d_base
-use sll_m_gyroaverage_2d_polar
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar, only: &
+    compute_gyroaverage_pade_high_order_polar, &
+    compute_gyroaverage_pade_polar, &
+    new_plan_gyroaverage_polar_pade, &
+    sll_plan_gyroaverage_polar
+
+  implicit none
+
+  public :: &
+    new_gyroaverage_2d_polar_pade_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_gyroaverage_2d_base) :: gyroaverage_2d_polar_pade_solver     
   

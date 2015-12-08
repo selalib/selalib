@@ -21,14 +21,25 @@
 
 
 module sll_m_derivative_2d_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_fcisl
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_fcisl, only: &
+    compute_w_hermite
+
+  implicit none
+
+  public :: &
+    compute_oblic_derivative_2d, &
+    new_oblic_2d_derivative, &
+    oblic_2d_derivative
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type  :: oblic_2d_derivative
     sll_int32 :: Nc_x1

@@ -3,14 +3,18 @@
 !-------------------------------------------------------------------
 
 program test_interpolation_3d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_sparse_grid_3d
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_sparse_grid_3d, only: &
+    sparse_grid_interpolator_3d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, dimension(:), allocatable :: order
   sll_int32:: levels

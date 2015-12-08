@@ -5,9 +5,11 @@
 !  Overall period>2^123;  Default seeds x,y,z,w.
 !  Set your own seeds with statement i=kisset(ix,iy,iz,iw).
 module sll_m_marsaglia
-implicit none
-private
-public :: kiss, kisset
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 integer :: x=123456789, y=362436069, z=521288629, w=916191069
 
 contains

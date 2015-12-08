@@ -8,18 +8,40 @@
 !>  - first mud2cr is called to generate a second-order approximation.  
 !>  - then mud24cr is called to improve the estimate to fourth-order.
 module sll_m_mudpack_curvilinear
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
 
-implicit none
-private
+! use F77_mudpack, only: &
+!   muh24cr, &
+!   muh2cr
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    mudpack_2d, &
+    sll_create, &
+    sll_non_separable_with_cross_terms, &
+    sll_non_separable_without_cross_terms, &
+    sll_separable
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Mudpack solver cartesian 2d
-type, public :: mudpack_2d
+type :: mudpack_2d
 
    sll_real64, dimension(:), allocatable :: work !< array for tmp data
    sll_int32  :: mgopt(4)           !< Option to control multigrid
@@ -30,9 +52,9 @@ type, public :: mudpack_2d
 
 end type mudpack_2d
 
-integer, parameter, public :: SLL_SEPARABLE  = 1                        !< type of equation
-integer, parameter, public :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type of equation
-integer, parameter, public :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
+integer, parameter :: SLL_SEPARABLE  = 1                        !< type of equation
+integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type of equation
+integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
 
 !> Interpolator to compute derivative xx
 class(sll_c_interpolator_2d), pointer :: cxx_interp
@@ -58,16 +80,6 @@ interface sll_create
   module procedure initialize_poisson_curvilinear_mudpack
 end interface sll_create
 
-public :: sll_create
-public :: cxx_interp
-public :: cyy_interp
-public :: cxy_interp
-public :: cx_interp
-public :: cy_interp
-public :: ce_interp
-public :: a12_interp
-public :: a21_interp
-public :: solve_poisson_curvilinear_mudpack
 
 contains
 
@@ -569,23 +581,23 @@ cy  = cy_interp%interpolate_from_interpolant_value(x,y)
 ce  = ce_interp%interpolate_from_interpolant_value(x,y)
 end subroutine coefcr
 
-!> input x dependent coefficients
-subroutine cofx(x,cxx,cx,cex)
-implicit none
-real(8)  :: x,cxx,cx,cex
-cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
-cx  = 0.0_8 + x - x
-cex = 0.0_8
-end subroutine cofx
-
-!> input y dependent coefficients
-subroutine cofy(y,cyy,cy,cey)
-real(8)  :: y,cyy,cy,cey
-cyy = 1.0_8
-cy  = 0.0_8 + y - y
-cey = 0.0_8
-end subroutine cofy
-
+!!> input x dependent coefficients
+!subroutine cofx(x,cxx,cx,cex)
+!implicit none
+!real(8)  :: x,cxx,cx,cex
+!cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
+!cx  = 0.0_8 + x - x
+!cex = 0.0_8
+!end subroutine cofx
+!
+!!> input y dependent coefficients
+!subroutine cofy(y,cyy,cy,cey)
+!real(8)  :: y,cyy,cy,cey
+!cyy = 1.0_8
+!cy  = 0.0_8 + y - y
+!cey = 0.0_8
+!end subroutine cofy
+!
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)

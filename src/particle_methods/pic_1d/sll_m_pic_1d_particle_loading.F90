@@ -14,17 +14,59 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_pic_1d_particle_loading
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
-    use sll_m_constants
-    use sll_m_collective
-    use sll_m_particle_1d_description
-    use sll_m_sobol
-    use sll_m_prob
-    implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_collective, only: &
+    sll_collective_barrier, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_e_charge, &
+    sll_e_mass, &
+    sll_epsilon_0, &
+    sll_kb, &
+    sll_kx, &
+    sll_pi, &
+    sll_proton_mass
+
+  use sll_m_particle_1d_description, only: &
+    sll_particle_1d_group
+
+  use sll_m_prob, only: &
+    normal_cdf_inv
+
+  use sll_m_sobol, only: &
+    i8_sobol_generate
+
+  implicit none
+
+  public :: &
+    control_variate_xv, &
+    enable_deltaf, &
+    load_particle_species, &
+    num_species, &
+    set_loading_parameters, &
+    sll_initialize_intrinsic_mpi_random, &
+    sll_pic1d_ensure_boundary_conditions, &
+    sll_pic1d_ensure_boundary_conditions_species, &
+    sll_pic1d_ensure_periodicity, &
+    sll_pic1d_testcase_bumpontail, &
+    sll_pic1d_testcase_ionbeam, &
+    sll_pic1d_testcase_ionbeam_electrons, &
+    sll_pic1d_testcase_landau, &
+    sll_pic1d_testcase_quiet
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     !Definitions for different loadings
     sll_int32, parameter :: SLL_PIC1D_TESTCASE_LANDAU=1
@@ -53,8 +95,8 @@ module sll_m_pic_1d_particle_loading
     !    sll_real64, parameter :: sll_kb = 1.3806488D-23
     !    sll_real64, parameter :: PLASMA_FREQUENCY=sqrt(sll_kb*T/sll_e_mass)
 
-    integer, private :: ierr
-    sll_int32,private :: coll_rank, coll_size
+    integer :: ierr
+    sll_int32 :: coll_rank, coll_size
 
     !Parameters for different loading types
     !sll_int32 ::  pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
@@ -67,13 +109,13 @@ module sll_m_pic_1d_particle_loading
     sll_real64 :: bumpontail_v0=4.0_f64
     sll_real64 :: bumpontail_sigma=0.5_f64
     sll_real64 :: plasma_size=0.25_f64 !Relative size of plasma
-    sll_real64 :: sll_pic_boundary_condition=real(SLL_PERIODIC,f64)
+    !sll_real64 :: sll_pic_boundary_condition=real(SLL_PERIODIC,f64)
 
-    sll_int32,private :: numberof_streams=1
+    sll_int32 :: numberof_streams=1
     logical  :: enable_deltaf=.FALSE.
 
-    sll_real64,private :: interval_length
-    sll_real64,private :: interval_a, interval_b
+    sll_real64 :: interval_length
+    sll_real64 :: interval_a, interval_b
 
     !Probability
     abstract interface
