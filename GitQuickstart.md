@@ -5,10 +5,10 @@ with some additions. So i keep her name in it.* [Pierre](@pin)
 
 Morgane wants to contribute to selalib project, she needs to
 
-* Create an account on gforge.inria.fr
-* Send an email to navaro@math.unistra.fr to be part of the project selalib
+* Have an account on https://gitlab.mpcdf.mpg.de
+* Send an email to @pin to be part of the project selalib
 * After Pierre accept her in the projet, she has to edit her ssh keys
-`https://gforge.inria.fr/account/editsshkeys.php`
+`https://gitlab.mpcdf.mpg.de/profile/keys`
 and follow instructions...
 
 After a couple of hours, she can install git and configure it
@@ -26,7 +26,7 @@ Check configuration with:
 
 Clone the repository:
 ~~~
- git clone git+ssh://morgane@scm.gforge.inria.fr//gitroot//selalib/selalib.git
+ git clone git@gitlab.mpcdf.mpg.de:selalib/selalib.git
  cd selalib/
 ~~~
 
@@ -37,7 +37,7 @@ Display all branches with:
 
 Create the local branch and merge the remote selalib-devel branch:
 ~~~
- git checkout -b selalib-devel origin/selalib-devel
+ git checkout -b develop origin/develop
 ~~~
 
 To build the library, she reads the [CMake Quickstart Guide](CMakeQuickstart.md)
@@ -55,9 +55,9 @@ in this directory...
 
 * She wants to get all new updates of selalib-devel (the main branch)
 ~~~
- git checkout selalib-devel     (change to selalib-devel)
+ git checkout develop    (change to selalib-devel)
  git fetch origin              (download changes from repository)
- git merge origin/selalib-devel (update local branch selalib-devel)
+ git merge origin/develop (update local branch selalib-devel)
  git checkout morgane-branch   (back to her branch)
  git merge selalib-devel (update her branch with modifications on selalib-devel)
 ~~~
@@ -92,9 +92,9 @@ or if some tracked file has been modified but has not been staged for the next c
 But she wants to offer her new algorithm to the group.
 She goes back to the main branch:
 ~~~
- git checkout selalib-devel   (switch to selalib-devel)
+ git checkout develop   (switch to develop)
  git merge morgane-branch       (add the new algorithm from Morgane)
- git push origin selalib-devel  (selalib-devel is updated on the server, 
+ git push origin develop  (develop is updated on the server, 
                                  everybody can use these improvements)
 ~~~
 
@@ -107,7 +107,7 @@ many cores, so she pushes her branch to the server
 She logs on the cluster login node. She edit new ssh keys and configure git. To 
 put her work on the server:
 ~~~
- git clone git+ssh://morgane@scm.gforge.inria.fr//gitroot//selalib/selalib.git
+ git clone git@gitlab.mpcdf.mpg.de:selalib/selalib.git
  cd selalib/
  git checkout -b morgane-branch origin/morgane-banch
 ~~~
