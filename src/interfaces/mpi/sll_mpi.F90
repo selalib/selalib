@@ -111,6 +111,7 @@ module sll_mpi
     mpi_status_size,     &
     mpi_success,         &
     mpi_sum,             &
+    mpi_prod,            &
     mpi_thread_funneled, &
     mpi_thread_multiple, &
     mpi_thread_single,   &
