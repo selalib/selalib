@@ -1519,8 +1519,8 @@ sll_real64 :: int_jac
 sll_int32  :: ierr
 sll_int32  :: nc_1, nc_2
 
-!$ sll_int32  :: tid = 0
-!$ sll_int32  :: nthreads = 1
+!!$ sll_int32  :: tid = 0
+!!$ sll_int32  :: nthreads = 1
   
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
