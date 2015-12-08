@@ -109,7 +109,7 @@ module sll_m_pic_1d_particle_loading
     sll_real64 :: bumpontail_v0=4.0_f64
     sll_real64 :: bumpontail_sigma=0.5_f64
     sll_real64 :: plasma_size=0.25_f64 !Relative size of plasma
-    sll_real64 :: sll_pic_boundary_condition=real(SLL_PERIODIC,f64)
+    !sll_real64 :: sll_pic_boundary_condition=real(SLL_PERIODIC,f64)
 
     sll_int32 :: numberof_streams=1
     logical  :: enable_deltaf=.FALSE.

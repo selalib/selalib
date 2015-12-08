@@ -37,14 +37,14 @@ module sll_m_particle_method_descriptors
   !>use initial distribution f(t=0,x,v) as control variate
   sll_int32, parameter :: SLL_CONTROLVARIATE_INITIAL=4
 
-  character(len=*), parameter :: &
-          sll_controlvariate_key(0:4) = &
-         (/"SLL_CONTROLVARIATE_NONE            ",&
-           "SLL_CONTROLVARIATE_STANDARD        ",&
-           "SLL_CONTROLVARIATE_MAXWELLIAN      ",&
-           "SLL_CONTROLVARIATE_MAXWELLIAN_LOCAL",&
-           "SLL_CONTROLVARIATE_INITIAL         "/)
-  
+!  character(len=*), parameter :: &
+!          sll_controlvariate_key(0:4) = &
+!         (/"SLL_CONTROLVARIATE_NONE            ",&
+!           "SLL_CONTROLVARIATE_STANDARD        ",&
+!           "SLL_CONTROLVARIATE_MAXWELLIAN      ",&
+!           "SLL_CONTROLVARIATE_MAXWELLIAN_LOCAL",&
+!           "SLL_CONTROLVARIATE_INITIAL         "/)
+!  
   
   
   !-------------- RANDOM NUMBERS -----------------------------
@@ -86,12 +86,12 @@ module sll_m_particle_method_descriptors
   sll_int32, parameter :: SLL_COLLISIONS_LANDAU = 3
   
   !>Key for collision operators
-   character(len=*), parameter :: &
-          sll_collisions_key(0:3) = &
-         (/"SLL_COLLISIONS_NONE       ",&
-           "SLL_COLLISIONS_STANDARD   ",&
-           "SLL_COLLISIONS_KROOK      ",&
-           "SLL_COLLISIONS_LANDAU     " /) 
+!   character(len=*), parameter :: &
+!          sll_collisions_key(0:3) = &
+!         (/"SLL_COLLISIONS_NONE       ",&
+!           "SLL_COLLISIONS_STANDARD   ",&
+!           "SLL_COLLISIONS_KROOK      ",&
+!           "SLL_COLLISIONS_LANDAU     " /) 
   
 end module sll_m_particle_method_descriptors
  
