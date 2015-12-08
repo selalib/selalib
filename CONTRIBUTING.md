@@ -29,6 +29,7 @@ git remote -v
 
 In order to checkout the new development branch for the first time, use:
 ```
+git fetch origin
 git checkout -b develop origin/develop
 ```
 Of course, you need to replace origin by gitlab if you choose to keep inria as your origin.
