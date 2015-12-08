@@ -1,6 +1,6 @@
 #if OMPI_V_MINOR < 10
-  external :: &
 #if OMPI_V_MINOR < 8
+  external :: &
     mpi_bcast,      &
     mpi_allgather,  &
     mpi_allgatherv, &
