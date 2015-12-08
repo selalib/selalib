@@ -15,11 +15,14 @@
 
 
 program test_lagrange_fast_parallel
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use sll_m_constants, only : sll_pi
+
   use sll_m_lagrange_fast, only : &
        sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
+
   use sll_m_collective, only : &
        sll_boot_collective, &
        sll_get_collective_rank, &
@@ -35,6 +38,7 @@ program test_lagrange_fast_parallel
        new_cartesian_topology
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: nd = 6
   sll_int32 :: procs_per_dimension(nd)

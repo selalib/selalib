@@ -7,6 +7,7 @@
 !> This is an alternative implementation of the Lagrange interpolation for equidistant grids. The only function implemented is an interpolation for a given displacement (interpolate_array_disp). The purpose of this implementation is to provide a fast alternative that exploits the simplifications in this special case.
 !> Note: The implementation is based on the formulas in Abramowitz and Stegun: Handbook of Mathematical Functions, Chapter 25.2
 module sll_m_lagrange_fast
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
   implicit none
 
@@ -15,6 +16,7 @@ module sll_m_lagrange_fast
        sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! --- compile-time constants to avoid run-time division
   sll_real64, parameter :: inv_6       = 1._f64/6._f64
