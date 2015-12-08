@@ -26,6 +26,8 @@ module sll_m_boundary_condition_descriptors
   public :: &
     sll_conductor, &
     sll_dirichlet, &
+    sll_d_halo, &
+    sll_d_one_sided, &
     sll_hermite, &
     sll_interior, &
     sll_neumann, &
