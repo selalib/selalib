@@ -9,6 +9,7 @@ In order to move your repositories to gitlab, set gitlab as your primary reposit
 ```
 git remote set-url origin git@gitlab.mpcdf.mpg.de:selalib/selalib.git
 ```
+Please make sure you have added your ssh key on GitLab (SSH Keys section in your profile settings).
 You can also keep the INRIA gforge as a remote repository using:
 ```
 git remote add inria <YOUR_LOGIN>@scm.gforge.inria.fr//gitroot//selalib/selalib.git
