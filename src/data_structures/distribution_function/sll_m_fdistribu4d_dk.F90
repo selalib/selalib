@@ -16,14 +16,45 @@
 !>@details
 !-----------------------------------------------------------
 module sll_m_fdistribu4d_dk
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_eta1, &
+    polar_eta2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    compute_cubic_spline_2d, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    new_cubic_spline_1d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_1d, &
+    sll_cubic_spline_2d, &
+    sll_delete
 
   implicit none
+
+  public :: &
+    function_xy_from_rtheta, &
+    init_brtheta, &
+    init_exact_profile_r, &
+    init_fequilibrium, &
+    init_fequilibrium_xy, &
+    profil_xy_exacte
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(1) :: whatever  ! dummy params array
 
@@ -284,9 +315,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_r(r_grid,func_r, &
     xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
     sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
@@ -313,7 +341,7 @@ module sll_m_fdistribu4d_dk
         y = ygrid_2d(ix,iy)
         r = polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
-        func_xy(ix,iy) = interpolate_value(r,sp1d_r)
+        func_xy(ix,iy) = interpolate_from_interpolant_value(r,sp1d_r)
       end do
     end do
     call sll_delete(sp1d_r)
@@ -325,10 +353,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_rtheta(r_grid,theta_grid, &
     func_rtheta,xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_constants
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1, polar_eta2
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: theta_grid
     sll_real64, dimension(:,:), intent(in)  :: func_rtheta

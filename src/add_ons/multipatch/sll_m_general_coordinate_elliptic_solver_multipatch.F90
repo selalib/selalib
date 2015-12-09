@@ -1,18 +1,60 @@
 module sll_m_general_coordinate_elliptic_solver_multipatch
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_timer 
-use sll_m_sparse_matrix
-use sll_m_sparse_matrix_mp
-use sll_m_scalar_field_2d_multipatch
-use sll_m_general_coordinate_elliptic_solver
-use sll_m_deboor_splines_1d
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-implicit none
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvd, &
+    deboor_type, &
+    interv
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points_and_weights
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre, &
+    es_gauss_lobatto
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    sll_delete, &
+    sll_scalar_field_multipatch_2d
+
+  use sll_m_sparse_matrix, only: &
+    sll_add_to_csr_matrix, &
+    sll_csr_matrix, &
+    sll_mult_csr_matrix_vector, &
+    sll_solve_csr_matrix
+
+  use sll_m_sparse_matrix_mp, only: &
+    new_csr_matrix_mp, &
+    sll_delete
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+
+  public :: &
+    factorize_mat_es_mp, &
+    general_coordinate_elliptic_solver_mp, &
+    initialize_general_elliptic_solver_mp, &
+    new_general_elliptic_solver_mp, &
+    sll_solve_mp, &
+    solve_general_coordinates_elliptic_eq_mp
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer, parameter :: KNOTS_PERIODIC = 0, KNOTS_DIRICHLET = 1
 
@@ -444,6 +486,7 @@ sll_int32 :: li_A, li_Aprime
 sll_int32 :: nbsp,nbsp1
 sll_int32 :: index_coef1,index_coef2,index
 sll_real64 :: elt_mat_global
+type(deboor_type) :: deboor
 
 call sll_set_time_mark(t0)
 
@@ -507,10 +550,13 @@ do patch = 1,es_mp%T%number_patches
       wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
       gtmp2 = gpt2
       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
-      call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
+      call interv(deboor, &
+        es_mp%knots2(patch,:), &
+        size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
       if (mflag_y .eq. -1) stop "Problem : interv2 returned flag = -1"
     
-      call bsplvd( es_mp%knots2(patch,:),        &
+      call bsplvd( deboor,                       &
+                   es_mp%knots2(patch,:),        &
                    es_mp%spline_degree2(patch)+1,&
                    gtmp2,                        &
                    left_y,                       &
@@ -525,9 +571,11 @@ do patch = 1,es_mp%T%number_patches
         wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
         gtmp1   = gpt1
         local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
-        call interv(es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
+        call interv(deboor, &
+         es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
 
-        call bsplvd( es_mp%knots1(patch,:),        &
+        call bsplvd( deboor,                       &
+                     es_mp%knots1(patch,:),        &
                      es_mp%spline_degree1(patch)+1,&
                      gtmp1,                        &
                      left_x,                       &

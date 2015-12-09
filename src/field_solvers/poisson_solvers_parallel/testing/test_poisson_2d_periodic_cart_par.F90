@@ -1,16 +1,62 @@
 program test_poisson_2d_periodic_cart_par
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_collective
-  use hdf5
-  use sll_m_hdf5_io_parallel
-  use sll_m_gnuplot_parallel
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use hdf5, only: &
+    hid_t, &
+    hsize_t
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_rect_2d_parallel
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close
+
+  use sll_m_poisson_2d_periodic_cartesian_par, only: &
+    delete_poisson_2d_periodic_plan_cartesian_par, &
+    new_poisson_2d_periodic_plan_cartesian_par, &
+    new_poisson_2d_periodic_plan_cartesian_par_alt, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par_alt
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_collective, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    sll_view_lims
+
+  use sll_mpi, only: &
+    mpi_prod
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
   type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan_alt
@@ -49,13 +95,13 @@ program test_poisson_2d_periodic_cart_par
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   dx = Lx/ncx
   dy = Ly/ncy
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   e      = int(log(real(colsz))/log(2.))
   print *, 'running on ', 2**e, 'processes'
 
@@ -101,13 +147,13 @@ program test_poisson_2d_periodic_cart_par
   call parallel_hdf5_write_array_2d( 'phi_computed.h5',   &
      ncx, ncy, phi, 'phi', layout_alt)
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
@@ -162,13 +208,13 @@ program test_poisson_2d_periodic_cart_par
                                     size(rho,1), size(rho,2), &
                                     rho, "rho", 1, error)  
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
@@ -185,11 +231,11 @@ program test_poisson_2d_periodic_cart_par
 
   if (myrank==0) then
      if (prod4test(1)==1.) then
-        call flush(6)
+        flush( output_unit )
         print*, ' '
-        call flush(6)
+        flush( output_unit )
         print*, '"sll_poisson_2d_periodic_cart_par" test: PASSED'
-        call flush(6)
+        flush( output_unit )
         print*, ' '
      endif
   endif
@@ -226,10 +272,10 @@ contains
     SLL_ASSERT( associated(layout) )
     col => get_layout_collective( layout )
     myrank = sll_get_collective_rank( col )
-    global_dims(:) = (/ n_pts1,n_pts2 /)
+    global_dims(:) = [int(n_pts1,HSIZE_T),int(n_pts2,HSIZE_T)]
     
-    offset(1) = get_layout_i_min( layout, myrank ) - 1
-    offset(2) = get_layout_j_min( layout, myrank ) - 1
+    offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
+    offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
 
     comm   = sll_world_collective%comm
     call sll_hdf5_file_create(filename,comm,file_id,error)

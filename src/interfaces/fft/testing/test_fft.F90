@@ -8,8 +8,10 @@ program unit_test
 #define FFTW_MOD 1000000000
 
   type(sll_fft_plan), pointer :: p => null()
+  type(sll_fft_plan), pointer :: pf => null()
+  type(sll_fft_plan), pointer :: pb => null()
 
-  sll_real64, parameter  :: err_max = 10E-14
+  sll_real64, parameter  :: err_max = 10E-14_f64
   sll_int32, parameter   :: hmax = 1
   sll_int32, parameter   :: imin = 10
   sll_int32, parameter   :: imax = 15
@@ -22,36 +24,25 @@ program unit_test
   sll_comp64, dimension(m1,m2) :: data_copy2d
   sll_real64, dimension(m1,m2) :: rdata_copy2d
   sll_real64, dimension(n) :: rdata_comp, rdata_copy, rdata
-  sll_comp64 :: mode
   sll_real64 :: ierr  ! this is not used as an integer below, bad name
-  sll_real64 :: err_var
-  sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
+  sll_int32 :: i,j,s,h,k,t
+  sll_int32 :: rnd_seed_size
+  sll_int32, allocatable :: rnd_seed(:) !< Random seed.
 
+  ! Aligned data
+  sll_comp64, dimension(:), pointer :: in
+  sll_real64, dimension(:), pointer :: ar_data
+ 
   call print_defaultfftlib()
   
+  ! Set some random seed
+  call random_seed (size=rnd_seed_size)
+  allocate(rnd_seed(rnd_seed_size))
+  do j=1, rnd_seed_size
+     rnd_seed(j) = 100+15*j
+  end do
+  call random_seed (put=rnd_seed)
   
-  
-! test getter and setter functions in complex case
-  s = 2**imin
-  do j=1,s
-    CALL RANDOM_COMPLEX(data_comp(j))
-  enddo
-
-  data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  do i=0,s-1
-    mode = fft_get_mode(p,data_comp(1:s),i)
-    call fft_set_mode(p,data_comp(1:s),mode,i)
-  enddo
-  ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
-
-  if( ierr .ne. 0_f64 ) then
-    print *,'Average error too big',ierr
-    stop
-  else
-    print *,'get and set mode complex ok'
-  endif
-  call fft_delete_plan(p)
 
 ! test getter and setter functions in real case
   s = 2**imax
@@ -59,12 +50,14 @@ program unit_test
     CALL RANDOM_NUMBER(rdata(j))
   enddo
   rdata_copy(1:s) = rdata(1:s)
-  p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
-  do i=0,s/2
-    mode = fft_get_mode(p,rdata(1:s),i)
-    call fft_set_mode(p,rdata(1:s),mode,i)
-  enddo
-  ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
+  ALLOCATE(ar_data(1:s))
+  p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
+  !call fft_apply_plan_r2r_1d(p, rdata(1:s), rdata(1:s))
+  do j=1,s/2+1
+     data_comp(j) =  fft_get_mode_r2c_1d(p,rdata(1:s), j-1)
+     call fft_set_mode_c2r_1d(p,ar_data, data_comp(j),j-1) 
+  end do
+  ierr = MAXVAL(ABS(ar_data - rdata_copy(1:s)))
   if( ierr .ne. 0_f64 ) then
     print *,'Average error too big',ierr
     stop
@@ -72,33 +65,8 @@ program unit_test
     print *,'get and set mode real ok'
   endif
   call fft_delete_plan(p)
+  DEALLOCATE(ar_data)
 
-
-! Standard do-loop on the mode
-  s = 2**imin
-  do j=1,s
-    CALL RANDOM_COMPLEX(data_comp(j))
-  enddo
-  data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  do ind_mode=0,s-1
-    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
-  enddo
-  call fft_delete_plan(p)
-
-! optimized do-loop on the mode
-  s = 2**imin
-  do j=1,s
-    CALL RANDOM_COMPLEX(data_comp(j))
-  enddo
-  data_copy(1:s) = data_comp(1:s)
-  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-  do array_position=0,s-1
-    ind_mode = fft_ith_stored_mode(p,array_position) !The only change with the standard
-                                                     !do-loop is this line.
-    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
-  enddo
-  call fft_delete_plan(p)
 
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX'
@@ -111,12 +79,12 @@ program unit_test
     enddo
     data_copy(1:s) = data_comp(1:s)
   
-    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
-    call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
+    p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+    call fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_INVERSE,FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp(1:s),data_comp(1:s))
+    p => fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),FFT_BACKWARD,normalized=.TRUE.)
+    call fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
     call fft_delete_plan(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
     if( ierr > err_max ) then
@@ -124,6 +92,38 @@ program unit_test
     endif
    enddo
   enddo
+  print *, 'OK'
+
+
+  print *,'-------------------------------------------------'
+  print * ,'COMPLEX TO COMPLEX WITH ALIGNED MEMORY AND PLANNER OPTIMIZATION'
+
+  ! Allocate aligned memory
+  in => fft_allocate_aligned_complex(m1)
+  !call fft_allocate_aligned_complex(m1, p_in, in)
+ 
+  ! Initialize the plans 
+  pf => fft_new_plan_c2c_1d(m1,in,in,FFT_FORWARD, aligned = .TRUE., optimization = FFT_MEASURE)
+  pb => fft_new_plan_c2c_1d(m1,in,in,FFT_BACKWARD,normalized=.TRUE., aligned = .TRUE., optimization = FFT_PATIENT)
+ 
+  ! Initialize the data (note that this has to be done after initializing the plans due to the optimization level.
+  do j=1,m1
+     CALL RANDOM_COMPLEX(data_comp(j))
+  enddo
+  in = data_comp(1:m1)
+    
+  ! Forward transform
+  call fft_apply_plan_c2c_1d(pf,in,in)
+  call fft_delete_plan(pf)
+  
+  ! Backward transform
+  call fft_apply_plan_c2c_1d(pb,in,in)
+  call fft_delete_plan(pb)
+  ierr = ERROR_MAX(data_comp(1:m1) - in)
+  if( ierr > err_max ) then
+     stop 'Average error too big'
+  endif
+
   print *, 'OK'
 
 
@@ -138,12 +138,12 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
-    call fft_apply_plan(p,rdata(1:s),rdata(1:s))
+    p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
+    call fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_INVERSE,FFT_NORMALIZE)
-    call fft_apply_plan(p,rdata(1:s),rdata(1:s))
+    p => fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),FFT_BACKWARD,normalized = .TRUE.)
+    call fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
  
     ierr = MAXVAL(ABS( rdata(1:s) - rdata_copy(1:s) ))
@@ -158,6 +158,38 @@ program unit_test
   print *, 'OK'
 
 
+  print *,'-------------------------------------------------'
+  print * ,'REAL TO REAL WITH ALIGNED MEMORY AND PLANNER OPTIMIZATION'
+
+  ! Allocate aligned memory
+  ar_data => fft_allocate_aligned_real(m1)
+ 
+  ! Initialize the plans 
+  pf => fft_new_plan_r2r_1d(m1,ar_data,ar_data,FFT_FORWARD, aligned = .TRUE., optimization = FFT_MEASURE)
+  pb => fft_new_plan_r2r_1d(m1,ar_data,ar_data,FFT_BACKWARD,normalized=.TRUE., aligned = .TRUE., optimization = FFT_PATIENT)
+ 
+  ! Initialize the data (note that this has to be done after initializing the plans due to the optimization level.
+  do j=1,m1
+     CALL RANDOM_NUMBER(rdata(j))
+  enddo
+  ar_data = rdata(1:m1)
+    
+  ! Forward transform
+  call fft_apply_plan_r2r_1d(pf,ar_data,ar_data)
+  call fft_delete_plan(pf)
+  
+  ! Backward transform
+  call fft_apply_plan_r2r_1d(pb,ar_data, ar_data)
+  call fft_delete_plan(pb)
+  ierr = MAXVAL(ABS(rdata(1:m1) - ar_data))
+  if( ierr > err_max ) then
+     stop 'Average error too big'
+  endif
+
+  print *, 'OK'
+
+
+
 #if _DEFAULTFFTLIB!=FFTPACK_MOD
   print *,'-------------------------------------------------'
   print * ,'REAL TO COMPLEX and COMPLEX TO REAL '
@@ -170,12 +202,12 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => fft_new_plan(s,rdata(1:s),data_comp(1:s/2+1))
-    call fft_apply_plan(p,rdata(1:s),data_comp(1:s/2+1))
+    p => fft_new_plan_r2c_1d(s,rdata(1:s),data_comp(1:s/2+1))
+    call fft_apply_plan_r2c_1d(p,rdata(1:s),data_comp(1:s/2+1))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,data_comp(1:s/2+1),rdata(1:s),FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp(1:s/2+1),rdata(1:s))
+    p => fft_new_plan_c2r_1d(s,data_comp(1:s/2+1),rdata(1:s), normalized = .TRUE.)
+    call fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata(1:s))
     call fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
@@ -194,12 +226,12 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata_comp(1:s)
   
-    p => fft_new_plan(s,rdata_comp(1:s),data_comp(1:s/2+1),FFT_NORMALIZE)
-    call fft_apply_plan(p,rdata_comp(1:s),data_comp(1:s/2+1))
+    p => fft_new_plan_r2c_1d(s,rdata_comp(1:s),data_comp(1:s/2+1), normalized = .TRUE.)
+    call fft_apply_plan_r2c_1d(p,rdata_comp(1:s),data_comp(1:s/2+1))
     call fft_delete_plan(p)
     
-    p => fft_new_plan(s,data_comp(1:s/2+1),rdata_comp(1:s))
-    call fft_apply_plan(p,data_comp(1:s/2+1),rdata_comp(1:s))
+    p => fft_new_plan_c2r_1d(s,data_comp(1:s/2+1),rdata_comp(1:s))
+    call fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata_comp(1:s))
     call fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata_comp(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
@@ -223,16 +255,16 @@ program unit_test
         enddo
         data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
         
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+        p => fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
              FFT_FORWARD)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
         
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_NORMALIZE)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        p => fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_BACKWARD,normalized = .TRUE.)
+        call fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call fft_delete_plan(p)
-        ierr = 0_f64
+        ierr = 0._f64
         do j=1,t
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
@@ -242,135 +274,6 @@ program unit_test
      enddo
   enddo
 
-  print * ,'COMPLEX TO COMPLEX 2D: WITH FLAGS'
-  do i=10,10
-     do h=1,hmax
-        s = m1!2**i
-        t = m2!2**(i-1)
-        
-        do j=1,s
-           do k=1,t
-              CALL RANDOM_COMPLEX(data_comp2d(j,k))
-           enddo
-        enddo
-        data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
-        
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_FORWARD, FFT_ONLY_SECOND_DIRECTION)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-        call fft_delete_plan(p)
-        
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE, FFT_NORMALIZE+FFT_ONLY_SECOND_DIRECTION)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-        call fft_delete_plan(p)
-        err_var = 0_f64
-        do j=1,t 
-           err_var = MAX(ERROR_MAX(data_comp2d(1:s,j)-data_copy2d(1:s,j)), &
-                err_var)
-        enddo
-        print *, 'max_error = ', err_var
-        if( ierr > err_max ) then
-           stop 'Average error too big'
-        endif
-     enddo
-  enddo
-
-
-
-  print *, 'OK', ierr
-#endif
-
-#if _DEFAULTFFTLIB==SLLFFTMOD
-  print *,'-------------------------------------------------'
-  print * ,'COMPLEX TO COMPLEX 2D in one direction only'
-  do i=10,10
-     do h=1,hmax
-        s = m1!2**i
-        t = m2!2**(i-1)
-        
-        do j=1,s
-           do k=1,t
-              CALL RANDOM_COMPLEX(data_comp2d(j,k))
-           enddo
-        enddo
-        data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
-        
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_FORWARD,FFT_ONLY_FIRST_DIRECTION)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-
-        call fft_delete_plan(p)
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_FORWARD,FFT_ONLY_SECOND_DIRECTION)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-        call fft_delete_plan(p)
-        ! The following are 2 ways to do the same thing.
-#if 1        
-        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_NORMALIZE)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-        call fft_delete_plan(p)
-#endif
-#if 0
-   p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_ONLY_SECOND_DIRECTION+FFT_NORMALIZE)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-        call fft_delete_plan(p)
-
-   p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-             FFT_INVERSE,FFT_ONLY_FIRST_DIRECTION+FFT_NORMALIZE)
-        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-        call fft_delete_plan(p)
-#endif
-        ierr = 0_f64
-        do j=1,t
-           ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
-        enddo
-        print *, 'error_max = ', ierr
-        if( ierr > err_max ) then
-           stop 'Average error too big'
-        endif
-     enddo
-  enddo
-  print *, 'OK', ierr
-!-----------------------------
-  do i=10,10
-   do h=1,hmax
-    s = m1!2**i
-    t = m2!2**(i-1)
-
-    do j=1,s
-     do k=1,t
-      CALL RANDOM_COMPLEX(data_comp2d(j,k))
-     enddo
-    enddo
-    data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
-  
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-                  FFT_FORWARD,FFT_ONLY_FIRST_DIRECTION + FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
-                  FFT_FORWARD, FFT_ONLY_SECOND_DIRECTION + FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-    ierr = 0_f64
-    do j=1,t
-      ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
-    enddo
-    if( ierr > err_max ) then
-      stop 'Average error too big'
-    endif
-   enddo
-  enddo
-  print *, 'OK', ierr
-!-----------------------------
 #endif
 
 #if _DEFAULTFFTLIB!=FFTPACK_MOD
@@ -389,15 +292,15 @@ program unit_test
     enddo
     rdata_copy2d(1:s,1:t) = data_real2d(1:s,1:t)
  
-    p => fft_new_plan(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
-    call fft_apply_plan(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    p => fft_new_plan_r2c_2d(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    call fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    p => fft_new_plan_c2r_2d(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),normalized = .TRUE.)
+    call fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call fft_delete_plan(p)
  
-    ierr = 0_f64
+    ierr = 0._f64
     do j=1,t
       ierr = MAX(MAXVAL(ABS(data_real2d(1:s,j) - rdata_copy2d(1:s,j))),ierr)
     enddo
@@ -422,15 +325,16 @@ program unit_test
     enddo
     rdata_copy2d(1:s,1:t) = data_real2d(1:s,1:t)
  
-    p => fft_new_plan(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t),FFT_NORMALIZE)
-    call fft_apply_plan(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    p => fft_new_plan_r2c_2d(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t),&
+         normalized = .TRUE.)
+    call fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call fft_delete_plan(p)
 
-    p => fft_new_plan(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
-    call fft_apply_plan(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    p => fft_new_plan_c2r_2d(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    call fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call fft_delete_plan(p)
 
-    ierr = 0_f64
+    ierr = 0._f64
     do j=1,t
       ierr = MAX(MAXVAL(ABS(data_real2d(1:s,j) - rdata_copy2d(1:s,j))),ierr)
     enddo
@@ -449,7 +353,7 @@ contains
     sll_comp64, DIMENSION(:) :: tab
     sll_real64 :: error
 
-    error = MAX( MAXVAL(ABS(REAL(tab))) , MAXVAL(ABS(DIMAG(tab))) )
+    error = MAX( MAXVAL(ABS(REAL(tab))) , MAXVAL(ABS(aimag(tab))) )
   END FUNCTION
 
   SUBROUTINE init_random_seed()
@@ -468,13 +372,13 @@ contains
   END SUBROUTINE
 
   SUBROUTINE RANDOM_COMPLEX(c)
-    COMPLEX(KIND=KIND(1.D0)) :: c
-    REAL(KIND=KIND(1.D0))    :: realpart,imagpart
+    sll_comp64, intent(out) :: c
+    sll_real64 :: realpart, imagpart
    
     CALL init_random_seed() 
     CALL RANDOM_NUMBER(realpart)
     CALL RANDOM_NUMBER(imagpart)
-    c = CMPLX(realpart,imagpart,KIND=KIND(1.D0))
+    c = CMPLX(realpart,imagpart,kind=f64)
   END SUBROUTINE
 
 end program unit_test

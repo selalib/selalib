@@ -16,13 +16,34 @@
 !**************************************************************
 
 program test_characteristics_2d_verlet
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_2d_verlet
-use sll_m_boundary_condition_descriptors
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_characteristics_2d_base),pointer :: verlet
 
@@ -41,10 +62,10 @@ implicit none
   sll_real64 :: dt
   sll_real64 :: err
   !sll_real64 :: tmp
-  class(sll_interpolator_2d_base), pointer   :: A1_interp_x1x2
-  class(sll_interpolator_2d_base), pointer   :: A2_interp_x1x2
-  class(sll_interpolator_1d_base), pointer   :: A1_interp_x1
-  class(sll_interpolator_1d_base), pointer   :: A2_interp_x1
+  class(sll_c_interpolator_2d), pointer   :: A1_interp_x1x2
+  class(sll_c_interpolator_2d), pointer   :: A2_interp_x1x2
+  class(sll_c_interpolator_1d), pointer   :: A1_interp_x1
+  class(sll_c_interpolator_1d), pointer   :: A2_interp_x1
 
   
   

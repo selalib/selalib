@@ -13,7 +13,6 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_timer
   sll_memory
   sll_utilities
-  sll_constants
   sll_sobol
   sll_prob
   sll_pic_visu

@@ -28,13 +28,31 @@
 
 module sll_m_gnuplot_parallel
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_ascii_io, only: sll_ascii_file_create
-use sll_m_utilities, only: sll_new_file_id, int2string
-use mpi
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
+  use sll_mpi, only: &
+    mpi_comm_rank, &
+    mpi_comm_size, &
+    mpi_comm_world
+
+  implicit none
+
+  public :: &
+    sll_gnuplot_2d_parallel, &
+    sll_gnuplot_curv_2d_parallel, &
+    sll_gnuplot_rect_2d_parallel
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Create a gnuplot file for a 2d mesh (cartesian or curvilinear)
 interface sll_gnuplot_2d_parallel

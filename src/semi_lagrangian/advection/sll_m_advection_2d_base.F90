@@ -16,9 +16,16 @@
 !**************************************************************
 
 module sll_m_advection_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
+
   implicit none
+
+  public :: &
+    sll_advection_2d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !solves \partial_t f +A1\partial_x1 f+A2\partial_x2 f = 0
    ! A1 <=> A1
    ! A2 <=> A2

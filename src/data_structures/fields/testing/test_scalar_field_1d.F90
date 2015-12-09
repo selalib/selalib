@@ -1,10 +1,32 @@
-program unit_test_1d
-#include "sll_working_precision.h"
+program test_scalar_field_1d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_cartesian_meshes
-use sll_m_constants
-use sll_m_scalar_field_1d
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    initialize_ad1d_interpolator, &
+    sll_arbitrary_degree_spline_interpolator_1d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_scalar_field_1d, only: &
+    new_scalar_field_1d_analytic, &
+    new_scalar_field_1d_discrete
+
+  use sll_m_scalar_field_1d_base, only: &
+    sll_scalar_field_1d_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 #define SPLINE_DEG1 3
 #define NUM_CELLS1  64
@@ -29,10 +51,6 @@ sll_real64                               :: eta1
 sll_real64                               :: h1
 sll_int32                                :: i
 
-real(8), external :: test_function_per
-real(8), external :: test_function_per_der1
-real(8), external :: test_function_dir
-real(8), external :: test_function_dir_der1
 
 sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
 sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
@@ -267,36 +285,45 @@ if ( ( sqrt(normL2_1) <= h1**(SPLINE_DEG1))   .AND. &
      ( sqrt(normH1_4) <= h1**(SPLINE_DEG1-1))) then
    print *, 'PASSED'
 end if
-end program unit_test_1d
 
-function test_function_per( eta1) result(res)
-   use sll_m_constants
-   real(8) :: res
-   real(8), intent(in) :: eta1
+contains
+
+function test_function_per( eta1, params ) result(res)
+   sll_real64 :: res
+   sll_real64, intent(in) :: eta1
+   sll_real64, dimension(:), intent(in), optional :: params
   intrinsic :: cos
   res = cos(2*sll_pi*eta1)
 end function test_function_per
 
-function test_function_per_der1( eta1) result(res)
-  use sll_m_constants
+
+function test_function_per_der1( eta1, params) result(res)
   intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
+  sll_real64 :: res
+  sll_real64, intent(in) :: eta1
+  sll_real64, dimension(:), intent(in), optional :: params
+
   res = -2*sll_pi*sin(2*sll_pi*eta1)
 end function test_function_per_der1
 
-function test_function_dir( eta1) result(res)
-  use sll_m_constants
+
+function test_function_dir( eta1, params) result(res)
   intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
+  sll_real64 :: res
+  sll_real64, intent(in) :: eta1
+   sll_real64, dimension(:), intent(in), optional :: params
+
   res = sin(2*sll_pi*eta1)
 end function test_function_dir
 
-function test_function_dir_der1( eta1) result(res)
-  use sll_m_constants
+function test_function_dir_der1( eta1, params) result(res)
   intrinsic :: cos
-  real(8) :: res
-  real(8), intent(in) :: eta1
+  sll_real64 :: res
+  sll_real64, intent(in) :: eta1
+   sll_real64, dimension(:), intent(in), optional :: params
+
   res = 2.0*sll_pi*cos(2*sll_pi*eta1)
 end function test_function_dir_der1
+
+end program test_scalar_field_1d
+

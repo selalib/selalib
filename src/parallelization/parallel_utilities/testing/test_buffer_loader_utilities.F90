@@ -1,12 +1,30 @@
 program unit_test_buffer_loader_utilities
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_buffer_loader_utilities
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_buffer_loader_utilities, only: &
+    compute_displacements_array_2d, &
+    load_buffer32_2d, &
+    receive_counts_array_2d
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_collective_gatherv_real, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    new_layout_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, dimension(:), allocatable :: collective_displs
   sll_int32, dimension(:), allocatable :: collective_recvcnts

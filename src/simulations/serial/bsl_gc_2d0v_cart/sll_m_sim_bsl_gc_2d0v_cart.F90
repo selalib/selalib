@@ -11,53 +11,162 @@ module sll_m_sim_bsl_gc_2d0v_cart
 !         Adnane Hamiaz (hamiaz@math.unistra.fr)
 
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-!#include "sll_field_2d.h"
-!#include "sll_m_utilities.h"
-#include "sll_poisson_solvers.h"
-  use sll_m_constants
-  use sll_m_cartesian_meshes  
-  use sll_m_advection_1d_periodic
-  use sll_m_advection_2d_bsl
-  use sll_m_advection_2d_tensor_product
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  use sll_m_advection_1d_BSL
-  use sll_m_advection_1d_CSL
-  use sll_m_advection_1d_PSM
-  use sll_m_characteristics_1d_explicit_euler
-  use sll_m_characteristics_1d_trapezoid
-  use sll_m_characteristics_1d_explicit_euler_conservative
-  use sll_m_characteristics_1d_trapezoid_conservative
-  use sll_m_reduction
-  use sll_m_sim_base
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-#ifdef MUDPACK
-  !use sll_m_mudpack_curvilinear
-  use sll_m_poisson_2d_mudpack
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-#endif
-  use sll_m_poisson_2d_elliptic_solver, only:new_poisson_2d_elliptic_solver, es_gauss_legendre
-!  use sll_m_timer
-!  use sll_m_fft
-  use sll_m_poisson_2d_periodic_solver
-  use sll_m_parallel_array_initializer
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_bsl, only: &
+    new_bsl_1d_advector
+
+  use sll_m_advection_1d_csl, only: &
+    new_csl_1d_advector
+
+  use sll_m_advection_1d_psm, only: &
+    new_psm_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_advection_2d_tensor_product, only: &
+    new_tensor_product_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    new_explicit_euler_1d_charac
+
+  use sll_m_characteristics_1d_explicit_euler_conservative, only: &
+    new_explicit_euler_conservative_1d_charac
+
+  use sll_m_characteristics_1d_trapezoid, only: &
+    new_trapezoid_1d_charac
+
+  use sll_m_characteristics_1d_trapezoid_conservative, only: &
+    new_trapezoid_conservative_1d_charac
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_common_array_initializers, only: &
+    sll_khp1_2d, &
+    sll_scalar_initializer_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_non_separable_with_cross_terms, &
+    sll_non_separable_without_cross_terms, &
+    sll_separable
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_elliptic_solver, only: &
+    new_poisson_2d_elliptic_solver
+
+  use sll_m_poisson_2d_periodic_solver, only: &
+    new_poisson_2d_periodic_solver
+
+  use sll_m_reduction, only: &
+    compute_integral_trapezoid_1d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+#ifdef MUDPACK
+  use sll_m_poisson_2d_mudpack, only: &
+    new_poisson_2d_mudpack
+
+  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
+    new_poisson_2d_mudpack_curvilinear_solver
+
+#endif
   implicit none
 
+  public :: &
+    new_guiding_center_2d_cartesian
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
   
-  sll_int32, parameter, private :: SLL_EULER = 0 
-  sll_int32, parameter, private :: SLL_PREDICTOR_CORRECTOR = 1 
-  sll_int32, parameter, private :: SLL_LEAP_FROG = 2 
-  sll_int32, parameter, private :: SLL_PHI_FROM_RHO = 0
-  sll_int32, parameter, private :: SLL_E_FROM_RHO = 1
+  sll_int32, parameter :: SLL_EULER = 0 
+  sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_LEAP_FROG = 2 
+  sll_int32, parameter :: SLL_PHI_FROM_RHO = 0
+  sll_int32, parameter :: SLL_E_FROM_RHO = 1
 
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_guiding_center_cartesian
@@ -74,7 +183,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
 
    
    !poisson solver
@@ -165,19 +274,19 @@ contains
     sll_int32 :: Nc_x2
     sll_real64 :: x1_max
     sll_real64 :: x2_max     
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
     class(sll_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
     class(sll_advection_1d_base), pointer    :: advect_1d_x1
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_real64 :: x1_min_bis
@@ -1156,7 +1265,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min
@@ -1181,8 +1290,8 @@ contains
       x2=x2_min+real(i2-1,f64)*delta_x2
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(x1,x2)
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(x1,x2)
       end do
     end do
     
@@ -1355,8 +1464,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = x1_min+real(i-1,f64)*dx1
+          x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
       call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)

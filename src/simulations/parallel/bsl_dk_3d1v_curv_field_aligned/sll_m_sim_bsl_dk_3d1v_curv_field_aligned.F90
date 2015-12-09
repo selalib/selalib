@@ -24,35 +24,36 @@
 
 module sll_m_sim_bsl_dk_3d1v_curv_field_aligned
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-!#include "sll_field_2d.h"
-!#include "sll_m_utilities.h"
 
-  use sll_m_sim_base, only : &
-    sll_simulation_base_class
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d
 
-  use sll_m_utilities, only : &
-    sll_new_file_id
-    
-  use sll_m_collective, only : &
-    sll_world_collective, &
-    sll_get_collective_rank
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_world_collective
 
-  use sll_m_cartesian_meshes, only : &
-    sll_cartesian_mesh_2d, &
-    sll_cartesian_mesh_1d
-
-  use sll_m_coordinate_transformation_2d_base, only : &
+  use sll_m_coordinate_transformation_2d_base, only: &
     sll_coordinate_transformation_2d_base
 
-  
-  use sll_m_dk_curv_mesh, only : &
-    init_dk_curv_mesh    
+  use sll_m_dk_curv_mesh, only: &
+    init_dk_curv_mesh
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    sll_new_file_id
 
   implicit none
+
+  public :: &
+    sll_t_sim_sl_dk_3d1v_curv_field_aligned
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: &
     sll_t_sim_sl_dk_3d1v_curv_field_aligned

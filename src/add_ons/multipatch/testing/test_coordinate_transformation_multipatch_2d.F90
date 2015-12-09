@@ -1,7 +1,10 @@
 program unit_test_2d
-#include "sll_working_precision.h"
-  use sll_m_coordinate_transformation_multipatch
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_coordinate_transformation_multipatch_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_coordinate_transformation_multipatch_2d) :: mp
 

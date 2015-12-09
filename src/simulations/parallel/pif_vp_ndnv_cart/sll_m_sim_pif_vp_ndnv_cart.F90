@@ -3,28 +3,84 @@
 !**************************************************************
 
 module sll_m_sim_pif_vp_ndnv_cart
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  use hdf5, only: &
+    hid_t
 
-use sll_m_pif_fieldsolver
-use sll_m_timer
-use sll_m_sobol
-use sll_m_prob
-use sll_m_collective
-use sll_m_moment_matching
-use sll_m_pic_utilities
-use sll_m_particle_method_descriptors
-use sll_m_sim_base
-use sll_m_wedge_product_generaldim
-use sll_m_descriptors
-use sll_m_pic_visu
-use sll_m_pic_visu_parallel
-use sll_m_time_composition
-use sll_m_hdf5_io_serial
+  use sll_m_collective, only: &
+    sll_collective_barrier, &
+    sll_collective_globalsum, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
 
-implicit none
+  use sll_m_constants, only: &
+    sll_i1, &
+    sll_pi
+
+  use sll_m_descriptors, only: &
+    sll_landau_diag, &
+    sll_landau_prod, &
+    sll_landau_sum, &
+    sll_vlasovpoisson_sim
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_moment_matching, only: &
+    match_moment_1d_weight_linear_real64
+
+  use sll_m_particle_method_descriptors, only: &
+    sll_collisions_none, &
+    sll_controlvariate_maxwellian, &
+    sll_controlvariate_none, &
+    sll_controlvariate_standard, &
+    sll_moment_match_initial, &
+    sll_moment_match_none
+
+  use sll_m_pic_visu, only: &
+    plot_format_points3d
+
+  use sll_m_pic_visu_parallel, only: &
+    distribution_xdmf_coll
+
+  use sll_m_pif_fieldsolver, only: &
+    diag_dot_matrix_real64, &
+    pif_fieldsolver
+
+  use sll_m_prob, only: &
+    normal_cdf_inv
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_sobol, only: &
+    i8_sobol
+
+  use sll_m_time_composition, only: &
+    comp_coeff_sym_sym
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
+  use sll_m_wedge_product_generaldim, only: &
+    cross_product_2d, &
+    cross_product_3d
+
+  implicit none
+
+  public :: &
+    sll_simulation_general_vlasov_poisson_pif
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! abstract interface
 !         function electric_field_general(x,t) result(E)
@@ -1032,25 +1088,25 @@ end subroutine rk4_generalvp_pif
   vv=-(v(1,:)**2+v(2,:)**2+v(3,:)**2)
   sqrtvv=sll_i1*sqrt(-vv)
   
-     c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0D0+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2+v(3,:)**2)*&
-     (-1.0D0/2.0D0))/vv+1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*&
+     c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0_f64+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2+v(3,:)**2)*&
+     (-1.0_f64/2.0_f64))/vv+1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*&
      (v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*&
-     exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+(w(3,:)*&
-     exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))/vv)
+     exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+(w(3,:)*&
+     exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
   
-     c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0D0+v(1,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(1,:)**2+v(3,:)**2)*&
-     (-1.0D0/2.0D0))/vv-1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*&
+     c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*&
+     (-1.0_f64/2.0_f64))/vv-1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*&
      exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)**2*v(3,:)*&
-     exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)-&
-     (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
-     exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))/vv)
+     exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)-&
+     (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
+     exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
      
      
-     c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0D0+v(1,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(1,:)**2+v(3,:)**2)*(-1.0D0/2.0D0))/&
-     vv-1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
-     *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+&
-     1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
-     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)) 
+     c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*(-1.0_f64/2.0_f64))/&
+     vv-1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
+     *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+&
+     1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
+     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))
   end function
  
  

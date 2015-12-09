@@ -2,8 +2,11 @@
 
 program memory_tester
 !  use sll_strings
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   integer :: err
   integer :: i, j, k
   real, dimension(:), pointer :: a=>null()

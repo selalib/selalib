@@ -37,14 +37,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_remap
                          sll_mesh_calculus
                          sll_quadrature
-                         sll_constants
                          sll_coordinate_transformations
                          sll_meshes
                          sll_utilities
                          sll_timer
                          sll_memory
                          sll_assert
-                         sll_working_precision
                          )
 
     # Variables passed to simulations' CMakeFiles in subdirectories
@@ -55,6 +53,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ## Vlasov-Poisson 1Dx1D
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart                         )
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_two_species             )
+    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_multi_species           )
     ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_no_split                )
 
     ## Vlasov-Ampere 1Dx1D
@@ -80,14 +79,18 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( bsl_dk_3d1v_polar                        )
     ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_one_mu                 )
     ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_multi_mu               )
-    ADD_SUBDIRECTORY( bsl_dk_3d1v_polar_field_aligned          )
+    IF(FULL_FORTRAN2003)
+      ADD_SUBDIRECTORY( bsl_dk_3d1v_polar_field_aligned          )
+    ENDIF(FULL_FORTRAN2003)
     ADD_SUBDIRECTORY( bsl_dk_3d1v_curv                         )
     ADD_SUBDIRECTORY( bsl_dk_3d1v_curv_field_aligned           )
 
     # Eulerian simulations
 
     ## Vlasov-Poisson 2Dx2D
+    IF(FULL_FORTRAN2003)
     ADD_SUBDIRECTORY( eul_vp_2d2v_cart_fv                      )
+    ENDIF(FULL_FORTRAN2003)
 
     # Particle simulations
 

@@ -12,29 +12,59 @@
 !> This needs to be present to answer questions like T%x_node(i,j). 
 !> We set this logical mesh outside of the read_from_file routine.
 module sll_m_coordinate_transformations_2d_nurbs
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
 
-  use sll_m_xdmf
-  use sll_m_meshes_base
-  use sll_m_cartesian_meshes
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_gnuplot
-  use sll_m_interpolators_2d_base
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_deboor_splines_2d
-  use sll_m_constants, only : &
-       sll_epsilon_0
-  use sll_m_plotmtv
-  use sll_m_utilities, only: sll_new_file_id
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_epsilon_0
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_mtv, &
+    sll_io_xdmf
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_meshes_base, only: &
+    sll_mesh_2d_base
+
+  use sll_m_plotmtv, only: &
+    sll_plotmtv_write
+
+  use sll_m_utilities, only: &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
 
   implicit none
+
+  public :: &
+    new_nurbs_2d_transformation_from_file, &
+    sll_coordinate_transformation_2d_nurbs, &
+    sll_coordinate_transformation_2d_nurbs_ptr, &
+    sll_delete
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Nurbs-based coordinate transformation 
-  type, extends(sll_coordinate_transformation_2d_base), public :: &
+  type, extends(sll_coordinate_transformation_2d_base) :: &
        sll_coordinate_transformation_2d_nurbs
      !> \f$ x_1(i,j) \f$
      sll_real64, dimension(:,:), pointer :: x1_node =>null()  
@@ -45,11 +75,11 @@ module sll_m_coordinate_transformations_2d_nurbs
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x1_interp =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x2_interp =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x3_interp =>null()
      !> PLEASE ADD DOCUMENTATION
      sll_int32 :: is_rational
      !> PLEASE ADD DOCUMENTATION
@@ -97,7 +127,7 @@ module sll_m_coordinate_transformations_2d_nurbs
      procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
-  type, public :: sll_coordinate_transformation_2d_nurbs_ptr
+  type :: sll_coordinate_transformation_2d_nurbs_ptr
      !> Pointer to class
      class(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
@@ -106,8 +136,6 @@ module sll_m_coordinate_transformations_2d_nurbs
      module procedure delete_transformation_2d_nurbs
   end interface sll_delete
 
-  public sll_delete
-  public new_nurbs_2d_transformation_from_file
 
   
 contains
@@ -122,7 +150,6 @@ contains
   end function new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_m_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
@@ -468,10 +495,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-             transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+             transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x1_node_nurbs
   
@@ -495,10 +522,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
 
   end function x2_node_nurbs
@@ -528,10 +555,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64 )
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
     
   end function x1_cell_nurbs
@@ -558,10 +585,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
     
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
     
   end function x2_cell_nurbs
@@ -580,10 +607,10 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-             transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+             transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x1_nurbs
 
@@ -601,10 +628,10 @@ contains
     
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x2_nurbs
 
@@ -718,10 +745,10 @@ contains
     
     if (transf%is_rational == 0) then ! IN the case of SPLINE
        
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
 
        jacobian_matrix(1,1) = j11
        jacobian_matrix(1,2) = j12
@@ -730,15 +757,15 @@ contains
        
     else 
 
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
+       value_11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
        ratio_value_3_square = 1.0_f64/(value_3)**2
        
        j11 = value_11*value_3- value_31*value_1

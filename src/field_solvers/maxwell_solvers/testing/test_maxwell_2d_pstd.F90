@@ -5,15 +5,21 @@ program test_maxwell_2d_pstd
 !-------------------------------------------------------------------
 !  test 2D Maxwell solver based on FFT
 !-------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
-use sll_m_constants
+#include "sll_working_precision.h"
+#include "sll_maxwell_solvers_macros.h"
 
-use sll_m_maxwell_2d_pstd
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
+  use sll_m_maxwell_2d_pstd, only: &
+    sll_create, &
+    sll_maxwell_2d_pstd, &
+    sll_solve
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min

@@ -31,51 +31,84 @@
 !> More details by following the link sll_m_cubic_splines
 
 module sll_m_cubic_splines
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
-  use sll_m_tridiagonal  ! Used for 'slow' algorithm implementation
-  use sll_m_boundary_condition_descriptors
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag_double
+
   implicit none
+
+  public :: &
+    compute_cubic_spline_1d, &
+    compute_cubic_spline_2d, &
+    deposit_value_2d, &
+    get_coeff_cubic_spline_2d, &
+    get_x1_delta, &
+    get_x1_max, &
+    get_x1_min, &
+    get_x2_delta, &
+    get_x2_max, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_array, &
+    interpolate_from_interpolant_derivatives_eta1, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    interpolate_x1_derivative_2d, &
+    interpolate_x2_derivative_2d, &
+    new_cubic_spline_1d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_1d, &
+    sll_cubic_spline_2d, &
+    sll_delete
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> @brief 
   !> basic type for one-dimensional cubic spline data. 
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type, public  ::  sll_cubic_spline_1D
-     sll_int32 SLL_PRIV                   :: n_points !< size
-     sll_real64 SLL_PRIV                  :: delta    !< discretization step
-     sll_real64 SLL_PRIV                  :: rdelta   !< reciprocal of delta
-     sll_real64 SLL_PRIV                  :: xmin     !< left boundary
-     sll_real64 SLL_PRIV                  :: xmax     !< right boundary
-     sll_int32 SLL_PRIV                   :: bc_type  !< periodic, hermite
-     !> scratch space D (L*D=F); refer to the algorithm below. Size depends on 
+  type  ::  sll_cubic_spline_1D
+     sll_int32, private                   :: n_points !< size
+     sll_real64, private                  :: delta    !< discretization step
+     sll_real64, private                  :: rdelta   !< reciprocal of delta
+     sll_real64, private                  :: xmin     !< left boundary
+     sll_real64, private                  :: xmax     !< right boundary
+     sll_int32, private                   :: bc_type  !< periodic, hermite
+     !> scratch space D (L*D=F), refer to the algorithm below. Size depends on 
      !> BCs.
-     sll_real64, dimension(:), pointer SLL_PRIV :: d =>null() 
+     sll_real64, dimension(:), pointer, private :: d =>null() 
      !> the spline coeffs
-     sll_real64, dimension(:), pointer SLL_PRIV :: coeffs=>null() 
+     sll_real64, dimension(:), pointer, private :: coeffs=>null() 
      !> left slope, for Hermite:
-     sll_real64 SLL_PRIV                        :: slope_L  
+     sll_real64, private                        :: slope_L  
      !> right slope, for Hermite
-     sll_real64 SLL_PRIV                        :: slope_R 
+     sll_real64, private                        :: slope_R 
      !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV                           :: compute_slope_L
+     logical, private                           :: compute_slope_L
      !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV                           :: compute_slope_R
+     logical, private                           :: compute_slope_R
      !> Data required for the 'slow' algorithm based on a standard
      !> tridiagonal system solution. Note that we use the same nomenclature
      !> as in the sll_m_tridiagonal module.
-     logical SLL_PRIV                           :: use_fast_algorithm
+     logical, private                           :: use_fast_algorithm
      !> Tridiagonal solver data
-     sll_real64, dimension(:), pointer SLL_PRIV :: a => null()
+     sll_real64, dimension(:), pointer, private :: a => null()
      !> Tridiagonal solver data
-     sll_real64, dimension(:), pointer SLL_PRIV :: cts => null()
+     sll_real64, dimension(:), pointer, private :: cts => null()
      !> Tridiagonal solver data
-     sll_int32, dimension(:), pointer SLL_PRIV  :: ipiv => null()
+     sll_int32, dimension(:), pointer, private  :: ipiv => null()
      !> Hermite needs extended f array:
-     sll_real64, dimension(:), pointer SLL_PRIV :: f_aux => null() 
+     sll_real64, dimension(:), pointer, private :: f_aux => null() 
   end type sll_cubic_spline_1D
 
 
@@ -84,38 +117,38 @@ module sll_m_cubic_splines
   !> @details
   !> This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type, public :: sll_cubic_spline_2D
-    sll_int32  SLL_PRIV   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
-    sll_int32  SLL_PRIV   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_delta    !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_delta    !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_min      !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x1_max      !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_min      !< PLEASE ADD DOCUMENTATION
-    sll_real64 SLL_PRIV   :: x2_max      !< PLEASE ADD DOCUMENTATION
-    sll_int32  SLL_PRIV   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
-    sll_int32  SLL_PRIV   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
+  type :: sll_cubic_spline_2D
+    sll_int32 , private   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_delta    !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_delta    !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_min      !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x1_max      !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_min      !< PLEASE ADD DOCUMENTATION
+    sll_real64, private   :: x2_max      !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
+    sll_int32 , private   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
     ! if data is not used, it should be deleted make a decision...
-    sll_real64, pointer SLL_PRIV :: data(:,:) => null()  !< data for the spline fit
-    sll_real64, pointer SLL_PRIV :: d1(:) => null()      !< scratch space D (L*D = F), 
+    sll_real64, pointer, private :: data(:,:) => null()  !< data for the spline fit
+    sll_real64, pointer, private :: d1(:) => null()      !< scratch space D (L*D = F), 
                                                          !< refer to algorithm below. 
                                                          !< Size depends on BCs.
-    sll_real64, pointer SLL_PRIV :: d2(:) => null()      !< Second scratch space: 
-    sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()!< the spline coefficients:
-    sll_real64, pointer SLL_PRIV :: x1_min_slopes(:) => null() 
-    sll_real64, pointer SLL_PRIV :: x1_max_slopes(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_min_slopes(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_max_slopes(:) => null()
-    sll_real64, pointer SLL_PRIV :: x1_min_slopes_coeffs(:) => null()
-    sll_real64, pointer SLL_PRIV :: x1_max_slopes_coeffs(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_min_slopes_coeffs(:) => null()
-    sll_real64, pointer SLL_PRIV :: x2_max_slopes_coeffs(:) => null()
-    logical SLL_PRIV             :: compute_slopes_x1_min
-    logical SLL_PRIV             :: compute_slopes_x1_max
-    logical SLL_PRIV             :: compute_slopes_x2_min
-    logical SLL_PRIV             :: compute_slopes_x2_max
+    sll_real64, pointer, private :: d2(:) => null()      !< Second scratch space: 
+    sll_real64, pointer, private :: coeffs(:,:) => null()!< the spline coefficients:
+    sll_real64, pointer, private :: x1_min_slopes(:) => null() 
+    sll_real64, pointer, private :: x1_max_slopes(:) => null()
+    sll_real64, pointer, private :: x2_min_slopes(:) => null()
+    sll_real64, pointer, private :: x2_max_slopes(:) => null()
+    sll_real64, pointer, private :: x1_min_slopes_coeffs(:) => null()
+    sll_real64, pointer, private :: x1_max_slopes_coeffs(:) => null()
+    sll_real64, pointer, private :: x2_min_slopes_coeffs(:) => null()
+    sll_real64, pointer, private :: x2_max_slopes_coeffs(:) => null()
+    logical, private             :: compute_slopes_x1_min
+    logical, private             :: compute_slopes_x1_max
+    logical, private             :: compute_slopes_x2_min
+    logical, private             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
   !> @brief 
@@ -179,27 +212,6 @@ module sll_m_cubic_splines
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-    public sll_delete,                        &
-           new_cubic_spline_1d,               &
-           new_cubic_spline_2d,               &
-           compute_cubic_spline_1d,           &
-           compute_cubic_spline_2d,           &
-           interpolate_derivative,            &
-           interpolate_value,                 &
-           interpolate_array_values,          &
-           interpolate_pointer_values,        &
-           interpolate_array_derivatives,     &
-           interpolate_pointer_derivatives,   &
-           interpolate_value_2d,              &
-           interpolate_x1_derivative_2D,      &
-           interpolate_x2_derivative_2D,      &
-           get_x1_min,                        &
-           get_x1_max,                        &
-           get_x1_delta,                      &
-           get_x2_max,                        &
-           get_x2_delta,                      &
-           deposit_value_2d,                  &
-           get_coeff_cubic_spline_2d
 
 contains  ! ****************************************************************
 
@@ -392,7 +404,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   ! Fast spline algorithm description:
   !
   ! - data: the array whose data must be fit with the cubic spline.
-  ! - np: (number of points; length of the data array that must be fit with 
+  ! - np: (number of points, length of the data array that must be fit with 
   !   the spline.
   ! - bc_type: an integer flag describing the type of boundary conditions 
   !   desired.
@@ -895,8 +907,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> @param[in] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D subroutine.
   !> @returns the value of the interpolated image of the abscissa x,
-  function interpolate_value( x, spline )
-    sll_real64                         :: interpolate_value
+  function interpolate_from_interpolant_value( x, spline )
+    sll_real64                         :: interpolate_from_interpolant_value
     intrinsic                          :: associated, int, real
     sll_real64, intent(in)             :: x
     type(sll_cubic_spline_1D), pointer :: spline
@@ -911,8 +923,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     xmin = spline%xmin
     rh   = spline%rdelta
     coeffs => spline%coeffs(0:spline%n_points+2)
-    interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
-  end function interpolate_value
+    interpolate_from_interpolant_value = interpolate_value_aux( x, xmin, rh, coeffs )
+  end function interpolate_from_interpolant_value
 
   !> @brief returns the values of the images of a collection of abscissae,
   !> represented by a 1D array in another output array. The spline coefficients
@@ -925,7 +937,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> interpolated.
   !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
-  subroutine interpolate_array_values( a_in, a_out, n, spline )
+  subroutine interpolate_from_interpolant_array( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
@@ -975,9 +987,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
        t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
        a_out(i) = (1.0_f64/6.0_f64)*(t2 + t4)
-       !print*,'interpolate_array_values', i, a_out(i)
+       !print*,'interpolate_from_interpolant_array', i, a_out(i)
     end do
-  end subroutine interpolate_array_values
+  end subroutine interpolate_from_interpolant_array
 
 
   ! FIXME: The following function is not in the unit test.
@@ -1120,7 +1132,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> @param[in] num_pts the number of elements of the input array.
   !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
-  subroutine interpolate_array_derivatives( &
+  subroutine interpolate_from_interpolant_derivatives_eta1( &
     array_in, &
     array_out, &
     num_pts, &
@@ -1143,10 +1155,10 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        array_out(i) = interpolate_derivative_aux( &
             array_in(i), spline%xmin, spline%rdelta, coeffs )
     end do
-  end subroutine interpolate_array_derivatives
+  end subroutine interpolate_from_interpolant_derivatives_eta1
 
   ! FIXME: The following subroutine is not in the unit test
-  !> @brief analogous to the interpolate_array_derivatives() subroutine but
+  !> @brief analogous to the interpolate_from_interpolant_derivatives_eta1() subroutine but
   !> its input and output arrays are pointers.
   !> @param[in] ptr_in input double-precison element array pointer containing the 
   !> abscissae at which the derivatives are wanted.

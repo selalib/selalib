@@ -4,10 +4,18 @@
 !> @details
 !> Contains the abstract class to create a Poisson solver in 2D.
 module sll_m_poisson_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
 
   implicit none
+
+  public :: &
+    sll_poisson_2d_base, &
+    sll_f_function_of_position
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> PLEASE ADD DOCUMENTATION
   type, abstract :: sll_poisson_2d_base 

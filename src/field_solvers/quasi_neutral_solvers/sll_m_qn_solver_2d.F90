@@ -16,15 +16,41 @@
 !***************************************************************************
 
 module sll_m_qn_solver_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_boundary_condition_descriptors
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_neumann
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    delete, &
+    dirichlet_matrix, &
+    neumann_matrix, &
+    new, &
+    qn_solver_2d, &
+    solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type qn_solver_2d
      sll_int32                   :: BC ! Boundary_conditions
@@ -71,11 +97,11 @@ contains
 
     ! For FFTs in theta-direction
     !plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
-    plan%fft_plan => fft_new_plan( NP_theta, x, x, FFT_FORWARD )
+    plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
 
     ! For inverse FFTs in theta-direction
-    !plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_INVERSE )
-    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
+    !plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
+    plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
@@ -113,11 +139,11 @@ contains
     !
     !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
     !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
-    call fft_apply_plan( plan%fft_plan, hat_f, hat_f )
-    call fft_apply_plan( plan%fft_plan, hat_g, hat_g )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
     
-    call fft_apply_plan( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    call fft_apply_plan( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
 
     if (plan%BC==SLL_NEUMANN) then
        hat_rho(1,:)  = hat_rho(1,:) + (c(1)-2/dr)*hat_f 
@@ -129,7 +155,7 @@ contains
 
     do i=2,NP_r-1
        !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
-       call fft_apply_plan( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
+       call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
     enddo
 
     do j=1,NP_theta
@@ -155,7 +181,7 @@ contains
     ! FFT in the k-direction of Tild_phi (storaged in phi)  
     do i=1,NP_r
        !call fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
-       call fft_apply_plan( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
+       call fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
     phi = real(hat_phi, f64)/real(NP_theta,f64)
@@ -192,7 +218,7 @@ contains
     dr = (rmax-rmin)/(NP_r+1)
     dtheta = 2*sll_pi / NP_theta        
 
-    a_resh = 0.d0
+    a_resh = 0._f64
 
     do i=1,NP_r
        r = rmin + i*dr
@@ -220,7 +246,7 @@ contains
     dr = (rmax-rmin)/(NP_r-1)
     dtheta = 2*sll_pi / NP_theta
 
-    a_resh = 0.d0
+    a_resh = 0._f64
 
     a_resh(2) = 2/dr**2 + 1/(Zi*Te(1)) + (k/rmin)**2
     a_resh(3) = -2/dr**2

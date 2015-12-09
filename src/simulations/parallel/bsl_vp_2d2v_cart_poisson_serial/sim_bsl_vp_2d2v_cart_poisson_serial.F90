@@ -5,11 +5,27 @@
 ! - sequential for poisson 
 
 program sim_bsl_vp_2d2v_cart_poisson_serial
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
-  use sll_m_collective
-  use sll_m_timer
-  implicit none 
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_bsl_vp_2d2v_cart_poisson_serial, only: &
+    delete_vp4d_par_cart, &
+    new_vlasov_par_poisson_seq_cart, &
+    sll_simulation_4d_vlasov_par_poisson_seq_cart
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !  character(len=256) :: filename
 !  character(len=256) :: filename_local
@@ -86,7 +102,7 @@ program sim_bsl_vp_2d2v_cart_poisson_serial
   ! argument.
 
   
-!  call getarg(1, filename)
+!  call get_command_argument(1, filename)
 !  filename_local = trim(filename)
 !  
 !  sim => new_vlasov_par_poisson_seq_cart( filename_local )

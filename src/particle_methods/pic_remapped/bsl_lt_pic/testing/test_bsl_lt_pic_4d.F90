@@ -27,20 +27,36 @@
 program test_bsl_lt_pic_4d
 
   ! [[file:../working_precision/sll_m_working_precision.h]]
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  ! [[file:../memory/sll_m_memory.h]]
-#include "sll_memory.h"
+  use sll_m_bsl_lt_pic_4d_group, only: &
+    sll_bsl_lt_pic_4d_group, &
+    sll_bsl_lt_pic_4d_group_new
 
-  ! [[file:../assert/sll_m_assert.h]]
-#include "sll_assert.h"
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    eval_hat_function
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_bsl_lt_pic_4d_group
-  use sll_m_cartesian_meshes
-  use sll_m_timer
-  use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
 
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_remapped_pic_utilities, only: &
+    apply_periodic_bc_on_cartesian_mesh_2d, &
+    x_is_in_domain_2d
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
 #define SPECIES_CHARGE  1._f64
 #define SPECIES_MASS    1._f64
 #define particle_group_id 1_i32
@@ -99,17 +115,15 @@ program test_bsl_lt_pic_4d
 #define X4_PLOT_CST 0._f64
 
 
-  implicit none
-  
   type(sll_bsl_lt_pic_4d_group),        pointer     :: particle_group
   type(sll_cartesian_mesh_2d),          pointer     :: mesh_2d
-  type(sll_cartesian_mesh_2d),          pointer     :: plotting_mesh_2d
+  !type(sll_cartesian_mesh_2d),          pointer     :: plotting_mesh_2d
 
-  character(len=30) :: file_name
+  !character(len=30) :: file_name
   character(5)      :: ncx_name, ncy_name
 
   sll_int32 :: k
-  sll_int64 :: j, j_x, j_y, j_vx, j_vy
+  sll_int64 :: j_x, j_y, j_vx, j_vy
 !  sll_int32 :: part_array_size, part_guard_size
   sll_real64 :: error, tolerance, f_target
   sll_real64 :: f_j
@@ -145,20 +159,20 @@ program test_bsl_lt_pic_4d
   sll_real64 :: basis_height
 
 
-  sll_real64 :: x_j_bsl_before_per
-  sll_real64 :: y_j_bsl_before_per
-  sll_real64 :: vx_j_bsl_before_per
-  sll_real64 :: vy_j_bsl_before_per
+  !sll_real64 :: x_j_bsl_before_per
+  !sll_real64 :: y_j_bsl_before_per
+  !sll_real64 :: vx_j_bsl_before_per
+  !sll_real64 :: vy_j_bsl_before_per
 
-  sll_real64 :: x_j_bsl
-  sll_real64 :: y_j_bsl
-  sll_real64 :: vx_j_bsl
-  sll_real64 :: vy_j_bsl
+  !sll_real64 :: x_j_bsl
+  !sll_real64 :: y_j_bsl
+  !sll_real64 :: vx_j_bsl
+  !sll_real64 :: vy_j_bsl
 
-  sll_real64 :: x_j_bsl_end
-  sll_real64 :: y_j_bsl_end
-  sll_real64 :: vx_j_bsl_end
-  sll_real64 :: vy_j_bsl_end
+  !sll_real64 :: x_j_bsl_end
+  !sll_real64 :: y_j_bsl_end
+  !sll_real64 :: vx_j_bsl_end
+  !sll_real64 :: vy_j_bsl_end
 
   ! Benchmarking remap performance
   type(sll_time_mark) :: remapstart
@@ -217,8 +231,8 @@ program test_bsl_lt_pic_4d
 
   !MCP: for a constant (1) function, take hat_shift = 0 and basis_height = 1
   !MCP: for the std tensor-product hat function, take hat_shift = 1 and basis_height = 0
-  hat_shift = 1.
-  basis_height = 0.
+  hat_shift = 1.0_f64
+  basis_height = 0.0_f64
 
   ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
 
@@ -251,14 +265,14 @@ program test_bsl_lt_pic_4d
      ! set particle position
      coords(1) = new_x_k
      coords(2) = new_y_k
-     coords(3) = 0
+     coords(3) = 0.0_f64
      call particle_group%set_x(k, coords)
 
 
      ! set particle speed
      coords(1) = new_vx_k
      coords(2) = new_vy_k
-     coords(3) = 0
+     coords(3) = 0.0_f64
      call particle_group%set_v(k, coords)
 
     ! SHOULD WE PUT THE PARTICLES BACK INTO THE DOMAIN ???
@@ -271,7 +285,7 @@ program test_bsl_lt_pic_4d
     remap_type = 'bsl_ltp'
   else
     ! called as an executable, with an argument
-    call getarg(1,remap_type)
+    call get_command_argument(1,remap_type)
   end if
 
   call sll_set_time_mark(remapstart)
@@ -298,10 +312,10 @@ program test_bsl_lt_pic_4d
   
   ! result should still be exact on the new grid because all the transformations have been linear
 
-  number_nodes_x  = particle_group%number_parts_x
-  number_nodes_y  = particle_group%number_parts_y
-  number_nodes_vx = particle_group%number_parts_vx
-  number_nodes_vy = particle_group%number_parts_vy
+  number_nodes_x  = int(particle_group%number_parts_x, i64)
+  number_nodes_y  = int(particle_group%number_parts_y, i64)
+  number_nodes_vx = int(particle_group%number_parts_vx, i64)
+  number_nodes_vy = int(particle_group%number_parts_vy, i64)
 
   h_nodes_x    = particle_group%remapping_grid%delta_eta1
   h_nodes_y    = particle_group%remapping_grid%delta_eta2
@@ -314,7 +328,7 @@ program test_bsl_lt_pic_4d
   nodes_vy_min   = particle_group%remapping_grid%eta4_min
 
   open(80,file='target_values_test_init4D.dat')
-  error = 0
+  error = 0.0_f64
   x_j = nodes_x_min
   do j_x = 1, number_nodes_x
     y_j = nodes_y_min
@@ -323,7 +337,7 @@ program test_bsl_lt_pic_4d
       do j_vx = 1, number_nodes_vx
         vy_j = nodes_vy_min
         do j_vy = 1, number_nodes_vy
-          f_j = real( particle_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
+          f_j = real( particle_group%target_values(j_x,j_y,j_vx,j_vy) ,f64)
           call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
 
           if( .not. x_is_in_domain_2d( new_x, new_y, particle_group%space_mesh_2d,   &
@@ -424,7 +438,7 @@ program test_bsl_lt_pic_4d
 !  call sll_delete( particle_group )
 !  call sll_delete( mesh_2d )
 
-  tolerance = 1e-6
+  tolerance = 1.0d-6
   if( error < tolerance )then
     ! print*, "TEST PASSED: error = ", error
     print *, 'PASSED'

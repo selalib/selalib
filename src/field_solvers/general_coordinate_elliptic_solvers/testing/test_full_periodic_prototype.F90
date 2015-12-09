@@ -1,26 +1,65 @@
 !Test for new version of general coordinates elliptic solver
 !made by Adnane and Michel
 program test_gces_full_periodic_prototype
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_errors.h"
 
-use sll_m_cartesian_meshes
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_scalar_field_2d
-use sll_m_constants, only : &
-     sll_pi
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_deboor_splines_2d
-use sll_m_general_coordinate_elliptic_solver
-use sll_m_cubic_spline_interpolator_2d
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre, &
+    factorize_mat_es_prototype, &
+    general_coordinate_elliptic_solver, &
+    initialize_general_elliptic_solver_prototype, &
+    solve_general_coordinates_elliptic_eq_prototype
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_analytic, &
+    new_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_cartesian_mesh_2d),                  pointer :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 type(general_coordinate_elliptic_solver)              :: es
-class(sll_interpolator_2d_base),              pointer :: interp_rho
+class(sll_c_interpolator_2d),              pointer :: interp_rho
 class(sll_scalar_field_2d_base),              pointer :: a11_field_mat
 class(sll_scalar_field_2d_base),              pointer :: a12_field_mat
 class(sll_scalar_field_2d_base),              pointer :: a21_field_mat
@@ -445,9 +484,9 @@ mode2 = params(6)
 
 x1  = sinprod_x1(eta1,eta2, params)
 x2  = sinprod_x2(eta1,eta2, params)
-pi  = 4d0*atan(1d0)
-res = (mode1*2d0*pi/L1)**2
-res = res+(mode2*2d0*pi/L2)**2
+pi  = 4._f64*atan(1._f64)
+res = (mode1*2.0_f64*pi/L1)**2
+res = res+(mode2*2.0_f64*pi/L2)**2
 res = -res*cos(2*pi*mode1*x1/L1)*cos(2*pi*mode2*x2/L2)
 
 end function rhs
@@ -471,8 +510,8 @@ mode1 = params(5)
 mode2 = params(6)
 x1 = sinprod_x1(eta1,eta2, params)
 x2 = sinprod_x2(eta1,eta2, params)
-pi = 4d0*atan(1d0)
-res = cos(2d0*pi*mode1*x1/L1)*cos(2d0*pi*mode2*x2/L2)
+pi = 4._f64*atan(1._f64)
+res = cos(2.0_f64*pi*mode1*x1/L1)*cos(2.0_f64*pi*mode2*x2/L2)
 end function sol
 
 end program test_gces_full_periodic_prototype

@@ -4,16 +4,32 @@
 !> @details ...
 module sll_m_particle_initializer
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
-  use sll_m_gaussian, only: gaussian_deviate_2D
-  use sll_m_sobol, only: i8_sobol
-  use sll_m_prob, only: normal_cdf_inv
-  
+  use sll_m_gaussian, only: &
+    gaussian_deviate_2d
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_prob, only: &
+    normal_cdf_inv
+
+  use sll_m_sobol, only: &
+    i8_sobol
+
   implicit none
+
+  public :: &
+    sll_particle_initialize_random_landau_1d2v, &
+    sll_particle_initialize_random_landau_2d2v, &
+    sll_particle_initialize_sobol_landau_1d2v, &
+    sll_particle_initialize_sobol_landau_2d2v
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! Different ansatz. Use or remove
 !!$  type :: sll_particle_initializer_2d2v

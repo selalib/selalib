@@ -20,7 +20,6 @@
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 
 use sll_m_cartesian_meshes
 use sll_m_working_precision
@@ -35,5 +34,10 @@ use sll_m_cubic_splines
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_common_coordinate_transformations
+use sll_m_poisson_1d_periodic
+use sll_m_poisson_2d_periodic_fftpack
+
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
+
 
 #endif

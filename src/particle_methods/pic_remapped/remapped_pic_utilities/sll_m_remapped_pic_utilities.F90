@@ -17,17 +17,21 @@
 
 module sll_m_remapped_pic_utilities
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_m_accumulators.h"
-!#include "particle_representation.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes
-  use sll_m_working_precision
-  use sll_m_timer
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-implicit none
+  implicit none
+
+  public :: &
+    apply_periodic_bc_on_cartesian_mesh_2d, &
+    x_is_in_domain_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

@@ -1,18 +1,23 @@
 program test_xdmf_parallel
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_collective, only:  &
-    sll_world_collective,    &
-    sll_boot_collective,     &
-    sll_halt_collective,     &
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
     sll_get_collective_size, &
-    sll_get_collective_rank
+    sll_halt_collective, &
+    sll_world_collective
 
-  use sll_m_xdmf_light_parallel, only: sll_t_xdmf_parallel_file
-  use sll_m_io_utilities,        only: sll_f_check_equal_files
+  use sll_m_io_utilities, only: &
+    sll_f_check_equal_files
+
+  use sll_m_xdmf_light_parallel, only: &
+    sll_t_xdmf_parallel_file
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !----------------------------------------------------------------------------
   ! VARIABLES DECLARATION

@@ -22,11 +22,25 @@
 !> multipatch approach.
 
 module sll_m_cartesian_meshes_multipatch
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_cartesian_meshes
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d_ptr
+
   implicit none
+
+  public :: &
+    new_cartesian_mesh_multipatch_2d, &
+    sll_cartesian_mesh_multipatch_2d, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief basic logical mesh multipatch object.
   type sll_cartesian_mesh_multipatch_2d

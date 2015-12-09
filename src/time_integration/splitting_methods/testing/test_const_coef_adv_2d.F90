@@ -2,16 +2,34 @@
 !> @brief Unit test for operator splitting. Constant coefficient advection.
 !> 
 program test_const_coef_adv_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_field_2d.h"
-  use sll_m_const_coef_advection_2d
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
-  use sll_m_hdf5_io_serial
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_const_coef_advection_2d, only: &
+    const_coef_advection_2d, &
+    new_const_coef_advection_2d
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    do_split_steps, &
+    sll_strang_tvt
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define N1 50
 #define N2 60
 #define XMIN (-1.0_f64)
@@ -26,8 +44,8 @@ program test_const_coef_adv_2d
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
-  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+  class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
+  class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
 
   ! initialize interpolator
   call interp_eta1%initialize( N1, XMIN, XMAX, SLL_PERIODIC )
@@ -50,7 +68,7 @@ program test_const_coef_adv_2d
        interp_eta1_ptr, interp_eta2_ptr, SLL_STRANG_TVT)
 
   ! do some steps of lie_splitting
-  dt = 0.5
+  dt = 0.5_f64
   call do_split_steps(split, dt, 4)
 
   ! save results

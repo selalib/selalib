@@ -1,25 +1,47 @@
 program test_lobalap
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_common_coordinate_transformations
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  !use sll_m_map_function, only: set_map_function
-  use sll_m_lobatto_poisson
-  use sll_m_dg_fields
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete, &
+    sll_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  use sll_m_lobatto_poisson, only: &
+    lobatto_poisson_solver, &
+    sll_create, &
+    sll_solve, &
+    sll_delete
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(lobatto_poisson_solver)                          :: solver
-  type(sll_cartesian_mesh_2d), pointer                    :: mesh
+  type(sll_cartesian_mesh_2d), pointer                  :: mesh
   class(sll_coordinate_transformation_2d_base), pointer :: tau
   type(sll_dg_field_2d), pointer                        :: dg_rho
   type(sll_dg_field_2d), pointer                        :: dg_ex
   type(sll_dg_field_2d), pointer                        :: dg_ey
-
   sll_int32, parameter                                  :: degree = 3
-  real(8), external                                     :: f_cos
-  real(8), external                                     :: f_four
   
 #define NPTS1 2
 #define NPTS2 2
@@ -83,69 +105,70 @@ program test_lobalap
   call dg_ex%write_to_file('ex')
   call dg_ey%write_to_file('ey')
 
-end program test_lobalap
+contains
 
-real(8) function f_cos( r, theta )
+  real(8) function f_cos( r, theta )
 
-   real(8) :: r
-   real(8) :: theta
+    real(8) :: r
+    real(8) :: theta
 
-   f_cos = (r-R_MIN)*(r-R_MAX)*cos(N*theta)*r
+    f_cos = (r-R_MIN)*(r-R_MAX)*cos(N*theta)*r
 
-end function f_cos
+  end function f_cos
 
-real(8) function f_four( x, y)
-  real(8) :: x, y
+  real(8) function f_four( x, y)
+    real(8) :: x, y
 #ifdef DEBUG
-  real(8) :: dummy
-  dummy = x+y
+    real(8) :: dummy
+    dummy = x+y
 #endif
-   f_four = -4._8
+    f_four = -4._8
 
-end function f_four
+  end function f_four
 
-real(8) function f_sin( r, theta )
+  real(8) function f_sin( r, theta )
 
-   real(8) :: r
-   real(8) :: theta
+    real(8) :: r
+    real(8) :: theta
 
-   f_sin = (r-R_MIN)*(r-R_MAX)*sin(N*theta)*r
+    f_sin = (r-R_MIN)*(r-R_MAX)*sin(N*theta)*r
 
-end function f_sin
+  end function f_sin
 
-real(8) function lap_f_cos( r, theta )
+  real(8) function lap_f_cos( r, theta )
 
-   !sage: assume(r>=1)
-   !sage: assume(r<=2)
-   !sage: phi = (r-R_MIN)*(r-R_MAX)*r*cos(n*theta)
-   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+    !sage: assume(r>=1)
+    !sage: assume(r<=2)
+    !sage: phi = (r-R_MIN)*(r-R_MAX)*r*cos(n*theta)
+    !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
 
-   real(8) :: r
-   real(8) :: theta
+    real(8) :: r
+    real(8) :: theta
 
-   lap_f_cos = -(r-R_MAX)*(r-R_MIN)*N*N*cos(N*theta)/r &
-           + ((r-R_MAX)*(r-R_MIN)*cos(N*theta)  &
-           + (r-R_MAX)*r*cos(N*theta) + (r-R_MIN)*r*cos(N*theta) &
-           + 2d0*((r-R_MAX)*cos(N*theta) + (r-R_MIN)*cos(N*theta) &
-           + r*cos(N*theta))*r)/r
+    lap_f_cos = -(r-R_MAX)*(r-R_MIN)*N*N*cos(N*theta)/r &
+            + ((r-R_MAX)*(r-R_MIN)*cos(N*theta)  &
+            + (r-R_MAX)*r*cos(N*theta) + (r-R_MIN)*r*cos(N*theta) &
+            + 2.0_8*((r-R_MAX)*cos(N*theta) + (r-R_MIN)*cos(N*theta) &
+            + r*cos(N*theta))*r)/r
 
+  end function lap_f_cos
 
-end function lap_f_cos
+  real(8) function lap_f_sin( r, theta)
 
-real(8) function lap_f_sin( r, theta)
+    !sage: assume(r>=1)
+    !sage: assume(r<=2)
+    !sage: phi = (r-R_MIN)*(r-R_MAX)*r*sin(n*theta)
+    !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
 
-   !sage: assume(r>=1)
-   !sage: assume(r<=2)
-   !sage: phi = (r-R_MIN)*(r-R_MAX)*r*sin(n*theta)
-   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
-
-   real(8) :: r
-   real(8) :: theta
+    real(8) :: r
+    real(8) :: theta
    
-   lap_f_sin = -(r-R_MAX)*(r-R_MIN)*N*N*sin(N*theta)/r &
-         + ((r-R_MAX)*(r-R_MIN)*sin(N*theta) &
-         + (r-R_MAX)*r*sin(N*theta) + (r-R_MIN)*r*sin(N*theta) &
-         + 2d0*((r-R_MAX)*sin(N*theta) + (r-R_MIN)*sin(N*theta)  &
-         + r*sin(N*theta))*r)/r
+    lap_f_sin = -(r-R_MAX)*(r-R_MIN)*N*N*sin(N*theta)/r &
+          + ((r-R_MAX)*(r-R_MIN)*sin(N*theta) &
+          + (r-R_MAX)*r*sin(N*theta) + (r-R_MIN)*r*sin(N*theta) &
+          + 2.0_8*((r-R_MAX)*sin(N*theta) + (r-R_MIN)*sin(N*theta)  &
+          + r*sin(N*theta))*r)/r
 
-end function lap_f_sin
+  end function lap_f_sin
+
+end program test_lobalap

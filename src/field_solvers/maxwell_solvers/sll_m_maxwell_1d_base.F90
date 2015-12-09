@@ -5,15 +5,23 @@
 !> Contains the abstract class to create a Maxwell solver in 1D.
 
 module sll_m_maxwell_1d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_utilities, only : int2string
+  use sll_m_utilities, only: &
+    int2string
 
   implicit none
+
+  public :: &
+    function_1d_real64, &
+    sll_maxwell_1d_base, &
+    sll_plot_two_fields_1d
+
   private
-  public :: sll_plot_two_fields_1d, function_1d_real64
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type, public, abstract :: sll_maxwell_1d_base
+  type, abstract :: sll_maxwell_1d_base
 
    contains
      procedure(compute_field1_from_field2), deferred :: &

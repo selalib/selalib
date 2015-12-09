@@ -1,10 +1,21 @@
 !>@internal [example] 
 program test_ascii_io
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_ascii_io
-use sll_m_xml_io
-use sll_m_constants
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_write_array
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_close, &
+    sll_xml_file_create
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32 :: i, j             !< indices
 sll_int32 :: error            !< error code
@@ -29,11 +40,11 @@ SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2),error)
 SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2),error)
 
 do j = 1, nnodes_x2
-   vt = real(j-1)/(nnodes_x2-1)
+   vt = real(j-1,f64)/real(nnodes_x2-1,f64)
    angle = vt * 2. * sll_pi
    theta(j) = angle
    do i = 1, nnodes_x1
-      xt = real(i-1) / float(nnodes_x1-1)
+      xt = real(i-1,f64) / real(nnodes_x1-1,f64)
       R =  1 + xt
       ray(i) = R
       x1(i,j) = R * cos(angle)

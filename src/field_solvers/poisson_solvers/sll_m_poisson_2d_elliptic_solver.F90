@@ -24,17 +24,54 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_elliptic_solver
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-!use sll_m_boundary_condition_descriptors
-  use sll_m_poisson_2d_base
-  use sll_m_general_coordinate_elliptic_solver
-  use sll_m_scalar_field_2d_base
-  use sll_m_scalar_field_2d
-  use sll_m_cubic_spline_interpolator_2d
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    factorize_mat_es_prototype, &
+    general_coordinate_elliptic_solver, &
+    new_general_elliptic_solver_prototype, &
+    set_rho_coefficients_coordinates_elliptic_eq_prototype, &
+    solve_general_coordinates_elliptic_eq_prototype
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base, &
+    sll_f_function_of_position
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_elliptic_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_NO_SOLVE_ELLIPTIC_SOLVER = 0 
   sll_int32, parameter :: SLL_SOLVE_ELLIPTIC_SOLVER = 1 
@@ -51,14 +88,14 @@ implicit none
     class(sll_scalar_field_2d_base), pointer                :: b1_field
     class(sll_scalar_field_2d_base), pointer                :: b2_field
     class(sll_scalar_field_2d_base), pointer                :: c_field
-    class(sll_interpolator_2d_base), pointer                :: interp_rho
-    class(sll_interpolator_2d_base), pointer                :: interp_a11
-    class(sll_interpolator_2d_base), pointer                :: interp_a12
-    class(sll_interpolator_2d_base), pointer                :: interp_a21
-    class(sll_interpolator_2d_base), pointer                :: interp_a22
-    class(sll_interpolator_2d_base), pointer                :: interp_b1
-    class(sll_interpolator_2d_base), pointer                :: interp_b2
-    class(sll_interpolator_2d_base), pointer                :: interp_c
+    class(sll_c_interpolator_2d), pointer                :: interp_rho
+    class(sll_c_interpolator_2d), pointer                :: interp_a11
+    class(sll_c_interpolator_2d), pointer                :: interp_a12
+    class(sll_c_interpolator_2d), pointer                :: interp_a21
+    class(sll_c_interpolator_2d), pointer                :: interp_a22
+    class(sll_c_interpolator_2d), pointer                :: interp_b1
+    class(sll_c_interpolator_2d), pointer                :: interp_b2
+    class(sll_c_interpolator_2d), pointer                :: interp_c
     !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
     !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
 !    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
@@ -146,7 +183,7 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
-   class(sll_interpolator_2d_base), pointer, optional :: interp_rho
+   class(sll_c_interpolator_2d), pointer, optional :: interp_rho
    character(len=256), optional  :: interp_rho_case
    sll_int32, intent(in), optional :: control
    logical, intent(in), optional :: precompute_rhs
@@ -234,7 +271,7 @@ contains
              spline_degree_eta2)
          case default
            print *,'interp_rho_case=',interp_rho_case
-           call flush()
+           flush( output_unit )
            SLL_ERROR('initialize_poisson_2d_elliptic_solver','bad interp_rho_case')    
        end select
      else
@@ -674,7 +711,7 @@ contains
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32, intent(in), optional     :: control
-   class(sll_interpolator_2d_base), pointer, optional :: interp_rho
+   class(sll_c_interpolator_2d), pointer, optional :: interp_rho
    character(len=256), optional  :: interp_rho_case
    logical, intent(in), optional     :: precompute_rhs
    logical, intent(in), optional     :: with_constraint

@@ -1,23 +1,43 @@
 program test_integration
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_rectangle_integration
-use sll_m_trapz_integration
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_fekete_integration
-use sll_m_box_splines, only: &
-     write_connectivity
-use test_function_module, only: &
-     one, &
-     test_func, &
-     one_2D, &
-     test_func_2D
-use sll_m_constants, only : &
-     sll_pi
-implicit none
+  use sll_m_box_splines, only: &
+    write_connectivity
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fekete_integration, only: &
+    fekete_order_num, &
+    fekete_points_and_weights
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_integrate_1d, &
+    gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_derivative_matrix, &
+    gauss_lobatto_integrate_1d, &
+    gauss_lobatto_points, &
+    gauss_lobatto_weights
+
+  use sll_m_rectangle_integration, only: &
+    rectangle_integrate_1d
+
+  use sll_m_trapz_integration, only: &
+    trapz_integrate_1d
+
+  use test_function_module, only: &
+    one, &
+    one_2d, &
+    test_func, &
+    test_func_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer :: i,j,n
 sll_int32 :: ierr
@@ -45,13 +65,13 @@ write (*,'(5x, 5a16 )') &
 'rectangle','trapz','legendre','lobatto', 'Exact value'
 do i=2,10
   do j = 1, i
-    x(j) = (j-1)*0.5*sll_pi/(i-1)
+    x(j) = (j-1)*0.5_f64*sll_pi/(i-1)
   end do
   write (*,'(a, i2, a, 5f16.12)') 'n = ', i, ': ', &
    rectangle_integrate_1d( test_func, x, i), &
    trapz_integrate_1d( test_func, x, i), &
-   gauss_legendre_integrate_1d( test_func, 0._f64, sll_pi/2.0, i), &
-   gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_pi/2.0, i), &
+   gauss_legendre_integrate_1d( test_func, 0._f64, sll_pi/2._f64, i), &
+   gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_pi/2._f64, i), &
    0.4674011002723395
 end do
 
@@ -115,22 +135,22 @@ do i = 1, n
 end do
 
 allocate(dlag(4,4))
-dlag(1,1) = -0.3000000000000000000000000000000000000000D1
-dlag(1,2) = -0.8090169943749474241022934171828190588602D0
-dlag(1,3) = 0.3090169943749474241022934171828190588602D0
-dlag(1,4) = -0.5000000000000000000000000000000000000000D0
-dlag(2,1) = 0.4045084971874737120511467085914095294301D1
-dlag(2,2) = -0.6D-39
-dlag(2,3) = -0.1118033988749894848204586834365638117720D1
-dlag(2,4) = 0.1545084971874737120511467085914095294300D1
-dlag(3,1) = -0.1545084971874737120511467085914095294300D1
-dlag(3,2) = 0.1118033988749894848204586834365638117720D1
-dlag(3,3) = 0.1D-38
-dlag(3,4) = -0.4045084971874737120511467085914095294301D1
-dlag(4,1) = 0.5000000000000000000000000000000000000000D0
-dlag(4,2) = -0.3090169943749474241022934171828190588602D0
-dlag(4,3) = 0.8090169943749474241022934171828190588602D0
-dlag(4,4) = 0.3000000000000000000000000000000000000000D1
+dlag(1,1) = -0.3000000000000000000000000000000000000000e1_f64
+dlag(1,2) = -0.8090169943749474241022934171828190588602e0_f64
+dlag(1,3) = 0.3090169943749474241022934171828190588602e0_f64
+dlag(1,4) = -0.5000000000000000000000000000000000000000e0_f64
+dlag(2,1) = 0.4045084971874737120511467085914095294301e1_f64
+dlag(2,2) = -0.6e-39_f64
+dlag(2,3) = -0.1118033988749894848204586834365638117720e1_f64
+dlag(2,4) = 0.1545084971874737120511467085914095294300e1_f64
+dlag(3,1) = -0.1545084971874737120511467085914095294300e1_f64
+dlag(3,2) = 0.1118033988749894848204586834365638117720e1_f64
+dlag(3,3) = 0.1e-38_f64
+dlag(3,4) = -0.4045084971874737120511467085914095294301e1_f64
+dlag(4,1) = 0.5000000000000000000000000000000000000000e0_f64
+dlag(4,2) = -0.3090169943749474241022934171828190588602e0_f64
+dlag(4,3) = 0.8090169943749474241022934171828190588602e0_f64
+dlag(4,4) = 0.3000000000000000000000000000000000000000e1_f64
 
 write(*,"(/,a,/)") " Exact values with maple "
 

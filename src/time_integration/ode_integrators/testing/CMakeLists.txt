@@ -1,4 +1,4 @@
-ADD_EXECUTABLE( test_ode_integrators test_ode_integrators.F90 )
+ADD_EXECUTABLE( test_ode_integrators test_ode_integrators.F90 m_ode_collection.F90 )
 TARGET_LINK_LIBRARIES( test_ode_integrators sll_ode_integrators sll_assert )
 
 IF( PYTHON3_FOUND )

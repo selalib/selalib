@@ -1,27 +1,68 @@
 !> @ingroup fields
 module sll_parallel_array_output_module
-#include "sll_working_precision.h"
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_collective
-use sll_m_remapper
-use sll_m_xml_io
-use sll_m_cartesian_meshes
-use sll_m_utilities, only : &
-     int2string
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_4d
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_world_collective
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_global_size_j, &
+    get_layout_global_size_k, &
+    get_layout_global_size_l, &
+    get_layout_j_min, &
+    get_layout_k_min, &
+    get_layout_l_min, &
+    layout_4d
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_create
+
+  use sll_mpi, only: &
+    mpi_real8, &
+    mpi_reduce, &
+    mpi_sum
 
 #ifndef NOHDF5
-use hdf5, only: hid_t, hssize_t, hsize_t
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
 #endif
+  implicit none
+
+  public :: &
+    write_mesh_4d, &
+    write_xmf_file
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define MPI_MASTER 0
 
 contains
 
 subroutine write_mesh_4d(mesh)
-
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
 
   type(sll_cartesian_mesh_4d), intent(in) :: mesh
   sll_int32                               :: error
@@ -30,6 +71,8 @@ subroutine write_mesh_4d(mesh)
   sll_real64, dimension(:), allocatable   :: eta2
   sll_real64, dimension(:), allocatable   :: eta3
   sll_real64, dimension(:), allocatable   :: eta4
+
+  sll_int32 :: i, j, k, l
 
   error = 0
  
@@ -158,10 +201,6 @@ end subroutine write_attribute
 
 subroutine write_fx1x2(f, layout, cplot)
 
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
-
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -171,11 +210,16 @@ subroutine write_fx1x2(f, layout, cplot)
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fij
   sll_real64                              :: sumloc
-  
+ 
+  sll_int32 :: i, j
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
+
   call compute_local_sizes(layout,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(fij(1:loc_sz_i,1:loc_sz_j),error)
+
   do j=1,loc_sz_j
      do i=1,loc_sz_i
         sumloc = sum(f(i,j,:,:))
@@ -194,9 +238,6 @@ end subroutine write_fx1x2
 
 subroutine write_fx1x3(f, layout, cplot)
 
-#ifndef NOHDF5
-  use sll_m_hdf5_io_serial
-#endif
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -206,11 +247,16 @@ subroutine write_fx1x3(f, layout, cplot)
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64                              :: sumloc
-  
+
+  sll_int32 :: i, k
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
+
   call compute_local_sizes(layout,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(fik(1:loc_sz_i,1:loc_sz_k),error)
+
   do k=1,loc_sz_k
      do i=1,loc_sz_i
         sumloc= sum(f(i,:,k,:))
@@ -229,10 +275,6 @@ end subroutine write_fx1x3
 
 subroutine write_fx2x4(f, layout, cplot)
 
-#ifndef NOHDF5
-  use sll_m_hdf5_io_parallel
-#endif
-
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -243,7 +285,10 @@ subroutine write_fx2x4(f, layout, cplot)
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fjl
-  
+
+  sll_int32 :: j, l
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
 
@@ -267,15 +312,13 @@ subroutine write_fx2x4(f, layout, cplot)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx2x4_'//cplot//".h5",comm,pfile_id,error)
-  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
+  call sll_hdf5_write_array(pfile_id,global_dims,offset,fjl,"/values",error)
   call sll_hdf5_file_close(pfile_id, error)
 #endif
 
 end subroutine write_fx2x4
 
 subroutine write_fx3x4(f, layout, cplot)
-
-  use sll_m_hdf5_io_parallel
 
   sll_real64, dimension(:,:,:,:)          :: f
   Type(layout_4D), pointer                :: layout
@@ -287,7 +330,10 @@ subroutine write_fx3x4(f, layout, cplot)
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fkl
-  
+
+  sll_int32 :: k, l
+  sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+
   prank = sll_get_collective_rank(sll_world_collective)
   comm  = sll_world_collective%comm
 
@@ -305,7 +351,7 @@ subroutine write_fx3x4(f, layout, cplot)
 
 #ifndef NOHDF5
   call sll_hdf5_file_create('fx3x4_'//cplot//".h5",comm,pfile_id,error)
-  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/values",error)
+  call sll_hdf5_write_array(pfile_id,global_dims,offset,fkl,"/values",error)
   call sll_hdf5_file_close(pfile_id, error)
 #endif
 

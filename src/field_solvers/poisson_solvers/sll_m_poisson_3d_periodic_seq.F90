@@ -5,14 +5,32 @@
 
 module sll_m_poisson_3d_periodic_seq
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_fft
-  use sll_m_constants
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
 
   implicit none
+
+  public :: &
+    delete_poisson_3d_periodic_plan_seq, &
+    new_poisson_3d_periodic_plan_seq, &
+    poisson_3d_periodic_plan_seq, &
+    solve_poisson_3d_periodic_seq
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to solve Poisson equation on 3d domain. Mesh is cartesian and
   !> all boundary conditions are periodic. Numerical method is FFT based.
@@ -67,14 +85,14 @@ contains
     plan%Lz = Lz
 
     ! For FFTs (in each direction)
-    plan%px => fft_new_plan( nx, x, x, FFT_FORWARD )
-    plan%py => fft_new_plan( ny, y, y, FFT_FORWARD )
-    plan%pz => fft_new_plan( nz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( nx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ny, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( nz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan_c2c_1d( nx, x, x, FFT_BACKWARD )
+    plan%py_inv => fft_new_plan_c2c_1d( ny, y, y, FFT_BACKWARD )
+    plan%pz_inv => fft_new_plan_c2c_1d( nz, z, z, FFT_BACKWARD )
 
   end function new_poisson_3d_periodic_plan_seq
 
@@ -107,21 +125,21 @@ contains
     plan%hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz
        do j=1,ny
-          call fft_apply_plan( plan%px, plan%hat_rho(:,j,k), plan%hat_rho(:,j,k) )
+          call fft_apply_plan_c2c_1d( plan%px, plan%hat_rho(:,j,k), plan%hat_rho(:,j,k) )
        enddo
     enddo
 
     ! FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call fft_apply_plan( plan%py, plan%hat_rho(i,:,k), plan%hat_rho(i,:,k) )
+          call fft_apply_plan_c2c_1d( plan%py, plan%hat_rho(i,:,k), plan%hat_rho(i,:,k) )
        enddo
     enddo
 
     ! FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call fft_apply_plan( plan%pz, plan%hat_rho(i,j,:), plan%hat_rho(i,j,:) )
+          call fft_apply_plan_c2c_1d( plan%pz, plan%hat_rho(i,j,:), plan%hat_rho(i,j,:) )
        enddo
     enddo
 
@@ -147,7 +165,7 @@ contains
                 ind_z = real(nz-(k-1),f64)
              endif
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
-                plan%hat_phi(i,j,k) = (0.d0,0.0d0)
+                plan%hat_phi(i,j,k) = (0._f64,0._f64)
              else
                 plan%hat_phi(i,j,k) = &
                     plan%hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
@@ -160,21 +178,21 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call fft_apply_plan( plan%pz_inv, plan%hat_phi(i,j,:), plan%hat_phi(i,j,:) )
+          call fft_apply_plan_c2c_1d( plan%pz_inv, plan%hat_phi(i,j,:), plan%hat_phi(i,j,:) )
        enddo
     enddo
 
     ! Inverse FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call fft_apply_plan( plan%py_inv, plan%hat_phi(i,:,k), plan%hat_phi(i,:,k) )
+          call fft_apply_plan_c2c_1d( plan%py_inv, plan%hat_phi(i,:,k), plan%hat_phi(i,:,k) )
        enddo
     enddo
 
     ! Inverse FFTs in x-direction
     do k=1,nz
        do j=1,ny
-          call fft_apply_plan( plan%px_inv, plan%hat_phi(:,j,k), plan%hat_phi(:,j,k) )
+          call fft_apply_plan_c2c_1d( plan%px_inv, plan%hat_phi(:,j,k), plan%hat_phi(:,j,k) )
        enddo
     enddo
 

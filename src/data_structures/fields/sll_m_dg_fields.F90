@@ -5,23 +5,41 @@
 !> * Periodic boundary conditions.
 module sll_m_dg_fields
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_utilities, only : int2string
-  use sll_m_ascii_io
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gauss_lobatto_integration, only : &
-       gauss_lobatto_points, &
-       gauss_lobatto_weights
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
 
-implicit none
-private
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_gmsh, &
+    sll_io_mtv, &
+    sll_io_xdmf
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points, &
+    gauss_lobatto_weights
+
+  use sll_m_utilities, only: &
+    int2string
+
+  implicit none
+
+  public :: &
+    sll_dg_field_2d, &
+    sll_new
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Object to describe field data with DG numerical method
-type, public :: sll_dg_field_2d
+type :: sll_dg_field_2d
 
    sll_int32                               :: degree  !< polynom degree
    sll_transformation, pointer             :: tau     !< coordinate transformation
@@ -56,9 +74,8 @@ interface operator(-)
   module procedure dg_field_sub
 end interface operator(-)
 
-public :: sll_new, operator(+), operator(-)
 
-sll_int32, private :: error
+sll_int32 :: error
 
 contains
 

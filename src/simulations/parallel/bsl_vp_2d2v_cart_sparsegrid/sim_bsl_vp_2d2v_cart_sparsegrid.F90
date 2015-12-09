@@ -1,7 +1,19 @@
 program sim_bsl_vp_2d2v_cart_sparsegrid
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_vp_2d2v_cart_sparsegrid
-  use sll_m_collective
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_bsl_vp_2d2v_cart_sparsegrid, only: &
+    sll_t_sim_sl_vp_2d2v_cart_sparsegrid
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_t_sim_sl_vp_2d2v_cart_sparsegrid) :: sim
   character(len=256)                         :: filename

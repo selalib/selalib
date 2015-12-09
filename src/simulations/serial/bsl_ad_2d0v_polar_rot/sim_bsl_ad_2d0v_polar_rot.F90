@@ -1,21 +1,57 @@
 program sim_bsl_ad_2d0v_polar_rot
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
-  use sll_m_common_coordinate_transformations
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_ascii_io
-  use sll_m_boundary_condition_descriptors
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_interpolators_2d_base
-  use sll_m_constants
-  use sll_m_hermite_interpolator_2d
-  use sll_m_hermite_interpolation_2d
-  use sll_m_xdmf
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_hermite_interpolation_2d, only: &
+    sll_hermite_c0, &
+    sll_hermite_dirichlet, &
+    sll_hermite_periodic
+
+  use sll_m_hermite_interpolator_2d, only: &
+    new_hermite_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_xdmf, only: &
+    sll_plot_f
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   sll_int32 :: num_cells1
@@ -42,15 +78,15 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64, allocatable :: charac_feet2(:,:)
   sll_int32 :: step
   sll_int32 :: i
-  sll_real64 :: x
-  sll_real64 :: y
-  sll_real64 :: xx
-  sll_real64 :: yy
-  logical :: inside
+  !sll_real64 :: x
+  !sll_real64 :: y
+  !sll_real64 :: xx
+  !sll_real64 :: yy
+  !logical :: inside
   sll_real64 :: t
   sll_real64 :: linf_err
   character(len=256) :: num_method_case
-  sll_int32 :: num_method
+  !sll_int32 :: num_method
   sll_int32 :: IO_stat
   sll_int32, parameter :: input_file = 99
   character(len = 256) :: input_filename
@@ -58,8 +94,8 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_int32 :: count
   character(len=256) :: rho_name
   character(len=256) :: rho_error_name
-  character(len=256)  :: filename
-  character(len=4)   :: filenum
+  !character(len=256)  :: filename
+  !character(len=4)   :: filenum
   logical :: use_num
   sll_int32 :: num_run
   character(len=256)  :: str_num_run
@@ -79,13 +115,13 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64 :: time_interpolate
   sll_real64 :: time_t0
   sll_real64 :: time_t1
-  sll_real64 :: cosdt
-  sll_real64 :: sindt
+  !sll_real64 :: cosdt
+  !sll_real64 :: sindt
   sll_real64 :: delta1
   sll_real64 :: delta2
   sll_real64 :: rmin
   sll_real64 :: rmax
-  class(sll_interpolator_2d_base), pointer :: interp2d
+  class(sll_c_interpolator_2d), pointer :: interp2d
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   sll_int32 :: j
@@ -328,7 +364,7 @@ program sim_bsl_ad_2d0v_polar_rot
       do i=1,num_cells1+1
         charac_feet1(i,j) = rmin+real(i-1,f64)*delta1
         charac_feet2(i,j) = (real(j-1,f64)*delta2+dt)/(2._f64*sll_pi)
-        charac_feet2(i,j) = charac_feet2(i,j)-floor(charac_feet2(i,j))
+        charac_feet2(i,j) = charac_feet2(i,j)-real(floor(charac_feet2(i,j)),f64)
         charac_feet2(i,j) = charac_feet2(i,j)*(2._f64*sll_pi)                
       enddo
     enddo
@@ -370,12 +406,13 @@ program sim_bsl_ad_2d0v_polar_rot
 !      xx = x*cosdt - y*sindt
 !      yy = x*sindt + y*cosdt
 !    enddo 
-    rho_tn1 = interp2d%interpolate_array( &
+    call interp2d%interpolate_array( &
       num_cells1+1, &
       num_cells2+1, &
       rho_tn, &
       charac_feet1, &
-      charac_feet2)      
+      charac_feet2, &
+      rho_tn1)      
 
 
  

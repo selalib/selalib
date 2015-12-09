@@ -4,9 +4,20 @@
 ! - parallel
 
 program sim_bsl_vp_3d3v_cart
-  use sll_m_sim_bsl_vp_3d3v_cart
-  use sll_m_collective
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_halt_collective
+
+  use sll_m_sim_bsl_vp_3d3v_cart, only: &
+    delete_vp6d_par_cart, &
+    sll_simulation_6d_vlasov_poisson_cart
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local
@@ -16,11 +27,11 @@ program sim_bsl_vp_3d3v_cart
   call sll_boot_collective() ! Wrap this up in something else
 
   print *, 'Proceed to run simulation.'
-  call flush(6)
+  flush( output_unit )
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
   call simulation%run( )

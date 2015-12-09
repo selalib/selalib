@@ -5,18 +5,40 @@
 !
 
 program sll_m_polar_advection
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_interpolators_2d_base
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_cartesian_meshes
-use sll_m_gnuplot
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_arbitrary_degree_spline_interpolator_2d), target  :: spline_xy
 
@@ -100,7 +122,7 @@ do itime = 1, nbiter
          eta1 = eta1_min + modulo(eta1 - eta1_min - alpha1, eta1_max-eta1_min)
          eta2 = eta2_min + modulo(eta2 - eta2_min - alpha2, eta2_max-eta2_min)
 
-         f(i,j) = spline_xy%interpolate_value(eta1,eta2)
+         f(i,j) = spline_xy%interpolate_from_interpolant_value(eta1,eta2)
 
       end do
    end do

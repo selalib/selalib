@@ -7,24 +7,30 @@
 
 program test_box_splines_derivatives
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_boundary_condition_descriptors
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d, &
-       new_hex_mesh_2d
-  use sll_m_box_splines, only : &
-       sll_box_spline_2d, &
-       new_box_spline_2d, &
-       boxspline_x1_derivative, &
-       boxspline_x2_derivative, &
-       compute_box_spline, &
-       write_all_django_files
-  use sll_m_hex_pre_filters, only : &
-       pre_filter_pfir
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_box_splines, only: &
+    boxspline_x1_derivative, &
+    boxspline_x2_derivative, &
+    compute_box_spline, &
+    new_box_spline_2d, &
+    sll_box_spline_2d, &
+    write_all_django_files
+
+  use sll_m_hex_pre_filters, only: &
+    pre_filter_pfir
+
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Variable to check is successful. By default it is the case.
   logical :: passed_test = .true.
@@ -46,7 +52,7 @@ program test_box_splines_derivatives
   sll_real64, dimension(:), allocatable :: f
   sll_real64, dimension(:), allocatable :: dxf
   sll_real64, dimension(:), allocatable :: dyf
-  sll_real64, dimension(:), allocatable :: splines_on_support
+  !sll_real64, dimension(:), allocatable :: splines_on_support
 
   print *, " ************************************************** "
   print *, "       Testing arbitrary degree box-splines"

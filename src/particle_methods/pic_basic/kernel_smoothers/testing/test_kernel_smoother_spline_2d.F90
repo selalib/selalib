@@ -1,11 +1,24 @@
 program test_kernel_smoother_spline_2d
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_2d  
-  use sll_m_particle_group_base
-  use sll_m_particle_group_2d2v
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation
+
+  use sll_m_kernel_smoother_spline_2d, only: &
+    sll_t_kernel_smoother_spline_2d, &
+    sll_new_smoother_spline_2d
+
+  use sll_m_particle_group_2d2v, only: &
+    sll_new_particle_group_2d2v, &
+    sll_particle_group_2d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
   class(sll_t_kernel_smoother_spline_2d),pointer :: kernel

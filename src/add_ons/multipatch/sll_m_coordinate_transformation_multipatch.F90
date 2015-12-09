@@ -45,18 +45,33 @@
 
 
 module sll_m_coordinate_transformation_multipatch
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes_multipatch
-  use sll_m_coordinate_transformations_2d_nurbs
-  use sll_m_ascii_io
-  use sll_m_plotmtv
-  use sll_m_utilities, only: sll_new_file_id, int2string
-  use sll_m_xdmf
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    new_nurbs_2d_transformation_from_file, &
+    sll_coordinate_transformation_2d_nurbs, &
+    sll_coordinate_transformation_2d_nurbs_ptr
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
 
   implicit none
+
+  public :: &
+    multipatch_data_2d_real, &
+    new_coordinate_transformation_multipatch_2d, &
+    sll_coordinate_transformation_multipatch_2d, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief basic type for the multipatch. It is meant to be an opaque
   !> entity and dealt with only through the methods in this module.

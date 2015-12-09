@@ -1,16 +1,35 @@
 program test_pic_accumulators
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_accumulators.h"
-  use sll_m_pic_utilities
-  use sll_m_constants, only: sll_pi
-  use sll_m_particle_group_4d
-  use sll_m_particle_group_2d
-  use sll_m_particle_initializers_2d
-  use sll_m_particle_initializers_4d
-  use sll_m_cartesian_meshes
 
+  use sll_m_accumulators, only: &
+    new_charge_accumulator_2d, &
+    sll_charge_accumulator_2d, &
+    sll_delete
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_particle_group_2d, only: &
+    sll_delete
+
+  use sll_m_particle_group_4d, only: &
+    new_particle_4d_group, &
+    sll_delete, &
+    sll_particle_group_4d
+
+  use sll_m_particle_initializers_4d, only: &
+    sll_initial_particles_4d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
@@ -27,7 +46,6 @@ program test_pic_accumulators
 #define QoverM 1._f64
 
   
-  implicit none
   type(sll_particle_group_4d), pointer :: part_group
   type(sll_cartesian_mesh_2d),   pointer :: m2d
   type(sll_charge_accumulator_2d), pointer :: all_charge
@@ -42,7 +60,7 @@ program test_pic_accumulators
 
   call sll_initial_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, &
- 	NUM_PARTICLES, part_group )
+        NUM_PARTICLES, part_group )
 
   all_charge => new_charge_accumulator_2d( m2d )
 

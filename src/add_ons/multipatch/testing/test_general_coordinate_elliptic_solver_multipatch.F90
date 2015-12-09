@@ -1,22 +1,40 @@
 program test_general_elliptic_solver_multipatch
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use m_multipatch_helper_functions, only: &
+    func_one, &
+    func_zero
 
-use sll_m_cartesian_meshes
-use sll_m_cartesian_meshes_multipatch
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_multipatch
-use sll_m_scalar_field_2d
-use sll_m_scalar_field_2d_multipatch
-use sll_m_constants
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_timer
-use sll_m_general_coordinate_elliptic_solver_multipatch
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-implicit none
+  use sll_m_coordinate_transformation_multipatch, only: &
+    new_coordinate_transformation_multipatch_2d, &
+    sll_coordinate_transformation_multipatch_2d, &
+    sll_delete
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_coordinate_transformation_2d_nurbs
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre
+
+  use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
+    factorize_mat_es_mp, &
+    general_coordinate_elliptic_solver_mp, &
+    initialize_general_elliptic_solver_mp, &
+    solve_general_coordinates_elliptic_eq_mp
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    new_scalar_field_multipatch_2d, &
+    sll_delete, &
+    sll_scalar_field_multipatch_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
@@ -58,12 +76,6 @@ sll_real64 :: delta2
 sll_real64 :: x1
 sll_real64 :: x2
 
-real(8), external    :: func_zero
-real(8), external    :: func_one
-real(8), external    :: func_epsi
-real(8), external    :: source_term_perdir
-real(8), external    :: source_term_dirper
-sll_real64, external :: sol_exacte_perdir
 
 T => new_coordinate_transformation_multipatch_2d("circle_mp5_pts12")
 
@@ -116,7 +128,7 @@ do ipatch= 0,num_patches-1
        val_b1   = func_zero( x1, x2)
        val_b2   = func_zero( x1, x2)
        val_c    = func_zero( x1, x2)
-       val_rho  = -4d0*9d0*exp(-9*(x1**2+x2**2))+(2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))
+       val_rho  = -4.0_f64*9.0_f64*exp(-9*(x1**2+x2**2))+(2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))
        val_phi  = 0.0_f64
        val_phi_exacte = exp(-9*(x1**2+x2**2))
        call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 

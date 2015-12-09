@@ -1,12 +1,34 @@
 program test_fcisl
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_fcisl
-  use sll_m_constants
-  use sll_m_advection_1d_periodic
-  
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fcisl, only: &
+    compute_at_aligned, &
+    compute_iota_from_shift, &
+    compute_oblic_shift, &
+    compute_spaghetti, &
+    compute_spaghetti_and_shift_from_guess, &
+    compute_spaghetti_size_from_shift, &
+    load_spaghetti, &
+    new_oblic_derivative, &
+    sll_oblic_derivative, &
+    unload_spaghetti
+
+  use sll_m_periodic_interp, only: &
+    spline
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32 :: Nc_x1
   sll_int32 :: Nc_x2

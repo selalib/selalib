@@ -19,22 +19,35 @@
 !> @details We are using FFTW to compute ffts. Boundary conditions
 !> must be periodic.
 module sll_m_advection_1d_ampere
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_interpolators_1d_base
-use sll_m_fft
-use sll_m_constants, only : &
-     sll_pi
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
 
-private
+  use sll_m_constants, only: &
+    sll_pi
 
-type,extends(sll_advection_1d_base), public :: ampere_1d_advector
+  use sll_m_fft, only: &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_delete_plan, &
+    fft_new_plan_c2r_1d, &
+    fft_new_plan_r2c_1d, &
+    sll_fft_plan
+
+  implicit none
+
+  public :: &
+    ampere_1d_advector_ptr, &
+    new_ampere_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type,extends(sll_advection_1d_base) :: ampere_1d_advector
   
   sll_int32                         :: nc_eta1
   sll_real64                        :: eta1_min
@@ -58,11 +71,10 @@ contains
 
 end type ampere_1d_advector
 
-type, public :: ampere_1d_advector_ptr 
+type :: ampere_1d_advector_ptr 
   class(ampere_1d_advector), pointer :: ptr
 end type ampere_1d_advector_ptr
 
-public ::  new_ampere_1d_advector
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -112,8 +124,8 @@ subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
   adv%r0 = (0.0_f64, 0.0_f64)
   adv%r1 = (0.0_f64, 0.0_f64)
 
-  adv%fwx => fft_new_plan(nc_eta1, adv%d_dx,  adv%fk)
-  adv%bwx => fft_new_plan(nc_eta1, adv%fk, adv%d_dx)
+  adv%fwx => fft_new_plan_r2c_1d(nc_eta1, adv%d_dx,  adv%fk)
+  adv%bwx => fft_new_plan_c2r_1d(nc_eta1, adv%fk, adv%d_dx)
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:nc_eta1/2+1), error)
    
@@ -165,11 +177,11 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   nc_x = adv%nc_eta1
 
   adv%d_dx = input(1:nc_x)
-  call fft_apply_plan(adv%fwx, adv%d_dx, adv%fk)
+  call fft_apply_plan_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
   do i = 2, nc_x/2+1
     adv%fk(i) = adv%fk(i)*cmplx(cos(adv%kx(i)*a*dt),-sin(adv%kx(i)*a*dt),kind=f64)
   end do
-  call fft_apply_plan(adv%bwx, adv%fk, adv%d_dx)
+  call fft_apply_plan_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 
   output(1:nc_x) = adv%d_dx / nc_x
   output(nc_x+1) = output(1)

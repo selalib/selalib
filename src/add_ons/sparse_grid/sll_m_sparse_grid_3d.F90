@@ -5,25 +5,31 @@
 !> @details <DETAILED_DESCRIPTION>
 
 module sll_m_sparse_grid_3d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_periodic_interpolator_1d
-use sll_m_arbitrary_degree_splines
-use sll_m_lagrange_interpolator_1d
-use sll_m_sparse_grid_interpolator
-use sll_m_constants, only: sll_pi
-implicit none
-private
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_sparse_grid_interpolator, only: &
+    sparse_grid_interpolator
+
+  implicit none
+
+  public :: &
+    sparse_grid_interpolator_3d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Sparse grid object for 3d with interpolation routines.
-type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
+type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_3d
 sll_int32, dimension(:,:,:), pointer  :: index !< 3d mapping: for each 3d index l on the sparse grid, \a index gives the index of the first node belonging to this level  
 
 contains
   procedure :: initialize => initialize_sg3d! Initialization routine
-  procedure :: interpolate_value ! Compute the value of the sparse grid interpolant at position eta
+  procedure :: interpolate_from_interpolant_value ! Compute the value of the sparse grid interpolant at position eta
   procedure :: interpolate_const_disp
   procedure :: fg_to_sg
   procedure :: SPFFT
@@ -42,7 +48,7 @@ contains
 
 
 !> Compute the value of the sparse grid interpolant at position \a eta (using standard sparse grid interpolation)
-  function interpolate_value( interpolator,data, eta ) result(val)
+  function interpolate_from_interpolant_value( interpolator,data, eta ) result(val)
     class(sparse_grid_interpolator_3d), intent(inout) :: interpolator !< sparse grid object
     sll_real64 :: val !< interpolated value
     sll_real64,dimension(:), intent(in) :: data !< Value of hierarchical surplus
@@ -53,7 +59,7 @@ contains
     else
        val = interpolate_from_hierarchical_surplus_boundary(interpolator,data,eta)
     end if
-  end function interpolate_value
+  end function interpolate_from_interpolant_value
 
 
 !> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
@@ -119,7 +125,7 @@ end subroutine Interpolate_const_disp
 
 
 ! helper functions
-!> Implements \a interpolate_value for periodic sparse grid
+!> Implements \a interpolate_from_interpolant_value for periodic sparse grid
  function interpolate_from_hierarchical_surplus( interpolator,data, eta ) result(val)
     class(sparse_grid_interpolator_3d), intent(inout) :: interpolator
     sll_int32 :: j,l1,l2,l3,level
@@ -176,7 +182,7 @@ end subroutine Interpolate_const_disp
 
   end function interpolate_from_hierarchical_surplus
 
-!> implements interpolation from hierarchical surplus (\a interpolate_value) non-periodic
+!> implements interpolation from hierarchical surplus (\a interpolate_from_interpolant_value) non-periodic
  function interpolate_from_hierarchical_surplus_boundary( interpolator,data, eta ) result(val)
     class(sparse_grid_interpolator_3d), intent(inout) :: interpolator
     sll_int32 :: j,l1,l2, l3,level

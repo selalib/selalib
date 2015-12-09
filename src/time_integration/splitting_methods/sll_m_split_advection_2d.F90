@@ -1,19 +1,45 @@
 !> @ingroup operator_splitting
 !> @brief Implements split operators for constant coefficient advection
 module sll_m_split_advection_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-  use sll_m_characteristics_1d_base
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
-  use sll_m_cartesian_meshes  
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_cubic_non_uniform_splines
-  use sll_m_ode_solvers
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    signature_process_outside_point_1d, &
+    sll_characteristics_1d_base
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    cubic_nonunif_spline_1d, &
+    new_cubic_nonunif_spline_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    initialize_operator_splitting, &
+    operator_splitting
 
   implicit none
+
+  public :: &
+    new_split_advection_2d, &
+    sll_advective, &
+    sll_conservative, &
+    split_advection_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_ADVECTIVE    = 0
   sll_int32, parameter :: SLL_CONSERVATIVE = 1
@@ -26,9 +52,9 @@ module sll_m_split_advection_2d
   !> comment: how to change then the advection fields in time?
   type, extends(operator_splitting) :: split_advection_2d
      !> interpolator object in first direction
-     class(sll_interpolator_1d_base), pointer  :: interp1
+     class(sll_c_interpolator_1d), pointer  :: interp1
      !> interpolator object in second direction
-     class(sll_interpolator_1d_base), pointer  :: interp2
+     class(sll_c_interpolator_1d), pointer  :: interp2
      !> characteristics object in first direction
      class(sll_characteristics_1d_base), pointer  :: charac1
      procedure(signature_process_outside_point_1d), pointer, nopass :: process_outside_point1 !< for bdr direction 1
@@ -117,8 +143,8 @@ contains
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, dimension(:,:), pointer, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_interpolator_1d_base), pointer  :: interp1 !< interpolator direction 1
-    class(sll_interpolator_1d_base), pointer  :: interp2 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp1 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp2 !< interpolator direction 1
     class(sll_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
     procedure(signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
     class(sll_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
@@ -184,8 +210,8 @@ contains
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, dimension(:,:), pointer, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_interpolator_1d_base), pointer  :: interp1 !< interpolator direction 1
-    class(sll_interpolator_1d_base), pointer  :: interp2 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp1 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp2 !< interpolator direction 1
     class(sll_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
     procedure(signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
     class(sll_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
@@ -602,10 +628,11 @@ contains
       enddo  
 
 
-      this%output1(1:n1) = this%interp1%interpolate_array( &
+      call this%interp1%interpolate_array( &
         n1, &
         this%input1(1:n1), &
-        this%feet_inside1(1:n1))      
+        -this%feet_inside1(1:n1),&
+        this%output1(1:n1))      
       
       
       if(this%advection_form==SLL_CONSERVATIVE)then      
@@ -744,10 +771,11 @@ contains
           eta2_min, &
           eta2_max)
       enddo  
-      this%output2(1:n2) = this%interp2%interpolate_array( &
-        n2, &
-        this%input2(1:n2), &
-        this%feet_inside2(1:n2))      
+      call this%interp2%interpolate_array( &
+           n2, &
+           this%input2(1:n2), &
+           -this%feet_inside2(1:n2), &
+           this%output2(1:n2))      
       
       
       if(this%advection_form==SLL_CONSERVATIVE)then      

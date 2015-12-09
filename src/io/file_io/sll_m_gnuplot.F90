@@ -26,16 +26,23 @@
 !> @image html gnuplot.png
 module sll_m_gnuplot
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
+#include "sll_working_precision.h"
 
-! use sll_m_ascii_io                                      !OLD VERSION
-! use sll_m_utilities, only: sll_new_file_id, int2string  !OLD VERSION
-use sll_m_utilities, only: int2string
+  use sll_m_utilities, only: &
+    int2string
 
-implicit none
+  implicit none
 
-private
+  public :: &
+    sll_gnuplot_1d, &
+    sll_gnuplot_2d, &
+    sll_gnuplot_write
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> write file plotable by gnuplot to visualize 2d field
 interface sll_gnuplot_1d
@@ -53,7 +60,6 @@ interface sll_gnuplot_2d
    module procedure write_unstructured_field
 end interface
 
-public sll_gnuplot_1d, sll_gnuplot_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains  
@@ -229,15 +235,16 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
 
   sll_int32        :: error      ! error code
   sll_int32        :: file_id    ! file unit number
-!  sll_int32        :: fgnu_id    ! file unit number !OLD VERSION
   sll_int32        :: npoints
   sll_int32        :: ipoints    
   character(len=4) :: cplot
   character(len=8) :: gnu_status
+  logical          :: l_exist
+  character(len=*), parameter :: sub_name = "sll_gnuplot_1d"
+  character(len=200) :: message 
   
   npoints = size(x_array)
  
-
   if (present( iplot )) then
     ! Check that plot index is strictly positive
     SLL_ASSERT( iplot > 0 )
@@ -246,14 +253,21 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
     call int2string( iplot, cplot )
 
     ! Determine Gnuplot file status
-    if (iplot == 1) then
+    if (iplot==1) then
       gnu_status = 'replace'
     else
-      gnu_status = 'old'
+      inquire (file= trim(array_name)//'.gnu', exist=l_exist)
+      if (l_exist) then
+        gnu_status = 'old'
+      else
+        message = "The file "//trim(array_name)//'.gnu' &
+                & //" does not exist and iplot>1. A first call with iplot=1 is needed"
+        SLL_ERROR(sub_name, message)
+      end if
     end if
 
     ! Open Gnuplot file
-    open( file= trim( array_name )//'.gnu', &
+    open( file= trim(array_name)//'.gnu', &
       status  = gnu_status,  &
       form    = 'formatted', &
       position= 'append',    &

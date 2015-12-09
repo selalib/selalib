@@ -6,15 +6,45 @@
 ! - parallel
 
 program sim_bsl_vp_2d2v_curv
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_vp_2d2v_curv
-  use sll_m_collective
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_halt_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_landau_initializer_4d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_sim_bsl_vp_2d2v_curv, only: &
+    initialize_vp4d_general, &
+    sll_simulation_4d_vp_general, &
+    sll_delete
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local
@@ -29,7 +59,7 @@ program sim_bsl_vp_2d2v_curv
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
 
   ! To initialize the simulation type, there should be two options. One is to

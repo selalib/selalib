@@ -18,10 +18,28 @@
 !> @ingroup utilities
 !> Some common numerical utilities
 module sll_m_utilities
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    byte_size, &
+    compute_bloc, &
+    compute_mesh_from_bloc, &
+    display_matrix_2d_integer, &
+    int2string, &
+    is_even, &
+    is_power_of_two, &
+    mpe_decomp1d, &
+    pfenvelope, &
+    sll_display, &
+    sll_factorial, &
+    sll_new_file_id
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !  intrinsic :: selected_int_kind ! this line gives an error, why?
 
   ! Tentative implementation of a standard-compliant way to get the
@@ -58,7 +76,7 @@ module sll_m_utilities
   end interface sll_display
 
   !> @param logical variable used to print time history
-  logical, private :: flag = .true.
+  logical :: flag = .true.
 
   !> Return factorial
   interface sll_factorial
@@ -297,7 +315,7 @@ subroutine initialize_file( data_file_id, thf_file_id )
   integer                     :: IO_stat
   sll_int32                   :: error
 
-  call getarg( 1, filename)
+  call get_command_argument( 1, filename)
 
   call sll_new_file_id(data_file_id, error)
   open(data_file_id,file=trim(filename),IOStat=IO_stat)
@@ -511,19 +529,24 @@ subroutine compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
   node_positions(N+1)   = 1._f64
   
   !piecewise linear mapping (maybe enhanced like in complete mesh)
-  dx=bloc_coord(1)/real(bloc_index(1),f64)
-  do i=2,bloc_index(1)
-     node_positions(i) = (real(i,f64)-1._f64)*dx
-  enddo
-  dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
-  do i=2,bloc_index(2)
-    node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
-  enddo
-  dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
-  do i=2,bloc_index(3)
-    node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
-  enddo
-        
+  if(bloc_index(1).ne. 0)then
+    dx=bloc_coord(1)/real(bloc_index(1),f64)
+    do i=2,bloc_index(1)
+      node_positions(i) = (real(i,f64)-1._f64)*dx
+    enddo
+  endif
+  if(bloc_index(2).ne.0)then  
+    dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
+    do i=2,bloc_index(2)
+      node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
+    enddo
+  endif
+  if(bloc_index(3).ne.0)then  
+    dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
+    do i=2,bloc_index(3)
+      node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
+    enddo
+  endif      
 end subroutine compute_mesh_from_bloc
 
 

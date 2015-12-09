@@ -18,17 +18,51 @@
 !> @ingroup poisson_solvers
 !> Module to solve Poisson equation on polar mesh using FFT transform
 module sll_m_poisson_polar_parallel
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann, &
+    sll_neumann_mode_0
+
+  use sll_m_collective, only: &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    layout_2d, &
+    local_to_global, &
+    new_remap_plan, &
+    remap_plan_2d_comp64
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    initialize, &
+    new_poisson_polar, &
+    sll_poisson_polar, &
+    solve, &
+    solve_poisson_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   !>Class for the Poisson solver in polar coordinate
   type sll_poisson_polar
    sll_real64                          :: rmin     !< left corner of r dimension
@@ -175,8 +209,8 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%fw => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%bw => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    this%fw => fft_new_plan_c2c_1d(ntheta,buf,buf,FFT_FORWARD,normalized=.true.)
+    this%bw => fft_new_plan_c2c_1d(ntheta,buf,buf,FFT_BACKWARD)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
     psize = sll_get_collective_size(sll_world_collective)
@@ -250,7 +284,7 @@ contains
     call compute_local_sizes( this%layout_a, nr_loc, na_loc )
 
     do i=1,nr_loc
-      call fft_apply_plan(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+      call fft_apply_plan_c2c_1d(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
     end do
 
     
@@ -370,7 +404,7 @@ contains
          !   this%f_r(i,2) = real(this%phik(i),kind=f64)
          !else
          !   this%f_r(i,j) = real(this%phik(i),kind=f64)
-         !   this%f_r(i,j+1) = dimag(this%phik(i))
+         !   this%f_r(i,j+1) = aimag(this%phik(i))
          !endif
 
       end do
@@ -384,7 +418,7 @@ contains
     
     do i=1,nr_loc
       !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta))
-      call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+      call fft_apply_plan_c2c_1d(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
       phi(i,1:ntheta) = real(this%f_a(i,1:ntheta))
     end do
 

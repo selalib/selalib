@@ -1,8 +1,15 @@
 program test_random_deviate_generators
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_gaussian
-  use sll_m_hammersley
+
+  use sll_m_gaussian, only: &
+    gaussian_deviate
+
+  use sll_m_hammersley, only: &
+    suite_hamm
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define Xmin  0._f64
 #define Xmax  5._f64

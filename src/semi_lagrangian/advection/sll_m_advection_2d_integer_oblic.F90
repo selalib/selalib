@@ -20,22 +20,35 @@
 ! we use a shift that corresponds to a mesh point
 
 module sll_m_advection_2d_integer_oblic
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-!use sll_m_fcisl
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    integer_oblic_2d_advector, &
+    integer_oblic_advect_2d, &
+    new_integer_oblic_2d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type  :: integer_oblic_2d_advector
   
     class(sll_advection_1d_base), pointer :: adv_x1
     class(sll_advection_1d_base), pointer :: adv_aligned
-    class(sll_interpolator_2d_base), pointer  :: interp
+    class(sll_c_interpolator_2d), pointer  :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
     sll_real64, dimension(:), pointer :: eta2_coords
@@ -79,7 +92,7 @@ contains
     type(integer_oblic_2d_advector), pointer :: adv
     class(sll_advection_1d_base), pointer :: adv_x1
     class(sll_advection_1d_base), pointer :: adv_aligned
-    class(sll_interpolator_2d_base), pointer :: interp
+    class(sll_c_interpolator_2d), pointer :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
@@ -128,7 +141,7 @@ contains
     type(integer_oblic_2d_advector), intent(inout) :: adv
     class(sll_advection_1d_base), pointer :: adv_x1
     class(sll_advection_1d_base), pointer :: adv_aligned
-    class(sll_interpolator_2d_base), pointer :: interp
+    class(sll_c_interpolator_2d), pointer :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2

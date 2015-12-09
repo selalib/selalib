@@ -1,15 +1,25 @@
 program sequential_advection
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_gnuplot
+#include "sll_working_precision.h"
 
-use sll_m_interpolators_2d_base
-use sll_m_arbitrary_degree_spline_interpolator_2d
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-class(sll_interpolator_2d_base), pointer                  :: interp
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class(sll_c_interpolator_2d), pointer                  :: interp
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: spl
 
 sll_real64, dimension(:,:),  pointer       :: f
@@ -79,7 +89,7 @@ do i_step=1, 3*n_step
      eta2 = eta2_min + (j-1)*delta_eta2 - alpha1
      do i = 1, nc_eta1+1
         eta1 = eta1_min + (i-1)*delta_eta1 - alpha2
-        f(i,j) = interp%interpolate_value(eta1,eta2)
+        f(i,j) = interp%interpolate_from_interpolant_value(eta1,eta2)
      end do
   end do
 

@@ -63,16 +63,46 @@ self%d_dz = self%d_dz / nc_z
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 module sll_m_maxwell_3d_pstd
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_fftw3
+  use iso_c_binding, only: &
+    c_associated, &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+#ifdef FFTW_F2003
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_destroy_plan, &
+    fftw_execute_dft_c2r, &
+    fftw_execute_dft_r2c, &
+    fftw_free, &
+    fftw_patient, &
+    fftw_plan_dft_c2r_1d, &
+    fftw_plan_dft_r2c_1d
+#else
+  use sll_m_fftw3, only: &
+       fftw_patient
+#endif
+
+
+  implicit none
+
+  public :: &
+    sll_delete, &
+    sll_new, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
 interface sll_new
@@ -99,10 +129,9 @@ interface sll_delete
  module procedure free_maxwell_3d_pstd
 end interface sll_delete
 
-public :: sll_new, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> Maxwell solver object
-type, public :: maxwell_pstd_3d
+type :: maxwell_pstd_3d
    private
    sll_int32                          :: nc_x         !< x cells number
    sll_int32                          :: nc_y         !< y cells number
@@ -133,7 +162,6 @@ type, public :: maxwell_pstd_3d
    sll_real64                         :: mu_0         !< magnetic permeability
 end type maxwell_pstd_3d
 
-private
 
 contains
 

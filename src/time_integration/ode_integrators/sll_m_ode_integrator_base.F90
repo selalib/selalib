@@ -12,13 +12,20 @@
 !------------------------------------------------------------------------------
 module sll_m_ode_integrator_base
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_errors.h"
-  use sll_m_vector_space_base, only: sll_vector_space_base
+
+  use sll_m_vector_space_base, only: &
+    sll_vector_space_base
 
   implicit none
-!  public :: sll_ode_base, sll_ode_integrator_base
+
+  public :: &
+    sll_ode_base, &
+    sll_ode_integrator_base
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !----------------------------------------------------------------------------
   ! Abstract type: sll_ode_base
@@ -31,7 +38,7 @@ module sll_m_ode_integrator_base
   !>          The user of the library should provide a derived ODE class, and 
   !>          possibly a derived vector space for its data.
   !>
-  type, public, abstract :: sll_ode_base
+  type, abstract :: sll_ode_base
   contains
     procedure( i_rhs ), deferred :: rhs   !< evaluate *f(t,y)*
 !    procedure                    :: solve !< solve an implicit problem
@@ -48,7 +55,7 @@ module sll_m_ode_integrator_base
   !>          of this class in order to use any integrator.  Additionally,
   !>          specific integrators will have other options and methods.
   !>
-  type, public, abstract :: sll_ode_integrator_base
+  type, abstract :: sll_ode_integrator_base
 
     !> Pointer to ODE object
     class( sll_ode_base ), pointer :: ode => null()

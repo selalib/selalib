@@ -17,18 +17,27 @@
 
 !> @internal [example]
 program test_poisson_2d_curvilinear
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_constants
-use sll_m_poisson_2d_curvilinear
-use sll_m_general_coordinate_elliptic_solver
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann, &
+    sll_periodic
+
+  use sll_m_poisson_2d_curvilinear, only: &
+    new_poisson_2d_curvilinear, &
+    poisson_2d_curvilinear, &
+    poisson_gauss_legendre, &
+    sll_poisson_open_knots, &
+    sll_poisson_periodic_knots
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(poisson_2d_curvilinear), pointer :: poisson
-  type(general_coordinate_elliptic_solver), pointer :: poisson_gen
+  !type(general_coordinate_elliptic_solver), pointer :: poisson_gen
   sll_int32 :: num_cells1
   sll_int32 :: num_cells2
   character(len=256) :: bc_min1_str

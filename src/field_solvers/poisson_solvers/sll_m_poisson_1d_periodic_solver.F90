@@ -1,13 +1,25 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 module sll_m_poisson_1d_periodic_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!use sll_m_boundary_condition_descriptors
-use sll_m_poisson_1d_base
-use sll_m_poisson_1d_periodic
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_poisson_1d_base, only: &
+    sll_poisson_1d_base
+
+  use sll_m_poisson_1d_periodic, only: &
+    new, &
+    poisson_1d_periodic, &
+    solve
+
+  implicit none
+
+  public :: &
+    new_poisson_1d_periodic_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type,extends(sll_poisson_1d_base) :: poisson_1d_periodic_solver     

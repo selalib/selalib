@@ -1,9 +1,25 @@
 module sll_m_hermite_interpolation_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_boundary_condition_descriptors
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  implicit none
+
+  public :: &
+    compute_interpolants_hermite_1d, &
+    compute_w_hermite_1d, &
+    interpolate_value_hermite_1d, &
+    new_hermite_interpolation_1d, &
+    sll_hermite_1d_c0, &
+    sll_hermite_interpolation_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !Hermite interpolation in 1d
 !derivatives are given with finite stencil formulae of order p

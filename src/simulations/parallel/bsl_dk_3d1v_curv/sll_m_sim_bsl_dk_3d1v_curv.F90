@@ -5,28 +5,108 @@
 
 module sll_m_sim_bsl_dk_3d1v_curv
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_fdistribu4d_dk
-  use sll_m_general_coordinate_elliptic_solver
-  use sll_m_scalar_field_2d_base
-  use sll_m_scalar_field_2d
-  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_m_scalar_field_1d_base
-  use sll_m_scalar_field_1d
-  use sll_m_timer
-  use sll_m_deboor_splines_1d
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    sll_arbitrary_degree_spline_interpolator_1d
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_4d
+
+  use sll_m_collective, only: &
+    sll_collective_reduce_real64, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_fdistribu4d_dk, only: &
+    function_xy_from_rtheta, &
+    init_brtheta, &
+    init_exact_profile_r, &
+    init_fequilibrium_xy, &
+    profil_xy_exacte
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre, &
+    factorize_mat_es, &
+    general_coordinate_elliptic_solver, &
+    new_general_elliptic_solver, &
+    sll_solve
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array_1d, &
+    sll_hdf5_write_array_2d, &
+    sll_hdf5_write_array_3d
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_3d_real64, &
+    remap_plan_4d_real64, &
+    sll_delete
+
+  use sll_m_scalar_field_1d, only: &
+    new_scalar_field_1d_discrete, &
+    sll_scalar_field_1d_discrete
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_discrete, &
+    sll_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_between, &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    is_even
+
+  use sll_mpi, only: &
+    mpi_sum
 
   implicit none
+
+  public :: &
+    first_step_4d_dk_hybrid, &
+    initialize, &
+    sll_delete, &
+    sll_simulation_4d_dk_hybrid
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define PRINT_PLOTS 1
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_DK_hybrid
@@ -1893,7 +1973,7 @@ contains
             vpar   = max(min(vpar,sim%vpar_max),sim%vpar_min)
 
             sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
-              sim%interp1d_f_vpar%interpolate_value(vpar)             
+              sim%interp1d_f_vpar%interpolate_from_interpolant_value(vpar)             
           end do
         end do
       end do
@@ -1941,7 +2021,7 @@ contains
             eta3    = sim%eta3_grid(ieta3) - alpha3
 
             sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
-              sim%interp1d_f_eta3%interpolate_value(eta3)
+              sim%interp1d_f_eta3%interpolate_from_interpolant_value(eta3)
           end do
         end do
       end do
@@ -2009,14 +2089,14 @@ contains
             if (eta1 < sim%cartesian_mesh4d%eta1_min) then 
                !print*, 'value point', eta1
                eta1 = sim%cartesian_mesh4d%eta1_min
-               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_from_interpolant_value(eta1,eta2)
             else if ( eta1> sim%cartesian_mesh4d%eta1_max) then 
                !print*, 'value point', eta1
                eta1 = sim%cartesian_mesh4d%eta1_max
-               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_from_interpolant_value(eta1,eta2)
             end if
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
-              sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+              sim%interp2d_f_eta1eta2%interpolate_from_interpolant_value(eta1,eta2)
 
           end do
         end do

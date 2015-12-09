@@ -1,31 +1,23 @@
 module sll_generate_tri_mesh
 
-implicit none
-private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  implicit none
 
-integer, dimension(:,:), allocatable :: nvois
-integer, dimension(:,:), allocatable :: nvoif
+  public :: &
+    plaqx, &
+    plaqy
 
-integer, dimension(:), allocatable   :: refs
-integer, dimension(:), allocatable   :: npoel1
-integer, dimension(:), allocatable   :: npoel2
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-integer :: i, j, k, ifr
+integer :: i
 
-integer :: imxref=99999999 ! entier designant la reference par defaut
 integer, parameter :: iout = 6
 
-integer :: nmxfr   ! nb total de frontieres referencees
 integer :: nmxsd   ! nb de sous domaines references
-integer :: nelin   ! nb de triangles internes
-integer :: nelfr   ! nb de triangles sur une frontiere
-integer :: nefro   ! nb de triangles ayant 1 noeud sur une frontiere
 
-integer, dimension(:), allocatable :: nar
+!logical :: PERIODIC_BC = .false.
 
-logical, public :: PERIODIC_BC = .false.
-
-public :: plaqx, plaqy
 
 CONTAINS
 
@@ -52,7 +44,7 @@ real(8) :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
 real(8) :: alx, aly
 real(8) :: x_min, x_max, y_min, y_max
 
-ndd = max0(nbox,nboy)
+ndd = max(nbox,nboy)
 alx = x_max-x_min
 aly = y_max-y_min
 

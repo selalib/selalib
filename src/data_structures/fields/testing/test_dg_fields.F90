@@ -1,16 +1,42 @@
 program test_dg_fields
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
 
-use sll_m_dg_fields
-use sll_m_coordinate_transformation_2d_base
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformations_2d
-use sll_m_cartesian_meshes
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
 
-implicit none
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_gmsh, &
+    sll_io_gnuplot, &
+    sll_io_mtv, &
+    sll_io_xdmf
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !=====================================!
 ! Simulation parameters               !
@@ -31,7 +57,6 @@ class(sll_coordinate_transformation_2d_base), pointer :: collela
 type(sll_dg_field_2d), pointer :: ex
 type(sll_dg_field_2d), pointer :: bz
 
-sll_real64, external :: sll_m_gaussian, add
 
 mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta1_max=1._f64, &
@@ -86,11 +111,45 @@ call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
 
-bz => sll_new( degree, collela, sll_m_gaussian) 
+bz => sll_new( degree, collela, gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
 call bz%write_to_file('bz', SLL_IO_MTV)
 call bz%write_to_file('bz', SLL_IO_XDMF)
 
 print*,'PASSED'
+
+contains
+  
+  
+  sll_real64 function gaussian( x1, x2, time)
+
+    use sll_m_constants
+    implicit none
+    
+    sll_real64, intent(in) :: x1
+    sll_real64, intent(in) :: x2
+    sll_real64, intent(in) :: time
+    
+    gaussian =   exp(-(x1*x1+x2*x2)) * cos(time)
+    return
+    
+  end function gaussian
+
+
+  sll_real64 function add( x1, x2, time)
+
+   use sll_m_constants
+   implicit none
+
+   sll_real64, intent(in) :: x1
+   sll_real64, intent(in) :: x2
+   sll_real64, intent(in) :: time
+
+   add =   x1+x2
+   return
+   print*, time
+
+ end function add
+
 
 end program test_dg_fields

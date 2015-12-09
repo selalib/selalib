@@ -38,35 +38,130 @@
 
 
 module sll_m_sim_bsl_dk_3d1v_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  !use sll_m_test_4d_initializer
-  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
-  use sll_m_fdistribu4d_dk
-  use sll_m_cartesian_meshes
-  use sll_m_reduction
-  use sll_m_advection_2d_bsl
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_advection_1d_periodic
-  use sll_m_poisson_2d_polar_wrapper
-  use sll_m_hermite_interpolation_2d
-  use sll_m_hdf5_io_serial
-  use sll_m_ascii_io
-  use sll_m_gnuplot
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
 
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_neumann_mode_0, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_cartesian_meshes, only: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fdistribu4d_dk, only: &
+    init_fequilibrium
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_1d, &
+    sll_gnuplot_2d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array, &
+    sll_hdf5_write_array_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_wrapper, only: &
+    new_poisson_2d_polar, &
+    sll_poisson_drift_kinetic
+
+  use sll_m_reduction, only: &
+    compute_reduction_2d_to_0d, &
+    compute_reduction_4d_to_3d_direction4
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_3d_real64, &
+    remap_plan_4d_real64
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_even
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
 
   implicit none
+
+  public :: &
+    delete_dk4d_polar, &
+    sll_simulation_4d_drift_kinetic_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !! choice of QNS solver
 !! should be else where
@@ -190,7 +285,7 @@ module sll_m_sim_bsl_dk_3d1v_polar
 
 
     class(sll_advection_2d_base), pointer :: adv_x1x2
-    !class(sll_interpolator_2d_base), pointer :: interp_x1x2
+    !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_characteristics_2d_base), pointer :: charac_x1x2
     class(sll_advection_1d_base), pointer :: adv_x3
     class(sll_advection_1d_base), pointer :: adv_x4
@@ -201,8 +296,8 @@ module sll_m_sim_bsl_dk_3d1v_polar
 
 
     !for computing advection field from phi
-    class(sll_interpolator_2d_base), pointer   :: phi_interp_x1x2
-    class(sll_interpolator_1d_base), pointer   :: phi_interp_x3
+    class(sll_c_interpolator_2d), pointer   :: phi_interp_x1x2
+    class(sll_c_interpolator_1d), pointer   :: phi_interp_x3
 
 
      !--> temporary structures that are used in CG_polar
@@ -231,11 +326,11 @@ contains
     sll_int32            :: IO_stat
     sll_int32, parameter :: input_file = 99
     class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_2d_base), pointer   :: f_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_2d), pointer   :: f_interp2d
     sll_real64 :: charac2d_tol
     sll_int32 :: charac2d_maxiter
 
@@ -1017,7 +1112,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_1d), pointer :: mesh1
     type(sll_cartesian_mesh_1d), pointer :: mesh2
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min
@@ -1042,8 +1137,8 @@ contains
       x2=x2_min+real(i2-1,f64)*delta_x2
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)/x1
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)/x1
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(x1,x2)/x1
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(x1,x2)/x1
       end do
     end do
     
@@ -1057,7 +1152,7 @@ contains
     sll_real64, dimension(:), intent(in) :: phi
     sll_real64, dimension(:), intent(out) :: A
     type(sll_cartesian_mesh_1d), pointer :: mesh
-    class(sll_interpolator_1d_base), pointer   :: interp
+    class(sll_c_interpolator_1d), pointer   :: interp
     sll_int32 :: Nc_x1
     sll_real64 :: x1_min
     sll_real64 :: delta_x1
@@ -1072,7 +1167,7 @@ contains
 
     do i1=1,Nc_x1+1
       x1=x1_min+real(i1-1,f64)*delta_x1
-      A(i1)=interp%interpolate_derivative_eta1(x1)
+      A(i1)=interp%interpolate_from_interpolant_derivative_eta1(x1)
     end do
   end subroutine compute_field_from_phi_cartesian_1d
 

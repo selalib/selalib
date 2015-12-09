@@ -18,9 +18,25 @@
 ! example a flag like SLL_DIRICHLET_NEUMANN could indicate two BC's along
 ! a particular dimension...
 module sll_m_boundary_condition_descriptors
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_conductor, &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_interior, &
+    sll_neumann, &
+    sll_neumann_mode_0, &
+    sll_periodic, &
+    sll_set_to_limit, &
+    sll_silver_muller, &
+    sll_user_defined
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> User defined boundary condition
   sll_int32, parameter :: SLL_USER_DEFINED   = -1 
@@ -44,6 +60,10 @@ module sll_m_boundary_condition_descriptors
   sll_int32, parameter :: SLL_CONDUCTOR      = 8
   !> Absorbing boundary condition fro Maxwell
   sll_int32, parameter :: SLL_SILVER_MULLER  = 9
+  !> Use a one-sided stencil at the boundary
+  sll_int32, parameter :: SLL_D_ONE_SIDED    = 10
+  !> Values outside the domain are provided as halo cells (for domain decomposition)
+  sll_int32, parameter :: SLL_D_HALO         = 11
 
 
 end module sll_m_boundary_condition_descriptors

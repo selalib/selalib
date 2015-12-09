@@ -1,15 +1,42 @@
 program test_fcisl_toroidal
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fcisl_toroidal
-  use sll_m_constants
-  use sll_m_interpolators_2d_base
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_ascii_io
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create, &
+    sll_ascii_write_array_1d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fcisl_toroidal, only: &
+    compute_analytic_field, &
+    compute_euler_field, &
+    compute_feet_analytic, &
+    compute_feet_euler, &
+    compute_feet_rk4, &
+    compute_inverse_invr_integral, &
+    compute_invr_integral, &
+    compute_linspace, &
+    compute_modulo_vect, &
+    compute_modulo_vect2d_inplace, &
+    compute_rk4_field, &
+    compute_time_points, &
+    interpolate2d_toroidal
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64 :: R0
   sll_real64 :: dt
@@ -57,7 +84,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: f_exact
   sll_real64, dimension(:), allocatable :: params_aligned
   
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_int32 :: mode_m
   sll_int32 :: mode_n
   sll_int32 :: nb_iter
@@ -65,18 +92,18 @@ implicit none
   sll_real64 :: ph
   sll_int32 :: iter
   sll_int32 :: hermite_p
-  sll_int32 :: hermite_r_left
-  sll_int32 :: hermite_r_right
-  sll_int32 :: hermite_s_left
-  sll_int32 :: hermite_s_right
+  !sll_int32 :: hermite_r_left
+  !sll_int32 :: hermite_r_right
+  !sll_int32 :: hermite_s_left
+  !sll_int32 :: hermite_s_right
   sll_int32 :: lag_p
   sll_int32 :: lag_r
   sll_int32 :: lag_s
   sll_real64 :: iota  
-  sll_real64, dimension(:,:,:), allocatable :: hermite_w_aligned
-  sll_int32, dimension(:,:), allocatable :: hermite_w_cell_aligned
-  sll_real64, dimension(:,:), allocatable :: theta_pos_left
-  sll_real64, dimension(:,:,:), allocatable :: buf
+  !sll_real64, dimension(:,:,:), allocatable :: hermite_w_aligned
+  !sll_int32, dimension(:,:), allocatable :: hermite_w_cell_aligned
+  !sll_real64, dimension(:,:), allocatable :: theta_pos_left
+  !sll_real64, dimension(:,:,:), allocatable :: buf
   
   
   nb_iter = 10
@@ -306,12 +333,13 @@ print*,"iota=",iota
   f_classic = f_init
   err = 0._f64
   do iter=1,nb_iter
-    f = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Npts_theta, &
       Npts_phi, &
       f_classic, &
       charac_theta, &
-      charac_phi)
+      charac_phi, &
+      f)
     f_classic = f
     
     call compute_feet_analytic( &

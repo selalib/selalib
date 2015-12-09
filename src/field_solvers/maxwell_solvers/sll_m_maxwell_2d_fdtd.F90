@@ -40,13 +40,20 @@
 !>
 module sll_m_maxwell_2d_fdtd
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_m_maxwell_solvers_base
-implicit none
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_maxwell_2d_fdtd, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d with FDTD scheme
 interface sll_create
@@ -66,11 +73,10 @@ interface sll_solve_faraday
  module procedure ampere_2d_fdtd
 end interface sll_solve_faraday
 
-public :: sll_create, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
-type, public :: sll_maxwell_2d_fdtd
+type :: sll_maxwell_2d_fdtd
   private
   sll_int32  :: nc_eta1      !< x cells number
   sll_int32  :: nc_eta2      !< y cells number
@@ -92,7 +98,6 @@ type, public :: sll_maxwell_2d_fdtd
   sll_real64 :: dy           !< step size along dimension 2
 end type sll_maxwell_2d_fdtd
 
-private
 
 contains
 
@@ -402,11 +407,11 @@ end subroutine bc_periodic_2d_fdtd
 !PN    ex => fx; ey => fy; bz => fz
 !PN    select case(side)
 !PN    case(SOUTH)
-!PN       ex(i1:j1,i2) = 0.d0
+!PN       ex(i1:j1,i2) = 0._f64
 !PN    case(NORTH)
 !PN       bz(i1:j1,j2) = bz(i1:j1,j2-1)
 !PN    case(WEST)
-!PN       ey(i1,i2:j2) = 0.d0
+!PN       ey(i1,i2:j2) = 0._f64
 !PN    case(EAST)
 !PN       bz(j1,i2:j2) = bz(j1-1,i2:j2)
 !PN    end select
@@ -420,7 +425,7 @@ end subroutine bc_periodic_2d_fdtd
 !PN    case(NORTH)
 !PN       ez(i1:j1,j2) = ez(i1:j1,j2-1)
 !PN    case(WEST)
-!PN       by(i1,i2:j2) = 0.d0
+!PN       by(i1,i2:j2) = 0._f64
 !PN    case(EAST)
 !PN       ez(j1,i2:j2) = ez(j1-1,i2:j2)
 !PN    end select

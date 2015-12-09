@@ -16,25 +16,60 @@
 !**************************************************************
 
 program test_advection_2d_tensor_product
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_2d_tensor_product
-use sll_m_characteristics_2d_explicit_euler
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_advection_1d_BSL
-use sll_m_characteristics_1d_explicit_euler
-use sll_m_cubic_spline_interpolator_1d
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_bsl, only: &
+    new_bsl_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_tensor_product, only: &
+    new_tensor_product_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    new_explicit_euler_1d_charac
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_advection_2d_base), pointer :: adv
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_x2
-  class(sll_interpolator_1d_base), pointer :: interp_x1
-  class(sll_interpolator_1d_base), pointer :: interp_x2
+  class(sll_c_interpolator_1d), pointer :: interp_x1
+  class(sll_c_interpolator_1d), pointer :: interp_x2
   class(sll_characteristics_1d_base), pointer :: charac_x1
   class(sll_characteristics_1d_base), pointer :: charac_x2
-  class(sll_interpolator_2d_base), pointer :: interp
+  class(sll_c_interpolator_2d), pointer :: interp
   class(sll_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
