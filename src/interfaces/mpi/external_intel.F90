@@ -12,8 +12,8 @@
     mpi_gather,      &
     mpi_gatherv,     &
     mpi_iallreduce,  &
-    mpi_isend,       &
     mpi_irecv,       &
+    mpi_isend,       &
     mpi_reduce,      &
     mpi_recv,        &
     mpi_scatter,     &
