@@ -26,6 +26,7 @@ SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
+SET(BUILD_AGMG            OFF CACHE BOOL   "Build AGMG libraries")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 

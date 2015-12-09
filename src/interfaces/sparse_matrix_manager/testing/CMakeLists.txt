@@ -22,10 +22,12 @@ TARGET_LINK_LIBRARIES( test_gmres ${BLAS_LIBRARIES} )
 ADD_TEST( NAME gmres COMMAND test_gmres )
 SET_TESTS_PROPERTIES( gmres PROPERTIES TIMEOUT 2 )
 
-ADD_EXECUTABLE(test_csr_matrix test_csr_matrix.F90)
-TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
-ADD_TEST( NAME agmg COMMAND test_csr_matrix )
-SET_TESTS_PROPERTIES( agmg PROPERTIES TIMEOUT 5 )
+IF (BUILD_AGMG)
+  ADD_EXECUTABLE(test_csr_matrix test_csr_matrix.F90)
+  TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
+  ADD_TEST( NAME agmg COMMAND test_csr_matrix )
+  SET_TESTS_PROPERTIES( agmg PROPERTIES TIMEOUT 5 )
+ENDIF (BUILD_AGMG)
 
 IF(BUILD_PARALUTION)
 
