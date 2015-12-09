@@ -35,7 +35,8 @@ endif()
 # Specific operations for OpenMPI
 #-------------------------------------------------------------------------------
 if( ${MPI_LIB} STREQUAL "openmpi" )
-  execute_process( COMMAND ompi_info OUTPUT_VARIABLE OMPI_INFO )
+  find_program(OMPI_INFO_PROG NAMES ompi_info HINTS /opt/local/libexec/openmpi-mp/ /usr/local/bin )
+  execute_process( COMMAND ${OMPI_INFO_PROG} OUTPUT_VARIABLE OMPI_INFO )
   string( REGEX MATCH "Open MPI: ([0-9]+)\\.([0-9]+)\\.([0-9]+)" OMPI_VERSION ${OMPI_INFO} )
   set( OMPI_V_MAJOR ${CMAKE_MATCH_1} )
   set( OMPI_V_MINOR ${CMAKE_MATCH_2} )
