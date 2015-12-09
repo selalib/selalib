@@ -1,9 +1,3 @@
-find_path(MPI_FORTRAN_MOD_DIR NAMES mpi.mod
-          PATH $ENV{MPI_FORTRAN_MOD_DIR})
-if(MPI_FORTRAN_MOD_DIR)
-  include_directories(${MPI_FORTRAN_MOD_DIR})
-endif(MPI_FORTRAN_MOD_DIR)
-
 message( STATUS "=========================================================")
 message( STATUS "MPI_Fortran_FOUND         = ${MPI_Fortran_FOUND}"         )
 message( STATUS "MPI_Fortran_COMPILER      = ${MPI_Fortran_COMPILER}"      )
