@@ -1,7 +1,18 @@
 program test_lagrange
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_lagrange_interpolation
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_lagrange_interpolation, only: &
+    compact_derivative_weight, &
+    compute_stencil_plus, &
+    lagrange_interpolate, &
+    weight_product_x1
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NP 20
 #define XMIN  0.0_f64

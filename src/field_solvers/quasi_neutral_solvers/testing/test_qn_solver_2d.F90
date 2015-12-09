@@ -1,14 +1,24 @@
 program test_qn_solver_2d
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_qn_solver_2d
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_qn_solver_2d, only: &
+    delete, &
+    new, &
+    qn_solver_2d, &
+    solve
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32                    :: BC ! Boundary_conditions
   sll_int32                             :: NP_r, NP_theta
@@ -20,9 +30,9 @@ program test_qn_solver_2d
 
   NP_r = 256
   NP_theta = 256
-  rmin = 1.d0
-  rmax = 10.d0
-  Zi = 1.d0
+  rmin = 1._f64
+  rmax = 10._f64
+  Zi = 1._f64
 
   do i=1,2 ! 2 test functions
 
@@ -35,7 +45,7 @@ program test_qn_solver_2d
      print*, 'Testing sequential qns2d', BC
 
      SLL_ALLOCATE(Te(NP_r), ierr)
-     Te = 1.d0
+     Te = 1._f64
      call test_process(BC, NP_r, NP_theta, rmin, rmax, Te, Zi)
      SLL_DEALLOCATE_ARRAY(Te, ierr)
 
@@ -81,8 +91,8 @@ contains
 
     do i_test=1,2
 
-       f = 0.d0
-       average_err_bound  = 0.d0
+       f = 0._f64
+       average_err_bound  = 0._f64
 
        do j=1,NP_theta
 
@@ -110,21 +120,22 @@ contains
 
                 phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*cos(theta)
 
-                rho(i,j) = cos(theta) * ( 2d0*cos(rmin+rmax-2*r) - &
-                                      c(i)* sin(rmin+rmax-2*r) + &
-                    (1/r**2+1/(Zi*Te(i)))*sin(rmax-r)*sin(r-rmin))
+                rho(i,j) = cos(theta) * ( 2.0_f64*cos(rmin+rmax-2.0_f64*r) - &
+                                             c(i)*sin(rmin+rmax-2.0_f64*r) + &
+                    (1.0_f64/r**2+1.0_f64/(Zi*Te(i)))*sin(rmax-r)*sin(r-rmin))
              else
                phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r) * &
-                   exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi)
+                   exp(-0.5_f64*(theta-sll_pi)**2)/sqrt(2.0_f64*sll_pi)
 
-               rho(i,j) = ( 2d0*cos(rmax+rmin-2*r) - c(i)*sin(rmax+rmin-2*r) ) * &
-                          exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi) + phi_exact(i,j) &
-                                       * ( 1/(Zi*Te(i)) - ((theta-sll_pi)**2-1)/r**2 )
+               rho(i,j) = ( 2.0_f64*cos(rmax+rmin-2.0_f64*r) - c(i)*sin(rmax+rmin-2.0_f64*r) ) * &
+                       exp(-0.5_f64*(theta-sll_pi)**2)/sqrt(2.0_f64*sll_pi) + phi_exact(i,j) &
+                        * ( 1.0_f64/(Zi*Te(i)) - ((theta-sll_pi)**2-1.0_f64)/r**2 )
              endif
 
              Mtheta = abs(sin(r-rmin)*sin(rmax-r))
              average_err_bound = average_err_bound + &
-             Mr*dr**2/12d0 + abs(c(i))*Mr*dr**2/6d0 + Mtheta*dtheta**2/(r**2*12)
+                     Mr*dr**2/12.0_f64 + abs(c(i))*Mr*dr**2/6.0_f64 + &
+                     Mtheta*dtheta**2/(r**2*12.0_f64)
           enddo
 
        enddo

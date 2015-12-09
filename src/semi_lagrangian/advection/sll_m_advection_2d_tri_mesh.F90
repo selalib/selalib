@@ -1,15 +1,22 @@
 !> This fortran module is dedicated to advection on
 !> triangular mesh.
 module sll_m_advection_2d_tri_mesh
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_meshes_base
-use sll_m_triangular_meshes
+  use sll_m_triangular_meshes, only: &
+    sll_triangular_mesh_2d
 
-implicit none
+  implicit none
+
+  public :: &
+    advection_2d, &
+    new_advection_2d_tri_mesh, &
+    sll_advection_tri_mesh
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 2d advection on triangular mesh
@@ -459,7 +466,7 @@ do while( nbpres > 0 )
      
          adv%coef(4,ip) = pa2x*ey(jp) - pa2y*ex(jp)
 
-         adv%itest(ip) = 1 + max(0,nint(sign(1d0,adv%coef(4,ip))))
+         adv%itest(ip) = 1 + max(0,nint(sign(1.0_f64,adv%coef(4,ip))))
          adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
@@ -472,7 +479,7 @@ do while( nbpres > 0 )
  
          adv%coef(4,ip) = pa3x*ey(jp) - pa3y*ex(jp)
 
-         adv%itest(ip) = 2 + max(0,nint(sign(1d0,adv%coef(4,ip))))
+         adv%itest(ip) = 2 + max(0,nint(sign(1.0_f64,adv%coef(4,ip))))
          adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
@@ -485,7 +492,7 @@ do while( nbpres > 0 )
 
          adv%coef(4,ip) = pa1x*ey(jp) - pa1y*ex(jp)
 
-         adv%itest(ip) = 1 +mod(2+max(0,nint(sign(1d0,adv%coef(4,ip)))),3)
+         adv%itest(ip) = 1 +mod(2+max(0,nint(sign(1.0_f64,adv%coef(4,ip)))),3)
          adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if

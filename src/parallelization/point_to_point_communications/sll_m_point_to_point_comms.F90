@@ -1,10 +1,43 @@
 module sll_m_point_to_point_comms
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-  use sll_m_collective
-  use mpi  !could this be sent back to the collective module?
+
+  use sll_m_collective, only: &
+    sll_collective_barrier, &
+    sll_collective_t, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_test_mpi_error
+
+  use sll_mpi, only: &
+    mpi_double_precision, &
+    mpi_get_count, &
+    mpi_irecv, &
+    mpi_isend, &
+    mpi_request_free, &
+    mpi_request_null, &
+    mpi_status_ignore, &
+    mpi_status_size, &
+    mpi_success, &
+    mpi_wait
+
   implicit none
+
+  public :: &
+    comm_receive_real64, &
+    comm_send_real64, &
+    delete_comm_real64, &
+    get_buffer, &
+    new_comm_real64, &
+    sll_configure_comm_real64_torus_2d, &
+    sll_create_comm_real64_ring, &
+    sll_p2p_comm_real64, &
+    sll_view_port
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! ************************************************************************
   ! The comm abstraction has been adapted from technology present in some

@@ -9,16 +9,28 @@
 !> * Linear system solve with lapack (Choleski)
 !> This solver is not fully tested, please use it carefully.
 module sll_m_fem_2d_periodic
-#include "sll_poisson_solvers_macros.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_poisson_solvers_macros.h"
 
-implicit none
-private
+! use F77_lapack, only: &
+!   dgetrf, &
+!   dgetrs
+
+  implicit none
+
+  public :: &
+    sll_create, &
+    sll_fem_poisson_2d_periodic, &
+    sll_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Structure to solve Poisson equation on 2d irregular cartesian mesh
 !> with finite element numerical method
-type, public :: sll_fem_poisson_2d_periodic
+type :: sll_fem_poisson_2d_periodic
    sll_int32                           :: nx    !< cells number along x
    sll_int32                           :: ny    !< cells number along y
    sll_real64, dimension(:,:), pointer :: A     !< Mass matrix
@@ -38,7 +50,6 @@ interface sll_solve
    module procedure solve_poisson_2d_periodic_fem
 end interface sll_solve
 
-public :: sll_create, sll_solve
 
 contains
 
@@ -86,24 +97,24 @@ Axelem(2,:) = (/ -2.0_f64,  2.0_f64,  1.0_f64, -1.0_f64 /)
 Axelem(3,:) = (/ -1.0_f64,  1.0_f64,  2.0_f64, -2.0_f64 /)
 Axelem(4,:) = (/  1.0_f64, -1.0_f64, -2.0_f64,  2.0_f64 /)
 
-Axelem = 1.d0/6.d0 * Axelem
+Axelem = 1._f64/6._f64 * Axelem
 
 Ayelem(1,:) = (/  2.0_f64,  1.0_f64, -1.0_f64, -2.0_f64 /)
 Ayelem(2,:) = (/  1.0_f64,  2.0_f64, -2.0_f64, -1.0_f64 /)
 Ayelem(3,:) = (/ -1.0_f64, -2.0_f64,  2.0_f64,  1.0_f64 /)
 Ayelem(4,:) = (/ -2.0_f64, -1.0_f64,  1.0_f64,  2.0_f64 /)
 
-Ayelem = 1.d0/6.d0 * Ayelem
+Ayelem = 1._f64/6._f64 * Ayelem
 
 Melem(1,:) = (/ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64/)
 Melem(2,:) = (/ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64/)
 Melem(3,:) = (/ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64/)
 Melem(4,:) = (/ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64/)
 
-Melem = 1.d0/36.d0 * Melem
+Melem = 1._f64/36._f64 * Melem
 
-this%A = 0.d0
-this%M = 0.d0
+this%A = 0._f64
+this%M = 0._f64
 
 !***  Interior mesh ***
 do j=1,this%ny-1

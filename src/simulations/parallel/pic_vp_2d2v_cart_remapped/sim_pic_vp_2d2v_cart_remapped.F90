@@ -12,10 +12,26 @@
 
 program sim_pic_vp_2d2v_cart_remapped
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_pic_vp_2d2v_cart_remapped
-  use sll_m_collective 
-  use sll_m_timer
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_pic_vp_2d2v_cart_remapped, only: &
+    sll_simulation_4d_vp_generic_pic_cartesian
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_simulation_4d_vp_generic_pic_cartesian) :: sim
   character(len=256)                          :: filename

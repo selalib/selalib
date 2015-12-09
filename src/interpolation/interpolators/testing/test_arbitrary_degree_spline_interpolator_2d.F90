@@ -1,12 +1,22 @@
 program unit_test
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_constants, only : &
-     sll_pi
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 64
 #define NPTS2 64 
@@ -352,13 +362,13 @@ normH1(k)   = 0.0_f64
   
 do j=1,NPTS2
   do i=1,NPTS1-1
-    node_val        = ad2d%interpolate_value(eta1(i),eta2(j))
+    node_val        = ad2d%interpolate_from_interpolant_value(eta1(i),eta2(j))
     normL2(k)       = normL2(k) + (node_val-f(i,j))**2 *h1*h2
     acc(k)          = acc(k) + abs(node_val-f(i,j))
-    deriv1_val      = ad2d%interpolate_derivative_eta1(eta1(i),eta2(j))   
+    deriv1_val      = ad2d%interpolate_from_interpolant_derivative_eta1(eta1(i),eta2(j))   
     acc_der1(k)     = acc_der1(k) + abs(deriv1_val-df_eta1(i,j))
     normH1(k)       = normH1(k) + (deriv1_val-df_eta1(i,j))**2 *h1*h2
-    deriv2_val      = ad2d%interpolate_derivative_eta2(eta1(i),eta2(j))
+    deriv2_val      = ad2d%interpolate_from_interpolant_derivative_eta2(eta1(i),eta2(j))
     acc_der2(k)     = acc_der2(k) + abs(deriv2_val-df_eta2(i,j))
     normH1(k)       = normH1(k) + (deriv2_val-df_eta2(i,j))**2 *h1*h2
   end do

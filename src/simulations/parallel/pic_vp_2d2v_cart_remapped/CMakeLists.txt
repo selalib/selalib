@@ -9,7 +9,6 @@ file( GLOB   POST_PROC "*.dat" "*.gnu" )
 ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_sim_parallel
-  sll_working_precision
   sll_pic_interface
   sll_simple_pic
   sll_bsl_lt_pic

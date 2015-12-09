@@ -31,20 +31,46 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_mudpack_curvilinear_solver_old
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-!use sll_m_boundary_condition_descriptors
-use sll_m_constants
-use sll_m_poisson_2d_base
-use sll_m_mudpack_curvilinear
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
-!use sll_m_poisson_2d_polar
-implicit none
+#include "sll_working_precision.h"
+
+! use F77_mudpack, only: &
+!   mud2, &
+!   mud24, &
+!   mud24cr, &
+!   mud2cr
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_non_separable_with_cross_terms, &
+    sll_non_separable_without_cross_terms
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base, &
+    sll_f_function_of_position
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_mudpack_curvilinear_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   
@@ -59,16 +85,16 @@ implicit none
   sll_real64, dimension(:,:), pointer :: cy_2d
   sll_real64, dimension(:,:), pointer :: ce_2d
   sll_real64, dimension(:,:), pointer :: rho
-  class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: a11_interp
-  class(sll_interpolator_2d_base), pointer   :: a22_interp
-  class(sll_interpolator_2d_base), pointer   :: a12_interp
-  class(sll_interpolator_2d_base), pointer   :: a21_interp
+  class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cxy_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cx_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: cy_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: ce_2d_interp
+  class(sll_c_interpolator_2d), pointer   :: a11_interp
+  class(sll_c_interpolator_2d), pointer   :: a22_interp
+  class(sll_c_interpolator_2d), pointer   :: a12_interp
+  class(sll_c_interpolator_2d), pointer   :: a21_interp
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   sll_int32  :: mudpack_curvilinear_case
   sll_real64, dimension(:), pointer :: work !< array for tmp data
@@ -239,11 +265,7 @@ contains
     common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
     equivalence(intl,iprm)
     equivalence(xa,fprm)
-    !declare coefficient and boundary condition input subroutines external
-    !external mudpack_curvilinear_cofx,mudpack_curvilinear_cofy,mudpack_curvilinear_bndsp
-    external mudpack_curvilinear_cof
-    external mudpack_curvilinear_cofcr
-    external mudpack_curvilinear_bndcr
+
     !!!! end variables for mudpack_curvilinear 
     sll_real64 :: delta1,delta2
 
@@ -517,11 +539,6 @@ contains
     equivalence(intl,iprm)
     equivalence(xa,fprm)
 
-    !declare coefficient and boundary condition input subroutines external
-    !external mudpack_curvilinear_cofx,mudpack_curvilinear_cofy,mudpack_curvilinear_bndsp
-    external mudpack_curvilinear_cof
-    external mudpack_curvilinear_cofcr
-    external mudpack_curvilinear_bndcr
     !set initial guess because solve should be called every time step in a
     !time dependent problem and the elliptic operator does not depend on time.
     iguess = poisson%iguess
@@ -782,19 +799,20 @@ subroutine coefx_array(eta1_min,eta2_min, &
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: cx_array
-    class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
-    class(sll_interpolator_2d_base), pointer   :: a21_interp
+    class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: a21_interp
     
     
 do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1   
-   cx_array(i,j)= cxx_2d_interp%interpolate_derivative_eta1(eta1,eta2)+ &
-                  a21_interp%interpolate_derivative_eta2(eta1,eta2)                         
+   cx_array(i,j)= cxx_2d_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
+                  a21_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefx_array
+
 subroutine coefy_array(eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cyy_2d_interp,a12_interp,cy_array)
   implicit none                     
@@ -802,54 +820,45 @@ subroutine coefy_array(eta1_min,eta2_min, &
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: cy_array
-    class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
-    class(sll_interpolator_2d_base), pointer   :: a12_interp
+    class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: a12_interp
     
 do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1    
-   cy_array(i,j)= cyy_2d_interp%interpolate_derivative_eta2(eta1,eta2)+ &
-                  a12_interp%interpolate_derivative_eta1(eta1,eta2)                         
+   cy_array(i,j)= cyy_2d_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)+ &
+                  a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefy_array  
   
-  
-end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
-
-
 subroutine mudpack_curvilinear_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-implicit none
 real(8)  :: x,cxx,cx
 real(8)  :: y,cyy,cy,ce
-cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
+cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
 return
-end
+end subroutine
 
 subroutine mudpack_curvilinear_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
-cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cxy = mudpack_curvilinear_wrapper%cxy_2d_interp%interpolate_value(x,y)
-cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
+cxx = mudpack_curvilinear_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+cxy = mudpack_curvilinear_wrapper%cxy_2d_interp%interpolate_from_interpolant_value(x,y)
+cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
 
 return
-end
+end subroutine
+
 !> input mixed derivative b.c. to mud2sp
 subroutine mudpack_curvilinear_bndcr(kbdy,xory,alfa,gbdy)
-use sll_m_poisson_2d_mudpack_curvilinear_solver_old
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
@@ -859,7 +868,7 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   alfa = -1.0d0
+   alfa = -1._f64
    gbdy = px + alfa*pe
    return
 end if
@@ -867,24 +876,13 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   alfa = 1.0d0
+   alfa = 1._f64
    gbdy = py + alfa*pe
    return
 end if
-end
+end subroutine
 
-
-
-
-
-
-
-
-
-
-
-
-
+end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

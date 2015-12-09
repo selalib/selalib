@@ -1,14 +1,23 @@
 program test_cubic_splines_nonuniform
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cubic_non_uniform_splines
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_tridiagonal
-  !use sort_module
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    compute_spline_nonunif, &
+    cubic_nonunif_spline_1d, &
+    interpolate_array_value_nonunif, &
+    new_cubic_nonunif_spline_1d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   
   logical                                :: test_passed

@@ -17,18 +17,37 @@
 !>  Triangular mesh
 !------------------------------------------------------------------------------
 module sll_m_triangular_meshes
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_meshes_base
-use sll_m_tri_mesh_xmf
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hexagonal_meshes, only: &
+    get_cell_vertices_index, &
+    sll_hex_mesh_2d
+
+  implicit none
+
+  public :: &
+    analyze_triangular_mesh, &
+    map_to_circle, &
+    new_triangular_mesh_2d, &
+    read_from_file, &
+    sll_create, &
+    sll_delete, &
+    sll_display, &
+    sll_triangular_mesh_2d, &
+    write_triangular_mesh_mtv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 2d hexagonal mesh
@@ -180,7 +199,6 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
-  use sll_m_hexagonal_meshes
   type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
   type(sll_triangular_mesh_2d),      pointer :: tri_mesh
 
@@ -358,7 +376,7 @@ mesh%eta2_max = eta2_max
 
 nbox = nc_eta1+1
 nboy = nc_eta2+1
-ndd = max0(nbox,nboy)
+ndd = max(nbox,nboy)
 alx = eta1_max-eta1_min
 aly = eta2_max-eta2_min
 
@@ -1004,9 +1022,9 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 write(6,*)"*** Calcul des aires des triangles ***"
 #endif /* DEBUG */
 
-allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0d0
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0_f64
 
-airtot = 0.d0
+airtot = 0._f64
 
 do it = 1, mesh%num_triangles
 
@@ -1596,7 +1614,7 @@ end do
 !end if
 
 allocate(mesh%vtaux(mesh%nbtcot),mesh%vtauy(mesh%nbtcot))
-mesh%vtaux = 0.d0; mesh%vtauy = 0.d0
+mesh%vtaux = 0._f64; mesh%vtauy = 0._f64
 
 !==============================================================!
 !--- Calcul complementaires relatifs au lissage des champs ----!
@@ -1607,12 +1625,12 @@ mesh%vtaux = 0.d0; mesh%vtauy = 0.d0
 allocate(mesh%nuvac(2,mesh%nbtcot)); mesh%nuvac = 0
 
 !tableau des longueurs des cotes 
-allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0d0
+allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0_f64
 
 !tableaux de lissage et des cotes tangeants 
-allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0.d0
-allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0.d0
-allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0.d0
+allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0._f64
+allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0._f64
+allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0._f64
 
 allocate(mesh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
 allocate(mesh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes

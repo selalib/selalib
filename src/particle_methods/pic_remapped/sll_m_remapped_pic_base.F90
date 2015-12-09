@@ -4,18 +4,26 @@
 
 module sll_m_remapped_pic_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_accumulators, only: &
+    sll_charge_accumulator_2d
 
   implicit none
-  private
 
-  public :: temp_species_new
+  public :: &
+    sll_c_remapped_particle_group, &
+    temp_species_new
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   !> @brief Particle species (temporary: should use the common type for that)
   !============================================================================
-  type, public :: sll_temp_species
+  type :: sll_temp_species
     !      character(len=64) :: name !< species name
       sll_real64        :: q    !< charge of a single particle
       sll_real64        :: m    !< mass   of a single particle
@@ -33,7 +41,7 @@ module sll_m_remapped_pic_base
   !============================================================================
   !> @brief Particle group
   !============================================================================
-  type, public, abstract :: sll_c_remapped_particle_group       ! previous name sll_particle_group_base
+  type, abstract :: sll_c_remapped_particle_group       ! previous name sll_particle_group_base
 
     class( sll_temp_species ), pointer :: species
     sll_int32                     :: id
@@ -192,8 +200,7 @@ module sll_m_remapped_pic_base
   abstract interface
    subroutine dep_charge_2d( self, charge_accumulator, target_total_charge )
     use sll_m_working_precision
-#include "sll_accumulators.h"
-    import sll_c_remapped_particle_group
+    import sll_c_remapped_particle_group, sll_charge_accumulator_2d
     class( sll_c_remapped_particle_group ),           intent( inout ) :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
     sll_real64,                                 intent(in), optional :: target_total_charge

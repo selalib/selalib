@@ -23,29 +23,42 @@
 !> boundary conditions.
 !> @snippet poisson_solvers/test_poisson_2d_fft.F90 example
 module sll_m_poisson_2d_fft
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_poisson_2d_base
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base, &
+    sll_f_function_of_position
 
 #ifdef FFTW
-use sll_m_poisson_2d_periodic_fftw
-#else
-use sll_m_poisson_2d_periodic_fftpack
-#endif
+  use sll_m_poisson_2d_periodic_fftw, only: &
+    initialize, &
+    poisson_2d_periodic_fftw, &
+    solve
 
-implicit none
-private
-
-  type, public, extends(sll_poisson_2d_base) :: poisson_2d_fft_solver
-  
-#ifdef FFTW
-    type(poisson_2d_periodic_fftw),    private, pointer :: solver
+#define poisson_2d_periodic poisson_2d_periodic_fftw
 #else
-    type(poisson_2d_periodic_fftpack), private, pointer :: solver
+use sll_m_poisson_2d_periodic_fftpack, only: &
+    initialize, &
+    poisson_2d_periodic_fftpack, &
+    solve
+
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
-  
+  implicit none
+
+  public :: &
+    new_poisson_2d_fft_solver, &
+    poisson_2d_fft_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type, extends(sll_poisson_2d_base) :: poisson_2d_fft_solver
+
+    type(poisson_2d_periodic), private, pointer :: solver
+
   contains
 
     !> Create the Poisson solver
@@ -65,7 +78,6 @@ private
       
   end type poisson_2d_fft_solver
 
-  public :: new_poisson_2d_fft_solver
 
 contains
 

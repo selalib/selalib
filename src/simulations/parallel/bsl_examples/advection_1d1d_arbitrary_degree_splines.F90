@@ -1,20 +1,58 @@
 program parallel_advection
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_interpolators_1d_base
-use sll_m_arbitrary_degree_spline_interpolator_1d
-use sll_m_gnuplot_parallel
-use sll_m_remapper
-use sll_m_collective
-  use sll_m_utilities, only : &
-       is_power_of_two
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_2d_parallel
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_real64, &
+    sll_view_lims, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_wtime
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #define MPI_MASTER 0
 
-implicit none
+class(sll_c_interpolator_1d), pointer   :: interp_eta1
+class(sll_c_interpolator_1d), pointer   :: interp_eta2
 
-class(sll_interpolator_1d_base), pointer   :: interp_eta1
-class(sll_interpolator_1d_base), pointer   :: interp_eta2
 type(sll_arbitrary_degree_spline_interpolator_1d), target :: spl_eta1
 type(sll_arbitrary_degree_spline_interpolator_1d), target :: spl_eta2
 sll_real64, dimension(:,:),  pointer       :: f_eta1
@@ -60,7 +98,7 @@ sll_int32  :: i, j
 call sll_boot_collective()
 
 prank = sll_get_collective_rank(sll_world_collective)
-psize = sll_get_collective_size(sll_world_collective)
+psize = int(sll_get_collective_size(sll_world_collective),kind=i64)
 comm  = sll_world_collective%comm
 
 tcpu1 = MPI_WTIME()
@@ -85,7 +123,7 @@ call initialize_layout_with_distributed_array( &
            nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
 if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta1 )
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
 SLL_CLEAR_ALLOCATE(f_eta1(1:loc_sz_i,1:loc_sz_j),error)
@@ -96,7 +134,7 @@ call initialize_layout_with_distributed_array( &
             nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
 if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta2 )
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 SLL_CLEAR_ALLOCATE(f_eta2(1:loc_sz_i,1:loc_sz_j),error)
@@ -176,7 +214,7 @@ subroutine advection_eta1(dt)
 
      do i = 1, loc_sz_i
         eta1 = eta1_min + (i-1)*delta_eta1 - alpha
-        f_eta1(i,j) = interp_eta1%interpolate_value(eta1)
+        f_eta1(i,j) = interp_eta1%interpolate_from_interpolant_value(eta1)
      end do
 
   end do
@@ -197,7 +235,7 @@ subroutine advection_eta2(dt)
 
      do j = 1, loc_sz_j
         eta2 = eta2_min + (j-1)*delta_eta2 - alpha
-        f_eta2(i,j) = interp_eta2%interpolate_value(eta2)
+        f_eta2(i,j) = interp_eta2%interpolate_from_interpolant_value(eta2)
      end do
 
   end do

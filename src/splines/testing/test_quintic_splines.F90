@@ -1,10 +1,14 @@
 program test_quintic_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_quintic_splines
+  use sll_m_quintic_splines, only: &
+    inspl5, &
+    splin5
 
-implicit none
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32, parameter :: n = 64     ! number of interpolation points
 sll_real64           :: x(n)       ! vector of abscissae

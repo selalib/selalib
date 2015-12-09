@@ -1,8 +1,18 @@
 program test_periodic_interpolation
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_periodic_interp
-  use sll_m_fft
-  implicit none 
+
+  use sll_m_constants, only: &
+    sll_twopi
+
+  use sll_m_periodic_interp, only: &
+    initialize_periodic_interp, &
+    periodic_interp, &
+    periodic_interp_work, &
+    spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32, parameter    :: N0 = 16
   sll_real64               :: u(16*N0), u_exact(16*N0), u_out(16*N0)
@@ -12,19 +22,19 @@ program test_periodic_interpolation
   !sll_int32 :: i0
   sll_int32 :: mode 
 
-  error = 0.0_8
+  error = 0.0_f64
   print*, 'Testing order of periodic interpolation'
   ! loop on N 
   N = N0
   do p=1,4
      N= 2*N 
-     alpha = 0.05_8
+     alpha = 0.05_f64
      
      ! Interpolate non trivial smooth periodic function
      mode = 3
      do  i=0, N-1
-        u(i+1) = 1.0_8 / (2 + sin(mode*twopi*i/N))
-        u_exact(i+1) =  1.0_8 / (2 + sin(mode*twopi*(i-alpha)/N))
+        u(i+1)       = 1.0_f64 / (2.0_f64 + sin(mode*sll_twopi*i/N))
+        u_exact(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*sll_twopi*(i-alpha)/N))
         !u(i+1) = cos(mode*twopi*i/N)
         !u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
@@ -42,7 +52,7 @@ program test_periodic_interpolation
      
      if (p>1) then
         print*, 'N=',N, 'error=', error, 'numerical order=', &
-             log(old_error/error)/log(2.0_8) 
+             log(old_error/error)/log(2.0_f64)
      endif
   end do
  

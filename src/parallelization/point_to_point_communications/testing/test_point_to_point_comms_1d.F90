@@ -1,9 +1,36 @@
 program comm_unit_test
-  use sll_m_collective
-  use sll_m_point_to_point_comms
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_point_to_point_comms, only: &
+    comm_receive_real64, &
+    comm_send_real64, &
+    delete_comm_real64, &
+    get_buffer, &
+    new_comm_real64, &
+    sll_create_comm_real64_ring, &
+    sll_p2p_comm_real64, &
+    sll_view_port
+
+  use sll_mpi, only: &
+    mpi_land
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #define PROBLEM_SIZE 4
 
   type(sll_p2p_comm_real64), pointer :: comm
@@ -27,7 +54,7 @@ program comm_unit_test
   comm => new_comm_real64( sll_world_collective, 2, PROBLEM_SIZE )
   if(rank == 0) then
      print *, 'created new comm, size = ', size
-     call flush(6)
+     flush( output_unit )
   end if
 
   ! In this test the processors in the communicator are organized as a ring,
@@ -36,7 +63,7 @@ program comm_unit_test
 
   if(rank == 0) then
      print *, 'configured the comm as a 1D ring'
-     call flush(6)
+     flush( output_unit )
   end if
 
   SLL_ALLOCATE(array1(PROBLEM_SIZE),ierr)

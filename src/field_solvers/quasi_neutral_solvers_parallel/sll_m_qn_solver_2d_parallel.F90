@@ -1,20 +1,59 @@
 module sll_m_qn_solver_2d_parallel
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_fft
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_boundary_condition_descriptors
-  use sll_m_qn_solver_2d, only: dirichlet_matrix, neumann_matrix
-  use sll_m_tridiagonal
-  use sll_m_utilities, only : &
-       is_power_of_two
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_neumann
+
+  use sll_m_collective, only: &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_qn_solver_2d, only: &
+    dirichlet_matrix, &
+    neumann_matrix
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_remap_plan, &
+    remap_plan_3d_comp64, &
+    sll_delete
+
+  use sll_m_tridiagonal, only: &
+    setup_cyclic_tridiag, &
+    solve_cyclic_tridiag
+
+  use sll_m_utilities, only: &
+    is_power_of_two
 
   implicit none
+
+  public :: &
+    qn_solver_2d_parallel, &
+    new_qn_solver_2d_parallel, &
+    solve_qn_solver_2d_parallel, &
+    delete_qn_solver_2d_parallel
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   type qn_solver_2d_parallel
@@ -88,9 +127,9 @@ contains
     plan%rmin     = rmin
     plan%rmax     = rmax
     
-    plan%fft_plan => fft_new_plan( NP_theta, x, x, FFT_FORWARD )
+    plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
 
-    plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
+    plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
 
     plan%layout_fft => new_layout_3D( sll_world_collective )
     call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
@@ -151,12 +190,12 @@ contains
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    call fft_apply_plan( plan%fft_plan, hat_f, hat_f )
-    call fft_apply_plan( plan%fft_plan, hat_g, hat_g )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
 
     do i=1,NP_r_loc
 
-       call fft_apply_plan( plan%fft_plan, plan%array_fft(i,:,1), &
+       call fft_apply_plan_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
                                               plan%array_fft(i,:,1) )
        global = local_to_global( plan%layout_fft, (/i, 1, 1/))
        ind = global(1)
@@ -219,7 +258,7 @@ contains
 
     do i=1,NP_r_loc
        !call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
-       call fft_apply_plan( plan%inv_fft_plan, plan%array_fft(i,:,1), &
+       call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
                                                   plan%array_fft(i,:,1) ) 
     enddo
 

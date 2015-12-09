@@ -1,15 +1,42 @@
 program test_poisson_polar_parallel
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_gnuplot_parallel
-  use sll_m_poisson_polar_parallel
+  use iso_fortran_env, only: &
+    output_unit
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_2d_parallel
+
+  use sll_m_poisson_polar_parallel, only: &
+    initialize, &
+    sll_poisson_polar, &
+    solve_poisson_polar
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    sll_view_lims
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_poisson_polar) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
@@ -75,12 +102,12 @@ call initialize_layout_with_distributed_array( nr,     &
                                                   psize,  &
                                                   1,      &
                                                   layout_a )
-call flush(6)
+flush( output_unit )
 if (prank == 0) then
    call sll_view_lims(layout_a)
    call sll_view_lims(layout_a)
 end if
-call flush(6)
+flush( output_unit )
 
 call compute_local_sizes(layout_a, nr_loc, na_loc )
 SLL_CLEAR_ALLOCATE(rhs(1:nr_loc,1:na_loc),error)
@@ -171,7 +198,7 @@ sll_real64 function f_cos( r, theta )
    f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
            + ((r-r_max)*(r-r_min)*cos(n*theta)  &
            + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
-           + 2*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
+           + 2.0_f64*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
            + r*cos(n*theta))*r)/r
 
 
@@ -190,7 +217,7 @@ sll_real64 function f_sin( r, theta)
    f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
          + ((r-r_max)*(r-r_min)*sin(n*theta) &
          + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
-         + 2*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
+         + 2.0_f64*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
          + r*sin(n*theta))*r)/r
 
 end function f_sin

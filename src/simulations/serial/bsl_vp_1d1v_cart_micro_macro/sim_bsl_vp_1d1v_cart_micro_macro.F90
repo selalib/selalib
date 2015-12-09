@@ -6,31 +6,58 @@
 !> be performed
 
 program sim_bsl_vp_1d1v_cart_micro_macro
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cubic_splines
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_periodic_interpolator_1d
-  use sll_m_landau_2d_initializer
-  use sll_m_tsi_2d_initializer
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
-  use sll_m_timer
-  use omp_lib
-  use sll_m_hdf5_io_serial
-  use sll_m_periodic_interp
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
   use sll_m_constants, only: &
-       sll_pi
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    interpolate_from_interpolant_array, &
+    new_cubic_spline_1d, &
+    sll_cubic_spline_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_periodic_interpolator_1d, only: &
+    sll_periodic_interpolator_1d
+
+  use sll_m_poisson_1d_periodic, only: &
+    initialize, &
+    poisson_1d_periodic, &
+    solve
+
+  use sll_m_utilities, only: &
+    int2string, &
+    pfenvelope
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
   type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
   type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
   type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
-  class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
   type(poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:,:), allocatable, target :: f
   sll_real64, dimension(:,:), allocatable :: fg,ff,ff1,ff2
@@ -38,7 +65,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
   sll_real64, dimension(:), allocatable :: fx
-  sll_real64, dimension(:), pointer     :: f1d
+  !sll_real64, dimension(:), pointer     :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array, vg_array, vh_array, vhg_array 
   sll_real64, dimension(:), allocatable :: x_array, xg_array
@@ -47,7 +74,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_int32, parameter  :: param_out_drive = 40
-  sll_real64 :: kmode, omegadr, omegadr0
+  sll_real64 :: kmode, omegadr!, omegadr0
   sll_int32  :: is_delta_f
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
@@ -60,8 +87,8 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_int32  :: freqdiag = 1
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
   sll_real64 :: l1norm, l2norm
-  sll_real64 :: equilibrium_contrib
-  character(len=32) :: fname, case
+  !sll_real64 :: equilibrium_contrib
+  character(len=32) :: case
   sll_int32  :: istep
   sll_int32  :: nbox
   sll_real64 :: eps
@@ -71,14 +98,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
   sll_real64 :: adr, Edrmax
   logical    :: turn_drive_off
-  sll_int32  :: istartx, iendx, jstartv, jendv
-  sll_int32  :: num_threads, my_num
-  sll_int32  :: ipiece_size_x, ipiece_size_v
-  type(sll_time_mark) :: time0 
-  sll_real64 :: time1
+  !sll_int32  :: istartx, jstartv, jendv
+  !sll_int32  :: num_threads, my_num
+  !sll_int32  :: ipiece_size_x, ipiece_size_v
+  !type(sll_time_mark) :: time0 
+  !sll_real64 :: time1
   sll_int32  :: error, file_id
   character(len=4) :: cstep
-  character(len=32) :: dsetname
+  !character(len=32) :: dsetname
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
@@ -89,7 +116,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
 
   ! determine what case is being run
-  call GET_COMMAND_ARGUMENT(1,case)
+  call get_command_argument(1,case)
   ! open and read input file
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.nml')
@@ -99,7 +126,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        eps = 0.0  ! no initial perturbation for driven simulation
+        eps = 0.0_f64  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else if (case == "tsi") then
@@ -117,7 +144,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        eps = 0.0  ! no initial perturbation for driven simulation
+        eps = 0.0_f64  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else
@@ -329,7 +356,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   do i=1,Ncx+1
      !compute splines coef associated to fg and evalute splines on the fine mesh vh_array --> ff1
      call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
-     call interpolate_array_values(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
+     call interpolate_from_interpolant_array(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
 
      !compute ff:=deltaf on the fine mesh: ff(v_j)=f(v_j)-ff1(v_j), v_j\in vh_array
      mass=0._f64
@@ -413,13 +440,13 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               vg_array(j)=vmax
            endif
         enddo
-        call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
-        call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
         !compute fg on the fine mesh -> ff1
-        call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
         !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
         mass=0._f64
@@ -442,7 +469,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
            endif
         enddo
 
-        call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        call interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
         ff(i,:)=ff2(i,:)+ff(i,:)
@@ -469,7 +496,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               xg_array(i)=xg_array(i)-xmax
            endif
         enddo
-        call interpolate_array_values(xg_array, fg(:,j), Ncx+1, interp_spline_x)
+        call interpolate_from_interpolant_array(xg_array, fg(:,j), Ncx+1, interp_spline_x)
      enddo
 
 
@@ -487,7 +514,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               xg_array(i)=xg_array(i)-xmax
            endif
         enddo
-        call interpolate_array_values(xg_array, ff(:,j), Ncx+1, interp_spline_x)
+        call interpolate_from_interpolant_array(xg_array, ff(:,j), Ncx+1, interp_spline_x)
 
      enddo
 
@@ -534,14 +561,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               vg_array(j)=vmax
            endif
         enddo
-        call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
       
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
-        call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
         !compute fg on the fine mesh -> ff1
-        call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+        call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
         !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
         mass=0._f64
@@ -564,7 +591,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
            endif
         enddo
 
-        call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        call interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
 
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
@@ -582,12 +609,12 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      if (mod(istep,freqdiag)==0) then
         time = istep*dt
         print *,'time',time
-        mass = 0.
-        momentum = 0.
-        l1norm = 0.
-        l2norm = 0.
-        kinetic_energy = 0.
-        potential_energy = 0.
+        mass = 0.0_f64
+        momentum = 0.0_f64
+        l1norm = 0.0_f64
+        l2norm = 0.0_f64
+        kinetic_energy = 0.0_f64
+        potential_energy = 0.0_f64
         do i = 1, Ncx 
            mass = mass + sum(fg(i,:))
            l1norm = l1norm + sum(abs(fg(i,:)))
@@ -640,7 +667,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !compute fg on the fine mesh -> ff1 (for diagnostic)
   do i=1,Ncx+1
      call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
-     call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+     call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
   enddo
 
   open(12, file="ffinalh")

@@ -1,5 +1,12 @@
 module sll_m_prob
- implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  implicit none
+
+  public :: &
+    normal_cdf_inv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 subroutine angle_cdf ( x, n, cdf )
 

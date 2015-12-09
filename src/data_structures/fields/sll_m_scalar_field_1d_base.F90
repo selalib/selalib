@@ -1,6 +1,14 @@
 module sll_m_scalar_field_1d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_scalar_field_1d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 
   ! Fundamental field type

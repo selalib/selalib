@@ -1,4 +1,3 @@
-
 !***************************************************************************
 !
 ! Selalib 2012     
@@ -15,16 +14,45 @@
 !                                  
 !***************************************************************************
 program test_qn_solver_2d_parallel
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_collective
-  use sll_m_qn_solver_2d_parallel
-  use sll_m_boundary_condition_descriptors
 
-implicit none
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_mpi, only : &
+    mpi_prod
+
+  use sll_m_qn_solver_2d_parallel, only: &
+    qn_solver_2d_parallel, &
+    new_qn_solver_2d_parallel, &
+    delete_qn_solver_2d_parallel, &
+    solve_qn_solver_2d_parallel
+
+  use sll_m_remapper, only: &
+    layout_3d, &
+    new_layout_3d, &
+    local_to_global, &
+    initialize_layout_with_distributed_array
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32                             :: BC ! Boundary_conditions
   sll_int32                             :: NP_r, NP_theta
@@ -42,9 +70,9 @@ implicit none
 
   NP_r = 256
   NP_theta = 256
-  rmin = 1.d0
-  rmax = 10.d0
-  Zi = 1.d0
+  rmin = 1._f64
+  rmax = 10._f64
+  Zi = 1._f64
 
   do i=1,2
 
@@ -54,25 +82,25 @@ implicit none
         BC = SLL_DIRICHLET
      endif
      if (myrank==0) then
-        call flush(6)
+        flush( output_unit )
         print*, ' '
-        call flush(6)
+        flush( output_unit )
         print*, 'Testing sll_qns2d_angular_spect_method_par with ', BC
-        call flush(6)
+        flush( output_unit )
         print*, ' '
      endif
      SLL_ALLOCATE(Te(NP_r), ierr)
-     Te = 1.d0
+     Te = 1._f64
      call test_process(BC, NP_r, NP_theta, rmin, rmax, Te, Zi, prod4test)
      SLL_DEALLOCATE_ARRAY(Te, ierr)
 
   enddo
 
   if (myrank==0) then
-     if (prod4test(1)==1.d0) then
-        call flush(6)
+     if (prod4test(1)==1._f64) then
+        flush( output_unit )
         print*, 'test_sll_qns2d_angular_spect_method_par: PASSED'
-        call flush(6)
+        flush( output_unit )
         print*, ' '
      endif
   endif
@@ -108,10 +136,10 @@ contains
     sll_int32, dimension(1:3)                           :: global
     sll_int32                                           :: gi, gj
     sll_int32                                           :: myrank
-    sll_real32                                          :: ok = 1.d0
+    sll_real32                                          :: ok = 1._f64
     sll_real32, dimension(1)                            :: prod4test
     type(layout_3D), pointer                            :: layout
-    sll_int64                                           :: colsz ! collective size
+    sll_int32                                           :: colsz ! collective size
 
     if (BC==SLL_NEUMANN) then
        dr = (rmax-rmin)/(NP_r-1)
@@ -123,7 +151,7 @@ contains
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
 
-    NP_r_loc = NP_r/int(colsz)
+    NP_r_loc = NP_r/colsz
     NP_theta_loc = NP_theta
 
     SLL_ALLOCATE(rho_par(NP_r_loc,NP_theta_loc), ierr)
@@ -138,44 +166,44 @@ contains
 
     do i_test=1,2 ! 2 test functions
 
-    f = 0.d0
-    average_err_bound = 0.d0
+    f = 0._f64
+    average_err_bound = 0._f64
 
     do j=1,NP_theta
 
        theta = (j-1)*dtheta
-       Mr = 4*abs(cos(theta))
+       Mr = 4._f64*abs(cos(theta))
        if (BC==SLL_NEUMANN) then
           if (i_test==1) then
              f(j) = sin(rmax-rmin)*cos(theta)
           else
-             f(j)= sin(rmax-rmin) * exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi)
+             f(j)= sin(rmax-rmin) * exp(-.5*(theta-sll_pi)**2)/sqrt(2._f64*sll_pi)
           endif
        endif
 
        do i=1,NP_r
           if (BC==SLL_NEUMANN) then
              r = rmin + (i-1)*dr
-             c_seq(i) = 2/r
+             c_seq(i) = 2._f64/r
           else ! 'dirichlet'
              r = rmin + i*dr
-             c_seq(i) = (rmax+rmin-2*r) / ( (rmax-r)*(r-rmin) )
+             c_seq(i) = (rmax+rmin-2._f64*r) / ( (rmax-r)*(r-rmin) )
           endif
           ! c=n_0'(r), c_seq is c in sequential
           if (i_test==1) then
              phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*cos(theta)
-             rho_seq(i,j) = cos(theta) * ( 2*cos(rmin+rmax-2*r) - c_seq(i)* sin( &
-                 rmin+rmax-2*r)+(1/r**2+1/(Zi*Te_seq(i)))*sin(rmax-r)*sin(r-rmin))
+             rho_seq(i,j) = cos(theta) * ( 2._f64*cos(rmin+rmax-2._f64*r) - c_seq(i)* sin( &
+                 rmin+rmax-2._f64*r)+(1._f64/r**2+1._f64/(Zi*Te_seq(i)))*sin(rmax-r)*sin(r-rmin))
           else
-             phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*exp(-.5*(theta-sll_pi)**2)/ &
+             phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*exp(-.5_f64*(theta-sll_pi)**2)/ &
                                                                    sqrt(2*sll_pi)
-             rho_seq(i,j) = ( 2*cos(rmax+rmin-2*r) - c_seq(i)*sin(rmax+rmin-2*r) ) * &
-                                         exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi) + &
-                    phi_exact(i,j) * ( 1/(Zi*Te_seq(i)) - ((theta-sll_pi)**2-1)/r**2 )
+             rho_seq(i,j) = ( 2._f64*cos(rmax+rmin-2._f64*r) - c_seq(i)*sin(rmax+rmin-2*r) ) * &
+                                         exp(-.5_f64*(theta-sll_pi)**2)/sqrt(2._f64*sll_pi) + &
+                    phi_exact(i,j) * ( 1/(Zi*Te_seq(i)) - ((theta-sll_pi)**2-1._f64)/r**2 )
           endif
           Mtheta = abs(sin(r-rmin)*sin(rmax-r))
           average_err_bound = average_err_bound + &
-          Mr*dr**2/12 + abs(c_seq(i))*Mr*dr**2/6 + Mtheta*dtheta**2/(r**2*12)
+          Mr*dr**2/12._f64 + abs(c_seq(i))*Mr*dr**2/6._f64 + Mtheta*dtheta**2/(r**2*12._f64)
        enddo
 
     enddo
@@ -186,7 +214,7 @@ contains
 
     layout => new_layout_3D( sll_world_collective )
     call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
-                                                int(colsz), 1, 1, layout )
+                                                colsz, 1, 1, layout )
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
@@ -201,8 +229,8 @@ contains
    
     call solve_qn_solver_2d_parallel(plan, rho_par, c_par, Te_par, f, g, Zi, phi)
 
-    average_err        = 0.d0
-    average_err_bound  = 0.d0
+    average_err        = 0._f64
+    average_err_bound  = 0._f64
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
@@ -216,28 +244,28 @@ contains
              r = rmin + gi*dr
           endif
           average_err = average_err  + abs( phi_exact (gi,gj) - phi(i,j))
-          Mr = 4*abs(cos(theta))
+          Mr = 4._f64*abs(cos(theta))
           Mtheta = abs(sin(r-rmin)*sin(rmax-r))
-          average_err_bound = average_err_bound + Mr*dr**2/12 + &
-               abs(c_par(i))*Mr*dr**2/6 + Mtheta*dtheta**2/(r**2*12)
+          average_err_bound = average_err_bound + Mr*dr**2/12._f64 + &
+               abs(c_par(i))*Mr*dr**2/6._f64 + Mtheta*dtheta**2/(r**2*12._f64)
        enddo
     enddo
 
     average_err  = average_err/(NP_r_loc*NP_theta_loc)
     average_err_bound = average_err_bound/(NP_r_loc*NP_theta_loc)
 
-    call flush(6)
+    flush( output_unit )
     print*, 'Error in proc', myrank, ':', average_err
-    call flush(6)
+    flush( output_unit )
     print*, 'Boundary error in proc', myrank, ':', average_err_bound
-    call flush(6)
+    flush( output_unit )
     print*, ' '
     if ( average_err > average_err_bound) then
-       call flush(6)
+       flush( output_unit )
        print*, 'test_sll_qns2d_angular_spect_method_par: FAILED'
-       call flush(6)
+       flush( output_unit )
        print*, 'myrank=', myrank
-       call flush(6)
+       flush( output_unit )
        print*, ' '
        stop
     endif

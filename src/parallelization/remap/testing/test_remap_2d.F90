@@ -1,11 +1,50 @@
 program remap_2d_unit_test
-  use sll_m_collective
-  use sll_m_remapper
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-  use sll_m_utilities, only : &
-       is_power_of_two
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    get_layout_i_max, &
+    get_layout_i_min, &
+    get_layout_j_max, &
+    get_layout_j_min, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_comp64, &
+    remap_plan_2d_real64, &
+    set_layout_i_max, &
+    set_layout_i_min, &
+    set_layout_j_max, &
+    set_layout_j_min, &
+    sll_delete, &
+    sll_get_num_nodes, &
+    sll_view_lims
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_prod
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,
   ! distributed among NPi*NPj processors.
@@ -61,7 +100,7 @@ program remap_2d_unit_test
      print *, '--------------- REMAP test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -71,7 +110,7 @@ program remap_2d_unit_test
   end if
 
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -187,7 +226,7 @@ print *, 'applied plan'
               print*, 'program stopped by failure'
               stop
            end if
-           call flush(6)
+           flush( output_unit )
         end do
      end do
      
@@ -208,9 +247,9 @@ print *, 'applied plan'
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   
@@ -239,11 +278,11 @@ print *, 'applied plan'
      print *, '--------------- REMAP 2D test: complex case ------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -342,7 +381,7 @@ print *, 'applied plan'
               print*, 'program stopped by failure'
               stop
            end if
-           call flush(6)
+           flush( output_unit )
         end do
      end do
      
@@ -363,9 +402,9 @@ print *, 'applied plan'
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
      call sll_collective_barrier(sll_world_collective)
   

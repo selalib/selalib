@@ -44,13 +44,34 @@
 !> @author
 !> Klaus Reuter, Max Planck Computing and Data Facility (MPCDF)
 module sll_m_decomposition
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-   use sll_m_collective
-   use mpi
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-   implicit none
+  use sll_m_collective, only: &
+    sll_collective_t
+
+  use sll_mpi, only: &
+    mpi_cart_create, &
+    mpi_cart_get, &
+    mpi_cart_shift, &
+    mpi_double, &
+    mpi_sendrecv, &
+    mpi_status_ignore, &
+    mpi_success
+
+  implicit none
+
+  public :: &
+    apply_halo_exchange, &
+    cartesian_topology_6d, &
+    decomposition_6d, &
+    new_cartesian_domain_decomposition, &
+    new_cartesian_topology
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
    !> @brief    Information on the cartesian process topology.

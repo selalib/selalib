@@ -4,23 +4,36 @@
 !> @details Spline with index i starts at point i
 module sll_m_kernel_smoother_spline_1d
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base, only : &
-       sll_c_kernel_smoother, SLL_GALERKIN, SLL_COLLOCATION
-  use sll_m_arbitrary_degree_splines, only : &
-       uniform_b_splines_at_x
+  use sll_m_arbitrary_degree_splines, only: &
+    uniform_b_splines_at_x
+
   use sll_m_gauss_legendre_integration, only : &
        gauss_legendre_points_and_weights
-  
-  implicit none
-  private
 
-  public :: sll_new_smoother_spline_1d
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation, &
+    sll_c_kernel_smoother, &
+    sll_galerkin
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+
+  implicit none
+
+  public :: &
+    sll_t_kernel_smoother_spline_1d, &
+    sll_new_smoother_spline_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>  Spline kernel smoother in1d.
-  type, public, extends(sll_c_kernel_smoother) :: sll_t_kernel_smoother_spline_1d
+  type, extends(sll_c_kernel_smoother) :: sll_t_kernel_smoother_spline_1d
 
      ! Information about the 1d mesh
      sll_real64 :: delta_x(1)  !< Value of grid spacing along both directions.
@@ -45,7 +58,7 @@ module sll_m_kernel_smoother_spline_1d
      procedure :: add_current_update_v => add_current_update_v_spline_1d
      procedure :: evaluate => evaluate_field_single_spline_1d !> Evaluate spline function with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_1d !> Evaluate multiple spline functions with given coefficients
-     procedure :: update_jv !> Helper function to compute the integral of j using Gauss quadrature
+     procedure :: update_jv !> elper function to compute the integral of j using Gauss quadrature
 
   end type sll_t_kernel_smoother_spline_1d
   

@@ -16,20 +16,39 @@
 !**************************************************************
 
 program test_qn_2d_polar_precompute
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_field_2d.h"
-use sll_m_qn_2d_polar_precompute
-use sll_m_timer
-use sll_m_ascii_io
-use sll_m_gauss_lobatto_integration
-use sll_m_gauss_legendre_integration
-use sll_m_gnuplot
-use sll_m_qn_2d_polar
-use sll_m_gyroaverage_2d_polar_hermite_solver
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gyroaverage_utilities, only: &
+    compute_init_f_polar, &
+    compute_mu, &
+    compute_shape_circle
+
+  use sll_m_qn_2d_polar, only: &
+    compute_error, &
+    compute_gamma0, &
+    compute_gamma0_quadrature
+
+  use sll_m_qn_2d_polar_precompute, only: &
+    compute_qns_inverse_polar_splines, &
+    compute_qns_matrix_polar_splines, &
+    solve_qns_polar_splines
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32 :: ierr
   sll_real64,dimension(:), allocatable :: Ti
@@ -57,12 +76,12 @@ implicit none
   sll_int32 :: j
   sll_int32 :: m
   sll_int32 :: mat_id
-  sll_int32 :: nml_id
+  !sll_int32 :: nml_id
   sll_real64 :: lambda_coeff
   character(len=256) :: quadrature_case
   sll_int32 :: quadrature_points_per_cell
-  sll_int32 :: num_cells
-  sll_int32 :: s
+  !sll_int32 :: num_cells
+  !sll_int32 :: s
   sll_int32 :: mode_r
   sll_int32 :: mode_theta
   sll_real64 :: eta_min(2)
@@ -83,11 +102,11 @@ implicit none
   sll_real64 :: num_buffer_cell
   sll_int32  :: hermite_case
   sll_int32  :: interp_degree(2)
-  class(sll_gyroaverage_2d_base), pointer :: gyroaverage
+  !class(sll_gyroaverage_2d_base), pointer :: gyroaverage
   sll_int32 :: interp_x1
   sll_int32 :: interp_x2
-  sll_real64 :: mass 
-  sll_real64 :: vol
+  !sll_real64 :: mass 
+  !sll_real64 :: vol
     
   namelist /params/ &
     r_min, &

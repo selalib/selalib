@@ -1,19 +1,41 @@
 program sim_bsl_ad_2d0v_hex_rot
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
-  use sll_m_ascii_io
 
-  use sll_m_box_splines
-  use sll_m_constants
-  use sll_m_hexagonal_meshes
-  use sll_m_interpolation_hex_hermite
-  use sll_m_utilities, only : &
-       int2string
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_box_splines, only: &
+    hex_interpolate_value, &
+    new_box_spline_2d, &
+    sll_box_spline_2d
+
+  use sll_m_constants, only: &
+    sll_sqrt3
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite
+
+  use sll_m_hexagonal_meshes, only: &
+    get_cell_vertices_index, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    der_finite_difference, &
+    hermite_interpolation
+
+  use sll_m_utilities, only: &
+    int2string
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_HEX_SPLINES = 2
   sll_int32, parameter :: SLL_HEX_Z9 = 9
@@ -667,27 +689,27 @@ program sim_bsl_ad_2d0v_hex_rot
      !          rho_tn1(i) = rho_tn(i)
      !        elseif(num_method==SLL_HEX_P1)then
      !          rho_tn1(i) = rho_tn(i)
-     !		  call p1_interpolation( &
-     !		    i, &
-     !		    xx, &
-     !		    yy, &
-     !		    rho_tn, &
-     !		    rho_tn1, &
-     !		    mesh)
+     !          call p1_interpolation( &
+     !          i, &
+     !          xx, &
+     !          yy, &
+     !          rho_tn, &
+     !          rho_tn1, &
+     !          mesh)
      !        else
-     !		  call hermite_interpolation( &
-     !		    i, &
-     !		    xx, &
-     !		    yy, &
-     !		    rho_tn, &
-     !		    center_values_tn,&
-     !		    edge_values_tn, &
-     !		    rho_tn1, &
-     !		    mesh, &
-     !		    deriv, &
-     !		    aire,& 
-     !		    num_method)
-     !		endif    
+     !          call hermite_interpolation( &
+     !          i, &
+     !          xx, &
+     !          yy, &
+     !          rho_tn, &
+     !          center_values_tn,&
+     !          edge_values_tn, &
+     !          rho_tn1, &
+     !          mesh, &
+     !          deriv, &
+     !          aire,& 
+     !          num_method)
+     !          endif    
      !      else
      !        rho_tn1(i) = 0._f64 ! dirichlet boundary condition
      !      endif
@@ -1150,7 +1172,7 @@ contains
     sll_int32 :: j
     sll_int32 :: mini
     sll_int32 :: maxi
-    sll_int32, 	allocatable :: check(:)
+    sll_int32, allocatable :: check(:)
     sll_int32 :: num_cells
 
     num_cells = mesh%num_cells
@@ -1533,13 +1555,13 @@ contains
 
 
 
-          !	    call p1_interpolation( &
-          !		  i, &
-          !		  xx, &
-          !		  yy, &
-          !		  rho_tn, &
-          !		  rho_tn1, &
-          !		  mesh)
+          !call p1_interpolation( &
+          !	  i, &
+          !	  xx, &
+          !	  yy, &
+          !	  rho_tn, &
+          !	  rho_tn1, &
+          !	  mesh)
        else
           rho_tn1(i) = 0._f64 ! dirichlet boundary condition
        endif

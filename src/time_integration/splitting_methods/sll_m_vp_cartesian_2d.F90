@@ -1,15 +1,34 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 module sll_m_vp_cartesian_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_field_2d.h"
-  use sll_m_interpolators_1d_base
-  use sll_m_time_splitting
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_distribution_function, only: &
+    sll_distribution_function_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_poisson_1d_periodic, only: &
+    poisson_1d_periodic, &
+    solve
+
+  use sll_m_time_splitting, only: &
+    time_splitting
+
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type :: app_field_params
      sll_real64 :: Edrmax, tflat, tL, tR, twL, twR, t0
@@ -18,7 +37,7 @@ module sll_m_vp_cartesian_2d
   end type app_field_params
 
   type, extends(time_splitting) :: vp_cartesian_2d
-     class(sll_interpolator_1d_base), pointer    :: interpx, interpv
+     class(sll_c_interpolator_1d), pointer    :: interpx, interpv
      type(sll_distribution_function_2d), pointer   :: dist_func
      type(poisson_1d_periodic), pointer            :: poisson_1d
      sll_int32 :: Ncx, Ncv
@@ -35,7 +54,7 @@ contains
     type(sll_distribution_function_2d), target   :: dist_func
     type(poisson_1d_periodic), target            :: poisson_1d
     sll_int32 :: Ncx, Ncv
-    class(sll_interpolator_1d_base), pointer    :: interpx, interpv
+    class(sll_c_interpolator_1d), pointer    :: interpx, interpv
     type(app_field_params)  :: params
     this%dist_func  => dist_func
     this%poisson_1d => poisson_1d
@@ -62,9 +81,9 @@ contains
     vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
     delta_v = (vmax - vmin) /  mesh%num_cells2
     do j = 1, this%Ncv+1
-       displacement = (vmin + (j-1) * delta_v) * dt
+       displacement = -(vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
-       f1d = this%interpx%interpolate_array_disp(this%Ncx+1, f1d, displacement)
+       call this%interpx%interpolate_array_disp_inplace(this%Ncx+1, f1d, displacement)
     end do
   end subroutine 
 
@@ -108,9 +127,9 @@ contains
     endif
     ! do advection for given electric field
     do i = 1, this%Ncx+1
-        displacement = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        displacement = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(this%dist_func) (i,:) 
-        f1d = this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement)
+        call this%interpv%interpolate_array_disp_inplace(this%Ncv+1, f1d, displacement)
      end do
   end subroutine
 

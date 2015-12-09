@@ -1,18 +1,99 @@
 module sll_m_sim_bsl_vp_3d3v_cart
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_interpolators_1d_base
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_distribution_function_6d_initializer
-  use sll_m_poisson_3d_periodic_par
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
+#include "sll_working_precision.h"
+
+  use hdf5, only: &
+    hid_t, &
+    hsize_t, &
+    hssize_t
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_distribution_function_6d_initializer, only: &
+    init_test_6d_par, &
+    load_test_6d_initializer, &
+    new_cartesian_6d_mesh, &
+    simple_cartesian_6d_mesh
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_poisson_3d_periodic_par, only: &
+    new_poisson_3d_periodic_plan_par, &
+    poisson_3d_periodic_plan_par, &
+    solve_poisson_3d_periodic_par
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    apply_remap_6d, &
+    compute_local_sizes, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    get_layout_k_min, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    layout_6d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_layout_6d, &
+    new_remap_plan, &
+    remap_plan_3d_real64, &
+    remap_plan_6d_real64, &
+    sll_delete
+
+  use sll_m_scalar_field_initializers_base, only: &
+    node_centered_field
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string, &
+    is_power_of_two
+
+  use sll_m_xdmf_parallel, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  use sll_m_xml_io, only: &
+    sll_xml_field, &
+    sll_xml_file_close, &
+    sll_xml_file_create, &
+    sll_xml_grid_geometry
+
+  use sll_mpi, only: &
+    mpi_wtime
+
   implicit none
+
+  public :: &
+    delete_vp6d_par_cart, &
+    sll_delete, &
+    sll_simulation_6d_vlasov_poisson_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: &
      sll_simulation_6d_vlasov_poisson_cart
@@ -551,11 +632,10 @@ contains
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ex    =  sim%ex_split(i,j,k)
-                      alpha = -ex*0.5_f64*sim%dt
+                      alpha = ex*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed.
-                      sim%f_x4x5x6(i,j,k,:,m,n) = &
-                           sim%interp_x4%interpolate_array_disp( &
+                      call sim%interp_x4%interpolate_array_disp_inplace( &
                              sim%nc_x4, &
                              sim%f_x4x5x6(i,j,k,:,m,n), &
                              alpha )
@@ -572,11 +652,10 @@ contains
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ey    = sim%ey_split(i,j,k)
-                      alpha = -ey*0.5_f64*sim%dt
+                      alpha = ey*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      sim%f_x4x5x6(i,j,k,l,:,n) = &
-                           sim%interp_x5%interpolate_array_disp( &
+                      call sim%interp_x5%interpolate_array_disp_inplace( &
                              sim%nc_x5, &
                              sim%f_x4x5x6(i,j,k,l,:,n), &
                              alpha )
@@ -593,11 +672,10 @@ contains
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ez    =  sim%ez_split(i,j,k)
-                      alpha = -ez*0.5_f64*sim%dt
+                      alpha = ez*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      sim%f_x4x5x6(i,j,k,l,m,:) = &
-                           sim%interp_x6%interpolate_array_disp( &
+                      call     sim%interp_x6%interpolate_array_disp_inplace( &
                              sim%nc_x6, &
                              sim%f_x4x5x6(i,j,k,l,m,:), &
                              alpha )
@@ -625,9 +703,8 @@ contains
                    do j=1,sim%mesh6d%num_cells2
                       vmin = sim%mesh6d%x4_min
                       delta = sim%mesh6d%delta_x4
-                      alpha = (vmin + (k-1)*delta)*sim%dt
-                      sim%f_x1x2x3(:,j,k,l,m,n) = &
-                           sim%interp_x1%interpolate_array_disp( &
+                      alpha = -(vmin + (k-1)*delta)*sim%dt
+                      call sim%interp_x1%interpolate_array_disp_inplace( &
                              sim%nc_x1, &
                              sim%f_x1x2x3(:,j,k,l,m,n), &
                              alpha )
@@ -645,9 +722,8 @@ contains
                    do i=1,sim%mesh6d%num_cells1
                       vmin = sim%mesh6d%x5_min
                       delta = sim%mesh6d%delta_x5
-                      alpha = (vmin + (l-1)*delta)*sim%dt
-                      sim%f_x1x2x3(i,:,k,l,m,n) = &
-                           sim%interp_x2%interpolate_array_disp( &
+                      alpha = -(vmin + (l-1)*delta)*sim%dt
+                      call     sim%interp_x2%interpolate_array_disp_inplace( &
                              sim%nc_x2, &
                              sim%f_x1x2x3(i,:,k,l,m,n), &
                              alpha )
@@ -737,11 +813,10 @@ contains
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ex    = sim%ex_split(i,j,k)
-                      alpha = -ex*0.5_f64*sim%dt
+                      alpha = ex*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      sim%f_x4x5x6(i,j,k,:,m,n) = &
-                           sim%interp_x4%interpolate_array_disp( &
+                      call sim%interp_x4%interpolate_array_disp_inplace( &
                              sim%nc_x4, &
                              sim%f_x4x5x6(i,j,k,:,m,n), &
                              alpha )
@@ -758,11 +833,10 @@ contains
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ey    = sim%ey_split(i,j,k)
-                      alpha = -ey*0.5_f64*sim%dt
+                      alpha = ey*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      sim%f_x4x5x6(i,j,k,l,:,n) = &
-                           sim%interp_x5%interpolate_array_disp( &
+                      call  sim%interp_x5%interpolate_array_disp_inplace( &
                              sim%nc_x5, &
                              sim%f_x4x5x6(i,j,k,l,:,n), &
                              alpha )
@@ -779,11 +853,10 @@ contains
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ez    =  sim%ez_split(i,j,k)
-                      alpha = -ez*0.5_f64*sim%dt
+                      alpha = ez*0.5_f64*sim%dt
                       ! interpolate_array_disp() has an interface that must 
                       ! be changed
-                      sim%f_x4x5x6(i,j,k,l,m,:) = &
-                           sim%interp_x6%interpolate_array_disp( &
+                      call  sim%interp_x6%interpolate_array_disp_inplace( &
                              sim%nc_x6, &
                              sim%f_x4x5x6(i,j,k,l,m,:), &
                              alpha )
@@ -1223,15 +1296,15 @@ contains
     sll_real64, intent(in)                      :: delta_v
     sll_int32, intent(in)                       :: num_pts
     sll_real64, dimension(:), intent(inout)     :: f_line
-    class(sll_interpolator_1d_base)             :: f_interp
+    class(sll_c_interpolator_1d)             :: f_interp
     sll_int32  :: i
     sll_real64 :: displacement
 
     do i=1, num_pts
-       displacement = (vmin + real(i-1,f64)*delta_v)*dt
+       displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_x_1d
 
@@ -1240,19 +1313,18 @@ contains
     sll_real64, dimension(:), intent(in)     :: efield
     sll_int32, intent(in)                    :: num_pts
     sll_real64, dimension(:), intent(inout)  :: f_line
-    class(sll_interpolator_1d_base), pointer :: f_interp
+    class(sll_c_interpolator_1d), pointer :: f_interp
     sll_int32                                :: i
     sll_real64                               :: displacement
 
     do i=1, num_pts
        ! Why is the negative sign there?
-       displacement = -efield(i)*0.5_f64*dt
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       displacement = efield(i)*0.5_f64*dt
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_v_1d
 
   subroutine test_write(sim)
-    use sll_m_xdmf_parallel
     class(sll_simulation_6d_vlasov_poisson_cart), intent(in) :: sim
     type(layout_3D), pointer :: my_layout
     integer(HSIZE_T), dimension(3)  :: array_dims 
@@ -1333,10 +1405,6 @@ contains
 
 
   subroutine plot_fields(itime, sim)
-    use sll_m_collective
-    use hdf5
-    use sll_m_hdf5_io_parallel
-    use sll_m_xml_io
     sll_int32, intent(in) :: itime
     character(len=4)      :: ctime
     sll_int32             :: i_layout

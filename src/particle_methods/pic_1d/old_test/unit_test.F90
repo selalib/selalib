@@ -96,7 +96,7 @@ NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
 
 !**************************************************************
     ! Read input data from file
-    call getarg(1,filename)
+    call get_command_argument(1,filename)
     open(unit=input_file, file=trim(filename), IOStat=IO_stat)
     if( IO_stat /= 0 ) then
         print *, 'init_file() failed to open file ', filename

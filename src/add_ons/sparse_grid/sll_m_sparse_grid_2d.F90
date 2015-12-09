@@ -5,23 +5,32 @@
 !> @details <DETAILED_DESCRIPTION>
 
 module sll_m_sparse_grid_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_periodic_interpolator_1d
-use sll_m_arbitrary_degree_splines
-use sll_m_lagrange_interpolator_1d
-use sll_m_sparse_grid_interpolator
-use sll_m_constants, only: sll_pi
-use, intrinsic :: iso_c_binding
+  use iso_c_binding, only: &
+    c_double, &
+    c_double_complex, &
+    c_ptr, &
+    c_size_t
 
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
-private
+  use sll_m_sparse_grid_interpolator, only: &
+    sparse_grid_interpolator
+
+  implicit none
+
+  public :: &
+    sparse_grid_interpolator_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Object for sparse grid fast Fourier transform implemented based on FFTW library
-  type, public :: fft_fg_2d
+  type :: fft_fg_2d
      type(C_PTR)  :: bw
      complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: in
      real(C_DOUBLE), dimension(:,:), pointer :: out
@@ -30,14 +39,14 @@ private
   end type fft_fg_2d
 
 !> Sparse grid object for 2d with interpolation routines.
-type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_2d
+type, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_2d
 sll_int32, dimension(:,:), pointer  :: index !< 2d mapping: for each 2d index l on the sparse grid, \a index gives the index of the first node belonging to this level 
 type(fft_fg_2d) :: fft_object_fg !< FFT object for sparse grid FFT implementation based on FFTW
 
 contains
   procedure :: initialize => initialize_sg2d!> Initialization routine
   procedure :: interpolate_const_disp
-  procedure :: interpolate_value=>interpolate_value_sg !> Compute the value of the sparse grid interpolant at position eta
+  procedure :: interpolate_from_interpolant_value=>interpolate_value_sg !> Compute the value of the sparse grid interpolant at position eta
   procedure :: interpolate_disp_nconst_in_1d !> Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
   procedure :: interpolate_disp_linnconst_in_1d !> Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
   procedure :: fg_to_sg
@@ -427,7 +436,7 @@ function interpolate_value_sg( interpolator,data,  eta ) result(val)
 end function interpolate_value_sg
 
 
-! helper function for interpolate_value
+! helper function for interpolate_from_interpolant_value
 
 !> Implementation of \a interpolate_value_sg for periodic sparse grid
  function interpolate_from_hierarchical_surplus( interpolator,data, eta ) result(val)
@@ -1131,13 +1140,13 @@ subroutine linear_filter(interpolator, data, hs, width)
   do j=1,interpolator%size_basis
      dx = interpolator%hierarchy(j)%coordinate
      dxn(1) = dx(1); dxn(2) = dx(2) + width(2)
-     data(j) = data(j)*0.5_f64 + 0.125*interpolator%interpolate_value(hs,dxn);
+     data(j) = data(j)*0.5_f64 + 0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
      dxn(2) = dx(2) - width(2)
-     data(j) = data(j) +0.125*interpolator%interpolate_value(hs,dxn);
+     data(j) = data(j) +0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
      dxn(1) = dx(1)+width(1); dxn(2) = dx(2)
-     data(j) = data(j) + 0.125*interpolator%interpolate_value(hs,dxn);
+     data(j) = data(j) + 0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
      dxn(1) = dx(1) - width(1)
-     data(j) = data(j) + 0.125*interpolator%interpolate_value(hs,dxn);
+     data(j) = data(j) + 0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
   end do
   
 

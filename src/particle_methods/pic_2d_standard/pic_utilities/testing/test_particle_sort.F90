@@ -1,15 +1,30 @@
 program particle_sorter
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "particle_representation.h"
-  
-  use sll_m_constants, only: sll_pi
-  use sll_m_cartesian_meshes
-  use sll_m_particle_sort
-  use sll_m_particle_group_4d
-  use sll_m_gaussian
-  use sll_m_hammersley
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hammersley, only: &
+    suite_hamm
+
+  use sll_m_particle_group_4d, only: &
+    new_particle_4d_group, &
+    sll_particle_group_4d
+
+  use sll_m_particle_sort, only: &
+    sll_new_particle_sorter_2d, &
+    sll_particle_sorter_2d, &
+    sll_sort_particles_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define THERM_SPEED 1._f64
 #define num_particles 100000_i32
@@ -43,8 +58,8 @@ program particle_sorter
   sorter => sll_new_particle_sorter_2d( m )
 ! the arguments to new_particle_group should be 32bit ints... change
 
-  weight = (m%eta1_max - m%eta1_min) * &
-           (m%eta2_max - m%eta2_min)/real(num_particles,f32) 
+  weight = real(m%eta1_max - m%eta1_min,f32) * &
+           real(m%eta2_max - m%eta2_min,f32)/real(num_particles,f32) 
   rdx = 1._f64/m%delta_eta1
   rdy = 1._f64/m%delta_eta2
   xmin = m%eta1_min

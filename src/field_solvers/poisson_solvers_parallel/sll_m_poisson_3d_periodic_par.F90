@@ -5,20 +5,52 @@
 !> depends on sll_m_remapper
 module sll_m_poisson_3d_periodic_par
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  
-  use sll_m_utilities, only : &
-       is_power_of_two, is_even
-  use sll_m_fft
-  use sll_m_collective
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_remapper
+  use sll_m_collective, only: &
+    sll_collective_t, &
+    sll_get_collective_size
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2c_1d, &
+    fft_backward, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_new_plan_c2c_1d, &
+    sll_fft_plan
+
+  use sll_m_remapper, only: &
+    apply_remap_3d, &
+    compute_local_sizes, &
+    get_layout_collective, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d, &
+    new_remap_plan, &
+    remap_plan_3d_comp64, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    is_even, &
+    is_power_of_two
 
   implicit none
+
+  public :: &
+    delete_poisson_3d_periodic_plan_par, &
+    new_poisson_3d_periodic_plan_par, &
+    poisson_3d_periodic_plan_par, &
+    solve_poisson_3d_periodic_par
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to solve Poisson equation on 3d mesh with periodic boundary
   !> conditions. Solver is parallel and numerical method is based on fft 
@@ -86,7 +118,7 @@ contains
     collective => get_layout_collective(start_layout)
     colsz      = int(sll_get_collective_size(collective),i64)
 
-    if ( int(colsz,i32) > min(ncx,ncy,ncz) ) then     
+    if ( int(colsz,i32) > min(ncx,ncy,ncz) ) then
        print *, 'This test needs to run in a number of processes which',  &
                 ' is less than or equal', min(ncx,ncy,ncz), ' in order to ', &
                 'be able properly split the arrays.'
@@ -95,7 +127,7 @@ contains
     end if
     if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
          (.not.is_power_of_two(int(ncy,i64))) .and. &
-         (.not.is_power_of_two(int(ncz,i64))) ) then     
+         (.not.is_power_of_two(int(ncz,i64))) ) then
        print *, 'This test needs to run on numbers of cells which are',  &
                 'powers of 2.'
        print *, 'Exiting...'
@@ -111,14 +143,14 @@ contains
     plan%Lz  = Lz
 
     ! For FFTs (in each direction)
-    plan%px => fft_new_plan( ncx, x, x, FFT_FORWARD )
-    plan%py => fft_new_plan( ncy, y, y, FFT_FORWARD )
-    plan%pz => fft_new_plan( ncz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan_c2c_1d( ncx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan_c2c_1d( ncy, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan_c2c_1d( ncz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( ncx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ncy, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( ncz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan_c2c_1d( ncx, x, x, FFT_BACKWARD )
+    plan%py_inv => fft_new_plan_c2c_1d( ncy, y, y, FFT_BACKWARD )
+    plan%pz_inv => fft_new_plan_c2c_1d( ncz, z, z, FFT_BACKWARD )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
@@ -221,7 +253,7 @@ contains
     plan%array_x = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
-          call fft_apply_plan(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
+          call fft_apply_plan_c2c_1d(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
        enddo
     enddo
 
@@ -232,7 +264,7 @@ contains
     call apply_remap_3D( plan%rmp3_xy, plan%array_x, plan%array_y ) 
     do k=1,nz_loc
        do i=1,nx_loc
-          call fft_apply_plan(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
+          call fft_apply_plan_c2c_1d(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
        enddo
     enddo
 
@@ -243,7 +275,7 @@ contains
     call apply_remap_3D( plan%rmp3_yz, plan%array_y, plan%array_z ) 
     do j=1,ny_loc
        do i=1,nx_loc
-          call fft_apply_plan(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
+          call fft_apply_plan_c2c_1d(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
        enddo
     enddo
 
@@ -259,11 +291,7 @@ contains
              gj = global(2)
              gk = global(3)
              if( (gi==1) .and. (gj==1) .and. (gk==1) ) then
-                call fft_set_mode( &
-                     plan%pz, &
-                     plan%array_z(1,1,:), &
-                     (0.0_f64,0.0_f64), &
-                     1)
+                plan%array_z(1,1,1) = (0.0_f64,0.0_f64)
              else
                 if (gi<=nx/2) then
                    ind_x = real(gi-1,f64)
@@ -281,13 +309,13 @@ contains
                    ind_z = real(nz-(gk-1),f64)
                 endif
 !!$           if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
-!!$               if ( rho(i,j,k) /= 0.d0 ) then     
+!!$               if ( rho(i,j,k) /= 0._f64 ) then
 !!$                  print *,'3D: periodic poisson cannot be solved without', &
 !!$                                                      ' global_rho(1,1,1)=0'
 !!$                  print *, 'Exiting...'
 !!$                  stop
 !!$              endif
-!!$              plan%array_z(i,j,k) = 0.d0
+!!$              plan%array_z(i,j,k) = 0._f64
 !!$           else
                 plan%array_z(i,j,k) = plan%array_z(i,j,k)/(4*sll_pi**2 * &
                             ((ind_x/Lx)**2 + (ind_y/Ly)**2+(ind_z/Lz)**2))
@@ -299,7 +327,7 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny_loc
        do i=1,nx_loc
-          call fft_apply_plan( &
+          call fft_apply_plan_c2c_1d( &
                plan%pz_inv, &
                plan%array_z(i,j,:), &
                plan%array_z(i,j,:))
@@ -313,7 +341,7 @@ contains
     call apply_remap_3D( plan%rmp3_zy, plan%array_z, plan%array_y )
     do k=1,nz_loc
        do i=1,nx_loc
-          call fft_apply_plan( &
+          call fft_apply_plan_c2c_1d( &
                plan%py_inv, &
                plan%array_y(i,:,k), &
                plan%array_y(i,:,k) )
@@ -327,7 +355,7 @@ contains
     call apply_remap_3D( plan%rmp3_yx, plan%array_y, plan%array_x ) 
     do k=1,nz_loc
        do j=1,ny_loc
-          call fft_apply_plan( &
+          call fft_apply_plan_c2c_1d( &
                plan%px_inv, &
                plan%array_x(:,j,k), &
                plan%array_x(:,j,k) )

@@ -1,17 +1,42 @@
 module sll_m_qn_2d_polar_precompute
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_timer
-  use sll_m_qn_2d_polar
+! use F77_blas, only: &
+!   dgemm, &
+!   zgemm
+
+! use F77_fftpack, only: &
+!   zfftb, &
+!   zfftf, &
+!   zffti
+
+! use F77_lapack, only: &
+!   zgetrf, &
+!   zgetri
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_qn_2d_polar, only: &
+    compute_splines_coefs_matrix_nat_1d, &
+    compute_splines_coefs_matrix_per_1d, &
+    contribution_spl, &
+    localize_polar, &
+    matrix_product_compf, &
+    splcoefnat1d0old, &
+    splcoefper1d0old
 
   implicit none
+
+  public :: &
+    compute_qns_inverse_polar_splines, &
+    compute_qns_matrix_polar_splines, &
+    solve_qns_polar_splines
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
@@ -301,7 +326,7 @@ contains
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
 !        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !        D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo
@@ -354,7 +379,7 @@ contains
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
 !        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !          D_contr(m,:,:) = D_contr(m,:,:) + pointer_mat_contribution_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo

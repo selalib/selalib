@@ -6,22 +6,54 @@ program test_maxwell_2d_discrete
 !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
 !  with discrete coordinate transformation
 !--------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
+  use m_maxwell_helper_functions, only: &
+    sol_bz
 
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_cartesian_meshes
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_dg_fields
-use sll_m_maxwell_solvers_base
-use sll_m_maxwell_2d_diga
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
 
-implicit none
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    deriv1_jacobian_polar_f, &
+    deriv_x1_polar_f_eta1, &
+    deriv_x1_polar_f_eta2, &
+    deriv_x2_polar_f_eta1, &
+    deriv_x2_polar_f_eta2, &
+    jacobian_polar_f, &
+    x1_polar_f, &
+    x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic, &
+    new_coordinate_transformation_2d_discrete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_cubic_spline_interpolator_2d
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d
+
+  use sll_m_maxwell_2d_diga, only: &
+    sll_maxwell_2d_diga, &
+    sll_solve, &
+    sll_uncentered, &
+    sll_new
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 #define NPTS1 33
 #define NPTS2 33 
@@ -51,8 +83,6 @@ type(sll_dg_field_2d), pointer      :: bz_a, dz_a
 type(sll_dg_field_2d), pointer      :: ex_d, dx_d
 type(sll_dg_field_2d), pointer      :: ey_d, dy_d
 type(sll_dg_field_2d), pointer      :: bz_d, dz_d
-
-sll_real64, external :: sol_ex, sol_ey, sol_bz
   
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64

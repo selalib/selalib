@@ -1,13 +1,42 @@
 module sll_m_fcisl_toroidal
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-use sll_m_constants
-use sll_m_parallel_array_initializer
-use sll_m_hermite_interpolation_2d
-use sll_m_lagrange_interpolation
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_hermite_derivatives_periodic1, &
+    compute_w_hermite, &
+    localize_per
+
+  use sll_m_lagrange_interpolation, only: &
+    lagrange_interpolate
+
+  implicit none
+
+  public :: &
+    compute_analytic_field, &
+    compute_euler_field, &
+    compute_feet_analytic, &
+    compute_feet_euler, &
+    compute_feet_rk4, &
+    compute_inverse_invr_integral, &
+    compute_invr_integral, &
+    compute_linspace, &
+    compute_modulo_vect, &
+    compute_modulo_vect2d_inplace, &
+    compute_rk4_field, &
+    compute_time_points, &
+    interpolate2d_toroidal
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !we consider i this test a case where magnetic filed
 !is not straght lines in theta phi

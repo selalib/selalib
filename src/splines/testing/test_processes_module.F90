@@ -1,13 +1,84 @@
 module test_processes_module
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_cubic_splines
-  use sll_m_constants
-  use util_constants
-  use test_func_module
-  use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_1d, &
+    compute_cubic_spline_2d, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_array, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    new_cubic_spline_1d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_1d, &
+    sll_cubic_spline_2d, &
+    sll_delete
+
+  use test_func_module, only: &
+    f, &
+    fprime
+
+  use util_constants, only: &
+    np, &
+    npx1, &
+    npx2, &
+    r1, &
+    r2, &
+    x1max, &
+    x1min, &
+    x2max, &
+    x2min, &
+    xmax, &
+    xmin
+
   implicit none
+
+  public :: &
+    coscos, &
+    deriv1_polar_x, &
+    deriv1_polar_y, &
+    deriv2_polar_x, &
+    deriv2_polar_y, &
+    dmycos, &
+    fxy, &
+    interpolator_tester_1d_hrmt, &
+    interpolator_tester_1d_prdc, &
+    interpolator_tester_2d_hrmt_prdc, &
+    interpolator_tester_2d_prdc_prdc, &
+    line, &
+    mcossin, &
+    msincos, &
+    mycos, &
+    plane, &
+    plane2, &
+    plane2_deriv, &
+    plane3, &
+    plane3_deriv_x, &
+    plane3_deriv_y, &
+    plane_deriv, &
+    polar_x, &
+    polar_y, &
+    sincos_prod, &
+    sinsin, &
+    test_2d_spline_hrmt_hrmt, &
+    test_2d_spline_hrmt_hrmt_no_slopes, &
+    test_2d_spline_hrmt_prdc, &
+    test_2d_spline_hrmt_prdc_no_slopes, &
+    test_2d_spline_prdc_hrmt, &
+    test_2d_spline_prdc_hrmt_no_slopes, &
+    test_spline_1d_hrmt
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   abstract interface
      function fx(x)
@@ -107,13 +178,13 @@ contains
     print *, 'interpolating individual values from 1 to NP-1:'
     do i=1, NP-1
        x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
-       accumulator1 = accumulator1 + abs(data(i) - interpolate_value(x, sp1))
+       accumulator1 = accumulator1 + abs(data(i) - interpolate_from_interpolant_value(x, sp1))
     end do
     print *, 'checking periodicity:'
     print *, 'difference between values at points 1 and NP: ', &
-         abs(data(1) - interpolate_value(XMAX,sp1))
+         abs(data(1) - interpolate_from_interpolant_value(XMAX,sp1))
     print *, 'interpolating the whole array:'
-    call interpolate_array_values(coordinates, out, NP-1, sp1)
+    call interpolate_from_interpolant_array(coordinates, out, NP-1, sp1)
     do i=1, NP-1
        accumulator3 = accumulator3 + abs(data(i) - out(i))
     end do
@@ -121,9 +192,9 @@ contains
     print *, 'hermite case, NP points: '
     do i=1, NP
        x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
-       accumulator2 = accumulator2 + abs(data(i) - interpolate_value(x, sp2))
+       accumulator2 = accumulator2 + abs(data(i) - interpolate_from_interpolant_value(x, sp2))
     end do
-    call interpolate_array_values(coordinates, out, NP, sp2)
+    call interpolate_from_interpolant_array(coordinates, out, NP, sp2)
     do i=1, NP
        accumulator4 = accumulator4 + abs(data(i) - out(i))
     end do
@@ -137,11 +208,11 @@ contains
     print *, accumulator3/real(NP,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( XMIN,sp1)
+         'interpolated        = ', interpolate_from_interpolant_value( XMIN,sp1)
     
     write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0+XMIN,sp1)
+         'interpolated        = ', interpolate_from_interpolant_value( (XMAX-XMIN)/4.0+XMIN,sp1)
      
     if ( (accumulator1/real(NP,f64) >= 1.0e-15) .or. &
          (accumulator3/real(NP,f64) >= 1.0e-15) ) then 
@@ -157,10 +228,10 @@ contains
     print *, accumulator2/real(NP,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( 0.0_f64,sp2)
+         'interpolated        = ', interpolate_from_interpolant_value( 0.0_f64,sp2)
     write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4+1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0,sp2)
+         'interpolated        = ', interpolate_from_interpolant_value( (XMAX-XMIN)/4.0,sp2)
      print *, 'spline coefficients: '
      
     if ( (accumulator2/real(NP,f64) >= 1.0e-15) .or. &
@@ -568,13 +639,13 @@ contains
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 
-          val = interpolate_value(x1,spline)
+          val = interpolate_from_interpolant_value(x1,spline)
           !print *,'x = ', x1, 'true data: ',data_in(i+1), 'interpolated: ', val
           acc = acc + abs(val-data_in(i+1))  
        end do
        ! Do the last point separately because due to roundoff error, it ends
        ! up out of the range inside the loop.
-       val = interpolate_value(X1MAX, spline)
+       val = interpolate_from_interpolant_value(X1MAX, spline)
        acc = acc + abs(val-data_in(npts))    
 
        average_error = acc/(real(npts,f64))

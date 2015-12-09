@@ -1,10 +1,34 @@
 module sll_m_fcisl
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_cartesian_meshes
-  use sll_m_advection_1d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d
+
+  implicit none
+
+  public :: &
+    compute_at_aligned, &
+    compute_derivative_periodic, &
+    compute_iota_from_shift, &
+    compute_oblic_shift, &
+    compute_spaghetti, &
+    compute_spaghetti_and_shift_from_guess, &
+    compute_spaghetti_size_from_shift, &
+    compute_w_hermite, &
+    load_spaghetti, &
+    new_oblic_derivative, &
+    sll_oblic_derivative, &
+    unload_spaghetti
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! a direction is chosen for interpolation
 ! derivative computation and advection
@@ -668,7 +692,7 @@ contains
 !    sll_real64, dimension(:), intent(in) :: phi
 !    sll_real64, dimension(:), intent(out) :: A
 !    type(sll_cartesian_mesh_1d), pointer :: mesh
-!    class(sll_interpolator_1d_base), pointer   :: interp
+!    class(sll_c_interpolator_1d), pointer   :: interp
 !    sll_int32 :: Nc_x1
 !    sll_real64 :: x1_min
 !    sll_real64 :: delta_x1
@@ -683,7 +707,7 @@ contains
 !
 !    do i1=1,Nc_x1+1
 !      x1=x1_min+real(i1-1,f64)*delta_x1
-!      A(i1)=interp%interpolate_derivative_eta1(x1)
+!      A(i1)=interp%interpolate_from_interpolant_derivative_eta1(x1)
 !    end do
 !  end subroutine compute_field_from_phi_cartesian_1d
 

@@ -1,19 +1,45 @@
 program sim_bsl_gc_2d0v_hex_splines
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_euler_2d_hex
-  use sll_m_hexagonal_meshes
-  use sll_m_hex_poisson
-  use sll_m_pivotbande
-  use sll_m_box_splines
-  use sll_m_utilities, only : &
-       int2string, &
-       sll_new_file_id
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_box_splines, only: &
+    hex_interpolate_value, &
+    new_box_spline_2d, &
+    sll_box_spline_2d
+
+  use sll_m_constants, only: &
+    sll_sqrt3
+
+  use sll_m_euler_2d_hex, only: &
+    compute_characteristic_adams2_2d_hex, &
+    compute_characteristic_euler_2d_hex
+
+  use sll_m_hex_poisson, only: &
+    compute_hex_fields, &
+    hex_matrix_poisson, &
+    hex_second_terme_poisson
+
+  use sll_m_hexagonal_meshes, only: &
+    delete_hex_mesh_2d, &
+    display_hex_mesh_2d, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_pivotbande, only: &
+    factolub_bande, &
+    solvlub_bande
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
   type(sll_box_spline_2d), pointer        :: spline

@@ -1,7 +1,15 @@
 module sll_m_initial_distribution_functions
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_constants
+
+  use sll_m_constants, only: &
+    sll_kx, &
+    sll_pi
+
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains 
   elemental function landau(x, v)
@@ -11,7 +19,8 @@ contains
     
     ! sll_kx is defined in the sll_m_constants module. 
     ! It is set at the mesh initialization 
-    landau = ( 1d0 + eps * cos(sll_kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*v*v)
+    landau = ( 1.0_f64 + eps * cos(sll_kx*x) ) &
+             / sqrt(2.0_f64*sll_pi) * exp(-0.5_f64*v*v)
   end function landau
   
   elemental function two_stream(x,v) result(fval)
@@ -25,9 +34,9 @@ contains
     ! sll_kx is defined in the sll_m_constants module. 
     ! It is set at the mesh initialization 
     vv = v*v
-    fval=(1d0+eps*((cos(2*sll_kx*x)+cos(3*sll_kx*x))/1.2_f64+cos(sll_kx*x)))* &
-         (1d0/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*  &
-         (1d0+.5_f64*vv/(1-xi))*exp(-.5_f64*vv)
+    fval=(1.0_f64+eps*((cos(2*sll_kx*x)+cos(3*sll_kx*x))/1.2_f64+cos(sll_kx*x)))* &
+         (1.0_f64/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*  &
+         (1.0_f64+.5_f64*vv/(1-xi))*exp(-.5_f64*vv)
     !fval=(1+eps*eps*cos(sll_kx*x)+eps*cos(2*sll_kx*x))*0.5_f64/sqrt(2*pi) &
     !     *(exp(-.5_f64*(vx-v0)**2)+ exp(-.5_f64*(vx+v0)**2))
     !fval=(1+eps*cos(sll_kx*x))*0.5_f64/sqrt(2*pi)*(exp(-.5_f64*(vx-v0)**2) &
@@ -53,7 +62,7 @@ contains
   
     xx = (x - xoffset )**2
     vv = (v - voffset )**2
-    fval =  exp(-0.5_f64*(xx+vv)*40.)
+    fval =  exp(-0.5_f64*(xx+vv)*40._f64)
   end function sll_m_gaussian
 
 end module

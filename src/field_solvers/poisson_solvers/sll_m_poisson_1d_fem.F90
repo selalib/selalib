@@ -4,23 +4,59 @@
 
 !> Module to solve Poisson equation on one dimensional mesh using Finite Elements
 module sll_m_poisson_1d_fem
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-    use sll_m_constants
-    use sll_m_cartesian_meshes
-    use sll_m_arbitrary_degree_splines
-    use sll_m_boundary_condition_descriptors
-    use sll_m_gauss_legendre_integration
-    use sll_m_utilities
-    use sll_m_fft
-    implicit none
+! use F77_lapack, only: &
+!   dgbsv
+
+  use sll_m_arbitrary_degree_splines, only: &
+    arbitrary_degree_spline_1d, &
+    b_spline_derivatives_at_x, &
+    b_splines_at_x, &
+    new_arbitrary_degree_spline_1d, &
+    periodic_arbitrary_deg_spline
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d, &
+    sll_cell, &
+    sll_cell_margin, &
+    sll_mesh_area
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_delete_plan, &
+    fft_new_plan_c2r_1d, &
+    fft_new_plan_r2c_1d, &
+    sll_fft_plan
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_utilities, only: &
+    is_power_of_two
+
+  implicit none
+
+  public :: &
+    new_poisson_1d_fem, &
+    poisson_1d_fem, &
+    poisson_1d_fem_rhs_function
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !  private
     !  public :: initialize, new, solve
 
     !  !> Solver data structure
-    !  type, public :: poisson_1d_periodic
+    !  type :: poisson_1d_periodic
     !     sll_int32                         :: nc_eta1 !< number of cells
     !     sll_real64                        :: eta1_min !< left corner
     !     sll_real64                        :: eta1_max !< right corner
@@ -179,11 +215,11 @@ contains
         !FFT--------------------------------------------------------------------------------------
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
-        this%stiffn_matrix_first_line_fourier = (0d0,0d0)
-        this%forward_fftplan => fft_new_plan(this%num_cells,this%fem_solution,this%stiffn_matrix_first_line_fourier, &
-            FFT_FORWARD+FFT_NORMALIZE)
-        this%backward_fftplan=>fft_new_plan(this%num_cells,this%stiffn_matrix_first_line_fourier,this%fem_solution, &
-            FFT_INVERSE  + FFT_NORMALIZE_INVERSE)
+        this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
+        this%forward_fftplan => fft_new_plan_r2c_1d(this%num_cells, &
+             this%fem_solution,this%stiffn_matrix_first_line_fourier)
+        this%backward_fftplan=>fft_new_plan_c2r_1d(this%num_cells, &
+             this%stiffn_matrix_first_line_fourier,this%fem_solution)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
 
         !------------------------------------------------------------------------------------------
@@ -194,14 +230,14 @@ contains
         !prepare fourier transformation for stiffness matrix
 
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
-        this%stiffn_matrix_first_line_fourier=(0d0,0d0)
+        this%stiffn_matrix_first_line_fourier=(0._f64,0._f64)
         call sll_poisson_1d_fft_precomputation(this,this%stiffn_matrix_first_line, &
             this%stiffn_matrix_first_line_fourier, ierr)
         !Assemble mass matrix for L2-Norm
         call sll_poisson_1d_fem_assemble_mass_matrix(this, ierr)
 
         SLL_ALLOCATE(this%mass_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
-        this%mass_matrix_first_line_fourier=(0d0,0d0)
+        this%mass_matrix_first_line_fourier=(0._f64,0._f64)
         call sll_poisson_1d_fft_precomputation(this,this%mass_matrix_first_line, &
             this%mass_matrix_first_line_fourier, ierr)
 
@@ -216,7 +252,7 @@ contains
 
         this%fem_solution=solution_vector
         !Since the solution has been set we have to reset the seminorm
-        this%seminorm=-1d0
+        this%seminorm=-1._f64
     endsubroutine
 
     !<Calculates the inhomogenity b={<f, \phi_i>, i =1, ... N} with given function f
@@ -236,7 +272,7 @@ contains
         sll_real64,dimension(2) :: cellmargin
         sll_int32 :: ierr=0
         !Set right hand side to zero
-        rhs=0d0
+        rhs=0._f64
         !Get Gauss Legendre points and weights to be exact for the selected spline degree
         !Note a Bspline is a piecewise polynom
         if ( .not. present(n_quadrature_points_user)) then
@@ -321,7 +357,7 @@ contains
         !this is the first line of the matrix
         ! (c_1  0 0  0  .... c_4   c_3  c_2)
         !Note this only works because the period is symmetric
-        circulantvector=0d0
+        circulantvector=0._f64
         circulantvector(1)=circulant_matrix_first_line(1)
         circulantvector(2:N)=circulant_matrix_first_line(N:2:-1)
         circulantvector=circulantvector
@@ -332,7 +368,7 @@ contains
         !        SLL_CLEAR_ALLOCATE(circulant_matrix_first_line_fourier(1:N/2+1), ierr)
 
         !Fourier transform the circulant seed
-        call fft_apply_plan(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
 
         !circulant_matrix_first_line_fourier(1)=1.0_f64
         !        sll_real64:: matrix_condition
@@ -517,12 +553,12 @@ contains
         KD=this%spline_degree
         this%fem_solution =rhs
 
-        AB=0d0
+        AB=0._f64
         !Set up the diaognal for dirichlet
         AB(2*KD+1,1)=1.0_f64
-         this%fem_solution(1)=0d0
+         this%fem_solution(1)=0._f64
         AB(2*KD+1,N)=1.0_f64
-         this%fem_solution(N)=0d0
+         this%fem_solution(N)=0._f64
         AB(2*KD+1,2:N-1)=femperiod(1)
 
 
@@ -594,19 +630,19 @@ contains
         !Determine dimension of problem
 
         SLL_ALLOCATE(constant_factor_fourier(1:N/2+1), ierr)
-        constant_factor_fourier = (0d0,0d0)
+        constant_factor_fourier = (0._f64,0._f64)
         SLL_ALLOCATE(data_complex(1:N/2+1),ierr)
-        data_complex = (0d0,0d0)
-        constant_factor=0d0
+        data_complex = (0._f64,0._f64)
+        constant_factor=0._f64
         constant_factor=rightside
 
-        call fft_apply_plan(this%forward_fftplan,constant_factor,constant_factor_fourier)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,constant_factor,constant_factor_fourier)
         !constant_factor_fourier(1)=0
         data_complex=constant_factor_fourier/(matrix_fl_fourier)
-        data_complex(1)=(0d0,0d0)
+        data_complex(1)=(0._f64,0._f64)
         SLL_DEALLOCATE_ARRAY(constant_factor_fourier,ierr)
 
-        call fft_apply_plan(this%backward_fftplan,data_complex,solution)
+        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
         SLL_DEALLOCATE_ARRAY(data_complex,ierr)
         !Somehow the normalization does not do what it should do:
         solution=solution/N
@@ -642,7 +678,7 @@ contains
         SLL_ASSERT( size(knots_eval)==size(realvals))
         SLL_ASSERT( this%num_cells==size(bspline_vector))
 
-        realvals=0d0
+        realvals=0._f64
 
         cell=sll_cell(this%cartesian_mesh, knots_eval)
         !cell= bspline_fem_solver_1d_cell_number(knots_mesh, knots_eval(eval_idx))
@@ -743,10 +779,10 @@ contains
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan(this%forward_fftplan,rhs,data_complex)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,rhs,data_complex)
         data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
-        data_complex(1)=(0d0,0d0)
-        call fft_apply_plan(this%backward_fftplan,data_complex,rhs)
+        data_complex(1)=(0._f64,0._f64)
+        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,rhs)
 
         !!!
         !Somehow the normalization does not do what it should do:
@@ -842,7 +878,7 @@ contains
 !             stop
         data_complex=this%mass_matrix_first_line_fourier/this%stiffn_matrix_first_line_fourier
         !Remove the offset
-        data_complex(1)=(0d0,0d0)
+        data_complex(1)=(0._f64,0._f64)
 
 
         !The factor two comes from the real to complex fourier transform and
@@ -869,10 +905,10 @@ contains
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan(this%forward_fftplan,solution,data_complex)
+        call fft_apply_plan_r2c_1d(this%forward_fftplan,solution,data_complex)
         data_complex=data_complex*(this%mass_matrix_first_line_fourier)
-        data_complex(1)=(0d0,0d0)
-        call fft_apply_plan(this%backward_fftplan,data_complex,solution)
+        data_complex(1)=(0._f64,0._f64)
+        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
         solution=solution/(N)
         l2norm=dot_product(this%fem_solution, solution )
     endfunction
@@ -925,7 +961,7 @@ contains
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
         sll_int :: b_idx
         sll_int :: b_contrib_idx
-        rhs=0d0
+        rhs=0._f64
 
         SLL_ASSERT( (size(pweight)==size(ppos) .OR. size(pweight)==1))
         !        if (present(interpolfun_user)) then
@@ -980,8 +1016,8 @@ contains
         enddo
 
         if (  this%boundarycondition==SLL_DIRICHLET ) then
-            rhs(1:this%bspline%degree+1)=0d0
-            rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0d0
+            rhs(1:this%bspline%degree+1)=0._f64
+            rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0._f64
         endif
     endfunction
 

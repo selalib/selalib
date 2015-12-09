@@ -6,26 +6,36 @@
 ! - The coordinate transformation is defined by patches.
 
 program sim_bsl_vp_2d2v_cart_multipatch
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_coordinate_transformation_multipatch
-  use sll_m_sim_bsl_vp_2d2v_cart_multipatch, only: &
-     sll_simulation_4d_qns_general_multipatch, &
-     initialize_4d_qns_gen_mp, &
-     run_4d_qns_general_mp
-  use sll_m_collective
-!  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-!  use sll_m_coordinate_transformations_2d_nurbs
-  use sll_m_common_array_initializers
-  ! use sll_m_poisson_2d_elliptic_solver, &
-  !    only: es_gauss_legendre
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_halt_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_gaussian_beam_initializer_4d
+
+  use sll_m_constants, only: &
+    sll_pi
+
   use sll_m_coordinate_transformation_multipatch, only: &
-     sll_coordinate_transformation_multipatch_2d
-  use sll_m_general_coordinate_elliptic_solver
-!  use sll_m_scalar_field_2d_multipatch
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre
+
+  use sll_m_sim_bsl_vp_2d2v_cart_multipatch, only: &
+    initialize_4d_qns_gen_mp, &
+    run_4d_qns_general_mp, &
+    sll_simulation_4d_qns_general_multipatch
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   character(len=256) :: filename
@@ -36,13 +46,10 @@ program sim_bsl_vp_2d2v_cart_multipatch
 
   sll_real64, dimension(1:8) :: gaussian_beam_params
   sll_real64, dimension(1:2) :: elec_field_ext_params
-  sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
   sll_real64, dimension(1) :: f_zero_params
   sll_real64, dimension(1) :: f_one_params
   sll_real64, dimension(1) :: f_minus_one_params
   sll_real64, dimension(1) :: f_epsi_params
-  sll_real64, external :: electric_field_ext_1
-  sll_real64, external :: electric_field_ext_2
 
 
   print *, 'Booting parallel environment...'
@@ -51,7 +58,7 @@ program sim_bsl_vp_2d2v_cart_multipatch
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
   
   f_zero_params(:) = (/0.0_f64/)
@@ -159,60 +166,64 @@ program sim_bsl_vp_2d2v_cart_multipatch
   !call delete(simulation)
   !call delete(transformation_x)
 
+contains
+  
+  function func_one( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 1.0_8
+  end function func_one
+  
+  function func_minus_one( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = -1.0_8
+  end function func_minus_one
+  
+  function func_zero( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 0.0_8
+  end function func_zero
+  
+  
+  function func_epsi( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 0.00001_8
+  end function func_epsi
+  
+  function electric_field_ext_1(x,y,params) result(res)
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = params(1)*x
+  end function electric_field_ext_1
+  
+  
+  function electric_field_ext_2(x,y,params) result(res)
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = params(2)*y
+  end function electric_field_ext_2
+  
+
 end program sim_bsl_vp_2d2v_cart_multipatch
 
 ! External functions used as parameters in the above unit test:
 
 
-function func_one( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = 1.0_8
-end function func_one
-
-function func_minus_one( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = -1.0_8
-end function func_minus_one
-
-function func_zero( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = 0.0_8
-end function func_zero
-
-
-function func_epsi( eta1, eta2, params ) result(res)
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = 0.00001_8
-end function func_epsi
-
-function electric_field_ext_1(x,y,params) result(res)
-  real(8), intent(in) :: x
-  real(8), intent(in) :: y
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = params(1)*x
-end function electric_field_ext_1
-
-
-function electric_field_ext_2(x,y,params) result(res)
-  real(8), intent(in) :: x
-  real(8), intent(in) :: y
-  real(8), dimension(:), intent(in) :: params
-  real(8) :: res
-  res = params(2)*y
-end function electric_field_ext_2
 
 
 

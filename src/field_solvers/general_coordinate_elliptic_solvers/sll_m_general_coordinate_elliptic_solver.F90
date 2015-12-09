@@ -10,7 +10,7 @@
 !> \mathbf{S}(t) = \sum_{i = 0}^{m-n-1} b_{i,n} (t) . \mathbf{P}_{i} \,,\, t \in [0, 1],
 !> \f]
 !> 
-!> où les \f$ P_i \f$ is a polynomial function \f$ (m-n) \f$ points.
+!> where \f$ P_i \f$ is a polynomial function \f$ (m-n) \f$ points.
 !> 
 !> \f$ m-n \f$ B-splines n degree functions are defined recursively :
 !> 
@@ -31,40 +31,81 @@
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
 module sll_m_general_coordinate_elliptic_solver
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
-use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
-                                      sll_scalar_field_2d_discrete
-use sll_m_interpolators_2d_base, only: sll_interpolator_2d_base
-use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
-  sll_arbitrary_degree_spline_interpolator_2d
-use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
-  interv, deboor_type, bsplvd
-use sll_m_cubic_splines  
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_sparse_matrix, only : sll_csr_matrix,                 &
-                                     new_csr_matrix,                 &
-                                     new_csr_matrix_with_constraint, &
-                                     csr_add_one_constraint,         &
-                                     sll_factorize_csr_matrix,       &
-                                     sll_add_to_csr_matrix,          &
-                                     sll_mult_csr_matrix_vector,     &
-                                     sll_solve_csr_matrix,           &
-                                     sll_delete
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_arbitrary_degree_spline_interpolator_2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_2d, &
+    get_coeff_cubic_spline_2d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_2d
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvd, &
+    deboor_type, &
+    interv
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    gauss_lobatto_points_and_weights
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_scalar_field_2d, only: &
+    sll_scalar_field_2d_analytic, &
+    sll_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
+  use sll_m_sparse_matrix, only: &
+    csr_add_one_constraint, &
+    new_csr_matrix, &
+    new_csr_matrix_with_constraint, &
+    sll_add_to_csr_matrix, &
+    sll_csr_matrix, &
+    sll_delete, &
+    sll_factorize_csr_matrix, &
+    sll_mult_csr_matrix_vector, &
+    sll_solve_csr_matrix
 
 #ifdef _OPENMP
 use omp_lib
 #endif
+  implicit none
 
-implicit none
+  public :: &
+    es_gauss_legendre, &
+    es_gauss_lobatto, &
+    factorize_mat_es, &
+    factorize_mat_es_prototype, &
+    general_coordinate_elliptic_solver, &
+    initialize_general_elliptic_solver_prototype, &
+    new_general_elliptic_solver, &
+    new_general_elliptic_solver_prototype, &
+    set_rho_coefficients_coordinates_elliptic_eq_prototype, &
+    sll_create, &
+    sll_delete, &
+    sll_solve, &
+    solve_general_coordinates_elliptic_eq_prototype
 
-private
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
 !> General coordinate elliptic solver derived type
@@ -73,7 +114,7 @@ private
 !> splines in array global_indices depends on the boundary conditions.
 !> local_indices includes the changes resulting from the boundary conditions.
 !> local_to_lobal_indices(i,j) = global_indices(local_indices(i,j))
-type, public :: general_coordinate_elliptic_solver
+type :: general_coordinate_elliptic_solver
 
   private
   sll_int32,  public :: num_cells1
@@ -135,9 +176,9 @@ type, public :: general_coordinate_elliptic_solver
 end type general_coordinate_elliptic_solver
 
 !> For the integration mode.  
-sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
+sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0
 !> For the integration mode.  
-sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
+sll_int32, parameter :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
   module procedure delete_elliptic
@@ -151,16 +192,6 @@ interface sll_solve
   module procedure solve_general_coordinates_elliptic_eq
 end interface sll_solve
 
-public sll_delete,                          &
-       sll_create,                          &
-       sll_solve,                           &
-       new_general_elliptic_solver,         &
-       factorize_mat_es,                    &
-       solve_general_coordinates_elliptic_eq_prototype, &
-       initialize_general_elliptic_solver_prototype, &
-       new_general_elliptic_solver_prototype,         &
-       factorize_mat_es_prototype, &
-       set_rho_coefficients_coordinates_elliptic_eq_prototype
 contains 
 
 ! *******************************************************************
@@ -372,14 +403,14 @@ es%gauss_pts2(2,:) = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,:)
 
 !print *,'#begin'
 !print *,'#quadrature',quadrature_type1,quadrature_type2
-!call flush()
+!flush( output_unit )
 !print *,es%gauss_pts1(1,:)
 !print *,'#end'
-!call flush()
+!flush( output_unit )
 !print *,es%delta_eta1
 !print *,es%gauss_pts1(1,1:spline_degree1+2)
 !print *,es%gauss_pts1(1,1:spline_degree1+2)/es%delta_eta1
-!call flush()
+!flush( output_unit )
 
 es%perper  = .false. 
 
@@ -430,7 +461,7 @@ end if
 !print *,es%delta_eta1
 !print *,es%gauss_pts1(1,1:spline_degree1+2)
 !print *,es%gauss_pts1(1,1:spline_degree1+2)/es%delta_eta1
-!call flush()
+!flush( output_unit )
 
 SLL_ALLOCATE(es%knots1(knots1_size),ierr)
 SLL_ALLOCATE(es%knots2(knots2_size),ierr)
@@ -658,7 +689,7 @@ if(err>1.e-8)then
   enddo
   enddo
   enddo
-  call flush()
+  flush( output_unit )
   gspl1 = es%gauss_pts1(1,1)
   ispl1 = spline_degree1+1
   call bsplvd( &
@@ -672,7 +703,7 @@ if(err>1.e-8)then
     2)
   print *,dbs1
   print *,'#err=',err
-  call flush()
+  flush( output_unit )
   SLL_ERROR('initialize_general_elliptic_solver&
   &','v_splines1_check and es%v_splines1 differ')
 endif
@@ -1488,8 +1519,8 @@ sll_real64 :: int_jac
 sll_int32  :: ierr
 sll_int32  :: nc_1, nc_2
 
-!$ sll_int32  :: tid = 0
-!$ sll_int32  :: nthreads = 1
+!!$ sll_int32  :: tid = 0
+!!$ sll_int32  :: nthreads = 1
   
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
@@ -1542,21 +1573,21 @@ if(es%precompute_rhs .eqv. .false.)then
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
 
-  !$OMP PARALLEL &
-  !$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
-  !$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
-  !$OMP              tid, nthreads)                      &
-  !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
-  !$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
-  !$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
-  !$OMP         valfj,jac_mat)
-  !$ tid = omp_get_thread_num()
-  !$ nthreads = omp_get_num_threads()
-  !$OMP MASTER
-  !$ print *, 'Number of threads = ', nthreads
-  !$OMP END MASTER
-  
-  !$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
+  !!$OMP PARALLEL &
+  !!$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
+  !!$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
+  !!$OMP              tid, nthreads)                      &
+  !!$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
+  !!$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
+  !!$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
+  !!$OMP         valfj,jac_mat)
+  !!$ tid = omp_get_thread_num()
+  !!$ nthreads = omp_get_num_threads()
+  !!$OMP MASTER
+  !!$ print *, 'Number of threads = ', nthreads
+  !!$OMP END MASTER
+  !
+  !!$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
   do j=1, nc_2
     do i=1, nc_1
       M_rho_loc = 0.0_f64
@@ -1616,7 +1647,7 @@ if(es%precompute_rhs .eqv. .false.)then
     end do
   end do
 
-  !$OMP END PARALLEL
+  !!$OMP END PARALLEL
 
   !PN fix bug found by Michel
   !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
@@ -2303,62 +2334,62 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
   sll_real64, dimension(:,:), allocatable :: dbiatx
   if(num_cells<1)then
     print *,'#num_cells=',num_cells
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with num_cells')
   endif
   if(degree<0)then
     print *,'#degree=',degree
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with degree')
   endif
   if(num_cell_points<1)then
     print *,'#num_cell_points=',num_cell_points
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with num_cell_points')
   endif
   if(minval(cell_points)<0.)then
     print *,'#minval(cell_points)=',minval(cell_points)
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with minval(cell_points)')
   endif
   if(maxval(cell_points)>=1.)then
     print *,'#maxval(cell_points)=',maxval(cell_points)
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with maxval(cell_points)')
   endif
   
   if(size(knots)<num_cells+2*degree+1)then
     print *,'#size(knots)=',size(knots)
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with knots')
   endif
   if(size(v_splines,1)<2)then
     print *,'#size(v_splines,1)=',size(v_splines,1),2
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
   if(size(v_splines,2)<degree+1)then
     print *,'#size(v_splines,2)=',size(v_splines,2),degree+1
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
   if(size(v_splines,3)<num_cell_points)then
     print *,'#size(v_splines,3)=',size(v_splines,3),num_cell_points
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
   if(size(v_splines,4)<num_cells)then
     print *,'#size(v_splines,4)=',size(v_splines,4),num_cells
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
@@ -2372,7 +2403,7 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
     do j=1,num_cell_points
       eta = eta_min_loc+cell_points(j)*delta_eta_loc
       !print *,'#eta=',eta_min_loc,cell_points(j),delta_eta_loc
-      !call flush()
+      !flush( output_unit )
       call compute_b_spline_and_deriv_at_x( &
         knots, &
         i+degree, &
@@ -2382,7 +2413,7 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
       v_splines(1,1:degree+1,j,i) = dbiatx(:,1)
       v_splines(2,1:degree+1,j,i) = dbiatx(:,2)
       !print *,  v_splines(1,1:degree+1,j,i)
-      !call flush()
+      !flush( output_unit )
       !stop
     enddo  
   enddo
@@ -2418,56 +2449,56 @@ subroutine compute_non_zero_splines_at_cell_points( &
   sll_real64, dimension(:), allocatable :: dbiatx
   if(num_cells<1)then
     print *,'#num_cells=',num_cells
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with num_cells')
   endif
   if(degree<0)then
     print *,'#degree=',degree
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with degree')
   endif
   if(num_cell_points<1)then
     print *,'#num_cell_points=',num_cell_points
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with num_cell_points')
   endif
   if(minval(cell_points)<0.)then
     print *,'#minval(cell_points)=',minval(cell_points)
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with minval(cell_points)')
   endif
   if(maxval(cell_points)>=1.)then
     print *,'#maxval(cell_points)=',maxval(cell_points)
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with maxval(cell_points)')
   endif
   
   if(size(knots)<num_cells+2*degree+1)then
     print *,'#size(knots)=',size(knots)
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with knots')
   endif
   if(size(v_splines,1)<degree+1)then
     print *,'#size(v_splines,1)=',size(v_splines,1),degree+1
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
   if(size(v_splines,2)<num_cell_points)then
     print *,'#size(v_splines,2)=',size(v_splines,2),num_cell_points
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
   if(size(v_splines,3)<num_cells)then
     print *,'#size(v_splines,3)=',size(v_splines,3),num_cells
-    call flush()
+    flush( output_unit )
     SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
     &','Problem with size of v_splines')
   endif
@@ -2481,7 +2512,7 @@ subroutine compute_non_zero_splines_at_cell_points( &
     do j=1,num_cell_points
       eta = eta_min_loc+cell_points(j)*delta_eta_loc
       !print *,'#eta=',eta_min_loc,cell_points(j),delta_eta_loc
-      !call flush()
+      !flush( output_unit )
       call compute_b_spline_at_x( &
         knots, &
         i+degree, &
@@ -2490,7 +2521,7 @@ subroutine compute_non_zero_splines_at_cell_points( &
         dbiatx)
       v_splines(1:degree+1,j,i) = dbiatx
       !print *,  v_splines(1,1:degree+1,j,i)
-      !call flush()
+      !flush( output_unit )
       !stop
     enddo  
   enddo
@@ -2644,7 +2675,7 @@ end subroutine compute_b_spline_at_x
 !    do i=1,degree+1
 !      print *,splines1(i),splines2(i)
 !    enddo
-!    call flush()
+!    flush( output_unit )
 !  endif
 !end function check_compute_b_spline_at_x
 
@@ -2869,7 +2900,7 @@ call compute_local_to_global_splines_indices( &
 
 if(es%precompute_rhs)then
 print *,'#begin connectivity rho'
-call flush()
+flush( output_unit )
 
 call compute_index( &
   num_cells1, &
@@ -2908,13 +2939,13 @@ call compute_local_to_global_splines_indices( &
   bc_indices1 = bc_rho_indices1, &
   bc_indices2 = bc_rho_indices2 )
 print *,'#end connectivity rho'
-call flush()
+flush( output_unit )
 endif
 
 
 
 print *,'#initconnectivity_new done'
-call flush()
+flush( output_unit )
 
 
 
@@ -3054,7 +3085,7 @@ es%csr_mat_source => new_csr_matrix( &
 endif
  
 print *,'#new_csr_matrix done'
-call flush()
+flush( output_unit )
 
     
 
@@ -3117,7 +3148,7 @@ call compute_global_knots( &
 
 
 print *,'#compute_global_knots done'
-call flush()
+flush( output_unit )
 
 
 call compute_non_zero_splines_and_deriv_at_cell_points( &
@@ -3158,7 +3189,7 @@ call compute_non_zero_splines_at_cell_points( &
 
 
 
-call flush()
+flush( output_unit )
 
 end subroutine initialize_general_elliptic_solver_prototype
 
@@ -3302,7 +3333,7 @@ vec_sz1 = compute_vec_size( &
   bc1_max)
 
 print *,'begin factorize_mat_es_prototype'
-call flush()
+flush( output_unit )
 SLL_CLEAR_ALLOCATE(elt_mat_loc(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(mass(1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
@@ -3524,7 +3555,7 @@ end do
 end do
 
 print *,'end matrix construction factorize_mat_es_prototype'
-call flush()
+flush( output_unit )
 
 !es%intjac = intjac
 es%intjac = sum(es%masse)
@@ -3555,7 +3586,7 @@ else
 end if 
 
 print *,'#end of sll_factorize_csr_matrix'
-call flush()
+flush( output_unit )
 
 
 !SLL_DEALLOCATE_ARRAY(M_c,ierr)
@@ -3570,7 +3601,7 @@ SLL_DEALLOCATE_ARRAY(stif,ierr)
 SLL_DEALLOCATE_ARRAY(mass,ierr) 
 
 print *,'#dealloc ok sll_factorize_csr_matrix'
-call flush()
+flush( output_unit )
    
 end subroutine factorize_mat_es_prototype
 
@@ -3610,12 +3641,12 @@ else
   if(present(rho_coeff))then
     if(size(rho_coeff,1)<num_spl1)then
       print *,'#size(rho_coeff,1)=',size(rho_coeff,1)
-      call flush()
+      flush( output_unit )
       SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','bad size(rho_coeff,1)')
     endif
     if(size(rho_coeff,2)<num_spl2)then
       print *,'#size(rho_coeff,2)=',size(rho_coeff,2)
-      call flush()
+      flush( output_unit )
       SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','bad size(rho_coeff,2)')
     endif
     do j = 1,num_spl2
@@ -3678,7 +3709,7 @@ sll_int32, dimension(:), allocatable :: index_coeff2
 !!$ sll_int32  :: nthreads = 1
 
 print *,'#solve begin'
-call flush()
+flush( output_unit )
 
   
 num_pts_g1 = size(es%gauss_pts1,2)
@@ -3887,7 +3918,7 @@ coeff_phi(:,:) = 0._f64
   
 
 print *,'#solve done'
-call flush()
+flush( output_unit )
 
 end subroutine solve_general_coordinates_elliptic_eq_prototype
 

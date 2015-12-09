@@ -1,14 +1,34 @@
 program test_pic_initializers
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_particle_group_4d
-  use sll_m_particle_group_2d
-  use sll_m_particle_initializers_2d
-  use sll_m_particle_initializers_4d
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_particle_group_2d, only: &
+    new_particle_2d_group, &
+    sll_delete, &
+    sll_particle_group_2d
+
+  use sll_m_particle_group_4d, only: &
+    new_particle_4d_group, &
+    sll_delete, &
+    sll_particle_group_4d
+
+  use sll_m_particle_initializers_2d, only: &
+    sll_initial_particles_2d
+
+  use sll_m_particle_initializers_4d, only: &
+    sll_initial_particles_4d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
@@ -23,9 +43,7 @@ program test_pic_initializers
 #define YMIN 0._f64
 #define YMAX 1._f64
 #define QoverM 1._f64
-
   
-  implicit none
   type(sll_particle_group_4d), pointer :: init_group
   type(sll_particle_group_2d), pointer :: init_group_GC
   type(sll_cartesian_mesh_2d),   pointer :: m2d

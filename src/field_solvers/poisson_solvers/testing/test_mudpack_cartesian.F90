@@ -1,13 +1,25 @@
 program test_mudpack_cartesian
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 
-  use sll_m_mudpack
-  use sll_m_boundary_condition_descriptors
-  use sll_m_constants, only : sll_pi
-  use sll_m_gnuplot
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_mudpack, only: &
+    delete_mudpack_cartesian, &
+    initialize_mudpack_cartesian, &
+    sll_mudpack_solver, &
+    solve_mudpack_cartesian
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer :: nc_eta1
 integer :: nc_eta2
@@ -34,10 +46,10 @@ SLL_CLEAR_ALLOCATE(phi( 1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(rhs( 1:nc_eta1+1,1:nc_eta2+1),error)
 
 !set end points of solution rectangle in (x,y) space
-eta1_min = 0.0_f64
-eta1_max = 4.0_f64
-eta2_min = 0.0_f64
-eta2_max = 4.0_f64
+eta1_min = 0.0_8
+eta1_max = 4.0_8
+eta2_min = 0.0_8
+eta2_max = 4.0_8
 
 delta_eta1 = (eta1_max-eta1_min)/dble(nc_eta1)
 delta_eta2 = (eta2_max-eta2_min)/dble(nc_eta2)
@@ -73,10 +85,10 @@ call delete_mudpack_cartesian(periodic)
 
 print*,"PASSED"
 
-eta1_min = -5.0_f64
-eta1_max =  5.0_f64
-eta2_min = -5.0_f64
-eta2_max =  5.0_f64
+eta1_min = -5.0_8
+eta1_max =  5.0_8
+eta2_min = -5.0_8
+eta2_max =  5.0_8
 
 delta_eta1 = (eta1_max-eta1_min)/dble(nc_eta1)
 delta_eta2 = (eta2_max-eta2_min)/dble(nc_eta2)
@@ -113,7 +125,7 @@ call sll_gnuplot_2d(eta1_min, eta1_max, nc_eta1+1, &
                     eta2_min, eta2_max, nc_eta2+1, &
                     rhs, "rhs_dirichlet", 1, error)
 
-!rhs = 4.0_f64
+!rhs = 4.0_8
 phi(:,1) = sol(:,1)
 phi(:,nc_eta2+1) = sol(:,nc_eta2+1)
 phi(1,:) = sol(1,:)

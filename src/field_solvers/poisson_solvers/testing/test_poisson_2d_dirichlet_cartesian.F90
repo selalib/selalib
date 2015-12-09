@@ -1,11 +1,22 @@
 program test_poisson_2d_dirichlet_cartesian
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_poisson_2d_dirichlet_cartesian
-  use sll_m_gnuplot
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_2d_dirichlet_cartesian, only: &
+    new_poisson_2d_dirichlet_cartesian_plan, &
+    poisson_2d_dirichlet_cartesian, &
+    sll_delete, &
+    sll_solve
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type (poisson_2d_dirichlet_cartesian), pointer :: plan
 
@@ -29,8 +40,8 @@ program test_poisson_2d_dirichlet_cartesian
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  dx = Lx/ncx
-  dy = Ly/ncy
+  dx = Lx/real(ncx,f64)
+  dy = Ly/real(ncy,f64)
 
   plan => new_poisson_2d_dirichlet_cartesian_plan(ncx, ncy, Lx, Ly)
 
@@ -50,13 +61,13 @@ program test_poisson_2d_dirichlet_cartesian
 
   call sll_solve(plan, rho, phi)
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_dirichlet" failure'
@@ -75,13 +86,13 @@ program test_poisson_2d_dirichlet_cartesian
 !!$       size(rho,1), size(rho,2), &
 !!$       rho, "rho", 1, error)  
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   print *, 'PASSED'
 end program test_poisson_2d_dirichlet_cartesian

@@ -26,13 +26,29 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_polar_parallel_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!use sll_m_boundary_condition_descriptors
-use sll_m_poisson_2d_base
-use sll_m_poisson_polar_parallel
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base, &
+    sll_f_function_of_position
+
+  use sll_m_poisson_polar_parallel, only: &
+    new_poisson_polar, &
+    sll_poisson_polar, &
+    solve_poisson_polar
+
+  use sll_m_remapper, only: &
+    layout_2d
+
+  implicit none
+
+  public :: &
+    new_poisson_2d_polar_parallel_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
   sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1

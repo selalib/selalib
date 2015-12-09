@@ -24,23 +24,54 @@
 
 module sll_m_bsl_lt_pic_4d_group
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_accumulators.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-! #include "particle_representation.h"   NEEDED?
+  use sll_m_accumulators, only: &
+    charge_accumulator_cell_2d, &
+    reset_charge_accumulator_to_zero, &
+    sll_charge_accumulator_2d
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_working_precision
-  use sll_m_cartesian_meshes
-  use sll_m_remapped_pic_base
-  use sll_m_bsl_lt_pic_4d_particle
-  use sll_m_bsl_lt_pic_4d_utilities
-  use sll_m_gnuplot
+  use sll_m_bsl_lt_pic_4d_particle, only: &
+    sll_bsl_lt_pic_4d_particle
+
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    apply_periodic_bc_x, &
+    apply_periodic_bc_y, &
+    eval_hat_function, &
+    eval_landau_fx, &
+    get_initial_position_on_cartesian_grid_from_particle_index, &
+    get_particle_index_from_initial_position_on_cartesian_grid, &
+    sll_pic_shape, &
+    update_closest_particle_arrays
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_4d, &
+    sll_cartesian_mesh_2d, &
+    sll_cartesian_mesh_4d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group, &
+    temp_species_new
 
   implicit none
+
+  public :: &
+    sll_bsl_lt_pic_4d_group, &
+    sll_bsl_lt_pic_4d_group_new, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Group of @ref sll_bsl_lt_pic_4d_particle
   type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group

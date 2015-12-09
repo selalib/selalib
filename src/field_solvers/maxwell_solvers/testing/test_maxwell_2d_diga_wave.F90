@@ -5,22 +5,76 @@ program test_maxwell_2d_diga_wave
     !--------------------------------------------------------------------------
     !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
     !--------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_common_coordinate_transformations
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_cartesian_meshes
-  use sll_m_dg_fields
-  use sll_m_maxwell_2d_diga
-  use sll_m_maxwell_solvers_base
+  use m_maxwell_helper_functions, only: &
+    gaussian
 
-    implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_silver_muller
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    affine_jac11, &
+    affine_jac12, &
+    affine_jac21, &
+    affine_jac22, &
+    affine_x1, &
+    affine_x2, &
+    homography_jac11, &
+    homography_jac12, &
+    homography_jac21, &
+    homography_jac22, &
+    homography_x1, &
+    homography_x2, &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    rubber_sheeting_jac11, &
+    rubber_sheeting_jac12, &
+    rubber_sheeting_jac21, &
+    rubber_sheeting_jac22, &
+    rubber_sheeting_x1, &
+    rubber_sheeting_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_mtv
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_dg_field_2d, &
+    sll_new
+
+  use sll_m_maxwell_2d_diga, only: &
+    sll_create, &
+    sll_maxwell_2d_diga, &
+    sll_solve, &
+    sll_uncentered
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     !=====================================!
     ! Simulation parameters               !
@@ -50,8 +104,6 @@ program test_maxwell_2d_diga_wave
     sll_real64  :: cfl = 0.5_f64
     sll_int32   :: itest
     !character(len=4) :: cstep
-    !init functions
-    sll_real64, external :: sll_m_gaussian
 
     mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
@@ -184,7 +236,7 @@ program test_maxwell_2d_diga_wave
    
         ex  => sll_new(degree,tau)
         ey  => sll_new(degree,tau)
-        bz  => sll_new(degree,tau,sll_m_gaussian)
+        bz  => sll_new(degree,tau,gaussian)
    
         ex0 => sll_new(degree,tau)
         ey0 => sll_new(degree,tau)

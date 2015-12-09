@@ -26,20 +26,29 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_scalar_field_1d_base
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_interpolators_1d_base
-  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_m_utilities
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gnuplot
-!  use sll_m_scalar_field_initializers_base
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_scalar_field_1d_base, only: &
+    sll_scalar_field_1d_base
+
   implicit none
+
+  public :: &
+    new_scalar_field_1d_analytic, &
+    new_scalar_field_1d_discrete, &
+    sll_scalar_field_1d_discrete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_analytic
      procedure(one_var_parametrizable_function), pointer, nopass :: func
@@ -77,7 +86,7 @@ module sll_m_scalar_field_1d
      !sll_int32                            :: sz_coeff2
      character(len=64)                    :: name
      !     sll_int32                            :: plot_counter
-     class(sll_interpolator_1d_base), pointer :: interp_1d !!! a implementer
+     class(sll_c_interpolator_1d), pointer :: interp_1d !!! a implementer
      sll_real64, dimension(:), pointer :: point
      !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
@@ -358,7 +367,7 @@ contains   ! *****************************************************************
     type(sll_scalar_field_1d_discrete), pointer :: obj
 !    sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_1d_base), target        :: interpolator_1d ! a implementer
+    class(sll_c_interpolator_1d), target        :: interpolator_1d ! a implementer
      type(sll_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32, optional :: sz_point
@@ -395,7 +404,7 @@ contains   ! *****************************************************************
     class(sll_scalar_field_1d_discrete)         :: field
    ! sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_1d_base), target        :: interpolator_1d
+    class(sll_c_interpolator_1d), target        :: interpolator_1d
     type(sll_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32,optional :: sz_point
@@ -481,7 +490,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in) :: eta
     sll_real64             :: value_at_pt_discrete_1d
     
-    value_at_pt_discrete_1d = field%interp_1d%interpolate_value(eta)
+    value_at_pt_discrete_1d = field%interp_1d%interpolate_from_interpolant_value(eta)
   end function value_at_pt_discrete_1d
   
   function value_at_index_discrete_1d( field, i )
@@ -490,7 +499,7 @@ contains   ! *****************************************************************
     sll_real64            :: eta
     sll_real64            :: value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
+    value_at_index_discrete_1d = field%interp_1d%interpolate_from_interpolant_value(eta) 
   end function value_at_index_discrete_1d
   
   function derivative_value_at_pt_discrete_1d( field, eta )
@@ -499,7 +508,7 @@ contains   ! *****************************************************************
     sll_real64             :: derivative_value_at_pt_discrete_1d
     
     derivative_value_at_pt_discrete_1d = &
-         field%interp_1d%interpolate_derivative_eta1(eta)
+         field%interp_1d%interpolate_from_interpolant_derivative_eta1(eta)
   end function derivative_value_at_pt_discrete_1d
   
   function derivative_value_at_index_discrete_1d( field, i )
@@ -509,7 +518,7 @@ contains   ! *****************************************************************
     sll_real64            :: derivative_value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     derivative_value_at_index_discrete_1d = &
-         field%interp_1d%interpolate_derivative_eta1(eta)
+         field%interp_1d%interpolate_from_interpolant_derivative_eta1(eta)
   end function derivative_value_at_index_discrete_1d
 
   subroutine write_to_file_discrete_1d( field, tag )

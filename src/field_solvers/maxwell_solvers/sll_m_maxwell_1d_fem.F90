@@ -5,25 +5,42 @@
 !> Contains the abstract class to create a Maxwell solver in 1D.
 
 module sll_m_maxwell_1d_fem
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_gauss_legendre_integration
-  use sll_m_arbitrary_degree_splines
-  use sll_m_maxwell_1d_base
-  
+! use F77_fftpack, only: &
+!   dfftb, &
+!   dfftf, &
+!   dffti
+
+  use sll_m_arbitrary_degree_splines, only: &
+    uniform_b_splines_at_x
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gauss_legendre_integration, only: &
+    gauss_legendre_points_and_weights
+
+  use sll_m_maxwell_1d_base, only: &
+    function_1d_real64, &
+    sll_maxwell_1d_base
+
   implicit none
-  private
-  
-  public :: sll_new_maxwell_1d_fem,  &
-            solve_circulant,         &
-            compute_E_from_B_1d_fem, &
-            compute_fem_rhs,         &
-            compute_B_from_E_1d_fem, compute_E_from_rho_1d_fem, L2projection_1d_fem, L2norm_squarred_1d_fem
 
-  type, public, extends(sll_maxwell_1d_base) :: sll_maxwell_1d_fem
+  public :: &
+    compute_b_from_e_1d_fem, &
+    compute_e_from_b_1d_fem, &
+    compute_e_from_rho_1d_fem, &
+    compute_fem_rhs, &
+    sll_maxwell_1d_fem, &
+    sll_new_maxwell_1d_fem
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type, extends(sll_maxwell_1d_base) :: sll_maxwell_1d_fem
 
      sll_real64 :: Lx          !< length of Periodic domain
      sll_real64 :: delta_x     !< cell size

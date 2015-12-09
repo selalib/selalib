@@ -7,27 +7,52 @@
 !------------------------------------------------------------------------------
 
 module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
-#include "sll_assert.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_sparse_grid_3d
-  use sll_m_poisson_3d_sparse_grid_fft
-  use sll_m_sim_base
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_collective, only: &
+    sll_collective_alltoallv_double, &
+    sll_collective_alltoallv_int, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_3d_sparse_grid_fft, only: &
+    sll_fft3d_derivative
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_real64
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_sparse_grid_3d, only: &
+    sparse_grid_interpolator_3d
 
   implicit none
+
+  public :: &
+    sll_t_sim_sl_vp_3d3v_cart_sparsegrid
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_LANDAU = 0
   sll_int32, parameter :: SLL_TSI = 1
 
-  private
 
-  type, public, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_3d3v_cart_sparsegrid
+  type, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_3d3v_cart_sparsegrid
      logical     :: is_mdeltaf
      sll_int32   :: test_case
      sll_int32   :: levelx

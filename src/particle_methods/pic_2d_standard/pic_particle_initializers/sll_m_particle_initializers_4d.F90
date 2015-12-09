@@ -16,18 +16,31 @@
 !**************************************************************
 
 module sll_m_particle_initializers_4d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "particle_representation.h"
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_particle_group_4d
-  use sll_m_cartesian_meshes
-  use sll_m_gaussian
-  use sll_m_hammersley
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_gaussian, only: &
+    gaussian_deviate_2d
+
+  use sll_m_particle_group_4d, only: &
+    sll_particle_group_4d
 
   implicit none
+
+  public :: &
+    sll_initial_particles_4d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !   private sll_init_spatial_particle2D, suite_hamm
 ! !  In the future, we have to build a directory called

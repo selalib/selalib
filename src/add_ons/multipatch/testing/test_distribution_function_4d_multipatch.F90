@@ -1,10 +1,44 @@
 program unit_test_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_coordinate_transformation_multipatch
-  use sll_m_distribution_function_4d_multipatch
-  use sll_m_collective
-  use sll_m_common_array_initializers
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_landau_initializer_4d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_coordinate_transformation_multipatch_2d
+
+  use sll_m_distribution_function_4d_multipatch, only: &
+    compute_charge_density_multipatch, &
+    sll_distribution_function_4d_multipatch, &
+    sll_new_distribution_function_4d_multipatch, &
+    sll_delete
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    new_scalar_field_multipatch_2d, &
+    sll_scalar_field_multipatch_2d, &
+    sll_delete
+
+  use sll_m_utilities, only: &
+    is_even
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_coordinate_transformation_multipatch_2d)      :: t_mp
   class(sll_scalar_field_multipatch_2d), pointer         :: rho_mp

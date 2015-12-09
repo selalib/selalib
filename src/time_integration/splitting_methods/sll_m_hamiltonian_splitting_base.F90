@@ -1,10 +1,16 @@
 module sll_m_hamiltonian_splitting_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  
-  implicit none
-  private
 
-  type, public, abstract :: sll_t_hamiltonian_splitting_base
+  implicit none
+
+  public :: &
+    sll_t_hamiltonian_splitting_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type, abstract :: sll_t_hamiltonian_splitting_base
 
    contains 
      procedure(splitting), deferred :: lie_splitting

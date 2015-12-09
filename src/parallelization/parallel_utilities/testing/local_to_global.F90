@@ -2,7 +2,9 @@
 !data stored in local array spread in several processors.
 program local_to_global
 
-use mpi
+use sll_mpi
+use iso_fortran_env, only: output_unit
+
 implicit none
 
 integer  :: nx, ny
@@ -120,7 +122,7 @@ call MPI_Type_free(newtype,ierr)
 !deallocate(global)
 deallocate(local)
 
-call flush(6)
+flush( output_unit )
 
 tcpu2 = MPI_WTIME()
 if (prank == proot) then

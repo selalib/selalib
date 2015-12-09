@@ -1,19 +1,37 @@
 !> @brief
 !> Implements the distribution function types
 module sll_m_distribution_function
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-use sll_m_constants
-use sll_m_utilities   ! for int2string
-use sll_m_interpolators_1d_base
-use sll_m_coordinate_transformation_2d_base
-use sll_m_scalar_field_2d_old
-use sll_m_scalar_field_initializers_base
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
 
-implicit none
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_scalar_field_2d_old, only: &
+    initialize_scalar_field_2d, &
+    scalar_field_2d, &
+    scalar_function_2d_old
+
+  use sll_m_scalar_field_initializers_base, only: &
+    cell_centered_field, &
+    node_centered_field, &
+    scalar_field_2d_initializer_base
+
+  implicit none
+
+  public :: &
+    initialize_distribution_function_2d, &
+    sll_distribution_function_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
   type, extends(extended_type) :: new_df_type;                       \
@@ -101,8 +119,8 @@ contains
     initializer )
 
     class(sll_coordinate_transformation_2d_base), pointer :: transf
-    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     type(sll_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass
