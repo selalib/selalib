@@ -274,19 +274,19 @@ c
 c
       tau = pi * r2lamb / dble(nf1)**2
       cross1 = 1d0/sqrt(r2lamb)
-      zz = dcmplx(fw(0),fw(1))
+      zz = cmplx(fw(0),fw(1),kind=8)
       fk(0) = cross1*zz
       do k1 = 1, (ms-1)/2
          cross1 = -cross1
          cross = cross1*exp(tau*dble(k1)**2)
-            zz = dcmplx(fw(2*k1),fw(2*k1+1))
+            zz = cmplx(fw(2*k1),fw(2*k1+1),kind=8)
          fk(k1) = cross*zz
-            zz = dcmplx(fw(2*(nf1-k1)),fw(2*(nf1-k1)+1))
+            zz = cmplx(fw(2*(nf1-k1)),fw(2*(nf1-k1)+1),kind=8)
          fk(-k1) = cross*zz
       enddo
       if (ms/2*2.eq.ms) then
          cross = -cross1*exp(tau*dble(ms/2)**2)
-         zz = dcmplx(fw(2*nf1-ms),fw(2*nf1-ms+1))
+         zz = cmplx(fw(2*nf1-ms),fw(2*nf1-ms+1),kind=8)
          fk(-ms/2) = cross*zz
       endif
       deallocate(fw)
@@ -463,7 +463,7 @@ c          locations using Gaussian convolution.
 c     ---------------------------------------------------------------
       t1 = pi/r2lamb
       do j = 1, nj
-         cj(j) = dcmplx(0d0,0d0)
+         cj(j) = cmplx(0d0,0d0,kind=8)
          jb1 = int((xj(j)+pi)/hx)
          diff1 = (xj(j)+pi)/hx - jb1
          jb1 = mod(jb1, nf1)
@@ -485,15 +485,15 @@ c
          jb1d = min(nspread-1, jb1)
          jb1u = min(nspread, nf1-jb1-1)
          do k1 = -nspread+1, -jb1d-1
-            zz = dcmplx(fw(2*(jb1+k1+nf1)),fw(2*(jb1+k1+nf1)+1))
+            zz = cmplx(fw(2*(jb1+k1+nf1)),fw(2*(jb1+k1+nf1)+1),kind=8)
             cj(j) = cj(j) + xc(k1)*zz
          enddo
          do k1 = -jb1d, jb1u
-            zz = dcmplx(fw(2*(jb1+k1)),fw(2*(jb1+k1)+1))
+            zz = cmplx(fw(2*(jb1+k1)),fw(2*(jb1+k1)+1),kind=8)
             cj(j) = cj(j) + xc(k1)*zz
          enddo
          do k1 = jb1u+1, nspread
-            zz = dcmplx(fw(2*(jb1+k1-nf1)),fw(2*(jb1+k1-nf1)+1))
+            zz = cmplx(fw(2*(jb1+k1-nf1)),fw(2*(jb1+k1-nf1)+1),kind=8)
             cj(j) = cj(j) + xc(k1)*zz
          enddo
       enddo
@@ -669,7 +669,7 @@ c
          jb1 = int(dble(nf1/2) + (xj(j)-xb)/hx)
          diff1 = dble(nf1/2) + (xj(j)-xb)/hx - real(jb1,kind=8)
          ang = sb*xj(j)
-         cs = dcmplx(cos(ang),sin(ang)) * cj(j)
+         cs = cmplx(cos(ang),sin(ang),kind=8) * cj(j)
 
          xc(0) = exp(-t1*diff1**2)
          cross = xc(0)
@@ -702,18 +702,18 @@ c ---------------------------------------------------------------
 c
       t1 = pi * r2lamb1 / dble(nf1)**2
       cross1 = (1d0-2d0*mod(nf1/2,2))/r2lamb1
-      zz = dcmplx(fw(nf1),fw(nf1+1))
+      zz = cmplx(fw(nf1),fw(nf1+1),kind=8)
       zz = cross1*zz
       fw(nf1) = dreal(zz)
       fw(nf1+1) = dimag(zz)
       do k1 = 1, kmax
          cross1 = -cross1
          cross = cross1*exp(t1*dble(k1)**2)
-         zz = dcmplx(fw(nf1-2*k1),fw(nf1-2*k1+1))
+         zz = cmplx(fw(nf1-2*k1),fw(nf1-2*k1+1),kind=8)
          zz = cross*zz
          fw(nf1-2*k1) = dreal(zz)
          fw(nf1-2*k1+1) = dimag(zz)
-         zz = dcmplx(fw(nf1+2*k1),fw(nf1+2*k1+1))
+         zz = cmplx(fw(nf1+2*k1),fw(nf1+2*k1+1),kind=8)
          zz = cross*zz
          fw(nf1+2*k1) = dreal(zz)
          fw(nf1+2*k1+1) = dimag(zz)
@@ -755,9 +755,9 @@ c     ---------------------------------------------------------------
             xc(-k1) = fw(iw1+k1)*cross
          enddo
 c
-         fk(j) = dcmplx(0d0,0d0)
+         fk(j) = cmplx(0d0,0d0,kind=8)
          do k1 = -nspread+1, nspread
-            zz = dcmplx(fw(2*(kb1+k1)),fw(2*(kb1+k1)+1))
+            zz = cmplx(fw(2*(kb1+k1)),fw(2*(kb1+k1)+1),kind=8)
             fk(j) = fk(j) + xc(k1)*zz
          enddo
       enddo
@@ -767,7 +767,7 @@ c
       do j = 1, nk
          fk(j) = (exp(t1*(sk(j)-sb)**2))*fk(j)
          ang = (sk(j)-sb)*xb
-         fk(j) = dcmplx(cos(ang),sin(ang)) * fk(j)
+         fk(j) = cmplx(cos(ang),sin(ang),kind=8) * fk(j)
       enddo
       deallocate(fw)
       return

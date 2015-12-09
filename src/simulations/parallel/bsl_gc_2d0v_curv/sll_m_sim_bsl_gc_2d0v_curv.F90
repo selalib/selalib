@@ -4,57 +4,200 @@ module sll_m_sim_bsl_gc_2d0v_curv
 !contact: Adnane Hamiaz (hamiaz@math.unistra.fr
 !         Michel Mehrenberger (mehrenbe@math.unistra.fr)
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_memory.h"
-!#include "sll_field_2d.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-#include "sll_fft.h"
-#include "sll_poisson_solvers.h"
-!  use sll_m_constants
-!  use sll_m_cartesian_meshes  
-!  use sll_m_advection_1d_periodic
-!  use sll_m_interpolators_1d_base
-  use sll_m_advection_2d_base
-  use sll_m_characteristics_1d_explicit_euler
-  use sll_m_advection_2d_bsl
-  use sll_m_advection_2d_tensor_product
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  use sll_m_advection_1d_BSL
-  use sll_m_advection_1d_CSL_periodic
-  !use sll_m_advection_1d_CSL
-  !use sll_m_advection_1d_PSM
-!  use sll_m_characteristics_1d_explicit_euler
-  use sll_m_characteristics_1d_trapezoid
-  !use sll_m_characteristics_1d_explicit_euler_conservative
-  !use sll_m_characteristics_1d_trapezoid_conservative
-  use sll_m_reduction
-  use sll_m_sim_base
- 
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_hermite_interpolation_2d
-  use sll_m_hermite_interpolator_2d
-  use sll_m_hermite_interpolation_1d
-  use sll_m_hermite_interpolator_1d
-  use sll_m_arbitrary_degree_spline_interpolator_2d
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-!  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  use sll_m_parallel_array_initializer
-  
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_advection_1d_bsl, only: &
+    new_bsl_1d_advector
+
+  use sll_m_advection_1d_csl_periodic, only: &
+    new_csl_periodic_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_advection_2d_tensor_product, only: &
+    new_tensor_product_2d_advector
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    new_arbitrary_degree_spline_interp2d
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    new_explicit_euler_1d_charac
+
+  use sll_m_characteristics_1d_trapezoid, only: &
+    new_trapezoid_1d_charac
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_common_array_initializers, only: &
+    sll_diocotron_initializer_2d, &
+    sll_diocotron_initializer_2d2, &
+    sll_dsg_2d, &
+    sll_khp1_2d, &
+    sll_scalar_initializer_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    d_sharped_geo_jac11, &
+    d_sharped_geo_jac12, &
+    d_sharped_geo_jac21, &
+    d_sharped_geo_jac22, &
+    d_sharped_geo_x1, &
+    d_sharped_geo_x2, &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2, &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_shear_jac11, &
+    polar_shear_jac12, &
+    polar_shear_jac21, &
+    polar_shear_jac22, &
+    polar_shear_x1, &
+    polar_shear_x2, &
+    polar_x1, &
+    polar_x2, &
+    polygonal_jac11, &
+    polygonal_jac12, &
+    polygonal_jac21, &
+    polygonal_jac22, &
+    polygonal_x1, &
+    polygonal_x2, &
+    sinprod_jac11, &
+    sinprod_jac12, &
+    sinprod_jac21, &
+    sinprod_jac22, &
+    sinprod_x1, &
+    sinprod_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d, &
+    sll_cubic_spline_interpolator_2d
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    es_gauss_legendre
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_hermite_interpolation_1d, only: &
+    sll_hermite_1d_c0
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite, &
+    sll_hermite_c0, &
+    sll_hermite_periodic
+
+  use sll_m_hermite_interpolator_1d, only: &
+    new_hermite_interpolator_1d
+
+  use sll_m_hermite_interpolator_2d, only: &
+    new_hermite_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_mudpack_curvilinear, only: &
+    mudpack_2d, &
+    sll_non_separable_without_cross_terms
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_elliptic_solver, only: &
+    new_poisson_2d_elliptic_solver
+
+  use sll_m_reduction, only: &
+    compute_integral_trapezoid_1d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_plot_f, &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
 #ifdef MUDPACK
- !use sll_m_mudpack_curvilinear
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
+    new_poisson_2d_mudpack_curvilinear_solver
+
 #endif
-  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_elliptic_solver, &
-     only: new_poisson_2d_elliptic_solver, &
-           es_gauss_legendre
   implicit none
+
+  public :: &
+    delete_guiding_center_2d_curvilinear, &
+    new_guiding_center_2d_curvilinear, &
+    sll_simulation_2d_guiding_center_curvilinear
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI = 0 
   sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD = 1 
@@ -76,19 +219,19 @@ module sll_m_sim_bsl_gc_2d0v_curv
    class(sll_coordinate_transformation_2d_base), pointer :: transformation
   
    ! Simulation should carry the pointers to the heap-allocated objects itself
-    class(sll_interpolator_2d_base), pointer :: f_interp2d => null()
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d => null()
+    class(sll_c_interpolator_2d), pointer :: f_interp2d => null()
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d => null()
     class(sll_characteristics_2d_base), pointer :: charac2d => null()
     class(sll_characteristics_1d_base), pointer :: charac1d_x1 => null()
     class(sll_characteristics_1d_base), pointer :: charac1d_x2 => null()
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d => null()
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d => null()
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1 => null()
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1 => null()
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2 => null()
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2 => null()
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1 => null()
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2 => null()
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d => null()
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d => null()
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1 => null()
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1 => null()
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2 => null()
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2 => null()
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1 => null()
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2 => null()
     class(sll_advection_1d_base), pointer    :: advect_1d_x1 => null()
     class(sll_advection_1d_base), pointer    :: advect_1d_x2 => null()
    
@@ -101,7 +244,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-!   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+!   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
    !coef
    sll_real64, dimension(:,:), pointer :: b11
    sll_real64, dimension(:,:), pointer :: b12
@@ -113,8 +256,6 @@ module sll_m_sim_bsl_gc_2d0v_curv
    
    !poisson solver
    class(sll_poisson_2d_base), pointer   :: poisson
-   !type(poisson_2d_periodic), pointer   :: poisson
-   !type(sll_plan_poisson_polar), pointer :: poisson 
 #ifdef MUDPACK
     type(mudpack_2d) :: poisson2
 #endif    
@@ -171,8 +312,6 @@ contains
     SLL_ALLOCATE(sim,ierr)
     
     call initialize_guiding_center_2d_curvilinear(sim,filename,num_run)
-    
-  
   
   end function new_guiding_center_2d_curvilinear
   
@@ -240,11 +379,10 @@ contains
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
     character(len=256) ::  es_control_case
-    sll_int32 ::  es_control
     character(len=256) ::  interp_rho_case
     sll_int32 :: rho_degree1
     sll_int32 :: rho_degree2
-    class(sll_interpolator_2d_base), pointer   :: interp_rho
+    class(sll_c_interpolator_2d), pointer   :: interp_rho
     logical :: precompute_rhs
     logical :: with_constraint
     logical :: with_constraint_loc    
@@ -268,30 +406,9 @@ contains
     sll_int32 :: Nc_eta2
     sll_real64 :: r_minus
     sll_real64 :: r_plus
-!!$    class(sll_interpolator_2d_base), pointer :: f_interp2d
-!!$    class(sll_interpolator_2d_base), pointer :: phi_interp2d
-!!$    class(sll_characteristics_2d_base), pointer :: charac2d
-!!$    class(sll_characteristics_1d_base), pointer :: charac1d_x1
-!!$    class(sll_characteristics_1d_base), pointer :: charac1d_x2
-!!$    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-!!$    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-!!$    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-!!$    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-!!$    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-!!$    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-!!$    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-!!$    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
-!!$    class(sll_advection_1d_base), pointer    :: advect_1d_x1
-!!$    class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
     sll_real64, dimension(9) :: params_mesh_DSG
-    sll_real64 :: eta1_min_bis
-    sll_real64 :: eta1_max_bis
-    sll_real64 :: eta2_min_bis
-    sll_real64 :: eta2_max_bis
-    sll_int32  :: Nc_eta1_bis
-    sll_int32  :: Nc_eta2_bis
 
     character(len=256)      :: str_num_run
     character(len=256)      :: filename_loc
@@ -376,10 +493,7 @@ contains
       bc_eta2_right   
 
 
-
-
-    
-        !! set default parameters
+    !! set default parameters
     
     !geometry
     mesh_case="SLL_LANDAU_MESH"
@@ -447,7 +561,6 @@ contains
     eps_penalization = 0._f64
     zero_mean = .true.
      
-    !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
 #ifdef MUDPACK
     print *,'#MUDPACK IS ON'
     mudpack_method = SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS  
@@ -1802,7 +1915,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -1828,8 +1941,8 @@ contains
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
     end do
    
@@ -1844,7 +1957,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32, intent(in) :: d1
     sll_int32, intent(in) :: d2
     sll_int32 :: Nc_eta1
@@ -2228,7 +2341,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    pfwd => fft_new_plan(Nc_eta2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_eta2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -2273,10 +2386,10 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l1 = l1*delta_eta2
     l2 = sqrt(l2*delta_eta2)
     e  = 0.5_f64*e*delta_eta2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))**2
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
@@ -2345,7 +2458,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    pfwd => fft_new_plan(Nc_eta2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_eta2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -2394,10 +2507,10 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l1 = l1*delta_eta2
     l2 = sqrt(l2*delta_eta2)
     e  = 0.5_f64*e*delta_eta2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
+      time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))**2
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
@@ -2463,8 +2576,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+          eta1 = eta1_min+real(i-1,f64)*deta1
+          eta2 = eta2_min+real(j-1,f64)*deta2
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -2530,8 +2643,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+          eta1 = eta1_min+real(i-1,f64)*deta1
+          eta2 = eta2_min+real(j-1,f64)*deta2
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -2688,10 +2801,10 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          ddphi_eta22 = -4._f64*eta1*(1._f64-eta1)*(pi2*pi2*1.6_f64*sin(4._f64*pi2*eta2))
          ddphi_eta12 = 4._f64*(1._f64-eta1)*(pi2*0.4_f64*cos(4._f64*pi2*eta2))   
                   
-         cx_array(i,j)  = (a11_interp%interpolate_derivative_eta1(eta1,eta2)+ &
-                           a12_interp%interpolate_derivative_eta2(eta1,eta2))
-         cy_array(i,j)  = (a22_interp%interpolate_derivative_eta2(eta1,eta2)+ &
-                           a12_interp%interpolate_derivative_eta1(eta1,eta2))  
+         cx_array(i,j)  = (a11_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
+                           a12_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2))
+         cy_array(i,j)  = (a22_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)+ &
+                           a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2))  
          write(202,*) eta1,eta2,cx_array(i,j),cy_array(i,j)                                     
          rho = (cxx_array(i,j)*ddphi_eta11 + cyy_array(i,j)*ddphi_eta22 + &
                  cxy_array(i,j)*ddphi_eta12 + cx_array(i,j) *dphi_eta1   + &
@@ -2701,13 +2814,13 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     enddo 
   end subroutine sll_DSG 
 
+
   subroutine delete_guiding_center_2d_curvilinear( sim )
 
     class(sll_simulation_2d_guiding_center_curvilinear) :: sim
-    sll_int32 :: ierr
-    
             
   end subroutine delete_guiding_center_2d_curvilinear
+
 
   function compute_integral_trapezoid_2d( &
     input, &

@@ -24,20 +24,42 @@
 
 module sll_m_simple_pic_4d_group
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_accumulators.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-! #include "particle_representation.h"   NEEDED?
+  use sll_m_accumulators, only: &
+    charge_accumulator_cell_2d, &
+    reset_charge_accumulator_to_zero, &
+    sll_charge_accumulator_2d
 
-  use sll_m_working_precision
-  use sll_m_simple_pic_4d_particle
-  use sll_m_cartesian_meshes
-  use sll_m_remapped_pic_base
-  use sll_m_pic_random_initializers, only: sll_pic_4d_random_unweighted_initializer_landau_f0
-  use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_pic_random_initializers, only: &
+    sll_pic_4d_random_unweighted_initializer_landau_f0
+
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group, &
+    temp_species_new
+
+  use sll_m_remapped_pic_utilities, only: &
+    apply_periodic_bc_on_cartesian_mesh_2d, &
+    x_is_in_domain_2d
+
+  use sll_m_simple_pic_4d_particle, only: &
+    sll_simple_pic_4d_particle
+
   implicit none
+
+  public :: &
+    sll_delete, &
+    sll_simple_pic_4d_group, &
+    sll_simple_pic_4d_group_new
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Group of sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle
 

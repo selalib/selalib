@@ -1,24 +1,31 @@
-program test_hex_hermite
+program test_hex_hermite_circ
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_interpolation_hex_hermite
-  !use sll_m_euler_2d_hex
+  use sll_m_hexagonal_meshes, only: &
+    delete_hex_mesh_2d, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    der_finite_difference, &
+    hermite_interpolation, &
+    print_method
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:,:), allocatable :: deriv
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
   sll_int32    :: num_method = 15
-  character(len = 5) ::name_test = "gauss"
+  !character(len = 5) ::name_test = "gauss"
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
-  sll_real64   :: r_min
+  !sll_real64   :: r_min
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
   sll_real64   :: gauss_sig
@@ -54,9 +61,9 @@ program test_hex_hermite
   ! character(len = 4) :: number
   logical      :: inside
   type(sll_hex_mesh_2d), pointer :: mesh
-  character(len = 50) :: filename
-  character(len = 50) :: filename2
-  character(len = 4)  :: filenum
+  !character(len = 50) :: filename
+  !character(len = 50) :: filename2
+  !character(len = 4)  :: filenum
 
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -492,9 +499,9 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: uxn, uyn, phi,dxux,dyux,dxuy,dyuy
     sll_int32,          intent(in) :: type
-    sll_int32  :: i,h1,h2
-    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
-    sll_real64 :: uh1, uh2
+    sll_int32  :: i!,h1,h2
+    !sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+    !sll_real64 ::  uh2
 
     
     if (type==1) then
@@ -514,7 +521,7 @@ contains
   end subroutine compute_hex_fields
 
 
-end program test_hex_hermite
+end program test_hex_hermite_circ
 
 
 

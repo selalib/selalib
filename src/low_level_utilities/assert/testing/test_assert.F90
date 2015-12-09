@@ -1,8 +1,10 @@
 program test_assert
 !#include "sll_m_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!#include "sll_m_working_precision.h"
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   integer, dimension(:), allocatable :: a
   integer :: b
   allocate( a(1000) )

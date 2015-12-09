@@ -1,7 +1,14 @@
 program unit_test_meshes_multipatch
-  use sll_m_cartesian_meshes_multipatch
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes_multipatch, only: &
+    new_cartesian_mesh_multipatch_2d, &
+    sll_cartesian_mesh_multipatch_2d, &
+    sll_delete
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NUM_PATCHES 5
 #define NUM_CELLS1 32

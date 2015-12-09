@@ -1,22 +1,56 @@
 !> Scalar field on mesh with coordinate transformation
 module sll_m_scalar_field_2d_old
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_interpolators_1d_base
-  use sll_m_scalar_field_initializers_base
-  use sll_m_utilities, only: int2string
-  use sll_m_xdmf
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create, &
+    sll_ascii_write_array_2d
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base, &
+    sll_io_gnuplot, &
+    sll_io_vtk, &
+    sll_io_xdmf
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_scalar_field_initializers_base, only: &
+    cell_centered_field, &
+    node_centered_field, &
+    scalar_field_2d_initializer_base
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
 
   implicit none
-  private
 
-  type, public :: scalar_field_2d
+  public :: &
+    initialize_scalar_field_2d, &
+    scalar_field_2d, &
+    scalar_function_2d_old, &
+    sll_create, &
+    write_scalar_field_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type :: scalar_field_2d
      class(sll_coordinate_transformation_2d_base), pointer :: transf
-     class(sll_interpolator_1d_base), pointer :: eta1_interpolator
-     class(sll_interpolator_1d_base), poInter :: eta2_interpolator
+     class(sll_c_interpolator_1d), pointer :: eta1_interpolator
+     class(sll_c_interpolator_1d), poInter :: eta2_interpolator
      sll_real64, dimension(:,:), pointer      :: data
      sll_int32                                :: data_position
      character(len=64)                        :: name
@@ -39,10 +73,6 @@ module sll_m_scalar_field_2d_old
      module procedure initialize_scalar_field_2d
   end interface sll_create
 
-  public sll_create
-  public scalar_function_2D_old
-  public initialize_scalar_field_2d
-  public write_scalar_field_2d
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
@@ -60,8 +90,8 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                        :: field_name
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_int32, intent(in)                               :: data_position
-    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
+    class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     
     class(sll_cartesian_mesh_2d), pointer :: mesh

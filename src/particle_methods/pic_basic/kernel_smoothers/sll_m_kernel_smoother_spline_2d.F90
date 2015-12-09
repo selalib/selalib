@@ -4,19 +4,30 @@
 !> @details  Spline with index i starts at point i
 module sll_m_kernel_smoother_spline_2d
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base, only : &
-       sll_c_kernel_smoother, SLL_COLLOCATION, SLL_GALERKIN
-  use sll_m_arbitrary_degree_splines, only : &
-       uniform_b_splines_at_x
-  
+  use sll_m_arbitrary_degree_splines, only: &
+    uniform_b_splines_at_x
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation, &
+    sll_c_kernel_smoother, &
+    sll_galerkin
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
   implicit none
-  private
 
-  public :: sll_new_smoother_spline_2d, sll_t_kernel_smoother_spline_2d
+  public :: &
+       sll_new_smoother_spline_2d, &
+       sll_t_kernel_smoother_spline_2d
   
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 
   !>  Spline kernel smoother in 2d.
   type, public, extends(sll_c_kernel_smoother) :: sll_t_kernel_smoother_spline_2d
 

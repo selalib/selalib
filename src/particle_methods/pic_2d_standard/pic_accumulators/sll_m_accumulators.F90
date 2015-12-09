@@ -16,11 +16,39 @@
 !**************************************************************
 
 module sll_m_accumulators
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
   implicit none
+
+  public :: &
+    charge_accumulator_cell_2d, &
+    electric_field_accumulator, &
+    electric_field_accumulator_cs, &
+    field_accumulator_cell, &
+    field_accumulator_cs, &
+    new_charge_accumulator_2d, &
+    new_charge_accumulator_2d_cs, &
+    new_field_accumulator_2d, &
+    new_field_accumulator_cs_2d, &
+    reset_charge_accumulator_to_zero, &
+    reset_charge_accumulator_to_zero_cs, &
+    reset_field_accumulator_cs_to_zero, &
+    reset_field_accumulator_to_zero, &
+    sll_charge_accumulator_2d, &
+    sll_charge_accumulator_2d_cs, &
+    sll_charge_accumulator_2d_cs_ptr, &
+    sll_charge_accumulator_2d_ptr, &
+    sll_delete, &
+    sum_accumulators, &
+    sum_accumulators_cs
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! The idea of having this data structure is to precompute the values of
   ! the electric field, store them redundantly on a cell-based structure and

@@ -1,17 +1,22 @@
 module sll_m_particle_group_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
   implicit none
-  private
 
-  public :: species_new
+  public :: &
+    sll_particle_group_base, &
+    species_new
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   ! Particle species
   !============================================================================
-  type, public :: sll_species
+  type :: sll_species
 
     character(len=64) :: name !< species name
     sll_real64        :: q    !< charge of a single particle
@@ -26,7 +31,7 @@ module sll_m_particle_group_base
   !============================================================================
   ! Particle group
   !============================================================================
-  type, public, abstract :: sll_particle_group_base
+  type, abstract :: sll_particle_group_base
 
     class( sll_species ), pointer :: species
     sll_int32                     :: id

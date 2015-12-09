@@ -26,41 +26,158 @@
 
 module sll_m_sim_bsl_vp_1d1v_cart
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_memory.h"
-#include "sll_field_2d.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-#include "sll_poisson_solvers.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_collective
-use sll_m_remapper
-use sll_m_buffer_loader_utilities
-use sll_m_constants
-use sll_m_cartesian_meshes
-use sll_m_gnuplot_parallel
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_common_array_initializers
-use sll_m_parallel_array_initializer
-use sll_m_advection_1d_periodic
-use sll_m_advection_1d_non_uniform_cubic_splines
-use sll_m_fft
-use sll_m_sim_base
-use sll_m_time_splitting
-use sll_m_time_splitting_coeff
-use sll_m_poisson_1d_periodic
-use sll_m_poisson_1d_periodic_solver
-use sll_m_poisson_1d_polar_solver
-use sll_m_advection_1d_ampere
-use sll_m_primitives
+  use sll_m_advection_1d_ampere, only: &
+    ampere_1d_advector_ptr, &
+    new_ampere_1d_advector
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base_ptr
+
+  use sll_m_advection_1d_non_uniform_cubic_splines, only: &
+    new_non_uniform_cubic_splines_1d_advector
+
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_close, &
+    sll_ascii_file_create
+
+  use sll_m_binary_io, only: &
+    sll_binary_file_close, &
+    sll_binary_file_create, &
+    sll_binary_read_array_0d, &
+    sll_binary_read_array_2d, &
+    sll_binary_write_array_0d, &
+    sll_binary_write_array_1d, &
+    sll_binary_write_array_2d
+
+  use sll_m_buffer_loader_utilities, only: &
+    compute_displacements_array_2d, &
+    load_buffer_2d, &
+    receive_counts_array_2d
+
+  use sll_m_cartesian_meshes, only: &
+    get_node_positions, &
+    new_cartesian_mesh_1d, &
+    sll_cartesian_mesh_1d, &
+    sll_cartesian_mesh_2d, &
+    operator(*)
+
+  use sll_m_collective, only: &
+    sll_collective_allreduce, &
+    sll_collective_gatherv_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_beam_initializer_2d, &
+    sll_bump_on_tail_initializer_2d, &
+    sll_landau_initializer_2d, &
+    sll_scalar_initializer_2d, &
+    sll_two_stream_instability_initializer_2d
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_fft, only: &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_apply_plan_r2r_1d, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_1d
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_2d_parallel_array_initializer_cartesian
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_poisson_1d_base, only: &
+    sll_poisson_1d_base
+
+  use sll_m_poisson_1d_periodic_solver, only: &
+    new_poisson_1d_periodic_solver
+
+  use sll_m_poisson_1d_polar_solver, only: &
+    new_poisson_1d_polar_solver
+
+  use sll_m_primitives, only: &
+    function_to_primitive, &
+    primitive_to_function
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_remap_plan, &
+    remap_plan_2d_real64, &
+    sll_view_lims
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_time_splitting_coeff, only: &
+    new_time_splitting_coeff, &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_tvt, &
+    sll_order6_vtv, &
+    sll_order6vp_tvt, &
+    sll_order6vp_vtv, &
+    sll_order6vpnew1_vtv, &
+    sll_order6vpnew2_vtv, &
+    sll_order6vpnew_tvt, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv, &
+    splitting_coeff
+
+  use sll_m_utilities, only: &
+    compute_bloc, &
+    compute_mesh_from_bloc, &
+    int2string, &
+    pfenvelope, &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_plot_f_cartesian
+
+  use sll_mpi, only: &
+    mpi_sum
 
 #ifdef _OPENMP
-use omp_lib
-#endif
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
 
+#endif
   implicit none
+
+  public :: &
+    change_initial_function_vp2d_par_cart, &
+    delete_vp2d_par_cart, &
+    new_vp2d_par_cart, &
+    sll_simulation_2d_vlasov_poisson_cart
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   integer, parameter :: SLL_ADVECTIVE    = 0
   integer, parameter :: SLL_CONSERVATIVE = 1
@@ -1089,7 +1206,7 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
 
     SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,normalized = .TRUE.)
     SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
     layout_x1       => new_layout_2D( sll_world_collective )
@@ -1396,9 +1513,9 @@ contains
                  
                  sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
                
-                 call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%fwx,  &
-                                     sim%advect_ampere_x1(tid)%ptr%d_dx, &
-                                     sim%advect_ampere_x1(tid)%ptr%fk)
+                 call fft_apply_plan_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1(tid)%ptr%fk)
                  do i = 2, nc_x1/2+1
                    sim%advect_ampere_x1(tid)%ptr%fk(i) = &
                       sim%advect_ampere_x1(tid)%ptr%fk(i) & 
@@ -1412,9 +1529,9 @@ contains
                     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
                     * sim%integration_weight(ig_omp)
                
-                 call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, &
-                                     sim%advect_ampere_x1(tid)%ptr%fk,  &
-                                     sim%advect_ampere_x1(tid)%ptr%d_dx)
+                 call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1(tid)%ptr%d_dx)
                
                  f1d_omp_out(1:nc_x1,tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
                  f1d_omp_out(np_x1,  tid) = f1d_omp_out(1, tid) 
@@ -1440,9 +1557,9 @@ contains
                     sim%advect_ampere_x1(1)%ptr%r1 )
                
                sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
-               call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
-                                   sim%advect_ampere_x1(1)%ptr%d_dx, &
-                                   sim%advect_ampere_x1(1)%ptr%ek)
+               call fft_apply_plan_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
+                    sim%advect_ampere_x1(1)%ptr%d_dx, &
+                    sim%advect_ampere_x1(1)%ptr%ek)
                
                
                do i = 2, nc_x1/2+1
@@ -1452,9 +1569,9 @@ contains
                     / (2*sll_pi*cmplx(0.,i-1,kind=f64))
                end do
                
-               call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
-                                   sim%advect_ampere_x1(1)%ptr%ek,  &
-                                   efield)
+               call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
+                    sim%advect_ampere_x1(1)%ptr%ek,  &
+                    efield)
                
                efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
                efield(np_x1) = efield(1)
@@ -1644,10 +1761,10 @@ contains
           f_hat_x2_loc(1:nb_mode+1) = 0._f64
           do i=1,local_size_x2
              buf_fft = f_x1(1:np_x1-1,i)
-             call fft_apply_plan(pfwd,buf_fft,buf_fft)
+             call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
              do k=0,nb_mode
                 f_hat_x2_loc(k+1) = f_hat_x2_loc(k+1) &
-                     +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+                     +abs(fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
                      *sim%integration_weight(ig+i)
              enddo
           enddo
@@ -1671,10 +1788,10 @@ contains
           if (sll_get_collective_rank(sll_world_collective)==0) then                  
 
              buf_fft = rho(1:np_x1-1)
-             call fft_apply_plan(pfwd,buf_fft,buf_fft)
+             call fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
 
              do k=0,nb_mode
-                rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+                rho_mode(k)=fft_get_mode_r2c_1d(pfwd,buf_fft,k)
              enddo
 
              !write(th_diag_id,'(8g20.12)',advance='no') &

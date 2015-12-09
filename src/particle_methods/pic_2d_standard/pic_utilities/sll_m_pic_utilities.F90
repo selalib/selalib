@@ -16,19 +16,45 @@
 !**************************************************************
 
 module sll_m_pic_utilities
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_accumulators.h" 
-  use sll_m_particle_group_4d
-  use sll_m_particle_group_2d
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_accumulators.h"
+
+  use sll_m_accumulators, only: &
+    sll_charge_accumulator_2d, &
+    sll_charge_accumulator_2d_cs, &
+    sll_charge_accumulator_2d_cs_ptr, &
+    sll_charge_accumulator_2d_ptr
+
+  use sll_m_particle_group_2d, only: &
+    sll_particle_group_2d
+
+  use sll_m_particle_group_4d, only: &
+    sll_particle_group_4d
+
+  use sll_m_particle_representations, only: &
+    sll_particle_2d, &
+    sll_particle_4d
 
 #ifdef _OPENMP
-   use omp_lib
+  use omp_lib, only: &
+    omp_get_thread_num
+
 #endif
-implicit none
+  implicit none
+
+  public :: &
+    sll_first_charge_accumulation_2d, &
+    sll_first_charge_accumulation_2d_cs, &
+    sll_first_gc_charge_accumulation_2d, &
+    sll_first_gc_charge_accumulation_2d_cs
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #ifdef _OPENMP
-   logical :: openmp_st
+!   logical :: openmp_st
 #endif
 !!    !$ openmp_st = OMP_IN_PARALLEL()
 !!    print*, 'USE of omp', openmp_st

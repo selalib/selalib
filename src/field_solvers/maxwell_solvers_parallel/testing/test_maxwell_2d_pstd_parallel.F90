@@ -4,22 +4,63 @@
 #define MPI_MASTER 0
 program test_maxwell_2d_periodic_cart_par
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_maxwell_2d_periodic_cartesian_par
-  use sll_m_collective
-  use hdf5
-  use sll_m_xml_io
-  use sll_m_hdf5_io_parallel, only: sll_hdf5_file_create, &
-                                  sll_hdf5_write_array, &
-                                  sll_hdf5_file_close
-  use sll_m_utilities, only : &
-       int2string
+  use hdf5, only: &
+    hsize_t
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_hdf5_io_parallel, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_maxwell_2d_periodic_cartesian_par, only: &
+    ampere_te, &
+    delete_maxwell_2d_periodic_plan_cartesian_par, &
+    faraday_te, &
+    maxwell_2d_periodic_plan_cartesian_par, &
+    new_maxwell_2d_periodic_plan_cartesian_par
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    get_layout_i_min, &
+    get_layout_j_min, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    local_to_global, &
+    new_layout_2d, &
+    sll_view_lims
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xml_io, only: &
+    sll_xml_file_close, &
+    sll_xml_file_create
+
+  use sll_mpi, only: &
+    mpi_real8, &
+    mpi_reduce, &
+    mpi_sum, &
+    mpi_wtime
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32   :: ncx
   sll_int32   :: ncy
@@ -40,7 +81,7 @@ program test_maxwell_2d_periodic_cart_par
   sll_int32   :: mode = 1
   sll_real32  :: ok 
   sll_real64  :: dt
-  sll_real64  :: time = 0.0
+  sll_real64  :: time = 0.0_f64
   sll_real64  :: omega
   sll_real64  :: err_l2
   sll_real64  :: err_glob
@@ -74,7 +115,7 @@ program test_maxwell_2d_periodic_cart_par
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  psize = sll_get_collective_size(sll_world_collective)
+  psize = int(sll_get_collective_size(sll_world_collective),i64)
   prank = sll_get_collective_rank(sll_world_collective)
 
   dx = Lx/ncx
@@ -82,7 +123,6 @@ program test_maxwell_2d_periodic_cart_par
 
   omega  = sqrt((mode*sll_pi/Lx)**2+(mode*sll_pi/Ly)**2)
 
-  psize  = sll_get_collective_size(sll_world_collective)
   e      = int(log(real(psize))/log(2.))
   print *, 'running on ', 2**e, 'processes'
 
@@ -103,11 +143,11 @@ program test_maxwell_2d_periodic_cart_par
                                                  nprocx, &
                                                       1, &
                                                 layout_y )
-  call flush(6)
+  flush( output_unit )
   call sll_view_lims(layout_x)
-  call flush(6)
+  flush( output_unit )
   call sll_view_lims(layout_y)
-  call flush(6)
+  flush( output_unit )
 
   plan => new_maxwell_2d_periodic_plan_cartesian_par(layout_x, &
                                                      layout_y, &
@@ -155,7 +195,7 @@ program test_maxwell_2d_periodic_cart_par
      call faraday_te(plan,dt,ex,ey)
      call write_fields_2d('fields-'//cstep)
 
-     err_l2 = 0.0
+     err_l2 = 0.0_f64
      do j=1,ny_loc
      do i=1,nx_loc
         global = local_to_global( layout_x, (/i, j/))
@@ -201,16 +241,16 @@ contains
     sll_int32                        :: file_id
     integer(HSIZE_T), dimension(1:2) :: offset
 
-    global_dims(:) = (/ ncx,ncy /)
+    global_dims(:) = (/ int(ncx,HSIZE_T),int(ncy,HSIZE_T) /)
 
     call sll_hdf5_file_create(file_name//'.h5',sll_world_collective%comm, &
                               file_id,error)
-    offset(1) = get_layout_i_min(layout_y,prank) - 1
-    offset(2) = get_layout_j_min(layout_y,prank) - 1
+    offset(1) = int(get_layout_i_min(layout_y,prank) - 1,HSIZE_T)
+    offset(2) = int(get_layout_j_min(layout_y,prank) - 1,HSIZE_T)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ex,'ex_values',error)
-    offset(1) = get_layout_i_min(layout_x,prank) - 1
-    offset(2) = get_layout_j_min(layout_x,prank) - 1
+    offset(1) = int(get_layout_i_min(layout_x,prank) - 1,HSIZE_T)
+    offset(2) = int(get_layout_j_min(layout_x,prank) - 1,HSIZE_T)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ey,'ey_values',error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &

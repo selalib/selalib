@@ -5,9 +5,11 @@
 !  Overall period>2^123;  Default seeds x,y,z,w.
 !  Set your own seeds with statement i=kisset(ix,iy,iz,iw).
 module sll_m_marsaglia
-implicit none
-private
-public :: kiss, kisset
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 integer :: x=123456789, y=362436069, z=521288629, w=916191069
 
 contains
@@ -21,13 +23,15 @@ contains
     kiss = x + y + ishft (z, 16) + w
   contains
    function m(k, n)
-      integer :: m, k, n
+      integer :: m
+      integer, intent(in) :: k, n
       m = ieor (k, ishft (k, n) )
     end function m
   end function kiss
 
   function kisset (ix, iy, iz, iw)
-     integer :: kisset, ix, iy, iz, iw
+     integer :: kisset
+     integer, intent(in) :: ix, iy, iz, iw
      x = ix
      y = iy
      z = iz

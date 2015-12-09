@@ -1,10 +1,21 @@
 program sim_bsl_gc_2d0v_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_sim_bsl_gc_2d0v_polar
-  use sll_m_timer
-  use sll_m_constants
+#include "sll_working_precision.h"
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_sim_bsl_gc_2d0v_polar, only: &
+    new_guiding_center_2d_polar
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   class(sll_simulation_base_class), pointer :: sim
   character(len=256) :: filename
   character(len=256) :: filename_local

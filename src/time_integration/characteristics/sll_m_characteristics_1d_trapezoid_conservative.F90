@@ -18,14 +18,32 @@
 !http://en.wikipedia.org/wiki/Trapezoidal_rule_%28differential_equations%29
 
 module sll_m_characteristics_1d_trapezoid_conservative
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_1d_base
-use sll_m_interpolators_1d_base
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic, &
+    sll_set_to_limit, &
+    sll_user_defined
+
+  use sll_m_characteristics_1d_base, only: &
+    process_outside_point_periodic, &
+    process_outside_point_set_to_limit, &
+    signature_process_outside_point_1d, &
+    sll_characteristics_1d_base
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    new_trapezoid_conservative_1d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_characteristics_1d_base) :: trapezoid_conservative_1d_charac_computer
     sll_int32                               :: Npts
@@ -33,7 +51,7 @@ implicit none
     sll_real64                              :: eta_max  
     procedure(signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), pointer               :: A_interp
+    class(sll_c_interpolator_1d), pointer               :: A_interp
     sll_int32 :: maxiter
     sll_real64 :: tol
     sll_int32 :: bc_type 
@@ -63,7 +81,7 @@ contains
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), target :: A_interp
+    class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
     sll_int32 :: ierr
@@ -100,7 +118,7 @@ contains
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), target :: A_interp
+    class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
 
@@ -221,7 +239,7 @@ contains
             x2_i = x2  
           endif                      
           x2 = 0.5_f64*(input(j)+input(j+1)) &
-            -0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+            -0.5_f64*dt*(charac%A_interp%interpolate_from_interpolant_value(x2_i)+A(j))
         end do
         if (iter==charac%maxiter .and. abs(x2_old-x2)>charac%tol) then
           print*,'#not enough iterations for compute_trapezoid_conservative_1d_charac',&

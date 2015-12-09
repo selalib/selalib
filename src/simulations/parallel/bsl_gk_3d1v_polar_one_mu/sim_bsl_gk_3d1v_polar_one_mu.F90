@@ -5,9 +5,19 @@
 ! - parallel
 
 program sim_bsl_gk_3d1v_polar_one_mu
-  use sll_m_sim_bsl_gk_3d1v_polar_one_mu
-  use sll_m_collective
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_bsl_gk_3d1v_polar_one_mu, only: &
+    delete_dk4d_polar, &
+    sll_simulation_4d_drift_kinetic_polar_one_mu
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local
@@ -19,7 +29,7 @@ program sim_bsl_gk_3d1v_polar_one_mu
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
   call simulation%run( )

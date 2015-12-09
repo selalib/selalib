@@ -1,10 +1,23 @@
 module sll_m_lagrange_interpolation_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  implicit none
+
+  public :: &
+    compute_lagrange_interpolation_1d, &
+    interpolate_from_interpolant_array, &
+    new_lagrange_interpolation_1d, &
+    sll_lagrange_interpolation_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
  type :: sll_lagrange_interpolation_1D
    sll_int32                            :: d !half of stencil
@@ -89,7 +102,7 @@ subroutine compute_lagrange_interpolation_1D(lagrange)
 end subroutine compute_lagrange_interpolation_1D
 
 !> This function computes the value at the grid points displacement by -alpha
-subroutine interpolate_array_values(fi,alpha,lagrange)
+subroutine interpolate_from_interpolant_array(fi,alpha,lagrange)
 type(sll_lagrange_interpolation_1D), pointer :: lagrange !< \a lagrange is the lagrange interpolator object
 sll_real64, intent(in) :: alpha !< \a alpha is the (negative) displacement
 sll_int32 ::i,j,index_gap
@@ -163,7 +176,7 @@ case default
 end select
 end if
 
-end subroutine interpolate_array_values 
+end subroutine interpolate_from_interpolant_array 
  
  
 subroutine delete_lagrange_interpolation_1D( sll_m_lagrange_interpolation )

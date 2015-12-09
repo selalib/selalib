@@ -1,11 +1,23 @@
 program unit_test
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-use sll_m_arbitrary_degree_spline_interpolator_1d
-use sll_m_boundary_condition_descriptors
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    set_values_at_boundary1d, &
+    sll_arbitrary_degree_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_neumann, &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 31
 #define NPTS2 31 
@@ -58,11 +70,11 @@ normL2_0 = 0.0_f64
 normH1_0 = 0.0_f64
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
-  node_val   = ad1d%interpolate_value(eta1)
+  node_val   = ad1d%interpolate_from_interpolant_value(eta1)
   ref        = sin(2.0_f64*sll_pi*eta1)
   acc        = acc + abs(node_val-ref)
   normL2_0   = normL2_0  + (node_val-ref)**2*h1
-  deriv1_val = ad1d%interpolate_derivative_eta1(eta1)
+  deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)
   ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
   acc_der1   = acc_der1 + abs(deriv1_val-ref)
   normH1_0   = normH1_0  + (deriv1_val-ref)**2*h1
@@ -86,11 +98,11 @@ normL2_1 = 0.0_f64
 normH1_1 = 0.0_f64
 do i=0,NPTS1-2
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
    ref        = sin(2.0_f64*sll_pi*eta1)
    acc1       = acc1 + abs(node_val-ref)
    normL2_1   = normL2_1  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
    ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
    acc1_der1  = acc1_der1 + abs(deriv1_val-ref)
    normH1_1   = normH1_1  + (deriv1_val-ref)**2*h1
@@ -117,11 +129,11 @@ normL2_2 = 0.0_f64
 normH1_2 = 0.0_f64
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
-  node_val   = ad1d%interpolate_value(eta1)
+  node_val   = ad1d%interpolate_from_interpolant_value(eta1)
   ref        = sin(2.0_f64*sll_pi*eta1)+ 3.0_f64
   acc2       = acc2 + abs(node_val-ref)
   normL2_2   = normL2_2  + (node_val-ref)**2*h1
-  deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+  deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
   ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
   acc2_der1  = acc2_der1 + abs(deriv1_val-ref)
   normH1_2   = normH1_2  + (deriv1_val-ref)**2*h1
@@ -156,11 +168,11 @@ normL2_3 = 0.0_f64
 normH1_3 = 0.0_f64
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
-  node_val   = ad1d%interpolate_value(eta1)
+  node_val   = ad1d%interpolate_from_interpolant_value(eta1)
   ref        = sin(2.0_f64*sll_pi*eta1)+ 3.0_f64
   acc3       = acc3 + abs(node_val-ref)
   normL2_3   = normL2_3  + (node_val-ref)**2*h1
-  deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+  deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
   ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
   acc3_der1  = acc2_der1 + abs(deriv1_val-ref)
   normH1_3   = normH1_3  + (deriv1_val-ref)**2*h1
@@ -175,8 +187,8 @@ do i=0,NPTS1-1
   reference(i+1)     = cos(2.0_f64*sll_pi*eta1)
 end do
 
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -196,11 +208,11 @@ normL2_4 = 0.0_f64
 normH1_4 = 0.0_f64
 do i=0,NPTS1-2
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc4       = acc4 + abs(node_val-ref)
    normL2_4   = normL2_4  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
    ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
    acc4_der1  = acc4_der1 + abs(deriv1_val-ref)
    normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
@@ -214,8 +226,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -235,11 +247,11 @@ normL2_4 = 0.0_f64
 normH1_4 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc4       = acc4 + abs(node_val-ref)
    normL2_4   = normL2_4  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
    ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
    acc4_der1  = acc4_der1 + abs(deriv1_val-ref)
    normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
@@ -253,8 +265,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -274,11 +286,11 @@ normL2_5 = 0.0_f64
 normH1_5 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc5       = acc5 + abs(node_val-ref)
    normL2_5   = normL2_5  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
    ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
    acc5_der1  = acc5_der1 + abs(deriv1_val-ref)
    normH1_5   = normH1_5  + (deriv1_val-ref)**2*h1
@@ -292,8 +304,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -313,11 +325,11 @@ normL2_6 = 0.0_f64
 normH1_6 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc6       = acc6 + abs(node_val-ref)
    normL2_6   = normL2_6  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
    ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
    acc6_der1  = acc6_der1 + abs(deriv1_val-ref)
    normH1_6   = normH1_6  + (deriv1_val-ref)**2*h1
@@ -331,8 +343,8 @@ do i=0,NPTS1-1
    x(i+1)         = cos(2.0_f64*sll_pi*eta1)
    reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
@@ -352,11 +364,11 @@ normL2_7 = 0.0_f64
 normH1_7 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc7        = acc7 + abs(node_val-ref)
    normL2_7    = normL2_7  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
    ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
    acc7_der1  = acc7_der1 + abs(deriv1_val-ref)
    normH1_7   = normH1_7  + (deriv1_val-ref)**2*h1

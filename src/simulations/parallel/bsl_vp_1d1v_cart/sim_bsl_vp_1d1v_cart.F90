@@ -5,15 +5,33 @@
 
 program sim_bsl_vp_1d1v_cart
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_sim_bsl_vp_1d1v_cart
-use sll_m_common_array_initializers
-use sll_m_collective
-use sll_m_timer
-use sll_m_constants
-implicit none
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_landau_initializer_2d, &
+    sll_scalar_initializer_2d
+
+  use sll_m_sim_bsl_vp_1d1v_cart, only: &
+    change_initial_function_vp2d_par_cart, &
+    delete_vp2d_par_cart, &
+    new_vp2d_par_cart, &
+    sll_simulation_2d_vlasov_poisson_cart
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class(sll_simulation_2d_vlasov_poisson_cart), pointer :: sim
 

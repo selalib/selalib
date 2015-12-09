@@ -16,14 +16,21 @@
 !**************************************************************
 
 program test_gyroaverage_2d_polar_hermite
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_gyroaverage_2d_polar_hermite_solver
+#include "sll_working_precision.h"
 
-!use sll_m_qn_2d_polar
+  use sll_m_constants, only: &
+    sll_pi
 
-implicit none
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar_hermite_solver, only: &
+    new_gyroaverage_2d_polar_hermite_solver
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_gyroaverage_2d_base), pointer :: gyroaverage 
   sll_real64 :: err

@@ -1,13 +1,25 @@
 !> @ingroup operator_splitting
 !> @brief Implements split operators for constant coefficient advection
 module sll_m_const_coef_advection_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
+#include "sll_working_precision.h"
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    initialize_operator_splitting, &
+    operator_splitting
 
   implicit none
+
+  public :: &
+    const_coef_advection_2d, &
+    new_const_coef_advection_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 
   !> Simple operator splitting type for 2D constant coefficient advection
@@ -16,9 +28,9 @@ module sll_m_const_coef_advection_2d
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, extends(operator_splitting) :: const_coef_advection_2d
      !> interpolator object in first direction
-     class(sll_interpolator_1d_base), pointer    :: interp1
+     class(sll_c_interpolator_1d), pointer    :: interp1
      !> interpolator object in second direction
-     class(sll_interpolator_1d_base), pointer    :: interp2 
+     class(sll_c_interpolator_1d), pointer    :: interp2 
      !> function do be evolved
      sll_real64, dimension(:,:), pointer :: data
      !> dimension in first direction
@@ -45,8 +57,8 @@ contains
     sll_int32, intent(in)  :: n2   !< dimension in second direction
     sll_real64, intent(in) :: a1   !< advection coeeficient in first direction
     sll_real64, intent(in) :: a2   !< advection coeeficient in first direction
-    class(sll_interpolator_1d_base), pointer    :: interp1  !< interpolator for first direction
-    class(sll_interpolator_1d_base), pointer    :: interp2  !< interpolator for second direction
+    class(sll_c_interpolator_1d), pointer    :: interp1  !< interpolator for first direction
+    class(sll_c_interpolator_1d), pointer    :: interp2  !< interpolator for second direction
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
@@ -70,8 +82,8 @@ contains
     sll_int32, intent(in)  :: n2   !< dimension in second direction
     sll_real64, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_interpolator_1d_base), pointer    :: interp1  !< interpolator for first direction
-    class(sll_interpolator_1d_base), pointer    :: interp2  !< interpolator for second direction
+    class(sll_c_interpolator_1d), pointer    :: interp1  !< interpolator for first direction
+    class(sll_c_interpolator_1d), pointer    :: interp2  !< interpolator for second direction
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
@@ -105,9 +117,9 @@ contains
     sll_int32 :: j
     
     do j = 1, this%n2
-       displacement = this%a1 * dt
+       displacement = -this%a1 * dt
        f1d => this%data(:,j)
-       f1d = this%interp1%interpolate_array_disp(this%n1, f1d, displacement)
+       call this%interp1%interpolate_array_disp_inplace(this%n1, f1d, displacement)
     end do
   end subroutine
 
@@ -121,9 +133,9 @@ contains
     sll_int32 :: i
     
     do i = 1, this%n1
-       displacement = this%a2 * dt
+       displacement = -this%a2 * dt
        f1d => this%data(i,:)
-       f1d = this%interp2%interpolate_array_disp(this%n2, f1d, displacement)
+       call this%interp2%interpolate_array_disp_inplace(this%n2, f1d, displacement)
     end do
   end subroutine
 

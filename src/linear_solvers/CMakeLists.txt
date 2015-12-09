@@ -10,7 +10,7 @@ IF(Fortran_COMPILER MATCHES IBM)
    SET_SOURCE_FILES_PROPERTIES( sol.f muls.f PROPERTIES COMPILE_FLAGS '-qfixed' )
 ENDIF()
 
-TARGET_LINK_LIBRARIES( sll_linear_solvers sll_errors sll_memory sll_assert sll_working_precision )
+TARGET_LINK_LIBRARIES( sll_linear_solvers sll_errors sll_memory sll_assert )
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)

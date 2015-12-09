@@ -1,22 +1,67 @@
 program sim_bsl_vp_1d1v_cart_serial
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "sll_field_2d.h"
 
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_landau_2d_initializer
-  use sll_m_tsi_2d_initializer
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d
+
+  use sll_m_distribution_function, only: &
+    initialize_distribution_function_2d, &
+    sll_distribution_function_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_landau_2d_initializer, only: &
+    init_landau_2d
+
+  use sll_m_poisson_1d_periodic, only: &
+    initialize, &
+    poisson_1d_periodic, &
+    solve
+
+  use sll_m_scalar_field_2d_old, only: &
+    write_scalar_field_2d
+
+  use sll_m_scalar_field_initializers_base, only: &
+    node_centered_field, &
+    scalar_field_2d_initializer_base
+
+  use sll_m_tsi_2d_initializer, only: &
+    init_tsi_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
-  class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
   type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
@@ -56,7 +101,7 @@ program sim_bsl_vp_1d1v_cart_serial
   namelist / tsi / kmode, eps, v0, is_delta_f 
 
   ! determine what case is being run
-  call GET_COMMAND_ARGUMENT(1,case)
+  call get_command_argument(1,case)
   ! open and read input file
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.nml')
@@ -181,24 +226,24 @@ program sim_bsl_vp_1d1v_cart_serial
   ! half time step advection in v
   do istep = 1, nbiter
      do i = 1, Ncx+1
-        alpha = -efield(i) * 0.5_f64 * dt
+        alpha = efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
      end do
      ! full time step advection in x
      do j = 1, Ncv+1
-        alpha = (vmin + (j-1) * delta_v) * dt
+        alpha = -(vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        call interp_x%interpolate_array_disp_inplace(Ncx+1, f1d, alpha)
      end do
      ! compute rho and electric field
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
      call solve(poisson_1d, efield, rho)
      ! half time step advection in v
      do i = 1, Ncx+1
-        alpha = -efield(i) * 0.5_f64 * dt
+        alpha = efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
      end do
      ! diagnostics
      time = istep*dt

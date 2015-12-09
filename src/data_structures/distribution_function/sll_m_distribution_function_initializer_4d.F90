@@ -1,12 +1,42 @@
 module sll_m_distribution_function_initializer_4d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_m_constants
-  use sll_m_scalar_field_initializers_base
-  use sll_m_collective
-  use sll_m_remapper
+#include "sll_working_precision.h"
+
+  use sll_m_collective, only: &
+    sll_collective_t, &
+    sll_get_collective_rank
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_remapper, only: &
+    get_layout_collective, &
+    get_layout_i_max, &
+    get_layout_i_min, &
+    get_layout_j_max, &
+    get_layout_j_min, &
+    get_layout_k_max, &
+    get_layout_k_min, &
+    get_layout_l_max, &
+    get_layout_l_min, &
+    layout_4d, &
+    local_to_global
+
+  use sll_m_scalar_field_initializers_base, only: &
+    scalar_field_4d_initializer_base
+
   implicit none
+
+  public :: &
+    init_test_4d_par, &
+    load_test_4d_initializer, &
+    new_cartesian_4d_mesh, &
+    simple_cartesian_4d_mesh
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution

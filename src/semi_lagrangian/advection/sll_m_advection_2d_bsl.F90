@@ -20,18 +20,30 @@
 
 
 module sll_m_advection_2d_bsl
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_2d_base
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    new_bsl_2d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_advection_2d_base) :: BSL_2d_advector
   
-    class(sll_interpolator_2d_base), pointer  :: interp
+    class(sll_c_interpolator_2d), pointer  :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
     sll_real64, dimension(:), pointer :: eta2_coords
@@ -65,7 +77,7 @@ contains
     eta2_coords) &  
     result(adv)      
     type(BSL_2d_advector), pointer :: adv
-    class(sll_interpolator_2d_base), pointer :: interp
+    class(sll_c_interpolator_2d), pointer :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
@@ -108,7 +120,7 @@ contains
     eta1_coords, &
     eta2_coords)    
     class(BSL_2d_advector), intent(inout) :: adv
-    class(sll_interpolator_2d_base), pointer :: interp
+    class(sll_c_interpolator_2d), pointer :: interp
     class(sll_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
@@ -223,12 +235,13 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    output = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       adv%Npts1, &
       adv%Npts2, &
       input, &
       adv%charac_feet1, &
-      adv%charac_feet2)      
+      adv%charac_feet2, &
+      output)      
           
   end subroutine BSL_advect_2d
 

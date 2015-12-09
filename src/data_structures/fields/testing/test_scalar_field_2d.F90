@@ -1,13 +1,57 @@
 program unit_test_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_cartesian_meshes
-  use sll_m_constants
-  use sll_m_scalar_field_2d
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use helper_functions
+#include "sll_working_precision.h"
+
+  use helper_functions, only: &
+    test_function_dirdir, &
+    test_function_dirdir_der1, &
+    test_function_dirdir_der2, &
+    test_function_dirper, &
+    test_function_dirper_der1, &
+    test_function_dirper_der2, &
+    test_function_perdir, &
+    test_function_perdir_der1, &
+    test_function_perdir_der2, &
+    test_function_perper, &
+    test_function_perper_der1, &
+    test_function_perper_der2
+
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    initialize_ad2d_interpolator, &
+    sll_arbitrary_degree_spline_interpolator_2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_scalar_field_2d, only: &
+    new_scalar_field_2d_analytic, &
+    new_scalar_field_2d_discrete
+
+  use sll_m_scalar_field_2d_base, only: &
+    sll_scalar_field_2d_base
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define SPLINE_DEG1 3
 #define SPLINE_DEG2 3
@@ -43,8 +87,8 @@ program unit_test_2d
   ! class(scalar_field_2d_initializer_base), pointer    :: pfinit
   ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
   ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
-  ! class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  ! class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+  ! class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
+  ! class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
   !type(sll_arbitrary_degree_spline_interpolator_2d), target    :: interp_2d_term_source
   !class(sll_scalar_field_2d_base), pointer              :: rho
   !sll_real64, dimension(:,:), allocatable    :: calculated
@@ -57,18 +101,6 @@ program unit_test_2d
   !sll_int32 :: npts1,npts2
   sll_int32 :: i,j
   !sll_int32 :: ierr
-!!$  real(8), external :: test_function_perper
-!!$  real(8), external :: test_function_perper_der1
-!!$  real(8), external :: test_function_perper_der2
-!!$  real(8), external :: test_function_perdir
-!!$  real(8), external :: test_function_perdir_der1
-!!$  real(8), external :: test_function_perdir_der2
-!!$  real(8), external :: test_function_dirper
-!!$  real(8), external :: test_function_dirper_der1
-!!$  real(8), external :: test_function_dirper_der2
-!!$  real(8), external :: test_function_dirdir
-!!$  real(8), external :: test_function_dirdir_der1
-!!$  real(8), external :: test_function_dirdir_der2
   
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
   sll_real64 :: normL2_5,normL2_6,normL2_7,normL2_8

@@ -1,24 +1,84 @@
 module sll_m_sim_bsl_vp_2d2v_curv
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_interpolators_1d_base
-  use sll_m_interpolators_2d_base
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_poisson_2d_periodic_cartesian_par
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_sim_base
-  use sll_m_cartesian_meshes
-  use sll_m_parallel_array_initializer
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gnuplot_parallel
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_collective, only: &
+    sll_collective_reduce_real64, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_4d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_cubic_spline_interpolator_2d, &
+    sll_delete
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_gnuplot_rect_2d_parallel
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_parallel_array_initializer, only: &
+    sll_4d_parallel_array_initializer
+
+  use sll_m_poisson_2d_periodic_cartesian_par, only: &
+    new_poisson_2d_periodic_plan_cartesian_par, &
+    poisson_2d_periodic_plan_cartesian_par, &
+    solve_poisson_2d_periodic_cartesian_par
+
+  use sll_m_remapper, only: &
+    apply_remap_2d, &
+    apply_remap_4d, &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_2d, &
+    layout_4d, &
+    local_to_global, &
+    new_layout_2d, &
+    new_layout_4d, &
+    new_remap_plan, &
+    remap_plan_2d_comp64, &
+    remap_plan_2d_real64, &
+    remap_plan_4d_real64, &
+    sll_delete
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    is_even, &
+    sll_new_file_id
+
+  use sll_mpi, only: &
+    mpi_sum
+
   implicit none
+
+  public :: &
+    initialize_vp4d_general, &
+    sll_delete, &
+    sll_simulation_4d_vp_general
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_general
   
@@ -802,8 +862,8 @@ contains
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
-                alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                alpha3 = sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+                call sim%interp_x3%interpolate_array_disp_inplace( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha3 )
@@ -839,8 +899,8 @@ contains
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
-                alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                alpha4 = sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+                call sim%interp_x4%interpolate_array_disp_inplace( &
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
                      alpha4 )
@@ -1009,7 +1069,7 @@ contains
                    eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
                 end if
                 
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_from_interpolant_value(eta1,eta2)
 
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
@@ -1302,15 +1362,15 @@ contains
     sll_real64, intent(in)                      :: delta_v
     sll_int32, intent(in)                       :: num_pts
     sll_real64, dimension(:), intent(inout)     :: f_line
-    class(sll_interpolator_1d_base)             :: f_interp
+    class(sll_c_interpolator_1d)             :: f_interp
     sll_int32  :: i
     sll_real64 :: displacement
 
     do i=1, num_pts
-       displacement = (vmin + real(i-1,f64)*delta_v)*dt
+       displacement = -(vmin + real(i-1,f64)*delta_v)*dt
        ! remember that the function interpolate_array_disp() has the wrong
        ! interface since it should be a subroutine, not a function.
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_x_1d
 
@@ -1319,13 +1379,13 @@ contains
     sll_real64, dimension(:), intent(in)     :: efield
     sll_int32, intent(in)                    :: num_pts
     sll_real64, dimension(:), intent(inout)  :: f_line
-    class(sll_interpolator_1d_base), pointer :: f_interp
+    class(sll_c_interpolator_1d), pointer :: f_interp
     sll_int32                                :: i
     sll_real64                               :: displacement
 
     do i=1, num_pts
-       displacement = -efield(i)*0.5_f64*dt
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+       displacement = efield(i)*0.5_f64*dt
+       call f_interp%interpolate_array_disp_inplace(num_pts, f_line, displacement)
     end do
   end subroutine advection_v_1d
 

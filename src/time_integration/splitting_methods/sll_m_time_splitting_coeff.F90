@@ -25,11 +25,36 @@
 module sll_m_time_splitting_coeff
 
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    new_time_splitting_coeff, &
+    sll_lie_tv, &
+    sll_lie_vt, &
+    sll_order6_tvt, &
+    sll_order6_vtv, &
+    sll_order6vp2d_vtv, &
+    sll_order6vp_tvt, &
+    sll_order6vp_vtv, &
+    sll_order6vpnew1_vtv, &
+    sll_order6vpnew2_vtv, &
+    sll_order6vpnew_tvt, &
+    sll_order6vpot_vtv, &
+    sll_order6vpotnew1_vtv, &
+    sll_order6vpotnew2_vtv, &
+    sll_order6vpotnew3_vtv, &
+    sll_strang_tvt, &
+    sll_strang_vtv, &
+    sll_triple_jump_tvt, &
+    sll_triple_jump_vtv, &
+    splitting_coeff
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_USER_DEFINED         = -3 
   sll_int32, parameter :: SLL_LIE_TV               = -2 

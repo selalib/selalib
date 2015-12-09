@@ -17,23 +17,37 @@
 
 
 module sll_m_particle_group_4d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "particle_representation.h"
+#include "sll_working_precision.h"
 
-!  use sll_m_particle_representations
-  use sll_m_cartesian_meshes
+  use sll_m_cartesian_meshes, only: &
+    sll_cartesian_mesh_2d
+
+  use sll_m_particle_representations, only: &
+    sll_particle_4d, &
+    sll_particle_4d_guard_ptr
+
 #ifdef _OPENMP
-  use omp_lib
-#endif
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
 
+#endif
   implicit none
 
+  public :: &
+    new_particle_4d_group, &
+    sll_delete, &
+    sll_particle_group_4d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
   type :: sll_particle_group_4d
-     sll_int32  :: number_particles! peut etre a faire en SLL_PRIV
-     sll_int32  :: active_particles! tout ça doit passer en 32
-     sll_int32  :: guard_list_size! tout ça doit passer en 32
+     sll_int32  :: number_particles
+     sll_int32  :: active_particles
+     sll_int32  :: guard_list_size
      ! an array indexed by the thread number, of the number of particles
      ! to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles

@@ -30,14 +30,16 @@
 !Ondřej Čertík
 
 module test_fornberg
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_fornberg, only: populate_weights
+  use sll_m_fornberg, only: &
+    populate_weights
 
   implicit none
 
   private
-  public test_weights, test_forward_5pts, test_backward_5pts
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

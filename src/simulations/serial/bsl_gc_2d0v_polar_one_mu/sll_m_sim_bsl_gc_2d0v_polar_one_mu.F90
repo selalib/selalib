@@ -9,46 +9,126 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
 
 !contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
 !         Adnane Hamiaz (hamiaz@math.unistra.fr)
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_field_2d.h"
-#include "sll_poisson_solvers.h"
-  !use sll_logical_meshes 
-  use sll_m_cartesian_meshes  
-  use sll_m_advection_1d_periodic
-  use sll_m_advection_2d_bsl
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  !use sll_poisson_2d_periodic  
-  use sll_m_fft
-  use sll_m_reduction
-  use sll_m_sim_base
-  !use sll_cubic_spline_interpolator_2d
-  !use sll_cubic_spline_interpolator_1d
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  use sll_m_poisson_2d_polar_wrapper
-  use sll_m_poisson_2d_elliptic_solver
-  use sll_m_scalar_field_2d_base
-  !use sll_m_scalar_field_2d_alternative
-  use sll_m_parallel_array_initializer
-  use sll_m_gyroaverage_2d_polar_hermite_solver
-  use sll_m_gyroaverage_2d_polar_splines_solver
-  use sll_m_gyroaverage_2d_polar_pade_solver
+#include "sll_working_precision.h"
+
+  use sll_m_advection_2d_base, only: &
+    sll_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    new_bsl_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_hermite, &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    new_verlet_2d_charac
+
+  use sll_m_common_array_initializers, only: &
+    sll_diocotron_initializer_2d, &
+    sll_scalar_initializer_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    polar_jac11, &
+    polar_jac12, &
+    polar_jac21, &
+    polar_jac22, &
+    polar_x1, &
+    polar_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fft, only: &
+    fft_apply_plan_r2r_1d, &
+    fft_delete_plan, &
+    fft_forward, &
+    fft_get_mode_r2c_1d, &
+    fft_new_plan_r2r_1d, &
+    sll_fft_plan
+
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar_hermite_solver, only: &
+    new_gyroaverage_2d_polar_hermite_solver
+
+  use sll_m_gyroaverage_2d_polar_pade_solver, only: &
+    new_gyroaverage_2d_polar_pade_solver
+
+  use sll_m_gyroaverage_2d_polar_splines_solver, only: &
+    new_gyroaverage_2d_polar_splines_solver
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_wrapper, only: &
+    new_poisson_2d_polar
+
+  use sll_m_reduction, only: &
+    compute_integral_trapezoid_1d
+
+  use sll_m_sim_base, only: &
+    sll_simulation_base_class
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
 #ifdef MUDPACK
   use sll_m_poisson_2d_mudpack
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
+    new_poisson_2d_mudpack_curvilinear_solver
+
 #endif
-
-  
-  !use sll_m_parallel_array_initializer
-
   implicit none
+
+  public :: &
+    new_guiding_center_2d_polar_one_mu
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !#define OLD_POISSON  
 !#define NEW_POISSON  
@@ -75,7 +155,7 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
 
    
    !poisson solver
@@ -191,19 +271,19 @@ contains
     sll_real64 :: x1_max     
     sll_real64 :: x2_min
     sll_real64 :: x2_max     
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
     sll_real64, dimension(:,:), pointer :: b11
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
     sll_real64, dimension(:,:), pointer :: b22
-    sll_real64, dimension(:,:), pointer :: b1
-    sll_real64, dimension(:,:), pointer :: b2
+    !sll_real64, dimension(:,:), pointer :: b1
+    !sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
 !    sll_real64, dimension(:,:), allocatable :: cxx_2d
@@ -300,7 +380,7 @@ contains
     gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
     !gyroaverage_case = "SPLINES"
     !gyroaverage_case = "PADE"
-    mu = 1.0e-0
+    mu = 1.0_f64
     gyroaverage_N_points = 16
     gyroaverage_interp_degree_x1 = 3
     gyroaverage_interp_degree_x2 = 3     
@@ -943,7 +1023,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_interpolator_2d_base), pointer   :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min
@@ -968,8 +1048,8 @@ contains
       x2=x2_min+real(i2-1,f64)*delta_x2
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)/x1
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)/x1
+        A1(i1,i2)=interp2d%interpolate_from_interpolant_derivative_eta2(x1,x2)/x1
+        A2(i1,i2)=-interp2d%interpolate_from_interpolant_derivative_eta1(x1,x2)/x1
       end do
     end do
     
@@ -1027,7 +1107,7 @@ contains
     
     SLL_ALLOCATE(int_r(Nc_x2),ierr)
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
-    pfwd => fft_new_plan(Nc_x2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+    pfwd => fft_new_plan_r2r_1d(Nc_x2,int_r,int_r,FFT_FORWARD,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -1072,10 +1152,10 @@ contains
     l1 = l1*delta_x2
     l2 = sqrt(l2*delta_x2)
     e  = 0.5_f64*e*delta_x2
-    call fft_apply_plan(pfwd,int_r,int_r)
+    call fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))
+     time_mode(i1) = abs(fft_get_mode_r2c_1d(pfwd,int_r,i1-1))
       !mode_slope(i1) = &
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
@@ -1147,8 +1227,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          r       = rmin+real(i-1,f32)*dr
-          theta   = real(j-1,f32)*dtheta
+          r       = rmin+real(i-1,f64)*dr
+          theta   = real(j-1,f64)*dtheta
           x1(i,j) = r*cos(theta)
           x2(i,j) = r*sin(theta)
         end do

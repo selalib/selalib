@@ -1,15 +1,30 @@
 program test_advection_2d_tri_mesh
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d, &
-       new_hex_mesh_2d
-use sll_m_triangular_meshes
-use sll_m_advection_2d_tri_mesh
-use sll_m_gnuplot
-use sll_m_mesh_calculus_2d
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_2d_tri_mesh, only: &
+    advection_2d, &
+    new_advection_2d_tri_mesh, &
+    sll_advection_tri_mesh
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_hexagonal_meshes, only: &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_triangular_meshes, only: &
+    analyze_triangular_mesh, &
+    map_to_circle, &
+    new_triangular_mesh_2d, &
+    sll_delete, &
+    sll_triangular_mesh_2d, &
+    write_triangular_mesh_mtv
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_triangular_mesh_2d), pointer :: t_mesh
 type(sll_hex_mesh_2d), pointer        :: h_mesh
@@ -26,11 +41,11 @@ sll_int32  :: num_cells
 sll_int32  :: ierr
 sll_int32  :: istep
 
-sll_real64 :: dt = 0.1
+sll_real64 :: dt = 0.1_f64
 
 sll_int32, allocatable  :: mitchell_corners(:,:)
-sll_int32  :: is1, is2, is3, ic, jc, iv, is, it, iac, nbc
-sll_int32  :: ic1, ic2, ic3, ic4
+sll_int32  :: is1, is2, ic, iv, it, iac, nbc
+!sll_int32  :: ic1, ic2, ic3, ic4
 
 !Create a triangular mesh from an hex mesh
 !Reference on the boundary is set to "one"
@@ -51,8 +66,8 @@ x1 => t_mesh%coord(1,:)
 x2 => t_mesh%coord(2,:)
 
 df = exp(-((x1-0.5)**2+x2*x2)/0.04_f64)
-ex = -1. !- x2
-ey =  0. !+ x1
+ex = -1.0_f64 !- x2
+ey =  0.0_f64 !+ x1
 
 t_adv => new_advection_2d_tri_mesh(t_mesh)
 
@@ -61,7 +76,7 @@ do istep = 1, 1
   call sll_gnuplot_2d( df, "f_tri", t_mesh%coord, t_mesh%nodes, istep)
 end do
 
-print*, 'error =', sum(abs(df-exp(-(x1*x1+x2*x2)/0.04_f64)))/t_mesh%num_nodes
+print*, 'error =', sum(abs(df-exp(-(x1*x1+x2*x2)/0.04_f64)))/real(t_mesh%num_nodes,f64)
 
 call analyze_triangular_mesh(t_mesh) 
 

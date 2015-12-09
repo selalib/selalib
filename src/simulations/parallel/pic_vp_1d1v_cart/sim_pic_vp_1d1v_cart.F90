@@ -1,19 +1,21 @@
 program sim_pic_vp_1d1v_cart
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-    
-    use sll_m_sim_pic_vp_1d1v_cart, only: &
-      sll_simulation_pic1d1v_vp_periodic, &
-      sll_delete
-    
-    use sll_m_collective, only: &
-      sll_world_collective,   &
-      sll_collective_barrier, &
-      sll_boot_collective,    &
-      sll_get_collective_rank,&
-      sll_halt_collective
-    
-    implicit none
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_barrier, &
+    sll_get_collective_rank, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_sim_pic_vp_1d1v_cart, only: &
+    sll_delete, &
+    sll_simulation_pic1d1v_vp_periodic
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !==============================================================================
 
   character(len=256) :: filename
@@ -30,7 +32,7 @@ program sim_pic_vp_1d1v_cart
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
+  call get_command_argument(1, filename)
   filename_local = trim(filename)
 
   call simulation%init_from_file( filename_local )

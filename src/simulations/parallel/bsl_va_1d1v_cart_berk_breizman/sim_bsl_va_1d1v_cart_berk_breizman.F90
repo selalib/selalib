@@ -4,15 +4,29 @@
 ! - parallel
 
 program sim_bsl_va_1d1v_cart_berk_breizman
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-use sll_m_gaussian
-use sll_m_collective
-use sll_m_timer
-use sll_m_constants
-use sll_m_parallel_array_initializer
-use sll_m_sim_bsl_va_1d1v_cart_berk_breizman
-implicit none
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_scalar_initializer_2d
+
+  use sll_m_sim_bsl_va_1d1v_cart_berk_breizman, only: &
+    new_va2d_par_cart, &
+    sll_simulation_2d_vlasov_ampere_cart
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim
 character(len=256) :: filename

@@ -1,9 +1,34 @@
 program comm_unit_test_2d
-  use sll_m_collective
-  use sll_m_point_to_point_comms
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_point_to_point_comms, only: &
+    comm_receive_real64, &
+    comm_send_real64, &
+    delete_comm_real64, &
+    get_buffer, &
+    new_comm_real64, &
+    sll_configure_comm_real64_torus_2d, &
+    sll_p2p_comm_real64
+
+  use sll_mpi, only: &
+    mpi_land
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! This test takes a 2D array and sends the nodes at the borders to the
   ! neighboring processors, mimicking the type of operations that one would do
@@ -51,7 +76,7 @@ program comm_unit_test_2d
   comm => new_comm_real64( sll_world_collective, 4, BUF_SIZE )
   if(rank == 0) then
      print *, 'created new comm, size = ', col_size
-     call flush(6)
+     flush( output_unit )
   end if
 
   ! In this test the processors in the communicator are organized as a 2D ring,
@@ -67,7 +92,7 @@ program comm_unit_test_2d
 
   if(rank == 0) then
      print *, 'configured the comm as a toroidal surface'
-     call flush(6)
+     flush( output_unit )
   end if
 
   SLL_ALLOCATE(main_array(SZ_X,SZ_Y),ierr)

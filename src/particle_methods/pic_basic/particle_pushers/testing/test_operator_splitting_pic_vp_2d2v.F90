@@ -1,34 +1,58 @@
 ! TODO: Use input from file to initialize and compare
 
 program test_operator_splitting_pic_vp_2d2v
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
-  use sll_m_particle_initializer
-  use sll_m_particle_group_2d2v
-  use sll_m_kernel_smoother_base
-  use sll_m_kernel_smoother_spline_2d
-  use sll_m_operator_splitting_pic_vp_2d2v
-  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_fft
-  use sll_m_poisson_2d_base
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_pic_poisson_base, only : &
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_kernel_smoother_base, only: &
+    sll_collocation, &
+    sll_c_kernel_smoother
+
+  use sll_m_kernel_smoother_spline_2d, only: &
+    sll_t_kernel_smoother_spline_2d, &
+    sll_new_smoother_spline_2d
+
+  use sll_m_operator_splitting_pic_vp_2d2v, only: &
+    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_t_operator_splitting_pic_vp_2d2v
+
+  use sll_m_particle_group_2d2v, only: &
+    sll_new_particle_group_2d2v, &
+    sll_particle_group_2d2v
+
+  use sll_m_particle_group_base, only: &
+    sll_particle_group_base
+
+  use sll_m_poisson_2d_fft, only: &
+    new_poisson_2d_fft_solver
+
+  use sll_m_poisson_2d_base, only: &
+    sll_poisson_2d_base
+
+ use sll_m_pic_poisson_base, only : &
        sll_c_pic_poisson
+
   use sll_m_pic_poisson_2d, only : &
        sll_f_new_pic_poisson_2d
+
   use sll_m_collective, only : &
        sll_boot_collective, sll_halt_collective
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ! Tolerance for comparison of real numbers: set it here!
+  sll_real64, parameter :: EQV_TOL = 1.0e-14_f64
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
 
   ! Array for efield
   !sll_real64, pointer :: efield(:,:)
-
 
   ! Abstract kernel smoother
   class(sll_c_kernel_smoother), pointer :: kernel_smoother
@@ -54,6 +78,7 @@ program test_operator_splitting_pic_vp_2d2v
   sll_int32  :: i_part
   sll_real64 :: xi(3)
   logical    :: passed
+  sll_int32  :: ierr   ! error code for SLL_ALLOCATE
 
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
@@ -85,7 +110,7 @@ program test_operator_splitting_pic_vp_2d2v
   !     rnd_seed)
   SLL_ALLOCATE(particle_info_ref(n_particles,5), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([   11.780972450961723D0 ,       5.4977871437821380D0,       0.78539816339744828D0,        7.0685834705770345D0,       0.15731068461017067D0,       -1.5341205443525459D0,        1.5341205443525459D0,      -0.15731068461017067D0,        86.251495608834688D0,        71.662174808595040D0], [n_particles, 5])
+  particle_info_ref = reshape([   11.780972450961723_f64 ,       5.4977871437821380_f64,       0.78539816339744828_f64,        7.0685834705770345_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        1.5341205443525459_f64,      -0.15731068461017067_f64,        86.251495608834688_f64,        71.662174808595040_f64], [n_particles, 5])
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -119,23 +144,23 @@ program test_operator_splitting_pic_vp_2d2v
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.796703519422740D0,        5.3443750893468831D0,       0.93881021783270291D0,        7.0528524021160175D0,       0.15731068461017067D0,       -1.5341205443525459D0,        1.5341205443525459D0,      -0.15731068461017067D0,        86.251495608834688D0,        71.662174808595040D0], [n_particles, 5])
+  particle_info_ref = reshape([   11.796703519422740_f64,        5.3443750893468831_f64,       0.93881021783270291_f64,        7.0528524021160175_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        1.5341205443525459_f64,      -0.15731068461017067_f64,        86.251495608834688_f64,        71.662174808595040_f64], [n_particles, 5])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,1))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,2))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi = particle_group%get_v(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,3))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,4))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi(1:1) = particle_group%get_charge(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,5))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,5))> EQV_TOL) then
         passed = .FALSE.
      end if
   end do
@@ -146,23 +171,23 @@ program test_operator_splitting_pic_vp_2d2v
   call propagator%operatorV(delta_t)
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.796703519422740D0,        5.3443750893468831D0,       0.93881021783270291D0,        7.0528524021160175D0,       0.15346588344558551D0,       -1.5294930005799796D0,        1.5302579166423358D0,      -0.15266168508042444D0,        86.251495608834688D0,        71.662174808595040D0  ], [n_particles, 5])
+  particle_info_ref = reshape([   11.796703519422740_f64,        5.3443750893468831_f64,       0.93881021783270291_f64,        7.0528524021160175_f64,       0.15346588344558551_f64,       -1.5294930005799796_f64,        1.5302579166423358_f64,      -0.15266168508042444_f64,        86.251495608834688_f64,        71.662174808595040_f64  ], [n_particles, 5])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,1))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,2))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi = particle_group%get_v(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,3))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
-     elseif (abs(xi(2)-particle_info_ref(i_part,4))> 1D-14) then
+     elseif (abs(xi(2)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
      end if
      xi(1:1) = particle_group%get_charge(i_part)
-     if (abs(xi(1)-particle_info_ref(i_part,5))> 1D-14) then
+     if (abs(xi(1)-particle_info_ref(i_part,5))> EQV_TOL) then
         passed = .FALSE.
      end if
   end do

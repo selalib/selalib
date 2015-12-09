@@ -4,28 +4,57 @@ program sim_bsl_gc_2d0v_hex
   ! on hexagonal mesh
   ! one priority is to test the mitchell
   ! element which is not tested elsewhere
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
 
-  use sll_m_boundary_condition_descriptors
-  use sll_m_ascii_io
-  use sll_m_utilities, only : &
-       int2string
-  use sll_m_constants, only : &
-       sll_sqrt3
-  use sll_m_euler_2d_hex
-  use sll_m_hexagonal_meshes, only : &
-       sll_hex_mesh_2d
-  use sll_m_hex_poisson
-  use sll_m_pivotbande
-  use sll_m_box_splines, only : &
-       sll_box_spline_2d, &
-       new_box_spline_2d, &
-       hex_interpolate_value
-  use sll_m_interpolation_hex_hermite
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet
+
+  use sll_m_box_splines, only: &
+    hex_interpolate_value, &
+    new_box_spline_2d, &
+    sll_box_spline_2d
+
+  use sll_m_constants, only: &
+    sll_sqrt3
+
+  use sll_m_euler_2d_hex, only: &
+    compute_characteristic_adams2_2d_hex, &
+    compute_characteristic_euler_2d_hex
+
+  use sll_m_hermite_interpolation_2d, only: &
+    compute_w_hermite
+
+  use sll_m_hex_poisson, only: &
+    compute_hex_fields, &
+    hex_matrix_poisson, &
+    hex_second_terme_poisson
+
+  use sll_m_hexagonal_meshes, only: &
+    delete_hex_mesh_2d, &
+    display_hex_mesh_2d, &
+    get_cell_vertices_index, &
+    new_hex_mesh_2d, &
+    sll_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    der_finite_difference, &
+    hermite_interpolation
+
+  use sll_m_pivotbande, only: &
+    factolub_bande, &
+    solvlub_bande
+
+  use sll_m_utilities, only: &
+    int2string
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   sll_int32, parameter :: SLL_HEX_SPLINES = 2
   sll_int32, parameter :: SLL_HEX_Z9 = 9
   sll_int32, parameter :: SLL_HEX_Z10 = 10
@@ -69,8 +98,8 @@ program sim_bsl_gc_2d0v_hex
   sll_int32    :: i, k1, k2, index_tab, type
   sll_int32    :: width_band1,width_band2
   sll_int32    :: num_cells, n_points
-  sll_int32    :: cells_min, cells_max
-  sll_int32    :: cells_stp
+  !sll_int32    :: cells_min, cells_max
+  !sll_int32    :: cells_stp
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius
   sll_real64   :: epsilon
@@ -107,7 +136,7 @@ program sim_bsl_gc_2d0v_hex
   !character(len = 256) :: input_filename
   !character(len = 50)  :: filename
   !character(len = 4)   :: filenum
-  character(len = 4)   :: degnum
+  !character(len = 4)   :: degnum
   sll_int32 :: p
   sll_int32 :: k_mode
   sll_int32 :: freq_diag
@@ -384,11 +413,11 @@ program sim_bsl_gc_2d0v_hex
 
   !call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax)
   call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,thdiag_1d_id)
-  !	call int2string(nloops,filenum)
-  !     	filename  = "guiding_center_rho"//trim(filenum)
-  !     	call mesh%write_field_hex_mesh_xmf(rho_tn, trim(filename))
-  !     	filename  = "guiding_center_phi"//trim(filenum)
-  !     	call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+  !call int2string(nloops,filenum)
+  !     filename  = "guiding_center_rho"//trim(filenum)
+  !     call mesh%write_field_hex_mesh_xmf(rho_tn, trim(filename))
+  !     filename  = "guiding_center_phi"//trim(filenum)
+  !     call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
 
   !*********************************************************
   !                          Time loop
@@ -781,9 +810,9 @@ contains
     sll_real64 :: energy
     sll_int32  :: i
     sll_int32,intent(in)  :: out_unit
-    character(len = 50) :: filename
-    character(len =  4) :: filenum
-    character(len =  4) :: splinedeg
+    !character(len = 50) :: filename
+    !character(len =  4) :: filenum
+    !character(len =  4) :: splinedeg
 
     energy    = 0._f64
     mass      = 0._f64
@@ -955,8 +984,8 @@ contains
     sll_real64 :: y1
     sll_real64 :: y2
     sll_real64 :: y3
-    sll_int32 :: k11
-    sll_int32 :: k12
+    !sll_int32 :: k11
+    !sll_int32 :: k12
     sll_real64 :: freedom(3)
     sll_real64 :: base(3)
     sll_real64 :: f
@@ -1026,13 +1055,13 @@ contains
     sll_int32, allocatable :: index2(:,:)
     sll_int32, allocatable :: index3(:,:)
     sll_int32, allocatable :: bounds1(:,:)
-    sll_int32, allocatable :: bounds2(:,:)
-    sll_int32, allocatable :: bounds3(:,:)
+    !sll_int32, allocatable :: bounds2(:,:)
+    !sll_int32, allocatable :: bounds3(:,:)
     sll_int32 :: ierr
     sll_int32 :: j
     sll_int32 :: mini
-    sll_int32 :: maxi
-    sll_int32, 	allocatable :: check(:)
+    !sll_int32 :: maxi
+    sll_int32, allocatable :: check(:)
     sll_int32 :: num_cells
 
     num_cells = mesh%num_cells
@@ -1190,11 +1219,11 @@ contains
     !sll_real64, intent(in) :: dt
 
     sll_int32 :: i
-    sll_real64 :: x
-    sll_real64 :: y
-    logical :: true
-    sll_real64 :: cosdt
-    sll_real64 :: sindt
+    !sll_real64 :: x
+    !sll_real64 :: y
+    !logical :: true
+    !sll_real64 :: cosdt
+    !sll_real64 :: sindt
     sll_real64 :: xx
     sll_real64 :: yy
     sll_real64 :: det
@@ -1207,15 +1236,15 @@ contains
     sll_int32 :: i1
     sll_int32 :: i2
     sll_int32 :: i3
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_real64 :: x3
-    sll_real64 :: y1
-    sll_real64 :: y2
-    sll_real64 :: y3
+    !sll_real64 :: x1
+    !sll_real64 :: x2
+    !sll_real64 :: x3
+    !sll_real64 :: y1
+    !sll_real64 :: y2
+    !sll_real64 :: y3
     sll_int32 :: ii
     sll_int32 :: jj
-    sll_real64 :: xi
+    !sll_real64 :: xi
     sll_real64 :: tmp
     sll_real64 :: aire
     sll_real64 :: a2
@@ -1223,7 +1252,7 @@ contains
     sll_real64 :: freedom(3)
     sll_real64 :: base(3)
     sll_real64 :: f
-    sll_real64                 :: x1x,x2x,x3x,y1y,y2y,y3y
+    !sll_real64 :: x1x,x2x,x3x,y1y,y2y,y3y
     sll_real64 :: val1
     sll_real64 :: val2
     sll_real64 :: r1_x1
@@ -1415,13 +1444,13 @@ contains
 
 
 
-          !	    call p1_interpolation( &
-          !		  i, &
-          !		  xx, &
-          !		  yy, &
-          !		  rho_tn, &
-          !		  rho_tn1, &
-          !		  mesh)
+          !  call p1_interpolation( &
+          !  i, &
+          !  xx, &
+          !  yy, &
+          !  rho_tn, &
+          !  rho_tn1, &
+          !  mesh)
        else
           rho_tn1(i) = 0._f64 ! dirichlet boundary condition
        endif
@@ -1732,8 +1761,8 @@ contains
     sll_int32 :: s_left
     sll_int32 :: r_right
     sll_int32 :: s_right
-    sll_int32 :: r
-    sll_int32 :: s
+    !sll_int32 :: r
+    !sll_int32 :: s
     sll_int32 :: num_pts_tot
     sll_int32, allocatable :: bounds1(:,:)
     sll_int32, allocatable :: hex_coord(:,:)
@@ -1893,8 +1922,8 @@ contains
     sll_int32 :: s_left
     sll_int32 :: r_right
     sll_int32 :: s_right
-    sll_int32 :: r
-    sll_int32 :: s
+    !sll_int32 :: r
+    !sll_int32 :: s
     sll_int32 :: num_pts_tot
     sll_int32, allocatable :: bounds1(:,:)
     sll_int32, allocatable :: hex_coord(:,:)
@@ -1905,9 +1934,9 @@ contains
     sll_int32 :: hex1_loc
     sll_int32 :: hex2_loc
     sll_int32 :: j
-    sll_int32 :: num
-    sll_int32 :: jj
-    sll_int32 :: tmp
+    !sll_int32 :: num
+    !sll_int32 :: jj
+    !sll_int32 :: tmp
     sll_int32 :: k
     sll_int32 :: a1(6)
     sll_int32 :: a2(6)
@@ -1992,8 +2021,8 @@ contains
     sll_int32 :: s_left
     sll_int32 :: r_right
     sll_int32 :: s_right
-    sll_int32 :: r
-    sll_int32 :: s
+    !sll_int32 :: r
+    !sll_int32 :: s
     sll_int32 :: num_pts_tot
     sll_int32, allocatable :: bounds1(:,:)
     sll_int32, allocatable :: hex_coord(:,:)
@@ -2121,13 +2150,13 @@ contains
     sll_int32 :: r
     sll_int32 :: s
     sll_int32 :: ierr
-    sll_int32 :: p2
+    !sll_int32 :: p2
     sll_real64, allocatable :: w_left(:)
     sll_real64, allocatable :: w_right(:)
     sll_int32 :: num_pts_tot
     !sll_int32, allocatable :: bounds1(:,:)
     !sll_int32, allocatable :: bounds2(:,:)
-    sll_int32, allocatable :: bounds3(:,:)
+    !sll_int32, allocatable :: bounds3(:,:)
     sll_int32 :: maxi1
     sll_real64, allocatable :: bufin1(:)
     sll_real64, allocatable :: bufout1(:)
@@ -2366,9 +2395,9 @@ contains
     sll_int32 :: num_pts_tot
     sll_int32 :: j
     sll_int32 :: ii
-    sll_int32 :: jj
+    !sll_int32 :: jj
     sll_real64 :: tmp
-    sll_int32 :: ind
+    !sll_int32 :: ind
 
 
 
@@ -2565,9 +2594,9 @@ contains
     sll_int32 :: num_pts_tot
     sll_int32 :: j
     sll_int32 :: ii
-    sll_int32 :: jj
+    !sll_int32 :: jj
     sll_real64 :: tmp
-    sll_int32 :: ind
+    !sll_int32 :: ind
 
     sll_int32, allocatable :: loc_stencil(:,:)
 
@@ -2827,17 +2856,17 @@ contains
     sll_int32 :: i
     sll_int32 :: r_left
     sll_int32 :: s_left
-    sll_int32 :: r_right
-    sll_int32 :: s_right
+    !sll_int32 :: r_right
+    !sll_int32 :: s_right
     sll_int32 :: ierr
     sll_real64, allocatable :: w_left(:)
-    sll_real64, allocatable :: w_right(:)
+    !sll_real64, allocatable :: w_right(:)
     sll_int32 :: num_pts_tot
     sll_int32 :: j
     sll_int32 :: ii
-    sll_int32 :: jj
+    !sll_int32 :: jj
     sll_real64 :: tmp
-    sll_int32 :: ind
+    !sll_int32 :: ind
 
     sll_int32 :: k
 
@@ -2958,7 +2987,7 @@ contains
     sll_real64 :: y2n
     sll_real64 :: y3n
 
-    sll_real64 :: err_loc
+    !sll_real64 :: err_loc
     sll_real64 :: err
 
     err = 0._f64
@@ -3239,7 +3268,7 @@ contains
     sll_real64 :: y2n
     sll_real64 :: y3n
 
-    sll_real64 :: err_loc
+    !sll_real64 :: err_loc
     sll_real64 :: err
 
     err = 0._f64

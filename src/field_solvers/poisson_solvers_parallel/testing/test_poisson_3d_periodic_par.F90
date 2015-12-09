@@ -15,16 +15,42 @@
 !************************************************************************
 
 program test_poisson_3d_periodic_par
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_poisson_solvers.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_poisson_3d_periodic_par
-  use sll_m_collective
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_collective_reduce, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_3d_periodic_par, only: &
+    delete_poisson_3d_periodic_plan_par, &
+    new_poisson_3d_periodic_plan_par, &
+    poisson_3d_periodic_plan_par, &
+    solve_poisson_3d_periodic_par
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    layout_3d, &
+    local_to_global, &
+    new_layout_3d
+
+  use sll_mpi, only: &
+    mpi_prod
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32                                    :: nx, ny, nz
   sll_int32                                    :: nx_loc, ny_loc, nz_loc
@@ -59,7 +85,7 @@ program test_poisson_3d_periodic_par
   Ly = 2*sll_pi
   Lz = 2*sll_pi
 
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective), i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
 
@@ -67,7 +93,6 @@ program test_poisson_3d_periodic_par
   dy = Ly/ny
   dz = Lz/nz
 
-  colsz  = sll_get_collective_size(sll_world_collective)
   e = int(log(real(colsz))/log(2.))
 
   ! Layout and local sizes for FFTs in x-direction
@@ -108,7 +133,7 @@ program test_poisson_3d_periodic_par
      if (i_test==1) then
         phi_an = cos(x)*sin(y)*cos(z)
      else if (i_test == 2) then
-        phi_an = (4/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz)) &
+        phi_an = (4.0_f64/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz)) &
              * exp(-.5*(x-Lx/2)**2)                   &
              * exp(-.5*(y-Ly/2)**2) * sin(z)
      end if
@@ -130,7 +155,7 @@ program test_poisson_3d_periodic_par
      SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
      call solve_poisson_3d_periodic_par(plan, rho, phi)
 
-     average_err  = 0.d0
+     average_err  = 0._f64
 
      do k=1,nz_loc
         do j=1,ny_loc
@@ -143,11 +168,11 @@ program test_poisson_3d_periodic_par
 
      average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
 
-     call flush(6); print*, ' ------------------'
-     call flush(6); print*, ' myrank ', myrank
-     call flush(6); print*, 'local average error:', average_err
-     call flush(6); print*, 'dx*dy*dz =', dx*dy*dz
-     call flush(6); print*, ' ------------------'
+     flush( output_unit ); print*, ' ------------------'
+     flush( output_unit ); print*, ' myrank ', myrank
+     flush( output_unit ); print*, 'local average error:', average_err
+     flush( output_unit ); print*, 'dx*dy*dz =', dx*dy*dz
+     flush( output_unit ); print*, ' ------------------'
 
      if (average_err> dx*dy*dz ) then
         print*, 'Test stopped by "sll_m_poisson_3d_periodic_par" failure'
@@ -163,11 +188,11 @@ program test_poisson_3d_periodic_par
      if (myrank==0) then
 
         if (prod4test(1)==1.) then
-           call flush(6)
+           flush( output_unit )
            print*, ' '
-           call flush(6)
+           flush( output_unit )
            print*, '"sll_m_poisson_3d_periodic_par" test: PASSED'
-           call flush(6)
+           flush( output_unit )
            print*, ' '
         endif
      endif           

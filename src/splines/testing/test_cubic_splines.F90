@@ -1,15 +1,65 @@
 program test_cubic_splines
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-#define PRINT_SPLINE_COEFFS 0
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
 
-use util_constants
-use test_processes_module
-implicit none
+  use sll_m_constants, only: &
+    sll_pi
 
-intrinsic :: cos
+  use sll_m_cubic_splines, only: &
+    compute_cubic_spline_2d, &
+    interpolate_derivative, &
+    interpolate_from_interpolant_value, &
+    interpolate_value_2d, &
+    interpolate_x1_derivative_2d, &
+    interpolate_x2_derivative_2d, &
+    new_cubic_spline_2d, &
+    sll_cubic_spline_2d
+
+  use test_processes_module, only: &
+    coscos, &
+    deriv1_polar_x, &
+    deriv1_polar_y, &
+    deriv2_polar_x, &
+    deriv2_polar_y, &
+    dmycos, &
+    fxy, &
+    interpolator_tester_1d_hrmt, &
+    interpolator_tester_1d_prdc, &
+    interpolator_tester_2d_hrmt_prdc, &
+    interpolator_tester_2d_prdc_prdc, &
+    line, &
+    mcossin, &
+    msincos, &
+    mycos, &
+    plane, &
+    plane2, &
+    plane2_deriv, &
+    plane3, &
+    plane3_deriv_x, &
+    plane3_deriv_y, &
+    plane_deriv, &
+    polar_x, &
+    polar_y, &
+    sincos_prod, &
+    sinsin, &
+    test_2d_spline_hrmt_hrmt, &
+    test_2d_spline_hrmt_hrmt_no_slopes, &
+    test_2d_spline_hrmt_prdc, &
+    test_2d_spline_hrmt_prdc_no_slopes, &
+    test_2d_spline_prdc_hrmt, &
+    test_2d_spline_prdc_hrmt_no_slopes, &
+    test_spline_1d_hrmt
+
+  use util_constants, only: &
+    npx1, &
+    npx2
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32                              :: ok
 
@@ -66,7 +116,7 @@ test_passed = .true.
   call interpolator_tester_1d_prdc( &
        mycos, &
        mycos, &
-       interpolate_value, &
+       interpolate_from_interpolant_value, &
        0.0_f64, &
        2.0_f64*sll_pi, &
        33, &
@@ -327,7 +377,7 @@ contains
          SLL_PERIODIC, SLL_PERIODIC )
 
     call compute_cubic_spline_2d( data_2d, s )
-    acc_2D = 0.0
+    acc_2D = 0.0_f64
     do j=1, npts2
        do i=1, npts1
           x1 = coordinates_i(i)

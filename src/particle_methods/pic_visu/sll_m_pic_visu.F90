@@ -20,13 +20,40 @@
 
 module sll_m_pic_visu
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_gnuplot
-use sll_m_utilities, only: sll_new_file_id, int2string
-use sll_m_xdmf
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_ascii_io, only: &
+    sll_ascii_file_create
+
+  use sll_m_gnuplot, only: &
+    sll_gnuplot_2d
+
+  use sll_m_utilities, only: &
+    int2string, &
+    sll_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_corect2d_nodes
+
+  implicit none
+
+  public :: &
+    compute_df_cic, &
+    distribution_gnuplot, &
+    distribution_m4_gnuplot, &
+    distribution_tsc_gnuplot, &
+    distribution_xdmf, &
+    electricpotential_gnuplot_inline, &
+    energies_electrostatic_gnuplot_inline, &
+    particles_center_gnuplot, &
+    particles_center_gnuplot_inline, &
+    plot_format_points3d, &
+    plot_format_xmdv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> plot particles centers with gnuplot
 interface particles_center_gnuplot
@@ -98,7 +125,7 @@ delta_v = (vmax-vmin)/(nv-1)
 
 weight = 1._f64!/(delta_x*delta_v)   ! needs improvement
 
-df = 0.d0
+df = 0.0_f64
 do k=1,size(x)
    do i=1,nx
       if (xmin+(i-1)*delta_x <= x(k) .and. x(k) < xmin+i*delta_x) then
@@ -492,7 +519,7 @@ if( x .gt. 2. ) then
 else if ( x .ge. 1. .and. x .le. 2. ) then
    f_m4 = 0.5 * (2.-x)**2 * (1.-x)
 else if ( x .le. 1. ) then
-   f_m4 = 1. - 2.5 *x**2 + 1.5 * (dabs(x))**3
+   f_m4 = 1. - 2.5 *x**2 + 1.5 * (abs(x))**3
 end if
 
 return

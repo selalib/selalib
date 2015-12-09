@@ -21,7 +21,7 @@ program dk_cartesian_4d
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  !call getarg(1, filename)
+  !call get_command_argument(1, filename)
   !filename_local = trim(filename)
 
   ! To initialize the simulation type, there should be two options. One is to

@@ -6,29 +6,82 @@
 !> be performed
 
 program sim_bsl_vp_1d1v_cart_deltaf
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "sll_field_2d.h"
 
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_periodic_interpolator_1d
-  use sll_m_periodic_interp
-  use sll_m_landau_2d_initializer
-  use sll_m_tsi_2d_initializer
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
-  use omp_lib
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_hermite, &
+    sll_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_cubic_spline_interpolator_1d, &
+    sll_delete
+
+  use sll_m_distribution_function, only: &
+    initialize_distribution_function_2d, &
+    sll_distribution_function_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_landau_2d_initializer, only: &
+    init_landau_2d
+
+  use sll_m_periodic_interp, only: &
+    trigo_fft_selalib
+
+  use sll_m_periodic_interpolator_1d, only: &
+    sll_delete, &
+    sll_periodic_interpolator_1d
+
+  use sll_m_poisson_1d_periodic, only: &
+    initialize, &
+    poisson_1d_periodic, &
+    solve
+
+  use sll_m_scalar_field_2d_old, only: &
+    write_scalar_field_2d
+
+  use sll_m_scalar_field_initializers_base, only: &
+    node_centered_field, &
+    scalar_field_2d_initializer_base
+
+  use sll_m_tsi_2d_initializer, only: &
+    init_tsi_2d
+
+  use sll_m_utilities, only: &
+    pfenvelope
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
   type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
   type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
-  class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+  class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
   type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
@@ -46,7 +99,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_int32, parameter  :: param_out_drive = 40
-  sll_real64 :: kmode, omegadr, omegadr0
+  sll_real64 :: kmode, omegadr!, omegadr0
   sll_int32  :: is_delta_f
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
@@ -83,7 +136,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
 
 
   ! determine what case is being run
-  call GET_COMMAND_ARGUMENT(1,case)
+  call get_command_argument(1,case)
   ! open and read input file
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.nml')
@@ -92,7 +145,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        eps = 0.0  ! no initial perturbation for driven simulation
+        eps = 0.0_f64  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else if (case == "tsi") then
@@ -327,9 +380,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
   ! half time step advection in v
   do istep = 1, nbiter
      do i = istartx, iendx
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        alpha = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -342,9 +395,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      !$omp barrier
 
      do j =  jstartv, jendv
-        alpha = (vmin + (j-1) * delta_v) * dt
+        alpha = -(vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        call interp_x%interpolate_array_disp_inplace(Ncx+1, f1d, alpha)
      end do
      !$omp barrier
 
@@ -366,9 +419,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      endif
      !$omp end single
      do i = istartx, iendx
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        alpha = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        call interp_v%interpolate_array_disp_inplace(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -383,12 +436,12 @@ program sim_bsl_vp_1d1v_cart_deltaf
      ! diagnostics
      if (mod(istep,freqdiag)==0) then
         time = istep*dt
-        mass = 0.
-        momentum = 0.
-        l1norm = 0.
-        l2norm = 0.
-        kinetic_energy = 0.
-        potential_energy = 0.
+        mass = 0.0_f64
+        momentum = 0.0_f64
+        l1norm = 0.0_f64
+        l2norm = 0.0_f64
+        kinetic_energy = 0.0_f64
+        potential_energy = 0.0_f64
         do i = 1, Ncx 
            mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
            l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))

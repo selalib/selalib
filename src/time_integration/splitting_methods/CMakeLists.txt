@@ -13,7 +13,6 @@ TARGET_LINK_LIBRARIES( sll_splitting_methods
   sll_distribution_function
   sll_interpolators
   sll_advection
-  sll_working_precision
   sll_poisson_solvers
   sll_memory
   ode_solvers )

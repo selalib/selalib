@@ -16,16 +16,36 @@
 !**************************************************************
 
 program test_qn_solver_3d_polar_parallel_x1_wrapper
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_qn_solver_3d_polar_parallel_x1_wrapper
-use sll_m_remapper
-use sll_m_collective
 
-!use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_dirichlet, &
+    sll_neumann_mode_0
 
-implicit none
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_halt_collective, &
+    sll_world_collective
+
+  use sll_m_poisson_3d_base, only: &
+    sll_poisson_3d_base
+
+  use sll_m_qn_solver_3d_polar_parallel_x1_wrapper, only: &
+    new_qn_solver_3d_polar_parallel_x1_wrapper
+
+  use sll_m_remapper, only: &
+    compute_local_sizes, &
+    initialize_layout_with_distributed_array, &
+    new_layout_2d, &
+    layout_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_poisson_3d_base), pointer :: poisson 
   sll_real64 :: err

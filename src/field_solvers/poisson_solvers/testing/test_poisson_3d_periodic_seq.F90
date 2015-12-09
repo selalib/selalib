@@ -15,14 +15,21 @@
 !***************************************************************************
 
 program test_poisson_3d_periodic_seq
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_poisson_solvers.h"
-  use sll_m_constants
-  use sll_m_poisson_3d_periodic_seq
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_poisson_3d_periodic_seq, only: &
+    delete_poisson_3d_periodic_plan_seq, &
+    new_poisson_3d_periodic_plan_seq, &
+    poisson_3d_periodic_plan_seq, &
+    solve_poisson_3d_periodic_seq
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32  :: nx, ny, nz
   sll_real64 :: Lx, Ly, Lz
@@ -86,7 +93,7 @@ program test_poisson_3d_periodic_seq
         phi_an = cos(x)*sin(y)*cos(z)
         rho = 3._f64 * phi_an
      else if (i_test == 2) then
-        phi_an = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) *  exp(-.5 & 
+        phi_an = (4.0_f64/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) *  exp(-.5 & 
                  *(x-Lx/2)**2) * exp(-.5*(y-Ly/2)**2) * sin(z)
         rho    = phi_an * (3.0_f64 - ((x-Lx/2.0_f64)**2 + &
                  (y-Ly/2.0_f64)**2))
@@ -96,7 +103,7 @@ program test_poisson_3d_periodic_seq
      call solve_poisson_3d_periodic_seq(plan, rho, phi)
      call cpu_time(time_2)
 
-     average_err = sum( abs(phi_an-phi) ) / (nx*ny*nz)
+     average_err = sum( abs(phi_an-phi) ) / real(nx*ny*nz,f64)
      print*, 'Average error:', average_err
      print*, 'dx*dy*dz =', dx*dy*dz
      print*, 'CPU time = ', time_2-time_1

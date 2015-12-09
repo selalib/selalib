@@ -26,21 +26,62 @@
 !we use a lot of points in x1 and few points in x2
 
 program aligned_translation_2d
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_1d_base
-use sll_m_advection_1d_periodic
-use sll_m_lagrange_interpolation
-use sll_m_advection_2d_oblic
-use sll_m_timer
-use sll_m_fcisl_toroidal
-use sll_m_constants
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
 
-implicit none
+  use sll_m_advection_1d_periodic, only: &
+    new_periodic_1d_advector
+
+  use sll_m_advection_2d_oblic, only: &
+    new_oblic_2d_advector, &
+    oblic_2d_advector, &
+    oblic_advect_2d_constant
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    new_cubic_spline_interpolator_2d
+
+  use sll_m_fcisl_toroidal, only: &
+    compute_modulo_vect2d_inplace, &
+    interpolate2d_toroidal
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_hdf5_file_close, &
+    sll_hdf5_file_create, &
+    sll_hdf5_write_array
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    lagrange, &
+    spline
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
+  use sll_m_utilities, only: &
+    int2string
+
+  use sll_m_xdmf, only: &
+    sll_xdmf_close, &
+    sll_xdmf_open, &
+    sll_xdmf_write_array
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
   type(oblic_2d_advector), pointer :: adv  
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_x2
@@ -73,8 +114,8 @@ implicit none
   sll_int32 :: step
   sll_int32 :: istep
   sll_real64 :: err
-  sll_real64 :: alpha
-  sll_int32 :: i0
+!  sll_real64 :: alpha
+!  sll_int32 :: i0
   sll_real64 :: dt_loc
   sll_real64, dimension(:,:), allocatable :: buf
   sll_real64, dimension(:,:), allocatable :: f_new
@@ -84,14 +125,14 @@ implicit none
   sll_real64, dimension(:), allocatable :: xx
   sll_real64, dimension(:), allocatable :: x1_array
   sll_real64, dimension(:), allocatable :: x2_array
-  sll_int32 :: ell
-  sll_int32 :: i2_loc
+!  sll_int32 :: ell
+!  sll_int32 :: i2_loc
   character(len=256) :: filename
   sll_int32 :: IO_stat
   sll_int32, parameter  :: input_file = 99
   sll_int32 :: i
   sll_real64 :: err0
-  sll_real64 :: err1
+!  sll_real64 :: err1
   sll_real64 :: err2
   sll_real64 :: dt_max0
   sll_real64 :: dt_max2
@@ -108,7 +149,7 @@ implicit none
   sll_real64 :: dt_max4
   sll_real64 :: err3  
   sll_real64 :: err4  
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p
@@ -534,12 +575,12 @@ do istep = 1,num_dt1
 
 
   do step =1,nb_step
-    f_new = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Nc_x1+1, &
       Nc_x2+1, &
       f, &
       feet_x1, &
-      feet_x2)
+      feet_x2, f_new)
     f = f_new      
   enddo
 
@@ -689,8 +730,7 @@ contains
     nnodes_x2, &
     array_name, time)    
     !mesh_2d)
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
+
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:), intent(in) :: node_positions_x1

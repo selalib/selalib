@@ -14,17 +14,24 @@
 
 module sll_m_poisson_2d_dirichlet_cartesian
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-!  use sll_m_fft
-  use sll_m_constants
+
   implicit none
+
+  public :: &
+    new_poisson_2d_dirichlet_cartesian_plan, &
+    poisson_2d_dirichlet_cartesian, &
+    sll_delete, &
+    sll_solve
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to store data from Poisson solver. This
   !> solver is parallel on structured cartesian mesh. 
-  type, public :: poisson_2d_dirichlet_cartesian
+  type :: poisson_2d_dirichlet_cartesian
      sll_int32                           :: ncx    !< number of cells  
      sll_int32                           :: ncy    !< number of cells
 
@@ -51,9 +58,6 @@ module sll_m_poisson_2d_dirichlet_cartesian
      module procedure delete_poisson_2d_dirichlet_cartesian
   end interface sll_delete
 
-  public :: new_poisson_2d_dirichlet_cartesian_plan
-  public :: sll_solve
-  public :: sll_delete
 
 contains
 
@@ -139,8 +143,8 @@ contains
     SLL_ALLOCATE(plan%vkgs(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgi(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgd(n),ierr)
-    plan%vkgs=0.d0
-    plan%vkgi=0.d0
+    plan%vkgs=0._f64
+    plan%vkgi=0._f64
     !definir vkgs,vkgi,vkgd
     do l=1,ch
        i=plan%indi(l)

@@ -16,15 +16,30 @@
 !**************************************************************
 
 module sll_m_characteristics_1d_explicit_euler
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_1d_base
-implicit none
-private
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  type,public,extends(sll_characteristics_1d_base) :: explicit_euler_1d_charac_computer
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_characteristics_1d_base, only: &
+    process_outside_point_periodic, &
+    process_outside_point_set_to_limit, &
+    signature_process_outside_point_1d, &
+    sll_characteristics_1d_base
+
+  implicit none
+
+  public :: &
+    new_explicit_euler_1d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_characteristics_1d_base) :: explicit_euler_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
@@ -40,7 +55,6 @@ private
   end type explicit_euler_1d_charac_computer
 
 
-public :: new_explicit_euler_1d_charac
 
 contains
   function new_explicit_euler_1d_charac(&

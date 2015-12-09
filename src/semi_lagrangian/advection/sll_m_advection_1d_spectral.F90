@@ -19,29 +19,49 @@
 !> @details We are using FFTW to compute ffts. Boundary conditions
 !> must be periodic.
 module sll_m_advection_1d_spectral
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_fftw.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_interpolators_1d_base
-use sll_m_constants, only : &
-     sll_pi
+  use iso_c_binding, only: &
+    c_associated, &
+    c_double_complex, &
+    c_f_pointer, &
+    c_ptr, &
+    c_size_t
+
+  use sll_m_advection_1d_base, only: &
+    sll_advection_1d_base
+
+  use sll_m_constants, only: &
+    sll_pi
 
 #ifdef FFTW_F2003
 #include "sll_fftw.h"
-use sll_m_fftw3
+  use sll_m_fftw3, only: &
+    fftw_alloc_complex, &
+    fftw_destroy_plan, &
+    fftw_execute_dft_c2r, &
+    fftw_execute_dft_r2c, &
+    fftw_free, &
+    fftw_patient, &
+    fftw_plan_dft_c2r_1d, &
+    fftw_plan_dft_r2c_1d
+
 #else
 use sll_m_fft
 #endif
+  implicit none
 
-implicit none
+  public :: &
+    new_spectral_1d_advector
 
-private
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type,extends(sll_advection_1d_base), public :: spectral_1d_advector
+type,extends(sll_advection_1d_base) :: spectral_1d_advector
   
   sll_int32                         :: num_cells
   sll_real64                        :: eta_min
@@ -72,7 +92,6 @@ contains
 
 end type spectral_1d_advector
 
-public ::  new_spectral_1d_advector
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -124,8 +143,8 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
 #else
 
   SLL_CLEAR_ALLOCATE(adv%fk(1:num_cells/2+1), error)
-  adv%fwx => fft_new_plan(num_cells, adv%d_dx,  adv%fk)
-  adv%bwx => fft_new_plan(num_cells, adv%fk, adv%d_dx)
+  adv%fwx => fft_new_plan_r2c_1d(num_cells, adv%d_dx,  adv%fk)
+  adv%bwx => fft_new_plan_c2r_1d(num_cells, adv%fk, adv%d_dx)
 
 #endif
 
@@ -175,7 +194,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 #ifdef FFTW_F2003
   call fftw_execute_dft_r2c(adv%fwx, adv%d_dx, adv%fk)
 #else
-  call fft_apply_plan(adv%fwx, adv%d_dx, adv%fk)
+  call fft_apply_plan_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
 #endif
 
   !f = f^n exp(-i kx vx dt)
@@ -187,7 +206,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 #ifdef FFTW_F2003
   call fftw_execute_dft_c2r(adv%bwx, adv%fk, adv%d_dx)
 #else
-  call fft_apply_plan(adv%bwx, adv%fk, adv%d_dx)
+  call fft_apply_plan_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 #endif
 
   output(1:num_cells)= adv%d_dx / num_cells

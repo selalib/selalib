@@ -4,16 +4,61 @@
 ! - parallel
 
 program sim_eul_vp_2d2v_cart_fv
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_eul_vp_2d2v_cart_fv
-  use sll_m_collective
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_common_array_initializers
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_timer
+
+  use sll_m_cartesian_meshes, only: &
+    new_cartesian_mesh_2d, &
+    sll_cartesian_mesh_2d, &
+    sll_delete
+
+  use sll_m_collective, only: &
+    sll_boot_collective, &
+    sll_halt_collective
+
+  use sll_m_common_array_initializers, only: &
+    sll_galaxy_1d_xvx_initializer_v1v2x1x2, &
+    sll_galaxy_2d_initializer_v1v2x1x2, &
+    sll_landau_1d_xvx_initializer_v1v2x1x2, &
+    sll_landau_1d_yvy_initializer_v1v2x1x2, &
+    sll_landau_2d_initializer_v1v2x1x2, &
+    sll_test_vx_transport_initializer_v1v2x1x2, &
+    sll_test_vy_transport_initializer_v1v2x1x2, &
+    sll_test_x_transport_initializer_v1v2x1x2, &
+    sll_test_xvx_transport_initializer_v1v2x1x2, &
+    sll_test_y_transport_initializer_v1v2x1x2, &
+    sll_test_yvy_transport_initializer_v1v2x1x2, &
+    sll_twostream_1d_xvx_initializer_v1v2x1x2
+
+  use sll_m_common_coordinate_transformations, only: &
+    identity_jac11, &
+    identity_jac12, &
+    identity_jac21, &
+    identity_jac22, &
+    identity_x1, &
+    identity_x2
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_coordinate_transformation_2d_base
+
+  use sll_m_coordinate_transformations_2d, only: &
+    new_coordinate_transformation_2d_analytic
+
+  use sll_m_sim_eul_vp_2d2v_cart_fv, only: &
+    initialize_vp4d, &
+    sll_simulation_4d_vp_eulerian_cart_finite_volume, &
+    sll_delete
+
+  use sll_m_timer, only: &
+    sll_set_time_mark, &
+    sll_time_elapsed_since, &
+    sll_time_mark
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_simulation_4d_vp_eulerian_cart_finite_volume)      :: simulation
   type(sll_cartesian_mesh_2d), pointer      :: mx,mv
@@ -27,7 +72,7 @@ program sim_eul_vp_2d2v_cart_fv
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  !call getarg(1, filename)
+  !call get_command_argument(1, filename)
   !filename_local = trim(filename)
 
   ! To initialize the simulation type, there should be two options. One is to

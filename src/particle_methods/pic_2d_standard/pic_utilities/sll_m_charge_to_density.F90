@@ -17,12 +17,27 @@
 
 
 module sll_m_charge_to_density
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_accumulators.h"
-  use sll_m_cartesian_meshes
+
+  use sll_m_accumulators, only: &
+    electric_field_accumulator, &
+    electric_field_accumulator_cs, &
+    sll_charge_accumulator_2d, &
+    sll_charge_accumulator_2d_cs
+
   implicit none
+
+  public :: &
+    sll_accumulate_field, &
+    sll_accumulate_field_cs, &
+    sll_convert_charge_to_rho_2d_per_per, &
+    sll_convert_charge_to_rho_2d_per_per_cs
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 

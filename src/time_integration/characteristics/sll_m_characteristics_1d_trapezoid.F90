@@ -18,14 +18,31 @@
 !http://en.wikipedia.org/wiki/Trapezoidal_rule_%28differential_equations%29
 
 module sll_m_characteristics_1d_trapezoid
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_1d_base
-use sll_m_interpolators_1d_base
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_periodic, &
+    sll_set_to_limit
+
+  use sll_m_characteristics_1d_base, only: &
+    process_outside_point_periodic, &
+    process_outside_point_set_to_limit, &
+    signature_process_outside_point_1d, &
+    sll_characteristics_1d_base
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    new_trapezoid_1d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type,extends(sll_characteristics_1d_base) :: trapezoid_1d_charac_computer
     sll_int32                               :: Npts
@@ -33,7 +50,7 @@ implicit none
     sll_real64                              :: eta_max  
     procedure(signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), pointer               :: A_interp
+    class(sll_c_interpolator_1d), pointer               :: A_interp
     sll_int32 :: maxiter
     sll_real64 :: tol
     logical :: feet_inside
@@ -65,7 +82,7 @@ contains
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), target :: A_interp
+    class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
     logical, intent(in), optional :: feet_inside
@@ -105,7 +122,7 @@ contains
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), target :: A_interp
+    class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
     logical, intent(in), optional :: feet_inside
@@ -224,7 +241,7 @@ contains
           else
             x2_i = x2  
           endif                      
-          x2 = input(j)-0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+          x2 = input(j)-0.5_f64*dt*(charac%A_interp%interpolate_from_interpolant_value(x2_i)+A(j))
           iter = iter+1
           !if(j==1)then
           !  print *,'#x2=',x2

@@ -4,11 +4,17 @@
 !> The time splitting: Lie splitting and Strang splitting
 !> 
 module sll_m_time_splitting
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    time_splitting
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, abstract :: time_splitting
      sll_real64 :: current_time = 0.0_f64

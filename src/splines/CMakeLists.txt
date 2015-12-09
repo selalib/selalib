@@ -11,10 +11,10 @@ ADD_LIBRARY( sll_splines STATIC
 
 TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
-  sll_boundary_condition_descriptors
   sll_meshes
   sll_linear_solvers
-  deboor
+  sll_timer
+  pppack
   ${LAPACK_LIBRARIES} )
 
 IF(BUILD_TESTING)
