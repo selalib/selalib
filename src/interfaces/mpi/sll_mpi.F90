@@ -125,10 +125,12 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
-#ifdef __INTEL_COMPILER
+#ifdef INTEL_MPI
 #include "external_intel.F90"
-#else
+#elif defined(OMPI)
 #include "external_openmpi.F90"
+#elif defined(MPICH)
+#include "external_mpich.F90"
 #endif
 
 !-----------------------------------------------------------------------
