@@ -43,19 +43,19 @@ if( ${MPI_LIB} STREQUAL "openmpi" )
   execute_process( COMMAND ${OMPI_INFO_PROG} OUTPUT_VARIABLE OMPI_INFO )
   string( REGEX MATCH "Open MPI: ([0-9]+)\\.([0-9]+)\\.([0-9]+)" OMPI_VERSION ${OMPI_INFO} )
   message( STATUS ${CMAKE_MATCH_0} )
-  set( OMPI_V_MAJOR ${CMAKE_MATCH_1} )
-  set( OMPI_V_MINOR ${CMAKE_MATCH_2} )
-  set( OMPI_V_REVSN ${CMAKE_MATCH_3} )
+  math( EXPR OMPI_VERSION
+    "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 + ${CMAKE_MATCH_3}" )
   add_definitions( -DOMPI )
-  add_definitions( -DOMPI_V_MAJOR=${OMPI_V_MAJOR} )
-  add_definitions( -DOMPI_V_MINOR=${OMPI_V_MINOR} )
-  add_definitions( -DOMPI_V_REVSN=${OMPI_V_REVSN} )
+  add_definitions( -DOMPI_VERSION=${OMPI_VERSION} )
+  message( STATUS "OMPI_VERSION = ${OMPI_VERSION}" )
 endif()
 
 #-------------------------------------------------------------------------------
 # Specific operations for MPICH
 #-------------------------------------------------------------------------------
 if( ${MPI_LIB} STREQUAL "mpich" )
+#  execute_process( COMMAND mpichversion OUTPUT_VARIABLE MPICH_INFO )
+#  string( REGEX MATCH "MPICH Version:    	([0-9]+)\\.([0-9]+)\\.([0-9]+)" MPICH_VERSION ${MPICH_INFO} )
   execute_process(
     COMMAND mpichversion
     COMMAND grep "MPICH Version:\\s*[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+"
@@ -63,15 +63,11 @@ if( ${MPI_LIB} STREQUAL "mpich" )
     )
   message( STATUS ${MPICH_INFO} )
   string( REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" MPICH_VERSION ${MPICH_INFO} )
-#  execute_process( COMMAND mpichversion OUTPUT_VARIABLE MPICH_INFO )
-#  string( REGEX MATCH "MPICH Version:    	([0-9]+)\\.([0-9]+)\\.([0-9]+)" MPICH_VERSION ${MPICH_INFO} )
-  set( MPICH_V_MAJOR ${CMAKE_MATCH_1} )
-  set( MPICH_V_MINOR ${CMAKE_MATCH_2} )
-  set( MPICH_V_REVSN ${CMAKE_MATCH_3} )
+  math( EXPR MPICH_VERSION
+    "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 + ${CMAKE_MATCH_3}" )
   add_definitions( -DMPICH )
-  add_definitions( -DMPICH_V_MAJOR=${MPICH_V_MAJOR} )
-  add_definitions( -DMPICH_V_MINOR=${MPICH_V_MINOR} )
-  add_definitions( -DMPICH_V_REVSN=${MPICH_V_REVSN} )
+  add_definitions( -DMPICH_VERSION=${MPICH_VERSION} )
+  message( STATUS "MPICH_VERSION = ${MPICH_VERSION}" )
 endif()
 
 #-------------------------------------------------------------------------------
