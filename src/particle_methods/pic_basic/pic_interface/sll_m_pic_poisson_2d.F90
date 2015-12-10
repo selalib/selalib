@@ -186,9 +186,9 @@ contains
 
 
     if (component == 1) then
-       energy = this%solver%l2norm_squarred(this%efield1)
+       energy = this%solver%l2norm_squared(this%efield1)
     elseif (component == 2) then
-       energy = this%solver%l2norm_squarred(this%efield2)
+       energy = this%solver%l2norm_squared(this%efield2)
     end if
 
   end function compute_field_energy_2d

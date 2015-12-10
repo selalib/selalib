@@ -32,7 +32,7 @@ module sll_m_poisson_2d_base
 
     !> Compute the squarred L_2 for given coefficients
     procedure(signature_norm_squarred), deferred :: &
-         l2norm_squarred
+         l2norm_squared
     !> Compute the right hand side from a given function
     procedure(signature_update_dofs_function), deferred :: &
          compute_rhs_from_function

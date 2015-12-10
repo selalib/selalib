@@ -91,8 +91,6 @@ end interface
 !> derived type to solve the Poisson equation on 2d regular cartesian mesh 
 !> with periodic boundary conditions on both sides
 type :: poisson_2d_periodic_fftw
-
-   private
    sll_real64, dimension(:,:), pointer :: kx       !< wave number in x
    sll_real64, dimension(:,:), pointer :: ky       !< wave number in y
    sll_real64, dimension(:,:), pointer :: k2       !< \f[ k_x^2 + k_y^2 \f]
