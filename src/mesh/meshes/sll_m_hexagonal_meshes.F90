@@ -1859,7 +1859,13 @@ contains
           boundary = 1
        end if
        ! Mapping to circle:
-       call mesh%hex_to_aligned_pt( i, "TOKAMAK", x1, y1)
+       if (transf .eq. "IDENTITY") then
+          x1 = mesh%cartesian_coord(1, i)
+          y1 = mesh%cartesian_coord(2, i)
+       else
+          call mesh%hex_to_aligned_pt( i, transf, x1, y1)
+       end if
+
        !... we write the coordinates
        write (out_unit, "((i6),(a,1x),(g25.17),(a,1x),(g25.17))") boundary, &
             ",", &

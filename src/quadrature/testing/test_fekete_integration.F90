@@ -71,7 +71,7 @@ program test_fekete_integration
 
 
   ! Writing all django files....................................................
-  num_cells = 20
+  num_cells = 10
   degree = 1
   rule = 1
   transf="TOKAMAK"

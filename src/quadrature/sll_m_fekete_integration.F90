@@ -877,7 +877,7 @@ contains
   subroutine write_quadrature(rule)
     sll_int32, intent(in)       :: rule
     sll_int32                   :: out_unit
-    character(len=14), parameter :: name = "boxsplines_quadrature.txt"
+    character(len=25), parameter :: name = "boxsplines_quadrature.txt"
     sll_real64, dimension(2, 3) :: ref_pts
     sll_real64, dimension(:,:), allocatable :: quad_pw
     sll_int32  :: num_fek
@@ -899,8 +899,8 @@ contains
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
-    ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
-    !    ref_pts(:,2) = (/ sqrt(3._f64)/2._f64, 0.5_f64 /)
+    ! ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
     ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
 
     call triangle_area(ref_pts, volume)
