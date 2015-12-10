@@ -1,0 +1,3 @@
+ADD_EXECUTABLE( test_control_variate test_control_variate.F90)
+TARGET_LINK_LIBRARIES( test_control_variate sll_pic_interface sll_particle_types)
+ADD_TEST( NAME control_variate COMMAND test_control_variate)
