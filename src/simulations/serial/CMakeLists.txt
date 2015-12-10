@@ -43,7 +43,7 @@ IF(HDF5_ENABLED)
   ADD_SUBDIRECTORY( bsl_gc_2d0v_polar_one_mu                  )
   ADD_SUBDIRECTORY( bsl_gc_2d0v_hex                           )
   ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_splines                   )
-  ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_aligned                   )
+#  ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_aligned                   )
   ADD_SUBDIRECTORY( bsl_gc_2d0v_hex_hermite                   )
 
   # Eulerian method
