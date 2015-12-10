@@ -7,6 +7,6 @@ mkdir build
 cd build; {
 cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON ..
 make #VERBOSE=1
-make Experimental
+ctest
 }; cd -
 exit 0
