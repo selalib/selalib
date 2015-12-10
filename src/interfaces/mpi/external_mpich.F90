@@ -9,7 +9,6 @@
     mpi_cart_create, &
     mpi_cart_get,    &
     mpi_dims_create, &
-    mpi_finalize,    &
     mpi_gather,      &
     mpi_gatherv,     &
     mpi_iallreduce,  &

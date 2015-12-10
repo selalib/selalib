@@ -71,16 +71,6 @@ if( ${MPI_LIB} STREQUAL "mpich" )
 endif()
 
 #-------------------------------------------------------------------------------
-#message( STATUS ${OMPI_INFO} )
-#message( STATUS "OpenMPI version is: ${OMPI_V_MAJOR}.${OMPI_V_MINOR}.${OMPI_V_REVSN}" )
-#message( STATUS "=======================================" )
-#message( STATUS ${CMAKE_MATCH_0} )
-#message( STATUS ${CMAKE_MATCH_1} )
-#message( STATUS ${CMAKE_MATCH_2} )
-#message( STATUS ${CMAKE_MATCH_3} )
-#message( STATUS "=======================================" )
-
-#-------------------------------------------------------------------------------
 # ADD LIBRARY
 #-------------------------------------------------------------------------------
 add_library( sll_mpi OBJECT sll_mpi.F90 )
