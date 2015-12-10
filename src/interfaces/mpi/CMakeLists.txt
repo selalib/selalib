@@ -39,7 +39,8 @@ message( STATUS "MPI_LIB = ${MPI_LIB}" )
 #-------------------------------------------------------------------------------
 # Specific operations for Intel MPI
 #-------------------------------------------------------------------------------
-if( ${MPI_LIB} STREQUAL "intel" )
+#if( ${MPI_LIB} STREQUAL "intel" )
+if( ${MPI_LIB} STREQUAL "impi" )
   set( INTEL_MPI_INFO $ENV{I_MPI_ROOT} )
   string( REGEX MATCH "impi/([0-9]+)\\.([0-9]+)\\.([0-9]+)" INTEL_MPI_VERSION ${INTEL_MPI_INFO} )
   message( STATUS ${CMAKE_MATCH_0} )
