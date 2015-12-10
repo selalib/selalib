@@ -9,7 +9,7 @@
     mpi_cart_create, &
     mpi_cart_get,    &
     mpi_dims_create, &
-#if MPICH_VERSION < 30105
+#if MPICH_VERSION < 30100
     mpi_finalize,    &
 #endif
     mpi_gather,      &
