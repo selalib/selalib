@@ -1,7 +1,7 @@
 stages:
   - ctest
   
-ubuntu:
+ubuntu-openmpi:
   stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
@@ -10,7 +10,7 @@ ubuntu:
   tags:
     - ubuntu
     
-mavericks:
+mavericks-openmpi:
   stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
