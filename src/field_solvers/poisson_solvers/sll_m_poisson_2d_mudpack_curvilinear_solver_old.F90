@@ -118,7 +118,7 @@ module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 
     !> Compute the squarred L_2 for given coefficients
     procedure :: &
-         l2norm_squarred => l2norm_squarred_2d_mudpack_curvilinear
+         l2norm_squared => l2norm_squarred_2d_mudpack_curvilinear
     !> Compute the right hand side from a given function
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_mudpack_curvilinear
@@ -689,7 +689,7 @@ contains
     sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
     sll_real64                                     :: r
     
-    print*, 'l2norm_squarred not implemented for poisson_2d_mudpack_curvilinear_solver.'
+    print*, 'l2norm_squared not implemented for poisson_2d_mudpack_curvilinear_solver.'
     
   end function l2norm_squarred_2d_mudpack_curvilinear
   

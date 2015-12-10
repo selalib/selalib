@@ -115,7 +115,7 @@ module sll_m_poisson_2d_elliptic_solver
     procedure, pass(poisson) :: compute_E_from_rho => &
       compute_E_from_rho_2d_elliptic_solver
 
-    procedure :: l2norm_squarred => l2norm_squarred_2d_elliptic_solver
+    procedure :: l2norm_squared => l2norm_squarred_2d_elliptic_solver
     procedure :: compute_rhs_from_function => compute_rhs_from_function_2d_elliptic_solver
 
   end type poisson_2d_elliptic_solver
@@ -871,7 +871,7 @@ contains
        sll_real64,intent(in)                      :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
        sll_real64                                   :: r
        
-       print*, 'l2norm_squarred not implemented for 2d elliptic solver.'
+       print*, 'l2norm_squared not implemented for 2d elliptic solver.'
 
      end function l2norm_squarred_2d_elliptic_solver
     
