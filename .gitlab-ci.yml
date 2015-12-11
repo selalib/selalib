@@ -1,7 +1,7 @@
 stages:
   - ctest
   
-ubuntu:
+ubuntu-openmpi:
   stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
@@ -9,8 +9,19 @@ ubuntu:
     - develop
   tags:
     - ubuntu
+    - openmpi
+
+ubuntu-mpich:
+  stage: ctest
+  script: 
+    - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - ubuntu
+    - mpich
     
-mavericks:
+mavericks-openmpi:
   stage: ctest
   script: 
     - "scripts/selalib-ci.sh"
@@ -18,12 +29,24 @@ mavericks:
     - develop
   tags:
     - osx
+    - openmpi
     
-fedora:
+fedora-openmpi:
   stage: ctest
   script: 
-    - "scripts/fedora-ci.sh"
+    - "scripts/fedora-openmpi-ci.sh"
   only:
     - develop
   tags:
     - fedora
+    - openmpi
+
+fedora-mpich:
+  stage: ctest
+  script: 
+    - "scripts/fedora-mpich-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora
+    - mpich
