@@ -9,6 +9,7 @@ ubuntu-openmpi:
     - develop
   tags:
     - ubuntu
+    - openmpi
     
 mavericks-openmpi:
   stage: ctest
@@ -18,6 +19,7 @@ mavericks-openmpi:
     - develop
   tags:
     - osx
+    - openmpi
     
 fedora-openmpi:
   stage: ctest
@@ -27,6 +29,7 @@ fedora-openmpi:
     - develop
   tags:
     - fedora
+    - openmpi
 
 fedora-mpich:
   stage: ctest
@@ -36,3 +39,4 @@ fedora-mpich:
     - develop
   tags:
     - fedora
+    - mpich
