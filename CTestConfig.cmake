@@ -44,9 +44,29 @@ else()
       endif(LINUX_ISSUE MATCHES "SUSE")
       set(LINUX_NAME "${LINUX_NAME}-${LINUX_VER}")
    endif()
+   if(EXISTS "/etc/system-release")
+      set(LINUX_NAME "")
+      file(READ "/etc/system-release" LINUX_ISSUE)
+      # Fedora case
+      if(LINUX_ISSUE MATCHES "Fedora")
+        string(REGEX MATCH "[0-2]+[0-9]" FEDORA "${LINUX_ISSUE}")
+        set(LINUX_NAME "Fedora-${FEDORA}")
+        set(LINUX_VER "${CMAKE_MATCH_1}")
+      endif(LINUX_ISSUE MATCHES "Fedora")
+   endif()
 endif()
 
-MESSAGE(STATUS "LINUX_NAME:${LINUX_NAME}")
+#-------------------------------------------------------------------------------
+# Detect MPI library: OpenMPI | MPICH | Intel MPI | Bull-X MPI
+# Copy-paste of src/interfaces/mpiCMakeLists.txt
+#-------------------------------------------------------------------------------
+SET( TEST_STRING ${MPI_Fortran_INCLUDE_PATH} )
+STRING( REGEX MATCH "open\\-?mpi|mpich|impi|bullxmpi" MPI_LIB ${TEST_STRING} )
+IF( MPI_LIB )
+  STRING( REPLACE "-" "" MPI_LIB ${MPI_LIB} )
+ELSE()
+  SET( MPI_LIB "mpi" )
+ENDIF()
 
 SET(CTEST_PROJECT_NAME "Selalib")
 SET(CTEST_NIGHTLY_START_TIME "00:00:00 EST")
@@ -59,8 +79,8 @@ FIND_PROGRAM(CTEST_GIT_COMMAND NAMES git)
 SET(UPDATE_COMMAND "${CTEST_GIT_COMMAND}")
 
 IF(LINUX_NAME)
-SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${LINUX_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${MPI_LIB}-${LINUX_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 ELSE()
-SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${MPI_LIB}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 ENDIF()
 MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
