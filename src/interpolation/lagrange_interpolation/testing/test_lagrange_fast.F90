@@ -1,12 +1,12 @@
 program test_lagrange_fast
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  
+
   use sll_m_constants, only : sll_pi
-  
+
   use sll_m_lagrange_fast, only : &
     sll_s_interpolate_array_disp_lagrange_fixed_no_bc
-  
+
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -44,7 +44,7 @@ program test_lagrange_fast
     diff=max(diff, abs(f(xp(i),num_points) - fp(i)))
   end do
 
-  if (diff < 1.e-4) then
+  if (diff < 1.e-6) then
     print *, ""
     print *, "Fast Lagrange interpolation unit test: PASSED"
     print *, "error =", diff
@@ -65,7 +65,7 @@ contains
     sll_int32, intent(in) :: num_points
     sll_real64, intent(in) :: x
     sll_real64 :: f
-    f = cos(2*sll_pi*x/(num_points-1.0))
+    f = cos(2*sll_pi*x/num_points)
   end function
 
 end program test_lagrange_fast

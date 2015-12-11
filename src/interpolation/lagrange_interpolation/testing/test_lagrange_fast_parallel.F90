@@ -10,7 +10,6 @@
 ! plot the output files (intp_values_*.dat).
 !
 ! (c) 2015, Klaus Reuter, khr@mpcdf.mpg.de
-! All rights reserved.
 ! ---
 
 
@@ -29,7 +28,7 @@ program test_lagrange_fast_parallel
        sll_get_collective_size, &
        sll_halt_collective, &
        sll_world_collective
-       
+
   use sll_m_decomposition, only : &
        apply_halo_exchange, &
        cartesian_topology_6d, &
@@ -52,7 +51,7 @@ program test_lagrange_fast_parallel
   sll_real64, dimension(:,:,:,:,:,:), pointer :: xi, fi, xp, fp
   sll_real64 :: val
   sll_int32 :: i, stencil
-  sll_real64 :: diff, alpha
+  sll_real64 :: diff, alpha, diff_new
   character(len=128) :: filename
   character(len=6) :: rank_str
 
@@ -152,10 +151,29 @@ program test_lagrange_fast_parallel
     fp(decomposition%local%mn(1):decomposition%local%mx(1),1,1,1,1,1), &
     filename)
 
+
+  diff = 0.0_f64
+  do i=decomposition%local%mn(1), decomposition%local%mx(1)
+    diff_new = abs(f(xp(i,1,1,1,1,1), global_grid_points_per_dimension(1)) - fp(i,1,1,1,1,1))
+    if (diff_new > diff) then
+      ! print *, "### diff=", diff_new, ", i=", i
+      diff = diff_new
+    endif
+  end do
+
+  ! optional: do an MPI min reduction on diff
+
   deallocate(xi, fi, xp, fp)
 
-    ! TODO: implement real test
-  print *, "Fast Lagrange interpolation unit test: PASSED"
+  if (diff < 1.e-6) then
+    print *, ""
+    print *, "Fast Lagrange parallel interpolation unit test: PASSED"
+    print *, "MPI rank=", my_rank, ", error =", diff
+  else
+    print *, ""
+    print *, "Fast Lagrange parallel interpolation unit test: FAILED"
+    print *, "MPI rank=", my_rank, ", error =", diff
+  end if
 
 101 call sll_halt_collective()
   stop
@@ -166,7 +184,7 @@ contains
     sll_int32, intent(in) :: num_points
     sll_real64, intent(in) :: x
     sll_real64 :: f
-    f = cos(2*sll_pi*x/(num_points-1.0))
+    f = cos(2*sll_pi*x/num_points)
   end function
 
   subroutine dump(x, y, filename)
