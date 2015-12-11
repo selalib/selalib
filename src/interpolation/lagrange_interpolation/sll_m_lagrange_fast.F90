@@ -1,5 +1,6 @@
 !> @ingroup lagrange_interpolation
 !> @author Klaus Reuter, MPCDF
+!> @author Katharina Kormann, IPP
 !> @contact Katharina Kormann, IPP
 !> @brief
 !> Module for 1D Lagrange interpolation on a uniform grid (only odd order)
@@ -72,7 +73,7 @@ contains
 !------------------------------------------------------------------------------!
   !> vectorizable 3-pt-lagrange interpolation
   subroutine lagr_3pt_vec(fi, fp, p)
-    sll_real64, intent(in)  :: fi(:) !< known function values 
+    sll_real64, intent(in)  :: fi(:) !< known function values
     sll_real64, intent(out) :: fp(:) !< interpolated function values
     sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
 
@@ -100,7 +101,7 @@ contains
     pp(4) = -(p+1.)*p*(p*p-4.)*inv_6
     pp(5) = (p*p-1.)*p*(p+2.)*inv_24
   end subroutine
- 
+
 
 !------------------------------------------------------------------------------!
   !> single point 5-pt-lagrange interpolation
@@ -127,7 +128,7 @@ contains
 !------------------------------------------------------------------------------!
   !> vectorizable 5-pt-lagrange interpolation
   subroutine lagr_5pt_vec(fi, fp, p)
-    sll_real64, intent(in)  :: fi(:) !< known function values 
+    sll_real64, intent(in)  :: fi(:) !< known function values
     sll_real64, intent(out) :: fp(:) !< interpolated function values
     sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
 
@@ -176,7 +177,7 @@ contains
     sll_real64, intent(in) :: f2  !< known function values at point 2 (relative to where we want to interpolate)
     sll_real64, intent(in) :: f3  !< known function values at point 3 (relative to where we want to interpolate)
     sll_real64, intent(in) :: p   !< displacement in units of grid spacing
-   
+
     sll_real64 :: pp(7)
     call lagr_7pt_coeff(pp, p)
     lagr_7pt = pp(1) * fm3 &
@@ -192,7 +193,7 @@ contains
 !------------------------------------------------------------------------------!
   !> vectorizable 7-pt-lagrange interpolation
   subroutine lagr_7pt_vec(fi, fp, p)
-    sll_real64, intent(in)  :: fi(:) !< known function values 
+    sll_real64, intent(in)  :: fi(:) !< known function values
     sll_real64, intent(out) :: fp(:) !< interpolated function values
     sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
 
@@ -264,7 +265,7 @@ contains
 !------------------------------------------------------------------------------!
   !> vectorizable 9-pt-lagrange interpolation
   subroutine lagr_9pt_vec(fi, fp, p)
-    sll_real64, intent(in)  :: fi(:) !< known function values 
+    sll_real64, intent(in)  :: fi(:) !< known function values
     sll_real64, intent(out) :: fp(:) !< interpolated function values
     sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
 
@@ -344,7 +345,7 @@ contains
 !------------------------------------------------------------------------------!
   !> vectorizable 11-pt-lagrange interpolation
   subroutine lagr_11pt_vec(fi, fp, p)
-    sll_real64, intent(in)  :: fi(:) !< known function values 
+    sll_real64, intent(in)  :: fi(:) !< known function values
     sll_real64, intent(out) :: fp(:) !< interpolated function values
     sll_real64, intent(in)  :: p     !< displacement in units of grid spacing
 
@@ -376,8 +377,8 @@ contains
   !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
   subroutine sll_s_interpolate_array_disp_lagrange_fixed_no_bc(fi, fp, p, stencil)
     implicit none
-    sll_real64, intent(in)   :: fi(:)   
-    sll_real64, intent(out)  :: fp(:)  
+    sll_real64, intent(in)   :: fi(:)
+    sll_real64, intent(out)  :: fp(:)
     sll_real64, intent(in)   :: p
     sll_int32,  intent(in)   :: stencil
     sll_int32 :: n, i

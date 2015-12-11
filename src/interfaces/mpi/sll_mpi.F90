@@ -47,7 +47,7 @@ module sll_mpi
 !  external :: mpi_init, mpi_init_thread, mpi_initialized, mpi_finalize, &
 !    mpi_comm_size, mpi_comm_rank, mpi_comm_split, mpi_comm_free, &
 !    mpi_type_create_f90_real, &
-!    mpi_barrier, mpi_wait, mpi_waitall 
+!    mpi_barrier, mpi_wait, mpi_waitall
 
 !-----------------------------------------------------------------------
 ! Module interface
@@ -124,33 +124,33 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
 
-#ifndef HOMEBREW
-  external ::       &
-#ifdef __INTEL_COMPILER
-    mpi_iallreduce, &
-    mpi_cart_coords,     &
-    mpi_cart_create,     &
-    mpi_cart_get,        &
-    mpi_dims_create,     &
-    mpi_finalize,        &
-#endif /* __INTEL_COMPILER */
-    mpi_bcast,      &
-    mpi_allgather,  &
-    mpi_allgatherv, &
-    mpi_allreduce,  &
-    mpi_alltoall,   &
-    mpi_alltoallv,  &
-    mpi_gather,     &
-    mpi_gatherv,    &
-    mpi_scatter,    &
-    mpi_scatterv,   &
-    mpi_isend,      &
-    mpi_irecv,      &
-    mpi_reduce,     &
-    mpi_recv,       &
-    mpi_send,       &
-    mpi_sendrecv!,   &
-#endif /* HOMEBREW */
+!#ifndef HOMEBREW
+!  external ::       &
+!#ifdef __INTEL_COMPILER
+!    mpi_iallreduce, &
+!    mpi_cart_coords,     &
+!    mpi_cart_create,     &
+!    mpi_cart_get,        &
+!    mpi_dims_create,     &
+!    mpi_finalize,        &
+!#endif /* __INTEL_COMPILER */
+!    mpi_bcast,      &
+!    mpi_allgather,  &
+!    mpi_allgatherv, &
+!    mpi_allreduce,  &
+!    mpi_alltoall,   &
+!    mpi_alltoallv,  &
+!    mpi_gather,     &
+!    mpi_gatherv,    &
+!    mpi_scatter,    &
+!    mpi_scatterv,   &
+!    mpi_isend,      &
+!    mpi_irecv,      &
+!    mpi_reduce,     &
+!    mpi_recv,       &
+!    mpi_send,       &
+!    mpi_sendrecv!,   &
+!#endif /* HOMEBREW */
 
 !-----------------------------------------------------------------------
 end module sll_mpi
