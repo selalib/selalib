@@ -14,10 +14,8 @@ module load cemracs/hdf5/1.8.13
 module load cemracs/fftw/3.3.4
 mkdir selalib-gnu
 cd selalib-gnu; {
-cmake ${HOME}/selalib/src -DHDF5_PARALLEL_ENABLED=ON \
-                          -DBUILD_JOREK=ON \
-                          -DGIT_LOGIN=navaro \
-                          -DCMAKE_BUILD_TYPE=Release 
+cmake ${HOME}/selalib -DHDF5_PARALLEL_ENABLED=ON \
+                      -DCMAKE_BUILD_TYPE=Release 
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
