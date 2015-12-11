@@ -80,7 +80,6 @@ INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
 INCLUDE(DoxygenConfig)
-INCLUDE(CTest)
 INCLUDE(PreprocessorTarget)
 
 IF(MPI_ENABLED)
@@ -89,6 +88,7 @@ IF(MPI_ENABLED)
   INCLUDE(POEConfig)
 ENDIF()
 
+INCLUDE(CTest)
 INCLUDE(HDF5Config)
 
 IF(PASTIX_ENABLED)
