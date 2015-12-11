@@ -2,8 +2,6 @@ SET(HDF5_ROOT $ENV{HDF5_ROOT} CACHE PATH "HDF5 location")
 
 IF(NOT HDF5_FOUND AND HDF5_ENABLED)
 
-
-
    SET(HDF5_PATHS ${MPI_Fortran_INCLUDE_PATH}
                   $ENV{HDF5_HOME}
                   ${HDF5_ROOT} 
