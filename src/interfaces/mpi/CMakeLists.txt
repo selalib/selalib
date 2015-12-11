@@ -79,7 +79,7 @@ if( ${MPI_LIB} STREQUAL "mpich" )
     COMMAND grep "MPICH Version:\\s*[0-9]\\+\\.[0-9]"#\\+\\.[0-9]\\+"
     OUTPUT_VARIABLE MPICH_INFO
     )
-  message( STATUS "MPICH_INFO:${MPICH_INFO}" )
+  #message( STATUS "MPICH_INFO:${MPICH_INFO}" )
   string( REGEX MATCH "([0-9]+)\\.([0-9])" MPICH_VERSION ${MPICH_INFO} )
 
   math( EXPR MPICH_VERSION
