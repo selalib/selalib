@@ -132,11 +132,11 @@ program sim_bsl_vp_2d2v_curv
 !!$  gaussian_params(5) = 1.0        !vxc
 !!$  gaussian_params(6) = 0.0        !vyc
 
-  landau_params(1) = 0.0      !eta1_min
+  landau_params(1) = 0.0_f64      !eta1_min
   landau_params(2) = mx%eta1_max
-  landau_params(3) = 0.0      !eta2_min
+  landau_params(3) = 0.0_f64      !eta2_min
   landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.05!0.01     !eps
+  landau_params(5) = 0.05_f64!0.01     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_general( &

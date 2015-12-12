@@ -2686,23 +2686,23 @@ subroutine gyroaverage_field_dk(sim)
   
   ! i=1
   
-    diag = (-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+    diag = (-(2/dr**2)-(real(k/2,f64)/ &
          (sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*&
          real(1-1,f64)/real(sim%m_x1%num_cells,f64)))**2)
-    diagp1 = (1/dr**2+1/(2*dr*(sim%m_x1%eta_min+ &
+    diagp1 = (1./dr**2+1./(2.*dr*(sim%m_x1%eta_min+ &
          (sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)&
          /real(sim%m_x1%num_cells,f64))))     
     
     lap_f(1,k) = diag*f(1,k)+diagp1*f(2,k)
   
      do i=2,sim%m_x1%num_cells
-        diagm1 = (1/dr**2-1/(2*dr*(sim%m_x1%eta_min+ &
+        diagm1 = (1./dr**2-1./(2.*dr*(sim%m_x1%eta_min+ &
              (sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)&
              /real(sim%m_x1%num_cells,f64))))
-        diag = (-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+        diag = (-(2./dr**2)-(real(k/2,f64)/ &
              (sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*&
              real(i-1,f64)/real(sim%m_x1%num_cells,f64)))**2)
-        diagp1 = (1/dr**2+1/(2*dr*(sim%m_x1%eta_min+ &
+        diagp1 = (1./dr**2+1./(2.*dr*(sim%m_x1%eta_min+ &
              (sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)&
              /real(sim%m_x1%num_cells,f64))))
              
@@ -2712,10 +2712,10 @@ subroutine gyroaverage_field_dk(sim)
 
   ! i=sim%m_x1%num_cells+1
 
-        diagm1 = (1/dr**2-1/(2*dr*(sim%m_x1%eta_min+ &
+        diagm1 = (1./dr**2-1./(2.*dr*(sim%m_x1%eta_min+ &
              (sim%m_x1%eta_max-sim%m_x1%eta_min)*real((sim%m_x1%num_cells+1)-1,f64)&
              /real(sim%m_x1%num_cells,f64))))
-        diag = (-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+        diag = (-(2./dr**2)-(real(k/2,f64)/ &
              (sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*&
              real((sim%m_x1%num_cells+1)-1,f64)/real(sim%m_x1%num_cells,f64)))**2)
 
@@ -2779,7 +2779,7 @@ subroutine solve_bilaplacian_polar(sim,f)
    
   !***POISSON
   do k=1,sim%m_x2%num_cells
-     nfloat=floor(k/2._f64)*1._f64
+     nfloat=real(k/2,f64)
      do i=1,sim%m_x1%num_cells-1
      
         ri=sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)/real(sim%m_x1%num_cells,f64)
@@ -2897,8 +2897,8 @@ end subroutine solve_bilaplacian_polar
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          r       = rmin+real(i-1,f32)*dr
-          theta   = real(j-1,f32)*dtheta
+          r       = rmin+real(i-1,f64)*dr
+          theta   = real(j-1,f64)*dtheta
           x1(i,j) = r*cos(theta)
           x2(i,j) = r*sin(theta)
         end do

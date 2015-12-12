@@ -304,9 +304,9 @@ contains
 !    SLL_WARNING( this_sub_name, "'init_from_file' method not implemented" )
     character( len=256 )                                         :: arg_filename
      
-    character(len=256) :: path
+    !character(len=256) :: path
 
-    character(len=32) ::  testcase
+    !character(len=32) ::  testcase
     character(len=32) ::  ppusher
     character(len=32) ::  psolver
     character(len=32) :: scenario
@@ -461,7 +461,7 @@ contains
             if (coll_rank==0) write(*,*) "#PIC1D: Particles loaded..."
                
             !Determine index of fastest particle
-            sim%fastest_particle_idx = maxloc( sim%particlespeed, dim=1 )   
+            sim%fastest_particle_idx = int(maxloc( sim%particlespeed, dim=1 ),8)
 
             !Do precalculations, especially for the FEM solver  
             !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, -(sll_e_charge/sll_epsilon_0) )
@@ -525,8 +525,9 @@ contains
   !Information on initial field
 
           print *, "#Initial Field average: " , sum( sim%fsolver%getPotential())
-          print *, "#Initial Field variance: " , sum((sum(  sim%fsolver%getPotential())/sim%mesh_cells &
-            -  sim%fsolver%getPotential())**2)/sim%mesh_cells
+          print *, "#Initial Field variance: " , &
+          sum((sum(sim%fsolver%getPotential())/real(sim%mesh_cells,f64) &
+          -  sim%fsolver%getPotential())**2)/real(sim%mesh_cells,f64)
 
 
         !---------------------------Initial Plots----------------------------------------
@@ -602,10 +603,10 @@ contains
             
             ! Compute mean value and variance 
             sim%particleweight_mean(timestep)       = sum(sim%species(1)%particle%weight) &
-                                                    / size(sim%species(1)%particle) ! WARNING: bug here
+               / real(size(sim%species(1)%particle),f64) ! WARNING: bug here
             
             sim%particleweight_var(timestep)        = sum(sim%species(1)%particle%weight**2) &
-                                                    / size(sim%species(1)%particle)          &
+               / real(size(sim%species(1)%particle),f64)          &
                                                     - sim%particleweight_mean(timestep)**2
 
             ! Other diagnostic quantities: kin. energy, el. energy, momentum, etc..
@@ -671,7 +672,8 @@ contains
             ! Estimate total simulation runtime
             if (coll_rank==0 .AND. timestep==1) then
                 call sll_set_time_mark(tstop)
-                print *, "Remaining Time: " , (sll_time_elapsed_between(tstart,tstop)/timestep)*real(sim%tsteps-timestep,i64)
+                print *, "Remaining Time: " , &
+       (sll_time_elapsed_between(tstart,tstop)/real(timestep,f64))*real(sim%tsteps-timestep,i64)
             endif
             phase_space_distribution%vmin = minval(sim%species(1)%particle%vx)
             phase_space_distribution%vmax = maxval(sim%species(1)%particle%vx)
@@ -684,8 +686,10 @@ contains
         sim%fieldenergy(timestep)     = sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
         sim%impulse(timestep)         = sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
         sim%thermal_velocity_estimate(timestep) = sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
-        sim%particleweight_mean(timestep)       = sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle)
-        sim%particleweight_var(timestep)        = sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
+        sim%particleweight_mean(timestep) = sum(sim%species(1)%particle%weight)&
+          /real(size(sim%species(1)%particle),f64)
+        sim%particleweight_var(timestep)  = sum(sim%species(1)%particle%weight**2)&
+         /real(size(sim%species(1)%particle),f64)-sim%particleweight_mean(timestep)**2
 
         close(25)
 
@@ -696,7 +700,7 @@ contains
         if (coll_rank==0) then
             call sll_set_time_mark(tstop)
             print *, "Overall Time: " , sll_time_elapsed_between(tstart,tstop)
-            print *, "Particles Pushed/s: " , (sim%nmark*coll_size*sim%tsteps)/sll_time_elapsed_between(tstart,tstop)
+            print *, "Particles Pushed/s: " , real(sim%nmark*coll_size*sim%tsteps,f64)/sll_time_elapsed_between(tstart,tstop)
         endif
         
         ! Compute damping (exponential factor) of electrostatic energy (this makes sense only for Landau damping)
@@ -773,7 +777,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         sll_int32 :: num_sp
         sll_real64 :: energy
         num_sp=size(p_species)
-        energy=0
+        energy=0.0_f64
         do idx=1,num_sp
             energy=energy + &
             sll_pic1d_calc_kineticenergy_weighted(p_species(idx)%particle%vx, &
@@ -793,7 +797,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         sll_int32 :: idx, num_sp
         num_sp=size(p_species)
 
-        impulse=0
+        impulse=0.0_f64
         do idx=1,num_sp
             impulse=impulse + sll_pic1d_calc_impulse_weighted&
                (p_species(idx)%particle%weight, p_species(idx)%particle%vx, &
@@ -825,7 +829,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         sll_int32 :: idx, num_sp
         num_sp=size(p_species)
 
-        impulse=0
+        impulse=0.0_f64
         do idx=1,num_sp
             impulse=impulse + sll_pic1d_calc_impulse_weighted&
                (p_species(idx)%particle%weight_const, p_species(idx)%particle%vx, &
@@ -885,7 +889,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
     end function
     
     function calculate_total_mass(sim) result (total_massk)
-       integer   ::  i,k 
+       !integer   ::  i,k 
        class(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
        sll_real64                                              :: total_massk
 
@@ -902,7 +906,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
    function sll_total_momentum(sim) result (momentum)   
        class(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
        sll_real64   :: momentum
-       integer      :: K
+       !integer      :: K
        
        momentum=dot_product(sim%species(1)%particle%vx,sim%species(1)%particle%weight) 
        
@@ -923,7 +927,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         sll_int32 :: num_sp
         sll_real64 :: energy
         num_sp=size(p_species)
-        energy=0
+        energy=0.0_f64
        do idx=1,num_sp
        
             energy=energy + &
@@ -953,7 +957,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         sll_int32 :: num_sp
         num_sp=size(p_species)
 
-        energy=0
+        energy=0.0_f64
         do idx=1,num_sp
             energy=energy+ &
                 dot_product(sim%Eex( p_species(idx)%particle%dx, 0.0_f64), &
@@ -1558,7 +1562,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         sll_real64                              :: h
         sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))                :: x_0
         sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%vx))                :: v_0
-        sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
+        sll_real64, dimension(size(x_0)) ::  DPhidx_0, x_1, v_1
        
         h=sim%tstepw
         x_0 =sim%species(sim%pushed_species)%particle%dx
