@@ -600,7 +600,7 @@ contains
                                                      loc_sz_x2, &
                                                      loc_sz_x3, &
                                                      loc_sz_x4)
-    sim%rho(:,:) = 0.0
+    sim%rho(:,:) = 0.0_f64
     
     do j=1,loc_sz_x2
        do i=1,loc_sz_x1

@@ -383,7 +383,7 @@ contains
     !--> Initialization diagnostics for the norm
     nb_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
 
-    if ( mod( sim%diag2D_step , sim%dt) .ne. 0) then 
+    if ( mod( sim%diag2D_step , sim%dt) .ne. 0.0_f64) then 
        print*, ' Problem with diag2D_step'
        print*, ' must be equal to a multiple of dt'
        print*, ' here diag2D_step= ', sim%diag2D_step
@@ -434,8 +434,8 @@ contains
     type(sll_time_mark) :: t0, t1 
     double precision    :: elaps_time_advec, elaps_time_QN
 
-    elaps_time_advec = 0.0
-    elaps_time_QN    = 0.0
+    elaps_time_advec = 0.0_f64
+    elaps_time_QN    = 0.0_f64
 
     do iter = 1,sim%nb_iter
       sim%iter_time = sim%iter_time + sim%dt
@@ -724,9 +724,9 @@ contains
     Nr = sim%nc_x1+1
     SLL_ALLOCATE(sim%r_grid(Nr),ierr)
     Lr = abs(sim%r_max-sim%r_min)
-    dr = Lr/float(Nr-1)
+    dr = Lr/real(Nr-1,f64)
     do ir = 1,Nr
-      sim%r_grid(ir) = sim%r_min + float(ir-1)*dr
+      sim%r_grid(ir) = sim%r_min + real(ir-1,f64)*dr
     end do
 
    ! !--> Initialization of n0(r), Ti(r) and Te(r)
@@ -825,10 +825,10 @@ contains
 
     theta_min = 0._f64
     Ltheta    = 2._f64*sll_pi
-    dtheta    = Ltheta/float(Ntheta-1)
+    dtheta    = Ltheta/real(Ntheta-1,f64)
     do itheta = 1,Ntheta
       theta_grid_tmp(itheta) = theta_min + &
-          float(itheta-1)*dtheta
+          real(itheta-1,f64)*dtheta
     end do
 
     call init_Brtheta(sim%r_grid,theta_grid_tmp,B_rtheta_tmp)
@@ -1024,19 +1024,19 @@ contains
     !--> Initialization of the grid in phi direction
     SLL_ALLOCATE(phi_grid_tmp(Nphi),ierr)
     Lphi = abs(sim%phi_max-sim%phi_min)
-    dphi = Lphi/float(Nphi-1)
+    dphi = Lphi/real(Nphi-1,f64)
     do i3 = 1,Nphi
       phi_grid_tmp(i3) = sim%phi_min + &
-        float(i3-1)*dphi
+        real(i3-1,f64)*dphi
     end do
 
     !--> Initialization of the grid in vpar direction
     SLL_ALLOCATE(vpar_grid_tmp(Nvpar),ierr)
     Lvpar = abs(sim%vpar_max-sim%vpar_min)
-    dvpar = Lvpar/float(Nvpar-1)
+    dvpar = Lvpar/real(Nvpar-1,f64)
     do i4 = 1,Nvpar
       vpar_grid_tmp(i4) = sim%vpar_min + &
-        float(i4-1)*dvpar
+        real(i4-1,f64)*dvpar
     end do
 
     !--> Length in the second direction
@@ -1079,8 +1079,8 @@ contains
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
                 sim%feq_xyvpar(i1,i2,i4) * &
                 (1._f64 + sim%eps_perturb*&
-                cos(2._f64*sll_pi*real(sim%mmode)*theta_j + &
-                2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi) * tmp)
+                cos(2._f64*sll_pi*real(sim%mmode,f64)*theta_j + &
+                2._f64*sll_pi*real(sim%nmode,f64)*phi_k/Lphi) * tmp)
           end do
         end do
       end do
@@ -1616,8 +1616,8 @@ contains
         B_xy_tmp     = sim%B_xy(ieta1,ieta2) 
         norm2_xy_tmp = sim%norm_square_xy(ieta1,ieta2) 
         val_tmp      = n0_xy_tmp/(B_xy_tmp*norm2_xy_tmp)
-        values_B1(ieta1,ieta2) = 0.0!-val_tmp*x_tmp
-        values_B2(ieta1,ieta2) = 0.0!-val_tmp*y_tmp
+        values_B1(ieta1,ieta2) = 0.0_f64!-val_tmp*x_tmp
+        values_B2(ieta1,ieta2) = 0.0_f64!-val_tmp*y_tmp
       end do
     end do
 
@@ -2494,11 +2494,11 @@ contains
 
     sim%time_evol(diag_num) = sim%iter_time
 
-    nrj_kin   = 0.0
-    nrj_pot   = 0.0
-    nrj_tot   = 0.0
-    heat_flux = 0.0
-    phisquare = 0.0
+    nrj_kin   = 0.0_f64
+    nrj_pot   = 0.0_f64
+    nrj_tot   = 0.0_f64
+    heat_flux = 0.0_f64
+    phisquare = 0.0_f64
 
     !-> Computation of the energy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc
@@ -2605,11 +2605,11 @@ contains
     delta_eta3 = sim%cartesian_mesh4d%delta_eta3
     delta_vpar = sim%cartesian_mesh4d%delta_eta4
     
-    norm_L1    = 0.0
-    norm_L2    = 0.0
-    norm_Linf  = 0.0
-    mass       = 0.0
-    entropy_kin= 0.0
+    norm_L1    = 0.0_f64
+    norm_L2    = 0.0_f64
+    norm_Linf  = 0.0_f64
+    mass       = 0.0_f64
+    entropy_kin= 0.0_f64
 
     !-> Computation of the enrgy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc

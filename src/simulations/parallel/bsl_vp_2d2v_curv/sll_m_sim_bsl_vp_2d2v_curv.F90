@@ -1160,7 +1160,7 @@ contains
     delta3  = mv%delta_eta1
     delta4  = mv%delta_eta2
 
-    partial(:,:,:) = 0.0
+    partial(:,:,:) = 0.0_f64
     ! rho must be initialized to zero unless multiple distribution functions
     ! are used.
     do k=1,numpts3

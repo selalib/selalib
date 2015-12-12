@@ -1063,8 +1063,8 @@ contains
     class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
 
     !--> For initial profile HDF5 saving
-    sll_int32                    :: file_err
-    sll_int32                    :: file_id
+    !sll_int32                    :: file_err
+    !sll_int32                    :: file_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
     sll_real64, allocatable      :: f4d_store(:,:,:,:)  ! for field prediction
     sll_int32  :: loc4d_sz_x1
@@ -1086,7 +1086,8 @@ contains
     character(len=4)        :: cplot
     character(len=*), parameter :: filetype="HDF"
     character(len=64)       :: hdf5_file_name, xml_file_name, field_name
-    sll_int32               :: hdf5_file_id, error
+    !sll_int32               :: hdf5_file_id
+    !sll_int32               :: error
     type( sll_t_hdf5_serial ) :: hdf5_file
     type( sll_t_xdmf_parallel_file ) :: xdmf_file
     logical                 :: to_file
@@ -2505,7 +2506,7 @@ contains
     sll_real64, allocatable :: x1(:,:), x2(:,:)
     sll_real64              :: r, dr, rmin, rmax, theta, dtheta
     sll_int32               :: i, j, nnodes_x1, nnodes_x2
-    sll_int32               :: file_id, error
+    sll_int32               :: error
     type(sll_t_hdf5_serial) :: hdf5_file
 
     nnodes_x1 = mesh_x1%num_cells+1
@@ -2548,11 +2549,11 @@ contains
     character(len=*)           , intent(  out) :: dataset_x1
     character(len=*)           , intent(  out) :: dataset_x2
 
-    sll_real64, allocatable :: x1(:,:), x2(:,:)
-    sll_real64              :: r, dr, rmin, rmax, theta, dtheta
-    sll_int32               :: i, j, nnodes_x1, nnodes_x2
-    sll_int32               :: file_id, error
-    type(sll_t_hdf5_serial) :: hdf5_file
+    !sll_real64, allocatable :: x1(:,:), x2(:,:)
+    !sll_real64              :: r, dr, rmin, rmax, theta, dtheta
+    !sll_int32               :: i, j, nnodes_x1, nnodes_x2
+    !sll_int32               :: file_id, error
+    !type(sll_t_hdf5_serial) :: hdf5_file
 
     !nnodes_x1 = mesh_x1%num_cells+1
     !nnodes_x2 = mesh_x2%num_cells+1
@@ -2636,9 +2637,9 @@ contains
     character(len=*)           , intent(  out) :: dataset_x2
     character(len=*)           , intent(  out) :: dataset_x3
 
-    sll_real64, allocatable :: x2(:,:), x3(:,:)
-    sll_int32               :: i, j, nnodes_x2, nnodes_x3
-    sll_int32               :: file_id, error
+    !sll_real64, allocatable :: x2(:,:), x3(:,:)
+    !sll_int32               :: i, j, nnodes_x2, nnodes_x3
+    !sll_int32               :: file_id, error
 
     !nnodes_x2 = mesh_x2%num_cells+1
     !nnodes_x3 = mesh_x3%num_cells+1

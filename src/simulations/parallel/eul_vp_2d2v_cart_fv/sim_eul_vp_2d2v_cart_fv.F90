@@ -150,8 +150,8 @@ program sim_eul_vp_2d2v_cart_fv
 #define TMAX 0.1_f64
 !#define TMAX 0._f64
 #define CFL 0.7_f64
-#define ELECMAX 1.0_f64 ! upper bound estimate for the electric field
-#define EPSILON 0.005
+#define ELECMAX 1.0_f64 /* upper bound estimate for the electric field*/
+#define EPSILON 0.005_f64
 #define TEST 5
 ! 0: x transport 1: landau damping 1d xvx  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
@@ -161,7 +161,7 @@ program sim_eul_vp_2d2v_cart_fv
 !11: galaxy 1D test case
 !12: galaxy 2D test case
 
-#define DEG  2 ! polynomial degree
+#define DEG  2 /* polynomial degree */
 #define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
@@ -207,11 +207,11 @@ program sim_eul_vp_2d2v_cart_fv
     landau_params(3)=ETA4MIN
     landau_params(4)=ETA4MAX
     landau_params(5)= EPSILON  !epsilon in the landau
-    landau_params(6)= DEG  ! polynomial interpolation degree
+    landau_params(6)= real(DEG,f64)  ! polynomial interpolation degree
     landau_params(7)=CFL
-    landau_params(8)=TEST
+    landau_params(8)= real(TEST,f64)
     landau_params(9)=ELECMAX
-    landau_params(10)=SCHEME
+    landau_params(10)= real(SCHEME,f64)
     landau_params(11)=TINI
   ! initialize simulation object with the above parameters
     if(TEST==0) then
