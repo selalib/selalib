@@ -1512,8 +1512,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = x1_min+real(i-1,f64)*dx1
+          x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
       call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)

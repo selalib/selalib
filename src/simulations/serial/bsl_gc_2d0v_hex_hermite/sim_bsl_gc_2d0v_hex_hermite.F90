@@ -1250,7 +1250,6 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               :: i,h1,h2,m1,m2,k1,k2,ne,ns, index_tab
-    sll_real64              :: eps = 1.e-6
 
     do i = 1,mesh2%num_pts_tot 
        h1 = mesh2%hex_coord(1,i)
@@ -1266,13 +1265,13 @@ contains
        call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
-       if ( abs(m1) > eps .and. abs(m2) > eps ) then
+       if ( abs(m1) > 0 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(2,ns)
           rho2(i) = rho_edge(ne) 
-       elseif( abs(m1) < eps .and. abs(m2) > eps ) then
+       elseif( abs(m1) < 1 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(1,ns)
           rho2(i) = rho_edge(ne)
-       elseif( abs(m1) > eps .and. abs(m2) < eps ) then 
+       elseif( abs(m1) > 0 .and. abs(m2) < 1 ) then 
           ne =  mesh%edge_center_index(3,ns)
           rho2(i) = rho_edge(ne)
        else
@@ -1288,7 +1287,6 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               ::i,h1,h2,m1,m2,k1,k2,ne,ns
-    sll_real64              :: eps = 1.e-6
 
 
     do i = 1,mesh2%num_pts_tot 
@@ -1305,13 +1303,13 @@ contains
        call mesh%index_hex_to_global(k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
 
-       if ( abs(m1) > eps .and. abs(m2) > eps ) then
+       if ( abs(m1) > 0 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(2,ns)
           rho_edge(ne) = rho2(i)
-       elseif( abs(m1) < eps .and. abs(m2) > eps ) then
+       elseif( abs(m1) < 1 .and. abs(m2) > 0 ) then
           ne =  mesh%edge_center_index(1,ns)
           rho_edge(ne) = rho2(i)
-       elseif( abs(m1) > eps .and. abs(m2) < eps ) then 
+       elseif( abs(m1) > 0 .and. abs(m2) < 1 ) then 
           ne =  mesh%edge_center_index(3,ns)
           rho_edge(ne) = rho2(i)
        else

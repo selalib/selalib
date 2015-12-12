@@ -573,9 +573,9 @@ contains
     x2_fine_min  = 0.36_f64
     x2_fine_max  = 2.28_f64
 
-    density_x2_min_to_x2_fine_min      = 1
-    density_x2_fine_min_to_x2_fine_max = 1
-    density_x2_fine_max_to_x2_max      = 1
+    density_x2_min_to_x2_fine_min      = 1.0_f64
+    density_x2_fine_min_to_x2_fine_max = 1.0_f64
+    density_x2_fine_max_to_x2_max      = 1.0_f64
     every_x2_min_to_x2_fine_min        = 1
     every_x2_fine_min_to_x2_fine_max   = 1
     every_x2_fine_max_to_x2_max        = 1
@@ -1034,15 +1034,15 @@ contains
 
       case ("SLL_NO_DRIVE")
         sim%driven         = .false.
-        sim%t0             = 0.
-        sim%twL            = 0.
-        sim%twR            = 0.
-        sim%tflat          = 0.
-        sim%tL             = 0.
-        sim%tR             = 0.
+        sim%t0             = 0.0_f64
+        sim%twL            = 0.0_f64
+        sim%twR            = 0.0_f64
+        sim%tflat          = 0.0_f64
+        sim%tL             = 0.0_f64
+        sim%tR             = 0.0_f64
         sim%turn_drive_off = .false.
-        sim%Edrmax         = 0.
-        sim%omegadr        = 0.    
+        sim%Edrmax         = 0.0_f64
+        sim%omegadr        = 0.0_f64
 
       case("SLL_KEEN_DRIVE")
         sim%driven         = .true.
@@ -1544,7 +1544,7 @@ contains
     
     do i = 2, nc_x1/2+1
       sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-         - sim%advect_ampere_x1(1)%ptr%r1(i) * sim%L / (2*sll_pi*cmplx(0.,i-1,kind=f64))
+         - sim%advect_ampere_x1(1)%ptr%r1(i) * sim%L / cmplx(0.,2.*sll_pi*(i-1),kind=f64)
     end do
     
     call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
@@ -1778,7 +1778,7 @@ contains
     sll_real64, dimension(:), allocatable :: f_hat_x2
     sll_comp64, dimension(:), allocatable :: rho_mode
 
-    SLL_CLEAR_ALLOCATE(rho_mode(0:sim%nb_mode),ierr) 
+    SLL_ALLOCATE(rho_mode(0:sim%nb_mode),ierr) ; rho_mode = cmplx(0.,0.,f64)
     SLL_CLEAR_ALLOCATE(f_hat_x2(1:sim%nb_mode+1),ierr)
     SLL_CLEAR_ALLOCATE(f_hat_x2_loc(1:sim%nb_mode+1),ierr)
 

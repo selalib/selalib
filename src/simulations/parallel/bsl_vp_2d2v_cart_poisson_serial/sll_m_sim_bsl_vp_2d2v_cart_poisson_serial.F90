@@ -679,7 +679,7 @@ contains
     sll_int32 :: ierr
     sll_int32, dimension(:), allocatable :: recv_sz
     sll_int32, dimension(:), allocatable :: disps
-    sll_int32 :: send_size
+    !sll_int32 :: send_size
     sll_int32 :: nproc_x1
     sll_int32 :: nproc_x2
     sll_int32 :: nproc_x3
@@ -985,51 +985,51 @@ contains
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
       if(sim%split%dim_split_V==2)then
-	    call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x1(:,:,1), &
-		  "E_x1", &
-		  0, &
-		  ierr)
-	    call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x2(:,:,1), &
-		  "E_x2", &
-		  0, &
-		  ierr)
-		  
-	    call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x1(:,:,2), &
-		  "dK_x1", &
-		  0, &
-		  ierr)
-		call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x2(:,:,2), &
-		  "dK_x2", &
-		  0, &
-		  ierr)
+    call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x1(:,:,1), &
+  "E_x1", &
+  0, &
+  ierr)
+    call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x2(:,:,1), &
+  "E_x2", &
+  0, &
+  ierr)
+ 
+    call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x1(:,:,2), &
+  "dK_x1", &
+  0, &
+  ierr)
+call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x2(:,:,2), &
+  "dK_x2", &
+  0, &
+  ierr)
         call compute_jacobian( &
           E_x1, &
           E_x2, &
@@ -1039,17 +1039,17 @@ contains
           sim%stencil_r, &
           sim%stencil_s, &
           jacobian_E)
-		call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  jacobian_E(:,:), &
-		  "jacobian_E", &
-		  0, &
-		  ierr)
+call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  jacobian_E(:,:), &
+  "jacobian_E", &
+  0, &
+  ierr)
       endif
       write(th_diag_id,'(13g20.12)') &
         time, &
@@ -1253,8 +1253,8 @@ contains
           loc_sz_x2, &
           loc_sz_x3, &
           loc_sz_x4, &
-		  delta1, &    
-		  delta2)
+  delta1, &    
+  delta2)
 
         
         
@@ -1358,51 +1358,51 @@ contains
           call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
 
       if(sim%split%dim_split_V==2)then
-	    call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x1(:,:,1), &
-		  "E_x1", &
-		  istep, &
-		  ierr)
-	    call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x2(:,:,1), &
-		  "E_x2", &
-		  istep, &
-		  ierr)
-		  
-	    call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x1(:,:,2), &
-		  "dK_x1", &
-		  istep, &
-		  ierr)
-		call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  field_x2(:,:,2), &
-		  "dK_x2", &
-		  istep, &
-		  ierr)
+    call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x1(:,:,1), &
+  "E_x1", &
+  istep, &
+  ierr)
+    call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x2(:,:,1), &
+  "E_x2", &
+  istep, &
+  ierr)
+ 
+    call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x1(:,:,2), &
+  "dK_x1", &
+  istep, &
+  ierr)
+call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  field_x2(:,:,2), &
+  "dK_x2", &
+  istep, &
+  ierr)
         call compute_jacobian( &
           E_x1, &
           E_x2, &
@@ -1412,17 +1412,17 @@ contains
           sim%stencil_r, &
           sim%stencil_s, &
           jacobian_E)
-		call sll_gnuplot_2d( &
-		  sim%mesh_x1%eta_min, &
-		  sim%mesh_x1%eta_max, &
-		  nc_x1+1, &
-		  sim%mesh_x2%eta_min, &
-		  sim%mesh_x2%eta_max, &
-		  nc_x2+1, &
-		  jacobian_E(:,:), &
-		  "jacobian_E", &
-		  istep, &
-		  ierr)
+call sll_gnuplot_2d( &
+  sim%mesh_x1%eta_min, &
+  sim%mesh_x1%eta_max, &
+  nc_x1+1, &
+  sim%mesh_x2%eta_min, &
+  sim%mesh_x2%eta_max, &
+  nc_x2+1, &
+  jacobian_E(:,:), &
+  "jacobian_E", &
+  istep, &
+  ierr)
 
       endif
 
@@ -1520,7 +1520,7 @@ contains
   
   subroutine delete_vp4d_par_cart( sim )
     class(sll_simulation_4d_vlasov_par_poisson_seq_cart) :: sim
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     
     
    if(associated(sim%mesh_x1)) then

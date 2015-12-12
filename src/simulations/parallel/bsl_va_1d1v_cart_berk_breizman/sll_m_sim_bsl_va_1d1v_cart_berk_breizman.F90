@@ -1024,9 +1024,9 @@ rho(np_x1) = rho(1)
 do i = 2, nc_x1
   efield(i) = efield(i-1)+0.5*(rho(i-1)+rho(i)-2.)*dx
 end do
-efield(1:nc_x1) = efield - sum(efield(1:nc_x1)) / nc_x1
+efield(1:nc_x1) = efield - sum(efield(1:nc_x1)) / real(nc_x1,f64)
 efield(1) = efield(np_x1)
-print*,'ee=', sum(efield(1:nc_x1)*efield(1:nc_x1)) / nc_x1
+print*,'ee=', sum(efield(1:nc_x1)*efield(1:nc_x1)) / real(nc_x1,f64)
 do i = 1, nc_x1
   write(11,*) sim%x1_array(i), efield(i), rho(i)
 end do
@@ -1245,7 +1245,7 @@ sll_int32  :: global_indices(2)
 sll_real64 :: delta_t
 sll_int32  :: nc_x1
 sll_int32  :: np_x1
-sll_comp64 :: s0, s1
+!sll_comp64 :: s0, s1
 sll_int32  :: tid, ig_omp, i, i_omp
 sll_real64 :: alpha_omp
 sll_real64 :: L
@@ -1330,9 +1330,9 @@ end do
 L =  sim%L / (2.0_f64*sll_pi)
 gamma_d = sim%gamma_d * delta_t
 
-sim%advect_ampere_x1(1)%ptr%ek(1) = 0.0_f64
+sim%advect_ampere_x1(1)%ptr%ek(1) = cmplx(0.,0.,f64)
 do i = 2, nc_x1/2+1
-  sim%advect_ampere_x1(1)%ptr%ek(i) = + L / cmplx(0.0_f64,real(i-1,f64),f64) * &
+  sim%advect_ampere_x1(1)%ptr%ek(i) = + cmplx(L,0.,f64) / cmplx(0.0_f64,real(i-1,f64),f64) * &
      (sim%advect_ampere_x1(1)%ptr%r1(i)-sim%advect_ampere_x1(1)%ptr%r0(i))     &
       +(1.0_f64-gamma_d) *  sim%advect_ampere_x1(1)%ptr%ek(i)
      
@@ -1343,7 +1343,7 @@ call fft_apply_plan_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
      efield)
 
 efield(np_x1) = efield(1)
-efield        = efield/nc_x1
+efield        = efield/real(nc_x1,f64)
 
 end subroutine advection_ampere_x
   
@@ -1385,7 +1385,7 @@ call sll_collective_allreduce( sll_world_collective, &
 
 rho(np_x1) = rho(1)
 !rho = sim%factor_x2_1-sim%factor_x2_rho*rho
-rho = rho - sum(rho)/np_x1
+rho = rho - sum(rho)/real(np_x1,f64)
 
 
 deallocate(rho_loc)
