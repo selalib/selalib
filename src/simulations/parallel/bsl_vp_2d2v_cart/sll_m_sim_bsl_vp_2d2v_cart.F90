@@ -396,7 +396,7 @@ contains
     ! original process mesh for the 4d data is NP1xNP2xNP3x1 (we start with a
     ! layout that permits a reduction in x4), then the processor mesh for the
     ! Poisson step should be NP1'xNP2'x1x1 where NP1xNP2xNP3 = NP1'xNP2'
-    sim%rho_split(:,:) = 0.0
+    sim%rho_split(:,:) = 0.0_f64
 
     call compute_charge_density( &
          sim%mesh4d, &
@@ -838,7 +838,7 @@ contains
     
     delta4   = mesh%delta_x4
     delta3   = mesh%delta_x3
-    partial(:,:,:) = 0.0
+    partial(:,:,:) = 0.0_f64
     numpts3 = mesh%num_cells3
     numpts4 = mesh%num_cells4
     
@@ -1086,8 +1086,8 @@ contains
     integer(HSIZE_T), dimension(2)  :: array_dims 
     integer(HSSIZE_T), dimension(2) :: offset 
 
-    array_dims(1) = sim%nc_x1
-    array_dims(2) = sim%nc_x2
+    array_dims(1) = int(sim%nc_x1,HSIZE_T)
+    array_dims(2) = int(sim%nc_x2,HSIZE_T)
     world_size    = sll_get_collective_size(sll_world_collective)
     my_rank       = sll_get_collective_rank(sll_world_collective)
 
@@ -1103,8 +1103,8 @@ contains
 
        call compute_local_sizes( my_layout, local_nx1, local_nx2)        
     
-       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
-       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
+       offset(1) =  int(get_layout_i_min( my_layout, my_rank ) - 1,HSSIZE_T)
+       offset(2) =  int(get_layout_j_min( my_layout, my_rank ) - 1,HSSIZE_T)
 
        if (itime == 1) then
 
