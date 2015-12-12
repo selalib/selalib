@@ -366,18 +366,18 @@ contains
 
   subroutine run_4d_qns_general_mp(sim)
     class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
-    sll_int32  :: loc_sz_x1
-    sll_int32  :: loc_sz_x2
-    sll_int32  :: loc_sz_x3
-    sll_int32  :: loc_sz_x4
+    !sll_int32  :: loc_sz_x1
+    !sll_int32  :: loc_sz_x2
+    !sll_int32  :: loc_sz_x3
+    !sll_int32  :: loc_sz_x4
     sll_int32  :: i
     sll_int32  :: j
-    sll_int32  :: k
-    sll_int32  :: l
-    sll_real64 :: vmin3
-    sll_real64 :: vmax3
-    sll_real64 :: vmin4
-    sll_real64 :: vmax4
+    !sll_int32  :: k
+    !sll_int32  :: l
+    !sll_real64 :: vmin3
+    !sll_real64 :: vmax3
+    !sll_real64 :: vmin4
+    !sll_real64 :: vmax4
     sll_real64 :: delta1
     sll_real64 :: delta2
     !sll_real64 :: delta3
@@ -386,36 +386,36 @@ contains
     !sll_real64 :: alpha2
     !sll_real64 :: alpha3
     !sll_real64 :: alpha4
-    sll_int32  :: itemp
+    !sll_int32  :: itemp
     sll_int32  :: ierr
     sll_int32  :: itime
-    sll_int32  :: nc_x1
-    sll_int32  :: nc_x2
-    sll_int32  :: nc_x3
-    sll_int32  :: nc_x4
-    sll_real64 :: ex
-    sll_real64 :: ey
+    !sll_int32  :: nc_x1
+    !sll_int32  :: nc_x2
+    !sll_int32  :: nc_x3
+    !sll_int32  :: nc_x4
+    !sll_real64 :: ex
+    !sll_real64 :: ey
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: eta3
-    sll_real64 :: eta4
-    sll_real64 :: x
-    sll_real64 :: y
+    !sll_real64 :: eta3
+    !sll_real64 :: eta4
+    !sll_real64 :: x
+    !sll_real64 :: y
     sll_real64 :: eta1_min
     sll_real64 :: eta2_min
-    sll_real64 :: eta3_min
-    sll_real64 :: eta4_min
-    sll_real64 :: eta1_max
-    sll_real64 :: eta2_max
-    sll_real64 :: eta3_max
-    sll_real64 :: eta4_max
-    sll_real64 :: eta1_new
-    sll_real64 :: eta2_new
+    !sll_real64 :: eta3_min
+    !sll_real64 :: eta4_min
+    !sll_real64 :: eta1_max
+    !sll_real64 :: eta2_max
+    !sll_real64 :: eta3_max
+    !sll_real64 :: eta4_max
+    !sll_real64 :: eta1_new
+    !sll_real64 :: eta2_new
     !sll_real64 :: diff
-    sll_real64, dimension(1:2,1:2) :: inv_j
-    sll_real64, dimension(1:2,1:2) :: jac_m
-    sll_int32,  dimension(1:2)     :: gi     ! for storing global indices
-    sll_int32,  dimension(1:4)     :: gi4d   ! for storing global indices
+    !sll_real64, dimension(1:2,1:2) :: inv_j
+    !sll_real64, dimension(1:2,1:2) :: jac_m
+    !sll_int32,  dimension(1:2)     :: gi     ! for storing global indices
+    !sll_int32,  dimension(1:4)     :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE sim%number_diags
@@ -423,14 +423,14 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_energy_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
-    sll_real64, dimension(1) :: tmp1
-    sll_real64 :: tmp,numpart
+    !sll_real64, dimension(1) :: tmp1
+    sll_real64 :: numpart
     sll_int32  :: buffer_counter
     sll_int32  :: efield_energy_file_id
     sll_int32  :: num_particles_file_id
-    sll_int32  :: global_indices(4)
-    sll_int32  :: iplot
-    character(len=4) :: cplot
+    !sll_int32  :: global_indices(4)
+    !sll_int32  :: iplot
+    !character(len=4) :: cplot
     class(sll_scalar_field_multipatch_2d), pointer      :: a11_field_mat
     class(sll_scalar_field_multipatch_2d), pointer      :: a21_field_mat
     class(sll_scalar_field_multipatch_2d), pointer      :: a12_field_mat
@@ -438,26 +438,26 @@ contains
     class(sll_scalar_field_multipatch_2d), pointer      :: b1_field_vect
     class(sll_scalar_field_multipatch_2d), pointer      :: b2_field_vect
     class(sll_scalar_field_multipatch_2d), pointer      :: c_field
-    type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_1
-    type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_2
+    !type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_1
+    !type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_2
     type(sll_scalar_field_multipatch_2d), pointer      :: rho
     type(sll_scalar_field_multipatch_2d), pointer      :: phi
     type(sll_scalar_field_multipatch_2d), pointer      :: layer_x1x2
-    type(sll_cartesian_mesh_2d), pointer                         :: logical_m
+    !type(sll_cartesian_mesh_2d), pointer                         :: logical_m
     class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
     type(sll_distribution_function_4d_multipatch), pointer     :: f_mp
 
-    sll_real64, dimension(:), allocatable :: send_buf
-    sll_real64, dimension(:), allocatable :: recv_buf
+    !sll_real64, dimension(:), allocatable :: send_buf
+    !sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32,  dimension(:), allocatable :: recv_sz
     sll_int32,  dimension(:), allocatable :: disps ! for allgatherv operation
     sll_real64 :: val_a11, val_a12, val_a21, val_a22
     sll_real64 :: val_b1,  val_b2,  val_c
-    sll_real64 :: val_rho, val_phi, val_phi_exacte
+    sll_real64 :: val_rho, val_phi!, val_phi_exacte
     !sll_real64 :: density_tot
     sll_real64 :: x1
     sll_real64 :: x2
-    sll_int32  :: send_size   ! for allgatherv operation
+    !sll_int32  :: send_size   ! for allgatherv operation
     !sll_int32 :: droite_test_pente
     sll_int32 :: num_patches
     sll_int32 :: ipatch
@@ -469,9 +469,9 @@ contains
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
     ! time variables
-    type(sll_time_mark)  :: t0 
-    type(sll_time_mark)  :: t1
-    sll_real64 :: time 
+    !type(sll_time_mark)  :: t0 
+    !type(sll_time_mark)  :: t1
+    !sll_real64 :: time 
     sll_int32 :: size_diag    
     
     ! Start with the fields
@@ -1061,7 +1061,7 @@ contains
     sll_real64 :: delta2
     sll_real64 :: alpha3
     sll_int32  :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
-    sll_int32  :: i, j, k, l
+    sll_int32  :: i, j, l
     sll_real64 :: ex
     sll_real64 :: ey
 
@@ -1147,7 +1147,7 @@ contains
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: k
-    sll_int32  :: l
+    !sll_int32  :: l
     sll_real64 :: ex
     sll_real64 :: ey
     sll_real64 :: x

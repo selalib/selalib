@@ -30,7 +30,7 @@ program sim_bsl_gk_3d1v_polar_multi_mu
   character(len=256) :: filename_local
   type(sll_simulation_4d_drift_kinetic_polar_multi_mu) :: simulation
   type(sll_time_mark)  :: t0
-  sll_real64 :: time,time1,time2 
+  sll_real64 :: time!,time1,time2 
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Booting parallel environment...'

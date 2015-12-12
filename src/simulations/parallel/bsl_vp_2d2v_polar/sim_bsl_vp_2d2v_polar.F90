@@ -108,15 +108,15 @@ program sim_bsl_vp_2d2v_polar
 !  val = alpha*exp(-0.5_f64*((x -xc )**2+(y -yc )**2)) + &
 !        beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
 
-  params(1) = 5.0 !xc
-  params(2) = 0.0 !yc
-  params(3) = 0.0 !vxc
-  params(4) = 0.0 !vyc
-  params(5) = 1.0 !alpha
-  params(6) = 0.0 !beta
+  params(1) = 5.0_f64 !xc
+  params(2) = 0.0_f64 !yc
+  params(3) = 0.0_f64 !vxc
+  params(4) = 0.0_f64 !vyc
+  params(5) = 1.0_f64 !alpha
+  params(6) = 0.0_f64 !beta
 
   simulation%num_iterations = 100 ! run 100 iterations
-  simulation%dt             = 0.1 ! time step
+  simulation%dt             = 0.1_f64 ! time step
   call simulation%run()
   call sll_delete(simulation)
 

@@ -460,7 +460,7 @@ contains
     ! problem 
     ! here is that the end result would still need a layout change to be fed
     ! into the Poisson solver...
-    sim%rho_split(:,:,:) = 0.0
+    sim%rho_split(:,:,:) = 0.0_f64
 
     call compute_charge_density_6d( &
          sim%mesh6d, &
@@ -1043,7 +1043,7 @@ contains
     delta4   = mesh%delta_x4
     delta5   = mesh%delta_x5
     delta6   = mesh%delta_x6
-    partial(:,:,:,:,:) = 0.0 
+    partial(:,:,:,:,:) = 0.0 _f64
     numpts4 = mesh%num_cells4
     numpts5 = mesh%num_cells5
     numpts6 = mesh%num_cells6
@@ -1348,17 +1348,17 @@ contains
     sll_real64 :: x3_min
     sll_int32  :: i, j, k, gi, gj, gk
 
-    array_dims(1) =  sim%nc_x1
-    array_dims(2) =  sim%nc_x2
-    array_dims(3) =  sim%nc_x3
+    array_dims(1) =  int(sim%nc_x1,HSIZE_T)
+    array_dims(2) =  int(sim%nc_x2,HSIZE_T)
+    array_dims(3) =  int(sim%nc_x3,HSIZE_T)
 
     world_size    =  sll_get_collective_size(sll_world_collective)
     my_rank       =  sll_get_collective_rank(sll_world_collective)
 
     my_layout     => sim%rho_seq_x1
-    offset(1)     =  get_layout_i_min( my_layout, my_rank ) - 1
-    offset(2)     =  get_layout_j_min( my_layout, my_rank ) - 1
-    offset(3)     =  get_layout_k_min( my_layout, my_rank ) - 1
+    offset(1)     =  int(get_layout_i_min( my_layout, my_rank ) - 1, HSSIZE_T)
+    offset(2)     =  int(get_layout_j_min( my_layout, my_rank ) - 1, HSSIZE_T)
+    offset(3)     =  int(get_layout_k_min( my_layout, my_rank ) - 1, HSSIZE_T)
 
     call compute_local_sizes(my_layout, local_nx1, local_nx2, local_nx3)
     SLL_ALLOCATE(x1(local_nx1,local_nx2,local_nx3),error)
@@ -1456,9 +1456,9 @@ contains
     integer(HSIZE_T), dimension(3)  :: array_dims 
     integer(HSSIZE_T), dimension(3) :: offset 
 
-    array_dims(1) = sim%nc_x1
-    array_dims(2) = sim%nc_x2
-    array_dims(3) = sim%nc_x3
+    array_dims(1) = int(sim%nc_x1,HSIZE_T)
+    array_dims(2) = int(sim%nc_x2,HSIZE_T)
+    array_dims(3) = int(sim%nc_x3,HSIZE_T)
     ! The following inquiry should be on a specific layout, not on world...
     world_size    = sll_get_collective_size(sll_world_collective)
     my_rank       = sll_get_collective_rank(sll_world_collective)
@@ -1474,9 +1474,9 @@ contains
 
        call compute_local_sizes(my_layout, local_nx1, local_nx2, local_nx3)
     
-       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
-       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
-       offset(3) =  get_layout_k_min( my_layout, my_rank ) - 1
+       offset(1) =  int(get_layout_i_min( my_layout, my_rank ) - 1, HSSIZE_T)
+       offset(2) =  int(get_layout_j_min( my_layout, my_rank ) - 1, HSSIZE_T)
+       offset(3) =  int(get_layout_k_min( my_layout, my_rank ) - 1, HSSIZE_T)
 
        if (itime == 1) then
           SLL_ALLOCATE(x1(local_nx1,local_nx2,local_nx3),error)

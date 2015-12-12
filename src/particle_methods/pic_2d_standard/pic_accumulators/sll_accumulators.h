@@ -20,8 +20,8 @@
   ! expression unfortunately.
 #define SLL_ACCUMULATE_CHARGE( acc, dx, dy, icell, q, tmp1, tmp2) \
   do; \
-    tmp1 = (1.0_f64 - dx); \
-    tmp2 = (1.0_f64 - dy); \
+    tmp1 = (1.0 - dx); \
+    tmp2 = (1.0 - dy); \
     acc%q_acc(icell)%q_sw = acc%q_acc(icell)%q_sw + q*tmp1*tmp2; \
     acc%q_acc(icell)%q_se = acc%q_acc(icell)%q_se + q*  dx*tmp2; \
     acc%q_acc(icell)%q_nw = acc%q_acc(icell)%q_nw + q*tmp1*  dy; \
@@ -74,8 +74,8 @@
 
 #define SLL_INTERPOLATE_FIELD_EXTENDED(part_Ex, part_Ey, cell_E, p, tmp3, tmp4, icell) \
   do; \
-    tmp3 = (1.0_f64 - p%dx); \
-    tmp4 = (1.0_f64 - p%dy); \
+    tmp3 = (1.0 - p%dx); \
+    tmp4 = (1.0 - p%dy); \
     part_Ex = p%dx*p%dy*cell_E(icell)%Ex_ne + tmp3*p%dy*cell_E(icell)%Ex_nw + p%dx*tmp4*cell_E(icell)%Ex_se + tmp3*tmp4*cell_E(icell)%Ex_sw; \
     part_Ey = p%dx*p%dy*cell_E(icell)%Ey_ne + tmp3*p%dy*cell_E(icell)%Ey_nw + p%dx*tmp4*cell_E(icell)%Ey_se + tmp3*tmp4*cell_E(icell)%Ey_sw; \
     exit; \
@@ -95,8 +95,8 @@
 
 #define SLL_INTERPOLATE_FIELD(part_Ex, part_Ey, cell_E, p, tmp3, tmp4) \
   do; \
-    tmp3 = (1.0_f64 - p%dx); \
-    tmp4 = (1.0_f64 - p%dy); \
+    tmp3 = (1.0 - p%dx); \
+    tmp4 = (1.0 - p%dy); \
     part_Ex = p%dx*p%dy*cell_E(p%ic)%Ex_ne + tmp3*p%dy*cell_E(p%ic)%Ex_nw + p%dx*tmp4*cell_E(p%ic)%Ex_se + tmp3*tmp4*cell_E(p%ic)%Ex_sw; \
     part_Ey = p%dx*p%dy*cell_E(p%ic)%Ey_ne + tmp3*p%dy*cell_E(p%ic)%Ey_nw + p%dx*tmp4*cell_E(p%ic)%Ey_se + tmp3*tmp4*cell_E(p%ic)%Ey_sw; \
     exit; \
