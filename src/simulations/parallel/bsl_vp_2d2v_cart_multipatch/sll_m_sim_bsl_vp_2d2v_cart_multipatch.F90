@@ -380,12 +380,12 @@ contains
     sll_real64 :: vmax4
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_real64 :: delta3
-    sll_real64 :: delta4
-    sll_real64 :: alpha1
-    sll_real64 :: alpha2
-    sll_real64 :: alpha3
-    sll_real64 :: alpha4
+    !sll_real64 :: delta3
+    !sll_real64 :: delta4
+    !sll_real64 :: alpha1
+    !sll_real64 :: alpha2
+    !sll_real64 :: alpha3
+    !sll_real64 :: alpha4
     sll_int32  :: itemp
     sll_int32  :: ierr
     sll_int32  :: itime
@@ -411,7 +411,7 @@ contains
     sll_real64 :: eta4_max
     sll_real64 :: eta1_new
     sll_real64 :: eta2_new
-    sll_real64 :: diff
+    !sll_real64 :: diff
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_real64, dimension(1:2,1:2) :: jac_m
     sll_int32,  dimension(1:2)     :: gi     ! for storing global indices
@@ -454,11 +454,11 @@ contains
     sll_real64 :: val_a11, val_a12, val_a21, val_a22
     sll_real64 :: val_b1,  val_b2,  val_c
     sll_real64 :: val_rho, val_phi, val_phi_exacte
-    sll_real64 :: density_tot
+    !sll_real64 :: density_tot
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32  :: send_size   ! for allgatherv operation
-    sll_int32 :: droite_test_pente
+    !sll_int32 :: droite_test_pente
     sll_int32 :: num_patches
     sll_int32 :: ipatch
     sll_int32 :: num_pts1
@@ -933,7 +933,7 @@ contains
     type(sll_scalar_field_multipatch_2d), pointer          :: field_x1x2
     type(sll_distribution_function_4d_multipatch), pointer :: f_mp
     sll_real64, intent(in)                                 :: deltat
-    sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
+    sll_real64, dimension(1:2,1:2) :: inv_j!,jac_m
     sll_int32  :: loc_sz_x1
     sll_int32  :: loc_sz_x2
     sll_int32  :: loc_sz_x3
@@ -952,8 +952,8 @@ contains
     sll_int32  :: ip
     sll_real64 :: f_interpolated
     sll_int32  :: num_patches
-    type(sll_time_mark) :: t0 !delete this
-    sll_real64 :: time     ! delete this
+    !type(sll_time_mark) :: t0 !delete this
+    !sll_real64 :: time     ! delete this
     ! Here we do something ugly, which is to call the 'get_local_sizes()'
     ! method just to obtain the local sizes in the x3 and x4 directions, which
     ! are 'cut' (parallelized), as we are carrying out a sequential x1x2
@@ -1144,14 +1144,17 @@ contains
     sll_real64 :: alpha4
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_int32  :: i, j, k, l
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: k
+    sll_int32  :: l
     sll_real64 :: ex
     sll_real64 :: ey
     sll_real64 :: x
     sll_real64 :: y
     sll_int32  :: nc_x4
     sll_real64, dimension(:), pointer :: line
-    sll_real64, dimension(:,:,:,:), pointer :: f4d
+    !sll_real64, dimension(:,:,:,:), pointer :: f4d
 
     nc_x4               = sim%mesh2d_v%num_cells2
     num_patches         = f_mp%num_patches
@@ -1275,7 +1278,7 @@ contains
     sll_real64  :: lenght2
     sll_real64  :: length_total
     sll_int32 :: i, j
-    sll_real64, dimension(1:2,1:2) :: jac_m
+    !sll_real64, dimension(1:2,1:2) :: jac_m
     sll_real64   :: eta1, eta2
     numpts1 = mx%num_cells1+1
     numpts2 = mx%num_cells2+1

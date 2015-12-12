@@ -33,10 +33,10 @@ character(len=256) :: filename
 character(len=256) :: filename_local
 type(sll_time_mark)  :: t0
 sll_real64 :: time
-sll_int32 :: ierr 
+!sll_int32 :: ierr 
 procedure(sll_scalar_initializer_2d), pointer :: init_func, equil_func
-sll_real64, dimension(:), pointer :: params, equil_params
-sll_int32 :: num_params
+!sll_real64, dimension(:), pointer :: params, equil_params
+!sll_int32 :: num_params
 
 call sll_boot_collective()
 if(sll_get_collective_rank(sll_world_collective)==0)then
