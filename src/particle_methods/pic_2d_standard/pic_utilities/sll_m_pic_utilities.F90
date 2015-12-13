@@ -69,8 +69,8 @@ contains
     type(sll_charge_accumulator_2d), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
-    sll_real32 :: tmp1
-    sll_real32 :: tmp2
+    sll_real64 :: tmp1
+    sll_real64 :: tmp2
     sll_int32  :: thread_id
     
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
@@ -134,8 +134,8 @@ contains
     type(sll_charge_accumulator_2d), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
-    sll_real32 :: tmp1
-    sll_real32 :: tmp2
+    sll_real64 :: tmp1
+    sll_real64 :: tmp2
     sll_int32  :: thread_id
     
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
