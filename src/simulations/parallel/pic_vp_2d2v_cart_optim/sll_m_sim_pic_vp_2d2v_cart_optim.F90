@@ -279,7 +279,7 @@ contains
     sll_real64 :: tmp1, tmp2, tmp3, tmp4
     sll_real32 :: tmp5, tmp6, temp
     sll_real32 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
-    !sll_real64 :: valeur, val2
+    sll_real64 :: valeur, val2
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     sll_int32  :: ic_x1,ic_y1
@@ -287,7 +287,7 @@ contains
     sll_real64 :: xmin, ymin
     sll_real64 :: rdx, rdy
     sll_int32  :: gi ! counter index for guard list
-    sll_real64 :: Ex, Ey, Ex1, Ey1!, Ex_CS, Ey_CS
+    sll_real64 :: Ex, Ey, Ex1, Ey1, Ex_CS, Ey_CS
     sll_real64 :: dtqom! dt * qoverm
     sll_real64 :: x, x1  ! for global position
     sll_real64 :: y, y1  ! for global position
@@ -298,17 +298,14 @@ contains
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
     type(sll_particle_4d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy
-    !sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
-    !sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
+    sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
+    sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
     sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-#ifdef _OPENMP
-    sll_real64 :: t2
-    sll_real64 :: time
-#endif
-    sll_real64 :: t3
+!    type(sll_time_mark)  :: t2, t3
+    sll_real64 :: t2, t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    !sll_real64   :: t_init, t_fin, time
+    sll_real64   :: t_init, t_fin, time
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
@@ -317,9 +314,9 @@ contains
     sll_int32 :: sort_nb
     sll_real64 :: some_val, une_cst
     sll_real64 :: val_lee, exval_ee
-    sll_real64 :: val_ee
+    sll_real64 :: tot_ee, val_ee
     sll_real64 :: omega_i, omega_r, psi
-    !sll_real64 :: bors
+    sll_real64 :: bors
     
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
