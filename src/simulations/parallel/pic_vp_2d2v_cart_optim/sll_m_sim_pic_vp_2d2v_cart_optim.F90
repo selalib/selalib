@@ -301,7 +301,10 @@ contains
     !sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     !sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
     sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-!    type(sll_time_mark)  :: t2, t3
+#ifdef _OPENMP
+    sll_real64 :: t2
+    sll_real64 :: time
+#endif
     sll_real64 :: t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
