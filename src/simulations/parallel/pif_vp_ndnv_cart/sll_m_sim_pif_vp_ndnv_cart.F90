@@ -163,7 +163,7 @@ sll_real64, dimension(:),allocatable :: kineticenergy,fieldenergy, energy,energy
                weight_sum,weight_var,moment_error, l2potential
 sll_real64, dimension(:,:),allocatable ::moment,moment_var
 sll_comp64, dimension(:), allocatable :: rhs, solution
-sll_real64 :: ExB=0
+sll_real64 :: ExB=0.0_f64
 !--------------
 
 !------MPI---------
@@ -278,14 +278,14 @@ function v_cross_B_generalvp_pif(sim, x,v, time) result(vxB)
  
  SELECT CASE (sim%dimx)
    CASE (1)
-    vxB=0
+    vxB=0.0_f64
    CASE (2)
       !det( [v;B])*v
       vxB=cross_product_2D(v, sim%B(x,time))      
    CASE (3)   
       vxB=cross_product_3D(v, sim%B(x,time))     
    CASE default
-   vxB=0
+   vxB=0.0_f64
 END SELECT
  
 end function
@@ -297,7 +297,7 @@ function Bzero_generalvp_pif(sim, x, time) result(B)
  sll_real64, dimension(:,:), intent(in) :: x !position for B
  sll_real64, intent(in) :: time
  sll_real64, dimension(size(x,1),size(x,2)) :: B
- B=0
+ B=0.0_f64
 end function
 
 function Ezero_generalvp_pif(sim, x, time) result(E)
@@ -305,7 +305,7 @@ function Ezero_generalvp_pif(sim, x, time) result(E)
  sll_real64, dimension(:,:), intent(in) :: x !position for B
  sll_real64, intent(in) :: time
  sll_real64, dimension(size(x,1),size(x,2)) :: E
- E=0
+ E=0.0_f64
 end function
 
 
@@ -315,15 +315,15 @@ function E_KEENWAVE_2D(sim, x, time) result(E)
  sll_real64, intent(in) :: time
  sll_real64, dimension(size(x,1),size(x,2)) :: E
 
- sll_real64 :: t0=0
- sll_real64 :: tL=69
- sll_real64 :: tR=307
- sll_real64 :: tomegaL=20
- sll_real64 :: tomegaR=20
- sll_real64 :: omega=0.37
- sll_real64 :: Emax=0.2
+ sll_real64 :: t0=0.0_f64
+ sll_real64 :: tL=69.0_f64
+ sll_real64 :: tR=307.0_f64
+ sll_real64 :: tomegaL=20.0_f64
+ sll_real64 :: tomegaR=20.0_f64
+ sll_real64 :: omega=0.370_f64
+ sll_real64 :: Emax=0.20_f64
  
- sll_real64 :: k=0.26
+ sll_real64 :: k=0.26_f64
  sll_real64 :: L
  sll_real64 :: KEENeps
  tomegaR=tomegaL;
@@ -346,7 +346,7 @@ sll_int32 :: idx
      B(:,idx)=sim%B0(:)
    end do
  else
-   B=0
+   B=0.0_f64
  endif
  
 !  !leads in three dimensions to (0,0,1) 
@@ -363,7 +363,7 @@ function solve_field_sum_generalvp_pif(sim, rhs) result(solution)
  
  SELECT CASE (sim%FIELDSOLVER)
     CASE(PIF_NO_E_FIELD)
-     solution=0
+     solution=0.0_f64
     CASE(PIF_POISSON)
       solution=sim%SOLVER%solve_poisson(rhs)
     CASE(PIF_QUASINEUTRAL_RHO)
@@ -572,7 +572,7 @@ function visu_bound_low(sim, dim)  result(bound)
   sll_real64 :: bound
   
   if (dim<=sim%dimx) then
-    bound=0
+    bound=0.0_f64
   elseif (dim>sim%dimx .and. dim <=2*sim%dimx) then
     bound=-4.0_f64
   endif
@@ -601,7 +601,7 @@ subroutine load_landau_prod_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
   sll_int32 :: idx
   do idx=1, sim%npart_loc
-    sim%particle(sim%maskw,idx)=1+sim%eps*product(cos(sim%kmode(:)*sim%particle(sim%maskx,idx)),1)  
+    sim%particle(sim%maskw,idx)=1.0_f64+sim%eps*product(cos(sim%kmode(:)*sim%particle(sim%maskx,idx)),1)  
   end do
     sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight  
 end subroutine
@@ -610,7 +610,7 @@ subroutine load_landau_diag_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
   sll_int32 :: idx
   do idx=1, sim%npart_loc
-    sim%particle(sim%maskw,idx)=1+sim%eps*cos(sum(sim%kmode(:)*sim%particle(sim%maskx,idx),1))  
+    sim%particle(sim%maskw,idx)=1.0_f64+sim%eps*cos(sum(sim%kmode(:)*sim%particle(sim%maskx,idx),1))  
   end do
   sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight 
 end subroutine
@@ -623,7 +623,7 @@ end subroutine
   sll_real64 :: dt
  sll_int32 :: NUM_TIMESTEPS, NUM_MODES, NUM_PARTICLES, DIMENSION, TIME_INTEGRATOR_ORDER
  sll_real64 :: QoverM, EPSILON
- sll_real64, dimension(10) :: K=0,L=0, B0=0
+ sll_real64, dimension(10) :: K=0.0_f64,L=0.0_f64, B0=0.0_f64
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
  
  sll_int32, dimension(2) :: PLOT2D_IDX=0, PLOT2D_BIN=50
@@ -972,8 +972,8 @@ end subroutine heun_generalvp_pif
 subroutine rk4_generalvp_pif(sim)
     class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
     sll_real64 :: t
-     sll_real64, dimension(sim%dimx,sim%npart_loc) :: k1_xx, k1_vx,k2_xx, &
-                    k2_vx,k3_xx, k3_vx,E,k4_xx,k4_vx, xx_up,vx_up
+     !sll_real64, dimension(sim%dimx,sim%npart_loc) :: k1_xx, k1_vx,k2_xx, &
+     !               k2_vx,k3_xx, k3_vx,E,k4_xx,k4_vx, xx_up,vx_up
     t=(sim%tstep-1)*sim%dt
 ! 
 
@@ -1123,17 +1123,17 @@ SLL_ALLOCATE(sim%rk_d(rk_order),ierr)
 SELECT CASE (rk_order)
    CASE (1)
     !euler not symplectic
-    sim%rk_d=1
-    sim%rk_c=1
+    sim%rk_d=1.0_f64
+    sim%rk_c=1.0_f64
    CASE (2)
-      sim%rk_d=(/0.5, 0.5 /)
-      sim%rk_c=(/0.0, 1.0/) 
+      sim%rk_d=(/0.5_f64, 0.5_f64 /)
+      sim%rk_c=(/0.0_f64, 1.0_f64/) 
    CASE (3)
-     sim%rk_d(:)=(/ 2.0/3.0, -2.0/3.0, 1.0 /) 
-     sim%rk_c(:)=(/ 7.0/24.0,3/4.0,-1.0/24.0 /)  
+     sim%rk_d(:)=(/ 2.0_f64/3.0_f64, -2.0_f64/3.0_f64, 1.0_f64 /) 
+     sim%rk_c(:)=(/ 7.0_f64/24.0_f64,3.0_f64/4.0_f64,-1.0_f64/24.0_f64 /)  
    CASE (4)
-      sim%rk_d=(/ 2.0*rk4sx+1.0 , -4.0*rk4sx-1.0, 2.0*rk4sx+1.0, 0.0_f64/) 
-      sim%rk_c=(/ rk4sx + 0.5 , -rk4sx, -rk4sx, rk4sx +0.5 /) 
+      sim%rk_d=(/ 2.0_f64*rk4sx+1.0_f64 , -4.0_f64*rk4sx-1.0_f64, 2.0_f64*rk4sx+1.0_f64, 0.0_f64/) 
+      sim%rk_c=(/ rk4sx + 0.5_f64 , -rk4sx, -rk4sx, rk4sx +0.5_f64 /) 
    CASE DEFAULT
 END SELECT
 
@@ -1194,7 +1194,7 @@ sll_real64, dimension(size(particle,2)) :: cv
 SELECT CASE (sim%controlvariate)
    CASE (SLL_CONTROLVARIATE_NONE)
      !This should not happen
-      cv=1
+      cv=1.0_f64
     CASE (SLL_CONTROLVARIATE_STANDARD)
       cv=sqrt(2.0_f64*sll_pi)**(-size(sim%maskv))*exp(-0.5_f64*sum(sim%particle(sim%maskv,:),1)**2)
     CASE (SLL_CONTROLVARIATE_MAXWELLIAN)
