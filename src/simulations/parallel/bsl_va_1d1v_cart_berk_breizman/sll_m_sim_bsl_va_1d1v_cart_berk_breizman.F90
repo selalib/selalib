@@ -1245,12 +1245,14 @@ sll_int32  :: global_indices(2)
 sll_real64 :: delta_t
 sll_int32  :: nc_x1
 sll_int32  :: np_x1
-!sll_comp64 :: s0, s1
 sll_int32  :: tid, ig_omp, i, i_omp
 sll_real64 :: alpha_omp
 sll_real64 :: L
 sll_real64 :: gamma_d
 
+#ifdef _OPENMP
+sll_comp64 :: s0, s1
+#endif
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
