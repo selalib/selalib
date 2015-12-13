@@ -75,6 +75,10 @@ program sim_bsl_vp_1d1v_cart_deltaf
   use sll_m_utilities, only: &
     pfenvelope
 
+#ifdef _OPENMP
+  use omp_lib
+#endif
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -288,7 +292,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
   !$omp& interp_per_x, interp_per_v)
-#ifdef __OPENMP
+#ifdef _OPENMP
   my_num = omp_get_thread_num()
   num_threads =  omp_get_num_threads()
 #endif

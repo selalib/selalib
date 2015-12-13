@@ -264,50 +264,50 @@ contains
 !!!   calls of routines with '_CS' mean use of Cubic Splines  !!!
 !     for deposition or interpolation step                      !
     class(sll_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
-    sll_int32  :: ierr, it, jj, counter
+    sll_int32  :: ierr, it!, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8
+    sll_real32 :: tmp3, tmp4, tmp5, tmp6
+    sll_real32 :: tmp7, tmp8
     sll_real64 :: ee_val, enst
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
-    sll_int32  :: ic_x1,ic_y1
-    sll_real32 :: off_x, off_y,off_x1,off_y1
+    !sll_int32  :: ic_x1,ic_y1
+    sll_real32 :: off_x, off_y!,off_x1,off_y1
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_real64 :: xmax, ymax
-    sll_int32  :: gi ! counter index for guard list
-    sll_real64 :: Ex, Ey, Ex1, Ey1
+    !sll_int32  :: gi ! counter index for guard list
+    sll_real64 :: Ex, Ey!, Ex1, Ey1
     sll_real64 :: qoverm
-    sll_real64 :: x, x1  ! for global position
-    sll_real64 :: y, y1  ! for global position
-    sll_real64 :: pp_vx,  pp_vy
-    sll_real64 :: dt, tfin
-    type(sll_time_mark) :: tinit
+    sll_real64 :: x!, x1  ! for global position
+    sll_real64 :: y!, y1  ! for global position
+    !sll_real64 :: pp_vx,  pp_vy
+    sll_real64 :: dt!, tfin
+    !type(sll_time_mark) :: tinit
     sll_real64 :: temp
     sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
     type(sll_particle_2d), dimension(:), pointer :: p
     type(sll_particle_2d), dimension(:), allocatable :: ploc
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
-    type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
-    sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
+    !type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
+    !sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
     sll_real64, dimension(:),   allocatable  ::  diag_enstrophy
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
 !!$    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-    type(sll_time_mark)  :: t2, t3, t8
+    !type(sll_time_mark)  :: t2, t3, t8
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    sll_real64   :: t_init, t_fin, time
+    !sll_real64   :: t_init, t_fin!, time
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
     type(sll_charge_accumulator_2d),    pointer :: q_accum
     type(sll_charge_accumulator_2d_CS), pointer :: q_accum_CS
     sll_int32  :: sort_nb
-    sll_real64  :: some_val
-    sll_real64  :: x2, y2
-    character(6)  :: it_name
-    character(22) :: nnnom
+    !sll_real64  :: some_val
+    !sll_real64  :: x2, y2
+    !character(6)  :: it_name
+    !character(22) :: nnnom
 
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
@@ -637,47 +637,47 @@ contains
 !!!   calls of routines with '_CS' mean use of Cubic Splines  !!!
 !     for deposition or interpolation step                      !
     class(sll_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
-    sll_int32  :: ierr, it, jj, counter
+    sll_int32  :: ierr, it!, jj!, counter
     sll_int32  :: i, j
     sll_real64 :: tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8
+    sll_real32 :: tmp7, tmp8
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
-    sll_int32  :: ic_x1,ic_y1
-    sll_real32 :: off_x, off_y,off_x1,off_y1
+    !sll_int32  :: ic_x1,ic_y1
+    sll_real32 :: off_x, off_y!,off_x1,off_y1
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_real64 :: xmax, ymax
-    sll_int32  :: gi ! counter index for guard list
-    sll_real64 :: Ex, Ey, Ex1, Ey1
+    !sll_int32  :: gi ! counter index for guard list
+    sll_real64 :: Ex, Ey!, Ex1, Ey1
     sll_real64 :: qoverm
-    sll_real64 :: x, x1  ! for global position
-    sll_real64 :: y, y1  ! for global position
-    sll_real64 :: pp_vx,  pp_vy
-    sll_real64 :: dt, tfin
+    sll_real64 :: x!, x1  ! for global position
+    sll_real64 :: y!, y1  ! for global position
+    !sll_real64 :: pp_vx,  pp_vy
+    sll_real64 :: dt!, tfin
     type(sll_time_mark) :: tinit
     sll_real64 :: temp
     sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
     type(sll_particle_2d), dimension(:), pointer :: p
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
-    type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
-    sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
-    sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
+    !type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
+    !sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
+    !sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
 !!$    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-    type(sll_time_mark)  :: t2, t3, t8
+    !type(sll_time_mark)  :: t2, t3, t8
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    sll_real64   :: t_init, t_fin, time
+    !sll_real64   :: t_init, t_fin, time
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
     type(sll_charge_accumulator_2d),    pointer :: q_accum
     type(sll_charge_accumulator_2d_CS), pointer :: q_accum_CS
     sll_int32  :: sort_nb
-    sll_real64  :: some_val
-    sll_real64  :: x2, y2
-    character(6)  :: it_name
-    character(22) :: nnnom
+    !sll_real64  :: some_val
+    !sll_real64  :: x2, y2
+    !character(6)  :: it_name
+    !character(22) :: nnnom
 
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
