@@ -209,12 +209,6 @@ end interface delete
 
 sll_int32                               :: istep
 sll_int32                               :: iplot
-sll_int32                               :: adr_id
-sll_int32                               :: edr_id
-sll_int32                               :: t_id
-sll_int32                               :: deltaf_id
-sll_int32                               :: rhotot_id
-sll_int32                               :: efield_id
 sll_int32                               :: thdiag_id
 sll_real64                              :: time
 
