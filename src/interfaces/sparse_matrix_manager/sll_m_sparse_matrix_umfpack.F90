@@ -678,14 +678,14 @@ subroutine sll_init_SparseMatrix(self, ai_nel, api_LM_1, ai_nen_1, api_LM_2, &
 end subroutine sll_init_SparseMatrix
 
 subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
-  implicit none
-  type(sll_csr_matrix) :: mat
-  sll_real64, dimension(:) :: apr_U
-  sll_real64, dimension(:) :: apr_B
-  sll_real64, dimension(:), pointer :: Masse_tot
-  !local var
-  sll_int32  :: sys
+
+  type(sll_csr_matrix)                :: mat
+  sll_real64, dimension(:)            :: apr_U
+  sll_real64, dimension(:)            :: apr_B
+  sll_real64, dimension(:), pointer   :: Masse_tot
   sll_real64, dimension(umfpack_info) :: info
+  sll_int32  :: sys
+
   sys = 0
   call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
   
@@ -697,6 +697,7 @@ end subroutine sll_solve_csr_matrix_perper
 !> Fill a matrix in CSR format corresponding to a constant coefficient
 !> five-point stencil on a square grid
 subroutine uni2d(this,f)
+
 type(sll_csr_matrix) :: this
 sll_real64           :: f(:)
 sll_real64, pointer  :: a(:)
@@ -704,7 +705,10 @@ sll_int32            :: m
 sll_int32, pointer   :: ia(:),ja(:)
 integer              :: k,l,i,j
 
-real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
+real (kind(0d0)), parameter :: zero =  0.0d0
+real (kind(0d0)), parameter :: cx   = -1.0d0
+real (kind(0d0)), parameter :: cy   = -1.0d0
+real (kind(0d0)), parameter :: cy   = -1.0d0
 
 a  => this%val
 ia => this%row_ptr
@@ -757,6 +761,6 @@ end do
 this%num_nz = l
 
 return
-end subroutine uni2D
+end subroutine uni2d
 
 end module sll_m_sparse_matrix
