@@ -30,7 +30,7 @@
     ! nothing (second case) then we don't want dangling semicolons...
 #ifdef DEBUG
 # define SLL_ASSERT(x) if ( .not. (x) ) then;          \
-      call sll_assertion( STRNG(x), __FILE__, __LINE__ ); \
+      call sll_s_assertion( STRNG(x), __FILE__, __LINE__ ); \
    end if;
 #else
 # define SLL_ASSERT(x) 

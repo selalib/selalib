@@ -7,48 +7,48 @@ module sll_m_scalar_field_2d_old
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create, &
-    sll_ascii_write_array_2d
+    sll_s_ascii_file_create, &
+    sll_s_ascii_write_array_2d
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base, &
-    sll_io_gnuplot, &
-    sll_io_vtk, &
-    sll_io_xdmf
+    sll_c_coordinate_transformation_2d_base, &
+    sll_p_io_gnuplot, &
+    sll_p_io_vtk, &
+    sll_p_io_xdmf
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_scalar_field_initializers_base, only: &
-    cell_centered_field, &
-    node_centered_field, &
-    scalar_field_2d_initializer_base
+    sll_p_cell_centered_field, &
+    sll_p_node_centered_field, &
+    sll_c_scalar_field_2d_initializer_base
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   use sll_m_xdmf, only: &
-    sll_xdmf_close, &
-    sll_xdmf_open, &
-    sll_xdmf_write_array
+    sll_s_xdmf_close, &
+    sll_o_xdmf_open, &
+    sll_o_xdmf_write_array
 
   implicit none
 
   public :: &
-    initialize_scalar_field_2d, &
-    scalar_field_2d, &
-    scalar_function_2d_old, &
-    sll_create, &
-    write_scalar_field_2d
+    sll_s_initialize_scalar_field_2d, &
+    sll_t_scalar_field_2d, &
+    sll_i_scalar_function_2d_old, &
+    sll_o_create, &
+    sll_s_write_scalar_field_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type :: scalar_field_2d
-     class(sll_coordinate_transformation_2d_base), pointer :: transf
+  type :: sll_t_scalar_field_2d
+     class(sll_c_coordinate_transformation_2d_base), pointer :: transf
      class(sll_c_interpolator_1d), pointer :: eta1_interpolator
      class(sll_c_interpolator_1d), poInter :: eta2_interpolator
      sll_real64, dimension(:,:), pointer      :: data
@@ -56,28 +56,28 @@ module sll_m_scalar_field_2d_old
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
   contains
-     procedure :: write_to_file =>  write_scalar_field_2d
-     procedure :: initialize    =>  initialize_scalar_field_2d
-  end type scalar_field_2d
+     procedure :: write_to_file =>  sll_s_write_scalar_field_2d
+     procedure :: initialize    =>  sll_s_initialize_scalar_field_2d
+  end type sll_t_scalar_field_2d
 
   abstract interface
-     function scalar_function_2D_old( eta1, eta2 )
+     function sll_i_scalar_function_2d_old( eta1, eta2 )
        use sll_m_working_precision
-       sll_real64 :: scalar_function_2D_old
+       sll_real64 :: sll_i_scalar_function_2d_old
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
-     end function scalar_function_2D_old
+     end function sll_i_scalar_function_2d_old
   end interface
 
-  interface sll_create
-     module procedure initialize_scalar_field_2d
-  end interface sll_create
+  interface sll_o_create
+     module procedure sll_s_initialize_scalar_field_2d
+  end interface sll_o_create
 
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
   ! initializer is not use whith fortran95
-  subroutine initialize_scalar_field_2d( &
+  subroutine sll_s_initialize_scalar_field_2d( &
     this, &
     field_name, &
     transf, &
@@ -86,16 +86,16 @@ contains   ! *****************************************************************
     eta2_interpolator, &
     initializer )
 
-    class(scalar_field_2d), intent(inout)               :: this
+    class(sll_t_scalar_field_2d), intent(inout)               :: this
     character(len=*), intent(in)                        :: field_name
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     sll_int32, intent(in)                               :: data_position
     class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
     class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
-    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
+    class(sll_c_scalar_field_2d_initializer_base), pointer, optional :: initializer
     
-    class(sll_cartesian_mesh_2d), pointer :: mesh
-    character(len=*), parameter :: this_sub_name = 'initialize_scalar_field_2d'
+    class(sll_t_cartesian_mesh_2d), pointer :: mesh
+    character(len=*), parameter :: this_sub_name = 'sll_s_initialize_scalar_field_2d'
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -106,7 +106,7 @@ contains   ! *****************************************************************
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
-    SLL_WARNING( this_sub_name, "The scalar_field_2d object is deprecated." )
+    SLL_WARNING( this_sub_name, "The sll_t_scalar_field_2d object is deprecated." )
 
     this%transf => transf
     this%transf%written = .false.
@@ -125,28 +125,28 @@ contains   ! *****************************************************************
     if( associated(eta1_interpolator) ) then
        this%eta1_interpolator => eta1_interpolator
     else
-       print *, 'initialize_scalar_field_2d(): eta1_interpolator pointer ', &
+       print *, 'sll_s_initialize_scalar_field_2d(): eta1_interpolator pointer ', &
             'is not associated. Exiting...'
        stop
     end if
     if( associated(eta2_interpolator) ) then
        this%eta2_interpolator => eta2_interpolator
     else
-       print *, 'initialize_scalar_field_2d(): eta2_interpolator pointer ', &
+       print *, 'sll_s_initialize_scalar_field_2d(): eta2_interpolator pointer ', &
             'is not associated. Exiting...'
        stop
     end if
 
 
     this%data_position = data_position
-    if (data_position == NODE_CENTERED_FIELD) then
+    if (data_position == sll_p_node_centered_field) then
        SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
        if (present(initializer)) then
           call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
-    else if (data_position == CELL_CENTERED_FIELD) then
+    else if (data_position == sll_p_cell_centered_field) then
        SLL_ALLOCATE(this%data(num_cells1,num_cells2), ierr)
        delta1 = 1.0_f64/real(num_cells1,f64)
        delta2 = 1.0_f64/real(num_cells2,f64)
@@ -159,7 +159,7 @@ contains   ! *****************************************************************
        end if
     endif
     this%plot_counter = 0
-  end subroutine initialize_scalar_field_2d
+  end subroutine sll_s_initialize_scalar_field_2d
 
 !PN DEFINED BUT NOT USED
 ! ! The following pair of subroutines are tricky. We want them as general 
@@ -171,7 +171,7 @@ contains   ! *****************************************************************
 ! ! values anywhere instead of at the nodes.
 ! ! For now, this interface would permit to have multiple implementations.
 ! subroutine compute_eta1_derivative_on_col( field2d, ith_col, deriv_out )
-!   type(scalar_field_2d), intent(in)    :: field2d
+!   type(sll_t_scalar_field_2d), intent(in)    :: field2d
 !   sll_int32, intent(in)                :: ith_col
 !   sll_real64, dimension(:),intent(out) :: deriv_out
 !   deriv_out = 0.0_f64 * ith_col
@@ -182,25 +182,25 @@ contains   ! *****************************************************************
 ! ! need to do something about deallocating the field proper, when allocated
 ! ! in the heap...
 ! subroutine delete_scalar_field_2d( this )
-!   type(scalar_field_2d), pointer :: this
+!   type(sll_t_scalar_field_2d), pointer :: this
 !   sll_int32                      :: ierr
 !   nullify(this%transf)
 !   SLL_DEALLOCATE(this%data, ierr)
 ! end subroutine delete_scalar_field_2d
 
-  subroutine write_scalar_field_2d( &
+  subroutine sll_s_write_scalar_field_2d( &
     scalar_field, &
     multiply_by_jacobian, &
     output_file_name, &
     output_format)
 
-    class(scalar_field_2d) :: scalar_field
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    class(sll_t_scalar_field_2d) :: scalar_field
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
     sll_int32              :: local_format 
-    class(sll_cartesian_mesh_2d), pointer :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -220,7 +220,7 @@ contains   ! *****************************************************************
     if (present(output_format)) then
        local_format = output_format
     else
-       local_format = SLL_IO_XDMF
+       local_format = sll_p_io_xdmf
     end if
 
     transf => scalar_field%transf
@@ -233,7 +233,7 @@ contains   ! *****************************************************************
 
     num_pts1 = mesh%num_cells1+1
     num_pts2 = mesh%num_cells2+1
-    if (scalar_field%data_position == NODE_CENTERED_FIELD) then
+    if (scalar_field%data_position == sll_p_node_centered_field) then
        SLL_ALLOCATE(val(num_pts1,num_pts2), ierr)
     else
        SLL_ALLOCATE(val(num_pts1-1,num_pts2-1), ierr)
@@ -243,7 +243,7 @@ contains   ! *****************************************************************
        val =  scalar_field%data
     else !if (multiply_by_jacobian) then 
 
-       if (scalar_field%data_position == CELL_CENTERED_FIELD) then
+       if (scalar_field%data_position == sll_p_cell_centered_field) then
           eta2 =  0.5_f64 * mesh%delta_eta2
           do i2 = 1, mesh%num_cells2
              eta1 = 0.5_f64 * mesh%delta_eta1
@@ -270,34 +270,34 @@ contains   ! *****************************************************************
     print*, local_format
 
     select case(local_format)
-    case (SLL_IO_XDMF)
+    case (sll_p_io_xdmf)
        
-       if (scalar_field%data_position == NODE_CENTERED_FIELD) then
+       if (scalar_field%data_position == sll_p_node_centered_field) then
           center = "Node"
-       else if (scalar_field%data_position == CELL_CENTERED_FIELD) then
+       else if (scalar_field%data_position == sll_p_cell_centered_field) then
           center = "Cell"
        end if
 
        if (.not. present(output_file_name)) then
           scalar_field%plot_counter = scalar_field%plot_counter+1
-          call int2string(scalar_field%plot_counter, counter)
+          call sll_s_int2string(scalar_field%plot_counter, counter)
           name = trim(scalar_field%name)//counter
        else 
           name = output_file_name
        end if
-       call sll_xdmf_open(trim(name)//".xmf", &
+       call sll_o_xdmf_open(trim(name)//".xmf", &
             scalar_field%transf%label,        &
             num_pts1,num_pts2,file_id,ierr)
       
-       call sll_xdmf_write_array(trim(name), &
+       call sll_o_xdmf_write_array(trim(name), &
                                  val,&
                                  scalar_field%name,ierr,file_id, &
                                  "center")
-       call sll_xdmf_close(file_id,ierr)
+       call sll_s_xdmf_close(file_id,ierr)
 
-    case (SLL_IO_VTK)
+    case (sll_p_io_vtk)
 
-       call sll_ascii_file_create(trim(name)//".vtr", file_id, ierr)
+       call sll_s_ascii_file_create(trim(name)//".vtr", file_id, ierr)
 
        write(file_id,"(a)")"<VTKFile type='RectilinearGrid'>"
        write(file_id,"(a,6i5,a)")"<RectilinearGrid WholeExtent='",1, num_pts1,1,num_pts2,1,1,"'>"
@@ -316,19 +316,19 @@ contains   ! *****************************************************************
 
        close(file_id)
 
-    case (SLL_IO_GNUPLOT)
-       call sll_ascii_file_create(trim(name)//".vtr", file_id, ierr)
-       call sll_ascii_write_array_2d(file_id, val, ierr)
+    case (sll_p_io_gnuplot)
+       call sll_s_ascii_file_create(trim(name)//".vtr", file_id, ierr)
+       call sll_s_ascii_write_array_2d(file_id, val, ierr)
        close(file_id)
 
     case default
 
-       print*, "write_scalar_field_2d: requested output format not recognized."
+       print*, "sll_s_write_scalar_field_2d: requested output format not recognized."
        stop
     end select
 
 
     SLL_DEALLOCATE_ARRAY(val,ierr)
-  end subroutine write_scalar_field_2d
+  end subroutine sll_s_write_scalar_field_2d
 
 end module sll_m_scalar_field_2d_old

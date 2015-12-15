@@ -60,7 +60,7 @@ module sll_m_hdf5_io_parallel
     hssize_t
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close
+    sll_o_hdf5_file_close
 
   use sll_mpi, only: &
     mpi_info_null
@@ -68,25 +68,25 @@ module sll_m_hdf5_io_parallel
   implicit none
 
   public :: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Create new HDF5 file
-  interface sll_hdf5_file_create
+  interface sll_o_hdf5_file_create
     module procedure sll_hdf5_par_file_create
   end interface
 
   !> Open existing HDF5 file
-  interface sll_hdf5_file_open
+  interface sll_o_hdf5_file_open
     module procedure sll_hdf5_par_file_open
   end interface
 
   !> Write array in HDF5 file
-  interface sll_hdf5_write_array
+  interface sll_o_hdf5_write_array
      module procedure sll_hdf5_par_write_dble_array_1d
      module procedure sll_hdf5_par_write_dble_array_2d
      module procedure sll_hdf5_par_write_dble_array_3d
@@ -155,7 +155,7 @@ contains
   end subroutine sll_hdf5_par_file_open
 
 !  !> Close HDF5 file
-!  subroutine sll_hdf5_file_close(file_id,error)
+!  subroutine sll_o_hdf5_file_close(file_id,error)
 !    integer(hid_t), intent(in)     :: file_id   !< file unit number
 !    integer, intent(out)           :: error     !< error code
 !
@@ -169,7 +169,7 @@ contains
 !    !
 !    call h5close_f(error)
 !    SLL_ASSERT(error==0)
-!  end subroutine sll_hdf5_file_close
+!  end subroutine sll_o_hdf5_file_close
 
   
   

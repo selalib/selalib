@@ -5,71 +5,71 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite
+    sll_p_hermite
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_collective, only: &
-    sll_collective_reduce_real64, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_s_collective_reduce_real64, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_common_array_initializers, only: &
-    sll_scalar_initializer_4d
+    sll_i_scalar_initializer_4d
 
   use sll_m_coordinate_transformation_multipatch, only: &
-    sll_coordinate_transformation_multipatch_2d
+    sll_t_coordinate_transformation_multipatch_2d
 
   use sll_m_coordinate_transformations_2d_nurbs, only: &
-    sll_coordinate_transformation_2d_nurbs
+    sll_t_coordinate_transformation_2d_nurbs
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_cubic_spline_interpolator_1d, &
-    sll_delete
+    sll_t_cubic_spline_interpolator_1d, &
+    sll_o_delete
 
   use sll_m_distribution_function_4d_multipatch, only: &
-    compute_charge_density_multipatch, &
-    sll_distribution_function_4d_multipatch, &
-    sll_new_distribution_function_4d_multipatch
+    sll_s_compute_charge_density_multipatch, &
+    sll_t_distribution_function_4d_multipatch, &
+    sll_f_new_distribution_function_4d_multipatch
 
   use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
-    factorize_mat_es_mp, &
-    general_coordinate_elliptic_solver_mp, &
-    new_general_elliptic_solver_mp, &
-    sll_solve_mp
+    sll_s_factorize_mat_es_mp, &
+    sll_t_general_coordinate_elliptic_solver_mp, &
+    sll_f_new_general_elliptic_solver_mp, &
+    sll_o_solve_mp
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array_1d, &
-    sll_hdf5_write_array_2d
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array_1d, &
+    sll_o_hdf5_write_array_2d
 
   use sll_m_remapper, only: &
-    layout_2d, &
-    layout_4d, &
-    remap_plan_2d_comp64, &
-    remap_plan_2d_real64, &
-    remap_plan_4d_real64, &
-    sll_delete
+    sll_t_layout_2d, &
+    sll_t_layout_4d, &
+    sll_t_remap_plan_2d_comp64, &
+    sll_t_remap_plan_2d_real64, &
+    sll_t_remap_plan_4d_real64, &
+    sll_o_delete
 
   use sll_m_scalar_field_2d, only: &
-    two_var_parametrizable_function
+    sll_i_two_var_parametrizable_function
 
   use sll_m_scalar_field_2d_multipatch, only: &
-    new_scalar_field_multipatch_2d, &
-    sll_scalar_field_multipatch_2d
+    sll_f_new_scalar_field_multipatch_2d, &
+    sll_t_scalar_field_multipatch_2d
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_m_timer, only: &
-    sll_time_mark
+    sll_t_time_mark
 
   use sll_m_utilities, only: &
-    is_even, &
-    sll_new_file_id
+    sll_f_is_even, &
+    sll_s_new_file_id
 
   use sll_mpi, only: &
     mpi_sum
@@ -77,15 +77,15 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
   implicit none
 
   public :: &
-    initialize_4d_qns_gen_mp, &
-    run_4d_qns_general_mp, &
-    sll_delete, &
-    sll_simulation_4d_qns_general_multipatch
+    sll_s_initialize_4d_qns_gen_mp, &
+    sll_s_run_4d_qns_general_mp, &
+    sll_o_delete, &
+    sll_t_simulation_4d_qns_general_multipatch
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general_multipatch
+  type, extends(sll_c_simulation_base_class) :: sll_t_simulation_4d_qns_general_multipatch
      ! Parallel environment parameters
      sll_int32  :: world_size
      sll_int32  :: my_rank
@@ -114,11 +114,11 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
      sll_int32  :: bc_vy_0
      sll_int32  :: bc_vy_1
      ! the logical meshes are split in two one for space, one for velocity
-     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_v
+     type(sll_t_cartesian_mesh_2d), pointer    :: mesh2d_v
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
-     type(sll_coordinate_transformation_multipatch_2d), pointer :: transfx
-     type(general_coordinate_elliptic_solver_mp), pointer      :: qns
+     type(sll_t_coordinate_transformation_multipatch_2d), pointer :: transfx
+     type(sll_t_general_coordinate_elliptic_solver_mp), pointer      :: qns
 
 
      !  number dignostics for the simulation
@@ -166,39 +166,39 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
      sll_real64,dimension(:),pointer :: pt_eta1
      sll_real64,dimension(:),pointer :: pt_eta2
      ! for remap
-     type(layout_4D), pointer :: sequential_x1x2
-     type(layout_4D), pointer :: sequential_x3x4
-     type(layout_2D), pointer :: rho_full_layout
-     type(layout_2D), pointer :: rho_seq_x2
-     type(layout_2D), pointer :: split_rho_layout ! not sequential in any dir.
-     type(remap_plan_2D_real64), pointer :: split_to_full
-     type(remap_plan_2D_real64), pointer :: seqx1_to_seqx2
+     type(sll_t_layout_4d), pointer :: sequential_x1x2
+     type(sll_t_layout_4d), pointer :: sequential_x3x4
+     type(sll_t_layout_2d), pointer :: rho_full_layout
+     type(sll_t_layout_2d), pointer :: rho_seq_x2
+     type(sll_t_layout_2d), pointer :: split_rho_layout ! not sequential in any dir.
+     type(sll_t_remap_plan_2d_real64), pointer :: split_to_full
+     type(sll_t_remap_plan_2d_real64), pointer :: seqx1_to_seqx2
      ! remaps for the electric field data
      !     type(remap_plan_2D), pointer :: efld_split_to_seqx1
-     type(remap_plan_2D_comp64), pointer :: efld_seqx1_to_seqx2
-     type(remap_plan_2D_comp64), pointer :: efld_seqx2_to_split
-     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
-     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
+     type(sll_t_remap_plan_2d_comp64), pointer :: efld_seqx1_to_seqx2
+     type(sll_t_remap_plan_2d_comp64), pointer :: efld_seqx2_to_split
+     type(sll_t_remap_plan_4d_real64), pointer :: seqx1x2_to_seqx3x4
+     type(sll_t_remap_plan_4d_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators
-     type(sll_cubic_spline_interpolator_1d) :: interp_x3
-     type(sll_cubic_spline_interpolator_1d) :: interp_x4
+     type(sll_t_cubic_spline_interpolator_1d) :: interp_x3
+     type(sll_t_cubic_spline_interpolator_1d) :: interp_x4
      ! for distribution function initializer:
-     procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
+     procedure(sll_i_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
      ! for general coordinate QNS
-     procedure(two_var_parametrizable_function),nopass,pointer :: a11_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: a12_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: b1_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: b2_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: der1_b1_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: der1_b2_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: der2_b1_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: der2_b2_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: c_f
-     procedure(two_var_parametrizable_function),nopass,pointer :: elec_field_ext_1
-     procedure(two_var_parametrizable_function),nopass,pointer :: elec_field_ext_2
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: a11_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: a12_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: a21_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: a22_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: b1_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: b2_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: der1_b1_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: der1_b2_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: der2_b1_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: der2_b2_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: c_f
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: elec_field_ext_1
+     procedure(sll_i_two_var_parametrizable_function),nopass,pointer :: elec_field_ext_2
      sll_real64, dimension(:), pointer :: a11_f_params
      sll_real64, dimension(:), pointer :: a12_f_params
      sll_real64, dimension(:), pointer :: a21_f_params
@@ -209,14 +209,14 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
      sll_real64, dimension(:), pointer :: elec_field_ext_f_params
 
    contains
-     procedure, pass(sim) :: run => run_4d_qns_general_mp
+     procedure, pass(sim) :: run => sll_s_run_4d_qns_general_mp
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen_mp
-     procedure, pass(sim) :: initialize => initialize_4d_qns_gen_mp
-  end type sll_simulation_4d_qns_general_multipatch
+     procedure, pass(sim) :: initialize => sll_s_initialize_4d_qns_gen_mp
+  end type sll_t_simulation_4d_qns_general_multipatch
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_4d_qns_gen_mp
-  end interface sll_delete
+  end interface sll_o_delete
 
   ! interface initialize
   !    module procedure initialize_4d_qns_general_multipatch
@@ -225,7 +225,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
 contains
 
   ! Tentative function to initialize the simulation object 'manually'.
-  subroutine initialize_4d_qns_gen_mp(&
+  subroutine sll_s_initialize_4d_qns_gen_mp(&
        sim, &
        mesh2d_v, &
        transformation_x, &
@@ -258,24 +258,24 @@ contains
        elec_field_ext_f_params,&
        number_diags)
     
-    class(sll_simulation_4d_qns_general_multipatch),   intent(inout)      :: sim
-    type(sll_coordinate_transformation_multipatch_2d), intent(in), target :: transformation_x
-    type(sll_cartesian_mesh_2d), pointer         :: mesh2d_v
-    procedure(sll_scalar_initializer_4d)       :: init_func
+    class(sll_t_simulation_4d_qns_general_multipatch),   intent(inout)      :: sim
+    type(sll_t_coordinate_transformation_multipatch_2d), intent(in), target :: transformation_x
+    type(sll_t_cartesian_mesh_2d), pointer         :: mesh2d_v
+    procedure(sll_i_scalar_initializer_4d)       :: init_func
     sll_real64, dimension(:), target           :: params
-    procedure(two_var_parametrizable_function) :: a11_f
-    procedure(two_var_parametrizable_function) :: a12_f
-    procedure(two_var_parametrizable_function) :: a21_f
-    procedure(two_var_parametrizable_function) :: a22_f
-    procedure(two_var_parametrizable_function) :: b1_f
-    procedure(two_var_parametrizable_function) :: b2_f
-    procedure(two_var_parametrizable_function) :: der1_b1_f
-    procedure(two_var_parametrizable_function) :: der1_b2_f
-    procedure(two_var_parametrizable_function) :: der2_b1_f
-    procedure(two_var_parametrizable_function) :: der2_b2_f
-    procedure(two_var_parametrizable_function) :: c_f
-    procedure(two_var_parametrizable_function) :: electric_field_ext_1
-    procedure(two_var_parametrizable_function) :: electric_field_ext_2
+    procedure(sll_i_two_var_parametrizable_function) :: a11_f
+    procedure(sll_i_two_var_parametrizable_function) :: a12_f
+    procedure(sll_i_two_var_parametrizable_function) :: a21_f
+    procedure(sll_i_two_var_parametrizable_function) :: a22_f
+    procedure(sll_i_two_var_parametrizable_function) :: b1_f
+    procedure(sll_i_two_var_parametrizable_function) :: b2_f
+    procedure(sll_i_two_var_parametrizable_function) :: der1_b1_f
+    procedure(sll_i_two_var_parametrizable_function) :: der1_b2_f
+    procedure(sll_i_two_var_parametrizable_function) :: der2_b1_f
+    procedure(sll_i_two_var_parametrizable_function) :: der2_b2_f
+    procedure(sll_i_two_var_parametrizable_function) :: c_f
+    procedure(sll_i_two_var_parametrizable_function) :: electric_field_ext_1
+    procedure(sll_i_two_var_parametrizable_function) :: electric_field_ext_2
     sll_real64, dimension(:), intent(in) :: a11_f_params
     sll_real64, dimension(:), intent(in) :: a12_f_params
     sll_real64, dimension(:), intent(in) :: a21_f_params
@@ -334,12 +334,12 @@ contains
     sim%c_f_params(:)   = c_f_params
     sim%elec_field_ext_f_params(:) = elec_field_ext_f_params
     
-  end subroutine initialize_4d_qns_gen_mp
+  end subroutine sll_s_initialize_4d_qns_gen_mp
 
 
   subroutine init_4d_qns_gen_mp( sim, filename )
     intrinsic :: trim
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
+    class(sll_t_simulation_4d_qns_general_multipatch), intent(inout) :: sim
     character(len=*), intent(in)                                   :: filename
     sll_int32             :: IO_stat
     sll_real64            :: dt
@@ -364,8 +364,8 @@ contains
   end subroutine init_4d_qns_gen_mp
 
 
-  subroutine run_4d_qns_general_mp(sim)
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
+  subroutine sll_s_run_4d_qns_general_mp(sim)
+    class(sll_t_simulation_4d_qns_general_multipatch), intent(inout) :: sim
     !sll_int32  :: loc_sz_x1
     !sll_int32  :: loc_sz_x2
     !sll_int32  :: loc_sz_x3
@@ -431,21 +431,21 @@ contains
     !sll_int32  :: global_indices(4)
     !sll_int32  :: iplot
     !character(len=4) :: cplot
-    class(sll_scalar_field_multipatch_2d), pointer      :: a11_field_mat
-    class(sll_scalar_field_multipatch_2d), pointer      :: a21_field_mat
-    class(sll_scalar_field_multipatch_2d), pointer      :: a12_field_mat
-    class(sll_scalar_field_multipatch_2d), pointer      :: a22_field_mat
-    class(sll_scalar_field_multipatch_2d), pointer      :: b1_field_vect
-    class(sll_scalar_field_multipatch_2d), pointer      :: b2_field_vect
-    class(sll_scalar_field_multipatch_2d), pointer      :: c_field
-    !type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_1
-    !type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_2
-    type(sll_scalar_field_multipatch_2d), pointer      :: rho
-    type(sll_scalar_field_multipatch_2d), pointer      :: phi
-    type(sll_scalar_field_multipatch_2d), pointer      :: layer_x1x2
-    !type(sll_cartesian_mesh_2d), pointer                         :: logical_m
-    class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
-    type(sll_distribution_function_4d_multipatch), pointer     :: f_mp
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: a11_field_mat
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: a21_field_mat
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: a12_field_mat
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: a22_field_mat
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: b1_field_vect
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: b2_field_vect
+    class(sll_t_scalar_field_multipatch_2d), pointer      :: c_field
+    !type(sll_t_scalar_field_multipatch_2d), pointer      :: elec_field_ext_1
+    !type(sll_t_scalar_field_multipatch_2d), pointer      :: elec_field_ext_2
+    type(sll_t_scalar_field_multipatch_2d), pointer      :: rho
+    type(sll_t_scalar_field_multipatch_2d), pointer      :: phi
+    type(sll_t_scalar_field_multipatch_2d), pointer      :: layer_x1x2
+    !type(sll_t_cartesian_mesh_2d), pointer                         :: logical_m
+    class(sll_t_coordinate_transformation_2d_nurbs), pointer     :: transf
+    type(sll_t_distribution_function_4d_multipatch), pointer     :: f_mp
 
     !sll_real64, dimension(:), allocatable :: send_buf
     !sll_real64, dimension(:), allocatable :: recv_buf
@@ -469,53 +469,53 @@ contains
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
     ! time variables
-    !type(sll_time_mark)  :: t0 
-    !type(sll_time_mark)  :: t1
+    !type(sll_t_time_mark)  :: t0 
+    !type(sll_t_time_mark)  :: t1
     !sll_real64 :: time 
     sll_int32 :: size_diag    
     
     ! Start with the fields
-    !    call sll_set_time_mark(t0) 
+    !    call sll_s_set_time_mark(t0) 
     a11_field_mat => &
-         new_scalar_field_multipatch_2d("a11", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("a11", sim%transfx, owns_data=.true.)
 
     a12_field_mat => &
-         new_scalar_field_multipatch_2d("a12", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("a12", sim%transfx, owns_data=.true.)
 
     a21_field_mat => &
-         new_scalar_field_multipatch_2d("a21", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("a21", sim%transfx, owns_data=.true.)
 
     a22_field_mat => &
-         new_scalar_field_multipatch_2d("a22", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("a22", sim%transfx, owns_data=.true.)
 
     b1_field_vect => &
-         new_scalar_field_multipatch_2d("b1", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("b1", sim%transfx, owns_data=.true.)
     
     b2_field_vect => &
-         new_scalar_field_multipatch_2d("b2", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("b2", sim%transfx, owns_data=.true.)
     
     c_field       => &
-         new_scalar_field_multipatch_2d("c", sim%transfx, owns_data=.true.)
+         sll_f_new_scalar_field_multipatch_2d("c", sim%transfx, owns_data=.true.)
     
     layer_x1x2    => &
-         new_scalar_field_multipatch_2d("layer_x1x2", &
+         sll_f_new_scalar_field_multipatch_2d("layer_x1x2", &
                                         sim%transfx, &
                                         owns_data=.false.)
     
     phi => &
-         new_scalar_field_multipatch_2d("potential_field_phi", &
+         sll_f_new_scalar_field_multipatch_2d("potential_field_phi", &
                                         sim%transfx, &
                                         owns_data=.true.)
     
     rho => &
-         new_scalar_field_multipatch_2d("rho_field_multipatch", &
+         sll_f_new_scalar_field_multipatch_2d("rho_field_multipatch", &
                                         sim%transfx, &
                                         owns_data=.true.)
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to create multipatch fields =', time
 
-    ! elec_field_ext_1 => new_scalar_field_multipatch_2d("E1_ext", sim%transfx)
-    ! elec_field_ext_2 => new_scalar_field_multipatch_2d("E2_ext", sim%transfx)
+    ! elec_field_ext_1 => sll_f_new_scalar_field_multipatch_2d("E1_ext", sim%transfx)
+    ! elec_field_ext_2 => sll_f_new_scalar_field_multipatch_2d("E2_ext", sim%transfx)
 
     ! call elec_field_ext_1_field_mat%allocate_memory()
     ! call elec_field_ext_2_field_mat%allocate_memory()
@@ -523,7 +523,7 @@ contains
     num_patches = sim%transfx%get_number_patches()
 
     !    print *, 'rank:', sim%my_rank, 'initializing patches.'
-    !call sll_set_time_mark(t0)
+    !call sll_s_set_time_mark(t0)
     do ipatch= 0,num_patches-1
        ! Please get rid of these 'fixes' whenever it is decided that gfortran 
        ! 4.6 is no longer supported by Selalib.
@@ -531,7 +531,7 @@ contains
        ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
        !     transf   => sim%transfx%get_transformation(ipatch)
        transf => sim%transfx%transfs(ipatch+1)%t
-       !       call sll_display(transf%mesh)
+       !       call sll_o_display(transf%mesh)
        
        num_pts1 = sim%transfx%get_num_cells_eta1(ipatch) + 1! logical_m%num_cells1+1
        num_pts2 = sim%transfx%get_num_cells_eta2(ipatch) + 1!logical_m%num_cells2+1
@@ -579,12 +579,12 @@ contains
        end do
     end do
 
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to initialize MP fields =', time
        
     !print *, 'rank: ', sim%my_rank, 'updating interpolation coefficients.'
 
-    !call sll_set_time_mark(t0)
+    !call sll_s_set_time_mark(t0)
 
     call a11_field_mat%update_interpolation_coefficients()
     call a12_field_mat%update_interpolation_coefficients()
@@ -596,31 +596,31 @@ contains
     call phi%update_interpolation_coefficients()
     call rho%update_interpolation_coefficients()
 
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to update coefficients =', time
 
     !print *, '********** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     buffer_counter = 1
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%my_rank    = sll_f_get_collective_rank(sll_v_world_collective)
     
     ! Consider deleting the following lines :
     SLL_ALLOCATE(recv_sz(sim%world_size),ierr)
     SLL_ALLOCATE(disps(sim%world_size),ierr)
     
     if( sim%my_rank == 0 ) then
-       call sll_new_file_id( efield_energy_file_id, ierr )
+       call sll_s_new_file_id( efield_energy_file_id, ierr )
        if( ierr == 1 ) then
-          print *, 'sll_new_file_id() failed to obtain a file identifier.', &
+          print *, 'sll_s_new_file_id() failed to obtain a file identifier.', &
                ' Exiting...'
           stop
        end if
     end if
     
     if( sim%my_rank == 0 ) then
-       call sll_new_file_id( num_particles_file_id, ierr )
+       call sll_s_new_file_id( num_particles_file_id, ierr )
        if( ierr == 1 ) then
-          print *, 'sll_new_file_id() failed to obtain a file identifier.', &
+          print *, 'sll_s_new_file_id() failed to obtain a file identifier.', &
                ' Exiting...'
           stop
        end if
@@ -652,7 +652,7 @@ contains
        sim%nproc_x4 = 1
     end if
     
-    if(is_even(sim%power2)) then
+    if(sll_f_is_even(sim%power2)) then
        sim%nproc_x1 = 2**(sim%power2/2)
        sim%nproc_x2 = 2**(sim%power2/2)
        sim%nproc_x3 = 1
@@ -668,44 +668,44 @@ contains
     ! Creating and intializing distribution function.
 
     print *, 'creating and initializing distribution function MP.'
-    !call sll_set_time_mark(t0)
-    f_mp => sll_new_distribution_function_4d_multipatch( sll_world_collective, &
+    !call sll_s_set_time_mark(t0)
+    f_mp => sll_f_new_distribution_function_4d_multipatch( sll_v_world_collective, &
          sim%transfx, sim%mesh2d_v, sim%nproc_x1, sim%nproc_x2 )
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to create MP F =', time
 
-    !call sll_set_time_mark(t0)
+    !call sll_s_set_time_mark(t0)
     call f_mp%initialize( sim%init_func, sim%params ) 
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to initialize MP F =', time
 
     ! First dt/2 advection for eta1-eta2:
-    !call sll_set_time_mark(t0)
+    !call sll_s_set_time_mark(t0)
     call f_mp%set_to_sequential_x1x2()
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to reconfigure F =', time
 
     !print *, 'First-time advection in x1x2.'
-    !call sll_set_time_mark(t0)
+    !call sll_s_set_time_mark(t0)
     call advection_x1x2( sim, layer_x1x2, f_mp, 0.5*sim%dt)    
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time for advection x1x2 =', time
 
     ! Initialize the poisson plan before going into the main loop.
     !print *, 'Creating and initializing elliptic solver.'
-    !call sll_set_time_mark(t0)
-    sim%qns => new_general_elliptic_solver_mp( &
-         sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
-         sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
+    !call sll_s_set_time_mark(t0)
+    sim%qns => sll_f_new_general_elliptic_solver_mp( &
+         sim%quadrature_type1,& !sll_p_es_gauss_legendre, &  ! put in arguments
+         sim%quadrature_type2,& !sll_p_es_gauss_legendre, &  ! put in arguments
          sim%transfx)
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time for creating field solver', time
     !print*, 'about to factorize matrix qns'
     
 
     !print *, 'factorizing solver matrices.'
-    !call sll_set_time_mark(t0)
-    call factorize_mat_es_mp(&
+    !call sll_s_set_time_mark(t0)
+    call sll_s_factorize_mat_es_mp(&
          sim%qns, & 
          a11_field_mat, &
          a12_field_mat, &
@@ -714,7 +714,7 @@ contains
          b1_field_vect, &
          b2_field_vect, &
          c_field)
-    !time = sll_time_elapsed_since(t0)
+    !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time for factorizing matrices', time
 
     !print*, '--- ended factorization matrix qns'
@@ -723,13 +723,13 @@ contains
          sim%mesh2d_v%num_cells1+1, &
          sim%mesh2d_v%eta1_min, &
          sim%mesh2d_v%eta1_max, &
-         SLL_HERMITE)
+         sll_p_hermite)
     
     call sim%interp_x4%initialize( &
          sim%mesh2d_v%num_cells2+1, &
          sim%mesh2d_v%eta2_min, &
          sim%mesh2d_v%eta2_max, &
-         SLL_HERMITE)
+         sll_p_hermite)
     
     
     ! ------------------------------------------------------------------------
@@ -775,7 +775,7 @@ contains
 
        call f_mp%set_to_sequential_x3x4()       
        
-       call compute_charge_density_multipatch(f_mp, rho)
+       call sll_s_compute_charge_density_multipatch(f_mp, rho)
 
        call rho%update_interpolation_coefficients( )
        
@@ -783,12 +783,12 @@ contains
           call rho%write_to_file(0)
        end if
        
-       !call sll_set_time_mark(t0)         
-       call sll_solve_mp(&
+       !call sll_s_set_time_mark(t0)         
+       call sll_o_solve_mp(&
             sim%qns,&
             rho,&
             phi)
-       !time = sll_time_elapsed_since(t0)
+       !time = sll_f_time_elapsed_since(t0)
        !print*, 'rank: ', sim%my_rank, 'time to solve QNS =', time
        
        !print*, '--- end solve qns'
@@ -841,8 +841,8 @@ contains
           ! write particles buffer to disk 
           ! ----------------------------------
           num_particles_global = 0.0_f64
-          call sll_collective_reduce_real64( &
-               sll_world_collective, &
+          call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                num_particles_local, &
                BUFFER_SIZE, &
                MPI_SUM, &
@@ -864,8 +864,8 @@ contains
           ! write electric field energy to disk 
           ! ----------------------------------
           buffer_energy_result = 0.0_f64
-          call sll_collective_reduce_real64( &
-               sll_world_collective, &
+          call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                buffer_energy, &
                BUFFER_SIZE, &
                MPI_SUM, &
@@ -920,7 +920,7 @@ contains
     end do ! main loop
 #undef BUFFER_SIZE
 
-  end subroutine run_4d_qns_general_mp
+  end subroutine sll_s_run_4d_qns_general_mp
   
 
   subroutine advection_x1x2( &
@@ -929,9 +929,9 @@ contains
        f_mp, &
        deltat)
     
-    class(sll_simulation_4d_qns_general_multipatch)        :: sim
-    type(sll_scalar_field_multipatch_2d), pointer          :: field_x1x2
-    type(sll_distribution_function_4d_multipatch), pointer :: f_mp
+    class(sll_t_simulation_4d_qns_general_multipatch)        :: sim
+    type(sll_t_scalar_field_multipatch_2d), pointer          :: field_x1x2
+    type(sll_t_distribution_function_4d_multipatch), pointer :: f_mp
     sll_real64, intent(in)                                 :: deltat
     sll_real64, dimension(1:2,1:2) :: inv_j!,jac_m
     sll_int32  :: loc_sz_x1
@@ -952,7 +952,7 @@ contains
     sll_int32  :: ip
     sll_real64 :: f_interpolated
     sll_int32  :: num_patches
-    !type(sll_time_mark) :: t0 !delete this
+    !type(sll_t_time_mark) :: t0 !delete this
     !sll_real64 :: time     ! delete this
     ! Here we do something ugly, which is to call the 'get_local_sizes()'
     ! method just to obtain the local sizes in the x3 and x4 directions, which
@@ -961,7 +961,7 @@ contains
     ! approach is applied only to the space coordinates (x1, x2), the limits
     ! of the indices in x3 and x4 are shared by all the patches. 
     ! In other words, this call only helps to hide a call like
-    ! compute_local_sizes() using the layout of the distribution function of
+    ! sll_o_compute_local_sizes() using the layout of the distribution function of
     ! any of the patches. Sorry about this... :-(
     call f_mp%get_local_data_sizes( &
          0, &
@@ -1002,10 +1002,10 @@ contains
              do j=1,loc_sz_x2
                 do i=1,loc_sz_x1
                    eta(:) = f_mp%get_eta_coordinates( ip, (/i,j,k,l/) )
-!                   call sll_set_time_mark(t0) ! delete this
+!                   call sll_s_set_time_mark(t0) ! delete this
                    inv_j(:,:)  = &
                      field_x1x2%transf%inverse_jacobian_matrix(eta(1),eta(2),ip)
-!                   time = sll_time_elapsed_since(t0) ! delete
+!                   time = sll_f_time_elapsed_since(t0) ! delete
  !                  print *, 'time for inverse jacobian: ', time
                    alpha1 = -deltat*(inv_j(1,1)*eta(3) + inv_j(1,2)*eta(4))
                    alpha2 = -deltat*(inv_j(2,1)*eta(3) + inv_j(2,2)*eta(4))
@@ -1042,12 +1042,12 @@ contains
   end subroutine advection_x1x2
 
   subroutine advection_x3(sim, f_mp, phi, deltat, efield_energy_total)
-    type(sll_distribution_function_4d_multipatch), pointer :: f_mp
-    class(sll_simulation_4d_qns_general_multipatch) :: sim
-    type(sll_scalar_field_multipatch_2d), pointer   :: phi
+    type(sll_t_distribution_function_4d_multipatch), pointer :: f_mp
+    class(sll_t_simulation_4d_qns_general_multipatch) :: sim
+    type(sll_t_scalar_field_multipatch_2d), pointer   :: phi
     sll_real64, intent(in) :: deltat
     sll_real64, intent(out) :: efield_energy_total
-    type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
+    type(sll_t_coordinate_transformation_multipatch_2d), pointer :: transf
     sll_int32 :: ip
     sll_int32 :: num_patches
     sll_real64, dimension(1:4) :: eta
@@ -1129,12 +1129,12 @@ contains
   
   
   subroutine advection_x4( sim, f_mp, phi, deltat, integral_f )
-    type(sll_distribution_function_4d_multipatch), pointer :: f_mp
-    class(sll_simulation_4d_qns_general_multipatch) :: sim
-    type(sll_scalar_field_multipatch_2d), pointer   :: phi
+    type(sll_t_distribution_function_4d_multipatch), pointer :: f_mp
+    class(sll_t_simulation_4d_qns_general_multipatch) :: sim
+    type(sll_t_scalar_field_multipatch_2d), pointer   :: phi
     sll_real64, intent(in) :: deltat
     sll_real64, intent(inout) :: integral_f
-    type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
+    type(sll_t_coordinate_transformation_multipatch_2d), pointer :: transf
     sll_int32 :: ip
     sll_int32 :: num_patches
     sll_real64, dimension(1:4) :: eta
@@ -1205,7 +1205,7 @@ contains
 
 
   subroutine delete_4d_qns_gen_mp( sim )
-    type(sll_simulation_4d_qns_general_multipatch) :: sim
+    type(sll_t_simulation_4d_qns_general_multipatch) :: sim
     sll_int32 :: ierr
     SLL_DEALLOCATE( sim%f_x1x2, ierr )
     SLL_DEALLOCATE( sim%f_x3x4, ierr )
@@ -1218,19 +1218,19 @@ contains
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
-    call sll_delete( sim%sequential_x1x2 )
-    call sll_delete( sim%sequential_x3x4 )
-    call sll_delete( sim%rho_full_layout )
-    call sll_delete( sim%rho_seq_x2 )
-    call sll_delete( sim%split_rho_layout )
-    call sll_delete( sim%split_to_full )
-    call sll_delete( sim%efld_seqx1_to_seqx2 )
-    call sll_delete( sim%efld_seqx2_to_split )
-    call sll_delete( sim%seqx1x2_to_seqx3x4 )
-    call sll_delete( sim%seqx3x4_to_seqx1x2 )
-    ! call sll_delete( sim%interp_x1x2 )
-    call sll_delete( sim%interp_x3 )
-    call sll_delete( sim%interp_x4 )
+    call sll_o_delete( sim%sequential_x1x2 )
+    call sll_o_delete( sim%sequential_x3x4 )
+    call sll_o_delete( sim%rho_full_layout )
+    call sll_o_delete( sim%rho_seq_x2 )
+    call sll_o_delete( sim%split_rho_layout )
+    call sll_o_delete( sim%split_to_full )
+    call sll_o_delete( sim%efld_seqx1_to_seqx2 )
+    call sll_o_delete( sim%efld_seqx2_to_split )
+    call sll_o_delete( sim%seqx1x2_to_seqx3x4 )
+    call sll_o_delete( sim%seqx3x4_to_seqx1x2 )
+    ! call sll_o_delete( sim%interp_x1x2 )
+    call sll_o_delete( sim%interp_x3 )
+    call sll_o_delete( sim%interp_x4 )
     SLL_DEALLOCATE(sim%diag_masse,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
@@ -1264,8 +1264,8 @@ contains
        mx,&
        rho, &
        density_tot )
-    class(sll_simulation_4d_qns_general_multipatch)     :: sim
-    type(sll_cartesian_mesh_2d), pointer     :: mx
+    class(sll_t_simulation_4d_qns_general_multipatch)     :: sim
+    type(sll_t_cartesian_mesh_2d), pointer     :: mx
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
     sll_real64, intent(out)              :: density_tot
     
@@ -1317,9 +1317,9 @@ contains
  !----------------------------------------------------
   subroutine writeHDF5_diag_qns( sim )
    ! use sll_m_collective
-    use sll_m_hdf5_io_serial, only: sll_hdf5_file_create, &
-      sll_hdf5_write_array_1d, sll_hdf5_file_close
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
+    use sll_m_hdf5_io_serial, only: sll_o_hdf5_file_create, &
+      sll_o_hdf5_write_array_1d, sll_o_hdf5_file_close
+    class(sll_t_simulation_4d_qns_general_multipatch), intent(inout) :: sim
 
     sll_int32 :: ix1_diag, ix2_diag
     sll_int32 :: iv1_diag, iv2_diag
@@ -1360,48 +1360,48 @@ contains
 
    ! print*, 'sim%count_save_diag = ', sim%count_save_diag
  
-   call sll_collective_reduce_real64( &
-               sll_world_collective, &
+   call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_masse(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_masse_result )
 
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_norm_L1(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_norm_L1_result )
 
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_norm_L2(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_norm_L2_result )
 
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_norm_Linf(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_norm_Linf_result )
 
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_entropy_kin(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_entropy_kin_result )
 
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_nrj_kin(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
@@ -1409,16 +1409,16 @@ contains
                diag_nrj_kin_result )
 
     
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_nrj_pot(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_nrj_pot_result )
 
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
+    call sll_s_collective_reduce_real64( &
+               sll_v_world_collective, &
                sim%diag_nrj_tot(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
@@ -1435,34 +1435,34 @@ contains
 
     if (sim%my_rank.eq.0) then
       print*,'--> Save HDF5 file: ',filename_HDF5
-      call sll_hdf5_file_create(filename_HDF5,file_id,file_err)
-      call sll_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_file_create(filename_HDF5,file_id,file_err)
+      call sll_o_hdf5_write_array_2d(file_id, &
         sim%f_x1x2(:,:,iv1_diag,iv2_diag),'f2d_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_write_array_2d(file_id, &
         sim%f_x3x4(ix1_diag,ix2_diag,:,:),'f2d_v1v2',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_nrj_kin_result(:),'nrj_kin',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_nrj_pot_result(:),'nrj_pot',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_nrj_tot_result(:),'nrj_tot',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_relative_error_nrj_tot_result(:),&
                           'relative_error_nrj_tot',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_masse_result(:),&
                           'masse',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_norm_L1_result(:),'L1_norm',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_norm_L2_result(:),'L2_norm',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_norm_Linf_result(:),'Linf_norm',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
+      call sll_o_hdf5_write_array_1d(file_id,&
                           diag_entropy_kin_result(:),'entropy_kin',file_err)
-      ! call sll_hdf5_write_array_2d(file_id,sim%point_x(:,:),'X_coord',file_err)
-      ! call sll_hdf5_write_array_2d(file_id,sim%point_y(:,:),'Y_coord',file_err)
-      call sll_hdf5_file_close(file_id,file_err)
+      ! call sll_o_hdf5_write_array_2d(file_id,sim%point_x(:,:),'X_coord',file_err)
+      ! call sll_o_hdf5_write_array_2d(file_id,sim%point_y(:,:),'Y_coord',file_err)
+      call sll_o_hdf5_file_close(file_id,file_err)
       
     end if
     sim%count_save_diag = sim%count_save_diag + 1
@@ -1532,7 +1532,7 @@ contains
 #if 0  
   subroutine compute_norm_L1_L2_Linf_qns(sim)
     
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
+    class(sll_t_simulation_4d_qns_general_multipatch), intent(inout) :: sim
     
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Nv1,Nv2
@@ -1569,7 +1569,7 @@ contains
           do iv1 = 1,Nv1-1
              do iv2 = 1,Nv2-1
                 
-                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
+                glob_ind4d(:) = sll_o_local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)

@@ -4,20 +4,20 @@ program test_poisson_2d_periodic
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
 #ifdef FFTW
   use sll_m_poisson_2d_periodic_fftw, only: &
-    initialize, &
-    poisson_2d_periodic_fftw, &
-    solve
+    sll_o_initialize, &
+    sll_t_poisson_2d_periodic_fftw, &
+    sll_o_solve
 
-#define poisson_2d_periodic poisson_2d_periodic_fftw
+#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftw
 #else
 use sll_m_poisson_2d_periodic_fftpack, only: &
-    initialize, &
+    sll_o_initialize, &
     poisson_2d_periodic_fftpack, &
-    solve
+    sll_o_solve
 
 #define poisson_2d_periodic poisson_2d_periodic_fftpack
 #endif
@@ -50,8 +50,8 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
    sll_int32                 :: i
    sll_int32                 :: j
 
-   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
-   eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
+   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
+   eta2_min = .0_f64; eta2_max = 2.0_f64*sll_p_pi
 
    nc_eta1 = 127; nc_eta2 = 127
 
@@ -67,7 +67,7 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
    write(*,*) " eta1_min, eta1_max, nc_eta1 ", eta1_min, eta1_max, nc_eta1
    write(*,*) " eta2_min, eta2_max, nc_eta2 ", eta2_min, eta2_max, nc_eta2
 
-   call initialize( poisson, eta1_min, eta1_max, nc_eta1, &
+   call sll_o_initialize( poisson, eta1_min, eta1_max, nc_eta1, &
                     eta2_min, eta2_max, nc_eta2, info) 
 
    open(14, file="test_poisson_2d_rho.dat")
@@ -85,17 +85,17 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
    end do
 
    rhs = rho
-   call solve( poisson, phi, rhs)
+   call sll_o_solve( poisson, phi, rhs)
    error =  maxval(abs(phi_exact+phi))
    write(*,*) " Po Error = " , error
    if (error > 1e-13) stop 'FAILED'
    rhs = rho
-   call solve( poisson, phi, rhs)
+   call sll_o_solve( poisson, phi, rhs)
    error = maxval(abs(phi_exact+phi))
    write(*,*) " Po Error = " ,  error
    if (error > 1e-13) stop 'FAILED'
    rhs = rho
-   call solve( poisson, ex, ey, rhs)
+   call sll_o_solve( poisson, ex, ey, rhs)
    error = maxval(abs(ex_exact-ex))
    write(*,*) " Ex Error = " , error
    if (error > 1e-13) stop 'FAILED'
@@ -103,7 +103,7 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
    write(*,*) " Ey Error = " , error
    if (error > 1e-13) stop 'FAILED'
    rhs = rho
-   call solve( poisson, ex, ey, rhs)
+   call sll_o_solve( poisson, ex, ey, rhs)
    error = maxval(abs(ex_exact-ex))
    write(*,*) " Ex Error = " , error
    if (error > 1e-13) stop 'FAILED'

@@ -64,7 +64,7 @@
 !> Examples of calls of interface (generic)
 !>\code
 !> !print namelist info
-!> call sll_s_nml_mesh_1d_landau_cart( &
+!> call sll_o_nml_mesh_1d_landau_cart( &
 !>  filename, &
 !>  proc_id=sll_get_collective_rank(sll_world_collective))
 !>\endcode
@@ -92,7 +92,7 @@
 !> according to <code>choice</code> read from namelist 
 !> <code>mesh_1d_landau_cart</code> in <code>filename</code>
 !>\code
-!> call sll_s_nml_mesh_1d_landau_cart(filename,array)
+!> call sll_o_nml_mesh_1d_landau_cart(filename,array)
 !>\endcode
 !> The output <code>array</code> is of size <code>num_cells+1</code>
 !> with  
@@ -101,18 +101,18 @@
 !>\endcode
 !> 2. Same, but read this time, from namelist <code>mesh_1d_landau_cart_1</code>.
 !>\code
-!> call sll_s_nml_mesh_1d_landau_cart(filename,array,clone="_1")
+!> call sll_o_nml_mesh_1d_landau_cart(filename,array,clone="_1")
 !>\endcode
 !> 3. Allocation and initialization of 
-!> <code>type(sll_cartesian_mesh_1d), pointer :: mesh</code>
+!> <code>type(sll_t_cartesian_mesh_1d), pointer :: mesh</code>
 !> according to <code>choice</code> read from namelist 
 !> <code>mesh_1d_landau_cart</code> in <code>filename</code>
 !>\code
-!> call sll_s_nml_mesh_1d_landau_cart(filename,mesh)
+!> call sll_o_nml_mesh_1d_landau_cart(filename,mesh)
 !>\endcode
 !> 4. Same, but read this time, from namelist <code>mesh_1d_landau_cart_1</code>.
 !>\code
-!> call sll_s_nml_mesh_1d_landau_cart(filename,mesh,clone="_1")
+!> call sll_o_nml_mesh_1d_landau_cart(filename,mesh,clone="_1")
 !>\endcode
 
   !-----------------------------------------------------------------
@@ -127,19 +127,19 @@ module sll_m_nml_mesh_1d_landau_cart
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_1d, &
-    sll_cartesian_mesh_1d
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_utilities, only: &
-    sll_new_file_id
+    sll_s_new_file_id
 
   implicit none
 
   public :: &
-    sll_s_nml_mesh_1d_landau_cart
+    sll_o_nml_mesh_1d_landau_cart
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -163,12 +163,12 @@ module sll_m_nml_mesh_1d_landau_cart
   !  SPECIFIC DECLARATION (BEGIN)
   !-----------------------------------------------------------------
 
-  interface sll_s_nml_mesh_1d_landau_cart
+  interface sll_o_nml_mesh_1d_landau_cart
      module procedure &
        s_nml_mesh_1d_landau_cart_array, &
        s_nml_mesh_1d_landau_cart_mesh, &
        s_nml_mesh_1d_landau_cart_print       
-  end interface sll_s_nml_mesh_1d_landau_cart
+  end interface sll_o_nml_mesh_1d_landau_cart
 
   !-----------------------------------------------------------------
   !  SPECIFIC DECLARATION (END)
@@ -208,7 +208,7 @@ contains
     
     num_cells = self%num_cells
     eta_min = self%eta_min
-    eta_max = eta_min+real(self%nbox,f64)*2._f64*sll_pi/real(self%kmode,f64)
+    eta_max = eta_min+real(self%nbox,f64)*2._f64*sll_p_pi/real(self%kmode,f64)
     delta_eta = (eta_max-eta_min)/real(num_cells,f64)
     
     SLL_ALLOCATE(array(num_cells+1),ierr)
@@ -227,7 +227,7 @@ contains
     proc_id)
 
     character(len=*), intent(in)    :: filename !< namelist file input
-    type(sll_cartesian_mesh_1d), pointer, intent(out) :: mesh !< output mesh
+    type(sll_t_cartesian_mesh_1d), pointer, intent(out) :: mesh !< output mesh
     character(len=*), intent(in), optional :: clone !< optional choice of clone
     sll_int32, intent(in), optional :: proc_id !< optional id of proc
     
@@ -245,9 +245,9 @@ contains
     
     num_cells = self%num_cells
     eta_min = self%eta_min
-    eta_max = eta_min+real(self%nbox,f64)*2._f64*sll_pi/real(self%kmode,f64)
+    eta_max = eta_min+real(self%nbox,f64)*2._f64*sll_p_pi/real(self%kmode,f64)
 
-    mesh => new_cartesian_mesh_1d( &
+    mesh => sll_f_new_cartesian_mesh_1d( &
       num_cells, &
       eta_min=eta_min, &
       eta_max=eta_max)
@@ -364,7 +364,7 @@ contains
       nbox, &
       kmode)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -423,7 +423,7 @@ contains
       nbox_1, &
       kmode_1)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -482,7 +482,7 @@ contains
       nbox_2, &
       kmode_2)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -541,7 +541,7 @@ contains
       nbox_3, &
       kmode_3)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -600,7 +600,7 @@ contains
       nbox_4, &
       kmode_4)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &

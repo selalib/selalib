@@ -4,23 +4,23 @@ program sim_fsl_ad_2d0v_polar
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_periodic
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    compute_cubic_spline_2d, &
-    deposit_value_2d, &
-    interpolate_value_2d, &
-    new_cubic_spline_2d, &
-    sll_cubic_spline_2d
+    sll_s_compute_cubic_spline_2d, &
+    sll_s_deposit_value_2d, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_cubic_spline_2d, &
+    sll_t_cubic_spline_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
+  type(sll_t_cubic_spline_2d), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,field_case
   sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,val_bsl,val_bsl_nc,val_fsl,val_fsl_nc,tmp1,tmp2
   sll_real64 :: a1,a2,rr,thetath,k1r,k2r,k3r,k4r,k1theta,k2theta,k3theta,k4theta
@@ -69,7 +69,7 @@ program sim_fsl_ad_2d0v_polar
   print *,'#T=',real(nb_step,f64)*dt
   
   dr = (rmax-rmin)/real(Nr,f64)
-  dtheta = 2._f64*sll_pi/real(Ntheta,f64)
+  dtheta = 2._f64*sll_p_pi/real(Ntheta,f64)
 	
   ! allocations
   SLL_ALLOCATE(f(Nr+1,Ntheta+1), err)
@@ -82,25 +82,25 @@ program sim_fsl_ad_2d0v_polar
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation spline 
-  spl_bsl => new_cubic_spline_2D(Nr+1, Ntheta+1, &
+  spl_bsl => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
     rmin, rmax, &
-    0._f64, 2._f64*sll_pi, &
-    SLL_HERMITE, SLL_PERIODIC,&
+    0._f64, 2._f64*sll_p_pi, &
+    sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_bsl_nc => new_cubic_spline_2D(Nr+1, Ntheta+1, &
+  spl_bsl_nc => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
     rmin, rmax, &
-    0._f64, 2._f64*sll_pi, &
-    SLL_HERMITE, SLL_PERIODIC,&
+    0._f64, 2._f64*sll_p_pi, &
+    sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_fsl => new_cubic_spline_2D(Nr+1, Ntheta+1, &
+  spl_fsl => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
     rmin, rmax, &
-    0._f64, 2._f64*sll_pi, &
-    SLL_HERMITE, SLL_PERIODIC,&
+    0._f64, 2._f64*sll_p_pi, &
+    sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_fsl_nc => new_cubic_spline_2D(Nr+1, Ntheta+1, &
+  spl_fsl_nc => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
     rmin, rmax, &
-    0._f64, 2._f64*sll_pi, &
-    SLL_HERMITE, SLL_PERIODIC,&
+    0._f64, 2._f64*sll_p_pi, &
+    sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
  
@@ -125,7 +125,7 @@ program sim_fsl_ad_2d0v_polar
       endif
       if (test_case==4) then
         if(r>=0.4.and.r<=0.6)then
-          f(i,j) = exp(-30._f64*(theta-0.5*sll_pi)**2)
+          f(i,j) = exp(-30._f64*(theta-0.5*sll_p_pi)**2)
         else
           f(i,j) = 0._f64
         endif  
@@ -134,7 +134,7 @@ program sim_fsl_ad_2d0v_polar
         f(i,j) = 1._f64
       endif
       if (test_case==6) then
-        f(i,j) = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)*exp(-30._f64*(theta-0.5*sll_pi)**2)
+        f(i,j) = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)*exp(-30._f64*(theta-0.5*sll_p_pi)**2)
       endif
       if (test_case==7) then
         f(i,j) = 0._f64
@@ -241,16 +241,16 @@ program sim_fsl_ad_2d0v_polar
           if(y>=0)then
             theta = acos(x/r)
           else
-            theta = 2._f64*sll_pi-acos(x/r)
+            theta = 2._f64*sll_p_pi-acos(x/r)
           endif
         endif
           
         ! correction of theta
-        if(theta>2._f64*sll_pi)then
-          theta= theta-2._f64*sll_pi
+        if(theta>2._f64*sll_p_pi)then
+          theta= theta-2._f64*sll_p_pi
         endif
         if(theta<0._f64)then
-          theta= theta+2._f64*sll_pi
+          theta= theta+2._f64*sll_p_pi
         endif
           
         x = r*cos(theta)
@@ -267,7 +267,7 @@ program sim_fsl_ad_2d0v_polar
         endif
         if (test_case==4) then
           if(r>=0.4.and.r<=0.6)then
-            val = exp(-30._f64*(theta-0.5*sll_pi)**2)
+            val = exp(-30._f64*(theta-0.5*sll_p_pi)**2)
           else
             val = 0._f64
           endif
@@ -276,7 +276,7 @@ program sim_fsl_ad_2d0v_polar
           val = 1._f64
         endif
         if (test_case==6) then
-          val = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)*exp(-30._f64*(theta-0.5*sll_pi)**2)
+          val = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)*exp(-30._f64*(theta-0.5*sll_p_pi)**2)
         endif
         if (test_case==7) then
           val = 0._f64
@@ -325,10 +325,10 @@ program sim_fsl_ad_2d0v_polar
       fh_fsl_nc(i,Ntheta+1)=fh_fsl_nc(i,1)
     enddo
       
-    call compute_cubic_spline_2D(fh_bsl,spl_bsl)
-    call compute_cubic_spline_2D(fh_bsl_nc,spl_bsl_nc)
-    call compute_cubic_spline_2D(fh_fsl,spl_fsl)
-    call compute_cubic_spline_2D(fh_fsl_nc,spl_fsl_nc)
+    call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
+    call sll_s_compute_cubic_spline_2d(fh_bsl_nc,spl_bsl_nc)
+    call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
+    call sll_s_compute_cubic_spline_2d(fh_fsl_nc,spl_fsl_nc)
     
     do i=1,Nr+1
       do j=1,Ntheta+1
@@ -371,20 +371,20 @@ program sim_fsl_ad_2d0v_polar
           if(y>=0)then
             theta = acos(x/r)
           else
-            theta = 2._f64*sll_pi-acos(x/r)
+            theta = 2._f64*sll_p_pi-acos(x/r)
           endif
         endif
         
         ! correction of theta
-        if(theta>2._f64*sll_pi)then
-          theta= theta-2._f64*sll_pi
+        if(theta>2._f64*sll_p_pi)then
+          theta= theta-2._f64*sll_p_pi
         endif
         if(theta<0._f64)then
-          theta= theta+2._f64*sll_pi
+          theta= theta+2._f64*sll_p_pi
         endif
         
-        fh_bsl(i,j)    = interpolate_value_2D(r,theta,spl_bsl)
-        fh_bsl_nc(i,j) = interpolate_value_2D(r,theta,spl_bsl_nc)/(rmin+real(i-1,f64)*dr)
+        fh_bsl(i,j)    = sll_f_interpolate_value_2d(r,theta,spl_bsl)
+        fh_bsl_nc(i,j) = sll_f_interpolate_value_2d(r,theta,spl_bsl_nc)/(rmin+real(i-1,f64)*dr)
     
         diag(3,step) = diag(3,step) + fh_bsl(i,j) * (rmin+real(i-1,f64)*dr)*dr*dtheta
         diag(4,step) = diag(4,step) + fh_bsl(i,j) * dr*dtheta
@@ -432,16 +432,16 @@ program sim_fsl_ad_2d0v_polar
           if(y>=0)then
             theta = acos(x/r)
           else
-            theta = 2._f64*sll_pi-acos(x/r)
+            theta = 2._f64*sll_p_pi-acos(x/r)
           endif
         endif
         
         ! correction of theta
-        if(theta>2._f64*sll_pi)then
-          theta= theta-2._f64*sll_pi
+        if(theta>2._f64*sll_p_pi)then
+          theta= theta-2._f64*sll_p_pi
         endif
         if(theta<0._f64)then
-          theta= theta+2._f64*sll_pi
+          theta= theta+2._f64*sll_p_pi
         endif
         
         rfeet(i,j) = r
@@ -452,8 +452,8 @@ program sim_fsl_ad_2d0v_polar
       enddo
     enddo
     
-    call deposit_value_2D(rfeet,thetafeet,spl_fsl,fh_fsl)
-    call deposit_value_2D(rfeet,thetafeet,spl_fsl_nc,fh_fsl_nc)
+    call sll_s_deposit_value_2d(rfeet,thetafeet,spl_fsl,fh_fsl)
+    call sll_s_deposit_value_2d(rfeet,thetafeet,spl_fsl_nc,fh_fsl_nc)
     
     do i=1,Nr+1
       r=rmin+real(i-1,f64)*dr

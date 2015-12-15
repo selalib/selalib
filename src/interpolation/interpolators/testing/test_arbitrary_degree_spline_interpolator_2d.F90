@@ -4,16 +4,16 @@ program unit_test
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    sll_arbitrary_degree_spline_interpolator_2d, &
-    sll_delete
+    sll_t_arbitrary_degree_spline_interpolator_2d, &
+    sll_o_delete
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_hermite, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -21,10 +21,10 @@ program unit_test
 #define NPTS1 64
 #define NPTS2 64 
 #define SPL_DEG 3
-#define X1MIN (-2.0_f64*sll_pi)
-#define X1MAX (+2.0_f64*sll_pi)
-#define X2MIN (-2.0_f64*sll_pi)
-#define X2MAX (+2.0_f64*sll_pi)
+#define X1MIN (-2.0_f64*sll_p_pi)
+#define X1MAX (+2.0_f64*sll_p_pi)
+#define X2MIN (-2.0_f64*sll_p_pi)
+#define X2MAX (+2.0_f64*sll_p_pi)
 #define TOLERANCE_NODE 1.0E-7_f64
 #define TOLERANCE_DER  3.0e-5_f64
 
@@ -75,10 +75,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_PERIODIC, &
-                          SLL_PERIODIC, &
-                          SLL_PERIODIC, &
-                          SLL_PERIODIC  )
+call check_interpolation( sll_p_periodic, &
+                          sll_p_periodic, &
+                          sll_p_periodic, &
+                          sll_p_periodic  )
 
 print *, '***********************************************************'
 print *, '              periodic-dirichlet case'
@@ -92,10 +92,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_PERIODIC,  &
-                          SLL_PERIODIC,  &
-                          SLL_DIRICHLET, &
-                          SLL_DIRICHLET  )
+call check_interpolation( sll_p_periodic,  &
+                          sll_p_periodic,  &
+                          sll_p_dirichlet, &
+                          sll_p_dirichlet  )
 
 print *, '***********************************************************'
 print *, '              dirichlet-periodic case'
@@ -109,10 +109,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_DIRICHLET,  &
-                          SLL_DIRICHLET,  &
-                          SLL_PERIODIC, &
-                          SLL_PERIODIC  )
+call check_interpolation( sll_p_dirichlet,  &
+                          sll_p_dirichlet,  &
+                          sll_p_periodic, &
+                          sll_p_periodic  )
 
 print *, '***********************************************************'
 print *, '              dirichlet-dirichlet case'
@@ -126,10 +126,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_DIRICHLET, &
-                          SLL_DIRICHLET, &
-                          SLL_DIRICHLET, &
-                          SLL_DIRICHLET  )
+call check_interpolation( sll_p_dirichlet, &
+                          sll_p_dirichlet, &
+                          sll_p_dirichlet, &
+                          sll_p_dirichlet  )
 
 print *, '***********************************************************'
 print *, '              Hermite-dirichlet-dirichlet-hermite case'
@@ -143,10 +143,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_HERMITE,   &
-                          SLL_DIRICHLET, &
-                          SLL_DIRICHLET, &
-                          SLL_HERMITE    )
+call check_interpolation( sll_p_hermite,   &
+                          sll_p_dirichlet, &
+                          sll_p_dirichlet, &
+                          sll_p_hermite    )
 
 print *, '***********************************************************'
 print *, '              Hermite-dirichlet-hermite-dirichlet case'
@@ -160,10 +160,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_HERMITE,   &
-                          SLL_DIRICHLET, &
-                          SLL_HERMITE,   &
-                          SLL_DIRICHLET  )
+call check_interpolation( sll_p_hermite,   &
+                          sll_p_dirichlet, &
+                          sll_p_hermite,   &
+                          sll_p_dirichlet  )
 
 print *, '***********************************************************'
 print *, '              dirichlet-Hermite-hermite-dirichlet case'
@@ -177,10 +177,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_DIRICHLET, &
-                          SLL_HERMITE,   &
-                          SLL_HERMITE,   &
-                          SLL_DIRICHLET  )
+call check_interpolation( sll_p_dirichlet, &
+                          sll_p_hermite,   &
+                          sll_p_hermite,   &
+                          sll_p_dirichlet  )
 
 print *, '***********************************************************'
 print *, '              dirichlet-Hermite-dirichlet-hermite case'
@@ -194,10 +194,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_DIRICHLET, &
-                          SLL_HERMITE,   &
-                          SLL_DIRICHLET, &
-                          SLL_HERMITE  )
+call check_interpolation( sll_p_dirichlet, &
+                          sll_p_hermite,   &
+                          sll_p_dirichlet, &
+                          sll_p_hermite  )
 
 print *, '***********************************************************'
 print *, '              Hermite-Hermite-Hermite-hermite case'
@@ -211,10 +211,10 @@ do j=1,NPTS2
   end do
 end do
 
-call check_interpolation( SLL_HERMITE, &
-                          SLL_HERMITE, &
-                          SLL_HERMITE, &
-                          SLL_HERMITE  )
+call check_interpolation( sll_p_hermite, &
+                          sll_p_hermite, &
+                          sll_p_hermite, &
+                          sll_p_hermite  )
 
 print*, '--------------------------------------------'
 print*, ' Average error in nodes'
@@ -320,7 +320,7 @@ sll_int32,  intent(in)  :: bc_eta1_max
 sll_int32,  intent(in)  :: bc_eta2_min
 sll_int32,  intent(in)  :: bc_eta2_max
 
-type(sll_arbitrary_degree_spline_interpolator_2d) :: ad2d
+type(sll_t_arbitrary_degree_spline_interpolator_2d) :: ad2d
 
 sll_real64 :: deriv1_val 
 sll_real64 :: deriv2_val
@@ -378,7 +378,7 @@ acc(k)      = acc(k)/(NPTS1*NPTS2)
 acc_der1(k) = acc_der1(k)/(NPTS1*NPTS2)
 acc_der2(k) = acc_der2(k)/(NPTS1*NPTS2)
 
-call sll_delete(ad2d)
+call sll_o_delete(ad2d)
 
 end subroutine check_interpolation
 

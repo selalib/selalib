@@ -45,7 +45,7 @@
 ! sll_m_working_precision.F90. The use of the integer as a yardstick is a
 ! more natural choice in some contexts.
 
-#define BYTE_SIZEOF( var )  size(transfer(var, (/1_byte_size/) ))
+#define BYTE_SIZEOF( var )  size(transfer(var, (/1_sll_p_byte_size/) ))
 #define INT32_SIZEOF( var ) size(transfer(var, (/1_i32/)))
 
 #define SWAP(A,B) A = A + B; B = A - B; A = A - B

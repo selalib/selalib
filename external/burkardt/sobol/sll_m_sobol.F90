@@ -4,8 +4,8 @@ module sll_m_sobol
   implicit none
 
   public :: &
-    i8_sobol, &
-    i8_sobol_generate
+    sll_s_i8_sobol, &
+    sll_s_i8_sobol_generate
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1705,7 +1705,7 @@ end function
 
 !*****************************************************************************80
 !
-!! I8_SOBOL generates a new quasirandom Sobol vector with each call.
+!! sll_s_i8_sobol generates a new quasirandom Sobol vector with each call.
 !
 !  Discussion:
 !
@@ -1784,7 +1784,7 @@ end function
 !
 !    Output, real ( kind = 8 ) QUASI(DIM_NUM), the next quasirandom vector.
 !
-subroutine i8_sobol ( dim_num, seed, quasi )
+subroutine sll_s_i8_sobol ( dim_num, seed, quasi )
   integer( kind=8 ), intent(in   ) :: dim_num
   integer( kind=8 ), intent(inout) :: seed
   real   ( kind=8 ), intent(  out) :: quasi(dim_num)
@@ -1821,7 +1821,7 @@ subroutine i8_sobol ( dim_num, seed, quasi )
 !
   if ( dim_num < 1 .or. dim_max < dim_num ) then
     write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'I8_SOBOL - Fatal error!'
+    write ( *, '(a)' ) 'sll_s_i8_sobol - Fatal error!'
     write ( *, '(a)' ) '  The spatial dimension DIM_NUM should satisfy:'
     write ( *, '(a,i8)' ) '    1 <= DIM_NUM <= ', dim_max
     write ( *, '(a,i8)' ) '  But this input value is DIM_NUM = ', dim_num
@@ -2822,7 +2822,7 @@ if ( dim_num_save == 0 ) then
 !
   if ( l > maxcol ) then
     write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'I8_SOBOL - Fatal error!'
+    write ( *, '(a)' ) 'sll_s_i8_sobol - Fatal error!'
     write ( *, '(a)' ) '  Too many calls!'
     write ( *, '(a,i12)' ) '  MAXCOL = ', maxcol
     write ( *, '(a,i12)' ) '  L =      ', l
@@ -2843,11 +2843,11 @@ if ( dim_num_save == 0 ) then
 
   return
 end subroutine
-subroutine i8_sobol_generate ( m, n, skip, r )
+subroutine sll_s_i8_sobol_generate ( m, n, skip, r )
 
 !*****************************************************************************80
 !
-!! I8_SOBOL_GENERATE generates a Sobol dataset.
+!! sll_s_i8_sobol_generate generates a Sobol dataset.
 !
 !  Discussion:
 !
@@ -2888,7 +2888,7 @@ subroutine i8_sobol_generate ( m, n, skip, r )
   seed = skip
 
   do j = 1, n
-    call i8_sobol ( m, seed, r(1:m,j) )
+    call sll_s_i8_sobol ( m, seed, r(1:m,j) )
   end do
 
   return

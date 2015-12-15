@@ -12,8 +12,8 @@ module sll_m_wedge_product_generaldim
   implicit none
 
   public :: &
-    cross_product_2d, &
-    cross_product_3d
+    sll_f_cross_product_2d, &
+    sll_f_cross_product_3d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -21,7 +21,7 @@ module sll_m_wedge_product_generaldim
  contains
 
 !This is just an arbitrary definition
-pure function cross_product_2D(v,w) result(cross)
+pure function sll_f_cross_product_2d(v,w) result(cross)
 sll_real64, dimension(:,:), intent(in) :: v,w
  sll_real64, dimension(2,size(v,2)):: cross
   sll_real64, dimension(size(v,2)):: determinante
@@ -35,7 +35,7 @@ sll_real64, dimension(:,:), intent(in) :: v,w
 end function
 
 
-pure function cross_product_3D( v, w) result(cross)
+pure function sll_f_cross_product_3d( v, w) result(cross)
  sll_real64, dimension(:,:), intent(in) :: v,w
  sll_real64, dimension(3,size(v,2)):: cross
  !! SLL_ASSERT(size(v,1)==3)

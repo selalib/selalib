@@ -23,16 +23,16 @@ module sll_m_sparse_matrix_mp
 #include "sll_assert.h"
 
   use sll_m_qsort_partition, only : &
-       qsortc
+       sll_s_qsortc
 
   use sll_m_sparse_matrix, only: &
-    sll_csr_matrix
+    sll_t_csr_matrix
   
   implicit none
 
   public :: &
-    initialize_csr_matrix_mp, &
-    new_csr_matrix_mp
+    sll_s_initialize_csr_matrix_mp, &
+    sll_f_new_csr_matrix_mp
 
   private
 
@@ -54,7 +54,7 @@ contains
   !> column index of the matrix, for the element i and local degree of freedom \ell for patch p
   !> param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch
   !> return a pointer to the newly allocated object.
-  function new_csr_matrix_mp( &
+  function sll_f_new_csr_matrix_mp( &
     num_rows, &
     num_cols, &
     num_patch,&
@@ -64,7 +64,7 @@ contains
     local_to_global_col, &
     num_local_dof_col ) &
     result(mat)
-    type(sll_csr_matrix), pointer :: mat
+    type(sll_t_csr_matrix), pointer :: mat
     sll_int32, intent(in) :: num_rows
     sll_int32, intent(in) :: num_cols
     sll_int32, intent(in) :: num_patch
@@ -75,7 +75,7 @@ contains
     sll_int32, dimension(:),intent(in)      :: num_local_dof_col
     sll_int32 :: ierr
     SLL_ALLOCATE(mat, ierr)
-    call initialize_csr_matrix_mp( &
+    call sll_s_initialize_csr_matrix_mp( &
       mat, &
       num_rows, &
       num_cols, &
@@ -86,7 +86,7 @@ contains
       local_to_global_col, &
       num_local_dof_col )
       
-  end function new_csr_matrix_mp
+  end function sll_f_new_csr_matrix_mp
 
   !> @brief initialization of CSR matrix type
   !> thanks to the global index of each local dof of each element
@@ -101,7 +101,7 @@ contains
   !> param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global 
   !> column index of the matrix, for the element i and local degree of freedom \ell for patch p
   !> param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch
-  subroutine initialize_csr_matrix_mp( &
+  subroutine sll_s_initialize_csr_matrix_mp( &
     mat, &
     num_rows, &
     num_cols, &
@@ -111,7 +111,7 @@ contains
     num_local_dof_row, &
     local_to_global_col, &
     num_local_dof_col)
-    type(sll_csr_matrix), intent(inout) :: mat
+    type(sll_t_csr_matrix), intent(inout) :: mat
     sll_int32, intent(in) :: num_rows
     sll_int32, intent(in) :: num_cols
     sll_int32, intent(in) :: num_patch
@@ -181,7 +181,7 @@ contains
     SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
     SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
-  end subroutine initialize_csr_matrix_mp
+  end subroutine sll_s_initialize_csr_matrix_mp
   
   integer function sll_count_non_zero_elts_mp( &
        ai_nR,&
@@ -318,7 +318,7 @@ contains
     ! _C FOR ROWS
     ! _R FOR COLUMNS
     implicit none
-    type(sll_csr_matrix) :: self
+    type(sll_t_csr_matrix) :: self
     sll_int32 :: ai_nC
     sll_int32 :: ai_nR
     sll_int32 :: ai_npatch
@@ -381,7 +381,7 @@ contains
              
              lpr_tmp(1: li_size) = api_columns(li_A_C, 1: li_size)
              
-             call QsortC(lpr_tmp)
+             call sll_s_qsortc(lpr_tmp)
              
              do li_i = 1, li_size
                 

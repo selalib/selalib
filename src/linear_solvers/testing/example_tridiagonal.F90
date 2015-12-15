@@ -4,8 +4,8 @@ program example_tridiag
 #include "sll_working_precision.h"
 
   use sll_m_tridiagonal, only: &
-    setup_cyclic_tridiag, &
-    solve_cyclic_tridiag
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -36,8 +36,8 @@ program example_tridiag
   
   ! Solve ax=b and put the result in x
   ! You can change x by b for use only one vector.
-  call setup_cyclic_tridiag( a, n, cts, ipiv ) !Compute the factoriazation of A=LU
-  call solve_cyclic_tridiag( cts, ipiv, b, n, x ) !Solve LUx=b
+  call sll_s_setup_cyclic_tridiag( a, n, cts, ipiv ) !Compute the factoriazation of A=LU
+  call sll_o_solve_cyclic_tridiag( cts, ipiv, b, n, x ) !Solve LUx=b
 
   print *, 'We solve ax=b with:'
   print *, 'a=(1 1 0)'

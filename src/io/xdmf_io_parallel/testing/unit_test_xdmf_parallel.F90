@@ -4,11 +4,11 @@ program test_xdmf_parallel
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_io_utilities, only: &
     sll_f_check_equal_files
@@ -56,11 +56,11 @@ program test_xdmf_parallel
   ! START PARALLEL ENVIRONMENT
   !----------------------------------------------------------------------------
 
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
   ! Choose which processor will send data to the XDMF file
-  send_rank =  sll_get_collective_size( sll_world_collective ) -1
-  to_file   = (sll_get_collective_rank( sll_world_collective ) == send_rank)
+  send_rank =  sll_f_get_collective_size( sll_v_world_collective ) -1
+  to_file   = (sll_f_get_collective_rank( sll_v_world_collective ) == send_rank)
 
   !----------------------------------------------------------------------------
   ! XDMF FILE CREATION
@@ -68,7 +68,7 @@ program test_xdmf_parallel
 
   ! Initialize with time and MPI communicator
   !------------------------------------------
-  call xdmf_file%init( time=8.0_f64, comm=sll_world_collective )
+  call xdmf_file%init( time=8.0_f64, comm=sll_v_world_collective )
 
   ! Add Grid 1 to Domain
   !---------------------
@@ -113,7 +113,7 @@ program test_xdmf_parallel
   ! UNIT TESTING
   !----------------------------------------------------------------------------
 
-  if (sll_get_collective_rank( sll_world_collective ) == 0) then
+  if (sll_f_get_collective_rank( sll_v_world_collective ) == 0) then
 
     ! Compare to reference file
     !--------------------------
@@ -133,6 +133,6 @@ program test_xdmf_parallel
   ! END PARALLEL ENVIRONMENT
   !----------------------------------------------------------------------------
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 end program test_xdmf_parallel

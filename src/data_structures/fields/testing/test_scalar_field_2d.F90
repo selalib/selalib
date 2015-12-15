@@ -18,37 +18,37 @@ program unit_test_2d
     test_function_perper_der2
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    initialize_ad2d_interpolator, &
-    sll_arbitrary_degree_spline_interpolator_2d
+    sll_s_initialize_ad2d_interpolator, &
+    sll_t_arbitrary_degree_spline_interpolator_2d
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
-    identity_jac11, &
-    identity_jac12, &
-    identity_jac21, &
-    identity_jac22, &
-    identity_x1, &
-    identity_x2
+    sll_f_identity_jac11, &
+    sll_f_identity_jac12, &
+    sll_f_identity_jac21, &
+    sll_f_identity_jac22, &
+    sll_f_identity_x1, &
+    sll_f_identity_x2
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    new_coordinate_transformation_2d_analytic
+    sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_scalar_field_2d, only: &
-    new_scalar_field_2d_analytic, &
-    new_scalar_field_2d_discrete
+    sll_f_new_scalar_field_2d_analytic, &
+    sll_f_new_scalar_field_2d_discrete
 
   use sll_m_scalar_field_2d_base, only: &
-    sll_scalar_field_2d_base
+    sll_c_scalar_field_2d_base
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -63,34 +63,34 @@ program unit_test_2d
 #define ETA2MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-  type(sll_cartesian_mesh_2d), pointer               :: mesh_2d
-  class(sll_coordinate_transformation_2d_base), pointer :: T
+  type(sll_t_cartesian_mesh_2d), pointer               :: mesh_2d
+  class(sll_c_coordinate_transformation_2d_base), pointer :: T
   ! either of these type declarations can be used to work. Initialization is
   ! different.
- ! class(sll_scalar_field_2d_base), pointer         :: field_2d
+ ! class(sll_c_scalar_field_2d_base), pointer         :: field_2d
 
-  class(sll_scalar_field_2d_base), pointer :: doubly_periodic_analytic
-  class(sll_scalar_field_2d_base), pointer :: periodic_dirichlet_analytic
-  class(sll_scalar_field_2d_base), pointer :: dirichlet_dirichlet_analytic
-  class(sll_scalar_field_2d_base), pointer :: dirichlet_periodic_analytic
-  class(sll_scalar_field_2d_base), pointer :: doubly_periodic_discrete
-  class(sll_scalar_field_2d_base), pointer :: periodic_dirichlet_discrete
-  class(sll_scalar_field_2d_base), pointer :: dirichlet_dirichlet_discrete
-  class(sll_scalar_field_2d_base), pointer :: dirichlet_periodic_discrete
+  class(sll_c_scalar_field_2d_base), pointer :: doubly_periodic_analytic
+  class(sll_c_scalar_field_2d_base), pointer :: periodic_dirichlet_analytic
+  class(sll_c_scalar_field_2d_base), pointer :: dirichlet_dirichlet_analytic
+  class(sll_c_scalar_field_2d_base), pointer :: dirichlet_periodic_analytic
+  class(sll_c_scalar_field_2d_base), pointer :: doubly_periodic_discrete
+  class(sll_c_scalar_field_2d_base), pointer :: periodic_dirichlet_discrete
+  class(sll_c_scalar_field_2d_base), pointer :: dirichlet_dirichlet_discrete
+  class(sll_c_scalar_field_2d_base), pointer :: dirichlet_periodic_discrete
   sll_int32 :: nc1, nc2!, iplot
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(:,:), pointer :: tab_values
-  type(sll_arbitrary_degree_spline_interpolator_2d), target                 :: interp_2d
+  type(sll_t_arbitrary_degree_spline_interpolator_2d), target                 :: interp_2d
   sll_real64 :: node_val,ref
-  ! procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
+  ! procedure(sll_f_polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
   ! type(init_landau_2d), target :: init_landau
   ! class(scalar_field_2d_initializer_base), pointer    :: pfinit
   ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
   ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
   ! class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
   ! class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
-  !type(sll_arbitrary_degree_spline_interpolator_2d), target    :: interp_2d_term_source
-  !class(sll_scalar_field_2d_base), pointer              :: rho
+  !type(sll_t_arbitrary_degree_spline_interpolator_2d), target    :: interp_2d_term_source
+  !class(sll_c_scalar_field_2d_base), pointer              :: rho
   !sll_real64, dimension(:,:), allocatable    :: calculated
   !sll_real64, dimension(:,:), allocatable    :: difference
   !sll_real64, dimension(:,:), pointer    :: tab_rho
@@ -119,21 +119,21 @@ program unit_test_2d
   print *, 'h2 = ', h2
 
   ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+  mesh_2d => sll_f_new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   print *, 'initialized mesh 2D'
   
   ! coordinate transformation
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       sll_f_identity_x1, &
+       sll_f_identity_x2, &
+       sll_f_identity_jac11, &
+       sll_f_identity_jac12, &
+       sll_f_identity_jac21, &
+       sll_f_identity_jac22, &
        params_identity )
   print *, 'initialized transformation'
 
@@ -153,20 +153,20 @@ program unit_test_2d
 !!$       test_function_perper, &
 !!$       'doubly_periodic', &
 !!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC )
+!!$       sll_p_periodic, &
+!!$       sll_p_periodic, &
+!!$       sll_p_periodic, &
+!!$       sll_p_periodic )
   
   ! ----> initialization of the field
-  doubly_periodic_analytic  => new_scalar_field_2d_analytic( &
+  doubly_periodic_analytic  => sll_f_new_scalar_field_2d_analytic( &
        test_function_perper, &
        "doubly_periodic_analytic", &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
+       sll_p_periodic, &
+       sll_p_periodic, &
+       sll_p_periodic, &
+       sll_p_periodic,&
        (/0.0_f64/), & ! could be anything in this case
        first_deriv_eta1=test_function_perper_der1,&
        first_deriv_eta2=test_function_perper_der2)
@@ -219,14 +219,14 @@ program unit_test_2d
   !----------------------------------------------------------------------------
   
   ! ----> initialization of the field
-  periodic_dirichlet_analytic  => new_scalar_field_2d_analytic( &
+  periodic_dirichlet_analytic  => sll_f_new_scalar_field_2d_analytic( &
        test_function_perdir, &
        "periodic_dirichlet_analytic", &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
+       sll_p_periodic, &
+       sll_p_periodic, &
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
        (/0.0_f64/), & ! could be anything
        first_deriv_eta1=test_function_perdir_der1,&
        first_deriv_eta2=test_function_perdir_der2) 
@@ -283,14 +283,14 @@ program unit_test_2d
 
 
   ! ----> initialization of the field
-  dirichlet_periodic_analytic  => new_scalar_field_2d_analytic( &
+  dirichlet_periodic_analytic  => sll_f_new_scalar_field_2d_analytic( &
        test_function_dirper, &
        "dirichlet_periodic_analytic", &
        T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
+       sll_p_periodic, &
+       sll_p_periodic,&
        (/0.0_f64/), &
        first_deriv_eta1=test_function_dirper_der1,&
        first_deriv_eta2=test_function_dirper_der2)
@@ -347,14 +347,14 @@ program unit_test_2d
   !----------------------------------------------------------------------------
   
   ! ----> initialization of the field
-  dirichlet_dirichlet_analytic  => new_scalar_field_2d_analytic( &
+  dirichlet_dirichlet_analytic  => sll_f_new_scalar_field_2d_analytic( &
        test_function_dirdir, &
        "dirichlet_dirichlet_analytic", &
        T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
        (/0.0_f64/), &
        first_deriv_eta1= test_function_dirdir_der1,&
        first_deriv_eta2=test_function_dirdir_der2)
@@ -429,7 +429,7 @@ program unit_test_2d
   
   ! ----> initializatio of the interpolator for the field
   
-  call initialize_ad2d_interpolator( &
+  call sll_s_initialize_ad2d_interpolator( &
        interp_2d, &
        NUM_CELLS1+1, &
        NUM_CELLS2+1, &
@@ -437,23 +437,23 @@ program unit_test_2d
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
+       sll_p_periodic, &
+       sll_p_periodic,&
+       sll_p_periodic,&
+       sll_p_periodic,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
 
   ! ----> initialization of the field
   
-  doubly_periodic_discrete => new_scalar_field_2d_discrete( &
+  doubly_periodic_discrete => sll_f_new_scalar_field_2d_discrete( &
        "doubly_periodic_discrete", &
        interp_2d, &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
+       sll_p_periodic, &
+       sll_p_periodic,&
+       sll_p_periodic,&
+       sll_p_periodic,&
        point1,&
        nc1+1,&
        point2,&
@@ -528,7 +528,7 @@ program unit_test_2d
 
   ! ----> initializatio of the interpolator for the field
   
-  call initialize_ad2d_interpolator( &
+  call sll_s_initialize_ad2d_interpolator( &
        interp_2d, &
        NUM_CELLS1+1, &
        NUM_CELLS2+1, &
@@ -536,23 +536,23 @@ program unit_test_2d
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
+       sll_p_periodic, &
+       sll_p_periodic,&
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
   
   ! ----> initialization of the field
   
-  periodic_dirichlet_discrete => new_scalar_field_2d_discrete( &
+  periodic_dirichlet_discrete => sll_f_new_scalar_field_2d_discrete( &
        "periodic_dirichlet_discrete", &
        interp_2d, &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
+       sll_p_periodic, &
+       sll_p_periodic,&
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
        point1,&
        nc1+1,&
        point2,&
@@ -634,7 +634,7 @@ program unit_test_2d
 
   ! ----> initializatio of the interpolator for the field
   
-  call initialize_ad2d_interpolator( &
+  call sll_s_initialize_ad2d_interpolator( &
        interp_2d, &
        NUM_CELLS1+1, &
        NUM_CELLS2+1, &
@@ -642,23 +642,23 @@ program unit_test_2d
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
+       sll_p_periodic,&
+       sll_p_periodic,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
   
   ! ----> initialization of the field
   
-  dirichlet_periodic_discrete => new_scalar_field_2d_discrete( &
+  dirichlet_periodic_discrete => sll_f_new_scalar_field_2d_discrete( &
        "dirichlet_periodic_discrete", &
        interp_2d, &
        T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
+       sll_p_periodic,&
+       sll_p_periodic,&
        point1,&
        nc1+1,&
        point2,&
@@ -736,7 +736,7 @@ program unit_test_2d
 
   ! ----> initializatio of the interpolator for the field
   
-  call initialize_ad2d_interpolator( &
+  call sll_s_initialize_ad2d_interpolator( &
        interp_2d, &
        NUM_CELLS1+1, &
        NUM_CELLS2+1, &
@@ -744,23 +744,23 @@ program unit_test_2d
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
   
   ! ----> initialization of the field
   
-  dirichlet_dirichlet_discrete => new_scalar_field_2d_discrete( &
+  dirichlet_dirichlet_discrete => sll_f_new_scalar_field_2d_discrete( &
        "dirichlet_dirichlet_discrete", &
        interp_2d, &
        T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
+       sll_p_dirichlet, &
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
        point1,&
        nc1+1,&
        point2,&
@@ -807,8 +807,8 @@ program unit_test_2d
 !!$        eta1 = real(i,f64)*(ETA1MAX-ETA1MIN)/(2*(npts1-1)) + ETA1MIN 
 !!$        eta2 = real(j,f64)*(ETA2MAX-ETA2MIN)/(2*(npts2-1)) + ETA2MIN
 !!$       calculated(i+1,j+1) = rho%value_at_point(eta1,eta2)
-!!$       difference(i+1,j+1) = calculated(i+1,j+1)-cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
-!       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), calculated(i+1,j+1),cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+!!$       difference(i+1,j+1) = calculated(i+1,j+1)-cos(2.0_f64*sll_p_pi*eta2)*cos(2.0_f64*sll_p_pi*eta1)
+!       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), calculated(i+1,j+1),cos(2.0_f64*sll_p_pi*eta2)*cos(2.0_f64*sll_p_pi*eta1)
 
      end do
   end do

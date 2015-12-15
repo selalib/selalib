@@ -13,20 +13,20 @@ module sll_m_time_composition
   implicit none
 
   public :: &
-    comp_coeff_sym_sym
+    sll_t_comp_coeff_sym_sym
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Symmetric Composition of Symmetric Methods
-  type comp_coeff_sym_sym
+  type sll_t_comp_coeff_sym_sym
     sll_int32 :: order
     sll_real64, dimension(:), allocatable :: gamma  !coefficients, already symmetric
     sll_int32 :: stages
     contains
     procedure, pass(this) :: init => time_composition_sym_sym
 !     procedure, pass(this) :: coeff => comp_coeff_
-  end type comp_coeff_sym_sym  
+  end type sll_t_comp_coeff_sym_sym  
   
 contains
 
@@ -39,7 +39,7 @@ contains
 !> relaxing the number of stages can lead to better methods of high order
 subroutine time_composition_sym_sym(this, order, stages) 
  sll_int32, intent(in) :: order, stages
- class(comp_coeff_sym_sym), intent(inout) :: this
+ class(sll_t_comp_coeff_sym_sym), intent(inout) :: this
  sll_int32 :: idx
  
  this%order=order

@@ -21,21 +21,21 @@ module sll_m_mudpack
   implicit none
 
   public :: &
-    delete_mudpack_cartesian, &
-    initialize_mudpack_cartesian, &
-    initialize_mudpack_polar, &
-    sll_create, &
-    sll_delete, &
-    sll_mudpack_solver, &
-    sll_solve, &
-    solve_mudpack_cartesian, &
-    solve_mudpack_polar
+    sll_s_delete_mudpack_cartesian, &
+    sll_s_initialize_mudpack_cartesian, &
+    sll_s_initialize_mudpack_polar, &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_mudpack_solver, &
+    sll_o_solve, &
+    sll_s_solve_mudpack_cartesian, &
+    sll_s_solve_mudpack_polar
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Mudpack solver cartesian 2d
-type :: sll_mudpack_solver
+type :: sll_t_mudpack_solver
 
    sll_real64, dimension(:), allocatable :: work !< array for tmp data
    sll_int32  :: mgopt(4)           !< Option to control multigrid
@@ -44,29 +44,29 @@ type :: sll_mudpack_solver
    sll_int32  :: iguess             !< Initial solution or loop over time
    sll_int32, pointer :: iwork(:,:) !< Internal work array for mudpack library
 
-end type sll_mudpack_solver
+end type sll_t_mudpack_solver
 
 integer, parameter :: CARTESIAN_2D = 2    !< geometry parameter
 integer, parameter :: CARTESIAN_3D = 3    !< geometry parameter
 integer, parameter :: POLAR        = 11   !< geometry parameter
 integer, parameter :: CYLINDRICAL  = 12   !< geometry parameter
 
-interface sll_create
-  module procedure initialize_mudpack_cartesian
-end interface sll_create
+interface sll_o_create
+  module procedure sll_s_initialize_mudpack_cartesian
+end interface sll_o_create
 
-interface sll_solve
-  module procedure solve_mudpack_cartesian
-end interface sll_solve
+interface sll_o_solve
+  module procedure sll_s_solve_mudpack_cartesian
+end interface sll_o_solve
 
-interface sll_delete
-  module procedure delete_mudpack_cartesian
-end interface sll_delete
+interface sll_o_delete
+  module procedure sll_s_delete_mudpack_cartesian
+end interface sll_o_delete
 
 contains
 
 !> Initialize the Poisson solver using mudpack library
-subroutine initialize_mudpack_cartesian( this,                        &
+subroutine sll_s_initialize_mudpack_cartesian( this,                        &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
                                         bc_eta1_left, bc_eta1_right, &
@@ -74,7 +74,7 @@ subroutine initialize_mudpack_cartesian( this,                        &
 implicit none
 
 ! set grid size params
-type(sll_mudpack_solver):: this          !< Data structure for solver
+type(sll_t_mudpack_solver):: this          !< Data structure for solver
 sll_real64, intent(in)  :: eta1_min      !< left corner x direction
 sll_real64, intent(in)  :: eta1_max      !< right corner x direction
 sll_real64, intent(in)  :: eta2_min      !< left corner x direction
@@ -205,13 +205,13 @@ if (error > 0) call exit(0)
 200 format('# error = ',i2, ' minimum work space = ',i7)
      
 #endif
-end subroutine initialize_mudpack_cartesian
+end subroutine sll_s_initialize_mudpack_cartesian
 
 
 !> Compute the potential using mudpack library on cartesian mesh
-subroutine solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
+subroutine sll_s_solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
 
-type(sll_mudpack_solver)     :: this      !< Data structure for Poisson solver
+type(sll_t_mudpack_solver)     :: this      !< Data structure for Poisson solver
 sll_real64           :: phi(:,:)  !< Electric potential
 sll_real64           :: rhs(:,:)  !< Charge density
 sll_real64, optional :: ex(:,:)   !< Electric field
@@ -304,26 +304,26 @@ if (present(ex) .and. present(ey)) then
 
 end if
 
-end subroutine solve_mudpack_cartesian
+end subroutine sll_s_solve_mudpack_cartesian
 
 !> deallocate the mudpack solver
-subroutine delete_mudpack_cartesian(this)
-type(sll_mudpack_solver)        :: this          !< Data structure for solver
+subroutine sll_s_delete_mudpack_cartesian(this)
+type(sll_t_mudpack_solver)        :: this          !< Data structure for solver
 
    deallocate(this%work)
 
-end subroutine delete_mudpack_cartesian
+end subroutine sll_s_delete_mudpack_cartesian
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine initialize_mudpack_polar(this,                      &
+subroutine sll_s_initialize_mudpack_polar(this,                      &
                                     r_min, r_max, nr,          &
                                     theta_min, theta_max, nth, &
                                     bc_r_min, bc_r_max,        &
                                     bc_theta_min, bc_theta_max )
 implicit none
 
-type(sll_mudpack_solver)       :: this      !< Solver object
+type(sll_t_mudpack_solver)       :: this      !< Solver object
 sll_real64, intent(in) :: r_min     !< radius min
 sll_real64, intent(in) :: r_max     !< radius min
 sll_real64, intent(in) :: theta_min !< theta min
@@ -452,15 +452,15 @@ if (ierror > 0) call exit(0)
 200 format(' ierror = ',i2, ' minimum work space = ',i7)
 
 return
-end subroutine initialize_mudpack_polar
+end subroutine sll_s_initialize_mudpack_polar
 
 
 !> Solve the Poisson equation and get the potential
-subroutine solve_mudpack_polar(this, phi, rhs)
+subroutine sll_s_solve_mudpack_polar(this, phi, rhs)
 implicit none
 
 ! set grid size params
-type(sll_mudpack_solver) :: this  !< solver data object
+type(sll_t_mudpack_solver) :: this  !< solver data object
 sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
@@ -497,7 +497,7 @@ SLL_ASSERT(ierror == 0)
 106 format(/' approximation call to mud2cr', &
     /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 
-end subroutine solve_mudpack_polar
+end subroutine sll_s_solve_mudpack_polar
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr

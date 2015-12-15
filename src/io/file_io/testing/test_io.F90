@@ -9,35 +9,35 @@ program test_io
     hid_t
 
   use sll_m_ascii_io, only: &
-    sll_ascii_write_array
+    sll_o_ascii_write_array
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   use sll_m_xdmf, only: &
-    sll_plot_f, &
-    sll_xdmf_close, &
-    sll_xdmf_corect2d_nodes, &
-    sll_xdmf_corect3d_nodes, &
-    sll_xdmf_curv2d_nodes, &
-    sll_xdmf_curv3d_nodes, &
-    sll_xdmf_open, &
-    sll_xdmf_rect2d_nodes, &
-    sll_xdmf_rect3d_nodes, &
-    sll_xdmf_write_array
+    sll_s_plot_f, &
+    sll_s_xdmf_close, &
+    sll_s_xdmf_corect2d_nodes, &
+    sll_s_xdmf_corect3d_nodes, &
+    sll_s_xdmf_curv2d_nodes, &
+    sll_s_xdmf_curv3d_nodes, &
+    sll_o_xdmf_open, &
+    sll_s_xdmf_rect2d_nodes, &
+    sll_s_xdmf_rect3d_nodes, &
+    sll_o_xdmf_write_array
 
   use sll_m_xml_io, only: &
-    sll_xml_file_close, &
-    sll_xml_file_create
+    sll_s_xml_file_close, &
+    sll_s_xml_file_create
 
 #ifndef NOHDF5
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
 
 #endif
   implicit none
@@ -95,7 +95,7 @@ SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2),error)
 
 do j = 1, nnodes_x2
    vt = real(j-1,f64)/real(nnodes_x2-1,f64)
-   angle = vt * 2. * sll_pi
+   angle = vt * 2. * sll_p_pi
    theta(j) = angle
    do i = 1, nnodes_x1
       xt = real(i-1,f64) / real(nnodes_x1-1,f64)
@@ -110,68 +110,68 @@ SLL_ALLOCATE(df(nnodes_x1,nnodes_x2),error)
 
 df = cos(2.*x1)*exp(-x2*x2)
  
-call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
-call sll_xdmf_write_array(mesh_name,x1,'x1',error)
-call sll_xdmf_write_array(mesh_name,x2,'x2',error)
-call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
-call sll_xdmf_write_array("test2d",df(1:ncells_x1,1:ncells_x2),"CellVal",error,file_id,"Cell")
-call sll_xdmf_close(file_id,error)
+call sll_o_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
+call sll_o_xdmf_write_array(mesh_name,x1,'x1',error)
+call sll_o_xdmf_write_array(mesh_name,x2,'x2',error)
+call sll_o_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
+call sll_o_xdmf_write_array("test2d",df(1:ncells_x1,1:ncells_x2),"CellVal",error,file_id,"Cell")
+call sll_s_xdmf_close(file_id,error)
 
 !ASCII version just in case of problem with binary format
-call sll_xml_file_create("test_ascii.xmf",file_id,error)
+call sll_s_xml_file_create("test_ascii.xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
                           nnodes_x2,nnodes_x1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
                           "' NumberType='Float' Precision='8' Format='XML'>"
-call sll_ascii_write_array(file_id,x1,error)
+call sll_o_ascii_write_array(file_id,x1,error)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
                           "' NumberType='Float' Precision='8' Format='XML'>"
-call sll_ascii_write_array(file_id,x2,error)
+call sll_o_ascii_write_array(file_id,x2,error)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='NodesVal' AttributeType='Scalar' Center='Node'>"
 write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
                           "' NumberType='Float' Precision='8' Format='XML'>"
-call sll_ascii_write_array(file_id,df,error)
+call sll_o_ascii_write_array(file_id,df,error)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
-call sll_xml_file_close(file_id,error)
+call sll_s_xml_file_close(file_id,error)
 
 !The field is describe on a cartesian mesh
 !Axis are perpendicular and spacing is constant
-call sll_xdmf_corect2d_nodes( "test_corect2d", df, "f1_2d", &
+call sll_s_xdmf_corect2d_nodes( "test_corect2d", df, "f1_2d", &
                               ray(1), (ray(nnodes_x1)-ray(1))/(nnodes_x1-1), &
                               theta(1), (theta(nnodes_x2)-theta(1))/(nnodes_x2-1), &
                               "HDF5") 
 !The field is describe on a cartesian mesh
 !Axis are perpendicular and spacing is define by eta1 and eta2 arrays
-call sll_xdmf_rect2d_nodes( "test_rect2d", df, "f2_2d", ray, theta, "HDF5") 
+call sll_s_xdmf_rect2d_nodes( "test_rect2d", df, "f2_2d", ray, theta, "HDF5") 
 
 !The field is describe on a structured curvilinear mesh.
 !Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
-call sll_xdmf_curv2d_nodes( "test_curv2d", df, "f3_2d", x1, x2, "HDF5") 
+call sll_s_xdmf_curv2d_nodes( "test_curv2d", df, "f3_2d", x1, x2, "HDF5") 
 
 #ifndef NOHDF5
 !Init step, create h5 files with mesh coordinates
-call sll_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
-call sll_hdf5_write_array(hfile_id,x1,"/x1",error)
-call sll_hdf5_file_close(hfile_id, error)
-call sll_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
-call sll_hdf5_write_array(hfile_id,x2,"/x2",error)
-call sll_hdf5_file_close(hfile_id, error)
+call sll_o_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
+call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+call sll_o_hdf5_file_close(hfile_id, error)
+call sll_o_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
+call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+call sll_o_hdf5_file_close(hfile_id, error)
 #endif
 
 !plot 10 fields using mesh coordinates written before
 do iplot = 1, 10
-   call int2string(iplot,cplot)
-   call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
+   call sll_s_int2string(iplot,cplot)
+   call sll_o_xdmf_open("f"//cplot//".xmf","polar_mesh", &
                       nnodes_x1,nnodes_x2,file_id,error)
-   df = cos(2.*x1)*exp(-x2*x2)*sin(2*sll_pi*iplot/10.)
-   call sll_xdmf_write_array("f"//cplot,df,"f_values",error,file_id,"Node")
-   call sll_xdmf_close(file_id,error)
+   df = cos(2.*x1)*exp(-x2*x2)*sin(2*sll_p_pi*iplot/10.)
+   call sll_o_xdmf_write_array("f"//cplot,df,"f_values",error,file_id,"Node")
+   call sll_s_xdmf_close(file_id,error)
 end do
 
 end subroutine test_io_2d
@@ -224,24 +224,24 @@ do k = 1, nnodes_x3
          b = b + 1._f64/(nnodes_x1-1)
       end do
       vy(j) = theta
-      theta = theta + 2._f64*sll_pi / (nnodes_x2-1)
+      theta = theta + 2._f64*sll_p_pi / (nnodes_x2-1)
    end do 
    vz(k) = phi
-   phi = phi + 2._f64*sll_pi / (nnodes_x3-1)
+   phi = phi + 2._f64*sll_p_pi / (nnodes_x3-1)
 end do 
 
-call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,nnodes_x3,file_id,error)
-call sll_xdmf_write_array(mesh_name,x1,'x1',error)
-call sll_xdmf_write_array(mesh_name,x2,'x2',error)
-call sll_xdmf_write_array(mesh_name,x3,'x3',error)
-call sll_xdmf_write_array("field3d",df,"NodeVal",error,file_id,"Node")
-call sll_xdmf_write_array("field3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
+call sll_o_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,nnodes_x3,file_id,error)
+call sll_o_xdmf_write_array(mesh_name,x1,'x1',error)
+call sll_o_xdmf_write_array(mesh_name,x2,'x2',error)
+call sll_o_xdmf_write_array(mesh_name,x3,'x3',error)
+call sll_o_xdmf_write_array("field3d",df,"NodeVal",error,file_id,"Node")
+call sll_o_xdmf_write_array("field3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
                           "CellVal",error,file_id,"Cell")
-call sll_xdmf_close(file_id,error)
+call sll_s_xdmf_close(file_id,error)
 
 !The field is describe on a cartesian mesh
 !Axis are perpendicular and spacing is constant
-call sll_xdmf_corect3d_nodes( "test_corect3d", df, "f1_3d", &
+call sll_s_xdmf_corect3d_nodes( "test_corect3d", df, "f1_3d", &
                               vx(1), (vx(nnodes_x1)-vx(1))/(nnodes_x1-1), &
                               vy(1), (vy(nnodes_x2)-vy(1))/(nnodes_x2-1), &
                               vz(1), (vz(nnodes_x2)-vz(1))/(nnodes_x3-1), &
@@ -249,16 +249,16 @@ call sll_xdmf_corect3d_nodes( "test_corect3d", df, "f1_3d", &
 
 !The field is describe on a cartesian mesh
 !Axis are perpendicular and spacing is define by eta1 and eta2 arrays
-call sll_xdmf_rect3d_nodes( "test_rect3d", df, "f2_3d", vx, vy, vz, "HDF5") 
+call sll_s_xdmf_rect3d_nodes( "test_rect3d", df, "f2_3d", vx, vy, vz, "HDF5") 
 
 !The field is describe on a structured curvilinear mesh.
 !Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
-call sll_xdmf_curv3d_nodes( "test_curv3d", df, "f3_3d", x1, x2, x3, "HDF5") 
+call sll_s_xdmf_curv3d_nodes( "test_curv3d", df, "f3_3d", x1, x2, x3, "HDF5") 
 
 end subroutine test_io_3d
 
 
-!> Example of use of sll_plot_f
+!> Example of use of sll_s_plot_f
 !> inside a loop
 subroutine test_sll_plot_f()
   sll_int32 :: iplot
@@ -312,12 +312,12 @@ subroutine test_sll_plot_f()
   eta1_min = 1._f64
   eta2_min = 0._f64
   eta1_max = 10._f64
-  eta2_max = 2._f64*sll_pi
+  eta2_max = 2._f64*sll_p_pi
   r_minus = 4._f64
   r_plus = 5._f64
   k_mode = 3
   eps = 0.5_f64
-  alpha = 2._f64*sll_pi
+  alpha = 2._f64*sll_p_pi
   
   !first we initialize the mesh
   !we use here a polar geometry
@@ -349,7 +349,7 @@ subroutine test_sll_plot_f()
   iplot = 0
   time = 0._f64
   f = 0._f64
-  call sll_plot_f( &
+  call sll_s_plot_f( &
     iplot, &
     f, &  
     nnodes_x1, &
@@ -377,7 +377,7 @@ subroutine test_sll_plot_f()
         if (y>=0._f64) then
           theta = acos(x/r)
         else
-          theta = 2._f64*sll_pi-acos(x/r)
+          theta = 2._f64*sll_p_pi-acos(x/r)
         endif
         if((r>=r_minus).and.(r<=r_plus))then
           res = (1.0_f64+eps*cos(k_mode*theta))
@@ -389,7 +389,7 @@ subroutine test_sll_plot_f()
     enddo
     
     if(modulo(step-1,freq_diag)==0)then
-      call sll_plot_f( &
+      call sll_s_plot_f( &
         iplot, &
         f, &  
         nnodes_x1, &
@@ -400,7 +400,7 @@ subroutine test_sll_plot_f()
         x1, &
         x2)    
       !PN phi = f*f
-      call sll_plot_f( &
+      call sll_s_plot_f( &
         iplot, &
         f*f, &  !PN phi, 
         nnodes_x1, &

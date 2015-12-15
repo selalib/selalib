@@ -10,52 +10,52 @@ program sim_bsl_vp_2d2v_curv
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d, &
-    sll_delete
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_o_delete
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_halt_collective
+    sll_s_boot_collective, &
+    sll_s_halt_collective
 
   use sll_m_common_array_initializers, only: &
-    sll_landau_initializer_4d
+    sll_f_landau_initializer_4d
 
   use sll_m_common_coordinate_transformations, only: &
-    identity_jac11, &
-    identity_jac12, &
-    identity_jac21, &
-    identity_jac22, &
-    identity_x1, &
-    identity_x2
+    sll_f_identity_jac11, &
+    sll_f_identity_jac12, &
+    sll_f_identity_jac21, &
+    sll_f_identity_jac22, &
+    sll_f_identity_x1, &
+    sll_f_identity_x2
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    new_coordinate_transformation_2d_analytic
+    sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_sim_bsl_vp_2d2v_curv, only: &
-    initialize_vp4d_general, &
-    sll_simulation_4d_vp_general, &
-    sll_delete
+    sll_s_initialize_vp4d_general, &
+    sll_t_simulation_4d_vp_general, &
+    sll_o_delete
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_vp_general)      :: simulation
-  type(sll_cartesian_mesh_2d), pointer      :: mx
-  type(sll_cartesian_mesh_2d), pointer      :: mv
-  class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
+  type(sll_t_simulation_4d_vp_general)      :: simulation
+  type(sll_t_cartesian_mesh_2d), pointer      :: mx
+  type(sll_t_cartesian_mesh_2d), pointer      :: mv
+  class(sll_c_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
 
   print *, 'Booting parallel environment...'
-  call sll_boot_collective() ! Wrap this up somewhere else
+  call sll_s_boot_collective() ! Wrap this up somewhere else
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
@@ -84,49 +84,49 @@ program sim_bsl_vp_2d2v_curv
 #define NPTS4 32
 
   ! logical mesh for space coordinates
-  mx => new_cartesian_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=.0_f64, eta1_max=4.0_f64*sll_pi)
+  mx => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2,       & 
+       eta1_min=.0_f64, eta1_max=4.0_f64*sll_p_pi)
 
   ! logical mesh for velocity coordinates
-  mv => new_cartesian_mesh_2d( NPTS3, NPTS4, &
+  mv => sll_f_new_cartesian_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
   print *, 'allocated logical meshes'
 !  ! logical mesh for space coordinates
-!  mx => new_cartesian_mesh_2d( NPTS1, NPTS2)
+!  mx => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2)
 !
 !  ! logical mesh for velocity coordinates
-!  mv => new_cartesian_mesh_2d( NPTS1, NPTS2, &
+!  mv => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2, &
 !       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
 !       eta2_min=-6.0_f64, eta2_max=6.0_f64)
 !
   ! coordinate transformation associated with space coordinates
-  transformation_x => new_coordinate_transformation_2d_analytic( &
+  transformation_x => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
        mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       sll_f_identity_x1, &
+       sll_f_identity_x2, &
+       sll_f_identity_jac11, &
+       sll_f_identity_jac12, &
+       sll_f_identity_jac21, &
+       sll_f_identity_jac22, &
        (/ 0.0_f64 /) )
  print *, 'allocated coordinate transformation'
 
-!  transformation_x => new_coordinate_transformation_2d_analytic( &
+!  transformation_x => sll_f_new_coordinate_transformation_2d_analytic( &
 !       "analytic_sinprod_transformation", &
 !       mx, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22 )
+!       sll_f_sinprod_x1, &
+!       sll_f_sinprod_x2, &
+!       sll_f_sinprod_jac11, &
+!       sll_f_sinprod_jac12, &
+!       sll_f_sinprod_jac21, &
+!       sll_f_sinprod_jac22 )
 
   ! define the values of the parameters for the landau initializer
 
-!!$  gaussian_params(1) = 2.0*sll_pi !xc
-!!$  gaussian_params(2) = 2.0*sll_pi !yc
+!!$  gaussian_params(1) = 2.0*sll_p_pi !xc
+!!$  gaussian_params(2) = 2.0*sll_p_pi !yc
 !!$  gaussian_params(3) = 0.0        !vxc
 !!$  gaussian_params(4) = 0.0        !vyc
 !!$  gaussian_params(5) = 1.0        !vxc
@@ -139,22 +139,22 @@ program sim_bsl_vp_2d2v_curv
   landau_params(5) = 0.05_f64!0.01     !eps
 
   ! initialize simulation object with the above parameters
-  call initialize_vp4d_general( &
+  call sll_s_initialize_vp4d_general( &
        simulation, &
        mx, &
        mv, &
        transformation_x, &
-       sll_landau_initializer_4d, &
+       sll_f_landau_initializer_4d, &
        landau_params )
   print *, 'initialized simulation object'
 !  ! define the values of the parameters for the landau initializer
-!  gaussian_params(1) = 3.0*sll_pi !xc
-!  gaussian_params(2) = 2.0*sll_pi !yc
+!  gaussian_params(1) = 3.0*sll_p_pi !xc
+!  gaussian_params(2) = 2.0*sll_p_pi !yc
 !  gaussian_params(3) = 0.0        !vxc
 !  gaussian_params(4) = 0.0        !vyc
 !
 !  ! initialize simulation object with the above parameters
-!  call initialize_vp4d_general( &
+!  call sll_s_initialize_vp4d_general( &
 !       simulation, &
 !       mx, &
 !       mv, &
@@ -164,11 +164,11 @@ program sim_bsl_vp_2d2v_curv
   print *, ' f initialized '
 
   call simulation%run( )
-  call sll_delete(simulation)
+  call sll_o_delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 
 end program sim_bsl_vp_2d2v_curv
