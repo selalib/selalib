@@ -1159,7 +1159,7 @@ contains
             x1_min, &
             x1_max, &
             num_cells_x1)
-!    case ("sll_p_dirichlet")
+!    case ("SLL_DIRICHLET")
 !       sim%poisson => new_poisson_1d_dirichlet_solver( &
 !            x1_min, &
 !            x1_max, &

@@ -575,11 +575,11 @@ contains
     sim%delta_f_method=delta_f_method
     
     select case (poisson2d_BC_rmin)
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         poisson2d_BC(1) = sll_p_dirichlet
-      case ("sll_p_neumann")
+      case ("SLL_NEUMANN")
         poisson2d_BC(1) = sll_p_neumann
-      case ("sll_p_neumann_mode_0")
+      case ("SLL_NEUMANN_MODE_0")
         poisson2d_BC(1) = sll_p_neumann_mode_0      
       case default
         print *,'#bad choice for poisson2d_BC_rmin'
@@ -589,11 +589,11 @@ contains
 
 
     select case (poisson2d_BC_rmax)
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         poisson2d_BC(2) = sll_p_dirichlet
-      case ("sll_p_neumann")
+      case ("SLL_NEUMANN")
         poisson2d_BC(2) = sll_p_neumann
-      case ("sll_p_neumann_mode_0")
+      case ("SLL_NEUMANN_MODE_0")
         poisson2d_BC(2) = sll_p_neumann_mode_0      
       case default
         print *,'#bad choice for poisson2d_BC_rmax'
