@@ -131,7 +131,7 @@ program remap_test_6d
   call sll_boot_collective()
 
   !  end_result = .true.
-  colsz  = sll_get_collective_size(sll_world_collective)
+  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
   myrank = sll_get_collective_rank(sll_world_collective)
 
   if( myrank .eq. RANK_TO_PRINT ) then
@@ -226,7 +226,7 @@ program remap_test_6d
                        lin_index = gi + (gj-1)*ni + (gk-1)*ni*nj + &
                             (gl-1)*ni*nj*nk + (gm-1)*ni*nj*nk*nl + &
                             (gn-1)*ni*nj*nk*nl*nm
-                       local_array1(i,j,k,l,m,n) = lin_index
+                       local_array1(i,j,k,l,m,n) = real(lin_index,f64)
                        ! Check if the theoretical index is what we expect:
                        theo_index = theoretical_global_6D_indices( &
                             lin_index, ni, nj, nk, nl, nm )
