@@ -128,6 +128,8 @@ module sll_mpi
 #include "external_openmpi.F90"
 #elif defined(MPICH)
 #include "external_mpich.F90"
+#elif defined(BULLX_MPI)
+#include "external_bullx.F90"
 #endif
 
 !-----------------------------------------------------------------------
