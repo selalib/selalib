@@ -35,8 +35,8 @@ module sll_m_lobatto_poisson
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type :: lobatto_poisson_solver
-    sll_transformation, pointer :: tau
-    sll_int32                   :: order
+    class(sll_coordinate_transformation_2d_base), pointer :: tau
+    sll_int32                                             :: order
   end type lobatto_poisson_solver
    
   interface sll_create
@@ -57,9 +57,10 @@ contains
 
 subroutine initialize_lobatto_poisson(this, tau, order)
 
-  type(lobatto_poisson_solver) :: this
-  sll_transformation, pointer :: tau
-  sll_int32, optional :: order
+  type(lobatto_poisson_solver)                          :: this
+  class(sll_coordinate_transformation_2d_base), pointer :: tau
+  sll_int32, optional                                   :: order
+
   sll_int32 :: nx0
   sll_int32 :: ny0
 

@@ -51,8 +51,6 @@
 #define sll_comp32 complex(kind=f32)
 #define sll_comp64 complex(kind=f64)
 
-#define sll_transformation class(sll_coordinate_transformation_2d_base)
-
 use sll_m_working_precision
 
 #define SLL_NULL_INT32  (/0.0_i32/)
