@@ -26,6 +26,7 @@ module sll_m_fft
 #include "sll_fftw.h"
 
   use sll_m_fftw3
+  use, intrinsic :: iso_c_binding
 
   implicit none 
 
