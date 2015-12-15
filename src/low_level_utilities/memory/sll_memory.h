@@ -69,22 +69,22 @@
   !
   ! *************************************************************************
  
-use sll_m_memory, only : test_error_code
+use sll_m_memory, only : sll_s_test_error_code
 
 #define SLL_ALLOCATE(array_name_and_lims, error_var)   \
   allocate(array_name_and_lims, stat=error_var);      \
-  call test_error_code(error_var, 'Memory allocation Failure.', __FILE__, \
+  call sll_s_test_error_code(error_var, 'Memory allocation Failure.', __FILE__, \
   __LINE__);
 
 #define SLL_DEALLOCATE(ptr, error_var)  \
   deallocate(ptr, stat=error_var);      \
-  call test_error_code(error_var, 'Error in memory deallocation.', __FILE__,\
+  call sll_s_test_error_code(error_var, 'Error in memory deallocation.', __FILE__,\
   __LINE__); \
   nullify(ptr);
 
 #define SLL_DEALLOCATE_ARRAY(array, error_var) \
   deallocate(array, stat=error_var);           \
-  call test_error_code(error_var, 'Failed array deallocation: ', __FILE__, \
+  call sll_s_test_error_code(error_var, 'Failed array deallocation: ', __FILE__, \
   __LINE__ ); 
 
 #define SLL_INIT_ARRAY(arry,val) arry = val;

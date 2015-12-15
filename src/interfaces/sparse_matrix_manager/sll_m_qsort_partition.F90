@@ -3,25 +3,25 @@ module sll_m_qsort_partition
   implicit none
 
   public :: &
-    qsortc
+    sll_s_qsortc
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
-recursive subroutine QsortC(A)
+recursive subroutine sll_s_qsortc(A)
 
   integer, intent(inout), dimension(:) :: A
   integer :: iq
 
   if(size(A) > 1) then
     call Partition(A, iq)
-    call QsortC(A(:iq-1))
-    call QsortC(A(iq:))
+    call sll_s_qsortc(A(:iq-1))
+    call sll_s_qsortc(A(iq:))
   endif
 
-end subroutine QsortC
+end subroutine sll_s_qsortc
 
 subroutine partition(A, marker)
 

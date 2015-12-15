@@ -5,25 +5,25 @@ module sll_m_pic_1d_distribution
 #include "sll_working_precision.h"
 
   use sll_m_pic_visu, only: &
-    compute_df_cic
+    sll_s_compute_df_cic
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   use sll_m_xdmf, only: &
-    sll_xdmf_corect2d_nodes
+    sll_s_xdmf_corect2d_nodes
 
   implicit none
 
   public :: &
-    pic1d_eulerian_distribution
+    sll_t_pic1d_eulerian_distribution
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !==============================================================================
 
-  type :: pic1d_eulerian_distribution
+  type :: sll_t_pic1d_eulerian_distribution
 
     sll_real64, allocatable :: f(:,:)
     sll_real64, allocatable :: n(:), nu(:), nke(:)
@@ -50,7 +50,7 @@ contains
 !==============================================================================
 
   subroutine pic1d_ed__initialize( self, xmin, xmax, nx, vmin, vmax, nv )
-    class( pic1d_eulerian_distribution ), intent( inout ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( inout ) :: self
     sll_real64                          , intent( in    ) :: xmin
     sll_real64                          , intent( in    ) :: xmax
     sll_int32                           , intent( in    ) :: nx   
@@ -76,13 +76,13 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine pic1d_ed__compute_f( self, xp, vp, wp )
-    class( pic1d_eulerian_distribution ), intent( inout ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( inout ) :: self
     sll_real64                          , intent( in    ) :: xp(:)
     sll_real64                          , intent( in    ) :: vp(:)
     sll_real64                          , intent( in    ) :: wp(:)
     
     ! Use cloud-in-cell (CIC) algorithm to compute 1D-1V distribution function
-    call compute_df_cic( xp, vp, wp, &
+    call sll_s_compute_df_cic( xp, vp, wp, &
       self%xmin, self%xmax, self%nx, &
       self%vmin, self%vmax, self%nv, &
       self%f )
@@ -92,7 +92,7 @@ contains
   !----------------------------------------------------------------------------
   ! Computing the number of particle in each cell
   subroutine pic1d_ed__compute_moments( self )
-    class( pic1d_eulerian_distribution ), intent( inout ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( inout ) :: self
 
     sll_int32  :: i
     sll_real64 :: dv
@@ -116,7 +116,7 @@ contains
   !----------------------------------------------------------------------------
   ! Compute mean velocity in each cell
   function pic1d_ed__mean_velocity( self ) result( u )
-    class( pic1d_eulerian_distribution ), intent( in ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( in ) :: self
     sll_real64                                         :: u(self%nx)
 
     u = self%nu / self%n
@@ -126,7 +126,7 @@ contains
   !----------------------------------------------------------------------------
   ! Compute mean temperature in each cell
   function pic1d_ed__mean_temperature( self ) result( T )
-    class( pic1d_eulerian_distribution ), intent( in ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( in ) :: self
     sll_real64                                         :: T(self%nx)
 
     
@@ -139,7 +139,7 @@ contains
   
   !----------------------------------------------------------------------------
   subroutine pic1d_ed__print_f( self, plot_name, iplot )
-    class( pic1d_eulerian_distribution ), intent( in ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( in ) :: self
     character( len=* )                  , intent( in ) :: plot_name
     sll_int32                           , intent( in ) :: iplot
 
@@ -148,15 +148,15 @@ contains
 
     dx = (self%xmax-self%xmin)/(self%nx-1)
     dv = (self%vmax-self%vmin)/(self%nv-1)
-    call int2string( iplot, fin )
-    call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, self%f, "f(x,v)", &
+    call sll_s_int2string( iplot, fin )
+    call sll_s_xdmf_corect2d_nodes( plot_name//'_'//fin, self%f, "f(x,v)", &
       self%xmin, dx, self%vmin, dv )
 
   end subroutine pic1d_ed__print_f
   
   !----------------------------------------------------------------------------
   subroutine pic1d_ed__print_moments( self, plot_name, iplot,root_path )
-    class( pic1d_eulerian_distribution ), intent( in ) :: self
+    class( sll_t_pic1d_eulerian_distribution ), intent( in ) :: self
     character( len=* )                  , intent( in ) :: plot_name
     sll_int32                           , intent( in ) :: iplot
     character(len=256)                  , intent( in ) :: root_path
@@ -171,7 +171,7 @@ contains
       x(i) = self%xmin + dx*(i-1)
     end do
     T=self%mean_temperature()                       
-    call int2string( iplot, fin )
+    call sll_s_int2string( iplot, fin )
     open(file_id, file = trim(root_path)//plot_name//'_'//fin//'.dat')
     write (file_id,*)"#distribution moments"
     write (file_id,*)  "#Time steps:", iplot

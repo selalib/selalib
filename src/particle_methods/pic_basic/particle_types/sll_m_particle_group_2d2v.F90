@@ -9,20 +9,20 @@ module sll_m_particle_group_2d2v
 #include "sll_working_precision.h"
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base, &
-    species_new
+    sll_c_particle_group_base, &
+    sll_f_species_new
 
   implicit none
 
   public :: &
-    sll_new_particle_group_2d2v, &
-    sll_particle_group_2d2v
+    sll_f_new_particle_group_2d2v, &
+    sll_t_particle_group_2d2v
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Simple version of a PIC particle group in 2d2v
-type, extends(sll_particle_group_base) :: sll_particle_group_2d2v
+type, extends(sll_c_particle_group_base) :: sll_t_particle_group_2d2v
    !sll_int32               :: n_particles !< number of particle
    sll_real64, pointer :: particle_array(:,:) !< array of particles
 
@@ -43,14 +43,14 @@ contains
     ! Initializer
     procedure :: initialize => initialize_particle_group_2d2v  !> Initialization function
    
-end type sll_particle_group_2d2v
+end type sll_t_particle_group_2d2v
 
 contains
 
   !----------------------------------------------------------------------!
   !> Constructor
-  function sll_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass, n_weights) result(self)
-    class( sll_particle_group_2d2v ),  pointer        :: self
+  function sll_f_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass, n_weights) result(self)
+    class( sll_t_particle_group_2d2v ),  pointer        :: self
     sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
     sll_int32                       , intent( in )    :: n_total_particles !< number of particles in total simulation
     sll_real64                      , intent( in )    :: charge !< charge of the particle species
@@ -63,15 +63,15 @@ contains
     self%n_particles = n_particles
     self%n_total_particles = n_total_particles
     SLL_ALLOCATE(self%particle_array(self%n_particles,4+n_weights), ierr) 
-    self%species => species_new( charge, mass)
+    self%species => sll_f_species_new( charge, mass)
 
     self%n_weights = n_weights
 
-  end function sll_new_particle_group_2d2v
+  end function sll_f_new_particle_group_2d2v
   
   !----------------------------------------------------------------------!
   pure function get_x_2d2v( self, i ) result( r )
-    class( sll_particle_group_2d2v ), intent( in ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(3) !< first two components hold the value of the particle position
 
@@ -82,7 +82,7 @@ contains
 
   !----------------------------------------------------------------------!
   pure function get_v_2d2v( self, i ) result( r )
-    class( sll_particle_group_2d2v ), intent( in ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(3) !< first two components hold the value of the particle velocity
 
@@ -94,7 +94,7 @@ contains
 ! Old version without optional argument
 !!$  !----------------------------------------------------------------------!
 !!$  pure function get_charge_2d2v( self, i ) result (r)
-!!$        class( sll_particle_group_2d2v ), intent( in ) :: self  !< particle group
+!!$        class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
 !!$    sll_int32                       , intent( in ) :: i !< no. of the particle
 !!$    sll_real64 :: r(self%n_weights) !< particle charge(s)
 !!$
@@ -104,7 +104,7 @@ contains
 !!$
 !!$  !----------------------------------------------------------------------!
 !!$  pure function get_mass_2d2v( self, i) result (r)
-!!$        class( sll_particle_group_2d2v ), intent( in ) :: self  !< particle group
+!!$        class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
 !!$    sll_int32                       , intent( in ) :: i !< no. of the particle
 !!$    sll_real64 :: r(self%n_weights) !< particle mass(es)
 !!$
@@ -114,7 +114,7 @@ contains
 
   !----------------------------------------------------------------------!
   pure function get_charge_2d2v( self, i , i_weight) result (r)
-        class( sll_particle_group_2d2v ), intent( in ) :: self !< particle group
+        class( sll_t_particle_group_2d2v ), intent( in ) :: self !< particle group
     sll_int32                           , intent( in ) :: i !< no. of the particle
     sll_int32, optional                 , intent( in ) :: i_weight
     sll_real64 :: r !< charges(s) of particle i
@@ -130,7 +130,7 @@ contains
 
   !----------------------------------------------------------------------!
   pure function get_mass_2d2v( self, i, i_weight) result (r)
-        class( sll_particle_group_2d2v ), intent( in ) :: self !< particle group
+        class( sll_t_particle_group_2d2v ), intent( in ) :: self !< particle group
     sll_int32                           , intent( in ) :: i !< no. of the particle
     sll_int32, optional                 , intent( in ) :: i_weight 
     sll_real64 :: r !< masses(s) of particle i
@@ -146,7 +146,7 @@ contains
  
   !----------------------------------------------------------------------!
   pure function get_weights_2d2v( self, i) result (r)
-        class( sll_particle_group_2d2v ), intent( in ) :: self  !< particle group
+        class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(self%n_weights) !< particle mass(es)
 
@@ -156,7 +156,7 @@ contains
 
   !----------------------------------------------------------------------!
   subroutine set_x_2d2v( self, i, x )
-    class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(3) !< components 1 and 2 hold the particle position to be set
 
@@ -166,7 +166,7 @@ contains
 
   !----------------------------------------------------------------------!
   subroutine set_v_2d2v( self, i, x )
-    class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(3) !< component 1 and 2 hold the particle velocity to be set
 
@@ -176,7 +176,7 @@ contains
   
   !----------------------------------------------------------------------!
   subroutine set_weights_2d2v( self, i, x )
-    class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x(self%n_weights) !< particle weight(s) to be set
 
@@ -186,7 +186,7 @@ contains
 
   !----------------------------------------------------------------------!
   subroutine set_common_weight_2d2v( self, i, x )
-    class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
     sll_real64                      , intent( in):: x !< common weight
 #ifdef DEBUG 
@@ -198,7 +198,7 @@ contains
 
   !----------------------------------------------------------------------!
   subroutine initialize_particle_group_2d2v (self, n_particles, n_total_particles, charge, mass, n_weights)
-    class( sll_particle_group_2d2v ), intent( inout ) :: self  !< particle group
+    class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
     sll_int32                       , intent( in )    :: n_total_particles !< number of particles in total simulation
     sll_real64                      , intent( in )    :: charge !< charge of the particle species
@@ -210,7 +210,7 @@ contains
     self%n_particles = n_particles
     self%n_total_particles = n_total_particles
     SLL_ALLOCATE(self%particle_array(self%n_particles,4+n_weights), ierr) 
-    self%species => species_new( charge, mass)
+    self%species => sll_f_species_new( charge, mass)
 
     self%n_weights = n_weights
 

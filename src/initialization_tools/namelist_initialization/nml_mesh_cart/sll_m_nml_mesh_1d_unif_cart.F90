@@ -60,7 +60,7 @@
 !> Examples of calls of interface (generic)
 !>\code
 !> !print namelist info
-!> call sll_s_nml_mesh_1d_unif_cart( &
+!> call sll_o_nml_mesh_1d_unif_cart( &
 !>  filename, &
 !>  proc_id=sll_get_collective_rank(sll_world_collective))
 !>\endcode
@@ -85,7 +85,7 @@
 !> according to <code>choice</code> read from namelist 
 !> <code>mesh_1d_unif_cart</code> in <code>filename</code>
 !>\code
-!> call sll_s_nml_mesh_1d_unif_cart(filename,array)
+!> call sll_o_nml_mesh_1d_unif_cart(filename,array)
 !>\endcode
 !> The output <code>array</code> is of size <code>num_cells+1</code>
 !> with  
@@ -94,18 +94,18 @@
 !>\endcode
 !> 2. Same, but read this time, from namelist <code>mesh_1d_unif_cart_1</code>.
 !>\code
-!> call sll_s_nml_mesh_1d_unif_cart(filename,array,clone="_1")
+!> call sll_o_nml_mesh_1d_unif_cart(filename,array,clone="_1")
 !>\endcode
 !> 3. Allocation and initialization of 
-!> <code>type(sll_cartesian_mesh_1d), pointer :: mesh</code>
+!> <code>type(sll_t_cartesian_mesh_1d), pointer :: mesh</code>
 !> according to <code>choice</code> read from namelist 
 !> <code>mesh_1d_unif_cart</code> in <code>filename</code>
 !>\code
-!> call sll_s_nml_mesh_1d_unif_cart(filename,mesh)
+!> call sll_o_nml_mesh_1d_unif_cart(filename,mesh)
 !>\endcode
 !> 4. Same, but read this time, from namelist <code>mesh_1d_unif_cart_1</code>.
 !>\code
-!> call sll_s_nml_mesh_1d_unif_cart(filename,mesh,clone="_1")
+!> call sll_o_nml_mesh_1d_unif_cart(filename,mesh,clone="_1")
 !>\endcode
 
   !-----------------------------------------------------------------
@@ -119,16 +119,16 @@ module sll_m_nml_mesh_1d_unif_cart
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_1d, &
-    sll_cartesian_mesh_1d
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
   use sll_m_utilities, only: &
-    sll_new_file_id
+    sll_s_new_file_id
 
   implicit none
 
   public :: &
-    sll_s_nml_mesh_1d_unif_cart
+    sll_o_nml_mesh_1d_unif_cart
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -151,12 +151,12 @@ module sll_m_nml_mesh_1d_unif_cart
   !  SPECIFIC DECLARATION (BEGIN)
   !-----------------------------------------------------------------
 
-  interface sll_s_nml_mesh_1d_unif_cart
+  interface sll_o_nml_mesh_1d_unif_cart
       module procedure &
         s_nml_mesh_1d_unif_cart_array, &
         s_nml_mesh_1d_unif_cart_mesh, &
         s_nml_mesh_1d_unif_cart_print
-  end interface sll_s_nml_mesh_1d_unif_cart
+  end interface sll_o_nml_mesh_1d_unif_cart
 
   !-----------------------------------------------------------------
   !  SPECIFIC DECLARATION (END)
@@ -215,7 +215,7 @@ contains
     proc_id) !< optional id of proc
 
     character(len=*), intent(in)    :: filename
-    type(sll_cartesian_mesh_1d), pointer, intent(out) :: mesh
+    type(sll_t_cartesian_mesh_1d), pointer, intent(out) :: mesh
     character(len=*), intent(in), optional :: clone
     sll_int32, intent(in), optional :: proc_id
     
@@ -235,7 +235,7 @@ contains
     eta_min = self%eta_min
     eta_max = self%eta_max
 
-    mesh => new_cartesian_mesh_1d( &
+    mesh => sll_f_new_cartesian_mesh_1d( &
       num_cells, &
       eta_min=eta_min, &
       eta_max=eta_max)
@@ -348,7 +348,7 @@ contains
       eta_min, &
       eta_max)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -403,7 +403,7 @@ contains
       eta_min_1, &
       eta_max_1)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -458,7 +458,7 @@ contains
       eta_min_2, &
       eta_max_2)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -513,7 +513,7 @@ contains
       eta_min_3, &
       eta_max_3)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -568,7 +568,7 @@ contains
       eta_min_4, &
       eta_max_4)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &

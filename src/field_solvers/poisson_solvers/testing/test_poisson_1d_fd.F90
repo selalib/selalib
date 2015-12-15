@@ -8,18 +8,18 @@ program unit_test_poisson_1d_fd
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_1d, &
-    sll_cartesian_mesh_1d
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
   use sll_m_constants, only: &
-    sll_kx
+    sll_p_kx
 
   use sll_m_poisson_1d_fd, only: &
-    new_poisson_1d_fd, &
-    poisson_1d_fd
+    sll_f_new_poisson_1d_fd, &
+    sll_t_poisson_1d_fd
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,7 +53,7 @@ contains
         !sll_real:: test_mode
         sll_real64, dimension(size(x)) :: y
         !test_mode=4
-        y= ((testfunction_test_mode*sll_kx)**2 )*sin(testfunction_test_mode*sll_kx*x)
+        y= ((testfunction_test_mode*sll_p_kx)**2 )*sin(testfunction_test_mode*sll_p_kx*x)
     end function
 
 
@@ -89,9 +89,9 @@ contains
         implicit none
         integer :: ierr
         sll_real64 :: interval_a=0.0_f64, interval_b=1.0_f64
-        class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
-        class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
-        class(poisson_1d_fd), pointer :: solver=>null()
+        class(sll_t_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
+        class(sll_t_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
+        class(sll_t_poisson_1d_fd), pointer :: solver=>null()
         sll_int32, intent(in) :: test_power_two
         sll_int32, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
@@ -117,13 +117,13 @@ contains
         !Test Mass Matrix Assembler
         test_dimension=2**test_power_two
 
-        mesh=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
+        mesh=>sll_f_new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
         knots=mesh%eta1_nodes()
 
-        mesh_eval=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
+        mesh_eval=>sll_f_new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
         knots_eval=mesh_eval%eta1_nodes()
 
-        solver=>new_poisson_1d_fd(mesh, 2,spline_degree, SLL_PERIODIC, ierr)
+        solver=>sll_f_new_poisson_1d_fd(mesh, 2,spline_degree, sll_p_periodic, ierr)
 
         call random_number(xx)
         xx=xx*(interval_b- interval_a)+interval_a
@@ -151,7 +151,7 @@ contains
             actual_solution=sll_poisson_1d_fd_testfunction(knots_eval)
             
             !call solver%solve(rhs)
-            !actual_solution=sll_poisson_1d_fem_testfunction(knots_eval)/((testfunction_test_mode*sll_kx)**2)            
+            !actual_solution=sll_poisson_1d_fem_testfunction(knots_eval)/((testfunction_test_mode*sll_p_kx)**2)            
             call solver%eval_solution(knots_eval, solution)
             
             numerical_error(test_mode+1)=maxval(abs( (solution - actual_solution)/maxval(abs(actual_solution)) ) )
@@ -167,17 +167,17 @@ contains
             !print *,"plot([", solver%fd_solution,"])"
             !            testfunction_test_mode=1.0_f64
 !!              print *, sll_poisson_1d_fem_testfunction(knots)
-!!              print *, sin(sll_kx*knots*testfunction_test_mode)*((testfunction_test_mode*sll_kx)**2 )
+!!              print *, sin(sll_p_kx*knots*testfunction_test_mode)*((testfunction_test_mode*sll_p_kx)**2 )
 !!              stop
       !!  print *,sll_poisson_1d_fem_testfunction(1),  sll_poisson_1d_fem_testfunction(1)
             !!call solver%solve(sll_poisson_1d_fem_testfunction)
 
             !call solver%eval_solution(knots_eval,solution)
-            !actual_solution=(((2.0_f64**test_mode)*sll_kx)**(-2))*sll_poisson_1d_fem_testfunction(knots_eval)
+            !actual_solution=(((2.0_f64**test_mode)*sll_p_kx)**(-2))*sll_poisson_1d_fem_testfunction(knots_eval)
             !numerical_error(test_mode+1)=maxval(abs( (solution - actual_solution)/maxval(abs(actual_solution)) ) )
 
             call solver%eval_solution_derivative(knots_eval,solution)
-            actual_solution=(2.0_f64**test_mode)*sll_kx*cos((2.0_f64**test_mode)*sll_kx*knots_eval)
+            actual_solution=(2.0_f64**test_mode)*sll_p_kx*cos((2.0_f64**test_mode)*sll_p_kx*knots_eval)
             numerical_error_deriv(test_mode+1)=maxval(abs( (solution - actual_solution)/maxval(abs(actual_solution)) ) )
 
             print *, "MAX",maxloc(abs( (solution - actual_solution)))
@@ -192,7 +192,7 @@ contains
             print *, "Relative l2 Error: ", num_error_sum
 
             print *, "H1-Seminorm of solution: ",&
-                H1seminorm, "Rel. Error: " , abs(H1seminorm - 0.5_f64*((2**test_mode)*sll_kx)**2)/(((2**test_mode)*sll_kx)**2)/2.0_f64
+                H1seminorm, "Rel. Error: " , abs(H1seminorm - 0.5_f64*((2**test_mode)*sll_p_kx)**2)/(((2**test_mode)*sll_p_kx)**2)/2.0_f64
 
             print *, "Residual FEM Equation: ", residual
 
@@ -218,9 +218,9 @@ contains
         implicit none
         integer :: ierr
         sll_real64 :: interval_a=0.0_f64, interval_b=1.0_f64
-        class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
-        !class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
-        class(poisson_1d_fd), pointer :: solver=>null()
+        class(sll_t_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
+        !class(sll_t_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
+        class(sll_t_poisson_1d_fd), pointer :: solver=>null()
         sll_int32, intent(in) :: test_power_two
         sll_int32, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
@@ -235,8 +235,8 @@ contains
 
         test_dimension=2**test_power_two
 
-        mesh=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
-        solver=>new_poisson_1d_fd(mesh, 2,spline_degree, SLL_PERIODIC, ierr)
+        mesh=>sll_f_new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
+        solver=>sll_f_new_poisson_1d_fd(mesh, 2,spline_degree, sll_p_periodic, ierr)
 
         call random_number(xx)
         xx=xx*(interval_b- interval_a)+interval_a
@@ -270,9 +270,9 @@ contains
         implicit none
         integer :: ierr
         sll_real64 :: interval_a=0.0_f64, interval_b=1.0_f64
-        class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
-        !class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
-        class(poisson_1d_fd), pointer :: solver=>null()
+        class(sll_t_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
+        !class(sll_t_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
+        class(sll_t_poisson_1d_fd), pointer :: solver=>null()
         sll_int32, intent(in) :: test_power_two
         sll_int32, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
@@ -289,8 +289,8 @@ contains
 
         test_dimension=2**test_power_two
 
-        mesh=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
-        solver=>new_poisson_1d_fd(mesh, 2,spline_degree, SLL_PERIODIC, ierr)
+        mesh=>sll_f_new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
+        solver=>sll_f_new_poisson_1d_fd(mesh, 2,spline_degree, sll_p_periodic, ierr)
 
         call random_number(xx)
         xx=xx*(interval_b- interval_a)+interval_a

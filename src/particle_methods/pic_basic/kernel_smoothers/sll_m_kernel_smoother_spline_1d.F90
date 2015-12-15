@@ -9,26 +9,26 @@ module sll_m_kernel_smoother_spline_1d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x
 
   use sll_m_kernel_smoother_base, only: &
-    sll_collocation, &
-    sll_kernel_smoother_base
+    sll_p_collocation, &
+    sll_c_kernel_smoother_base
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   implicit none
 
   public :: &
-    sll_kernel_smoother_spline_1d, &
-    sll_new_smoother_spline_1d
+    sll_t_kernel_smoother_spline_1d, &
+    sll_f_new_smoother_spline_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>  Spline kernel smoother in1d.
-  type, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_1d
+  type, extends(sll_c_kernel_smoother_base) :: sll_t_kernel_smoother_spline_1d
 
      ! Information about the 1d mesh
      sll_real64 :: delta_x(1)  !< Value of grid spacing along both directions.
@@ -52,13 +52,13 @@ module sll_m_kernel_smoother_spline_1d
      procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_1d !> accumulate component of current density 
      procedure :: evaluate_kernel_function_particle => evaluate_kernel_function_particle_spline_1d !> Evaluate spline function with given coefficients
 
-  end type sll_kernel_smoother_spline_1d
+  end type sll_t_kernel_smoother_spline_1d
   
 contains
   !---------------------------------------------------------------------------!
   subroutine compute_shape_factors_spline_1d(this, particle_group)
-    class( sll_kernel_smoother_spline_1d), intent(inout) :: this !< kernel smoother object
-    class( sll_particle_group_base), intent(in)     :: particle_group  !< particle group
+    class( sll_t_kernel_smoother_spline_1d), intent(inout) :: this !< kernel smoother object
+    class( sll_c_particle_group_base), intent(in)     :: particle_group  !< particle group
 
     ! local variables
     sll_real64 :: xi(3)
@@ -74,7 +74,7 @@ contains
        xi(1) = xi(1) - real(this%index_grid(1,i_part) -1,f64)
        ! Now we subtract the degree of the spline to get the index of the first spline.
        this%index_grid(:,i_part) =  this%index_grid(:,i_part) - this%spline_degree
-       spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+       spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
        this%values_grid(:,1,i_part) = spline_val
     end do
 
@@ -83,8 +83,8 @@ contains
   !---------------------------------------------------------------------------!
   subroutine accumulate_rho_from_klimontovich_spline_1d(this, particle_group,&
        rho_dofs)
-    class( sll_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
-    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+    class( sll_t_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
+    class( sll_c_particle_group_base), intent(in)     :: particle_group !< particle group
     sll_real64, intent(inout)                       :: rho_dofs(:) !< array holding the spline coefficients accumulated rho
     
     !local variables
@@ -102,7 +102,7 @@ contains
        end do
     end do
 
-    if (this%smoothing_type == SLL_COLLOCATION) then
+    if (this%smoothing_type == sll_p_collocation) then
        rho_dofs = rho_dofs/this%delta_x(1)
     end if
        
@@ -111,8 +111,8 @@ contains
   !---------------------------------------------------------------------------!
   subroutine accumulate_j_from_klimontovich_spline_1d(this, particle_group,&
        j_dofs, component)
-    class( sll_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
-    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+    class( sll_t_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
+    class( sll_c_particle_group_base), intent(in)     :: particle_group !< particle group
     sll_real64, intent(inout)                       :: j_dofs(:) !< array holding the spline coefficients of component \a component the accumulated j
     sll_int32, intent(in)                           :: component !< component of \a j_dof to be accumulated
     
@@ -134,7 +134,7 @@ contains
        end do
     end do
    
-    if (this%smoothing_type == SLL_COLLOCATION) then
+    if (this%smoothing_type == sll_p_collocation) then
        j_dofs = j_dofs/this%delta_x(1)
     end if
 
@@ -142,7 +142,7 @@ contains
   
   !---------------------------------------------------------------------------!
   subroutine evaluate_kernel_function_particle_spline_1d(this, rho_dofs, i_part, particle_value)
-    class( sll_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
+    class( sll_t_kernel_smoother_spline_1d), intent(in)    :: this !< kernel smoother object
     sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
     sll_int32, intent(in)                        :: i_part !< particle number
     sll_real64, intent(out)                      :: particle_value !< Value of the function at the position of particle \a i_part
@@ -164,8 +164,8 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  function sll_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
-    class( sll_kernel_smoother_spline_1d), pointer   :: this !< kernel smoother object
+  function sll_f_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
+    class( sll_t_kernel_smoother_spline_1d), pointer   :: this !< kernel smoother object
     sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
     sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
     sll_int32, intent(in) :: no_particles !< number of particles
@@ -198,7 +198,7 @@ contains
     SLL_ALLOCATE(this%index_grid(1, no_particles),ierr)
     SLL_ALLOCATE(this%values_grid(this%n_span, 1, no_particles),ierr)
 
-  end function sll_new_smoother_spline_1d
+  end function sll_f_new_smoother_spline_1d
 
   
 

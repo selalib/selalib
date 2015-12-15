@@ -3,9 +3,9 @@ program unit_test_meshes_multipatch
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes_multipatch, only: &
-    new_cartesian_mesh_multipatch_2d, &
-    sll_cartesian_mesh_multipatch_2d, &
-    sll_delete
+    sll_f_new_cartesian_mesh_multipatch_2d, &
+    sll_t_cartesian_mesh_multipatch_2d, &
+    sll_o_delete
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -14,10 +14,10 @@ program unit_test_meshes_multipatch
 #define NUM_CELLS1 32
 #define NUM_CELLS2 32
 
-  type(sll_cartesian_mesh_multipatch_2d), pointer :: mp2d
+  type(sll_t_cartesian_mesh_multipatch_2d), pointer :: mp2d
   sll_int32 :: i
 
-  mp2d => new_cartesian_mesh_multipatch_2d( NUM_PATCHES )
+  mp2d => sll_f_new_cartesian_mesh_multipatch_2d( NUM_PATCHES )
 
   print *, 'allocated mesh'
 
@@ -31,7 +31,7 @@ program unit_test_meshes_multipatch
      print *, mp2d%get_delta_eta1(i)
   end do
 
-  call sll_delete(mp2d)
+  call sll_o_delete(mp2d)
 
   print *, 'PASSED'
 

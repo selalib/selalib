@@ -80,7 +80,7 @@
 !> Examples of calls of interface (generic)
 !>\code
 !> !print namelist info
-!> call sll_s_nml_mesh_1d_two_grid_cart( &
+!> call sll_o_nml_mesh_1d_two_grid_cart( &
 !>  filename, &
 !>  proc_id=sll_get_collective_rank(sll_world_collective))
 !>\endcode
@@ -114,11 +114,11 @@
 !> according to <code>choice</code> read from namelist 
 !> <code>mesh_1d_two_grid_cart</code> in <code>filename</code>
 !>\code
-!> call sll_s_nml_mesh_1d_two_grid_cart(filename,array)
+!> call sll_o_nml_mesh_1d_two_grid_cart(filename,array)
 !>\endcode
 !> 2. Same, but read this time, from namelist <code>mesh_1d_two_grid_cart_1</code>.
 !>\code
-!> call sll_s_nml_mesh_1d_two_grid_cart(filename,array,clone="_1")
+!> call sll_o_nml_mesh_1d_two_grid_cart(filename,array,clone="_1")
 !>\endcode
 
   !-----------------------------------------------------------------
@@ -132,14 +132,14 @@ module sll_m_nml_mesh_1d_two_grid_cart
 #include "sll_working_precision.h"
 
   use sll_m_utilities, only: &
-    compute_bloc, &
-    compute_mesh_from_bloc, &
-    sll_new_file_id
+    sll_s_compute_bloc, &
+    sll_s_compute_mesh_from_bloc, &
+    sll_s_new_file_id
 
   implicit none
 
   public :: &
-    sll_s_nml_mesh_1d_two_grid_cart
+    sll_o_nml_mesh_1d_two_grid_cart
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -167,11 +167,11 @@ module sll_m_nml_mesh_1d_two_grid_cart
   !  SPECIFIC DECLARATION (BEGIN)
   !-----------------------------------------------------------------
 
-  interface sll_s_nml_mesh_1d_two_grid_cart
+  interface sll_o_nml_mesh_1d_two_grid_cart
       module procedure &
         s_nml_mesh_1d_two_grid_cart_array, &
         s_nml_mesh_1d_two_grid_cart_print
-  end interface sll_s_nml_mesh_1d_two_grid_cart
+  end interface sll_o_nml_mesh_1d_two_grid_cart
 
   !-----------------------------------------------------------------
   !  SPECIFIC DECLARATION (END)
@@ -219,8 +219,8 @@ contains
     bloc_index(2) = floor(self%density_in)
     bloc_index(3) = floor(self%density_out_max)
 
-    call compute_bloc(bloc_coord,bloc_index,num_cells)
-    call compute_mesh_from_bloc(bloc_coord,bloc_index,array)
+    call sll_s_compute_bloc(bloc_coord,bloc_index,num_cells)
+    call sll_s_compute_mesh_from_bloc(bloc_coord,bloc_index,array)
     array = eta_min+array*(eta_max-eta_min)
     
   end subroutine s_nml_mesh_1d_two_grid_cart_array
@@ -350,7 +350,7 @@ contains
       density_in, &
       density_out_max)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -425,7 +425,7 @@ contains
       density_in_1, &
       density_out_max_1)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -500,7 +500,7 @@ contains
       density_in_2, &
       density_out_max_2)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -575,7 +575,7 @@ contains
       density_in_3, &
       density_out_max_3)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -650,7 +650,7 @@ contains
       density_in_4, &
       density_out_max_4)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &

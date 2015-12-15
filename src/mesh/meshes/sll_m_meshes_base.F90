@@ -6,24 +6,24 @@ module sll_m_meshes_base
   implicit none
 
   public :: &
-    sll_mesh_1d_base, &
-    sll_mesh_2d_base, &
-    sll_mesh_3d_base
+    sll_c_mesh_1d_base, &
+    sll_c_mesh_2d_base, &
+    sll_c_mesh_3d_base
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 1D logical mesh
-  type, abstract :: sll_mesh_1d_base
+  type, abstract :: sll_c_mesh_1d_base
    contains
      procedure(get_geometry_1d), deferred, pass(mesh) :: eta1_node
      procedure(get_geometry_1d), deferred, pass(mesh) :: eta1_cell
      procedure(display_mesh_1d), deferred, pass :: display
      procedure(delete_mesh_1d),  deferred, pass :: delete
-  end type sll_mesh_1d_base
+  end type sll_c_mesh_1d_base
 
   !> @brief 2D logical mesh
-  type, abstract :: sll_mesh_2d_base
+  type, abstract :: sll_c_mesh_2d_base
    contains
      procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_node
      procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_node
@@ -37,10 +37,10 @@ module sll_m_meshes_base
                                      eta1_cell_two_arg
      generic, public :: eta2_cell => eta2_cell_one_arg, &
                                      eta2_cell_two_arg
-  end type sll_mesh_2d_base
+  end type sll_c_mesh_2d_base
 
   !> @brief 3D logical mesh
-  type, abstract:: sll_mesh_3d_base
+  type, abstract:: sll_c_mesh_3d_base
    contains
      procedure(get_geometry_3d), deferred, pass(mesh) :: eta1_node
      procedure(get_geometry_3d), deferred, pass(mesh) :: eta2_node
@@ -50,7 +50,7 @@ module sll_m_meshes_base
      procedure(get_geometry_3d), deferred, pass(mesh) :: eta3_cell
      procedure(display_mesh_3d), deferred, pass :: display
      procedure(delete_mesh_3d),  deferred, pass :: delete
-  end type sll_mesh_3d_base
+  end type sll_c_mesh_3d_base
 
   !> @brief 4D logical mesh
   type, abstract :: sll_mesh_4d_base
@@ -73,8 +73,8 @@ module sll_m_meshes_base
   abstract interface
      function get_geometry_1d(mesh, i) result(res)
        use sll_m_working_precision
-       import sll_mesh_1d_base
-       class(sll_mesh_1d_base), intent(in) :: mesh
+       import sll_c_mesh_1d_base
+       class(sll_c_mesh_1d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: i
        sll_real64 :: res
      end function get_geometry_1d
@@ -82,15 +82,15 @@ module sll_m_meshes_base
 
   abstract interface
      subroutine delete_mesh_1d(mesh)
-       import sll_mesh_1d_base
-       class(sll_mesh_1d_base), intent(inout) :: mesh
+       import sll_c_mesh_1d_base
+       class(sll_c_mesh_1d_base), intent(inout) :: mesh
      end subroutine delete_mesh_1d
   end interface
 
   abstract interface
      subroutine display_mesh_1d(mesh)
-       import sll_mesh_1d_base
-       class(sll_mesh_1d_base), intent(in) :: mesh
+       import sll_c_mesh_1d_base
+       class(sll_c_mesh_1d_base), intent(in) :: mesh
      end subroutine display_mesh_1d
   end interface
 
@@ -98,8 +98,8 @@ module sll_m_meshes_base
   abstract interface
      function get_geometry_2d(mesh, i, j) result(res)
        use sll_m_working_precision
-       import sll_mesh_2d_base
-       class(sll_mesh_2d_base), intent(in) :: mesh
+       import sll_c_mesh_2d_base
+       class(sll_c_mesh_2d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: i
        sll_int32, intent(in)  :: j
        sll_real64 :: res
@@ -109,8 +109,8 @@ module sll_m_meshes_base
   abstract interface
      function get_geometry_2d_one_arg(mesh, cell_num) result(res)
        use sll_m_working_precision
-       import sll_mesh_2d_base
-       class(sll_mesh_2d_base), intent(in) :: mesh
+       import sll_c_mesh_2d_base
+       class(sll_c_mesh_2d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: cell_num
        sll_real64 :: res
      end function get_geometry_2d_one_arg
@@ -118,15 +118,15 @@ module sll_m_meshes_base
 
   abstract interface
      subroutine display_mesh_2d(mesh)
-       import sll_mesh_2d_base
-       class(sll_mesh_2d_base), intent(in) :: mesh
+       import sll_c_mesh_2d_base
+       class(sll_c_mesh_2d_base), intent(in) :: mesh
      end subroutine display_mesh_2d
   end interface
   
   abstract interface
      subroutine delete_mesh_2d(mesh)
-       import sll_mesh_2d_base
-       class(sll_mesh_2d_base), intent(inout) :: mesh
+       import sll_c_mesh_2d_base
+       class(sll_c_mesh_2d_base), intent(inout) :: mesh
      end subroutine delete_mesh_2d
   end interface
 
@@ -134,8 +134,8 @@ module sll_m_meshes_base
   abstract interface
      function get_geometry_3d(mesh, i1, i2, i3) result(res)
        use sll_m_working_precision
-       import sll_mesh_3d_base
-       class(sll_mesh_3d_base), intent(in) :: mesh
+       import sll_c_mesh_3d_base
+       class(sll_c_mesh_3d_base), intent(in) :: mesh
        sll_int32, intent(in)  :: i1
        sll_int32, intent(in)  :: i2
        sll_int32, intent(in)  :: i3
@@ -145,15 +145,15 @@ module sll_m_meshes_base
 
   abstract interface
      subroutine display_mesh_3d(mesh)
-       import sll_mesh_3d_base
-       class(sll_mesh_3d_base), intent(in) :: mesh
+       import sll_c_mesh_3d_base
+       class(sll_c_mesh_3d_base), intent(in) :: mesh
      end subroutine display_mesh_3d
   end interface
 
   abstract interface
      subroutine delete_mesh_3d(mesh)
-       import sll_mesh_3d_base
-       class(sll_mesh_3d_base), intent(inout) :: mesh
+       import sll_c_mesh_3d_base
+       class(sll_c_mesh_3d_base), intent(inout) :: mesh
      end subroutine delete_mesh_3d
   end interface
 

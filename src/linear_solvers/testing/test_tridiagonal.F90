@@ -4,8 +4,8 @@ program test_tridiag
 #include "sll_working_precision.h"
 
   use sll_m_tridiagonal, only: &
-    setup_cyclic_tridiag, &
-    solve_cyclic_tridiag
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,12 +51,12 @@ program test_tridiag
  !       print *, a(:)
  !       print *, 'array b:'
  !       print *, b(:)
-        call setup_cyclic_tridiag( a, n, cts, ipiv )
+        call sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
  !       print *, 'cts:'
  !       print *, cts(:)
  !       print *, 'ipiv:'
  !       print *, ipiv(:)
-        call solve_cyclic_tridiag( cts, ipiv, b, n, x )
+        call sll_o_solve_cyclic_tridiag( cts, ipiv, b, n, x )
  !       print *, 'x:'
  !       print *, x(:)
         ! compute the residual
@@ -94,12 +94,12 @@ program test_tridiag
  !       print *, a(:)
  !       print *, 'array b:'
  !       print *, b(:)
-        call setup_cyclic_tridiag( a, n, cts, ipiv )
+        call sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
  !       print *, 'cts:'
  !       print *, cts(:)
  !       print *, 'ipiv:'
  !       print *, ipiv(:)
-        call solve_cyclic_tridiag( cts, ipiv, b_complex, n, x_complex )
+        call sll_o_solve_cyclic_tridiag( cts, ipiv, b_complex, n, x_complex )
  !       print *, 'x:'
  !       print *, x(:)
         ! compute the residual

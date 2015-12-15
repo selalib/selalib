@@ -17,14 +17,14 @@ module sll_m_fem_2d
 !   dpbtrs
 
   use sll_m_utilities, only: &
-    sll_display
+    sll_o_display
 
   implicit none
 
   public :: &
-    sll_create, &
-    sll_fem_poisson_2d, &
-    sll_solve
+    sll_o_create, &
+    sll_t_fem_poisson_2d, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -35,7 +35,7 @@ module sll_m_fem_2d
 !> @details
 !> finite element numerical method with
 !> Compact boundary conditions
-type :: sll_fem_poisson_2d
+type :: sll_t_fem_poisson_2d
    sll_real64, dimension(:,:), pointer :: A   !< Mass matrix
    sll_real64, dimension(:,:), pointer :: M   !< Stiffness matrix
    sll_real64, dimension(:,:), pointer :: mat !< Matrix solve by Lapack
@@ -47,24 +47,24 @@ type :: sll_fem_poisson_2d
    sll_int32,  dimension(:)  , pointer :: id
    sll_real64, dimension(:)  , pointer :: xd
    sll_real64, dimension(:)  , pointer :: yd
-end type sll_fem_poisson_2d
+end type sll_t_fem_poisson_2d
 
 !> Initialize the solver
-interface sll_create
+interface sll_o_create
    module procedure initialize_poisson_2d_fem
-end interface sll_create
+end interface sll_o_create
 
 !> Compute the electric potential
-interface sll_solve
+interface sll_o_solve
    module procedure solve_poisson_2d_fem
-end interface sll_solve
+end interface sll_o_solve
 
 
 contains
 
 !> Initialize Poisson solver object using finite elements method.
 subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( sll_fem_poisson_2d )  :: this !< solver data structure
+type( sll_t_fem_poisson_2d )  :: this !< solver data structure
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
@@ -113,7 +113,7 @@ Axelem(2,:) = [-2.0_f64,  2.0_f64,  1.0_f64, -1.0_f64 ]
 Axelem(3,:) = [-1.0_f64,  1.0_f64,  2.0_f64, -2.0_f64 ]
 Axelem(4,:) = [ 1.0_f64, -1.0_f64, -2.0_f64,  2.0_f64 ]
 
-call sll_display(Axelem, 'f7.3')
+call sll_o_display(Axelem, 'f7.3')
 
 Axelem = Axelem/6.0_f64
 
@@ -122,7 +122,7 @@ Ayelem(2,:) = [ 1.0_f64,  2.0_f64, -2.0_f64, -1.0_f64 ]
 Ayelem(3,:) = [-1.0_f64, -2.0_f64,  2.0_f64,  1.0_f64 ]
 Ayelem(4,:) = [-2.0_f64, -1.0_f64,  1.0_f64,  2.0_f64 ]
 
-call sll_display(Ayelem, 'f7.3')
+call sll_o_display(Ayelem, 'f7.3')
 
 Ayelem = Ayelem/6.0_f64
 
@@ -131,7 +131,7 @@ Mmelem(2,:) = [ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64 ]
 Mmelem(3,:) = [ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64 ]
 Mmelem(4,:) = [ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64 ]
 
-call sll_display(Mmelem, 'f7.3')
+call sll_o_display(Mmelem, 'f7.3')
 
 Mmelem = Mmelem/36.0_f64
 
@@ -163,7 +163,7 @@ do i=1,nx
 end do
 
 call write_mtv_file( x, y)
-!call sll_display(this%A, 'f5.2')
+!call sll_o_display(this%A, 'f5.2')
 
 !Set nodes dirichlet boundary conditions
 this%nd = 2*(nx+ny)
@@ -186,16 +186,16 @@ do i = nx+1, nx*(ny+1), nx+1
   this%id(nd) = k
 end do
 
-call sll_display(this%id, 'i5')
+call sll_o_display(this%id, 'i5')
 
-if (nx<5) call sll_display(this%A, 'f5.2')
+if (nx<5) call sll_o_display(this%A, 'f5.2')
 
 do i = 1, this%nd
   k = this%id(i)
   this%A(k,k) = 1d20
 end do
 
-if (nx < 5) call sll_display(this%A, 'f5.2')
+if (nx < 5) call sll_o_display(this%A, 'f5.2')
 
 kd = nx+2
 SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
@@ -213,7 +213,7 @@ do i = 1, n
   end do
 end do
 
-if (nx < 5) call sll_display(this%mat, 'f5.2')
+if (nx < 5) call sll_o_display(this%mat, 'f5.2')
 
 call dpbtrf('U',(nx+1)*(ny+1),kd,this%mat,kd+1,error)
 print*, 'info=', error
@@ -252,7 +252,7 @@ end function som
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( sll_fem_poisson_2d ) :: this !< Poisson solver object
+type( sll_t_fem_poisson_2d ) :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
@@ -282,7 +282,7 @@ do i = 1, this%nd
   b(k) = 1.0e20 * (this%xd(k)*this%xd(k)+this%yd(k)*this%yd(k))
 end do
 
-if (nx < 5) call sll_display(b, 'f5.2')
+if (nx < 5) call sll_o_display(b, 'f5.2')
 
 call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 

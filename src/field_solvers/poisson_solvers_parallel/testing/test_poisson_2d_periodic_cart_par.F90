@@ -12,45 +12,45 @@ program test_poisson_2d_periodic_cart_par
     output_unit
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_collective_reduce, &
-    sll_collective_t, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_o_collective_reduce, &
+    sll_t_collective_t, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gnuplot_parallel, only: &
-    sll_gnuplot_rect_2d_parallel
+    sll_s_gnuplot_rect_2d_parallel
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close
+    sll_o_hdf5_file_close
 
   use sll_m_poisson_2d_periodic_cartesian_par, only: &
-    delete_poisson_2d_periodic_plan_cartesian_par, &
-    new_poisson_2d_periodic_plan_cartesian_par, &
-    new_poisson_2d_periodic_plan_cartesian_par_alt, &
-    poisson_2d_periodic_plan_cartesian_par, &
-    solve_poisson_2d_periodic_cartesian_par, &
-    solve_poisson_2d_periodic_cartesian_par_alt
+    sll_s_delete_poisson_2d_periodic_plan_cartesian_par, &
+    sll_f_new_poisson_2d_periodic_plan_cartesian_par, &
+    sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt, &
+    sll_t_poisson_2d_periodic_plan_cartesian_par, &
+    sll_s_solve_poisson_2d_periodic_cartesian_par, &
+    sll_s_solve_poisson_2d_periodic_cartesian_par_alt
 
   use sll_m_remapper, only: &
-    compute_local_sizes, &
-    get_layout_collective, &
-    get_layout_i_min, &
-    get_layout_j_min, &
-    initialize_layout_with_distributed_array, &
-    layout_2d, &
-    local_to_global, &
-    new_layout_2d, &
-    sll_view_lims
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_collective, &
+    sll_o_get_layout_i_min, &
+    sll_o_get_layout_j_min, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_o_view_lims
 
   use sll_mpi, only: &
     mpi_prod
@@ -58,8 +58,8 @@ program test_poisson_2d_periodic_cart_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
-  type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan_alt
+  type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan
+  type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan_alt
 
   sll_int32                               :: ncx, ncy
   sll_int32                               :: nx_loc, ny_loc
@@ -75,8 +75,8 @@ program test_poisson_2d_periodic_cart_par
   sll_int32, dimension(1:2)               :: global
   sll_int32                               :: gi, gj
   sll_int32                               :: myrank
-  type(layout_2D), pointer                :: layout_x
-  type(layout_2D), pointer                :: layout_alt
+  type(sll_t_layout_2d), pointer                :: layout_x
+  type(sll_t_layout_2d), pointer                :: layout_alt
   sll_int64                               :: colsz ! collective size
   sll_int32                               :: nprocx, nprocy
   sll_int32                               :: e
@@ -87,38 +87,38 @@ program test_poisson_2d_periodic_cart_par
   ok = 1.0
 
   !Boot parallel environment
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
   ! Number of cells is equal to number of points in this case
   ncx = 512
   ncy = 512
-  Lx  = 2.0*sll_pi
-  Ly  = 2.0*sll_pi
+  Lx  = 2.0*sll_p_pi
+  Ly  = 2.0*sll_p_pi
 
-  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
-  myrank = sll_get_collective_rank(sll_world_collective)
+  colsz  = int(sll_f_get_collective_size(sll_v_world_collective),i64)
+  myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
   dx = Lx/ncx
   dy = Ly/ncy
 
-  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
+  colsz  = int(sll_f_get_collective_size(sll_v_world_collective),i64)
   e      = int(log(real(colsz))/log(2.))
   print *, 'running on ', 2**e, 'processes'
 
 !########### ALTERNATIVE SOLVER ##########################################
 
   ! Layout and local sizes for FFTs in x-direction
-  layout_alt => new_layout_2D( sll_world_collective )
+  layout_alt => sll_f_new_layout_2d( sll_v_world_collective )
   nprocx = 1
   nprocy = 2**e
-  call initialize_layout_with_distributed_array( ncx, ncy, &
+  call sll_o_initialize_layout_with_distributed_array( ncx, ncy, &
        nprocx, nprocy, layout_alt )
 
-  plan_alt => new_poisson_2d_periodic_plan_cartesian_par_alt(&
+  plan_alt => sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt(&
        layout_alt, ncx, ncy, Lx, Ly)
 
-  call compute_local_sizes( layout_alt, nx_loc, ny_loc )
-  call sll_view_lims( layout_alt )
+  call sll_o_compute_local_sizes( layout_alt, nx_loc, ny_loc )
+  call sll_o_view_lims( layout_alt )
 
   SLL_ALLOCATE(rho(nx_loc,ny_loc), error)
   SLL_ALLOCATE(phi_an(nx_loc,ny_loc), error)
@@ -127,7 +127,7 @@ program test_poisson_2d_periodic_cart_par
   ! initialize reference array
   do j=1,ny_loc
      do i=1,nx_loc
-        global = local_to_global( layout_alt, (/i, j/))
+        global = sll_o_local_to_global( layout_alt, (/i, j/))
         gi = global(1)
         gj = global(2)
         x  = (gi-1)*dx
@@ -140,7 +140,7 @@ program test_poisson_2d_periodic_cart_par
   call parallel_hdf5_write_array_2d( 'q_density.h5', &
      ncx, ncy, rho,  'rho', layout_alt)
 
-  call solve_poisson_2d_periodic_cartesian_par_alt(plan_alt, rho, phi)
+  call sll_s_solve_poisson_2d_periodic_cartesian_par_alt(plan_alt, rho, phi)
 
   call parallel_hdf5_write_array_2d( 'phi_analytical.h5', &
      ncx, ncy, phi_an, 'phi_an', layout_alt)
@@ -157,7 +157,7 @@ program test_poisson_2d_periodic_cart_par
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
-     !call sll_halt_collective()
+     !call sll_s_halt_collective()
      !stop
   endif
  
@@ -165,22 +165,22 @@ program test_poisson_2d_periodic_cart_par
   SLL_DEALLOCATE_ARRAY(rho,    error)
   SLL_DEALLOCATE_ARRAY(phi_an, error)
 
-  call delete_poisson_2d_periodic_plan_cartesian_par(plan_alt)
+  call sll_s_delete_poisson_2d_periodic_plan_cartesian_par(plan_alt)
 
 !#########FIRST VERSION WITH LAST PERIODIC POINT ADDED #########################
 
   ! Layout and local sizes for FFTs in x-direction
-  layout_x => new_layout_2D( sll_world_collective )
+  layout_x => sll_f_new_layout_2d( sll_v_world_collective )
   nprocx = 1
   nprocy = 2**e
-  call initialize_layout_with_distributed_array( ncx+1, ncy+1, &
+  call sll_o_initialize_layout_with_distributed_array( ncx+1, ncy+1, &
        nprocx, nprocy, layout_x )
 
-  plan => new_poisson_2d_periodic_plan_cartesian_par(&
+  plan => sll_f_new_poisson_2d_periodic_plan_cartesian_par(&
        layout_x, ncx, ncy, Lx, Ly)
 
-  call compute_local_sizes( layout_x, nx_loc, ny_loc )
-  call sll_view_lims( layout_x )
+  call sll_o_compute_local_sizes( layout_x, nx_loc, ny_loc )
+  call sll_o_view_lims( layout_x )
 
   SLL_ALLOCATE(rho(nx_loc,ny_loc), error)
   SLL_ALLOCATE(phi_an(nx_loc,ny_loc), error)
@@ -189,7 +189,7 @@ program test_poisson_2d_periodic_cart_par
   ! initialize reference array
   do j=1,ny_loc
      do i=1,nx_loc
-        global = local_to_global( layout_x, (/i, j/))
+        global = sll_o_local_to_global( layout_x, (/i, j/))
         gi = global(1)
         gj = global(2)
         x  = (gi-1)*dx
@@ -199,11 +199,11 @@ program test_poisson_2d_periodic_cart_par
      end do
   end do
 
-  call solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
+  call sll_s_solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
 
-  offset(1) =  get_layout_i_min( layout_x, myrank ) - 1
-  offset(2) =  get_layout_j_min( layout_x, myrank ) - 1
-  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
+  offset(1) =  sll_o_get_layout_i_min( layout_x, myrank ) - 1
+  offset(2) =  sll_o_get_layout_j_min( layout_x, myrank ) - 1
+  call sll_s_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
                                     size(rho,1), size(rho,2), &
                                     rho, "rho", 1, error)  
@@ -218,7 +218,7 @@ program test_poisson_2d_periodic_cart_par
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
-     call sll_halt_collective()
+     call sll_s_halt_collective()
      stop
   endif
  
@@ -226,7 +226,7 @@ program test_poisson_2d_periodic_cart_par
   SLL_DEALLOCATE_ARRAY(rho,    error)
   SLL_DEALLOCATE_ARRAY(phi_an, error)
 
-  call sll_collective_reduce(sll_world_collective, (/ ok /), &
+  call sll_o_collective_reduce(sll_v_world_collective, (/ ok /), &
        1, MPI_PROD, 0, prod4test )
 
   if (myrank==0) then
@@ -240,9 +240,9 @@ program test_poisson_2d_periodic_cart_par
      endif
   endif
 
-  call delete_poisson_2d_periodic_plan_cartesian_par(plan)
+  call sll_s_delete_poisson_2d_periodic_plan_cartesian_par(plan)
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 contains
 
@@ -261,27 +261,27 @@ contains
     integer(HSIZE_T), dimension(1:2)       :: global_dims
     sll_real64, dimension(:,:), intent(in) :: array
     character(len=*), intent(in)           :: dataset_name
-    type(layout_2D), pointer               :: layout
+    type(sll_t_layout_2d), pointer               :: layout
     sll_int32                              :: error
     integer(HID_T)                         :: file_id
     integer(HSIZE_T), dimension(1:2)       :: offset
-    type(sll_collective_t), pointer        :: col
+    type(sll_t_collective_t), pointer        :: col
     sll_int32                              :: myrank
     sll_int32                              :: comm
 
     SLL_ASSERT( associated(layout) )
-    col => get_layout_collective( layout )
-    myrank = sll_get_collective_rank( col )
+    col => sll_o_get_layout_collective( layout )
+    myrank = sll_f_get_collective_rank( col )
     global_dims(:) = [int(n_pts1,HSIZE_T),int(n_pts2,HSIZE_T)]
     
-    offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
-    offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
+    offset(1) = int(sll_o_get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
+    offset(2) = int(sll_o_get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
 
-    comm   = sll_world_collective%comm
-    call sll_hdf5_file_create(filename,comm,file_id,error)
-    call sll_hdf5_write_array(file_id,global_dims,offset, &
+    comm   = sll_v_world_collective%comm
+    call sll_o_hdf5_file_create(filename,comm,file_id,error)
+    call sll_o_hdf5_write_array(file_id,global_dims,offset, &
                               array,dataset_name,error)
-    call sll_hdf5_file_close(file_id,error)
+    call sll_o_hdf5_file_close(file_id,error)
 
   end subroutine parallel_hdf5_write_array_2d
 

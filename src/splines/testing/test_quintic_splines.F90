@@ -4,8 +4,8 @@ program test_quintic_splines
 #include "sll_working_precision.h"
 
   use sll_m_quintic_splines, only: &
-    inspl5, &
-    splin5
+    sll_s_inspl5, &
+    sll_s_splin5
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -45,15 +45,15 @@ cf(2,n) = dg(x_max)
 cf(3,1) = ddg(x_min)
 cf(3,n) = ddg(x_max)
 
-call inspl5(n,x,ind1,indn,cf,h)
+call sll_s_inspl5(n,x,ind1,indn,cf,h)
   
 err(:) = 0.0_f64
 do i = 1, 1000
   
   xx = x_min + (i-1)/999.*(x_max-x_min)
-  call splin5(n,x,cf,xx,0,f(1))
-  call splin5(n,x,cf,xx,1,f(2))
-  call splin5(n,x,cf,xx,2,f(3))
+  call sll_s_splin5(n,x,cf,xx,0,f(1))
+  call sll_s_splin5(n,x,cf,xx,1,f(2))
+  call sll_s_splin5(n,x,cf,xx,2,f(3))
   
   err(1) = err(1) + ( g(xx)   - f(1))**2 
   err(2) = err(2) + ( dg(xx)  - f(2))**2 

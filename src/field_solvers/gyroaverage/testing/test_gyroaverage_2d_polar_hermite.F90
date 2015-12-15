@@ -21,18 +21,18 @@ program test_gyroaverage_2d_polar_hermite
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gyroaverage_2d_base, only: &
-    sll_gyroaverage_2d_base
+    sll_c_gyroaverage_2d_base
 
   use sll_m_gyroaverage_2d_polar_hermite_solver, only: &
-    new_gyroaverage_2d_polar_hermite_solver
+    sll_f_new_gyroaverage_2d_polar_hermite_solver
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_gyroaverage_2d_base), pointer :: gyroaverage 
+  class(sll_c_gyroaverage_2d_base), pointer :: gyroaverage 
   sll_real64 :: err
   sll_real64 :: eta_min(2)
   sll_real64 :: eta_max(2)
@@ -48,7 +48,7 @@ program test_gyroaverage_2d_polar_hermite
   eta_min(1) = 0.1_f64
   eta_max(1) = 0.9_f64
   eta_min(2) = 0._f64
-  eta_max(2) = 2._f64*sll_pi  
+  eta_max(2) = 2._f64*sll_p_pi  
   
   Nc(1)=16
   Nc(2)=16
@@ -69,7 +69,7 @@ program test_gyroaverage_2d_polar_hermite
   
   hermite_case = 2
   
-  gyroaverage => new_gyroaverage_2d_polar_hermite_solver( &
+  gyroaverage => sll_f_new_gyroaverage_2d_polar_hermite_solver( &
     eta_min, &
     eta_max, &
     Nc, &
