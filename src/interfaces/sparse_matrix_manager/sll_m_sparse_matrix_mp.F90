@@ -17,15 +17,26 @@
 
 
 module sll_m_sparse_matrix_mp
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  
-  use sll_m_sparse_matrix
+
+  use sll_m_qsort_partition, only : &
+       qsortc
+
+  use sll_m_sparse_matrix, only: &
+    sll_csr_matrix
   
   implicit none
-   
 
+  public :: &
+    initialize_csr_matrix_mp, &
+    new_csr_matrix_mp
+
+  private
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 
 
