@@ -560,13 +560,13 @@ contains
     freq_diag_restart           = 5000
     nb_mode                     = 5
     time_init                   = 0._f64
-    split_case                  = "sll_p_strang_vtv" 
+    split_case                  = "SLL_STRANG_VTV" 
 
-    !split_case                 = "sll_p_strang_tvt" 
-    !split_case                 = "sll_p_order6vpnew1_vtv" 
-    !split_case                 = "sll_p_order6vpnew2_vtv" 
-    !split_case                 = "sll_p_order6_vtv"
-    !split_case                 = "sll_p_lie_tv"
+    !split_case                 = "SLL_STRANG_TVT" 
+    !split_case                 = "SLL_ORDER6VPNEW1_VTV" 
+    !split_case                 = "SLL_ORDER6VPNEW2_VTV" 
+    !split_case                 = "SLL_ORDER6_VTV"
+    !split_case                 = "SLL_LIE_TV"
 
     !advector
     advector_x1                 = "SLL_LAGRANGE"
@@ -794,31 +794,31 @@ contains
     endif
     
     select case (split_case)    
-      case ("sll_p_lie_tv")
+      case ("SLL_LIE_TV")
         sim%split => sll_f_new_time_splitting_coeff(sll_p_lie_tv)
-      case ("sll_p_lie_vt") 
+      case ("SLL_LIE_VT") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_lie_vt)
-      case ("sll_p_strang_tvt") 
+      case ("SLL_STRANG_TVT") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_strang_tvt)
-      case ("sll_p_strang_vtv") 
+      case ("SLL_STRANG_VTV") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_strang_vtv)
-      case ("sll_p_triple_jump_tvt") 
+      case ("SLL_TRIPLE_JUMP_TVT") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_triple_jump_tvt)
-      case ("sll_p_triple_jump_vtv") 
+      case ("SLL_TRIPLE_JUMP_VTV") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_triple_jump_vtv)
-      case ("sll_p_order6_vtv") 
+      case ("SLL_ORDER6_VTV") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6_vtv)
-      case ("sll_p_order6_tvt") 
+      case ("SLL_ORDER6_TVT") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6_tvt)
-      case ("sll_p_order6vp_tvt") 
+      case ("SLL_ORDER6VP_TVT") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6vp_tvt,dt=dt)
-      case ("sll_p_order6vp_vtv") 
+      case ("SLL_ORDER6VP_VTV") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6vp_vtv,dt=dt)
-      case ("sll_p_order6vpnew_tvt") 
+      case ("SLL_ORDER6VPNEW_TVT") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6vpnew_tvt,dt=dt)
-      case ("sll_p_order6vpnew1_vtv") 
+      case ("SLL_ORDER6VPNEW1_VTV") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6vpnew1_vtv,dt=dt)
-      case ("sll_p_order6vpnew2_vtv") 
+      case ("SLL_ORDER6VPNEW2_VTV") 
         sim%split => sll_f_new_time_splitting_coeff(sll_p_order6vpnew2_vtv,dt=dt)
       case default
         SLL_ERROR( this_sub_name, '#split_case not defined' )

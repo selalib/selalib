@@ -940,7 +940,7 @@ contains
           sim%m_x2%eta_max, &
           sll_p_hermite, &
           sll_p_periodic)
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         f_interp2d => sll_f_new_hermite_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
