@@ -32,11 +32,11 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
     sll_add_to_csr_matrix, &
     sll_csr_matrix, &
     sll_mult_csr_matrix_vector, &
-    sll_solve_csr_matrix
+    sll_solve_csr_matrix, &
+    sll_delete
 
   use sll_m_sparse_matrix_mp, only: &
-    new_csr_matrix_mp, &
-    sll_delete
+    new_csr_matrix_mp
 
   use sll_m_timer, only: &
     sll_set_time_mark, &

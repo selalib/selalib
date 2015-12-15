@@ -20,14 +20,35 @@
 !> @details This part of selalib is derived from SPM library
 !> developed by Ahmed Ratnani (http://ratnani.org/spm_doc/html/)
 module sll_m_sparse_matrix
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_m_qsort_partition
+  use sll_m_qsort_partition, only : &
+    qsortc
 
-implicit none
 
+  implicit none
+
+  public :: &
+    new_csr_matrix, &
+    new_csr_matrix_with_constraint, &
+    csr_add_one_constraint, &
+    csr_todense, &
+    delete_csr_matrix, &
+    initialize_csr_matrix, &
+    initialize_csr_matrix_with_constraint, &
+    sll_add_to_csr_matrix, &
+    sll_csr_matrix, &
+    sll_factorize_csr_matrix, &
+    sll_mult_csr_matrix_vector, &
+    sll_solve_csr_matrix, &
+    sll_solve_csr_matrix_perper, &
+    sll_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !> @brief type for CSR format
 type :: sll_csr_matrix
   sll_int32           :: num_rows !< rows, public
