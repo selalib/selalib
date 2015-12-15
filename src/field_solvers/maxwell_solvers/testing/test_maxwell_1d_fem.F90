@@ -68,6 +68,7 @@ program test_maxwell_1d_fem
   sll_real64                              :: err_ex2
   sll_real64                              :: err_ey
   sll_real64                              :: err_bz
+  sll_real64                              :: err_l2norm
   sll_real64                              :: dt
   !sll_real64                              :: cfl = 0.5_f64
   sll_real64                              :: Lx
@@ -75,6 +76,7 @@ program test_maxwell_1d_fem
   sll_real64, dimension(2)                :: domain
   sll_int32                               :: deg
   sll_int32,  parameter                   :: mode = 2
+  sll_real64                              :: l2norm
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
@@ -135,13 +137,16 @@ program test_maxwell_1d_fem
   ex = 0.0_f64
   call maxwell_1d%compute_E_from_j(dt*rho, 1, ex )
 
-
   ! Evaluate spline curve at grid points and compute error
   ! Ex is a 1-form, i.e. one spline degree lower
   sval = eval_uniform_periodic_spline_curve(deg-1, ex)
   err_ex2 = maxval(sval-ex_exact)
   print*, 'error Poisson',  err_ex2
   !call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
+
+  l2norm =  maxwell_1d%l2norm_squared(ex,deg-1)
+  err_l2norm = l2norm - dt**2*sll_pi
+  print*, 'error l2 norm', err_l2norm
 
 
   ! Test Maxwell on By and Ez 
@@ -183,7 +188,7 @@ program test_maxwell_1d_fem
   end do ! next time step
 
   tol = 1.0d-3
-  if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol) .and. (err_ex2 < tol)) then
+  if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol) .and. (err_ex2 < tol) .and. (err_l2norm < tol)) then
      print*,'PASSED'
   endif
 

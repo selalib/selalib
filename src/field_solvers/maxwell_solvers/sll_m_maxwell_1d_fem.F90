@@ -190,6 +190,28 @@ contains
      res = res / this%n_dofs
    end subroutine solve_circulant
 
+   subroutine solve_circulant2(this, eigvals, rhs, res)
+     class(sll_maxwell_1d_fem) :: this
+     sll_real64, intent(in) :: eigvals(:)    ! eigenvalues of circulant matrix
+     sll_real64, intent(in) :: rhs(:)
+     sll_real64, intent(out) :: res(:)
+     ! local variables
+     sll_int32 :: k
+     sll_real64 :: re, im 
+
+     ! Compute res from rhs, using eigenvalue of circulant  matrix
+     res = rhs
+     ! Forward FFT
+     call dfftf( this%n_dofs, res, this%wsave)
+     ! multiply by eigenvalue vector
+     print*, res
+     ! Backward FFT 
+     call dfftb( this%n_dofs, res,  this%wsave )
+     ! normalize
+     res = res !/ this%n_dofs
+   end subroutine solve_circulant2
+
+
    !> Compute the FEM right-hand-side for a given function f and periodic splines of given degree
    !> Its components are $\int f N_i dx$ where $N_i$ is the B-spline starting at $x_i$ 
    subroutine compute_fem_rhs(this, func, degree, coefs_dofs)
@@ -274,32 +296,21 @@ contains
      sll_int32  :: degree !< Specify the degree of the basis functions
      sll_real64 :: r !< Result: squared L2 norm
 
-     !Local variables
-     sll_int32 :: j, k
-
+     ! Multiply coefficients by mass matrix (use diagonalization FFT and mass matrix eigenvalues)
      if (degree == this%s_deg_0 ) then
-        r = sum(coefs_dofs**2)*this%mass_0(1)*0.5_f64
-     
-        do j = 2,this%s_deg_0+1
-           r = r + this%mass_0(j)*sum(coefs_dofs(1:this%n_dofs-j+1)*coefs_dofs(j:this%n_dofs))
-           do k= 1,j-1
-              r = r + this%mass_0(j)*coefs_dofs(this%n_dofs-j+1+k)*coefs_dofs(k)
-           end do
-        end do
-     elseif (degree == this%s_deg_1) then
-         r = sum(coefs_dofs**2)*this%mass_1(1)*0.5_f64
-     
-        do j = 2,this%s_deg_0
-           r = r + this%mass_1(j)*sum(coefs_dofs(1:this%n_dofs-j+1)*&
-                coefs_dofs(j:this%n_dofs))
-           do k= 1,j-1
-              r = r + this%mass_1(j)*coefs_dofs(this%n_dofs-j+1+k)*coefs_dofs(k)
-           end do
-        end do
-     end if
 
-     r = r*this%delta_x*2.0_f64
-        
+        call solve_circulant(this, this%eig_mass0, coefs_dofs, this%work)
+
+     elseif (degree == this%s_deg_1) then
+
+        call solve_circulant(this, this%eig_mass1, coefs_dofs, this%work)
+
+     end if
+     ! Multiply by the coefficients from the left (inner product)
+     r = sum(coefs_dofs*this%work)
+     ! Scale by delt_x
+     r = r*this%delta_x
+
    end function L2norm_squared_1d_fem
 
 
