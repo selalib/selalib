@@ -346,7 +346,7 @@ contains
     kmode_x2 = 3._f64
     eps = 1.e-6_f64
     bc_min_case = "SLL_NEUMANN_MODE0"
-    bc_max_case = "sll_p_dirichlet"
+    bc_max_case = "SLL_DIRICHLET"
     
     !time_iterations
     dt = 0.1_f64
@@ -374,8 +374,8 @@ contains
     !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3
-    bc_min_case = "sll_p_neumann_mode_0"    
-    bc_max_case = "sll_p_dirichlet"    
+    bc_min_case = "SLL_NEUMANN_MODE_0"    
+    bc_max_case = "SLL_DIRICHLET"    
 
     if(present(num_run))then
       write(str_num_run, *) num_run
@@ -468,7 +468,7 @@ contains
           sll_p_periodic, &
           const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
           const_eta1_max_slope = 0._f64)
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         f_interp2d => sll_f_new_hermite_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
@@ -650,11 +650,11 @@ contains
         stop
     end select
     select case(bc_min_case)
-      case("sll_p_dirichlet")
+      case("SLL_DIRICHLET")
         bc_min = sll_p_dirichlet
-      case("sll_p_neumann")
+      case("SLL_NEUMANN")
         bc_min = sll_p_neumann
-      case("sll_p_neumann_mode_0")
+      case("SLL_NEUMANN_MODE_0")
         bc_min = sll_p_neumann_mode_0
       case default
         print *,'#bad bc_min',bc_min
@@ -663,11 +663,11 @@ contains
         stop
     end select
     select case(bc_max_case)
-      case("sll_p_dirichlet")
+      case("SLL_DIRICHLET")
         bc_max = sll_p_dirichlet
-      case("sll_p_neumann")
+      case("SLL_NEUMANN")
         bc_max = sll_p_neumann
-      case("sll_p_neumann_mode_0")
+      case("SLL_NEUMANN_MODE_0")
         bc_max = sll_p_neumann_mode_0
       case default
         print *,'#bad bc_max',bc_max

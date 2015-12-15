@@ -79,10 +79,10 @@ program test_poisson_2d_curvilinear
   
   num_cells1 = 128
   num_cells2 = 128
-  bc_min1_str = "sll_p_dirichlet"
-  bc_max1_str = "sll_p_dirichlet"
-  bc_min2_str = "sll_p_dirichlet"
-  bc_max2_str = "sll_p_dirichlet"
+  bc_min1_str = "SLL_DIRICHLET"
+  bc_max1_str = "SLL_DIRICHLET"
+  bc_min2_str = "SLL_DIRICHLET"
+  bc_max2_str = "SLL_DIRICHLET"
   eta1_min = 0._f64
   eta1_max = 1._f64
   eta2_min = 0._f64
@@ -194,11 +194,11 @@ contains
     character(len=256), intent(in) :: bc
     sll_int32 :: res
     select case(bc)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         res = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         res = sll_p_dirichlet
-      case ("sll_p_neumann")
+      case ("SLL_NEUMANN")
         res = sll_p_neumann
       case default
         print *,'#boundary condition ',bc

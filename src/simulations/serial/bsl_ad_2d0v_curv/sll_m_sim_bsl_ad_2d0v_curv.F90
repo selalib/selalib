@@ -631,10 +631,10 @@ contains
       
    
     select case(bc_eta1_left)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta1_left = sll_p_periodic" 
         sim%bc_eta1_left = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         print*,"#bc_eta1_left = sll_p_dirichlet"  
         sim%bc_eta1_left = sll_p_dirichlet
       case default
@@ -645,10 +645,10 @@ contains
     end select
     
     select case(bc_eta1_right)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta1_right = sll_p_periodic" 
         sim%bc_eta1_right = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         print*,"#bc_eta1_right = sll_p_dirichlet"  
         sim%bc_eta1_right = sll_p_dirichlet
       case default
@@ -659,10 +659,10 @@ contains
     end select
     
        select case(bc_eta2_left)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta2_left = sll_p_periodic" 
         sim%bc_eta2_left = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         print*,"#bc_eta2_left = sll_p_dirichlet"  
         sim%bc_eta2_left = sll_p_dirichlet
       case default
@@ -673,10 +673,10 @@ contains
     end select
     
     select case(bc_eta2_right)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta2_right = sll_p_periodic" 
         sim%bc_eta2_right = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         print*,"#bc_eta2_right = sll_p_dirichlet"  
         sim%bc_eta2_right = sll_p_dirichlet
       case default
@@ -687,13 +687,13 @@ contains
     end select
     
     select case(bc_interp2d_eta1)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_interp2d_eta1= sll_p_periodic" 
         sim%bc_interp2d_eta1 = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         print*,"#bc_interp2d_eta1 = sll_p_dirichlet"  
         sim%bc_interp2d_eta1= sll_p_dirichlet
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         print*,"#bc_interp2d_eta1 = sll_p_hermite"  
         sim%bc_interp2d_eta1= sll_p_hermite 
       case default
@@ -704,13 +704,13 @@ contains
     end select
 
     select case(bc_interp2d_eta2)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_interp2d_eta2= sll_p_periodic" 
         sim%bc_interp2d_eta2 = sll_p_periodic
-      case ("sll_p_dirichlet")
+      case ("SLL_DIRICHLET")
         print*,"#bc_interp2d_eta2 = sll_p_dirichlet"  
         sim%bc_interp2d_eta2= sll_p_dirichlet
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         print*,"#bc_interp2d_eta2 = sll_p_hermite"  
         sim%bc_interp2d_eta2= sll_p_hermite 
       case default
@@ -721,14 +721,14 @@ contains
     end select
     
     select case(bc_charac2d_eta1)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_charac2d_eta1= sll_p_periodic" 
         sim%bc_charac2d_eta1= sll_p_periodic
         sim%process_outside_point1_func => process_outside_point_periodic1            
-      !case ("sll_p_dirichlet")
+      !case ("SLL_DIRICHLET")
       !  print*,"#bc_charac2d_eta1 = sll_p_dirichlet"  
       !  sim%bc_charac2d_eta1= sll_p_dirichlet
-      !case ("sll_p_hermite")
+      !case ("SLL_HERMITE")
       !  print*,"#bc_charac2d_eta1 = sll_p_hermite"  
       !  sim%bc_charac2d_eta1= sll_p_hermite 
       case ("sll_p_set_to_limit")
@@ -743,14 +743,14 @@ contains
     end select
 
     select case(bc_charac2d_eta2)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_charac2d_eta2= sll_p_periodic" 
         sim%bc_charac2d_eta2= sll_p_periodic
         sim%process_outside_point2_func => process_outside_point_periodic1
-      !case ("sll_p_dirichlet")
+      !case ("SLL_DIRICHLET")
       !  print*,"#bc_charac2d_eta2= sll_p_dirichlet"  
       !  sim%bc_charac2d_eta2= sll_p_dirichlet
-      !case ("sll_p_hermite")
+      !case ("SLL_HERMITE")
       !  print*,"#bc_charac2d_eta2 = sll_p_hermite"  
       !  sim%bc_charac2d_eta2= sll_p_hermite 
       case ("sll_p_set_to_limit")
@@ -917,7 +917,7 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         print*,"#f interpolation sll_p_hermite"
         f_interp2d => sll_f_new_hermite_interpolator_2d( &
           Nc_eta1+1, &
@@ -1026,7 +1026,7 @@ contains
           !eta1_min_bis, &
           !eta1_max_bis, &
           sim%bc_interp2d_eta1)
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         sim%interp1 => sll_f_new_hermite_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
@@ -1061,7 +1061,7 @@ contains
           !eta2_min_bis, &
           !eta2_max_bis, &
           sim%bc_interp2d_eta2)
-      case ("sll_p_hermite")
+      case ("SLL_HERMITE")
         sim%interp2 => sll_f_new_hermite_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
@@ -1182,7 +1182,7 @@ contains
               Nc_eta1+1, &
               eta_min = eta1_min, &
               eta_max = eta1_max)
-          case ("sll_p_hermite")   
+          case ("SLL_HERMITE")   
             sim%advect1_1d => sll_f_new_csl_periodic_1d_advector(&
               sim%interp1, &
               sim%charac1, &
@@ -1217,7 +1217,7 @@ contains
               Nc_eta2+1, &
               eta_min = eta2_min, &
               eta_max = eta2_max)
-          case ("sll_p_hermite")
+          case ("SLL_HERMITE")
             sim%advect2_1d => sll_f_new_csl_periodic_1d_advector(&
               sim%interp2, &
               sim%charac2, &
