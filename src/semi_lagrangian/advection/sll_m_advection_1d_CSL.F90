@@ -271,7 +271,7 @@ contains
 !    do i=1,Npts
 !      !x1 = adv%eta_coords(1)+real(i-1,f64)*(adv%eta_coords(Npts)-adv%eta_coords(1))/real(Npts-1,f64)
 !      x1 = adv%eta_coords_unit(i)
-!      adv%buf1d(i) = cos(2._f64*sll_pi*x1)
+!      adv%buf1d(i) = cos(2._f64*sll_p_pi*x1)
 !    enddo
     
     
@@ -293,9 +293,9 @@ contains
 !
 !    do i=1,Npts
 !      !print *,i,input(i),adv%buf1d(i),adv%eta_coords_unit(i),adv%eta_coords(i)
-!      print *,adv%eta_coords_unit(i),cos(2._f64*sll_pi*adv%eta_coords_unit(i)),adv%buf1d(i), &
-!      sin(2._f64*sll_pi*adv%eta_coords_unit(i))/(2._f64*sll_pi)
-!      !-sin(adv%eta_coords(i)-adv%eta_coords(1))/(2._f64*sll_pi)
+!      print *,adv%eta_coords_unit(i),cos(2._f64*sll_p_pi*adv%eta_coords_unit(i)),adv%buf1d(i), &
+!      sin(2._f64*sll_p_pi*adv%eta_coords_unit(i))/(2._f64*sll_p_pi)
+!      !-sin(adv%eta_coords(i)-adv%eta_coords(1))/(2._f64*sll_p_pi)
 !    enddo
 
     !do i=1,Npts

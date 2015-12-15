@@ -131,7 +131,7 @@ contains
         !            case(SLL_PERIODIC)
         !
         !
-        !            case(SLL_DIRICHLET)
+        !            case(sll_p_dirichlet)
         !
         !        endselect
         SLL_ALLOCATE(this%fourier_fmode(this%num_modes),ierr)
@@ -165,7 +165,7 @@ contains
     !        rhs=evalpoints(1:this%num_cells)
     !        selectcase(this%boundarycondition)
     !            case(SLL_PERIODIC)
-    !            case(SLL_DIRICHLET)
+    !            case(sll_p_dirichlet)
     !                rhs(1)=0
     !        endselect
     !

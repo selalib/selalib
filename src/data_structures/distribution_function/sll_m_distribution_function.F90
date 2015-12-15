@@ -360,8 +360,8 @@ contains
 !!$    case (LANDAU)
 !!$       xi  = 0.9
 !!$       eps = 0.05
-!!$       kx  = 2.0_f64*sll_pi/(nnode_x1*nnode_x2)
-!!$       ky  = 2.0_f64*sll_pi/(nnode_v1*nnode_v2)
+!!$       kx  = 2.0_f64*sll_p_pi/(nnode_x1*nnode_x2)
+!!$       ky  = 2.0_f64*sll_p_pi/(nnode_v1*nnode_v2)
 !!$       do jv=1, nnode_v2
 !!$          v2 = v2_min+(jv-1)*delta_v2
 !!$          do iv=1, nnode_v1
@@ -372,7 +372,7 @@ contains
 !!$                do ix=1, nnode_x1
 !!$                   x1=x1_min+(ix-1)*delta_x1
 !!$                   dist_func_4D%field%data(ix,jx,iv,jv)= &
-!!$                      (1+eps*cos(kx*x1))*1/(2.*sll_pi)*exp(-.5*vsq)
+!!$                      (1+eps*cos(kx*x1))*1/(2.*sll_p_pi)*exp(-.5*vsq)
 !!$                end do
 !!$             end do
 !!$          end do

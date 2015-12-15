@@ -266,7 +266,7 @@ contains
     !    1.3 the files which contain the local to global indexing information
     !        by patch.
     ! 2. Allocate the arrays which will store the local_index and 
-    !    local_to_global index information inside the multipatch.
+    !    sll_o_local_to_global index information inside the multipatch.
     ! 3. Loop over the filenames found in step 1. to initialize the arrays.
 
     ! The following line establishes a hardwired convetion about the naming
