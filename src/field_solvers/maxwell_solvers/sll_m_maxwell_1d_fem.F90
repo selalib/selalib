@@ -68,7 +68,7 @@ module sll_m_maxwell_1d_fem
      procedure :: &
           compute_rhs_from_function => compute_fem_rhs
      procedure :: &
-          L2norm_squarred => L2norm_squarred_1d_fem
+          L2norm_squared => L2norm_squared_1d_fem
      procedure :: &
           L2projection => L2projection_1d_fem
   end type sll_maxwell_1d_fem
@@ -268,7 +268,7 @@ contains
    end subroutine L2projection_1d_fem
 
    !> Compute square of the L2norm 
-   function L2norm_squarred_1d_fem(this, coefs_dofs, degree) result (r)
+   function L2norm_squared_1d_fem(this, coefs_dofs, degree) result (r)
      class(sll_maxwell_1d_fem) :: this !< Maxwell solver object
      sll_real64 :: coefs_dofs(:) !< Coefficient for each DoF
      sll_int32  :: degree !< Specify the degree of the basis functions
@@ -300,7 +300,7 @@ contains
 
      r = r*this%delta_x*2.0_f64
         
-   end function L2norm_squarred_1d_fem
+   end function L2norm_squared_1d_fem
 
 
    function sll_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(this)
