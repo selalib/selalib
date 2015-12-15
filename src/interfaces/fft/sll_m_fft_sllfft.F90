@@ -30,42 +30,42 @@ module sll_m_fft
 #include "sll_fftw.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_utilities, only : &
-    is_power_of_two
+    sll_f_is_power_of_two
 
   implicit none 
 
   public :: &
-    sll_fft_plan, &
-    FFT_FORWARD, &
-    FFT_BACKWARD, &
-    FFT_MEASURE, &
-    FFT_PATIENT, &
-    FFT_ESTIMATE, &
-    FFT_EXHAUSTIVE, &
-    FFT_WISDOM_ONLY, &
-    print_defaultfftlib, &
-    fft_allocate_aligned_complex, &
-    fft_allocate_aligned_real, &
-    fft_new_plan_r2r_1d, &
-    fft_new_plan_c2r_1d, &
-    fft_new_plan_r2c_1d, &
-    fft_new_plan_c2c_1d, &
-    fft_new_plan_r2c_2d, &
-    fft_new_plan_c2r_2d, &
-    fft_new_plan_c2c_2d, &
-    fft_apply_plan_r2r_1d, &
-    fft_apply_plan_c2r_1d, &
-    fft_apply_plan_r2c_1d, &
-    fft_apply_plan_c2c_1d, &
-    fft_apply_plan_r2c_2d, &
-    fft_apply_plan_c2r_2d, &
-    fft_apply_plan_c2c_2d, &
-    fft_set_mode_c2r_1d, &
-    fft_get_mode_r2c_1d, &
-    fft_delete_plan
+    sll_t_fft_plan, &
+    sll_p_fft_forward, &
+    sll_p_fft_backward, &
+    sll_p_fft_measure, &
+    sll_p_fft_patient, &
+    sll_p_fft_estimate, &
+    sll_p_fft_exhaustive, &
+    sll_p_fft_wisdom_only, &
+    sll_s_print_defaultfftlib, &
+    sll_f_fft_allocate_aligned_complex, &
+    sll_f_fft_allocate_aligned_real, &
+    sll_f_fft_new_plan_r2r_1d, &
+    sll_f_fft_new_plan_c2r_1d, &
+    sll_f_fft_new_plan_r2c_1d, &
+    sll_f_fft_new_plan_c2c_1d, &
+    sll_f_fft_new_plan_r2c_2d, &
+    sll_f_fft_new_plan_c2r_2d, &
+    sll_f_fft_new_plan_c2c_2d, &
+    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_apply_plan_c2r_1d, &
+    sll_s_fft_apply_plan_r2c_1d, &
+    sll_s_fft_apply_plan_c2c_1d, &
+    sll_s_fft_apply_plan_r2c_2d, &
+    sll_s_fft_apply_plan_c2r_2d, &
+    sll_s_fft_apply_plan_c2c_2d, &
+    sll_s_fft_set_mode_c2r_1d, &
+    sll_f_fft_get_mode_r2c_1d, &
+    sll_s_fft_delete_plan
 
 
   private
@@ -73,7 +73,7 @@ module sll_m_fft
 
 
   !> Derived type for ftt plan
-  type :: sll_fft_plan
+  type :: sll_t_fft_plan
      ! twiddle factors complex case
      sll_comp64, dimension(:), pointer :: t => null()
      ! twiddles factors real case
@@ -88,21 +88,21 @@ module sll_m_fft
      sll_int32                        :: problem_rank
      sll_int32, dimension(:), pointer :: problem_shape => null()
      sll_int32, dimension(:), pointer :: scramble_index => null()
-  end type sll_fft_plan
+  end type sll_t_fft_plan
 
 
 
   !> Set a forward fft
-  integer, parameter :: FFT_FORWARD = -1
+  integer, parameter :: sll_p_fft_forward = -1
   !> Set a backward fft
-  integer, parameter :: FFT_BACKWARD = 1
+  integer, parameter :: sll_p_fft_backward = 1
 
   ! Flags for initialization of the plan: These options are only used in FFTW interface and all set to -1 here
-  integer, parameter :: FFT_MEASURE = -1 !< FFTW planning-rigor flag FFTW_MEASURE (optimized plan) NOTE: planner overwrites the input array during planning  [value 0]
-  integer, parameter :: FFT_PATIENT = -1 !< FFTW planning-rigor flag FFTW_PATIENT (more optimizaton than MEASURE) NOTE: planner overwrites the input array during planning  [value 32]
-  integer, parameter :: FFT_ESTIMATE = -1 !< FFTW planning-rigor flag FFTW_ESTIMATE (simple heuristic for planer)   [value 64]. This is our default value
-  integer, parameter :: FFT_EXHAUSTIVE = -1 !< FFTW planning-rigor flag FFTW_EXHAUSTIVE (more optimization than PATIENT) NOTE: planner overwrites the input array during planning  [value 8]
-  integer, parameter :: FFT_WISDOM_ONLY = -1 ! 2097152 !< FFTW planning-rigor flag FFTW_WISDOM_ONLY (planner only initialized if wisdom is available)  [value 2097152]
+  integer, parameter :: sll_p_fft_measure = -1 !< FFTW planning-rigor flag FFTW_MEASURE (optimized plan) NOTE: planner overwrites the input array during planning  [value 0]
+  integer, parameter :: sll_p_fft_patient = -1 !< FFTW planning-rigor flag FFTW_PATIENT (more optimizaton than MEASURE) NOTE: planner overwrites the input array during planning  [value 32]
+  integer, parameter :: sll_p_fft_estimate = -1 !< FFTW planning-rigor flag FFTW_ESTIMATE (simple heuristic for planer)   [value 64]. This is our default value
+  integer, parameter :: sll_p_fft_exhaustive = -1 !< FFTW planning-rigor flag FFTW_EXHAUSTIVE (more optimization than PATIENT) NOTE: planner overwrites the input array during planning  [value 8]
+  integer, parameter :: sll_p_fft_wisdom_only = -1 ! 2097152 !< FFTW planning-rigor flag FFTW_WISDOM_ONLY (planner only initialized if wisdom is available)  [value 2097152]
 
 
   ! Assign a value to the different library.
@@ -118,37 +118,37 @@ contains
 
 
   !> Debug function
-  subroutine print_defaultfftlib()
+  subroutine sll_s_print_defaultfftlib()
     print *, 'The library used is SLLFFT'
   end subroutine
 
 
   !> Function to allocate an aligned complex array
-  function fft_allocate_aligned_complex(n) result(data)!, ptr_data, data)
+  function sll_f_fft_allocate_aligned_complex(n) result(data)!, ptr_data, data)
     sll_int32,                 intent(in)  :: n                !< Size of the pointer
     complex(f64), pointer     :: data(:) !< Array to be allocated
    
     allocate(data(n))
-    SLL_WARNING('fft_allocate_aligned_complex', 'Aligned allocation not implemented for SLLFFT. Usual allocation.')
+    SLL_WARNING('sll_f_fft_allocate_aligned_complex', 'Aligned allocation not implemented for SLLFFT. Usual allocation.')
 
-  end function fft_allocate_aligned_complex
+  end function sll_f_fft_allocate_aligned_complex
 
 
   !> Function to allocate an aligned real array
-  function fft_allocate_aligned_real(n) result(data)!, ptr_data, data)
+  function sll_f_fft_allocate_aligned_real(n) result(data)!, ptr_data, data)
     sll_int32,                 intent(in)  :: n                !< Size of the pointer
     real(f64), pointer                :: data(:) !< Array to be allocated
     
    
     allocate(data(n))
-    SLL_WARNING('fft_allocate_aligned_real', 'Aligned allocation not implemented for SLLFFT. Usual allocation.')
+    SLL_WARNING('sll_f_fft_allocate_aligned_real', 'Aligned allocation not implemented for SLLFFT. Usual allocation.')
 
-  end function fft_allocate_aligned_real
+  end function sll_f_fft_allocate_aligned_real
 
 
   !> Function to reconstruct the complex FFT mode from the data of a r2r transform
-  function fft_get_mode_r2c_1d(plan,data,k) result(mode)
-    type(sll_fft_plan), pointer, intent(in) :: plan !< FFT plan
+  function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
+    type(sll_t_fft_plan), pointer, intent(in) :: plan !< FFT plan
     sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
     sll_int32, intent(in)                   :: k    !< mode to be extracted
     sll_comp64                              :: mode !< Complex value of kth mode
@@ -173,8 +173,8 @@ contains
 
 
   !> Function to set a complex mode to the real representation of r2r.
-  subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
-    type(sll_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
+  subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
+    type(sll_t_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
     sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
     sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
     sll_int32, intent(in)                    :: k !< mode to be set
@@ -199,8 +199,8 @@ contains
 
 ! THIS IS THE ORDERING THAT SLLFFT R2R PRODUCES WITHOUT THE REORDERING TO FFTW
 !!$
-!!$  function fft_get_mode_r2c_1d(plan,data,k) result(mode)
-!!$    type(sll_fft_plan), pointer :: plan
+!!$  function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
+!!$    type(sll_t_fft_plan), pointer :: plan
 !!$    sll_real64, dimension(0:)   :: data
 !!$    sll_int32                   :: k, n_2, n
 !!$    sll_comp64                  :: mode
@@ -220,8 +220,8 @@ contains
 !!$  end function
 !!$
 !!$
-!!$  subroutine fft_set_mode_c2r_1d(plan,data,new_value,k)
-!!$    type(sll_fft_plan), pointer :: plan
+!!$  subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
+!!$    type(sll_t_fft_plan), pointer :: plan
 !!$    sll_real64, dimension(0:)   :: data
 !!$    sll_int32                   :: k, n_2, n
 !!$    sll_comp64                  :: new_value
@@ -249,15 +249,15 @@ contains
 ! - 1D -
 ! ------
   !> Create new 1d complex to complex plan
-    function fft_new_plan_c2c_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
+    function sll_f_fft_new_plan_c2c_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_comp64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_comp64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
-    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a FFT_FORWARD or \a FFT_BACKWARD)
+    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag only used by FFTW.
     sll_int32, optional, intent(in)              :: optimization !< Flag only used by FFTW.
-    type(sll_fft_plan), pointer                  :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer                  :: plan !< FFT planner object
 
     sll_int32 :: ierr, i
 
@@ -284,15 +284,15 @@ contains
     enddo
     SLL_ALLOCATE(plan%t(1:nx/2),ierr)
     call compute_twiddles(nx,plan%t)
-    if ( direction == FFT_FORWARD ) then
+    if ( direction == sll_p_fft_forward ) then
        plan%t = conjg(plan%t)
     end if
     call bit_reverse_complex(nx/2,plan%t)
   end function
 
   !> Compute fast Fourier transform in complex to complex mode.
-  subroutine fft_apply_plan_c2c_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan !< FFT planner object
+  subroutine sll_s_fft_apply_plan_c2c_1d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in)         :: plan !< FFT planner object
     sll_comp64, dimension(:), intent(inout)         :: array_in !< Complex data to be Fourier transformed
     sll_comp64, dimension(:), intent(inout)         :: array_out !< Fourier coefficients on output
 
@@ -318,17 +318,17 @@ contains
   ! - 2D               -
   ! --------------------
   !> Create new 2d complex to complex plan
-  function fft_new_plan_c2c_2d(nx,ny,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
+  function sll_f_fft_new_plan_c2c_2d(nx,ny,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_out !<(Typical) output array (gets overwritten for certain options)
-    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a FFT_FORWARD or \a FFT_BACKWARD)
+    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag for FFTW (unused)
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW (unused)
 
-    type(sll_fft_plan), pointer                      :: plan !< initialized planner object
+    type(sll_t_fft_plan), pointer                      :: plan !< initialized planner object
     sll_int32                                        :: ierr
 
     ! This does not look good.
@@ -354,25 +354,25 @@ contains
     SLL_ALLOCATE(plan%t(1:nx/2 + ny/2),ierr)
 
     call compute_twiddles(nx,plan%t(1:nx/2))
-    if ( direction == FFT_FORWARD ) then
+    if ( direction == sll_p_fft_forward ) then
        plan%t(1:nx/2) = conjg(plan%t(1:nx/2))
     end if
     call bit_reverse_complex(nx/2,plan%t(1:nx/2))
 
 
     call compute_twiddles(ny,plan%t(nx/2+1:nx/2 + ny/2))
-    if ( direction == FFT_FORWARD ) then
+    if ( direction == sll_p_fft_forward ) then
        plan%t(ny/2+1:ny/2 + ny/2) = conjg(plan%t(nx/2+1:nx/2 + ny/2))
     end if
     call bit_reverse_complex(ny/2,plan%t(nx/2+1:nx/2 + ny/2))
 
 
-  end function fft_new_plan_c2c_2d
+  end function sll_f_fft_new_plan_c2c_2d
 
 
 !> Compute fast Fourier transform in complex to complex mode.
-  subroutine fft_apply_plan_c2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)      :: plan !< FFT planner object
+  subroutine sll_s_fft_apply_plan_c2c_2d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in)      :: plan !< FFT planner object
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< Complex data to be Fourier transformed 
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_out !< Fourier coefficients on output
 
@@ -412,15 +412,15 @@ contains
 
 ! REAL
 !> Create new 1d real to real plan
-  function fft_new_plan_r2r_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
+  function sll_f_fft_new_plan_r2r_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
-    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a FFT_FORWARD or \a FFT_BACKWARD)
+    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag for FFTW (unused)
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW (unsed)
-    type(sll_fft_plan), pointer                  :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer                  :: plan !< FFT planner object
 
     sll_int32                                    :: ierr, i
 
@@ -453,15 +453,15 @@ contains
     SLL_ALLOCATE(plan%twiddles_n(0:nx-1),ierr)
     call compute_twiddles_real_array( nx, plan%twiddles_n )
     call compute_twiddles_real_array( nx/2, plan%twiddles(0:nx/2-1) )
-    if( direction .eq. FFT_FORWARD ) then
+    if( direction .eq. sll_p_fft_forward ) then
       call conjg_in_pairs(nx/2,plan%twiddles)
     endif
     call bit_reverse_in_pairs( nx/4, plan%twiddles(0:nx/2-1))
   end function
 
   !> Compute fast Fourier transform in real to real mode.
-  subroutine fft_apply_plan_r2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in) :: plan !< FFT planner object
+  subroutine sll_s_fft_apply_plan_r2r_1d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in) :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
     sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
 
@@ -476,7 +476,7 @@ contains
     endif
 
     ! Change from FFTW ordering back to SLLFFT ordering
-    if (plan%direction .EQ. FFT_BACKWARD) then
+    if (plan%direction .EQ. sll_p_fft_backward) then
        tmp = array_out
        do k=1,nx/2-1
           array_out(2*k+1) = tmp(k+1)
@@ -490,7 +490,7 @@ contains
     call real_data_fft_dit( array_out, nx, plan%twiddles, plan%twiddles_n, plan%direction )
     
     ! Change to FFTW ordering
-    if (plan%direction .EQ. FFT_FORWARD) then
+    if (plan%direction .EQ. sll_p_fft_forward) then
        tmp = array_out      
        do k=1,nx/2-1
           array_out(k+1) = tmp(2*k+1)
@@ -510,14 +510,14 @@ contains
 
 ! REAL TO COMPLEX
   !> Create new 1d real to complex plan for forward FFT
-  function fft_new_plan_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
+  function sll_f_fft_new_plan_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_comp64, dimension(:), intent(out)        :: array_out !< (Typical) output array (gets overwritten for certain options)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag for FFTW (unused)
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. (unused)
-    type(sll_fft_plan), pointer                  :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer                  :: plan !< FFT planner object
 
     sll_int32                                    :: ierr
 
@@ -525,7 +525,7 @@ contains
     SLL_ASSERT(size(array_out).eq.nx/2+1)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = FFT_FORWARD
+    plan%direction = sll_p_fft_forward
     if( present(normalized) ) then
        plan%normalized = normalized
     else
@@ -546,8 +546,8 @@ contains
 
 
   !> Compute fast Fourier transform in real to complex mode.
-  subroutine fft_apply_plan_r2c_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan !< FFT planner object
+  subroutine sll_s_fft_apply_plan_r2c_1d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in)         :: plan !< FFT planner object
     sll_real64, dimension(0:), intent(inout)         :: array_in !< Real input data to be Fourier transformed
     sll_comp64, dimension(0:), intent(out)           :: array_out !< Complex Fourier mode (only first half due to symmetry)
 
@@ -576,14 +576,14 @@ contains
 
 ! COMPLEX TO REAL
   !> Create new 1d complex to real plan for backward FFT
-  function fft_new_plan_c2r_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
+  function sll_f_fft_new_plan_c2r_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_comp64, dimension(:)                     :: array_in  !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:)                     :: array_out !< (Typical) output array (gets overwritten for certain options)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag for FFTW (unused)
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. (unused)
-    type(sll_fft_plan), pointer                  :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer                  :: plan !< FFT planner object
 
     sll_int32 :: ierr
 
@@ -591,7 +591,7 @@ contains
     SLL_ASSERT(size(array_out).eq.nx)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = FFT_BACKWARD
+    plan%direction = sll_p_fft_backward
     if( present(normalized) ) then
        plan%normalized = normalized
     else
@@ -610,8 +610,8 @@ contains
 
 
   !> Compute fast Fourier transform in complex to real mode.
-  subroutine fft_apply_plan_c2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)    :: plan !< FFT planner objece
+  subroutine sll_s_fft_apply_plan_c2r_1d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in)    :: plan !< FFT planner objece
     sll_comp64, dimension(0:),    intent(inout) :: array_in !< Complex Fourier coefficient to be transformed back
     sll_real64, dimension(0:),    intent(inout) :: array_out !< Real result of Fourier transform
 
@@ -642,7 +642,7 @@ contains
 
 ! REAL TO COMPLEX 2D
   !> Create new 2d complex to real plan for forward FFT
-  function fft_new_plan_r2c_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
+  function sll_f_fft_new_plan_r2c_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
     sll_real64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
@@ -651,7 +651,7 @@ contains
     logical, optional,   intent(in)              :: aligned    !< Flag for FFTW (unused)
     sll_int32, optional, intent(in)               :: optimization !< Planning-rigor flag for FFTW (unused)
 
-    type(sll_fft_plan), pointer                   :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer                   :: plan !< FFT planner object
 
     sll_int32                                    :: ierr
 
@@ -661,7 +661,7 @@ contains
     SLL_ASSERT(size(array_out,dim=2).eq.ny)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = FFT_FORWARD
+    plan%direction = sll_p_fft_forward
     if( present(normalized) ) then
        plan%normalized = normalized
     else
@@ -685,8 +685,8 @@ contains
   end function
 
  !> Compute fast Fourier transform in real to complex mode.
-  subroutine fft_apply_plan_r2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
+  subroutine sll_s_fft_apply_plan_r2c_2d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
     sll_real64, dimension(0:,0:), intent(inout)         :: array_in  !< Real input data to be Fourier transformed
     sll_comp64, dimension(0:,0:), intent(out)           :: array_out !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
 
@@ -718,15 +718,15 @@ contains
 
 ! COMPLEX TO REAL 2D
  !> Create new 2d real to complex plan for backward FFT
-  function fft_new_plan_c2r_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
+  function sll_f_fft_new_plan_c2r_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of point along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
     sll_comp64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:,:), intent(out)      :: array_out !< (Typical) output array (gets overwritten for certain options)
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a FFT_ESTIMATE, \a FFT_MEASURE, \a FFT_PATIENT, \a FFT_EXHAUSTIVE, \a FFT_WISDOM_ONLY. (default: \a FFT_ESTIMATE). Note that you need to 
-    type(sll_fft_plan), pointer                  :: plan !< FFT planner object
+    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    type(sll_t_fft_plan), pointer                  :: plan !< FFT planner object
 
 
     sll_int32                                    :: ierr
@@ -738,7 +738,7 @@ contains
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = FFT_BACKWARD
+    plan%direction = sll_p_fft_backward
     if( present(normalized) ) then
        plan%normalized = normalized
     else
@@ -761,8 +761,8 @@ contains
 
 
   !> Compute fast Fourier transform in complex to real mode.
-  subroutine fft_apply_plan_c2r_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
+  subroutine sll_s_fft_apply_plan_c2r_2d(plan,array_in,array_out)
+    type(sll_t_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
     sll_comp64, dimension(0:,0:), intent(inout)       :: array_in  !< Complex Fourier coefficient to be transformed back
     sll_real64, dimension(0:,0:), intent(out)         :: array_out !< Real output of Fourier transform
 
@@ -803,12 +803,12 @@ contains
 
 
   !> Deallocate the fft plan
-  subroutine fft_delete_plan(plan)
-   type(sll_fft_plan), pointer :: plan
+  subroutine sll_s_fft_delete_plan(plan)
+   type(sll_t_fft_plan), pointer :: plan
    sll_int32 :: ierr
 
     if( .not. associated(plan) ) then
-      print * , '  Error in fft_delete_plan subroutine'
+      print * , '  Error in sll_s_fft_delete_plan subroutine'
       print * , '  you try to delete a plan not associated'
       stop
     endif
@@ -862,7 +862,7 @@ contains
        print *, "ERROR: compute_twiddles(), array is of insufficient size."
        return
     else
-       theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
+       theta   = 2.0_f64*sll_p_pi/real(n,kind=f64)      ! basic angular interval
        ! By whatever means we use to compute the twiddles, some sanity
        ! checks are in order:
        ! t(1)     = (1,0)
@@ -895,8 +895,8 @@ contains
     sll_real64, dimension(0:n-1), intent(out) :: t
     sll_int32                                 :: k
     sll_real64                                :: theta
-    SLL_ASSERT(is_power_of_two(int(n,i64)))
-    theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
+    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)))
+    theta   = 2.0_f64*sll_p_pi/real(n,kind=f64)      ! basic angular interval
     ! By whatever means we use to compute the twiddles, some sanity
     ! checks are in order:
     ! t(0)   = 1, t(1)      = 0
@@ -939,7 +939,7 @@ contains
     integer                                :: j;                \
     integer                                :: k;                \
     data_type                              :: tmp;              \
-    SLL_ASSERT(is_power_of_two(int(n,i64)));                    \
+    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)));                    \
     j = 0;                                                      \
     k = n;                                                      \
     do i=0,n-2;                                                 \
@@ -973,7 +973,7 @@ contains
     integer                                :: j
     integer                                :: k
     sll_real64, dimension(1:2)             :: tmp
-    SLL_ASSERT(is_power_of_two(int(num_pairs,i64)))
+    SLL_ASSERT(sll_f_is_power_of_two(int(num_pairs,i64)))
     j = 0
     k = num_pairs
 #define ARRAY(i) a(2*(i):2*(i)+1)
@@ -1041,7 +1041,7 @@ contains
     sll_int32, intent(in)                   :: sign
     sll_comp64, dimension(:), intent(in)    :: twiddles
     sll_int32, intent(in)                   :: n
-    SLL_ASSERT(is_power_of_two(int(n,i64)))
+    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)))
     SLL_ASSERT(size(data) .ge. n)
     call fft_dit_nr_aux(data, n, twiddles, 0, sign)
   end subroutine fft_dit_nr
@@ -1064,9 +1064,9 @@ contains
     sll_comp64                                      :: tmp
 
     half = ishft(size,-1) ! any evidence this is faster?
-    !if ( sign == FFT_BACKWARD ) then
+    !if ( sign == sll_p_fft_backward ) then
     !   omega = twiddles(twiddle_index)
-    !else if ( sign == FFT_FORWARD ) then
+    !else if ( sign == sll_p_fft_forward ) then
     !   omega = conjg(twiddles(twiddle_index))
     !else
     !   stop 'ERROR in =fft_dit_nr_aux= argument sign invalid'
@@ -1105,7 +1105,7 @@ contains
 !PN    integer                                 :: n
 !PN    sll_int32                               :: ierr
 !PN    n = size(data) ! bad
-!PN    SLL_ASSERT(is_power_of_two(int(n,i64)))
+!PN    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)))
 !PN    SLL_ALLOCATE(twiddles(n/2),ierr)
 !PN    call compute_twiddles(n,twiddles)
 !PN    ! This algorithm uses the twiddles in natural order. The '1'
@@ -1142,9 +1142,9 @@ contains
     end if
     ! Do the butterflies for this stage
     do j=1,half
-       !if ( sign == FFT_FORWARD ) then
+       !if ( sign == sll_p_fft_forward ) then
        !   omega = conjg(twiddles(jtwiddle))
-       !else if ( sign == FFT_BACKWARD ) then
+       !else if ( sign == sll_p_fft_backward ) then
        !   omega = twiddles(jtwiddle)
        !else
        !  stop 'ERROR in =fft_dit_rn_aux= argument sign invalid'
@@ -1205,10 +1205,10 @@ contains
                                  ! in Fortran?
     ! select the value of the twiddle factor for this stage depending on
     ! the direction of the transform
-    !if ( sign == FFT_FORWARD ) then
+    !if ( sign == sll_p_fft_forward ) then
     !   omega_re =  CREAL0(twiddles, twiddle_index)
     !   omega_im = -CIMAG0(twiddles, twiddle_index)
-    !else if ( sign == FFT_BACKWARD ) then
+    !else if ( sign == sll_p_fft_backward ) then
     !   omega_re =  CREAL0(twiddles, twiddle_index)
     !   omega_im =  CIMAG0(twiddles, twiddle_index)
     !else
@@ -1296,10 +1296,10 @@ contains
     do j=1,half
        ! select the value of the twiddle factor for this stage depending on
        ! the direction of the transform
-       !if( sign == FFT_FORWARD ) then
+       !if( sign == sll_p_fft_forward ) then
        !   omega_re =  CREAL1(twiddles, jtwiddle)
        !   omega_im = -CIMAG1(twiddles, jtwiddle)
-       !else if ( sign == FFT_BACKWARD ) then
+       !else if ( sign == sll_p_fft_backward ) then
        !   omega_re =  CREAL1(twiddles, jtwiddle)
        !   omega_im =  CIMAG1(twiddles, jtwiddle)
        !else
@@ -1380,7 +1380,7 @@ contains
     sll_real64                                 :: omega_re
     sll_real64                                 :: omega_im
     sll_real64                                 :: s
-    SLL_ASSERT( is_power_of_two(int(n,i64)) )
+    SLL_ASSERT( sll_f_is_power_of_two(int(n,i64)) )
     SLL_ASSERT( size(data) .ge. n )
     SLL_ASSERT( size(twiddles) .eq. n/2 )
     n_2 = n/2
@@ -1400,7 +1400,7 @@ contains
     ! real FFT from the results of this complex transform. The inverse
     ! transform is computed by essentially inverting the order of this
     ! process and changing some signs...
-    if( sign .eq. FFT_FORWARD ) then
+    if( sign .eq. sll_p_fft_forward ) then
        ! we use the following as the 'switch' to flip signs between
        ! FORWARD and INVERSE transforms.
        s = -1.0_f64
@@ -1409,17 +1409,17 @@ contains
                                        n_2,         &
                                        twiddles,    &
                                        0,           &
-                                       FFT_FORWARD )
+                                       sll_p_fft_forward )
        ! but our _nr_ algorithm bit reverses the result, so, until we have
        ! some way to index the data correctly we have to do this:
        call bit_reverse_in_pairs( n_2, data(0:n-1) )
-    else if (sign .eq. FFT_BACKWARD) then
+    else if (sign .eq. sll_p_fft_backward) then
        s =  1.0_f64
     else
       stop 'ERROR IN =REAL_DATA_FFT_DIT= invalid argument sign'
     end if
     do i=1,n_2/2 ! the index 'i' corresponds to indexing H
-       ! FFT_FORWARD case: We intend to mix the odd/even components that we
+       ! sll_p_fft_forward case: We intend to mix the odd/even components that we
        ! have computed into complex numbers H_n. These Complex numbers will
        ! give the modes as in:
        !
@@ -1427,7 +1427,7 @@ contains
        !
        ! which is the answer we are after.
        !
-       ! FFT_BACKWARD case: The process of decomposing the H_n's into the
+       ! sll_p_fft_backward case: The process of decomposing the H_n's into the
        ! corresponding even and odd terms:
        !
        ! (even terms:) F_n^e = (F_n + F_(N/2-n)^*)
@@ -1458,13 +1458,13 @@ contains
        CREAL0(data,n_2-i) =  tmp_re + tmp3_re
        CIMAG0(data,n_2-i) = -tmp_im - tmp3_im
     end do
-    if ( sign .eq. FFT_FORWARD ) then
+    if ( sign .eq. sll_p_fft_forward ) then
        ! Set the first and N/2 values independently and pack them in the
        ! memory space provided by the original data.
        tmp_re = data(0)
        data(0) = tmp_re + data(1)   ! mode 0   is real
        data(1) = tmp_re - data(1)   ! mode N/2 is real
-    else if ( sign .eq. FFT_BACKWARD ) then
+    else if ( sign .eq. sll_p_fft_backward ) then
        ! Unpack the modes.
        tmp_re  = data(0)
        data(0) = 0.5_f64*(tmp_re + data(1))
@@ -1474,7 +1474,7 @@ contains
                                        n_2,         &
                                        twiddles,    &
                                        0,           &
-                                       FFT_BACKWARD )
+                                       sll_p_fft_backward )
        ! but our _nr_ algorithm bit reverses the result, so, until we have
        ! some way to index the data correctly we have to do this:
        call bit_reverse_in_pairs( n_2, data(0:n-1) )

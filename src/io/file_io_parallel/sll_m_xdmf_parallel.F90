@@ -24,7 +24,7 @@
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
 !>
-!> Here an example using the layout_2d object, check out how to compute
+!> Here an example using the sll_t_layout_2d object, check out how to compute
 !> offset values before calling sll_m_gnuplot_parallel subroutines.
 !> @snippet remap/unit_test_parallel.F90 example
 module sll_m_xdmf_parallel

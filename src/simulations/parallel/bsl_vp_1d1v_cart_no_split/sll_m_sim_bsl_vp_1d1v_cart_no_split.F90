@@ -465,7 +465,7 @@ contains
         print *, '#init_vp2d_par_cart() failed to open file ', trim(filename)//'.nml'
         stop
       end if
-      !if(sll_get_collective_rank(sll_world_collective)==0)then
+      !if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
         print *,'#initialization with filename:'
         print *,'#',trim(filename)//'.nml'
       !endif
@@ -477,7 +477,7 @@ contains
       read(input_file, drive)
       close(input_file)
     else
-      !if(sll_get_collective_rank(sll_world_collective)==0)then
+      !if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
         print *,'#initialization with default parameters'
       !endif      
     endif

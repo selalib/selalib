@@ -102,7 +102,7 @@ program VP1d_BSL_time_split
   params =  app_field_params( Edrmax, tflat, tL, tR, twL, twR, t0, kmode, omegadr, &
        turn_drive_off, driven )
   ! define uniform cartesian mesh in x and v
-  xmax = nbox * 2 * sll_pi / kmode
+  xmax = nbox * 2 * sll_p_pi / kmode
   delta_x = (xmax - xmin) / Ncx
   delta_v = (vmax - vmin) / Ncv
   SLL_ALLOCATE(v_array(Ncv+1),ierr)

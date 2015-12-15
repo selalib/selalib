@@ -646,7 +646,7 @@ subroutine test_sll_collective_globalsum
   if(rank==0) print *,'-----------------------------'
   call sll_s_collective_barrier(sll_v_world_collective)
 
-  summand_real64=1.0_f64 !or better sll_pi
+  summand_real64=1.0_f64 !or better sll_p_pi
   call sll_o_collective_globalsum( sll_v_world_collective, summand_real64, 0)
 
   summand_comp64=(1.0_f64, 0.0_f64)

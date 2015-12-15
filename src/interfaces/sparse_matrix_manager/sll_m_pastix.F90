@@ -6,9 +6,9 @@ module sll_m_pastix
 #include "sll_memory.h"
 
   use sll_m_collective, only: &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   implicit none
 
@@ -71,13 +71,13 @@ subroutine initialize_pastix(this,n,nnzeros,row_ptr,col_ind,val)
   sll_int32                          :: prank    
   sll_int32                          :: psize
 
-  if( .not. associated(sll_world_collective)) then
-     call sll_boot_collective()
+  if( .not. associated(sll_v_world_collective)) then
+     call sll_s_boot_collective()
   end if
   this%ncols = n
-  prank = sll_get_collective_rank( sll_world_collective )
-  psize = sll_get_collective_size( sll_world_collective )
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank( sll_v_world_collective )
+  psize = sll_f_get_collective_size( sll_v_world_collective )
+  comm  = sll_v_world_collective%comm
 
   ! Get options ftom command line
   this%nbthread = 1
@@ -127,7 +127,7 @@ subroutine factorize_pastix(this)
   type(pastix_solver) :: this
   sll_int32           :: comm    
    
-  comm  = sll_world_collective%comm
+  comm  = sll_v_world_collective%comm
   ! Call PaStiX first steps (Scotch - Fax - Blend)
   this%iparm(IPARM_START_TASK) = API_TASK_ORDERING
   this%iparm(IPARM_END_TASK)   = API_TASK_ANALYSE
@@ -151,7 +151,7 @@ subroutine solve_pastix_without_rhs(this, sol)
   sll_real64, dimension(:) :: sol
   sll_int32                :: comm    
 
-  comm = sll_world_collective%comm
+  comm = sll_v_world_collective%comm
 
   this%rhs = sol
 
@@ -175,7 +175,7 @@ subroutine solve_pastix_with_rhs(this, rhs, sol)
   sll_real64, dimension(:) :: sol
   sll_int32                :: comm    
 
-  comm = sll_world_collective%comm
+  comm = sll_v_world_collective%comm
 
   this%rhs = rhs
 
@@ -197,7 +197,7 @@ subroutine delete_pastix(this)
   type(pastix_solver) :: this
   sll_int32           :: comm    
 
-  comm = sll_world_collective%comm
+  comm = sll_v_world_collective%comm
 
   ! Call PaStiX clean
   this%iparm(IPARM_START_TASK)       = API_TASK_CLEAN

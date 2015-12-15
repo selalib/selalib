@@ -4,5 +4,5 @@ TARGET_LINK_LIBRARIES( test_buffer_loader_utilities
 
 
 
-#ADD_EXECUTABLE(local_to_global local_to_global.F90)
+#ADD_EXECUTABLE(sll_o_local_to_global sll_o_local_to_global.F90)
 #ADD_EXECUTABLE(scatter scatter.F90)

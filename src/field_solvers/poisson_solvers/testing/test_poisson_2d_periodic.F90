@@ -16,10 +16,10 @@ program test_poisson_2d_periodic
 #else
 use sll_m_poisson_2d_periodic_fftpack, only: &
     sll_o_initialize, &
-    poisson_2d_periodic_fftpack, &
+    sll_t_poisson_2d_periodic_fftpack, &
     sll_o_solve
 
-#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftpack
 #endif
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -101,8 +101,8 @@
       sll_int32                  :: i_min, i_max
       sll_int32                  :: j_min, j_max
       sll_int32                  :: k_min, k_max
-      sequential_theta => new_layout_3D( sll_world_collective )
-      sequential_r     => new_layout_3D( sll_world_collective )
+      sequential_theta => sll_f_new_layout_3d( sll_v_world_collective )
+      sequential_r     => sll_f_new_layout_3d( sll_v_world_collective )
       
       SLL_ALLOCATE( new_qn_plan, ierr )
       ! set scalars in quasi_neutral_plan object
@@ -443,9 +443,9 @@
          valpk(k) = plan%Kth(1)
          do i=2,plan%spline_degree+1
             valpm(k) = valpm(k) + &
-                 2*plan%Mth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%num_pts_t)
+                 2*plan%Mth(i)*cos(2*sll_p_pi*(i-1)*(k-1)/plan%num_pts_t)
             valpk(k) = valpk(k) + &
-                 2*plan%Kth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%num_pts_t)
+                 2*plan%Kth(i)*cos(2*sll_p_pi*(i-1)*(k-1)/plan%num_pts_t)
          end do
       end do
       
@@ -531,9 +531,9 @@
          valpk(k) = plan%Kth(1)
          do i=2,plan%spline_degree+1
             valpm(k) = valpm(k) + &
-                 2*plan%Mth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%num_pts_t)
+                 2*plan%Mth(i)*cos(2*sll_p_pi*(i-1)*(k-1)/plan%num_pts_t)
             valpk(k) = valpk(k) + &
-                 2*plan%Kth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%num_pts_t)
+                 2*plan%Kth(i)*cos(2*sll_p_pi*(i-1)*(k-1)/plan%num_pts_t)
          end do
       end do
       
