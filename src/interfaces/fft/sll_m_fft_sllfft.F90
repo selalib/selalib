@@ -22,18 +22,58 @@
 !> These functions do not depend on external library
 module sll_m_fft
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_errors.h"
-  use sll_m_constants
-  use sll_m_fft_utils
-  implicit none
+#include "sll_fftw.h"
+
+  use sll_m_constants, only: &
+    sll_pi
+
+  use sll_m_utilities, only : &
+    is_power_of_two
+
+  implicit none 
+
+  public :: &
+    sll_fft_plan, &
+    FFT_FORWARD, &
+    FFT_BACKWARD, &
+    FFT_MEASURE, &
+    FFT_PATIENT, &
+    FFT_ESTIMATE, &
+    FFT_EXHAUSTIVE, &
+    FFT_WISDOM_ONLY, &
+    print_defaultfftlib, &
+    fft_allocate_aligned_complex, &
+    fft_allocate_aligned_real, &
+    fft_new_plan_r2r_1d, &
+    fft_new_plan_c2r_1d, &
+    fft_new_plan_r2c_1d, &
+    fft_new_plan_c2c_1d, &
+    fft_new_plan_r2c_2d, &
+    fft_new_plan_c2r_2d, &
+    fft_new_plan_c2c_2d, &
+    fft_apply_plan_r2r_1d, &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_apply_plan_c2c_1d, &
+    fft_apply_plan_r2c_2d, &
+    fft_apply_plan_c2r_2d, &
+    fft_apply_plan_c2c_2d, &
+    fft_set_mode_c2r_1d, &
+    fft_get_mode_r2c_1d, &
+    fft_delete_plan
+
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++    
 
 
   !> Derived type for ftt plan
-  type, public :: sll_fft_plan
+  type :: sll_fft_plan
      ! twiddle factors complex case
      sll_comp64, dimension(:), pointer :: t => null()
      ! twiddles factors real case
@@ -53,9 +93,9 @@ module sll_m_fft
 
 
   !> Set a forward fft
-  integer, parameter, public :: FFT_FORWARD = -1
+  integer, parameter :: FFT_FORWARD = -1
   !> Set a backward fft
-  integer, parameter, public :: FFT_BACKWARD = 1
+  integer, parameter :: FFT_BACKWARD = 1
 
   ! Flags for initialization of the plan: These options are only used in FFTW interface and all set to -1 here
   integer, parameter :: FFT_MEASURE = -1 !< FFTW planning-rigor flag FFTW_MEASURE (optimized plan) NOTE: planner overwrites the input array during planning  [value 0]
