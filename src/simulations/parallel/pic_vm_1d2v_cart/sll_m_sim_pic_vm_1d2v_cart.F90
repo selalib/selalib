@@ -158,6 +158,7 @@ contains
     sll_int32   :: n_particles!, degree_smoother
     character(len=256)   :: init_case
     character(len=256)   :: splitting_case
+    sll_int32   :: spline_degree 
 
     sll_int32, parameter :: input_file = 99
     
@@ -166,7 +167,7 @@ contains
     
     namelist /grid_dims/          ng_x, x1_min, x1_max
 
-    namelist /pic_params/         n_particles, init_case, splitting_case!, degree_smoother
+    namelist /pic_params/         n_particles, init_case, splitting_case, spline_degree!, degree_smoother
 
     ! Read parameters from file
     open(unit = input_file, file=trim(filename), IOStat=io_stat)
@@ -198,7 +199,7 @@ contains
 
     sim%n_particles = n_particles/sim%world_size
     sim%n_total_particles = sim%n_particles * sim%world_size
-    sim%degree_smoother = 3!degree_smoother
+    sim%degree_smoother = spline_degree
     
     select case(init_case)
     case("SLL_INIT_RANDOM")
@@ -352,11 +353,11 @@ contains
     call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
          MPI_SUM, 0, total_energy)
     if (sim%rank == 0) then
-       potential_energy(1) = sim%maxwell_solver%L2norm_squarred&
+       potential_energy(1) = sim%maxwell_solver%L2norm_squared&
             (sim%efield_dofs(:,1), sim%degree_smoother-1)
-       potential_energy(2) = sim%maxwell_solver%L2norm_squarred&
+       potential_energy(2) = sim%maxwell_solver%L2norm_squared&
             (sim%efield_dofs(:,2), sim%degree_smoother)
-       potential_energy(3) = sim%maxwell_solver%L2norm_squarred&
+       potential_energy(3) = sim%maxwell_solver%L2norm_squared&
             ( sim%bfield_dofs, sim%degree_smoother-1)
        write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
             0.0_f64,  &
@@ -383,11 +384,11 @@ contains
 
        if (sim%rank == 0) then
           print*, 'Iteration=', j 
-          potential_energy(1) = sim%maxwell_solver%L2norm_squarred&
+          potential_energy(1) = sim%maxwell_solver%L2norm_squared&
                (sim%efield_dofs(:,1), sim%degree_smoother-1)
-          potential_energy(2) = sim%maxwell_solver%L2norm_squarred&
+          potential_energy(2) = sim%maxwell_solver%L2norm_squared&
                (sim%efield_dofs(:,2), sim%degree_smoother)
-          potential_energy(3) = sim%maxwell_solver%L2norm_squarred&
+          potential_energy(3) = sim%maxwell_solver%L2norm_squared&
                ( sim%bfield_dofs, sim%degree_smoother-1)
           write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
                real(j,f64)*sim%delta_t,  &
