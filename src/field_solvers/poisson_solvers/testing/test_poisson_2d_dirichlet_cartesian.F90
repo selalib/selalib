@@ -71,7 +71,7 @@ program test_poisson_2d_dirichlet_cartesian
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_dirichlet" failure'
-     !call sll_halt_collective()
+     !call sll_s_halt_collective()
      !stop
   endif
  

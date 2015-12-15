@@ -1,6 +1,6 @@
 !This program bring back data on processor 0 in global array from
 !data stored in local array spread in several processors.
-program local_to_global
+program sll_o_local_to_global
 
 use sll_mpi
 use iso_fortran_env, only: output_unit
@@ -132,4 +132,4 @@ end if
 call MPI_FINALIZE(ierr)
 stop
 
-end program local_to_global
+end program sll_o_local_to_global

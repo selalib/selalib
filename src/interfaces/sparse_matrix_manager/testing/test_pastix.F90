@@ -23,7 +23,7 @@ sll_int32                             :: nnzeros
 sll_int32,  dimension(:), allocatable :: ia,ja
 sll_real64, dimension(:), allocatable :: avals,rhs
 
-call sll_boot_collective()
+call sll_s_boot_collective()
 
 A = 0
 A(1,1) = 2; A(1,2) = -1.0
@@ -148,7 +148,7 @@ write(*,100) X
 call delete(linear_solver)
 print *,'#end of delete'
 
-call sll_halt_collective()
+call sll_s_halt_collective()
 
 print *,'#PASSED'
 

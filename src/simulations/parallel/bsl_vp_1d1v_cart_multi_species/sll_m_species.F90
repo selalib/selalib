@@ -190,7 +190,7 @@ case ("SLL_LANDAU")
   sp%params(3) = v0
   sp%params(4) = sigma
   sp%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !(0.5_f64*eps*sll_p_pi)**2/(kmode_x1*kmode_x2) &
   !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
   !for the moment
   sp%kx  = kmode
@@ -201,7 +201,7 @@ case ("SLL_BUMP_ON_TAIL")
   sp%params(1) = kmode
   sp%params(2) = eps
   sp%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !(0.5_f64*eps*sll_p_pi)**2/(kmode_x1*kmode_x2) &
   !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
   !for the moment
   sp%kx = kmode
@@ -214,7 +214,7 @@ case ("SLL_TWO_STREAM_INSTABILITY")
   sp%params(3) = sigma
   sp%params(4) = factor1
   sp%nrj0 = 0._f64  !compute the right value
-  !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+  !(0.5_f64*eps*sll_p_pi)**2/(kmode_x1*kmode_x2) &
   !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
   !for the moment
   sp%kx  = kmode

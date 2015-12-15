@@ -136,10 +136,10 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
 #else
   use sll_m_poisson_2d_periodic_fftpack, only: &
     sll_o_new, &
-    poisson_2d_periodic_fftpack, &
+    sll_t_poisson_2d_periodic_fftpack, &
     sll_o_solve
 
-#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftpack
 #endif
   implicit none
 

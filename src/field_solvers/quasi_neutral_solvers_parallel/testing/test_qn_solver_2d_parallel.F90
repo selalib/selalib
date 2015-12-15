@@ -22,34 +22,34 @@ program test_qn_solver_2d_parallel
     output_unit
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_neumann
+    sll_p_dirichlet, &
+    sll_p_neumann
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_collective_reduce, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_o_collective_reduce, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_mpi, only : &
     mpi_prod
 
   use sll_m_qn_solver_2d_parallel, only: &
-    qn_solver_2d_parallel, &
-    new_qn_solver_2d_parallel, &
-    delete_qn_solver_2d_parallel, &
-    solve_qn_solver_2d_parallel
+    sll_t_qn_solver_2d_parallel, &
+    sll_f_new_qn_solver_2d_parallel, &
+    sll_s_delete_qn_solver_2d_parallel, &
+    sll_s_solve_qn_solver_2d_parallel
 
   use sll_m_remapper, only: &
-    layout_3d, &
-    new_layout_3d, &
-    local_to_global, &
-    initialize_layout_with_distributed_array
+    sll_t_layout_3d, &
+    sll_f_new_layout_3d, &
+    sll_o_local_to_global, &
+    sll_o_initialize_layout_with_distributed_array
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -64,9 +64,9 @@ program test_qn_solver_2d_parallel
   sll_real32, dimension(1)              :: prod4test
 
   !Boot parallel environment
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
-  myrank = sll_get_collective_rank(sll_world_collective)
+  myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
   NP_r = 256
   NP_theta = 256
@@ -77,9 +77,9 @@ program test_qn_solver_2d_parallel
   do i=1,2
 
      if (i==1) then
-        BC = SLL_NEUMANN
+        BC = sll_p_neumann
      else
-        BC = SLL_DIRICHLET
+        BC = sll_p_dirichlet
      endif
      if (myrank==0) then
         flush( output_unit )
@@ -105,7 +105,7 @@ program test_qn_solver_2d_parallel
      endif
   endif
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 contains
 
@@ -129,7 +129,7 @@ contains
     sll_real64, dimension(NP_r,NP_theta)                :: phi_exact
     sll_real64, dimension(:,:), allocatable             :: rho_par, phi
     sll_int32                                           :: i, j, i_test
-    type (qn_solver_2d_parallel), pointer :: plan
+    type (sll_t_qn_solver_2d_parallel), pointer :: plan
     sll_real64                                          :: average_err
     sll_real64                                          :: average_err_bound
     sll_real64                                          :: Mr, Mtheta
@@ -138,18 +138,18 @@ contains
     sll_int32                                           :: myrank
     sll_real32                                          :: ok = 1._f64
     sll_real32, dimension(1)                            :: prod4test
-    type(layout_3D), pointer                            :: layout
+    type(sll_t_layout_3d), pointer                            :: layout
     sll_int32                                           :: colsz ! collective size
 
-    if (BC==SLL_NEUMANN) then
+    if (BC==sll_p_neumann) then
        dr = (rmax-rmin)/(NP_r-1)
     else ! 'Dirichlet'
        dr = (rmax-rmin)/(NP_r+1)
     endif
-    dtheta = 2*sll_pi/NP_theta
+    dtheta = 2*sll_p_pi/NP_theta
 
-    colsz  = sll_get_collective_size(sll_world_collective)
-    myrank = sll_get_collective_rank(sll_world_collective)
+    colsz  = sll_f_get_collective_size(sll_v_world_collective)
+    myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
     NP_r_loc = NP_r/colsz
     NP_theta_loc = NP_theta
@@ -162,7 +162,7 @@ contains
     SLL_ALLOCATE(f(NP_theta), ierr)
     SLL_ALLOCATE(g(NP_theta), ierr)
 
-    plan => new_qn_solver_2d_parallel(BC,rmin,rmax,NP_r, NP_theta)
+    plan => sll_f_new_qn_solver_2d_parallel(BC,rmin,rmax,NP_r, NP_theta)
 
     do i_test=1,2 ! 2 test functions
 
@@ -173,16 +173,16 @@ contains
 
        theta = (j-1)*dtheta
        Mr = 4._f64*abs(cos(theta))
-       if (BC==SLL_NEUMANN) then
+       if (BC==sll_p_neumann) then
           if (i_test==1) then
              f(j) = sin(rmax-rmin)*cos(theta)
           else
-             f(j)= sin(rmax-rmin) * exp(-.5*(theta-sll_pi)**2)/sqrt(2._f64*sll_pi)
+             f(j)= sin(rmax-rmin) * exp(-.5*(theta-sll_p_pi)**2)/sqrt(2._f64*sll_p_pi)
           endif
        endif
 
        do i=1,NP_r
-          if (BC==SLL_NEUMANN) then
+          if (BC==sll_p_neumann) then
              r = rmin + (i-1)*dr
              c_seq(i) = 2._f64/r
           else ! 'dirichlet'
@@ -195,11 +195,11 @@ contains
              rho_seq(i,j) = cos(theta) * ( 2._f64*cos(rmin+rmax-2._f64*r) - c_seq(i)* sin( &
                  rmin+rmax-2._f64*r)+(1._f64/r**2+1._f64/(Zi*Te_seq(i)))*sin(rmax-r)*sin(r-rmin))
           else
-             phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*exp(-.5_f64*(theta-sll_pi)**2)/ &
-                                                                   sqrt(2*sll_pi)
+             phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r)*exp(-.5_f64*(theta-sll_p_pi)**2)/ &
+                                                                   sqrt(2*sll_p_pi)
              rho_seq(i,j) = ( 2._f64*cos(rmax+rmin-2._f64*r) - c_seq(i)*sin(rmax+rmin-2*r) ) * &
-                                         exp(-.5_f64*(theta-sll_pi)**2)/sqrt(2._f64*sll_pi) + &
-                    phi_exact(i,j) * ( 1/(Zi*Te_seq(i)) - ((theta-sll_pi)**2-1._f64)/r**2 )
+                                         exp(-.5_f64*(theta-sll_p_pi)**2)/sqrt(2._f64*sll_p_pi) + &
+                    phi_exact(i,j) * ( 1/(Zi*Te_seq(i)) - ((theta-sll_p_pi)**2-1._f64)/r**2 )
           endif
           Mtheta = abs(sin(r-rmin)*sin(rmax-r))
           average_err_bound = average_err_bound + &
@@ -212,13 +212,13 @@ contains
 
     ! Test sll_qns2d_angular_spect_method_par
 
-    layout => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
+    layout => sll_f_new_layout_3d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
                                                 colsz, 1, 1, layout )
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
-          global = local_to_global( layout, (/i, j, 1/))
+          global = sll_o_local_to_global( layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
           rho_par(i,j) = rho_seq(gi,gj)
@@ -227,18 +227,18 @@ contains
         enddo
     enddo
    
-    call solve_qn_solver_2d_parallel(plan, rho_par, c_par, Te_par, f, g, Zi, phi)
+    call sll_s_solve_qn_solver_2d_parallel(plan, rho_par, c_par, Te_par, f, g, Zi, phi)
 
     average_err        = 0._f64
     average_err_bound  = 0._f64
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
-          global = local_to_global(layout, (/i, j, 1/))
+          global = sll_o_local_to_global(layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
           theta = (gj-1)*dtheta
-          if (bc==SLL_NEUMANN) then
+          if (bc==sll_p_neumann) then
              r = rmin + (gi-1)*dr
           else ! 'dirichlet'
              r = rmin + gi*dr
@@ -270,11 +270,11 @@ contains
        stop
     endif
 
-    call sll_collective_reduce(sll_world_collective, (/ ok /), 1,        &
+    call sll_o_collective_reduce(sll_v_world_collective, (/ ok /), 1,        &
                                                   MPI_PROD, 0, prod4test )
     enddo
 
-    call delete_qn_solver_2d_parallel(plan)
+    call sll_s_delete_qn_solver_2d_parallel(plan)
 
     SLL_DEALLOCATE_ARRAY(phi, ierr)
     SLL_DEALLOCATE_ARRAY(c_seq, ierr)

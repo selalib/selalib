@@ -82,7 +82,7 @@
 !> !print namelist info
 !> call sll_o_nml_mesh_1d_two_grid_cart( &
 !>  filename, &
-!>  proc_id=sll_get_collective_rank(sll_world_collective))
+!>  proc_id=sll_f_get_collective_rank(sll_v_world_collective))
 !>\endcode
 
   !-----------------------------------------------------------------

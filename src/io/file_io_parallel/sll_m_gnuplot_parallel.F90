@@ -21,7 +21,7 @@
 !> @details
 !> Data files are in ASCII format so these subroutines are slow and use
 !> a lot of disk space. Consider to use it for debug purpose.
-!> Here an example using the layout_2d object, check out how to compute
+!> Here an example using the sll_t_layout_2d object, check out how to compute
 !> offset values before calling sll_m_gnuplot_parallel subroutines.
 !> @snippet remap/unit_test_parallel.F90 example
 #define MPI_MASTER 0
@@ -243,7 +243,7 @@ end subroutine sll_s_gnuplot_rect_2d_parallel
 
 !!$!> write a data file plotable by gnuplot to visualize a 2d field
 !!$subroutine sll_gnuplot_draw_parallel_array_2d( &
-!!$     layout_2d, &
+!!$     sll_t_layout_2d, &
 !!$     x_min_global, &
 !!$     delta_x, &
 !!$     y_min_global, &
@@ -253,7 +253,7 @@ end subroutine sll_s_gnuplot_rect_2d_parallel
 !!$     iplot, &
 !!$     error)  
 !!$
-!!$  type(layout_2D), pointer               :: layout_2d
+!!$  type(sll_t_layout_2d), pointer               :: sll_t_layout_2d
 !!$  sll_real64, intent(in)                 :: x_min_global !< Box corners
 !!$  sll_real64, intent(in)                 :: delta_x      !< step size
 !!$  sll_real64, intent(in)                 :: y_min_global !< Box corners
@@ -274,14 +274,14 @@ end subroutine sll_s_gnuplot_rect_2d_parallel
 !!$  sll_int32                       :: comm, iproc, nproc
 !!$  logical                         :: dir_e
 !!$
-!!$  col =>get_layout_collective(layout_2D)
-!!$  nproc = sll_get_collective_size(col)
-!!$  iproc = sll_get_collective_rank(col)
+!!$  col =>get_layout_collective(sll_t_layout_2d)
+!!$  nproc = sll_f_get_collective_size(col)
+!!$  iproc = sll_f_get_collective_rank(col)
 !!$  call sll_s_int2string(iproc, cproc)
-!!$  comm  = sll_world_collective%comm
+!!$  comm  = sll_v_world_collective%comm
 !!$  call sll_s_int2string(iplot, fin)
 !!$
-!!$  gi(1:2) = local_to_global(layout_2D, (/ 1, 1 /) )
+!!$  gi(1:2) = sll_o_local_to_global(sll_t_layout_2d, (/ 1, 1 /) )
 !!$
 !!$  !shouldn't we allow this same instruction when iplot is zero??
 !!$  if (iplot == 1) then
