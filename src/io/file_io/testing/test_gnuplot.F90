@@ -5,10 +5,10 @@ program test_io_gnuplot
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_2d
+    sll_o_gnuplot_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -25,7 +25,7 @@ sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: array
 
 sll_real64 :: eta1_min = 1.0_f64, eta1_max = 2.0_f64
-sll_real64 :: eta2_min = 0.0_f64, eta2_max = 2*sll_pi
+sll_real64 :: eta2_min = 0.0_f64, eta2_max = 2*sll_p_pi
 
 n1 = 32
 n2 = 64
@@ -52,15 +52,15 @@ array = cos(2.*x1)*exp(-x2*x2)
 ! Set plot index to 1, otherwise a new file id is not computed (dangerous!)
 iplot = 1
 
-call sll_gnuplot_2d(eta1_min, eta1_max, n1, &
+call sll_o_gnuplot_2d(eta1_min, eta1_max, n1, &
                     eta2_min, eta2_max, n2, &
                     array, 'plot_1', iplot, error)
 
-call sll_gnuplot_2d(n1, eta1, n2, eta2, array, 'plot_2', iplot, error)
+call sll_o_gnuplot_2d(n1, eta1, n2, eta2, array, 'plot_2', iplot, error)
  
-call sll_gnuplot_2d(n1, n2, x1, x2, array, 'plot_3', iplot, error)
+call sll_o_gnuplot_2d(n1, n2, x1, x2, array, 'plot_3', iplot, error)
  
-call sll_gnuplot_2d(n1, n2, x1, x2, 'mesh', error)
+call sll_o_gnuplot_2d(n1, n2, x1, x2, 'mesh', error)
  
 print*, 'PASSED'
 end program test_io_gnuplot

@@ -4,13 +4,13 @@ program test_poisson_2d_sparse_grid_fft
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_poisson_2d_sparse_grid_fft, only: &
-    sll_fft_derivative
+    sll_t_fft_derivative
 
   use sll_m_sparse_grid_2d, only: &
-    sparse_grid_interpolator_2d
+    sll_t_sparse_grid_interpolator_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -19,7 +19,7 @@ program test_poisson_2d_sparse_grid_fft
    sll_int32   :: nc_eta1, nc_eta2
    sll_int32   :: error
 
-   type(sparse_grid_interpolator_2d), target :: interp
+   type(sll_t_sparse_grid_interpolator_2d), target :: interp
 
    sll_real64, dimension(:),allocatable      :: ex
    sll_real64, dimension(:),allocatable      :: ey
@@ -29,7 +29,7 @@ program test_poisson_2d_sparse_grid_fft
    sll_real64, dimension(:),allocatable      :: phi
    sll_real64, dimension(:),allocatable      :: phi_exact
    sll_real64, dimension(:),allocatable        :: rho_hsp, phi_hsp
-   type(sll_fft_derivative) :: poisson
+   type(sll_t_fft_derivative) :: poisson
 
    sll_real64                         :: x1, x2
    sll_int32                          :: i
@@ -40,8 +40,8 @@ program test_poisson_2d_sparse_grid_fft
    order = 2;
    levels(1) = 9; levels(2) = 8;
 
-   eta_min(1) = .0_f64; eta_max(1) = 4.0_f64*sll_pi
-   eta_min(2) = .0_f64; eta_max(2) = 4.0_f64*sll_pi
+   eta_min(1) = .0_f64; eta_max(1) = 4.0_f64*sll_p_pi
+   eta_min(2) = .0_f64; eta_max(2) = 4.0_f64*sll_p_pi
 
    nc_eta1 = 20; nc_eta2 = 20
 

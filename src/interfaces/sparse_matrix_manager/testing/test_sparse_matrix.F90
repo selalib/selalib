@@ -8,7 +8,7 @@ use sll_m_collective
 
 implicit none
 
-type(sll_csr_matrix),       pointer     :: mat
+type(sll_t_csr_matrix),       pointer     :: mat
 sll_int32                               :: num_rows
 sll_int32                               :: num_elements
 sll_int32,  dimension(:,:), allocatable :: local_to_global_row
@@ -21,9 +21,9 @@ sll_real64                              :: val
 sll_int32                               :: prank
 sll_int32                               :: psize
 
-call sll_boot_collective()
-prank = sll_get_collective_rank( sll_world_collective )
-psize = sll_get_collective_size( sll_world_collective )
+call sll_s_boot_collective()
+prank = sll_f_get_collective_rank( sll_v_world_collective )
+psize = sll_f_get_collective_size( sll_v_world_collective )
 
 write(*,*) " #", prank, " of ", psize
 
@@ -42,8 +42,8 @@ enddo
 
 b = 1._f64
 
-print *,'#begin new_csr_matrix'
-mat => new_csr_matrix( &
+print *,'#begin sll_f_new_csr_matrix'
+mat => sll_f_new_csr_matrix( &
   num_rows, &
   num_rows, &
   num_elements, &
@@ -51,19 +51,19 @@ mat => new_csr_matrix( &
   num_local_dof_row, &
   local_to_global_row, &
   num_local_dof_row)
-print *,'#end new_csr_matrix'
+print *,'#end sll_f_new_csr_matrix'
 
 !do identity matrix
 print *,'#begin add_to_csr_matrix'
 val = 1._f64
 do i=1,num_rows
-  call sll_add_to_csr_matrix(mat, val, i, i)
+  call sll_s_add_to_csr_matrix(mat, val, i, i)
 enddo
 print *,'#end add_to_csr_matrix'
 
-print *,'#begin sll_solve_csr_matrix'
-call sll_solve_csr_matrix(mat, b, x)
-print *,'#end sll_solve_csr_matrix'
+print *,'#begin sll_s_solve_csr_matrix'
+call sll_s_solve_csr_matrix(mat, b, x)
+print *,'#end sll_s_solve_csr_matrix'
   
 if(maxval(abs(x-1.0_f64))<1.e-13)then
   print *,'#PASSED'
@@ -71,6 +71,6 @@ else
   print *,'#system is not good resolved',maxval(abs(x))
 endif
 
-call sll_halt_collective()
+call sll_s_halt_collective()
 
 end program

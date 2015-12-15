@@ -4,33 +4,33 @@ program test_fcisl_toroidal
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_close, &
-    sll_ascii_file_create, &
-    sll_ascii_write_array_1d
+    sll_s_ascii_file_close, &
+    sll_s_ascii_file_create, &
+    sll_s_ascii_write_array_1d
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    new_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_fcisl_toroidal, only: &
-    compute_analytic_field, &
-    compute_euler_field, &
-    compute_feet_analytic, &
-    compute_feet_euler, &
-    compute_feet_rk4, &
-    compute_inverse_invr_integral, &
-    compute_invr_integral, &
-    compute_linspace, &
-    compute_modulo_vect, &
-    compute_modulo_vect2d_inplace, &
-    compute_rk4_field, &
-    compute_time_points, &
-    interpolate2d_toroidal
+    sll_s_compute_analytic_field, &
+    sll_s_compute_euler_field, &
+    sll_s_compute_feet_analytic, &
+    sll_s_compute_feet_euler, &
+    sll_s_compute_feet_rk4, &
+    sll_f_compute_inverse_invr_integral, &
+    sll_f_compute_invr_integral, &
+    sll_s_compute_linspace, &
+    sll_s_compute_modulo_vect, &
+    sll_s_compute_modulo_vect2d_inplace, &
+    sll_s_compute_rk4_field, &
+    sll_s_compute_time_points, &
+    sll_f_interpolate2d_toroidal
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -174,9 +174,9 @@ print*,"iota=",iota
   SLL_ALLOCATE(f_aligned(Npts_theta,Npts_phi),ierr)
   SLL_ALLOCATE(f(Npts_theta,Npts_phi),ierr)
   
-  call compute_time_points(dt,num_time_points,time_points)
+  call sll_s_compute_time_points(dt,num_time_points,time_points)
   
-  call compute_euler_field( &
+  call sll_s_compute_euler_field( &
     R0, &
     time_points, &
     num_time_points, &
@@ -187,14 +187,14 @@ print*,"iota=",iota
     phi_euler, &
     theta0, &
     phi0)   
-  call compute_modulo_vect(phi_euler,phi,num_time_points,2._f64*sll_pi)
-  call compute_modulo_vect(theta_euler,theta,num_time_points,2._f64*sll_pi)
-  call sll_ascii_file_create("euler_field.dat", file_id, ierr)    
-  call sll_ascii_write_array_1d(file_id,time_points,ierr,num_time_points,phi,theta)  
-  call sll_ascii_file_close(file_id,ierr)
+  call sll_s_compute_modulo_vect(phi_euler,phi,num_time_points,2._f64*sll_p_pi)
+  call sll_s_compute_modulo_vect(theta_euler,theta,num_time_points,2._f64*sll_p_pi)
+  call sll_s_ascii_file_create("euler_field.dat", file_id, ierr)    
+  call sll_s_ascii_write_array_1d(file_id,time_points,ierr,num_time_points,phi,theta)  
+  call sll_s_ascii_file_close(file_id,ierr)
   !for visualization: gnuplot -e 'plot "euler_field.dat" u 2:3 w p ps 1 lt 5'  
 
-  call compute_rk4_field( &
+  call sll_s_compute_rk4_field( &
     R0, &
     time_points, &
     num_time_points, &
@@ -205,15 +205,15 @@ print*,"iota=",iota
     phi_rk4, &
     theta0, &
     phi0)   
-  call compute_modulo_vect(phi_rk4,phi,num_time_points,2._f64*sll_pi)
-  call compute_modulo_vect(theta_rk4,theta,num_time_points,2._f64*sll_pi)
-  call sll_ascii_file_create("rk4_field.dat", file_id, ierr)    
-  call sll_ascii_write_array_1d(file_id,time_points,ierr,num_time_points,phi,theta)  
-  call sll_ascii_file_close(file_id,ierr)
+  call sll_s_compute_modulo_vect(phi_rk4,phi,num_time_points,2._f64*sll_p_pi)
+  call sll_s_compute_modulo_vect(theta_rk4,theta,num_time_points,2._f64*sll_p_pi)
+  call sll_s_ascii_file_create("rk4_field.dat", file_id, ierr)    
+  call sll_s_ascii_write_array_1d(file_id,time_points,ierr,num_time_points,phi,theta)  
+  call sll_s_ascii_file_close(file_id,ierr)
   !for visualization: gnuplot -e 'plot "rk4_field.dat" u 2:3 w p ps 1 lt 5'  
 
 
-  call compute_analytic_field( &
+  call sll_s_compute_analytic_field( &
     R0, &
     time_points, &
     num_time_points, &
@@ -224,11 +224,11 @@ print*,"iota=",iota
     phi_analytic, &
     theta0, &
     phi0)   
-  call compute_modulo_vect(phi_analytic,phi,num_time_points,2._f64*sll_pi)
-  call compute_modulo_vect(theta_analytic,theta,num_time_points,2._f64*sll_pi)
-  call sll_ascii_file_create("analytic_field.dat", file_id, ierr)    
-  call sll_ascii_write_array_1d(file_id,time_points,ierr,num_time_points,phi,theta) 
-  call sll_ascii_file_close(file_id,ierr)
+  call sll_s_compute_modulo_vect(phi_analytic,phi,num_time_points,2._f64*sll_p_pi)
+  call sll_s_compute_modulo_vect(theta_analytic,theta,num_time_points,2._f64*sll_p_pi)
+  call sll_s_ascii_file_create("analytic_field.dat", file_id, ierr)    
+  call sll_s_ascii_write_array_1d(file_id,time_points,ierr,num_time_points,phi,theta) 
+  call sll_s_ascii_file_close(file_id,ierr)
   !for visualization: gnuplot -e 'plot "analytic_field.dat" u 2:3 w p ps 1 lt 5'  
 
   
@@ -239,23 +239,23 @@ print*,"iota=",iota
   
   print *,'#err between rk4 and analytic=',err
   
-  call compute_linspace(x_array,xmin,xmax,Npts_x)
+  call sll_s_compute_linspace(x_array,xmin,xmax,Npts_x)
   err = 0._f64
   do i=1,Npts_x
-    err= max(err,abs(compute_inverse_invR_integral(R0,smallr,compute_invR_integral(R0,smallr,x_array(i)))-x_array(i)))
-    err= max(err,abs(compute_invR_integral(R0,smallr,compute_inverse_invR_integral(R0,smallr,x_array(i)))-x_array(i)))    
+    err= max(err,abs(sll_f_compute_inverse_invr_integral(R0,smallr,sll_f_compute_invr_integral(R0,smallr,x_array(i)))-x_array(i)))
+    err= max(err,abs(sll_f_compute_invr_integral(R0,smallr,sll_f_compute_inverse_invr_integral(R0,smallr,x_array(i)))-x_array(i)))    
   enddo
 
   print *,'#err for invR integral and inverse=',err
 
-  call compute_linspace(phi_array,0._f64,2._f64*sll_pi,Npts_phi)
-  call compute_linspace(theta_array,0._f64,2._f64*sll_pi,Npts_theta)
+  call sll_s_compute_linspace(phi_array,0._f64,2._f64*sll_p_pi,Npts_phi)
+  call sll_s_compute_linspace(theta_array,0._f64,2._f64*sll_p_pi,Npts_theta)
   params(1) = R0
   params(2) = psipr 
   params(3) = F0
   params(4) = smallr
   
-  call compute_feet_euler( &
+  call sll_s_compute_feet_euler( &
     theta_array, &
     phi_array, &
     Npts_theta, &
@@ -265,7 +265,7 @@ print*,"iota=",iota
     charac_theta_euler, &
     charac_phi_euler) 
 
-  call compute_feet_rk4( &
+  call sll_s_compute_feet_rk4( &
     theta_array, &
     phi_array, &
     Npts_theta, &
@@ -276,7 +276,7 @@ print*,"iota=",iota
     charac_phi_rk4) 
 
 
-  call compute_feet_analytic( &
+  call sll_s_compute_feet_analytic( &
     theta_array, &
     phi_array, &
     Npts_theta, &
@@ -308,7 +308,7 @@ print*,"iota=",iota
   enddo 
 
 
-  call compute_feet_analytic( &
+  call sll_s_compute_feet_analytic( &
     theta_array, &
     phi_array, &
     Npts_theta, &
@@ -317,19 +317,19 @@ print*,"iota=",iota
     params, &
     charac_theta, &
     charac_phi) 
-  call compute_modulo_vect2d_inplace(charac_theta,Npts_theta,Npts_phi,2._f64*sll_pi)
-  call compute_modulo_vect2d_inplace(charac_phi,Npts_theta,Npts_phi,2._f64*sll_pi)
+  call sll_s_compute_modulo_vect2d_inplace(charac_theta,Npts_theta,Npts_phi,2._f64*sll_p_pi)
+  call sll_s_compute_modulo_vect2d_inplace(charac_phi,Npts_theta,Npts_phi,2._f64*sll_p_pi)
 
 
-  interp_classic => new_cubic_spline_interpolator_2d( &
+  interp_classic => sll_f_new_cubic_spline_interpolator_2d( &
     Npts_theta, &
     Npts_phi, &
     0._f64, &
-    2._f64*sll_pi, &
+    2._f64*sll_p_pi, &
     0._f64, &
-    2._f64*sll_pi, &
-    SLL_PERIODIC, &
-    SLL_PERIODIC)
+    2._f64*sll_p_pi, &
+    sll_p_periodic, &
+    sll_p_periodic)
   f_classic = f_init
   err = 0._f64
   do iter=1,nb_iter
@@ -342,7 +342,7 @@ print*,"iota=",iota
       f)
     f_classic = f
     
-    call compute_feet_analytic( &
+    call sll_s_compute_feet_analytic( &
       theta_array, &
       phi_array, &
       Npts_theta, &
@@ -376,14 +376,14 @@ print*,"iota=",iota
   params_aligned(6) = real(lag_r,f64)
   params_aligned(7) = real(lag_s,f64)
   params_aligned(8) = 0._f64
-  params_aligned(9) = 2._f64*sll_pi
+  params_aligned(9) = 2._f64*sll_p_pi
   params_aligned(10) = 0._f64
-  params_aligned(11) = 2._f64*sll_pi
+  params_aligned(11) = 2._f64*sll_p_pi
 
   f_aligned = f_init
   err = 0._f64
   do iter=1,nb_iter
-    f = interpolate2d_toroidal( &
+    f = sll_f_interpolate2d_toroidal( &
       Npts_theta, &
       Npts_phi, &
       f_aligned, &
@@ -392,7 +392,7 @@ print*,"iota=",iota
       params_aligned)
     f_aligned = f
     
-    call compute_feet_analytic( &
+    call sll_s_compute_feet_analytic( &
       theta_array, &
       phi_array, &
       Npts_theta, &
@@ -433,7 +433,7 @@ print*,"iota=",iota
 !    hermite_s_left, &
 !    theta_pos_left, &
 !    0._f64, &
-!    2._f64*sll_pi )
+!    2._f64*sll_p_pi )
 !
 !
 !  SLL_ALLOCATE(buf(9,Npts_theta,Npts_phi),ierr)  

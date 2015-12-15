@@ -7,10 +7,10 @@ program test_interpolation_2d
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_sparse_grid_2d, only: &
-    sparse_grid_interpolator_2d
+    sll_t_sparse_grid_interpolator_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,7 +28,7 @@ program test_interpolation_2d
   sll_int32, dimension(2) :: dorder,levelsini
   sll_real64, dimension(:), allocatable :: displacement
 
-  type(sparse_grid_interpolator_2d), target   :: interp
+  type(sll_t_sparse_grid_interpolator_2d), target   :: interp
 
   logical :: fail
 
@@ -40,8 +40,8 @@ program test_interpolation_2d
   ALLOCATE(errorvecFFT(its));
 
   ! Set parameters
-  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_pi;
-  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_pi;
+  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_p_pi;
+  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_p_pi;
 
   levels = 8;
   order(1) = 1;

@@ -7,70 +7,70 @@ module sll_m_sim_pic_vp_2d2v_cart_optim_push
 #include "particle_representation.h"
 
   use sll_m_accumulators, only: &
-    electric_field_accumulator, &
-    electric_field_accumulator_cs, &
-    field_accumulator_cell, &
-    field_accumulator_cs, &
-    new_charge_accumulator_2d, &
-    new_charge_accumulator_2d_cs, &
-    new_field_accumulator_2d, &
-    new_field_accumulator_cs_2d, &
-    reset_charge_accumulator_to_zero, &
-    reset_charge_accumulator_to_zero_cs, &
-    reset_field_accumulator_cs_to_zero, &
-    reset_field_accumulator_to_zero, &
-    sll_charge_accumulator_2d, &
-    sll_charge_accumulator_2d_cs, &
-    sll_charge_accumulator_2d_cs_ptr, &
-    sll_charge_accumulator_2d_ptr, &
-    sum_accumulators, &
-    sum_accumulators_cs
+    sll_t_electric_field_accumulator, &
+    sll_t_electric_field_accumulator_cs, &
+    sll_t_field_accumulator_cell, &
+    sll_t_field_accumulator_cs, &
+    sll_f_new_charge_accumulator_2d, &
+    sll_f_new_charge_accumulator_2d_cs, &
+    sll_f_new_field_accumulator_2d, &
+    sll_f_new_field_accumulator_cs_2d, &
+    sll_s_reset_charge_accumulator_to_zero, &
+    sll_s_reset_charge_accumulator_to_zero_cs, &
+    sll_s_reset_field_accumulator_cs_to_zero, &
+    sll_s_reset_field_accumulator_to_zero, &
+    sll_t_charge_accumulator_2d, &
+    sll_t_charge_accumulator_2d_cs, &
+    sll_t_charge_accumulator_2d_cs_ptr, &
+    sll_t_charge_accumulator_2d_ptr, &
+    sll_s_sum_accumulators, &
+    sll_s_sum_accumulators_cs
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_charge_to_density, only: &
-    sll_accumulate_field, &
-    sll_accumulate_field_cs, &
-    sll_convert_charge_to_rho_2d_per_per, &
-    sll_convert_charge_to_rho_2d_per_per_cs
+    sll_s_accumulate_field, &
+    sll_s_accumulate_field_cs, &
+    sll_s_convert_charge_to_rho_2d_per_per, &
+    sll_s_convert_charge_to_rho_2d_per_per_cs
 
   use sll_m_collective, only: &
-    sll_collective_allreduce, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_o_collective_allreduce, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_particle_group_4d, only: &
-    new_particle_4d_group, &
-    sll_particle_group_4d
+    sll_f_new_particle_4d_group, &
+    sll_t_particle_group_4d
 
   use sll_m_particle_initializers_4d, only: &
-    sll_initial_particles_4d
+    sll_s_initial_particles_4d
 
   use sll_m_particle_representations, only: &
-    sll_particle_4d, &
-    sll_particle_4d_guard
+    sll_t_particle_4d, &
+    sll_t_particle_4d_guard
 
   use sll_m_particle_sort, only: &
-    sll_new_particle_sorter_2d, &
-    sll_particle_sorter_2d, &
-    sll_sort_particles_2d
+    sll_f_new_particle_sorter_2d, &
+    sll_t_particle_sorter_2d, &
+    sll_s_sort_particles_2d
 
   use sll_m_pic_utilities, only: &
-    sll_first_charge_accumulation_2d, &
-    sll_first_charge_accumulation_2d_cs
+    sll_s_first_charge_accumulation_2d, &
+    sll_s_first_charge_accumulation_2d_cs
 
   use sll_m_poisson_2d_fft, only: &
-    new_poisson_2d_fft_solver, &
-    poisson_2d_fft_solver
+    sll_f_new_poisson_2d_fft_solver, &
+    sll_t_poisson_2d_fft_solver
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_mpi, only: &
     mpi_sum
@@ -85,13 +85,13 @@ module sll_m_sim_pic_vp_2d2v_cart_optim_push
   implicit none
 
   public :: &
-    sll_delete, &
-    sll_pic_simulation_4d_cartesian
+    sll_o_delete, &
+    sll_t_pic_simulation_4d_cartesian
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type, extends(sll_simulation_base_class) :: sll_pic_simulation_4d_cartesian
+  type, extends(sll_c_simulation_base_class) :: sll_t_pic_simulation_4d_cartesian
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_int32  :: num_iterations
@@ -100,16 +100,16 @@ module sll_m_sim_pic_vp_2d2v_cart_optim_push
      sll_int32  :: guard_size
      sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
-     type(sll_particle_group_4d),  pointer :: part_group
-     type(sll_cartesian_mesh_2d),    pointer :: m2d
-     type(sll_particle_sorter_2d), pointer :: sorter
-     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
-     type(electric_field_accumulator), pointer :: E_accumulator
+     type(sll_t_particle_group_4d),  pointer :: part_group
+     type(sll_t_cartesian_mesh_2d),    pointer :: m2d
+     type(sll_t_particle_sorter_2d), pointer :: sorter
+     type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
+     type(sll_t_electric_field_accumulator), pointer :: E_accumulator
      logical :: use_cubic_splines
-     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
-     type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
+     type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
+     type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
-     type(poisson_2d_fft_solver), pointer :: poisson
+     type(sll_t_poisson_2d_fft_solver), pointer :: poisson
      sll_real64, dimension(:,:), pointer :: E1, E2
      sll_int32 :: my_rank
      sll_int32 :: world_size
@@ -117,11 +117,11 @@ module sll_m_sim_pic_vp_2d2v_cart_optim_push
    contains
      procedure, pass(sim) :: init_from_file => init_4d_pic_cartesian
      procedure, pass(sim) :: run => run_4d_pic_cartesian
-  end type sll_pic_simulation_4d_cartesian
+  end type sll_t_pic_simulation_4d_cartesian
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_4d_pic_cart
-  end interface sll_delete
+  end interface sll_o_delete
 
 !!$  interface initialize
 !!$     module procedure initialize_4d_qns_general
@@ -131,7 +131,7 @@ contains
 
   subroutine init_4d_pic_cartesian( sim, filename )
     intrinsic :: trim
-    class(sll_pic_simulation_4d_cartesian), intent(inout) :: sim
+    class(sll_t_pic_simulation_4d_cartesian), intent(inout) :: sim
     character(len=*), intent(in)                          :: filename
     sll_int32   :: IO_stat
     sll_int32   :: ierr
@@ -150,7 +150,7 @@ contains
     sll_int32, dimension(:), allocatable  :: rand_seed
     sll_int32   :: rand_seed_size
     sll_int32  :: thread_id, it
-    type(sll_particle_group_4d), pointer  :: pa_gr
+    type(sll_t_particle_group_4d), pointer  :: pa_gr
 
     namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
                           PARTICLE_ARRAY_SIZE, &
@@ -169,12 +169,12 @@ contains
     read(input_file, elec_params)
     close(input_file)
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%my_rank    = sll_f_get_collective_rank(sll_v_world_collective)
 
 
-    XMAX = (2._f64*sll_pi/KX)
-!!$    YMAX = (2._f64*sll_pi/KY)! le cas LANDAU 2D en X
+    XMAX = (2._f64*sll_p_pi/KX)
+!!$    YMAX = (2._f64*sll_p_pi/KY)! le cas LANDAU 2D en X
     sim%use_cubic_splines = UseCubicSplines
     sim%thermal_speed_parts = THERM_SPEED
     sim%parts_number = NUM_PARTICLES
@@ -185,19 +185,19 @@ contains
 
     sim%elec_params = (/KX, ALPHA, er, psi, omega_r, omega_i /)
     
-    sim%m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
+    sim%m2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
                 XMIN, XMAX, YMIN, YMAX )
 
-    sim%part_group => new_particle_4d_group( &
+    sim%part_group => sll_f_new_particle_4d_group( &
          NUM_PARTICLES, &
          PARTICLE_ARRAY_SIZE, &
          GUARD_SIZE, &
          QoverM,     &
          sim%m2d )
 
-    sim%sorter => sll_new_particle_sorter_2d( sim%m2d )
+    sim%sorter => sll_f_new_particle_sorter_2d( sim%m2d )
 
-    sim%poisson => new_poisson_2d_fft_solver( sim%m2d%eta1_min,    &
+    sim%poisson => sll_f_new_poisson_2d_fft_solver( sim%m2d%eta1_min,    &
                                               sim%m2d%eta1_max,    & 
                                               sim%m2d%num_cells1,  &
                                               sim%m2d%eta2_min,    &
@@ -214,7 +214,7 @@ contains
     pa_gr => sim%part_group
 !!$    call sll_initial_particles_4d_L2d( sim%thermal_speed_parts, & 
 !!$                                   ALPHA, KX, KY, sim%m2d,     &
-    call sll_initial_particles_4d( sim%thermal_speed_parts, & 
+    call sll_s_initial_particles_4d( sim%thermal_speed_parts, & 
                                    ALPHA, KX, sim%m2d,     &
                                    sim%parts_number,        &
                                    pa_gr, &
@@ -230,7 +230,7 @@ contains
     !$omp end do
 
     !$omp single
-    call sll_sort_particles_2d( sim%sorter, sim%part_group )
+    call sll_s_sort_particles_2d( sim%sorter, sim%part_group )
     sim%n_threads =  1
     !$omp end single
 
@@ -249,10 +249,10 @@ contains
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
 #endif 
-       sim%q_accumulator_CS(thread_id+1)%q => new_charge_accumulator_2d_CS( sim%m2d )       
+       sim%q_accumulator_CS(thread_id+1)%q => sll_f_new_charge_accumulator_2d_cs( sim%m2d )       
        !$omp end parallel
-       sim%E_accumulator_CS => new_field_accumulator_CS_2d( sim%m2d )           
-       call sll_first_charge_accumulation_2d_CS( sim%part_group, sim%q_accumulator_CS )
+       sim%E_accumulator_CS => sll_f_new_field_accumulator_cs_2d( sim%m2d )           
+       call sll_s_first_charge_accumulation_2d_cs( sim%part_group, sim%q_accumulator_CS )
 
     else
        
@@ -262,10 +262,10 @@ contains
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
 #endif 
-       sim%q_accumulator(thread_id+1)%q => new_charge_accumulator_2d( sim%m2d )
+       sim%q_accumulator(thread_id+1)%q => sll_f_new_charge_accumulator_2d( sim%m2d )
        !$omp end parallel
-       sim%E_accumulator => new_field_accumulator_2d( sim%m2d )
-       call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator)!(1)%q )
+       sim%E_accumulator => sll_f_new_field_accumulator_2d( sim%m2d )
+       call sll_s_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator)!(1)%q )
     endif
     
   end subroutine init_4d_pic_cartesian
@@ -274,7 +274,7 @@ contains
     intrinsic :: trim
 !!!   calls of routines with '_CS' mean use of Cubic Splines  !!!
 !     for deposition or interpolation step                      !
-    class(sll_pic_simulation_4d_cartesian), intent(inout)  :: sim
+    class(sll_t_pic_simulation_4d_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j
     sll_real64 :: tmp5, tmp6, temp
@@ -291,10 +291,10 @@ contains
     sll_real64 :: y, y1 ! for global position
     sll_real64 :: dt, ttime
     sll_real64 :: pp_vx, pp_vy
-    type(sll_particle_4d), dimension(:), pointer :: p
-    type(field_accumulator_cell), dimension(:), pointer :: accumE
-    type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
-    type(sll_particle_4d_guard), dimension(:), pointer :: p_guard
+    type(sll_t_particle_4d), dimension(:), pointer :: p
+    type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
+    type(sll_t_field_accumulator_cs), dimension(:), pointer :: accumE_CS
+    type(sll_t_particle_4d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy!, diag_energyL2D
     sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
@@ -306,8 +306,8 @@ contains
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
-    type(sll_charge_accumulator_2d),    pointer :: q_accum
-    type(sll_charge_accumulator_2d_CS), pointer :: q_accum_CS
+    type(sll_t_charge_accumulator_2d),    pointer :: q_accum
+    type(sll_t_charge_accumulator_2d_cs), pointer :: q_accum_CS
     sll_int32  :: sort_nb
     sll_real64 :: some_val, une_cst
     sll_real64 :: val_lee, exval_ee
@@ -347,12 +347,12 @@ contains
 
     if (sim%use_cubic_splines) then
        accumE_CS => sim%E_accumulator_CS%e_acc
-       call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
-       call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho ) 
+       call sll_s_sum_accumulators_cs( sim%q_accumulator_CS, n_threads, ncx*ncy )
+       call sll_s_convert_charge_to_rho_2d_per_per_cs( sim%q_accumulator_CS(1)%q, sim%rho ) 
     else
        accumE => sim%E_accumulator%e_acc
-       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
-       call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
+       call sll_s_sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
+       call sll_s_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
     endif
 
     if (sim%world_size > 1 ) then
@@ -362,7 +362,7 @@ contains
              rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
           enddo
        enddo
-       call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+       call sll_o_collective_allreduce( sll_v_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
             MPI_SUM, rho1d_receive   )
        do j = 1, ncy+1
           do i = 1, ncx+1
@@ -397,8 +397,8 @@ contains
 !!$         + tot_ee * 0.5_f64! ATTENTION : resultats faux avec MPI 
     
     if (sim%use_cubic_splines) then 
-       call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
-       call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
+       call sll_s_reset_field_accumulator_cs_to_zero( sim%E_accumulator_CS )
+       call sll_s_accumulate_field_cs( sim%E1, sim%E2, sim%E_accumulator_CS )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, ttmp)
        !$&omp FIRSTPRIVATE(dtqom)
        do i = 1, sim%parts_number
@@ -412,8 +412,8 @@ contains
 
     else
        
-       call reset_field_accumulator_to_zero( sim%E_accumulator )
-       call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
+       call sll_s_reset_field_accumulator_to_zero( sim%E_accumulator )
+       call sll_s_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
        !$&omp FIRSTPRIVATE(dtqom)
        do i = 1, sim%parts_number
@@ -427,7 +427,7 @@ contains
     endif
 
     une_cst = 16._f64*(sim%elec_params(2))**2 *(sim%elec_params(3))**2 &
-         * sll_pi/sim%elec_params(1) !pi/KX*(4._f64*ALPHA*er)**2
+         * sll_p_pi/sim%elec_params(1) !pi/KX*(4._f64*ALPHA*er)**2
     omega_i = sim%elec_params(6)
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
@@ -469,7 +469,7 @@ contains
        endif
 
        if (mod(it+1,sort_nb)==0) then 
-          call sll_sort_particles_2d( sim%sorter, sim%part_group )
+          call sll_s_sort_particles_2d( sim%sorter, sim%part_group )
        endif
 
        ! *******************************************************************
@@ -488,7 +488,7 @@ contains
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
-          call reset_charge_accumulator_to_zero_CS( sim%q_accumulator_CS(thread_id+1)%q )
+          call sll_s_reset_charge_accumulator_to_zero_cs( sim%q_accumulator_CS(thread_id+1)%q )
           q_accum_CS => sim%q_accumulator_CS(thread_id+1)%q
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
@@ -581,7 +581,7 @@ contains
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
-          call reset_charge_accumulator_to_zero ( sim%q_accumulator(thread_id+1)%q )
+          call sll_s_reset_charge_accumulator_to_zero ( sim%q_accumulator(thread_id+1)%q )
           q_accum => sim%q_accumulator(thread_id+1)%q
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
@@ -667,11 +667,11 @@ contains
        ! -----------------------------
 
        if (sim%use_cubic_splines) then
-          call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
-          call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho )
+          call sll_s_sum_accumulators_cs( sim%q_accumulator_CS, n_threads, ncx*ncy )
+          call sll_s_convert_charge_to_rho_2d_per_per_cs( sim%q_accumulator_CS(1)%q, sim%rho )
        else
-          call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
-          call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho )
+          call sll_s_sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
+          call sll_s_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho )
        endif
        if (sim%world_size > 1 ) then
           do j = 1, ncy+1
@@ -680,7 +680,7 @@ contains
                 rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
              enddo
           enddo
-          call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+          call sll_o_collective_allreduce( sll_v_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
                MPI_SUM, rho1d_receive   )
           do j = 1, ncy+1
              do i = 1, ncx+1
@@ -692,11 +692,11 @@ contains
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
        
        if (sim%use_cubic_splines) then
-          call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
-          call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
+          call sll_s_reset_field_accumulator_cs_to_zero( sim%E_accumulator_CS )
+          call sll_s_accumulate_field_cs( sim%E1, sim%E2, sim%E_accumulator_CS )
        else
-          call reset_field_accumulator_to_zero( sim%E_accumulator )
-          call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
+          call sll_s_reset_field_accumulator_to_zero( sim%E_accumulator )
+          call sll_s_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
 !!$          some_val = 0.0_f64
 !!$          !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
 !!$          !$omp do reduction(+:some_val)
@@ -783,7 +783,7 @@ contains
 !!$  ! This just happened since the guts of the unit test were transplanted here
 !!$  ! directly, but this should be cleaned up.
 !!$  subroutine run_4d_pic_cart(sim)
-!!$    class(sll_pic_simulation_4d_cartesian), intent(inout) :: sim
+!!$    class(sll_t_pic_simulation_4d_cartesian), intent(inout) :: sim
 !!$
 !!$
 !!$
@@ -791,7 +791,7 @@ contains
 
 
   subroutine delete_4d_pic_cart( sim )
-    type(sll_pic_simulation_4d_cartesian) :: sim
+    type(sll_t_pic_simulation_4d_cartesian) :: sim
   end subroutine delete_4d_pic_cart
 
 

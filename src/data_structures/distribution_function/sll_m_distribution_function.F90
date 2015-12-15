@@ -6,29 +6,29 @@ module sll_m_distribution_function
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_scalar_field_2d_old, only: &
-    initialize_scalar_field_2d, &
-    scalar_field_2d, &
-    scalar_function_2d_old
+    sll_s_initialize_scalar_field_2d, &
+    sll_t_scalar_field_2d, &
+    sll_i_scalar_function_2d_old
 
   use sll_m_scalar_field_initializers_base, only: &
-    cell_centered_field, &
-    node_centered_field, &
-    scalar_field_2d_initializer_base
+    sll_p_cell_centered_field, &
+    sll_p_node_centered_field, &
+    sll_c_scalar_field_2d_initializer_base
 
   implicit none
 
   public :: &
-    initialize_distribution_function_2d, &
-    sll_distribution_function_2d
+    sll_s_initialize_distribution_function_2d, &
+    sll_t_distribution_function_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -40,10 +40,10 @@ module sll_m_distribution_function
      sll_real64      :: average;                                     \
   end type new_df_type
 
-!NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
+!NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, sll_t_scalar_field_2d)
 !NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, scalar_field_4d)
 
-NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
+NEW_TYPE_FOR_DF( sll_t_distribution_function_2d, sll_t_scalar_field_2d )
 
 
 !!$  interface write_distribution_function
@@ -63,16 +63,16 @@ contains
     name, &
     data_func ) 
     
-    class(sll_distribution_function_2D)   :: this
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
-    procedure(scalar_function_2D_old)           :: data_func
+    class(sll_t_distribution_function_2d)   :: this
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+    procedure(sll_i_scalar_function_2d_old)           :: data_func
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
-    class(sll_cartesian_mesh_2d), pointer :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     this%transf => transf
     this%plot_counter = 0
@@ -82,7 +82,7 @@ contains
     this%pmass = 1.0_f64
     mesh => transf%get_cartesian_mesh()
 
-    if (data_position == NODE_CENTERED_FIELD) then
+    if (data_position == sll_p_node_centered_field) then
        SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
        do i2 = 1, mesh%num_cells2+1
           do i1 = 1, mesh%num_cells1+1
@@ -90,7 +90,7 @@ contains
                   transf%x2_at_node(i1,i2))
           end do
        end do
-    else if (data_position == CELL_CENTERED_FIELD) then
+    else if (data_position == sll_p_cell_centered_field) then
        SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
        delta1 = 1.0_f64/mesh%num_cells1
        delta2 = 1.0_f64/mesh%num_cells2
@@ -107,7 +107,7 @@ contains
     endif
   end subroutine sll_new_distribution_function_2d
 
-  subroutine initialize_distribution_function_2d( &
+  subroutine sll_s_initialize_distribution_function_2d( &
     this, &
     mass, &
     charge, &
@@ -118,11 +118,11 @@ contains
     eta2_interpolator, &
     initializer )
 
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
     class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
-    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
-    type(sll_distribution_function_2d), intent(inout)   :: this
+    class(sll_c_scalar_field_2d_initializer_base), pointer, optional :: initializer
+    type(sll_t_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass
     sll_real64, intent(in)                              :: charge
     character(len=*), intent(in)                        :: field_name
@@ -131,7 +131,7 @@ contains
     this%pmass = mass
     this%pcharge = charge
 
-    call initialize_scalar_field_2d( &
+    call sll_s_initialize_scalar_field_2d( &
          this, &
          field_name, &
          transf, &
@@ -139,7 +139,7 @@ contains
          eta1_interpolator, &
          eta2_interpolator, &
          initializer )
-  end subroutine initialize_distribution_function_2d
+  end subroutine sll_s_initialize_distribution_function_2d
 #endif
 
 

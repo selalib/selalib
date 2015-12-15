@@ -12,7 +12,7 @@ module sll_m_rectangle_integration
   implicit none
 
   public :: &
-    rectangle_integrate_1d
+    sll_o_rectangle_integrate_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,7 +31,7 @@ end interface
 #endif
 
 !> Integrate numerically with Gauss-Lobatto formula
-interface rectangle_integrate_1d
+interface sll_o_rectangle_integrate_1d
   module procedure rectangle_integral_1d 
 end interface
 

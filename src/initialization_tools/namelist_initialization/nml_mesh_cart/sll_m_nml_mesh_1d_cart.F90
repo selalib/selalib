@@ -52,7 +52,7 @@
 !> Examples of calls of interface (generic)
 !>\code
 !> !print namelist info
-!> call sll_s_nml_mesh_1d_cart( &
+!> call sll_o_nml_mesh_1d_cart( &
 !>  filename, &
 !>  proc_id=sll_get_collective_rank(sll_world_collective))
 !>\endcode
@@ -75,11 +75,11 @@
 !> according to <code>choice</code> read from namelist 
 !> <code>mesh_1d_cart</code> in <code>filename</code>
 !>\code
-!> call sll_s_nml_mesh_1d_cart(filename,array)
+!> call sll_o_nml_mesh_1d_cart(filename,array)
 !>\endcode
 !> 2. Same, but read this time, from namelist <code>mesh_1d_cart_1</code>.
 !>\code
-!> call sll_s_nml_mesh_1d_cart(filename,array,clone="_1")
+!> call sll_o_nml_mesh_1d_cart(filename,array,clone="_1")
 !>\endcode
 
   !-----------------------------------------------------------------
@@ -95,21 +95,21 @@ module sll_m_nml_mesh_1d_cart
 #include "sll_working_precision.h"
 
   use sll_m_nml_mesh_1d_landau_cart, only: &
-    sll_s_nml_mesh_1d_landau_cart
+    sll_o_nml_mesh_1d_landau_cart
 
   use sll_m_nml_mesh_1d_two_grid_cart, only: &
-    sll_s_nml_mesh_1d_two_grid_cart
+    sll_o_nml_mesh_1d_two_grid_cart
 
   use sll_m_nml_mesh_1d_unif_cart, only: &
-    sll_s_nml_mesh_1d_unif_cart
+    sll_o_nml_mesh_1d_unif_cart
 
   use sll_m_utilities, only: &
-    sll_new_file_id
+    sll_s_new_file_id
 
   implicit none
 
   public :: &
-    sll_s_nml_mesh_1d_cart
+    sll_o_nml_mesh_1d_cart
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -130,11 +130,11 @@ module sll_m_nml_mesh_1d_cart
   !  SPECIFIC DECLARATION (BEGIN)
   !-----------------------------------------------------------------
 
-  interface sll_s_nml_mesh_1d_cart
+  interface sll_o_nml_mesh_1d_cart
       module procedure &
         s_nml_mesh_1d_cart_array, &
         s_nml_mesh_1d_cart_print
-  end interface sll_s_nml_mesh_1d_cart
+  end interface sll_o_nml_mesh_1d_cart
 
   !-----------------------------------------------------------------
   !  SPECIFIC DECLARATION (END)
@@ -172,19 +172,19 @@ contains
     caller = 's_nml_mesh_1d_cart_array'
     select case (self%choice)
       case("unif")
-        call sll_s_nml_mesh_1d_unif_cart( &
+        call sll_o_nml_mesh_1d_unif_cart( &
           filename, &
           array, &
           clone, &
           proc_id)
       case("landau")
-        call sll_s_nml_mesh_1d_landau_cart( &
+        call sll_o_nml_mesh_1d_landau_cart( &
           filename, &
           array, &
           clone, &
           proc_id)
       case("two_grid")
-        call sll_s_nml_mesh_1d_two_grid_cart( &
+        call sll_o_nml_mesh_1d_two_grid_cart( &
           filename, &
           array, &
           clone, &
@@ -294,7 +294,7 @@ contains
     call set_default_values( &
       choice)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -341,7 +341,7 @@ contains
     call set_default_values( &
       choice_1)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -388,7 +388,7 @@ contains
     call set_default_values( &
       choice_2)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -435,7 +435,7 @@ contains
     call set_default_values( &
       choice_3)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &
@@ -482,7 +482,7 @@ contains
     call set_default_values( &
       choice_4)
 
-    call sll_new_file_id(namelist_id, ierr)
+    call sll_s_new_file_id(namelist_id, ierr)
     open( &
       unit = namelist_id, &
       file=trim(filename)//'.nml', &

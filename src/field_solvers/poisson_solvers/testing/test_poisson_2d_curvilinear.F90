@@ -22,21 +22,21 @@ program test_poisson_2d_curvilinear
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_neumann, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_neumann, &
+    sll_p_periodic
 
   use sll_m_poisson_2d_curvilinear, only: &
-    new_poisson_2d_curvilinear, &
-    poisson_2d_curvilinear, &
-    poisson_gauss_legendre, &
-    sll_poisson_open_knots, &
-    sll_poisson_periodic_knots
+    sll_f_new_poisson_2d_curvilinear, &
+    sll_t_poisson_2d_curvilinear, &
+    sll_p_poisson_gauss_legendre, &
+    sll_p_poisson_open_knots, &
+    sll_p_poisson_periodic_knots
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(poisson_2d_curvilinear), pointer :: poisson
+  type(sll_t_poisson_2d_curvilinear), pointer :: poisson
   !type(general_coordinate_elliptic_solver), pointer :: poisson_gen
   sll_int32 :: num_cells1
   sll_int32 :: num_cells2
@@ -79,10 +79,10 @@ program test_poisson_2d_curvilinear
   
   num_cells1 = 128
   num_cells2 = 128
-  bc_min1_str = "SLL_DIRICHLET"
-  bc_max1_str = "SLL_DIRICHLET"
-  bc_min2_str = "SLL_DIRICHLET"
-  bc_max2_str = "SLL_DIRICHLET"
+  bc_min1_str = "sll_p_dirichlet"
+  bc_max1_str = "sll_p_dirichlet"
+  bc_min2_str = "sll_p_dirichlet"
+  bc_max2_str = "sll_p_dirichlet"
   eta1_min = 0._f64
   eta1_max = 1._f64
   eta2_min = 0._f64
@@ -114,17 +114,17 @@ program test_poisson_2d_curvilinear
   bc_min2 = boundary_condition(bc_min2_str)
   bc_max2 = boundary_condition(bc_max2_str)
 
-  if(bc_min1==SLL_PERIODIC)then
-    bc_knots1 = SLL_POISSON_PERIODIC_KNOTS
+  if(bc_min1==sll_p_periodic)then
+    bc_knots1 = sll_p_poisson_periodic_knots
   else
-    bc_knots1 = SLL_POISSON_OPEN_KNOTS      
+    bc_knots1 = sll_p_poisson_open_knots      
   endif
-  if(bc_min2==SLL_PERIODIC)then
-    bc_knots2 = SLL_POISSON_PERIODIC_KNOTS
+  if(bc_min2==sll_p_periodic)then
+    bc_knots2 = sll_p_poisson_periodic_knots
   else
-    bc_knots2 = SLL_POISSON_OPEN_KNOTS      
+    bc_knots2 = sll_p_poisson_open_knots      
   endif
-  poisson => new_poisson_2d_curvilinear( &
+  poisson => sll_f_new_poisson_2d_curvilinear( &
     spline_degree1, &
     spline_degree2, &
     num_cells1, &
@@ -137,8 +137,8 @@ program test_poisson_2d_curvilinear
     eta1_max, &
     eta2_min, &
     eta2_max, &
-    quadrature_type1=POISSON_GAUSS_LEGENDRE, &
-    quadrature_type2=POISSON_GAUSS_LEGENDRE, &
+    quadrature_type1=sll_p_poisson_gauss_legendre, &
+    quadrature_type2=sll_p_poisson_gauss_legendre, &
     num_quadrature_points1=spline_degree1+2, &
     num_quadrature_points2=spline_degree1+2, &
     bc_knots_min1 = bc_knots1, &
@@ -147,13 +147,13 @@ program test_poisson_2d_curvilinear
     bc_knots_max2 = bc_knots2 )
 
   
-!  poisson => new_poisson_2d_curvilinear( &
+!  poisson => sll_f_new_poisson_2d_curvilinear( &
 !    spline_degree1, &
 !    spline_degree2, &
 !    num_cells1, &
 !    num_cells2, &
-!    POISSON_GAUSS_LEGENDRE, &
-!    POISSON_GAUSS_LEGENDRE, &
+!    sll_p_poisson_gauss_legendre, &
+!    sll_p_poisson_gauss_legendre, &
 !    bc_left, &
 !    bc_right, &
 !    bc_bottom, &
@@ -171,8 +171,8 @@ program test_poisson_2d_curvilinear
 !    spline_degree2, &
 !    num_cells1, &
 !    num_cells2, &
-!    POISSON_GAUSS_LEGENDRE, &
-!    POISSON_GAUSS_LEGENDRE, &
+!    sll_p_poisson_gauss_legendre, &
+!    sll_p_poisson_gauss_legendre, &
 !    bc_left, &
 !    bc_right, &
 !    bc_bottom, &
@@ -194,12 +194,12 @@ contains
     character(len=256), intent(in) :: bc
     sll_int32 :: res
     select case(bc)
-      case ("SLL_PERIODIC")
-        res = SLL_PERIODIC
-      case ("SLL_DIRICHLET")
-        res = SLL_DIRICHLET
-      case ("SLL_NEUMANN")
-        res = SLL_NEUMANN
+      case ("sll_p_periodic")
+        res = sll_p_periodic
+      case ("sll_p_dirichlet")
+        res = sll_p_dirichlet
+      case ("sll_p_neumann")
+        res = sll_p_neumann
       case default
         print *,'#boundary condition ',bc
         print *,'#not implemented in file ',__FILE__,'at line ',__LINE__

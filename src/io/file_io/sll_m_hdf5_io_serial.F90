@@ -50,29 +50,29 @@ module sll_m_hdf5_io_serial
   implicit none
 
   public :: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_file_open, &
-    sll_hdf5_write_array, &
-    sll_hdf5_write_array_1d, &
-    sll_hdf5_write_array_2d, &
-    sll_hdf5_write_array_3d
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_file_open, &
+    sll_o_hdf5_write_array, &
+    sll_o_hdf5_write_array_1d, &
+    sll_o_hdf5_write_array_2d, &
+    sll_o_hdf5_write_array_3d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Create new HDF5 file
-  interface sll_hdf5_file_create
+  interface sll_o_hdf5_file_create
     module procedure sll_hdf5_ser_file_create
   end interface
 
   !> Open existing HDF5 file
-  interface sll_hdf5_file_open
+  interface sll_o_hdf5_file_open
     module procedure sll_hdf5_ser_file_open
   end interface
 
   !> Close HDF5 file
-  interface sll_hdf5_file_close
+  interface sll_o_hdf5_file_close
     module procedure sll_hdf5_ser_file_close
   end interface
 
@@ -83,7 +83,7 @@ module sll_m_hdf5_io_serial
   !>\param[in]  array array
   !>\param[in]  dsetname dataset name
   !>\param[out] error dataset error code
-  interface sll_hdf5_write_array
+  interface sll_o_hdf5_write_array
      module procedure sll_hdf5_ser_write_dble_array_1d
      module procedure sll_hdf5_ser_write_dble_array_2d
      module procedure sll_hdf5_ser_write_dble_array_3d
@@ -93,19 +93,19 @@ module sll_m_hdf5_io_serial
   end interface
 
   !> Interface to write a 1d array in HDF5 file format
-  interface sll_hdf5_write_array_1d
+  interface sll_o_hdf5_write_array_1d
      module procedure sll_hdf5_ser_write_dble_array_1d
      module procedure sll_hdf5_ser_write_int_array_1d
   end interface
 
   !> Interface to write a 2d array in HDF5 file format
-  interface sll_hdf5_write_array_2d
+  interface sll_o_hdf5_write_array_2d
      module procedure sll_hdf5_ser_write_dble_array_2d
      module procedure sll_hdf5_ser_write_int_array_2d
   end interface
 
   !> Interface to write a 3d array in HDF5 file format
-  interface sll_hdf5_write_array_3d
+  interface sll_o_hdf5_write_array_3d
      module procedure sll_hdf5_ser_write_dble_array_3d
      module procedure sll_hdf5_ser_write_int_array_3d
   end interface

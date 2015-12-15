@@ -29,15 +29,15 @@ module sll_m_plotmtv
   implicit none
 
   public :: &
-    sll_plotmtv_write
+    sll_o_plotmtv_write
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Create the mtv file to plot a structured mesh (cartesian or curvilinear)
-interface sll_plotmtv_write
+interface sll_o_plotmtv_write
 module procedure  sll_plotmtv_curv_2d
-end interface sll_plotmtv_write
+end interface sll_o_plotmtv_write
 
 contains  
 

@@ -4,28 +4,28 @@ program test_kernel_smoother_spline_1d
 #include "sll_working_precision.h"
 
   use sll_m_kernel_smoother_base, only: &
-    sll_collocation
+    sll_p_collocation
 
   use sll_m_kernel_smoother_spline_1d, only: &
-    sll_kernel_smoother_spline_1d, &
-    sll_new_smoother_spline_1d
+    sll_t_kernel_smoother_spline_1d, &
+    sll_f_new_smoother_spline_1d
 
   use sll_m_particle_group_1d2v, only: &
-    sll_new_particle_group_1d2v, &
-    sll_particle_group_1d2v
+    sll_f_new_particle_group_1d2v, &
+    sll_t_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
-  class(sll_kernel_smoother_spline_1d),pointer :: kernel
+  class(sll_t_kernel_smoother_spline_1d),pointer :: kernel
   ! Abstract particle group
-  class(sll_particle_group_base), pointer :: particle_group
+  class(sll_c_particle_group_base), pointer :: particle_group
   ! Specific particle group
-  class(sll_particle_group_1d2v), pointer :: specific_particle_group 
+  class(sll_t_particle_group_1d2v), pointer :: specific_particle_group 
   ! Parameters for the test
   sll_int32 :: n_cells
   sll_int32 :: n_particles
@@ -69,7 +69,7 @@ program test_kernel_smoother_spline_1d
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
-  specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
+  specific_particle_group => sll_f_new_particle_group_1d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
   do i_part = 1,n_particles
@@ -85,8 +85,8 @@ program test_kernel_smoother_spline_1d
 
 
   ! Initialize the kernel
-  kernel => sll_new_smoother_spline_1d&
-       (domain, [n_cells], n_particles, spline_degree, SLL_COLLOCATION)
+  kernel => sll_f_new_smoother_spline_1d&
+       (domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
 
   
   ! Compute the shape factors

@@ -5,11 +5,11 @@ module sll_m_point_to_point_comms
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
-    sll_collective_barrier, &
-    sll_collective_t, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_test_mpi_error
+    sll_s_collective_barrier, &
+    sll_t_collective_t, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_test_mpi_error
 
   use sll_mpi, only: &
     mpi_double_precision, &
@@ -26,15 +26,15 @@ module sll_m_point_to_point_comms
   implicit none
 
   public :: &
-    comm_receive_real64, &
-    comm_send_real64, &
-    delete_comm_real64, &
-    get_buffer, &
-    new_comm_real64, &
-    sll_configure_comm_real64_torus_2d, &
-    sll_create_comm_real64_ring, &
-    sll_p2p_comm_real64, &
-    sll_view_port
+    sll_s_comm_receive_real64, &
+    sll_s_comm_send_real64, &
+    sll_s_delete_comm_real64, &
+    sll_f_get_buffer, &
+    sll_f_new_comm_real64, &
+    sll_s_configure_comm_real64_torus_2d, &
+    sll_s_create_comm_real64_ring, &
+    sll_t_p2p_comm_real64, &
+    sll_s_view_port
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -118,15 +118,15 @@ module sll_m_point_to_point_comms
   ! this should be the only public type
 
   ! Consider the dynamic allocation of the 'remotes' array...
-  type sll_p2p_comm_real64
+  type sll_t_p2p_comm_real64
      sll_int32 :: comm_size =  0
      sll_int32 :: rank      = -1
      sll_int32 :: num_ports
      sll_int32 :: buffer_size
-     type(sll_collective_t), pointer :: collective
+     type(sll_t_collective_t), pointer :: collective
      type(port_real64), dimension(:),pointer :: ports  ! array of ports
    !  type(sll_remote), pointer       :: remotes  ! may not be needed
-  end type sll_p2p_comm_real64
+  end type sll_t_p2p_comm_real64
 
 contains
 
@@ -135,17 +135,17 @@ contains
 
 !!$  function get_mpi_request( comm, port )
 !!$    sll_int32                      :: get_mpi_request
-!!$    type(sll_p2p_comm_real64), pointer :: comm
+!!$    type(sll_t_p2p_comm_real64), pointer :: comm
 !!$    sll_int32, intent(in)          :: port
 !!$    sll_int32 :: bit_select
 !!$    bit_select = comm%ports(port)%bit
 !!$    get_mpi_request = comm%ports(port)%buffer(bit_select+1)%request
 !!$  end function get_mpi_request
 
-  subroutine sll_view_port(comm, port)
-    type(sll_p2p_comm_real64), pointer :: comm
+  subroutine sll_s_view_port(comm, port)
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
-    print *, 'rank: ', sll_get_collective_rank(comm%collective), &
+    print *, 'rank: ', sll_f_get_collective_rank(comm%collective), &
          'port: ', port, &
          'bit: ', comm%ports(port)%bit, &
          'other_rank: ', comm%ports(port)%other_rank, &
@@ -154,7 +154,7 @@ contains
          'buffer(1)%request: ', comm%ports(port)%buffer(1)%request, &
          'buffer(2)%data: ', comm%ports(port)%buffer(2)%data, &
          'buffer(2)%request: ', comm%ports(port)%buffer(2)%request
-  end subroutine sll_view_port
+  end subroutine sll_s_view_port
 
   function flip_bit( bit )
     sll_int32 :: flip_bit
@@ -173,7 +173,7 @@ contains
 
 
   subroutine flip_buffer( comm, port )
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32 :: bit
 
@@ -183,20 +183,20 @@ contains
     comm%ports(port)%bit = flip_bit(bit)
   end subroutine flip_buffer
 
-  function get_buffer( comm, port )
-    sll_real64, dimension(:), pointer :: get_buffer
-    type(sll_p2p_comm_real64), pointer :: comm
+  function sll_f_get_buffer( comm, port )
+    sll_real64, dimension(:), pointer :: sll_f_get_buffer
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32 :: bit
     SLL_ASSERT(associated(comm))
     call check_port( comm, port )
     if( port_is_busy( comm, port ) ) then
-       get_buffer => null()
+       sll_f_get_buffer => null()
     else
        bit = comm%ports(port)%bit
-       get_buffer => comm%ports(port)%buffer(bit+1)%data
+       sll_f_get_buffer => comm%ports(port)%buffer(bit+1)%data
     end if
-  end function get_buffer
+  end function sll_f_get_buffer
 
   ! Tag generators. 
   ! We need unique integer identifiers that we can use as tags for the
@@ -261,7 +261,7 @@ contains
   end subroutine initialize_port_real64
 
   subroutine check_buffer_size( comm, size )
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: size
     SLL_ASSERT( associated(comm) )
     if( size > comm%buffer_size ) then
@@ -271,7 +271,7 @@ contains
   end subroutine check_buffer_size
 
   subroutine check_port( comm, port )
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: port
     if( (port < 1) .or. (port > comm%num_ports) )then
        print *, 'comm module error, check_port(): ', &
@@ -282,7 +282,7 @@ contains
 
   function port_is_busy( comm, port )
     logical                        :: port_is_busy
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
 
     SLL_ASSERT( associated(comm) )
@@ -295,7 +295,7 @@ contains
   end function port_is_busy
 
   subroutine check_other_rank( comm, other_rank )
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: other_rank
 
     if( (other_rank < 0) .or. (other_rank >= comm%comm_size) ) then
@@ -306,7 +306,7 @@ contains
 
   function get_num_ports( comm )
     sll_int32 :: get_num_ports
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
 
     SLL_ASSERT( associated(comm) )
     get_num_ports = comm%num_ports
@@ -314,34 +314,34 @@ contains
 
   function get_buffer_size( comm )
     sll_int32 :: get_buffer_size
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     SLL_ASSERT( associated(comm) )
     get_buffer_size = comm%buffer_size
   end function get_buffer_size
 
-  function new_comm_real64( collective, num_ports, buffer_size ) result(comm)
-    type(sll_collective_t), pointer :: collective
+  function sll_f_new_comm_real64( collective, num_ports, buffer_size ) result(comm)
+    type(sll_t_collective_t), pointer :: collective
     sll_int32, intent(in)           :: num_ports
     sll_int32, intent(in)           :: buffer_size
-    type(sll_p2p_comm_real64), pointer  :: comm
+    type(sll_t_p2p_comm_real64), pointer  :: comm
     sll_int32                       :: ierr
     sll_int32                       :: i
     sll_int32                       :: max_num_ports
     
     if(.not.associated(collective) ) then
-       print *, 'new_comm_real64(), passed collective pointer not associated.'
+       print *, 'sll_f_new_comm_real64(), passed collective pointer not associated.'
        stop
     end if
     if( buffer_size < 0 ) then
-       print *, 'new_comm_real64(), passed negative buffer size.'
+       print *, 'sll_f_new_comm_real64(), passed negative buffer size.'
        stop
     end if
 
     SLL_ALLOCATE(comm, ierr)
     comm%collective  => collective
     comm%num_ports   = num_ports
-    comm%comm_size   = sll_get_collective_size(collective)
-    comm%rank        = sll_get_collective_rank(collective)
+    comm%comm_size   = sll_f_get_collective_size(collective)
+    comm%rank        = sll_f_get_collective_rank(collective)
     comm%buffer_size = buffer_size
     ! The maximum number of ports is determined by the tagging system that 
     ! we use. It is important to verify that we don't have any problems due
@@ -357,10 +357,10 @@ contains
     ! it is a good idea probably to store a 'duplicate' collective,
     ! with an unerlying duplicate communicator generated by MPI_Comm_dup
     ! and use this as the base collective for the comm... this is pending.
-  end function new_comm_real64
+  end function sll_f_new_comm_real64
 
   subroutine connect_ports( comm, port, remote, remote_port )
-    type(sll_p2p_comm_real64), pointer :: comm
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32, intent(in)          :: remote
     sll_int32, intent(in)          :: remote_port
@@ -372,7 +372,7 @@ contains
     call check_port(comm,remote_port)
     call check_other_rank( comm, remote )
 
-!!$    print *, sll_get_collective_rank(comm%collective), ' rank = ', comm%rank,&
+!!$    print *, sll_f_get_collective_rank(comm%collective), ' rank = ', comm%rank,&
 !!$         'port = ', port, ' is connected with remote = ', remote, &
 !!$         'remote port = ',  remote_port
     if( port_is_busy(comm, port) ) then
@@ -391,7 +391,7 @@ contains
     tag = receive_tag( bit, port, comm%ports(port)%other_port)
 
 !!$    write (*,'(a,i8,a, z8,a,z8,a,z8,a,z20)') 'rank: ',  &
-!!$         sll_get_collective_rank(comm%collective), ' port = ', port, &
+!!$         sll_f_get_collective_rank(comm%collective), ' port = ', port, &
 !!$         ' bit = ', bit, ' other port = ', remote_port, &
 !!$         ' tag = ', tag
 
@@ -412,8 +412,8 @@ contains
     call flip_buffer(comm,port)
   end subroutine connect_ports
 
-  subroutine comm_send_real64( comm, port, size )
-    type(sll_p2p_comm_real64), pointer :: comm
+  subroutine sll_s_comm_send_real64( comm, port, size )
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32, intent(in)          :: size
     sll_int32 :: bit
@@ -422,7 +422,7 @@ contains
 
     ! arguments tests here
     if(comm%ports(port)%other_rank < 0) then
-       print *, 'comm_send_real64(), error, port not connected, rank = ', &
+       print *, 'sll_s_comm_send_real64(), error, port not connected, rank = ', &
             comm%rank, ' other_rank = ', comm%ports(port)%other_rank, &
             ' port = ', port, 'size = ', size
        stop
@@ -432,7 +432,7 @@ contains
     tag = send_tag( bit, port, comm%ports(port)%other_port)
 
 !!$    print *, 'sending operation, rank: ',  &
-!!$         sll_get_collective_rank(comm%collective), ' port = ', port, &
+!!$         sll_f_get_collective_rank(comm%collective), ' port = ', port, &
 !!$         ' bit = ', bit, ' other port = ', comm%ports(port)%other_port, &
 !!$         ' tag = ', tag , '  data = ', comm%ports(port)%buffer(bit+1)%data
 
@@ -446,15 +446,15 @@ contains
          GET_MPI_REQUEST(comm,port), &
          ierr )
     if( ierr .ne. MPI_SUCCESS ) then
-       print *, 'comm_send_real64() error in mpi call'
+       print *, 'sll_s_comm_send_real64() error in mpi call'
        stop
     end if
     ! The other buffer should be with a pending 'receive'.
     call flip_buffer(comm,port)
-  end subroutine comm_send_real64
+  end subroutine sll_s_comm_send_real64
 
-  subroutine comm_receive_real64( comm, port, count )
-    type(sll_p2p_comm_real64), pointer :: comm
+  subroutine sll_s_comm_receive_real64( comm, port, count )
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32, intent(out)         :: count
     sll_int32, dimension(MPI_STATUS_SIZE) :: stat
@@ -465,25 +465,25 @@ contains
 
     ! error checking...
     if(.not. port_is_busy(comm, port) ) then
-       print *, 'comm_receive_real64() error: port', port, ' is not busy; ', &
+       print *, 'sll_s_comm_receive_real64() error: port', port, ' is not busy; ', &
             'there are imbalanced send and receive calls.'
        stop
     end if
 
 !    request = GET_MPI_REQUEST(comm, port)
 !!$    print *, ' inside receive rank: ', &
-!!$         sll_get_collective_rank(comm%collective), 'port: ', &
+!!$         sll_f_get_collective_rank(comm%collective), 'port: ', &
 !!$         port, GET_MPI_REQUEST(comm,port)
 
     call MPI_Wait(GET_MPI_REQUEST(comm,port), stat, ierr)
     if(ierr .ne. MPI_SUCCESS) then
-       print *, 'comm_receive_real64(), MPI_Wait error'
+       print *, 'sll_s_comm_receive_real64(), MPI_Wait error'
        stop
     end if
 
     call MPI_Get_Count(stat, MPI_DOUBLE_PRECISION, local_count, ierr)
     if(ierr .ne. MPI_SUCCESS) then
-       print *, 'comm_receive_real64(), MPI_Get_Count() error'
+       print *, 'sll_s_comm_receive_real64(), MPI_Get_Count() error'
        stop
     end if
 
@@ -491,14 +491,14 @@ contains
     call flip_buffer(comm,port)
 
     if(.not. port_is_busy(comm, port) ) then
-       print *, 'comm_receive_real64() error: imbalanced send and receive calls'
+       print *, 'sll_s_comm_receive_real64() error: imbalanced send and receive calls'
        stop
     end if
 
 !    request = GET_MPI_REQUEST(comm, port)
     call MPI_Wait(GET_MPI_REQUEST(comm,port), MPI_STATUS_IGNORE, ierr)
     if(ierr .ne. MPI_SUCCESS) then
-       print *, 'comm_receive_real64(), MPI_Wait error in second call.'
+       print *, 'sll_s_comm_receive_real64(), MPI_Wait error in second call.'
        stop
     end if
 
@@ -514,20 +514,20 @@ contains
          comm%collective%comm, &
          GET_MPI_REQUEST(comm,port), &
          ierr )
-    call sll_test_mpi_error(ierr, 'MPI_Irecv error')
+    call sll_s_test_mpi_error(ierr, 'MPI_Irecv error')
 
     call flip_buffer(comm,port)
     count = local_count - BUFFER_PADDING
-  end subroutine comm_receive_real64
+  end subroutine sll_s_comm_receive_real64
 
-  subroutine delete_comm_real64( comm )
-    type(sll_p2p_comm_real64), pointer :: comm
+  subroutine sll_s_delete_comm_real64( comm )
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32 :: i
     sll_int32 :: num_ports
     sll_int32 :: ierr
 
     if(.not. associated(comm)) then
-       print *, 'comm module error: delete_comm_real64() received a ', &
+       print *, 'comm module error: sll_s_delete_comm_real64() received a ', &
             'non-associated pointer argument.'
        stop
     end if
@@ -538,23 +538,23 @@ contains
           ! block until the send's are completed.
 !          request = GET_MPI_REQUEST(comm, i)
           call MPI_Wait(GET_MPI_REQUEST(comm,i), MPI_STATUS_IGNORE, ierr)
-          call sll_test_mpi_error(ierr, 'delete_comm_real64(), MPI_Wait()')
+          call sll_s_test_mpi_error(ierr, 'sll_s_delete_comm_real64(), MPI_Wait()')
        end if
        call flip_buffer( comm, i )
        if( port_is_busy(comm,i) ) then
           ! drop the receive's
 !          request = GET_MPI_REQUEST(comm, i)
           call MPI_Request_free(GET_MPI_REQUEST(comm,i), ierr)
-          call sll_test_mpi_error(ierr,'delete_comm_real64:MPI_Request_free()')
+          call sll_s_test_mpi_error(ierr,'sll_s_delete_comm_real64:MPI_Request_free()')
        end if
     end do
-    call sll_collective_barrier(comm%collective)
+    call sll_s_collective_barrier(comm%collective)
     do i=1,num_ports
        SLL_DEALLOCATE(comm%ports(i)%buffer(1)%data,ierr)
        SLL_DEALLOCATE(comm%ports(i)%buffer(2)%data,ierr)
     end do
     comm => null()
-  end subroutine delete_comm_real64
+  end subroutine sll_s_delete_comm_real64
 
   function port_num_is_valid( num )
     logical               :: port_num_is_valid
@@ -574,17 +574,17 @@ contains
   ! would be to create a function which internally creates the comm and
   ! returns it...
 
-  subroutine sll_create_comm_real64_ring( comm )
-    type(sll_p2p_comm_real64), pointer :: comm
+  subroutine sll_s_create_comm_real64_ring( comm )
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32 :: rank
     sll_int32 :: size
-    rank = sll_get_collective_rank(comm%collective)
-    size = sll_get_collective_size(comm%collective)
+    rank = sll_f_get_collective_rank(comm%collective)
+    size = sll_f_get_collective_size(comm%collective)
 
     ! do some checking here whether the comm has the right number of ports...
     call connect_ports( comm, 1, mod(rank+size-1,size), 2 )
     call connect_ports( comm, 2, mod(rank+size+1,size), 1 )
-  end subroutine sll_create_comm_real64_ring
+  end subroutine sll_s_create_comm_real64_ring
 
   ! helper functions meant to be used internally within the 2D 'ring'.
   subroutine find_ij( rank, nprocx, i, j )
@@ -604,8 +604,8 @@ contains
     rank_index = i+nprocx*j
   end function rank_index
 
-  subroutine sll_configure_comm_real64_torus_2D( comm, nprocx, nprocy )
-    type(sll_p2p_comm_real64), pointer :: comm
+  subroutine sll_s_configure_comm_real64_torus_2d( comm, nprocx, nprocy )
+    type(sll_t_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: nprocx
     sll_int32, intent(in) :: nprocy
     sll_int32 :: rank
@@ -616,7 +616,7 @@ contains
     sll_int32 :: bottom
     sll_int32 :: top
 
-    rank = sll_get_collective_rank(comm%collective)
+    rank = sll_f_get_collective_rank(comm%collective)
     call find_ij( rank, nprocx, iloc, jloc )
     left   = mod(iloc+nprocx-1,nprocx)
     right  = mod(iloc+nprocx+1,nprocx)
@@ -630,7 +630,7 @@ contains
     call connect_ports( comm, 3, rank_index(nprocx, iloc, bottom), 4 )
     ! top connection
     call connect_ports( comm, 4, rank_index(nprocx, iloc, top),    3 )
-  end subroutine sll_configure_comm_real64_torus_2D
+  end subroutine sll_s_configure_comm_real64_torus_2d
  
 #if 0
 

@@ -33,10 +33,10 @@ module sll_m_advection_1d_spectral
     c_size_t
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
 #ifdef FFTW_F2003
 #include "sll_fftw.h"
@@ -56,12 +56,12 @@ use sll_m_fft
   implicit none
 
   public :: &
-    new_spectral_1d_advector
+    sll_f_new_spectral_1d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type,extends(sll_advection_1d_base) :: spectral_1d_advector
+type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
   
   sll_int32                         :: num_cells
   sll_real64                        :: eta_min
@@ -97,7 +97,7 @@ end type spectral_1d_advector
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function new_spectral_1d_advector( num_cells, &
+function sll_f_new_spectral_1d_advector( num_cells, &
                                    eta_min,   &
                                    eta_max    &
                                    ) result(adv)      
@@ -114,7 +114,7 @@ function new_spectral_1d_advector( num_cells, &
       
   call initialize( adv, num_cells, eta_min, eta_max)    
   
-end function new_spectral_1d_advector
+end function sll_f_new_spectral_1d_advector
 
 subroutine initialize( adv, num_cells, eta_min, eta_max)    
 
@@ -150,7 +150,7 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:num_cells/2+1), error)
    
-  kx0 = 2._f64*sll_pi/(eta_max-eta_min)
+  kx0 = 2._f64*sll_p_pi/(eta_max-eta_min)
 
   adv%kx(1) = 1.0_f64
   do i=2,num_cells/2+1

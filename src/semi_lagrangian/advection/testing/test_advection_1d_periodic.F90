@@ -20,18 +20,18 @@ program test_advection_1d_periodic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
-    new_periodic_1d_advector
+    sll_f_new_periodic_1d_advector
 
   use sll_m_periodic_interp, only: &
-    spline
+    sll_p_spline
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_advection_1d_base), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv
   sll_real64 :: xmin
   sll_real64 :: xmax
   sll_int32 :: num_cells
@@ -59,11 +59,11 @@ program test_advection_1d_periodic
   
   input = 1._f64
   
-  adv => new_periodic_1d_advector( &
+  adv => sll_f_new_periodic_1d_advector( &
     num_cells, &
     xmin, &
     xmax, &
-    SPLINE, &
+    sll_p_spline, &
     order) 
   
   call adv%advect_1d_constant(&

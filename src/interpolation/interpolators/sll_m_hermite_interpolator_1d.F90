@@ -10,10 +10,10 @@ module sll_m_hermite_interpolator_1d
 #include "sll_working_precision.h"
 
   use sll_m_hermite_interpolation_1d, only: &
-    compute_interpolants_hermite_1d, &
-    interpolate_value_hermite_1d, &
-    new_hermite_interpolation_1d, &
-    sll_hermite_interpolation_1d
+    sll_s_compute_interpolants_hermite_1d, &
+    sll_f_interpolate_value_hermite_1d, &
+    sll_f_new_hermite_interpolation_1d, &
+    sll_t_hermite_interpolation_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -21,7 +21,7 @@ module sll_m_hermite_interpolator_1d
   implicit none
 
   public :: &
-    new_hermite_interpolator_1d
+    sll_f_new_hermite_interpolator_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -37,7 +37,7 @@ module sll_m_hermite_interpolator_1d
  !> Interpolator class of Hermite 1D interpolator
  type,extends(sll_c_interpolator_1d) :: sll_hermite_interpolator_1d
    !> PLEASE ADD DOCUMENTATION
-   type(sll_hermite_interpolation_1d), pointer :: hermite
+   type(sll_t_hermite_interpolation_1d), pointer :: hermite
    !> PLEASE ADD DOCUMENTATION
    sll_int32                                    :: npts
    contains
@@ -80,7 +80,7 @@ contains  !**********************************************************
 
 
     !> PLEASE ADD DOCUMENTATION
-  function new_hermite_interpolator_1d( &
+  function sll_f_new_hermite_interpolator_1d( &
     npts, &
     eta_min, &
     eta_max, &
@@ -123,7 +123,7 @@ contains  !**********************************************************
       eta_max_slopes)    
 
      
-  end function  new_hermite_interpolator_1d
+  end function  sll_f_new_hermite_interpolator_1d
 
 
   subroutine initialize_hermite_interpolator_1d( &
@@ -151,7 +151,7 @@ contains  !**********************************************************
     sll_real64, dimension(:),intent(in), optional :: eta_min_slopes
     sll_real64, dimension(:),intent(in), optional :: eta_max_slopes
        
-    interpolator%hermite  => new_hermite_interpolation_1d( &
+    interpolator%hermite  => sll_f_new_hermite_interpolation_1d( &
       npts, &
       eta_min, &
       eta_max, &
@@ -182,14 +182,14 @@ contains  !**********************************************************
     if(present(size_eta_coords))then
       !print *,'#Warning size_eta_coords not used'
     endif
-    call compute_interpolants_hermite_1d( interpolator%hermite, data_array )
+    call sll_s_compute_interpolants_hermite_1d( interpolator%hermite, data_array )
   end subroutine wrap_compute_interpolants_hermite_1d
   
   function wrap_interpolate_value_hermite_1d( interpolator, eta1 ) result(val)
     class(sll_hermite_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
-    val = interpolate_value_hermite_1d( eta1, interpolator%hermite )
+    val = sll_f_interpolate_value_hermite_1d( eta1, interpolator%hermite )
       
   end function wrap_interpolate_value_hermite_1d
 
@@ -206,7 +206,7 @@ contains  !**********************************************************
     sll_real64, dimension(:), intent(in)           :: data
     sll_real64, dimension(num_pts), intent(out)   :: output_array
     sll_int32 :: i
-    call compute_interpolants_hermite_1d( this%hermite, data )
+    call sll_s_compute_interpolants_hermite_1d( this%hermite, data )
     do i = 1, num_pts
       output_array(i) = this%interpolate_from_interpolant_value(coordinates(i))
     end do
