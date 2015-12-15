@@ -1,16 +1,27 @@
 module sll_m_pastix
-
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define MPI_MASTER 0
 #include "pastix_fortran.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-use sll_m_collective
+  use sll_m_collective, only: &
+    sll_get_collective_rank, &
+    sll_get_collective_size, &
+    sll_world_collective
 
-implicit none
-private
+  implicit none
 
-type, public :: pastix_solver
+  public :: &
+    pastix_solver, &
+    initialize, &
+    factorize, &
+    solve, &
+    delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+type :: pastix_solver
  pastix_data_ptr_t        :: pastix_data !< PaStiX structure (0 for first call)
  pastix_int_t             :: ncols       !< Number of columns in the matrix
  pastix_int_t   , pointer :: colptr(:)   !< Index of first elt of each col in avals
@@ -44,8 +55,6 @@ end interface factorize
 interface delete
    module procedure delete_pastix
 end interface delete
-
-public :: initialize, factorize, solve, delete
 
 contains
 
