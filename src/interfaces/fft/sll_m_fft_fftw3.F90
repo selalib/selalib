@@ -18,6 +18,7 @@
 !> @author ???? and Katharina Kormann (IPP)
 !> @brief FFT interface for FFTW
 module sll_m_fft
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -25,14 +26,42 @@ module sll_m_fft
 #include "sll_fftw.h"
 
   use sll_m_fftw3
-  use sll_m_fft_utils
-  use, intrinsic :: iso_c_binding
-
-  !private
-
-  !public :: fft_new_plan_c2c_1d, fft_apply_plan_c2c_1d
 
   implicit none 
+
+  public :: &
+    sll_fft_plan, &
+    FFT_FORWARD, &
+    FFT_BACKWARD, &
+    FFT_MEASURE, &
+    FFT_PATIENT, &
+    FFT_ESTIMATE, &
+    FFT_EXHAUSTIVE, &
+    FFT_WISDOM_ONLY, &
+    print_defaultfftlib, &
+    fft_allocate_aligned_complex, &
+    fft_allocate_aligned_real, &
+    fft_new_plan_r2r_1d, &
+    fft_new_plan_c2r_1d, &
+    fft_new_plan_r2c_1d, &
+    fft_new_plan_c2c_1d, &
+    fft_new_plan_r2c_2d, &
+    fft_new_plan_c2r_2d, &
+    fft_new_plan_c2c_2d, &
+    fft_apply_plan_r2r_1d, &
+    fft_apply_plan_c2r_1d, &
+    fft_apply_plan_r2c_1d, &
+    fft_apply_plan_c2c_1d, &
+    fft_apply_plan_r2c_2d, &
+    fft_apply_plan_c2r_2d, &
+    fft_apply_plan_c2c_2d, &
+    fft_set_mode_c2r_1d, &
+    fft_get_mode_r2c_1d, &
+    fft_delete_plan
+
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++    
   
   !> Type for FFT plan in SeLaLib
   type sll_fft_plan
