@@ -708,7 +708,7 @@ integer              :: k,l,i,j
 real (kind(0d0)), parameter :: zero =  0.0d0
 real (kind(0d0)), parameter :: cx   = -1.0d0
 real (kind(0d0)), parameter :: cy   = -1.0d0
-real (kind(0d0)), parameter :: cy   = -1.0d0
+real (kind(0d0)), parameter :: cd   = +4.0d0
 
 a  => this%val
 ia => this%row_ptr
