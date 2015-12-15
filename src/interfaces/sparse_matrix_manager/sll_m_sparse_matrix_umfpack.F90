@@ -31,7 +31,7 @@ module sll_m_sparse_matrix
     new_csr_matrix, &
     new_csr_matrix_with_constraint, &
     csr_add_one_constraint, &
-    csr_todense, &
+    !csr_todense, &
     delete_csr_matrix, &
     initialize_csr_matrix, &
     initialize_csr_matrix_with_constraint, &
