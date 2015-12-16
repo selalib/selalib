@@ -323,7 +323,7 @@ subroutine initialize_csr_matrix_classic( mat,                 &
       if (row /= 0) then
         if (lpi_col(row,0) /= 0) then
           sz = lpi_col(row, 0)
-          call QsortC(lpi_col(row,1:sz))
+          call sll_s_QsortC(lpi_col(row,1:sz))
           do i = 1, sz
             mat%col_ind(mat%row_ptr(row)+i-1) = lpi_col(row,i)
           end do
@@ -684,7 +684,7 @@ subroutine sll_init_SparseMatrix(self, ai_nel, api_LM_1, ai_nen_1, api_LM_2, &
 
             lpr_tmp(1: li_size) = api_columns(li_A_1, 1: li_size)
 
-            call QsortC(lpr_tmp)
+            call sll_s_QsortC(lpr_tmp)
 
             do li_i = 1, li_size
 
