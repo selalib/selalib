@@ -51,7 +51,7 @@ module sll_m_binary_io
   interface sll_o_binary_write_array
      module procedure sll_s_binary_write_array_1d
      module procedure sll_s_binary_write_array_2d
-     module procedure sll_binary_write_array_3d
+     module procedure sll_s_binary_write_array_3d
   end interface
 
 contains
@@ -137,7 +137,7 @@ write(file_id,IOSTAT=error) array
 end subroutine
 
 !> Write a 3D array in the binary file file_id
-subroutine sll_binary_write_array_3d(file_id,array,error)
+subroutine sll_s_binary_write_array_3d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id      !< file unit number
 sll_int32 , intent(out)      :: error        !< error code
 sll_real64, intent(in)       :: array(:,:,:) !< data array
