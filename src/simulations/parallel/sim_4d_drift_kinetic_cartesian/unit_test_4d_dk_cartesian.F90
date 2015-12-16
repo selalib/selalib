@@ -63,7 +63,7 @@ program dk_cartesian_4d
        landau_params )
 
   call simulation%run( )
-  call sll_delete(simulation)
+  call sll_o_delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 

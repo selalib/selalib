@@ -68,7 +68,7 @@ module sll_m_hermite_interpolator_1d
 
 !PN DEFINED BUT NOT USED
 ! !> Deallocate the class interpolator
-! interface sll_delete
+! interface sll_o_delete
 !   module procedure delete_hi1d
 ! end interface
 

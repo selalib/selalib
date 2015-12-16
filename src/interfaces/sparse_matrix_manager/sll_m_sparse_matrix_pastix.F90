@@ -23,25 +23,25 @@ module sll_m_sparse_matrix
 #include "sll_assert.h"
   use sll_m_pastix
   use sll_m_qsort_partition, only : &
-     qsortC
+     sll_s_qsortc
 
   implicit none
 
   public :: &
-    new_csr_matrix, &
-    new_csr_matrix_with_constraint, &
-    csr_add_one_constraint, &
-    csr_todense, &
-    delete_csr_matrix, &
-    initialize_csr_matrix, &
-    initialize_csr_matrix_with_constraint, &
-    sll_add_to_csr_matrix, &
-    sll_csr_matrix, &
-    sll_factorize_csr_matrix, &
-    sll_mult_csr_matrix_vector, &
-    sll_solve_csr_matrix, &
-    sll_solve_csr_matrix_perper, &
-    sll_delete
+    sll_f_new_csr_matrix, &
+    sll_f_new_csr_matrix_with_constraint, &
+    sll_s_csr_add_one_constraint, &
+    sll_s_csr_todense, &
+    sll_s_delete_csr_matrix, &
+    sll_s_initialize_csr_matrix, &
+    sll_s_initialize_csr_matrix_with_constraint, &
+    sll_s_add_to_csr_matrix, &
+    sll_t_csr_matrix, &
+    sll_s_factorize_csr_matrix, &
+    sll_s_mult_csr_matrix_vector, &
+    sll_s_solve_csr_matrix, &
+    sll_s_solve_csr_matrix_perper, &
+    sll_o_delete
 
   private
 
@@ -49,7 +49,7 @@ module sll_m_sparse_matrix
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief type for CSR format
-type sll_csr_matrix
+type sll_t_csr_matrix
   sll_int32                         :: num_rows !< number of rows
   sll_int32                         :: num_cols !< number of columns
   sll_int32                         :: num_nz   !< number of non zero elements
@@ -57,11 +57,11 @@ type sll_csr_matrix
   sll_int32,  dimension(:), pointer :: col_ind
   sll_real64, dimension(:), pointer :: val
   type(pastix_solver),      pointer :: linear_solver
-end type sll_csr_matrix
+end type sll_t_csr_matrix
 
-interface sll_delete
-   module procedure delete_csr_matrix
-end interface sll_delete
+interface sll_o_delete
+   module procedure sll_s_delete_csr_matrix
+end interface sll_o_delete
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -69,15 +69,15 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine delete_csr_matrix(csr_mat)
+subroutine sll_s_delete_csr_matrix(csr_mat)
 
-  type(sll_csr_matrix), pointer :: csr_mat
+  type(sll_t_csr_matrix), pointer :: csr_mat
 
   sll_int32                     :: ierr
 
   nullify(csr_mat)
     
-end subroutine delete_csr_matrix
+end subroutine sll_s_delete_csr_matrix
 
 !> @brief allocates the memory space for a new CSR type on the heap,
 !> initializes it with the given arguments and returns a pointer to the
@@ -93,7 +93,7 @@ end subroutine delete_csr_matrix
 !> param[in] num_local_dof_col : number of local degrees of freedom for the columns
 !> return a pointer to the newly allocated object.
 
-function new_csr_matrix( num_rows,            &
+function sll_f_new_csr_matrix( num_rows,            &
                          num_cols,            &
                          num_elements,        &
                          local_to_global_row, &
@@ -101,7 +101,7 @@ function new_csr_matrix( num_rows,            &
                          local_to_global_col, &
                          num_local_dof_col)   result(mat)
 
-  type(sll_csr_matrix), pointer             :: mat
+  type(sll_t_csr_matrix), pointer             :: mat
   sll_int32,                     intent(in) :: num_rows
   sll_int32,                     intent(in) :: num_cols
   sll_int32,                     intent(in) :: num_elements
@@ -114,7 +114,7 @@ function new_csr_matrix( num_rows,            &
 
   SLL_ALLOCATE(mat, ierr)
 
-  call initialize_csr_matrix( mat,                 &
+  call sll_s_initialize_csr_matrix( mat,                 &
                               num_rows,            &
                               num_cols,            &
                               num_elements,        &
@@ -123,7 +123,7 @@ function new_csr_matrix( num_rows,            &
                               local_to_global_col, &
                               num_local_dof_col)
       
-end function new_csr_matrix
+end function sll_f_new_csr_matrix
 
 !> @brief initialization of CSR matrix type
 !> thanks to the global index of each local dof of each element
@@ -137,7 +137,7 @@ end function new_csr_matrix
 !> param[in] local_to_global_col : local_to_global_col(\ell,i) gives the global 
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> param[in] num_local_dof_col : number of local degrees of freedom for the columns
-subroutine initialize_csr_matrix(  mat,                 &
+subroutine sll_s_initialize_csr_matrix(  mat,                 &
                                    num_rows,            &
                                    num_cols,            &
                                    num_elements,        &
@@ -146,7 +146,7 @@ subroutine initialize_csr_matrix(  mat,                 &
                                    local_to_global_col, &
                                    num_local_dof_col)
 
-  type(sll_csr_matrix),      intent(inout) :: mat
+  type(sll_t_csr_matrix),      intent(inout) :: mat
   sll_int32,                 intent(in)    :: num_rows
   sll_int32,                 intent(in)    :: num_cols
   sll_int32,                 intent(in)    :: num_elements
@@ -210,12 +210,12 @@ subroutine initialize_csr_matrix(  mat,                 &
   SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
   SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
   
-end subroutine initialize_csr_matrix
+end subroutine sll_s_initialize_csr_matrix
 
-subroutine initialize_csr_matrix_with_constraint( mat, mat_a)
+subroutine sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
-  type(sll_csr_matrix), intent(inout) :: mat
-  type(sll_csr_matrix), intent(in) :: mat_a
+  type(sll_t_csr_matrix), intent(inout) :: mat
+  type(sll_t_csr_matrix), intent(in) :: mat_a
   sll_int32 :: ierr
 
   !print*,' COUNTING NON ZERO ELEMENTS'
@@ -230,22 +230,22 @@ subroutine initialize_csr_matrix_with_constraint( mat, mat_a)
   
   ! get the default configuration
 
-end subroutine initialize_csr_matrix_with_constraint
+end subroutine sll_s_initialize_csr_matrix_with_constraint
 
-function new_csr_matrix_with_constraint(mat_a) result(mat)
+function sll_f_new_csr_matrix_with_constraint(mat_a) result(mat)
 
-  type(sll_csr_matrix), pointer :: mat
-  type(sll_csr_matrix)          :: mat_a
+  type(sll_t_csr_matrix), pointer :: mat
+  type(sll_t_csr_matrix)          :: mat_a
 
   sll_int32                     :: ierr
 
   SLL_ALLOCATE(mat, ierr)
 
-  call initialize_csr_matrix_with_constraint( mat, mat_a)
+  call sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
-end function new_csr_matrix_with_constraint
+end function sll_f_new_csr_matrix_with_constraint
  
-subroutine csr_add_one_constraint( ia_in,          &
+subroutine sll_s_csr_add_one_constraint( ia_in,          &
                                    ja_in,          &
                                    a_in,           &
                                    num_rows_in,    &
@@ -329,20 +329,20 @@ subroutine csr_add_one_constraint( ia_in,          &
     stop
   endif
   
-end subroutine csr_add_one_constraint
+end subroutine sll_s_csr_add_one_constraint
 
-subroutine sll_factorize_csr_matrix(mat)
-  type(sll_csr_matrix), intent(inout) :: mat
+subroutine sll_s_factorize_csr_matrix(mat)
+  type(sll_t_csr_matrix), intent(inout) :: mat
   sll_int32 :: ierr
   
   call factorize(mat%linear_solver)
   
-end subroutine sll_factorize_csr_matrix
+end subroutine sll_s_factorize_csr_matrix
 
 
-subroutine sll_mult_csr_matrix_vector(mat, input, output)
+subroutine sll_s_mult_csr_matrix_vector(mat, input, output)
   
-  type(sll_csr_matrix) :: mat
+  type(sll_t_csr_matrix) :: mat
   sll_real64, dimension(:), intent(in) :: input
   sll_real64, dimension(:), intent(out) :: output
   !local var
@@ -360,12 +360,12 @@ subroutine sll_mult_csr_matrix_vector(mat, input, output)
           
   end do
 
-end subroutine sll_mult_csr_matrix_vector
+end subroutine sll_s_mult_csr_matrix_vector
 
 
-subroutine sll_add_to_csr_matrix(mat, val, a, a_prime)
+subroutine sll_s_add_to_csr_matrix(mat, val, a, a_prime)
   
-  type(sll_csr_matrix), intent(inout) :: mat
+  type(sll_t_csr_matrix), intent(inout) :: mat
   sll_real64,           intent(in)    :: val
   sll_int32,            intent(in)    :: a
   sll_int32,            intent(in)    :: a_prime
@@ -383,12 +383,12 @@ subroutine sll_add_to_csr_matrix(mat, val, a, a_prime)
     end if
   end do
 
-end subroutine sll_add_to_csr_matrix
+end subroutine sll_s_add_to_csr_matrix
 
 
 subroutine set_values_csr_matrix(mat, val)
   implicit none
-  type(sll_csr_matrix) :: mat
+  type(sll_t_csr_matrix) :: mat
   sll_real64, dimension(:), intent(in) :: val
   !local variables
   sll_int32 :: i
@@ -407,9 +407,9 @@ end subroutine set_values_csr_matrix
 
 
 
-subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
+subroutine sll_s_solve_csr_matrix(mat, apr_B, apr_U)
   implicit none
-  type(sll_csr_matrix) :: mat
+  type(sll_t_csr_matrix) :: mat
   sll_real64, dimension(:) :: apr_U
   sll_real64, dimension(:) :: apr_B
   !local var
@@ -418,7 +418,7 @@ subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
   apr_U = apr_B
   call solve(mat%linear_solver,apr_U)
   
-end subroutine sll_solve_csr_matrix
+end subroutine sll_s_solve_csr_matrix
 
 
     integer function sll_count_non_zero_elts( &
@@ -518,7 +518,7 @@ end subroutine sll_solve_csr_matrix
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
-        type(sll_csr_matrix) :: self
+        type(sll_t_csr_matrix) :: self
         integer, dimension(:,:), intent(in) :: api_LM_1
         integer, dimension(:,:), intent(in) :: api_LM_2
         integer :: ai_nel, ai_nen_1, ai_nen_2
@@ -581,9 +581,9 @@ end subroutine sll_solve_csr_matrix
     end subroutine sll_init_SparseMatrix
 
 
-  subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
+  subroutine sll_s_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
     implicit none
-    type(sll_csr_matrix) :: mat
+    type(sll_t_csr_matrix) :: mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B
     sll_real64, dimension(:), pointer :: Masse_tot
@@ -591,7 +591,7 @@ end subroutine sll_solve_csr_matrix
     sll_int32  :: sys
     sys = 0
     
-  end subroutine sll_solve_csr_matrix_perper
+  end subroutine sll_s_solve_csr_matrix_perper
 
 
 

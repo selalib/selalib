@@ -59,9 +59,9 @@ module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
     
   end type sll_simulation_4d_drift_kinetic_cart_finite_volume
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_dk_cart
-  end interface sll_delete
+  end interface sll_o_delete
 
 contains
 
@@ -331,9 +331,9 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%fstar_v3x1x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x1x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x1x2, ierr )
-    call sll_delete( sim%sequential_v3x1x2 )
-    call sll_delete( sim%rho_seq_x1x2 )
-    call sll_delete( sim%phi_seq_x1x2 )
+    call sll_o_delete( sim%sequential_v3x1x2 )
+    call sll_o_delete( sim%rho_seq_x1x2 )
+    call sll_o_delete( sim%phi_seq_x1x2 )
   end subroutine delete_dk_cart
 
   ! we put the reduction functions here for now, since we are only using

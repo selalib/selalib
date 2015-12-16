@@ -58,7 +58,7 @@ module sll_m_lagrange_interpolator_1d
 
 !PN DEFINED BUT NOT USED
 ! !> Deallocate the class interpolator
-! interface sll_delete
+! interface sll_o_delete
 !   module procedure delete_li1d
 ! end interface
 
