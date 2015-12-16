@@ -42,9 +42,9 @@ module sll_m_xdmf
 
 #ifdef NOHDF5
   use sll_m_binary_io, only: &
-    sll_binary_file_create, &
-    sll_binary_file_close, &
-    sll_binary_write_array
+    sll_s_binary_file_create, &
+    sll_s_binary_file_close, &
+    sll_o_binary_write_array
 
 #else
   use sll_m_hdf5_io_serial, only: &
@@ -158,10 +158,10 @@ npoints_x1 = size(array,1)
 npoints_x2 = size(array,2)
 
 #ifdef NOHDF5
-call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
+call sll_s_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
                             file_id,error)
-call sll_binary_write_array(file_id,array,error)
-call sll_binary_file_close(file_id,error)
+call sll_o_binary_write_array(file_id,array,error)
+call sll_s_binary_file_close(file_id,error)
 #else
 call sll_o_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                           file_id,error)
@@ -206,10 +206,10 @@ npoints_x2 = size(array,2)
 npoints_x3 = size(array,3)
 
 #ifdef NOHDF5
-call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
+call sll_s_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
                             file_id,error)
-call sll_binary_write_array(file_id,array,error)
-call sll_binary_file_close(file_id,error)
+call sll_o_binary_write_array(file_id,array,error)
+call sll_s_binary_file_close(file_id,error)
 #else
 call sll_o_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                           file_id,error)
@@ -256,10 +256,12 @@ sll_real64                   :: eta2_min    !< y min
 sll_real64                   :: delta_eta1  !< dx
 sll_real64                   :: delta_eta2  !< dy
 sll_int32                    :: file_id     !< xmf file unit number
-sll_int32                    :: hfile_id    !< h5 file unit number
 sll_int32                    :: nx1         !< x nodes number
 sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< "HDF5" or "Binary"
+#ifndef NOHDF5
+sll_int32                    :: hfile_id    !< h5 file unit number
+#endif
     
 nx1 = size(array,1)
 nx2 = size(array,2)
@@ -320,11 +322,13 @@ sll_real64                   :: delta_eta1  !< dx
 sll_real64                   :: delta_eta2  !< dy
 sll_real64                   :: delta_eta3  !< dz
 sll_int32                    :: file_id     !< xmf file unit number
-sll_int32                    :: hfile_id    !< h5 file unit number
 sll_int32                    :: nx1         !< x nodes number
 sll_int32                    :: nx2         !< y nodes number
 sll_int32                    :: nx3         !< z nodes number
 character(len=4), optional   :: file_format !< "HDF5" or "Binary"
+#ifndef NOHDF5
+sll_int32                    :: hfile_id    !< h5 file unit number
+#endif
     
 nx1 = size(array,1)
 nx2 = size(array,2)
@@ -376,11 +380,13 @@ character(len=*), intent(in) :: file_name  !< xmf file name
 character(len=*), intent(in) :: array_name !< array name
 sll_int32                    :: error      !< error code
 sll_int32                    :: file_id    !< xmf file unit number
-sll_int32                    :: hfile_id   !< h5 file unit number
 sll_int32                    :: nx1        !< x nodes number
 sll_int32                    :: nx2        !< y nodes number
 character(len=4), optional   :: file_format!< file format "HDF5" or "Binary"
 sll_int32                    :: i, j
+#ifndef NOHDF5
+sll_int32                    :: hfile_id    !< h5 file unit number
+#endif
     
 nx1 = size(array,1)
 nx2 = size(array,2)
@@ -437,12 +443,14 @@ character(len=*), intent(in) :: file_name    !< xmf file name
 character(len=*), intent(in) :: array_name   !< array name
 sll_int32                    :: error        !< error code
 sll_int32                    :: file_id      !< xmf file unit number
-sll_int32                    :: hfile_id     !< h5 file unit number
 sll_int32                    :: nx1          !< x nodes number
 sll_int32                    :: nx2          !< y nodes number
 sll_int32                    :: nx3          !< z nodes number
 character(len=4), optional   :: file_format  !< file format "HDF5" or "Binary"
 sll_int32                    :: i, j, k
+#ifndef NOHDF5
+sll_int32                    :: hfile_id    !< h5 file unit number
+#endif
     
 nx1 = size(array,1)
 nx2 = size(array,2)
@@ -505,10 +513,12 @@ character(len=*), intent(in) :: file_name   !< xmf file name
 character(len=*), intent(in) :: array_name  !< array name
 sll_int32                    :: error       !< error code
 sll_int32                    :: file_id     !< xmf file unit number
-sll_int32                    :: hfile_id    !< h5 file unit number
 sll_int32                    :: nx1         !< x nodes number
 sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< file format "HDF5" or "Binary"
+#ifndef NOHDF5
+sll_int32                    :: hfile_id    !< h5 file unit number
+#endif
 
 nx1 = size(array,1)
 nx2 = size(array,2)
@@ -609,11 +619,13 @@ character(len=*), intent(in) :: file_name     !< xmf file name
 character(len=*), intent(in) :: array_name    !< array name
 sll_int32                    :: error         !< error code
 sll_int32                    :: file_id       !< xmf file unit number
-sll_int32                    :: hfile_id      !< h5 file unit number
 sll_int32                    :: nx1           !< x nodes number
 sll_int32                    :: nx2           !< y nodes number
 sll_int32                    :: nx3           !< z nodes number
 character(len=4), optional   :: file_format   !< file format "HDF5" or "Binary"
+#ifndef NOHDF5
+sll_int32                    :: hfile_id    !< h5 file unit number
+#endif
 
 nx1 = size(array,1)
 nx2 = size(array,2)
