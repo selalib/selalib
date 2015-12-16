@@ -51,7 +51,14 @@ module sll_m_advection_1d_spectral
     fftw_plan_dft_r2c_1d
 
 #else
-use sll_m_fft
+use sll_m_fft, only: &
+  sll_f_fft_new_plan_c2r_1d, &
+  sll_f_fft_new_plan_r2c_1d, &
+  sll_s_fft_apply_plan_c2r_1d, &
+  sll_s_fft_apply_plan_r2c_1d, &
+  sll_s_fft_delete_plan, &
+  sll_t_fft_plan
+
 #endif
   implicit none
 
@@ -78,8 +85,8 @@ type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
   fftw_comp, pointer  :: fk(:)        !< f fft transform
   fftw_int            :: sz_fk        !< size for memory allocation
 #else
-  type(sll_fft_plan),       pointer :: fwx
-  type(sll_fft_plan),       pointer :: bwx
+  type(sll_t_fft_plan),       pointer :: fwx
+  type(sll_t_fft_plan),       pointer :: bwx
   sll_comp64, dimension(:), pointer :: fk
 #endif
 
@@ -143,8 +150,8 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
 #else
 
   SLL_CLEAR_ALLOCATE(adv%fk(1:num_cells/2+1), error)
-  adv%fwx => fft_new_plan_r2c_1d(num_cells, adv%d_dx,  adv%fk)
-  adv%bwx => fft_new_plan_c2r_1d(num_cells, adv%fk, adv%d_dx)
+  adv%fwx => sll_f_fft_new_plan_r2c_1d(num_cells, adv%d_dx,  adv%fk)
+  adv%bwx => sll_f_fft_new_plan_c2r_1d(num_cells, adv%fk, adv%d_dx)
 
 #endif
 
@@ -194,7 +201,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 #ifdef FFTW_F2003
   call fftw_execute_dft_r2c(adv%fwx, adv%d_dx, adv%fk)
 #else
-  call fft_apply_plan_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
+  call sll_s_fft_apply_plan_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
 #endif
 
   !f = f^n exp(-i kx vx dt)
@@ -206,7 +213,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 #ifdef FFTW_F2003
   call fftw_execute_dft_c2r(adv%bwx, adv%fk, adv%d_dx)
 #else
-  call fft_apply_plan_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
+  call sll_s_fft_apply_plan_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 #endif
 
   output(1:num_cells)= adv%d_dx / num_cells
@@ -224,8 +231,8 @@ subroutine delete(adv)
   call fftw_destroy_plan(adv%fwx)
   call fftw_destroy_plan(adv%bwx)
 #else
-  call fft_delete_plan(adv%fwx)
-  call fft_delete_plan(adv%bwx)
+  call sll_s_fft_delete_plan(adv%fwx)
+  call sll_s_fft_delete_plan(adv%bwx)
 #endif
    
 end subroutine delete
