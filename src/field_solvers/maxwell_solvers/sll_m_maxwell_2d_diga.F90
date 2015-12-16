@@ -244,9 +244,12 @@ subroutine initialize_maxwell_2d_diga( this,         &
       call compute_normals(tau,bc_south,bc_east,bc_north,bc_west, &
                            i,j,degree,this%cell(i,j))
 
-      SLL_CLEAR_ALLOCATE(this%cell(i,j)%MassMatrix(1:nddl)     , error)
-      SLL_CLEAR_ALLOCATE(this%cell(i,j)%DxMatrix(1:nddl,1:nddl), error)
-      SLL_CLEAR_ALLOCATE(this%cell(i,j)%DyMatrix(1:nddl,1:nddl), error)
+      allocate(this%cell(i,j)%MassMatrix(nddl))
+      this%cell(i,j)%MassMatrix(nddl) = 0.0_f64
+      allocate(this%cell(i,j)%DxMatrix(nddl, nddl))
+      this%cell(i,j)%DxMatrix = 0.0_f64
+      allocate(this%cell(i,j)%DyMatrix(nddl, nddl))
+      this%cell(i,j)%DyMatrix = 0.0_f64
 
       xa = this%cell(i,j)%eta1_min ; xb  = this%cell(i,j)%eta1_max 
       ya = this%cell(i,j)%eta2_min ; yb  = this%cell(i,j)%eta2_max 
