@@ -448,21 +448,29 @@ contains
     sim%n_threads = 1
     print*, 'number of threads is ', sim%n_threads
 
-   SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
+    SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
 
-   thread_id = 0
-   sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
-   sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
+    thread_id = 0
+    sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
+    sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
 
-   !! -- --  First charge deposition [begin]  -- --
+    !! -- --  First charge deposition [begin]  -- --
 
-   charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
+    charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-   target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-   enforce_total_charge = .true.
-   call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
+    target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+    enforce_total_charge = .false.
+    call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
 
-   !! -- --  First charge deposition [end]  -- --
+    print *, "[DEBUG 98786758] target_total_charge = ", SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+    print *, "[DEBUG 98786758] size of domain = ", (XMAX - XMIN) * (YMAX - YMIN)
+    print *, "[DEBUG 98786758] ", XMAX
+    print *, "[DEBUG 98786758] ", XMIN
+    print *, "[DEBUG 98786758] ", YMAX
+    print *, "[DEBUG 98786758] ", YMIN
+    print *, "[DEBUG 98786758] )------------------------------------------------------------------------------------------------"
+
+    !! -- --  First charge deposition [end]  -- --
 
 
   end subroutine init_4d_generic_pic_cartesian
@@ -476,8 +484,6 @@ contains
   !! \note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
   !!
   !! \note 2: use of cubic spline particles (routines with _CS) is disabled for now
-  !!
-  !! \todo 1: write and check the remapping step with adequate frequency
   !!
   !!
   !! @author this version written by MCP, ALH
@@ -612,7 +618,7 @@ contains
     call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
          MPI_SUM, rho1d_receive   )
 
-    print*,  "aaaa cc"
+    !     print*,  "aaaa cc"
 
     do j = 1, ncy+1
        do i = 1, ncx+1
@@ -622,16 +628,16 @@ contains
 
     !! -- --  MPI communications of rho [end]  -- --
 
-    print*,  "aa  dd"
-
-    print*,  "aa  dd 1 ", xmin
-    print*,  "aa  dd 2 ", sim%mesh_2d%eta1_max
-    print*,  "aa  dd 3 ", ncx+1
-    print*,  "aa  dd 4 ", ymin
-    print*,  "aa  dd 5 ", sim%mesh_2d%eta2_max
-    print*, sim%my_rank
-    print*, sim%rho
-    print*, size(sim%rho)
+    !    print*,  "aa  dd"
+    !
+    !    print*,  "aa  dd 1 ", xmin
+    !    print*,  "aa  dd 2 ", sim%mesh_2d%eta1_max
+    !    print*,  "aa  dd 3 ", ncx+1
+    !    print*,  "aa  dd 4 ", ymin
+    !    print*,  "aa  dd 5 ", sim%mesh_2d%eta2_max
+    !    print*, sim%my_rank
+    !    print*, sim%rho
+    !    print*, size(sim%rho)
 
 
     if (sim%my_rank == 0) then
@@ -642,7 +648,7 @@ contains
        ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%rho, 'rho_init_standPUSH', it+1, ierr )
+            sim%rho, 'rho_init', it+1, ierr )
     endif
 
     !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
@@ -666,11 +672,11 @@ contains
        print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%E1, 'Ex', it+1, ierr )
+            sim%E1, 'Ex_init', it+1, ierr )
 
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%E2, 'Ey', it+1, ierr )
+            sim%E2, 'Ey_init', it+1, ierr )
 
     endif
 
@@ -908,6 +914,15 @@ contains
       end do
 
       !! -- --  parallel communications for rho ?? [end]  -- --
+
+      if (sim%my_rank == 0) then
+         ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
+
+         ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
+         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+              sim%mesh_2d%eta2_max, ncy+1,                            &
+              sim%rho, 'rho', it+1, ierr )
+      end if
 
       !> ### Poisson solver (computing \f$E^{n+1}\f$)
 

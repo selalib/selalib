@@ -864,32 +864,6 @@ contains
 
   end subroutine bsl_lt_pic_4d_initializer
 
-  !
-  !  ! initialize the bsl_lt_pic group with the landau f0 distribution
-  !  subroutine bsl_lt_pic_4d_initializer_landau_f0 (          &
-  !              p_group, thermal_speed, alpha, k_landau       &
-  !          )
-  !    class(sll_bsl_lt_pic_4d_group), intent(inout)       :: p_group
-  !    sll_real64, intent(in)                              :: thermal_speed, alpha, k_landau
-  !
-  !    call p_group%bsl_lt_pic_4d_write_landau_density_on_remapping_grid( thermal_speed, alpha, k_landau )
-  !    call p_group%bsl_lt_pic_4d_compute_new_remapped_f_coefficients()
-  !
-  !  end subroutine bsl_lt_pic_4d_initializer_landau_f0
-
-
-  ! initialize the bsl_lt_pic group with a tensor product hat function with max value = basis_height + shift at (x0,y0,vx0,vy0)
-    !  do not call subroutine bsl_lt_pic_4d_initializer_hat_f0 (                                             &
-    !              p_group, x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift      &
-    !          )
-    !    class(sll_bsl_lt_pic_4d_group), intent(inout)       :: p_group
-    !    sll_real64, intent(in)                              :: x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift
-    !
-    !    call p_group%bsl_lt_pic_4d_write_hat_density_on_remapping_grid( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift)
-    !    call p_group%bsl_lt_pic_4d_compute_new_remapped_f_coefficients()
-    !
-    !  end subroutine bsl_lt_pic_4d_initializer_hat_f0
-
 
   subroutine bsl_lt_pic_4d_write_landau_density_on_remapping_grid(    &
               p_group,                              &
@@ -925,6 +899,8 @@ contains
     sll_real64 :: f_vy
     sll_real64 :: one_over_thermal_velocity
     sll_real64 :: one_over_two_pi
+
+    sll_real64 :: total_density ! DEBUG
 
     one_over_thermal_velocity = 1./thermal_speed
     one_over_two_pi = 1./(2*sll_pi)
@@ -983,31 +959,113 @@ contains
 
     else
 
-      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- b"
-      print*, p_group%remapped_f_interpolation_type
-      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- c"
-      print*, p_group%sparse_grid_interpolator%size_basis
-      print*, size(p_group%remapped_f_sparse_grid_coefficients,1)
-      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- d"
+      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- b"
+      !      print*, p_group%remapped_f_interpolation_type
+      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- c"
+      !      print*, p_group%sparse_grid_interpolator%size_basis
+      !      print*, size(p_group%remapped_f_sparse_grid_coefficients,1)
+      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- d"
       SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
-
       SLL_ASSERT( size(p_group%remapped_f_sparse_grid_coefficients,1) == p_group%sparse_grid_interpolator%size_basis )
 
-      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- assert ok "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
 
       do j=1, p_group%sparse_grid_interpolator%size_basis
           x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
           vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
           vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
 
-          f_x = eval_landau_fx(alpha, k_landau, x_j)
+          f_x = 1._f64 + alpha * cos(k_landau * x_j)  ! eval_landau_fx(alpha, k_landau, x_j)
           f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j * one_over_thermal_velocity)**2)
           f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j * one_over_thermal_velocity)**2)
 
           ! here we store a nodal value but later this array will indeed store sparse grid coefficients
+
+          !!!!!    [DEBUG]   TO RESTORE
+
           p_group%remapped_f_sparse_grid_coefficients(j) = one_over_two_pi * f_x * f_vx * f_vy
 
+          !                 p_group%remapped_f_sparse_grid_coefficients(j) = 1.
+
       end do
+
+
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+
+      number_nodes_x  = 50
+      number_nodes_y  = 1
+      number_nodes_vx = 51
+      number_nodes_vy = 51
+
+      h_x    = 4*sll_pi / number_nodes_x
+      h_y    = 1./number_nodes_y
+      h_vx   = 10./(number_nodes_vx-1)
+      h_vy   = 10./(number_nodes_vy-1)
+
+
+      x_min    = 0
+      y_min    = 0
+      vx_min   = -5
+      vy_min   = -5
+
+      total_density = 0
+
+      print *, "alpha, k_landau, one_over_thermal_velocity, one_over_two_pi = ", &
+                    alpha, k_landau, one_over_thermal_velocity, one_over_two_pi
+
+      do j_x = 1, number_nodes_x
+        x_j = x_min + (j_x-1) * h_x
+        f_x = 1._f64 + alpha * cos(k_landau * x_j) ! eval_landau_fx(alpha, k_landau, x_j)
+
+        print *, " DIFF -- ", 1._f64 + alpha * cos(k_landau * x_j),  eval_landau_fx(alpha, k_landau, x_j),    &
+                  1._f64 + alpha * cos(k_landau * x_j) - eval_landau_fx(alpha, k_landau, x_j)
+        do j_y = 1, number_nodes_y
+          ! (density does not depend on y)
+          do j_vx = 1, number_nodes_vx
+            vx_j = vx_min + (j_vx-1) * h_vx
+            f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j*one_over_thermal_velocity)**2)
+
+            do j_vy = 1, number_nodes_vy
+              vy_j = vy_min + (j_vy-1) * h_vy
+              f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j*one_over_thermal_velocity)**2)
+
+              total_density = total_density + ( one_over_two_pi * f_x * f_vx * f_vy ) * h_x * h_y * h_vx * h_vy
+
+            end do
+          end do
+        end do
+      end do
+
+      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- CHECKING TOTAL DENSITY:  ", total_density
+
 
     end if
 
@@ -1704,6 +1762,7 @@ contains
   end function
 
 
+! TODO: it should be the flow grid here below, not g...
 #define UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(djx,djy,djvx,djvy)                                            \
     do;                                                                                                                 \
         k_neighbor = closest_marker(j_x+(djx), j_y+(djy), j_vx+(djvx), j_vy+(djvy));                                    \
@@ -1716,10 +1775,10 @@ contains
             vx = coords(1) ;                                                                                            \
             vy = coords(2) ;                                                                                            \
             call periodic_correction(p_group,x,y) ;                                                                     \
-            x_aux = x - g%eta1_min;                                                                                     \
-            y_aux = y - g%eta2_min;                                                                                     \
-            vx_aux = vx - g%eta3_min;                                                                                   \
-            vy_aux = vy - g%eta4_min;                                                                                   \
+            x_aux = x - p_group%flow_grid%eta1_min;                                                                     \
+            y_aux = y - p_group%flow_grid%eta2_min;                                                                     \
+            vx_aux = vx - p_group%flow_grid%eta3_min;                                                                   \
+            vy_aux = vy - p_group%flow_grid%eta4_min;                                                                   \
             call update_closest_marker_arrays(k_neighbor,                                                               \
                                                 x_aux, y_aux, vx_aux, vy_aux,                                           \
                                                 j_x, j_y, j_vx, j_vy,                                                   \
@@ -2015,8 +2074,14 @@ contains
     sll_real64 :: vx_aux
     sll_real64 :: vy_aux
 
+    sll_real64 :: debug_charge
+    sll_int32  :: debug_count
+
+
     ! --- end of declarations!
 
+    debug_charge = 0
+    debug_count = 0
 
     ! getting the parameters of the flow grid
     flow_grid_x_min    = p_group%flow_grid%eta1_min
@@ -2042,6 +2107,9 @@ contains
     g_num_points_vx = 0
     g_num_points_vy = 0
 
+    print *, " ?? 876876897895697698769876987 ?? A "
+    deposited_charge = 0.0_f64
+    print *, " ?? 876876897895697698769876987 ?? B "
 
     !> A.  preparation of the point sets where f will be reconstructed, depending on the different scenarios
     if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
@@ -2091,10 +2159,10 @@ contains
         deposition_grid_num_cells_vy = g_num_points_vy - 1
 
         ! todo: write these computations in constructor, and set p_group%number_deposition_particles to the actual nb of dep parts
-        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F]  -- given lower bound:",p_group%number_deposition_particles
 
         tmp = real(  g_num_points_x * g_num_points_y * g_num_points_vx * g_num_points_vy, f64)  ! number of deposition particles
-        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F]  will use ", tmp, "deposition particles"
+        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F] will use ", tmp, "deposition particles"
+        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F] -- should be at least ",p_group%number_deposition_particles
         SLL_ASSERT( tmp >= p_group%number_deposition_particles )
 
         ! then we position the grid of deposition cells so that every deposition particle is _inside_ a poisson cell
@@ -2138,10 +2206,6 @@ contains
         SLL_ASSERT( .not. reconstruct_f_on_g_grid )
         SLL_ERROR("bsl_lt_pic_4d_write_f_on_grid_or_deposit", " this part not implemented yet...")
 
-      end if
-
-      if( enforce_total_charge )then
-          deposited_charge = 0.0_f64
       end if
 
     else if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
@@ -2274,6 +2338,16 @@ contains
       g_grid_y_min  = g%eta2_min
       g_grid_vx_min = g%eta3_min
       g_grid_vy_min = g%eta4_min
+
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta1_min, g%eta1_min = ", p_group%flow_grid%eta1_min, g%eta1_min
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta2_min, g%eta2_min = ", p_group%flow_grid%eta2_min, g%eta2_min
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta3_min, g%eta3_min = ", p_group%flow_grid%eta3_min, g%eta3_min
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta4_min, g%eta4_min = ", p_group%flow_grid%eta4_min, g%eta4_min
+
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta1_max, g%eta1_max = ", p_group%flow_grid%eta1_max, g%eta1_max
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta2_max, g%eta2_max = ", p_group%flow_grid%eta2_max, g%eta2_max
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta3_max, g%eta3_max = ", p_group%flow_grid%eta3_max, g%eta3_max
+      print *, "DEBUG 87675765 -- p_group%flow_grid%eta4_max, g%eta4_max = ", p_group%flow_grid%eta4_max, g%eta4_max
 
       if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
         deposition_dvol = h_g_grid_x * h_g_grid_y * h_g_grid_vx * h_g_grid_vy
@@ -2726,6 +2800,9 @@ contains
 
                           reconstructed_charge = reconstructed_f_value * deposition_dvol * p_group%species%q
 
+                          debug_count = debug_count + 1
+                          debug_charge = debug_charge + deposition_dvol * p_group%species%q
+
                           if( .false. )then
                             print *, "[DEBUG] -- [deposit with] ", reconstructed_f_value * deposition_dvol * p_group%species%q
                             print *, "[DEBUG] -- reconstructed_charge = ", reconstructed_charge
@@ -2745,9 +2822,8 @@ contains
                           charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
                                   + reconstructed_charge *  cell_offset_x *  cell_offset_y
 
-                          if( enforce_total_charge )then
-                            deposited_charge = deposited_charge + reconstructed_charge
-                          end if
+                          ! count the total charge
+                          deposited_charge = deposited_charge + reconstructed_charge
 
                         else
 
@@ -2777,6 +2853,8 @@ contains
 
                           end if
                         end if
+                      else
+                        print *, "654654535466545434564 -- ZERO VALUE !"
                       end if
                     ! this is the end of the (fourfold) loop on the grid nodes
                     end do
@@ -2821,6 +2899,17 @@ contains
         SLL_ERROR("writing f on the remap grid", "broken test")
       end if
     end if
+
+
+    print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- debug_count  = ", debug_count
+    print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- g_num_points:  ", &
+            g_num_points_x * g_num_points_y * g_num_points_vx * g_num_points_vy
+    print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- g_num_points modified :  ", &
+            g_num_points_x* g_num_points_y * (g_num_points_vx -1) * (g_num_points_vy - 1)
+
+    print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- debug_charge = ", debug_charge
+    print *,  " [DEPOSIT_CHARGE] DEBUG  -- --- (scenario == SLL_BSL_LT_PIC_DEPOSIT_F) = ", (scenario == SLL_BSL_LT_PIC_DEPOSIT_F)
+    print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- deposited_charge = ", deposited_charge
 
     if( (scenario == SLL_BSL_LT_PIC_DEPOSIT_F) .and. enforce_total_charge )then
 
