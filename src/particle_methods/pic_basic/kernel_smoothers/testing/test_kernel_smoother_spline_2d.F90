@@ -114,10 +114,10 @@ program test_kernel_smoother_spline_2d
 
   do i_part = 1, n_particles
      xi = particle_group%get_x(i_part)
-     wi = particle_group%get_weights(i_part)
+     wi = particle_group%get_charge(i_part)
      call kernel%add_charge(xi(1:2), wi(1), rho_dofs)
   end do
-  rho_dofs = rho_dofs/product(kernel%delta_x)
+  rho_dofs = rho_dofs
 
   rho_dofs_ref = 0.0_f64
   rho_dofs_ref(8:10) = values_grid(1:3,1,1)

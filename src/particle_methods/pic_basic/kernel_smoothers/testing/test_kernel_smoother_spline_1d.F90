@@ -97,18 +97,18 @@ program test_kernel_smoother_spline_1d
   rho_dofs = 0.0_f64
   do i_part = 1, n_particles
      xi = particle_group%get_x(i_part)
-     wi = particle_group%get_weights(i_part)
+     wi = particle_group%get_charge(i_part)
      call kernel%add_charge(xi(1), wi(1), rho_dofs)
   end do
-  rho_dofs = rho_dofs/kernel%delta_x(1)
-  !call kernel%accumulate_rho_from_klimontovich(particle_group, rho_dofs)
+  rho_dofs = rho_dofs
   rho_dofs_ref = 0.0_f64
   rho_dofs_ref(8:10) = values_grid(1:3,1,1)
   rho_dofs_ref(1) = values_grid(4,1,1)
   rho_dofs_ref(1:4) = rho_dofs_ref(1:4) + values_grid(:,1,2) + values_grid(:,1,3)
   rho_dofs_ref(5:8) = rho_dofs_ref(5:8) + values_grid(:,1,4)
-  rho_dofs_ref = rho_dofs_ref * real(n_cells,f64)/domain(2)/real(n_particles, f64)
+  rho_dofs_ref = rho_dofs_ref/real(n_particles, f64) * real(n_cells,f64)/domain(2)
   error = maxval(abs(rho_dofs-rho_dofs_ref))
+
   if (error > 1.e-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge .'
