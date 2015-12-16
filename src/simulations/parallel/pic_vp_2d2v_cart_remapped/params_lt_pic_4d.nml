@@ -47,7 +47,7 @@
 /
 
 &lt_pic_deposition_params
-    number_deposition_particles = 1000                ! lower bound for the number of deposition particles
+    number_deposition_particles = 100000                ! lower bound for the number of deposition particles
 /
 
 &lt_pic_markers_params
