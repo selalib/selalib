@@ -1043,7 +1043,7 @@ contains
     delta4   = mesh%delta_x4
     delta5   = mesh%delta_x5
     delta6   = mesh%delta_x6
-    partial(:,:,:,:,:) = 0.0 _f64
+    partial(:,:,:,:,:) = 0.0_f64
     numpts4 = mesh%num_cells4
     numpts5 = mesh%num_cells5
     numpts6 = mesh%num_cells6
