@@ -67,7 +67,7 @@ contains
   !---------------------------------------------------------------------------!
   subroutine add_charge_single_spline_1d(this, position, weight, rho_dofs)
     class( sll_t_kernel_smoother_spline_1d ), intent(inout) :: this !< kernel smoother object
-     sll_real64, intent(in)  :: position(this%dim) !< Position of the particle
+    sll_real64, intent(in)  :: position(this%dim) !< Position of the particle
     sll_real64,                intent( in ) :: weight !< Weight of the particle
     sll_real64,                 intent( inout ) :: rho_dofs(this%n_dofs) !< Coefficient vector of the charge distribution
 
