@@ -34,7 +34,7 @@ program test_kernel_smoother_spline_1d
 
   ! helper variables
   sll_int32  :: i_part 
-  sll_real64 :: xi(3), wi(1)
+  sll_real64 :: xi(3), wi(1), vi(3), x_new(1)
   logical :: passed
   sll_real64 :: error
 
@@ -48,6 +48,8 @@ program test_kernel_smoother_spline_1d
   ! J dofs
   sll_real64 :: j_dofs(10)
   sll_real64 :: j_dofs_ref(10)
+  ! B dofs
+  sll_real64 :: b_dofs(10)
 
   ! For evaluation check
   sll_real64 :: particle_values(4)
@@ -63,7 +65,7 @@ program test_kernel_smoother_spline_1d
   spline_degree = 3 ! Spline degree
   domain = [0.0_f64, 2.0_f64] ! x_min, x_max
   x_vec = [0.1_f64, 0.65_f64, 0.7_f64, 1.5_f64] ! Particle positions
-  v_vec(:,1) = [1.5_f64, 0.0_f64, 0.0_f64, 0.0_f64]
+  v_vec(:,1) = [1.5_f64, -3.0_f64, 0.0_f64, 6.0_f64]
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
@@ -115,20 +117,31 @@ program test_kernel_smoother_spline_1d
   end if
 
 
-!!$  ! Test j accumulations
-!!$  j_dofs = 0.0_f64
-!!$  call kernel%accumulate_j_from_klimontovich(particle_group, j_dofs, 1)
-!!$  j_dofs_ref = 0.0_f64  
-!!$  j_dofs_ref(8:10) = values_grid(1:3,1,1)*v_vec(1,1)
-!!$  j_dofs_ref(1) = values_grid(4,1,1)*v_vec(1,1)
-!!$  j_dofs_ref(1:4) = j_dofs_ref(1:4) + values_grid(:,1,2)*v_vec(2,1) + &
-!!$       values_grid(:,1,3)*v_vec(3,1)
-!!$  j_dofs_ref(5:8) = j_dofs_ref(5:8) + values_grid(:,1,4)*v_vec(4,1)
-!!$  j_dofs_ref = j_dofs_ref * real(n_cells,f64)/domain(2)/real(n_particles, f64)
-!!$  error = maxval(abs(j_dofs-j_dofs_ref))
-!!$  if (error > 1.e-14) then
-!!$     passed = .FALSE.
-!!$  end if
+  ! Test j accumulations
+  j_dofs = 0.0_f64
+  b_dofs = 0.0_f64
+  do i_part=1,n_particles 
+     xi = particle_group%get_x(i_part)
+     wi = particle_group%get_charge(i_part)
+     vi = particle_group%get_v(i_part)
+     x_new = xi(1) + vi(1)/10.0_f64
+     call kernel%add_current_update_v( xi(1), x_new, wi(1), 1.0_f64, b_dofs, vi, j_dofs )
+  end do
+  j_dofs_ref = [ 2.4617513020833336D-002,   4.0690104166666692D-005, 0.0_f64, &
+       0.0_f64, 0.0_f64, 0.0_f64,  0.0_f64,  6.5104166666666674D-004, &
+       4.6834309895833329D-002,    0.11535644531249999_f64];
+  j_dofs_ref = j_dofs_ref + [ -0.16219075520833331_f64, -0.16219075520833331_f64, &
+       -2.52685546875D-002,  -4.0690104166666692D-005 , &
+       0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64,  &
+       -4.0690104166666692D-005,  -2.52685546875D-002];
+  j_dofs_ref = j_dofs_ref + [ 6.5104166666666696D-004,  0.0_f64, 0.0_f64,  &
+       0.0_f64, 6.5104166666666674D-004, 5.0130208333333329D-002,  &
+       0.19986979166666666_f64, 0.24869791666666663_f64,  &
+       0.19986979166666666_f64, 5.0130208333333329D-002];
+  error = maxval(abs(j_dofs-j_dofs_ref))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
 
 
   ! Test function evaluation
