@@ -122,7 +122,9 @@ module sll_mpi
 
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
-#ifdef INTEL_MPI
+#ifdef MPI_AUTO
+#include "external_auto.F90"
+#elif defined(INTEL_MPI)
 #include "external_intel.F90"
 #elif defined(OMPI)
 #include "external_openmpi.F90"

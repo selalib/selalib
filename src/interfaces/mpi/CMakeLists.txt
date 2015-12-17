@@ -83,6 +83,56 @@ if( ${MPI_LIB} STREQUAL "bullxmpi" )
 endif()
 
 #-------------------------------------------------------------------------------
+# AUTOMATIC APPROACH: used if the above does not work!
+#-------------------------------------------------------------------------------
+
+# Get the new MPI compiler definitions
+get_property( cur_defs DIRECTORY    PROPERTY COMPILE_DEFINITIONS )
+get_property( par_defs DIRECTORY .. PROPERTY COMPILE_DEFINITIONS )
+list( REMOVE_ITEM cur_defs ${par_defs} )
+foreach( def ${cur_defs} )
+  list( APPEND MPI_DEFS -D${def} )
+endforeach()
+string( REPLACE ";" " " MPI_DEFS "${MPI_DEFS}" )
+#message( STATUS ${MPI_DEFS} )
+
+# Variables
+set( SRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/sll_mpi.F90 )
+set( ERR_FILE ${CMAKE_CURRENT_SOURCE_DIR}/mpi_errors.txt )
+set( EXT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/external_auto.F90 )
+set( PYSCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/create_external_list.py )
+
+# Test if 'sll_mpi' is correctly compiled
+execute_process(
+  COMMAND ${MPI_Fortran_COMPILER} ${MPI_DEFS} -c ${SRC_FILE}
+  ERROR_VARIABLE ERR_STAT
+  )
+
+# If there is a compilation problem, generate a list of external symbols
+if( ERR_STAT )
+  message( "" )
+  message( "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" )
+  message( "WARNING: file 'sll_mpi.F90' cannot be compiled!"                   )
+  message( "         fall back to automatic generation of external symbols..." )
+  message( "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" )
+  message( "" )
+  execute_process(
+    COMMAND ${MPI_Fortran_COMPILER} -c ${SRC_FILE}
+    ERROR_FILE ${ERR_FILE}
+    )
+  execute_process( COMMAND python ${PYSCRIPT} ${ERR_FILE} ${EXT_FILE} )
+#  string( FIND ${MPI_DEFS} "=" LOC )
+#  message( STATUS ${LOC} )
+#  math( EXPR LOC "${LOC}-1" )
+#  string( SUBSTRING ${MPI_DEFS} 1 ${LOC} MPI_DEFS )
+#  message( STATUS ${MPI_DEFS} )
+#  remove_definitions( ${MPI_DEFS} )
+  add_definitions( -DMPI_AUTO )
+else()
+  message( STATUS "'sll_mpi.F90' is correctly compiled.. proceed with configuration" )
+endif()
+
+#-------------------------------------------------------------------------------
 # ADD LIBRARY
 #-------------------------------------------------------------------------------
 add_library( sll_mpi OBJECT sll_mpi.F90 )
