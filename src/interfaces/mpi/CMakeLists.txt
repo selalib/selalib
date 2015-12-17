@@ -59,19 +59,22 @@ if( ${MPI_LIB} STREQUAL "mpich" )
 #  string( REGEX MATCH "MPICH Version:    	([0-9]+)\\.([0-9]+)\\.([0-9]+)" MPICH_VERSION ${MPICH_INFO} )
   find_program(MPICH_INFO_PROG NAMES mpichversion HINTS /opt/local/bin /usr/local/bin )
   message( STATUS "MPICH_INFO_PROG:${MPICH_INFO_PROG}" )
-  execute_process(
-    COMMAND ${MPICH_INFO_PROG}
-    COMMAND grep "MPICH Version:\\s*[0-9]\\+\\.[0-9]"#\\+\\.[0-9]\\+"
-    OUTPUT_VARIABLE MPICH_INFO
-    )
-  #message( STATUS "MPICH_INFO:${MPICH_INFO}" )
-  string( REGEX MATCH "([0-9]+)\\.([0-9])" MPICH_VERSION ${MPICH_INFO} )
-
-  math( EXPR MPICH_VERSION
-    "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 ") #+ ${CMAKE_MATCH_3}" )
-  add_definitions( -DMPICH )
-  add_definitions( -DMPICH_VERSION=${MPICH_VERSION} )
-  message( STATUS "MPICH_VERSION = ${MPICH_VERSION}" )
+  if( MPICH_INFO_PROG )
+    execute_process(
+      COMMAND ${MPICH_INFO_PROG}
+      COMMAND grep "MPICH Version:\\s*[0-9]\\+\\.[0-9]"#\\+\\.[0-9]\\+"
+      OUTPUT_VARIABLE MPICH_INFO
+      )
+    #message( STATUS "MPICH_INFO:${MPICH_INFO}" )
+    string( REGEX MATCH "([0-9]+)\\.([0-9])" MPICH_VERSION ${MPICH_INFO} )
+    math( EXPR MPICH_VERSION
+      "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 ") #+ ${CMAKE_MATCH_3}" )
+    add_definitions( -DMPICH )
+    add_definitions( -DMPICH_VERSION=${MPICH_VERSION} )
+    message( STATUS "MPICH_VERSION = ${MPICH_VERSION}" )
+  else()
+    message( "WARNING: cannot find 'mpichversion' executable." )
+  endif()
 endif()
 
 #-------------------------------------------------------------------------------
