@@ -372,18 +372,22 @@ contains
 #ifdef FFTW_F2003
       plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_R2HC,flag_fftw)
 #else      
+      ! This would be the call to actually create a r2r plan
+      !call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,flag_fftw)
+
       allocate(plan%scratch(nx/2+1))
       call dfftw_plan_dft_r2c_1d(plan%fftw,nx,array_in,plan%scratch,flag_fftw)
-      !call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,flag_fftw)
       SLL_WARNING('sll_f_fft_new_plan_r2r_1d','R2HC not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
 #endif
     else if(direction .eq. sll_p_fft_backward) then
 #ifdef FFTW_F2003
       plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,flag_fftw)
 #else
+      ! This would be the code to actually create an r2r plan
+      !call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_HC2R,flag_fftw)
+
       allocate(plan%scratch(nx/2+1))
       call dfftw_plan_dft_c2r_1d(plan%fftw,nx,plan%scratch,array_out,flag_fftw)
-      !call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_HC2R,flag_fftw)
       SLL_WARNING('sll_f_fft_new_plan_r2r_1d','HC2R not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
 #endif
     endif
