@@ -117,8 +117,10 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
   SLL_CLEAR_ALLOCATE(adv%d_dx(1:num_cells), error)
   SLL_ALLOCATE(adv%fk(1:num_cells/2+1), error)
   adv%fk(1:num_cells/2+1) = cmplx(0.0,0.0,kind=f64)
+  !$OMP CRITICAL
   adv%fwx => sll_f_fft_new_plan_r2c_1d(num_cells, adv%d_dx,  adv%fk)
   adv%bwx => sll_f_fft_new_plan_c2r_1d(num_cells, adv%fk, adv%d_dx)
+  !$OMP END CRITICAL
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:num_cells/2+1), error)
    
