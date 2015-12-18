@@ -392,7 +392,7 @@ contains
   !> Compute fast Fourier transform in real to real mode.
   subroutine sll_s_fft_apply_plan_r2r_1d(plan,array_in,array_out)
 
-    type(sll_t_fft_plan), pointer, intent(in) :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer, intent(inout) :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
     sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
 
