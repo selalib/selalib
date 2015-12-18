@@ -18,6 +18,7 @@ TARGET_LINK_LIBRARIES( sll_bsl_lt_pic
   sll_sparse_grid
   sll_timer # needed?
   sll_file_io # needed?
+  sll_sobol
   )
 
 # Ctest
