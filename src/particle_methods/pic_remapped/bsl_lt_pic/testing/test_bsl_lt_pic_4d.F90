@@ -208,6 +208,7 @@ program test_bsl_lt_pic_4d
         REMAP_NC_VX,              &
         REMAP_NC_VY,              &
         remapping_sparse_grid_max_levels, &
+        SLL_BSL_LT_PIC_FIXED_GRID,&
         NUM_DEPOSITION_PARTS,     &
         NUM_MARKERS_X,            &
         NUM_MARKERS_Y,            &
