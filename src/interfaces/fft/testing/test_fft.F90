@@ -145,14 +145,12 @@ program unit_test
     p => sll_f_fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),sll_p_fft_backward,normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call sll_s_fft_delete_plan(p)
- 
+    
     ierr = MAXVAL(ABS( rdata(1:s) - rdata_copy(1:s) ))
-#ifdef FFTW_F2003
     if( ierr > err_max ) then
       print*,'Average error too big ',ierr
       stop ''
     endif
-#endif
    enddo
   enddo
   print *, 'OK'
