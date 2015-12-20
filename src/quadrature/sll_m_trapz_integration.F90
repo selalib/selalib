@@ -12,7 +12,7 @@ module sll_m_trapz_integration
   implicit none
 
   public :: &
-    trapz_integrate_1d
+    sll_o_trapz_integrate_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,7 +31,7 @@ end interface
 #endif
 
 !> Integrate numerically with Gauss-Lobatto formula
-interface trapz_integrate_1d
+interface sll_o_trapz_integrate_1d
   module procedure trapz_integral_1d 
 end interface
 

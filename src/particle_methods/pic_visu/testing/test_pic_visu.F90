@@ -10,17 +10,17 @@ program test_pic_visu
     vitesse
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_pic_visu, only: &
-    distribution_gnuplot, &
-    distribution_m4_gnuplot, &
-    distribution_tsc_gnuplot, &
-    distribution_xdmf, &
-    particles_center_gnuplot, &
-    particles_center_gnuplot_inline, &
-    plot_format_points3d, &
-    plot_format_xmdv
+    sll_o_distribution_gnuplot, &
+    sll_s_distribution_m4_gnuplot, &
+    sll_s_distribution_tsc_gnuplot, &
+    sll_s_distribution_xdmf, &
+    sll_o_particles_center_gnuplot, &
+    sll_s_particles_center_gnuplot_inline, &
+    sll_o_plot_format_points3d, &
+    sll_s_plot_format_xmdv
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -55,7 +55,7 @@ SLL_ALLOCATE(w(nbpart),error)
 
 do i = 1, nbpart 
    t = real(i,f64) / real(nbpart-1,f64)
-   angle = t * (sll_pi * 2.) * 50._f64
+   angle = t * (sll_p_pi * 2.) * 50._f64
    r = t * 2.
    x(i) = r * cos(angle)
    v(i) = r * sin(angle)
@@ -71,18 +71,18 @@ SLL_ALLOCATE(density(nx,nv), error)
 
 iplot = 1
 time = 0._f64
-call particles_center_gnuplot( "pic_xv", x, v, xmin, xmax, vmin, vmax, iplot, time )
-call distribution_gnuplot( "df_xv", x, v, xmin, xmax, nx, vmin, vmax, nv, iplot, time)  
-call particles_center_gnuplot_inline( x, v, xmin, xmax, vmin, vmax, time )
-call plot_format_points3d( "pic_xv", x, v, iplot)
-call plot_format_xmdv( "pic_xv", x, v, iplot, xmin, xmax, vmin, vmax)
-call distribution_xdmf("df_xv", x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)  
+call sll_o_particles_center_gnuplot( "pic_xv", x, v, xmin, xmax, vmin, vmax, iplot, time )
+call sll_o_distribution_gnuplot( "df_xv", x, v, xmin, xmax, nx, vmin, vmax, nv, iplot, time)  
+call sll_s_particles_center_gnuplot_inline( x, v, xmin, xmax, vmin, vmax, time )
+call sll_o_plot_format_points3d( "pic_xv", x, v, iplot)
+call sll_s_plot_format_xmdv( "pic_xv", x, v, iplot, xmin, xmax, vmin, vmax)
+call sll_s_distribution_xdmf("df_xv", x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)  
 
-call distribution_tsc_gnuplot('df_tsc', x, v, w, &
+call sll_s_distribution_tsc_gnuplot('df_tsc', x, v, w, &
                              xmin, xmax, nx,     &
                              vmin, vmax, nv, iplot)  
 
-call distribution_m4_gnuplot('df_m4', x, v, w, &
+call sll_s_distribution_m4_gnuplot('df_m4', x, v, w, &
                              xmin, xmax, nx,     &
                              vmin, vmax, nv, iplot)  
 end subroutine plot_test_2d
@@ -122,10 +122,10 @@ do istep = 1, nstep       !loop over time
    time = time + dt
    if ( mod(istep, 10) == 0) then
       iplot = iplot + 1
-      call particles_center_gnuplot( "pic_xy", xp, yp, &
+      call sll_o_particles_center_gnuplot( "pic_xy", xp, yp, &
            xmin, xmax, ymin, ymax, iplot, time )
-      call plot_format_points3d( "pic_xy", xp, yp, op, iplot)
-      call plot_format_xmdv( "pic_xy", xp, yp, iplot, xmin, xmax, ymin, ymax)
+      call sll_o_plot_format_points3d( "pic_xy", xp, yp, op, iplot)
+      call sll_s_plot_format_xmdv( "pic_xy", xp, yp, iplot, xmin, xmax, ymin, ymax)
    end if
 
 end do      !next time step

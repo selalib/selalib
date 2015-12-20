@@ -4,7 +4,7 @@ IF(MPI_ENABLED)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   ADD_EXECUTABLE( test_sparse_matrix test_sparse_matrix.F90 )
   TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
-  ADD_MPI_TEST( sparse_matrix test_sparse_matrix 2 " " )
+  ADD_MPI_TEST( sparse_matrix test_sparse_matrix 1 " " )
   SET_TESTS_PROPERTIES( sparse_matrix PROPERTIES TIMEOUT 20 )
 ENDIF(MPI_ENABLED)
 

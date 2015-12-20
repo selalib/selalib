@@ -30,36 +30,36 @@ module sll_m_advection_1d_CSL_periodic
 !   dfftf
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_characteristics_1d_base, only: &
-    process_outside_point_periodic, &
-    sll_characteristics_1d_base
+    sll_f_process_outside_point_periodic, &
+    sll_c_characteristics_1d_base
 
   use sll_m_gauss_legendre_integration, only: &
-    gauss_legendre_points_and_weights
+    sll_f_gauss_legendre_points_and_weights
 
   use sll_m_hermite_interpolation_1d, only: &
-    compute_w_hermite_1d
+    sll_s_compute_w_hermite_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_lagrange_interpolation, only: &
-    lagrange_interpolate
+    sll_f_lagrange_interpolate
 
   implicit none
 
   public :: &
-    new_csl_periodic_1d_advector
+    sll_f_new_csl_periodic_1d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_advection_1d_base) :: CSL_periodic_1d_advector
+  type,extends(sll_c_advection_1d_base) :: CSL_periodic_1d_advector
   
     class(sll_c_interpolator_1d), pointer  :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: charac_feet
     sll_real64, dimension(:), pointer :: charac_feet_inside
@@ -84,7 +84,7 @@ module sll_m_advection_1d_CSL_periodic
 
 
 contains
-  function new_CSL_periodic_1d_advector( &
+  function sll_f_new_csl_periodic_1d_advector( &
     interp, &
     charac, &
     Npts, &
@@ -95,7 +95,7 @@ contains
     result(adv)      
     type(CSL_periodic_1d_advector), pointer :: adv
     class(sll_c_interpolator_1d), pointer :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
@@ -115,7 +115,7 @@ contains
       eta_coords, &
       csl_degree)    
     
-  end function  new_CSL_periodic_1d_advector
+  end function  sll_f_new_csl_periodic_1d_advector
 
 
   subroutine initialize_CSL_periodic_1d_advector(&
@@ -129,7 +129,7 @@ contains
     csl_degree)    
     class(CSL_periodic_1d_advector), intent(inout) :: adv
     class(sll_c_interpolator_1d), pointer :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
@@ -275,7 +275,7 @@ contains
     
     do i=1,adv%Npts
       adv%charac_feet_inside(i) = &
-        process_outside_point_periodic( &
+        sll_f_process_outside_point_periodic( &
           adv%charac_feet(i), &
           adv%eta_coords(1), &
           adv%eta_coords(adv%Npts))
@@ -531,7 +531,7 @@ contains
     r_right=(-d+1)/2
     s_right=d/2+1
     
-    call compute_w_hermite_1d(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite_1d(w_left,r_left,s_left)
     if((2*(d/2)-d)==0)then
       w_right(r_right:s_right) = w_left(r_left:s_left)
     else
@@ -718,7 +718,7 @@ contains
     nodes(3,1) = b
     nodes(2,1) = 0.5_f64*(a+b)
     do j=1,3
-      eta = process_outside_point_periodic( &
+      eta = sll_f_process_outside_point_periodic( &
         nodes(j,1), &
         eta_min, &
         eta_max)
@@ -1011,7 +1011,7 @@ contains
     
     num_gauss_points = (d+1)/2
     SLL_ALLOCATE(xw(2,num_gauss_points),ierr)
-    xw = gauss_legendre_points_and_weights( &
+    xw = sll_f_gauss_legendre_points_and_weights( &
       num_gauss_points, &
       0._f64, &
       1._f64 )
@@ -1116,7 +1116,7 @@ contains
     
     do i=1,Npts
       eta = charac(i)
-      eta = process_outside_point_periodic(eta,eta_min,eta_max)
+      eta = sll_f_process_outside_point_periodic(eta,eta_min,eta_max)
       eta = real(N,f64)*(eta-eta_min)/(eta_max-eta_min)
       ind = floor(eta)
       eta = eta-ind
@@ -1135,14 +1135,14 @@ contains
       dof(4) = deriv(2,ind)
       output(i) = evaluate_hermite_1d(eta,dof)
       eta = charac(i)
-      eta = process_outside_point_periodic(eta,eta_min,eta_max)
+      eta = sll_f_process_outside_point_periodic(eta,eta_min,eta_max)
       res = output(i)-interp%interpolate_from_interpolant_value(eta)
       if(abs(res)>1.e-10)then
         print *,'#problem detected'
         print *,'#dof=',dof
         print *,'ind=',ind
         eta = charac(i)
-        eta = process_outside_point_periodic(eta,eta_min,eta_max)
+        eta = sll_f_process_outside_point_periodic(eta,eta_min,eta_max)
         eta = real(N,f64)*(eta-eta_min)/(eta_max-eta_min)
         ind = floor(eta)
         eta = eta-ind
@@ -1740,15 +1740,15 @@ contains
     d = s-r
     res = 0._f64
     !do i=r,s
-    !  print *,lagrange_interpolate(xval(i),d,xval(r:s),fval(r:s))
+    !  print *,sll_f_lagrange_interpolate(xval(i),d,xval(r:s),fval(r:s))
     !enddo
 		!stop
 	!x = a	
-	!nodes(1) = lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
+	!nodes(1) = sll_f_lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
 	!x = 0.5_f64*(a+b)	
-	!nodes(2) = lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
+	!nodes(2) = sll_f_lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
 	!x = b	
-	!nodes(3) = lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
+	!nodes(3) = sll_f_lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
 
     !res = nodes(1)+4._f64*nodes(2)+nodes(3) 
     !res = res*(b-a)/6._f64
@@ -1759,7 +1759,7 @@ contains
     do i=1,ng
       x = a+xw(1,i)*(b-a)
       !print *,'x=',i,x
-      res = res+(b-a)*xw(2,i)*lagrange_interpolate(x,d,xval(r:s),fval(r:s))
+      res = res+(b-a)*xw(2,i)*sll_f_lagrange_interpolate(x,d,xval(r:s),fval(r:s))
     enddo
 
 	!print *,'res gauss=',res	

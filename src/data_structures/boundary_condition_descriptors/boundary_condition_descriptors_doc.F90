@@ -18,6 +18,6 @@
 !>  - sll_m_boundary_condition_descriptors.h
 !>
 !> 	SLL_PERIODIC 	Periodic boundary condition u(1)=u(n)
-!>    SLL_DIRICHLET    	Dirichlet boundary condition 
-!> 	SLL_NEUMANN       Neumann boundary condition 
+!>    sll_p_dirichlet    	Dirichlet boundary condition 
+!> 	sll_p_neumann       Neumann boundary condition 
 !> 	SLL_HERMITE       Hermite boundary condition 

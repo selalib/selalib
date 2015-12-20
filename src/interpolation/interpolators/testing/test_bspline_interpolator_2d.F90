@@ -4,15 +4,15 @@ program bspline_2d_dirichlet
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite
+    sll_p_hermite
 
   use sll_m_bspline_interpolator_2d, only: &
-    new_bspline_interpolator_2d, &
-    sll_bspline_interpolator_2d, &
-    sll_delete
+    sll_f_new_bspline_interpolator_2d, &
+    sll_t_bspline_interpolator_2d, &
+    sll_o_delete
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,7 +26,7 @@ program bspline_2d_dirichlet
 #define X2MIN    0.0_f64
 #define X2MAX    1.0_f64
 
-type(sll_bspline_interpolator_2d), pointer :: interpolator
+type(sll_t_bspline_interpolator_2d), pointer :: interpolator
 
 sll_real64, dimension(NPTS1,NPTS2) :: x
 sll_real64, dimension(NPTS1,NPTS2) :: y
@@ -58,7 +58,7 @@ do j=1,NPTS2
 end do
   
 print*, ' Initialize new interpolator '
-interpolator => new_bspline_interpolator_2d( &
+interpolator => sll_f_new_bspline_interpolator_2d( &
   NPTS1,                                     &
   NPTS2,                                     &
   X1MIN,                                     &
@@ -67,8 +67,8 @@ interpolator => new_bspline_interpolator_2d( &
   X2MAX,                                     &
   SPL_DEG1,                                  &
   SPL_DEG2,                                  &
-  SLL_HERMITE,                               &
-  SLL_HERMITE,                               &
+  sll_p_hermite,                               &
+  sll_p_hermite,                               &
   0.0_f64,                                   &
   0.0_f64,                                   &
   0.0_f64,                                   &
@@ -127,7 +127,7 @@ else
   print *, 'FAILED'
 end if
 
-call sll_delete(interpolator)
+call sll_o_delete(interpolator)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -139,7 +139,7 @@ contains
     sll_real64 :: y
     sll_real64 :: f
   
-    f = sin(2.0_f64*sll_pi*x)*sin(2.0_f64*sll_pi*y)
+    f = sin(2.0_f64*sll_p_pi*x)*sin(2.0_f64*sll_p_pi*y)
   
   end function f
   
@@ -149,7 +149,7 @@ contains
     sll_real64 :: y
     sll_real64 :: df_dx
   
-    df_dx = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*x)*sin(2.0_f64*sll_pi*y)
+    df_dx = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*x)*sin(2.0_f64*sll_p_pi*y)
   
   end function df_dx
 
@@ -159,7 +159,7 @@ contains
     sll_real64 :: y
     sll_real64 :: df_dy
   
-    df_dy = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*y)*sin(2.0_f64*sll_pi*x)
+    df_dy = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*y)*sin(2.0_f64*sll_p_pi*x)
   
   end function df_dy
 

@@ -2,30 +2,30 @@ module sll_m_map_function
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   implicit none
 
   public :: &
-    map, &
-    set_map_function
+    sll_s_map, &
+    sll_s_set_map_function
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-class(sll_coordinate_transformation_2d_base),pointer :: tau
+class(sll_c_coordinate_transformation_2d_base),pointer :: tau
 
 contains
 
-   subroutine set_map_function(mytau)
-   class(sll_coordinate_transformation_2d_base), target :: mytau
+   subroutine sll_s_set_map_function(mytau)
+   class(sll_c_coordinate_transformation_2d_base), target :: mytau
 
    tau => mytau
 
-   end subroutine set_map_function
+   end subroutine sll_s_set_map_function
 
 
   ! fonction qui envoie le carré [0,1]x[0,1] sur le vrai domaine de calcul
@@ -33,14 +33,14 @@ contains
   ! variables physiques: (x,y)
   ! autres données calculées:
   ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
-  ! subroutine map(u,v,x,y,jac,invjac,det)
+  ! subroutine sll_s_map(u,v,x,y,jac,invjac,det)
   ! pour l'instant on n'utilise pas la jacobienne
-  subroutine map(u,v,x,y)
+  subroutine sll_s_map(u,v,x,y)
     implicit none
     real(8),intent(in) :: u,v
     real(8),intent(out) :: x,y
     real(8) :: eta1, eta2
-    class(sll_cartesian_mesh_2d), pointer :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     !x=(1+u)*(1+v)*cos(pi*v)
     !y=(1+u)*sin(pi*v)
@@ -51,7 +51,7 @@ contains
     x = tau%x1(eta1,eta2)
     y = tau%x2(eta1,eta2)
 
-  end subroutine map
+  end subroutine sll_s_map
 
 end module sll_m_map_function
 

@@ -6,33 +6,33 @@ program sim_bsl_ad_2d0v_hex_rot
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet
+    sll_p_dirichlet
 
   use sll_m_box_splines, only: &
-    hex_interpolate_value, &
-    new_box_spline_2d, &
-    sll_box_spline_2d
+    sll_f_hex_interpolate_value, &
+    sll_f_new_box_spline_2d, &
+    sll_t_box_spline_2d
 
   use sll_m_constants, only: &
-    sll_sqrt3
+    sll_p_sqrt3
 
   use sll_m_hermite_interpolation_2d, only: &
-    compute_w_hermite
+    sll_s_compute_w_hermite
 
   use sll_m_hexagonal_meshes, only: &
-    get_cell_vertices_index, &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_s_get_cell_vertices_index, &
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   use sll_m_interpolation_hex_hermite, only: &
-    der_finite_difference, &
-    hermite_interpolation
+    sll_s_der_finite_difference, &
+    sll_s_hermite_interpolation
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -50,8 +50,8 @@ program sim_bsl_ad_2d0v_hex_rot
   sll_int32, parameter :: SLL_HEX_MITCHELL_new = 40
   sll_int32, parameter :: SLL_HEX_Z9_new = 90
 
-  type(sll_hex_mesh_2d),   pointer        :: mesh
-  type(sll_box_spline_2d), pointer        :: spline
+  type(sll_t_hex_mesh_2d),   pointer        :: mesh
+  type(sll_t_box_spline_2d), pointer        :: spline
   sll_real64, allocatable :: deriv(:,:)
   !sll_real64, allocatable :: deriv_new(:,:)
   sll_real64, dimension(:), allocatable :: center_values_tn
@@ -284,7 +284,7 @@ program sim_bsl_ad_2d0v_hex_rot
   ! ----------------------------
   count = 0
 
-  call sll_ascii_file_create(thdiag_1d_filename, thdiag_1d_id, ierr)
+  call sll_s_ascii_file_create(thdiag_1d_filename, thdiag_1d_id, ierr)
 
 
   select case (num_method_case)
@@ -334,13 +334,13 @@ program sim_bsl_ad_2d0v_hex_rot
   endif
 
 
-  mesh => new_hex_mesh_2d( &
+  mesh => sll_f_new_hex_mesh_2d( &
        num_cells, &
        center_mesh_x1, &
        center_mesh_x2,&
        radius=radius, &
        EXTRA_TABLES = EXTRA_TABLES )
-  !call display_hex_mesh_2d(mesh)
+  !call sll_s_display_hex_mesh_2d(mesh)
   r_vec(1,1) = mesh%r1_x1
   r_vec(1,2) = mesh%r1_x2
   r_vec(2,1) = mesh%r2_x1
@@ -355,7 +355,7 @@ program sim_bsl_ad_2d0v_hex_rot
 
 
   if(num_method==SLL_HEX_SPLINES)then
-     spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+     spline => sll_f_new_box_spline_2d(mesh, sll_p_dirichlet)
   else if(num_method==SLL_HEX_MITCHELL)then
      SLL_ALLOCATE(deriv(13,n_points),ierr)  
   else if(num_method==SLL_HEX_MITCHELL_new)then
@@ -531,14 +531,14 @@ program sim_bsl_ad_2d0v_hex_rot
              rho_tn, &
              deriv)
      case default
-        call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv) 
+        call  sll_s_der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv) 
      end select
      !    if(num_method==SLL_HEX_SPLINES)then
      !      call spline%compute_coeff_box_spline_2d( rho_tn, spline_degree)
      !    elseif(num_method == SLL_HEX_NOTHING)then
      !    elseif(num_method == SLL_HEX_P1)then
      !    else
-     !      call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv)
+     !      call  sll_s_der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv)
      !    endif
      call cpu_time(time_t1)
      time_compute_interpolant = time_compute_interpolant+time_t1-time_t0 
@@ -560,9 +560,9 @@ program sim_bsl_ad_2d0v_hex_rot
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.      
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.      
            if ( inside ) then
-              rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+              rho_tn1(i) = sll_f_hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
            else
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            endif
@@ -578,7 +578,7 @@ program sim_bsl_ad_2d0v_hex_rot
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.      
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.      
            if ( inside ) then
               rho_tn1(i) = rho_tn(i)
            else
@@ -597,7 +597,7 @@ program sim_bsl_ad_2d0v_hex_rot
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.      
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.      
            if ( inside ) then
               call p1_interpolation( &
                    i, &
@@ -652,9 +652,9 @@ program sim_bsl_ad_2d0v_hex_rot
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.      
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.      
            if ( inside ) then
-              call hermite_interpolation( &
+              call sll_s_hermite_interpolation( &
                    i, &
                    xx, &
                    yy, &
@@ -681,10 +681,10 @@ program sim_bsl_ad_2d0v_hex_rot
      !      h1 =  xx*r11 + yy*r12
      !      h2 =  xx*r21 + yy*r22
      !      if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-     !      if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.      
+     !      if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.      
      !      if ( inside ) then
      !        if(num_method==SLL_HEX_SPLINES)then
-     !          rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+     !          rho_tn1(i) = sll_f_hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
      !        elseif(num_method==SLL_HEX_NOTHING)then
      !          rho_tn1(i) = rho_tn(i)
      !        elseif(num_method==SLL_HEX_P1)then
@@ -697,7 +697,7 @@ program sim_bsl_ad_2d0v_hex_rot
      !          rho_tn1, &
      !          mesh)
      !        else
-     !          call hermite_interpolation( &
+     !          call sll_s_hermite_interpolation( &
      !          i, &
      !          xx, &
      !          yy, &
@@ -736,12 +736,12 @@ program sim_bsl_ad_2d0v_hex_rot
            h2 =  xx*r21 + yy*r22
 
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.
 
            if ( inside ) then
-              !rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+              !rho_tn1(i) = sll_f_hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
 
-              call hermite_interpolation( &
+              call sll_s_hermite_interpolation( &
                    i, &
                    xx, &
                    yy, &
@@ -776,10 +776,10 @@ program sim_bsl_ad_2d0v_hex_rot
            h2 =  xx*r21 + yy*r22
 
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) inside = .false.
 
            if ( inside ) then
-              call hermite_interpolation( &
+              call sll_s_hermite_interpolation( &
                    i, &
                    xx, &
                    yy, &
@@ -875,7 +875,7 @@ program sim_bsl_ad_2d0v_hex_rot
              l1_err_loc, &
              l2_err_loc, &
              linf_err_loc
-        call int2string(count,filenum)
+        call sll_s_int2string(count,filenum)
         filename  = trim(rho_name)//trim(filenum)
         call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = trim(rho_error_name)//trim(filenum)
@@ -919,7 +919,7 @@ program sim_bsl_ad_2d0v_hex_rot
        l2_err, &
        linf_err
 
-  call sll_ascii_file_create(thdiag_0d_filename, thdiag_0d_id, ierr)
+  call sll_s_ascii_file_create(thdiag_0d_filename, thdiag_0d_id, ierr)
 
   write(thdiag_0d_id,*) &
        t_end-t_init, &
@@ -952,7 +952,7 @@ contains
        center_values_t, &
        edge_values_t)
     implicit none
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: f_t(:)
     sll_real64, intent(in) :: t
     sll_real64, intent(in) :: center_x1
@@ -1084,7 +1084,7 @@ contains
     sll_real64,intent(in) :: y
     sll_real64, intent(in) :: f_tn(:)
     sll_real64, intent(out) :: output_tn1(:)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_int32 :: i
     sll_int32 :: i1
     sll_int32 :: i2
@@ -1095,8 +1095,8 @@ contains
     sll_real64 :: y1
     sll_real64 :: y2
     sll_real64 :: y3
-    sll_int32 :: k11
-    sll_int32 :: k12
+    !sll_int32 :: k11
+    !sll_int32 :: k12
     sll_real64 :: freedom(3)
     sll_real64 :: base(3)
     sll_real64 :: f
@@ -1107,7 +1107,7 @@ contains
 
     aire = mesh%delta**2*sqrt(3._f64)*0.25_f64
     !return
-    call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+    call sll_s_get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
 
     x1 = mesh%cartesian_coord(1,i1) 
     x2 = mesh%cartesian_coord(1,i2) 
@@ -1158,7 +1158,7 @@ contains
   end subroutine p1_interpolation
 
   subroutine get_numerotation(mesh,index1)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_int32 :: i
     sll_real64 :: err
     sll_real64 :: err_loc
@@ -1166,12 +1166,12 @@ contains
     sll_int32, allocatable :: index2(:,:)
     sll_int32, allocatable :: index3(:,:)
     sll_int32, allocatable :: bounds1(:,:)
-    sll_int32, allocatable :: bounds2(:,:)
-    sll_int32, allocatable :: bounds3(:,:)
+    !sll_int32, allocatable :: bounds2(:,:)
+    !sll_int32, allocatable :: bounds3(:,:)
     sll_int32 :: ierr
     sll_int32 :: j
     sll_int32 :: mini
-    sll_int32 :: maxi
+    !sll_int32 :: maxi
     sll_int32, allocatable :: check(:)
     sll_int32 :: num_cells
 
@@ -1319,7 +1319,7 @@ contains
        rho_tn, &
        rho_tn1, &
        positions )
-    !type(sll_hex_mesh_2d), pointer :: mesh
+    !type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(in) :: radius
     sll_int32, intent(in) :: num_cells
     sll_real64, intent(in) :: r(2,2)
@@ -1330,11 +1330,11 @@ contains
     !sll_real64, intent(in) :: dt
 
     sll_int32 :: i
-    sll_real64 :: x
-    sll_real64 :: y
-    logical :: true
-    sll_real64 :: cosdt
-    sll_real64 :: sindt
+    !sll_real64 :: x
+    !sll_real64 :: y
+    !logical :: true
+    !sll_real64 :: cosdt
+    !sll_real64 :: sindt
     sll_real64 :: xx
     sll_real64 :: yy
     sll_real64 :: det
@@ -1347,15 +1347,15 @@ contains
     sll_int32 :: i1
     sll_int32 :: i2
     sll_int32 :: i3
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_real64 :: x3
-    sll_real64 :: y1
-    sll_real64 :: y2
-    sll_real64 :: y3
+    !sll_real64 :: x1
+    !sll_real64 :: x2
+    !sll_real64 :: x3
+    !sll_real64 :: y1
+    !sll_real64 :: y2
+    !sll_real64 :: y3
     sll_int32 :: ii
     sll_int32 :: jj
-    sll_real64 :: xi
+    !sll_real64 :: xi
     sll_real64 :: tmp
     sll_real64 :: aire
     sll_real64 :: a2
@@ -1363,7 +1363,7 @@ contains
     sll_real64 :: freedom(3)
     sll_real64 :: base(3)
     sll_real64 :: f
-    sll_real64                 :: x1x,x2x,x3x,y1y,y2y,y3y
+    !sll_real64                 :: x1x,x2x,x3x,y1y,y2y,y3y
     sll_real64 :: val1
     sll_real64 :: val2
     sll_real64 :: r1_x1
@@ -1435,8 +1435,8 @@ contains
 
           !ii = floor(h1/mesh%delta)
           !jj = floor(h2/mesh%delta)
-          !ii = cart_to_hex1(mesh, xx, yy)
-          !jj = cart_to_hex2(mesh, xx, yy)
+          !ii = sll_f_cart_to_hex1(mesh, xx, yy)
+          !jj = sll_f_cart_to_hex2(mesh, xx, yy)
           !jacob = r22 
           !jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
           !k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob)
@@ -1508,7 +1508,7 @@ contains
           !        endif
 
 
-          !call get_cell_vertices_index( xx, yy, mesh, i1, i2, i3 )
+          !call sll_s_get_cell_vertices_index( xx, yy, mesh, i1, i2, i3 )
 
           !x1 = mesh%r1_x1*mesh%hex_coord(1,i1)+mesh%r2_x1*mesh%hex_coord(2,i1)
           !x2 = mesh%r1_x1*mesh%hex_coord(1,i2)+mesh%r2_x1*mesh%hex_coord(2,i2)
@@ -1570,7 +1570,7 @@ contains
   end subroutine interpolate_p1_new_old
 
   subroutine get_numerotation_new(mesh,index1)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(out) :: index1(:,:)
     index1 = 0
     do i=1,mesh%num_pts_tot
@@ -1872,8 +1872,8 @@ contains
     sll_int32 :: s_left
     sll_int32 :: r_right
     sll_int32 :: s_right
-    sll_int32 :: r
-    sll_int32 :: s
+    !sll_int32 :: r
+    !sll_int32 :: s
     sll_int32 :: num_pts_tot
     sll_int32, allocatable :: bounds1(:,:)
     sll_int32, allocatable :: hex_coord(:,:)
@@ -2033,8 +2033,8 @@ contains
     sll_int32 :: s_left
     sll_int32 :: r_right
     sll_int32 :: s_right
-    sll_int32 :: r
-    sll_int32 :: s
+    !sll_int32 :: r
+    !sll_int32 :: s
     sll_int32 :: num_pts_tot
     sll_int32, allocatable :: bounds1(:,:)
     sll_int32, allocatable :: hex_coord(:,:)
@@ -2045,9 +2045,9 @@ contains
     sll_int32 :: hex1_loc
     sll_int32 :: hex2_loc
     sll_int32 :: j
-    sll_int32 :: num
-    sll_int32 :: jj
-    sll_int32 :: tmp
+    !sll_int32 :: num
+    !sll_int32 :: jj
+    !sll_int32 :: tmp
     sll_int32 :: k
     sll_int32 :: a1(6)
     sll_int32 :: a2(6)
@@ -2132,8 +2132,8 @@ contains
     sll_int32 :: s_left
     sll_int32 :: r_right
     sll_int32 :: s_right
-    sll_int32 :: r
-    sll_int32 :: s
+    !sll_int32 :: r
+    !sll_int32 :: s
     sll_int32 :: num_pts_tot
     sll_int32, allocatable :: bounds1(:,:)
     sll_int32, allocatable :: hex_coord(:,:)
@@ -2261,13 +2261,13 @@ contains
     sll_int32 :: r
     sll_int32 :: s
     sll_int32 :: ierr
-    sll_int32 :: p2
+    !sll_int32 :: p2
     sll_real64, allocatable :: w_left(:)
     sll_real64, allocatable :: w_right(:)
     sll_int32 :: num_pts_tot
     !sll_int32, allocatable :: bounds1(:,:)
     !sll_int32, allocatable :: bounds2(:,:)
-    sll_int32, allocatable :: bounds3(:,:)
+    !sll_int32, allocatable :: bounds3(:,:)
     sll_int32 :: maxi1
     sll_real64, allocatable :: bufin1(:)
     sll_real64, allocatable :: bufout1(:)
@@ -2282,7 +2282,7 @@ contains
     r_left=-p/2
     s_left=(p+1)/2
     SLL_ALLOCATE( w_left(r_left:s_left),ierr )
-    call compute_w_hermite(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite(w_left,r_left,s_left)
 
 
     r_right=(-p+1)/2
@@ -2506,9 +2506,9 @@ contains
     sll_int32 :: num_pts_tot
     sll_int32 :: j
     sll_int32 :: ii
-    sll_int32 :: jj
+    !sll_int32 :: jj
     sll_real64 :: tmp
-    sll_int32 :: ind
+    !sll_int32 :: ind
 
 
 
@@ -2516,7 +2516,7 @@ contains
     r_left=-p/2
     s_left=(p+1)/2
     SLL_ALLOCATE( w_left(r_left:s_left),ierr )
-    call compute_w_hermite(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite(w_left,r_left,s_left)
 
 
     r_right=(-p+1)/2
@@ -2705,9 +2705,9 @@ contains
     sll_int32 :: num_pts_tot
     sll_int32 :: j
     sll_int32 :: ii
-    sll_int32 :: jj
+    !sll_int32 :: jj
     sll_real64 :: tmp
-    sll_int32 :: ind
+    !sll_int32 :: ind
 
     sll_int32, allocatable :: loc_stencil(:,:)
 
@@ -2716,7 +2716,7 @@ contains
     r_left=-p/2
     s_left=(p+1)/2
     SLL_ALLOCATE( w_left(r_left:s_left),ierr )
-    call compute_w_hermite(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite(w_left,r_left,s_left)
 
 
     r_right=(-p+1)/2
@@ -2967,17 +2967,17 @@ contains
     sll_int32 :: i
     sll_int32 :: r_left
     sll_int32 :: s_left
-    sll_int32 :: r_right
-    sll_int32 :: s_right
+    !sll_int32 :: r_right
+    !sll_int32 :: s_right
     sll_int32 :: ierr
     sll_real64, allocatable :: w_left(:)
-    sll_real64, allocatable :: w_right(:)
+    !sll_real64, allocatable :: w_right(:)
     sll_int32 :: num_pts_tot
     sll_int32 :: j
     sll_int32 :: ii
-    sll_int32 :: jj
+    !sll_int32 :: jj
     sll_real64 :: tmp
-    sll_int32 :: ind
+    !sll_int32 :: ind
 
     sll_int32 :: k
 
@@ -2986,7 +2986,7 @@ contains
     r_left=-p/2
     s_left=(p+1)/2
     SLL_ALLOCATE( w_left(r_left:s_left),ierr )
-    call compute_w_hermite(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite(w_left,r_left,s_left)
 
 
 
@@ -3098,7 +3098,7 @@ contains
     sll_real64 :: y2n
     sll_real64 :: y3n
 
-    sll_real64 :: err_loc
+    !sll_real64 :: err_loc
     sll_real64 :: err
 
     err = 0._f64
@@ -3379,7 +3379,7 @@ contains
     sll_real64 :: y2n
     sll_real64 :: y3n
 
-    sll_real64 :: err_loc
+    !sll_real64 :: err_loc
     sll_real64 :: err
 
     err = 0._f64

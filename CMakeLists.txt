@@ -79,9 +79,7 @@ ADD_CUSTOM_TARGET( clear
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
-INCLUDE(HDF5Config)
 INCLUDE(DoxygenConfig)
-INCLUDE(CTest)
 INCLUDE(PreprocessorTarget)
 
 IF(MPI_ENABLED)
@@ -89,6 +87,9 @@ IF(MPI_ENABLED)
   INCLUDE(ProcessorCount)
   INCLUDE(POEConfig)
 ENDIF()
+
+INCLUDE(CTest)
+INCLUDE(HDF5Config)
 
 IF(PASTIX_ENABLED)
   FIND_PACKAGE(SCOTCH)

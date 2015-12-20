@@ -24,14 +24,14 @@ module sll_m_characteristics_1d_trapezoid
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic, &
-    sll_set_to_limit
+    sll_p_periodic, &
+    sll_p_set_to_limit
 
   use sll_m_characteristics_1d_base, only: &
-    process_outside_point_periodic, &
-    process_outside_point_set_to_limit, &
-    signature_process_outside_point_1d, &
-    sll_characteristics_1d_base
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -39,16 +39,16 @@ module sll_m_characteristics_1d_trapezoid
   implicit none
 
   public :: &
-    new_trapezoid_1d_charac
+    sll_f_new_trapezoid_1d_charac
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_characteristics_1d_base) :: trapezoid_1d_charac_computer
+  type,extends(sll_c_characteristics_1d_base) :: trapezoid_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
-    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
     class(sll_c_interpolator_1d), pointer               :: A_interp
     sll_int32 :: maxiter
@@ -63,7 +63,7 @@ module sll_m_characteristics_1d_trapezoid
   end type trapezoid_1d_charac_computer
 
 contains
-  function new_trapezoid_1d_charac(&
+  function sll_f_new_trapezoid_1d_charac(&
       Npts, &
       A_interp, &
       bc_type, &
@@ -80,7 +80,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
@@ -102,7 +102,7 @@ contains
       feet_inside)
 
     
-  end function new_trapezoid_1d_charac
+  end function sll_f_new_trapezoid_1d_charac
   subroutine initialize_trapezoid_1d_charac(&
       charac, &
       Npts, &
@@ -120,7 +120,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
@@ -152,10 +152,10 @@ contains
       stop
     else
       select case (bc_type)
-        case (SLL_PERIODIC)
-          charac%process_outside_point => process_outside_point_periodic          
-        case (SLL_SET_TO_LIMIT)
-          charac%process_outside_point => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          charac%process_outside_point => sll_f_process_outside_point_periodic          
+        case (sll_p_set_to_limit)
+          charac%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_trapezoid_1d_charac'

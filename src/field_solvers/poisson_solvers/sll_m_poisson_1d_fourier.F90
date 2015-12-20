@@ -10,18 +10,18 @@ module sll_m_poisson_1d_fourier
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_1d
+    sll_t_cartesian_mesh_1d
 
   use sll_m_constants, only: &
-    sll_i1, &
-    sll_kx, &
-    sll_pi
+    sll_p_i1, &
+    sll_p_kx, &
+    sll_p_pi
 
   implicit none
 
   public :: &
-    new_poisson_1d_fourier, &
-    poisson_1d_fourier
+    sll_f_new_poisson_1d_fourier, &
+    sll_t_poisson_1d_fourier
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -39,8 +39,8 @@ module sll_m_poisson_1d_fourier
 
     !> Structure to solve Poisson equation on 1d domain. Mesh is cartesian and
     !> could be irregular. Numerical method is using finite elements.
-    type :: poisson_1d_fourier
-        class(sll_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
+    type :: sll_t_poisson_1d_fourier
+        class(sll_t_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
 
         !> Fourier modes
         sll_int32 , private :: num_modes !<Number of fourier modes
@@ -63,7 +63,7 @@ module sll_m_poisson_1d_fourier
         procedure, pass(this) :: L2norm_solution=>poisson_1d_fourier_L2norm_solution
         procedure, pass(this) ::  get_rhs_from_klimontovich_density_weighted=>&
                                             poisson_1d_fourier_get_rhs_from_klimontovich_density_weighted
-    end type poisson_1d_fourier
+    end type sll_t_poisson_1d_fourier
 
     !Interface for one dimensional function for right hand side
     abstract interface
@@ -85,24 +85,24 @@ module sll_m_poisson_1d_fourier
     endinterface
 
     !    interface new
-    !         module procedure new_poisson_1d_fourier
+    !         module procedure sll_f_new_poisson_1d_fourier
     !    endinterface
 
 contains
 
     !>Destructor
     subroutine sll_delete_poisson_1d_fourier(this,ierr)
-        class(poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out)                :: ierr    !< error code
         SLL_DEALLOCATE_ARRAY(this%fourier_fmode,ierr)
 
     endsubroutine
 
 
-    function  new_poisson_1d_fourier(cartesian_mesh_1d,num_modes, bc_type,ierr) &
+    function  sll_f_new_poisson_1d_fourier(cartesian_mesh_1d,num_modes, bc_type,ierr) &
             result(solver)
-        type(poisson_1d_fourier), pointer :: solver     !< Solver data structure
-        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
+        type(sll_t_poisson_1d_fourier), pointer :: solver     !< Solver data structure
+        class(sll_t_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: num_modes !<Degree of the finite differences approximation
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
@@ -113,8 +113,8 @@ contains
 
 
     subroutine sll_initialize_poisson_1d_fourier(this, cartesian_mesh_1d,num_modes,bc_type, ierr)
-        class(poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
-        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
+        class(sll_t_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: num_modes !<Degree of the bsplines
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
@@ -131,7 +131,7 @@ contains
         !            case(SLL_PERIODIC)
         !
         !
-        !            case(SLL_DIRICHLET)
+        !            case(sll_p_dirichlet)
         !
         !        endselect
         SLL_ALLOCATE(this%fourier_fmode(this%num_modes),ierr)
@@ -142,7 +142,7 @@ contains
     endsubroutine
 
     !    subroutine poisson_1d_fourier_set_solution(this, solution_vector)
-    !        class(poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
+    !        class(sll_t_poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
     !        sll_real64, dimension(:) :: solution_vector
     !        SLL_ASSERT(size(solution_vector)==this%num_cells)
     !
@@ -154,7 +154,7 @@ contains
     !    function sll_poisson_1d_fourier_get_rhs_from_function(this, eval_function) &
         !            result( rhs )
     !        implicit none
-    !        class(poisson_1d_fourier),intent(in) :: this     !< Solver data structure
+    !        class(sll_t_poisson_1d_fourier),intent(in) :: this     !< Solver data structure
     !        procedure (poisson_1d_fourier_rhs_function) :: eval_function
     !        sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
     !        sll_int32 :: ierr=0
@@ -165,7 +165,7 @@ contains
     !        rhs=evalpoints(1:this%num_cells)
     !        selectcase(this%boundarycondition)
     !            case(SLL_PERIODIC)
-    !            case(SLL_DIRICHLET)
+    !            case(sll_p_dirichlet)
     !                rhs(1)=0
     !        endselect
     !
@@ -177,23 +177,23 @@ contains
 
 
     subroutine solve_poisson_1d_fourier_rhs_and_get(this, field, rhs)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_comp64, dimension(:), intent(in)      :: rhs
         sll_comp64, dimension(this%num_modes), intent(out)  :: field
         sll_real64 :: coeff
-        coeff=2.0_f64*sll_pi/this%Ilength
+        coeff=2.0_f64*sll_p_pi/this%Ilength
 
         call  solve_poisson_1d_fourier_rhs(this, rhs)
 
         field=-this%fourier_fmode/coeff/ &
                cmplx(solve_poisson_1d_fourier_get_modes(this),0.0_f64,kind=f64) &
-               /sll_i1
+               /sll_p_i1
 
     end subroutine
 
 
     function solve_poisson_1d_fourier_get_modes(this)  result(modes)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_int32, dimension(this%num_modes) :: modes
         sll_int32 :: idx
 
@@ -203,7 +203,7 @@ contains
     endfunction
 
     subroutine solve_poisson_1d_fourier_rhs(this, rhs)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_comp64, dimension(:), intent(in)      :: rhs
         SLL_ASSERT(size(rhs)==this%num_modes)
         SLL_ASSERT(size(rhs)==size(this%fourier_fmode))
@@ -215,11 +215,11 @@ contains
 
     !
     !    !> @brief Solves the poisson equation for a given right hand side function
-    !    !> @param this pointer to a poisson_1d_fourier object.
+    !    !> @param this pointer to a sll_t_poisson_1d_fourier object.
     !    !> @param rhs right hand side function of type poisson_1d_fourier_rhs_function
     !    subroutine solve_poisson_1d_fourier_functionrhs(this, rhs_fun)
     !        implicit none
-    !        class(poisson_1d_fourier),intent(inout) :: this
+    !        class(sll_t_poisson_1d_fourier),intent(inout) :: this
     !        procedure (poisson_1d_fourier_rhs_function) :: rhs_fun
     !        sll_real64, dimension(this%num_cells) :: rhs
     !
@@ -233,13 +233,13 @@ contains
     !< Evaluates the first derivative of the solution at the given points knots_eval
     !< The Result is written into eval_solution
     subroutine poisson_1d_fourier_eval_solution(this, knots_eval, eval_solution)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
         sll_int32, dimension(this%num_modes) :: fmode
         sll_int32 :: idx
         sll_real64 :: coeff
-        coeff=2.0_f64*sll_pi/this%Ilength
+        coeff=2.0_f64*sll_p_pi/this%Ilength
 
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
         do idx=1,this%num_modes
@@ -258,13 +258,13 @@ contains
     !< Evaluates the solution at the given points knots_eval
     !< The Result is written into eval_solution
     subroutine poisson_1d_fourier_eval_solution_derivative(this, knots_eval, eval_solution)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
         sll_int32, dimension(this%num_modes) :: fmode
         sll_int32 :: idx
         sll_real64 :: coeff
-        coeff=2.0_f64*sll_pi/this%Ilength
+        coeff=2.0_f64*sll_p_pi/this%Ilength
 
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
@@ -273,8 +273,8 @@ contains
         enddo
         do idx=1, size(knots_eval)
                 eval_solution(idx)= -2.0_f64* sum( &
-                    real(   this%fourier_fmode/(coeff*fmode*sll_i1) )*cos(knots_eval(idx)*fmode*coeff) &
-                    - aimag( this%fourier_fmode/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))
+                    real(   this%fourier_fmode/(coeff*fmode*sll_p_i1) )*cos(knots_eval(idx)*fmode*coeff) &
+                    - aimag( this%fourier_fmode/(coeff*fmode*sll_p_i1) )*sin(knots_eval(idx)*fmode*coeff))
 
         enddo
 
@@ -282,21 +282,21 @@ contains
 
     !    !<Gives the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
     function  poisson_1d_fourier_H1seminorm_solution(this) result(seminorm)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_real64 :: seminorm
         sll_int32 :: fmode_a!, fmode_b
         sll_real64 :: coeff
-        coeff=2.0_f64*sll_pi/this%Ilength
+        coeff=2.0_f64*sll_p_pi/this%Ilength
 
         seminorm=0.0_f64
         do fmode_a=1,this%num_modes
 !!            do fmode_b=1,this%num_modes
-!            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1)&
-!                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_i1))
-            seminorm=seminorm +  2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1))**2
+!            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_p_i1)&
+!                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_p_i1))
+            seminorm=seminorm +  2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_p_i1))**2
 
 
-            !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)/this%Ilength
+            !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_p_i1 )**2)/this%Ilength
 !            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -aimag(this%fourier_fmode(fmode_a))**2) &
 !                                  *(1.0_f64/fmode_a)**2/coeff**2/this%Ilength*2
 !            seminorm=seminorm=
@@ -307,25 +307,25 @@ contains
     !
     !<Gives the squared L2-norm of the solution $\Phi$: $|\Phi|^2$
     function  poisson_1d_fourier_L2norm_solution(this) result(l2norm)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_real64 :: l2norm
         sll_int32 :: fmode
         sll_real64 :: coeff
-        coeff=2.0_f64*sll_pi/this%Ilength
+        coeff=2.0_f64*sll_p_pi/this%Ilength
         do fmode=1,this%num_modes
-            l2norm=l2norm+ real((this%fourier_fmode(fmode)/(coeff*fmode*sll_i1)**2 )**2*2.0_f64)
+            l2norm=l2norm+ real((this%fourier_fmode(fmode)/(coeff*fmode*sll_p_i1)**2 )**2*2.0_f64)
         enddo
     endfunction
 
 
     function poisson_1d_fourier_get_rhs_from_klimontovich_density(this, &
             ppos)  result(rhs)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
         sll_comp64, dimension(this%num_modes) :: rhs
         sll_int32 ::fmode
         do fmode=1,this%num_modes
-            rhs(fmode)=sum(exp(-sll_i1 * fmode*ppos*sll_kx/this%Ilength));
+            rhs(fmode)=sum(exp(-sll_p_i1 * fmode*ppos*sll_p_kx/this%Ilength));
         enddo
     endfunction
 
@@ -333,7 +333,7 @@ contains
 
     function poisson_1d_fourier_get_rhs_from_klimontovich_density_weighted( this,&
             ppos, pweight) result(rhs)
-        class(poisson_1d_fourier),intent(inout) :: this
+        class(sll_t_poisson_1d_fourier),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_comp64, dimension(this%num_modes) :: rhs
@@ -343,9 +343,9 @@ contains
         do fmode=1,this%num_modes
             !Be careful here, the dot_product tends to complex conjugate stuff
             !which we don't want in this case
-            !rhs(fmode)=dot_product(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength), pweight )
+            !rhs(fmode)=dot_product(exp(-sll_p_i1*fmode*ppos*2.0_f64*sll_p_pi/this%Ilength), pweight )
             rhs(fmode)= &
-          sum(exp(-fmode*sll_i1*ppos*sll_kx/this%Ilength)&
+          sum(exp(-fmode*sll_p_i1*ppos*sll_p_kx/this%Ilength)&
              * cmplx(pweight,0.0_f64,kind=f64))
 
         enddo
@@ -354,7 +354,7 @@ contains
 
 
     !    function poisson_1d_fourier_calculate_residual(this) result(residuum)
-    !                class(poisson_1d_fourier),intent(inout) :: this
+    !                class(sll_t_poisson_1d_fourier),intent(inout) :: this
     !
     !        sll_real64 :: residuum
     !        residuum= sqrt(sum(( &

@@ -6,29 +6,29 @@ module sll_m_poisson_1d_periodic_solver
 #include "sll_working_precision.h"
 
   use sll_m_poisson_1d_base, only: &
-    sll_poisson_1d_base
+    sll_c_poisson_1d_base
 
   use sll_m_poisson_1d_periodic, only: &
-    new, &
-    poisson_1d_periodic, &
-    solve
+    sll_o_new, &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
 
   implicit none
 
   public :: &
-    new_poisson_1d_periodic_solver
+    sll_f_new_poisson_1d_periodic_solver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type,extends(sll_poisson_1d_base) :: poisson_1d_periodic_solver     
+  type,extends(sll_c_poisson_1d_base) :: poisson_1d_periodic_solver     
   
-  type(poisson_1d_periodic), pointer                   :: poiss
+  type(sll_t_poisson_1d_periodic), pointer                   :: poiss
   
   
   contains
-    procedure, pass(poisson) :: initialize => &
+    procedure, pass(poisson) :: sll_o_initialize => &
       initialize_poisson_1d_periodic_solver
     procedure, pass(poisson) :: compute_phi_from_rho => &
       compute_phi_from_rho_1d_periodic
@@ -40,7 +40,7 @@ module sll_m_poisson_1d_periodic_solver
   end type poisson_1d_periodic_solver
 
 contains
-  function new_poisson_1d_periodic_solver( &
+  function sll_f_new_poisson_1d_periodic_solver( &
     eta1_min, &
     eta1_max, &
     nc_eta1) &
@@ -58,7 +58,7 @@ contains
       eta1_min, &
       eta1_max, &
       nc_eta1)    
-  end function new_poisson_1d_periodic_solver
+  end function sll_f_new_poisson_1d_periodic_solver
   
   
   subroutine initialize_poisson_1d_periodic_solver( &
@@ -73,7 +73,7 @@ contains
     sll_int32 :: ierr
 
     
-    poisson%poiss => new( &
+    poisson%poiss => sll_o_new( &
       eta1_min, &
       eta1_max, &
       nc_eta1, &
@@ -97,7 +97,7 @@ contains
     endif
     print *,maxval(rho)  
     stop
-    !call solve(poisson%poiss, phi, rho)
+    !call sll_o_solve(poisson%poiss, phi, rho)
     
     
   end subroutine compute_phi_from_rho_1d_periodic
@@ -116,7 +116,7 @@ contains
     sll_real64,dimension(:),intent(in) :: rho
     sll_real64,dimension(:),intent(out) :: E
       
-    call solve(poisson%poiss, E, rho)
+    call sll_o_solve(poisson%poiss, E, rho)
            
   end subroutine compute_E_from_rho_1d_periodic
   

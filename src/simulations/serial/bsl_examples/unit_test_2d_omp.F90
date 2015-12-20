@@ -4,16 +4,16 @@ program unit_test_4d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -41,8 +41,8 @@ program unit_test_4d
   class(sll_c_interpolator_2d), pointer    :: interp_xy
   class(sll_c_interpolator_2d), pointer    :: interp_vxvy
 
-  type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
-  type(sll_cubic_spline_interpolator_2d), target  :: spline_vxvy
+  type(sll_t_cubic_spline_interpolator_2d), target  :: spline_xy
+  type(sll_t_cubic_spline_interpolator_2d), target  :: spline_vxvy
 
   print*,'*******************************'
   print*,' 4D case                       '
@@ -79,11 +79,11 @@ program unit_test_4d
   delta_vy = (vy_max-vy_min)/(n_vy-1)
 
   call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
-                            SLL_PERIODIC, SLL_PERIODIC )
+                            sll_p_periodic, sll_p_periodic )
   interp_xy   => spline_xy
 
   call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              SLL_PERIODIC, SLL_PERIODIC )
+                              sll_p_periodic, sll_p_periodic )
   interp_vxvy => spline_vxvy
 
   do i = 1, n_x
@@ -220,7 +220,7 @@ contains
    integer :: iplot
    character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+   call sll_s_int2string(iplot,cplot)
 
    open(11, file="dfvxvy-"//cplot//".dat")
    do l = 1, size(df,4)
@@ -251,7 +251,7 @@ contains
    integer :: iplot
    character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+   call sll_s_int2string(iplot,cplot)
 
    open(11, file="dfxy-"//cplot//".dat")
    do i = 1, size(df,1)

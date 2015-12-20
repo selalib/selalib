@@ -7,8 +7,8 @@ module sll_m_primitives
   implicit none
 
   public :: &
-    function_to_primitive, &
-    primitive_to_function
+    sll_s_function_to_primitive, &
+    sll_s_primitive_to_function
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -20,7 +20,7 @@ contains
 !> @param[in]  x  nodes positions
 !> @param[in]  n  nodes number
 !> @param[out] xm mean function
-subroutine function_to_primitive(f,x,n,xm)
+subroutine sll_s_function_to_primitive(f,x,n,xm)
 
 sll_real64,dimension(:),intent(inout) :: f
 sll_real64,dimension(:),intent(in)    :: x
@@ -51,14 +51,14 @@ do i=2,n
 enddo    
 f(n+1) = f(n)+tmp
 
-end subroutine function_to_primitive
+end subroutine sll_s_function_to_primitive
 
 !> Compute function value from primitive 
 !> @param[inout]  f  1d array of double float
 !> @param[in]     x  nodes positions
 !> @param[in]     n  nodes number
 !> @param[in]     xm mean function
-subroutine primitive_to_function(f,x,n,xm)
+subroutine sll_s_primitive_to_function(f,x,n,xm)
 
 sll_real64, dimension(:), intent(inout) :: f
 sll_real64, dimension(:), intent(in)    :: x
@@ -84,6 +84,6 @@ enddo
 
 f(n+1) = f(1)
 
-end subroutine primitive_to_function
+end subroutine sll_s_primitive_to_function
 
 end module sll_m_primitives

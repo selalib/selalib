@@ -3,15 +3,15 @@ program unit_test_2d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_periodic
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    new_cubic_spline_interpolator_2d, &
-    sll_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d, &
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -22,7 +22,7 @@ program unit_test_2d
 #define NPTS1 65 
 #define NPTS2 65 
 
-  !type(sll_cubic_spline_interpolator_2d) :: cs2d
+  !type(sll_t_cubic_spline_interpolator_2d) :: cs2d
   class(sll_c_interpolator_2d), pointer :: cs2d
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
@@ -68,15 +68,15 @@ program unit_test_2d
   !
   ! X1 = (r1 + (r2-r1)*eta1)*cos(2*pi*eta2)
   
-  cs2d =>new_cubic_spline_interpolator_2d(&
+  cs2d =>sll_f_new_cubic_spline_interpolator_2d(&
        NPTS1, &
        NPTS2, &
        0.0_f64, &
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       SLL_HERMITE, &
-       SLL_PERIODIC, &
+       sll_p_hermite, &
+       sll_p_periodic, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
   
@@ -88,8 +88,8 @@ program unit_test_2d
 !       1.0_f64, &
 !       0.0_f64, &
 !       1.0_f64, &
-!       SLL_HERMITE, &
-!       SLL_PERIODIC, &
+!       sll_p_hermite, &
+!       sll_p_periodic, &
 !       eta1_min_slopes=x1_eta1_min, &
 !       eta1_max_slopes=x1_eta1_max )
 
@@ -124,28 +124,28 @@ contains
 
 subroutine test_interpolator_2d()
   class(sll_c_interpolator_2d),    pointer   :: interp
-  type(sll_cubic_spline_interpolator_2d), target    :: spline
+  type(sll_t_cubic_spline_interpolator_2d), target    :: spline
   sll_real64, dimension(NPTS1,NPTS2) :: xx1
   sll_real64, dimension(NPTS1,NPTS2) :: xx2
   sll_real64, dimension(NPTS1,NPTS2) :: data_in
   sll_real64, dimension(NPTS1,NPTS2) :: data_out
 
   call spline%initialize(NPTS1,NPTS2, &
-                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         SLL_PERIODIC, SLL_PERIODIC )
+                         0.0_f64,2.0*sll_p_pi,0.0_f64,2.*sll_p_pi, &
+                         sll_p_periodic, sll_p_periodic )
   interp =>  spline
   do j = 1, NPTS2
   do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*real(i-1,f64)/real(NPTS1-1,f64)
-     xx2(i,j) = 2.*sll_pi*real(j-1,f64)/real(NPTS2-1,f64)
+     xx1(i,j) = 2.*sll_p_pi*real(i-1,f64)/real(NPTS1-1,f64)
+     xx2(i,j) = 2.*sll_p_pi*real(j-1,f64)/real(NPTS2-1,f64)
   end do
   end do
   data_in = cos(xx1)*sin(xx2)
 
   do j = 1, NPTS2
   do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*real(i-1,f64)/real(NPTS1,f64)
-     xx2(i,j) = 2.*sll_pi*real(j-1,f64)/real(NPTS2,f64)
+     xx1(i,j) = 2.*sll_p_pi*real(i-1,f64)/real(NPTS1,f64)
+     xx2(i,j) = 2.*sll_p_pi*real(j-1,f64)/real(NPTS2,f64)
   end do
   end do
   call interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2, data_out)
@@ -163,7 +163,7 @@ end subroutine test_interpolator_2d
     r1 = params(1)
     r2 = params(2)
     deriv_x1_polar_f_eta1 = eta1
-    deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
+    deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_p_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
   function deriv_x1_polar_f_eta2( eta1, eta2, params )
@@ -177,7 +177,7 @@ end subroutine test_interpolator_2d
 
     r1 = params(1)
     r2 = params(2)
-    k = 2.0_f64*sll_pi
+    k = 2.0_f64*sll_p_pi
     deriv_x1_polar_f_eta2 = -(r1+(r2-r1)*eta1)*sin(k*eta2)*k
   end function deriv_x1_polar_f_eta2
 
@@ -190,7 +190,7 @@ end subroutine test_interpolator_2d
 
     r1 = params(1)
     r2 = params(2)
-    x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_pi*eta2)
+    x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_p_pi*eta2)
   end function x1_polar_f
 
 end program unit_test_2d

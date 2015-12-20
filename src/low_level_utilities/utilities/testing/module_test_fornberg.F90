@@ -34,7 +34,7 @@ module test_fornberg
 #include "sll_working_precision.h"
 
   use sll_m_fornberg, only: &
-    populate_weights
+    sll_s_populate_weights
 
   implicit none
 
@@ -52,7 +52,7 @@ contains
     m = 2
     z = 0.0_f64
     allocate(c(0:nd, 0:m))
-    call populate_weights(z, x, nd, m, c)
+    call sll_s_populate_weights(z, x, nd, m, c)
     print *, c
   end subroutine test_weights
 
@@ -65,7 +65,7 @@ contains
     m = 2
     z = 0.0_f64
     allocate(c(0:nd, 0:m))
-    call populate_weights(z, x, nd, m, c)
+    call sll_s_populate_weights(z, x, nd, m, c)
     print *, c(0,:)
     print *, c(:,1)
     print *, c(:,2)
@@ -80,7 +80,7 @@ contains
     m = 2
     z = 0.0_f64
     allocate(c(0:nd, 0:m))
-    call populate_weights(z, x, nd, m, c)
+    call sll_s_populate_weights(z, x, nd, m, c)
     write(*,*) " "
     print *, c(:,1)
     write(*,*) " "

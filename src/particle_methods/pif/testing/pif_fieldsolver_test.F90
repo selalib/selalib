@@ -8,18 +8,18 @@ program pif_fieldsolver_test
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_pif_fieldsolver, only: &
-    pif_fieldsolver
+    sll_t_pif_fieldsolver
 
   use sll_m_timer, only: &
-    sll_set_time_mark, &
-    sll_time_elapsed_between, &
-    sll_time_mark
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_between, &
+    sll_t_time_mark
 
   use sll_m_utilities, only: &
-    display_matrix_2d_integer
+    sll_s_display_matrix_2d_integer
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -30,14 +30,14 @@ program pif_fieldsolver_test
 sll_int32 :: ierr
 sll_int32 :: npart !number of particles
 sll_real64, dimension(:,:), allocatable :: x!,y !particle coordinate
- type(sll_time_mark)  :: tstart, tstop
+ type(sll_t_time_mark)  :: tstart, tstop
 !sll_int32 :: maxmode=10
 !sll_comp64, dimension(:), allocatable :: fmodes
 !sll_comp64, dimension(:), allocatable :: modeone
 !sll_int32, dimension(:,:), allocatable :: modes
 sll_int32 :: idx, dimx
-sll_real64 :: boxlen=2*sll_pi
-type(pif_fieldsolver) :: SOLVER
+sll_real64 :: boxlen=2*sll_p_pi
+type(sll_t_pif_fieldsolver) :: SOLVER
 
 sll_int32, dimension(:),allocatable :: stenx,stenv,stenxw
 sll_int32 :: stenw
@@ -70,7 +70,7 @@ SOLVER%dimx=dimx
 
 call SOLVER%set_box_len(boxlen)
 call SOLVER%init(15)
- call display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
+ call sll_s_display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
 
 
 npart=int(1e5,i32)
@@ -179,27 +179,27 @@ chunksize=256
 print *, "Chunk size is set to: ", chunksize
 
 do idx=1,4
-call sll_set_time_mark(tstart)
+call sll_s_set_time_mark(tstart)
 rhs1=SOLVER%get_fourier_modes(x(stenxw,:))/npart
-call sll_set_time_mark(tstop)
-print *, 'Standard          ', sll_time_elapsed_between(tstart,tstop)
+call sll_s_set_time_mark(tstop)
+print *, 'Standard          ', sll_f_time_elapsed_between(tstart,tstop)
 
-call sll_set_time_mark(tstart)
+call sll_s_set_time_mark(tstart)
 rhs1=SOLVER%get_fourier_modes_chunk(x(stenxw,:),chunksize)/npart
-call sll_set_time_mark(tstop)
-print *, 'Standard chunked: ', sll_time_elapsed_between(tstart,tstop)
+call sll_s_set_time_mark(tstop)
+print *, 'Standard chunked: ', sll_f_time_elapsed_between(tstart,tstop)
 
 
-call sll_set_time_mark(tstart)
+call sll_s_set_time_mark(tstart)
 rhs2=SOLVER%get_fourier_modes2(x(stenxw,:))/npart
 !print *, abs(SOLVER%get_fourier_modes2(x(stenxw,:)))/npart
-call sll_set_time_mark(tstop)
-print *, 'Fast2:            ', sll_time_elapsed_between(tstart,tstop)
+call sll_s_set_time_mark(tstop)
+print *, 'Fast2:            ', sll_f_time_elapsed_between(tstart,tstop)
 
-call sll_set_time_mark(tstart)
+call sll_s_set_time_mark(tstart)
 rhs2=SOLVER%get_fourier_modes2_chunk(x(stenxw,:),chunksize)/npart
-call sll_set_time_mark(tstop)
-print *, 'Fast2 chunked:    ', sll_time_elapsed_between(tstart,tstop)
+call sll_s_set_time_mark(tstop)
+print *, 'Fast2 chunked:    ', sll_f_time_elapsed_between(tstart,tstop)
 end do
 
 end subroutine speed_test
@@ -211,7 +211,7 @@ end subroutine speed_test
 ! call display_matrix_2d_real(transpose(x),'F10.2')
 
 !modes=generate_exponents( (/0, -2, -1/), (/ 1 , 1, 0/))
-!  call display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
+!  call sll_s_display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
 
 
 

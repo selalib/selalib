@@ -15,18 +15,18 @@ program test_decomposition
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_decomposition, only: &
-    apply_halo_exchange, &
-    cartesian_topology_6d, &
-    decomposition_6d, &
-    new_cartesian_domain_decomposition, &
-    new_cartesian_topology
+    sll_o_apply_halo_exchange, &
+    sll_t_cartesian_topology_6d, &
+    sll_t_decomposition_6d, &
+    sll_o_new_cartesian_domain_decomposition, &
+    sll_o_new_cartesian_topology
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -36,8 +36,8 @@ program test_decomposition
    sll_int32, parameter :: nd = 6
    sll_int32 :: procs_per_dimension(nd)
    logical :: periodic(nd), check(2*nd+1)
-   type(cartesian_topology_6d), pointer :: topology
-   type(decomposition_6d), pointer :: decomposition
+   type(sll_t_cartesian_topology_6d), pointer :: topology
+   type(sll_t_decomposition_6d), pointer :: decomposition
    sll_int32 :: ierr
    sll_int32 :: world_size, my_rank
    sll_int32 :: global_grid_points_per_dimension(nd)
@@ -49,10 +49,10 @@ program test_decomposition
 
    ! --- executable section
 
-   call sll_boot_collective()
+   call sll_s_boot_collective()
 
-   world_size = sll_get_collective_size(sll_world_collective)
-   my_rank = sll_get_collective_rank(sll_world_collective)
+   world_size = sll_f_get_collective_size(sll_v_world_collective)
+   my_rank = sll_f_get_collective_rank(sll_v_world_collective)
 
 
 
@@ -85,7 +85,7 @@ program test_decomposition
    !> is passed to indicate if there is a periodic BC associated to a certain dimension.
    periodic(:) = .true.
    topology => &
-      new_cartesian_topology(sll_world_collective, procs_per_dimension, periodic)
+      sll_o_new_cartesian_topology(sll_v_world_collective, procs_per_dimension, periodic)
 
 
 
@@ -97,7 +97,7 @@ program test_decomposition
    global_grid_points_per_dimension(:) = 8
    halo_width_per_dimension(:) = 2
    decomposition => &
-      new_cartesian_domain_decomposition(topology, global_grid_points_per_dimension, halo_width_per_dimension)
+      sll_o_new_cartesian_domain_decomposition(topology, global_grid_points_per_dimension, halo_width_per_dimension)
 
 
 
@@ -117,7 +117,7 @@ program test_decomposition
    f6d = real(my_rank, kind=f64)
 
    !> (3) Do data exchange between neighbors.
-   call apply_halo_exchange(topology, decomposition, f6d)
+   call sll_o_apply_halo_exchange(topology, decomposition, f6d)
 
    !> (4) Check if the data was transferred correctly between the neighbours.
    check(:) = .false.
@@ -252,5 +252,5 @@ program test_decomposition
       write(*,*) "Domain decomposition unit test : FAILED"
    endif
 
-101   call sll_halt_collective()
+101   call sll_s_halt_collective()
 end program test_decomposition
