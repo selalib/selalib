@@ -24,37 +24,37 @@ module sll_m_cartesian_meshes
 #include "sll_working_precision.h"
 
   use sll_m_meshes_base, only: &
-    sll_mesh_1d_base, &
-    sll_mesh_2d_base, &
-    sll_mesh_3d_base
+    sll_c_mesh_1d_base, &
+    sll_c_mesh_2d_base, &
+    sll_c_mesh_3d_base
 
   implicit none
 
   public :: &
-    get_node_positions, &
-    new_cartesian_mesh_1d, &
-    new_cartesian_mesh_2d, &
-    new_cartesian_mesh_3d, &
-    new_cartesian_mesh_4d, &
+    sll_o_get_node_positions, &
+    sll_f_new_cartesian_mesh_1d, &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_f_new_cartesian_mesh_3d, &
+    sll_f_new_cartesian_mesh_4d, &
     operator(*), &
-    sll_cartesian_mesh_1d, &
-    sll_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d_ptr, &
-    sll_cartesian_mesh_3d, &
-    sll_cartesian_mesh_4d, &
-    sll_cell, &
-    sll_cell_margin, &
-    sll_delete, &
-    sll_display, &
-    sll_mesh_area, &
-    sll_new, &
-    tensor_product_1d_1d
+    sll_t_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d_ptr, &
+    sll_t_cartesian_mesh_3d, &
+    sll_t_cartesian_mesh_4d, &
+    sll_o_cell, &
+    sll_o_cell_margin, &
+    sll_o_delete, &
+    sll_o_display, &
+    sll_o_mesh_area, &
+    sll_o_new, &
+    sll_f_tensor_product_1d_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief 1D cartesian mesh
-  type, extends(sll_mesh_1d_base) :: sll_cartesian_mesh_1d
+  type, extends(sll_c_mesh_1d_base) :: sll_t_cartesian_mesh_1d
      sll_int32  :: num_cells
      sll_real64 :: eta_min
      sll_real64 :: eta_max
@@ -70,11 +70,11 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: area => length_cartesian_mesh_1d 
      procedure, pass(mesh) :: cell_margin => cell_margin_cartesian_mesh_1d
      procedure, pass(mesh) :: period => period_cartesian_mesh_1d
-  end type sll_cartesian_mesh_1d
+  end type sll_t_cartesian_mesh_1d
 
 
   !> @brief 2D cartesian mesh
-  type, extends(sll_mesh_2d_base) :: sll_cartesian_mesh_2d
+  type, extends(sll_c_mesh_2d_base) :: sll_t_cartesian_mesh_2d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_real64 :: eta1_min   !< minimum value of eta, direction 1
@@ -92,15 +92,15 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_2d_two_arg
      procedure, pass(mesh) :: display => display_cartesian_mesh_2d
      procedure, pass(mesh) :: delete => delete_cartesian_mesh_2d
-  end type sll_cartesian_mesh_2d
+  end type sll_t_cartesian_mesh_2d
 
   !> 2d cartesian mesh pointer
-  type :: sll_cartesian_mesh_2d_ptr
-     type(sll_cartesian_mesh_2d), pointer :: lm
-  end type sll_cartesian_mesh_2d_ptr
+  type :: sll_t_cartesian_mesh_2d_ptr
+     type(sll_t_cartesian_mesh_2d), pointer :: lm
+  end type sll_t_cartesian_mesh_2d_ptr
 
   !> @brief 3D cartesian mesh
-  type, extends(sll_mesh_3d_base) :: sll_cartesian_mesh_3d
+  type, extends(sll_c_mesh_3d_base) :: sll_t_cartesian_mesh_3d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3 
@@ -122,10 +122,10 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta3_cell => eta3_cell_3d
      procedure, pass(mesh) :: display => display_cartesian_mesh_3d
      procedure, pass(mesh) :: delete => delete_cartesian_mesh_3d
-  end type sll_cartesian_mesh_3d
+  end type sll_t_cartesian_mesh_3d
 
   !> 4D cartesian mesh
-  type :: sll_cartesian_mesh_4d
+  type :: sll_t_cartesian_mesh_4d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3
@@ -151,37 +151,37 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta3_cell => eta3_cell_4d
      procedure, pass(mesh) :: display => display_cartesian_mesh_4d
      procedure, pass(mesh) :: delete => delete_cartesian_mesh_4d
-  end type sll_cartesian_mesh_4d
+  end type sll_t_cartesian_mesh_4d
 
   !> @brief Deallocates memory for the cartesian mesh. 
   !> @param mesh pointer to a sll_cartesian_mesh_*d object.
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_cartesian_mesh_1d
      module procedure delete_cartesian_mesh_2d
      module procedure delete_cartesian_mesh_3d
      module procedure delete_cartesian_mesh_4d
-  end interface sll_delete
+  end interface sll_o_delete
 
 
   !> Tensor product 
   interface operator(*)
-     module procedure tensor_product_1d_1d
+     module procedure sll_f_tensor_product_1d_1d
      module procedure tensor_product_2d_2d
   end interface operator(*)
 
   !> Print mesh parameters
-  interface sll_display
+  interface sll_o_display
      module procedure display_cartesian_mesh_1d
      module procedure display_cartesian_mesh_2d
      module procedure display_cartesian_mesh_3d
      module procedure display_cartesian_mesh_4d
-  end interface sll_display
+  end interface sll_o_display
 
   !> Get node positions array
-  interface get_node_positions
+  interface sll_o_get_node_positions
      module procedure get_node_positions_1d
      module procedure get_node_positions_2d
-  end interface get_node_positions
+  end interface sll_o_get_node_positions
 
   !> @brief allocates the memory space for a new cartesian mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
@@ -192,22 +192,22 @@ module sll_m_cartesian_meshes
   !> @param eta_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh.
   !> @return a pointer to the newly allocated object.
-  interface sll_new
-     module procedure new_cartesian_mesh_1d
-     module procedure new_cartesian_mesh_2d
-     module procedure new_cartesian_mesh_3d
-     module procedure new_cartesian_mesh_4d
-  end interface sll_new
+  interface sll_o_new
+     module procedure sll_f_new_cartesian_mesh_1d
+     module procedure sll_f_new_cartesian_mesh_2d
+     module procedure sll_f_new_cartesian_mesh_3d
+     module procedure sll_f_new_cartesian_mesh_4d
+  end interface sll_o_new
 
-    interface sll_cell
+    interface sll_o_cell
      module procedure cell_cartesian_mesh_1d
-  end interface sll_cell
+  end interface sll_o_cell
 
-  interface sll_cell_margin
+  interface sll_o_cell_margin
      module procedure cell_margin_cartesian_mesh_1d
-  end interface sll_cell_margin
+  end interface sll_o_cell_margin
 
-  interface sll_mesh_area
+  interface sll_o_mesh_area
      module procedure length_cartesian_mesh_1d
      module procedure area_cartesian_mesh_2d
      module procedure area_cartesian_mesh_3d
@@ -234,12 +234,12 @@ end if
   !> @param eta_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh.
   !> @return a pointer to the newly allocated object.
-  function new_cartesian_mesh_1d( &
+  function sll_f_new_cartesian_mesh_1d( &
     num_cells, &
     eta_min, &
     eta_max ) result(m)
 
-    type(sll_cartesian_mesh_1d), pointer :: m
+    type(sll_t_cartesian_mesh_1d), pointer :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
     sll_real64, optional, intent(in) :: eta_max
@@ -247,7 +247,7 @@ end if
     sll_int32 :: ierr
     SLL_ALLOCATE(m, ierr)
     call initialize_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
-  end function new_cartesian_mesh_1d
+  end function sll_f_new_cartesian_mesh_1d
 
 
   !> Initializes a previously allocated 1D cartesian mesh object.
@@ -258,7 +258,7 @@ end if
   !> maximum value of the eta1 parameter in the cartesian mesh.
   !> @param m is a pointer to the newly allocated object.
   subroutine initialize_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
-    type(sll_cartesian_mesh_1d), pointer :: m
+    type(sll_t_cartesian_mesh_1d), pointer :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
     sll_real64, optional, intent(in) :: eta_max
@@ -279,12 +279,12 @@ end if
 
 
   !> Create a 2d mesh from two 1d meshes
-  function tensor_product_1d_1d( m_a, m_b) result(m_c)
-    type(sll_cartesian_mesh_1d), intent(in),  pointer :: m_a
-    type(sll_cartesian_mesh_1d), intent(in),  pointer :: m_b
-    type(sll_cartesian_mesh_2d),              pointer :: m_c
+  function sll_f_tensor_product_1d_1d( m_a, m_b) result(m_c)
+    type(sll_t_cartesian_mesh_1d), intent(in),  pointer :: m_a
+    type(sll_t_cartesian_mesh_1d), intent(in),  pointer :: m_b
+    type(sll_t_cartesian_mesh_2d),              pointer :: m_c
 
-    m_c => new_cartesian_mesh_2d( &
+    m_c => sll_f_new_cartesian_mesh_2d( &
     m_a%num_cells, &
     m_b%num_cells, &
     m_a%eta_min, &
@@ -292,15 +292,15 @@ end if
     m_b%eta_min, &
     m_b%eta_max ) 
 
-  end function tensor_product_1d_1d
+  end function sll_f_tensor_product_1d_1d
 
   !> Create a 4d mesh from two 2d meshes
   function tensor_product_2d_2d( m_a, m_b) result(m_c)
-    type(sll_cartesian_mesh_2d), intent(in),  pointer :: m_a
-    type(sll_cartesian_mesh_2d), intent(in),  pointer :: m_b
-    type(sll_cartesian_mesh_4d),              pointer :: m_c
+    type(sll_t_cartesian_mesh_2d), intent(in),  pointer :: m_a
+    type(sll_t_cartesian_mesh_2d), intent(in),  pointer :: m_b
+    type(sll_t_cartesian_mesh_4d),              pointer :: m_c
 
-    m_c => new_cartesian_mesh_4d( &
+    m_c => sll_f_new_cartesian_mesh_4d( &
     m_a%num_cells1, &
     m_a%num_cells2, &
     m_b%num_cells1, &
@@ -317,7 +317,7 @@ end if
   end function tensor_product_2d_2d
 
   subroutine get_node_positions_1d( m, eta1_node )
-    type(sll_cartesian_mesh_1d), pointer :: m
+    type(sll_t_cartesian_mesh_1d), pointer :: m
     sll_real64, dimension(:), pointer :: eta1_node
     sll_int32  :: num_cells
     sll_real64 :: eta_min
@@ -335,7 +335,7 @@ end if
   end subroutine get_node_positions_1d
 
   function eta1_node_1d(mesh, i) result(res)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_int32, intent(in) :: i
     sll_real64            :: res
     sll_real64            :: eta_min
@@ -347,7 +347,7 @@ end if
   end function eta1_node_1d
 
   function eta1_cell_1d(mesh, i) result(res)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_int32, intent(in) :: i
     sll_real64            :: res
     sll_real64            :: eta_min
@@ -360,7 +360,7 @@ end if
 
 
   subroutine get_node_positions_2d( m, eta1, eta2 )
-    class(sll_cartesian_mesh_2d),  pointer :: m
+    class(sll_t_cartesian_mesh_2d),  pointer :: m
     sll_real64, dimension(:,:), pointer :: eta1
     sll_real64, dimension(:,:), pointer :: eta2
     sll_int32  :: num_cells1
@@ -404,7 +404,7 @@ end if
   !> @param eta2_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh, direction 2.
   !> @return a pointer to the newly allocated object.
-  function new_cartesian_mesh_2d( &
+  function sll_f_new_cartesian_mesh_2d( &
     num_cells1, &
     num_cells2, &
     eta1_min, &
@@ -412,7 +412,7 @@ end if
     eta2_min, &
     eta2_max ) result(m)
 
-    type(sll_cartesian_mesh_2d), pointer :: m
+    type(sll_t_cartesian_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: num_cells1
     sll_int32, intent(in)  :: num_cells2
     sll_real64, optional, intent(in) :: eta1_min
@@ -431,7 +431,7 @@ end if
          eta2_min, &
          eta2_max )
 
-  end function new_cartesian_mesh_2d
+  end function sll_f_new_cartesian_mesh_2d
 
   !> @brief initializes a cartesian mesh 2D object that has been already 
   !> allocated.
@@ -455,7 +455,7 @@ end if
     eta2_min, &
     eta2_max )
 
-    type(sll_cartesian_mesh_2d), pointer :: m
+    type(sll_t_cartesian_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: num_cells1
     sll_int32, intent(in)  :: num_cells2
     sll_real64, optional, intent(in) :: eta1_min
@@ -489,7 +489,7 @@ end if
 
 
   function eta1_node_2d(mesh, i, j) result(res)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64            :: res
@@ -506,7 +506,7 @@ end if
   end function eta1_node_2d
 
   function eta2_node_2d(mesh, i, j) result(res)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64            :: res
@@ -523,7 +523,7 @@ end if
   end function eta2_node_2d
 
   function eta1_cell_2d_two_arg(mesh, i, j) result(res)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64            :: res
@@ -540,7 +540,7 @@ end if
   end function eta1_cell_2d_two_arg
     
   function eta2_cell_2d_two_arg(mesh, i, j) result(res)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64            :: res
@@ -557,7 +557,7 @@ end if
   end function eta2_cell_2d_two_arg
 
   function eta1_cell_2d_one_arg(mesh, cell_num) result(res)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in) :: cell_num
     sll_real64            :: res
     sll_real64            :: eta1_min
@@ -571,7 +571,7 @@ end if
   end function eta1_cell_2d_one_arg
 
   function eta2_cell_2d_one_arg(mesh, cell_num) result(res)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in) :: cell_num
     sll_real64            :: res
     sll_real64            :: eta2_min
@@ -603,7 +603,7 @@ end if
   !> @param eta3_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh, direction 3.
   !> @return m a pointer to the newly allocated object.
-  function new_cartesian_mesh_3d( &
+  function sll_f_new_cartesian_mesh_3d( &
        num_cells1, &
        num_cells2, &
        num_cells3, &
@@ -614,7 +614,7 @@ end if
        eta3_min, &
        eta3_max ) result(m)
 
-    type(sll_cartesian_mesh_3d), pointer :: m
+    type(sll_t_cartesian_mesh_3d), pointer :: m
     sll_int32, intent(in)  :: num_cells1
     sll_int32, intent(in)  :: num_cells2
     sll_int32, intent(in)  :: num_cells3
@@ -656,10 +656,10 @@ end if
        print*,'because eta3_max <= eta3_min'
     end if
 
-  end function new_cartesian_mesh_3d
+  end function sll_f_new_cartesian_mesh_3d
 
 function eta1_node_3d(mesh, i1, i2, i3) result(res)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -677,7 +677,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta1_node_3d
 
   function eta2_node_3d(mesh, i1, i2, i3) result(res)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -695,7 +695,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta2_node_3d
 
   function eta3_node_3d(mesh, i1, i2, i3) result(res)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -714,7 +714,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
 
   function eta1_cell_3d(mesh, i1, i2, i3) result(res)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -732,7 +732,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta1_cell_3d
 
   function eta2_cell_3d(mesh, i1, i2, i3) result(res)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -750,7 +750,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta2_cell_3d
 
   function eta3_cell_3d(mesh, i1, i2, i3) result(res)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -794,7 +794,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   !> @param eta4_max optional double precision value which represents the 
   !> maximum value of the eta4 parameter in the cartesian mesh, direction 4.
   !> @return m a pointer to the newly allocated object.  
-  function new_cartesian_mesh_4d( &
+  function sll_f_new_cartesian_mesh_4d( &
     num_cells1, &
     num_cells2, &
     num_cells3, &
@@ -808,7 +808,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     eta4_min, &
     eta4_max ) result(m)
     
-    type(sll_cartesian_mesh_4d), pointer :: m
+    type(sll_t_cartesian_mesh_4d), pointer :: m
     sll_int32, intent(in)  :: num_cells1
     sll_int32, intent(in)  :: num_cells2
     sll_int32, intent(in)  :: num_cells3
@@ -858,11 +858,11 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
        print*,'Problem to construct the mesh 4d '
        print*,'because eta4_max <= eta4_min'
     end if
-  end function new_cartesian_mesh_4d
+  end function sll_f_new_cartesian_mesh_4d
 
 
   function eta1_node_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -881,7 +881,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta1_node_4d
 
   function eta2_node_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -900,7 +900,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta2_node_4d
 
   function eta3_node_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -919,7 +919,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta3_node_4d
 
   function eta4_node_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -938,7 +938,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta4_node_4d
 
   function eta1_cell_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -957,7 +957,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta1_cell_4d
 
   function eta2_cell_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -976,7 +976,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta2_cell_4d
 
   function eta3_cell_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -995,7 +995,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta3_cell_4d  
 
   function eta4_cell_4d(mesh, i1, i2, i3, i4) result(res)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
     sll_int32, intent(in) :: i3
@@ -1014,10 +1014,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end function eta4_cell_4d  
 
   !> @brief display contents of a 1D cartesian mesh. Recommended access through
-  !> the generic interface sll_display( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> the generic interface sll_o_display( mesh ).
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   subroutine display_cartesian_mesh_1d(mesh)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
 
     write(*,"(/,(a))") '1D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells, &
@@ -1028,10 +1028,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end subroutine display_cartesian_mesh_1d
 
   !> @brief display contents of a 2d cartesian mesh. Recommended access through
-  !> the generic interface sll_display( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_2d object.
+  !> the generic interface sll_o_display( mesh ).
+  !> @param mesh pointer to a sll_t_cartesian_mesh_2d object.
   subroutine display_cartesian_mesh_2d(mesh)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
 
     write(*,"(/,(a))") '2D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
@@ -1045,10 +1045,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   end subroutine display_cartesian_mesh_2d
 
   !> @brief display contents of a 3d cartesian mesh. Recommended access through
-  !> the generic interface sll_display( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_3d object.
+  !> the generic interface sll_o_display( mesh ).
+  !> @param mesh pointer to a sll_t_cartesian_mesh_3d object.
   subroutine display_cartesian_mesh_3d(mesh)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
 
     write(*,"(/,(a))") '3D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
@@ -1067,10 +1067,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   
 
   !> @brief display contents of a 4d cartesian mesh. Recommended access through
-  !> the generic interface sll_display( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_4d object.
+  !> the generic interface sll_o_display( mesh ).
+  !> @param mesh pointer to a sll_t_cartesian_mesh_4d object.
   subroutine display_cartesian_mesh_4d(mesh)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
 
     write(*,"(/,(a))") '4D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
@@ -1093,9 +1093,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   
   !> @brief deallocates memory for the 1D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   subroutine delete_cartesian_mesh_1d( mesh )
-    class(sll_cartesian_mesh_1d), intent(inout) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
     !    print *, 'delete_cartesian_mesh_1d, ERROR: passed argument is not ', &
@@ -1107,9 +1107,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
   !> @brief deallocates memory for the 2D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_2d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_2d object.
   subroutine delete_cartesian_mesh_2d( mesh )
-    class(sll_cartesian_mesh_2d), intent(inout) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
     !    print *, 'delete_cartesian_mesh_2d, ERROR: passed argument is not ', &
@@ -1121,9 +1121,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
   !> @brief deallocates memory for the 3D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_3d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_3d object.
   subroutine delete_cartesian_mesh_3d( mesh )
-    class(sll_cartesian_mesh_3d), intent(inout) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
     !    print *, 'delete_cartesian_mesh_3d, ERROR: passed argument is not ', &
@@ -1135,9 +1135,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
   !> @brief deallocates memory for the 4D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
-  !> @param mesh pointer to a sll_cartesian_mesh_4d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_4d object.
   subroutine delete_cartesian_mesh_4d( mesh )
-    class(sll_cartesian_mesh_4d), intent(inout) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
     !    print *, 'delete_cartesian_mesh_4d, ERROR: passed argument is not ', &
@@ -1149,9 +1149,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
   
   !> @brief Returns all nodes for the 1D cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   function nodes_cartesian_mesh_1d(mesh) result(nodes)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_real64,  dimension( mesh%num_cells +1) ::nodes
     sll_int32  :: idx
     sll_int32  :: nknots
@@ -1164,11 +1164,11 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   endfunction
 
   !> @brief Returns cell number(s) for given point(s) in cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   !> @param point  position for wich cell number should be calculated
   !> Last knot belongs to last cell
   function cell_cartesian_mesh_1d(mesh, point) result(cell)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_real64, dimension(:),  intent(in) ::point
     sll_int32, dimension(size(point)) :: cell
     cell=floor((point - mesh%eta_min)/mesh%delta_eta)+1
@@ -1177,12 +1177,12 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   endfunction
 
   !> @brief Returns the margin (a,b) for a given cell
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   !> @param cell number of cell
   !> @param margin two dimensional array sorted from low to high
   !> Last knot belongs to last cell
   function cell_margin_cartesian_mesh_1d(mesh, cell) result(margin)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_int32, intent(in) :: cell
     sll_real64, dimension(2) :: margin
 
@@ -1192,26 +1192,26 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   endfunction
 
   !> @brief Returns the number of nodes for the 1D cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   function num_nodes_cartesian_mesh_1d(mesh) result(num_nodes)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_int32 :: num_nodes
     num_nodes=mesh%num_cells+1
   endfunction num_nodes_cartesian_mesh_1d
 
   !> @brief Returns the interval length for a 1D cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   function length_cartesian_mesh_1d(mesh) result(length)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_real64 :: length
     length=mesh%eta_max-mesh%eta_min
     SLL_ASSERT(length >=0)
   endfunction length_cartesian_mesh_1d   
   
   !> @brief Returns the area size for a 2D cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_2d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_2d object.
   function area_cartesian_mesh_2d( mesh) result(area)
-    class(sll_cartesian_mesh_2d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_2d), intent(in) :: mesh
     sll_real64 :: area
     area=(mesh%eta1_max-mesh%eta1_min)*&
                 (mesh%eta2_max-mesh%eta2_min)
@@ -1220,9 +1220,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   endfunction area_cartesian_mesh_2d
 
   !> @brief Returns the area size for a 3D cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_3d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_3d object.
   function area_cartesian_mesh_3d( mesh) result(area)
-    class(sll_cartesian_mesh_3d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
     sll_real64 :: area
     area=(mesh%eta1_max-mesh%eta1_min)*&
                 (mesh%eta2_max-mesh%eta2_min)*&
@@ -1232,9 +1232,9 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   endfunction area_cartesian_mesh_3d
 
   !> @brief Returns the area size for a 3D cartesian mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_3d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_3d object.
   function area_cartesian_mesh_4d( mesh) result(area)
-    class(sll_cartesian_mesh_4d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_4d), intent(in) :: mesh
     sll_real64 :: area
     area=(mesh%eta1_max-mesh%eta1_min)*&
                 (mesh%eta2_max-mesh%eta2_min)*&
@@ -1248,10 +1248,10 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   
   
   !> @brief Returns coordinate in a periodic mesh
-  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
   !> @param point position
   function period_cartesian_mesh_1d(mesh,point) result(posmod)
-    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    class(sll_t_cartesian_mesh_1d), intent(in) :: mesh
     sll_real64, intent(in) :: point
     sll_real64 :: posmod
 

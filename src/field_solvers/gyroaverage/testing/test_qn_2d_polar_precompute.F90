@@ -21,31 +21,31 @@ program test_qn_2d_polar_precompute
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_close, &
-    sll_ascii_file_create
+    sll_s_ascii_file_close, &
+    sll_s_ascii_file_create
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gyroaverage_utilities, only: &
-    compute_init_f_polar, &
-    compute_mu, &
-    compute_shape_circle
+    sll_s_compute_init_f_polar, &
+    sll_s_compute_mu, &
+    sll_s_compute_shape_circle
 
   use sll_m_qn_2d_polar, only: &
-    compute_error, &
-    compute_gamma0, &
-    compute_gamma0_quadrature
+    sll_s_compute_error, &
+    sll_s_compute_gamma0, &
+    sll_f_compute_gamma0_quadrature
 
   use sll_m_qn_2d_polar_precompute, only: &
-    compute_qns_inverse_polar_splines, &
-    compute_qns_matrix_polar_splines, &
-    solve_qns_polar_splines
+    sll_s_compute_qns_inverse_polar_splines, &
+    sll_s_compute_qns_matrix_polar_splines, &
+    sll_s_solve_qns_polar_splines
 
   use sll_m_timer, only: &
-    sll_set_time_mark, &
-    sll_time_elapsed_since, &
-    sll_time_mark
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -71,7 +71,7 @@ program test_qn_2d_polar_precompute
   character(len=256) :: filename
   sll_int32             :: IO_stat
   sll_int32, parameter  :: input_file = 99
-  type(sll_time_mark)  :: t0
+  type(sll_t_time_mark)  :: t0
   sll_real64 :: time
   sll_int32 :: j
   sll_int32 :: m
@@ -129,7 +129,7 @@ program test_qn_2d_polar_precompute
     interp_x1, &
     interp_x2
 
-  call sll_set_time_mark(t0)
+  call sll_s_set_time_mark(t0)
 
 
   !default parameters
@@ -191,7 +191,7 @@ program test_qn_2d_polar_precompute
   SLL_ALLOCATE(val(2,num_cells_r+1), ierr)
 
   
-  call compute_mu( &
+  call sll_s_compute_mu( &
     quadrature_case, &
     mu_points, &
     mu_weights, &
@@ -213,16 +213,16 @@ program test_qn_2d_polar_precompute
   
   
   
-  call compute_shape_circle(points,N_points)
+  call sll_s_compute_shape_circle(points,N_points)
 
 
   Nc = (/num_cells_r,num_cells_theta/)
   eta_min = (/r_min,0._f64/)
-  eta_max = (/r_max,2._f64*sll_pi/)
+  eta_max = (/r_max,2._f64*sll_p_pi/)
   mode = (/mode_r,mode_theta/)
 
 
-  gamma0_num = compute_gamma0_quadrature( &
+  gamma0_num = sll_f_compute_gamma0_quadrature( &
     Nc, &
     eta_min, &
     eta_max, &
@@ -235,7 +235,7 @@ program test_qn_2d_polar_precompute
   
   gamma0 = 1._f64
   
-  call compute_gamma0(mode,eta_min,eta_max,gamma0)
+  call sll_s_compute_gamma0(mode,eta_min,eta_max,gamma0)
 
   print *,'gamma0=',gamma0,gamma0-gamma0_num,gamma0-(1._f64-gamma0_num)
   
@@ -261,7 +261,7 @@ program test_qn_2d_polar_precompute
 !      r = r_min+real(j-1,f64)*(r_max-r_min)/real(num_cells_r,f64)
 !      rho(j) = minval((/rho(j),abs(r-r_min)/num_buffer_cell,abs(r-r_max)/num_buffer_cell/))
 !    enddo
-    call compute_qns_matrix_polar_splines( &
+    call sll_s_compute_qns_matrix_polar_splines( &
       r_min, &
       r_max, &
       num_cells_r, &
@@ -273,7 +273,7 @@ program test_qn_2d_polar_precompute
     mat = mat+mat_loc*mu_weights(i)
   enddo
 
-  call sll_ascii_file_create("mat.dat", mat_id, ierr)
+  call sll_s_ascii_file_create("mat.dat", mat_id, ierr)
 
    do m = 1,num_cells_theta
      do i= 1,num_cells_r+1
@@ -283,17 +283,17 @@ program test_qn_2d_polar_precompute
      enddo
    enddo
 
-  call sll_ascii_file_close(mat_id,ierr)
+  call sll_s_ascii_file_close(mat_id,ierr)
 
   mat_loc = mat
 
-  call compute_qns_inverse_polar_splines( &
+  call sll_s_compute_qns_inverse_polar_splines( &
     mat, &
     lambda, &
     num_cells_r, &
     num_cells_theta)
 
-!  call compute_qns_inverse_polar_splines( &
+!  call sll_s_compute_qns_inverse_polar_splines( &
 !    mat, &
 !    lambda, &
 !    num_cells_r, &
@@ -311,21 +311,21 @@ program test_qn_2d_polar_precompute
 
 
   
-  call compute_init_f_polar(phi,mode,Nc,eta_min,eta_max)
+  call sll_s_compute_init_f_polar(phi,mode,Nc,eta_min,eta_max)
   
   print *,'#mode=',mode
   
   do i=1,Nc(1)+1
     r = r_min+real(i-1,f64)*(r_max-r_min)/real(Nc(1),f64)
     do j=1,Nc(2)+1
-      theta = real(j-1,f64)*2._f64*sll_pi/real(Nc(2),f64)
+      theta = real(j-1,f64)*2._f64*sll_p_pi/real(Nc(2),f64)
       phi(i,j) = 1._f64
 !if((r>=r_minus).and.(r<=r_plus))then
 !  phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta))
 !else
 !  phi(i,j) = 0._f64  
 !endif 
-phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*sin(2._f64*sll_pi*(r-r_min)/(r_max-r_min))
+phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*sin(2._f64*sll_p_pi*(r-r_min)/(r_max-r_min))
 
       
     enddo
@@ -341,11 +341,11 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !    enddo
 !  enddo
 !  
-!  !mass = mass*(r_max-r_min)/real(Nc(1),f64)*(2._f64*sll_pi)/real(Nc(2),f64)
+!  !mass = mass*(r_max-r_min)/real(Nc(1),f64)*(2._f64*sll_p_pi)/real(Nc(2),f64)
 !  
 !  mass = mass/vol
 !  
-!  phi = phi-mass !/(sll_pi*(r_max**2-r_min**2))
+!  phi = phi-mass !/(sll_p_pi*(r_max**2-r_min**2))
   
   phi_init = phi
   phi_restr(1:Nc(1)+1,1:Nc(2)) = phi(1:Nc(1)+1,1:Nc(2))
@@ -356,7 +356,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !    r_max, &
 !    num_cells_r+1, &
 !    0._f64, &
-!    2._f64*sll_pi, &
+!    2._f64*sll_p_pi, &
 !    num_cells_theta+1, &
 !    phi_init, &
 !    "phi_init", &
@@ -378,7 +378,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !  phi_restr(1:Nc(1)+1,1:Nc(2)) = phi_restr(1:Nc(1)+1,1:Nc(2))-phi(1:Nc(1)+1,1:Nc(2))
 
 
-  call solve_qns_polar_splines( &
+  call sll_s_solve_qns_polar_splines( &
     mat, &
     phi_restr, &
     num_cells_r, &
@@ -395,15 +395,15 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !    enddo
 !  enddo
 !  
-!  !mass = mass*(r_max-r_min)/real(Nc(1),f64)*(2._f64*sll_pi)/real(Nc(2),f64)
+!  !mass = mass*(r_max-r_min)/real(Nc(1),f64)*(2._f64*sll_p_pi)/real(Nc(2),f64)
 !  
 !  mass = mass/vol
 !  
-!  phi_restr = phi_restr-mass !/(sll_pi*(r_max**2-r_min**2))
+!  phi_restr = phi_restr-mass !/(sll_p_pi*(r_max**2-r_min**2))
 !
 
 
-!  call solve_qns_polar_splines( &
+!  call sll_s_solve_qns_polar_splines( &
 !    mat_loc, &
 !    phi_restr, &
 !    num_cells_r, &
@@ -444,7 +444,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !    r_max, &
 !    num_cells_r+1, &
 !    0._f64, &
-!    2._f64*sll_pi, &
+!    2._f64*sll_p_pi, &
 !    num_cells_theta+1, &
 !    phi_qn, &
 !    "phi_qn", &
@@ -456,7 +456,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !    r_max, &
 !    num_cells_r+1, &
 !    0._f64, &
-!    2._f64*sll_pi, &
+!    2._f64*sll_p_pi, &
 !    num_cells_theta+1, &
 !    phi_quotient, &
 !    "phi_quotient", &
@@ -467,7 +467,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 
 
     print *,'#test double gyroaverage'
-    call compute_error(phi_qn,phi_init,1-gamma0_num,error,(/1,1/),Nc)
+    call sll_s_compute_error(phi_qn,phi_init,1-gamma0_num,error,(/1,1/),Nc)
     print *,'#error whole domain=',error
 
 !stop  
@@ -490,7 +490,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 !    mat)
 
     print *, '#reached end of vp2d test'
-    time = sll_time_elapsed_since(t0)
+    time = sll_f_time_elapsed_since(t0)
     print *, '#time elapsed since t0 : ',time
 
   

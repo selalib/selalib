@@ -12,22 +12,22 @@ program test_box_splines_derivatives
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet
+    sll_p_dirichlet
 
   use sll_m_box_splines, only: &
-    boxspline_x1_derivative, &
-    boxspline_x2_derivative, &
-    compute_box_spline, &
-    new_box_spline_2d, &
-    sll_box_spline_2d, &
-    write_all_django_files
+    sll_f_boxspline_x1_derivative, &
+    sll_f_boxspline_x2_derivative, &
+    sll_f_compute_box_spline, &
+    sll_f_new_box_spline_2d, &
+    sll_t_box_spline_2d, &
+    sll_s_write_all_django_files
 
   use sll_m_hex_pre_filters, only: &
-    pre_filter_pfir
+    sll_s_pre_filter_pfir
 
   use sll_m_hexagonal_meshes, only: &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -35,8 +35,8 @@ program test_box_splines_derivatives
   ! Variable to check is successful. By default it is the case.
   logical :: passed_test = .true.
   ! Variables for the test:
-  type(sll_hex_mesh_2d),   pointer   :: mesh
-  type(sll_box_spline_2d), pointer   :: spline
+  type(sll_t_hex_mesh_2d),   pointer   :: mesh
+  type(sll_t_box_spline_2d), pointer   :: spline
   sll_int32,  parameter :: max_deg = 5
   sll_real64, parameter :: criterion = 1.0e-14_f64
   sll_int32    :: ierr
@@ -62,11 +62,11 @@ program test_box_splines_derivatives
   print *, "  Test will be made on the following mesh:"
   ! Mesh initialization
   num_cells = 20
-  mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
+  mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
   call mesh%display()
 
   ! Spline initialization
-  spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+  spline => sll_f_new_box_spline_2d(mesh, sll_p_dirichlet)
 
   ! Allocations for boxsplines and derivatives :
   SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
@@ -77,9 +77,9 @@ program test_box_splines_derivatives
      do i=1, mesh%num_pts_tot
         x1 = mesh%global_to_x1(i)
         x2 = mesh%global_to_x2(i)
-        f(i) = compute_box_spline(spline, x1, x2, degree)
-        dxf(i) = boxspline_x1_derivative(x1, x2, degree)
-        dyf(i) = boxspline_x2_derivative(x1, x2, degree)
+        f(i) = sll_f_compute_box_spline(spline, x1, x2, degree)
+        dxf(i) = sll_f_boxspline_x1_derivative(x1, x2, degree)
+        dyf(i) = sll_f_boxspline_x2_derivative(x1, x2, degree)
      end do
      print *, " * Degree =", degree
      print *, "    --> sum boxspline      = ", sum(f)
@@ -112,13 +112,13 @@ program test_box_splines_derivatives
   !      splines_on_support(3)
 
   ! SLL_DEALLOCATE_ARRAY(splines_on_support, ierr)
-  ! call sll_delete(spline) !also deletes the mesh
+  ! call sll_o_delete(spline) !also deletes the mesh
 
   ! Writing all django files
   num_cells = 20
   degree = 1
   rule = 1
-  !call write_all_django_files(num_cells, degree, rule)
+  !call sll_s_write_all_django_files(num_cells, degree, rule)
   print *, ""
   print *, "*********** wrote all django files ***********"
   print *, "   - number of cells    : ", num_cells
@@ -130,15 +130,15 @@ program test_box_splines_derivatives
   ! print *, ""
   ! print *, "------------ testing degree 3 -----------"
   ! num_cells = 3
-  ! mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
+  ! mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
   ! call mesh%display()
   ! degree = 3
-  ! spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+  ! spline => sll_f_new_box_spline_2d(mesh, sll_p_dirichlet)
   ! SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
   ! do i=1, mesh%num_pts_tot
   !    x1 = mesh%global_to_x1(i)
   !    x2 = mesh%global_to_x2(i)
-  !    f(i) = compute_box_spline(spline, x1, x2, degree)
+  !    f(i) = sll_f_compute_box_spline(spline, x1, x2, degree)
   ! end do
   ! print *, sum(f)
   ! call write_field_hex_mesh_xmf(mesh, f, "chi3")
@@ -151,7 +151,7 @@ program test_box_splines_derivatives
   print *, " ***************** PFIR *******************"
   print *, " Degree = ", degree
   somme = 0._f64
-  call pre_filter_pfir(mesh, degree, filters)
+  call sll_s_pre_filter_pfir(mesh, degree, filters)
   do i=1, 3*(degree+1)*(degree)+1
      val = filters(i)
      somme = somme + val

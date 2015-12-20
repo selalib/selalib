@@ -21,27 +21,27 @@ program test_derivative_2d_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
-    new_periodic_1d_advector
+    sll_f_new_periodic_1d_advector
 
   use sll_m_derivative_2d_oblic, only: &
-    compute_oblic_derivative_2d, &
-    new_oblic_2d_derivative, &
-    oblic_2d_derivative
+    sll_s_compute_oblic_derivative_2d, &
+    sll_f_new_oblic_2d_derivative, &
+    sll_t_oblic_2d_derivative
 
   use sll_m_periodic_interp, only: &
-    spline
+    sll_p_spline
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(oblic_2d_derivative), pointer :: deriv
+  type(sll_t_oblic_2d_derivative), pointer :: deriv
   sll_int32 :: Nc_x1
   sll_real64 :: x1_min
   sll_real64 :: x1_max
-  class(sll_advection_1d_base), pointer :: adv_x1
+  class(sll_c_advection_1d_base), pointer :: adv_x1
   sll_int32 :: Nc_x2
   sll_real64 :: x2_min
   sll_real64 :: x2_max
@@ -71,14 +71,14 @@ program test_derivative_2d_oblic
   A1 = 1._f64
   A2 = 2._f64
   
-  adv_x1 => new_periodic_1d_advector( &
+  adv_x1 => sll_f_new_periodic_1d_advector( &
     Nc_x1, &
     x1_min, &
     x1_max, &
-    SPLINE, & 
+    sll_p_spline, & 
     4) 
     
-  deriv => new_oblic_2d_derivative( &
+  deriv => sll_f_new_oblic_2d_derivative( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -95,7 +95,7 @@ program test_derivative_2d_oblic
   err = 0._f64
   
   input = 1._f64
-  call compute_oblic_derivative_2d( &
+  call sll_s_compute_oblic_derivative_2d( &
     deriv, &
     A1, &
     A2, &

@@ -11,54 +11,54 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_periodic
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_cubic_spline_interpolator_1d
+    sll_t_cubic_spline_interpolator_1d
 
   use sll_m_cubic_splines, only: &
-    compute_cubic_spline_1d, &
-    interpolate_from_interpolant_array, &
-    new_cubic_spline_1d, &
-    sll_cubic_spline_1d
+    sll_s_compute_cubic_spline_1d, &
+    sll_s_interpolate_from_interpolant_array, &
+    sll_f_new_cubic_spline_1d, &
+    sll_t_cubic_spline_1d
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_periodic_interp, only: &
-    lagrange, &
-    spline
+    sll_p_lagrange, &
+    sll_p_spline
 
   use sll_m_periodic_interpolator_1d, only: &
-    sll_periodic_interpolator_1d
+    sll_t_periodic_interpolator_1d
 
   use sll_m_poisson_1d_periodic, only: &
-    initialize, &
-    poisson_1d_periodic, &
-    solve
+    sll_o_initialize, &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
 
   use sll_m_utilities, only: &
-    int2string, &
-    pfenvelope
+    sll_s_int2string, &
+    sll_s_pfenvelope
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-!  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
-  type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
-  type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
-  type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
+!  type(sll_t_cubic_spline_interpolator_1d), target  ::  interp_spline_x
+  type(sll_t_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
+  type(sll_t_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
+  type(sll_t_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
-  type(poisson_1d_periodic)  :: poisson_1d
+  type(sll_t_poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:,:), allocatable, target :: f
   sll_real64, dimension(:,:), allocatable :: fg,ff,ff1,ff2
   sll_real64, dimension(:), allocatable :: rho
@@ -158,7 +158,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   endif
 
   ! define uniform cartesian mesh in x and coarse mesh in v
-  xmax = nbox * 2 * sll_pi / kmode
+  xmax = nbox * 2 * sll_p_pi / kmode
   delta_x = (xmax - xmin) / Ncx
   delta_v = (vmax - vmin) / Ncv
 
@@ -297,34 +297,34 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   end if
 #endif
 
-  ! initialize interpolators
+  ! sll_o_initialize interpolators
   select case (interpol_x)
-  case (1) ! periodic cubic spline
-     interp_spline_x => new_cubic_spline_1d( Ncx + 1, xmin, xmax, SLL_PERIODIC )
-!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+  case (1) ! periodic cubic sll_p_spline
+     interp_spline_x => sll_f_new_cubic_spline_1d( Ncx + 1, xmin, xmax, sll_p_periodic )
+!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
 !     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
-     call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
+     call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_spline, order_x)
      interp_x => interp_per_x
-  case(3) ! arbitrary order Lagrange periodic interpolation
-     call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
+  case(3) ! arbitrary order sll_p_lagrange periodic interpolation
+     call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_lagrange, order_x)
      interp_x => interp_per_x
   case default
      print*,'interpolation in x number ', interpol_x, ' not implemented' 
   end select
      select case (interpol_v)
-  case (1) ! hermite cubic spline
-      interp_spline_v => new_cubic_spline_1d( Ncv + 1,vmin, vmax, SLL_HERMITE )
-      interp_spline_vh => new_cubic_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), SLL_HERMITE )
+  case (1) ! hermite cubic sll_p_spline
+      interp_spline_v => sll_f_new_cubic_spline_1d( Ncv + 1,vmin, vmax, sll_p_hermite )
+      interp_spline_vh => sll_f_new_cubic_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), sll_p_hermite )
   case (2) ! arbitrary order periodic splines
-     call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
+     call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_spline, order_v)
      interp_v => interp_per_v
-  case(3) ! arbitrary order Lagrange periodic interpolation
-     call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
+  case(3) ! arbitrary order sll_p_lagrange periodic interpolation
+     call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_lagrange, order_v)
      interp_v => interp_per_v
-  case(4) ! arbitrary order open spline interpolation   
+  case(4) ! arbitrary order open sll_p_spline interpolation   
      !PN remove odd_degree replaced by cubic_spline
-     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)!order_v)
+     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite)!order_v)
   case default
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select
@@ -347,7 +347,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   do j=1,Ncv+1
      v=v_array(j)
      do i=1,Ncx+1
-        fg(i,j)=(1._f64/sqrt(2._f64*sll_pi))*exp(-0.5_f64*v*v)
+        fg(i,j)=(1._f64/sqrt(2._f64*sll_p_pi))*exp(-0.5_f64*v*v)
      enddo
   enddo
 
@@ -355,14 +355,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !--------------------------------------------
   do i=1,Ncx+1
      !compute splines coef associated to fg and evalute splines on the fine mesh vh_array --> ff1
-     call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
-     call interpolate_from_interpolant_array(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
+     call sll_s_compute_cubic_spline_1d(fg(i,:), interp_spline_v)
+     call sll_s_interpolate_from_interpolant_array(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
 
      !compute ff:=deltaf on the fine mesh: ff(v_j)=f(v_j)-ff1(v_j), v_j\in vh_array
      mass=0._f64
      do j=1,Ncvh+1
         v=vh_array(j)
-        ff(i,j)=(1._f64/sqrt(2._f64*sll_pi))*exp(-0.5_f64*v*v)-ff1(i,j)
+        ff(i,j)=(1._f64/sqrt(2._f64*sll_p_pi))*exp(-0.5_f64*v*v)-ff1(i,j)
         mass=mass+ff(i,j)
      enddo
      ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
@@ -381,21 +381,21 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   enddo
   close(12)
 
-  ! initialize Poisson
-  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
+  ! sll_o_initialize Poisson
+  call sll_o_initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(f, DIM = 2)
   else
      !compute density on coarse grid
      rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
   endif
-  call solve(poisson_1d, efield, rho)
+  call sll_o_solve(poisson_1d, efield, rho)
 
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
   istep = 0
   if (driven) then
-     call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
+     call sll_s_pfenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
           t0, turn_drive_off)
      do i = 1, Ncx + 1
         e_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
@@ -416,7 +416,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !$omp end single
 #endif
 
-  ! initialize timer
+  ! sll_o_initialize timer
   ! time loop
   !----------
 
@@ -429,7 +429,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
+        call sll_s_compute_cubic_spline_1d(fg(i,:), interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -440,13 +440,13 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               vg_array(j)=vmax
            endif
         enddo
-        call interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+        call sll_s_interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
-        call interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        call sll_s_interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
         !compute fg on the fine mesh -> ff1
-        call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+        call sll_s_interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
         !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
         mass=0._f64
@@ -457,7 +457,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call compute_cubic_spline_1D(ff(i,:),interp_spline_vh)
+        call sll_s_compute_cubic_spline_1d(ff(i,:),interp_spline_vh)
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -469,7 +469,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
            endif
         enddo
 
-        call interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        call sll_s_interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
         ff(i,:)=ff2(i,:)+ff(i,:)
@@ -485,7 +485,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         
         !compute splines coef associated to fg 
         !and compute, for the coarse grid in v fg^{n+1}(x_i)=fg^n(x_i^*) -> fg
-        call compute_cubic_spline_1D(fg(:,j), interp_spline_x)
+        call sll_s_compute_cubic_spline_1d(fg(:,j), interp_spline_x)
         alpha = (vmin + (j-1) * delta_v) * dt
         do i=1, Ncx+1
            xg_array(i)=x_array(i)-alpha
@@ -496,14 +496,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               xg_array(i)=xg_array(i)-xmax
            endif
         enddo
-        call interpolate_from_interpolant_array(xg_array, fg(:,j), Ncx+1, interp_spline_x)
+        call sll_s_interpolate_from_interpolant_array(xg_array, fg(:,j), Ncx+1, interp_spline_x)
      enddo
 
 
      do j=1,Ncvh+1 
         !compute splines coef associated to ff 
         !and compute, for the fine grid in v ff^{n+1}(x_i)=ff^n(x_i^*) -> ff
-        call compute_cubic_spline_1D(ff(:,j), interp_spline_x)
+        call sll_s_compute_cubic_spline_1d(ff(:,j), interp_spline_x)
         alpha = vh_array(j) * dt 
         do i=1, Ncx+1
            xg_array(i)=x_array(i)-alpha
@@ -514,7 +514,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               xg_array(i)=xg_array(i)-xmax
            endif
         enddo
-        call interpolate_from_interpolant_array(xg_array, ff(:,j), Ncx+1, interp_spline_x)
+        call sll_s_interpolate_from_interpolant_array(xg_array, ff(:,j), Ncx+1, interp_spline_x)
 
      enddo
 
@@ -531,10 +531,10 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         !compute density on coarse grid
         rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
      endif
-     call solve(poisson_1d, efield, rho)
+     call sll_o_solve(poisson_1d, efield, rho)
 
      if (driven) then
-        call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
+        call sll_s_pfenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
         do i = 1, Ncx + 1
            E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x &
@@ -550,7 +550,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call compute_cubic_spline_1D(fg(i,:),interp_spline_v)
+        call sll_s_compute_cubic_spline_1d(fg(i,:),interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -561,14 +561,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
               vg_array(j)=vmax
            endif
         enddo
-        call interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+        call sll_s_interpolate_from_interpolant_array(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
       
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
-        call interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        call sll_s_interpolate_from_interpolant_array(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
         !compute fg on the fine mesh -> ff1
-        call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+        call sll_s_interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
         !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
         mass=0._f64
@@ -579,7 +579,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call compute_cubic_spline_1D(ff(i,:), interp_spline_vh)
+        call sll_s_compute_cubic_spline_1d(ff(i,:), interp_spline_vh)
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -591,7 +591,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
            endif
         enddo
 
-        call interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        call sll_s_interpolate_from_interpolant_array(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
 
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
@@ -643,10 +643,10 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
         !call write_scalar_field_2d(f) 
-        call int2string(istep,cstep)
-        call sll_hdf5_file_create("f"//cstep//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,f,"f",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_s_int2string(istep,cstep)
+        call sll_o_hdf5_file_create("f"//cstep//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,f,"f",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
 
 #ifdef __OPENMP
@@ -656,18 +656,18 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 
      print *,'ITERATION',istep
 
-  call int2string(istep,cstep)
-  call sll_hdf5_file_create("ff"//cstep//".h5",file_id,error)
-  call sll_hdf5_write_array(file_id,ff,"ff",error)
-  call sll_hdf5_write_array(file_id,ff1,"ff1",error)
-  call sll_hdf5_write_array(file_id,fg,"fg",error)
-  call sll_hdf5_file_close(file_id, error)
+  call sll_s_int2string(istep,cstep)
+  call sll_o_hdf5_file_create("ff"//cstep//".h5",file_id,error)
+  call sll_o_hdf5_write_array(file_id,ff,"ff",error)
+  call sll_o_hdf5_write_array(file_id,ff1,"ff1",error)
+  call sll_o_hdf5_write_array(file_id,fg,"fg",error)
+  call sll_o_hdf5_file_close(file_id, error)
   end do
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
   do i=1,Ncx+1
-     call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
-     call interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+     call sll_s_compute_cubic_spline_1d(fg(i,:), interp_spline_v)
+     call sll_s_interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
   enddo
 
   open(12, file="ffinalh")
@@ -702,7 +702,7 @@ contains
     sll_real64, intent(in) :: v
     sll_real64 :: f_equilibrium
 
-    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+    f_equilibrium = 1.0_f64/sqrt(2*sll_p_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
 end program sim_bsl_vp_1d1v_cart_micro_macro

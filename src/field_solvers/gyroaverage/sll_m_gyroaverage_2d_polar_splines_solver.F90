@@ -23,30 +23,30 @@ module sll_m_gyroaverage_2d_polar_splines_solver
 #include "sll_working_precision.h"
 
   use sll_m_gyroaverage_2d_base, only: &
-    sll_gyroaverage_2d_base
+    sll_c_gyroaverage_2d_base
 
   use sll_m_gyroaverage_2d_polar, only: &
-    compute_gyroaverage_points_polar_spl, &
-    compute_gyroaverage_points_polar_with_invar_spl, &
-    compute_gyroaverage_pre_compute_polar_spl, &
-    compute_gyroaverage_pre_compute_polar_spl_fft, &
-    new_plan_gyroaverage_polar_splines, &
-    pre_compute_gyroaverage_polar_spl, &
-    pre_compute_gyroaverage_polar_spl_fft, &
-    sll_plan_gyroaverage_polar
+    sll_s_compute_gyroaverage_points_polar_spl, &
+    sll_s_compute_gyroaverage_points_polar_with_invar_spl, &
+    sll_s_compute_gyroaverage_pre_compute_polar_spl, &
+    sll_s_compute_gyroaverage_pre_compute_polar_spl_fft, &
+    sll_f_new_plan_gyroaverage_polar_splines, &
+    sll_s_pre_compute_gyroaverage_polar_spl, &
+    sll_s_pre_compute_gyroaverage_polar_spl_fft, &
+    sll_t_plan_gyroaverage_polar
 
   implicit none
 
   public :: &
-    new_gyroaverage_2d_polar_splines_solver
+    sll_f_new_gyroaverage_2d_polar_splines_solver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type,extends(sll_gyroaverage_2d_base) :: gyroaverage_2d_polar_splines_solver     
+  type,extends(sll_c_gyroaverage_2d_base) :: gyroaverage_2d_polar_splines_solver     
   
-    type(sll_plan_gyroaverage_polar), pointer                   :: gyro
+    type(sll_t_plan_gyroaverage_polar), pointer                   :: gyro
     sll_int32 :: splines_case
 	! splines_case
 	! 1 : splines
@@ -64,7 +64,7 @@ module sll_m_gyroaverage_2d_polar_splines_solver
   end type gyroaverage_2d_polar_splines_solver
 
 contains
-  function new_gyroaverage_2d_polar_splines_solver( &
+  function sll_f_new_gyroaverage_2d_polar_splines_solver( &
     eta_min, &
     eta_max, &
     Nc, &
@@ -89,7 +89,7 @@ contains
       N_points, &
       splines_case)
     
-  end function new_gyroaverage_2d_polar_splines_solver
+  end function sll_f_new_gyroaverage_2d_polar_splines_solver
   
   
   subroutine initialize_gyroaverage_2d_polar_splines_solver( &
@@ -116,7 +116,7 @@ contains
     
     select case(gyroaverage%splines_case)
        case (1,2,3,4)
-          gyroaverage%gyro => new_plan_gyroaverage_polar_splines( &
+          gyroaverage%gyro => sll_f_new_plan_gyroaverage_polar_splines( &
           eta_min, &
           eta_max, &
           Nc, &
@@ -138,15 +138,15 @@ contains
 
     select case(gyroaverage%splines_case)
       case (1)
-        call compute_gyroaverage_points_polar_spl(gyroaverage%gyro,f,larmor_rad)
+        call sll_s_compute_gyroaverage_points_polar_spl(gyroaverage%gyro,f,larmor_rad)
       case (2)
-        call compute_gyroaverage_points_polar_with_invar_spl(gyroaverage%gyro,f,larmor_rad)
+        call sll_s_compute_gyroaverage_points_polar_with_invar_spl(gyroaverage%gyro,f,larmor_rad)
       case (3)
-        call pre_compute_gyroaverage_polar_spl(gyroaverage%gyro,larmor_rad)
-        call compute_gyroaverage_pre_compute_polar_spl(gyroaverage%gyro,f)
+        call sll_s_pre_compute_gyroaverage_polar_spl(gyroaverage%gyro,larmor_rad)
+        call sll_s_compute_gyroaverage_pre_compute_polar_spl(gyroaverage%gyro,f)
       case (4)
-        call pre_compute_gyroaverage_polar_spl_FFT(gyroaverage%gyro,larmor_rad)
-        call compute_gyroaverage_pre_compute_polar_spl_FFT(gyroaverage%gyro,f)
+        call sll_s_pre_compute_gyroaverage_polar_spl_fft(gyroaverage%gyro,larmor_rad)
+        call sll_s_compute_gyroaverage_pre_compute_polar_spl_fft(gyroaverage%gyro,f)
       case default
         print *,'#bad value of splines_case=', gyroaverage%splines_case
         print *,'#not implemented'

@@ -21,25 +21,25 @@ program test_qn_2d_polar_splines
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gyroaverage_utilities, only: &
-    compute_init_f_polar
+    sll_s_compute_init_f_polar
 
   use sll_m_qn_2d_base, only: &
-    sll_qn_2d_base
+    sll_c_qn_2d_base
 
   use sll_m_qn_2d_polar, only: &
-    compute_gamma0, &
-    test_solve_qn_polar_splines
+    sll_s_compute_gamma0, &
+    sll_s_test_solve_qn_polar_splines
 
   use sll_m_qn_2d_polar_splines_solver, only: &
-    new_qn_2d_polar_splines_solver
+    sll_f_new_qn_2d_polar_splines_solver
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_qn_2d_base), pointer :: qn 
+  class(sll_c_qn_2d_base), pointer :: qn 
   sll_real64 :: err,mu_max
   sll_real64 :: eta_min(2)
   sll_real64 :: eta_max(2)
@@ -58,7 +58,7 @@ program test_qn_2d_polar_splines
   eta_min(1) = 2._f64 ! 0.1_f64
   eta_max(1) = 18._f64 ! 0.9_f64
   eta_min(2) = 0._f64
-  eta_max(2) = 2._f64*sll_pi  
+  eta_max(2) = 2._f64*sll_p_pi  
   
   mode(1) = 1
   mode(2) = 1
@@ -79,7 +79,7 @@ program test_qn_2d_polar_splines
   N_points = 32
   
   val = 1._f64
-  call compute_gamma0(mode,eta_min,eta_max,val)
+  call sll_s_compute_gamma0(mode,eta_min,eta_max,val)
   print *,"gamma0 = ",val
   
   SLL_ALLOCATE(phi(1:Nc(1)+1,1:Nc(2)+1),ierr)
@@ -210,7 +210,7 @@ mu_weights= [ real(8) :: 8.22732055833e-33 , &
   print *,"mu_points =",mu_points
   print *,"mu_weights =",mu_weights
   
-  call compute_init_f_polar(phi,mode,Nc,eta_min,eta_max)
+  call sll_s_compute_init_f_polar(phi,mode,Nc,eta_min,eta_max)
   phi_init = phi
   phi_restr(1:Nc(1)+1,1:Nc(2)) = phi(1:Nc(1)+1,1:Nc(2))
 
@@ -219,7 +219,7 @@ mu_weights= [ real(8) :: 8.22732055833e-33 , &
     T_i(i) = 1.7_f64 +i*0.2_f64
   enddo
   
-  qn => new_qn_2d_polar_splines_solver( &
+  qn => sll_f_new_qn_2d_polar_splines_solver( &
     eta_min, &
     eta_max, &
     Nc, &
@@ -241,7 +241,7 @@ mu_weights= [ real(8) :: 8.22732055833e-33 , &
   
   
   
-  call test_solve_qn_polar_splines(Nc,eta_min,eta_max, &
+  call sll_s_test_solve_qn_polar_splines(Nc,eta_min,eta_max, &
     mu_points(0:N_mu-1),mu_weights(0:N_mu-1),N_mu,mode,lambda,T_i,phi_init,phi_qn)
 
   if(err==0)then    

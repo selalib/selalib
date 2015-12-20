@@ -27,37 +27,37 @@ module sll_m_gyroaverage_2d_polar
 !   dffti
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gyroaverage_utilities, only: &
-    compute_shape_circle
+    sll_s_compute_shape_circle
 
   implicit none
 
   public :: &
-    compute_gyroaverage_pade_high_order_polar, &
-    compute_gyroaverage_pade_polar, &
-    compute_gyroaverage_points_polar_hermite, &
-    compute_gyroaverage_points_polar_hermite_c1, &
-    compute_gyroaverage_points_polar_spl, &
-    compute_gyroaverage_points_polar_with_invar_hermite_c1, &
-    compute_gyroaverage_points_polar_with_invar_spl, &
-    compute_gyroaverage_pre_compute_polar_hermite_c1, &
-    compute_gyroaverage_pre_compute_polar_spl, &
-    compute_gyroaverage_pre_compute_polar_spl_fft, &
-    new_plan_gyroaverage_polar_hermite, &
-    new_plan_gyroaverage_polar_pade, &
-    new_plan_gyroaverage_polar_splines, &
-    penta, &
-    pre_compute_gyroaverage_polar_hermite_c1, &
-    pre_compute_gyroaverage_polar_spl, &
-    pre_compute_gyroaverage_polar_spl_fft, &
-    sll_plan_gyroaverage_polar
+    sll_s_compute_gyroaverage_pade_high_order_polar, &
+    sll_s_compute_gyroaverage_pade_polar, &
+    sll_s_compute_gyroaverage_points_polar_hermite, &
+    sll_s_compute_gyroaverage_points_polar_hermite_c1, &
+    sll_s_compute_gyroaverage_points_polar_spl, &
+    sll_s_compute_gyroaverage_points_polar_with_invar_hermite_c1, &
+    sll_s_compute_gyroaverage_points_polar_with_invar_spl, &
+    sll_s_compute_gyroaverage_pre_compute_polar_hermite_c1, &
+    sll_s_compute_gyroaverage_pre_compute_polar_spl, &
+    sll_s_compute_gyroaverage_pre_compute_polar_spl_fft, &
+    sll_f_new_plan_gyroaverage_polar_hermite, &
+    sll_f_new_plan_gyroaverage_polar_pade, &
+    sll_f_new_plan_gyroaverage_polar_splines, &
+    sll_s_penta, &
+    sll_s_pre_compute_gyroaverage_polar_hermite_c1, &
+    sll_s_pre_compute_gyroaverage_polar_spl, &
+    sll_s_pre_compute_gyroaverage_polar_spl_fft, &
+    sll_t_plan_gyroaverage_polar
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type sll_plan_gyroaverage_polar
+  type sll_t_plan_gyroaverage_polar
      
      sll_real64          :: eta_min(2)     !< r min et theta min
      sll_real64          :: eta_max(2)     !< r max et theta max
@@ -76,12 +76,12 @@ module sll_m_gyroaverage_2d_polar
      sll_real64, dimension(:), pointer      :: luper
      sll_real64, dimension(:,:,:), pointer  :: A_fft
 
-  end type sll_plan_gyroaverage_polar
+  end type sll_t_plan_gyroaverage_polar
 
 contains
 
 
-  function new_plan_gyroaverage_polar_hermite(eta_min,eta_max,Nc,N_points,interp_degree,deriv_size) result(this)
+  function sll_f_new_plan_gyroaverage_polar_hermite(eta_min,eta_max,Nc,N_points,interp_degree,deriv_size) result(this)
 
     implicit none
 
@@ -91,7 +91,7 @@ contains
     sll_int32, intent(in)  :: N_points  
     sll_int32, intent(in)  :: interp_degree(2)
     sll_int32, intent(in)  :: deriv_size
-    type(sll_plan_gyroaverage_polar), pointer :: this
+    type(sll_t_plan_gyroaverage_polar), pointer :: this
 
     sll_int32 :: err
 
@@ -99,7 +99,7 @@ contains
     SLL_ALLOCATE(this%deriv(deriv_size,Nc(1)+1,Nc(2)+1),err)
     SLL_ALLOCATE(this%points(3,N_points),err)
        
-    call compute_shape_circle(this%points,N_points)   
+    call sll_s_compute_shape_circle(this%points,N_points)   
        
     this%eta_min=eta_min
     this%eta_max=eta_max
@@ -107,11 +107,11 @@ contains
     this%N_points=N_points
     this%interp_degree=interp_degree
     
-  end function new_plan_gyroaverage_polar_hermite
+  end function sll_f_new_plan_gyroaverage_polar_hermite
   
   
   
-  function new_plan_gyroaverage_polar_splines(eta_min,eta_max,Nc,N_points) result(this)
+  function sll_f_new_plan_gyroaverage_polar_splines(eta_min,eta_max,Nc,N_points) result(this)
 
     implicit none
 
@@ -119,32 +119,32 @@ contains
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, intent(in)  :: N_points
-    type(sll_plan_gyroaverage_polar), pointer :: this
+    type(sll_t_plan_gyroaverage_polar), pointer :: this
 
     sll_int32 :: err
 
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%points(3,N_points),err)
     
-    call compute_shape_circle(this%points,N_points) 
+    call sll_s_compute_shape_circle(this%points,N_points) 
        
     this%eta_min=eta_min
     this%eta_max=eta_max
     this%Nc=Nc
     this%N_points=N_points
     
-  end function new_plan_gyroaverage_polar_splines
+  end function sll_f_new_plan_gyroaverage_polar_splines
 
   
   
-  function new_plan_gyroaverage_polar_pade(eta_min,eta_max,Nc) result(this)
+  function sll_f_new_plan_gyroaverage_polar_pade(eta_min,eta_max,Nc) result(this)
 
     implicit none
 
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
-    type(sll_plan_gyroaverage_polar), pointer :: this
+    type(sll_t_plan_gyroaverage_polar), pointer :: this
     sll_int32 :: err
      
     SLL_ALLOCATE(this,err) 
@@ -153,11 +153,11 @@ contains
     this%eta_max=eta_max
     this%Nc=Nc
 
-  end function new_plan_gyroaverage_polar_pade
+  end function sll_f_new_plan_gyroaverage_polar_pade
 
   
-  subroutine compute_gyroaverage_points_polar_hermite(gyro,f,rho)
-    type(sll_plan_gyroaverage_polar)        :: gyro
+  subroutine sll_s_compute_gyroaverage_points_polar_hermite(gyro,f,rho)
+    type(sll_t_plan_gyroaverage_polar)        :: gyro
     sll_real64,dimension(:,:),intent(inout) :: f
     sll_real64,intent(in)                   :: rho
     sll_int32                               :: i,j,k,ii(2)
@@ -192,12 +192,12 @@ contains
     f(1,1:gyro%Nc(2)+1)=0._f64
     f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
     
-  end subroutine compute_gyroaverage_points_polar_hermite
+  end subroutine sll_s_compute_gyroaverage_points_polar_hermite
   
   
   
-  subroutine compute_gyroaverage_points_polar_hermite_c1(gyro,f,rho)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+  subroutine sll_s_compute_gyroaverage_points_polar_hermite_c1(gyro,f,rho)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,dimension(:,:),intent(inout) :: f
     sll_real64,intent(in)::rho
     sll_int32 ::i,j,k,ii(2)
@@ -220,7 +220,7 @@ contains
           x(2) = eta(1)*sin(eta(2))+rho*gyro%points(2,k)
           eta_star(1)=sqrt(x(1)**2+x(2)**2)
           call localize_nat(ii(1),eta_star(1),gyro%eta_min(1),gyro%eta_max(1),gyro%Nc(1))
-          eta_star(2)=modulo(atan2(x(2),x(1)),2._f64*sll_pi)
+          eta_star(2)=modulo(atan2(x(2),x(1)),2._f64*sll_p_pi)
           !eta_star(2)=modulo(atan2(x(2),x(1))+real(j-1,f64)*delta_eta(2),2._f64*M_PI) &
           ! to uncomment for compatibility with precompute
           call localize_per(ii(2),eta_star(2),gyro%eta_min(2),gyro%eta_max(2),gyro%Nc(2))
@@ -238,13 +238,13 @@ contains
   f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
   
   
-end subroutine compute_gyroaverage_points_polar_hermite_c1
+end subroutine sll_s_compute_gyroaverage_points_polar_hermite_c1
   
 
   
   
-subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
-  type(sll_plan_gyroaverage_polar)  :: gyro
+subroutine sll_s_compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
+  type(sll_t_plan_gyroaverage_polar)  :: gyro
   sll_real64,dimension(:,:),intent(inout) :: f
   sll_real64,intent(in)::rho
   sll_int32 ::i,j,k,ii(2)
@@ -270,7 +270,7 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
          call localize_nat(ii(1),eta_star(1),gyro%eta_min(1),gyro%eta_max(1),gyro%Nc(1))
          angle=atan2(x(2),x(1))
          do j=0,gyro%Nc(2)-1
-            eta_star(2)=modulo(angle+real(j,f64)*delta_eta(2),2._f64*sll_pi)
+            eta_star(2)=modulo(angle+real(j,f64)*delta_eta(2),2._f64*sll_p_pi)
             call localize_per(ii(2),eta_star(2),gyro%eta_min(2),gyro%eta_max(2),gyro%Nc(2))
             call interpolate_hermite_c1(gyro%deriv,ii,eta_star,fval,gyro%Nc)
             sum_fval(i,j)=sum_fval(i,j)+gyro%points(3,k)*fval
@@ -287,14 +287,14 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
    
    SLL_DEALLOCATE_ARRAY(sum_fval,error)
    
- end subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1
+ end subroutine sll_s_compute_gyroaverage_points_polar_with_invar_hermite_c1
  
  
  
   
  
- subroutine pre_compute_gyroaverage_polar_hermite_c1(gyro,rho)
-   type(sll_plan_gyroaverage_polar)  :: gyro
+ subroutine sll_s_pre_compute_gyroaverage_polar_hermite_c1(gyro,rho)
+   type(sll_t_plan_gyroaverage_polar)  :: gyro
    sll_real64,intent(in)::rho
    sll_int32,dimension(:,:),allocatable :: buf
    sll_int32 ::i,j,k,ell_1,ell_2,ii(2),s,nb,ind(2)
@@ -387,7 +387,7 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     
     print *,'#min/max=',minval(gyro%pre_compute_coeff(1:4,:)),maxval(gyro%pre_compute_coeff(1:4,:))
     SLL_DEALLOCATE_ARRAY(buf,error)
-  end subroutine pre_compute_gyroaverage_polar_hermite_c1
+  end subroutine sll_s_pre_compute_gyroaverage_polar_hermite_c1
 
   
 
@@ -491,8 +491,8 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     
   end subroutine assemble_csr_from_pre_compute   
   
-  subroutine compute_gyroaverage_pre_compute_polar_hermite_c1(gyro,f)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+  subroutine sll_s_compute_gyroaverage_pre_compute_polar_hermite_c1(gyro,f)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,dimension(:,:),intent(inout) :: f
     sll_int32 ::i,j,k,ell,ii(2),s
     sll_real64::fval,delta_eta(2)
@@ -534,13 +534,13 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     f(1,1:gyro%Nc(2)+1)=0._f64
     f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
     
-  end subroutine compute_gyroaverage_pre_compute_polar_hermite_c1
+  end subroutine sll_s_compute_gyroaverage_pre_compute_polar_hermite_c1
   
   
   
   
-  subroutine compute_gyroaverage_points_polar_spl(gyro,f,rho)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+  subroutine sll_s_compute_gyroaverage_points_polar_spl(gyro,f,rho)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,dimension(:,:),intent(inout) :: f
     sll_real64,dimension(:,:),allocatable,target::fbords
     sll_real64,dimension(:,:),pointer::pointer_f_bords
@@ -594,7 +594,7 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
              x(1) = eta(1)*cos(eta(2))+rho*gyro%points(1,k)
              x(2) = eta(1)*sin(eta(2))+rho*gyro%points(2,k)
              xx(1)=sqrt(x(1)**2+x(2)**2)
-             xx(2)=modulo(atan2(x(2),x(1)),2._f64*sll_pi)
+             xx(2)=modulo(atan2(x(2),x(1)),2._f64*sll_p_pi)
              !xx(2)=modulo(atan2(x(2),x(1))+real(j-1,f64)*delta_eta(2),2._f64*M_PI) & 
              ! to uncomment for compatibility with precompute
              call splnatper2d(pointer_f_bords,xx(1),gyro%eta_min(1),gyro%eta_max(1),&
@@ -619,12 +619,12 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     SLL_DEALLOCATE_ARRAY(fbords,error)
     SLL_DEALLOCATE_ARRAY(buf,error) 
     
-  end subroutine compute_gyroaverage_points_polar_spl
+  end subroutine sll_s_compute_gyroaverage_points_polar_spl
   
   
   
-  subroutine compute_gyroaverage_points_polar_with_invar_spl(gyro,f,rho)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+  subroutine sll_s_compute_gyroaverage_points_polar_with_invar_spl(gyro,f,rho)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,dimension(:,:),intent(inout) :: f
     sll_real64,intent(in)::rho
     sll_int32 ::i,j,k
@@ -678,7 +678,7 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
          enddo
          !call splcoefper1d(buf2,gyro%luper,gyro%N(2))
          do j=0,gyro%Nc(2)-1
-            angle=modulo(xx(2)+real(j,f64)*delta_eta(2),2._f64*sll_pi)
+            angle=modulo(xx(2)+real(j,f64)*delta_eta(2),2._f64*sll_p_pi)
             call splper1d(buf2,angle,gyro%eta_min(2),gyro%eta_max(2),fval,gyro%Nc(2))
             sum_fval(i,j)=sum_fval(i,j)+gyro%points(3,k)*fval
          enddo
@@ -698,11 +698,11 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
    SLL_DEALLOCATE_ARRAY(buf2,error)
    SLL_DEALLOCATE_ARRAY(sum_fval,error)
 
- end subroutine compute_gyroaverage_points_polar_with_invar_spl
+ end subroutine sll_s_compute_gyroaverage_points_polar_with_invar_spl
  
  
- subroutine pre_compute_gyroaverage_polar_spl(gyro,rho)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+ subroutine sll_s_pre_compute_gyroaverage_polar_spl(gyro,rho)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,intent(in)::rho
     sll_int32,dimension(:,:),allocatable :: buf
     sll_int32 ::i,j,k,ell_1,ell_2,ii(2),s,nb,ind(2)
@@ -786,12 +786,12 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     
     print *,'#min/max=',minval(gyro%pre_compute_coeff_spl(:)),maxval(gyro%pre_compute_coeff_spl(:))
     SLL_DEALLOCATE_ARRAY(buf,error)
-  end subroutine pre_compute_gyroaverage_polar_spl
+  end subroutine sll_s_pre_compute_gyroaverage_polar_spl
   
 
   
-  subroutine compute_gyroaverage_pre_compute_polar_spl(gyro,f)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+  subroutine sll_s_compute_gyroaverage_pre_compute_polar_spl(gyro,f)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,dimension(:,:),intent(inout) :: f
     sll_real64,dimension(:,:),allocatable,target::fbords
     sll_real64,dimension(:,:),pointer::pointer_f_bords
@@ -864,11 +864,11 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     SLL_DEALLOCATE_ARRAY(buf,error)
     SLL_DEALLOCATE_ARRAY(tmp_f,error)
     
-  end subroutine compute_gyroaverage_pre_compute_polar_spl
+  end subroutine sll_s_compute_gyroaverage_pre_compute_polar_spl
 
   
-  subroutine pre_compute_gyroaverage_polar_spl_FFT(gyro,rho)
-    type(sll_plan_gyroaverage_polar)  :: gyro
+  subroutine sll_s_pre_compute_gyroaverage_polar_spl_fft(gyro,rho)
+    type(sll_t_plan_gyroaverage_polar)  :: gyro
     sll_real64,intent(in)::rho
     sll_int32,dimension(:,:),allocatable :: buf
     sll_real64,dimension(:),allocatable::buf_fft
@@ -956,11 +956,11 @@ subroutine compute_gyroaverage_points_polar_with_invar_hermite_c1(gyro,f,rho)
     SLL_DEALLOCATE_ARRAY(buf,error)
     SLL_DEALLOCATE_ARRAY(buf_fft,error)
     
-  end subroutine pre_compute_gyroaverage_polar_spl_FFT
+  end subroutine sll_s_pre_compute_gyroaverage_polar_spl_fft
 
 
-subroutine compute_gyroaverage_pre_compute_polar_spl_FFT(gyro,f)
-  type(sll_plan_gyroaverage_polar)  :: gyro
+subroutine sll_s_compute_gyroaverage_pre_compute_polar_spl_fft(gyro,f)
+  type(sll_t_plan_gyroaverage_polar)  :: gyro
   sll_real64,dimension(:,:),intent(inout) :: f
   sll_real64,dimension(:,:),allocatable,target::fbords
   sll_real64,dimension(:,:),pointer::pointer_f_bords
@@ -1046,11 +1046,11 @@ subroutine compute_gyroaverage_pre_compute_polar_spl_FFT(gyro,f)
   SLL_DEALLOCATE_ARRAY(buf_fft,error)
   SLL_DEALLOCATE_ARRAY(tmp_f,error)
     
-end subroutine compute_gyroaverage_pre_compute_polar_spl_FFT
+end subroutine sll_s_compute_gyroaverage_pre_compute_polar_spl_fft
 
 
-subroutine compute_gyroaverage_pade_polar(gyro,f,rho)
-  type(sll_plan_gyroaverage_polar)  :: gyro
+subroutine sll_s_compute_gyroaverage_pade_polar(gyro,f,rho)
+  type(sll_t_plan_gyroaverage_polar)  :: gyro
   sll_real64,dimension(:,:),intent(inout) :: f
   sll_real64,dimension(:,:),allocatable :: fcomp
   sll_real64,dimension(:),allocatable :: buf,diagm1,diag,diagp1
@@ -1113,12 +1113,12 @@ subroutine compute_gyroaverage_pade_polar(gyro,f,rho)
   !*** duplicate periodic value ***
   f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
   
-end subroutine compute_gyroaverage_pade_polar
+end subroutine sll_s_compute_gyroaverage_pade_polar
 
 
 
-subroutine compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
-  type(sll_plan_gyroaverage_polar)  :: gyro
+subroutine sll_s_compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
+  type(sll_t_plan_gyroaverage_polar)  :: gyro
   sll_real64,dimension(:,:),intent(inout) :: f
   sll_real64,dimension(:,:),allocatable :: fcomp
   sll_real64,dimension(:),allocatable :: buf
@@ -1145,7 +1145,7 @@ subroutine compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
   else
       print *,'#bad value of pade_order=', order
       print *,'#not implemented'
-      print *,'#in compute_gyroaverage_pade_high_order_polar'
+      print *,'#in sll_s_compute_gyroaverage_pade_high_order_polar'
       stop  
   endif
   
@@ -1262,8 +1262,8 @@ subroutine compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
         fcomp(i,k)=diagm1_right(i)*fbuf(i-1)+diag_right(i)*fbuf(i)+diagp1_right(i)*fbuf(i+1)
      enddo
      
-     !*** Solve penta ***
-     call penta(gyro%Nc(1)+1,diagm2_left,diagm1_left,diag_left,diagp1_left,diagp2_left,fcomp(1:gyro%Nc(1)+1,k),f(1:gyro%Nc(1)+1,k))
+     !*** Solve sll_s_penta ***
+     call sll_s_penta(gyro%Nc(1)+1,diagm2_left,diagm1_left,diag_left,diagp1_left,diagp2_left,fcomp(1:gyro%Nc(1)+1,k),f(1:gyro%Nc(1)+1,k))
   enddo
   
   !*** Perform FFT 1D inverse ***
@@ -1274,7 +1274,7 @@ subroutine compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
   !*** duplicate periodic value ***
   f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
   
-end subroutine compute_gyroaverage_pade_high_order_polar
+end subroutine sll_s_compute_gyroaverage_pade_high_order_polar
 
 
 
@@ -2105,7 +2105,7 @@ subroutine solve_tridiag(a,b,c,v,x,n)
 end subroutine solve_tridiag
 
 
-      subroutine penta(n,e,a,b,c,f,d,x)
+      subroutine sll_s_penta(n,e,a,b,c,f,d,x)
 !************************** P E N T A ***************************
 !                                                               *
 !     Solution of a linear system of algebraic equations with   *
@@ -2117,9 +2117,9 @@ end subroutine solve_tridiag
 !                                                               *
 !                       === Use ===                             *
 !                                                               *
-!                  call penta(n,a,b,c,d,x)                      *
+!                  call sll_s_penta(n,a,b,c,d,x)                      *
 !                            or                                 *
-!                  call penta(n,a,b,c,d,d)                      *
+!                  call sll_s_penta(n,a,b,c,d,d)                      *
 !                                                               *
 !      In the last case, vector d contains the solution.        *
 !                                                               *
@@ -2167,37 +2167,37 @@ end subroutine solve_tridiag
          x(i) = (d(i) - f(i)*x(i+2) - c(i)*x(i+1))/b(i)
       end do
       return
-      end subroutine penta
+      end subroutine sll_s_penta
 
 
 
-!subroutine compute_shape_circle(points,N_points)
+!subroutine sll_s_compute_shape_circle(points,N_points)
 !  sll_int32,intent(in) :: N_points
 !  sll_real64,dimension(:,:) ::points
 !  sll_int32 :: i
 !  sll_real64 :: x
 !  do i=1,N_points
-!     x = 2._f64*sll_pi*real(i,f64)/(real(N_points,f64))
+!     x = 2._f64*sll_p_pi*real(i,f64)/(real(N_points,f64))
 !     points(1,i) = cos(x)
 !     points(2,i) = sin(x)
 !     points(3,i) = 1.0_f64/real(N_points,f64)
 !  enddo
 !   
-!end subroutine compute_shape_circle
+!end subroutine sll_s_compute_shape_circle
 !
 
-!  subroutine compute_init_f_polar(f,mode,N,eta_min,eta_max)
+!  subroutine sll_s_compute_init_f_polar(f,mode,N,eta_min,eta_max)
 !    sll_real64,dimension(:,:),intent(out)::f
 !    sll_int32,intent(in)::N(2),mode(2)
 !    sll_real64,intent(in)::eta_min(2),eta_max(2)
 !    sll_int32::i,j
 !    sll_real64::eta(2),delta_eta(2),kmode,val
 !
-!    call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),val)
+!    call sll_s_zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),val)
 !    delta_eta(1)=(eta_max(1)-eta_min(1))/real(N(1),f64)
 !    delta_eta(2)=(eta_max(2)-eta_min(2))/real(N(2),f64)
 !    
-!    kmode=real(mode(2),f64)*(2._f64*sll_pi)/(eta_max(2)-eta_min(2))
+!    kmode=real(mode(2),f64)*(2._f64*sll_p_pi)/(eta_max(2)-eta_min(2))
 !
 !    do j=1,N(2)+1
 !      eta(2)=eta_min(2)+real(j-1,f64)*delta_eta(2)
@@ -2209,10 +2209,10 @@ end subroutine solve_tridiag
 !      enddo
 !    enddo   
 !    
-!  end subroutine compute_init_f_polar
+!  end subroutine sll_s_compute_init_f_polar
 !  
 !  
-!   subroutine zero_bessel_dir_dir(mode,eta_min,eta_max,val)
+!   subroutine sll_s_zero_bessel_dir_dir(mode,eta_min,eta_max,val)
 !    sll_real64,intent(in)::eta_min,eta_max
 !    sll_int32,intent(in)::mode(2)
 !    sll_real64,intent(out)::val
@@ -2249,7 +2249,7 @@ end subroutine solve_tridiag
 !    close(27) 
 !    val = tmp
 !      
-!  end subroutine zero_bessel_dir_dir
+!  end subroutine sll_s_zero_bessel_dir_dir
 !
 
 

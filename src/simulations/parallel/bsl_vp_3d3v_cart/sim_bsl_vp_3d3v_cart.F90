@@ -9,22 +9,22 @@ program sim_bsl_vp_3d3v_cart
     output_unit
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_halt_collective
+    sll_s_boot_collective, &
+    sll_s_halt_collective
 
   use sll_m_sim_bsl_vp_3d3v_cart, only: &
-    delete_vp6d_par_cart, &
-    sll_simulation_6d_vlasov_poisson_cart
+    sll_s_delete_vp6d_par_cart, &
+    sll_t_simulation_6d_vlasov_poisson_cart
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_6d_vlasov_poisson_cart) :: simulation
+  type(sll_t_simulation_6d_vlasov_poisson_cart) :: simulation
 
   print *, 'Booting parallel environment for 6D simulation...'
-  call sll_boot_collective() ! Wrap this up in something else
+  call sll_s_boot_collective() ! Wrap this up in something else
 
   print *, 'Proceed to run simulation.'
   flush( output_unit )
@@ -35,10 +35,10 @@ program sim_bsl_vp_3d3v_cart
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
   call simulation%run( )
-  call delete_vp6d_par_cart(simulation)
+  call sll_s_delete_vp6d_par_cart(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 end program sim_bsl_vp_3d3v_cart
 

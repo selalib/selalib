@@ -15,29 +15,29 @@ module sll_m_periodic_interpolator_1d
     sll_c_interpolator_1d
 
   use sll_m_periodic_interp, only: &
-    delete, &
-    initialize_periodic_interp, &
-    periodic_interp, &
-    periodic_interp_work
+    sll_o_delete, &
+    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp, &
+    sll_t_periodic_interp_work
 
   implicit none
 
   public :: &
-    sll_delete, &
-    sll_periodic_interpolator_1d
+    sll_o_delete, &
+    sll_t_periodic_interpolator_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Periodic interpolator
-  type, extends(sll_c_interpolator_1d) ::  sll_periodic_interpolator_1d
+  type, extends(sll_c_interpolator_1d) ::  sll_t_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
      sll_int32                            :: num_points !< size
      sll_real64                           :: cell_size  !< cell size
      sll_real64                           :: domain_size!< length of interval
-     type(periodic_interp_work), pointer  :: per_interp !< ???
+     type(sll_t_periodic_interp_work), pointer  :: per_interp !< ???
    contains
      !>PLEASE ADD DOCUMENTATION
      procedure, pass(interpolator) :: initialize => initialize_per1d_interpolator
@@ -60,12 +60,12 @@ module sll_m_periodic_interpolator_1d
      !>PLEASE ADD DOCUMENTATION
      procedure, pass :: get_coefficients => get_coefficients_per1d
 
-  end type sll_periodic_interpolator_1d
+  end type sll_t_periodic_interpolator_1d
 
   !> Deallocate the interpolator object
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_per1d
-  end interface sll_delete
+  end interface sll_o_delete
 
 
 contains  ! ****************************************************************
@@ -80,7 +80,7 @@ contains  ! ****************************************************************
     type, &
     order)  result(res)
 
-    type(sll_periodic_interpolator_1d),  pointer :: res
+    type(sll_t_periodic_interpolator_1d),  pointer :: res
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -102,7 +102,7 @@ contains  ! ****************************************************************
 
 
   subroutine per_interpolate1d(this, num_pts, data, coordinates, output_array)
-    class(sll_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: coordinates
@@ -123,7 +123,7 @@ contains  ! ****************************************************************
   end subroutine per_interpolate1d
 
   subroutine per_interpolate1d_disp(this, num_pts, data, alpha, output_array)
-    class(sll_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
@@ -131,7 +131,7 @@ contains  ! ****************************************************************
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
-    call periodic_interp(this%per_interp, output_array, data, &
+    call sll_s_periodic_interp(this%per_interp, output_array, data, &
          -alpha/this%cell_size)
     ! complete by periodicity
     output_array(num_pts) = output_array(1)
@@ -139,7 +139,7 @@ contains  ! ****************************************************************
 
 
   subroutine per_interpolate1d_disp_inplace(this, num_pts, data, alpha)
-    class(sll_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(num_pts), intent(inout)   :: data
@@ -149,7 +149,7 @@ contains  ! ****************************************************************
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
-    call periodic_interp(this%per_interp, tmp, data, &
+    call sll_s_periodic_interp(this%per_interp, tmp, data, &
          -alpha/this%cell_size)
     ! complete by periodicity
     data = tmp
@@ -166,7 +166,7 @@ contains  ! ****************************************************************
        eta_coords, &
        size_eta_coords)
 
-    class(sll_periodic_interpolator_1d), intent(inout) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
@@ -193,7 +193,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
+    class(sll_t_periodic_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array
@@ -216,7 +216,7 @@ contains  ! ****************************************************************
 !   output_array )
 
 
-!   class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
+!   class(sll_t_periodic_interpolator_1d),  intent(in) :: interpolator
 !   sll_int32,  intent(in)                 :: num_pts
 !   sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
 !   sll_real64, dimension(:), intent(out)  :: output_array
@@ -233,7 +233,7 @@ contains  ! ****************************************************************
 
 
   function interpolate_value_per1d( interpolator, eta1 ) result(val)
-    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_per1d: ', &
@@ -245,7 +245,7 @@ contains  ! ****************************************************************
   end function
 
   function interpolate_deriv1_per1d( interpolator, eta1 ) result(val)
-    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_deriv1_per1d: ', &
@@ -258,7 +258,7 @@ contains  ! ****************************************************************
 
 !PN DEFINED BUT NOT USED
 ! function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-!   class(sll_periodic_interpolator_1d), intent(in) :: interpolator
+!   class(sll_t_periodic_interpolator_1d), intent(in) :: interpolator
 !   sll_real64 :: val
 !   sll_real64, intent(in) :: eta1
 !    print*, 'interpolate_derivative_f95: ', &
@@ -282,7 +282,7 @@ contains  ! ****************************************************************
     type, &
     order)
 
-    class(sll_periodic_interpolator_1d),  intent(inout) :: interpolator
+    class(sll_t_periodic_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -299,18 +299,18 @@ contains  ! ****************************************************************
     interpolator%cell_size  = (xmax-xmin) / (num_points-1)
     interpolator%domain_size = xmax-xmin
 
-    call initialize_periodic_interp(interpolator%per_interp, num_points-1, &
+    call sll_s_initialize_periodic_interp(interpolator%per_interp, num_points-1, &
          type, order)
   end subroutine
 
 
   subroutine delete_per1d( obj )
-    class(sll_periodic_interpolator_1d) :: obj
-    call delete(obj%per_interp)
+    class(sll_t_periodic_interpolator_1d) :: obj
+    call sll_o_delete(obj%per_interp)
   end subroutine delete_per1d
 
   subroutine set_coefficients_per1d( interpolator, coeffs )
-    class(sll_periodic_interpolator_1d), intent(inout) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_per1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -323,7 +323,7 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_per1d(interpolator)
-    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64, dimension(:), pointer            :: get_coefficients_per1d
 
     print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &

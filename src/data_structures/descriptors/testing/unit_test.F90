@@ -1,22 +1,22 @@
 program test_descriptors
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   use sll_m_descriptors, only: &
-    sll_landau_diag, &
-    sll_vlasovpoisson_sim
+    sll_p_landau_diag, &
+    sll_t_vlasovpoisson_sim
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_vlasovpoisson_sim) :: testcase
+type(sll_t_vlasovpoisson_sim) :: testcase
 
 
-call testcase%parse('  SLL_LANDAU_DIAG       ')
+call testcase%parse('  sll_p_landau_diag       ')
  print *, testcase%name()
- print *, SLL_LANDAU_DIAG%name(), SLL_LANDAU_DIAG%id
+ print *, sll_p_landau_diag%name(), sll_p_landau_diag%id
 
 print *, "PASSED"
 
-print *, trim('  SLL_LANDAU_DIAG       ')
+print *, trim('  sll_p_landau_diag       ')
 
 
 end program
