@@ -73,6 +73,8 @@ module sll_m_fft
     sll_int32                        :: problem_rank !< Dimension of FFT
     sll_int32, dimension(:), pointer :: problem_shape !< Array of size \a problem_rank specifying the number of points along each dimension
 
+    sll_comp64, allocatable, private :: scratch(:) !< Scratch data to simulate r2r for not FFTW_F2003
+
   end type sll_t_fft_plan
 
   
@@ -343,7 +345,7 @@ contains
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = FFTW_MOD
-    plan%direction = 0
+    plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
     else
@@ -369,14 +371,24 @@ contains
     if(direction .eq. sll_p_fft_forward) then
 #ifdef FFTW_F2003
       plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_R2HC,flag_fftw)
-#else
-      call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,flag_fftw)
+#else      
+      ! This would be the call to actually create a r2r plan
+      !call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,flag_fftw)
+
+      allocate(plan%scratch(nx/2+1))
+      call dfftw_plan_dft_r2c_1d(plan%fftw,nx,array_in,plan%scratch,flag_fftw)
+      SLL_WARNING('sll_f_fft_new_plan_r2r_1d','R2HC not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
 #endif
     else if(direction .eq. sll_p_fft_backward) then
 #ifdef FFTW_F2003
       plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,flag_fftw)
 #else
-      call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_HC2R,flag_fftw)
+      ! This would be the code to actually create an r2r plan
+      !call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_HC2R,flag_fftw)
+
+      allocate(plan%scratch(nx/2+1))
+      call dfftw_plan_dft_c2r_1d(plan%fftw,nx,plan%scratch,array_out,flag_fftw)
+      SLL_WARNING('sll_f_fft_new_plan_r2r_1d','HC2R not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
 #endif
     endif
   end function
@@ -384,22 +396,39 @@ contains
   !> Compute fast Fourier transform in real to real mode.
   subroutine sll_s_fft_apply_plan_r2r_1d(plan,array_in,array_out)
 
-    type(sll_t_fft_plan), pointer, intent(in) :: plan !< FFT planner object
+    type(sll_t_fft_plan), pointer, intent(inout) :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
     sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
 
     sll_real64                              :: factor
+    sll_int32                               :: j
 
 #ifdef FFTW_F2003
     call fftw_execute_r2r(plan%fftw, array_in, array_out)
-#else
-    SLL_ERROR('sll_s_fft_apply_plan_r2r_1d','R2HC not supported without FFTW_F2003.')
-#endif
-
+    
     if( plan%normalized .EQV. .TRUE. ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
       array_out = factor*array_out
     endif
+
+#else
+
+    if (plan%direction == sll_p_fft_forward) then
+       call sll_s_fft_apply_plan_r2c_1d(plan, array_in, plan%scratch)
+       array_out(1) = real(plan%scratch(1), f64)
+       array_out(plan%problem_shape(1)/2+1) =  real(plan%scratch((plan%problem_shape(1)/2+1)),f64)
+       do j=1, plan%problem_shape(1)/2-1
+          call sll_s_fft_set_mode_c2r_1d(plan, array_out, plan%scratch(j+1), j)
+       end do
+    elseif (plan%direction == sll_p_fft_backward) then
+       do j=0, plan%problem_shape(1)/2
+          plan%scratch(j+1) = sll_f_fft_get_mode_r2c_1d(plan, array_out, j)
+       end do
+       call sll_s_fft_apply_plan_c2r_1d(plan, plan%scratch ,array_out)
+    end if
+
+#endif
+
   end subroutine
 
 
