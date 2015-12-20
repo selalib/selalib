@@ -23,21 +23,21 @@ module sll_m_particle_initializers_4d
 #include "particle_representation.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gaussian, only: &
-    gaussian_deviate_2d
+    sll_s_gaussian_deviate_2d
 
   use sll_m_particle_group_4d, only: &
-    sll_particle_group_4d
+    sll_t_particle_group_4d
 
   implicit none
 
   public :: &
-    sll_initial_particles_4d
+    sll_s_initial_particles_4d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -49,16 +49,16 @@ module sll_m_particle_initializers_4d
 
 contains
 
-  subroutine sll_initial_particles_4d( &
+  subroutine sll_s_initial_particles_4d( &
               thermal_speed, alpha, k, &
               m2d,                     &
               num_particles,           &
               p_group,                 &
               rand_seed, rank, worldsize )
     sll_real64, intent(in) :: thermal_speed, alpha, k
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
-    type(sll_particle_group_4d), pointer, intent(inout) :: p_group
+    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group
     sll_int32  :: j, ii
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy
@@ -119,9 +119,9 @@ contains
 !-!          nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
 !-!               (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
 !-!          call random_number(yo)
-!-!          vx = nu * cos(yo*2.0_f64*sll_pi)! cos(vandercorput(j,5,2)*2.0_f64*sll_pi)!! yo=suite_hamm(j,5)
-!-!          vy = nu * sin(yo*2.0_f64*sll_pi)! sin(vandercorput(j,5,2)*2.0_f64*sll_pi)!
-          call gaussian_deviate_2D(val)
+!-!          vx = nu * cos(yo*2.0_f64*sll_p_pi)! cos(vandercorput(j,5,2)*2.0_f64*sll_p_pi)!! yo=suite_hamm(j,5)
+!-!          vy = nu * sin(yo*2.0_f64*sll_p_pi)! sin(vandercorput(j,5,2)*2.0_f64*sll_p_pi)!
+          call sll_s_gaussian_deviate_2d(val)
           vx = val(1)*thermal_speed
           vy = val(2)*thermal_speed
           !if (j<=50000) write(90,*) x, y, vx, vy 
@@ -133,7 +133,7 @@ contains
 
     return
     SLL_ASSERT(present(rank))
-  end subroutine sll_initial_particles_4d
+  end subroutine sll_s_initial_particles_4d
 
   subroutine sll_initial_particles_4d_L2d( &
               thermal_speed, alpha, &
@@ -143,9 +143,9 @@ contains
               rand_seed, rank, worldsize )
     sll_real64, intent(in) :: thermal_speed, alpha
     sll_real64, intent(in) :: kx, ky
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
-    type(sll_particle_group_4d), pointer, intent(inout) :: p_group
+    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group
     sll_int32  :: j, ii, ll
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy,  z
@@ -199,7 +199,7 @@ contains
        call random_number(z)
        z = (1._f64+alpha)*z
        if (eval_landau2d(alpha, kx, x, ky, y) >= z ) then
-          call gaussian_deviate_2D(val)
+          call sll_s_gaussian_deviate_2d(val)
           vx = val(1)*thermal_speed
           vy = val(2)*thermal_speed
           !if (j<=50000) write(90,*) x, y, vx, vy 

@@ -9,51 +9,51 @@ program test_io_parallel
     output_unit
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_collective_barrier, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_s_collective_barrier, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_gnuplot_parallel, only: &
-    sll_gnuplot_curv_2d_parallel, &
-    sll_gnuplot_rect_2d_parallel
+    sll_s_gnuplot_curv_2d_parallel, &
+    sll_s_gnuplot_rect_2d_parallel
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close
+    sll_o_hdf5_file_close
 
   use sll_m_remapper, only: &
-    compute_local_sizes, &
-    get_layout_i_min, &
-    get_layout_j_min, &
-    get_layout_k_min, &
-    initialize_layout_with_distributed_array, &
-    layout_2d, &
-    layout_3d, &
-    local_to_global, &
-    new_layout_2d, &
-    new_layout_3d, &
-    sll_delete, &
-    sll_view_lims
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_i_min, &
+    sll_o_get_layout_j_min, &
+    sll_o_get_layout_k_min, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_t_layout_3d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_f_new_layout_3d, &
+    sll_o_delete, &
+    sll_o_view_lims
 
   use sll_m_utilities, only: &
-    is_power_of_two
+    sll_f_is_power_of_two
 
   use sll_m_xdmf_parallel, only: &
-    sll_xdmf_close, &
-    sll_xdmf_open, &
-    sll_xdmf_write_array
+    sll_o_xdmf_close, &
+    sll_o_xdmf_open, &
+    sll_o_xdmf_write_array
 
   use sll_m_xml_io, only: &
-    sll_xml_field, &
-    sll_xml_file_close, &
-    sll_xml_file_create, &
-    sll_xml_grid_geometry
+    sll_o_xml_field, &
+    sll_s_xml_file_close, &
+    sll_s_xml_file_create, &
+    sll_o_xml_grid_geometry
 
   use sll_mpi, only: &
     mpi_info_null, &
@@ -87,11 +87,11 @@ character(len=8), parameter :: zdset = "zdataset" !< z dataset name
 
 
 ! Boot parallel environment
-call sll_boot_collective(MPI_THREAD_SINGLE)
+call sll_s_boot_collective(MPI_THREAD_SINGLE)
 
-colsz  = int(sll_get_collective_size(sll_world_collective),i64)
-myrank = sll_get_collective_rank(sll_world_collective)
-comm   = sll_world_collective%comm
+colsz  = int(sll_f_get_collective_size(sll_v_world_collective),i64)
+myrank = sll_f_get_collective_rank(sll_v_world_collective)
+comm   = sll_v_world_collective%comm
 info   = MPI_INFO_NULL
 
 if( myrank .eq. 0) then
@@ -102,10 +102,10 @@ if( myrank .eq. 0) then
    flush( output_unit )
 end if
 
-if (.not. is_power_of_two(colsz)) then     
+if (.not. sll_f_is_power_of_two(colsz)) then     
    print *, 'This test needs to run in a number of processes which is ',&
         'a power of 2.'
-   call sll_halt_collective()
+   call sll_s_halt_collective()
    stop
 end if
 
@@ -121,7 +121,7 @@ if (myrank == 0) &
 
 print *, myrank, 'PASSED'
 
-call sll_halt_collective()
+call sll_s_halt_collective()
   
 contains
 
@@ -135,7 +135,7 @@ contains
   sll_int32                :: gi, gj
  
   sll_int32, dimension(2)  :: global_indices
-  type(layout_2D), pointer :: layout
+  type(sll_t_layout_2d), pointer :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
   sll_int32      :: xml_id
@@ -150,7 +150,7 @@ contains
 #endif
   character(len=4) :: prefix = "mesh"
   
-  layout => new_layout_2D( sll_world_collective )        
+  layout => sll_f_new_layout_2d( sll_v_world_collective )        
 
   call two_power_rand_factorization(colsz, npi, npj)
   
@@ -158,12 +158,12 @@ contains
      print *, '2d layout configuration: ', npi, npj
   end if
   
-  call initialize_layout_with_distributed_array( &
+  call sll_o_initialize_layout_with_distributed_array( &
        nx, ny, npi, npj, layout )
        
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   
-  call compute_local_sizes( layout, mx, my)        
+  call sll_o_compute_local_sizes( layout, mx, my)        
   
   SLL_ALLOCATE(xdata(mx,my),error)
   SLL_ALLOCATE(ydata(mx,my),error)
@@ -171,7 +171,7 @@ contains
   
   do j = 1, my
      do i = 1, mx
-        global_indices =  local_to_global( layout, (/i, j/) )
+        global_indices =  sll_o_local_to_global( layout, (/i, j/) )
         gi = global_indices(1)
         gj = global_indices(2)
         xdata(i,j) = real(myrank,f64) !float(gi-1)!/(nx-1)
@@ -183,26 +183,26 @@ contains
 #ifdef NOHDF5
 #define HSSIZE_T i32
 #endif
-  offset(1) =  int(get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
-  offset(2) =  int(get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(1) =  int(sll_o_get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(2) =  int(sll_o_get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
 
   !Gnuplot output
-  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
+  call sll_s_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
                                     mx, my, &
                                     zdata, "rect_mesh", 1, error)  
 
-  call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
+  call sll_s_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
 #ifndef NOHDF5
   !Begin high level version
 
-  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
-  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
-  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
-  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
-  call sll_xdmf_close(xml_id,error)
+  call sll_o_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
+  call sll_o_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
+  call sll_o_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
+  call sll_o_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_o_xdmf_close(xml_id,error)
 
   !End high level version
 
@@ -210,28 +210,28 @@ contains
 
   !Begin low level version
 
-  call sll_hdf5_file_create(xfile,comm,file_id, error)
-  call sll_hdf5_write_array(file_id,datadims,offset,xdata,xdset,error)
-  call sll_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create(xfile,comm,file_id, error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,xdata,xdset,error)
+  call sll_o_hdf5_file_close(file_id,error)
 
   
-  call sll_hdf5_file_create(yfile,comm,file_id,error)
-  call sll_hdf5_write_array(file_id,datadims,offset,ydata,ydset,error)
-  call sll_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create(yfile,comm,file_id,error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,ydata,ydset,error)
+  call sll_o_hdf5_file_close(file_id,error)
   
-  call sll_hdf5_file_create(zfile,comm,file_id,error)
-  call sll_hdf5_write_array(file_id,datadims,offset,zdata,zdset,error)
-  call sll_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create(zfile,comm,file_id,error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,zdata,zdset,error)
+  call sll_o_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
   
-     call sll_xml_file_create("layout2d.xmf",xml_id,error)
-     call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, &
+     call sll_s_xml_file_create("layout2d.xmf",xml_id,error)
+     call sll_o_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, &
                                 xdset, ydset, 'Uniform' )
-     call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-     call sll_xml_file_close(xml_id,error)
+     call sll_o_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
+     call sll_s_xml_file_close(xml_id,error)
      print *, 'Printing 2D layout: '
-     call sll_view_lims( layout )
+     call sll_o_view_lims( layout )
      print *, '--------------------'
 
   end if
@@ -240,7 +240,7 @@ contains
 
   !End low level version
 
-  call sll_delete( layout )
+  call sll_o_delete( layout )
   
  end subroutine plot_layout2d
 !>@internal [example]
@@ -263,7 +263,7 @@ contains
   sll_int32                                   :: npk
   sll_int32                                 :: gi, gj, gk
 
-  type(layout_3D), pointer                  :: layout
+  type(sll_t_layout_3d), pointer                  :: layout
 
   sll_int32, dimension(3)                   :: global_indices
 
@@ -284,16 +284,16 @@ contains
 
   real(8), dimension(:,:,:), allocatable :: xdata, ydata, zdata
 
-  layout  => new_layout_3D( sll_world_collective )        
+  layout  => sll_f_new_layout_3d( sll_v_world_collective )        
   call two_power_rand_factorization(colsz, npi, npj, npk)
 
   if( myrank .eq. 0 ) &
      print *, '3D layout configuration: ', npi, npj, npk
 
-  call initialize_layout_with_distributed_array( &
+  call sll_o_initialize_layout_with_distributed_array( &
                      ni, nj, nk, npi, npj, npk, layout)
      
-  call compute_local_sizes( layout,       &
+  call sll_o_compute_local_sizes( layout,       &
                             loc_sz_i_init, &
                             loc_sz_j_init, &
                             loc_sz_k_init )        
@@ -307,7 +307,7 @@ contains
   do k=1,loc_sz_k_init
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
-           global_indices =  local_to_global( layout, (/i, j, k/) )
+           global_indices =  sll_o_local_to_global( layout, (/i, j, k/) )
            gi = global_indices(1)
            gj = global_indices(2)
            gk = global_indices(3)
@@ -323,59 +323,59 @@ contains
 #define HSSIZE_T i32
 #endif
 
-  offset(1) = int(get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
-  offset(2) = int(get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
-  offset(3) = int(get_layout_k_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(1) = int(sll_o_get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(2) = int(sll_o_get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(3) = int(sll_o_get_layout_k_min( layout, myrank ) - 1, HSSIZE_T)
 
 #ifndef NOHDF5
 
   !Begin high level version
 
-  call sll_xdmf_open(myrank,"3d-data.xmf","mesh3d",ni,nj,nk,xml_id,error)
-  call sll_xdmf_write_array("mesh3d",datadims,offset,xdata,'x1',error)
-  call sll_xdmf_write_array("mesh3d",datadims,offset,ydata,'x2',error)
-  call sll_xdmf_write_array("mesh3d",datadims,offset,zdata,"x3",error,xml_id,"Node")
-  call sll_xdmf_close(xml_id,error)
+  call sll_o_xdmf_open(myrank,"3d-data.xmf","mesh3d",ni,nj,nk,xml_id,error)
+  call sll_o_xdmf_write_array("mesh3d",datadims,offset,xdata,'x1',error)
+  call sll_o_xdmf_write_array("mesh3d",datadims,offset,ydata,'x2',error)
+  call sll_o_xdmf_write_array("mesh3d",datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_o_xdmf_close(xml_id,error)
 
   !End high level version
 
-  call sll_hdf5_file_create('layout3d-x.h5',comm,file_id,error)
-  call sll_hdf5_write_array(file_id,datadims,offset,xdata,'x',error)
-  call sll_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create('layout3d-x.h5',comm,file_id,error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,xdata,'x',error)
+  call sll_o_hdf5_file_close(file_id, error)
 
-  call sll_hdf5_file_create('layout3d-y.h5',comm,file_id, error)
-  call sll_hdf5_write_array(file_id,datadims,offset,ydata,'y',error)
-  call sll_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create('layout3d-y.h5',comm,file_id, error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,ydata,'y',error)
+  call sll_o_hdf5_file_close(file_id, error)
 
-  call sll_hdf5_file_create('layout3d-z.h5',comm,file_id, error)
-  call sll_hdf5_write_array(file_id,datadims,offset,zdata,'z',error)
-  call sll_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create('layout3d-z.h5',comm,file_id, error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,zdata,'z',error)
+  call sll_o_hdf5_file_close(file_id, error)
 
-  call sll_hdf5_file_create('layout3d.h5',comm,file_id, error)
-  call sll_hdf5_write_array(file_id,datadims,offset,local_array,'array',error)
-  call sll_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create('layout3d.h5',comm,file_id, error)
+  call sll_o_hdf5_write_array(file_id,datadims,offset,local_array,'array',error)
+  call sll_o_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
-     call sll_xml_file_create("layout3d.xmf",xml_id,error)
-     call sll_xml_grid_geometry(xml_id, 'layout3d-x.h5', ni, &
+     call sll_s_xml_file_create("layout3d.xmf",xml_id,error)
+     call sll_o_xml_grid_geometry(xml_id, 'layout3d-x.h5', ni, &
                                         'layout3d-y.h5', nj, &
                                         'layout3d-z.h5', nk, &
                                         'x', 'y', 'z', &
                                         'Uniform' )
-     call sll_xml_field(xml_id,'values', "layout3d.h5:/array", &
+     call sll_o_xml_field(xml_id,'values', "layout3d.h5:/array", &
                         ni,nj,nk,'HDF','Node')
-     call sll_xml_file_close(xml_id,error)
+     call sll_s_xml_file_close(xml_id,error)
 
      print *, 'Printing 3D layout: '
-     call sll_view_lims( layout )
+     call sll_o_view_lims( layout )
      print *, '--------------------'
   end if
 
 #endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   
-  call sll_delete( layout )
+  call sll_o_delete( layout )
   SLL_DEALLOCATE_ARRAY(local_array, error)
 
   end subroutine plot_layout3d
@@ -386,9 +386,9 @@ contains
     integer, intent(out), optional :: n3
     integer   :: expo, expo1, expo2, expo3
     sll_real64                :: rand_real
-    if (.not.is_power_of_two(colsz)) then   
+    if (.not.sll_f_is_power_of_two(colsz)) then   
        print*, 'The number of processors must be a power of 2'
-       call sll_halt_collective()
+       call sll_s_halt_collective()
        stop
     endif 
     expo = int(log(real(n))/log(2.))  

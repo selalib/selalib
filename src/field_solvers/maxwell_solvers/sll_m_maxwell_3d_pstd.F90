@@ -76,7 +76,7 @@ module sll_m_maxwell_3d_pstd
     c_size_t
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
 #ifdef FFTW_F2003
   use sll_m_fftw3, only: &
@@ -97,22 +97,22 @@ module sll_m_maxwell_3d_pstd
   implicit none
 
   public :: &
-    sll_delete, &
-    sll_new, &
-    sll_solve
+    sll_o_delete, &
+    sll_o_new, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_new
+interface sll_o_new
  module procedure new_maxwell_3d_pstd
-end interface sll_new
+end interface sll_o_new
 
 !> Solve maxwell solver 3d cartesian periodic with PSTD scheme
-interface sll_solve
+interface sll_o_solve
  module procedure solve_maxwell_3d
-end interface sll_solve
+end interface sll_o_solve
 
 !> Solve Ampere equation 3d cartesian periodic with PSTD scheme
 interface sll_solve_ampere
@@ -125,9 +125,9 @@ interface sll_solve_faraday
 end interface sll_solve_faraday
 
 !> Delete maxwell solver 3d cartesian periodic with PSTD scheme
-interface sll_delete
+interface sll_o_delete
  module procedure free_maxwell_3d_pstd
-end interface sll_delete
+end interface sll_o_delete
 
 
 !> Maxwell solver object
@@ -229,9 +229,9 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
    dy = (ymax-ymin) / nc_y
    dz = (zmax-zmin) / nc_z
 
-   kx0 = 2._f64*sll_pi/(nc_x*dx)
-   ky0 = 2._f64*sll_pi/(nc_y*dy)
-   kz0 = 2._f64*sll_pi/(nc_z*dz)
+   kx0 = 2._f64*sll_p_pi/(nc_x*dx)
+   ky0 = 2._f64*sll_p_pi/(nc_y*dy)
+   kz0 = 2._f64*sll_p_pi/(nc_z*dz)
 
    do i=2,nc_x/2+1
       self%kx(i) = (i-1)*kx0

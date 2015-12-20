@@ -4,23 +4,23 @@ program sim_fsl_ad_2d0v_curv
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_periodic
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    compute_cubic_spline_2d, &
-    deposit_value_2d, &
-    interpolate_value_2d, &
-    new_cubic_spline_2d, &
-    sll_cubic_spline_2d
+    sll_s_compute_cubic_spline_2d, &
+    sll_s_deposit_value_2d, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_cubic_spline_2d, &
+    sll_t_cubic_spline_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
+  type(sll_t_cubic_spline_2d), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
   sll_int32  :: i,j,bc1_type,bc2_type,err,it
   sll_int32  :: i1,i2,i3
@@ -84,12 +84,12 @@ program sim_fsl_ad_2d0v_curv
   ! BC        : periodic-periodic
   if (mesh_case==1) then
     eta1_min = 0._f64
-    eta1_max = 2._f64*sll_pi
+    eta1_max = 2._f64*sll_p_pi
     eta2_min = 0._f64
-    eta2_max = 2._f64*sll_pi
+    eta2_max = 2._f64*sll_p_pi
 
-    bc1_type = SLL_PERIODIC
-    bc2_type = SLL_PERIODIC
+    bc1_type = sll_p_periodic
+    bc2_type = sll_p_periodic
   endif
   
   ! mesh type : polar or polar-like
@@ -99,10 +99,10 @@ program sim_fsl_ad_2d0v_curv
     eta1_min = 0.2_f64
     eta1_max = 0.8_f64
     eta2_min = 0._f64
-    eta2_max = 2._f64*sll_pi
+    eta2_max = 2._f64*sll_p_pi
 
-    bc1_type = SLL_HERMITE
-    bc2_type = SLL_PERIODIC
+    bc1_type = sll_p_hermite
+    bc2_type = sll_p_periodic
   endif
   
   ! mesh type : Collela
@@ -110,12 +110,12 @@ program sim_fsl_ad_2d0v_curv
   ! BC        : periodic-periodic
   if (mesh_case==4) then
     eta1_min = 0._f64
-    eta1_max = 2._f64*sll_pi
+    eta1_max = 2._f64*sll_p_pi
     eta2_min = 0._f64
-    eta2_max = 2._f64*sll_pi
+    eta2_max = 2._f64*sll_p_pi
     
-    bc1_type = SLL_PERIODIC
-    bc2_type = SLL_PERIODIC
+    bc1_type = sll_p_periodic
+    bc2_type = sll_p_periodic
     
     alpha_mesh = 1._f64/100._f64
   endif
@@ -186,21 +186,21 @@ program sim_fsl_ad_2d0v_curv
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation of the splines
-  spl_bsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
+  spl_bsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
-    0._f64, 2._f64*sll_pi, &
+    0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_bsl_nc => new_cubic_spline_2D(Neta1+1, Neta2+1, &
+  spl_bsl_nc => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
-    0._f64, 2._f64*sll_pi, &
+    0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_fsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
+  spl_fsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
-    0._f64, 2._f64*sll_pi, &
+    0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_fsl_nc => new_cubic_spline_2D(Neta1+1, Neta2+1, &
+  spl_fsl_nc => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
-    0._f64, 2._f64*sll_pi, &
+    0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
   
   ! ---- * Initializations * ----
@@ -250,24 +250,24 @@ program sim_fsl_ad_2d0v_curv
       
       ! Collela mesh
       if (mesh_case==4) then        
-        x1_min = eta1_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
-        x1_max = eta1_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
-        x2_min = eta2_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
-        x2_max = eta2_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
+        x1_min = eta1_min + alpha_mesh * sin(2*sll_p_pi*eta1_min) * sin(2*sll_p_pi*eta2_min)
+        x1_max = eta1_max + alpha_mesh * sin(2*sll_p_pi*eta1_max) * sin(2*sll_p_pi*eta2_max)
+        x2_min = eta2_min + alpha_mesh * sin(2*sll_p_pi*eta1_min) * sin(2*sll_p_pi*eta2_min)
+        x2_max = eta2_max + alpha_mesh * sin(2*sll_p_pi*eta1_max) * sin(2*sll_p_pi*eta2_max)
         
         x1c = 0.5_f64*(x1_min+x1_max)
         x2c = 0.5_f64*(x2_min+x2_max)
        
-        x1_array(i,j) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-        x2_array(i,j) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+        x1_array(i,j) = eta1 + alpha_mesh * sin(2*sll_p_pi*eta1) * sin(2*sll_p_pi*eta2)
+        x2_array(i,j) = eta2 + alpha_mesh * sin(2*sll_p_pi*eta1) * sin(2*sll_p_pi*eta2)
         
         eta1t = eta1 + real(i-1,f64)*delta_eta1/2._f64
         eta2t = eta2 + real(j-1,f64)*delta_eta2/2._f64
              
-        jac_array(i,j) = (1._f64 + alpha_mesh*2._f64*sll_pi*cos(2*sll_pi*eta1t)*sin(2*sll_pi*eta2t))* &
-            (1.0_f64+alpha_mesh*2._f64*sll_pi*sin(2*sll_pi*eta1t)*cos(2*sll_pi*eta2t)) - &
-            alpha_mesh*2._f64*sll_pi*sin(2*sll_pi*eta1t)*cos(2*sll_pi*eta2t)* &
-            alpha_mesh*2._f64*sll_pi*cos(2*sll_pi*eta1t)*sin(2*sll_pi*eta2t)
+        jac_array(i,j) = (1._f64 + alpha_mesh*2._f64*sll_p_pi*cos(2*sll_p_pi*eta1t)*sin(2*sll_p_pi*eta2t))* &
+            (1.0_f64+alpha_mesh*2._f64*sll_p_pi*sin(2*sll_p_pi*eta1t)*cos(2*sll_p_pi*eta2t)) - &
+            alpha_mesh*2._f64*sll_p_pi*sin(2*sll_p_pi*eta1t)*cos(2*sll_p_pi*eta2t)* &
+            alpha_mesh*2._f64*sll_p_pi*cos(2*sll_p_pi*eta1t)*sin(2*sll_p_pi*eta2t)
       endif
       
       ! test-function
@@ -348,10 +348,10 @@ program sim_fsl_ad_2d0v_curv
       fh_fsl_nc(i,Neta2+1) = fh_fsl_nc(i,1)
     enddo
       
-    call compute_cubic_spline_2D(fh_bsl,spl_bsl)
-    call compute_cubic_spline_2D(fh_bsl_nc,spl_bsl_nc)
-    call compute_cubic_spline_2D(fh_fsl,spl_fsl)
-    call compute_cubic_spline_2D(fh_fsl_nc,spl_fsl_nc)
+    call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
+    call sll_s_compute_cubic_spline_2d(fh_bsl_nc,spl_bsl_nc)
+    call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
+    call sll_s_compute_cubic_spline_2d(fh_fsl_nc,spl_fsl_nc)
     
     do i=1,Neta1+1
       do j=1,Neta2+1
@@ -382,8 +382,8 @@ program sim_fsl_ad_2d0v_curv
       
         ! Collela mesh
         if (mesh_case==4) then        
-          x1tot(i,j) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-          x2tot(i,j) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+          x1tot(i,j) = eta1 + alpha_mesh * sin(2*sll_p_pi*eta1) * sin(2*sll_p_pi*eta2)
+          x2tot(i,j) = eta2 + alpha_mesh * sin(2*sll_p_pi*eta1) * sin(2*sll_p_pi*eta2)
         endif
       
         ! --- Displacement ---
@@ -413,7 +413,7 @@ program sim_fsl_ad_2d0v_curv
           if (x2>=0) then
             eta2 = acos(x1/eta1)
           else
-            eta2 = 2._f64*sll_pi-acos(x1/eta1)
+            eta2 = 2._f64*sll_p_pi-acos(x1/eta1)
           endif
         endif
         if (mesh_case==3) then
@@ -421,7 +421,7 @@ program sim_fsl_ad_2d0v_curv
           if (x2>=0) then
             eta2 = acos(x1/(eta1*eta1))
           else
-            eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
+            eta2 = 2._f64*sll_p_pi-acos(x1/(eta1*eta1))
           endif
         endif
         if (mesh_case==4) then
@@ -431,19 +431,19 @@ program sim_fsl_ad_2d0v_curv
           it = 0
           do while ((errN.ge.1E-15).and.(it.le.10))
             it = it+1
-            x1t = eta1 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-            x2t = eta2 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-            eta1t = eta1 - (x1t - x1)/(1._f64 + 2*sll_pi*alpha_mesh*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) &
-                + 2*sll_pi*alpha_mesh*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))
-            eta2t = eta2 - (x2t - x2)/(1._f64 + 2*sll_pi*alpha_mesh*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) &
-                + 2*sll_pi* alpha_mesh*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))
+            x1t = eta1 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+            x2t = eta2 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+            eta1t = eta1 - (x1t - x1)/(1._f64 + 2*sll_p_pi*alpha_mesh*sin(2*sll_p_pi*eta1)*cos(2*sll_p_pi*eta2) &
+                + 2*sll_p_pi*alpha_mesh*cos(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2))
+            eta2t = eta2 - (x2t - x2)/(1._f64 + 2*sll_p_pi*alpha_mesh*sin(2*sll_p_pi*eta1)*cos(2*sll_p_pi*eta2) &
+                + 2*sll_p_pi* alpha_mesh*cos(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2))
             errN = max(abs(eta1-eta1t),abs(eta2-eta2t))
             eta1 = eta1t
             eta2 = eta2t
           end do
           ! checking Newton
-          x1t = eta1 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-          x2t = eta2 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+          x1t = eta1 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+          x2t = eta2 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
           if ((abs(x1-x1t)/max(x1,x1t)>1E-10).or.(abs(x2-x2t)/max(x2,x2t)>1E-10)) then
             print*,'problem with Newton solver in the analytic part with the translation - analytic solution', &
                 abs(x1-x1t)/max(x1,x1t), abs(x2-x2t)/max(x2,x2t), x1, x1t, x2, x2t
@@ -478,13 +478,13 @@ program sim_fsl_ad_2d0v_curv
         endif
                                 
         ! --- Corrections on the BC ---
-        if (bc1_type.eq.SLL_HERMITE) then
+        if (bc1_type.eq.sll_p_hermite) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.SLL_HERMITE) then
+        if (bc2_type.eq.sll_p_hermite) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==SLL_PERIODIC) then
+        if (bc1_type==sll_p_periodic) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -492,7 +492,7 @@ program sim_fsl_ad_2d0v_curv
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==SLL_PERIODIC) then
+        if (bc2_type==sll_p_periodic) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo
@@ -562,7 +562,7 @@ program sim_fsl_ad_2d0v_curv
           if (x2>=0) then
             eta2 = acos(x1/eta1)
           else
-            eta2 = 2._f64*sll_pi-acos(x1/eta1)
+            eta2 = 2._f64*sll_p_pi-acos(x1/eta1)
           endif
         endif
         if (mesh_case==3) then
@@ -570,7 +570,7 @@ program sim_fsl_ad_2d0v_curv
           if (x2>=0) then
             eta2 = acos(x1/(eta1*eta1))
           else
-            eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
+            eta2 = 2._f64*sll_p_pi-acos(x1/(eta1*eta1))
           endif
         endif
         if (mesh_case==4) then
@@ -580,19 +580,19 @@ program sim_fsl_ad_2d0v_curv
           it = 0
           do while ((errN.ge.1E-15).and.(it.le.10))
             it = it+1
-            x1t = eta1 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-            x2t = eta2 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-            eta1t = eta1 - (x1t - x1)/(1._f64 + 2*sll_pi*alpha_mesh*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) &
-                + 2*sll_pi*alpha_mesh*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))
-            eta2t = eta2 - (x2t - x2)/(1._f64 + 2*sll_pi*alpha_mesh*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) &
-                + 2*sll_pi* alpha_mesh*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))
+            x1t = eta1 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+            x2t = eta2 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+            eta1t = eta1 - (x1t - x1)/(1._f64 + 2*sll_p_pi*alpha_mesh*sin(2*sll_p_pi*eta1)*cos(2*sll_p_pi*eta2) &
+                + 2*sll_p_pi*alpha_mesh*cos(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2))
+            eta2t = eta2 - (x2t - x2)/(1._f64 + 2*sll_p_pi*alpha_mesh*sin(2*sll_p_pi*eta1)*cos(2*sll_p_pi*eta2) &
+                + 2*sll_p_pi* alpha_mesh*cos(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2))
             errN = max(abs(eta1-eta1t),abs(eta2-eta2t))
             eta1 = eta1t
             eta2 = eta2t
           end do
           ! checking Newton
-          x1t = eta1 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-          x2t = eta2 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+          x1t = eta1 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+          x2t = eta2 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
           if ((abs(x1-x1t)/max(x1,x1t)>1E-10).or.(abs(x2-x2t)/max(x2,x2t)>1E-10)) then
             print*,'problem with Newton solver in the analytic part with the translation - analytic solution', &
                 abs(x1-x1t)/max(x1,x1t), abs(x2-x2t)/max(x2,x2t), x1, x1t, x2, x2t
@@ -627,13 +627,13 @@ program sim_fsl_ad_2d0v_curv
         endif
                           
         ! --- Corrections on the BC ---
-        if (bc1_type.eq.SLL_HERMITE) then
+        if (bc1_type.eq.sll_p_hermite) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.SLL_HERMITE) then
+        if (bc2_type.eq.sll_p_hermite) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==SLL_PERIODIC) then
+        if (bc1_type==sll_p_periodic) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -641,7 +641,7 @@ program sim_fsl_ad_2d0v_curv
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==SLL_PERIODIC) then
+        if (bc2_type==sll_p_periodic) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo
@@ -651,8 +651,8 @@ program sim_fsl_ad_2d0v_curv
         endif
       
         ! --- Interpolation ---
-        fh_bsl(i,j)    = interpolate_value_2D(eta1,eta2,spl_bsl)
-        fh_bsl_nc(i,j) = interpolate_value_2D(eta1,eta2,spl_bsl_nc)/jac_array(i,j)
+        fh_bsl(i,j)    = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl)
+        fh_bsl_nc(i,j) = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl_nc)/jac_array(i,j)
         
         ! ------------ FSL part -----------------
         
@@ -688,7 +688,7 @@ program sim_fsl_ad_2d0v_curv
           if (x2>=0) then
             eta2 = acos(x1/eta1)
           else
-            eta2 = 2._f64*sll_pi-acos(x1/eta1)
+            eta2 = 2._f64*sll_p_pi-acos(x1/eta1)
           endif
         endif
         if (mesh_case==3) then
@@ -696,7 +696,7 @@ program sim_fsl_ad_2d0v_curv
           if (x2>=0) then
             eta2 = acos(x1/(eta1*eta1))
           else
-            eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
+            eta2 = 2._f64*sll_p_pi-acos(x1/(eta1*eta1))
           endif
         endif
         if (mesh_case==4) then
@@ -706,19 +706,19 @@ program sim_fsl_ad_2d0v_curv
           it = 0
           do while ((errN.ge.1E-15).and.(it.le.10))
             it = it+1
-            x1t = eta1 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-            x2t = eta2 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-            eta1t = eta1 - (x1t - x1)/(1._f64 + 2*sll_pi*alpha_mesh*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) &
-                + 2*sll_pi*alpha_mesh*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))
-            eta2t = eta2 - (x2t - x2)/(1._f64 + 2*sll_pi*alpha_mesh*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) &
-                + 2*sll_pi* alpha_mesh*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))
+            x1t = eta1 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+            x2t = eta2 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+            eta1t = eta1 - (x1t - x1)/(1._f64 + 2*sll_p_pi*alpha_mesh*sin(2*sll_p_pi*eta1)*cos(2*sll_p_pi*eta2) &
+                + 2*sll_p_pi*alpha_mesh*cos(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2))
+            eta2t = eta2 - (x2t - x2)/(1._f64 + 2*sll_p_pi*alpha_mesh*sin(2*sll_p_pi*eta1)*cos(2*sll_p_pi*eta2) &
+                + 2*sll_p_pi* alpha_mesh*cos(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2))
             errN = max(abs(eta1-eta1t),abs(eta2-eta2t))
             eta1 = eta1t
             eta2 = eta2t
           end do
           ! checking Newton
-          x1t = eta1 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-          x2t = eta2 + alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+          x1t = eta1 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
+          x2t = eta2 + alpha_mesh*sin(2*sll_p_pi*eta1)*sin(2*sll_p_pi*eta2)
           if ((abs(x1-x1t)/max(x1,x1t)>1E-10).or.(abs(x2-x2t)/max(x2,x2t)>1E-10)) then
             print*,'problem with Newton solver in the analytic part with the translation - analytic solution', &
                 abs(x1-x1t)/max(x1,x1t), abs(x2-x2t)/max(x2,x2t), x1, x1t, x2, x2t
@@ -753,13 +753,13 @@ program sim_fsl_ad_2d0v_curv
         endif
                         
         ! --- Corrections on the BC ---
-        if (bc1_type.eq.SLL_HERMITE) then
+        if (bc1_type.eq.sll_p_hermite) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.SLL_HERMITE) then
+        if (bc2_type.eq.sll_p_hermite) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==SLL_PERIODIC) then
+        if (bc1_type==sll_p_periodic) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -767,7 +767,7 @@ program sim_fsl_ad_2d0v_curv
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==SLL_PERIODIC) then
+        if (bc2_type==sll_p_periodic) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo
@@ -786,8 +786,8 @@ program sim_fsl_ad_2d0v_curv
     
     ! --- Deposition ---
     
-    call deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl)
-    call deposit_value_2D(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
+    call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,fh_fsl)
+    call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
     
     ! --- Some adding operations ---
     
@@ -883,8 +883,8 @@ program sim_fsl_ad_2d0v_curv
         endif
         ! Collela mesh
         if (mesh_case==4) then        
-          x1tot(i,j) = eta1tot(i,j) + alpha_mesh * sin(2*sll_pi*eta1tot(i,j)) * sin(2*sll_pi*eta2tot(i,j))
-          x2tot(i,j) = eta2tot(i,j) + alpha_mesh * sin(2*sll_pi*eta1tot(i,j)) * sin(2*sll_pi*eta2tot(i,j))
+          x1tot(i,j) = eta1tot(i,j) + alpha_mesh * sin(2*sll_p_pi*eta1tot(i,j)) * sin(2*sll_p_pi*eta2tot(i,j))
+          x2tot(i,j) = eta2tot(i,j) + alpha_mesh * sin(2*sll_p_pi*eta1tot(i,j)) * sin(2*sll_p_pi*eta2tot(i,j))
         endif
         write(950,*) eta1tot(i,j),eta2tot(i,j),x1tot(i,j),x2tot(i,j)
       end do

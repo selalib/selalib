@@ -12,83 +12,87 @@ program sim_bsl_vp_1d1v_cart_deltaf
 #include "sll_field_2d.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_periodic
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
-    identity_jac11, &
-    identity_jac12, &
-    identity_jac21, &
-    identity_jac22, &
-    identity_x1, &
-    identity_x2
+    sll_f_identity_jac11, &
+    sll_f_identity_jac12, &
+    sll_f_identity_jac21, &
+    sll_f_identity_jac22, &
+    sll_f_identity_x1, &
+    sll_f_identity_x2
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    new_coordinate_transformation_2d_analytic
+    sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_cubic_spline_interpolator_1d, &
-    sll_delete
+    sll_t_cubic_spline_interpolator_1d, &
+    sll_o_delete
 
   use sll_m_distribution_function, only: &
-    initialize_distribution_function_2d, &
-    sll_distribution_function_2d
+    sll_s_initialize_distribution_function_2d, &
+    sll_t_distribution_function_2d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_landau_2d_initializer, only: &
-    init_landau_2d
+    sll_t_init_landau_2d
 
   use sll_m_periodic_interp, only: &
-    trigo_fft_selalib
+    sll_p_trigo_fft_selalib
 
   use sll_m_periodic_interpolator_1d, only: &
-    sll_delete, &
-    sll_periodic_interpolator_1d
+    sll_o_delete, &
+    sll_t_periodic_interpolator_1d
 
   use sll_m_poisson_1d_periodic, only: &
-    initialize, &
-    poisson_1d_periodic, &
-    solve
+    sll_o_initialize, &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
 
   use sll_m_scalar_field_2d_old, only: &
-    write_scalar_field_2d
+    sll_s_write_scalar_field_2d
 
   use sll_m_scalar_field_initializers_base, only: &
-    node_centered_field, &
-    scalar_field_2d_initializer_base
+    sll_p_node_centered_field, &
+    sll_c_scalar_field_2d_initializer_base
 
   use sll_m_tsi_2d_initializer, only: &
-    init_tsi_2d
+    sll_t_init_tsi_2d
 
   use sll_m_utilities, only: &
-    pfenvelope
+    sll_s_pfenvelope
+
+#ifdef _OPENMP
+  use omp_lib
+#endif
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
-  type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
-  type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
+  type(sll_t_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
+  type(sll_t_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
+  type(sll_t_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
-  type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
-  class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
-  type(init_landau_2d), target :: init_landau
-  type(init_tsi_2d), target :: init_tsi
-  class(scalar_field_2d_initializer_base), pointer    :: p_init_f
-  type(sll_distribution_function_2d)   :: f
-  type(poisson_1d_periodic)  :: poisson_1d
+  type(sll_t_cartesian_mesh_2d), pointer :: mesh2d_cart
+  class(sll_c_coordinate_transformation_2d_base), pointer   :: mesh2d_base
+  type(sll_t_init_landau_2d), target :: init_landau
+  type(sll_t_init_tsi_2d), target :: init_tsi
+  class(sll_c_scalar_field_2d_initializer_base), pointer    :: p_init_f
+  type(sll_t_distribution_function_2d)   :: f
+  type(sll_t_poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
@@ -164,7 +168,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   endif
 
   ! define uniform cartesian mesh in x and v
-  xmax = nbox * 2 * sll_pi / kmode
+  xmax = nbox * 2 * sll_p_pi / kmode
   delta_x = (xmax - xmin) / Ncx
   delta_v = (vmax - vmin) / Ncv
   SLL_ALLOCATE(v_array(Ncv+1),ierr)
@@ -227,7 +231,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   end if
 
   ! Initialise logical cartesian mesh
-  mesh2d_cart => new_cartesian_mesh_2d( &
+  mesh2d_cart => sll_f_new_cartesian_mesh_2d( &
        Ncx,  &
        Ncv,  &
        xmin, &  
@@ -237,15 +241,15 @@ program sim_bsl_vp_1d1v_cart_deltaf
    )
   
   ! Define transformation object with identity transformation
-  mesh2d_base => new_coordinate_transformation_2d_analytic( &
+  mesh2d_base => sll_f_new_coordinate_transformation_2d_analytic( &
        "mesh2d_cart",  &
        mesh2d_cart,    &
-       identity_x1,    &
-       identity_x2,    &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       sll_f_identity_x1,    &
+       sll_f_identity_x2,    &
+       sll_f_identity_jac11, &
+       sll_f_identity_jac12, &
+       sll_f_identity_jac21, &
+       sll_f_identity_jac22, &
        (/ 0.0_f64 /) )
  
 
@@ -274,9 +278,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
   open(unit = adr_diag, file = 'adrdiag.dat') 
 
   ! initialization of sll_m_distribution_function
-  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, &
+  call init_landau%initialize(mesh2d_base, sll_p_node_centered_field, eps, kmode, &
        is_delta_f)
-  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, &
+  call init_tsi%initialize(mesh2d_base, sll_p_node_centered_field, eps, kmode, v0, &
        is_delta_f)
   if (case == "landau") then
      p_init_f => init_landau
@@ -288,7 +292,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
   !$omp& interp_per_x, interp_per_v)
-#ifdef __OPENMP
+#ifdef _OPENMP
   my_num = omp_get_thread_num()
   num_threads =  omp_get_num_threads()
 #endif
@@ -309,24 +313,24 @@ program sim_bsl_vp_1d1v_cart_deltaf
      jendv = Ncv+1
   end if
 
-  ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
+  ! sll_o_initialize interpolators
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite )
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_spline, 8)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_spline, 8)
 
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_trigo, 8)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_trigo, 8)
 
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_trigo_fft_selalib, 8)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_trigo_fft_selalib, 8)
 
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
 
 
   !call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
-  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
+  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite)
   !interp_x => interp_spline_x
   !interp_v => interp_spline_v
 
@@ -335,32 +339,32 @@ program sim_bsl_vp_1d1v_cart_deltaf
   !$omp barrier
   !$omp single
   fname = 'dist_func'
-  call initialize_distribution_function_2d( &
+  call sll_s_initialize_distribution_function_2d( &
        f, &
        1.0_f64, &
        1.0_f64, &
        fname, &
        mesh2d_base, &
-       NODE_CENTERED_FIELD, &
+       sll_p_node_centered_field, &
        interp_x, &
        interp_v, &
        p_init_f )
   ! write mesh and initial distribution function
-  call write_scalar_field_2d(f) 
+  call sll_s_write_scalar_field_2d(f) 
 
-  ! initialize Poisson
-  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
+  ! sll_o_initialize Poisson
+  call sll_o_initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
   else
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
   endif
-  call solve(poisson_1d, efield, rho)
+  call sll_o_solve(poisson_1d, efield, rho)
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
   istep = 0
   if (driven) then
-     call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
+     call sll_s_pfenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
           t0, turn_drive_off)
      do i = 1, Ncx + 1
         e_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
@@ -408,9 +412,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
      else
         rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
      endif
-     call solve(poisson_1d, efield, rho)
+     call sll_o_solve(poisson_1d, efield, rho)
      if (driven) then
-        call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
+        call sll_s_pfenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
         do i = 1, Ncx + 1
            E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x &
@@ -463,15 +467,15 @@ program sim_bsl_vp_1d1v_cart_deltaf
         write(eapp_diag,*) e_app
         write(adr_diag,*) istep*dt, adr
         print*, 'iteration: ', istep
-        call write_scalar_field_2d(f) 
+        call sll_s_write_scalar_field_2d(f) 
      end if
      !$omp end single
   end do
 
-  call sll_delete(interp_spline_x)
-  call sll_delete(interp_spline_v)
-  call sll_delete(interp_per_x)
-  call sll_delete(interp_per_v)
+  call sll_o_delete(interp_spline_x)
+  call sll_o_delete(interp_spline_v)
+  call sll_o_delete(interp_per_x)
+  call sll_o_delete(interp_per_v)
   !$omp end parallel
   close(th_diag)
   close(ex_diag)
@@ -482,7 +486,7 @@ contains
     sll_real64, intent(in) :: v
     sll_real64 :: f_equilibrium
 
-    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+    f_equilibrium = 1.0_f64/sqrt(2*sll_p_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
 

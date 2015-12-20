@@ -202,7 +202,7 @@ contains
     ! the whole process is supposed to be done only once anyway.
     layout => init_obj%data_layout
     col    => get_layout_collective(layout)
-    myrank =  sll_get_collective_rank( col )
+    myrank =  sll_f_get_collective_rank( col )
     i_min = get_layout_i_min( layout, myrank )
     i_max = get_layout_i_max( layout, myrank )
     j_min = get_layout_j_min( layout, myrank )
@@ -225,7 +225,7 @@ contains
     vy_min = init_obj%mesh_4d%x4_min
     vy_max = init_obj%mesh_4d%x4_max
     v_thermal = init_obj%v_thermal
-    factor    = sll_pi/(8.0_f64*v_thermal**2)
+    factor    = sll_p_pi/(8.0_f64*v_thermal**2)
     factor2   = 0.5_f64/v_thermal**2
 
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
@@ -241,14 +241,14 @@ contains
           do j=1, num_pts2
              do i=1, num_pts1
                 ! convert to global indices
-                gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                 x  = gi(1)*delta1  ! danger: implicit xmin = 0
                 y  = gi(2)*delta2  ! danger: implicit ymin = 0
                 vx = vx_min + gi(3)*delta3
                 vy = vy_min + gi(4)*delta4
                 ! The following function could be defined outside and
                 ! maybe stored in the object as a function pointer.
-                data_out(i,j,k,l) = factor*sin(sll_pi*x)*sin(sll_pi*y)*&
+                data_out(i,j,k,l) = factor*sin(sll_p_pi*x)*sin(sll_p_pi*y)*&
                                            exp(-(vx**2+vy**2)*factor2)
              end do
           end do
@@ -302,7 +302,7 @@ contains
 !!$    ! the whole process is supposed to be done only once anyway.
 !!$    layout => init_obj%data_layout
 !!$    col    => get_layout_collective(layout)
-!!$    myrank =  sll_get_collective_rank( col )
+!!$    myrank =  sll_f_get_collective_rank( col )
 !!$    i_min = get_layout_i_min( layout, myrank )
 !!$    i_max = get_layout_i_max( layout, myrank )
 !!$    j_min = get_layout_j_min( layout, myrank )
@@ -325,7 +325,7 @@ contains
 !!$    vy_min = init_obj%mesh_4d%x4_min
 !!$    vy_max = init_obj%mesh_4d%x4_max
 !!$    v_thermal = init_obj%v_thermal
-!!$    factor    = sll_pi/(8.0_f64*v_thermal**2)
+!!$    factor    = sll_p_pi/(8.0_f64*v_thermal**2)
 !!$    factor2   = 0.5_f64/v_thermal**2
 !!$
 !!$    SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
@@ -341,14 +341,14 @@ contains
 !!$          do j=1, num_pts2
 !!$             do i=1, num_pts1
 !!$                ! convert to global indices
-!!$                gi(:) = local_to_global( layout, (/i,j,k,l/) )
+!!$                gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
 !!$                x  = gi(1)*delta1  ! danger: implicit xmin = 0
 !!$                y  = gi(2)*delta2  ! danger: implicit ymin = 0
 !!$                vx = vx_min + gi(3)*delta3
 !!$                vy = vy_min + gi(4)*delta4
 !!$                ! The following function could be defined outside and
 !!$                ! maybe stored in the object as a function pointer.
-!!$                data_out(i,j,k,l) = factor*sin(sll_pi*x)*sin(sll_pi*y)*&
+!!$                data_out(i,j,k,l) = factor*sin(sll_p_pi*x)*sin(sll_p_pi*y)*&
 !!$                                           exp(-(vx**2+vy**2)*factor2)
 !!$             end do
 !!$          end do

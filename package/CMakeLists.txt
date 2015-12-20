@@ -81,7 +81,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_polar_wrapper.F90
     ${SLL_DIR}/field_solvers/poisson_solvers/sll_m_poisson_2d_base.F90
     ${SLL_DIR}/interfaces/fft/sll_m_fft_utils.F90
-    ${SLL_DIR}/interfaces/mpi/sll_mpi.F90
     ${SLL_DIR}/quadrature/sll_m_rectangle_integration.F90
     ${SLL_DIR}/quadrature/sll_m_trapz_integration.F90
     ${SLL_DIR}/quadrature/sll_m_gauss_legendre_integration.F90
@@ -165,6 +164,10 @@ ENDIF(SUITESPARSE_ENABLED)
 
 IF(MPI_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+  ${SLL_DIR}/interfaces/mpi/sll_mpi.F90
+  ${SLL_DIR}/interfaces/mpi/external_intel.F90	
+  ${SLL_DIR}/interfaces/mpi/external_mpich.F90	
+  ${SLL_DIR}/interfaces/mpi/external_openmpi.F90
   ${SLL_DIR}/parallelization/collective/sll_m_collective.F90
   ${SLL_DIR}/parallelization/remap/sll_m_remapper.F90
   ${SLL_DIR}/parallelization/point_to_point_communications/sll_m_point_to_point_comms.F90

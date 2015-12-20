@@ -26,10 +26,10 @@ module sll_m_advection_2d_integer_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_characteristics_2d_base, only: &
-    sll_characteristics_2d_base
+    sll_c_characteristics_2d_base
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -37,19 +37,19 @@ module sll_m_advection_2d_integer_oblic
   implicit none
 
   public :: &
-    integer_oblic_2d_advector, &
-    integer_oblic_advect_2d, &
-    new_integer_oblic_2d_advector
+    sll_t_integer_oblic_2d_advector, &
+    sll_s_integer_oblic_advect_2d, &
+    sll_f_new_integer_oblic_2d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type  :: integer_oblic_2d_advector
+  type  :: sll_t_integer_oblic_2d_advector
   
-    class(sll_advection_1d_base), pointer :: adv_x1
-    class(sll_advection_1d_base), pointer :: adv_aligned
+    class(sll_c_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_aligned
     class(sll_c_interpolator_2d), pointer  :: interp
-    class(sll_characteristics_2d_base), pointer  :: charac
+    class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
     sll_real64, dimension(:), pointer :: eta2_coords
     sll_real64, dimension(:,:), pointer :: charac_feet1
@@ -66,16 +66,16 @@ module sll_m_advection_2d_integer_oblic
   !   procedure, pass(adv) :: initialize => &
   !     initialize_integer_oblic_2d_advector
   !  procedure, pass(adv) :: advect_2d => &
-  !    integer_oblic_advect_2d
+  !    sll_s_integer_oblic_advect_2d
   
-  end type integer_oblic_2d_advector
+  end type sll_t_integer_oblic_2d_advector
    
 
 
 
 
 contains
-  function new_integer_oblic_2d_advector( &
+  function sll_f_new_integer_oblic_2d_advector( &
     adv_x1, &
     adv_aligned, &
     interp, &
@@ -89,11 +89,11 @@ contains
     eta1_coords, &
     eta2_coords) &  
     result(adv)      
-    type(integer_oblic_2d_advector), pointer :: adv
-    class(sll_advection_1d_base), pointer :: adv_x1
-    class(sll_advection_1d_base), pointer :: adv_aligned
+    type(sll_t_integer_oblic_2d_advector), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_aligned
     class(sll_c_interpolator_2d), pointer :: interp
-    class(sll_characteristics_2d_base), pointer  :: charac
+    class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_real64, intent(in), optional :: eta1_min
@@ -121,7 +121,7 @@ contains
       eta1_coords, &
       eta2_coords)    
     
-  end function  new_integer_oblic_2d_advector
+  end function  sll_f_new_integer_oblic_2d_advector
 
 
   subroutine initialize_integer_oblic_2d_advector(&
@@ -138,11 +138,11 @@ contains
     eta2_max, &
     eta1_coords, &
     eta2_coords)    
-    type(integer_oblic_2d_advector), intent(inout) :: adv
-    class(sll_advection_1d_base), pointer :: adv_x1
-    class(sll_advection_1d_base), pointer :: adv_aligned
+    type(sll_t_integer_oblic_2d_advector), intent(inout) :: adv
+    class(sll_c_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_aligned
     class(sll_c_interpolator_2d), pointer :: interp
-    class(sll_characteristics_2d_base), pointer  :: charac
+    class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_real64, intent(in), optional :: eta1_min
@@ -235,27 +235,27 @@ contains
 
 
 !  subroutine set_shift(adv, shift)
-!    type(integer_oblic_2d_advector) :: adv  
+!    type(sll_t_integer_oblic_2d_advector) :: adv  
 !    sll_int32, intent(in) :: shift
 !    adv%shift = shift
 !  end subroutine set_shift
 !
 !
 !  function get_shift(adv) result(shift)
-!    type(integer_oblic_2d_advector) :: adv  
+!    type(sll_t_integer_oblic_2d_advector) :: adv  
 !    sll_int32 :: shift
 !    shift = adv%shift
 !  end function get_shift
 
 
-  subroutine integer_oblic_advect_2d(&
+  subroutine sll_s_integer_oblic_advect_2d(&
     adv, &
     phi, &
     shift, &
     dt, &
     input, &
     output)
-    type(integer_oblic_2d_advector) :: adv
+    type(sll_t_integer_oblic_2d_advector) :: adv
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_int32, intent(in) :: shift
     sll_real64, intent(in) :: dt 
@@ -337,7 +337,7 @@ contains
 !      adv%charac_feet1, &
 !      adv%charac_feet2)      
           
-  end subroutine integer_oblic_advect_2d
+  end subroutine sll_s_integer_oblic_advect_2d
 
 
 

@@ -5,17 +5,17 @@ program test_qn_solver_2d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_neumann
+    sll_p_dirichlet, &
+    sll_p_neumann
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_qn_solver_2d, only: &
-    delete, &
-    new, &
-    qn_solver_2d, &
-    solve
+    sll_o_delete, &
+    sll_o_new, &
+    sll_t_qn_solver_2d, &
+    sll_o_solve
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -37,9 +37,9 @@ program test_qn_solver_2d
   do i=1,2 ! 2 test functions
 
      if (i==1) then
-        BC = SLL_NEUMANN
+        BC = sll_p_neumann
      else
-        BC = SLL_DIRICHLET
+        BC = sll_p_dirichlet
      endif
 
      print*, 'Testing sequential qns2d', BC
@@ -70,24 +70,24 @@ contains
     sll_real64, dimension(NP_r,NP_theta)    :: rho, phi
     sll_real64, dimension(NP_r,NP_theta)    :: phi_exact
     sll_int32                               :: i, j, i_test
-    type (qn_solver_2d), pointer            :: plan
+    type (sll_t_qn_solver_2d), pointer            :: plan
     sll_real64                              :: average_err
     sll_real64                              :: average_err_bound
     sll_real64                              :: Mr, Mtheta
 
-    if (BC==SLL_NEUMANN) then
+    if (BC==sll_p_neumann) then
        dr = (rmax-rmin)/(NP_r-1)
     else 
        dr = (rmax-rmin)/(NP_r+1)
     endif
 
-    dtheta = 2*sll_pi/NP_theta
+    dtheta = 2*sll_p_pi/NP_theta
 
     SLL_ALLOCATE(c(NP_r), ierr)
     SLL_ALLOCATE(f(NP_theta), ierr)
     SLL_ALLOCATE(g(NP_theta), ierr)
 
-    plan => new(BC, rmin, rmax, NP_r, NP_theta)
+    plan => sll_o_new(BC, rmin, rmax, NP_r, NP_theta)
 
     do i_test=1,2
 
@@ -99,16 +99,16 @@ contains
           theta = (j-1)*dtheta
           Mr = 4.0_f64*abs(cos(theta))
 
-          if (BC==SLL_NEUMANN) then
+          if (BC==sll_p_neumann) then
              if (i_test==1) then
                 f(j) = sin(rmax-rmin)*cos(theta)
              else
-                f(j)= sin(rmax-rmin) * exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi)
+                f(j)= sin(rmax-rmin) * exp(-.5*(theta-sll_p_pi)**2)/sqrt(2*sll_p_pi)
              endif
           endif
 
           do i=1,NP_r
-             if (BC==SLL_NEUMANN) then
+             if (BC==sll_p_neumann) then
                 r = rmin + (i-1)*dr
                 c(i) = 2/r
              else ! 'dirichlet'
@@ -125,11 +125,11 @@ contains
                     (1.0_f64/r**2+1.0_f64/(Zi*Te(i)))*sin(rmax-r)*sin(r-rmin))
              else
                phi_exact(i,j)  = sin(r-rmin)*sin(rmax-r) * &
-                   exp(-0.5_f64*(theta-sll_pi)**2)/sqrt(2.0_f64*sll_pi)
+                   exp(-0.5_f64*(theta-sll_p_pi)**2)/sqrt(2.0_f64*sll_p_pi)
 
                rho(i,j) = ( 2.0_f64*cos(rmax+rmin-2.0_f64*r) - c(i)*sin(rmax+rmin-2.0_f64*r) ) * &
-                       exp(-0.5_f64*(theta-sll_pi)**2)/sqrt(2.0_f64*sll_pi) + phi_exact(i,j) &
-                        * ( 1.0_f64/(Zi*Te(i)) - ((theta-sll_pi)**2-1.0_f64)/r**2 )
+                       exp(-0.5_f64*(theta-sll_p_pi)**2)/sqrt(2.0_f64*sll_p_pi) + phi_exact(i,j) &
+                        * ( 1.0_f64/(Zi*Te(i)) - ((theta-sll_p_pi)**2-1.0_f64)/r**2 )
              endif
 
              Mtheta = abs(sin(r-rmin)*sin(rmax-r))
@@ -142,7 +142,7 @@ contains
 
        g = -f
 
-       call solve(plan, rho, c, Te, f, g, Zi, phi)
+       call sll_o_solve(plan, rho, c, Te, f, g, Zi, phi)
 
        average_err = sum(abs(phi_exact-phi))/real(NP_r*NP_theta,f64)
        average_err_bound = average_err_bound/real(NP_r*NP_theta,f64)
@@ -160,7 +160,7 @@ contains
     
     enddo
 
-    call delete(plan)
+    call sll_o_delete(plan)
 
     SLL_DEALLOCATE_ARRAY(c, ierr)
     SLL_DEALLOCATE_ARRAY(f, ierr)

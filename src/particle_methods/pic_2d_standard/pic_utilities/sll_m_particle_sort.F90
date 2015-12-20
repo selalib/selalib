@@ -23,52 +23,52 @@ module sll_m_particle_sort
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_particle_group_2d, only: &
-    sll_particle_group_2d
+    sll_t_particle_group_2d
 
   use sll_m_particle_group_4d, only: &
-    sll_particle_group_4d
+    sll_t_particle_group_4d
 
   use sll_m_particle_representations, only: &
-    sll_particle_2d, &
-    sll_particle_4d
+    sll_t_particle_2d, &
+    sll_t_particle_4d
 
   implicit none
 
   public :: &
-    sll_delete, &
-    sll_new_particle_sorter_2d, &
-    sll_particle_sorter_2d, &
-    sll_sort_gc_particles_2d, &
-    sll_sort_particles_2d
+    sll_o_delete, &
+    sll_f_new_particle_sorter_2d, &
+    sll_t_particle_sorter_2d, &
+    sll_s_sort_gc_particles_2d, &
+    sll_s_sort_particles_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type :: sll_particle_sorter_2d
+  type :: sll_t_particle_sorter_2d
      sll_int32, dimension(:), pointer   :: pa
      sll_int32, dimension(:), pointer   :: pa_save
-     type(sll_cartesian_mesh_2d), pointer :: mesh
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh
      sll_int32                          :: num_cells
-  end type sll_particle_sorter_2d
+  end type sll_t_particle_sorter_2d
   
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_particle_sorter_2d
-  end interface sll_delete
+  end interface sll_o_delete
 
 contains
 
-  function sll_new_particle_sorter_2d( mesh ) result(res)
-    type(sll_particle_sorter_2d), pointer :: res
-    type(sll_cartesian_mesh_2d), pointer    :: mesh
+  function sll_f_new_particle_sorter_2d( mesh ) result(res)
+    type(sll_t_particle_sorter_2d), pointer :: res
+    type(sll_t_cartesian_mesh_2d), pointer    :: mesh
     sll_int32 :: ierr
     sll_int32 :: ncx
     sll_int32 :: ncy
 
     if( .not. associated(mesh) ) then
-       print *, 'ERROR, sll_new_particle_sorter_2d(): passed mesh is not ', &
+       print *, 'ERROR, sll_f_new_particle_sorter_2d(): passed mesh is not ', &
             'associated.'
        stop
     end if
@@ -82,11 +82,11 @@ contains
 
     res%mesh => mesh
     res%num_cells = ncx*ncy
-  end function sll_new_particle_sorter_2d
+  end function sll_f_new_particle_sorter_2d
 
-  subroutine sll_sort_particles_2d( sorter, group )
-    type(sll_particle_sorter_2d), pointer :: sorter
-    type(sll_particle_group_4d), pointer  :: group
+  subroutine sll_s_sort_particles_2d( sorter, group )
+    type(sll_t_particle_sorter_2d), pointer :: sorter
+    type(sll_t_particle_group_4d), pointer  :: group
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
@@ -96,13 +96,13 @@ contains
     sll_int32 :: index_in
     sll_int32 :: index_out
     sll_int32 :: index_stop
-    type(sll_particle_4d), dimension(:), pointer :: p
-    type(sll_particle_4d)                        :: p_tmp
+    type(sll_t_particle_4d), dimension(:), pointer :: p
+    type(sll_t_particle_4d)                        :: p_tmp
     sll_int32, dimension(:), pointer             :: pa
     sll_int32, dimension(:), pointer             :: pa_save
     ! make sure that the meshes are the same
     if( .not. associated(sorter%mesh, target=group%mesh) ) then
-       print *, 'ERROR, sll_sort_particles_2d(): mesh passed to sorter ', &
+       print *, 'ERROR, sll_s_sort_particles_2d(): mesh passed to sorter ', &
             'and particle group mesh are not the same. Code will not stop ', &
             'but bad things may happen...'
     end if
@@ -158,13 +158,13 @@ contains
           end do
        end if
     end do
-  end subroutine sll_sort_particles_2d
+  end subroutine sll_s_sort_particles_2d
 
 
 
-  subroutine sll_sort_gc_particles_2d( sorter, group )
-    type(sll_particle_sorter_2d), pointer :: sorter
-    type(sll_particle_group_2d), pointer  :: group
+  subroutine sll_s_sort_gc_particles_2d( sorter, group )
+    type(sll_t_particle_sorter_2d), pointer :: sorter
+    type(sll_t_particle_group_2d), pointer  :: group
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
@@ -174,13 +174,13 @@ contains
     sll_int32 :: index_in
     sll_int32 :: index_out
     sll_int32 :: index_stop
-    type(sll_particle_2d), dimension(:), pointer :: p
-    type(sll_particle_2d)                        :: p_tmp
+    type(sll_t_particle_2d), dimension(:), pointer :: p
+    type(sll_t_particle_2d)                        :: p_tmp
     sll_int32, dimension(:), pointer             :: pa
     sll_int32, dimension(:), pointer             :: pa_save
     ! make sure that the meshes are the same
     if( .not. associated(sorter%mesh, target=group%mesh) ) then
-       print *, 'ERROR, sll_sort_particles_2d(): mesh passed to sorter ', &
+       print *, 'ERROR, sll_s_sort_particles_2d(): mesh passed to sorter ', &
             'and particle group mesh are not the same. Code will not stop ', &
             'but bad things may happen...'
     end if
@@ -236,11 +236,11 @@ contains
           end do
        end if
     end do
-  end subroutine sll_sort_gc_particles_2d
+  end subroutine sll_s_sort_gc_particles_2d
 
 
   subroutine delete_particle_sorter_2d( sorter )
-    type(sll_particle_sorter_2d), pointer :: sorter
+    type(sll_t_particle_sorter_2d), pointer :: sorter
     SLL_ASSERT(associated(sorter))
   end subroutine delete_particle_sorter_2d
 

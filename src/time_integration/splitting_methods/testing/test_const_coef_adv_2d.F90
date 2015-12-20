@@ -1,4 +1,4 @@
-!> @ingroup operator_splitting
+!> @ingroup sll_t_operator_splitting
 !> @brief Unit test for operator splitting. Constant coefficient advection.
 !> 
 program test_const_coef_adv_2d
@@ -7,26 +7,26 @@ program test_const_coef_adv_2d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_const_coef_advection_2d, only: &
-    const_coef_advection_2d, &
-    new_const_coef_advection_2d
+    sll_t_const_coef_advection_2d, &
+    sll_f_new_const_coef_advection_2d
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_cubic_spline_interpolator_1d
+    sll_t_cubic_spline_interpolator_1d
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array_2d
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array_2d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_operator_splitting, only: &
-    do_split_steps, &
-    sll_strang_tvt
+    sll_s_do_split_steps, &
+    sll_p_strang_tvt
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,7 +34,7 @@ program test_const_coef_adv_2d
 #define N2 60
 #define XMIN (-1.0_f64)
 #define XMAX 1.0_f64
-  class(const_coef_advection_2d), pointer :: split
+  class(sll_t_const_coef_advection_2d), pointer :: split
   sll_real64, dimension(:,:), pointer :: data
   sll_real64 :: x_1, x_2
   sll_int32 :: i, j
@@ -42,14 +42,14 @@ program test_const_coef_adv_2d
   sll_int32 :: ierr, file_id
   character(len=20) :: filename
 
-  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
-  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
+  type(sll_t_cubic_spline_interpolator_1d), target  :: interp_eta1
+  type(sll_t_cubic_spline_interpolator_1d), target  :: interp_eta2
   class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
   class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
 
   ! initialize interpolator
-  call interp_eta1%initialize( N1, XMIN, XMAX, SLL_PERIODIC )
-  call interp_eta2%initialize( N2, XMIN, XMAX, SLL_PERIODIC )
+  call interp_eta1%initialize( N1, XMIN, XMAX, sll_p_periodic )
+  call interp_eta2%initialize( N2, XMIN, XMAX, sll_p_periodic )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
@@ -64,17 +64,17 @@ program test_const_coef_adv_2d
   end do
 
   ! initialize time splitting method
-  split => new_const_coef_advection_2d( data, N1, N2, 0.1_f64, 0.2_f64, &
-       interp_eta1_ptr, interp_eta2_ptr, SLL_STRANG_TVT)
+  split => sll_f_new_const_coef_advection_2d( data, N1, N2, 0.1_f64, 0.2_f64, &
+       interp_eta1_ptr, interp_eta2_ptr, sll_p_strang_tvt)
 
   ! do some steps of lie_splitting
   dt = 0.5_f64
-  call do_split_steps(split, dt, 4)
+  call sll_s_do_split_steps(split, dt, 4)
 
   ! save results
   filename = "data.h5"
-  call sll_hdf5_file_create(filename, file_id, ierr)
-  call sll_hdf5_write_array_2d(file_id, data, "data", ierr)
-  call sll_hdf5_file_close(file_id, ierr)
+  call sll_o_hdf5_file_create(filename, file_id, ierr)
+  call sll_o_hdf5_write_array_2d(file_id, data, "data", ierr)
+  call sll_o_hdf5_file_close(file_id, ierr)
   
 end program test_const_coef_adv_2d

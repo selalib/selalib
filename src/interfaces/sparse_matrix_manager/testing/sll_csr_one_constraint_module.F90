@@ -13,7 +13,7 @@
 module csr_one_constraint_module
 
 contains 
-  subroutine csr_add_one_constraint( &
+  subroutine sll_s_csr_add_one_constraint( &
     ia_in, &
     ja_in, &
     a_in, &
@@ -95,7 +95,7 @@ contains
       stop
     endif
     
-  end subroutine csr_add_one_constraint
+  end subroutine sll_s_csr_add_one_constraint
   
   
   

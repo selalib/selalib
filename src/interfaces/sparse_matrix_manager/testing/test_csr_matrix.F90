@@ -10,7 +10,7 @@ implicit none
 real (kind(0d0)),allocatable :: f(:),x(:)
 integer :: n,iter,iprint,nhinv
 real (kind(0d0)) :: tol
-type(sll_csr_matrix), pointer :: mat
+type(sll_t_csr_matrix), pointer :: mat
 
 !
 !       set inverse of the mesh size (feel free to change)

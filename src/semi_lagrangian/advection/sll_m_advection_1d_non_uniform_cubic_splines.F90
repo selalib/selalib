@@ -23,22 +23,22 @@ module sll_m_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_cubic_non_uniform_splines, only: &
-    compute_spline_nonunif_1d_periodic_aux2, &
-    interpolate_array_value_nonunif_aux, &
-    setup_spline_nonunif_1d_periodic_aux
+    sll_s_compute_spline_nonunif_1d_periodic_aux2, &
+    sll_s_interpolate_array_value_nonunif_aux, &
+    sll_s_setup_spline_nonunif_1d_periodic_aux
 
   implicit none
 
   public :: &
-    new_non_uniform_cubic_splines_1d_advector
+    sll_f_new_non_uniform_cubic_splines_1d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_advection_1d_base) :: non_uniform_cubic_splines_1d_advector
+  type,extends(sll_c_advection_1d_base) :: non_uniform_cubic_splines_1d_advector
 
      sll_int32                            :: num_cells
      sll_real64                           :: xmin
@@ -59,15 +59,15 @@ module sll_m_advection_1d_non_uniform_cubic_splines
     procedure, pass(adv) :: delete => delete_non_unif_cubic_splines_1d_adv
   end type non_uniform_cubic_splines_1d_advector
    
-!!$  interface sll_delete
+!!$  interface sll_o_delete
 !!$     module procedure delete_non_unif_cubic_splines_1d_adv
-!!$  end interface sll_delete
+!!$  end interface sll_o_delete
 
 
 contains
   
 
-  function new_non_uniform_cubic_splines_1d_advector(&
+  function sll_f_new_non_uniform_cubic_splines_1d_advector(&
     num_cells, &
     xmin, &
     xmax, &
@@ -92,7 +92,7 @@ contains
       order, &
       node_positions)
     
-  end function new_non_uniform_cubic_splines_1d_advector
+  end function sll_f_new_non_uniform_cubic_splines_1d_advector
 
   
   subroutine initialize_non_uniform_cubic_splines_1d_advector(&
@@ -156,7 +156,7 @@ contains
     SLL_CLEAR_ALLOCATE(adv%Xstar(1:num_cells+1),ierr)
     
     adv%node_pos(0:num_cells)=adv%node_positions(1:num_cells+1)
-    call setup_spline_nonunif_1D_periodic_aux( adv%node_pos, num_cells, adv%buf, adv%ibuf)
+    call sll_s_setup_spline_nonunif_1d_periodic_aux( adv%node_pos, num_cells, adv%buf, adv%ibuf)
     
   end subroutine initialize_non_uniform_cubic_splines_1d_advector   
 
@@ -259,7 +259,7 @@ contains
     
     sll_real64, dimension(:), intent(inout) :: f
     sll_real64, dimension(:), intent(in) :: node_positions
-    !type(cubic_nonunif_spline_1D), pointer :: spl_per
+    !type(sll_t_cubic_nonunif_spline_1d), pointer :: spl_per
     sll_int32,intent(in):: N
     sll_real64,intent(in)::alpha
     sll_real64 :: dx
@@ -331,9 +331,9 @@ contains
 !      tmp=tmp2
 !    enddo
     
-    !call setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
-    call compute_spline_nonunif_1D_periodic_aux2( f, N, buf, ibuf, coeffs )
-    call interpolate_array_value_nonunif_aux( Xstar, f, N, node_pos, coeffs,N)
+    !call sll_s_setup_spline_nonunif_1d_periodic_aux( node_pos, N, buf, ibuf)
+    call sll_s_compute_spline_nonunif_1d_periodic_aux2( f, N, buf, ibuf, coeffs )
+    call sll_s_interpolate_array_value_nonunif_aux( Xstar, f, N, node_pos, coeffs,N)
     
  !4312190464           4312214392   
     

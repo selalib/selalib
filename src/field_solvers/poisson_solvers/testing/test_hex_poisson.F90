@@ -5,23 +5,23 @@ program test_hex_poisson
 #include "sll_working_precision.h"
 
   use sll_m_hex_poisson, only: &
-    compute_hex_fields, &
-    hex_matrix_poisson, &
-    hex_second_terme_poisson
+    sll_s_compute_hex_fields, &
+    sll_s_hex_matrix_poisson, &
+    sll_s_hex_second_terme_poisson
 
   use sll_m_hexagonal_meshes, only: &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   use sll_m_pivotbande, only: &
-    factolub_bande, &
-    residue_bande, &
-    solvlub_bande
+    sll_s_factolub_bande, &
+    sll_s_residue_bande, &
+    sll_s_solvlub_bande
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_hex_mesh_2d), pointer          :: mesh
+  type(sll_t_hex_mesh_2d), pointer          :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
   sll_real64, dimension(:),allocatable    :: uxn, uyn,dxuxn,dyuxn,dxuyn,dyuyn
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
@@ -55,7 +55,7 @@ program test_hex_poisson
   ! SLL_ALLOCATE(u( n_points,n_points), ierr)
 
   ! initialization
-  mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
+  mesh => sll_f_new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
   
   do i=1, n_points  
 
@@ -76,20 +76,20 @@ program test_hex_poisson
 
   ! here rho = - laplacian(sol) , sol ~ phi
 
-  call hex_matrix_poisson( matrix_poisson, mesh,1 )
+  call sll_s_hex_matrix_poisson( matrix_poisson, mesh,1 )
 
-  call hex_second_terme_poisson( second_term, mesh, rho )
+  call sll_s_hex_second_terme_poisson( second_term, mesh, rho )
   
   !call searchband(matrix_poisson,n_points,l1,l2)
   l1 = 2*num_cells + 1
   l2 = l1
 
   call cpu_time(t_init)
-  call factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
+  call sll_s_factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
   call cpu_time(t_inter)
-  call solvlub_bande(l,u,phi,second_term,n_points,l1,l2)
+  call sll_s_solvlub_bande(l,u,phi,second_term,n_points,l1,l2)
   call cpu_time(t_end)
-  call residue_bande(matrix_poisson,phi,second_term,l1,l2,n_points,residu)
+  call sll_s_residue_bande(matrix_poisson,phi,second_term,l1,l2,n_points,residu)
 
   print*, "for ",  n_points ," points, the computation time was : ",   t_end - t_init
   print*, " with a computation time for the factorisation, of :",t_inter-t_init
@@ -118,7 +118,7 @@ program test_hex_poisson
   ! testing computing the field for the guiding center model in a hex. mesh
   ! here : uxn = -dy(phi)  and uyn = +dx(phi)
 
-  call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi_end,1)
+  call sll_s_compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi_end,1)
 
   erreur1 = 0._f64
   erreur2 = 0._f64

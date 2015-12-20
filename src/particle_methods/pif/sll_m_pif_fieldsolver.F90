@@ -9,20 +9,20 @@ module sll_m_pif_fieldsolver
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_i1, &
-    sll_pi
+    sll_p_i1, &
+    sll_p_pi
 
   implicit none
 
   public :: &
-    diag_dot_matrix_real64, &
-    pif_fieldsolver
+    sll_f_diag_dot_matrix_real64, &
+    sll_t_pif_fieldsolver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-    type :: pif_fieldsolver
+    type :: sll_t_pif_fieldsolver
 
 
     sll_int32 :: dimx !spatial dimensions
@@ -57,11 +57,11 @@ module sll_m_pif_fieldsolver
     procedure, pass(this) :: visu_info=>visu_info_sll_pif_fieldsolver
      
      procedure, pass(this) :: l2norm=>l2norm_sll_pif_fieldsolver
- end type pif_fieldsolver
+ end type sll_t_pif_fieldsolver
 
 contains
 pure function sll_pif_fieldsolver_get_problemsize(this) result(sz)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_int32 :: sz
  if (allocated(this%allmodes)) then
  sz=size(this%allmodes,2)
@@ -72,7 +72,7 @@ end function sll_pif_fieldsolver_get_problemsize
 
 !>Returns the l2norm for a coefficient vector of a solution
 function l2norm_sll_pif_fieldsolver(this, solution) result(l2norm)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_comp64, dimension(:), intent(in) :: solution
 !  sll_int32 :: idx
  sll_real64 :: l2norm
@@ -86,7 +86,7 @@ end function l2norm_sll_pif_fieldsolver
 
 
 subroutine sll_pif_fieldsolver_init(this,maxmode)
- class(pif_fieldsolver), intent(inout) :: this
+ class(sll_t_pif_fieldsolver), intent(inout) :: this
  sll_int32, intent(in) :: maxmode
  sll_int32, allocatable, dimension(:) :: maxmodes,minmodes
  sll_int32 :: ierr,idx
@@ -104,24 +104,24 @@ subroutine sll_pif_fieldsolver_init(this,maxmode)
  SLL_ALLOCATE(this%rhs_one(1:this%problemsize()),ierr)
  do idx=1,size(this%allmodes,2)
    if (sum(abs(this%allmodes(:,idx)))==0) then
-      this%rhs_one(idx)=cmplx(product((2*sll_pi/this%unitmode)),0.,f64)
+      this%rhs_one(idx)=cmplx(product((2*sll_p_pi/this%unitmode)),0.,f64)
    endif
  end do
 end subroutine  sll_pif_fieldsolver_init
 
 
 subroutine visu_info_sll_pif_fieldsolver(this)
- class(pif_fieldsolver), intent(inout) :: this
+ class(sll_t_pif_fieldsolver), intent(inout) :: this
 
 print *,"Spatial Dimensions (x)", this%dimx
 print *,"Number of Fourier modes: ", this%problemsize()
-print *,"Domain length", 1.0/this%unitmode*sll_pi*2.0
+print *,"Domain length", 1.0/this%unitmode*sll_p_pi*2.0
 
 end subroutine
 
 
 subroutine sll_pif_fieldsolver_set_box_len(this, length)
- class(pif_fieldsolver), intent(inout) :: this
+ class(sll_t_pif_fieldsolver), intent(inout) :: this
  sll_real64, intent(in) :: length
  sll_int32 :: ierr 
 
@@ -129,13 +129,13 @@ subroutine sll_pif_fieldsolver_set_box_len(this, length)
  SLL_ALLOCATE(this%unitmode(this%dimx),ierr)
  endif
  
- this%unitmode=2*sll_pi/length
+ this%unitmode=2*sll_p_pi/length
 end subroutine sll_pif_fieldsolver_set_box_len
  
  
  
 subroutine sll_pif_fieldsolver_set_box_lens(this, lengths)
- class(pif_fieldsolver), intent(inout) :: this
+ class(sll_t_pif_fieldsolver), intent(inout) :: this
  sll_real64, intent(in),dimension(:) :: lengths
  sll_int32 :: ierr 
  
@@ -145,7 +145,7 @@ subroutine sll_pif_fieldsolver_set_box_lens(this, lengths)
  SLL_ALLOCATE(this%unitmode(this%dimx),ierr)
  endif
  
- this%unitmode(:)=2*sll_pi/lengths(:)
+ this%unitmode(:)=2*sll_p_pi/lengths(:)
 end subroutine sll_pif_fieldsolver_set_box_lens
 
 
@@ -155,7 +155,7 @@ end subroutine sll_pif_fieldsolver_set_box_lens
 !  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,v,weight)
 !  sll_real64, dimension(dimx), intent(in) :: mode !normalized to domain fourier mode
 !  !warning the dot_product(x,y)=conjg(x)*y
-!  get_fourier_mode=dot_product(particle(dimx+dimv+1,:),exp(-sll_i1*matmul(mode,particle(1:dimx,:)))) 
+!  get_fourier_mode=dot_product(particle(dimx+dimv+1,:),exp(-sll_p_i1*matmul(mode,particle(1:dimx,:)))) 
 ! end function get_fourier_mode
  
 
@@ -163,7 +163,7 @@ end subroutine sll_pif_fieldsolver_set_box_lens
  
 
  function get_fourier_modes2_chunk(this, particle,chunksize) result(fouriermodes)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
    sll_int32, intent(in) :: chunksize
  sll_comp64, dimension(:), allocatable :: fouriermodes
@@ -176,7 +176,7 @@ end function get_fourier_modes2_chunk
  
  
  subroutine calc_fourier_modes2_chunk(this, particle,fouriermodes,chunksize)
-  class(pif_fieldsolver), intent(in) :: this
+  class(sll_t_pif_fieldsolver), intent(in) :: this
   sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
   sll_comp64, dimension(:),intent(out) :: fouriermodes
   sll_int32, intent(in) :: chunksize
@@ -199,14 +199,14 @@ enddo
  
  !please apply this chunked
 subroutine calc_fourier_modes2(this, particle,fouriermodes)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
  !sll_real64, dimension(size(particle,2)) :: weight
  sll_comp64, dimension(this%dimx,size(particle,2)) :: unitmodes
  sll_comp64, dimension(:),intent(out) :: fouriermodes
  sll_int32 :: idx!,ierr
  !Calculate unit fourier modes first
- unitmodes=exp(cmplx(0.0,-diag_dot_matrix_real64(this%unitmode, particle(1:this%dimx,:)),f64));
+ unitmodes=exp(cmplx(0.0,-sll_f_diag_dot_matrix_real64(this%unitmode, particle(1:this%dimx,:)),f64));
  !Extract weights from particle array
  !weight=particle(this%dimx+1,:)
  
@@ -220,7 +220,7 @@ end subroutine calc_fourier_modes2
  
 !please apply this chuncked
 function get_fourier_modes2(this, particle) result(fouriermodes)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
  
  sll_comp64, dimension(:), allocatable :: fouriermodes
@@ -234,7 +234,7 @@ end function get_fourier_modes2
 !>Get phi from the right hand side
 !> - Phi''= pho
 function sll_pif_fieldsolver_solve_poisson(this, rhs) result(solution)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_comp64, dimension(:), intent(in) :: rhs
  sll_comp64, dimension(size(rhs)) :: solution
  sll_int32 :: idx
@@ -245,7 +245,7 @@ function sll_pif_fieldsolver_solve_poisson(this, rhs) result(solution)
   if (sum(abs(this%allmodes(:,idx)))/=0) then
    solution(idx)=rhs(idx)                               &
      / cmplx(sum((this%allmodes(:,idx)*this%unitmode(:))**2)  &
-     *       product(this%unitmode/sll_pi/2.0_f64),0.0,f64)
+     *       product(this%unitmode/sll_p_pi/2.0_f64),0.0,f64)
   else
        solution(idx)=(0.0_f64,0.0_f64)
   endif
@@ -262,7 +262,7 @@ end function sll_pif_fieldsolver_solve_poisson
 
 
 function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solution)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_comp64, dimension(:), intent(in) :: rhs
  sll_comp64, dimension(size(rhs)) :: solution
  sll_int32 :: idx
@@ -272,7 +272,7 @@ function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solutio
  do idx=1,size(rhs)
  !intermit constant mode
   if (sum(abs(this%allmodes(:,idx)))/=0) then
-   solution(idx)=rhs(idx)*cmplx(product(this%unitmode/sll_pi/2),0.0,f64)
+   solution(idx)=rhs(idx)*cmplx(product(this%unitmode/sll_p_pi/2),0.0,f64)
   else
        solution(idx)=(0.0_f64,0.0_f64)
   endif
@@ -301,14 +301,14 @@ end function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow
 
 !Get rho from the right hand side
 function sll_pif_fieldsolver_solve_mass(this, rhs) result(solution)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_comp64, dimension(:), intent(in) :: rhs
  sll_comp64, dimension(size(rhs)) :: solution
  sll_int32 :: idx
  
  SLL_ASSERT(size(rhs)==this%problemsize())
  
- solution=rhs*cmplx(product(this%unitmode/sll_pi/2),0.0_f64,f64)
+ solution=rhs*cmplx(product(this%unitmode/sll_p_pi/2),0.0_f64,f64)
  do idx=1,this%problemsize()
   if ( .not. this%allmodes(1,idx)==0) then
    solution(idx)=solution(idx)*2
@@ -318,14 +318,14 @@ end function sll_pif_fieldsolver_solve_mass
 
 !Get rho from the right hand side
 function sll_pif_fieldsolver_solve_quasineutral(this, rhs) result(solution)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_comp64, dimension(:), intent(in) :: rhs
  sll_comp64, dimension(size(rhs)) :: solution
  sll_int32 :: idx
  
  SLL_ASSERT(size(rhs)==this%problemsize())
  
- solution=rhs*cmplx(product(this%unitmode/sll_pi/2),0.0,f64)
+ solution=rhs*cmplx(product(this%unitmode/sll_p_pi/2),0.0,f64)
  do idx=1,this%problemsize()
   if ( .not. this%allmodes(1,idx)==0) then
    solution(idx)=solution(idx)*2
@@ -339,7 +339,7 @@ function sll_pif_fieldsolver_solve_quasineutral(this, rhs) result(solution)
 end function sll_pif_fieldsolver_solve_quasineutral
 
 function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradient)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: pos !pos vector (x), no weights
  sll_comp64, dimension(:), intent(in) :: fouriermodes
  sll_real64, dimension(size(pos,1),size(pos,2)) ::  gradient
@@ -351,7 +351,7 @@ function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradie
 !   do jdx=1,size(pos,2)
 !   
 !    do idx=1,this%problemsize()
-!        partmode=sll_i1*exp(sll_i1*(dot_product(this%allmodes(:,idx)*this%unitmode(:),pos(1:this%dimx,jdx))  ))
+!        partmode=sll_p_i1*exp(sll_p_i1*(dot_product(this%allmodes(:,idx)*this%unitmode(:),pos(1:this%dimx,jdx))  ))
 !  
 !        gradient(:,jdx)=gradient(:,jdx)+(real(partmode)*real(fouriermodes(idx))-aimag(partmode)*aimag(fouriermodes(idx)))*&
 !                               (this%allmodes(:,idx)*this%unitmode(:))
@@ -359,7 +359,7 @@ function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradie
 !  end do
  
  do idx=1,this%problemsize()
- partmode=sll_i1*exp(cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)),f64))
+ partmode=sll_p_i1*exp(cmplx(0.0_f64,matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)),f64))
  do jdx=1,size(partmode)
       gradient(:,jdx)=gradient(:,jdx)+(real(partmode(jdx))*real(fouriermodes(idx))-aimag(partmode(jdx))*aimag(fouriermodes(idx)))*&
                              (this%allmodes(:,idx)*this%unitmode(:))
@@ -369,7 +369,7 @@ end function sll_pif_fieldsolver_eval_gradient
 
 
 function sll_pif_fieldsolver_eval_solution(this, pos,fouriermodes) result(fun)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: pos !pos vector (x), no weights
  sll_comp64, dimension(:), intent(in) :: fouriermodes
  sll_real64, dimension(size(pos,2)) ::  fun
@@ -385,7 +385,7 @@ end function sll_pif_fieldsolver_eval_solution
 
 
 function get_fourier_modes_chunk(this, particle, chunksize) result(fouriermodes)
-  class(pif_fieldsolver), intent(in) :: this
+  class(sll_t_pif_fieldsolver), intent(in) :: this
   sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
   sll_comp64, dimension(:), allocatable  :: fouriermodes
   sll_int32, intent(in) :: chunksize
@@ -406,7 +406,7 @@ end function get_fourier_modes_chunk
 
 
 subroutine calc_fourier_modes(this, particle, fouriermodes) 
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
  sll_comp64, dimension(:), intent(out) :: fouriermodes
  sll_int32 :: idx
@@ -450,7 +450,7 @@ end function
 
 
 function get_fourier_modes(this, particle) result(fouriermodes)
- class(pif_fieldsolver), intent(in) :: this
+ class(sll_t_pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
  sll_comp64, dimension(:), allocatable :: fouriermodes
  sll_int32 :: ierr
@@ -523,18 +523,18 @@ end function array_exponent_comp64
 ! end function
  
  
-function  diag_dot_matrix_real64( diagonal,matrix)
+function  sll_f_diag_dot_matrix_real64( diagonal,matrix)
  sll_real64, dimension(:,:), intent(in) :: matrix !full matrix
  sll_real64, dimension(:), intent(in) :: diagonal !Entries of a diagonal matrix
-  sll_real64 , dimension(size(matrix,1),size(matrix,2)) :: diag_dot_matrix_real64
+  sll_real64 , dimension(size(matrix,1),size(matrix,2)) :: sll_f_diag_dot_matrix_real64
   sll_int32 :: idx,sz
  
  SLL_ASSERT(size(matrix,1)==size(diagonal))
  sz=size(matrix,2)
  do idx=1,sz
- diag_dot_matrix_real64(:,idx)=diagonal(:)*matrix(:,idx)
+ sll_f_diag_dot_matrix_real64(:,idx)=diagonal(:)*matrix(:,idx)
  end do
-end function diag_dot_matrix_real64
+end function sll_f_diag_dot_matrix_real64
  
  
 end module sll_m_pif_fieldsolver

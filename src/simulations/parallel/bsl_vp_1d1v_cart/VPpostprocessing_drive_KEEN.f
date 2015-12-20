@@ -39,12 +39,12 @@
       real(8), allocatable :: blue_v(:), blue_f(:)
       
       ! This is the velocity range to be written out 
-      vrangemax = 4.0
-      vrangemin = 0.
+      vrangemax = 4.0_8
+      vrangemin = 0._8
            
       ! Constants
       pi = 3.1415926535897932385_8
-      ii = cmplx(0, 1)
+      ii = cmplx(0, 1, 8)
 
       ! get run directory
       numarg = iargc ( )
@@ -216,7 +216,7 @@
                write(4, *) it*dt
             endif
             ! Calculate total charge
-            Q = 0.
+            Q = 0._8
             do i=1, N
                Q = Q + rhotot(i)
             enddo
@@ -224,10 +224,10 @@
             write(75,*) it*dt,  Q
             ! Take Fourier transform
             do i=1, N
-               rhoft(i) = rhotot(i)
+               rhoft(i) = cmplx(rhotot(i),0.,8)
             enddo
             call ZFFTF(N, rhoft, table)
-            call normfft_sqrtN(cmplx(rhoft,kind=16), N)
+            call normfft_sqrtN(cmplx(rhoft,kind=8), N)
             ! Get amplitude of fundamental mode
             rhofundamental = 2.*abs(rhoft(modeorder+1))     
             ! Write out amplitude of fundamental mode
@@ -314,10 +314,10 @@
             
             ! Take Fourier transform
             do i=1, N
-               efieldft(i) = efield(i)
+               efieldft(i) = cmplx(efield(i),0.,8)
             enddo
             call ZFFTF(N, efieldft, table)
-            call normfft_sqrtN(cmplx(efieldft,kind=16), N)
+            call normfft_sqrtN(cmplx(efieldft,kind=8), N)
             ! Get amplitude of fundamental mode
             efieldfundamental = 2.*abs(efieldft(modeorder+1))     
             ! Write out amplitude of fundamental mode
@@ -328,18 +328,18 @@
             endif
             
             ! Calculate electrostatic energy
-            ESE = 0.
+            ESE = 0._8
             do i=1,N
                ESE = ESE + efield(i)*efield(i)/(8.*pi)
             enddo
-            ESE = ESE * 0.5_8 * L / float(N)
+            ESE = ESE * 0.5_8 * L / real(N,8)
             write(120,*) it*dt, ESE
             
             ! Calculate rho and phi from the E-field
             if(mod(it, nmovieefield)==0) then
                dk = 2.*pi / L
-               rhoft(1) = 0.
-               phift(1) = 0.
+               rhoft(1) = cmplx(0.,0.,8)
+               phift(1) = cmplx(0.,0.,8)
                do i=2, N/2
                   k = dfloat(i-1) * dk
                   rhoft(i) = efieldft(i) * ii * k
@@ -351,9 +351,9 @@
                   phift(i) = efieldft(i) / ii / k
                enddo
                call ZFFTB(N, rhoft, table)
-               call normfft_sqrtN(cmplx(rhoft,kind=16), N)
+               call normfft_sqrtN(cmplx(rhoft,kind=8), N)
                call ZFFTB(N, phift, table)
-               call normfft_sqrtN(cmplx(phift,kind=16), N)
+               call normfft_sqrtN(cmplx(phift,kind=8), N)
                do i=1, N
                   rho_from_E(i) = real(rhoft(i))
                   phi(i) = real(phift(i))
@@ -488,11 +488,11 @@
       
       ! Calculate initial velocity distribution
       do j=1, Nv
-         intf = 0.
+         intf = 0._8
          do i=1, N
             intf = f0(i,j)
          enddo
-         distv0(j) = intf * L/float(N)
+         distv0(j) = intf * L/real(N,8)
       enddo
       ! Now, look at the time evolution of delta-f(x,v)
       do it=0, Nt
@@ -524,8 +524,8 @@
                !enddo
                write(23, *) it * dt
                ! Calculate min and max values of 'all-v' movie
-               min_delta_f = 0.
-               max_delta_f = 0.
+               min_delta_f = 0._8
+               max_delta_f = 0._8
                do i=1, N/mbox
                   do j=1, Nv
                      if(deltaf(i,j) > max_delta_f) then
@@ -537,8 +537,8 @@
                enddo
                write(35,*) min_delta_f, max_delta_f
                 ! Calculate min and max values of 'zoom' movie
-               min_delta_f = 0.
-               max_delta_f = 0.
+               min_delta_f = 0._8
+               max_delta_f = 0._8
                do i=1, N/mbox
                   do j=ivmin, ivmax
                      if(deltaf(i,j) > max_delta_f) then
@@ -552,11 +552,11 @@
                
                ! Calculate space-averaged velocity distribution
                do j=1, Nv
-                  intf = 0.
+                  intf = 0._8
                   do i=1, N
                      intf = deltaf(i,j)
                   enddo
-                  distv(j) = distv0(j) + intf * L/float(N)
+                  distv(j) = distv0(j) + intf * L/real(N,8)
                enddo
                write(27,*) distv
                
@@ -570,15 +570,15 @@
             if(it*dt > Tsetup) then
                do j=1, Nv
                   do i=1, N
-                     f_kx_v(i,j) = 0.
+                     f_kx_v(i,j) = cmplx(0.,0.,8)
                   enddo
                enddo
                do j=ivmin, ivmax
                   do i=1, N
-                     frowft(i) = deltaf(i,j) + f0(i,j)
+                     frowft(i) = cmplx(deltaf(i,j)+ f0(i,j),0.,8)
                   enddo
                   call ZFFTF(N, frowft, table)
-                  call normfft_sqrtN(cmplx(frowft,kind=16), N)
+                  call normfft_sqrtN(cmplx(frowft,kind=8), N)
                   do i=1, N/2
                      f_kx_v(i,j) = frowft(i+N/2)
                   enddo
@@ -611,9 +611,9 @@
                     
                         
             ! Calculate entropy and kinetic energy
-            entropy1 = 0.
-            entropy2 = 0.
-            KE = 0.
+            entropy1 = 0._8
+            entropy2 = 0._8
+            KE = 0.0_8
             do i=1, N
                do j=1, Nv
                   f = f0(i,j) + deltaf(i,j)
@@ -735,7 +735,7 @@
       
       implicit none
       integer N, i
-      complex(16) efield(N)
+      complex(8) efield(N)
       
       do i=1, N
          efield(i) = efield(i) / N
@@ -747,14 +747,10 @@
       
       implicit none
       integer N, i
-      complex(16) efield(N)
+      complex(8) efield(N)
       
       do i=1, N
-         efield(i) = efield(i) / sqrt(float(N))
+         efield(i) = efield(i) / cmplx(sqrt(real(N,8)),0.,8)
       enddo
       return
       end
-      
-
-
-	   

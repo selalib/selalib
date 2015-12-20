@@ -25,18 +25,18 @@ module sll_m_advection_1d_CSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic, &
-    sll_set_to_limit, &
-    sll_user_defined
+    sll_p_periodic, &
+    sll_p_set_to_limit, &
+    sll_p_user_defined
 
   use sll_m_characteristics_1d_base, only: &
-    process_outside_point_periodic, &
-    process_outside_point_set_to_limit, &
-    signature_process_outside_point_1d, &
-    sll_characteristics_1d_base
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -44,15 +44,15 @@ module sll_m_advection_1d_CSL
   implicit none
 
   public :: &
-    new_csl_1d_advector
+    sll_f_new_csl_1d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_advection_1d_base) :: CSL_1d_advector
+  type,extends(sll_c_advection_1d_base) :: CSL_1d_advector
   
     class(sll_c_interpolator_1d), pointer  :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: eta_coords_unit
     sll_real64, dimension(:), pointer :: eta_coords_unit_back
@@ -62,7 +62,7 @@ module sll_m_advection_1d_CSL
     sll_real64, dimension(:), pointer :: buf1d_out
     sll_int32 :: Npts
     sll_int32 :: bc_type  
-    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
 
   contains
@@ -80,7 +80,7 @@ module sll_m_advection_1d_CSL
 
 
 contains
-  function new_CSL_1d_advector( &
+  function sll_f_new_csl_1d_advector( &
     interp, &
     charac, &
     Npts, &
@@ -92,13 +92,13 @@ contains
     result(adv)      
     type(CSL_1d_advector), pointer :: adv
     class(sll_c_interpolator_1d), pointer :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
     sll_real64, dimension(:), pointer, optional :: eta_coords
     sll_int32, intent(in), optional :: bc_type
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     sll_int32 :: ierr
     
@@ -115,7 +115,7 @@ contains
       bc_type, &
       process_outside_point)
     
-  end function  new_CSL_1d_advector
+  end function  sll_f_new_csl_1d_advector
 
 
   subroutine initialize_CSL_1d_advector(&
@@ -130,13 +130,13 @@ contains
     process_outside_point)
     class(CSL_1d_advector), intent(inout) :: adv
     class(sll_c_interpolator_1d), pointer :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
     sll_real64, dimension(:), pointer, optional :: eta_coords
     sll_int32, intent(in), optional :: bc_type
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     sll_int32 :: ierr
     sll_int32 :: i
@@ -185,7 +185,7 @@ contains
 
     if(present(process_outside_point)) then
       adv%process_outside_point => process_outside_point
-      adv%bc_type = SLL_USER_DEFINED
+      adv%bc_type = sll_p_user_defined
     else if(.not.(present(bc_type))) then
       print *,'#provide boundary condition'
       print *,'#bc_type or process_outside_point function'
@@ -194,10 +194,10 @@ contains
     else
       adv%bc_type = bc_type
       select case (bc_type)
-        case (SLL_PERIODIC)
-          adv%process_outside_point => process_outside_point_periodic                    
-        case (SLL_SET_TO_LIMIT)
-          adv%process_outside_point => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          adv%process_outside_point => sll_f_process_outside_point_periodic                    
+        case (sll_p_set_to_limit)
+          adv%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_CSL_1d_advector'
@@ -271,7 +271,7 @@ contains
 !    do i=1,Npts
 !      !x1 = adv%eta_coords(1)+real(i-1,f64)*(adv%eta_coords(Npts)-adv%eta_coords(1))/real(Npts-1,f64)
 !      x1 = adv%eta_coords_unit(i)
-!      adv%buf1d(i) = cos(2._f64*sll_pi*x1)
+!      adv%buf1d(i) = cos(2._f64*sll_p_pi*x1)
 !    enddo
     
     
@@ -293,9 +293,9 @@ contains
 !
 !    do i=1,Npts
 !      !print *,i,input(i),adv%buf1d(i),adv%eta_coords_unit(i),adv%eta_coords(i)
-!      print *,adv%eta_coords_unit(i),cos(2._f64*sll_pi*adv%eta_coords_unit(i)),adv%buf1d(i), &
-!      sin(2._f64*sll_pi*adv%eta_coords_unit(i))/(2._f64*sll_pi)
-!      !-sin(adv%eta_coords(i)-adv%eta_coords(1))/(2._f64*sll_pi)
+!      print *,adv%eta_coords_unit(i),cos(2._f64*sll_p_pi*adv%eta_coords_unit(i)),adv%buf1d(i), &
+!      sin(2._f64*sll_p_pi*adv%eta_coords_unit(i))/(2._f64*sll_p_pi)
+!      !-sin(adv%eta_coords(i)-adv%eta_coords(1))/(2._f64*sll_p_pi)
 !    enddo
 
     !do i=1,Npts

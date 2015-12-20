@@ -5,30 +5,30 @@ program test_integration
 #include "sll_working_precision.h"
 
   use sll_m_box_splines, only: &
-    write_connectivity
+    sll_s_write_connectivity
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_fekete_integration, only: &
-    fekete_order_num, &
-    fekete_points_and_weights
+    sll_s_fekete_order_num, &
+    sll_f_fekete_points_and_weights
 
   use sll_m_gauss_legendre_integration, only: &
-    gauss_legendre_integrate_1d, &
-    gauss_legendre_points_and_weights
+    sll_o_gauss_legendre_integrate_1d, &
+    sll_f_gauss_legendre_points_and_weights
 
   use sll_m_gauss_lobatto_integration, only: &
-    gauss_lobatto_derivative_matrix, &
-    gauss_lobatto_integrate_1d, &
-    gauss_lobatto_points, &
-    gauss_lobatto_weights
+    sll_f_gauss_lobatto_derivative_matrix, &
+    sll_o_gauss_lobatto_integrate_1d, &
+    sll_f_gauss_lobatto_points, &
+    sll_f_gauss_lobatto_weights
 
   use sll_m_rectangle_integration, only: &
-    rectangle_integrate_1d
+    sll_o_rectangle_integrate_1d
 
   use sll_m_trapz_integration, only: &
-    trapz_integrate_1d
+    sll_o_trapz_integrate_1d
 
   use test_function_module, only: &
     one, &
@@ -56,7 +56,7 @@ sll_real64, dimension(:,:), allocatable :: xyw
 !sll_real64 :: app_res
 sll_int32  :: rule
 !sll_int32  :: num_cells
-!type(sll_hex_mesh_2d), pointer :: mesh
+!type(sll_t_hex_mesh_2d), pointer :: mesh
 !sll_real64, dimension(:,:), allocatable     :: knots
 !sll_int32,  dimension(:,:), allocatable     :: LM
 
@@ -65,13 +65,13 @@ write (*,'(5x, 5a16 )') &
 'rectangle','trapz','legendre','lobatto', 'Exact value'
 do i=2,10
   do j = 1, i
-    x(j) = (j-1)*0.5_f64*sll_pi/(i-1)
+    x(j) = (j-1)*0.5_f64*sll_p_pi/(i-1)
   end do
   write (*,'(a, i2, a, 5f16.12)') 'n = ', i, ': ', &
-   rectangle_integrate_1d( test_func, x, i), &
-   trapz_integrate_1d( test_func, x, i), &
-   gauss_legendre_integrate_1d( test_func, 0._f64, sll_pi/2._f64, i), &
-   gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_pi/2._f64, i), &
+   sll_o_rectangle_integrate_1d( test_func, x, i), &
+   sll_o_trapz_integrate_1d( test_func, x, i), &
+   sll_o_gauss_legendre_integrate_1d( test_func, 0._f64, sll_p_pi/2._f64, i), &
+   sll_o_gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_p_pi/2._f64, i), &
    0.4674011002723395
 end do
 
@@ -82,19 +82,19 @@ do i=2,10
      x(j) = (j-1)*1.0_f64/(i-1)
    end do
    write (*,'(a, i2, a, 4f16.12)') 'n = ', i, ': ', &
-        rectangle_integrate_1d( one, x, i), &
-        trapz_integrate_1d( one, x, i), &
-        gauss_legendre_integrate_1d( one, 0.0_f64, 1.0_f64, i), &
-        gauss_lobatto_integrate_1d( one, 0.0_f64, 1.0_f64, i)
+        sll_o_rectangle_integrate_1d( one, x, i), &
+        sll_o_trapz_integrate_1d( one, x, i), &
+        sll_o_gauss_legendre_integrate_1d( one, 0.0_f64, 1.0_f64, i), &
+        sll_o_gauss_lobatto_integrate_1d( one, 0.0_f64, 1.0_f64, i)
 end do
 print *, 'Exact value: '
 write (*,'(f22.15)') 1.00000
 
 print *, 'Test gauss_points()'
-print *, gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
+print *, sll_f_gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
 
-x = gauss_lobatto_points( 10, -1._f64, 1._f64)
-w = gauss_lobatto_weights(10)
+x = sll_f_gauss_lobatto_points( 10, -1._f64, 1._f64)
+w = sll_f_gauss_lobatto_weights(10)
 
 print*, 'Gauss Lobatto points and weights in [-1:1]'
 do i = 1, 10
@@ -127,7 +127,7 @@ write(*,*) "  1.000000000000000  0.022222222222222  "
 write(*,"(/,a,/)") "Matrix of derivatives"
 n = 4
 allocate(d(n,n))
-d = gauss_lobatto_derivative_matrix(n) 
+d = sll_f_gauss_lobatto_derivative_matrix(n) 
 
 write (string, '( "(",I2,"f20.15)" )' )  n
 do i = 1, n
@@ -173,12 +173,12 @@ pxy2(:,2) = (/ 1._f64, 1._f64 /)
 pxy2(:,3) = (/ 0._f64, 1._f64 /)
 
 rule = 2
-call fekete_order_num ( rule, n )
+call sll_s_fekete_order_num ( rule, n )
 SLL_ALLOCATE(xyw(1:3, 1:n), ierr)
 
 write(*,"(a)") " Computing Fekete points and weights on reference triangle "
 write(*,"(/,a)") "           x                   y                    w"
-xyw = fekete_points_and_weights(pxy1, rule)
+xyw = sll_f_fekete_points_and_weights(pxy1, rule)
 
 do j = 1, n
    write(*, string) (xyw(i,j), i = 1, 3)

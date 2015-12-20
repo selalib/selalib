@@ -50,10 +50,10 @@
 !> &    rhs,                            &
 !> &    "rho",                          &     
 !> &    tau,                            &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
 !> &    [0.0_f64]                       )
 !> 
 !> 

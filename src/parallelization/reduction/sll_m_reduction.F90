@@ -6,11 +6,11 @@ module sll_m_reduction
   implicit none
 
   public :: &
-    compute_integral_trapezoid_1d, &
-    compute_reduction_2d_to_0d, &
-    compute_reduction_4d_to_2d_direction34, &
-    compute_reduction_4d_to_3d_direction4, &
-    compute_reduction_diag_4d_to_2d_direction12
+    sll_f_compute_integral_trapezoid_1d, &
+    sll_s_compute_reduction_2d_to_0d, &
+    sll_s_compute_reduction_4d_to_2d_direction34, &
+    sll_s_compute_reduction_4d_to_3d_direction4, &
+    sll_s_compute_reduction_diag_4d_to_2d_direction12
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -39,7 +39,7 @@ contains
   !---------------------------------------------------  
     
 
-  subroutine compute_reduction_4d_to_3d_direction4(&
+  subroutine sll_s_compute_reduction_4d_to_3d_direction4(&
     data_4d, &
     data_3d, &
     Npts1, &
@@ -64,7 +64,7 @@ contains
     
     
     if(Npts1>size(data_4d,1))then
-      print *,'#Problem for size1 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size1 in sll_s_compute_reduction_4d_to_3d_direction4'
       print *,'#Npts=',(/Npts1,Npts2,Npts3,Npts4/)
       print *,'#size(data_4d)=',(/ &
         size(data_4d,1), &
@@ -74,15 +74,15 @@ contains
       stop
     endif
     if(Npts2>size(data_4d,2))then
-      print *,'#Problem for size2 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size2 in sll_s_compute_reduction_4d_to_3d_direction4'
       stop
     endif
     if(Npts3>size(data_4d,3))then
-      print *,'#Problem for size3 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size3 in sll_s_compute_reduction_4d_to_3d_direction4'
       stop
     endif
     if(Npts4>size(data_4d,4))then
-      print *,'#Problem for size3 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size3 in sll_s_compute_reduction_4d_to_3d_direction4'
       stop
     endif
     if(.not.(present(integration_func)))then
@@ -112,7 +112,7 @@ contains
         end do
       end do      
     endif  
-  end subroutine compute_reduction_4d_to_3d_direction4
+  end subroutine sll_s_compute_reduction_4d_to_3d_direction4
 
 
   subroutine compute_reduction_4d_to_3d_direction4_accumulate(&
@@ -140,7 +140,7 @@ contains
     
     
     if(Npts1>size(data_4d,1))then
-      print *,'#Problem for size1 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size1 in sll_s_compute_reduction_4d_to_3d_direction4'
       print *,'#Npts=',(/Npts1,Npts2,Npts3,Npts4/)
       print *,'#size(data_4d)=',(/ &
         size(data_4d,1), &
@@ -150,15 +150,15 @@ contains
       stop
     endif
     if(Npts2>size(data_4d,2))then
-      print *,'#Problem for size2 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size2 in sll_s_compute_reduction_4d_to_3d_direction4'
       stop
     endif
     if(Npts3>size(data_4d,3))then
-      print *,'#Problem for size3 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size3 in sll_s_compute_reduction_4d_to_3d_direction4'
       stop
     endif
     if(Npts4>size(data_4d,4))then
-      print *,'#Problem for size3 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Problem for size3 in sll_s_compute_reduction_4d_to_3d_direction4'
       stop
     endif
     if(.not.(present(integration_func)))then
@@ -193,7 +193,7 @@ contains
 
 
 
-  subroutine compute_reduction_4d_to_2d_direction34(&
+  subroutine sll_s_compute_reduction_4d_to_2d_direction34(&
     data_4d, &
     data_2d, &
     Npts1, &
@@ -220,20 +220,20 @@ contains
     
     
     if(Npts1>size(data_4d,1))then
-      print *,'#Problem for size1 in compute_reduction_4d_to_2d_direction34'
+      print *,'#Problem for size1 in sll_s_compute_reduction_4d_to_2d_direction34'
       print *,'Npts1=',Npts1,'size(data_4d,1)',size(data_4d,1)
       stop
     endif
     if(Npts2>size(data_4d,2))then
-      print *,'#Problem for size2 in compute_reduction_4d_to_2d_direction34'
+      print *,'#Problem for size2 in sll_s_compute_reduction_4d_to_2d_direction34'
       stop
     endif
     if(Npts3>size(data_4d,3))then
-      print *,'#Problem for size3 in compute_reduction_4d_to_2d_direction34'
+      print *,'#Problem for size3 in sll_s_compute_reduction_4d_to_2d_direction34'
       stop
     endif
     if(Npts4>size(data_4d,4))then
-      print *,'#Problem for size3 in compute_reduction_4d_to_2d_direction34'
+      print *,'#Problem for size3 in sll_s_compute_reduction_4d_to_2d_direction34'
       stop
     endif
     if(.not.(present(integration_func)))then
@@ -276,10 +276,10 @@ contains
         print *,'integration_func_params is present'
       endif
       print *,'#not implemented yet'
-      print *,'#in compute_reduction_4d_to_2d_direction34'
+      print *,'#in sll_s_compute_reduction_4d_to_2d_direction34'
       stop
     endif  
-  end subroutine compute_reduction_4d_to_2d_direction34
+  end subroutine sll_s_compute_reduction_4d_to_2d_direction34
 
 
   subroutine compute_reduction_4d_to_2d_direction12(&
@@ -376,7 +376,7 @@ contains
 
 
 
-  subroutine compute_reduction_diag_4d_to_2d_direction12(&
+  subroutine sll_s_compute_reduction_diag_4d_to_2d_direction12(&
     data_4d, &
     data_diag_2d, &
     Npts1, &
@@ -497,12 +497,12 @@ contains
       print *,'#in compute_reduction_4d_to_2d_direction12'
       stop
     endif  
-  end subroutine compute_reduction_diag_4d_to_2d_direction12
+  end subroutine sll_s_compute_reduction_diag_4d_to_2d_direction12
 
 
 
 
-  subroutine compute_reduction_2d_to_0d(&
+  subroutine sll_s_compute_reduction_2d_to_0d(&
     data_2d, &
     res, &
     Npts1, &
@@ -525,12 +525,12 @@ contains
     
     
     if(Npts1>size(data_2d,1))then
-      print *,'#Problem for size1 in compute_reduction_2d_to_0d'
+      print *,'#Problem for size1 in sll_s_compute_reduction_2d_to_0d'
       print *,'Npts1=',Npts1,'size(data_2d,1)',size(data_2d,1)
       stop
     endif
     if(Npts2>size(data_2d,2))then
-      print *,'#Problem for size2 in compute_reduction_2d_to_0d'
+      print *,'#Problem for size2 in sll_s_compute_reduction_2d_to_0d'
       print *,'Npts2=',Npts2,'size(data_2d,2)',size(data_2d,2)
       stop
     endif
@@ -570,10 +570,10 @@ contains
         print *,'integration_func_params is present'
       endif
       print *,'#not implemented yet'
-      print *,'#in compute_reduction_2d_to_0d'
+      print *,'#in sll_s_compute_reduction_2d_to_0d'
       stop
     endif  
-  end subroutine compute_reduction_2d_to_0d
+  end subroutine sll_s_compute_reduction_2d_to_0d
 
 
 
@@ -584,7 +584,7 @@ contains
 
 
   
-  function compute_integral_trapezoid_1d(data, Npts, delta, func_params) result(res)
+  function sll_f_compute_integral_trapezoid_1d(data, Npts, delta, func_params) result(res)
     sll_real64, dimension(:), intent(in)    :: data
     sll_int32, intent(in) :: Npts
     sll_real64,intent(in) :: delta
@@ -603,7 +603,7 @@ contains
       res = res + data(i)
     enddo
     res = res*delta
-  end function compute_integral_trapezoid_1d
+  end function sll_f_compute_integral_trapezoid_1d
 
   function compute_integral_conservative_1d(data, Npts, node_positions) result(res)
     sll_real64, dimension(:), intent(in)    :: data

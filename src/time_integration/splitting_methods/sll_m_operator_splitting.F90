@@ -1,4 +1,4 @@
-!> @ingroup operator_splitting
+!> @ingroup sll_t_operator_splitting
 !> @brief 
 !> Base class of operator splitting library. 
 !>
@@ -13,7 +13,7 @@
 !> order in time for the full solution.
 !>
 !> The application of an operator splitting method to a concrete problem is done
-!> by extending the operator_splitting splitting base class by a new type
+!> by extending the sll_t_operator_splitting splitting base class by a new type
 !> containing on the one hand the data on which the operators act
 !> and a specific implementation of the two operators
 !>
@@ -26,31 +26,31 @@ module sll_m_operator_splitting
   implicit none
 
   public :: &
-    do_split_steps, &
-    initialize_operator_splitting, &
-    operator_splitting, &
-    sll_lie_tv, &
-    sll_lie_vt, &
-    sll_order6_tvt, &
-    sll_order6_vtv, &
-    sll_strang_tvt, &
-    sll_strang_vtv, &
-    sll_triple_jump_tvt, &
-    sll_triple_jump_vtv
+    sll_s_do_split_steps, &
+    sll_s_initialize_operator_splitting, &
+    sll_t_operator_splitting, &
+    sll_p_lie_tv, &
+    sll_p_lie_vt, &
+    sll_p_order6_tvt, &
+    sll_p_order6_vtv, &
+    sll_p_strang_tvt, &
+    sll_p_strang_vtv, &
+    sll_p_triple_jump_tvt, &
+    sll_p_triple_jump_vtv
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! global variables 
   sll_int32, parameter :: SLL_USER_DEFINED      = 0 !< user defined splitting
-  sll_int32, parameter :: SLL_LIE_TV            = 1 !< Lie splitting T first (order 1)
-  sll_int32, parameter :: SLL_LIE_VT            = 2 !< Lie splitting V first x (order 1)
-  sll_int32, parameter :: SLL_STRANG_TVT        = 3 !< Strang splitting T first (order 2)
-  sll_int32, parameter :: SLL_STRANG_VTV        = 4 !< Strang splitting V first (order 2)
-  sll_int32, parameter :: SLL_TRIPLE_JUMP_TVT   = 5 !< Triple jump splitting T first (order 4)
-  sll_int32, parameter :: SLL_TRIPLE_JUMP_VTV   = 6 !< Triple jump splitting V first (order 4)
-  sll_int32, parameter :: SLL_ORDER6_TVT        = 7 !< Order 6 splitting T first (order 6)
-  sll_int32, parameter :: SLL_ORDER6_VTV        = 8 !< Order 6 splitting V first (order 6)
+  sll_int32, parameter :: sll_p_lie_tv            = 1 !< Lie splitting T first (order 1)
+  sll_int32, parameter :: sll_p_lie_vt            = 2 !< Lie splitting V first x (order 1)
+  sll_int32, parameter :: sll_p_strang_tvt        = 3 !< Strang splitting T first (order 2)
+  sll_int32, parameter :: sll_p_strang_vtv        = 4 !< Strang splitting V first (order 2)
+  sll_int32, parameter :: sll_p_triple_jump_tvt   = 5 !< Triple jump splitting T first (order 4)
+  sll_int32, parameter :: sll_p_triple_jump_vtv   = 6 !< Triple jump splitting V first (order 4)
+  sll_int32, parameter :: sll_p_order6_tvt        = 7 !< Order 6 splitting T first (order 6)
+  sll_int32, parameter :: sll_p_order6_vtv        = 8 !< Order 6 splitting V first (order 6)
   sll_int32, parameter :: SLL_ORDER6VP_TVT      = 9 !< Specific Vlasov-Poisson splitting T first (order 6)
   sll_int32, parameter :: SLL_ORDER6VP_VTV      = 10 !< Specific Vlasov-Poisson splitting V first (order 6)
   sll_int32, parameter :: SLL_ORDER6VPNEW_TVT   = 11 !< Specific Vlasov-Poisson splitting T first (order 6)
@@ -60,7 +60,7 @@ module sll_m_operator_splitting
   sll_int32, parameter :: SLL_ORDER6VPOT_VTV    = 15 !< Specific Vlasov-Poisson splitting V first (order 6)
 
  !> operator splitting object
-  type :: operator_splitting
+  type :: sll_t_operator_splitting
      !> current time to be incremented 
      sll_real64 :: current_time = 0.0_f64  
      !> defines the splitting method to be chosen from those defined as global variables in 
@@ -79,19 +79,19 @@ module sll_m_operator_splitting
      procedure, pass(this) :: operatorT => operator
      !> pointer on routine defined second operator
      procedure, pass(this) :: operatorV => operator
-  end type operator_splitting
+  end type sll_t_operator_splitting
 
 contains
-  !> @brief dummy implementation of an operator_splitting needed to provide the interface. 
+  !> @brief dummy implementation of an sll_t_operator_splitting needed to provide the interface. 
   !> The class cannot be abstract because the splitting coefficients are initialised here 
   !> as they are generic for any type of operator.
   subroutine operator (this, dt)
-    class(operator_splitting), intent(inout)  :: this !< operator_splitting object
+    class(sll_t_operator_splitting), intent(inout)  :: this !< sll_t_operator_splitting object
     sll_real64, intent(in)  :: dt !< time increment on which operator is applied
 
     print*, 'This is a dummy implementation for providint the interface  &
     &    in sll_operator_splitting_base.F90.                             &
-    &    The class operator_splitting needs to be extended               &
+    &    The class sll_t_operator_splitting needs to be extended               &
     &    providing the data to be evolved by the operator for an actual  &
     &    implementation.'
 
@@ -100,17 +100,17 @@ contains
     SLL_ASSERT(dt>0.0_f64)
   end subroutine operator
 
-  !> @brief Returns a pointer to a heap-allocated operator_splitting object.
+  !> @brief Returns a pointer to a heap-allocated sll_t_operator_splitting object.
   !> @param[in]	split_case	splitting method to be chosen among
   !> SLL_USER_DEFINED : user provides coefficients <br>
-  !> SLL_LIE_TV : first order Lie with T first <br>
-  !> SLL_LIE_VT : first order Lie with V first <br>
-  !> SLL_STRANG_TVT : second order Strang with T first <br>
-  !> SLL_STRANG_VTV : second order Strang with V first <br>
-  !> SLL_TRIPLE_JUMP_TVT : fourth order triple jump with T first <br>
-  !> SLL_TRIPLE_JUMP_VTV : fourth order triple jump with V first <br>
-  !> SLL_ORDER6_TVT : sixth order with T first <br>
-  !> SLL_ORDER6_VTV : sixth order with V first <br>
+  !> sll_p_lie_tv : first order Lie with T first <br>
+  !> sll_p_lie_vt : first order Lie with V first <br>
+  !> sll_p_strang_tvt : second order Strang with T first <br>
+  !> sll_p_strang_vtv : second order Strang with V first <br>
+  !> sll_p_triple_jump_tvt : fourth order triple jump with T first <br>
+  !> sll_p_triple_jump_vtv : fourth order triple jump with V first <br>
+  !> sll_p_order6_tvt : sixth order with T first <br>
+  !> sll_p_order6_vtv : sixth order with V first <br>
   !> SLL_ORDER6VP_TVT : sixth order optimized for Vlasov-Poisson with T first <br>
   !> SLL_ORDER6VP_VTV : sixth order optimized for Vlasov-Poisson with V first <br>
   !> SLL_ORDER6VPnew_TVT <br>
@@ -122,7 +122,7 @@ contains
   !> @param[in]	nb_split_step	number of split steps in the method
   !> @param[in]	split_begin_T	logical True if T first false else
   !> @param[in]	dt	time step
-  !> @return split a pointer to a heap-allocated operator_splitting object.
+  !> @return split a pointer to a heap-allocated sll_t_operator_splitting object.
   function new_operator_splitting( &
        split_case, &
        split_step, &
@@ -130,7 +130,7 @@ contains
        split_begin_T, &
        dt) &
        result(split)  
-    class(operator_splitting), pointer :: split
+    class(sll_t_operator_splitting), pointer :: split
     sll_int32, intent(in)  :: split_case
     sll_real64, dimension(:), intent(in), optional :: split_step
     sll_int32, intent(in), optional :: nb_split_step
@@ -139,7 +139,7 @@ contains
     sll_int32 :: ierr
 
     SLL_ALLOCATE(split,ierr)   
-    call initialize_operator_splitting( &
+    call sll_s_initialize_operator_splitting( &
          split, &
          split_case, &
          split_step, &
@@ -153,14 +153,14 @@ contains
   !> @param[in]	split	operator splitting object to be initialised
   !> @param[in]	split_case	splitting method to be chosen among <br>
   !> SLL_USER_DEFINED : user provides coefficients <br>
-  !> SLL_LIE_TV : first order Lie with T first <br>
-  !> SLL_LIE_VT : first order Lie with V first <br>
-  !> SLL_STRANG_TVT : second order Strang with T first <br>
-  !> SLL_STRANG_VTV : second order Strang with V first <br>
-  !> SLL_TRIPLE_JUMP_TVT : fourth order triple jump with T first <br>
-  !> SLL_TRIPLE_JUMP_VTV : fourth order triple jump with V first <br>
-  !> SLL_ORDER6_TVT : sixth order with T first <br>
-  !> SLL_ORDER6_VTV : sixth order with V first <br>
+  !> sll_p_lie_tv : first order Lie with T first <br>
+  !> sll_p_lie_vt : first order Lie with V first <br>
+  !> sll_p_strang_tvt : second order Strang with T first <br>
+  !> sll_p_strang_vtv : second order Strang with V first <br>
+  !> sll_p_triple_jump_tvt : fourth order triple jump with T first <br>
+  !> sll_p_triple_jump_vtv : fourth order triple jump with V first <br>
+  !> sll_p_order6_tvt : sixth order with T first <br>
+  !> sll_p_order6_vtv : sixth order with V first <br>
   !> SLL_ORDER6VP_TVT : sixth order optimized for Vlasov-Poisson with T first <br>
   !> SLL_ORDER6VP_VTV : sixth order optimized for Vlasov-Poisson with V first <br>
   !> SLL_ORDER6VPnew_TVT <br>
@@ -172,7 +172,7 @@ contains
   !> @param[in]	nb_split_step	number of split steps in the method
   !> @param[in]	split_begin_T	logical True if T first false else
   !> @param[in]	dt	time step
-  subroutine initialize_operator_splitting( &
+  subroutine sll_s_initialize_operator_splitting( &
        split, &
        split_case, &
        split_step, &
@@ -180,7 +180,7 @@ contains
        split_begin_T, &
        dt)
 
-    class(operator_splitting) :: split
+    class(sll_t_operator_splitting) :: split
     sll_int32, intent(in) :: split_case
     sll_real64, dimension(:), intent(in), optional :: split_step
     sll_int32, intent(in), optional :: nb_split_step
@@ -223,33 +223,33 @@ contains
           split%nb_split_step =nb_split_step
           split%split_begin_T = split_begin_T  
        endif
-    case (SLL_LIE_TV) 
+    case (sll_p_lie_tv) 
        split%nb_split_step = 2
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .true.
        split%split_step(1) = 1._f64
        split%split_step(2) = 1._f64
-    case (SLL_LIE_VT) 
+    case (sll_p_lie_vt) 
        split%nb_split_step = 2
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .false.
        split%split_step(1) = 1._f64
        split%split_step(2) = 1._f64
-    case (SLL_STRANG_TVT) ! Strang splitting TVT
+    case (sll_p_strang_tvt) ! Strang splitting TVT
        split%nb_split_step = 3
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .true.
        split%split_step(1) = 0.5_f64
        split%split_step(2) = 1._f64
        split%split_step(3) = split%split_step(1)
-    case (SLL_STRANG_VTV) ! Strang splitting VTV
+    case (sll_p_strang_vtv) ! Strang splitting VTV
        split%nb_split_step = 3
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .false.
        split%split_step(1) = 0.5_f64
        split%split_step(2) = 1._f64
        split%split_step(3) = split%split_step(1)
-    case (SLL_TRIPLE_JUMP_TVT) ! triple jump TVT
+    case (sll_p_triple_jump_tvt) ! triple jump TVT
        split%nb_split_step = 7
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .true.
@@ -260,7 +260,7 @@ contains
        split%split_step(5) = split%split_step(3)
        split%split_step(6) = split%split_step(2)
        split%split_step(7) = split%split_step(1)
-    case (SLL_TRIPLE_JUMP_VTV) ! triple jump VTV
+    case (sll_p_triple_jump_vtv) ! triple jump VTV
        split%nb_split_step = 7
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .false.
@@ -271,7 +271,7 @@ contains
        split%split_step(5) = split%split_step(3)
        split%split_step(6) = split%split_step(2)
        split%split_step(7) = split%split_step(1)
-    case (SLL_ORDER6_TVT) ! Order 6 TVT
+    case (sll_p_order6_tvt) ! Order 6 TVT
        split%nb_split_step = 23
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .true.
@@ -298,7 +298,7 @@ contains
        split%split_step(21) = split%split_step(3)
        split%split_step(22) = split%split_step(2)
        split%split_step(23) = split%split_step(1)  
-    case (SLL_ORDER6_VTV) ! Order 6 VTV
+    case (sll_p_order6_vtv) ! Order 6 VTV
        split%nb_split_step = 23
        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
        split%split_begin_T = .false.
@@ -505,28 +505,28 @@ contains
        print *,'#split_case not defined'
        stop       
     end select
-  end subroutine initialize_operator_splitting
+  end subroutine sll_s_initialize_operator_splitting
 
   !> @brief Apply the composition method for given number of times steps.
-  !> @param[inout]	split	operator_splitting object
+  !> @param[inout]	split	sll_t_operator_splitting object
   !> @param[in]	dt	: time step
   !> @param[in]	number_time_steps	: number of time steps to be performed
-  subroutine do_split_steps(split, dt, number_time_steps)
-    class(operator_splitting)   :: split
+  subroutine sll_s_do_split_steps(split, dt, number_time_steps)
+    class(sll_t_operator_splitting)   :: split
     sll_real64, intent(in)  :: dt
     sll_int32, intent(in)   :: number_time_steps
     ! local variables
     sll_int32  :: i, istep
 
     ! Straight implementation of Lie splitting in both direction
-    if (split%split_case == SLL_LIE_TV) then
+    if (split%split_case == sll_p_lie_tv) then
        do i = 1, number_time_steps
           call split%operatorT(dt)
           call split%operatorV(dt)
           ! Increment current_time
           split%current_time = split%current_time + dt
        end do
-    else if (split%split_case == SLL_LIE_VT) then
+    else if (split%split_case == sll_p_lie_vt) then
        do i = 1, number_time_steps
           call split%operatorV(dt)
           call split%operatorT(dt)
@@ -605,7 +605,7 @@ contains
           split%current_time = split%current_time + dt
        endif
     endif
-  end subroutine do_split_steps
+  end subroutine sll_s_do_split_steps
 
 
 end module sll_m_operator_splitting

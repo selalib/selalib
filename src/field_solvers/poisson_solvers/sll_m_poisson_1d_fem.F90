@@ -13,42 +13,42 @@ module sll_m_poisson_1d_fem
 !   dgbsv
 
   use sll_m_arbitrary_degree_splines, only: &
-    arbitrary_degree_spline_1d, &
-    b_spline_derivatives_at_x, &
-    b_splines_at_x, &
-    new_arbitrary_degree_spline_1d, &
-    periodic_arbitrary_deg_spline
+    sll_t_arbitrary_degree_spline_1d, &
+    sll_f_spline_derivatives_at_x, &
+    sll_f_splines_at_x, &
+    sll_f_new_arbitrary_degree_spline_1d, &
+    sll_p_periodic_arbitrary_deg_spline
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_1d, &
-    sll_cell, &
-    sll_cell_margin, &
-    sll_mesh_area
+    sll_t_cartesian_mesh_1d, &
+    sll_o_cell, &
+    sll_o_cell_margin, &
+    sll_o_mesh_area
 
   use sll_m_fft, only: &
-    fft_apply_plan_c2r_1d, &
-    fft_apply_plan_r2c_1d, &
-    fft_delete_plan, &
-    fft_new_plan_c2r_1d, &
-    fft_new_plan_r2c_1d, &
-    sll_fft_plan
+    sll_s_fft_apply_plan_c2r_1d, &
+    sll_s_fft_apply_plan_r2c_1d, &
+    sll_s_fft_delete_plan, &
+    sll_f_fft_new_plan_c2r_1d, &
+    sll_f_fft_new_plan_r2c_1d, &
+    sll_t_fft_plan
 
   use sll_m_gauss_legendre_integration, only: &
-    gauss_legendre_points_and_weights
+    sll_f_gauss_legendre_points_and_weights
 
   use sll_m_utilities, only: &
-    is_power_of_two
+    sll_f_is_power_of_two
 
   implicit none
 
   public :: &
-    new_poisson_1d_fem, &
-    poisson_1d_fem, &
-    poisson_1d_fem_rhs_function
+    sll_f_new_poisson_1d_fem, &
+    sll_t_poisson_1d_fem, &
+    sll_i_poisson_1d_fem_rhs_function
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -66,12 +66,12 @@ module sll_m_poisson_1d_fem
 
     !> Structure to solve Poisson equation on 1d domain. Mesh is cartesian and
     !> could be irregular. Numerical method is using finite elements.
-    type :: poisson_1d_fem
-        class(sll_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
+    type :: sll_t_poisson_1d_fem
+        class(sll_t_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
 
         !> Spline basis
         sll_int32 , private :: spline_degree !<Degree of the Bsplines
-        type(arbitrary_degree_spline_1d), pointer, private :: bspline  !<Bspline object
+        type(sll_t_arbitrary_degree_spline_1d), pointer, private :: bspline  !<Bspline object
 
         sll_real64, dimension(:), allocatable :: fem_solution
         sll_real64, dimension(:), allocatable, private :: stiffn_matrix_first_line
@@ -85,8 +85,8 @@ module sll_m_poisson_1d_fem
         sll_real64, private :: seminorm
 
         !FFT Plans
-        type(sll_fft_plan), pointer, private :: forward_fftplan => null()
-        type(sll_fft_plan), pointer, private :: backward_fftplan => null()
+        type(sll_t_fft_plan), pointer, private :: forward_fftplan => null()
+        type(sll_t_fft_plan), pointer, private :: backward_fftplan => null()
         sll_int32,private ::num_cells
 
         sll_int32,private :: boundarycondition
@@ -131,11 +131,11 @@ module sll_m_poisson_1d_fem
             poisson_1d_fem_get_rhs_from_klim_dens_weight_moment
         procedure,pass(this), public :: get_rhs_from_function=>&
             sll_poisson_1d_fem_get_rhs_from_function
-    end type poisson_1d_fem
+    end type sll_t_poisson_1d_fem
 
     !Interface for one dimensional function for right hand side
     abstract interface
-        function poisson_1d_fem_rhs_function(x) result(y)
+        function sll_i_poisson_1d_fem_rhs_function(x) result(y)
             use sll_m_working_precision
             sll_real64, dimension(:),intent(in) :: x
             sll_real64, dimension(size(x)) :: y
@@ -151,28 +151,28 @@ module sll_m_poisson_1d_fem
         module procedure sll_delete_poisson_1d_fem
     endinterface
 !    interface new
-!        module procedure new_poisson_1d_fem
+!        module procedure sll_f_new_poisson_1d_fem
 !    endinterface
 contains
 
     !>Destructor
     subroutine sll_delete_poisson_1d_fem(this,ierr)
-        class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
+        class(sll_t_poisson_1d_fem),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out)                :: ierr    !< error code
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line,ierr)
         SLL_DEALLOCATE_ARRAY(this%mass_matrix_first_line,ierr)
         SLL_DEALLOCATE_ARRAY(this%fem_solution,ierr)
         SLL_DEALLOCATE_ARRAY(this%mass_matrix_first_line_fourier,ierr)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier,ierr)
-        call fft_delete_plan(this%backward_fftplan)
-        call fft_delete_plan(this%forward_fftplan)
+        call sll_s_fft_delete_plan(this%backward_fftplan)
+        call sll_s_fft_delete_plan(this%forward_fftplan)
     endsubroutine
 
 
-    function  new_poisson_1d_fem(cartesian_mesh_1d,spline_degree,boundarycondition, ierr) &
+    function  sll_f_new_poisson_1d_fem(cartesian_mesh_1d,spline_degree,boundarycondition, ierr) &
             result(solver)
-        type(poisson_1d_fem), pointer :: solver     !< Solver data structure
-        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
+        type(sll_t_poisson_1d_fem), pointer :: solver     !< Solver data structure
+        class(sll_t_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: spline_degree !<Degree of the bsplines
         sll_int32, intent(in) :: boundarycondition !<Boundary Condition Descriptor
@@ -183,14 +183,14 @@ contains
 
 
     subroutine sll_initialize_poisson_1d_fem(this, cartesian_mesh_1d,spline_degree,boundarycondition, ierr)
-        class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
-        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
+        class(sll_t_poisson_1d_fem),intent(inout) :: this     !< Solver data structure
+        class(sll_t_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: spline_degree !<Degree of the bsplines
         sll_int32, intent(in) :: boundarycondition !<Boundary Condition Descriptor
         ierr=0
-        this%boundarycondition=boundarycondition !SLL_PERIODIC
-        !this%boundarycondition=SLL_DIRICHLET !SLL_PERIODIC
+        this%boundarycondition=boundarycondition !sll_p_periodic
+        !this%boundarycondition=sll_p_dirichlet !sll_p_periodic
 
         !scale_matrix_equation=1.0_f64
         this%cartesian_mesh=>cartesian_mesh_1d
@@ -198,13 +198,13 @@ contains
         this%spline_degree=spline_degree
         !Allocate spline
         selectcase(this%boundarycondition)
-            case(SLL_PERIODIC)
-                this%bspline=>new_arbitrary_degree_spline_1d(spline_degree,this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
-                    PERIODIC_ARBITRARY_DEG_SPLINE)
-            case(SLL_DIRICHLET)
-                this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
+            case(sll_p_periodic)
+                this%bspline=>sll_f_new_arbitrary_degree_spline_1d(spline_degree,this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
+                    sll_p_periodic_arbitrary_deg_spline)
+            case(sll_p_dirichlet)
+                this%bspline=>sll_f_new_arbitrary_degree_spline_1d( spline_degree, &
                     this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
-                    PERIODIC_ARBITRARY_DEG_SPLINE)
+                    sll_p_periodic_arbitrary_deg_spline)
             case default
                 print *, "This boundary condition is not supported!"
                 stop
@@ -216,9 +216,9 @@ contains
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
-        this%forward_fftplan => fft_new_plan_r2c_1d(this%num_cells, &
+        this%forward_fftplan => sll_f_fft_new_plan_r2c_1d(this%num_cells, &
              this%fem_solution,this%stiffn_matrix_first_line_fourier)
-        this%backward_fftplan=>fft_new_plan_c2r_1d(this%num_cells, &
+        this%backward_fftplan=>sll_f_fft_new_plan_c2r_1d(this%num_cells, &
              this%stiffn_matrix_first_line_fourier,this%fem_solution)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
 
@@ -246,7 +246,7 @@ contains
     endsubroutine
 
     subroutine poisson_1d_fem_set_solution(this, solution_vector)
-        class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
+        class(sll_t_poisson_1d_fem),intent(inout) :: this     !< Solver data structure
         sll_real64, dimension(:) :: solution_vector
         SLL_ASSERT(size(solution_vector)==this%num_cells)
 
@@ -260,8 +260,8 @@ contains
     function sll_poisson_1d_fem_get_rhs_from_function(this, eval_function,  n_quadrature_points_user) &
             result( rhs )
         implicit none
-        class(poisson_1d_fem),intent(in) :: this     !< Solver data structure
-        procedure (poisson_1d_fem_rhs_function) :: eval_function
+        class(sll_t_poisson_1d_fem),intent(in) :: this     !< Solver data structure
+        procedure (sll_i_poisson_1d_fem_rhs_function) :: eval_function
         sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
         sll_real64, dimension(:,:), allocatable   :: quadrature_points_weights
         sll_real64, dimension(:,:), allocatable   :: bspline_qpoint_values
@@ -290,15 +290,15 @@ contains
 
         !Quadrature for each support cell
         do cell=1, this%num_cells
-            cellmargin=sll_cell_margin(this%cartesian_mesh, cell)
-            quadrature_points_weights=gauss_legendre_points_and_weights(n_quadrature_points,&
+            cellmargin=sll_o_cell_margin(this%cartesian_mesh, cell)
+            quadrature_points_weights=sll_f_gauss_legendre_points_and_weights(n_quadrature_points,&
                 cellmargin(1),cellmargin(2))
             !quadrature_points_weights=gauss_lobatto_points_and_weights(n_quadrature_points, knots_mesh(cell), knots_mesh(cell+1))
             do i=1,n_quadrature_points
-                bspline_qpoint_values(:,i)=b_splines_at_x(this%bspline, cell, quadrature_points_weights(1,i ))
+                bspline_qpoint_values(:,i)=sll_f_splines_at_x(this%bspline, cell, quadrature_points_weights(1,i ))
                 !reorientate to the right side
                 !bspline_qpoint_values(:,i) = bspline_qpoint_values((spline_degree+1):1:-1,i)
-                !call sll_display(bspline_qpoint_values(:,i), "(F8.4)")
+                !call sll_o_display(bspline_qpoint_values(:,i), "(F8.4)")
             enddo
 
             !Loop over all splines with support in this cell
@@ -321,13 +321,13 @@ contains
             !enddo
 
         enddo
-        !call sll_display(knots(1:degree+2), "(F10.5)" )
-        !call sll_display(quadrature_points_weights(1,:), "(F10.5)" )
-        !call sll_display(quadrature_points_weights(2,:), "(F10.5)" )
+        !call sll_o_display(knots(1:degree+2), "(F10.5)" )
+        !call sll_o_display(quadrature_points_weights(1,:), "(F10.5)" )
+        !call sll_o_display(quadrature_points_weights(2,:), "(F10.5)" )
 
-        !call sll_display(bspline_qpoint_values, "(F10.5)" )
+        !call sll_o_display(bspline_qpoint_values, "(F10.5)" )
         !write(*,*)
-        !call sll_display(fem_matrix_period, "(F10.5)" )
+        !call sll_o_display(fem_matrix_period, "(F10.5)" )
 
         !!<SLL_DEALLOCATE_ARRAY( bspline_qpoint_values,ierr)
         SLL_DEALLOCATE_ARRAY( quadrature_points_weights,ierr)
@@ -340,7 +340,7 @@ contains
     !<Does precomputation for the FFT solver
     subroutine sll_poisson_1d_fft_precomputation(this,circulant_matrix_first_line, &
             circulant_matrix_first_line_fourier,ierr)
-        class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
+        class(sll_t_poisson_1d_fem),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out) :: ierr
         sll_real64, dimension(:),allocatable, intent(in)   :: circulant_matrix_first_line
         sll_comp64, dimension(this%num_cells/2 +1),intent(out)  ::circulant_matrix_first_line_fourier
@@ -349,7 +349,7 @@ contains
         ierr=0
         !Determine dimension of problem
         N=size(circulant_matrix_first_line)
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
         !Generate Circulant Seed
 
         !Circulant seed c to generate stiffness matrix as a circular matrix
@@ -368,7 +368,7 @@ contains
         !        SLL_CLEAR_ALLOCATE(circulant_matrix_first_line_fourier(1:N/2+1), ierr)
 
         !Fourier transform the circulant seed
-        call fft_apply_plan_r2c_1d(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
+        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
 
         !circulant_matrix_first_line_fourier(1)=1.0_f64
         !        sll_real64:: matrix_condition
@@ -378,12 +378,12 @@ contains
 
 
     subroutine sll_poisson_1d_fem_assemble_mass_matrix(this,ierr)
-        class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
+        class(sll_t_poisson_1d_fem),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out)                :: ierr    !< error code
 
         sll_real64, dimension(this%spline_degree+1) :: mass_matrix_period
         mass_matrix_period=sll_gen_fem_bspline_matrix_period ( this%bspline , &
-            this%cartesian_mesh%eta1_nodes(), b_splines_at_x , ierr)
+            this%cartesian_mesh%eta1_nodes(), sll_f_splines_at_x , ierr)
         SLL_CLEAR_ALLOCATE(this%mass_matrix_first_line(1:this%num_cells),ierr)
         !First line of stiffness matrix
         this%mass_matrix_first_line=0.0_f64
@@ -395,11 +395,11 @@ contains
     !<Generates the FEM matrix for arbitrary spline evaluation functions
     function sll_gen_fem_bspline_matrix_period (bspline_arbitrary_degree, knots, spline_evaluation,ierr, quadrature_points  ) &
             result( fem_matrix_period)
-        type(arbitrary_degree_spline_1d), pointer, intent(in) :: bspline_arbitrary_degree
+        type(sll_t_arbitrary_degree_spline_1d), pointer, intent(in) :: bspline_arbitrary_degree
         sll_int32, intent(out)                :: ierr    !< error code
         sll_real64, dimension(:), intent(in)     :: knots
         sll_real64, dimension(:), allocatable    :: fem_matrix_period
-        procedure (b_splines_at_x) :: spline_evaluation
+        procedure (sll_f_splines_at_x) :: spline_evaluation
         integer                   :: degree
         sll_real64, dimension(:,:), allocatable   :: quadrature_points_weights
         sll_real64, dimension(:,:), allocatable   :: bspline_qpoint_values
@@ -428,7 +428,7 @@ contains
         !fem_matrix_period=0_f64
         !Quadrature for each support cell
         do cell=1,degree+1
-            quadrature_points_weights=gauss_legendre_points_and_weights(quadrature_npoints, knots(cell), knots(cell+1))
+            quadrature_points_weights=sll_f_gauss_legendre_points_and_weights(quadrature_npoints, knots(cell), knots(cell+1))
             do i=1,quadrature_npoints
                 bspline_qpoint_values(:,i)=spline_evaluation(bspline_arbitrary_degree, cell, quadrature_points_weights(1,i ))
                 !reorientate to the right side
@@ -454,13 +454,13 @@ contains
 
 
     subroutine sll_poisson_1d_fem_assemble_stiffn_matrix(this,ierr)
-        class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
+        class(sll_t_poisson_1d_fem),intent(inout) :: this     !< Solver data structure
         sll_int32, intent(out)                :: ierr    !< error code
         !sll_real64 :: fem_matrix_period_sum
 
         sll_real64, dimension(this%spline_degree+1) :: stiffn_matrix_period
         stiffn_matrix_period=sll_gen_fem_bspline_matrix_period ( this%bspline , &
-            this%cartesian_mesh%eta1_nodes(), b_spline_derivatives_at_x , ierr)
+            this%cartesian_mesh%eta1_nodes(), sll_f_spline_derivatives_at_x , ierr)
         SLL_CLEAR_ALLOCATE(this%stiffn_matrix_first_line(1:this%num_cells),ierr)
         !First line of stiffness matrix
         this%stiffn_matrix_first_line=0.0_f64
@@ -486,13 +486,13 @@ contains
             !                            .OR. (fem_matrix_period_sum - sum(stiffn_matrix_first_line) > FEM_MASS_MATRIX_TOL)  ) then
         !                    print *, "FEM matrix assembly failed: "
         !                    print *, fem_matrix_period_sum    , sum(stiffn_matrix_first_line)
-        !!                    call sll_display(stiffn_matrix_period, "(F12.8)" )
+        !!                    call sll_o_display(stiffn_matrix_period, "(F12.8)" )
         !                    stop
         !                endif
     endsubroutine
 
     subroutine solve_poisson_1d_fem_rhs_and_get(this, field, rhs)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in)      :: rhs
         sll_real64, dimension(this%num_cells), intent(out)     :: field
 
@@ -502,13 +502,13 @@ contains
     end subroutine
 
     subroutine solve_poisson_1d_fem_rhs(this, rhs)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in)      :: rhs
       !  sll_real64, dimension(size(rhs)) :: rhs_bc
 
        ! rhs_bc=rhs
 
-        if (  this%boundarycondition==SLL_DIRICHLET ) then
+        if (  this%boundarycondition==sll_p_dirichlet ) then
             !rhs_bc(1:this%bspline%degree*2)=0
             !rhs_bc(this%num_cells-(this%bspline%degree*2)-2:this%num_cells)=0
             !this%fem_solution(1:this%bspline%degree+3)=0
@@ -527,7 +527,7 @@ contains
         call this%H1seminorm_solution_stoch_approx(rhs, this%num_sample)
         !this%seminorm=dot_product(this%fem_solution, rhs)
 
-!        if (  this%boundarycondition==SLL_DIRICHLET ) then
+!        if (  this%boundarycondition==sll_p_dirichlet ) then
 !            !         rhs_bc(1:this%bspline%degree+3)=0
 !            !         rhs_bc(this%num_cells-(this%bspline%degree)-3:this%num_cells)=0
 !            !this%fem_solution(1:this%bspline%degree+3)=0
@@ -538,7 +538,7 @@ contains
 
     !Not efficient yet, in the future store LU decomposition
     subroutine solve_poisson_1d_fem_rhs_dirichlet(this, rhs)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in)      :: rhs
         !sll_real64, dimension(size(rhs)) :: rhs_bc
         sll_real64, dimension(this%spline_degree+1) :: femperiod
@@ -548,7 +548,7 @@ contains
         sll_int32, dimension( this%num_cells ) :: IPIV
 
        femperiod=sll_gen_fem_bspline_matrix_period ( this%bspline , &
-            this%cartesian_mesh%eta1_nodes(), b_spline_derivatives_at_x , ierr)
+            this%cartesian_mesh%eta1_nodes(), sll_f_spline_derivatives_at_x , ierr)
         N=this%num_cells
         KD=this%spline_degree
         this%fem_solution =rhs
@@ -591,12 +591,12 @@ contains
     endsubroutine
 
     !> @brief Solves the poisson equation for a given right hand side function
-    !> @param this pointer to a poisson_1d_fem object.
-    !> @param rhs right hand side function of type poisson_1d_fem_rhs_function
+    !> @param this pointer to a sll_t_poisson_1d_fem object.
+    !> @param rhs right hand side function of type sll_i_poisson_1d_fem_rhs_function
     subroutine solve_poisson_1d_fem_functionrhs(this, rhs_fun)
         implicit none
-        class(poisson_1d_fem),intent(inout) :: this
-        procedure (poisson_1d_fem_rhs_function) :: rhs_fun
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
+        procedure (sll_i_poisson_1d_fem_rhs_function) :: rhs_fun
         sll_real64, dimension(this%num_cells) :: rhs
 
         rhs=sll_poisson_1d_fem_get_rhs_from_function(this, rhs_fun,10)
@@ -608,7 +608,7 @@ contains
 
     function poisson_1d_fem_solve_circulant_matrix_equation(this, matrix_fl_fourier,rightside ) &
             result(solution)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in)   :: rightside
         sll_comp64, dimension(:), intent(in)   :: matrix_fl_fourier
         sll_real64, dimension(:) :: constant_factor(size(rightside))
@@ -623,7 +623,7 @@ contains
 
         N=size(rightside)
         SLL_ASSERT(N==this%num_cells)
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 
         SLL_ASSERT(N/2+1==size(matrix_fl_fourier))
 
@@ -636,13 +636,13 @@ contains
         constant_factor=0._f64
         constant_factor=rightside
 
-        call fft_apply_plan_r2c_1d(this%forward_fftplan,constant_factor,constant_factor_fourier)
+        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,constant_factor,constant_factor_fourier)
         !constant_factor_fourier(1)=0
         data_complex=constant_factor_fourier/(matrix_fl_fourier)
         data_complex(1)=(0._f64,0._f64)
         SLL_DEALLOCATE_ARRAY(constant_factor_fourier,ierr)
 
-        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
+        call sll_s_fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
         SLL_DEALLOCATE_ARRAY(data_complex,ierr)
         !Somehow the normalization does not do what it should do:
         solution=solution/N
@@ -652,9 +652,9 @@ contains
     !< knots are the interpolant points and have nothing to do with the mesh
     function poisson_1d_fem_bspline_basis_to_realvals ( this , bspline_vector, knots_eval_in, interpolfun_user ) &
             result(realvals)
-        class(poisson_1d_fem),intent(in) :: this
-        procedure (b_splines_at_x),pointer :: interpolfun
-        procedure (b_splines_at_x), optional :: interpolfun_user
+        class(sll_t_poisson_1d_fem),intent(in) :: this
+        procedure (sll_f_splines_at_x),pointer :: interpolfun
+        procedure (sll_f_splines_at_x), optional :: interpolfun_user
         sll_real64, dimension(:), intent(in)     :: bspline_vector
         sll_real64, dimension(:), intent(in)     :: knots_eval_in
         sll_real64, dimension(size(knots_eval_in))    :: knots_eval
@@ -673,14 +673,14 @@ contains
             interpolfun=>interpolfun_user
         else
             print *, "Warning no Interpolation function given!"
-            interpolfun=>b_splines_at_x
+            interpolfun=>sll_f_splines_at_x
         endif
         SLL_ASSERT( size(knots_eval)==size(realvals))
         SLL_ASSERT( this%num_cells==size(bspline_vector))
 
         realvals=0._f64
 
-        cell=sll_cell(this%cartesian_mesh, knots_eval)
+        cell=sll_o_cell(this%cartesian_mesh, knots_eval)
         !cell= bspline_fem_solver_1d_cell_number(knots_mesh, knots_eval(eval_idx))
         !Loop over all points to evaluate
         !This should be vectorizzed
@@ -730,30 +730,30 @@ contains
     !< Evaluates the first derivative of the solution at the given points knots_eval
     !< The Result is written into eval_solution
     subroutine poisson_1d_fem_eval_solution(this, knots_eval, eval_solution)
-        class(poisson_1d_fem),intent(in) :: this
+        class(sll_t_poisson_1d_fem),intent(in) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
         eval_solution=poisson_1d_fem_bspline_basis_to_realvals(this, this%fem_solution,&
-            knots_eval, b_splines_at_x)
+            knots_eval, sll_f_splines_at_x)
     endsubroutine
 
     !< Evaluates the solution at the given points knots_eval
     !< The Result is written into eval_solution
     subroutine poisson_1d_fem_eval_solution_derivative(this, knots_eval, eval_solution)
-        class(poisson_1d_fem),intent(in) :: this
+        class(sll_t_poisson_1d_fem),intent(in) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
         eval_solution=poisson_1d_fem_bspline_basis_to_realvals(this, this%fem_solution,&
-            knots_eval, b_spline_derivatives_at_x)
+            knots_eval, sll_f_spline_derivatives_at_x)
     endsubroutine
 
 
         !<Returns the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
         function  poisson_1d_fem_H1seminorm_solution(this) result(seminorm)
-            class(poisson_1d_fem),intent(inout) :: this
+            class(sll_t_poisson_1d_fem),intent(inout) :: this
             sll_real64 :: seminorm
 
             seminorm=this%seminorm
@@ -761,7 +761,7 @@ contains
 
     !<Sets the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
     subroutine poisson_1d_fem_calc_H1seminorm_solution(this)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64 :: seminorm
         sll_int32 :: N
         sll_real64 , dimension(:) :: rhs(this%num_cells)
@@ -770,19 +770,19 @@ contains
         !so for the complex data there will be only allocated space for N/2 +1 values
         sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
 
-        !!type(sll_fft_plan), pointer :: forward_fftplan => null()
-        !!type(sll_fft_plan), pointer :: backward_fftplan => null()
+        !!type(sll_t_fft_plan), pointer :: forward_fftplan => null()
+        !!type(sll_t_fft_plan), pointer :: backward_fftplan => null()
         rhs=this%fem_solution
 
         !Determine dimension of problem
         N=size(this%fem_solution)
         SLL_ASSERT(N==this%num_cells)
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan_r2c_1d(this%forward_fftplan,rhs,data_complex)
+        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,rhs,data_complex)
         data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
         data_complex(1)=(0._f64,0._f64)
-        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,rhs)
+        call sll_s_fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,rhs)
 
         !!!
         !Somehow the normalization does not do what it should do:
@@ -799,7 +799,7 @@ contains
 !    !<This function uses stochastic approximates for the covariances
 !    !<matrix of the rhs as
 !    subroutine poisson_1d_fem_calc_H1seminorm_solution_stochastic(this)
-!        class(poisson_1d_fem),intent(inout) :: this
+!        class(sll_t_poisson_1d_fem),intent(inout) :: this
 !        sll_real64 :: seminorm
 !        sll_int32 :: N
 !        sll_int32 :: Nmark !Number of markers
@@ -815,7 +815,7 @@ contains
 !        !Determine dimension of problem
 !        N=size(this%fem_solution)
 !        SLL_ASSERT(N==this%num_cells)
-!        SLL_ASSERT(is_power_of_two(int(N,i64)))
+!        SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 !
 !        !Ge
 !        call fft_apply_plan(this%forward_fftplan,rhs,data_complex)
@@ -838,7 +838,7 @@ contains
     !<matrix of the rhs as
     subroutine poisson_1d_fem_H1seminorm_solution_stoch_approx &
                     (this, rhs, num_sample)
-              class(poisson_1d_fem),intent(inout) :: this
+              class(sll_t_poisson_1d_fem),intent(inout) :: this
               sll_real64, dimension(:) :: rhs
               sll_int32,  intent(in) :: num_sample
                 sll_int32 :: N
@@ -846,7 +846,7 @@ contains
         !Determine dimension of problem
         N=size(this%fem_solution)
         SLL_ASSERT(N==size(rhs))
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 
         bias= this%tr_stiffinv_massm&
                  - dot_product(this%fem_solution, rhs )
@@ -863,7 +863,7 @@ contains
 
     !Calculates  trace(K^{-1} M)
     subroutine poisson_1d_fem_tr_stiffinv_massm(this)
-              class(poisson_1d_fem),intent(inout) :: this
+              class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
          !sll_int32 :: ierr
 
@@ -888,13 +888,13 @@ contains
         this%tr_stiffinv_massm=2.0_f64*real(sum(data_complex))
 
         !Scale
-        this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_mesh_area(this%cartesian_mesh)
+        this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_o_mesh_area(this%cartesian_mesh)
     endsubroutine
 
 
     !<Gives the squared L2-norm of the solution $\Phi$: $|\Phi|^2$
     function  poisson_1d_fem_L2norm_solution(this) result(l2norm)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64 :: l2norm
         sll_int32 :: N
         sll_real64 , dimension(:) :: solution(this%num_cells)
@@ -903,12 +903,12 @@ contains
         !Determine dimension of problem
         N=size(this%fem_solution)
         SLL_ASSERT(N==this%num_cells)
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan_r2c_1d(this%forward_fftplan,solution,data_complex)
+        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,solution,data_complex)
         data_complex=data_complex*(this%mass_matrix_first_line_fourier)
         data_complex(1)=(0._f64,0._f64)
-        call fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
+        call sll_s_fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
         solution=solution/(N)
         l2norm=dot_product(this%fem_solution, solution )
     endfunction
@@ -916,9 +916,9 @@ contains
 
     function poisson_1d_fem_get_rhs_from_klimontovich_density(this, &
             ppos)  result(rhs)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
-        !procedure (b_splines_at_x), optional:: interpolfun_user
+        !procedure (sll_f_splines_at_x), optional:: interpolfun_user
         sll_real64, dimension(this%num_cells) :: rhs
 
         sll_real64, dimension(1) :: pweight
@@ -936,7 +936,7 @@ contains
 
     function poisson_1d_fem_get_rhs_from_klimontovich_density_weighted( this,&
             ppos, pweight) result(rhs)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%num_cells) :: rhs
@@ -949,13 +949,13 @@ contains
 
     function poisson_1d_fem_get_rhs_from_klim_dens_weight_moment( this,&
             ppos, pweight, moment) result(rhs)
-        class(poisson_1d_fem),intent(inout) :: this
+        class(sll_t_poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%num_cells) :: rhs
         sll_int32 :: moment
-        !procedure (b_splines_at_x), optional:: interpolfun_user
-        procedure (b_splines_at_x), pointer :: interpolfun
+        !procedure (sll_f_splines_at_x), optional:: interpolfun_user
+        procedure (sll_f_splines_at_x), pointer :: interpolfun
         sll_int32 :: idx
         sll_int32, dimension( size(ppos) ) :: cell
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
@@ -967,12 +967,12 @@ contains
         !        if (present(interpolfun_user)) then
         !            interpolfun=>interpolfun_user
         !        else
-        !            interpolfun=>b_splines_at_x
+        !            interpolfun=>sll_f_splines_at_x
         !        endif
 
-        interpolfun=>b_splines_at_x
+        interpolfun=>sll_f_splines_at_x
 
-        cell= sll_cell(this%cartesian_mesh, ppos)
+        cell= sll_o_cell(this%cartesian_mesh, ppos)
 
         do idx=1,size(ppos)
 
@@ -980,7 +980,7 @@ contains
             b_contribution=interpolfun(this%bspline,cell(idx), ppos(idx))**moment
             !b_contribution=interpolfun(bspline,5, particleposition(idx) - (cell-1)*(knots(2)-knots(1)))
 
-            !if  (this%boundarycondition==SLL_DIRICHLET) then
+            !if  (this%boundarycondition==sll_p_dirichlet) then
             !                if (cell(idx)>this%num_cells-(this%bspline%degree+1) ) then
             !                b_contribution((this%bspline%degree+1):(this%bspline%degree+1)-(this%num_cells-cell(idx)):-1)=0.0_f64
             !                endif
@@ -1015,14 +1015,14 @@ contains
 
         enddo
 
-        if (  this%boundarycondition==SLL_DIRICHLET ) then
+        if (  this%boundarycondition==sll_p_dirichlet ) then
             rhs(1:this%bspline%degree+1)=0._f64
             rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0._f64
         endif
     endfunction
 
     !    function poisson_1d_fem_calculate_residual(this) result(residuum)
-    !                class(poisson_1d_fem),intent(inout) :: this
+    !                class(sll_t_poisson_1d_fem),intent(inout) :: this
     !
     !        sll_real64 :: residuum
     !        residuum= sqrt(sum(( &
@@ -1058,7 +1058,7 @@ contains
     !Each core is responsible for a number of cells
     !OR
     !Each core is responsible for his particles
-    !interpolfun is optional and b_splines_at_x by default
+    !interpolfun is optional and sll_f_splines_at_x by default
     !This is the delta function
     !    function interpolate_particles_bsplines( bspline, knots, particleposition_in, interpolfun_user, particleweight) &
         !            result(b)

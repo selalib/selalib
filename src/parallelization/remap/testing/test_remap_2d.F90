@@ -7,38 +7,38 @@ program remap_2d_unit_test
     output_unit
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_collective_barrier, &
-    sll_collective_reduce, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_s_collective_barrier, &
+    sll_o_collective_reduce, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_remapper, only: &
-    apply_remap_2d, &
-    compute_local_sizes, &
-    get_layout_i_max, &
-    get_layout_i_min, &
-    get_layout_j_max, &
-    get_layout_j_min, &
-    initialize_layout_with_distributed_array, &
-    layout_2d, &
-    local_to_global, &
-    new_layout_2d, &
-    new_remap_plan, &
-    remap_plan_2d_comp64, &
-    remap_plan_2d_real64, &
-    set_layout_i_max, &
-    set_layout_i_min, &
-    set_layout_j_max, &
-    set_layout_j_min, &
-    sll_delete, &
-    sll_get_num_nodes, &
-    sll_view_lims
+    sll_o_apply_remap_2d, &
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_i_max, &
+    sll_o_get_layout_i_min, &
+    sll_o_get_layout_j_max, &
+    sll_o_get_layout_j_min, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_2d_comp64, &
+    sll_t_remap_plan_2d_real64, &
+    sll_o_set_layout_i_max, &
+    sll_o_set_layout_i_min, &
+    sll_o_set_layout_j_max, &
+    sll_o_set_layout_j_min, &
+    sll_o_delete, &
+    sll_o_get_num_nodes, &
+    sll_o_view_lims
 
   use sll_m_utilities, only: &
-    is_power_of_two
+    sll_f_is_power_of_two
 
   use sll_mpi, only: &
     mpi_prod
@@ -73,10 +73,10 @@ program remap_2d_unit_test
   sll_int64                                 :: colsz        ! collective size
   sll_real64                                :: val
   ! Remap stuff
-  type(layout_2D), pointer                  :: layout1
-  type(layout_2D), pointer                  :: layout2
-  type(remap_plan_2D_real64), pointer       :: rmp2
-  type(remap_plan_2D_comp64), pointer       :: rmp2c
+  type(sll_t_layout_2d), pointer                  :: layout1
+  type(sll_t_layout_2d), pointer                  :: layout2
+  type(sll_t_remap_plan_2d_real64), pointer       :: rmp2
+  type(sll_t_remap_plan_2d_comp64), pointer       :: rmp2c
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -90,10 +90,10 @@ program remap_2d_unit_test
   test_passed = .true.
 
   ! Boot parallel environment
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
-  colsz  = int(sll_get_collective_size(sll_world_collective),i64)
-  myrank = sll_get_collective_rank(sll_world_collective)
+  colsz  = int(sll_f_get_collective_size(sll_v_world_collective),i64)
+  myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
   if( myrank .eq. 0) then
      print *, ' '
@@ -103,7 +103,7 @@ program remap_2d_unit_test
      flush( output_unit )
   end if
 
-  if (.not. is_power_of_two(colsz)) then     
+  if (.not. sll_f_is_power_of_two(colsz)) then     
      print *, 'This test needs to run in a number of processes which is ',&
           'a power of 2.'
      stop
@@ -114,7 +114,7 @@ program remap_2d_unit_test
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
-     layout1  => new_layout_2D( sll_world_collective )        
+     layout1  => sll_f_new_layout_2d( sll_v_world_collective )        
      call factorize_in_random_2powers_2d(colsz, npi, npj)
      if(i_test==1)then
         npi = 1
@@ -130,14 +130,14 @@ program remap_2d_unit_test
         print *, 'source configuration: ', npi, npj
      end if
 
-     call initialize_layout_with_distributed_array( &
+     call sll_o_initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           npi, &
           npj, &
           layout1 )
      
-     call compute_local_sizes( layout1, loc_sz_i_init, loc_sz_j_init)        
+     call sll_o_compute_local_sizes( layout1, loc_sz_i_init, loc_sz_j_init)        
 
      SLL_ALLOCATE(local_array1(loc_sz_i_init,loc_sz_j_init),ierr)
  
@@ -145,14 +145,14 @@ program remap_2d_unit_test
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
            tmp_array(:) = (/i, j/)
-           global_indices =  local_to_global( layout1, tmp_array )
+           global_indices =  sll_o_local_to_global( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            local_array1(i,j) = real(gi + (gj-1)*ni,f64)
         enddo
      enddo
      
-     layout2  => new_layout_2D( sll_world_collective )
+     layout2  => sll_f_new_layout_2d( sll_v_world_collective )
      call factorize_in_random_2powers_2d(colsz, npi, npj)
      if(i_test==1)then
        npi = int(colsz,i32)
@@ -168,7 +168,7 @@ program remap_2d_unit_test
         print *, 'target configuration: ', npi, npj
      end if
 
-     call initialize_layout_with_distributed_array( &
+     call sll_o_initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           npi, &
@@ -177,31 +177,31 @@ program remap_2d_unit_test
 
      call reorganize_randomly_2d(layout2)
      
-     call compute_local_sizes( &
+     call sll_o_compute_local_sizes( &
           layout2, &
           loc_sz_i_final, &
           loc_sz_j_final )
 
      SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final), ierr )
     print *, 'will create new remap plan...'
-     rmp2 => NEW_REMAP_PLAN( layout1, layout2, local_array1)     
+     rmp2 => sll_o_new_remap_plan( layout1, layout2, local_array1)     
 print *, 'created plan, proceeding to apply plan...'
-     call apply_remap_2D( rmp2, local_array1, local_array2 ) 
+     call sll_o_apply_remap_2d( rmp2, local_array1, local_array2 ) 
 print *, 'applied plan'
      SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final),ierr ) 
 #if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
-        call sll_view_lims( layout1 )
+        call sll_o_view_lims( layout1 )
         print *, i_test, myrank, 'Printing layout2: '
-        call sll_view_lims( layout2 )
+        call sll_o_view_lims( layout2 )
      end if
 #endif
      ! compare results with expected data
      do j=1,loc_sz_j_final 
         do i=1,loc_sz_i_final
            tmp_array(:) = (/i, j/)
-           global_indices =  local_to_global( layout2, tmp_array )
+           global_indices =  sll_o_local_to_global( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            arrays_diff(i,j) = local_array2(i,j) - (gi + (gj-1)*ni)
@@ -219,9 +219,9 @@ print *, 'applied plan'
               print *, local_array2(:,:)
               !    end if
               print *, i_test, myrank, 'Printing layout1: '
-              call sll_view_lims( layout1 )
+              call sll_o_view_lims( layout1 )
               print *, i_test, myrank, 'Printing layout2: '
-              call sll_view_lims( layout2 )
+              call sll_o_view_lims( layout2 )
               
               print*, 'program stopped by failure'
               stop
@@ -235,8 +235,8 @@ print *, 'applied plan'
      ! local sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
      ok = 1
-     call sll_collective_reduce( &
-          sll_world_collective, &
+     call sll_o_collective_reduce( &
+          sll_v_world_collective, &
           (/ real(ok) /), & 
           1, &
           MPI_PROD, &
@@ -251,10 +251,10 @@ print *, 'applied plan'
      end if
      flush( output_unit ) 
        
-     call sll_collective_barrier(sll_world_collective)
+     call sll_s_collective_barrier(sll_v_world_collective)
   
-     call sll_delete( layout1 )
-     call sll_delete( layout2 )
+     call sll_o_delete( layout1 )
+     call sll_o_delete( layout2 )
      SLL_DEALLOCATE_ARRAY(local_array1, ierr)
      SLL_DEALLOCATE_ARRAY(local_array2, ierr)
      SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
@@ -286,21 +286,21 @@ print *, 'applied plan'
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
-     layout1  => new_layout_2D( sll_world_collective )        
+     layout1  => sll_f_new_layout_2d( sll_v_world_collective )        
      call factorize_in_random_2powers_2d(colsz, npi, npj)
 
      if( myrank .eq. 0 ) then
         print *, 'source configuration: ', npi, npj
      end if
 
-     call initialize_layout_with_distributed_array( &
+     call sll_o_initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           npi, &
           npj, &
           layout1 )
      
-     call compute_local_sizes( layout1, loc_sz_i_init, loc_sz_j_init)        
+     call sll_o_compute_local_sizes( layout1, loc_sz_i_init, loc_sz_j_init)        
 
      SLL_ALLOCATE(local_array1c(loc_sz_i_init,loc_sz_j_init),ierr)
  
@@ -308,7 +308,7 @@ print *, 'applied plan'
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
            tmp_array(:)   = (/i, j/)
-           global_indices =  local_to_global( layout1, tmp_array )
+           global_indices =  sll_o_local_to_global( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            val = real(gi + (gj-1)*ni,f64)
@@ -316,13 +316,13 @@ print *, 'applied plan'
         enddo
      enddo
      
-     layout2  => new_layout_2D( sll_world_collective )
+     layout2  => sll_f_new_layout_2d( sll_v_world_collective )
      call factorize_in_random_2powers_2d(colsz, npi, npj)
      if( myrank .eq. 0 ) then
         print *, 'target configuration: ', npi, npj
      end if
 
-     call initialize_layout_with_distributed_array( &
+     call sll_o_initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           npi, &
@@ -331,31 +331,31 @@ print *, 'applied plan'
 
      call reorganize_randomly_2d(layout2)
      
-     call compute_local_sizes( &
+     call sll_o_compute_local_sizes( &
           layout2, &
           loc_sz_i_final, &
           loc_sz_j_final )
 
      SLL_ALLOCATE( local_array2c(loc_sz_i_final, loc_sz_j_final), ierr )
     
-     rmp2c => NEW_REMAP_PLAN( layout1, layout2, local_array1c)     
+     rmp2c => sll_o_new_remap_plan( layout1, layout2, local_array1c)     
 
-     call apply_remap_2D( rmp2c, local_array1c, local_array2c ) 
+     call sll_o_apply_remap_2d( rmp2c, local_array1c, local_array2c ) 
 
      SLL_ALLOCATE(arrays_diffc(loc_sz_i_final,loc_sz_j_final),ierr ) 
 #if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
-        call sll_view_lims( layout1 )
+        call sll_o_view_lims( layout1 )
         print *, i_test, myrank, 'Printing layout2: '
-        call sll_view_lims( layout2 )
+        call sll_o_view_lims( layout2 )
      end if
 #endif
      ! compare results with expected data
      do j=1,loc_sz_j_final 
         do i=1,loc_sz_i_final
            tmp_array(:)   = (/i, j/)
-           global_indices =  local_to_global( layout2, tmp_array )
+           global_indices =  sll_o_local_to_global( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            val = real(gi + (gj-1)*ni,f64)
@@ -374,9 +374,9 @@ print *, 'applied plan'
               print *, local_array2c(:,:)
               !    end if
               print *, i_test, myrank, 'Printing layout1: '
-              call sll_view_lims( layout1 )
+              call sll_o_view_lims( layout1 )
               print *, i_test, myrank, 'Printing layout2: '
-              call sll_view_lims( layout2 )
+              call sll_o_view_lims( layout2 )
               
               print*, 'program stopped by failure'
               stop
@@ -390,8 +390,8 @@ print *, 'applied plan'
      ! local sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
      ok = 1
-     call sll_collective_reduce( &
-          sll_world_collective, &
+     call sll_o_collective_reduce( &
+          sll_v_world_collective, &
           (/ real(ok) /), & 
           1, &
           MPI_PROD, &
@@ -406,10 +406,10 @@ print *, 'applied plan'
      end if
      flush( output_unit ) 
        
-     call sll_collective_barrier(sll_world_collective)
+     call sll_s_collective_barrier(sll_v_world_collective)
   
-     call sll_delete( layout1 )
-     call sll_delete( layout2 )
+     call sll_o_delete( layout1 )
+     call sll_o_delete( layout2 )
 
      SLL_DEALLOCATE_ARRAY(local_array1c, ierr)
      SLL_DEALLOCATE_ARRAY(local_array2c, ierr)
@@ -423,16 +423,16 @@ print *, 'applied plan'
      endif
   endif
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
   
 contains
 
   subroutine reorganize_randomly_2d(layout)
     implicit none
-    type(layout_2D), pointer   :: layout
+    type(sll_t_layout_2d), pointer   :: layout
     integer                    :: i, colsz, proc_n, proc_p
     real                       :: rand_real
-    colsz = sll_get_num_nodes(layout)
+    colsz = sll_o_get_num_nodes(layout)
     do i=0, colsz-1
        call random_number(rand_real)
        proc_n = int(rand_real*(colsz-1))
@@ -445,29 +445,29 @@ contains
   subroutine swap_box_2D(proc_n, proc_p, layout)
     implicit none
     integer                  :: proc_n, proc_p
-    type(layout_2D), pointer :: layout
+    type(sll_t_layout_2d), pointer :: layout
     integer                  :: i_min_n, i_max_n, j_min_n, j_max_n
     integer                  :: i_min_p, i_max_p, j_min_p, j_max_p
     ! Get proc_n contents from layout
-    i_min_n = get_layout_i_min( layout, proc_n )
-    i_max_n = get_layout_i_max( layout, proc_n )
-    j_min_n = get_layout_j_min( layout, proc_n )
-    j_max_n = get_layout_j_max( layout, proc_n )
+    i_min_n = sll_o_get_layout_i_min( layout, proc_n )
+    i_max_n = sll_o_get_layout_i_max( layout, proc_n )
+    j_min_n = sll_o_get_layout_j_min( layout, proc_n )
+    j_max_n = sll_o_get_layout_j_max( layout, proc_n )
     ! Get proc_p contents from layout
-    i_min_p = get_layout_i_min( layout, proc_p )
-    i_max_p = get_layout_i_max( layout, proc_p )
-    j_min_p = get_layout_j_min( layout, proc_p )
-    j_max_p = get_layout_j_max( layout, proc_p )
+    i_min_p = sll_o_get_layout_i_min( layout, proc_p )
+    i_max_p = sll_o_get_layout_i_max( layout, proc_p )
+    j_min_p = sll_o_get_layout_j_min( layout, proc_p )
+    j_max_p = sll_o_get_layout_j_max( layout, proc_p )
     ! Set proc_n contents in layout
-    call set_layout_i_min( layout, proc_n, i_min_p )
-    call set_layout_i_max( layout, proc_n, i_max_p)
-    call set_layout_j_min( layout, proc_n, j_min_p )
-    call set_layout_j_max( layout, proc_n, j_max_p )
+    call sll_o_set_layout_i_min( layout, proc_n, i_min_p )
+    call sll_o_set_layout_i_max( layout, proc_n, i_max_p)
+    call sll_o_set_layout_j_min( layout, proc_n, j_min_p )
+    call sll_o_set_layout_j_max( layout, proc_n, j_max_p )
     ! Set proc_p contents in layout
-    call set_layout_i_min( layout, proc_p, i_min_n )
-    call set_layout_i_max( layout, proc_p, i_max_n )
-    call set_layout_j_min( layout, proc_p, j_min_n )
-    call set_layout_j_max( layout, proc_p, j_max_n )
+    call sll_o_set_layout_i_min( layout, proc_p, i_min_n )
+    call sll_o_set_layout_i_max( layout, proc_p, i_max_n )
+    call sll_o_set_layout_j_min( layout, proc_p, j_min_n )
+    call sll_o_set_layout_j_max( layout, proc_p, j_max_n )
   end subroutine swap_box_2D
   
 
@@ -497,7 +497,7 @@ contains
     sll_int64, intent(in) :: n
     integer, intent(out)  ::n1, n2
     integer   :: expo, expo1, expo2
-    if (.not.is_power_of_two(n)) then   
+    if (.not.sll_f_is_power_of_two(n)) then   
        print*, 'The number of processors must be a power of 2'
        stop
     endif 
