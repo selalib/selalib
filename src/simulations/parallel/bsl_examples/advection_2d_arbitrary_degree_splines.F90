@@ -5,13 +5,13 @@ program sequential_advection
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    sll_arbitrary_degree_spline_interpolator_2d
+    sll_t_arbitrary_degree_spline_interpolator_2d
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_2d
+    sll_o_gnuplot_2d
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -20,7 +20,7 @@ program sequential_advection
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class(sll_c_interpolator_2d), pointer                  :: interp
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: spl
+type(sll_t_arbitrary_degree_spline_interpolator_2d), target :: spl
 
 sll_real64, dimension(:,:),  pointer       :: f
 
@@ -59,10 +59,10 @@ call spl%initialize(nc_eta1+1,    &
                     eta1_max,     &
                     eta2_min,     &
                     eta2_max,     &
-                    SLL_PERIODIC, &
-                    SLL_PERIODIC, &
-                    SLL_PERIODIC, &
-                    SLL_PERIODIC, &
+                    sll_p_periodic, &
+                    sll_p_periodic, &
+                    sll_p_periodic, &
+                    sll_p_periodic, &
                     5, 5)
 
 interp => spl
@@ -93,7 +93,7 @@ do i_step=1, 3*n_step
      end do
   end do
 
-  call sll_gnuplot_2d( eta1_min, eta1_max, nc_eta1+1, &
+  call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1+1, &
                        eta2_min, eta2_max, nc_eta2+1, &
                        f, 'f_sequential', i_step, error)
 

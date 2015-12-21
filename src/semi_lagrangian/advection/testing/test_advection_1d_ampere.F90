@@ -21,13 +21,13 @@ program test_advection_1d_ampere
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_ampere, only: &
-    new_ampere_1d_advector
+    sll_f_new_ampere_1d_advector
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base_ptr
+    sll_t_advection_1d_base_ptr
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_1d
+    sll_o_gnuplot_1d
 
 #ifdef _OPENMP
   use omp_lib, only: &
@@ -38,7 +38,7 @@ program test_advection_1d_ampere
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-type(sll_advection_1d_base_ptr), pointer  :: adv(:)
+type(sll_t_advection_1d_base_ptr), pointer  :: adv(:)
 
 sll_real64                            :: xmin, vmin
 sll_real64                            :: xmax, vmax
@@ -85,12 +85,12 @@ SLL_ALLOCATE(adv(psize),            ierr)
 solution = exp(-(x*x)/0.01)
 input = solution
 
-adv(prank+1)%ptr => new_ampere_1d_advector(nc_x, xmin, xmax  )
+adv(prank+1)%ptr => sll_f_new_ampere_1d_advector(nc_x, xmin, xmax  )
 
 do istep = 1, nstep
    call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
    input = output
-   call sll_gnuplot_1d(output, x, 'f_ampere', istep)
+   call sll_o_gnuplot_1d(output, x, 'f_ampere', istep)
 end do
 
 err = maxval(abs(solution-input))

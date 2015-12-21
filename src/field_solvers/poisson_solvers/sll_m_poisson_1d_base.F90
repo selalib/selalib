@@ -12,12 +12,12 @@ module sll_m_poisson_1d_base
   implicit none
 
   public :: &
-    sll_poisson_1d_base
+    sll_c_poisson_1d_base
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type, abstract :: sll_poisson_1d_base 
+  type, abstract :: sll_c_poisson_1d_base 
   contains
     !> Solve Poisson equation and compute electric potential from charge density, 
     !> \f[ -\Delta \phi_i = \rho_i \f]
@@ -27,7 +27,7 @@ module sll_m_poisson_1d_base
     !> \f[ E_i = -\nabla \phi_i \f]  with \f[ -\Delta \phi_i = \rho_i \f].
     procedure(signature_compute_E_from_rho_1d), deferred, pass(poisson) :: &
       compute_E_from_rho
-  end type sll_poisson_1d_base
+  end type sll_c_poisson_1d_base
 
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -35,8 +35,8 @@ module sll_m_poisson_1d_base
   abstract interface
     subroutine signature_compute_phi_from_rho_1d( poisson, phi, rho )
       use sll_m_working_precision
-      import sll_poisson_1d_base      
-      class(sll_poisson_1d_base), target :: poisson
+      import sll_c_poisson_1d_base      
+      class(sll_c_poisson_1d_base), target :: poisson
       sll_real64,dimension(:),intent(in) :: rho
       sll_real64,dimension(:),intent(out) :: phi
     end subroutine signature_compute_phi_from_rho_1d
@@ -45,8 +45,8 @@ module sll_m_poisson_1d_base
   abstract interface    
     subroutine signature_compute_E_from_rho_1d( poisson, E, rho )
       use sll_m_working_precision
-      import sll_poisson_1d_base       
-      class(sll_poisson_1d_base) :: poisson
+      import sll_c_poisson_1d_base       
+      class(sll_c_poisson_1d_base) :: poisson
       sll_real64,dimension(:),intent(in) :: rho
       sll_real64,dimension(:),intent(out) :: E
     end subroutine signature_compute_E_from_rho_1d

@@ -5,8 +5,8 @@ module sll_m_choleski
   implicit none
 
   public :: &
-    choles, &
-    desrem
+    sll_s_choles, &
+    sll_s_desrem
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -30,7 +30,7 @@ contains
 !  programmeur : 
 !  f hecht - juin 84 inria
 !
-subroutine choles(mudl,ae,as)
+subroutine sll_s_choles(mudl,ae,as)
 
 !**********************************************************************
 
@@ -94,12 +94,12 @@ end if
  900 format(/10x,'resultats a verifier : le coefficient diagonal du dl'  &
              ,i6,' est inferieur au seuil de precision',e14.7)
  901 format(/10x,'xii:',e14.7,e14.7,e14.7)
- 902 format(/10x,'************  Erreur dans CHOLES *************'/)
+ 902 format(/10x,'************  Erreur dans sll_s_choles *************'/)
 
-end subroutine choles
+end subroutine sll_s_choles
 
 
-!Function: desrem
+!Function: sll_s_desrem
 !descente et/ou remontee d'un systeme lineaire ( cholesky )
 !
 ! in:
@@ -111,7 +111,7 @@ end subroutine choles
 !
 !  programmeur: 
 !f hecht  - juin 84 inria , f. hermeline aout 89 cel/v
-subroutine desrem(mudl,a,be,ntdl,bs)
+subroutine sll_s_desrem(mudl,a,be,ntdl,bs)
 
 sll_int32,  intent(in)    :: mudl(0:*)
 sll_real64, intent(in)    :: a(*)
@@ -154,7 +154,7 @@ do i = ntdl , 1 , -1
    end do
 end do
 
-end subroutine desrem
+end subroutine sll_s_desrem
 
 
 end module sll_m_choleski

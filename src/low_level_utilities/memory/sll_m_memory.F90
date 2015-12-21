@@ -31,7 +31,7 @@ module sll_m_memory
   implicit none
 
   public :: &
-    test_error_code
+    sll_s_test_error_code
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,7 +60,7 @@ contains
    !> @param[in] line_number line number of the call
    !---------------------------------------------------------------------------
 
-  subroutine test_error_code(err_code, descriptor, file_name, line_number)
+  subroutine sll_s_test_error_code(err_code, descriptor, file_name, line_number)
     integer                      :: err_code
     character(len=*), intent(in) :: descriptor
     character(len=*), intent(in) :: file_name
@@ -68,9 +68,9 @@ contains
     if (err_code .ne. 0) then
        write(*, '(a, a, i8)') descriptor, ' Triggered in FILE '//file_name// &
             ', in LINE: ', line_number
-       stop 'ERROR: test_error_code(): exiting program'
+       stop 'ERROR: sll_s_test_error_code(): exiting program'
     end if
-  end subroutine test_error_code
+  end subroutine sll_s_test_error_code
 
 
 end module sll_m_memory

@@ -1,16 +1,27 @@
 module sll_m_pastix
-
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define MPI_MASTER 0
 #include "pastix_fortran.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-use sll_m_collective
+  use sll_m_collective, only: &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
-implicit none
-private
+  implicit none
 
-type, public :: pastix_solver
+  public :: &
+    pastix_solver, &
+    initialize, &
+    factorize, &
+    solve, &
+    delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+type :: pastix_solver
  pastix_data_ptr_t        :: pastix_data !< PaStiX structure (0 for first call)
  pastix_int_t             :: ncols       !< Number of columns in the matrix
  pastix_int_t   , pointer :: colptr(:)   !< Index of first elt of each col in avals
@@ -45,8 +56,6 @@ interface delete
    module procedure delete_pastix
 end interface delete
 
-public :: initialize, factorize, solve, delete
-
 contains
 
 subroutine initialize_pastix(this,n,nnzeros,row_ptr,col_ind,val)
@@ -62,13 +71,13 @@ subroutine initialize_pastix(this,n,nnzeros,row_ptr,col_ind,val)
   sll_int32                          :: prank    
   sll_int32                          :: psize
 
-  if( .not. associated(sll_world_collective)) then
-     call sll_boot_collective()
+  if( .not. associated(sll_v_world_collective)) then
+     call sll_s_boot_collective()
   end if
   this%ncols = n
-  prank = sll_get_collective_rank( sll_world_collective )
-  psize = sll_get_collective_size( sll_world_collective )
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank( sll_v_world_collective )
+  psize = sll_f_get_collective_size( sll_v_world_collective )
+  comm  = sll_v_world_collective%comm
 
   ! Get options ftom command line
   this%nbthread = 1
@@ -118,7 +127,7 @@ subroutine factorize_pastix(this)
   type(pastix_solver) :: this
   sll_int32           :: comm    
    
-  comm  = sll_world_collective%comm
+  comm  = sll_v_world_collective%comm
   ! Call PaStiX first steps (Scotch - Fax - Blend)
   this%iparm(IPARM_START_TASK) = API_TASK_ORDERING
   this%iparm(IPARM_END_TASK)   = API_TASK_ANALYSE
@@ -142,7 +151,7 @@ subroutine solve_pastix_without_rhs(this, sol)
   sll_real64, dimension(:) :: sol
   sll_int32                :: comm    
 
-  comm = sll_world_collective%comm
+  comm = sll_v_world_collective%comm
 
   this%rhs = sol
 
@@ -166,7 +175,7 @@ subroutine solve_pastix_with_rhs(this, rhs, sol)
   sll_real64, dimension(:) :: sol
   sll_int32                :: comm    
 
-  comm = sll_world_collective%comm
+  comm = sll_v_world_collective%comm
 
   this%rhs = rhs
 
@@ -188,7 +197,7 @@ subroutine delete_pastix(this)
   type(pastix_solver) :: this
   sll_int32           :: comm    
 
-  comm = sll_world_collective%comm
+  comm = sll_v_world_collective%comm
 
   ! Call PaStiX clean
   this%iparm(IPARM_START_TASK)       = API_TASK_CLEAN

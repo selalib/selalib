@@ -23,10 +23,10 @@
 
 !> @brief Most simple particle model
 
-!> @details Mainly useful to compare against more advanced models. A group of sll_simple_pic_4d_particle
+!> @details Mainly useful to compare against more advanced models. A group of sll_t_simple_pic_4d_particle
 !> is a @ref sll_simple_pic_4d_group
 
-! [[sll_simple_pic_4d_particle]]
+! [[sll_t_simple_pic_4d_particle]]
 ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
 
 module sll_m_simple_pic_4d_particle
@@ -38,16 +38,16 @@ module sll_m_simple_pic_4d_particle
   implicit none
 
   public :: &
-    sll_simple_pic_4d_particle
+    sll_t_simple_pic_4d_particle
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! <<sll_simple_pic_4d_particle>>
+  ! <<sll_t_simple_pic_4d_particle>>
 
   !> @ingroup particle_methods
 
-  type :: sll_simple_pic_4d_particle
+  type :: sll_t_simple_pic_4d_particle
      
      !> cell index in the x dimension (can be outside physical domain)
      sll_int32  :: i_cell_x
@@ -69,6 +69,6 @@ module sll_m_simple_pic_4d_particle
 
      sll_real32 :: weight
 
-  end type sll_simple_pic_4d_particle
+  end type sll_t_simple_pic_4d_particle
 
 end module sll_m_simple_pic_4d_particle

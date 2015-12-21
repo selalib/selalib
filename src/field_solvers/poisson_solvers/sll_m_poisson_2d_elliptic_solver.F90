@@ -33,42 +33,42 @@ module sll_m_poisson_2d_elliptic_solver
     output_unit
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    new_arbitrary_degree_spline_interp2d
+    sll_f_new_arbitrary_degree_spline_interp2d
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_neumann
+    sll_p_dirichlet, &
+    sll_p_neumann
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    new_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_general_coordinate_elliptic_solver, only: &
-    factorize_mat_es_prototype, &
-    general_coordinate_elliptic_solver, &
-    new_general_elliptic_solver_prototype, &
-    set_rho_coefficients_coordinates_elliptic_eq_prototype, &
-    solve_general_coordinates_elliptic_eq_prototype
+    sll_s_factorize_mat_es_prototype, &
+    sll_t_general_coordinate_elliptic_solver, &
+    sll_f_new_general_elliptic_solver_prototype, &
+    sll_s_set_rho_coefficients_coordinates_elliptic_eq_prototype, &
+    sll_s_solve_general_coordinates_elliptic_eq_prototype
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
 
   use sll_m_poisson_2d_base, only: &
-    sll_poisson_2d_base, &
+    sll_c_poisson_2d_base, &
     sll_f_function_of_position
 
   use sll_m_scalar_field_2d, only: &
-    new_scalar_field_2d_discrete
+    sll_f_new_scalar_field_2d_discrete
 
   use sll_m_scalar_field_2d_base, only: &
-    sll_scalar_field_2d_base
+    sll_c_scalar_field_2d_base
 
   implicit none
 
   public :: &
-    new_poisson_2d_elliptic_solver
+    sll_f_new_poisson_2d_elliptic_solver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -77,17 +77,17 @@ module sll_m_poisson_2d_elliptic_solver
   sll_int32, parameter :: SLL_SOLVE_ELLIPTIC_SOLVER = 1 
   sll_int32, parameter :: SLL_DO_NOTHING_ELLIPTIC_SOLVER = 2 
 
-  type,extends(sll_poisson_2d_base) :: poisson_2d_elliptic_solver      
-    type(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
-    !class(sll_scalar_field_2d_discrete), pointer        :: phi_field
-    class(sll_scalar_field_2d_base), pointer                :: rho_field
-    class(sll_scalar_field_2d_base), pointer                :: a11_field
-    class(sll_scalar_field_2d_base), pointer                :: a12_field
-    class(sll_scalar_field_2d_base), pointer                :: a21_field
-    class(sll_scalar_field_2d_base), pointer                :: a22_field
-    class(sll_scalar_field_2d_base), pointer                :: b1_field
-    class(sll_scalar_field_2d_base), pointer                :: b2_field
-    class(sll_scalar_field_2d_base), pointer                :: c_field
+  type,extends(sll_c_poisson_2d_base) :: poisson_2d_elliptic_solver      
+    type(sll_t_general_coordinate_elliptic_solver), pointer      :: elliptic_solver
+    !class(sll_t_scalar_field_2d_discrete), pointer        :: phi_field
+    class(sll_c_scalar_field_2d_base), pointer                :: rho_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a11_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a12_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a21_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a22_field
+    class(sll_c_scalar_field_2d_base), pointer                :: b1_field
+    class(sll_c_scalar_field_2d_base), pointer                :: b2_field
+    class(sll_c_scalar_field_2d_base), pointer                :: c_field
     class(sll_c_interpolator_2d), pointer                :: interp_rho
     class(sll_c_interpolator_2d), pointer                :: interp_a11
     class(sll_c_interpolator_2d), pointer                :: interp_a12
@@ -96,15 +96,15 @@ module sll_m_poisson_2d_elliptic_solver
     class(sll_c_interpolator_2d), pointer                :: interp_b1
     class(sll_c_interpolator_2d), pointer                :: interp_b2
     class(sll_c_interpolator_2d), pointer                :: interp_c
-    !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
-    !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
-!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
+    !type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
+    !type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
     sll_int32 :: control
     logical :: precompute_rhs
   contains
@@ -157,7 +157,7 @@ contains
    zero_mean ) 
    
    class(poisson_2d_elliptic_solver),        target  :: poisson
-   class(sll_coordinate_transformation_2d_base), pointer :: transf
+   class(sll_c_coordinate_transformation_2d_base), pointer :: transf
    sll_int32, intent(in)  :: spline_degree_eta1
    sll_int32, intent(in)  :: spline_degree_eta2
    sll_int32, intent(in)  :: num_cells_eta1
@@ -219,8 +219,8 @@ contains
    endif
    bc_eta1_left_interp = bc_eta1_left
    
-   if(bc_eta1_left==SLL_NEUMANN)then
-     bc_eta1_left_interp = SLL_DIRICHLET
+   if(bc_eta1_left==sll_p_neumann)then
+     bc_eta1_left_interp = sll_p_dirichlet
    endif
 
     np_eta1 = num_cells_eta1 + 1
@@ -246,7 +246,7 @@ contains
      if(present(interp_rho_case))then
        select case(interp_rho_case)
          case ("SLL_CUBIC_SPLINES")
-           poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+           poisson%interp_rho => sll_f_new_cubic_spline_interpolator_2d( &
              np_eta1, &
              np_eta2, &
              eta1_min, &
@@ -256,7 +256,7 @@ contains
              bc_interp2d_eta1, &
              bc_interp2d_eta2)
          case ("SLL_ARBITRARY_DEGREE_SPLINES")
-           poisson%interp_rho => new_arbitrary_degree_spline_interp2d( &
+           poisson%interp_rho => sll_f_new_arbitrary_degree_spline_interp2d( &
              np_eta1, &
              np_eta2, &
              eta1_min, &
@@ -275,7 +275,7 @@ contains
            SLL_ERROR('initialize_poisson_2d_elliptic_solver','bad interp_rho_case')    
        end select
      else
-       poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+       poisson%interp_rho => sll_f_new_cubic_spline_interpolator_2d( &
          np_eta1, &
          np_eta2, &
          eta1_min, &
@@ -288,7 +288,7 @@ contains
    endif
 
 !   if(local_precompute_rhs)then
-!     poisson%interp_rho => new_arbitrary_degree_spline_interp2d( &
+!     poisson%interp_rho => sll_f_new_arbitrary_degree_spline_interp2d( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -302,7 +302,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)
 !   else
-!     poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+!     poisson%interp_rho => sll_f_new_cubic_spline_interpolator_2d( &
 !          np_eta1, &
 !          np_eta2, &
 !          eta1_min, &
@@ -316,7 +316,7 @@ contains
 
 
     
-  poisson%interp_a11 => new_cubic_spline_interpolator_2d( &
+  poisson%interp_a11 => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -327,7 +327,7 @@ contains
     bc_interp2d_eta2)                
 
 
-  poisson%interp_a12 => new_cubic_spline_interpolator_2d( &
+  poisson%interp_a12 => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -337,7 +337,7 @@ contains
     bc_interp2d_eta1, &
     bc_interp2d_eta2)                
 
-  poisson%interp_a21 => new_cubic_spline_interpolator_2d( &
+  poisson%interp_a21 => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -347,7 +347,7 @@ contains
     bc_interp2d_eta1, &
     bc_interp2d_eta2)                
 
-  poisson%interp_a22 => new_cubic_spline_interpolator_2d( &
+  poisson%interp_a22 => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -358,7 +358,7 @@ contains
     bc_interp2d_eta2)                
 
 
-  poisson%interp_b1 => new_cubic_spline_interpolator_2d( &
+  poisson%interp_b1 => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -368,7 +368,7 @@ contains
     bc_interp2d_eta1, &
     bc_interp2d_eta2)                
 
-  poisson%interp_b2 => new_cubic_spline_interpolator_2d( &
+  poisson%interp_b2 => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -378,7 +378,7 @@ contains
     bc_interp2d_eta1, &
     bc_interp2d_eta2)                
 
-  poisson%interp_c => new_cubic_spline_interpolator_2d( &
+  poisson%interp_c => sll_f_new_cubic_spline_interpolator_2d( &
     np_eta1, &
     np_eta2, &
     eta1_min, &
@@ -506,7 +506,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)   
                                    
-    poisson%a11_field => new_scalar_field_2d_discrete( &
+    poisson%a11_field => sll_f_new_scalar_field_2d_discrete( &
          "a11_check", &
          poisson%interp_a11, &
          transf, &
@@ -518,7 +518,7 @@ contains
     call poisson%a11_field%set_field_data( a11_values )
     call poisson%a11_field%update_interpolation_coefficients( )  
    
-    poisson%a12_field => new_scalar_field_2d_discrete( &
+    poisson%a12_field => sll_f_new_scalar_field_2d_discrete( &
          "a12_check", &
          poisson%interp_a12, &
          transf, &
@@ -530,7 +530,7 @@ contains
     call poisson%a12_field%set_field_data( a12_values )
     call poisson%a12_field%update_interpolation_coefficients( ) 
     
-    poisson%a21_field => new_scalar_field_2d_discrete( &
+    poisson%a21_field => sll_f_new_scalar_field_2d_discrete( &
          "a21_check", &
          poisson%interp_a21, &
          transf, &
@@ -542,7 +542,7 @@ contains
     call poisson%a21_field%set_field_data( a21_values )
     call poisson%a21_field%update_interpolation_coefficients( ) 
     
-    poisson%a22_field => new_scalar_field_2d_discrete( &
+    poisson%a22_field => sll_f_new_scalar_field_2d_discrete( &
          "a22_check", &
          poisson%interp_a22, &
          transf, &
@@ -554,7 +554,7 @@ contains
     call poisson%a22_field%set_field_data( a22_values )
     call poisson%a22_field%update_interpolation_coefficients( )
 
-    poisson%b1_field => new_scalar_field_2d_discrete( &
+    poisson%b1_field => sll_f_new_scalar_field_2d_discrete( &
          "b1_check", &
          poisson%interp_b1, &
          transf, &
@@ -566,7 +566,7 @@ contains
     call poisson%b1_field%set_field_data( b1_values )
     call poisson%b1_field%update_interpolation_coefficients( ) 
     
-    poisson%b2_field => new_scalar_field_2d_discrete( &
+    poisson%b2_field => sll_f_new_scalar_field_2d_discrete( &
          "b2_check", &
          poisson%interp_b2, &
          transf, &
@@ -578,7 +578,7 @@ contains
     call poisson%b2_field%set_field_data( b2_values )
     call poisson%b2_field%update_interpolation_coefficients( )
   
-    poisson%c_field => new_scalar_field_2d_discrete( &
+    poisson%c_field => sll_f_new_scalar_field_2d_discrete( &
          "c_check", &
          poisson%interp_c, &
          transf, &
@@ -596,7 +596,7 @@ contains
     rho_values(:,:) = 0.0_f64
     
     
-     poisson%rho_field => new_scalar_field_2d_discrete( &
+     poisson%rho_field => sll_f_new_scalar_field_2d_discrete( &
          "rho_check", &
          poisson%interp_rho, &
          transf, &
@@ -609,8 +609,8 @@ contains
     call poisson%rho_field%update_interpolation_coefficients( )
     
     ! initialize of general_elliptic_solver
-    print *,'new_general_elliptic_solver'   
-    poisson%elliptic_solver => new_general_elliptic_solver_prototype( &
+    print *,'sll_f_new_general_elliptic_solver'   
+    poisson%elliptic_solver => sll_f_new_general_elliptic_solver_prototype( &
         spline_degree_eta1, &
         spline_degree_eta2, &
         num_cells_eta1, &
@@ -634,8 +634,8 @@ contains
  
         
     ! compute matrix the field
-    print *,'#begin factorize_mat_es'
-    call factorize_mat_es_prototype(&
+    print *,'#begin sll_s_factorize_mat_es'
+    call sll_s_factorize_mat_es_prototype(&
 !    call assemble_mat_es(&
         poisson%elliptic_solver, &
         poisson%a11_field, &
@@ -645,12 +645,12 @@ contains
         poisson%b1_field,&
         poisson%b2_field,&
         poisson%c_field)    
-    print *,'#end factorize_mat_es'
+    print *,'#end sll_s_factorize_mat_es'
         
  end subroutine initialize_poisson_2d_elliptic_solver
  
  
- function new_poisson_2d_elliptic_solver( &
+ function sll_f_new_poisson_2d_elliptic_solver( &
    transf,&
    spline_degree_eta1, &
    spline_degree_eta2, &
@@ -684,7 +684,7 @@ contains
    result(poisson)
    
    class(poisson_2d_elliptic_solver),        pointer  :: poisson
-   class(sll_coordinate_transformation_2d_base), pointer :: transf
+   class(sll_c_coordinate_transformation_2d_base), pointer :: transf
    sll_int32, intent(in)  :: spline_degree_eta1
    sll_int32, intent(in)  :: spline_degree_eta2
    sll_int32, intent(in)  :: num_cells_eta1
@@ -753,7 +753,7 @@ contains
    with_constraint, &
    zero_mean)  
    
-  end function new_poisson_2d_elliptic_solver
+  end function sll_f_new_poisson_2d_elliptic_solver
   
   ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_elliptic_solver(poisson,phi,rho )
@@ -763,7 +763,7 @@ contains
     ! output variables
     sll_real64, dimension(:,:), intent(out)  :: phi
     ! local variables
-    !class(general_coordinate_elliptic_solver), pointer   :: elliptic_solver
+    !class(sll_t_general_coordinate_elliptic_solver), pointer   :: elliptic_solver
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: eta1_min
@@ -804,16 +804,16 @@ contains
      return
     endif
     if(poisson%precompute_rhs)then
-      call set_rho_coefficients_coordinates_elliptic_eq_prototype( &
+      call sll_s_set_rho_coefficients_coordinates_elliptic_eq_prototype( &
         poisson%elliptic_solver, &
         rho_values=-rho)
-      call solve_general_coordinates_elliptic_eq_prototype(&
+      call sll_s_solve_general_coordinates_elliptic_eq_prototype(&
         poisson%elliptic_solver,&
         phi)      
     else
       call poisson%rho_field%set_field_data(-rho)
       call poisson%rho_field%update_interpolation_coefficients( )
-      call solve_general_coordinates_elliptic_eq_prototype(&
+      call sll_s_solve_general_coordinates_elliptic_eq_prototype(&
         poisson%elliptic_solver,&
         phi, &
         rho_field=poisson%rho_field)
@@ -831,7 +831,7 @@ contains
 
     ! solves E = -\nabla Phi in 2d
 !    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
+!      class(sll_t_poisson_2d_fft_solver) :: poisson
 !      sll_real64,dimension(:,:),intent(in) :: phi
 !      sll_real64,dimension(:,:),intent(out) :: E1
 !      sll_real64,dimension(:,:),intent(out) :: E2

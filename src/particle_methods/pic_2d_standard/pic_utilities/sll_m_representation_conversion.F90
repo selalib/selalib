@@ -23,7 +23,7 @@ module sll_m_representation_conversion
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   implicit none
 
@@ -77,7 +77,7 @@ contains
   ! transforms a standard particle position (x,y) in our type (i_cell, dx, dy)
 
     sll_real64, intent(in)  :: x, y
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(out) :: i_cell       !! watch out: from 1 to m2d%num_cells1 * m2d%num_cells2
     sll_real32, intent(out) :: offset_x, offset_y
     sll_int32               :: i_cell_x_from_0     !! watch out: from 0 to m2d%num_cells1 - 1
@@ -116,7 +116,7 @@ contains
   ! transforms sll_type of a particle (i_cell, dx, dy) into the standard
   ! particle position (x,y)
     sll_real64, intent(out)  :: x, y
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(in) :: i_cell
     sll_real32, intent(in) :: offset_x, offset_y
 
@@ -136,7 +136,7 @@ contains
                       offset_x, offset_y )
 
     sll_real64, intent(in)  :: x, y
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(out) :: i_cell_x       !! not necessarily in [1, m2d%num_cells1], see comments above
     sll_int32,  intent(out) :: i_cell_y       !! not necessarily in [1, m2d%num_cells2], see comments above
     sll_real32, intent(out) :: offset_x, offset_y
@@ -166,7 +166,7 @@ contains
   ! transforms sll_type of a particle (i_cell, dx, dy) into the standard
   ! particle position (x,y)
     sll_real64, intent(out)  :: x, y
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(in) :: i_cell_x, i_cell_y
     sll_real32, intent(in) :: offset_x, offset_y
 
@@ -177,7 +177,7 @@ contains
 
 
   subroutine get_poisson_cell_index( m2d, i_cell_x, i_cell_y, i_cell )
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(in) :: i_cell_x       !! not necessarily in [1, m2d%num_cells1]
     sll_int32,  intent(in) :: i_cell_y      !! not necessarily in [1, m2d%num_cells2]
     sll_int32,  intent(out) :: i_cell        !! in [1, m2d%num_cells1 * m2d%num_cells2]

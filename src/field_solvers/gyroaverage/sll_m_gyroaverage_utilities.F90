@@ -4,56 +4,56 @@ module sll_m_gyroaverage_utilities
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gauss_legendre_integration, only: &
-    gauss_legendre_points, &
-    gauss_legendre_weights
+    sll_f_gauss_legendre_points, &
+    sll_f_gauss_legendre_weights
 
   use sll_m_gauss_lobatto_integration, only: &
-    gauss_lobatto_points, &
-    gauss_lobatto_weights
+    sll_f_gauss_lobatto_points, &
+    sll_f_gauss_lobatto_weights
 
   implicit none
 
   public :: &
-    compute_init_f_polar, &
-    compute_mu, &
-    compute_shape_circle, &
-    zero_bessel_dir_dir
+    sll_s_compute_init_f_polar, &
+    sll_s_compute_mu, &
+    sll_s_compute_shape_circle, &
+    sll_s_zero_bessel_dir_dir
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
-  subroutine compute_shape_circle(points,N_points)
+  subroutine sll_s_compute_shape_circle(points,N_points)
     sll_int32,intent(in) :: N_points
     sll_real64,dimension(:,:) ::points
     sll_int32 :: i
     sll_real64 :: x
     do i=1,N_points
-      x = 2._f64*sll_pi*real(i,f64)/(real(N_points,f64))
+      x = 2._f64*sll_p_pi*real(i,f64)/(real(N_points,f64))
       points(1,i) = cos(x)
       points(2,i) = sin(x)
       points(3,i) = 1._f64/real(N_points,f64)
     enddo
    
-  end subroutine compute_shape_circle
+  end subroutine sll_s_compute_shape_circle
 
 
-  subroutine compute_init_f_polar(f,mode,N,eta_min,eta_max)
+  subroutine sll_s_compute_init_f_polar(f,mode,N,eta_min,eta_max)
     sll_real64,dimension(:,:),intent(out)::f
     sll_int32,intent(in)::N(2),mode(2)
     sll_real64,intent(in)::eta_min(2),eta_max(2)
     sll_int32::i,j
     sll_real64::eta(2),delta_eta(2),kmode,val
 
-    call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),val)
+    call sll_s_zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),val)
     delta_eta(1)=(eta_max(1)-eta_min(1))/real(N(1),f64)
     delta_eta(2)=(eta_max(2)-eta_min(2))/real(N(2),f64)
     
-    kmode=real(mode(2),f64)*(2._f64*sll_pi)/(eta_max(2)-eta_min(2))
+    kmode=real(mode(2),f64)*(2._f64*sll_p_pi)/(eta_max(2)-eta_min(2))
     
         
     do j=1,N(2)+1
@@ -67,10 +67,10 @@ contains
       enddo
     enddo   
     
-  end subroutine compute_init_f_polar
+  end subroutine sll_s_compute_init_f_polar
   
   
-   subroutine zero_bessel_dir_dir(mode,eta_min,eta_max,val)
+   subroutine sll_s_zero_bessel_dir_dir(mode,eta_min,eta_max,val)
     sll_real64,intent(in)::eta_min,eta_max
     sll_int32,intent(in)::mode(2)
     sll_real64,intent(out)::val
@@ -107,9 +107,9 @@ contains
     close(27) 
     val = tmp
       
-  end subroutine zero_bessel_dir_dir
+  end subroutine sll_s_zero_bessel_dir_dir
 
-  subroutine compute_mu( &
+  subroutine sll_s_compute_mu( &
     quadrature_case, &
     mu_points, &
     mu_weights, &
@@ -144,19 +144,19 @@ contains
         s=1
         do i=1,num_cells
           mu_points(s:s+quadrature_points_per_cell-1) = &
-            gauss_lobatto_points( &
+            sll_f_gauss_lobatto_points( &
               quadrature_points_per_cell, &
               mu_min+real(i-1,f64)/real(num_cells,f64)*(mu_max-mu_min), &
               mu_min+real(i,f64)/real(num_cells,f64)*(mu_max-mu_min) )
           mu_weights(s:s+quadrature_points_per_cell-1) = &
-            gauss_lobatto_weights( &
+            sll_f_gauss_lobatto_weights( &
               quadrature_points_per_cell, &
               mu_min+real(i-1,f64)/real(num_cells,f64)*(mu_max-mu_min), &
               mu_min+real(i,f64)/real(num_cells,f64)*(mu_max-mu_min) )
           s=s+quadrature_points_per_cell        
         enddo
-        !mu_points(1:N_mu) = gauss_lobatto_points( N_mu, 0._f64, mu_max )
-        !mu_weights(1:N_mu) = gauss_lobatto_weights( N_mu, 0._f64, mu_max )
+        !mu_points(1:N_mu) = sll_f_gauss_lobatto_points( N_mu, 0._f64, mu_max )
+        !mu_weights(1:N_mu) = sll_f_gauss_lobatto_weights( N_mu, 0._f64, mu_max )
         do i=1,N_mu
           mu_weights(i) = mu_weights(i)*exp(-mu_points(i))
         enddo       
@@ -167,32 +167,32 @@ contains
         s=1
         do i=1,num_cells
           mu_points(s:s+quadrature_points_per_cell-1) = &
-            gauss_legendre_points( &
+            sll_f_gauss_legendre_points( &
               quadrature_points_per_cell, &
               mu_min+real(i-1,f64)/real(num_cells,f64)*(mu_max-mu_min), &
               mu_min+real(i,f64)/real(num_cells,f64)*(mu_max-mu_min) )
           mu_weights(s:s+quadrature_points_per_cell-1) = &
-            gauss_legendre_weights( &
+            sll_f_gauss_legendre_weights( &
               quadrature_points_per_cell, &
               mu_min+real(i-1,f64)/real(num_cells,f64)*(mu_max-mu_min), &
               mu_min+real(i,f64)/real(num_cells,f64)*(mu_max-mu_min) )
           s=s+quadrature_points_per_cell        
         enddo
-        !mu_points(1:N_mu) = gauss_lobatto_points( N_mu, 0._f64, mu_max )
-        !mu_weights(1:N_mu) = gauss_lobatto_weights( N_mu, 0._f64, mu_max )
+        !mu_points(1:N_mu) = sll_f_gauss_lobatto_points( N_mu, 0._f64, mu_max )
+        !mu_weights(1:N_mu) = sll_f_gauss_lobatto_weights( N_mu, 0._f64, mu_max )
         do i=1,N_mu
           mu_weights(i) = mu_weights(i)*exp(-mu_points(i))
         enddo       
       case default
         print *,'#bad quadrature_case',trim(quadrature_case)
         print *,'#not implemented'
-        print *,'#in compute_mu'
+        print *,'#in sll_s_compute_mu'
         print*,'#at line and file:',__LINE__,__FILE__
         stop
     end select
 
     
-  end subroutine compute_mu
+  end subroutine sll_s_compute_mu
 
 
 end module sll_m_gyroaverage_utilities

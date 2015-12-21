@@ -74,15 +74,15 @@ tsteps=100
 qm=-1 !electrons
 
 dimx=2
-boxlen=4*sll_pi
+boxlen=4*sll_p_pi
 
 
-call sll_boot_collective()
-call sll_collective_barrier(sll_world_collective)
+call sll_s_boot_collective()
+call sll_collective_barrier(sll_v_world_collective)
  !really global variables
- coll_rank = sll_get_collective_rank( sll_world_collective )
- coll_size = sll_get_collective_size( sll_world_collective )
- call sll_collective_barrier(sll_world_collective)
+ coll_rank = sll_f_get_collective_rank( sll_v_world_collective )
+ coll_size = sll_f_get_collective_size( sll_v_world_collective )
+ call sll_collective_barrier(sll_v_world_collective)
 
 
 if (coll_rank==0) then
@@ -96,7 +96,7 @@ endif
 npart_loc=npart/coll_size
 
 !print*, "#Core ", coll_rank, " handles particles", coll_rank*nparticles +1, "-", (coll_rank+1)*nparticles
-!call sll_collective_barrier(sll_world_collective)
+!call sll_collective_barrier(sll_v_world_collective)
 if (coll_rank==0) print*, "#Total Number of particles: ", npart_loc*coll_size
 
 
@@ -122,7 +122,7 @@ call init_particle_prior_maxwellian()
 
 
 !Set weights for strong landau damping
-particle(maskw,:)=(1-0.4*sum(cos(0.5*particle(maskx,:) +sll_pi/3.0),1))
+particle(maskw,:)=(1-0.4*sum(cos(0.5*particle(maskx,:) +sll_p_pi/3.0),1))
 particle(maskw,:)=particle(maskw,:)/prior_weight
 
 SLL_ALLOCATE(weight_const(npart_loc),ierr)
@@ -155,7 +155,7 @@ end do
 call write_result()
 
 
-call sll_halt_collective()
+call sll_s_halt_collective()
 !--------------------------------------------------------------
 contains
 
@@ -193,7 +193,7 @@ subroutine calculate_diagnostics
 sll_int32 :: idx
 
 kineticenergy(tstep)=sum(sum(particle(maskv,:)**2,1)*particle(maskw,:))/npart
-call sll_collective_globalsum(sll_world_collective, kineticenergy)
+call sll_collective_globalsum(sll_v_world_collective, kineticenergy)
 
 fieldenergy(tstep)=abs(dot_product(solution,rhs))
 ! fieldenergy(tstep)=abs(Efield)
@@ -203,12 +203,12 @@ energy_error(tstep)=abs(energy(2)-energy(tstep))/abs(energy(1))
 do idx=1,size(particle,2)
 moment(:,tstep)=moment(:,tstep)+(particle(maskv,idx)*particle(maskw,idx))
 end do
-call sll_collective_globalsum(sll_world_collective, moment(:,tstep))
+call sll_collective_globalsum(sll_v_world_collective, moment(:,tstep))
 
 moment_error(tstep)=sqrt(sum((moment(:,1)-moment(:,tstep))**2))
 
 weight_sum(tstep)=sum(particle(maskw,:))/npart
-call sll_collective_globalsum(sll_world_collective, weight_sum,0)
+call sll_collective_globalsum(sll_v_world_collective, weight_sum,0)
 
 
 end subroutine
@@ -258,7 +258,7 @@ subroutine symplectic_rungekutta()
      !Charge assignement, get right hand side
      rhs=SOLVER%get_rhs_particle(particle(maskxw,:))/npart
      !mpi allreduce
-     call sll_collective_globalsum(sll_world_collective, rhs)
+     call sll_collective_globalsum(sll_v_world_collective, rhs)
 
      solution=SOLVER%solve_poisson(rhs)
      
@@ -363,9 +363,9 @@ SELECT CASE (controlvariate)
      !This should not happen
       cv=1
     CASE (SLL_CONTROLVARIATE_STANDARD)
-      cv=sqrt(2*sll_pi)**(-size(maskv))*exp(-0.5*sum(particle(maskv,:),1)**2)
+      cv=sqrt(2*sll_p_pi)**(-size(maskv))*exp(-0.5*sum(particle(maskv,:),1)**2)
     CASE (SLL_CONTROLVARIATE_MAXWELLIAN)
-      cv=sqrt(2*sll_pi)**(-size(maskv))*exp(-0.5*sum(particle(maskv,:),1)**2)
+      cv=sqrt(2*sll_p_pi)**(-size(maskv))*exp(-0.5*sum(particle(maskv,:),1)**2)
 END SELECT
 
 end function 

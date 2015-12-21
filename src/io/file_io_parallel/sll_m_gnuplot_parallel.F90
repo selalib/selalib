@@ -21,7 +21,7 @@
 !> @details
 !> Data files are in ASCII format so these subroutines are slow and use
 !> a lot of disk space. Consider to use it for debug purpose.
-!> Here an example using the layout_2d object, check out how to compute
+!> Here an example using the sll_t_layout_2d object, check out how to compute
 !> offset values before calling sll_m_gnuplot_parallel subroutines.
 !> @snippet remap/unit_test_parallel.F90 example
 #define MPI_MASTER 0
@@ -33,11 +33,11 @@ module sll_m_gnuplot_parallel
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_utilities, only: &
-    int2string, &
-    sll_new_file_id
+    sll_s_int2string, &
+    sll_s_new_file_id
 
   use sll_mpi, only: &
     mpi_comm_rank, &
@@ -47,23 +47,23 @@ module sll_m_gnuplot_parallel
   implicit none
 
   public :: &
-    sll_gnuplot_2d_parallel, &
-    sll_gnuplot_curv_2d_parallel, &
-    sll_gnuplot_rect_2d_parallel
+    sll_o_gnuplot_2d_parallel, &
+    sll_s_gnuplot_curv_2d_parallel, &
+    sll_s_gnuplot_rect_2d_parallel
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Create a gnuplot file for a 2d mesh (cartesian or curvilinear)
-interface sll_gnuplot_2d_parallel
-   module procedure sll_gnuplot_curv_2d_parallel
-   module procedure sll_gnuplot_rect_2d_parallel
-end interface sll_gnuplot_2d_parallel
+interface sll_o_gnuplot_2d_parallel
+   module procedure sll_s_gnuplot_curv_2d_parallel
+   module procedure sll_s_gnuplot_rect_2d_parallel
+end interface sll_o_gnuplot_2d_parallel
 
 contains  
 
 !> write a data file plotable by gnuplot to visualize a 2d field
-subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
+subroutine sll_s_gnuplot_curv_2d_parallel(array_x, array_y, array, &
                                    array_name, iplot, error)  
 
   sll_real64, dimension(:,:), intent(in) :: array_x    !< x mesh coordinates
@@ -85,8 +85,8 @@ subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,error)
   call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,error)
   comm = MPI_COMM_WORLD
-  call int2string(iproc, cproc)
-  call int2string(iplot, fin)
+  call sll_s_int2string(iproc, cproc)
+  call sll_s_int2string(iplot, fin)
   
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
@@ -100,8 +100,8 @@ subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   SLL_ASSERT(size(array,  1) == size(array_y,1))
   SLL_ASSERT(size(array,  2) == size(array_y,2))
   
-  call sll_new_file_id(file_id, error)
-  call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
+  call sll_s_new_file_id(file_id, error)
+  call sll_s_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
   
   ! we need to get rid of size() calls for anything that is not an argument
   ! check...
@@ -116,7 +116,7 @@ subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   if (iproc == MPI_MASTER) then
   
      if (first_call) then
-        call sll_new_file_id(gnu_id, error)
+        call sll_s_new_file_id(gnu_id, error)
         open(gnu_id,file=array_name//".gnu")
         rewind(gnu_id)
         first_call = .false.
@@ -128,7 +128,7 @@ subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
      write(gnu_id,"(a)",advance='no') &
      "splot '"//"0000/"//array_name//'_'//fin//".dat' w l"
      do iproc = 1, nproc - 1
-        call int2string(iproc, cproc)
+        call sll_s_int2string(iproc, cproc)
         write(gnu_id,"(a)",advance='no')  &
         ",'"//cproc//"/"//array_name//'_'//fin//".dat' w l "
      end do
@@ -137,7 +137,7 @@ subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   
   end if
 
-end subroutine sll_gnuplot_curv_2d_parallel
+end subroutine sll_s_gnuplot_curv_2d_parallel
 
 
 
@@ -153,7 +153,7 @@ end subroutine sll_gnuplot_curv_2d_parallel
 !! data. The collective should be passed as an argument. But this may imply that
 !! different collectives will write data with the same name... further changes
 !! are needed.
-subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
+subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
                                         y_min, delta_y, &
                                         npts_x, npts_y, &
                                         array, array_name, iplot, error)  
@@ -183,16 +183,16 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,error)
   call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,error)
   comm  = MPI_COMM_WORLD
-  call int2string(iproc, cproc)
-  call int2string(iplot, fin)
+  call sll_s_int2string(iproc, cproc)
+  call sll_s_int2string(iplot, fin)
   
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
      call system("mkdir -p "//cproc)
   end if
   
-  call sll_new_file_id(file_id, error)
-  call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
+  call sll_s_new_file_id(file_id, error)
+  call sll_s_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
   do j = 1, npts_y
      y = y_min + (j-1)*delta_y  
      do i = 1, npts_x
@@ -206,7 +206,7 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
   if (iproc == MPI_MASTER) then
      
      if (first_call) then
-        call sll_new_file_id(gnu_id, error)
+        call sll_s_new_file_id(gnu_id, error)
         open(gnu_id,file=array_name//".gnu")
         rewind(gnu_id)
         first_call = .false.
@@ -219,7 +219,7 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
      write(gnu_id,"(a)",advance='no') &
           "splot '"//"0000/"//array_name//'_'//fin//".dat' w l"
      do iproc = 1, nproc - 1
-        call int2string(iproc, cproc)
+        call sll_s_int2string(iproc, cproc)
         write(gnu_id,"(a)",advance='no')  &
              ",'"//cproc//"/"//array_name//'_'//fin//".dat' w l "
      end do
@@ -228,7 +228,7 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
      
   end if
   
-end subroutine sll_gnuplot_rect_2d_parallel
+end subroutine sll_s_gnuplot_rect_2d_parallel
 
 
 
@@ -243,7 +243,7 @@ end subroutine sll_gnuplot_rect_2d_parallel
 
 !!$!> write a data file plotable by gnuplot to visualize a 2d field
 !!$subroutine sll_gnuplot_draw_parallel_array_2d( &
-!!$     layout_2d, &
+!!$     sll_t_layout_2d, &
 !!$     x_min_global, &
 !!$     delta_x, &
 !!$     y_min_global, &
@@ -253,7 +253,7 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$     iplot, &
 !!$     error)  
 !!$
-!!$  type(layout_2D), pointer               :: layout_2d
+!!$  type(sll_t_layout_2d), pointer               :: sll_t_layout_2d
 !!$  sll_real64, intent(in)                 :: x_min_global !< Box corners
 !!$  sll_real64, intent(in)                 :: delta_x      !< step size
 !!$  sll_real64, intent(in)                 :: y_min_global !< Box corners
@@ -274,14 +274,14 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$  sll_int32                       :: comm, iproc, nproc
 !!$  logical                         :: dir_e
 !!$
-!!$  col =>get_layout_collective(layout_2D)
-!!$  nproc = sll_get_collective_size(col)
-!!$  iproc = sll_get_collective_rank(col)
-!!$  call int2string(iproc, cproc)
-!!$  comm  = sll_world_collective%comm
-!!$  call int2string(iplot, fin)
+!!$  col =>get_layout_collective(sll_t_layout_2d)
+!!$  nproc = sll_f_get_collective_size(col)
+!!$  iproc = sll_f_get_collective_rank(col)
+!!$  call sll_s_int2string(iproc, cproc)
+!!$  comm  = sll_v_world_collective%comm
+!!$  call sll_s_int2string(iplot, fin)
 !!$
-!!$  gi(1:2) = local_to_global(layout_2D, (/ 1, 1 /) )
+!!$  gi(1:2) = sll_o_local_to_global(sll_t_layout_2d, (/ 1, 1 /) )
 !!$
 !!$  !shouldn't we allow this same instruction when iplot is zero??
 !!$  if (iplot == 1) then
@@ -293,8 +293,8 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$     end if
 !!$  end if
 !!$
-!!$  call sll_new_file_id(file_id, error)
-!!$  call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', &
+!!$  call sll_s_new_file_id(file_id, error)
+!!$  call sll_s_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', &
 !!$       file_id, error )
 !!$  do i = 1, size(array,1)
 !!$     x = x_min+(i-1)*delta_x
@@ -308,7 +308,7 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$
 !!$if (iproc == MPI_MASTER) then
 !!$
-!!$   if (iplot == 1) call sll_new_file_id(gnu_id, error)
+!!$   if (iplot == 1) call sll_s_new_file_id(gnu_id, error)
 !!$   open(gnu_id,file=array_name//".gnu", position="append")
 !!$   if (iplot == 1) rewind(gnu_id)
 !!$
@@ -316,7 +316,7 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$   write(gnu_id,"(a)",advance='no') &
 !!$   "splot '"//"0000/"//array_name//'_'//fin//".dat' w l"
 !!$   do iproc = 1, nproc - 1
-!!$      call int2string(iproc, cproc)
+!!$      call sll_s_int2string(iproc, cproc)
 !!$      write(gnu_id,"(a)",advance='no')  &
 !!$      ",'"//cproc//"/"//array_name//'_'//fin//".dat' w l "
 !!$   end do
@@ -325,7 +325,7 @@ end subroutine sll_gnuplot_rect_2d_parallel
 !!$
 !!$end if
 !!$
-!!$end subroutine sll_gnuplot_rect_2d_parallel
+!!$end subroutine sll_s_gnuplot_rect_2d_parallel
 
 
 end module sll_m_gnuplot_parallel

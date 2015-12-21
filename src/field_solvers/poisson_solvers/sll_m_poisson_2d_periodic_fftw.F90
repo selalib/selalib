@@ -38,7 +38,7 @@ module sll_m_poisson_2d_periodic_fftw
     c_size_t
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
 #ifdef FFTW_F2003
   use sll_m_fftw3, only: &
@@ -59,26 +59,26 @@ module sll_m_poisson_2d_periodic_fftw
   implicit none
 
   public :: &
-    initialize, &
-    new, &
-    poisson_2d_periodic_fftw, &
-    solve
+    sll_o_initialize, &
+    sll_o_new, &
+    sll_t_poisson_2d_periodic_fftw, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-!> Create a new poisson solver on 1d mesh
-interface new
+!> Create a sll_o_new poisson solver on 1d mesh
+interface sll_o_new
   module procedure new_poisson_2d_periodic_fftw
 end interface
 
-!> Initialize the Poisson solver using fftw library
-interface initialize
+!> sll_o_initialize the Poisson solver using fftw library
+interface sll_o_initialize
   module procedure initialize_poisson_2d_periodic_fftw
 end interface
 
 !> get the potential or electric fields
-interface solve
+interface sll_o_solve
    module procedure solve_potential_poisson_2d_periodic_fftw
    module procedure solve_e_fields_poisson_2d_periodic_fftw
 end interface
@@ -88,9 +88,10 @@ interface delete
    module procedure delete_poisson_2d_periodic_fftw
 end interface
 
-!> derived type to solve the Poisson equation on 2d regular cartesian mesh 
+!> derived type to sll_o_solve the Poisson equation on 2d regular cartesian mesh 
 !> with periodic boundary conditions on both sides
-type :: poisson_2d_periodic_fftw
+type :: sll_t_poisson_2d_periodic_fftw
+
    sll_real64, dimension(:,:), pointer :: kx       !< wave number in x
    sll_real64, dimension(:,:), pointer :: ky       !< wave number in y
    sll_real64, dimension(:,:), pointer :: k2       !< \f[ k_x^2 + k_y^2 \f]
@@ -107,13 +108,13 @@ type :: poisson_2d_periodic_fftw
    fftw_plan                           :: p_tmp    !< C array pointer
    fftw_real                , pointer  :: tmp(:,:)
 
-end type poisson_2d_periodic_fftw
+end type sll_t_poisson_2d_periodic_fftw
 
 
 contains
 
 
-  !> Create a new solver
+  !> Create a sll_o_new solver
   !> @return a pointer to the solver derived type
 function new_poisson_2d_periodic_fftw( &
    x_min,                              &
@@ -125,7 +126,7 @@ function new_poisson_2d_periodic_fftw( &
    error)                              &
    result(this)
 
-  type(poisson_2d_periodic_fftw),pointer :: this   !< self object
+  type(sll_t_poisson_2d_periodic_fftw),pointer :: this   !< self object
   sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
   sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
   sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -141,7 +142,7 @@ function new_poisson_2d_periodic_fftw( &
 end function new_poisson_2d_periodic_fftw 
 
 
-!> Initialize the Poisson solver
+!> sll_o_initialize the Poisson solver
 subroutine initialize_poisson_2d_periodic_fftw(self, &
   x_min,                                             &
   x_max,                                             &
@@ -151,7 +152,7 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
   nc_y,                                              &
   error )
 
-  type(poisson_2d_periodic_fftw) :: self   !< Self data object
+  type(sll_t_poisson_2d_periodic_fftw) :: self   !< Self data object
   sll_real64, intent(in)         :: x_min  !< left corner direction x
   sll_real64, intent(in)         :: x_max  !< right corner direction x
   sll_real64, intent(in)         :: y_min  !< left corner direction y
@@ -205,8 +206,8 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
   SLL_ALLOCATE(self%ky(nc_x/2+1,nc_y), error)
   SLL_ALLOCATE(self%k2(nc_x/2+1,nc_y), error)
 
-  kx0 = 2._f64*sll_pi/(x_max-x_min)
-  ky0 = 2._f64*sll_pi/(y_max-y_min)
+  kx0 = 2._f64*sll_p_pi/(x_max-x_min)
+  ky0 = 2._f64*sll_p_pi/(y_max-y_min)
   
   do ik=1,nc_x/2+1
      kx1 = (ik-1)*kx0
@@ -227,11 +228,11 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
 
 end subroutine initialize_poisson_2d_periodic_fftw
 
-!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
+!> sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
-  type(poisson_2d_periodic_fftw)          :: self !< self data object
+  type(sll_t_poisson_2d_periodic_fftw)          :: self !< self data object
   sll_real64, dimension(:,:), intent(in)  :: rho  !< charge density
   sll_real64, dimension(:,:), intent(out) :: phi  !< electric potential
   sll_int32                               :: nc_x !< number of cells direction x
@@ -255,11 +256,11 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
 end subroutine solve_potential_poisson_2d_periodic_fftw
 
-!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
+!> sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
-  type(poisson_2d_periodic_fftw),intent(inout) :: self !< Self data object
+  type(sll_t_poisson_2d_periodic_fftw),intent(inout) :: self !< Self data object
   sll_real64, dimension(:,:),    intent(in)    :: rho  !< Charge density
   sll_real64, dimension(:,:),    intent(out)   :: e_x  !< Electric field x
   sll_real64, dimension(:,:),    intent(out)   :: e_y  !< Electric field y
@@ -303,7 +304,7 @@ end subroutine solve_e_fields_poisson_2d_periodic_fftw
 !> Delete the Poisson object
 subroutine delete_poisson_2d_periodic_fftw(self)
 
-  type(poisson_2d_periodic_fftw) :: self
+  type(sll_t_poisson_2d_periodic_fftw) :: self
 
 #ifdef FFTW_F2003
   call fftw_free(self%p_rho)

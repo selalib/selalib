@@ -29,11 +29,11 @@ module sll_m_ascii_io
   implicit none
 
   public :: &
-    sll_ascii_file_close, &
-    sll_ascii_file_create, &
-    sll_ascii_write_array, &
-    sll_ascii_write_array_1d, &
-    sll_ascii_write_array_2d
+    sll_s_ascii_file_close, &
+    sll_s_ascii_file_create, &
+    sll_o_ascii_write_array, &
+    sll_s_ascii_write_array_1d, &
+    sll_s_ascii_write_array_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -42,16 +42,16 @@ module sll_m_ascii_io
 !> \param[in] file_id file unit number
 !> \param[in] array array
 !> \param[out] error error code
-interface sll_ascii_write_array
-   module procedure sll_ascii_write_array_1d 
-   module procedure sll_ascii_write_array_2d
+interface sll_o_ascii_write_array
+   module procedure sll_s_ascii_write_array_1d 
+   module procedure sll_s_ascii_write_array_2d
    module procedure sll_ascii_write_array_3d
 end interface
   
 contains
 
 !> Create ASCII file
-subroutine sll_ascii_file_create(file_name, file_id, error)
+subroutine sll_s_ascii_file_create(file_name, file_id, error)
 
    character(len=*), intent(in)         :: file_name !< file name
    sll_int32, intent(out)               :: error     !< error code
@@ -79,16 +79,16 @@ subroutine sll_ascii_file_create(file_name, file_id, error)
    open(file_id,FILE=file_name,FORM='FORMATTED',IOSTAT=error)
    rewind(file_id)
 
-end subroutine sll_ascii_file_create
+end subroutine sll_s_ascii_file_create
 
 !> Close ASCII file
-subroutine sll_ascii_file_close(file_id,error)
+subroutine sll_s_ascii_file_close(file_id,error)
 sll_int32, intent(in)  :: file_id !<file unit number
 sll_int32, intent(out) :: error   !<error code
 
 close(file_id, IOSTAT=error)
      
-end subroutine sll_ascii_file_close
+end subroutine sll_s_ascii_file_close
 
 
 
@@ -104,7 +104,7 @@ end subroutine
 
 
 !> Write a 1d array ASCII format
-subroutine sll_ascii_write_array_1d(file_id,array,error,num_points,array2,array3)
+subroutine sll_s_ascii_write_array_1d(file_id,array,error,num_points,array2,array3)
 sll_int32 , intent(in)  :: file_id
 sll_int32 , intent(out) :: error
 sll_real64, intent(in)  :: array(:)
@@ -151,7 +151,7 @@ endif
 end subroutine
 
 !> Write a 2d array ASCII format
-subroutine sll_ascii_write_array_2d(file_id,array,error)
+subroutine sll_s_ascii_write_array_2d(file_id,array,error)
 sll_int32 , intent(in)  :: file_id
 sll_int32 , intent(out) :: error
 sll_real64, intent(in)  :: array(:,:)

@@ -24,7 +24,7 @@ module sll_m_particle_1d_description
   implicit none
 
   public :: &
-    sll_particle_1d_group
+    sll_t_particle_1d_group
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -46,14 +46,14 @@ module sll_m_particle_1d_description
   end type sll_particle_1d_guard
 
 
-  type :: sll_particle_1d_group
+  type :: sll_t_particle_1d_group
     type(sll_particle_1d), allocatable, dimension(:) :: particle
     sll_real64 :: qm
   !contains
   !remove
   !add
   !
-  end type sll_particle_1d_group
+  end type sll_t_particle_1d_group
 
 
 

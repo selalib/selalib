@@ -9,25 +9,25 @@ module sll_m_kernel_smoother_spline_1d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x
 
   use sll_m_gauss_legendre_integration, only : &
-       gauss_legendre_points_and_weights
+    sll_f_gauss_legendre_points_and_weights
 
   use sll_m_kernel_smoother_base, only: &
-    sll_collocation, &
+    sll_p_collocation, &
     sll_c_kernel_smoother, &
-    sll_galerkin
+    sll_p_galerkin
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
 
   implicit none
 
   public :: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_new_smoother_spline_1d
+    sll_f_new_smoother_spline_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -80,7 +80,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    this%spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2,this%n_grid(1))+1
@@ -169,14 +169,14 @@ contains
 
    n_cells = this%n_grid(1)
 
-   this%quad_xw = gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
+   this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
 
    this%spline_val = this%quad_xw(2,1) * &
-        uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,1))
+        sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,1))
    do j=2,this%n_quad_points
       this%spline_val = this%spline_val + &
            this%quad_xw(2,j) * &
-           uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,j))
+           sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,j))
    end do
    this%spline_val = this%spline_val * sign*this%delta_x(1)
 
@@ -207,7 +207,7 @@ contains
 !!$    position(1) = position(1) - real(this%index_grid(1,i_part) -1,f64)
 !!$    ! Now we subtract the degree of the spline to get the index of the first spline.
 !!$    this%index_grid(:,i_part) =  this%index_grid(:,i_part) - this%spline_degree
-!!$    spline_val = uniform_b_splines_at_x(this%spline_degree, position(1))
+!!$    spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, position(1))
 !!$    this%values_grid(:,1,i_part) = spline_val
 !!$    
 !!$    
@@ -231,7 +231,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    this%spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
@@ -264,7 +264,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    this%spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
+    this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
@@ -280,7 +280,7 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  function sll_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
+  function sll_f_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
     class( sll_t_kernel_smoother_spline_1d), pointer   :: this !< kernel smoother object
     sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
     sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
@@ -311,9 +311,9 @@ contains
     this%n_span = spline_degree + 1
 
     ! Initialize information on smoothing type
-    if (smoothing_type == SLL_COLLOCATION) then
+    if (smoothing_type == sll_p_collocation) then
        this%scaling = 1.0_f64/this%delta_x(1)
-    elseif (smoothing_type == SLL_GALERKIN) then
+    elseif (smoothing_type == sll_p_galerkin) then
        this%scaling = 1.0_f64
     else
        print*, 'Smoothing Type ', smoothing_type, ' not implemented for kernel_smoother_spline_1d.'
@@ -324,7 +324,7 @@ contains
     ALLOCATE( this%spline_val(this%n_span))
     ALLOCATE( this%quad_xw(2,this%n_quad_points))
 
-  end function sll_new_smoother_spline_1d
+  end function sll_f_new_smoother_spline_1d
 
   
 

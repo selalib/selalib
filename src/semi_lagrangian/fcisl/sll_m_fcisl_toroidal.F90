@@ -5,35 +5,35 @@ module sll_m_fcisl_toroidal
 #include "sll_working_precision.h"
 
   use sll_m_common_array_initializers, only: &
-    sll_scalar_initializer_2d
+    sll_i_scalar_initializer_2d
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_hermite_interpolation_2d, only: &
-    compute_hermite_derivatives_periodic1, &
-    compute_w_hermite, &
-    localize_per
+    sll_s_compute_hermite_derivatives_periodic1, &
+    sll_s_compute_w_hermite, &
+    sll_s_localize_per
 
   use sll_m_lagrange_interpolation, only: &
-    lagrange_interpolate
+    sll_f_lagrange_interpolate
 
   implicit none
 
   public :: &
-    compute_analytic_field, &
-    compute_euler_field, &
-    compute_feet_analytic, &
-    compute_feet_euler, &
-    compute_feet_rk4, &
-    compute_inverse_invr_integral, &
-    compute_invr_integral, &
-    compute_linspace, &
-    compute_modulo_vect, &
-    compute_modulo_vect2d_inplace, &
-    compute_rk4_field, &
-    compute_time_points, &
-    interpolate2d_toroidal
+    sll_s_compute_analytic_field, &
+    sll_s_compute_euler_field, &
+    sll_s_compute_feet_analytic, &
+    sll_s_compute_feet_euler, &
+    sll_s_compute_feet_rk4, &
+    sll_f_compute_inverse_invr_integral, &
+    sll_f_compute_invr_integral, &
+    sll_s_compute_linspace, &
+    sll_s_compute_modulo_vect, &
+    sll_s_compute_modulo_vect2d_inplace, &
+    sll_s_compute_rk4_field, &
+    sll_s_compute_time_points, &
+    sll_f_interpolate2d_toroidal
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -48,7 +48,7 @@ module sll_m_fcisl_toroidal
 
 contains 
 
-subroutine compute_time_points(dt,num_time_points,time_points)
+subroutine sll_s_compute_time_points(dt,num_time_points,time_points)
   sll_real64, intent(in) :: dt
   sll_int32, intent(in) :: num_time_points
   sll_real64, dimension(:), intent(out) :: time_points
@@ -64,10 +64,10 @@ subroutine compute_time_points(dt,num_time_points,time_points)
     time_points(i) = real(i-1,f64)*dt
   enddo
   
-end subroutine compute_time_points
+end subroutine sll_s_compute_time_points
 
 
-subroutine compute_euler_field( &
+subroutine sll_s_compute_euler_field( &
   R0, &
   time_points, &
   num_time_points, &
@@ -104,10 +104,10 @@ subroutine compute_euler_field( &
     phi(i+1) = phi(i)+F0/bigr*dt
   enddo
 
-end subroutine compute_euler_field 
+end subroutine sll_s_compute_euler_field 
 
 
-subroutine compute_rk4_field( &
+subroutine sll_s_compute_rk4_field( &
   R0, &
   time_points, &
   num_time_points, &
@@ -129,9 +129,9 @@ subroutine compute_rk4_field( &
   sll_real64, dimension(:), intent(out) :: phi
   sll_real64, intent(in) :: theta0
   sll_real64, intent(in) :: phi0
-  procedure(sll_scalar_initializer_2d), pointer :: func1
+  procedure(sll_i_scalar_initializer_2d), pointer :: func1
   sll_real64 :: params1(2)
-  procedure(sll_scalar_initializer_2d), pointer :: func2
+  procedure(sll_i_scalar_initializer_2d), pointer :: func2
   sll_real64 :: params2(3)
   sll_real64 :: dt  
   !sll_real64 :: bigr
@@ -164,7 +164,7 @@ subroutine compute_rk4_field( &
     phi(i+1) = phi(i)+(dt/6._f64)*(k2(1)+2._f64*(k2(2)+k2(3))+k2(4))
   enddo
 
-end subroutine compute_rk4_field 
+end subroutine sll_s_compute_rk4_field 
 
 function toroidal_1(theta,phi,params) result(res)
   sll_real64 :: res
@@ -204,7 +204,7 @@ end function toroidal_2
 
 
 
-subroutine compute_analytic_field( &
+subroutine sll_s_compute_analytic_field( &
   R0, &
   time_points, &
   num_time_points, &
@@ -235,13 +235,13 @@ subroutine compute_analytic_field( &
   
   do i=1,num_time_points
     theta(i) = theta0-psipr/smallr*(time_points(i)-time_points(1))
-    phi(i) = phi0 -F0*smallr/psipr*(compute_invR_integral(R0,smallr,theta(i))-compute_invR_integral(R0,smallr,theta0))
+    phi(i) = phi0 -F0*smallr/psipr*(sll_f_compute_invr_integral(R0,smallr,theta(i))-sll_f_compute_invr_integral(R0,smallr,theta0))
   enddo
 
-end subroutine compute_analytic_field 
+end subroutine sll_s_compute_analytic_field 
 
 
-function compute_invR_integral(R0,smallr,x) result(res)
+function sll_f_compute_invr_integral(R0,smallr,x) result(res)
   sll_real64 :: res
   sll_real64, intent(in) :: R0
   sll_real64, intent(in) :: smallr
@@ -253,22 +253,22 @@ function compute_invR_integral(R0,smallr,x) result(res)
   !computes int(1/(R0+smallr*cos(u)),u=0..x)
   !we suppose that R0>r
   
-  xx = 0.5_f64+x/(2._f64*sll_pi)
+  xx = 0.5_f64+x/(2._f64*sll_p_pi)
   k = real(floor(xx),f64)
   alpha = xx-k
   if(alpha<1.e-12)then 
-    res = -0.5_f64*sll_pi
+    res = -0.5_f64*sll_p_pi
   else
-    res = tan((-0.5_f64+alpha)*sll_pi)
+    res = tan((-0.5_f64+alpha)*sll_p_pi)
     res = atan((R0-smallr)/sqrt(R0**2-smallr**2)*res)
   endif
-  res = res+k*sll_pi  
+  res = res+k*sll_p_pi  
   res = 2._f64/(sqrt(R0**2-smallr**2))*res
   
-end function compute_invR_integral
+end function sll_f_compute_invr_integral
 
 
-function compute_inverse_invR_integral(R0,smallr,x) result(res)
+function sll_f_compute_inverse_invr_integral(R0,smallr,x) result(res)
   sll_real64 :: res
   sll_real64, intent(in) :: R0
   sll_real64, intent(in) :: smallr
@@ -281,19 +281,19 @@ function compute_inverse_invR_integral(R0,smallr,x) result(res)
   !we suppose that R0>r
   
   xx = 0.5_f64*x*sqrt(R0**2-smallr**2)
-  xx = 0.5_f64+xx/sll_pi
+  xx = 0.5_f64+xx/sll_p_pi
   k = real(floor(xx),f64)
   alpha = xx-k
   if(alpha<1.e-12)then 
-    res = -0.5_f64*sll_pi
+    res = -0.5_f64*sll_p_pi
   else
-    res = tan((-0.5_f64+alpha)*sll_pi)
+    res = tan((-0.5_f64+alpha)*sll_p_pi)
     res = atan(sqrt(R0**2-smallr**2)/(R0-smallr)*res)
   endif
-  res = res+k*sll_pi  
+  res = res+k*sll_p_pi  
   res = 2._f64*res
   
-end function compute_inverse_invR_integral
+end function sll_f_compute_inverse_invr_integral
 
 
 
@@ -307,7 +307,7 @@ subroutine compute_modulo(x,L)
   
 end subroutine compute_modulo
 
-subroutine compute_modulo_vect(in,out,num_points,L)
+subroutine sll_s_compute_modulo_vect(in,out,num_points,L)
   sll_real64, dimension(:), intent(in) :: in
   sll_real64, dimension(:), intent(out) :: out
   sll_int32, intent(in) :: num_points
@@ -331,10 +331,10 @@ subroutine compute_modulo_vect(in,out,num_points,L)
     call compute_modulo(out(i),L)
   enddo
   
-end subroutine compute_modulo_vect
+end subroutine sll_s_compute_modulo_vect
 
 
-subroutine compute_modulo_vect2d_inplace(inout,num_points1,num_points2,L)
+subroutine sll_s_compute_modulo_vect2d_inplace(inout,num_points1,num_points2,L)
   sll_real64, dimension(:,:), intent(inout) :: inout
   sll_int32, intent(in) :: num_points1
   sll_int32, intent(in) :: num_points2
@@ -360,11 +360,11 @@ subroutine compute_modulo_vect2d_inplace(inout,num_points1,num_points2,L)
     enddo  
   enddo
   
-end subroutine compute_modulo_vect2d_inplace
+end subroutine sll_s_compute_modulo_vect2d_inplace
 
 
 
-subroutine compute_linspace(array,xmin,xmax,Npts)
+subroutine sll_s_compute_linspace(array,xmin,xmax,Npts)
   sll_real64, dimension(:), intent(out) :: array
   sll_real64, intent(in) :: xmin
   sll_real64, intent(in) :: xmax
@@ -379,9 +379,9 @@ subroutine compute_linspace(array,xmin,xmax,Npts)
     array(i) = xmin+real(i-1,f64)*dx
   enddo
   
-end subroutine compute_linspace
+end subroutine sll_s_compute_linspace
 
-subroutine compute_feet_euler(theta_in,phi_in,num_points1,num_points2,dt,params,theta_out,phi_out)
+subroutine sll_s_compute_feet_euler(theta_in,phi_in,num_points1,num_points2,dt,params,theta_out,phi_out)
   sll_real64, dimension(:), intent(in) :: theta_in
   sll_real64, dimension(:), intent(in) :: phi_in
   sll_int32, intent(in) :: num_points1
@@ -423,10 +423,10 @@ subroutine compute_feet_euler(theta_in,phi_in,num_points1,num_points2,dt,params,
     enddo
   enddo  
 
-end subroutine compute_feet_euler
+end subroutine sll_s_compute_feet_euler
 
 
-subroutine compute_feet_rk4(theta_in,phi_in,num_points1,num_points2,dt,params,theta_out,phi_out)
+subroutine sll_s_compute_feet_rk4(theta_in,phi_in,num_points1,num_points2,dt,params,theta_out,phi_out)
   sll_real64, dimension(:), intent(in) :: theta_in
   sll_real64, dimension(:), intent(in) :: phi_in
   sll_int32, intent(in) :: num_points1
@@ -447,9 +447,9 @@ subroutine compute_feet_rk4(theta_in,phi_in,num_points1,num_points2,dt,params,th
   sll_int32 :: i
   sll_int32 :: j
 
-  procedure(sll_scalar_initializer_2d), pointer :: func1
+  procedure(sll_i_scalar_initializer_2d), pointer :: func1
   sll_real64 :: params1(2)
-  procedure(sll_scalar_initializer_2d), pointer :: func2
+  procedure(sll_i_scalar_initializer_2d), pointer :: func2
   sll_real64 :: params2(3)
   sll_real64 :: k1(4)
   sll_real64 :: k2(4)
@@ -493,11 +493,11 @@ subroutine compute_feet_rk4(theta_in,phi_in,num_points1,num_points2,dt,params,th
     enddo
   enddo  
 
-end subroutine compute_feet_rk4
+end subroutine sll_s_compute_feet_rk4
 
 
 
-subroutine compute_feet_analytic(theta_in,phi_in,num_points1,num_points2,dt,params,theta_out,phi_out)
+subroutine sll_s_compute_feet_analytic(theta_in,phi_in,num_points1,num_points2,dt,params,theta_out,phi_out)
   sll_real64, dimension(:), intent(in) :: theta_in
   sll_real64, dimension(:), intent(in) :: phi_in
   sll_int32, intent(in) :: num_points1
@@ -537,14 +537,14 @@ subroutine compute_feet_analytic(theta_in,phi_in,num_points1,num_points2,dt,para
       theta_out(i,j) = theta_in(i)-psipr/smallr*dt
       phi_out(i,j) = phi_in(j) &
         -F0*smallr/psipr*( &
-        compute_invR_integral(R0,smallr,theta_out(i,j)) &
-        -compute_invR_integral(R0,smallr,theta_in(i)))
+        sll_f_compute_invr_integral(R0,smallr,theta_out(i,j)) &
+        -sll_f_compute_invr_integral(R0,smallr,theta_in(i)))
     enddo
   enddo  
 
-end subroutine compute_feet_analytic
+end subroutine sll_s_compute_feet_analytic
 
-function interpolate2d_toroidal( &
+function sll_f_interpolate2d_toroidal( &
   num_points1, &
   num_points2, &
   data_in, &
@@ -610,7 +610,7 @@ function interpolate2d_toroidal( &
   lag_p = lag_s-lag_r
   
   SLL_ALLOCATE(hermite_buf(3,num_points1,num_points2),ierr)
-  call compute_hermite_derivatives_periodic1( &
+  call sll_s_compute_hermite_derivatives_periodic1( &
     data_in, &
     num_points1, &
     num_points2, &
@@ -631,15 +631,15 @@ function interpolate2d_toroidal( &
   do j=1,num_points2
     do i=1,num_points1
       eta2_loc = eta2(i,j)
-      call localize_per(j0,eta2_loc,eta2_min,eta2_max,num_points2-1)
-      tmp2 = compute_invR_integral(R0,smallr,eta1(i,j))
+      call sll_s_localize_per(j0,eta2_loc,eta2_min,eta2_max,num_points2-1)
+      tmp2 = sll_f_compute_invr_integral(R0,smallr,eta1(i,j))
       tmp2 = tmp2-eta2_loc*tmp1
       do jj=lag_r,lag_s
         j0_loc = modulo(j0+jj+num_points2-1,num_points2-1)+1
-        eta1_loc = compute_inverse_invR_integral(R0,smallr,real(jj,f64)*tmp1+tmp2)
+        eta1_loc = sll_f_compute_inverse_invr_integral(R0,smallr,real(jj,f64)*tmp1+tmp2)
         !phi(t) = phi(0)-F0r/psipr*(L(th(t))-L(th(0)))
         !Hermite interpolation
-        call localize_per(i0,eta1_loc,eta1_min,eta1_max,num_points1-1)
+        call sll_s_localize_per(i0,eta1_loc,eta1_min,eta1_max,num_points1-1)
         i0=i0+1
         w(1)=(2._f64*eta1_loc+1)*(1._f64-eta1_loc)*(1._f64-eta1_loc)
         w(2)=eta1_loc*eta1_loc*(3._f64-2._f64*eta1_loc)
@@ -660,14 +660,14 @@ function interpolate2d_toroidal( &
         !endif  
       enddo
       
-      data_out(i,j) = lagrange_interpolate( &
+      data_out(i,j) = sll_f_lagrange_interpolate( &
         eta2_loc, &
         lag_p, &
         lag_x(lag_r:lag_s), &
         lag_buf(lag_r:lag_s))
     enddo
   enddo
-end function interpolate2d_toroidal
+end function sll_f_interpolate2d_toroidal
 
 subroutine compute_w_hermite_aligned( &
   w, &
@@ -720,14 +720,14 @@ subroutine compute_w_hermite_aligned( &
     SLL_ERROR(fun,'#bad size2 for eta1_pos')
   endif
   
-  call compute_w_hermite(w_loc_tmp,r,s)
+  call sll_s_compute_w_hermite(w_loc_tmp,r,s)
   w_loc(1:-r) = w_loc_tmp(r:-1)
   w_loc(-r+1:s) = w_loc_tmp(1:s)
   
   do i=1,num_points1
     do ell=1,r-s
       eta1_loc = eta1_pos(ell,i)
-      call localize_per(i0,eta1_loc,eta1_min,eta1_max,num_points1-1)
+      call sll_s_localize_per(i0,eta1_loc,eta1_min,eta1_max,num_points1-1)
       i0=i0+1
       w_cell(ell,i) = i0
       w_basis(1)=(2._f64*eta1_loc+1)*(1._f64-eta1_loc)*(1._f64-eta1_loc)
@@ -779,7 +779,7 @@ subroutine compute_hermite_derivatives_aligned( &
   s_left=(p1+1)/2
   r_right=(-p1+1)/2
   s_right=p1/2+1   
-  call compute_w_hermite(w_left,r_left,s_left)
+  call sll_s_compute_w_hermite(w_left,r_left,s_left)
   if(((2*p1/2)-p1)==0)then
     w_right(r_right:s_right) = w_left(r_left:s_left)
   else

@@ -9,13 +9,13 @@ program sim_pif_vp_ndnv_cart
     output_unit
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_get_collective_rank, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_sim_pif_vp_ndnv_cart, only: &
-    sll_simulation_general_vlasov_poisson_pif
+    sll_t_simulation_general_vlasov_poisson_pif
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,9 +26,9 @@ program sim_pif_vp_ndnv_cart
    integer :: idx
    
    !print *, 'Booting parallel environment for simulation...'
-   call sll_boot_collective() ! Wrap this up in something else
+   call sll_s_boot_collective() ! Wrap this up in something else
   
-   coll_rank=sll_get_collective_rank( sll_world_collective )
+   coll_rank=sll_f_get_collective_rank( sll_v_world_collective )
  
    if (coll_rank == 0) then
        print *, 'Proceed to run simulation.'
@@ -48,12 +48,12 @@ program sim_pif_vp_ndnv_cart
 !   call delete_vp6d_par_cart(simulation)
    print *, 'reached end of PIF test'
    print *, 'PASSED'
-   call sll_halt_collective()
+   call sll_s_halt_collective()
 
    contains
    
    subroutine run_from_file(filename)
-      type(sll_simulation_general_vlasov_poisson_pif) :: simulation
+      type(sll_t_simulation_general_vlasov_poisson_pif) :: simulation
       character(len=256), intent(in) :: filename
       call simulation%init_from_file(filename)
       call simulation%run()    

@@ -11,14 +11,14 @@ module sll_m_poisson_2d_base
   implicit none
 
   public :: &
-    sll_poisson_2d_base, &
+    sll_c_poisson_2d_base, &
     sll_f_function_of_position
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> PLEASE ADD DOCUMENTATION
-  type, abstract :: sll_poisson_2d_base 
+  type, abstract :: sll_c_poisson_2d_base 
 
   contains
 
@@ -30,14 +30,14 @@ module sll_m_poisson_2d_base
     procedure(signature_compute_E_from_rho_2d), deferred, pass(poisson) :: &
       compute_E_from_rho
 
-    !> Compute the squarred L_2 for given coefficients
-    procedure(signature_norm_squarred), deferred :: &
+    !> Compute the squared L_2 for given coefficients
+    procedure(signature_norm_squared), deferred :: &
          l2norm_squared
     !> Compute the right hand side from a given function
     procedure(signature_update_dofs_function), deferred :: &
          compute_rhs_from_function
 
-  end type sll_poisson_2d_base
+  end type sll_c_poisson_2d_base
 
 
   abstract interface
@@ -59,9 +59,9 @@ module sll_m_poisson_2d_base
     subroutine signature_compute_phi_from_rho_2d( poisson, phi, rho )
 
       use sll_m_working_precision
-      import sll_poisson_2d_base      
+      import sll_c_poisson_2d_base      
 
-      class(sll_poisson_2d_base), target     :: poisson
+      class(sll_c_poisson_2d_base), target     :: poisson
       sll_real64,dimension(:,:), intent(in)  :: rho
       sll_real64,dimension(:,:), intent(out) :: phi
 
@@ -74,9 +74,9 @@ module sll_m_poisson_2d_base
     subroutine signature_compute_E_from_rho_2d( poisson, E1, E2, rho )
 
       use sll_m_working_precision
-      import sll_poisson_2d_base       
+      import sll_c_poisson_2d_base       
 
-      class(sll_poisson_2d_base)              :: poisson
+      class(sll_c_poisson_2d_base)              :: poisson
       sll_real64, dimension(:,:), intent(in)  :: rho
       sll_real64, dimension(:,:), intent(out) :: E1
       sll_real64, dimension(:,:), intent(out) :: E2
@@ -86,22 +86,22 @@ module sll_m_poisson_2d_base
 
   !---------------------------------------------------------------------------!
   abstract interface
-     function signature_norm_squarred(poisson, coefs_dofs) result( r )
+     function signature_norm_squared(poisson, coefs_dofs) result( r )
        use sll_m_working_precision
-       import sll_poisson_2d_base
-       class( sll_poisson_2d_base) , intent(in)                   :: poisson !< Poisson solver object.
+       import sll_c_poisson_2d_base
+       class( sll_c_poisson_2d_base) , intent(in)                   :: poisson !< Poisson solver object.
        sll_real64 , intent(in)                                    :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
        sll_real64                                     :: r
-     end function signature_norm_squarred
+     end function signature_norm_squared
   end interface
 
   !---------------------------------------------------------------------------!
   abstract interface
      subroutine signature_update_dofs_function(poisson, func, coefs_dofs)
        use sll_m_working_precision
-       import sll_poisson_2d_base
+       import sll_c_poisson_2d_base
        import sll_f_function_of_position
-       class( sll_poisson_2d_base)                    :: poisson !< Maxwell solver object.
+       class( sll_c_poisson_2d_base)                    :: poisson !< Maxwell solver object.
        procedure(sll_f_function_of_position)          :: func !< Function to be projected.
        sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
      end subroutine signature_update_dofs_function

@@ -5,14 +5,14 @@ module sll_m_scalar_field_1d_base
   implicit none
 
   public :: &
-    sll_scalar_field_1d_base
+    sll_c_scalar_field_1d_base
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 
   ! Fundamental field type
-  type, abstract :: sll_scalar_field_1d_base 
+  type, abstract :: sll_c_scalar_field_1d_base 
    contains
 !     procedure(function_get_mesh_1d), deferred, pass :: get_cartesian_mesh
      procedure(function_evaluation_real_1d), deferred, pass :: value_at_point
@@ -26,17 +26,17 @@ module sll_m_scalar_field_1d_base
      procedure(field_1d_subroutine), deferred, pass :: delete
 !     ! here we can continue with derivatives or whatever else that might
      ! be desired.
-  end type sll_scalar_field_1d_base
+  end type sll_c_scalar_field_1d_base
   
 !  type sll_scalar_field_1d_base_ptr
-!     type(sll_scalar_field_1d_base), pointer :: base
+!     type(sll_c_scalar_field_1d_base), pointer :: base
 !  end type sll_scalar_field_1d_base_ptr
   
   abstract interface
      subroutine set_field_data_subroutine_1d( field, values )
        use sll_m_working_precision
-       import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(inout) :: field
+       import sll_c_scalar_field_1d_base
+       class(sll_c_scalar_field_1d_base), intent(inout) :: field
        sll_real64, dimension(:), intent(in) :: values
      end subroutine set_field_data_subroutine_1d
   end interface
@@ -45,25 +45,25 @@ module sll_m_scalar_field_1d_base
 !  abstract interface
 !     function function_get_mesh_1d(field) result(res)
 !       use sll_m_cartesian_meshes
-!       import sll_scalar_field_1d_base
-!       class(sll_scalar_field_1d_base), intent(in) :: field
-!       type(sll_cartesian_mesh_1d), pointer :: res  ! a implementer
+!       import sll_c_scalar_field_1d_base
+!       class(sll_c_scalar_field_1d_base), intent(in) :: field
+!       type(sll_t_cartesian_mesh_1d), pointer :: res  ! a implementer
 !     end function function_get_mesh_1d
 !  end interface
 !  
 !  
   abstract interface
      subroutine field_1d_message_pass( field )
-       import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(inout) :: field
+       import sll_c_scalar_field_1d_base
+       class(sll_c_scalar_field_1d_base), intent(inout) :: field
      end subroutine field_1d_message_pass
   end interface
 
   abstract interface
      function function_evaluation_real_1d( field, eta ) result(res)
        use sll_m_working_precision
-       import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(inout) :: field
+       import sll_c_scalar_field_1d_base
+       class(sll_c_scalar_field_1d_base), intent(inout) :: field
        sll_real64, intent(in) :: eta
        sll_real64             :: res
      end function function_evaluation_real_1d
@@ -72,8 +72,8 @@ module sll_m_scalar_field_1d_base
 !  abstract interface
 !     function function_evaluation_integer_1d( field, i ) result(res)
 !       use sll_m_working_precision
-!       import sll_scalar_field_1d_base
-!       class(sll_scalar_field_1d_base), intent(inout) :: field
+!       import sll_c_scalar_field_1d_base
+!       class(sll_c_scalar_field_1d_base), intent(inout) :: field
 !       sll_int32, intent(in)  :: i
 !       sll_real64             :: res
 !     end function function_evaluation_integer_1d
@@ -82,8 +82,8 @@ module sll_m_scalar_field_1d_base
 !  abstract interface 
 !     function derivative_evaluation_real( field, eta ) result(res)
 !       use sll_m_working_precision
-!       import sll_scalar_field_1d_base
-!       class(sll_scalar_field_1d_base), intent(inout) :: field
+!       import sll_c_scalar_field_1d_base
+!       class(sll_c_scalar_field_1d_base), intent(inout) :: field
 !       sll_real64, intent(in) :: eta
 !       sll_real64             :: res
 !     end function derivative_evaluation_real
@@ -93,8 +93,8 @@ module sll_m_scalar_field_1d_base
 !  abstract interface 
 !     function derivative_evaluation_integer( field, i) result(res)
 !       use sll_m_working_precision
-!       import sll_scalar_field_1d_base
-!       class(sll_scalar_field_1d_base), intent(inout) :: field
+!       import sll_c_scalar_field_1d_base
+!       class(sll_c_scalar_field_1d_base), intent(inout) :: field
 !       sll_int32, intent(in)  :: i
 !       sll_real64             :: res
 !     end function derivative_evaluation_integer
@@ -105,8 +105,8 @@ module sll_m_scalar_field_1d_base
 !!  abstract interface
 !!     function return_integer( field ) result(res)
 !!       use sll_m_working_precision
-!!       import sll_scalar_field_1d_base
-!!       class(sll_scalar_field_1d_base), intent(in) :: field
+!!       import sll_c_scalar_field_1d_base
+!!       class(sll_c_scalar_field_1d_base), intent(in) :: field
 !!       sll_int32             :: res
 !!     end function return_integer
 !!  end interface
@@ -114,16 +114,16 @@ module sll_m_scalar_field_1d_base
 !  abstract interface
 !     subroutine field_1d_file_output( field, tag )
 !       use sll_m_working_precision
-!       import sll_scalar_field_1d_base
-!       class(sll_scalar_field_1d_base), intent(inout) :: field
+!       import sll_c_scalar_field_1d_base
+!       class(sll_c_scalar_field_1d_base), intent(inout) :: field
 !       sll_int32, intent(in)                       :: tag
 !     end subroutine field_1d_file_output
 !  end interface
 !  
   abstract interface
      subroutine field_1d_subroutine( field )
-       import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(inout) :: field
+       import sll_c_scalar_field_1d_base
+       class(sll_c_scalar_field_1d_base), intent(inout) :: field
      end subroutine field_1d_subroutine
   end interface
 !  

@@ -25,71 +25,71 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
 #include "particle_representation.h"
 
   use sll_m_accumulators, only: &
-    electric_field_accumulator, &
-    electric_field_accumulator_cs, &
-    field_accumulator_cell, &
-    new_charge_accumulator_2d, &
-    new_field_accumulator_2d, &
-    reset_charge_accumulator_to_zero, &
-    reset_field_accumulator_to_zero, &
-    sll_charge_accumulator_2d, &
-    sll_charge_accumulator_2d_cs_ptr, &
-    sll_charge_accumulator_2d_ptr, &
-    sum_accumulators
+    sll_t_electric_field_accumulator, &
+    sll_t_electric_field_accumulator_cs, &
+    sll_t_field_accumulator_cell, &
+    sll_f_new_charge_accumulator_2d, &
+    sll_f_new_field_accumulator_2d, &
+    sll_s_reset_charge_accumulator_to_zero, &
+    sll_s_reset_field_accumulator_to_zero, &
+    sll_t_charge_accumulator_2d, &
+    sll_t_charge_accumulator_2d_cs_ptr, &
+    sll_t_charge_accumulator_2d_ptr, &
+    sll_s_sum_accumulators
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_bsl_lt_pic_4d_group, only: &
-    sll_bsl_lt_pic_4d_group, &
-    sll_bsl_lt_pic_4d_group_new
+    sll_t_bsl_lt_pic_4d_group, &
+    sll_f_bsl_lt_pic_4d_group_new
 
   use sll_m_bsl_lt_pic_4d_utilities, only: &
-    get_poisson_cell_index, &
-    global_to_cell_offset_extended
+    sll_s_get_poisson_cell_index, &
+    sll_s_global_to_cell_offset_extended
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_charge_to_density, only: &
-    sll_accumulate_field, &
-    sll_convert_charge_to_rho_2d_per_per
+    sll_s_accumulate_field, &
+    sll_s_convert_charge_to_rho_2d_per_per
 
   use sll_m_collective, only: &
-    sll_collective_allreduce, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_o_collective_allreduce, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_2d
+    sll_o_gnuplot_2d
 
   use sll_m_poisson_2d_fft, only: &
-    new_poisson_2d_fft_solver, &
-    poisson_2d_fft_solver
+    sll_f_new_poisson_2d_fft_solver, &
+    sll_t_poisson_2d_fft_solver
 
   use sll_m_remapped_pic_base, only: &
     sll_c_remapped_particle_group
 
   use sll_m_remapped_pic_utilities, only: &
-    apply_periodic_bc_on_cartesian_mesh_2d, &
-    x_is_in_domain_2d
+    sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
+    sll_f_is_in_domain_2d
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_m_simple_pic_4d_group, only: &
-    sll_simple_pic_4d_group, &
-    sll_simple_pic_4d_group_new
+    sll_t_simple_pic_4d_group, &
+    sll_f_simple_pic_4d_group_new
 
   use sll_m_timer, only: &
-    sll_set_time_mark, &
-    sll_time_elapsed_since, &
-    sll_time_mark
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
 
   use sll_mpi, only: &
     mpi_sum
@@ -97,13 +97,13 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
   implicit none
 
   public :: &
-    sll_delete, &
-    sll_simulation_4d_vp_generic_pic_cartesian
+    sll_o_delete, &
+    sll_t_simulation_4d_vp_generic_pic_cartesian
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! uses [[selalib:src/simulations/simulation_base_class.F90::sll_simulation_base_class]], called by
+  ! uses [[selalib:src/simulations/simulation_base_class.F90::sll_c_simulation_base_class]], called by
   ! [[file:unit_test_4d_vp_generic_pic_cartesian.F90::unit_test_4d_vp_generic_pic_cartesian]]. We have chosen to store
   ! all simulation parameters (both ltpic and simple) in this sim object.
 
@@ -117,7 +117,7 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
   !> sll_m_simple_pic_4d_particle::sll_simple_pic_4d_particle <!--
   !> [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
   
-  type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian
+  type, extends(sll_c_simulation_base_class) :: sll_t_simulation_4d_vp_generic_pic_cartesian
 
      !> the abstract particle group
      
@@ -151,22 +151,22 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      sll_real64, dimension(1:6) :: elec_params
      !> @}
 
-     !> Underlying 2D cartesian sll_m_cartesian_meshes::sll_cartesian_mesh_2d
-     ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
-     type ( sll_cartesian_mesh_2d ),    pointer :: mesh_2d
+     !> Underlying 2D cartesian sll_m_cartesian_meshes::sll_t_cartesian_mesh_2d
+     ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_t_cartesian_mesh_2d]]
+     type ( sll_t_cartesian_mesh_2d ),    pointer :: mesh_2d
 
      !> called q_accumulator in Sever simulation
-     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
+     type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
 
-     !> uses sll_m_accumulators::sll_charge_accumulator_2d
-     ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_charge_accumulator_2d]]
-     type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
-     type(electric_field_accumulator),                  pointer     :: E_accumulator
+     !> uses sll_m_accumulators::sll_t_charge_accumulator_2d
+     ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_t_charge_accumulator_2d]]
+     type(sll_t_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
+     type(sll_t_electric_field_accumulator),                  pointer     :: E_accumulator
      logical :: use_lt_pic_scheme        ! if false then use pic scheme
-     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
-     type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
+     type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
+     type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
-     type(poisson_2d_fft_solver), pointer :: poisson
+     type(sll_t_poisson_2d_fft_solver), pointer :: poisson
      sll_real64 :: total_density
 
      sll_real64, dimension(:,:), pointer :: E1, E2
@@ -176,12 +176,12 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
    contains
      procedure, pass(sim) :: init_from_file => init_4d_generic_pic_cartesian
      procedure, pass(sim) :: run => run_4d_generic_pic_cartesian
-  end type sll_simulation_4d_vp_generic_pic_cartesian
+  end type sll_t_simulation_4d_vp_generic_pic_cartesian
 
   !> Standard Selalib deallocation
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_4d_generic_pic_cartesian
-  end interface sll_delete
+  end interface sll_o_delete
   
 contains
 
@@ -190,7 +190,7 @@ contains
 
   subroutine particles_snapshot(time,sim)
 
-    class(sll_simulation_4d_vp_generic_pic_cartesian), intent(in) :: sim
+    class(sll_t_simulation_4d_vp_generic_pic_cartesian), intent(in) :: sim
     
     ! Actual time
     
@@ -209,9 +209,9 @@ contains
     write(filename,'(A19,F0.3,A4)') 'particles_snapshot_',time,'.gnu'
 
     ! Inspired from [[file:~/selalib/src/file_io/sll_m_gnuplot.F90::subroutine sll_gnuplot_corect_2d]]. Calls
-    ! [[file:~/selalib/src/file_io/sll_m_ascii_io.F90::sll_ascii_file_create]]
+    ! [[file:~/selalib/src/file_io/sll_m_ascii_io.F90::sll_s_ascii_file_create]]
 
-    call sll_ascii_file_create(filename,fileid,error)
+    call sll_s_ascii_file_create(filename,fileid,error)
 
     ! placing data inside the gnuplot script
     ! [[http://stackoverflow.com/questions/12722048/gnuplot-data-points-in-script]]
@@ -236,12 +236,12 @@ contains
     close(fileid)
   end subroutine particles_snapshot
 
-  !> redefines sll_simulation_base_class::init_from_file <!--
+  !> redefines sll_c_simulation_base_class::init_from_file <!--
   !> [[selalib:src/simulations/simulation_base_class.F90::init_from_file]] -->
 
   subroutine init_4d_generic_pic_cartesian   ( sim, filename )
     intrinsic :: trim
-    class(sll_simulation_4d_vp_generic_pic_cartesian), intent(inout) :: sim
+    class(sll_t_simulation_4d_vp_generic_pic_cartesian), intent(inout) :: sim
     character(len=*), intent(in)                          :: filename
     sll_int32   :: IO_stat
     sll_int32   :: ierr
@@ -273,11 +273,11 @@ contains
     sll_int32   :: initial_density_identifier
 
     ! <<simple_pic_particle_group>>
-    ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
-    type(sll_simple_pic_4d_group),      pointer     :: simple_pic_particle_group
-    type(sll_bsl_lt_pic_4d_group),      pointer     :: bsl_lt_pic_particle_group
+    ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_t_simple_pic_4d_group]]
+    type(sll_t_simple_pic_4d_group),      pointer     :: simple_pic_particle_group
+    type(sll_t_bsl_lt_pic_4d_group),      pointer     :: bsl_lt_pic_particle_group
 
-    type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
+    type(sll_t_charge_accumulator_2d),    pointer :: charge_accumulator
 
     sll_real64  :: er, psi, omega_i, omega_r
     sll_int32, parameter  :: input_file = 99
@@ -339,12 +339,12 @@ contains
     end if
     close(input_file)
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%my_rank    = sll_f_get_collective_rank(sll_v_world_collective)
     
     print*, 'sim%world_size=',sim%world_size, ' sim%my_rank=', sim%my_rank
 
-    XMAX = (2._f64*sll_pi/KX_LANDAU)
+    XMAX = (2._f64*sll_p_pi/KX_LANDAU)
     sim%use_lt_pic_scheme = UseLtPicScheme
     print *, "AAA"
 
@@ -357,10 +357,10 @@ contains
     sim%remap_period = remap_period
     sim%elec_params = (/KX_LANDAU, ALPHA, er, psi, omega_r, omega_i /)
     
-    sim%mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
+    sim%mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
                                            XMIN, XMAX, YMIN, YMAX )
 
-    sim%poisson => new_poisson_2d_fft_solver( sim%mesh_2d%eta1_min,    &
+    sim%poisson => sll_f_new_poisson_2d_fft_solver( sim%mesh_2d%eta1_min,    &
                                               sim%mesh_2d%eta1_max,    &
                                               sim%mesh_2d%num_cells1,  &
                                               sim%mesh_2d%eta2_min,    &
@@ -374,7 +374,7 @@ contains
 
       ! construct [[bsl_lt_particle_group]]
       particle_group_id = 1
-      bsl_lt_pic_particle_group => sll_bsl_lt_pic_4d_group_new( &
+      bsl_lt_pic_particle_group => sll_f_bsl_lt_pic_4d_group_new( &
         SPECIES_CHARGE,                                 &
         SPECIES_MASS,                                   &
         particle_group_id,                              &
@@ -407,7 +407,7 @@ contains
       ! construct [[simple_pic_particle_group]]
       particle_group_id = 0
 
-      simple_pic_particle_group => sll_simple_pic_4d_group_new(     &
+      simple_pic_particle_group => sll_f_simple_pic_4d_group_new(     &
             SPECIES_CHARGE,                                             &
             SPECIES_MASS,                                               &
             particle_group_id,                                          &
@@ -448,8 +448,8 @@ contains
    SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
 
    thread_id = 0
-   sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
-   sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
+   sim%q_accumulator_ptr(thread_id+1)%q => sll_f_new_charge_accumulator_2d( sim%mesh_2d )
+   sim%E_accumulator => sll_f_new_field_accumulator_2d( sim%mesh_2d )
 
    !! -- --  First charge deposition [begin]  -- --
 
@@ -467,7 +467,7 @@ contains
 
   ! <<run_4d_generic_pic_cartesian>>
   
-  !> Run the Vlasov-Poisson simulation. Redefines sll_simulation_base_class::run <!--
+  !> Run the Vlasov-Poisson simulation. Redefines sll_c_simulation_base_class::run <!--
   !> [[selalib:src/simulations/simulation_base_class.F90::run]] -->
   !!
   !! \note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
@@ -480,7 +480,7 @@ contains
   !! @author this version written by MCP, ALH
 
   subroutine run_4d_generic_pic_cartesian( sim )
-    class(sll_simulation_4d_vp_generic_pic_cartesian), intent(inout)  :: sim
+    class(sll_t_simulation_4d_vp_generic_pic_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j, k
     sll_real64 :: tmp1, tmp2, tmp3, tmp4
@@ -502,7 +502,7 @@ contains
     sll_real64 :: pp_x,pp_y,pp_vx, pp_vy
     sll_real32 :: pp_dx, pp_dy
     sll_int32  :: pp_icell, pp_icell_x, pp_icell_y
-    type(field_accumulator_cell), dimension(:), pointer :: accumE
+    type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
     ! type(sll_generic_pic_4d_particle_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy
     sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
@@ -515,7 +515,7 @@ contains
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
-    type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
+    type(sll_t_charge_accumulator_2d),    pointer :: charge_accumulator
     sll_int32 :: sort_nb
     sll_real64 :: some_val, une_cst
     sll_real64 :: val_lee, exval_ee
@@ -527,7 +527,7 @@ contains
     ! Timings and statistics
     sll_real64 :: deposit_time
     sll_real64 :: loop_time
-    type(sll_time_mark) :: deposit_time_mark, loop_time_mark
+    type(sll_t_time_mark) :: deposit_time_mark, loop_time_mark
     
     ! ------------------------------
     ncx = sim%mesh_2d%num_cells1
@@ -567,21 +567,21 @@ contains
     !>
     !> - starting from
     !>   * \f$(x,y)^0_k\f$, \f$(v_x, v_y)^0_k\f$ stored in the particle group
-    !>     sll_simulation_4d_vp_generic_pic_cartesian::particle_group
+    !>     sll_t_simulation_4d_vp_generic_pic_cartesian::particle_group
     !>
     !> - we end with
     !>   * \f$E^0\f$ stored in sim\%E1 (\f$E^0_x\f$), sim\%E2 (\f$E^0_y\f$)
     !>   * \f$(x,y)^0_k, (v_x, v_y)^{-1/2}_k\f$ stored in the the particle group
-    !>     sll_simulation_4d_vp_generic_pic_cartesian::particle_group
+    !>     sll_t_simulation_4d_vp_generic_pic_cartesian::particle_group
     !  ----------------------------------------------------------------------------------------------------
 
     !! -- --  ?? [begin]  -- --
 
     accumE => sim%E_accumulator%e_acc
-    call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
+    call sll_s_sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
 
-    ! [[selalib:src/pic_utilities/sll_charge_to_density.F90::sll_convert_charge_to_rho_2d_per_per]]
-    call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
+    ! [[selalib:src/pic_utilities/sll_charge_to_density.F90::sll_s_convert_charge_to_rho_2d_per_per]]
+    call sll_s_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
 
     !! -- --  ?? [end]  -- --
 
@@ -595,7 +595,7 @@ contains
        enddo
     enddo
     
-    call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
          MPI_SUM, rho1d_receive   )
     
     do j = 1, ncy+1
@@ -610,7 +610,7 @@ contains
        it = 0
 
        ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+       call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
             sim%mesh_2d%eta2_max, ncy+1,                        &
             sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
@@ -621,18 +621,18 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
-    ! <<Ex_Ey_output>> using the [[selalib:src/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably the
+    ! <<Ex_Ey_output>> using the [[selalib:src/file_io/sll_m_gnuplot.F90::sll_o_gnuplot_2d]] interface and most probably the
     ! [[file:~/selalib/src/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
     
     if (sim%my_rank == 0) then
        it = 0
        
        print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+       call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
             sim%mesh_2d%eta2_max, ncy+1,                        &
             sim%E1, 'Ex', it, ierr )
 
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+       call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
             sim%mesh_2d%eta2_max, ncy+1,                        &
             sim%E2, 'Ey', it, ierr )
 
@@ -664,8 +664,8 @@ contains
 
     !! -- --  half v-push (computing v^0 -> v^{-1/2})  [begin]  -- --
 
-    call reset_field_accumulator_to_zero( sim%E_accumulator )
-    call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
+    call sll_s_reset_field_accumulator_to_zero( sim%E_accumulator )
+    call sll_s_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
 
     do k = 1, sim%number_particles
 
@@ -683,8 +683,8 @@ contains
       !> because the base PIC class does not give access to this type of info (because some particles may not have
       !> it)
 
-      call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
-      call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
+      call sll_s_global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
+      call sll_s_get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
       ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
       SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
@@ -700,14 +700,14 @@ contains
     ! -- --  half v-push  [end]  -- --
 
     ! this means (pi / KX_LANDAU) * (4._f64 * ALPHA * er)**2
-    une_cst = (sll_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
+    une_cst = (sll_p_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
     omega_i = sim%elec_params(6)
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
 
     if (sim%my_rank ==0) open(65,file='logE_standPush.dat')
     !#ifdef _OPENMP
-    !    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
+    !    t2 = omp_get_wtime() !   call sll_s_set_time_mark(t2)
     !#endif
 
     !AAA-ALH-HERE
@@ -722,7 +722,7 @@ contains
     !  ----------------------------------------------------------------------------------------------------
 
     ! Time statistics
-    call sll_set_time_mark(loop_time_mark)
+    call sll_s_set_time_mark(loop_time_mark)
     deposit_time=0
 
     ! First snapshot at time 0 [[particles_snapshot]]
@@ -766,7 +766,7 @@ contains
       some_val = 0.0_f64
 
       thread_id = 0
-      call reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
+      call sll_s_reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
       !! -- --  particle loop -- --
@@ -791,8 +791,8 @@ contains
          !> because the base PIC class does not give access to this type of info (because some particles may not
          !> have it).
 
-         call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
-         call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
+         call sll_s_global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
+         call sll_s_get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
          ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
@@ -819,13 +819,13 @@ contains
 
          !! -- --  x-push [end]  -- --
 
-         if( .not. x_is_in_domain_2d( coords(1), coords(2), sim%mesh_2d,            &
+         if( .not. sll_f_is_in_domain_2d( coords(1), coords(2), sim%mesh_2d,            &
                                        sim%domain_is_x_periodic,                    &
                                        sim%domain_is_y_periodic )                   &
                ) then
             !! -- -- put outside particles back in domain
-            ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::apply_periodic_bc_on_cartesian_mesh_2d]]
-           call apply_periodic_bc_on_cartesian_mesh_2d( sim%mesh_2d, coords(1), coords(2))
+            ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_s_apply_periodic_bc_on_cartesian_mesh_2d]]
+           call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( sim%mesh_2d, coords(1), coords(2))
          end if
 
          ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::set_x]]
@@ -837,13 +837,13 @@ contains
       
       print *, "deposit charge begin"
 
-      call sll_set_time_mark(deposit_time_mark)
+      call sll_s_set_time_mark(deposit_time_mark)
 
       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::deposit_charge_2d]]
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
       call sim%particle_group%deposit_charge_2d( charge_accumulator )
 
-      deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
+      deposit_time=deposit_time+sll_f_time_elapsed_since(deposit_time_mark)
 
       print *, "deposit charge end"
 
@@ -855,8 +855,8 @@ contains
 
       !! -- --  parallel communications for rho ?? [begin]  -- --
 
-      call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
-      call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
+      call sll_s_sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
+      call sll_s_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
       do j = 1, ncy+1
          do i = 1, ncx+1
             rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
@@ -864,7 +864,7 @@ contains
          end do
       end do
 
-      call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+      call sll_o_collective_allreduce( sll_v_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
             MPI_SUM, rho1d_receive   )
 
       do j = 1, ncy+1
@@ -880,7 +880,7 @@ contains
       !> In the time loop, the field \f$E^{n+1}\f$ is obtained with a call to the Poisson solver.  Again, sim\%rho has
       !> the proper sign so that we do not need to multiply it by an additional physical constant.
 
-      ! [[file:~/selalib/src/poisson_solvers/sll_poisson_2d_base.F90::compute_E_from_rho]]
+      ! [[file:~/selalib/src/poisson_solvers/sll_c_poisson_2d_base.F90::compute_E_from_rho]]
       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
       !! -- --  diagnostics (plotting) [begin]  -- --
@@ -925,11 +925,11 @@ contains
        if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
 
             print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
-            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+            call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                                 sim%mesh_2d%eta2_max, ncy+1,                        &
                                 sim%E1, 'Ex', it+1, ierr )
 
-            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+            call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                                 sim%mesh_2d%eta2_max, ncy+1,                        &
                                 sim%E2, 'Ey', it+1, ierr )
             print *, "done."
@@ -942,8 +942,8 @@ contains
        !! -- --  diagnostics (computing energy) [begin]  -- --
         print *, "diag energy"
 
-        call reset_field_accumulator_to_zero( sim%E_accumulator )
-        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
+        call sll_s_reset_field_accumulator_to_zero( sim%E_accumulator )
+        call sll_s_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
         some_val = 0.0_f64
 
         do k = 1, sim%number_particles
@@ -957,8 +957,8 @@ contains
              !> because the base PIC class does not give access to this type of info (because some particles may not
              !> have it).  todo: we may want to optimize this out for speed
 
-             call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
-             call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
+             call sll_s_global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
+             call sll_s_get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
              ! [[selalib:src/pic_accumulators/sll_m_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
              SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
@@ -1001,7 +1001,7 @@ contains
     !  ----------------------------------------------------------------------------------------------------
 
     !#ifdef _OPENMP
-    !    time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
+    !    time = omp_get_wtime()!! time = sll_f_time_elapsed_since(t2)
     !
     !    if (sim%my_rank ==0) then
     !       close(65)
@@ -1020,7 +1020,7 @@ contains
     ! ALH - Time statistics. The number of deposits is computed separately to take the number of LTP BSL virtual
     ! particles into account.
     
-    loop_time=sll_time_elapsed_since(loop_time_mark)
+    loop_time=sll_f_time_elapsed_since(loop_time_mark)
     write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%number_particles,' pushes/sec '
     if(sim%use_lt_pic_scheme)then
        write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                     &
@@ -1043,7 +1043,7 @@ contains
 
 
   subroutine delete_4d_generic_pic_cartesian( sim )
-    type(sll_simulation_4d_vp_generic_pic_cartesian) :: sim
+    type(sll_t_simulation_4d_vp_generic_pic_cartesian) :: sim
   end subroutine delete_4d_generic_pic_cartesian
 
 
@@ -1051,14 +1051,14 @@ contains
 !    logical :: res
 !    sll_real64, intent(in) :: x
 !    sll_real64, intent(in) :: y
-!    type(sll_cartesian_mesh_2d), pointer :: mesh
+!    type(sll_t_cartesian_mesh_2d), pointer :: mesh
 !
 !    res = (x >= mesh%eta1_min) .and. (x <= mesh%eta1_max) .and. &
 !          (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
 !  end function in_bounds
 
 !  subroutine apply_periodic_bc( mesh, x, y )
-!    type(sll_cartesian_mesh_2d), pointer :: mesh
+!    type(sll_t_cartesian_mesh_2d), pointer :: mesh
 !    sll_real64, intent(inout) :: x
 !    sll_real64, intent(inout) :: y
 !

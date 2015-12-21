@@ -13,39 +13,39 @@ module sll_m_periodic_interp
 !   zffti
 
   use sll_m_arbitrary_degree_splines, only: &
-    uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x
 
   use sll_m_constants, only: &
-    sll_pi, &
-    sll_twopi
+    sll_p_pi, &
+    sll_p_twopi
 
   use sll_m_fft, only: &
-    fft_apply_plan_r2r_1d, &
-    fft_backward, &
-    fft_forward, &
-    fft_new_plan_r2r_1d, &
-    sll_fft_plan
+    sll_s_fft_apply_plan_r2r_1d, &
+    sll_p_fft_backward, &
+    sll_p_fft_forward, &
+    sll_f_fft_new_plan_r2r_1d, &
+    sll_t_fft_plan
 
   implicit none
 
   public :: &
-    delete, &
-    initialize_periodic_interp, &
-    lagrange, &
-    periodic_interp, &
-    periodic_interp_work, &
-    spline, &
-    trigo, &
-    trigo_fft_selalib
+    sll_o_delete, &
+    sll_s_initialize_periodic_interp, &
+    sll_p_lagrange, &
+    sll_s_periodic_interp, &
+    sll_t_periodic_interp_work, &
+    sll_p_spline, &
+    sll_p_trigo, &
+    sll_p_trigo_fft_selalib
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  sll_int32,  parameter :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
+  sll_int32,  parameter :: sll_p_trigo = 0, sll_p_spline = 1, sll_p_lagrange = 2, sll_p_trigo_fft_selalib = 3
   sll_int32,  parameter :: TRIGO_REAL = 4
   sll_comp64, parameter :: ii_64 = (0.0_f64, 1.0_f64)
 
-  type :: periodic_interp_work
+  type :: sll_t_periodic_interp_work
      sll_int32           :: N ! number of cells
      sll_int32           :: interpolator ! what interpolator is used
      sll_int32           :: order  ! order of interpolation (not needed for Fourier)
@@ -54,19 +54,19 @@ module sll_m_periodic_interp
      sll_real64, pointer :: wsave(:) ! workspace for fft
      sll_comp64, pointer :: modes(:) ! Fourier modes
      sll_comp64, pointer :: ufft (:) ! Fourier transform of function
-     sll_real64, pointer :: buf  (:) ! workspace for lagrange interpolation
-     sll_int32           :: sizebuf ! size of workspace for lagrange interpolation
-     type(sll_fft_plan), pointer :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
-   end type periodic_interp_work
+     sll_real64, pointer :: buf  (:) ! workspace for sll_p_lagrange interpolation
+     sll_int32           :: sizebuf ! size of workspace for sll_p_lagrange interpolation
+     type(sll_t_fft_plan), pointer :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
+   end type sll_t_periodic_interp_work
 
-  interface delete
+  interface sll_o_delete
      module procedure delete_periodic_interp_work
-  end interface delete
+  end interface sll_o_delete
 
 
 contains
-  subroutine initialize_periodic_interp( this, N, interpolator, order )
-    type(periodic_interp_work), pointer  :: this
+  subroutine sll_s_initialize_periodic_interp( this, N, interpolator, order )
+    type(sll_t_periodic_interp_work), pointer  :: this
     sll_int32,                intent(in) :: N            ! number of cells
     sll_int32,                intent(in) :: interpolator ! interpolation method
     sll_int32,                intent(in) :: order        ! order of method
@@ -74,7 +74,7 @@ contains
     ! local variables
     sll_int32  :: ierr, i, j
     !sll_int32  :: k
-    sll_int32  :: p ! spline degree
+    sll_int32  :: p ! sll_p_spline degree
     sll_int32  :: icoarse  ! coarsening factor for stabilization of trigonometric interpolation
     sll_real64 :: biatx(order)
     !sll_real64 :: mode
@@ -93,19 +93,19 @@ contains
     SLL_ALLOCATE(this%eigenvalues_S(N),ierr)
     SLL_ALLOCATE(this%modes(0:N-1),ierr)
 
-    ! set up spline parameters
+    ! set up sll_p_spline parameters
     if ((order/2) /= int(order/2.0)) then
-       print*, 'initialize_periodic_interp: order of interpolators needs to be even.', &
+       print*, 'sll_s_initialize_periodic_interp: order of interpolators needs to be even.', &
             'Order here is: ', Order
        stop
     end if
-    p = order - 1  ! spline degree is one less than order
+    p = order - 1  ! sll_p_spline degree is one less than order
 
     ! Initialize fft
     call zffti(N, this%wsave)
 
     select case (interpolator)
-    case (TRIGO)
+    case (sll_p_trigo)
        this%buf=>NULL()
        if (order == 0) then ! no coarsening
           this%eigenvalues_Minv = 1.0_f64
@@ -115,19 +115,19 @@ contains
           this%eigenvalues_Minv = 1.0_f64
        end if
 
-    case (SPLINE)
+    case (sll_p_spline)
        this%buf=>NULL()
-       biatx = uniform_b_splines_at_x(p, 0.0_f64 )
+       biatx = sll_f_uniform_b_splines_at_x(p, 0.0_f64 )
        do i=1, N
-          this%modes(i-1) = exp(ii_64*sll_twopi*(i-1)/N)
+          this%modes(i-1) = exp(ii_64*sll_p_twopi*(i-1)/N)
           this%eigenvalues_Minv(i) = biatx((p+1)/2)
           do j = 1,(p+1)/2
              this%eigenvalues_Minv(i) = this%eigenvalues_Minv(i) &
-                  + biatx(j+(p+1)/2)*2*cos(j*sll_twopi*(i-1)/N)
+                  + biatx(j+(p+1)/2)*2*cos(j*sll_p_twopi*(i-1)/N)
           end do
           this%eigenvalues_Minv(i) = 1.0_f64 / this%eigenvalues_Minv(i)
        end do
-    case (LAGRANGE)
+    case (sll_p_lagrange)
       this%sizebuf=3*N+15
       SLL_ALLOCATE(this%buf(0:this%sizebuf-1),ierr)    
        call dffti(N,this%buf(N:3*N+14))
@@ -135,22 +135,22 @@ contains
       this%sizebuf=2*N+15
       SLL_ALLOCATE(this%buf(1:this%sizebuf),ierr)    
        call dffti(N,this%buf)
-    case (TRIGO_FFT_SELALIB)
+    case (sll_p_trigo_fft_selalib)
        this%sizebuf=N
        SLL_ALLOCATE(this%buf(this%sizebuf),ierr)          
        !SLL_ALLOCATE(buf(N),ierr)
-       this%pfwd => fft_new_plan_r2r_1d(N,this%buf,this%buf,FFT_FORWARD,normalized = .TRUE.)
-       this%pinv => fft_new_plan_r2r_1d(N,this%buf,this%buf,FFT_BACKWARD)
+       this%pfwd => sll_f_fft_new_plan_r2r_1d(N,this%buf,this%buf,sll_p_fft_forward,normalized = .TRUE.)
+       this%pinv => sll_f_fft_new_plan_r2r_1d(N,this%buf,this%buf,sll_p_fft_backward)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
        print*, 'sll_m_periodic_interp:interpolator ',interpolator, ' not implemented'
        stop
     end select
 
-  end subroutine initialize_periodic_interp
+  end subroutine sll_s_initialize_periodic_interp
 
   subroutine delete_periodic_interp_work( this )
-    type(periodic_interp_work), pointer :: this 
+    type(sll_t_periodic_interp_work), pointer :: this 
 
     sll_int32 :: ierr
     
@@ -165,10 +165,10 @@ contains
     SLL_DEALLOCATE(this, ierr )
   end subroutine delete_periodic_interp_work
 
-  subroutine periodic_interp( this, u_out, u, alpha )
+  subroutine sll_s_periodic_interp( this, u_out, u, alpha )
     ! interpolate function u given at grid points on a periodic grid
     ! at positions j-alpha (alpha is normalized to the cell size)
-    type(periodic_interp_work), pointer :: this
+    type(sll_t_periodic_interp_work), pointer :: this
     sll_real64,             intent(out) :: u_out(:) ! result
     sll_real64,             intent(in)  :: u(:)     ! function to be interpolated
     sll_real64,             intent(in)  :: alpha    ! displacement normalized to cell size
@@ -191,22 +191,22 @@ contains
 
     ! Compute eigenvalues of shift matrix
     select case (this%interpolator)
-    case (TRIGO)
+    case (sll_p_trigo)
        ! Perform FFT of u
        do i=1, this%N
          this%ufft(i) = cmplx(u(i),kind=f64)
        end do
        call zfftf(this%N, this%ufft, this%wsave)
        this%eigenvalues_S(1) = (1.0_f64, 0.0_f64)
-       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*sll_pi*alpha)
+       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*sll_p_pi*alpha)
        do k=1, this%N/2-1
           !filter = 0.5_8*(1+tanh(100*(.35_8*this%N/2-k)/(this%N/2))) !F1
           !filter = 0.5_8*(1+tanh(100*(.25_8*this%N/2-k)/(this%N/2))) !F2
           !filter = 0.5_8*(1+tanh(50*(.25_8*this%N/2-k)/(this%N/2))) !F3
           filter = (1.0_f64, 0.0_f64)
 
-          this%eigenvalues_S(k+1) = exp(-ii_64*sll_twopi*k*alpha/this%N) * filter
-          this%eigenvalues_S(this%N-k+1) = exp(ii_64*sll_twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(k+1) = exp(-ii_64*sll_p_twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(this%N-k+1) = exp(ii_64*sll_p_twopi*k*alpha/this%N) * filter
        end do
        this%ufft = this%ufft*this%eigenvalues_S
        ! Perform inverse FFT and normalized
@@ -214,7 +214,7 @@ contains
        do i=1, this%N
           u_out(i) = real(this%ufft(i),f64) / real(this%N,f64)
        end do
-    case (SPLINE)
+    case (sll_p_spline)
        ! Perform FFT of u
        do i=1, this%N
          this%ufft(i) = cmplx(u(i),kind=f64)
@@ -225,7 +225,7 @@ contains
        p =  this%order - 1
        ishift = floor (-alpha)
        beta = -ishift - alpha
-       biatx = uniform_b_splines_at_x(p, beta )
+       biatx = sll_f_uniform_b_splines_at_x(p, beta )
 
        this%eigenvalues_S = (0.0_f64, 0.0_f64)
        do i=1, this%N
@@ -242,7 +242,7 @@ contains
        do i=1, this%N
           u_out(i) = real(this%ufft(i),f64) / real(this%N,f64)
        end do
-    case (LAGRANGE)
+    case (sll_p_lagrange)
        u_out = u
        call fourier1dperlagodd(this%buf,this%sizebuf,u_out,this%N, &
             alpha/this%N,this%order/2 - 1 )
@@ -253,11 +253,11 @@ contains
        !print *,this%sizebuf,this%N
        call fourier1dper(this%buf,this%sizebuf,u_out,this%N,alpha/this%N)
             
-    case (TRIGO_FFT_SELALIB)
+    case (sll_p_trigo_fft_selalib)
        u_out = u
-       call fft_apply_plan_r2r_1d(this%pfwd,u_out,u_out)
+       call sll_s_fft_apply_plan_r2r_1d(this%pfwd,u_out,u_out)
        n=this%N
-       tmp2=-ii_64*2._f64*sll_pi/n*alpha
+       tmp2=-ii_64*2._f64*sll_p_pi/n*alpha
 
        do i=1,n/2-1
          tmp = cmplx( u_out(2*i+1) , u_out(2*i+2) ,kind=f64)
@@ -274,15 +274,15 @@ contains
       ! do i=0,this%N/2
       !   tmp=fft_get_mode(this%pfwd,u_out,i)
       !   !print *,i,tmp,alpha
-      !   !tmp=tmp*exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+      !   !tmp=tmp*exp(-ii*2._f64*sll_p_pi/this%N*alpha*real(i,f64))
       !   tmp=tmp*exp(tmp2*real(i,f64))
-      !   !print *,i,tmp,exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+      !   !print *,i,tmp,exp(-ii*2._f64*sll_p_pi/this%N*alpha*real(i,f64))
       !   call fft_set_mode(this%pfwd,u_out,tmp,i)
       !   !tmp=fft_get_mode(this%pfwd,u_out,i)
       !   !print *,i,tmp
       ! enddo
 
-       call fft_apply_plan_r2r_1d(this%pinv,u_out,u_out)        
+       call sll_s_fft_apply_plan_r2r_1d(this%pinv,u_out,u_out)        
     case default
        print*, 'sll_m_periodic_interp:interpolator ',this%interpolator, ' not implemented'
        stop
@@ -300,7 +300,7 @@ contains
     !elapsed_time=real(clock_end-clock_start,8)/real(clock_rate,8)
     !print*,'time eigenvalues', elapsed_time
 
-  end subroutine periodic_interp
+  end subroutine sll_s_periodic_interp
 
  subroutine fourier1dperlagodd( buf, sizebuf, E, N, alpha, d )
     sll_int32,  intent(in)    :: N, sizebuf, d
@@ -397,7 +397,7 @@ contains
     !x=x*real(N,f64)
     !ix=floor(x)
     !x=x-real(ix,f64)
-    x=x*2._f64*sll_pi
+    x=x*2._f64*sll_p_pi
 
     call dfftf(N,E,coefd)
     !print *,E

@@ -4,19 +4,19 @@ program test_vector_space
 #include "sll_working_precision.h"
 
   use sll_m_vector_space_base, only: &
-    sll_vector_space_base
+    sll_c_vector_space_base
 
   use sll_m_vector_space_real_arrays, only: &
-    sll_vector_space_real_1d, &
-    sll_vector_space_real_2d
+    sll_t_vector_space_real_1d, &
+    sll_t_vector_space_real_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64,             target, allocatable :: a1(:), a2(:,:)
-  type( sll_vector_space_real_1d )            :: v1
-  type( sll_vector_space_real_2d )            :: v2
-  class( sll_vector_space_base ), allocatable :: v3
+  type( sll_t_vector_space_real_1d )            :: v1
+  type( sll_t_vector_space_real_2d )            :: v2
+  class( sll_c_vector_space_base ), allocatable :: v3
   sll_int32                                   :: i, j, n, m
 
   interface test_association
@@ -71,7 +71,7 @@ program test_vector_space
 !  v3 = v1
 !  call v3%add( v1, v2 )
 
-  select type( v3 ); type is( sll_vector_space_real_2d )
+  select type( v3 ); type is( sll_t_vector_space_real_2d )
 
     do i = 1,size( v3%array,1 )
       write(*,'(*(g12.5))') v3%array(i,:)

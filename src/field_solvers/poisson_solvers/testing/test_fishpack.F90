@@ -2,11 +2,11 @@ program test_fishpack
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   use sll_m_fishpack, only: &
-    cartesian_2d, &
-    cartesian_3d, &
-    fishpack_2d, &
-    fishpack_3d, &
-    polar_2d
+    sll_p_cartesian_2d, &
+    sll_p_cartesian_3d, &
+    sll_t_fishpack_2d, &
+    sll_t_fishpack_3d, &
+    sll_p_polar_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -66,9 +66,9 @@ real(8), dimension(nc_eta2+1)           :: eta2
 real(8), intent(in)                     :: eta1_min, eta1_max
 real(8), intent(in)                     :: eta2_min, eta2_max
 
-type(fishpack_2d) :: poisson
+type(sll_t_fishpack_2d) :: poisson
 
-call poisson%create(CARTESIAN_2D, &
+call poisson%create(sll_p_cartesian_2d, &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
          eta2_min, eta2_max, nc_eta2, bc_eta2  )
 
@@ -140,7 +140,7 @@ real(8), dimension(nc_eta2+1)           :: eta2
 real(8), intent(in)                     :: eta1_min, eta1_max
 real(8), intent(in)                     :: eta2_min, eta2_max
 
-type(fishpack_2d) :: poisson
+type(sll_t_fishpack_2d) :: poisson
 
 
 !--------------------------------------------------------------------------
@@ -167,7 +167,7 @@ type(fishpack_2d) :: poisson
 !									                    !
 !-------------------------------------------------------------------------!
 
-call poisson%create(POLAR_2D, &
+call poisson%create(sll_p_polar_2d, &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
          eta2_min, eta2_max, nc_eta2, bc_eta2   )
 
@@ -231,14 +231,14 @@ real(8), intent(in)                     :: eta3_min, eta3_max
 
 real(8), dimension(nc_eta1+1,nc_eta2+1,nc_eta3+1) :: field
 
-type(fishpack_3d) :: poisson
+type(sll_t_fishpack_3d) :: poisson
 
 real(8) , allocatable, dimension(:) :: eta1
 real(8) , allocatable, dimension(:) :: eta2
 real(8) , allocatable, dimension(:) :: eta3
 real(8) :: t, delta_eta1, delta_eta2, delta_eta3
 
-call poisson%create(CARTESIAN_3D,     &
+call poisson%create(sll_p_cartesian_3d,     &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
          eta2_min, eta2_max, nc_eta2, bc_eta2,&
          eta3_min, eta3_max, nc_eta3, bc_eta3)

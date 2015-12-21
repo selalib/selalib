@@ -4,35 +4,35 @@ program aligned_derivative_2d
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
-    new_periodic_1d_advector
+    sll_f_new_periodic_1d_advector
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_derivative_2d_oblic, only: &
-    compute_oblic_derivative_2d, &
-    new_oblic_2d_derivative, &
-    oblic_2d_derivative
+    sll_s_compute_oblic_derivative_2d, &
+    sll_f_new_oblic_2d_derivative, &
+    sll_t_oblic_2d_derivative
 
   use sll_m_fcisl, only: &
-    compute_derivative_periodic, &
-    compute_spaghetti, &
-    compute_spaghetti_and_shift_from_guess, &
-    compute_w_hermite
+    sll_s_compute_derivative_periodic, &
+    sll_s_compute_spaghetti, &
+    sll_s_compute_spaghetti_and_shift_from_guess, &
+    sll_s_compute_w_hermite
 
   use sll_m_periodic_interp, only: &
-    lagrange, &
-    spline
+    sll_p_lagrange, &
+    sll_p_spline
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type(oblic_2d_derivative), pointer :: deriv
-  class(sll_advection_1d_base), pointer :: adv_x1
-  !class(sll_advection_1d_base), pointer :: adv_x2
+  type(sll_t_oblic_2d_derivative), pointer :: deriv
+  class(sll_c_advection_1d_base), pointer :: adv_x1
+  !class(sll_c_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
   sll_int32 :: i2
   sll_int32 :: Nc_x1
@@ -192,7 +192,7 @@ program aligned_derivative_2d
   
   
   !print *,'#(r,s)=',r,s
-  call compute_w_hermite(w,r,s)
+  call sll_s_compute_w_hermite(w,r,s)
   !print *,'#w=',w(r:s)
   
   do i=1,Nc_x1+1
@@ -209,18 +209,18 @@ program aligned_derivative_2d
 
   select case (advector_x1)
     case ("SLL_SPLINES") ! arbitrary order periodic splines
-      adv_x1 => new_periodic_1d_advector( &
+      adv_x1 => sll_f_new_periodic_1d_advector( &
         Nc_x1, &
         x1_min, &
         x1_max, &
-        SPLINE, & 
+        sll_p_spline, & 
         order_x1) 
-    case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-      adv_x1 => new_periodic_1d_advector( &
+    case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
+      adv_x1 => sll_f_new_periodic_1d_advector( &
         Nc_x1, &
         x1_min, &
         x1_max, &
-        LAGRANGE, & 
+        sll_p_lagrange, & 
         order_x1)
     case default
       print*,'#advector in x1', advector_x1, ' not implemented'
@@ -228,18 +228,18 @@ program aligned_derivative_2d
   end select    
 !  select case (advector_x2)
 !    case ("SLL_SPLINES") ! arbitrary order periodic splines
-!      adv_x2 => new_periodic_1d_advector( &
+!      adv_x2 => sll_f_new_periodic_1d_advector( &
 !        Nc_x2, &
 !        x2_min, &
 !        x2_max, &
-!        SPLINE, & 
+!        sll_p_spline, & 
 !        order_x2) 
-!    case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-!      adv_x2 => new_periodic_1d_advector( &
+!    case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
+!      adv_x2 => sll_f_new_periodic_1d_advector( &
 !        Nc_x2, &
 !        x2_min, &
 !        x2_max, &
-!        LAGRANGE, & 
+!        sll_p_lagrange, & 
 !        order_x2)
 !    case default
 !      print*,'#advector in x2', advector_x2, ' not implemented'
@@ -254,10 +254,10 @@ program aligned_derivative_2d
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      phi_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1/(x1_max-x1_min)+A1_0*x2/(x2_max-x2_min)))
+      phi_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64)*(-A2_0*x1/(x1_max-x1_min)+A1_0*x2/(x2_max-x2_min)))
       Dx2_phi_exact(i1,i2) = &
-        A1_0*2._f64*sll_pi*real(k_mode,f64)/(x2_max-x2_min) &
-        *cos(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1/(x1_max-x1_min)+A1_0*x2/(x2_max-x2_min)))
+        A1_0*2._f64*sll_p_pi*real(k_mode,f64)/(x2_max-x2_min) &
+        *cos(2._f64*sll_p_pi*real(k_mode,f64)*(-A2_0*x1/(x1_max-x1_min)+A1_0*x2/(x2_max-x2_min)))
     enddo
   enddo
   
@@ -266,7 +266,7 @@ program aligned_derivative_2d
   Dx2_phi = 0._f64
   err = 0._f64
   do i=1,Nc_x1+1
-    call compute_derivative_periodic( &
+    call sll_s_compute_derivative_periodic( &
     phi(i,1:Nc_x2+1), &
     Dx2_phi(i,1:Nc_x2+1), &
     Nc_x2, &
@@ -281,7 +281,7 @@ program aligned_derivative_2d
   
   !new method: derivative along iota_modif
   iota = A1/A2
-  call compute_spaghetti_and_shift_from_guess( &
+  call sll_s_compute_spaghetti_and_shift_from_guess( &
     Nc_x1, &
     Nc_x2, &
     iota, &
@@ -332,7 +332,7 @@ program aligned_derivative_2d
   !enddo
   !stop
   
-  call compute_spaghetti( &
+  call sll_s_compute_spaghetti( &
     Nc_x1, &
     Nc_x2, &
     shift, &
@@ -368,7 +368,7 @@ program aligned_derivative_2d
 !    enddo
 !    stop
     !compute derivative
-    call compute_derivative_periodic( &
+    call sll_s_compute_derivative_periodic( &
       buf_1d(1:spaghetti_size*Nc_x2+1), &
       buf_1d_out(1:spaghetti_size*Nc_x2+1), &
       spaghetti_size*Nc_x2, &
@@ -413,7 +413,7 @@ program aligned_derivative_2d
   
   
   do i=1,Nc_x2+1
-    call compute_derivative_periodic( &
+    call sll_s_compute_derivative_periodic( &
     phi(1:Nc_x1+1,i), &
     Dx1_phi(1:Nc_x1+1,i), &
     Nc_x1, &
@@ -447,7 +447,7 @@ program aligned_derivative_2d
   !new method without spaghetti and with abstract interface 
   ! more in the spirit of Ottaviani 
   
-  deriv => new_oblic_2d_derivative( &
+  deriv => sll_f_new_oblic_2d_derivative( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -456,7 +456,7 @@ program aligned_derivative_2d
     r, &
     s )
 
-  call compute_oblic_derivative_2d( &
+  call sll_s_compute_oblic_derivative_2d( &
     deriv, &
     A1, &
     A2, &
