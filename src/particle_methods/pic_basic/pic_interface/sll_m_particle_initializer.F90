@@ -348,7 +348,7 @@ contains
           v(2) = -v(2)
        elseif (ip == 3) then
           v(1) = -v(1)
-       elseif (ip == 4) then
+       elseif (ip == 0) then
           v(2) = -v(2)
        end if
 
