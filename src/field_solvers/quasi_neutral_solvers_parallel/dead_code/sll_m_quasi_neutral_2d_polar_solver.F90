@@ -25,7 +25,7 @@ use sll_m_poisson_2d_base
 use sll_m_poisson_2d_polar
 implicit none
 
-  type,extends(sll_poisson_2d_base) :: quasi_neutral_2d_polar_solver     
+  type,extends(sll_c_poisson_2d_base) :: quasi_neutral_2d_polar_solver     
   
   type(sll_plan_poisson_polar), pointer                   :: poiss
   
@@ -110,7 +110,7 @@ contains
 
     ! solves E = -\nabla Phi in 2d
 !    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
+!      class(sll_t_poisson_2d_fft_solver) :: poisson
 !      sll_real64,dimension(:,:),intent(in) :: phi
 !      sll_real64,dimension(:,:),intent(out) :: E1
 !      sll_real64,dimension(:,:),intent(out) :: E2

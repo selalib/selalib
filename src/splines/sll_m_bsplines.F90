@@ -12,34 +12,34 @@ module sll_m_bsplines
 !   banslv
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_deboor_splines_1d, only: &
-    bsplvb, &
-    bsplvd, &
-    deboor_type, &
-    interv
+    sll_s_bsplvb, &
+    sll_s_bsplvd, &
+    sll_t_deboor_type, &
+    sll_s_interv
 
   use sll_m_fornberg, only: &
-    apply_fd
+    sll_s_apply_fd
 
   implicit none
 
   public :: &
-    compute_bspline_1d, &
-    compute_bspline_2d, &
-    delete_bspline_1d, &
-    interpolate_array_derivatives_1d, &
-    interpolate_array_values_1d, &
-    interpolate_array_values_2d, &
-    interpolate_derivative_1d, &
-    interpolate_value_1d, &
-    interpolate_value_2d, &
-    new_bspline_1d, &
-    new_bspline_2d, &
-    sll_bspline_1d, &
-    sll_bspline_2d, &
-    update_bspline_1d
+    sll_s_compute_bspline_1d, &
+    sll_o_compute_bspline_2d, &
+    sll_s_delete_bspline_1d, &
+    sll_s_interpolate_array_derivatives_1d, &
+    sll_s_interpolate_array_values_1d, &
+    sll_s_interpolate_array_values_2d, &
+    sll_f_interpolate_derivative_1d, &
+    sll_f_interpolate_value_1d, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_bspline_1d, &
+    sll_f_new_bspline_2d, &
+    sll_t_bspline_1d, &
+    sll_t_bspline_2d, &
+    sll_s_update_bspline_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -48,7 +48,7 @@ module sll_m_bsplines
 !> basic type for one-dimensional B-spline data. 
 !> @details This should be
 !> treated as an opaque type. It is better to use it through interpolator
-type :: sll_bspline_1d
+type :: sll_t_bspline_1d
 
   sll_int32                 :: n
   sll_int32                 :: k
@@ -72,28 +72,28 @@ type :: sll_bspline_1d
   sll_real64, allocatable   :: dl(:)
   sll_real64, allocatable   :: dr(:)
 
-end type sll_bspline_1d
+end type sll_t_bspline_1d
 
 !> @brief 
 !> basic type for two-dimensional B-spline data. 
 !> @details 
 !> treated as an opaque type. No access to its internals is directly allowed.
-type :: sll_bspline_2d
+type :: sll_t_bspline_2d
 
-  type(sll_bspline_1d), pointer :: bs1
-  type(sll_bspline_1d), pointer :: bs2
+  type(sll_t_bspline_1d), pointer :: bs1
+  type(sll_t_bspline_1d), pointer :: bs2
   sll_real64,           pointer :: bcoef(:,:)
   sll_real64,           pointer :: x1_min_slopes(:) => null() 
   sll_real64,           pointer :: x1_max_slopes(:) => null()
   sll_real64,           pointer :: x2_min_slopes(:) => null()
   sll_real64,           pointer :: x2_max_slopes(:) => null()
 
-end type sll_bspline_2d
+end type sll_t_bspline_2d
 
-interface compute_bspline_2d
+interface sll_o_compute_bspline_2d
   module procedure compute_bspline_2d_with_constant_slopes
   module procedure compute_bspline_2d_with_variable_slopes
-end interface compute_bspline_2d
+end interface sll_o_compute_bspline_2d
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -116,9 +116,9 @@ contains
 !> @param[in] sr OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @return a pointer to a heap-allocated cubic spline object.
-function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
+function sll_f_new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
 
-  type(sll_bspline_1D), pointer    :: new_bspline_1d
+  type(sll_t_bspline_1d), pointer    :: sll_f_new_bspline_1d
   sll_int32,  intent(in)           :: num_points
   sll_int32,  intent(in)           :: degree
   sll_real64, intent(in)           :: xmin
@@ -134,82 +134,82 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
   sll_int32, parameter             :: m=2
   sll_real64                       :: delta
 
-  SLL_ALLOCATE( new_bspline_1d, ierr )
+  SLL_ALLOCATE( sll_f_new_bspline_1d, ierr )
 
   k = degree+1
   n = num_points
 
-  SLL_ALLOCATE(new_bspline_1d%a(k,k), ierr)
+  SLL_ALLOCATE(sll_f_new_bspline_1d%a(k,k), ierr)
 
-  new_bspline_1d%bc_type = bc_type
-  new_bspline_1d%n       = num_points
-  new_bspline_1d%k       = degree+1
-  new_bspline_1d%length  = xmax - xmin
+  sll_f_new_bspline_1d%bc_type = bc_type
+  sll_f_new_bspline_1d%n       = num_points
+  sll_f_new_bspline_1d%k       = degree+1
+  sll_f_new_bspline_1d%length  = xmax - xmin
 
-  delta = new_bspline_1d%length / (n-1)
+  delta = sll_f_new_bspline_1d%length / (n-1)
 
-  SLL_ALLOCATE(new_bspline_1d%tau(n), ierr)
+  SLL_ALLOCATE(sll_f_new_bspline_1d%tau(n), ierr)
   do i = 1, n
-    new_bspline_1d%tau(i) = xmin + (i-1) * delta
+    sll_f_new_bspline_1d%tau(i) = xmin + (i-1) * delta
   end do
 
-  if ( bc_type == SLL_PERIODIC) then
+  if ( bc_type == sll_p_periodic) then
 
-    SLL_ALLOCATE(new_bspline_1d%t(n+k), ierr)
-    SLL_ALLOCATE(new_bspline_1d%bcoef(n),  ierr)
-    SLL_ALLOCATE(new_bspline_1d%q(1:(2*k-1)*n), ierr)
+    SLL_ALLOCATE(sll_f_new_bspline_1d%t(n+k), ierr)
+    SLL_ALLOCATE(sll_f_new_bspline_1d%bcoef(n),  ierr)
+    SLL_ALLOCATE(sll_f_new_bspline_1d%q(1:(2*k-1)*n), ierr)
 
-    new_bspline_1d%t(1:k) = xmin
+    sll_f_new_bspline_1d%t(1:k) = xmin
     if ( mod(k,2) == 0 ) then
       do i = k+1,n
-        new_bspline_1d%t(i) = new_bspline_1d%tau(i-k/2) 
+        sll_f_new_bspline_1d%t(i) = sll_f_new_bspline_1d%tau(i-k/2) 
       end do
     else
       do i = k+1, n
-        new_bspline_1d%t(i) = 0.5*(new_bspline_1d%tau(i  -(k-1)/2) &
-                                  +new_bspline_1d%tau(i-1-(k-1)/2))
+        sll_f_new_bspline_1d%t(i) = 0.5*(sll_f_new_bspline_1d%tau(i  -(k-1)/2) &
+                                  +sll_f_new_bspline_1d%tau(i-1-(k-1)/2))
       end do
     end if
-    new_bspline_1d%t(n+1:n+k) = xmax
+    sll_f_new_bspline_1d%t(n+1:n+k) = xmax
        
   else
 
     if (present(sl)) then
-      new_bspline_1d%sl = sl
-      new_bspline_1d%compute_sl = .false.
+      sll_f_new_bspline_1d%sl = sl
+      sll_f_new_bspline_1d%compute_sl = .false.
     else
-      new_bspline_1d%compute_sl = .true.
+      sll_f_new_bspline_1d%compute_sl = .true.
     end if
     if (present(sr)) then
-      new_bspline_1d%sr = sr
-      new_bspline_1d%compute_sr = .false.
+      sll_f_new_bspline_1d%sr = sr
+      sll_f_new_bspline_1d%compute_sr = .false.
     else
-      new_bspline_1d%compute_sr = .true.
+      sll_f_new_bspline_1d%compute_sr = .true.
     end if
 
-    SLL_ALLOCATE(new_bspline_1d%t(n+k+m),           ierr)
-    SLL_ALLOCATE(new_bspline_1d%bcoef(n+m),         ierr)
-    SLL_ALLOCATE(new_bspline_1d%q(1:(2*k-1)*(n+m)), ierr)
+    SLL_ALLOCATE(sll_f_new_bspline_1d%t(n+k+m),           ierr)
+    SLL_ALLOCATE(sll_f_new_bspline_1d%bcoef(n+m),         ierr)
+    SLL_ALLOCATE(sll_f_new_bspline_1d%q(1:(2*k-1)*(n+m)), ierr)
 
-    new_bspline_1d%t(1:k)   = xmin
+    sll_f_new_bspline_1d%t(1:k)   = xmin
     if ( mod(k,2) == 0) then
-      new_bspline_1d%t(k+1:n+m) = new_bspline_1d%tau(2:n-1)
+      sll_f_new_bspline_1d%t(k+1:n+m) = sll_f_new_bspline_1d%tau(2:n-1)
     else
       do i = k+1, n+m
-        new_bspline_1d%t(i) = 0.5*(new_bspline_1d%tau(i-k)+ &
-                                   new_bspline_1d%tau(i-k+1))
+        sll_f_new_bspline_1d%t(i) = 0.5*(sll_f_new_bspline_1d%tau(i-k)+ &
+                                   sll_f_new_bspline_1d%tau(i-k+1))
       end do
     end if
-    new_bspline_1d%t(n+m+1:n+m+k) = xmax
+    sll_f_new_bspline_1d%t(n+m+1:n+m+k) = xmax
 
   end if
 
-  allocate(new_bspline_1d%dbiatx(k,m))
-  allocate(new_bspline_1d%aj(k))
-  allocate(new_bspline_1d%dl(k))
-  allocate(new_bspline_1d%dr(k))
+  allocate(sll_f_new_bspline_1d%dbiatx(k,m))
+  allocate(sll_f_new_bspline_1d%aj(k))
+  allocate(sll_f_new_bspline_1d%dl(k))
+  allocate(sll_f_new_bspline_1d%dr(k))
 
-end function new_bspline_1d
+end function sll_f_new_bspline_1d
 
 !> @brief Returns a pointer to a heap-allocated bspline object.
 !> @param[in] nx1 Number of points where the data to be interpolated are 
@@ -239,11 +239,11 @@ end function new_bspline_1d
 !> @param[in] sr2 OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @return a pointer to a heap-allocated cubic spline object.
-function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
+function sll_f_new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
                          nx2, degree2, x2_min, x2_max, bc2, &
                          sl1, sr1, sl2, sr2  )
 
-  type(sll_bspline_2d), pointer    :: new_bspline_2d
+  type(sll_t_bspline_2d), pointer    :: sll_f_new_bspline_2d
 
   sll_int32,  intent(in)           :: nx1
   sll_int32,  intent(in)           :: degree1
@@ -264,39 +264,39 @@ function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
   sll_int32                        :: n2
   sll_int32                        :: ierr
 
-  SLL_ALLOCATE(new_bspline_2d, ierr )
-  SLL_ALLOCATE(new_bspline_2d%x1_min_slopes(1:nx2), ierr)
-  SLL_ALLOCATE(new_bspline_2d%x1_max_slopes(1:nx2), ierr)
-  SLL_ALLOCATE(new_bspline_2d%x2_min_slopes(1:nx1), ierr)
-  SLL_ALLOCATE(new_bspline_2d%x2_max_slopes(1:nx1), ierr)
+  SLL_ALLOCATE(sll_f_new_bspline_2d, ierr )
+  SLL_ALLOCATE(sll_f_new_bspline_2d%x1_min_slopes(1:nx2), ierr)
+  SLL_ALLOCATE(sll_f_new_bspline_2d%x1_max_slopes(1:nx2), ierr)
+  SLL_ALLOCATE(sll_f_new_bspline_2d%x2_min_slopes(1:nx1), ierr)
+  SLL_ALLOCATE(sll_f_new_bspline_2d%x2_max_slopes(1:nx1), ierr)
 
   if (present(sl1) .and. present(sr1)) then
-    new_bspline_2d%bs1 => new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1,sl1,sr1)
+    sll_f_new_bspline_2d%bs1 => sll_f_new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1,sl1,sr1)
   else
-    new_bspline_2d%bs1 => new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1)
+    sll_f_new_bspline_2d%bs1 => sll_f_new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1)
   end if
 
   if (present(sl1) .and. present(sr1)) then
-    new_bspline_2d%bs2 => new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2,sl2,sr2)
+    sll_f_new_bspline_2d%bs2 => sll_f_new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2,sl2,sr2)
   else
-    new_bspline_2d%bs2 => new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2)
+    sll_f_new_bspline_2d%bs2 => sll_f_new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2)
   end if
 
-  n1 = size(new_bspline_2d%bs1%bcoef)
-  n2 = size(new_bspline_2d%bs2%bcoef)
-  SLL_CLEAR_ALLOCATE(new_bspline_2d%bcoef(1:n1,1:n2), ierr)
+  n1 = size(sll_f_new_bspline_2d%bs1%bcoef)
+  n2 = size(sll_f_new_bspline_2d%bs2%bcoef)
+  SLL_CLEAR_ALLOCATE(sll_f_new_bspline_2d%bcoef(1:n1,1:n2), ierr)
 
-  if (present(sl1)) new_bspline_2d%x1_min_slopes(:) = sl1
-  if (present(sr1)) new_bspline_2d%x1_max_slopes(:) = sr1
-  if (present(sl2)) new_bspline_2d%x2_min_slopes(:) = sl2
-  if (present(sr2)) new_bspline_2d%x2_max_slopes(:) = sr2
+  if (present(sl1)) sll_f_new_bspline_2d%x1_min_slopes(:) = sl1
+  if (present(sr1)) sll_f_new_bspline_2d%x1_max_slopes(:) = sr1
+  if (present(sl2)) sll_f_new_bspline_2d%x2_min_slopes(:) = sl2
+  if (present(sr2)) sll_f_new_bspline_2d%x2_max_slopes(:) = sr2
 
-end function new_bspline_2d
+end function sll_f_new_bspline_2d
 
 
 subroutine build_system_with_derivative(this)
 
-  type(sll_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)    :: this 
 
   sll_real64              :: taui
   sll_int32               :: kpkm2
@@ -310,7 +310,7 @@ subroutine build_system_with_derivative(this)
   sll_int32               :: jj
   sll_int32               :: l
   sll_int32, parameter    :: m=2
-  type(deboor_type)       :: db
+  type(sll_t_deboor_type)       :: db
   
   n = this%n
   k = this%k
@@ -329,11 +329,11 @@ subroutine build_system_with_derivative(this)
   do i = 1, n
       
     taui = this%tau(i)
-    call interv( db, this%t, n+m+k, taui, left, mflag )
+    call sll_s_interv( db, this%t, n+m+k, taui, left, mflag )
 
     if (i < n) then
 
-      call bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
+      call sll_s_bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -341,7 +341,7 @@ subroutine build_system_with_derivative(this)
       end do
    
       if ( i == 1 ) then   
-        call bsplvd( db, this%t, k, taui, left, this%a, this%dbiatx, 2)
+        call sll_s_bsplvd( db, this%t, k, taui, left, this%a, this%dbiatx, 2)
         l = l + 1
         jj = i-left+1+(left-k)*(k+k-1)+l
         do j = 1, k
@@ -352,7 +352,7 @@ subroutine build_system_with_derivative(this)
 
     else
 
-      call bsplvd( db, this%t, k, taui, left, this%a, this%dbiatx, 2)
+      call sll_s_bsplvd( db, this%t, k, taui, left, this%a, this%dbiatx, 2)
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -360,7 +360,7 @@ subroutine build_system_with_derivative(this)
       end do
       l = l + 1
       
-      call bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
+      call sll_s_bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2 
@@ -379,7 +379,7 @@ end subroutine build_system_with_derivative
 
 subroutine build_system_periodic(this)
 
-  type(sll_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)    :: this 
 
   sll_real64              :: taui
   sll_int32               :: kpkm2
@@ -391,7 +391,7 @@ subroutine build_system_periodic(this)
   sll_int32               :: j
   sll_int32               :: jj
   sll_int32               :: ilp1mx
-  type(deboor_type)       :: db
+  type(sll_t_deboor_type)       :: db
   
   !PN Warning:
   !PN The system built for periodic boundary conditions is wrong
@@ -418,7 +418,7 @@ subroutine build_system_periodic(this)
       if ( this%t(left+1) < taui ) stop ' The linear system is not invertible!'
       exit
     end do
-    call bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
+    call sll_s_bsplvb ( db, this%t, k, 1, taui, left, this%bcoef )
     jj = i-left+1+(left-k)*(k+k-1)
     do j = 1, k
         jj = jj + kpkm2
@@ -448,7 +448,7 @@ end subroutine build_system_periodic
 !>  The B-coefficients for the interpolant 
 !>  of an additional data set can be obtained without going through all 
 !>  the calculations in this routine, simply by calling the subroutine
-!>  update_bspline_1d
+!>  sll_s_update_bspline_1d
 !>
 !>  @param[inout], the bspline object with knots and data point abscissas.
 !>  The triangular factorization of the coefficient matrix of the linear 
@@ -464,44 +464,44 @@ end subroutine build_system_periodic
 !    Springer, 2001,
 !    ISBN: 0387953663,
 !    LC: QA1.A647.v27.
-subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
+subroutine sll_s_compute_bspline_1d(this, gtau, slope_min, slope_max)
 
-  type(sll_bspline_1d)   :: this 
+  type(sll_t_bspline_1d)   :: this 
   sll_real64, intent(in) :: gtau(:)
   sll_real64, optional   :: slope_min
   sll_real64, optional   :: slope_max
 
-  if ( this%bc_type == SLL_PERIODIC) then
+  if ( this%bc_type == sll_p_periodic) then
     call build_system_periodic(this)
   else
     call build_system_with_derivative(this)
   end if
 
   if (present(slope_min) .and. present(slope_max)) then
-    call update_bspline_1d( this, gtau, slope_min, slope_max)
+    call sll_s_update_bspline_1d( this, gtau, slope_min, slope_max)
   else
-    call update_bspline_1d( this, gtau)
+    call sll_s_update_bspline_1d( this, gtau)
   end if
 
-end subroutine compute_bspline_1d
+end subroutine sll_s_compute_bspline_1d
 
 subroutine compute_bspline_2d_with_constant_slopes(this, gtau, &
   sl1_l, sl1_r, sl2_l, sl2_r)
 
-  type(sll_bspline_2d)    :: this 
+  type(sll_t_bspline_2d)    :: this 
   sll_real64, intent(in)  :: gtau(:,:)
   sll_real64, optional    :: sl1_l
   sll_real64, optional    :: sl1_r
   sll_real64, optional    :: sl2_l
   sll_real64, optional    :: sl2_r
 
-  if ( this%bs1%bc_type == SLL_PERIODIC) then
+  if ( this%bs1%bc_type == sll_p_periodic) then
     call build_system_periodic(this%bs1)
   else
     call build_system_with_derivative(this%bs1)
   end if
 
-  if ( this%bs2%bc_type == SLL_PERIODIC) then
+  if ( this%bs2%bc_type == sll_p_periodic) then
     call build_system_periodic(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
@@ -519,20 +519,20 @@ end subroutine compute_bspline_2d_with_constant_slopes
 subroutine compute_bspline_2d_with_variable_slopes(this, gtau, &
   sl1_l, sl1_r, sl2_l, sl2_r)
 
-  type(sll_bspline_2d)    :: this 
+  type(sll_t_bspline_2d)    :: this 
   sll_real64, intent(in)  :: gtau(:,:)
   sll_real64, intent(in)  :: sl1_l(:)
   sll_real64, intent(in)  :: sl1_r(:)
   sll_real64, intent(in)  :: sl2_l(:)
   sll_real64, intent(in)  :: sl2_r(:)
 
-  if ( this%bs1%bc_type == SLL_PERIODIC) then
+  if ( this%bs1%bc_type == sll_p_periodic) then
     call build_system_periodic(this%bs1)
   else
     call build_system_with_derivative(this%bs1)
   end if
 
-  if ( this%bs2%bc_type == SLL_PERIODIC) then
+  if ( this%bs2%bc_type == sll_p_periodic) then
     call build_system_periodic(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
@@ -556,11 +556,11 @@ end subroutine compute_bspline_2d_with_variable_slopes
 !> update 2 values before computing bsplines coefficients
 !> @details
 !> If the points positions did not change use this function instead
-!> of compute_bspline_2d. You still need to call compute_bspline_2d at
+!> of sll_o_compute_bspline_2d. You still need to call sll_o_compute_bspline_2d at
 !> the beginning to build the linear system.
 subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
-  type(sll_bspline_2d)    :: this 
+  type(sll_t_bspline_2d)    :: this 
   sll_real64, intent(in)  :: gtau(:,:)
   sll_real64, optional    :: sl1_l
   sll_real64, optional    :: sl1_r
@@ -586,7 +586,7 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   bc1 = this%bs1%bc_type
   bc2 = this%bs2%bc_type
 
-  if ( bc1 == SLL_PERIODIC ) then
+  if ( bc1 == sll_p_periodic ) then
     m1 = 0
   else
     m1 = 2
@@ -600,7 +600,7 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   if (present(sl2_r)) this%x2_max_slopes = sl2_r
 
   do j = 1, n2
-    call update_bspline_1d( this%bs1, gtau(:,j), &
+    call sll_s_update_bspline_1d( this%bs1, gtau(:,j), &
       this%x1_min_slopes(j), this%x1_max_slopes(j))
     bwork(j,:) = this%bs1%bcoef
   end do
@@ -612,7 +612,7 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   coeff2(1:n1) = this%x2_max_slopes(:)
 
   do i = 1, n1+m1
-    call update_bspline_1d( this%bs2, bwork(:,i), coeff1(i), coeff2(i))
+    call sll_s_update_bspline_1d( this%bs2, bwork(:,i), coeff1(i), coeff2(i))
     this%bcoef(i,:) = this%bs2%bcoef(:)
   end do
 
@@ -626,9 +626,9 @@ end subroutine update_bspline_2d
 !> If interpolants are already computed and if you change only 
 !> the data set and knots and points positions did not change
 !> use this routine.
-subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
+subroutine sll_s_update_bspline_1d(this, gtau, slope_min, slope_max)
 
-  type(sll_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)    :: this 
   sll_real64, intent(in)  :: gtau(:)
   sll_real64, optional    :: slope_min
   sll_real64, optional    :: slope_max
@@ -644,7 +644,7 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
 
   SLL_ASSERT(size(gtau) == n)
 
-  if (this%bc_type == SLL_PERIODIC) then
+  if (this%bc_type == sll_p_periodic) then
 
     this%bcoef = gtau
     call banslv ( this%q, k+k-1, n, k-1, k-1, this%bcoef )
@@ -654,7 +654,7 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
     this%bcoef(1)   = gtau(1)
 
     if(this%compute_sl) then
-      call apply_fd(k+1,1,this%tau(1:k+1),gtau(1:k+1), &
+      call sll_s_apply_fd(k+1,1,this%tau(1:k+1),gtau(1:k+1), &
         this%tau(1),slope(0:1))
       this%bcoef(2) = slope(1)
     else if (present(slope_min)) then
@@ -664,7 +664,7 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
     end if
     this%bcoef(3:n) = gtau(2:n-1)
     if(this%compute_sr) then
-      call apply_fd(k+1,1,this%tau(n-k-1:n),gtau(n-k-1:n), &
+      call sll_s_apply_fd(k+1,1,this%tau(n-k-1:n),gtau(n-k-1:n), &
         this%tau(n),slope(0:1))
       this%bcoef(n+1) = slope(1)
     else if (present(slope_max)) then
@@ -678,7 +678,7 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
 
   end if
   
-end subroutine update_bspline_1d
+end subroutine sll_s_update_bspline_1d
 
 
 !> @brief returns the value of the image of an abscissae,
@@ -689,10 +689,10 @@ end subroutine update_bspline_1d
 !> @param[out] y output double-precision element containing the 
 !> results of the interpolation.
 !> @param[inout] spline the spline object pointer, duly initialized and 
-!> already operated on by the compute_bspline_1d() subroutine.
-function interpolate_value_1d( this, x) result(y)
+!> already operated on by the sll_s_compute_bspline_1d() subroutine.
+function sll_f_interpolate_value_1d( this, x) result(y)
 
-  type(sll_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)    :: this 
   sll_real64, intent(in)  :: x
   sll_real64              :: y
   
@@ -708,18 +708,18 @@ function interpolate_value_1d( this, x) result(y)
   sll_int32               :: n
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
-  type(deboor_type)       :: db
+  type(sll_t_deboor_type)       :: db
   
   k = this%k
   n = this%n  
 
-  if (this%bc_type == SLL_PERIODIC) then
+  if (this%bc_type == sll_p_periodic) then
     nmk = n+k
   else
     nmk = n+m+k
   end if
   
-  call interv( db, this%t, nmk, x, i, mflag )
+  call sll_s_interv( db, this%t, nmk, x, i, mflag )
   
   y = this%bcoef(i)
   
@@ -772,7 +772,7 @@ function interpolate_value_1d( this, x) result(y)
   
   y = this%aj(1)
   
-end function interpolate_value_1d
+end function sll_f_interpolate_value_1d
 
 !> @brief returns the values of the images of a collection of 
 !> abscissae, represented by a 1D array in another output array. 
@@ -784,17 +784,17 @@ end function interpolate_value_1d
 !> @param[in] n the number of elements of the input array which are to be
 !> interpolated.
 !> @param[inout] spline the spline object pointer, duly initialized and 
-!> already operated on by the compute_bspline_1d() subroutine.
-subroutine interpolate_array_values_1d( this, n, x, y)
+!> already operated on by the sll_s_compute_bspline_1d() subroutine.
+subroutine sll_s_interpolate_array_values_1d( this, n, x, y)
 
-  type(sll_bspline_1d), pointer     :: this 
+  type(sll_t_bspline_1d), pointer     :: this 
   sll_int32,            intent(in)  :: n
   sll_real64,           intent(in)  :: x(n)
   sll_real64,           intent(out) :: y(n)
   
   call interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv=0)
 
-end subroutine interpolate_array_values_1d
+end subroutine sll_s_interpolate_array_values_1d
 
 !> @brief returns the values of the derivatives evaluated at a 
 !> collection of abscissae stored by a 1D array in another output 
@@ -807,20 +807,20 @@ end subroutine interpolate_array_values_1d
 !> @param[in] n the number of elements of the input array which are to be
 !> interpolated.
 !> @param[inout] spline the spline object pointer, duly initialized and 
-!> already operated on by the compute_bspline_1d() subroutine.
-subroutine interpolate_array_derivatives_1d( this, n, x, y)
-  type(sll_bspline_1d)    :: this 
+!> already operated on by the sll_s_compute_bspline_1d() subroutine.
+subroutine sll_s_interpolate_array_derivatives_1d( this, n, x, y)
+  type(sll_t_bspline_1d)    :: this 
   sll_int32,  intent(in)  :: n
   sll_real64, intent(in)  :: x(n)
   sll_real64, intent(out) :: y(n)
 
   call interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv=1)
 
-end subroutine interpolate_array_derivatives_1d
+end subroutine sll_s_interpolate_array_derivatives_1d
 
 subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
 
-  type(sll_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)    :: this 
   sll_int32,  intent(in)  :: n
   sll_real64, intent(in)  :: x(n)
   sll_real64, intent(out) :: y(n)
@@ -843,11 +843,11 @@ subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
   sll_real64, allocatable :: dr(:)
   sll_real64              :: xi
   sll_int32               :: jderiv
-  type(deboor_type)       :: db
+  type(sll_t_deboor_type)       :: db
   
   k = this%k
 
-  if (this%bc_type == SLL_PERIODIC) then
+  if (this%bc_type == sll_p_periodic) then
     nmk = n+k
   else
     nmk = n+m+k
@@ -867,14 +867,14 @@ subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
     !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
     !
     !  If no such I can be found, X lies outside the support of the
-    !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
+    !  spline F and  sll_f_bvalue = 0.  The asymmetry in this choice of I makes F
     !  right continuous.
     !
-    call interv ( db, this%t, nmk, xi, i, mflag )
+    call sll_s_interv ( db, this%t, nmk, xi, i, mflag )
     
     if ( mflag /= 0 ) return
     !
-    !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
+    !  If K = 1 (and JDERIV = 0), sll_f_bvalue = BCOEF(I).
     !
     if ( k <= 1 ) then
       y(l) = this%bcoef(i)
@@ -952,9 +952,9 @@ subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
 
 end subroutine interpolate_array_derivatives_1d_aux
 
-function interpolate_derivative_1d( this, x) result(y)
+function sll_f_interpolate_derivative_1d( this, x) result(y)
 
-  type(sll_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)    :: this 
   sll_real64, intent(in)  :: x
   sll_real64              :: y
   
@@ -971,12 +971,12 @@ function interpolate_derivative_1d( this, x) result(y)
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
   sll_int32,  parameter   :: jderiv = 1
-  type(deboor_type)       :: db
+  type(sll_t_deboor_type)       :: db
   
   k = this%k
   n = this%n
 
-  if (this%bc_type == SLL_PERIODIC) then
+  if (this%bc_type == sll_p_periodic) then
     nmk = n+k
   else
     nmk = n+m+k
@@ -985,10 +985,10 @@ function interpolate_derivative_1d( this, x) result(y)
   !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
   !
   !  If no such I can be found, X lies outside the support of the
-  !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
+  !  spline F and  sll_f_bvalue = 0.  The asymmetry in this choice of I makes F
   !  right continuous.
   !
-  call interv ( db, this%t, nmk, x, i, mflag )
+  call sll_s_interv ( db, this%t, nmk, x, i, mflag )
   
   y = this%bcoef(i)
   
@@ -996,7 +996,7 @@ function interpolate_derivative_1d( this, x) result(y)
   
   if ( mflag /= 0 ) return
   !
-  !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
+  !  If K = 1 (and JDERIV = 0), sll_f_bvalue = BCOEF(I).
   !
   if ( k <= 1 ) return
   !
@@ -1067,21 +1067,21 @@ function interpolate_derivative_1d( this, x) result(y)
   
   y = this%aj(1)
   
-end function interpolate_derivative_1d
+end function sll_f_interpolate_derivative_1d
 
-subroutine delete_bspline_1d( spline )
-  type(sll_bspline_1d), pointer :: spline
+subroutine sll_s_delete_bspline_1d( spline )
+  type(sll_t_bspline_1d), pointer :: spline
   print*, associated(spline)
-end subroutine delete_bspline_1d 
+end subroutine sll_s_delete_bspline_1d 
 
 subroutine delete_bspline_2D( spline )
-  type(sll_bspline_2D), pointer :: spline
+  type(sll_t_bspline_2d), pointer :: spline
   print*, associated(spline)
 end subroutine delete_bspline_2D 
 
-subroutine interpolate_array_values_2d(this, n1, n2, x, y, ideriv, jderiv)
+subroutine sll_s_interpolate_array_values_2d(this, n1, n2, x, y, ideriv, jderiv)
 
-type(sll_bspline_2d)    :: this
+type(sll_t_bspline_2d)    :: this
 sll_int32               :: n1
 sll_int32               :: n2
 sll_real64, intent(in)  :: x(:,:)
@@ -1114,7 +1114,7 @@ sll_real64              :: xi
 sll_real64              :: xj
 sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
-type(deboor_type)       :: db
+type(sll_t_deboor_type)       :: db
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
@@ -1127,12 +1127,12 @@ ky   =  this%bs2%k
 tx   => this%bs1%t
 ty   => this%bs2%t
 
-if (this%bs1%bc_type == SLL_PERIODIC) then
+if (this%bs1%bc_type == sll_p_periodic) then
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
-if (this%bs2%bc_type == SLL_PERIODIC) then
+if (this%bs2%bc_type == sll_p_periodic) then
   nmky = ny+ky
 else
   nmky = ny+ky+2
@@ -1151,10 +1151,10 @@ do j=1,n2
   db%ilo = kx
   klo = jlo
   xj  = this%bs2%tau(j)
-  call interv(db,ty,nmky,xj,lefty,mflag)
+  call sll_s_interv(db,ty,nmky,xj,lefty,mflag)
   do i=1,nx
     xi = this%bs1%tau(i)
-    call interv(db,tx,nmkx,xi,leftx,mflag)
+    call sll_s_interv(db,tx,nmkx,xi,leftx,mflag)
     do jj=1,ky
       jcmin = 1
       if ( kx <= leftx ) then
@@ -1206,7 +1206,7 @@ do j=1,n2
       end do
       wrk(jj) = ajx(1)
     end do
-    call interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
+    call sll_s_interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
     jcmin = 1
     if ( ky <= left ) then
       do jjj = 1, ky-1
@@ -1266,11 +1266,11 @@ deallocate(dly)
 deallocate(dry)
 deallocate(wrk)
 
-end subroutine interpolate_array_values_2d
+end subroutine sll_s_interpolate_array_values_2d
 
-function interpolate_value_2d(this, xi, xj, ideriv, jderiv ) result (y)
+function sll_f_interpolate_value_2d(this, xi, xj, ideriv, jderiv ) result (y)
 
-type(sll_bspline_2d)    :: this
+type(sll_t_bspline_2d)    :: this
 sll_real64, intent(in)  :: xi
 sll_real64, intent(in)  :: xj
 sll_int32,  intent(in)  :: ideriv
@@ -1292,7 +1292,7 @@ sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
 
 sll_real64, allocatable :: work(:)
-type(deboor_type)       :: db
+type(sll_t_deboor_type)       :: db
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
@@ -1304,19 +1304,19 @@ ty   => this%bs2%t
 allocate(work(size(this%bs1%bcoef)))
 work = 0.0_f64
 
-if (this%bs1%bc_type == SLL_PERIODIC) then
+if (this%bs1%bc_type == sll_p_periodic) then
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
-if (this%bs1%bc_type == SLL_PERIODIC) then
+if (this%bs1%bc_type == sll_p_periodic) then
   nmky = ny+ky
 else
   nmky = ny+ky+2
 end if
 
-call interv(db,tx,nmkx,xi,leftx,mflag)
-call interv(db,ty,nmky,xj,lefty,mflag)
+call sll_s_interv(db,tx,nmkx,xi,leftx,mflag)
+call sll_s_interv(db,ty,nmky,xj,lefty,mflag)
 
 do jj=1,ky
   jcmin = 1
@@ -1373,7 +1373,7 @@ do jj=1,ky
 end do
 
 !klo = this%bs2%ilo
-call interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
+call sll_s_interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
 
 jcmin = 1
 if ( ky <= left ) then
@@ -1427,11 +1427,11 @@ do jjj = jderiv+1, ky-1
 end do
 y = this%bs2%aj(1)
 
-end function interpolate_value_2d
+end function sll_f_interpolate_value_2d
 
 subroutine interpolate_array_x1_derivatives_2d(this, n1, n2, x, y)
 
-type(sll_bspline_2d)    :: this
+type(sll_t_bspline_2d)    :: this
 sll_int32,  intent(in)  :: n1
 sll_int32,  intent(in)  :: n2
 sll_real64, intent(in)  :: x(:,:)
@@ -1441,13 +1441,13 @@ SLL_ASSERT(this%bs1%n>0)
 SLL_ASSERT(n1 == size(x,1))
 SLL_ASSERT(n2 == size(y,2))
 y = 0.0_f64
-call interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
+call sll_s_interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
 
 end subroutine interpolate_array_x1_derivatives_2d
 
 subroutine interpolate_array_x2_derivatives_2d(this, n1, n2, x, y)
 
-type(sll_bspline_2d)    :: this
+type(sll_t_bspline_2d)    :: this
 sll_int32,  intent(in)  :: n1
 sll_int32,  intent(in)  :: n2
 sll_real64, intent(in)  :: x(:,:)
@@ -1457,7 +1457,7 @@ SLL_ASSERT(this%bs1%n>0)
 SLL_ASSERT(n1 == size(x,1))
 SLL_ASSERT(n2 == size(y,2))
 y = 0.0_f64
-call interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
+call sll_s_interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
 
 end subroutine interpolate_array_x2_derivatives_2d
 

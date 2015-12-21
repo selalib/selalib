@@ -1,4 +1,4 @@
-!> @ingroup operator_splitting
+!> @ingroup sll_t_operator_splitting
 !> @brief Implements split operators for constant coefficient advection
 module sll_m_const_coef_advection_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -9,14 +9,14 @@ module sll_m_const_coef_advection_2d
     sll_c_interpolator_1d
 
   use sll_m_operator_splitting, only: &
-    initialize_operator_splitting, &
-    operator_splitting
+    sll_s_initialize_operator_splitting, &
+    sll_t_operator_splitting
 
   implicit none
 
   public :: &
-    const_coef_advection_2d, &
-    new_const_coef_advection_2d
+    sll_t_const_coef_advection_2d, &
+    sll_f_new_const_coef_advection_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,7 +26,7 @@ module sll_m_const_coef_advection_2d
   !> Extends operator splitting
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type, extends(operator_splitting) :: const_coef_advection_2d
+  type, extends(sll_t_operator_splitting) :: sll_t_const_coef_advection_2d
      !> interpolator object in first direction
      class(sll_c_interpolator_1d), pointer    :: interp1
      !> interpolator object in second direction
@@ -44,14 +44,14 @@ module sll_m_const_coef_advection_2d
    contains
      procedure, pass(this) :: operatorT => adv1  !< advection in first direction
      procedure, pass(this) :: operatorV => adv2  !< advection in second direction
-  end type const_coef_advection_2d
+  end type sll_t_const_coef_advection_2d
 
 
 contains
-  function new_const_coef_advection_2d( data, n1, n2, a1, a2, interp1, interp2, &
+  function sll_f_new_const_coef_advection_2d( data, n1, n2, a1, a2, interp1, interp2, &
        split_case, split_step, nb_split_step, split_begin_T, dt) &
        result(this)  
-    class(const_coef_advection_2d), pointer :: this  !< object to be initialised
+    class(sll_t_const_coef_advection_2d), pointer :: this  !< object to be initialised
     sll_real64, dimension(:,:), pointer, intent(in) :: data   !< initial value of function
     sll_int32, intent(in)  :: n1   !< dimension in first direction
     sll_int32, intent(in)  :: n2   !< dimension in second direction
@@ -73,10 +73,10 @@ contains
 
   end function
 
-  !> @brief Initialise const_coef_advection_2d object
+  !> @brief Initialise sll_t_const_coef_advection_2d object
   subroutine initialize_const_coef_advection_2d( this, data, n1, n2, a1, a2, interp1, interp2, &
        split_case, split_step, nb_split_step, split_begin_T, dt)
-    class(const_coef_advection_2d), intent(inout)   :: this !< object 
+    class(sll_t_const_coef_advection_2d), intent(inout)   :: this !< object 
     sll_real64, dimension(:,:), pointer, intent(in) :: data   !< initial value of function
     sll_int32, intent(in)  :: n1   !< dimension in first direction
     sll_int32, intent(in)  :: n2   !< dimension in second direction
@@ -98,7 +98,7 @@ contains
     this%interp1 => interp1
     this%interp2 => interp2
 
-    call initialize_operator_splitting( &
+    call sll_s_initialize_operator_splitting( &
          this, &
          split_case, &
          split_step, &
@@ -109,7 +109,7 @@ contains
 
   !> @brief Constant coefficient advection operator in first direction
   subroutine adv1(this, dt)
-    class(const_coef_advection_2d), intent(inout) :: this !< object 
+    class(sll_t_const_coef_advection_2d), intent(inout) :: this !< object 
     sll_real64, intent(in)                        :: dt   !< time step
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
@@ -125,7 +125,7 @@ contains
 
   !> @brief Constant coefficient advection operator in second direction
   subroutine adv2(this, dt)
-    class(const_coef_advection_2d), intent(inout) :: this !< object 
+    class(sll_t_const_coef_advection_2d), intent(inout) :: this !< object 
     sll_real64, intent(in)                        :: dt   !< time step
     ! local variables
     sll_real64, dimension(:), pointer :: f1d

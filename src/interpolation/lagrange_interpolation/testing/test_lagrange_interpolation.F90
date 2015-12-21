@@ -4,16 +4,16 @@ program test_lagrange_interpolation
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_lagrange_interpolation_1d, only: &
-    compute_lagrange_interpolation_1d, &
-    interpolate_from_interpolant_array, &
-    new_lagrange_interpolation_1d, &
-    sll_lagrange_interpolation_1d
+    sll_s_compute_lagrange_interpolation_1d, &
+    sll_s_interpolate_from_interpolant_array, &
+    sll_f_new_lagrange_interpolation_1d, &
+    sll_t_lagrange_interpolation_1d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -21,7 +21,7 @@ program test_lagrange_interpolation
 sll_int32  :: i,d,num_points
 sll_real64 :: diff,alpha,xmin,xmax,l
 sll_real64,dimension(:),allocatable ::xi,fi,coord
-type(sll_lagrange_interpolation_1D),pointer ::l_i
+type(sll_t_lagrange_interpolation_1d),pointer ::l_i
 
 d=2
 num_points=100
@@ -40,9 +40,9 @@ do i=1,num_points
 end do 
 diff=0.0_f64
 
-l_i => new_lagrange_interpolation_1D(num_points,xmin,xmax,SLL_PERIODIC,d)
-call compute_lagrange_interpolation_1D(l_i)
-call interpolate_from_interpolant_array(fi,-alpha,l_i)
+l_i => sll_f_new_lagrange_interpolation_1d(num_points,xmin,xmax,sll_p_periodic,d)
+call sll_s_compute_lagrange_interpolation_1d(l_i)
+call sll_s_interpolate_from_interpolant_array(fi,-alpha,l_i)
 do i=1,num_points
  !print*,"interpolated value = ", l_i%data_out(i), " , Correct value = ",f(coord(i),num_points)
  diff=max(diff,abs(f(coord(i),num_points)-l_i%data_out(i)))
@@ -69,7 +69,7 @@ function f( x, num_points )
   sll_real64, intent(in) :: x
   sll_int32,  intent(in) :: num_points
   sll_real64 :: f
-  f = cos(2*sll_pi*x/(num_points-1.0))
+  f = cos(2*sll_p_pi*x/(num_points-1.0))
 end function
 
 end program test_lagrange_interpolation

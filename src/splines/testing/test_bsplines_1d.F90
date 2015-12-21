@@ -6,32 +6,32 @@ program test_bsplines_1d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_periodic
+    sll_p_hermite, &
+    sll_p_periodic
 
   use sll_m_bsplines, only: &
-    compute_bspline_1d, &
-    compute_bspline_2d, &
-    interpolate_array_derivatives_1d, &
-    interpolate_array_values_1d, &
-    interpolate_array_values_2d, &
-    interpolate_derivative_1d, &
-    interpolate_value_1d, &
-    interpolate_value_2d, &
-    new_bspline_1d, &
-    new_bspline_2d, &
-    sll_bspline_1d, &
-    sll_bspline_2d, &
-    update_bspline_1d
+    sll_s_compute_bspline_1d, &
+    sll_o_compute_bspline_2d, &
+    sll_s_interpolate_array_derivatives_1d, &
+    sll_s_interpolate_array_values_1d, &
+    sll_s_interpolate_array_values_2d, &
+    sll_f_interpolate_derivative_1d, &
+    sll_f_interpolate_value_1d, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_bspline_1d, &
+    sll_f_new_bspline_2d, &
+    sll_t_bspline_1d, &
+    sll_t_bspline_2d, &
+    sll_s_update_bspline_1d
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_bspline_1d), pointer :: bspline_1d
-type(sll_bspline_2d), pointer :: bspline_2d
+type(sll_t_bspline_1d), pointer :: bspline_1d
+type(sll_t_bspline_2d), pointer :: bspline_2d
 
 sll_real64                    :: err1
 sll_real64                    :: err2
@@ -51,19 +51,19 @@ sll_int32                     :: ierr
 print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
 print*,'***************************************************************'
-call test_process_1d(SLL_PERIODIC)
+call test_process_1d(sll_p_periodic)
 print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
 print*,'***************************************************************'
-call test_process_1d(SLL_HERMITE)
+call test_process_1d(sll_p_hermite)
 print*,'***************************************************************'
 print*,'*** 2D PERIODIC ***'
 print*,'***************************************************************'
-call test_process_2d(SLL_PERIODIC,SLL_PERIODIC)
+call test_process_2d(sll_p_periodic,sll_p_periodic)
 print*,'***************************************************************'
 print*,'*** 2D HERMITE  ***'
 print*,'***************************************************************'
-call test_process_2d(SLL_HERMITE,SLL_HERMITE)
+call test_process_2d(sll_p_hermite,sll_p_hermite)
 print*,'PASSED'
 
 contains
@@ -95,27 +95,27 @@ subroutine test_process_1d(bc_type)
     x(i) = (i-1)*h
   end do
 
-  if (bc_type == SLL_PERIODIC) print*, "Periodic Bspline"
-  bspline_1d => new_bspline_1d( n, d, tau_min, tau_max, bc_type)
+  if (bc_type == sll_p_periodic) print*, "Periodic Bspline"
+  bspline_1d => sll_f_new_bspline_1d( n, d, tau_min, tau_max, bc_type)
   print*, 'bspline_1d allocated'
   
-  gtau = cos(2*sll_pi*bspline_1d%tau)
-  slope_min = -sin(2.0_f64*sll_pi*tau_min)*2.0_f64*sll_pi
-  slope_max = -sin(2.0_f64*sll_pi*tau_max)*2.0_f64*sll_pi
+  gtau = cos(2*sll_p_pi*bspline_1d%tau)
+  slope_min = -sin(2.0_f64*sll_p_pi*tau_min)*2.0_f64*sll_p_pi
+  slope_max = -sin(2.0_f64*sll_p_pi*tau_max)*2.0_f64*sll_p_pi
   call cpu_time(t0)
-  call compute_bspline_1d(bspline_1d, gtau, slope_min, slope_max)
+  call sll_s_compute_bspline_1d(bspline_1d, gtau, slope_min, slope_max)
   call cpu_time(t1)
   do j = 1,nstep
-    call interpolate_array_values_1d( bspline_1d, n, x, y)
+    call sll_s_interpolate_array_values_1d( bspline_1d, n, x, y)
   end do
-  print*, " average values error = ", sum(abs(y-cos(2*sll_pi*x)))/real(n,f64)
-  print*, " maximum values error = ", maxval(abs(y-cos(2*sll_pi*x)))
+  print*, " average values error = ", sum(abs(y-cos(2*sll_p_pi*x)))/real(n,f64)
+  print*, " maximum values error = ", maxval(abs(y-cos(2*sll_p_pi*x)))
   call cpu_time(t2)
   do j = 1,nstep
-    call interpolate_array_derivatives_1d( bspline_1d, n, x, y)
+    call sll_s_interpolate_array_derivatives_1d( bspline_1d, n, x, y)
   end do
-  print*, " average derivatives error = ", sum(abs(y+2*sll_pi*sin(2*sll_pi*x)))/real(n,f64)
-  print*, " maximum derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
+  print*, " average derivatives error = ", sum(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))/real(n,f64)
+  print*, " maximum derivatives error = ", maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
   call cpu_time(t3)
 
   print*, ' ------------------------------------------------------- '
@@ -125,21 +125,21 @@ subroutine test_process_1d(bc_type)
   print*, ' time spent to interpolate array derivatives : ', t3-t2
   print*, ' ------------------------------------------------------- '
   
-  htau = sin(2*sll_pi*bspline_1d%tau)
-  call update_bspline_1d(bspline_1d, htau)
+  htau = sin(2*sll_p_pi*bspline_1d%tau)
+  call sll_s_update_bspline_1d(bspline_1d, htau)
   call random_number(x)
   x = x * (tau_max-tau_min)
-  call interpolate_array_values_1d( bspline_1d, n, x, y)
-  print*, "L2 norm error = ", sqrt(sum((y-sin(2*sll_pi*x))**2*h))
-  call interpolate_array_derivatives_1d( bspline_1d, n, x, y)
-  print*, "H1 norm error = ", sqrt(sum((y-2*sll_pi*cos(2*sll_pi*x))**2*h))
+  call sll_s_interpolate_array_values_1d( bspline_1d, n, x, y)
+  print*, "L2 norm error = ", sqrt(sum((y-sin(2*sll_p_pi*x))**2*h))
+  call sll_s_interpolate_array_derivatives_1d( bspline_1d, n, x, y)
+  print*, "H1 norm error = ", sqrt(sum((y-2*sll_p_pi*cos(2*sll_p_pi*x))**2*h))
   
   call cpu_time(t0)
   do j = 1,nstep
     err1 = 0.0_f64
     do i = 1, n
       err1 = err1 + &
-        abs(interpolate_value_1d(bspline_1d,x(i))-sin(2*sll_pi*x(i))) 
+        abs(sll_f_interpolate_value_1d(bspline_1d,x(i))-sin(2*sll_p_pi*x(i))) 
     end do
   end do
   call cpu_time(t1)
@@ -147,7 +147,7 @@ subroutine test_process_1d(bc_type)
     err2 = 0.0_f64
     do i = 1, n
       err2 = err2 + &
-        abs(interpolate_derivative_1d(bspline_1d,x(i))-2*sll_pi*cos(2*sll_pi*x(i))) 
+        abs(sll_f_interpolate_derivative_1d(bspline_1d,x(i))-2*sll_p_pi*cos(2*sll_p_pi*x(i))) 
     end do
   end do
   call cpu_time(t2)
@@ -180,14 +180,14 @@ subroutine test_process_2d(bc1_type, bc2_type)
 
   sll_real64              :: f
 
-  sll_real64, parameter   :: dpi = 2*sll_pi
+  sll_real64, parameter   :: dpi = 2*sll_p_pi
 
   sll_real64, parameter   :: x1_min = 0.0_f64
   sll_real64, parameter   :: x1_max = 1.0_f64
   sll_real64, parameter   :: x2_min = 0.0_f64
   sll_real64, parameter   :: x2_max = 1.0_f64
   
-  bspline_2d => new_bspline_2d( n1, d, x1_min, x1_max, bc1_type, &
+  bspline_2d => sll_f_new_bspline_2d( n1, d, x1_min, x1_max, bc1_type, &
                                 n2, d, x2_min, x2_max, bc2_type  )
   print*, 'bspline_2d allocated'
 
@@ -201,30 +201,30 @@ subroutine test_process_2d(bc1_type, bc2_type)
     end do
   end do
   
-  ftau = cos(2*sll_pi*tau1) * cos(2*sll_pi*tau2)
+  ftau = cos(2*sll_p_pi*tau1) * cos(2*sll_p_pi*tau2)
 
-  sl1 = - sin(2*sll_pi*x1_min) * 2.0_f64*sll_pi * cos(2*sll_pi*tau2( 1, :))
-  sr1 = - sin(2*sll_pi*x1_max) * 2.0_f64*sll_pi * cos(2*sll_pi*tau2(n1, :))
-  sl2 = - sin(2*sll_pi*x2_min) * 2.0_f64*sll_pi * cos(2*sll_pi*tau1( :, 1))
-  sr2 = - sin(2*sll_pi*x2_max) * 2.0_f64*sll_pi * cos(2*sll_pi*tau1( :,n2))
+  sl1 = - sin(2*sll_p_pi*x1_min) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau2( 1, :))
+  sr1 = - sin(2*sll_p_pi*x1_max) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau2(n1, :))
+  sl2 = - sin(2*sll_p_pi*x2_min) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau1( :, 1))
+  sr2 = - sin(2*sll_p_pi*x2_max) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau1( :,n2))
 
   call cpu_time(t0)
-  call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
+  call sll_o_compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
   call cpu_time(t1)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
+    call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
   end do
   err1 = sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/real(n1*n2,f64)
   err2 = maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t2)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 1, 0)
+    call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 1, 0)
   end do
   err3 = sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/real(n1*n2,f64)
   err4 = maxval(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t3)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 1)
+    call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 1)
   end do
   err5 = sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/real(n1*n2,f64)
   err6 = maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
@@ -249,12 +249,12 @@ subroutine test_process_2d(bc1_type, bc2_type)
   print*, "-----------------------------------------------------------"
   
   call cpu_time(t0)
-  call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
+  call sll_o_compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
   call cpu_time(t1)
   err1 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      f = interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,0)
+      f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,0)
       err1 = err1 + abs(f-ftau(i,j))
       write(10,*) tau1(i,j), tau2(i,j), f, ftau(i,j)
     end do
@@ -264,7 +264,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   err2 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      f = interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),1,0)
+      f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),1,0)
       err2 = err2 + abs(f+dpi*sin(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
     end do
   end do
@@ -272,7 +272,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   err3 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      f = interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,1)
+      f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,1)
       err3 = err3 + abs(f+dpi*sin(dpi*tau2(i,j))*cos(dpi*tau1(i,j)))
     end do
   end do

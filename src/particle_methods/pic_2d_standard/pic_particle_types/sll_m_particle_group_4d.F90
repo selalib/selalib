@@ -22,11 +22,11 @@ module sll_m_particle_group_4d
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_particle_representations, only: &
-    sll_particle_4d, &
-    sll_particle_4d_guard_ptr
+    sll_t_particle_4d, &
+    sll_t_particle_4d_guard_ptr
 
 #ifdef _OPENMP
   use omp_lib, only: &
@@ -37,14 +37,14 @@ module sll_m_particle_group_4d
   implicit none
 
   public :: &
-    new_particle_4d_group, &
-    sll_delete, &
-    sll_particle_group_4d
+    sll_f_new_particle_4d_group, &
+    sll_o_delete, &
+    sll_t_particle_group_4d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type :: sll_particle_group_4d
+  type :: sll_t_particle_group_4d
      sll_int32  :: number_particles
      sll_int32  :: active_particles
      sll_int32  :: guard_list_size
@@ -52,37 +52,37 @@ module sll_m_particle_group_4d
      ! to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles
      sll_real64 :: qoverm 
-     type(sll_cartesian_mesh_2d), pointer :: mesh
-     type(sll_particle_4d), dimension(:), pointer           :: p_list
-     type(sll_particle_4d_guard_ptr), dimension(:), pointer :: p_guard
-  end type sll_particle_group_4d
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh
+     type(sll_t_particle_4d), dimension(:), pointer           :: p_list
+     type(sll_t_particle_4d_guard_ptr), dimension(:), pointer :: p_guard
+  end type sll_t_particle_group_4d
   
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_particle_4d_group
-  end interface sll_delete
+  end interface sll_o_delete
 
 contains
 
-  function new_particle_4d_group( &
+  function sll_f_new_particle_4d_group( &
        num_particles,       &
        particle_array_size, &
        guard_list_size,     &
        qoverm,              &
        mesh ) result(res)
 
-    type(sll_particle_group_4d), pointer :: res
+    type(sll_t_particle_group_4d), pointer :: res
     sll_int32,  intent(in) :: num_particles
     sll_int32,  intent(in) :: particle_array_size
     sll_int32,  intent(in) :: guard_list_size
     sll_real64, intent(in) :: qoverm
-    type(sll_cartesian_mesh_2d), pointer :: mesh
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
     sll_int32 :: n_thread
     sll_int32 :: thread_id
     sll_int32 :: nn
 
     if( num_particles > particle_array_size ) then
-       print *, 'new_particle_4d_group(): ERROR,  num_particles should not ', &
+       print *, 'sll_f_new_particle_4d_group(): ERROR,  num_particles should not ', &
             'be greater than the memory size requested, particle_array_size.'
        STOP
     end if
@@ -123,10 +123,10 @@ contains
     endif
     res%mesh => mesh
 
-  end function new_particle_4d_group
+  end function sll_f_new_particle_4d_group
 
   subroutine delete_particle_4d_group(p_group)
-    type(sll_particle_group_4d), pointer :: p_group
+    type(sll_t_particle_group_4d), pointer :: p_group
     sll_int32 :: ierr
     sll_int32 :: thread_id
 

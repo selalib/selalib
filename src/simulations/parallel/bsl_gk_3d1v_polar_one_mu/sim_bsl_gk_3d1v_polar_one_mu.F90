@@ -7,23 +7,23 @@
 program sim_bsl_gk_3d1v_polar_one_mu
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_get_collective_rank, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_sim_bsl_gk_3d1v_polar_one_mu, only: &
-    delete_dk4d_polar, &
-    sll_simulation_4d_drift_kinetic_polar_one_mu
+    sll_s_delete_dk4d_polar, &
+    sll_t_simulation_4d_drift_kinetic_polar_one_mu
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_drift_kinetic_polar_one_mu) :: simulation
-  call sll_boot_collective()
-  if(sll_get_collective_rank(sll_world_collective)==0)then
+  type(sll_t_simulation_4d_drift_kinetic_polar_one_mu) :: simulation
+  call sll_s_boot_collective()
+  if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
     print *, '#Booting parallel environment...'
   endif
 
@@ -33,12 +33,12 @@ program sim_bsl_gk_3d1v_polar_one_mu
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
   call simulation%run( )
-  call delete_dk4d_polar(simulation)
-  if(sll_get_collective_rank(sll_world_collective)==0)then
+  call sll_s_delete_dk4d_polar(simulation)
+  if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
     print *, '#reached end of dk4d_polar test'
     print *, '#PASSED'
   endif
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 
 end program sim_bsl_gk_3d1v_polar_one_mu

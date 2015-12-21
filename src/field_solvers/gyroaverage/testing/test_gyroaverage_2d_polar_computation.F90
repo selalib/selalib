@@ -36,7 +36,7 @@ implicit none
   eta_min(1) = 0.1_f64
   eta_max(1) = 0.9_f64
   eta_min(2) = 0._f64
-  eta_max(2) = 2._f64*sll_pi  
+  eta_max(2) = 2._f64*sll_p_pi  
   
   Nc(1)=16
   Nc(2)=16

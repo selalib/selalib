@@ -5,44 +5,44 @@ program sim_bsl_gc_2d0v_hex_splines
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet
+    sll_p_dirichlet
 
   use sll_m_box_splines, only: &
-    hex_interpolate_value, &
-    new_box_spline_2d, &
-    sll_box_spline_2d
+    sll_f_hex_interpolate_value, &
+    sll_f_new_box_spline_2d, &
+    sll_t_box_spline_2d
 
   use sll_m_constants, only: &
-    sll_sqrt3
+    sll_p_sqrt3
 
   use sll_m_euler_2d_hex, only: &
-    compute_characteristic_adams2_2d_hex, &
-    compute_characteristic_euler_2d_hex
+    sll_s_compute_characteristic_adams2_2d_hex, &
+    sll_s_compute_characteristic_euler_2d_hex
 
   use sll_m_hex_poisson, only: &
-    compute_hex_fields, &
-    hex_matrix_poisson, &
-    hex_second_terme_poisson
+    sll_s_compute_hex_fields, &
+    sll_s_hex_matrix_poisson, &
+    sll_s_hex_second_terme_poisson
 
   use sll_m_hexagonal_meshes, only: &
-    delete_hex_mesh_2d, &
-    display_hex_mesh_2d, &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_s_delete_hex_mesh_2d, &
+    sll_s_display_hex_mesh_2d, &
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   use sll_m_pivotbande, only: &
-    factolub_bande, &
-    solvlub_bande
+    sll_s_factolub_bande, &
+    sll_s_solvlub_bande
 
   use sll_m_utilities, only: &
-    int2string, &
-    sll_new_file_id
+    sll_s_int2string, &
+    sll_s_new_file_id
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_hex_mesh_2d),   pointer        :: mesh
-  type(sll_box_spline_2d), pointer        :: spline
+  type(sll_t_hex_mesh_2d),   pointer        :: mesh
+  type(sll_t_box_spline_2d), pointer        :: spline
   sll_real64, dimension(:),   allocatable :: dxuxn, dyuxn
   sll_real64, dimension(:),   allocatable :: dxuyn, dyuyn
   sll_real64, dimension(:),   allocatable :: second_term
@@ -161,7 +161,7 @@ program sim_bsl_gc_2d0v_hex_splines
 
   do num_cells = cells_min,cells_max,cells_stp
 
-     call int2string(spline_degree,degnum)
+     call sll_s_int2string(spline_degree,degnum)
      if (model_name.eq."GC") then
         print*, ""
         print*," ********************************* "
@@ -194,9 +194,9 @@ program sim_bsl_gc_2d0v_hex_splines
      !*********************************************************
 
      ! Mesh creation -------------------------
-     mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
+     mesh => sll_f_new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
           radius=radius, EXTRA_TABLES = EXTRA_TABLES )
-     call display_hex_mesh_2d(mesh)
+     call sll_s_display_hex_mesh_2d(mesh)
 
      n_points   = mesh%num_pts_tot
      det = (mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1)/mesh%delta
@@ -243,7 +243,7 @@ program sim_bsl_gc_2d0v_hex_splines
      !*********************************************************
 
      ! Spline initialization -----------------
-     spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+     spline => sll_f_new_box_spline_2d(mesh, sll_p_dirichlet)
      ! ---------------------------------------
 
      ! Initial distribution ------------------
@@ -256,10 +256,10 @@ program sim_bsl_gc_2d0v_hex_splines
 
      ! Poisson solver ------------------------
      if (model_name.eq."GC") then
-        call hex_matrix_poisson( matrix_poisson, mesh,type=1)
-        call factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
-        call hex_second_terme_poisson( second_term, mesh, rho_tn )
-        call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
+        call sll_s_hex_matrix_poisson( matrix_poisson, mesh,type=1)
+        call sll_s_factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
+        call sll_s_hex_second_terme_poisson( second_term, mesh, rho_tn )
+        call sll_s_solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
 
         do i = 1, mesh%num_pts_tot
            k1 = mesh%hex_coord(1, i)
@@ -267,13 +267,13 @@ program sim_bsl_gc_2d0v_hex_splines
            call mesh%index_hex_to_global(k1, k2, index_tab)
            phi(i) = phi_interm(index_tab)
         enddo
-        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+        call sll_s_compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
      end if
      ! ---------------------------------------
 
      if (model_name.eq."GC") then
         call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
-        call int2string(nloops,filenum)
+        call sll_s_int2string(nloops,filenum)
         filename  = "guiding_center_rho"//trim(filenum)
         call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = "guiding_center_phi"//trim(filenum)
@@ -320,10 +320,10 @@ program sim_bsl_gc_2d0v_hex_splines
            elseif (model_name.eq."GC") then
               ! We use Adams2 for solving ODE except for first step
               if ( t <= dt + 1e-6 ) then ! first step with euler
-                 call compute_characteristic_euler_2d_hex( &
+                 call sll_s_compute_characteristic_euler_2d_hex( &
                       x,y,uxn,uyn,i,xx,yy,dt )
               else !the rest is done with Adams 2
-                 call compute_characteristic_adams2_2d_hex(x, y, &
+                 call sll_s_compute_characteristic_adams2_2d_hex(x, y, &
                       uxn, uyn, uxn_1, uyn_1, &
                       dxuxn,dyuxn,dxuyn,dyuyn, &
                       i, xx, yy, dt)
@@ -336,11 +336,11 @@ program sim_bsl_gc_2d0v_hex_splines
 
            if ( abs(h1) > radius-mesh%delta .or. abs(h2) > radius-mesh%delta ) &
                 inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) &
+           if ( abs(xx) > (radius-mesh%delta)*sll_p_sqrt3*0.5_f64) &
                 inside = .false.
 
            if ( inside ) then
-              rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, &
+              rho_tn1(i) = sll_f_hex_interpolate_value(mesh, xx, yy, &
                    spline, spline_degree)
            else
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
@@ -357,9 +357,9 @@ program sim_bsl_gc_2d0v_hex_splines
         !      computing the solution of the poisson equation
         !*********************************************************
         if (model_name.eq."GC") then
-           call hex_second_terme_poisson( second_term, mesh, rho_tn )
+           call sll_s_hex_second_terme_poisson( second_term, mesh, rho_tn )
 
-           call solvlub_bande(l,u,phi_interm,second_term,n_points,&
+           call sll_s_solvlub_bande(l,u,phi_interm,second_term,n_points,&
                 width_band1,width_band2)
 
            do i = 1, mesh%num_pts_tot    ! need to re-index phi :
@@ -369,7 +369,7 @@ program sim_bsl_gc_2d0v_hex_splines
               phi(i) = phi_interm(index_tab)
            enddo
 
-           call compute_hex_fields(mesh,uxn,uyn,&
+           call sll_s_compute_hex_fields(mesh,uxn,uyn,&
                 dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
            ! Updating the new field values ............
@@ -385,7 +385,7 @@ program sim_bsl_gc_2d0v_hex_splines
            call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,&
                 tmax,cells_min,cells_max)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
-              call int2string(nloops,filenum)
+              call sll_s_int2string(nloops,filenum)
               filename  = "guiding_center_rho"//trim(filenum)
               call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               if (model_name.eq."GC") then
@@ -398,7 +398,7 @@ program sim_bsl_gc_2d0v_hex_splines
            call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,&
                 cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
-              call int2string(nloops,filenum)
+              call sll_s_int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
               call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               count = 0
@@ -426,7 +426,7 @@ program sim_bsl_gc_2d0v_hex_splines
         deallocate(u)
      end if
 
-     call delete_hex_mesh_2d( mesh )
+     call sll_s_delete_hex_mesh_2d( mesh )
 
      call cpu_time(t_end)
      print*, "time used =", t_end - t_init
@@ -441,7 +441,7 @@ contains
   !*********initialization**************
 
   subroutine init_distr_gc(f_tn, mesh, epsilon)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: f_tn
     sll_real64, intent(in) :: epsilon
     sll_real64 :: x, y
@@ -463,7 +463,7 @@ contains
   end subroutine init_distr_gc
 
   subroutine init_distr_circ(f_tn, mesh, center_x1, center_x2, sigma, amplitude)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: f_tn
     sll_real64, intent(in) :: center_x1
     sll_real64, intent(in) :: center_x2
@@ -489,7 +489,7 @@ contains
   !> time evolutions, the second one is regarding the space discretization.
   !> @param rho real: contains the value of the density of the gc at time t
   !> @param t real: time of the simulation
-  !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
+  !> @param mesh sll_t_hex_mesh_2d: hexagonal mesh where the simulation is made
   !> @param uxn real: equals sum( y_i) where (xi,yi) are the mesh points
   !> @param uyn real: equals sum(-x_i) where (xi,yi) are the mesh points
   !> @param nloop int: number of loops done
@@ -499,7 +499,7 @@ contains
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
   subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
-    type(sll_hex_mesh_2d),  pointer  :: mesh
+    type(sll_t_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, dimension(:) :: uxn
     sll_real64, dimension(:) :: uyn
@@ -531,11 +531,11 @@ contains
     ! Writing file in respect to time...................
 
     if (mesh%num_cells == cells_max) then
-       call int2string(mesh%num_cells,filenum)
-       call int2string(deg,splinedeg)
+       call sll_s_int2string(mesh%num_cells,filenum)
+       call sll_s_int2string(deg,splinedeg)
        filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
 
-       call sll_new_file_id(out_unit, ierr)
+       call sll_s_new_file_id(out_unit, ierr)
        if (nloop == 0) then
           open(unit = out_unit, file=filename, action="write", status="replace")
        else
@@ -572,14 +572,14 @@ contains
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
 
-       call int2string(deg,splinedeg)
+       call sll_s_int2string(deg,splinedeg)
        filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
 
        if ( mesh%num_cells == cells_min ) then
-          call sll_new_file_id(out_unit, ierr)
+          call sll_s_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="replace")
        else
-          call sll_new_file_id(out_unit, ierr)
+          call sll_s_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        endif
 
@@ -619,7 +619,7 @@ contains
   !> time evolutions, the second one is regarding the space discretization.
   !> @param rho real: contains the value of the density of the circ at time t
   !> @param t real: time of the simulation
-  !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
+  !> @param mesh sll_t_hex_mesh_2d: hexagonal mesh where the simulation is made
   !> @param nloop int: number of loops done
   !> @param deg int: degree of the splines used for the interpolation method
   !> @param tmax: maximum time that the will simulation will run
@@ -632,7 +632,7 @@ contains
   !> return 
   subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max, &
        gauss_x1, gauss_x2, gauss_sig, gauss_amp)
-    type(sll_hex_mesh_2d),  pointer  :: mesh
+    type(sll_t_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, intent(in)   :: t
     sll_real64, intent(in)   :: tmax
@@ -664,11 +664,11 @@ contains
     ! --------------------------------------------------
     ! Writing file in respect to time...................
     if (mesh%num_cells == cells_max) then
-       call int2string(mesh%num_cells,filenum)
-       call int2string(deg,splinedeg)
+       call sll_s_int2string(mesh%num_cells,filenum)
+       call sll_s_int2string(deg,splinedeg)
        filename  = "diag_circ_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".txt"
 
-       call sll_new_file_id(out_unit, ierr)
+       call sll_s_new_file_id(out_unit, ierr)
        if (nloop == 0) then
           open(unit = out_unit, file=filename, action="write", status="replace")
           write(out_unit,*) &
@@ -717,11 +717,11 @@ contains
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
 
-       call int2string(deg,splinedeg)
+       call sll_s_int2string(deg,splinedeg)
        filename  = "diag_circ_spline"//trim(splinedeg)//"_nc.txt"
 
        if ( mesh%num_cells == cells_min ) then
-          call sll_new_file_id(out_unit, ierr)
+          call sll_s_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="replace")
           write(out_unit,*) &
                "number of cells", ",",&
@@ -732,7 +732,7 @@ contains
                "l_2 norm", ",",&
                "l_\inf norm"
        else
-          call sll_new_file_id(out_unit, ierr)
+          call sll_s_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        endif
 
@@ -770,7 +770,7 @@ contains
   end subroutine hex_diagnostics_circ
 
   subroutine write_center(mesh,rho,name)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: rho
     sll_int32                      :: i
     character(len = 50)            :: name

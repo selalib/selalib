@@ -17,7 +17,7 @@
 !**************************************************************
 
 !> @ingroup poisson_solvers
-!> Module to solve Poisson equation on one dimensional mesh using FFT
+!> Module to sll_o_solve Poisson equation on one dimensional mesh using FFT
 !> transform.
 module sll_m_poisson_1d_periodic
 
@@ -32,50 +32,50 @@ module sll_m_poisson_1d_periodic
 !   dffti
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   implicit none
 
   public :: &
-    initialize, &
-    new, &
-    poisson_1d_periodic, &
-    solve
+    sll_o_initialize, &
+    sll_o_new, &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Solver data structure
-  type :: poisson_1d_periodic
+  type :: sll_t_poisson_1d_periodic
      sll_int32                         :: nc_eta1 !< number of cells
      sll_real64                        :: eta1_min !< left corner
      sll_real64                        :: eta1_max !< right corner
      sll_real64, dimension(:), pointer :: wsave !< array used by fftpack
      sll_real64, dimension(:), pointer :: work  !< array used by fftpack
-  end type poisson_1d_periodic
+  end type sll_t_poisson_1d_periodic
 
-  !> Create a new poisson solver on 1d mesh
-  interface new
+  !> Create a sll_o_new poisson solver on 1d mesh
+  interface sll_o_new
      module procedure new_poisson_1d_periodic
   end interface
 
-  !> Initialize a new poisson solver on 1d mesh
-  interface initialize
+  !> sll_o_initialize a sll_o_new poisson solver on 1d mesh
+  interface sll_o_initialize
      module procedure initialize_poisson_1d_periodic
   end interface
 
-  !> Solve the Poisson equation on 1d mesh and compute the potential
-  interface solve
+  !> sll_o_solve the Poisson equation on 1d mesh and compute the potential
+  interface sll_o_solve
      module procedure solve_poisson_1d_periodic 
   end interface
 
 contains
 
-  !> Create a new solver
+  !> Create a sll_o_new solver
   !> @return
   function new_poisson_1d_periodic(eta1_min,eta1_max,nc_eta1,error) &
      result(this)
-     type(poisson_1d_periodic),pointer :: this     !< Solver data structure
+     type(sll_t_poisson_1d_periodic),pointer :: this     !< Solver data structure
      sll_int32,intent(in)              :: nc_eta1  !< number of cells
      sll_int32, intent(out)            :: error    !< error code
      sll_real64, intent(in)            :: eta1_min !< left corner
@@ -86,10 +86,10 @@ contains
 
   end function new_poisson_1d_periodic 
   
-  !> Initialize the solver
+  !> sll_o_initialize the solver
   subroutine initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
 
-    type(poisson_1d_periodic),intent(out) :: this     !< Solver data structure
+    type(sll_t_poisson_1d_periodic),intent(out) :: this     !< Solver data structure
     sll_int32,intent(in)                  :: nc_eta1  !< number of cells
     sll_int32, intent(out)                :: error    !< error code
     sll_real64, intent(in)                :: eta1_min !< left corner
@@ -112,7 +112,7 @@ contains
 
   subroutine solve_poisson_1d_periodic(this, field, rhs)
 
-    type(poisson_1d_periodic),intent(inout) :: this
+    type(sll_t_poisson_1d_periodic),intent(inout) :: this
     sll_real64, dimension(:), intent(out)   :: field
     sll_real64, dimension(:), intent(in)    :: rhs
     sll_int32                               :: ik
@@ -133,7 +133,7 @@ contains
 
     this%work = this%work /this%nc_eta1      ! normalize FFT
 
-    kx0  = 2_f64*sll_pi/(this%eta1_max-this%eta1_min)
+    kx0  = 2_f64*sll_p_pi/(this%eta1_max-this%eta1_min)
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
     ! correspondant a k=0 sont nulles

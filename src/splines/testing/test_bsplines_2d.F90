@@ -9,13 +9,13 @@ program test_bsplines_2d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_bsplines, only: &
-    compute_bspline_2d, &
-    interpolate_array_values_2d, &
-    new_bspline_2d, &
-    sll_bspline_2d
+    sll_o_compute_bspline_2d, &
+    sll_s_interpolate_array_values_2d, &
+    sll_f_new_bspline_2d, &
+    sll_t_bspline_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,12 +34,12 @@ sll_real64, pointer     :: taux(:)
 sll_real64, pointer     :: tauy(:)
 
 
-type(sll_bspline_2d), pointer :: bspline_2d
+type(sll_t_bspline_2d), pointer :: bspline_2d
 
 sll_real64 :: t0, t1, t2
 
-bspline_2d => new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, SLL_PERIODIC, &
-                              ny, ky-1, 1.0_f64, ny*1.0_f64, SLL_PERIODIC  )
+bspline_2d => sll_f_new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, sll_p_periodic, &
+                              ny, ky-1, 1.0_f64, ny*1.0_f64, sll_p_periodic  )
 
 ! set up data points and knots in x, interpolate between knots by parabolic 
 ! splines, using not-a-knot end condition
@@ -57,14 +57,14 @@ do i=1,nx
 end do
 
 call cpu_time(t0)
-call compute_bspline_2d( bspline_2d, gtau) 
+call sll_o_compute_bspline_2d( bspline_2d, gtau) 
 call cpu_time(t1)
 
 ! evaluate interpolation error at mesh points and print out
-call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau, 0, 0)
+call sll_s_interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau, 0, 0)
 !do j=1,ny
 !  do i=1,nx
-!    htau(i,j) = interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
+!    htau(i,j) = sll_f_interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
 !  end do
 !end do
 

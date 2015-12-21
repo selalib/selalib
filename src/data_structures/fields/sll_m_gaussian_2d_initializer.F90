@@ -53,7 +53,7 @@ contains
     class(init_gaussian_2d), intent(inout)       :: init_obj
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(out)    :: data_out
-    class(sll_cartesian_mesh_2d), pointer         :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer         :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -81,7 +81,7 @@ contains
              y = transf%x2_at_node(i,j)
              x = transf%x1_at_node(i,j)
              data_out(i,j) = &
-                  1.0_f64/(2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
+                  1.0_f64/(2*sll_p_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
                   (y-init_obj%yc)**2/init_obj%sigma_y**2))
           end do
@@ -94,7 +94,7 @@ contains
              x = transf%x1_at_cell(i,j)
              jac = transf%jacobian_at_cell(i,j)
              data_out(i,j) = &
-                  jac / (2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
+                  jac / (2*sll_p_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
                   (y-init_obj%yc)**2/init_obj%sigma_y**2))
           end do

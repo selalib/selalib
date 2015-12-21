@@ -10,40 +10,40 @@ program sll_m_polar_advection
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    sll_arbitrary_degree_spline_interpolator_2d
+    sll_t_arbitrary_degree_spline_interpolator_2d
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
-    polar_jac11, &
-    polar_jac12, &
-    polar_jac21, &
-    polar_jac22, &
-    polar_x1, &
-    polar_x2
+    sll_f_polar_jac11, &
+    sll_f_polar_jac12, &
+    sll_f_polar_jac21, &
+    sll_f_polar_jac22, &
+    sll_f_polar_x1, &
+    sll_f_polar_x2
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    new_coordinate_transformation_2d_analytic
+    sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_2d
+    sll_o_gnuplot_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_arbitrary_degree_spline_interpolator_2d), target  :: spline_xy
+type(sll_t_arbitrary_degree_spline_interpolator_2d), target  :: spline_xy
 
-type(sll_cartesian_mesh_2d), pointer                       :: logical_mesh
-class(sll_coordinate_transformation_2d_base), pointer      :: transfx
+type(sll_t_cartesian_mesh_2d), pointer                       :: logical_mesh
+class(sll_c_coordinate_transformation_2d_base), pointer      :: transfx
 
 sll_int32  :: itime
 sll_int32  :: nbiter = 1000
@@ -67,26 +67,26 @@ sll_real64, dimension(:,:), allocatable :: x1
 sll_real64, dimension(:,:), allocatable :: x2
 sll_int32 :: nc_x1, nc_x2
 
-logical_mesh => new_cartesian_mesh_2d(nc_eta1,  nc_eta2,  &
+logical_mesh => sll_f_new_cartesian_mesh_2d(nc_eta1,  nc_eta2,  &
                                     eta1_min, eta1_max, & 
                                     eta2_min, eta2_max)
 
 call spline_xy%initialize( nc_eta1+1, nc_eta2+1, &
                            eta1_min, eta1_max,   &
                            eta2_min, eta2_max,   &
-                           SLL_DIRICHLET, SLL_DIRICHLET, &
-                           SLL_PERIODIC, SLL_PERIODIC, &
+                           sll_p_dirichlet, sll_p_dirichlet, &
+                           sll_p_periodic, sll_p_periodic, &
                            3, 3 )
 
-transfx => new_coordinate_transformation_2d_analytic( &
+transfx => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic_polar_transformation", &
        logical_mesh, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, (/0.0_f64/) )
+       sll_f_polar_x1, &
+       sll_f_polar_x2, &
+       sll_f_polar_jac11, &
+       sll_f_polar_jac12, &
+       sll_f_polar_jac21, &
+       sll_f_polar_jac22, (/0.0_f64/) )
 
 nc_x1 = nc_eta1
 nc_x2 = nc_eta2
@@ -127,7 +127,7 @@ do itime = 1, nbiter
       end do
    end do
 
-   call sll_gnuplot_2d(nc_x1+1,nc_x2+1,x1,x2,f,"f_polar_advection",itime,error)
+   call sll_o_gnuplot_2d(nc_x1+1,nc_x2+1,x1,x2,f,"f_polar_advection",itime,error)
 
 end do
 

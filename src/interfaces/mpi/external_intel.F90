@@ -9,11 +9,14 @@
     mpi_cart_create, &
     mpi_cart_get,    &
     mpi_dims_create, &
+#if INTEL_MPI_VERSION < 50000
+    mpi_finalize,    &
+#endif
     mpi_gather,      &
     mpi_gatherv,     &
     mpi_iallreduce,  &
-    mpi_isend,       &
     mpi_irecv,       &
+    mpi_isend,       &
     mpi_reduce,      &
     mpi_recv,        &
     mpi_scatter,     &

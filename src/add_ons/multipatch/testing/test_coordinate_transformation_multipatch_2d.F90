@@ -1,12 +1,12 @@
 program unit_test_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   use sll_m_coordinate_transformation_multipatch, only: &
-    sll_coordinate_transformation_multipatch_2d
+    sll_t_coordinate_transformation_multipatch_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_coordinate_transformation_multipatch_2d) :: mp
+  type(sll_t_coordinate_transformation_multipatch_2d) :: mp
 
 !  call mp%read_from_file("identity_mp_info.nml")
   call mp%read_from_file("circle_mp5_pts12")

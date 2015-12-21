@@ -26,17 +26,17 @@ module sll_m_poisson_1d_polar_solver
 #include "sll_working_precision.h"
 
   use sll_m_poisson_1d_base, only: &
-    sll_poisson_1d_base
+    sll_c_poisson_1d_base
 
   implicit none
 
   public :: &
-    new_poisson_1d_polar_solver
+    sll_f_new_poisson_1d_polar_solver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_poisson_1d_base) :: poisson_1d_polar_solver     
+  type,extends(sll_c_poisson_1d_base) :: poisson_1d_polar_solver     
     sll_real64 :: length
     sll_int32 :: nc_eta1
   !type(sll_plan_poisson_polar), pointer                   :: poiss
@@ -55,7 +55,7 @@ module sll_m_poisson_1d_polar_solver
   end type poisson_1d_polar_solver
 
 contains
-  function new_poisson_1d_polar_solver( &
+  function sll_f_new_poisson_1d_polar_solver( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -77,7 +77,7 @@ contains
       nc_eta1, &
       bc )
     
-  end function new_poisson_1d_polar_solver
+  end function sll_f_new_poisson_1d_polar_solver
   
   
   subroutine initialize_poisson_1d_polar_solver( &
@@ -120,7 +120,7 @@ contains
 
     ! solves E = -\nabla Phi in 2d
 !    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
+!      class(sll_t_poisson_2d_fft_solver) :: poisson
 !      sll_real64,dimension(:,:),intent(in) :: phi
 !      sll_real64,dimension(:,:),intent(out) :: E1
 !      sll_real64,dimension(:,:),intent(out) :: E2
