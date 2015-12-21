@@ -55,8 +55,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
 
 
      sll_real64, pointer     :: efield_dofs(:,:) !< DoFs describing the two components of the electric field
-     sll_real64, pointer     :: bfield_dofs(:) !< DoFs describing the magnetic field
-     sll_real64, allocatable :: j_dofs(:,:)    !< DoFs for kernel representation of current density. 
+     sll_real64, pointer     :: bfield_dofs(:)   !< DoFs describing the magnetic field
+     sll_real64, allocatable :: j_dofs(:,:)      !< DoFs for kernel representation of current density. 
      sll_real64, allocatable :: j_dofs_local(:,:)!< MPI-processor local part of one component of \a j_dofs
 
    contains
@@ -125,8 +125,10 @@ contains
     sll_real64 :: r_new, r_old, qoverm, bfield
     sll_int32 :: index_new, index_old
     !sll_real64 :: primitive_1(3)
+    sll_real64 :: jnorm
 
-    this%j_dofs_local = 0.0_f64
+    sll_real64 :: efield_test(this%kernel_smoother_0%n_dofs), rho0(this%kernel_smoother_0%n_dofs), jk(this%kernel_smoother_0%n_dofs)
+
     n_cells = this%kernel_smoother_0%n_dofs
 
     ! Here we have to accumulate j and integrate over the time interval.
@@ -139,13 +141,34 @@ contains
     ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
 
 
+
+!!$    ! Test if efield_dofs(:,1) is the same when computed from Poisson
+!!$    this%j_dofs_local(:,1) = 0.0_f64
+!!$    do i_part=1,this%particle_group%n_particles
+!!$       x_new = this%particle_group%get_x(i_part)
+!!$       wi = this%particle_group%get_charge(i_part)
+!!$       call this%kernel_smoother_0%add_charge(x_new(1), wi(1), this%j_dofs_local(:,1))
+!!$    end do
+!!$    this%j_dofs(:,1) = 0.0_f64
+!!$    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+!!$         n_cells, MPI_SUM, this%j_dofs(:,1))
+!!$    call this%maxwell_solver%compute_E_from_rho(efield_test,&
+!!$         this%j_dofs(:,1))
+!!$    !print*, 'Error efield: ',  maxval(abs(efield_test - this%efield_dofs(:,1))), maxval(abs(this%efield_dofs(:,1)))
+!!$    !print*, this%j_dofs(:,1)
+!!$    !print*, 'rho0########'
+!!$    !print*, efield_test
+!!$    !print*, '--------'
+!!$    !print*, this%efield_dofs(:,1)
+
+    this%j_dofs_local = 0.0_f64
+
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
     ! Then update particle position:  X_new = X_old + dt * V
     do i_part=1,this%particle_group%n_particles  
        ! Read out particle position and velocity
        x_old = this%particle_group%get_x(i_part)
        vi = this%particle_group%get_v(i_part)
-
 
        ! Then update particle position:  X_new = X_old + dt * V
        x_new = x_old + dt * vi!modulo(x_old + dt * vi, this%Lx)
@@ -171,17 +194,46 @@ contains
        call this%particle_group%set_x(i_part, x_new)
        call this%particle_group%set_v(i_part, vi)
 
-    end do
+       !print*, x_old(1), x_new(1), wi, qoverm
+       !print*, this%j_dofs_local(:,1)
+       !print*, '--------'
 
+    end do
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
+    jnorm = sum(this%j_dofs(:,1))/n_cells
+    print*, 'sum j', jnorm
+    this%j_dofs(:,1) = this%j_dofs(:,1)-jnorm
+
     ! Update the electric field. Also, we still need to scale with 1/Lx
     !this%j_dofs(:,1) = this%j_dofs(:,1)*dt/2!this%delta_x!/this%Lx
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
+!!$    print*, 'ea', this%efield_dofs(:,1)
+!!$    print*, 'j++++++'
+!!$
+    ! Test if efield_dofs(:,1) is the same when computed from Poisson
+    this%j_dofs_local(:,1) = 0.0_f64
+    do i_part=1,this%particle_group%n_particles
+       x_new = this%particle_group%get_x(i_part)
+       wi = this%particle_group%get_charge(i_part)
+       call this%kernel_smoother_0%add_charge(x_new(1), wi(1), this%j_dofs_local(:,1))
+       !print*, 'a', wi, x_new
+       !print*, this%j_dofs_local(:,1)
+    end do
+    this%j_dofs(:,1) = 0.0_f64
+    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+         n_cells, MPI_SUM, this%j_dofs(:,1))
+    call this%maxwell_solver%compute_E_from_rho(efield_test,&
+         this%j_dofs(:,1))
+    !print*, this%efield_dofs(:,1)
+    print*, 'Error efield: ',  maxval(abs(efield_test - this%efield_dofs(:,1))), maxval(abs(this%efield_dofs(:,1)))
+!!$    print*, this%j_dofs(:,1)
+!!$    print*, 'rho1++++++'
+!!$    print*, 'ep', efield_test
 
 
  end subroutine operatorHp1_pic_vm_1d2v
@@ -374,7 +426,8 @@ contains
     sll_real64 :: values_0(4)
     sll_real64 :: bfield
     sll_real64 :: qm
-
+    sll_real64 :: jnorm
+    
     n_cells = this%kernel_smoother_0%n_dofs
 
     this%j_dofs_local = 0.0_f64
@@ -406,6 +459,11 @@ contains
 
     ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
     this%j_dofs(:,2) = this%j_dofs(:,2)*dt!/this%Lx
+
+    jnorm = sum(this%j_dofs(:,2))/n_cells
+    print*, 'sum j2', jnorm
+    this%j_dofs(:,2) = this%j_dofs(:,2)-jnorm
+
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,2), 2, this%efield_dofs(:,2))
     !!this%efield_dofs(:,2) = this%efield_dofs(:,2) - this%j_dofs(:,2)/this%Lx*dt
     
