@@ -109,7 +109,7 @@ set( EXT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/external_auto.F90 )
 set( PYSCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/create_external_list.py )
 
 # Test if 'sll_mpi' is correctly compiled
-set( CMD ${MPI_Fortran_COMPILER} ${SRC_FILE} -c ${MPI_DEFS} )
+set( CMD ${MPI_Fortran_COMPILER} ${SRC_FILE} -I${MPI_Fortran_MOD_DIR} -c ${MPI_DEFS} )
 string( REPLACE ";" " " CMD_MSG "${CMD}" )
 message( STATUS ${CMD_MSG} )
 execute_process( COMMAND ${CMD} ERROR_VARIABLE ERR_STAT )
