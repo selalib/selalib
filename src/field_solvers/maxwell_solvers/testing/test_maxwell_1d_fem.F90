@@ -112,8 +112,7 @@ program test_maxwell_1d_fem
      ex_exact(i) =   sin_k(xi)/(2*mode*sll_pi/Lx)
   end do
 
-  call compute_fem_rhs(maxwell_1d, cos_k, deg, rho)
-
+  call compute_fem_rhs(maxwell_1d, cos_k, deg, rho) 
   call compute_E_from_rho_1d_fem(maxwell_1d, ex, rho ) 
 
   ! Evaluate spline curve at grid points and compute error
@@ -122,7 +121,7 @@ program test_maxwell_1d_fem
   err_ex = maxval(sval-ex_exact)
   print*, 'error Poisson',  err_ex
   call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
-
+ 
   ! Test Ampere
   !-------------
   ! Set time step
@@ -141,7 +140,7 @@ program test_maxwell_1d_fem
   ! Ex is a 1-form, i.e. one spline degree lower
   sval = eval_uniform_periodic_spline_curve(deg-1, ex)
   err_ex2 = maxval(sval-ex_exact)
-  print*, 'error Poisson',  err_ex2
+  print*, 'error Ampere',  err_ex2
   !call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
 
   l2norm =  maxwell_1d%l2norm_squared(ex,deg-1)
