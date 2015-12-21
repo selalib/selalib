@@ -60,7 +60,8 @@ module sll_m_sim_pic_vm_1d2v_cart
 
   use sll_m_particle_initializer, only: &
     sll_particle_initialize_random_landau_1d2v, &
-    sll_particle_initialize_sobol_landau_1d2v
+    sll_particle_initialize_sobol_landau_1d2v, &
+    sll_particle_initialize_random_landau_symmetric_1d2v
 
   use sll_m_sim_base, only: &
     sll_simulation_base_class
@@ -278,7 +279,8 @@ contains
 
        ! Initialize position and velocity of the particles.
        ! Random initialization
-       call sll_particle_initialize_random_landau_1d2v &
+       !call sll_particle_initialize_random_landau_1d2v &
+       call sll_particle_initialize_random_landau_symmetric_1d2v &
             (sim%particle_group, sim%landau_param, &
             sim%domain(1) , &
             sim%domain(3), &
@@ -408,14 +410,14 @@ contains
     call sll_collective_allreduce( sll_world_collective, &
          rho_local, &
          sim%n_gcells, MPI_SUM, rho)
-    write(32,'(D16.25)') rho
-    write(33,*) sim%efield_dofs(:,1)
-    write(34,*) sim%efield_dofs(:,2)
-    write(35,*) sim%bfield_dofs
-    close(32)
-    close(33)
-    close(34)
-    close(35)
+    !write(32,'(D16.25)') rho
+    !write(33,*) sim%efield_dofs(:,1)
+    !write(34,*) sim%efield_dofs(:,2)
+    !write(35,*) sim%bfield_dofs
+    !close(32)
+    !close(33)
+    !close(34)
+    !close(35)
 
     if (sim%rank == 0) then
        reffile_id = 21
