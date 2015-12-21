@@ -5,9 +5,14 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_mpi, only: &
+    MPI_SUM
+
   use sll_m_collective, only: &
     sll_boot_collective, &
-    sll_halt_collective
+    sll_collective_allreduce, &
+    sll_halt_collective, &
+    sll_world_collective
 
   use sll_m_constants, only: &
     sll_pi
@@ -32,7 +37,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
     sll_new_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
-    sll_new_particle_group_1d2v
+    sll_new_particle_group_1d2v, &
+    sll_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
     sll_particle_group_base
@@ -48,10 +54,12 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
+  class(sll_particle_group_1d2v), pointer :: pg
 
   ! Arrays for the fields
   sll_real64, pointer :: efield(:,:), efield_ref(:,:)
   sll_real64, pointer :: bfield(:), bfield_ref(:)
+  sll_real64, pointer :: rho(:), rho_local(:)
 
   ! Abstract kernel smoothers
   class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
@@ -74,7 +82,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Helper 
   sll_int32  :: i_part
-  sll_real64 :: xi(3)
+  sll_real64 :: xi(3), wi(1)
   logical    :: passed
   sll_real64 :: error
   sll_int32  :: ierr   ! error code for SLL_ALLOCATE
@@ -97,8 +105,9 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   domain = [eta_min, eta_max, eta_max - eta_min]
 
   ! Initialize
-  particle_group => sll_new_particle_group_1d2v(n_particles, &
+  pg => sll_new_particle_group_1d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
+  particle_group => pg
 
   call particle_group%set_common_weight (1.0_f64)
 
@@ -145,14 +154,30 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   ! Initialize Maxwell solver
   maxwell_solver => sll_new_maxwell_1d_fem([eta_min, eta_max], num_cells, &
        degree_smoother)
-
-
+  
   SLL_ALLOCATE(efield(kernel_smoother_0%n_dofs,2),ierr)
   SLL_ALLOCATE(bfield(kernel_smoother_0%n_dofs),ierr)
   SLL_ALLOCATE(efield_ref(kernel_smoother_0%n_dofs,2),ierr)
   SLL_ALLOCATE(bfield_ref(kernel_smoother_0%n_dofs),ierr)
+  SLL_ALLOCATE(rho(kernel_smoother_0%n_dofs),ierr)
+  SLL_ALLOCATE(rho_local(kernel_smoother_0%n_dofs),ierr)
 
   efield = 1.0_f64
+
+  rho_local = 0.0_f64
+  do i_part = 1,n_particles
+     xi = particle_group%get_x(i_part)
+     wi(1) = particle_group%get_charge( i_part)
+     call kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
+  end do
+  ! MPI to sum up contributions from each processor
+  rho = 0.0_f64
+  call sll_collective_allreduce( sll_world_collective, &
+       rho_local, &
+       kernel_smoother_0%n_dofs, MPI_SUM, rho)
+  ! Solve Poisson problem
+  call maxwell_solver%compute_E_from_rho(efield(:,1),&
+       rho)
   bfield = 1.0_f64
 
   propagator => sll_new_hamiltonian_splitting_pic_vm_1d2v(maxwell_solver, &
@@ -181,7 +206,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
-        print*, xi(1), particle_info_ref(i_part,4)
      end if
   end do
   
@@ -216,26 +240,34 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      print*, 'Error in operatorHp2.'
   end if
 
+  !print*, 'v(1)', size(pg%particle_array,1), size(pg%particle_array,2),pg%particle_array(2,:)
+
   call propagator%operatorHE(delta_t)
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([    11.627560396526469_f64,        5.5135182122431550_f64,       -1.3696420089578860_f64,       9.9430804248216542e-2_f64,  0.40491306194184096_f64,       -1.4259284606804052_f64,        6.8636759376074723_f64,        5.7026946767517002_f64    ], [n_particles, 4])
+  particle_info_ref = reshape([    11.627560396526469_f64,        5.5135182122431550_f64,       -1.4311461960364338_f64,       2.7611337138493959E-002_f64,  0.39511488788223620_f64,       -1.3903131848268702_f64,        6.8636759376074723_f64,        5.7026946767517002_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'x(1) of particle ', i_part,' wrong'
      end if
      xi = particle_group%get_v(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'v(1) of particle ', i_part,' wrong'
+        print*, i_part, xi(1), particle_info_ref(i_part,2)
      elseif (abs(xi(2)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'v(2) of particle ', i_part,' wrong'
+        print*,   i_part, xi(2), particle_info_ref(i_part,3)
      end if
      xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'weight of particle ', i_part,' wrong'
      end if
   end do
 
@@ -247,22 +279,28 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.627560396526469_f64,        5.5135182122431550_f64,       -1.3696420089578860_f64,        9.9430804248216542D-002,  0.40491306194184096_f64,       -1.4259284606804052_f64,        6.8636759376074723_f64,        5.7026946767517002_f64      ], [n_particles, 4])
+  particle_info_ref = reshape([   11.627560396526469_f64,        5.5135182122431550_f64,       -1.4311461960364338_f64,       2.7611337138493959E-002_f64,  0.39511488788223620_f64,       -1.3903131848268702_f64,       6.8636759376074723_f64,        5.7026946767517002_f64      ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,1))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'x(1) of particle ', i_part,' wrong'
      end if
      xi = particle_group%get_v(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,2))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'v(1) of particle ', i_part,' wrong'
+        print*, i_part, xi(1), particle_info_ref(i_part,2)
      elseif (abs(xi(2)-particle_info_ref(i_part,3))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'v(2) of particle ', i_part,' wrong'
+        print*,   i_part, xi(2), particle_info_ref(i_part,3)
      end if
      xi(1:1) = particle_group%get_charge(i_part)
      if (abs(xi(1)-particle_info_ref(i_part,4))> EQV_TOL) then
         passed = .FALSE.
+        print*, 'weight of particle ', i_part,' wrong'
      end if
   end do
 
@@ -271,20 +309,36 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   end if
 
 
-  bfield_ref = [  0.99770541216286657_f64,       0.99234240623721359_f64,       0.98825065652414523_f64,        1.0022336143723096_f64,        1.0119601928906674_f64,        1.0060821139662497_f64,        1.0027406207578249_f64,        1.0027048521768871_f64,       0.99884366018700488_f64,       0.99713647072483091_f64]
+  bfield_ref = [ 0.96241425319343565_f64,        1.0704842857730226_f64, &
+       0.87749470807080665_f64,        1.0585080035598995_f64, &
+       1.0312067899733146_f64,       0.98524486372490983_f64, &
+       0.99163866889590213_f64,        1.0359265946162064_f64, &
+       0.96576229888372844_f64,        1.0213195333087741_f64 ];
 
-  efield_ref = reshape([1.0139333322572233_f64,       0.99694980433046210_f64,       0.98105828960960473_f64,       0.96702117187072789_f64,       0.98564985298325469_f64,        1.0000855014667056_f64,        1.0477798381501124_f64,        1.2387410309599800_f64,        1.3810186780785210_f64,        1.1543013648190512_f64,        1.0145964909357603_f64,        1.1109252342944447_f64,        1.2566590132766358_f64,        1.2290902864314954_f64,        1.0803226658682838_f64,        1.0034722970882306_f64,       0.96871172275213535_f64,       0.93518373011620015_f64,       0.94946045559169057_f64,       0.98519521240929375_f64 ],[num_cells,2])
+  efield_ref = reshape([ 0.32668967300827889_f64,       0.21111816665325256 _f64, &
+       -3.2797353014133206_f64,       0.93182059869704992_f64, &
+       2.4099520529926513_f64,      -0.54074935301675420_f64, &
+       -6.6508143734355582E-002_f64,  -4.4526750013638647_f64, &
+       2.7314012140039408_f64,        2.4952249586987651_f64, &
+       1.2896538770270727_f64,        0.45428428470806997_f64, &
+       1.9372031866314203_f64,        1.2380946765497305 _f64, &
+       0.83732795515227731_f64,        1.0244885213955153_f64, &
+       1.1187987978241094_f64,       0.68789307296286761_f64, &
+       1.0938576576751671_f64,       0.85201507883794003_f64 ], [num_cells,2]);
+
 
   error = maxval(bfield-bfield_ref)
 
   if (error> EQV_TOL) then
      passed = .FALSE.
+     print*, 'b field wrong.'
   end if
 
   error = maxval(efield-efield_ref)
 
   if (error> EQV_TOL) then
      passed = .FALSE.
+     print*, 'e field wrong.'
   end if
 
 
