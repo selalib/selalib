@@ -12,33 +12,33 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
-    sll_collective_alltoallv_double, &
-    sll_collective_alltoallv_int, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_s_collective_alltoallv_double, &
+    sll_s_collective_alltoallv_int, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_poisson_3d_sparse_grid_fft, only: &
-    sll_fft3d_derivative
+    sll_t_fft3d_derivative
 
   use sll_m_remapper, only: &
-    apply_remap_2d, &
-    compute_local_sizes, &
-    initialize_layout_with_distributed_array, &
-    layout_2d, &
-    local_to_global, &
-    new_layout_2d, &
-    new_remap_plan, &
-    remap_plan_2d_real64
+    sll_o_apply_remap_2d, &
+    sll_o_compute_local_sizes, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_2d_real64
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_m_sparse_grid_3d, only: &
-    sparse_grid_interpolator_3d
+    sll_t_sparse_grid_interpolator_3d
 
   implicit none
 
@@ -52,7 +52,7 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
   sll_int32, parameter :: SLL_TSI = 1
 
 
-  type, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_3d3v_cart_sparsegrid
+  type, extends(sll_c_simulation_base_class) :: sll_t_sim_sl_vp_3d3v_cart_sparsegrid
      logical     :: is_mdeltaf
      sll_int32   :: test_case
      sll_int32   :: levelx
@@ -82,14 +82,14 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
      sll_real64, dimension(:), allocatable :: dv
 
      !Poisson solver
-     type(sll_fft3d_derivative)  :: poisson
+     type(sll_t_fft3d_derivative)  :: poisson
      
      ! Interpolator
-     type(sparse_grid_interpolator_3d)   :: interp_x, interp_v
+     type(sll_t_sparse_grid_interpolator_3d)   :: interp_x, interp_v
 
      ! For parallelization
-     type(remap_plan_2d_real64), pointer :: remap_x2v, remap_v2x ! Remapper between layoutx and layoutv
-     type(layout_2D), pointer :: layoutx, layoutv ! Mesh discribution
+     type(sll_t_remap_plan_2d_real64), pointer :: remap_x2v, remap_v2x ! Remapper between layoutx and layoutv
+     type(sll_t_layout_2d), pointer :: layoutx, layoutv ! Mesh discribution
      sll_int32 :: colsz ! no of processors
      sll_int32 :: myrank ! mpi rank
      sll_int32, dimension(2) :: local_size_x, local_size_v ! Local size for x and v layouts, respectively
@@ -168,8 +168,8 @@ contains
     sll_int32  :: i_step
 
     ! MPI parameters
-    sim%colsz = sll_get_collective_size(sll_world_collective)
-    sim%myrank = sll_get_collective_rank(sll_world_collective)
+    sim%colsz = sll_f_get_collective_size(sll_v_world_collective)
+    sim%myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
     !Sparse grid
     sim%levelsx(1) = sim%levelx; sim%levelsx(2:3) = sim%levelsx(1);
@@ -183,16 +183,16 @@ contains
     ! Set the domain for one of the two test cases
     if (sim%test_case == SLL_LANDAU ) then
        !x domain
-       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  4.0_f64 * sll_pi
+       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  4.0_f64 * sll_p_pi
        sim%eta_min(2:3) = sim%eta_min(1); sim%eta_max(2:3) = sim%eta_max(1)
        !v domain
        sim%eta_min(4) = -6.0_f64; sim%eta_max(4) = 6.0_f64
        sim%eta_min(5:6) = sim%eta_min(4); sim%eta_max(5:6) = sim%eta_max(4)
     elseif (sim%test_case  == SLL_TSI) then
        !x domain
-       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  10.0_f64 * sll_pi
-       sim%eta_min(2) =  0.0_f64; sim%eta_max(2) =  4.0_f64 * sll_pi
-       sim%eta_min(3) =  0.0_f64; sim%eta_max(3) =  4.0_f64 * sll_pi
+       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  10.0_f64 * sll_p_pi
+       sim%eta_min(2) =  0.0_f64; sim%eta_max(2) =  4.0_f64 * sll_p_pi
+       sim%eta_min(3) =  0.0_f64; sim%eta_max(3) =  4.0_f64 * sll_p_pi
        !v domain
        sim%eta_min(4) = -8.0_f64; sim%eta_max(4) = 8.0_f64
        sim%eta_min(5) = -6.0_f64; sim%eta_max(5) = 6.0_f64
@@ -218,24 +218,24 @@ contains
 
 
     ! Now we compute the two parallel layouts
-    sim%layoutx => new_layout_2D(sll_world_collective);
-    call initialize_layout_with_distributed_array(&
+    sim%layoutx => sll_f_new_layout_2d(sll_v_world_collective);
+    call sll_o_initialize_layout_with_distributed_array(&
          sim%interp_x%size_basis, sim%interp_v%size_basis, 1, sim%colsz, sim%layoutx);
-    call compute_local_sizes(sim%layoutx, sim%local_size_x(1), sim%local_size_x(2));
+    call sll_o_compute_local_sizes(sim%layoutx, sim%local_size_x(1), sim%local_size_x(2));
     SLL_ALLOCATE(sim%f_x(sim%local_size_x(1),sim%local_size_x(2)),error);
-    sim%global_x = local_to_global(sim%layoutx, (/1,1/));
+    sim%global_x = sll_o_local_to_global(sim%layoutx, (/1,1/));
     sim%global_x = sim%global_x - 1;
     
-    sim%layoutv => new_layout_2D(sll_world_collective);
-    call initialize_layout_with_distributed_array(&
+    sim%layoutv => sll_f_new_layout_2d(sll_v_world_collective);
+    call sll_o_initialize_layout_with_distributed_array(&
          sim%interp_x%size_basis, sim%interp_v%size_basis, sim%colsz, 1, sim%layoutv);
-    call compute_local_sizes(sim%layoutv, sim%local_size_v(1), sim%local_size_v(2));
+    call sll_o_compute_local_sizes(sim%layoutv, sim%local_size_v(1), sim%local_size_v(2));
     SLL_ALLOCATE(sim%f_v(sim%local_size_v(1),sim%local_size_v(2)),error);
-    sim%global_v = local_to_global(sim%layoutv, (/1,1/));
+    sim%global_v = sll_o_local_to_global(sim%layoutv, (/1,1/));
     sim%global_v = sim%global_v - 1;
     
-    sim%remap_x2v => NEW_REMAP_PLAN(sim%layoutx, sim%layoutv, sim%f_x);
-    sim%remap_v2x => NEW_REMAP_PLAN(sim%layoutv, sim%layoutx, sim%f_v);
+    sim%remap_x2v => sll_o_new_remap_plan(sim%layoutx, sim%layoutv, sim%f_x);
+    sim%remap_v2x => sll_o_new_remap_plan(sim%layoutv, sim%layoutx, sim%f_v);
     
     ! Information for rho communication
     SLL_ALLOCATE(sim%recv_displs(sim%colsz),error);
@@ -248,8 +248,8 @@ contains
     sim%recv_displs = 0
     sim%send_cnt = 1;
     sim%recv_cnt = 1;
-    call sll_collective_alltoallV_int((/sim%global_v(1)/), sim%send_cnt, sim%send_displs,&
-         sim%recv_displs, sim%recv_cnt, sim%recv2, sll_world_collective);
+    call sll_s_collective_alltoallv_int((/sim%global_v(1)/), sim%send_cnt, sim%send_displs,&
+         sim%recv_displs, sim%recv_cnt, sim%recv2, sll_v_world_collective);
     sim%send_cnt = sim%local_size_v(1);
     do j=1,sim%colsz-1
        sim%recv_cnt(j) = sim%recv_displs(j+1)-sim%recv_displs(j);
@@ -285,14 +285,14 @@ contains
   
     ! Set initial value
     do j=1,3
-       kxyz(j)  = 2.0_f64*sll_pi/(sim%eta_max(j)-sim%eta_min(j))
+       kxyz(j)  = 2.0_f64*sll_p_pi/(sim%eta_max(j)-sim%eta_min(j))
     end do
 
     do i1=1,sim%local_size_x(1)
        eta(1:3) =  sim%interp_x%hierarchy(sim%global_x(1)+i1)%coordinate
        do i2=1,sim%local_size_x(2)
           eta(4:6) =sim%interp_v%hierarchy(sim%global_x(2)+i2)%coordinate
-          sim%f_x(i1,i2) = 1.0_f64/(2.0_f64*sll_pi)**(1.5_f64)*&
+          sim%f_x(i1,i2) = 1.0_f64/(2.0_f64*sll_p_pi)**(1.5_f64)*&
                (1.0_f64+sim%eps*(cos(kxyz(1)*eta(1))+&
                cos(kxyz(2)*eta(2))+cos(kxyz(3)*eta(3))))
           if (sim%test_case == SLL_TSI) then
@@ -314,7 +314,7 @@ contains
 
     time = 0.0_f64
     ! Propagate v half a step
-    call apply_remap_2D(sim%remap_x2v, sim%f_x, sim%f_v);
+    call sll_o_apply_remap_2d(sim%remap_x2v, sim%f_x, sim%f_v);
     sim%ft_v = transpose(sim%f_v);
     
     if (sim%is_mdeltaf .EQV. .FALSE.) then
@@ -330,7 +330,7 @@ contains
        call advection_v_df(sim, sim%delta_t)
     end if
     sim%f_v = transpose(sim%ft_v);
-    call apply_remap_2D(sim%remap_v2x, sim%f_v, sim%f_x);
+    call sll_o_apply_remap_2d(sim%remap_v2x, sim%f_v, sim%f_x);
     call compute_energy(sim, sim%nrj(0));
        
    
@@ -358,7 +358,7 @@ contains
        
        call advection_x(sim, sim%delta_t)
        
-       call apply_remap_2D(sim%remap_x2v, sim%f_x, sim%f_v);
+       call sll_o_apply_remap_2d(sim%remap_x2v, sim%f_x, sim%f_v);
        sim%ft_v = transpose(sim%f_v);
 
        if (sim%is_mdeltaf .EQV. .FALSE.) then
@@ -374,7 +374,7 @@ contains
           call advection_v_df(sim, sim%delta_t)
        end if
        sim%f_v = transpose(sim%ft_v);
-       call apply_remap_2D(sim%remap_v2x, sim%f_v, sim%f_x);
+       call sll_o_apply_remap_2d(sim%remap_v2x, sim%f_v, sim%f_x);
        call compute_energy(sim, sim%nrj(i_step));
        
        time  = time + sim%delta_t
@@ -504,8 +504,8 @@ contains
        sim%rho_loc(i1) = 1.0_f64-sim%rho_loc(i1);
     end do
     
-    call sll_collective_alltoallV_double(sim%rho_loc, sim%send_cnt, sim%send_displs,&
-         sim%rho, sim%recv_cnt, sim%recv_displs, sll_world_collective);
+    call sll_s_collective_alltoallv_double(sim%rho_loc, sim%send_cnt, sim%send_displs,&
+         sim%rho, sim%recv_cnt, sim%recv_displs, sll_v_world_collective);
     
   end subroutine compute_rho
   !------------------------------------------------------------------------------!
@@ -523,7 +523,7 @@ contains
        do i2 = 1, sim%local_size_v(2)
           if (sim%test_case == SLL_LANDAU) then
              if (sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(1) == 0) then
-                phi(1) = sqrt(2.0_f64*sll_pi)
+                phi(1) = sqrt(2.0_f64*sll_p_pi)
              else
                 h = sim%interp_v%length(1)/&
                      (real(2**sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(1),f64));
@@ -535,7 +535,7 @@ contains
                   real(max(2**(sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(1)),2), f64)
           end if
           if (sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(2) == 0) then
-             phi(2) = sqrt(2.0_f64*sll_pi) 
+             phi(2) = sqrt(2.0_f64*sll_p_pi) 
           else
              h = sim%interp_v%length(2)&
                   /(real(2**sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(2),f64));
@@ -543,7 +543,7 @@ contains
              phi(2) = int_f0_alpha(x0,h,0.5_f64);
           end if
           if (sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(3) == 0) then
-             phi(3) = sqrt(2.0_f64*sll_pi) 
+             phi(3) = sqrt(2.0_f64*sll_p_pi) 
           else
              h = sim%interp_v%length(3)/&
                   (real(2**sim%interp_v%hierarchy(sim%global_v(2)+i2)%level(3),f64));
@@ -556,8 +556,8 @@ contains
        sim%rho_loc(i1) = 1.0_f64-sim%rho_loc(i1);
     end do
 
-    call sll_collective_alltoallV_double(sim%rho_loc, sim%send_cnt, sim%send_displs,&
-         sim%rho, sim%recv_cnt, sim%recv_displs, sll_world_collective);
+    call sll_s_collective_alltoallv_double(sim%rho_loc, sim%send_cnt, sim%send_displs,&
+         sim%rho, sim%recv_cnt, sim%recv_displs, sll_v_world_collective);
     
   end subroutine compute_rho_df
 !------------------------------------------------------------------------------!
@@ -582,7 +582,7 @@ function int_f0_alpha(x0,h,alpha) result(intf0)
   sll_real64, intent(in) :: x0, h, alpha
   sll_real64 :: intf0
 
-  intf0 = sqrt(sll_pi/alpha)*0.5_f64*(&
+  intf0 = sqrt(sll_p_pi/alpha)*0.5_f64*(&
        (1.0_f64-x0/h)*(erf(x0*sqrt(alpha))-erf((x0-h)*sqrt(alpha)))+&
        (1.0_f64+x0/h)*(erf((x0+h)*sqrt(alpha))-erf(x0*sqrt(alpha))))+&
        (exp(-(x0-h)**2*alpha)+exp(-(x0+h)**2*alpha)-2.0_f64*exp(-x0**2*alpha))/&

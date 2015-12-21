@@ -8,23 +8,23 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x
 
   use sll_m_collective, only: &
-    sll_collective_allreduce, &
-    sll_world_collective
+    sll_o_collective_allreduce, &
+    sll_v_world_collective
 
   use sll_m_hamiltonian_splitting_base, only: &
-    sll_t_hamiltonian_splitting_base
+    sll_c_hamiltonian_splitting_base
 
   use sll_m_kernel_smoother_base, only: &
     sll_c_kernel_smoother
 
   use sll_m_maxwell_1d_base, only: &
-    sll_maxwell_1d_base
+    sll_c_maxwell_1d_base
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   use sll_mpi, only: &
     mpi_sum
@@ -32,18 +32,18 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   implicit none
 
   public :: &
-    sll_new_hamiltonian_splitting_pic_vm_1d2v, &
+    sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Operator splitting type for Vlasov-Maxwell 1d2v
-  type, extends(sll_t_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
-     class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
+  type, extends(sll_c_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
+     class(sll_c_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
      class(sll_c_kernel_smoother), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
      class(sll_c_kernel_smoother), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
-     class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
+     class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
 
      sll_int32 :: spline_degree !< Degree of the spline for j,B. Here 3.
      sll_real64 :: Lx !< Size of the domain
@@ -150,7 +150,7 @@ contains
 !!$       call this%kernel_smoother_0%add_charge(x_new(1), wi(1), this%j_dofs_local(:,1))
 !!$    end do
 !!$    this%j_dofs(:,1) = 0.0_f64
-!!$    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+!!$    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
 !!$         n_cells, MPI_SUM, this%j_dofs(:,1))
 !!$    call this%maxwell_solver%compute_E_from_rho(efield_test,&
 !!$         this%j_dofs(:,1))
@@ -202,7 +202,7 @@ contains
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
     jnorm = sum(this%j_dofs(:,1))/n_cells
@@ -225,7 +225,7 @@ contains
        !print*, this%j_dofs_local(:,1)
     end do
     this%j_dofs(:,1) = 0.0_f64
-    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
     call this%maxwell_solver%compute_E_from_rho(efield_test,&
          this%j_dofs(:,1))
@@ -263,8 +263,8 @@ contains
 !!$   y1 = -m/sqrt(3.0_f64)+c
 !!$   y2 = m/sqrt(3.0_f64) +c
 !!$   fy = sign*m*this%delta_x*&
-!!$        (uniform_b_splines_at_x(this%spline_degree-1, y1) +&
-!!$        uniform_b_splines_at_x(this%spline_degree-1, y2))
+!!$        (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
+!!$        sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
 !!$
 !!$
 !!$   ind = 1
@@ -392,7 +392,7 @@ contains
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
@@ -454,7 +454,7 @@ contains
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,2), &
+    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,2), &
          n_cells, MPI_SUM, this%j_dofs(:,2))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
@@ -536,7 +536,7 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_hamiltonian_splitting_pic_vm_1d2v(&
+  function sll_f_new_hamiltonian_splitting_pic_vm_1d2v(&
        maxwell_solver, &
        kernel_smoother_0, &
        kernel_smoother_1, &
@@ -546,10 +546,10 @@ contains
        x_min, &
        Lx) result(this)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), pointer :: this !< time splitting object 
-    class(sll_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
-    class(sll_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
+    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
     sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
     sll_real64, intent(in) :: x_min !< Lower bound of x domain
@@ -583,7 +583,7 @@ contains
     this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
     this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
 
-  end function sll_new_hamiltonian_splitting_pic_vm_1d2v
+  end function sll_f_new_hamiltonian_splitting_pic_vm_1d2v
 
   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
    function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)

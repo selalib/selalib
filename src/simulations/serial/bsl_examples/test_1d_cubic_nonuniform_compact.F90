@@ -4,16 +4,16 @@ program bsl_1d_cubic_nonuniform_compact
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite
+    sll_p_hermite
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_cubic_spline_interpolator_1d
+    sll_t_cubic_spline_interpolator_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,8 +34,8 @@ sll_real64, dimension(:,:), allocatable :: advfield_v
 class(sll_c_interpolator_1d), pointer     :: interp_x
 class(sll_c_interpolator_1d), pointer     :: interp_v
 
-type(sll_cubic_spline_interpolator_1d), target   :: spline_x
-type(sll_cubic_spline_interpolator_1d), target   :: spline_v
+type(sll_t_cubic_spline_interpolator_1d), target   :: spline_x
+type(sll_t_cubic_spline_interpolator_1d), target   :: spline_v
 
 print*,'*********************'
 print*,' 1D case             '
@@ -71,8 +71,8 @@ end do
 
 print*, 'initialize 2d distribution function f(x,v) sll_m_gaussian'
 Print*, 'checking advection of a Gaussian in a uniform field'
-call spline_x%initialize(nc_x+1, x_min, x_max, SLL_HERMITE )
-call spline_v%initialize(nc_v+1, v_min, v_max, SLL_HERMITE )
+call spline_x%initialize(nc_x+1, x_min, x_max, sll_p_hermite )
+call spline_v%initialize(nc_v+1, v_min, v_max, sll_p_hermite )
 
 interp_x => spline_x
 interp_v => spline_v
@@ -148,7 +148,7 @@ contains
    integer :: iplot, i, j
    character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+   call sll_s_int2string(iplot,cplot)
 
    open(11, file="df-"//cplot//".dat")
    do j = 1, size(df,2)

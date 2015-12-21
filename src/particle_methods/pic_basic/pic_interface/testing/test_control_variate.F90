@@ -1,20 +1,20 @@
 program test_control_variate
 #include "sll_working_precision.h"
   use sll_m_constants, only : &
-       sll_pi
+       sll_p_pi
 
   use sll_m_control_variate, only : &
        sll_t_control_variate, &
        sll_f_control_variate, &
        sll_new_control_variate
   use sll_m_particle_group_base, only : &
-       sll_particle_group_base
+       sll_c_particle_group_base
   use sll_m_particle_group_2d2v, only : &
-       sll_new_particle_group_2d2v
+       sll_f_new_particle_group_2d2v
 
   class(sll_t_control_variate), pointer :: control_variate
   sll_real64, pointer :: control_variate_parameter(:)
-  class(sll_particle_group_base), pointer :: particle_group
+  class(sll_c_particle_group_base), pointer :: particle_group
   sll_int32 :: n_particles
   sll_real64 :: x_vec(4,2)
   sll_real64 :: v_vec(4,2)
@@ -45,7 +45,7 @@ program test_control_variate
        0.15915494309189535D0, 0.15915494309189535D0]/w_vec(:,2)
 
   ! We need to initialize the particle group
-  particle_group => sll_new_particle_group_2d2v(n_particles, &
+  particle_group => sll_f_new_particle_group_2d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 3)
   
   call particle_group%set_common_weight( 1.0_f64/real(n_particles,f64))
@@ -91,7 +91,7 @@ contains
     sll_f_control_variate = exp(-0.5_f64*&
          ((vi(1)/this%control_variate_parameters(1))**2+&
          (vi(2)/this%control_variate_parameters(2))**2))/&
-         (2.0_f64*sll_pi*product(this%control_variate_parameters))
+         (2.0_f64*sll_p_pi*product(this%control_variate_parameters))
 
   end function control_variate_equi
 

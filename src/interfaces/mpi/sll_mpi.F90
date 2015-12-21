@@ -111,7 +111,6 @@ module sll_mpi
     mpi_status_size,     &
     mpi_success,         &
     mpi_sum,             &
-    mpi_prod,            &
     mpi_thread_funneled, &
     mpi_thread_multiple, &
     mpi_thread_single,   &
@@ -119,18 +118,20 @@ module sll_mpi
     mpi_wait,            &
     mpi_wtime
 
-
   private
 
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
-
-#ifdef INTEL_MPI
+#ifdef MPI_AUTO
+#include "external_auto.F90"
+#elif defined(INTEL_MPI)
 #include "external_intel.F90"
 #elif defined(OMPI)
 #include "external_openmpi.F90"
 #elif defined(MPICH)
 #include "external_mpich.F90"
+#elif defined(BULLX_MPI)
+#include "external_bullx.F90"
 #endif
 
 !-----------------------------------------------------------------------

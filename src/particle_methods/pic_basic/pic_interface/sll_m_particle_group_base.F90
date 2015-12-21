@@ -7,8 +7,8 @@ module sll_m_particle_group_base
   implicit none
 
   public :: &
-    sll_particle_group_base, &
-    species_new
+    sll_c_particle_group_base, &
+    sll_f_species_new
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,7 +31,7 @@ module sll_m_particle_group_base
   !============================================================================
   ! Particle group
   !============================================================================
-  type, abstract :: sll_particle_group_base
+  type, abstract :: sll_c_particle_group_base
 
     class( sll_species ), pointer :: species
     sll_int32                     :: id
@@ -57,14 +57,14 @@ module sll_m_particle_group_base
 !    procedure( get_all_coords), deferred :: get_all_x
 !    procedure( get_all_coords), deferred :: get_all_v
 
-  end type sll_particle_group_base
+  end type sll_c_particle_group_base
 
   !----------------------------------------------------------------------------
   abstract interface
    pure function i_get_scalar( self, i , i_weight) result( r )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( in ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_int32, optional             , intent( in ) :: i_weight
     sll_real64 :: r
@@ -75,8 +75,8 @@ module sll_m_particle_group_base
   abstract interface
    pure function i_get_coords( self, i ) result( r )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( in ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
    end function i_get_coords
@@ -86,8 +86,8 @@ module sll_m_particle_group_base
   abstract interface
    pure function i_get_array( self, i ) result( r )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( in ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(self%n_weights)
   end function i_get_array
@@ -97,8 +97,8 @@ module sll_m_particle_group_base
   abstract interface
    subroutine i_set_coords( self, i, x )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( inout ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(3)
    end subroutine i_set_coords
@@ -108,8 +108,8 @@ module sll_m_particle_group_base
   abstract interface
    subroutine i_set_scalar( self, i, x )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( inout ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x
   end subroutine i_set_scalar
@@ -119,8 +119,8 @@ module sll_m_particle_group_base
   abstract interface
    subroutine set_scalar( self, x )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( inout ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: x
   end subroutine set_scalar
   end interface
@@ -129,8 +129,8 @@ module sll_m_particle_group_base
   abstract interface
    subroutine i_set_array( self, i, x )
     use sll_m_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( inout ) :: self
+    import sll_c_particle_group_base
+    class( sll_c_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(self%n_weights)
   end subroutine i_set_array
@@ -150,7 +150,7 @@ contains
   end function q_over_m
 
   !----------------------------------------------------------------------------
-  function species_new( &
+  function sll_f_species_new( &
       species_charge,     &
       species_mass        &
   ) result(res)
@@ -164,5 +164,5 @@ contains
     res%q = species_charge
     res%m = species_mass
 
-  end function species_new
+  end function sll_f_species_new
 end module sll_m_particle_group_base

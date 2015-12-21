@@ -48,22 +48,22 @@ module sll_m_maxwell_2d_fdtd
   implicit none
 
   public :: &
-    sll_create, &
-    sll_maxwell_2d_fdtd, &
-    sll_solve
+    sll_o_create, &
+    sll_t_maxwell_2d_fdtd, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d with FDTD scheme
-interface sll_create
+interface sll_o_create
  module procedure initialize_maxwell_2d_fdtd
  module procedure initialize_maxwell_2d_fdtd_alt
-end interface sll_create
+end interface sll_o_create
 !> Solve maxwell solver 2d with FDTD scheme
-interface sll_solve
+interface sll_o_solve
  module procedure solve_maxwell_2d_fdtd
-end interface sll_solve
+end interface sll_o_solve
 !> Solve Ampere-Maxwell equation
 interface sll_solve_ampere
  module procedure ampere_2d_fdtd
@@ -76,7 +76,7 @@ end interface sll_solve_faraday
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
-type :: sll_maxwell_2d_fdtd
+type :: sll_t_maxwell_2d_fdtd
   private
   sll_int32  :: nc_eta1      !< x cells number
   sll_int32  :: nc_eta2      !< y cells number
@@ -96,7 +96,7 @@ type :: sll_maxwell_2d_fdtd
   sll_int32  :: j2           !< last indice of the block dimension 2
   sll_real64 :: dx           !< step size along dimension 1
   sll_real64 :: dy           !< step size along dimension 2
-end type sll_maxwell_2d_fdtd
+end type sll_t_maxwell_2d_fdtd
 
 
 contains
@@ -105,7 +105,7 @@ contains
 subroutine initialize_maxwell_2d_fdtd_alt(this, x1, x2, nc_x, &
                                       y1, y2, nc_y, polarization )
 
-   type(sll_maxwell_2d_fdtd) :: this         !< maxwell solver object
+   type(sll_t_maxwell_2d_fdtd) :: this         !< maxwell solver object
    sll_real64            :: x1           !< first incidice along x
    sll_real64            :: y1           !< last indice along x
    sll_real64            :: x2           !< first indice along y
@@ -131,7 +131,7 @@ end subroutine initialize_maxwell_2d_fdtd_alt
 !>Initilialize the maxwell solver
 subroutine initialize_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
 
-   type(sll_maxwell_2d_fdtd) :: this        !< maxwell solver object
+   type(sll_t_maxwell_2d_fdtd) :: this        !< maxwell solver object
    sll_int32          :: i1             !< first incidice along x
    sll_int32          :: j1             !< last indice along x
    sll_int32          :: i2             !< first indice along y
@@ -158,7 +158,7 @@ end subroutine initialize_maxwell_2d_fdtd
 !> in your appication.
 subroutine solve_maxwell_2d_fdtd(this, fx, fy, fz, dt)
 
-   type(sll_maxwell_2d_fdtd)         :: this !< maxwell object
+   type(sll_t_maxwell_2d_fdtd)         :: this !< maxwell object
    sll_real64, dimension(:,:) :: fx   !< Ex or Bx
    sll_real64, dimension(:,:) :: fy   !< Ey or By
    sll_real64, dimension(:,:) :: fz   !< Bz or Ez
@@ -178,7 +178,7 @@ end subroutine solve_maxwell_2d_fdtd
 !> Solve Faraday equation
 subroutine faraday_2d_fdtd( this, fx, fy, fz, dt )
 
-type(sll_maxwell_2d_fdtd)                 :: this !< Maxwell object
+type(sll_t_maxwell_2d_fdtd)                 :: this !< Maxwell object
 sll_real64, dimension(:,:), target :: fx   !< Ex or Bx
 sll_real64, dimension(:,:), target :: fy   !< Ey or By
 sll_real64, dimension(:,:), target :: fz   !< Bz or Ez
@@ -245,7 +245,7 @@ end subroutine faraday_2d_fdtd
 !> Solve ampere-maxwell equation with FDTD scheme
 subroutine ampere_2d_fdtd( this, fx, fy, fz, dt, jx, jy )
 
-type(sll_maxwell_2d_fdtd) :: this !< Maxwell object
+type(sll_t_maxwell_2d_fdtd) :: this !< Maxwell object
 sll_int32 :: i1, j1, i2, j2
 sll_real64, dimension(:,:), intent(inout), target :: fx !< Ex or Bx
 sll_real64, dimension(:,:), intent(inout), target :: fy !< Ey or By
@@ -332,7 +332,7 @@ end subroutine ampere_2d_fdtd
 !> Set boundary conditions 
 subroutine bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
 
-type(sll_maxwell_2d_fdtd) :: this !< maxwell solver object
+type(sll_t_maxwell_2d_fdtd) :: this !< maxwell solver object
 sll_int32 :: i1, j1, i2, j2
 sll_real64, dimension(:,:), intent(inout) :: fx !< Ex or Bx
 sll_real64, dimension(:,:), intent(inout) :: fy !< Ey or By
@@ -389,7 +389,7 @@ end subroutine bc_periodic_2d_fdtd
 !PN !> Set periodic bounday conditions
 !PN subroutine bc_metallic_2d_fdtd(this, fx, fy, fz, side)
 !PN 
-!PN type(sll_maxwell_2d_fdtd) :: this !< maxwell object
+!PN type(sll_t_maxwell_2d_fdtd) :: this !< maxwell object
 !PN sll_int32, intent(in) :: side !< which domain edge
 !PN sll_real64, dimension(:,:), target  :: fx !< Ex or Bx
 !PN sll_real64, dimension(:,:), target  :: fy !< Ey or By
@@ -438,7 +438,7 @@ end subroutine bc_periodic_2d_fdtd
 !PN !> Bundary conditions
 !PN subroutine bc_silver_muller_2d_fdtd( this, ex, ey, bz, ccall, dt )
 !PN 
-!PN type(sll_maxwell_2d_fdtd) :: this !< maxwell object
+!PN type(sll_t_maxwell_2d_fdtd) :: this !< maxwell object
 !PN sll_int32, intent(in) :: ccall !< domain edge (N,S,E,W)
 !PN sll_int32 :: i1, j1, i2, j2
 !PN sll_real64 :: a11,a12,a21,a22,b1,b2,dis

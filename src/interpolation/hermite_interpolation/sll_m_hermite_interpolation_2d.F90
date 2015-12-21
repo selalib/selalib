@@ -7,16 +7,16 @@ module sll_m_hermite_interpolation_2d
   implicit none
 
   public :: &
-    compute_hermite_derivatives_periodic1, &
-    compute_interpolants_hermite_2d, &
-    compute_w_hermite, &
-    interpolate_value_hermite_2d, &
-    localize_per, &
-    new_hermite_interpolation_2d, &
-    sll_hermite_c0, &
-    sll_hermite_dirichlet, &
-    sll_hermite_interpolation_2d, &
-    sll_hermite_periodic
+    sll_s_compute_hermite_derivatives_periodic1, &
+    sll_s_compute_interpolants_hermite_2d, &
+    sll_s_compute_w_hermite, &
+    sll_f_interpolate_value_hermite_2d, &
+    sll_s_localize_per, &
+    sll_f_new_hermite_interpolation_2d, &
+    sll_p_hermite_c0, &
+    sll_p_hermite_dirichlet, &
+    sll_t_hermite_interpolation_2d, &
+    sll_p_hermite_periodic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32,29 +32,29 @@ module sll_m_hermite_interpolation_2d
 ! for the moment only in implementation for the case DIRICHLET x PERIODIC
 
 
-  type :: sll_hermite_interpolation_2d
+  type :: sll_t_hermite_interpolation_2d
     sll_real64 :: eta_min(2) !< eta1 min and eta2 min
     sll_real64 :: eta_max(2) !< eta1 max and eta2 max
     sll_int32 :: Nc(2) !< number of cells in eta1 and in eta2     
     sll_int32 :: degree(2) !< interpolation degrees in eta1, eta2
     sll_int32 :: bc(2) !<boundary conditions in eta and eta2
-                       !< can be SLL_HERMITE_PERIODIC or SLL_HERMITE_DIRICHLET
+                       !< can be sll_p_hermite_periodic or sll_p_hermite_dirichlet
     sll_real64, dimension(:,:,:), pointer :: deriv
-    sll_int32 :: continuity(2) !< can be SLL_HERMITE_C0 or SLL_HERMITE_C1
-    sll_int32 :: deriv_size(2) !< 3 for SLL_HERMITE_C0 and 2 for SLL_HERMITE_C1
+    sll_int32 :: continuity(2) !< can be sll_p_hermite_c0 or SLL_HERMITE_C1
+    sll_int32 :: deriv_size(2) !< 3 for sll_p_hermite_c0 and 2 for SLL_HERMITE_C1
                                !< in each direction
                                !< deriv_size(1)*deriv_size(2) = size(deriv,1)                              
-  end type sll_hermite_interpolation_2d 
+  end type sll_t_hermite_interpolation_2d 
   
-  integer, parameter :: SLL_HERMITE_PERIODIC = 0, SLL_HERMITE_DIRICHLET = 1
-  integer, parameter :: SLL_HERMITE_C0 = 0, SLL_HERMITE_C1 = 1
+  integer, parameter :: sll_p_hermite_periodic = 0, sll_p_hermite_dirichlet = 1
+  integer, parameter :: sll_p_hermite_c0 = 0, SLL_HERMITE_C1 = 1
 
 !  interface delete
 !    module procedure delete_hermite_interpolation_2d
 !  end interface
 
 contains  !*****************************************************************************
-  function new_hermite_interpolation_2d( &
+  function sll_f_new_hermite_interpolation_2d( &
     npts1, &
     npts2, &
     eta1_min, &
@@ -77,7 +77,7 @@ contains  !*********************************************************************
     eta2_max_slopes ) &
     result(interp)
     
-    type(sll_hermite_interpolation_2d), pointer :: interp
+    type(sll_t_hermite_interpolation_2d), pointer :: interp
     sll_int32, intent(in) :: npts1
     sll_int32, intent(in) :: npts2
     sll_real64, intent(in) :: eta1_min
@@ -125,7 +125,7 @@ contains  !*********************************************************************
       eta2_min_slopes, &
       eta2_max_slopes )
 
-  end function new_hermite_interpolation_2d
+  end function sll_f_new_hermite_interpolation_2d
 
   subroutine initialize_hermite_interpolation_2d( &
     interp, &
@@ -150,7 +150,7 @@ contains  !*********************************************************************
     eta2_min_slopes, &
     eta2_max_slopes )
 
-    type(sll_hermite_interpolation_2d) :: interp
+    type(sll_t_hermite_interpolation_2d) :: interp
 
     sll_int32, intent(in) :: npts1
     sll_int32, intent(in) :: npts2
@@ -186,7 +186,7 @@ contains  !*********************************************************************
     deriv_size = 1
     do i=1,2
       select case (interp%continuity(i))
-        case (SLL_HERMITE_C0)
+        case (sll_p_hermite_c0)
           interp%deriv_size(i) = 3
         case (SLL_HERMITE_C1)
           interp%deriv_size(i) = 2
@@ -212,51 +212,51 @@ contains  !*********************************************************************
     
   end subroutine initialize_hermite_interpolation_2d
 
-  subroutine compute_interpolants_hermite_2d( &
+  subroutine sll_s_compute_interpolants_hermite_2d( &
     interp, &
     f)
-    type(sll_hermite_interpolation_2d) :: interp
+    type(sll_t_hermite_interpolation_2d) :: interp
     sll_real64, dimension(:,:), intent(in) :: f
-    if((interp%bc(1)==SLL_HERMITE_DIRICHLET).and.&
-      (interp%bc(2)==SLL_HERMITE_PERIODIC)) then
-      if((interp%continuity(1)==SLL_HERMITE_C0).and.&
-        (interp%continuity(2)==SLL_HERMITE_C0)) then         
+    if((interp%bc(1)==sll_p_hermite_dirichlet).and.&
+      (interp%bc(2)==sll_p_hermite_periodic)) then
+      if((interp%continuity(1)==sll_p_hermite_c0).and.&
+        (interp%continuity(2)==sll_p_hermite_c0)) then         
         call hermite_coef_nat_per(f,interp%deriv,interp%Nc,interp%degree)
       else
         print *,'#interp%continuity=', interp%continuity
-        print *,'#possible_value=', SLL_HERMITE_C0
+        print *,'#possible_value=', sll_p_hermite_c0
         print *,'#not implemented for the moment'
-        print *,'#in compute_interpolants_hermite_2d'
+        print *,'#in sll_s_compute_interpolants_hermite_2d'
         stop          
       endif
-    else if((interp%bc(1)==SLL_HERMITE_PERIODIC).and.&
-      (interp%bc(2)==SLL_HERMITE_PERIODIC)) then
-      if((interp%continuity(1)==SLL_HERMITE_C0).and.&
-        (interp%continuity(2)==SLL_HERMITE_C0)) then         
+    else if((interp%bc(1)==sll_p_hermite_periodic).and.&
+      (interp%bc(2)==sll_p_hermite_periodic)) then
+      if((interp%continuity(1)==sll_p_hermite_c0).and.&
+        (interp%continuity(2)==sll_p_hermite_c0)) then         
         call hermite_coef_per_per(f,interp%deriv,interp%Nc,interp%degree)
       else
         print *,'#interp%continuity=', interp%continuity
-        print *,'#possible_value=', SLL_HERMITE_C0
+        print *,'#possible_value=', sll_p_hermite_c0
         print *,'#not implemented for the moment'
-        print *,'#in compute_interpolants_hermite_2d'
+        print *,'#in sll_s_compute_interpolants_hermite_2d'
         stop          
       endif
     
     else  
        
       print *,'#interp%bc=', interp%bc
-      print *,'#possible_value=', SLL_HERMITE_DIRICHLET, SLL_HERMITE_PERIODIC     
+      print *,'#possible_value=', sll_p_hermite_dirichlet, sll_p_hermite_periodic     
       print *,'#not implemented for the moment'
-      print *,'#in compute_interpolants_hermite_2d'
+      print *,'#in sll_s_compute_interpolants_hermite_2d'
       stop          
     endif
     
     
-  end subroutine compute_interpolants_hermite_2d
+  end subroutine sll_s_compute_interpolants_hermite_2d
 
 
 
-subroutine compute_w_hermite(w,r,s)
+subroutine sll_s_compute_w_hermite(w,r,s)
     sll_int32,intent(in)::r,s
     sll_real64,dimension(r:s),intent(out)::w
     sll_int32 ::i,j
@@ -331,11 +331,11 @@ subroutine compute_w_hermite(w,r,s)
     !
 
   
-  end subroutine compute_w_hermite
+  end subroutine sll_s_compute_w_hermite
 
 
 
-subroutine compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf)
+subroutine sll_s_compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf)
   sll_real64, dimension(:,:), intent(in) :: f !> input 2d function
   sll_int32, intent(in) :: num_points1 !> 
   sll_int32, intent(in) :: num_points2 !> 
@@ -358,7 +358,7 @@ subroutine compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf
   s_left=(p+1)/2
   r_right=(-p+1)/2
   s_right=p/2+1   
-  call compute_w_hermite(w_left,r_left,s_left)
+  call sll_s_compute_w_hermite(w_left,r_left,s_left)
   if(((2*p/2)-p)==0)then
     w_right(r_right:s_right) = w_left(r_left:s_left)
   else
@@ -383,7 +383,7 @@ subroutine compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf
     enddo
   enddo
   
-end subroutine compute_hermite_derivatives_periodic1
+end subroutine sll_s_compute_hermite_derivatives_periodic1
 
 
 
@@ -429,8 +429,8 @@ subroutine hermite_coef_nat_per(f,buf3d,N,d)
     s_right=d/2+1
     
     
-    call compute_w_hermite(w_left_1,r_left(1),s_left(1))
-    call compute_w_hermite(w_left_2,r_left(2),s_left(2))    
+    call sll_s_compute_w_hermite(w_left_1,r_left(1),s_left(1))
+    call sll_s_compute_w_hermite(w_left_2,r_left(2),s_left(2))    
     if((2*(d(1)/2)-d(1))==0)then
       w_right_1(r_right(1):s_right(1)) = w_left_1(r_left(1):s_left(1))
     else
@@ -532,8 +532,8 @@ subroutine hermite_coef_per_per(f,buf3d,N,d)
     s_right=d/2+1
     
     
-    call compute_w_hermite(w_left_1,r_left(1),s_left(1))
-    call compute_w_hermite(w_left_2,r_left(2),s_left(2))    
+    call sll_s_compute_w_hermite(w_left_1,r_left(1),s_left(1))
+    call sll_s_compute_w_hermite(w_left_2,r_left(2),s_left(2))    
     if((2*(d(1)/2)-d(1))==0)then
       w_right_1(r_right(1):s_right(1)) = w_left_1(r_left(1):s_left(1))
     else
@@ -629,10 +629,10 @@ subroutine hermite_coef_per_per(f,buf3d,N,d)
 
 
 
-  function interpolate_value_hermite_2d( eta1, eta2, interp ) result(res)
+  function sll_f_interpolate_value_hermite_2d( eta1, eta2, interp ) result(res)
     sll_real64,intent(in) :: eta1
     sll_real64,intent(in) :: eta2
-    type(sll_hermite_interpolation_2d), pointer :: interp
+    type(sll_t_hermite_interpolation_2d), pointer :: interp
     sll_real64 :: res
     sll_real64 :: eta_tmp(2)
     sll_int32 :: ii(2)
@@ -645,12 +645,12 @@ subroutine hermite_coef_per_per(f,buf3d,N,d)
     !print *,'#eta_min=',interp%eta_min
     !print *,'#eta_max=',interp%eta_max
     !print *,'#before',ii,eta_tmp(1:2),interp%Nc
-    call localize_per(ii(2),eta_tmp(2),interp%eta_min(2),interp%eta_max(2),interp%Nc(2))
+    call sll_s_localize_per(ii(2),eta_tmp(2),interp%eta_min(2),interp%eta_max(2),interp%Nc(2))
     !print *,'#before',ii,eta_tmp(1:2),interp%Nc
     call interpolate_hermite(interp%deriv,ii,eta_tmp,res,interp%Nc)
     !print *,'#after'
     
-  end function interpolate_value_hermite_2d
+  end function sll_f_interpolate_value_hermite_2d
 
  subroutine interpolate_hermite(f,i,x,fval,N)
     sll_int32,intent(in)::i(2),N(2)
@@ -704,7 +704,7 @@ subroutine hermite_coef_per_per(f,buf3d,N,d)
     !print *,fval,' t',f    
   end subroutine interpolate_hermite
 
-  subroutine localize_per(i,x,xmin,xmax,N)
+  subroutine sll_s_localize_per(i,x,xmin,xmax,N)
     sll_int32,intent(out)::i
     sll_real64,intent(inout)::x
     sll_real64,intent(in)::xmin,xmax
@@ -718,7 +718,7 @@ subroutine hermite_coef_per_per(f,buf3d,N,d)
       i=0
       x=0._f64
     endif
-  end subroutine localize_per
+  end subroutine sll_s_localize_per
   
 
   subroutine localize_nat(i,x,xmin,xmax,N)

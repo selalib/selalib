@@ -55,73 +55,73 @@ program test_general_elliptic_solver
     u_sin_der2
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    initialize_ad2d_interpolator, &
-    sll_arbitrary_degree_spline_interpolator_2d
+    sll_s_initialize_ad2d_interpolator, &
+    sll_t_arbitrary_degree_spline_interpolator_2d
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d, &
-    sll_delete
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_o_delete
 
   use sll_m_common_coordinate_transformations, only: &
-    deriv_x1_polar_f_eta1, &
-    deriv_x1_polar_f_eta2, &
-    deriv_x2_polar_f_eta1, &
-    deriv_x2_polar_f_eta2, &
-    identity_jac11, &
-    identity_jac12, &
-    identity_jac21, &
-    identity_jac22, &
-    identity_x1, &
-    identity_x2, &
-    sinprod_jac11, &
-    sinprod_jac12, &
-    sinprod_jac21, &
-    sinprod_jac22, &
-    sinprod_x1, &
-    sinprod_x2, &
-    x1_polar_f, &
-    x2_polar_f
+    sll_f_deriv_x1_polar_f_eta1, &
+    sll_f_deriv_x1_polar_f_eta2, &
+    sll_f_deriv_x2_polar_f_eta1, &
+    sll_f_deriv_x2_polar_f_eta2, &
+    sll_f_identity_jac11, &
+    sll_f_identity_jac12, &
+    sll_f_identity_jac21, &
+    sll_f_identity_jac22, &
+    sll_f_identity_x1, &
+    sll_f_identity_x2, &
+    sll_f_sinprod_jac11, &
+    sll_f_sinprod_jac12, &
+    sll_f_sinprod_jac21, &
+    sll_f_sinprod_jac22, &
+    sll_f_sinprod_x1, &
+    sll_f_sinprod_x2, &
+    sll_f_x1_polar_f, &
+    sll_f_x2_polar_f
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    new_coordinate_transformation_2d_analytic
+    sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
 
   use sll_m_scalar_field_2d, only: &
-    new_scalar_field_2d_analytic, &
-    new_scalar_field_2d_discrete, &
-    sll_scalar_field_2d_discrete
+    sll_f_new_scalar_field_2d_analytic, &
+    sll_f_new_scalar_field_2d_discrete, &
+    sll_t_scalar_field_2d_discrete
 
   use sll_m_scalar_field_2d_base, only: &
-    sll_scalar_field_2d_base
+    sll_c_scalar_field_2d_base
 
   use sll_m_timer, only: &
-    sll_set_time_mark, &
-    sll_time_elapsed_since, &
-    sll_time_mark
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack
 #else
   use sll_m_general_coordinate_elliptic_solver, only: &
-    es_gauss_legendre, &
-    factorize_mat_es, &
-    general_coordinate_elliptic_solver, &
-    sll_create, &
-    sll_solve, &
-    sll_delete
+    sll_p_es_gauss_legendre, &
+    sll_s_factorize_mat_es, &
+    sll_t_general_coordinate_elliptic_solver, &
+    sll_o_create, &
+    sll_o_solve, &
+    sll_o_delete
 
 #endif
   implicit none
@@ -137,22 +137,22 @@ program test_general_elliptic_solver
 #define ETA2MAX           1.0_f64
 #define PRINT_COMPARISON  .false.
 
-type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
-class(sll_coordinate_transformation_2d_base), pointer     :: T
-type(general_coordinate_elliptic_solver)                  :: es
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d_rhs
+type(sll_t_cartesian_mesh_2d), pointer                      :: mesh_2d
+class(sll_c_coordinate_transformation_2d_base), pointer     :: T
+type(sll_t_general_coordinate_elliptic_solver)                  :: es
+type(sll_t_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
+type(sll_t_arbitrary_degree_spline_interpolator_2d), target :: interp_2d_rhs
 class(sll_c_interpolator_2d), pointer                  :: rhs_interp
-class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a12_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a21_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a22_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: b1_field_vect
-class(sll_scalar_field_2d_base), pointer                  :: b2_field_vect
-class(sll_scalar_field_2d_base), pointer                  :: c_field
-class(sll_scalar_field_2d_base), pointer                  :: rho
-type(sll_scalar_field_2d_discrete), pointer               :: phi
-type(sll_time_mark)                                       :: t_reference
+class(sll_c_scalar_field_2d_base), pointer                  :: a11_field_mat
+class(sll_c_scalar_field_2d_base), pointer                  :: a12_field_mat
+class(sll_c_scalar_field_2d_base), pointer                  :: a21_field_mat
+class(sll_c_scalar_field_2d_base), pointer                  :: a22_field_mat
+class(sll_c_scalar_field_2d_base), pointer                  :: b1_field_vect
+class(sll_c_scalar_field_2d_base), pointer                  :: b2_field_vect
+class(sll_c_scalar_field_2d_base), pointer                  :: c_field
+class(sll_c_scalar_field_2d_base), pointer                  :: rho
+type(sll_t_scalar_field_2d_discrete), pointer               :: phi
+type(sll_t_time_mark)                                       :: t_reference
 
 sll_real64 :: ti(16), te(16)
 sll_real64 :: acc(16)    
@@ -204,7 +204,7 @@ case_name = ['(per-per) with identity and source term analytic', &
              '(dir-dir) with identity and source term analytic']
 
 ! First thing, initialize the logical mesh associated with this problem. 
-mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, &
+mesh_2d => sll_f_new_cartesian_mesh_2d( NUM_CELLS1, &
                                   NUM_CELLS2, &
                                   ETA1MIN,    &
                                   ETA1MAX,    &
@@ -237,7 +237,7 @@ if (itest2 ==0) itest2 = 13
 
 do k = itest1, itest2
 
-  call int2string(k, ccase)
+  call sll_s_int2string(k, ccase)
 
   select case(k)
 
@@ -248,31 +248,31 @@ do k = itest1, itest2
   print*, " periodic-periodic boundary conditions "
   print*, "-------------------------------------------------------------"
 
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        (/ 0.0_f64 /) )
 
-  call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
+  call initialize_fields( sll_p_periodic, sll_p_periodic, sll_p_periodic, sll_p_periodic)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_perper,             &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        whatever  )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_periodic, sll_p_periodic, &
+                     sll_p_periodic, sll_p_periodic, ti(k), te(k))
 
   do j=1,npts2
   do i=1,npts1
@@ -302,31 +302,31 @@ do k = itest1, itest2
   print*, " periodic-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        (/0.0_f64/) )
 
-  call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_periodic, sll_p_periodic, sll_p_dirichlet, sll_p_dirichlet)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_perdir,             &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        whatever )
 
-  call solve_fields( SLL_PERIODIC,  SLL_PERIODIC,  &
-                     SLL_DIRICHLET, SLL_DIRICHLET, &
+  call solve_fields( sll_p_periodic,  sll_p_periodic,  &
+                     sll_p_dirichlet, sll_p_dirichlet, &
                      ti(k), te(k))
   
   do j=1,npts2
@@ -356,31 +356,31 @@ do k = itest1, itest2
   print*, " dirichlet-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        (/0.0_f64/) )
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, sll_p_dirichlet, sll_p_dirichlet)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_perdir,             &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_dirichlet, sll_p_dirichlet, ti(k), te(k))
 
   do j=1,npts2
   do i=1,npts1
@@ -409,32 +409,32 @@ do k = itest1, itest2
   print*, " dirichlet-periodic boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        (/0.0_f64/) )
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_PERIODIC,  SLL_PERIODIC)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_periodic,  sll_p_periodic)
   
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_dirper,             &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_periodic, sll_p_periodic, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -466,32 +466,32 @@ do k = itest1, itest2
   print*, " periodic-periodic boundary conditions         "
   print*, "-----------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
+       sll_f_sinprod_x1,                                &
+       sll_f_sinprod_x2,                                &
+       sll_f_sinprod_jac11,                             &
+       sll_f_sinprod_jac12,                             &
+       sll_f_sinprod_jac21,                             &
+       sll_f_sinprod_jac22,                             &
        (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
   
-  call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                          SLL_PERIODIC, SLL_PERIODIC)
+  call initialize_fields( sll_p_periodic, sll_p_periodic, &
+                          sll_p_periodic, sll_p_periodic)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_chgt_perper,        &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        whatever )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_periodic, sll_p_periodic, &
+                     sll_p_periodic, sll_p_periodic, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -502,10 +502,10 @@ do k = itest1, itest2
     grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
     grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
     reference(i,j) = ref
-    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
     if(PRINT_COMPARISON) call printout_comparison()
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val*val_jac * h1*h2
@@ -530,31 +530,31 @@ do k = itest1, itest2
   print*, " periodic-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
+       sll_f_sinprod_x1,                                &
+       sll_f_sinprod_x2,                                &
+       sll_f_sinprod_jac11,                             &
+       sll_f_sinprod_jac12,                             &
+       sll_f_sinprod_jac21,                             &
+       sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
-  call initialize_fields( SLL_PERIODIC,  SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_periodic,  sll_p_periodic, sll_p_dirichlet, sll_p_dirichlet)
   
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_chgt_perdir,        &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        whatever )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( sll_p_periodic, sll_p_periodic, &
+                     sll_p_dirichlet, sll_p_dirichlet, ti(k), te(k))
 
   do j=1,npts2
   do i=1,npts1
@@ -567,10 +567,10 @@ do k = itest1, itest2
     reference(i,j) = ref
     if(PRINT_COMPARISON) call printout_comparison()
     
-    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2 ) then
        integral_solution = integral_solution + node_val*val_jac* h1*h2
        integral_exact_solution = integral_exact_solution + ref*val_jac* h1*h2
@@ -590,32 +590,32 @@ do k = itest1, itest2
   print*, " dirichlet-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",    &
        mesh_2d,       &
-       sinprod_x1,    &
-       sinprod_x2,    &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       sll_f_sinprod_x1,    &
+       sll_f_sinprod_x2,    &
+       sll_f_sinprod_jac11, &
+       sll_f_sinprod_jac12, &
+       sll_f_sinprod_jac21, &
+       sll_f_sinprod_jac22, &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_dirichlet, sll_p_dirichlet)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_chgt_dirdir,        &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_dirichlet, sll_p_dirichlet, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -628,10 +628,10 @@ do k = itest1, itest2
         grad2ref   = sol_exacte_chgt_dirdir_der2(eta1(i),eta2(j))
         reference(i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+        val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
            integral_solution = integral_solution + node_val*val_jac * h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
@@ -652,32 +652,32 @@ do k = itest1, itest2
   print*, " dirichlet-periodic boundary conditions"
   print*, "---------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
+       sll_f_sinprod_x1,                                &
+       sll_f_sinprod_x2,                                &
+       sll_f_sinprod_jac11,                             &
+       sll_f_sinprod_jac12,                             &
+       sll_f_sinprod_jac21,                             &
+       sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
 
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_PERIODIC,  SLL_PERIODIC)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_periodic,  sll_p_periodic)
   
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        source_term_chgt_dirper,        &
        "rho"//ccase,                   &     
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        whatever)
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_PERIODIC,  SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_periodic,  sll_p_periodic, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -690,10 +690,10 @@ do k = itest1, itest2
         grad2ref   = sol_exacte_chgt_dirper_der2(eta1(i),eta2(j))
         reference(i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+        val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
            integral_solution = integral_solution + node_val*val_jac * h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
@@ -715,19 +715,19 @@ do k = itest1, itest2
   print*, " with non analytic source term " 
   print*, "---------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
-  call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                          SLL_PERIODIC, SLL_PERIODIC)
+  call initialize_fields( sll_p_periodic, sll_p_periodic, &
+                          sll_p_periodic, sll_p_periodic)
 
   do j=1,npts2
     do i=1,npts1
@@ -735,14 +735,14 @@ do k = itest1, itest2
     end do
   end do
   
-  rho => new_scalar_field_2d_discrete( &
+  rho => sll_f_new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
        interp_2d_rhs,                  &
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        eta1,                           &
        NUM_CELLS1,                     &
        eta2,                           &
@@ -751,8 +751,8 @@ do k = itest1, itest2
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_periodic, sll_p_periodic, &
+                     sll_p_periodic, sll_p_periodic, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -788,19 +788,19 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
+       sll_f_sinprod_x1,                                &
+       sll_f_sinprod_x2,                                &
+       sll_f_sinprod_jac11,                             &
+       sll_f_sinprod_jac12,                             &
+       sll_f_sinprod_jac21,                             &
+       sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
-  call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                          SLL_PERIODIC, SLL_PERIODIC)
+  call initialize_fields( sll_p_periodic, sll_p_periodic, &
+                          sll_p_periodic, sll_p_periodic)
   
   do j=1,npts2
   do i=1,npts1
@@ -811,14 +811,14 @@ do k = itest1, itest2
   rhs_interp => interp_2d_rhs
   tab_rho(:,:) = tab_rho - sum(tab_rho)/real(NUM_CELLS1*NUM_CELLS2,f64)
 
-  rho => new_scalar_field_2d_discrete( &
+  rho => sll_f_new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
        rhs_interp,                     &
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC ,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_periodic ,                  &
        eta1,                           &
        NUM_CELLS1,                     &
        eta2,                           &
@@ -827,8 +827,8 @@ do k = itest1, itest2
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_periodic, sll_p_periodic, &
+                     sll_p_periodic, sll_p_periodic, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -841,10 +841,10 @@ do k = itest1, itest2
     grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
     reference(i,j) = ref
     if(PRINT_COMPARISON) call printout_comparison()
-    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
     
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val*val_jac * h1*h2
@@ -868,19 +868,19 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
+       sll_f_sinprod_x1,                                &
+       sll_f_sinprod_x2,                                &
+       sll_f_sinprod_jac11,                             &
+       sll_f_sinprod_jac12,                             &
+       sll_f_sinprod_jac21,                             &
+       sll_f_sinprod_jac22,                             &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)) 
 
-  call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_periodic, sll_p_periodic, &
+                          sll_p_dirichlet, sll_p_dirichlet)
 
   do j=1,npts2
   do i=1,npts1
@@ -890,14 +890,14 @@ do k = itest1, itest2
 
   rhs_interp => interp_2d_rhs
 
-  rho => new_scalar_field_2d_discrete( &
+  rho => sll_f_new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
        rhs_interp,                     &
        T,                              &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        eta1,                           &
        NUM_CELLS1,                     &
        eta2,                           &
@@ -906,8 +906,8 @@ do k = itest1, itest2
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( sll_p_periodic, sll_p_periodic, &
+                     sll_p_dirichlet, sll_p_dirichlet, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -920,10 +920,10 @@ do k = itest1, itest2
     grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
     reference(i,j) = ref
     if(PRINT_COMPARISON) call printout_comparison()
-    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
     
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val*val_jac * h1*h2
@@ -949,19 +949,19 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-   T => new_coordinate_transformation_2d_analytic( &
+   T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                 &
        mesh_2d,                                    &
-       sinprod_x1,                                 &
-       sinprod_x2,                                 &
-       sinprod_jac11,                              &
-       sinprod_jac12,                              &
-       sinprod_jac21,                              &
-       sinprod_jac22,                              &
+       sll_f_sinprod_x1,                                 &
+       sll_f_sinprod_x2,                                 &
+       sll_f_sinprod_jac11,                              &
+       sll_f_sinprod_jac12,                              &
+       sll_f_sinprod_jac21,                              &
+       sll_f_sinprod_jac22,                              &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
 
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_dirichlet, sll_p_dirichlet)
 
   do j=1,npts2
   do i=1,npts1
@@ -971,14 +971,14 @@ do k = itest1, itest2
 
   rhs_interp => interp_2d_rhs
 
-  rho => new_scalar_field_2d_discrete( &
+  rho => sll_f_new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
        rhs_interp,                     &
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        eta1,                           &
        npts1,                          &
        eta2,                           &
@@ -987,8 +987,8 @@ do k = itest1, itest2
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_dirichlet, sll_p_dirichlet, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -1002,10 +1002,10 @@ do k = itest1, itest2
     reference(i,j) = ref
 
     if (PRINT_COMPARISON) call printout_comparison()
-    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sll_f_sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sll_f_sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
     
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val*val_jac * h1*h2
@@ -1031,19 +1031,19 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       sinprod_x1,                                &
-       sinprod_x2,                                &
-       sinprod_jac11,                             &
-       sinprod_jac12,                             &
-       sinprod_jac21,                             &
-       sinprod_jac22,                             &
+       sll_f_sinprod_x1,                                &
+       sll_f_sinprod_x2,                                &
+       sll_f_sinprod_jac11,                             &
+       sll_f_sinprod_jac12,                             &
+       sll_f_sinprod_jac21,                             &
+       sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_PERIODIC,  SLL_PERIODIC)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_periodic,  sll_p_periodic)
 
   do j=1,npts2
      do i=1,npts1
@@ -1053,14 +1053,14 @@ do k = itest1, itest2
   
   rhs_interp => interp_2d_rhs
 
-  rho => new_scalar_field_2d_discrete( &
+  rho => sll_f_new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
        rhs_interp,                     &
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        eta1,                           &
        npts1,                          &
        eta2,                           &
@@ -1069,8 +1069,8 @@ do k = itest1, itest2
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET,  &
-                     SLL_PERIODIC,  SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet,  &
+                     sll_p_periodic,  sll_p_periodic, ti(k), te(k))
    
   do j=1,npts2
   do i=1,npts1
@@ -1083,10 +1083,10 @@ do k = itest1, itest2
     grad2ref   = sol_exacte_chgt_dirper_der2(eta1(i),eta2(j))
     reference(i,j)  = ref
     if (PRINT_COMPARISON) call printout_comparison()
-    val_jac = sinprod_jac11(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
-              sinprod_jac22(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))-&
-              sinprod_jac12(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
-              sinprod_jac21(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))
+    val_jac = sll_f_sinprod_jac11(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
+              sll_f_sinprod_jac22(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))-&
+              sll_f_sinprod_jac12(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
+              sll_f_sinprod_jac21(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))
     
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
        integral_solution = integral_solution + node_val*val_jac * h1*h2
@@ -1110,28 +1110,28 @@ do k = itest1, itest2
   print*, " with analytic source term                        " 
   print*, "--------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "polar",                                   &
        mesh_2d,                                   &
-       x1_polar_f,                                &
-       x2_polar_f,                                &
-       deriv_x1_polar_f_eta1,                     & 
-       deriv_x1_polar_f_eta2,                     &
-       deriv_x2_polar_f_eta1,                     &
-       deriv_x2_polar_f_eta2,                     &
+       sll_f_x1_polar_f,                                &
+       sll_f_x2_polar_f,                                &
+       sll_f_deriv_x1_polar_f_eta1,                     & 
+       sll_f_deriv_x1_polar_f_eta2,                     &
+       sll_f_deriv_x2_polar_f_eta1,                     &
+       sll_f_deriv_x2_polar_f_eta2,                     &
        [1.0_f64,2.0_f64] )
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_PERIODIC,  SLL_PERIODIC)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_periodic,  sll_p_periodic)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        f_sin,                          &
        "fsin",                         &
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        whatever)
 
   do j = 1, npts2
@@ -1142,8 +1142,8 @@ do k = itest1, itest2
 
   call phi%set_field_data(values)
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_PERIODIC,  SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_periodic,  sll_p_periodic, ti(k), te(k))
    
   do j=1,npts2
   do i=1,npts1
@@ -1158,10 +1158,10 @@ do k = itest1, itest2
 
     if (PRINT_COMPARISON) call printout_comparison()
 
-    val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-              deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
-              deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-              deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
+    val_jac = sll_f_deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              sll_f_deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
+              sll_f_deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              sll_f_deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
       
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
       integral_solution = integral_solution + node_val*val_jac * h1*h2
@@ -1189,32 +1189,32 @@ do k = itest1, itest2
   print*, " with analytic source term                        " 
   print*, "--------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "polar",                                   &
        mesh_2d,                                   &
-       x1_polar_f,                                &
-       x2_polar_f,                                &
-       deriv_x1_polar_f_eta1,                     &
-       deriv_x1_polar_f_eta2,                     &
-       deriv_x2_polar_f_eta1,                     &
-       deriv_x2_polar_f_eta2,                     &
+       sll_f_x1_polar_f,                                &
+       sll_f_x2_polar_f,                                &
+       sll_f_deriv_x1_polar_f_eta1,                     &
+       sll_f_deriv_x1_polar_f_eta2,                     &
+       sll_f_deriv_x2_polar_f_eta1,                     &
+       sll_f_deriv_x2_polar_f_eta2,                     &
        [1.0_f64,2.0_f64] )
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC,  SLL_PERIODIC)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, sll_p_periodic,  sll_p_periodic)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        f_cos,                          & 
        "f_cos",                        &
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_PERIODIC,                   &
-       SLL_PERIODIC,                   &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_periodic,                   &
+       sll_p_periodic,                   &
        whatever)
 
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_PERIODIC,  SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_periodic,  sll_p_periodic, ti(k), te(k))
    
   do j=1,npts2
   do i=1,npts1
@@ -1229,10 +1229,10 @@ do k = itest1, itest2
 
     if (PRINT_COMPARISON) call printout_comparison()
 
-    val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-              deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
-              deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-              deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
+    val_jac = sll_f_deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              sll_f_deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
+              sll_f_deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              sll_f_deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
       
     if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
       integral_solution       = integral_solution + node_val*val_jac * h1*h2
@@ -1258,28 +1258,28 @@ do k = itest1, itest2
   print*, " with source term = 4                             " 
   print*, "--------------------------------------------------"
   
-  T => new_coordinate_transformation_2d_analytic( &
+  T => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic",                                &
        mesh_2d,                                   &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        (/0.0_f64/) )
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                          sll_p_dirichlet, sll_p_dirichlet)
 
-  rho => new_scalar_field_2d_analytic( &
+  rho => sll_f_new_scalar_field_2d_analytic( &
        func_four,                      & 
        "func_four",                    &
        T,                              &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
-       SLL_DIRICHLET,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
+       sll_p_dirichlet,                  &
        whatever)
 
   do j = 1, npts2
@@ -1293,8 +1293,8 @@ do k = itest1, itest2
 !                                            values(:,1),     &
 !                                            values(:,npts2))
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( sll_p_dirichlet, sll_p_dirichlet, &
+                     sll_p_dirichlet, sll_p_dirichlet, ti(k), te(k))
    
   do j=1,npts2
   do i=1,npts1
@@ -1325,12 +1325,12 @@ do k = itest1, itest2
 
 end do
 
-!call sll_ascii_file_create("solutions_gces.gnu",file_id,ierr)
+!call sll_s_ascii_file_create("solutions_gces.gnu",file_id,ierr)
 do k = itest1, itest2
   write(*,"(a)") case_name(k)
   print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
     ,k,normL2(k),normH1(k),ti(k),te(k)
-!  call int2string(k, ccase)
+!  call sll_s_int2string(k, ccase)
 !  write(file_id,"(a)") "set title '"//case_name(k)//"'"
 !  write(file_id,"(a)") "load 'phi_"//ccase//".gnu'"
 !  write(file_id,"(a)") " pause -1"
@@ -1363,7 +1363,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
   sll_int32, intent(in) :: bc_eta1_max
   sll_int32, intent(in) :: bc_eta2_max
 
-  a11_field_mat => new_scalar_field_2d_analytic(     &
+  a11_field_mat => sll_f_new_scalar_field_2d_analytic(     &
     func_one,                                        &
     "a11",                                           &
     T,                                               &
@@ -1373,7 +1373,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever  ) 
   
-  a12_field_mat => new_scalar_field_2d_analytic(     &
+  a12_field_mat => sll_f_new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "a12",                                           &
     T,                                               &
@@ -1383,7 +1383,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever )
   
-  a21_field_mat => new_scalar_field_2d_analytic(     &
+  a21_field_mat => sll_f_new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "a21",                                           &
     T,                                               &
@@ -1393,7 +1393,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic(     &
+  a22_field_mat => sll_f_new_scalar_field_2d_analytic(     &
     func_one,                                        &
     "a22",                                           &
     T,                                               &
@@ -1403,7 +1403,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever)
 
-  b1_field_vect => new_scalar_field_2d_analytic(     &
+  b1_field_vect => sll_f_new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "b1",                                            &
     T,                                               &
@@ -1415,7 +1415,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     first_deriv_eta1 = func_zero,                    &
     first_deriv_eta2 = func_zero) 
 
-  b2_field_vect => new_scalar_field_2d_analytic(     &
+  b2_field_vect => sll_f_new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "b2",                                            &
     T,                                               &
@@ -1427,7 +1427,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     first_deriv_eta1 = func_zero,                    &
     first_deriv_eta2 = func_zero)
 
-  c_field => new_scalar_field_2d_analytic(           &
+  c_field => sll_f_new_scalar_field_2d_analytic(           &
     func_zero,                                       &
     "c_field",                                       &
     T,                                               &
@@ -1437,7 +1437,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever  )
 
-  call initialize_ad2d_interpolator(                 &
+  call sll_s_initialize_ad2d_interpolator(                 &
     interp_2d,                                       &
     NUM_CELLS1+1,                                    &
     NUM_CELLS2+1,                                    &
@@ -1452,7 +1452,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  call initialize_ad2d_interpolator(                 &
+  call sll_s_initialize_ad2d_interpolator(                 &
     interp_2d_rhs,                                   &
     NUM_CELLS1+1,                                    &
     NUM_CELLS2+1,                                    &
@@ -1467,7 +1467,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  phi => new_scalar_field_2d_discrete(               &
+  phi => sll_f_new_scalar_field_2d_discrete(               &
     "phi_"//ccase,                                   &
     interp_2d,                                       &
     T,                                               &
@@ -1480,7 +1480,7 @@ end subroutine initialize_fields
 
 subroutine delete_things()
 
-  call sll_delete(es)
+  call sll_o_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -1511,16 +1511,16 @@ sll_real64, intent(out) :: te
 integral_solution = 0.0_f64
 integral_exact_solution = 0.0_f64
 
-call sll_set_time_mark(t_reference)
+call sll_s_set_time_mark(t_reference)
 
-call sll_create(       &
+call sll_o_create(       &
   es,                  &
   SPLINE_DEG1,         &
   SPLINE_DEG2,         &
   NUM_CELLS1,          &
   NUM_CELLS2,          &
-  ES_GAUSS_LEGENDRE,   &
-  ES_GAUSS_LEGENDRE,   &
+  sll_p_es_gauss_legendre,   &
+  sll_p_es_gauss_legendre,   &
   bc_eta1_min,         &
   bc_eta1_max,         &
   bc_eta2_min,         &
@@ -1530,7 +1530,7 @@ call sll_create(       &
   ETA2MIN,             &
   ETA2MAX              )
  
-call factorize_mat_es( &
+call sll_s_factorize_mat_es( &
   es,                  &
   a11_field_mat,       &
   a12_field_mat,       &
@@ -1540,19 +1540,19 @@ call factorize_mat_es( &
   b2_field_vect,       &
   c_field              )
 
-ti = sll_time_elapsed_since(t_reference)
+ti = sll_f_time_elapsed_since(t_reference)
 
-call sll_set_time_mark(t_reference)
+call sll_s_set_time_mark(t_reference)
 
 values = 0.0_f64
 call phi%set_field_data(values)
 call phi%update_interpolation_coefficients()
 
-call sll_solve( es, rho, phi)
+call sll_o_solve( es, rho, phi)
 
 !call phi%write_to_file(0)
 
-te = sll_time_elapsed_since(t_reference)
+te = sll_f_time_elapsed_since(t_reference)
 
 do j=1,npts2
   do i=1,npts1

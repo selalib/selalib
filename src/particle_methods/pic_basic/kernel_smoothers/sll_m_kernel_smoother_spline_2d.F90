@@ -9,20 +9,20 @@ module sll_m_kernel_smoother_spline_2d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x
 
   use sll_m_kernel_smoother_base, only: &
-    sll_collocation, &
+    sll_p_collocation, &
     sll_c_kernel_smoother, &
-    sll_galerkin
+    sll_p_galerkin
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   implicit none
 
   public :: &
-       sll_new_smoother_spline_2d, &
+       sll_f_new_smoother_spline_2d, &
        sll_t_kernel_smoother_spline_2d
   
   private
@@ -74,8 +74,8 @@ contains
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - this%spline_degree
-    this%spline_val(1:this%n_span,1) = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
-    this%spline_val(1:this%n_span,2) = uniform_b_splines_at_x(this%spline_degree, xi(2))
+    this%spline_val(1:this%n_span,1) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
+    this%spline_val(1:this%n_span,2) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
 
@@ -127,7 +127,7 @@ contains
 !!$  subroutine accumulate_j_from_klimontovich_spline_2d(this, particle_group,&
 !!$       j_dofs, component, i_weight)
 !!$    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
-!!$    class( sll_particle_group_base), intent(in)     :: particle_group !< particle group
+!!$    class( sll_c_particle_group_base), intent(in)     :: particle_group !< particle group
 !!$    sll_real64, intent(inout)                       :: j_dofs(:) !< spline coefficients ofcomponent \a component accumulated current density
 !!$    sll_int32, intent(in)                           :: component !< component of \a j_dofs to be accumulated.
 !!$    sll_int32, optional             , intent( in ) :: i_weight !< No. of the weight that should be used in the accumulation.
@@ -159,7 +159,7 @@ contains
 !!$       end do
 !!$    end do
 !!$   
-!!$    if (this%smoothing_type == SLL_COLLOCATION) then
+!!$    if (this%smoothing_type == sll_p_collocation) then
 !!$       j_dofs = j_dofs /product(this%delta_x)
 !!$    end if
 !!$
@@ -231,7 +231,7 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  function sll_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
+  function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
     class( sll_t_kernel_smoother_spline_2d), pointer   :: this
     sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
     sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
@@ -262,9 +262,9 @@ contains
     this%n_span = spline_degree + 1
 
     ! Initialize information on smoothing type
-    if (smoothing_type == SLL_COLLOCATION) then
+    if (smoothing_type == sll_p_collocation) then
        this%scaling = 1.0_f64/product(this%delta_x)
-    elseif (smoothing_type == SLL_GALERKIN) then
+    elseif (smoothing_type == sll_p_galerkin) then
        this%scaling = 1.0_f64
     else
        print*, 'Smoothing Type ', smoothing_type, ' not implemented for kernel_smoother_spline_2d.'
@@ -272,7 +272,7 @@ contains
 
     allocate( this%spline_val(this%n_span, 2))
 
-  end function sll_new_smoother_spline_2d
+  end function sll_f_new_smoother_spline_2d
 
   
   !< This function computes the index of a 1D array that stores 2D data in column major ordering. It also takes periodic boundary conditions into account.

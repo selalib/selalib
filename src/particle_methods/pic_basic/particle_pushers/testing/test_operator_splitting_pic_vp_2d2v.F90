@@ -1,4 +1,4 @@
-! TODO: Use input from file to initialize and compare
+! TODO: Use input from file to sll_o_initialize and compare
 
 program test_operator_splitting_pic_vp_2d2v
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -6,32 +6,32 @@ program test_operator_splitting_pic_vp_2d2v
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_kernel_smoother_base, only: &
-    sll_collocation, &
+    sll_p_collocation, &
     sll_c_kernel_smoother
 
   use sll_m_kernel_smoother_spline_2d, only: &
     sll_t_kernel_smoother_spline_2d, &
-    sll_new_smoother_spline_2d
+    sll_f_new_smoother_spline_2d
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
-    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_f_new_hamiltonian_splitting_pic_vp_2d2v, &
     sll_t_operator_splitting_pic_vp_2d2v
 
   use sll_m_particle_group_2d2v, only: &
-    sll_new_particle_group_2d2v, &
-    sll_particle_group_2d2v
+    sll_f_new_particle_group_2d2v, &
+    sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   use sll_m_poisson_2d_fft, only: &
-    new_poisson_2d_fft_solver
+    sll_f_new_poisson_2d_fft_solver
 
   use sll_m_poisson_2d_base, only: &
-    sll_poisson_2d_base
+    sll_c_poisson_2d_base
 
  use sll_m_pic_poisson_base, only : &
        sll_c_pic_poisson
@@ -40,7 +40,7 @@ program test_operator_splitting_pic_vp_2d2v
        sll_f_new_pic_poisson_2d
 
   use sll_m_collective, only : &
-       sll_boot_collective, sll_halt_collective
+       sll_s_boot_collective, sll_s_halt_collective
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -49,7 +49,7 @@ program test_operator_splitting_pic_vp_2d2v
   sll_real64, parameter :: EQV_TOL = 1.0e-14_f64
 
   ! Abstract particle group
-  class(sll_particle_group_base), pointer :: particle_group
+  class(sll_c_particle_group_base), pointer :: particle_group
 
   ! Array for efield
   !sll_real64, pointer :: efield(:,:)
@@ -58,7 +58,7 @@ program test_operator_splitting_pic_vp_2d2v
   class(sll_c_kernel_smoother), pointer :: kernel_smoother
   
   ! Poisson solver
-  class(sll_poisson_2d_base), pointer :: poisson_solver 
+  class(sll_c_poisson_2d_base), pointer :: poisson_solver 
 
   ! PIC Poisson solver
   class(sll_c_pic_poisson), pointer :: solver
@@ -83,12 +83,12 @@ program test_operator_splitting_pic_vp_2d2v
   ! Reference
   sll_real64, allocatable :: particle_info_ref(:,:)
    
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
   ! Set parameters
   n_particles = 2!10
   eta_min = 0.0_f64
-  eta_max = 4.0_f64*sll_pi
+  eta_max = 4.0_f64*sll_p_pi
   num_cells = 10
   delta_t = 0.1_f64
   degree_smoother = 3
@@ -96,12 +96,12 @@ program test_operator_splitting_pic_vp_2d2v
   rnd_seed = 10
   
   ! Initialize
-  particle_group => sll_new_particle_group_2d2v(n_particles, &
+  particle_group => sll_f_new_particle_group_2d2v(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
 
   ! Initial particle information   
   ! Data produce with following call
-  !call sll_particle_initialize_sobol_landau_2d2v(&
+  !call sll_s_particle_initialize_sobol_landau_2d2v(&
   !     particle_group, &
   !     [0.1_f64, 0.5_f64], &
   !     eta_min, &
@@ -112,7 +112,7 @@ program test_operator_splitting_pic_vp_2d2v
   particle_info_ref = 0.0_f64
   particle_info_ref = reshape([   11.780972450961723_f64 ,       5.4977871437821380_f64,       0.78539816339744828_f64,        7.0685834705770345_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        1.5341205443525459_f64,      -0.15731068461017067_f64,        86.251495608834688_f64,        71.662174808595040_f64], [n_particles, 5])
 
-  ! Initialize particles from particle_info_ref
+  ! sll_o_initialize particles from particle_info_ref
   xi = 0.0_f64
   do i_part =1, n_particles
      xi(1:2) = particle_info_ref(i_part, 1:2) 
@@ -125,18 +125,18 @@ program test_operator_splitting_pic_vp_2d2v
 
   domain(:,1) = eta_min
   domain(:,2) = eta_max
-  kernel_smoother => sll_new_smoother_spline_2d(&
+  kernel_smoother => sll_f_new_smoother_spline_2d(&
          domain, num_cells, n_particles, &
-         degree_smoother, SLL_COLLOCATION)
+         degree_smoother, sll_p_collocation)
   
-  poisson_solver => new_poisson_2d_fft_solver( &
+  poisson_solver => sll_f_new_poisson_2d_fft_solver( &
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
 
   solver => sll_f_new_pic_poisson_2d(num_cells, poisson_solver, kernel_smoother)
 
   !SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
-  propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(solver, &
+  propagator => sll_f_new_hamiltonian_splitting_pic_vp_2d2v(solver, &
        particle_group)
 
 
@@ -203,5 +203,6 @@ program test_operator_splitting_pic_vp_2d2v
      stop
   end if
   
-  call sll_halt_collective()
+  call sll_s_halt_collective()
+
 end program test_operator_splitting_pic_vp_2d2v

@@ -6,8 +6,8 @@ module  sll_m_euler_2d_hex
   implicit none
 
   public :: &
-    compute_characteristic_adams2_2d_hex, &
-    compute_characteristic_euler_2d_hex
+    sll_s_compute_characteristic_adams2_2d_hex, &
+    sll_s_compute_characteristic_euler_2d_hex
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -250,7 +250,7 @@ module  sll_m_euler_2d_hex
 !             ! these are not mesh points
 !          else ! these are mesh points
          
-!          call compute_characteristic_euler_2d_hex( &
+!          call sll_s_compute_characteristic_euler_2d_hex( &
 !        input1(i),input2(i),A1,A2,i,j,output1(i,j),output2(i,j),dt,step )
 
 !         !output1(i,j) = input1(i)-dt*A1(i,j) ! euler
@@ -275,7 +275,7 @@ module  sll_m_euler_2d_hex
 
 
 
-  subroutine compute_characteristic_euler_2d_hex( x1,x2,uxn,uyn,i,y1,y2,dt)
+  subroutine sll_s_compute_characteristic_euler_2d_hex( x1,x2,uxn,uyn,i,y1,y2,dt)
 
     sll_real64,dimension(:),intent(in):: uxn, uyn
     sll_real64, intent(in)  :: dt
@@ -286,7 +286,7 @@ module  sll_m_euler_2d_hex
     y1 = x1 - dt*uxn(i)
     y2 = x2 - dt*uyn(i)
 
-  end subroutine compute_characteristic_euler_2d_hex
+  end subroutine sll_s_compute_characteristic_euler_2d_hex
 
   ! subroutine compute_characteristic_verlet_2d_hex( z1,z2,uxn,uyn,dxux,dyux,dxuy,dyuy,i,zz1,zz2,dt, aire, mesh)
 
@@ -373,7 +373,7 @@ module  sll_m_euler_2d_hex
   end subroutine compute_characteristic_leapfrog_2d_hex
 
 
-  subroutine compute_characteristic_adams2_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
+  subroutine sll_s_compute_characteristic_adams2_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
        dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)
     sll_real64,dimension(:),intent(in):: uxn, uyn, uxn_1, uyn_1
     sll_real64,dimension(:),intent(in):: dxuxn,dyuxn,dxuyn,dyuyn
@@ -395,7 +395,7 @@ module  sll_m_euler_2d_hex
     y1 = x1 - dij0
     y2 = x2 - dij1
 
-  end subroutine compute_characteristic_adams2_2d_hex
+  end subroutine sll_s_compute_characteristic_adams2_2d_hex
 
   subroutine compute_characteristic_adams3_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
        uxn_2,uyn_2,dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)

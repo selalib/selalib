@@ -5,31 +5,31 @@ program test_hex_hermite
 #include "sll_working_precision.h"
 
   use sll_m_euler_2d_hex, only: &
-    compute_characteristic_adams2_2d_hex, &
-    compute_characteristic_euler_2d_hex
+    sll_s_compute_characteristic_adams2_2d_hex, &
+    sll_s_compute_characteristic_euler_2d_hex
 
   use sll_m_hex_poisson, only: &
-    compute_hex_fields, &
-    hex_matrix_poisson, &
-    hex_second_terme_poisson
+    sll_s_compute_hex_fields, &
+    sll_s_hex_matrix_poisson, &
+    sll_s_hex_second_terme_poisson
 
   use sll_m_hexagonal_meshes, only: &
-    delete_hex_mesh_2d, &
-    get_cell_vertices_index, &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_s_delete_hex_mesh_2d, &
+    sll_s_get_cell_vertices_index, &
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   use sll_m_interpolation_hex_hermite, only: &
-    der_finite_difference, &
-    hermite_interpolation, &
-    print_method
+    sll_s_der_finite_difference, &
+    sll_s_hermite_interpolation, &
+    sll_s_print_method
 
   use sll_m_pivotbande, only: &
-    factolub_bande, &
-    solvlub_bande
+    sll_s_factolub_bande, &
+    sll_s_solvlub_bande
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -40,7 +40,7 @@ program test_hex_hermite
   ! for any question : prouveur@math.univ-lyon1.fr
   !*************************************************************
 
-  type(sll_hex_mesh_2d), pointer          :: mesh, mesh2
+  type(sll_t_hex_mesh_2d), pointer          :: mesh, mesh2
   sll_int32    :: num_cells, n_points, n_triangle, n_edge ! number of hexagonal cells, number of vertices, triangles and edges in the mesh
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius ! parameters of the mesh
 
@@ -115,7 +115,7 @@ program test_hex_hermite
 
   radius = 14._f64
 
-  call print_method(num_method)
+  call sll_s_print_method(num_method)
 
   open(unit =111,  file="perf", action="write", status="replace")
 
@@ -265,11 +265,11 @@ program test_hex_hermite
      !  Mesh , distribution function & density initialization   
      !*********************************************************
 
-     mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
+     mesh => sll_f_new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
           radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
 
      if  ( num_method == 15 ) then
-        mesh2 => new_hex_mesh_2d( num_cells*2, center_mesh_x1, center_mesh_x2,&
+        mesh2 => sll_f_new_hex_mesh_2d( num_cells*2, center_mesh_x1, center_mesh_x2,&
              radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
      endif
 
@@ -284,10 +284,10 @@ program test_hex_hermite
      call init_distr(rho_tn,rho_center_tn,rho_edge_tn,num_method,mesh)
 
      if ( num_method /= 15 ) then
-        call hex_matrix_poisson( matrix_poisson, mesh,1)
-        call factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
-        call hex_second_terme_poisson( second_term, mesh, rho_tn )
-        call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
+        call sll_s_hex_matrix_poisson( matrix_poisson, mesh,1)
+        call sll_s_factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
+        call sll_s_hex_second_terme_poisson( second_term, mesh, rho_tn )
+        call sll_s_solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
 
         do i = 1, mesh%num_pts_tot    ! need to re-index phi : 
            k1 = mesh%hex_coord(1, i)
@@ -295,17 +295,17 @@ program test_hex_hermite
            call mesh%index_hex_to_global(k1, k2, index_tab)
            phi(i) = phi_interm(index_tab)
         enddo
-        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+        call sll_s_compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
         if ( num_method == 10 ) then
            do i = 1,mesh%num_triangles
               x = mesh%center_cartesian_coord(1,i)
               y = mesh%center_cartesian_coord(2,i)
-              call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
-              ! call hermite_interpolation(i,x,y,uxn,uxn_center&
+              call sll_s_get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+              ! call sll_s_hermite_interpolation(i,x,y,uxn,uxn_center&
               !      ,uxn_edge, uxn_center,mesh,deriv,aire,&
               !      9)
-              ! call hermite_interpolation(i,x,y,uyn,uyn_center&
+              ! call sll_s_hermite_interpolation(i,x,y,uyn,uyn_center&
               !      ,uyn_edge, uyn_center,mesh,deriv,aire,&
               !      9)
               uxn_center(i) = (uxn(i1)+uxn(i2)+uxn(i3))/3._f64
@@ -316,13 +316,13 @@ program test_hex_hermite
 
      if ( num_method == 15 ) then
 
-        call hex_matrix_poisson( matrix_poisson2, mesh2,1)
-        call factolub_bande(matrix_poisson2,l2,u2,n_points2,width_band1_2,width_band2_2)
+        call sll_s_hex_matrix_poisson( matrix_poisson2, mesh2,1)
+        call sll_s_factolub_bande(matrix_poisson2,l2,u2,n_points2,width_band1_2,width_band2_2)
 
         call assemble(rho_tn,rho_edge_tn,rho2,mesh,mesh2)
 
-        call hex_second_terme_poisson( second_term2, mesh2, rho2)
-        call solvlub_bande(l2,u2,phi2_interm,second_term2,n_points2,width_band1_2,width_band2_2)
+        call sll_s_hex_second_terme_poisson( second_term2, mesh2, rho2)
+        call sll_s_solvlub_bande(l2,u2,phi2_interm,second_term2,n_points2,width_band1_2,width_band2_2)
 
         do i = 1, n_points2   ! need to re-index phi : 
            k1 = mesh2%hex_coord(1, i)
@@ -331,7 +331,7 @@ program test_hex_hermite
            phi2(i) = phi2_interm(index_tab)
         enddo
 
-        call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
+        call sll_s_compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
         call deassemble(uxn,uxn_edge,uxn2,mesh,mesh2)
         call deassemble(uyn,uyn_edge,uyn2,mesh,mesh2)
         call deassemble(dxuxn,dxuxn_edge,dxuxn2,mesh,mesh2)
@@ -343,7 +343,7 @@ program test_hex_hermite
 
 
      if (num_method /= 15) then
-        call int2string(0,filenum)
+        call sll_s_int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
         call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
@@ -354,7 +354,7 @@ program test_hex_hermite
            call write_center(mesh,rho_center_tn1,filename)
         endif
      elseif ( num_method == 15 ) then
-        call int2string(0,filenum)
+        call sll_s_int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
         call mesh2%write_field_hex_mesh_xmf(rho2, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
@@ -387,7 +387,7 @@ program test_hex_hermite
         !                     interpolation
         !*********************************************************
 
-        call  der_finite_difference( rho_tn, p, step, mesh, deriv )
+        call  sll_s_der_finite_difference( rho_tn, p, step, mesh, deriv )
 
         do i=1, n_points 
 
@@ -402,11 +402,11 @@ program test_hex_hermite
            if (t < 2*dt) then
 
               ! solving with euler
-              call compute_characteristic_euler_2d_hex( &
+              call sll_s_compute_characteristic_euler_2d_hex( &
                    x,y,uxn,uyn,i,xx,yy,dt )
               
            else 
-              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+              call sll_s_compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
                    dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
            endif
            
@@ -418,7 +418,7 @@ program test_hex_hermite
                    .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
               if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
+                 call sll_s_hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
                       rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
                       num_method)
               else 
@@ -438,7 +438,7 @@ program test_hex_hermite
            !         .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
            !    if ( inside ) then
-           !       call hermite_interpolation(i, xx, yy, rho_tn_1, rho_center_tn_1,&
+           !       call sll_s_hermite_interpolation(i, xx, yy, rho_tn_1, rho_center_tn_1,&
            !            rho_edge_tn_1, rho_tn1, mesh, deriv, aire,& 
            !            num_method)
            !    else 
@@ -449,7 +449,7 @@ program test_hex_hermite
 
            !    ! solving with Adams 2
               
-           !    call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+           !    call sll_s_compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
            !         dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
 
            !    inside = .true.
@@ -460,7 +460,7 @@ program test_hex_hermite
            !         .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
            !    if ( inside ) then
-           !       call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
+           !       call sll_s_hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
            !            rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
            !            num_method)
            !    else 
@@ -480,10 +480,10 @@ program test_hex_hermite
               x = mesh%center_cartesian_coord(1,i)
               y = mesh%center_cartesian_coord(2,i)
               if (t < 2*dt) then
-                 call compute_characteristic_euler_2d_hex( &
+                 call sll_s_compute_characteristic_euler_2d_hex( &
                    x,y,uxn_center,uyn_center,i,xx,yy,dt )
               else
-                 call compute_characteristic_adams2_2d_hex( x,y,uxn_center,uyn_center,uxn_1,uyn_1,&
+                 call sll_s_compute_characteristic_adams2_2d_hex( x,y,uxn_center,uyn_center,uxn_1,uyn_1,&
                    dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
               endif
 
@@ -495,7 +495,7 @@ program test_hex_hermite
               if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
               if ( inside ) then
-                 call hermite_interpolation(i, x, y, rho_tn, rho_center_tn,&
+                 call sll_s_hermite_interpolation(i, x, y, rho_tn, rho_center_tn,&
                       rho_edge_tn, rho_center_tn1, mesh, deriv, aire,& 
                       num_method)
               else 
@@ -516,10 +516,10 @@ program test_hex_hermite
               y = mesh%edge_center_cartesian_coord(2,i) 
               
               if (t < 2*dt) then
-                 call compute_characteristic_euler_2d_hex( &
+                 call sll_s_compute_characteristic_euler_2d_hex( &
                       x,y,uxn_edge,uyn_edge,i,xx,yy,dt )
               else
-                 call compute_characteristic_adams2_2d_hex( x,y,uxn_edge,uyn_edge,uxn_1_edge,uyn_1_edge,&
+                 call sll_s_compute_characteristic_adams2_2d_hex( x,y,uxn_edge,uyn_edge,uxn_1_edge,uyn_1_edge,&
                       dxuxn_edge,dyuxn_edge,dxuyn_edge,dyuyn_edge,i,xx,yy,dt)
               endif
 
@@ -532,7 +532,7 @@ program test_hex_hermite
               if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
               if ( inside ) then
-                 call hermite_interpolation(i,xx,yy,rho_tn,rho_center_tn&
+                 call sll_s_hermite_interpolation(i,xx,yy,rho_tn,rho_center_tn&
                       ,rho_edge_tn, rho_edge_tn1,mesh,deriv,aire,&
                       num_method)
               else 
@@ -572,9 +572,9 @@ program test_hex_hermite
 
 
         if ( num_method /= 15 ) then
-           call hex_second_terme_poisson( second_term, mesh, rho_tn )
+           call sll_s_hex_second_terme_poisson( second_term, mesh, rho_tn )
 
-           call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
+           call sll_s_solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
 
            do i = 1, mesh%num_pts_tot    ! need to re-index phi : 
               k1 = mesh%hex_coord(1, i)
@@ -583,17 +583,17 @@ program test_hex_hermite
               phi(i) = phi_interm(index_tab)
            enddo
 
-           call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+           call sll_s_compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
            if ( num_method == 10 ) then
               do i = 1,mesh%num_triangles
                  x = mesh%center_cartesian_coord(1,i)
                  y = mesh%center_cartesian_coord(2,i)
-                 call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
-                 ! call hermite_interpolation(i,x,y,uxn,uxn_center&
+                 call sll_s_get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+                 ! call sll_s_hermite_interpolation(i,x,y,uxn,uxn_center&
                  !      ,uxn_edge, uxn_center,mesh,deriv,aire,&
                  !      9)
-                 ! call hermite_interpolation(i,x,y,uyn,uyn_center&
+                 ! call sll_s_hermite_interpolation(i,x,y,uyn,uyn_center&
                  !      ,uyn_edge, uyn_center,mesh,deriv,aire,&
                  !      9)
                  uxn_center(i) = (uxn(i1)+uxn(i2)+uxn(i3))/3._f64
@@ -604,8 +604,8 @@ program test_hex_hermite
 
         if ( num_method == 15 ) then
            call assemble(rho_tn,rho_edge_tn,rho2,mesh,mesh2)
-           call hex_second_terme_poisson( second_term2, mesh2, rho2)
-           call solvlub_bande(l2,u2,phi2_interm,second_term2,n_points2,width_band1_2,width_band2_2)
+           call sll_s_hex_second_terme_poisson( second_term2, mesh2, rho2)
+           call sll_s_solvlub_bande(l2,u2,phi2_interm,second_term2,n_points2,width_band1_2,width_band2_2)
 
            do i = 1, n_points2  ! need to re-index phi : 
               k1 = mesh2%hex_coord(1, i)
@@ -613,7 +613,7 @@ program test_hex_hermite
               call mesh2%index_hex_to_global(k1, k2, index_tab)
               phi2(i) = phi2_interm(index_tab)
            enddo
-           call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
+           call sll_s_compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
 
            call deassemble(uxn,uxn_edge,uxn2,mesh,mesh2)
            call deassemble(uyn,uyn_edge,uyn2,mesh,mesh2)
@@ -634,7 +634,7 @@ program test_hex_hermite
         endif
 
         if ( num_method /= 15 .and.count == 10.and.nloops<10000) then
-           call int2string(nloops,filenum)
+           call sll_s_int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
            call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
@@ -646,7 +646,7 @@ program test_hex_hermite
               call write_center(mesh,rho_center_tn1,filename)
            endif
         elseif ( num_method == 15 .and. count == 10.and.nloops<10000 ) then
-           call int2string(nloops,filenum)
+           call sll_s_int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
            call mesh2%write_field_hex_mesh_xmf( rho2, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
@@ -813,8 +813,8 @@ program test_hex_hermite
     write(111,*) num_cells, mesh%num_pts_tot, dt, cfl, t_end - t_init,&
                nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
 
-     call delete_hex_mesh_2d( mesh )
-     if  ( num_method == 15 ) call delete_hex_mesh_2d( mesh2 )
+     call sll_s_delete_hex_mesh_2d( mesh )
+     if  ( num_method == 15 ) call sll_s_delete_hex_mesh_2d( mesh2 )
 
 
 
@@ -827,7 +827,7 @@ contains
   !*********initialization**************
 
   subroutine init_distr(f_tn,center_values_tn,edge_values_tn,num_method,mesh)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: f_tn, center_values_tn, edge_values_tn
     sll_int32  :: num_method
     sll_real64 :: x, y, epsilon = 0.001_f64
@@ -890,7 +890,7 @@ contains
   ! writing quantities of interest such as the mass, the norms etc ..
 
   subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop, num_method)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:) :: rho,uxn,uyn
     sll_real64,intent(in)   :: t
     sll_int32 ,intent(in)   :: nloop,num_method
@@ -906,7 +906,7 @@ contains
     norm_l2   = 0._f64
     norm_linf = 0._f64
 
-    call int2string(mesh%num_cells,filenum)
+    call sll_s_int2string(mesh%num_cells,filenum)
     filename  = "hex_diag_"//trim(filenum)//".dat"
     if (nloop == 0) then
        open(unit = 11, file=filename, action="write", status="replace")
@@ -941,7 +941,7 @@ contains
   ! the vertices into one common array rho2
 
   subroutine assemble(rho,rho_edge,rho2,mesh,mesh2)
-    type(sll_hex_mesh_2d), pointer :: mesh,mesh2
+    type(sll_t_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               :: i,h1,h2,m1,m2,k1,k2,ne,ns, index_tab
     !sll_real64              :: eps = 1.d-6
@@ -987,7 +987,7 @@ contains
   ! the vertices into 2 separate arrays
 
   subroutine deassemble(rho,rho_edge,rho2,mesh,mesh2)
-    type(sll_hex_mesh_2d), pointer :: mesh,mesh2
+    type(sll_t_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               ::i,h1,h2,m1,m2,k1,k2,ne,ns
     !sll_real64              :: eps = 1.d-6
@@ -1031,7 +1031,7 @@ contains
   ! special routine to write the values at the center of the triangles 
 
   subroutine write_center(mesh,rho,name)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: rho
     sll_int32                      :: i
     character(len = 50)            :: name

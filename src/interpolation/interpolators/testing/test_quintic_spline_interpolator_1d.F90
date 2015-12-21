@@ -4,16 +4,16 @@ program quintic_spline_interpolator_1d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet
+    sll_p_dirichlet
 
   use sll_m_quintic_spline_interpolator_1d, only: &
-    set_values_at_boundary, &
-    sll_quintic_spline_interpolator_1d
+    sll_s_set_values_at_boundary, &
+    sll_t_quintic_spline_interpolator_1d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_quintic_spline_interpolator_1d) :: spline
+type(sll_t_quintic_spline_interpolator_1d) :: spline
 
 sll_real64                            :: error
 sll_real64, allocatable, dimension(:) :: point
@@ -43,9 +43,9 @@ do i=1,n
 end do
 
 print*, 'Quintic spline interpolation'
-call spline%initialize(n, x_min, x_max, SLL_DIRICHLET, SLL_DIRICHLET )
+call spline%initialize(n, x_min, x_max, sll_p_dirichlet, sll_p_dirichlet )
 
-call set_values_at_boundary( spline,     &
+call sll_s_set_values_at_boundary( spline,     &
                              f( x_min),  &
                              f( x_max),  &
                              df(x_min),  &

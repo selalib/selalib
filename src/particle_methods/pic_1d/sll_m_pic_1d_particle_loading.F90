@@ -20,61 +20,61 @@ module sll_m_pic_1d_particle_loading
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_collective, only: &
-    sll_collective_barrier, &
-    sll_collective_t, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_s_collective_barrier, &
+    sll_t_collective_t, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_e_charge, &
-    sll_e_mass, &
-    sll_epsilon_0, &
-    sll_kb, &
-    sll_kx, &
-    sll_pi, &
-    sll_proton_mass
+    sll_p_charge, &
+    sll_p_mass, &
+    sll_p_epsilon_0, &
+    sll_p_kb, &
+    sll_p_kx, &
+    sll_p_pi, &
+    sll_p_proton_mass
 
   use sll_m_particle_1d_description, only: &
-    sll_particle_1d_group
+    sll_t_particle_1d_group
 
   use sll_m_prob, only: &
-    normal_cdf_inv
+    sll_s_normal_cdf_inv
 
   use sll_m_sobol, only: &
-    i8_sobol_generate
+    sll_s_i8_sobol_generate
 
   implicit none
 
   public :: &
-    control_variate_xv, &
-    enable_deltaf, &
-    load_particle_species, &
-    num_species, &
-    set_loading_parameters, &
-    sll_initialize_intrinsic_mpi_random, &
-    sll_pic1d_ensure_boundary_conditions, &
-    sll_pic1d_ensure_boundary_conditions_species, &
-    sll_pic1d_ensure_periodicity, &
-    sll_pic1d_testcase_bumpontail, &
-    sll_pic1d_testcase_ionbeam, &
-    sll_pic1d_testcase_ionbeam_electrons, &
-    sll_pic1d_testcase_landau, &
-    sll_pic1d_testcase_quiet
+    sll_f_control_variate_xv, &
+    sll_v_enable_deltaf, &
+    sll_s_load_particle_species, &
+    sll_v_num_species, &
+    sll_s_set_loading_parameters, &
+    sll_s_initialize_intrinsic_mpi_random, &
+    sll_s_pic1d_ensure_boundary_conditions, &
+    sll_s_pic1d_ensure_boundary_conditions_species, &
+    sll_f_pic1d_ensure_periodicity, &
+    sll_p_pic1d_testcase_bumpontail, &
+    sll_p_pic1d_testcase_ionbeam, &
+    sll_p_pic1d_testcase_ionbeam_electrons, &
+    sll_p_pic1d_testcase_landau, &
+    sll_p_pic1d_testcase_quiet
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     !Definitions for different loadings
-    sll_int32, parameter :: SLL_PIC1D_TESTCASE_LANDAU=1
-    sll_int32, parameter :: SLL_PIC1D_TESTCASE_BUMPONTAIL=2
+    sll_int32, parameter :: sll_p_pic1d_testcase_landau=1
+    sll_int32, parameter :: sll_p_pic1d_testcase_bumpontail=2
     sll_int32, parameter :: SLL_PIC1D_TESTCASE_TWOSTREAM=3
-    sll_int32, parameter :: SLL_PIC1D_TESTCASE_IONBEAM=4
-    sll_int32, parameter :: SLL_PIC1D_TESTCASE_QUIET=5
-    sll_int32, parameter :: SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS=6
+    sll_int32, parameter :: sll_p_pic1d_testcase_ionbeam=4
+    sll_int32, parameter :: sll_p_pic1d_testcase_quiet=5
+    sll_int32, parameter :: sll_p_pic1d_testcase_ionbeam_electrons=6
 
     !Definitions for different Loaders
     sll_int32, parameter :: SLL_PIC1D_SAMPLER_SOBOL= 1
@@ -92,15 +92,15 @@ module sll_m_pic_1d_particle_loading
     sll_int32, parameter :: SLL_PIC1D_LOADER_BUMPONTAIL   = 2**3
     sll_int32, parameter :: SLL_PIC1D_SAMPLING_INVERSE   = 2**4
 
-    !    sll_real64, parameter :: sll_kb = 1.3806488D-23
-    !    sll_real64, parameter :: PLASMA_FREQUENCY=sqrt(sll_kb*T/sll_e_mass)
+    !    sll_real64, parameter :: sll_p_kb = 1.3806488D-23
+    !    sll_real64, parameter :: PLASMA_FREQUENCY=sqrt(sll_p_kb*T/sll_p_mass)
 
     integer :: ierr
     sll_int32 :: coll_rank, coll_size
 
     !Parameters for different loading types
-    !sll_int32 ::  pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
-    sll_int32 :: num_species
+    !sll_int32 ::  pic1d_testcase = sll_p_pic1d_testcase_landau
+    sll_int32 :: sll_v_num_species
     sll_real64 :: landau_alpha=0.01_f64
     sll_real64 :: landau_mode=0.4_f64
 
@@ -109,10 +109,10 @@ module sll_m_pic_1d_particle_loading
     sll_real64 :: bumpontail_v0=4.0_f64
     sll_real64 :: bumpontail_sigma=0.5_f64
     sll_real64 :: plasma_size=0.25_f64 !Relative size of plasma
-    !sll_real64 :: sll_pic_boundary_condition=real(SLL_PERIODIC,f64)
+    !sll_real64 :: sll_pic_boundary_condition=real(sll_p_periodic,f64)
 
     sll_int32 :: numberof_streams=1
-    logical  :: enable_deltaf=.FALSE.
+    logical  :: sll_v_enable_deltaf=.FALSE.
 
     sll_real64 :: interval_length
     sll_real64 :: interval_a, interval_b
@@ -168,7 +168,7 @@ module sll_m_pic_1d_particle_loading
 
 contains
 
-  subroutine set_loading_parameters( landau_alpha_user, landau_mode_user, numberof_streams_user )
+  subroutine sll_s_set_loading_parameters( landau_alpha_user, landau_mode_user, numberof_streams_user )
     sll_real64, intent(in) :: landau_alpha_user
     sll_real64, intent(in) :: landau_mode_user
     sll_int32 , intent(in) :: numberof_streams_user
@@ -177,9 +177,9 @@ contains
     landau_mode      = landau_mode_user
     landau_alpha     = landau_alpha_user
     numberof_streams = numberof_streams_user
-    !enable_deltaf=enable_deltaf_user
+    !sll_v_enable_deltaf=enable_deltaf_user
 
-  end subroutine set_loading_parameters
+  end subroutine sll_s_set_loading_parameters
 
   function gaussianrnd( mu, sigma ) result(x)
     sll_real64, intent(in) :: mu    !< mean
@@ -196,7 +196,7 @@ contains
     call random_number(u2)
 
     r   = sqrt(-2.0_f64*log(u1))
-    phi = sll_kx*u2
+    phi = sll_p_kx*u2
     x   = r*cos(phi)
     y   = r*sin(phi)
 
@@ -210,7 +210,7 @@ contains
 !    r1= 1.0-r1
 !    r1 = -alog(real(r1))
 !    r1 = sqrt(2.0*r1)
-!    r2 = 2.0*sll_pi*r2
+!    r2 = 2.0*sll_p_pi*r2
 !
 !    x  = r1*cos(r2)- mu
 !    y  = r1*sin(r2) -mu
@@ -239,7 +239,7 @@ contains
 !        R1= 1.0_f64-R1
 !        R1 = -ALOG(real(R1))
 !        R1 = SQRT(2.0*R1)
-!        R2 = 2.0*sll_pi*R2
+!        R2 = 2.0*sll_p_pi*R2
 !        gaussian_random_numbers(2*idx-1)= R1*COS(R2)- mu
 !        gaussian_random_numbers(2*idx) = R1*SIN(R2) -mu
 !    enddo
@@ -270,7 +270,7 @@ contains
         r1= 1.0_f64-r1
         r1 = -log(real(r1,f64))
         r1 = sqrt(2.0*r1)
-        r2 = 2.0*sll_pi*r2
+        r2 = 2.0*sll_p_pi*r2
         gaussian_random_numbers(2*idx-1)= r1*cos(r2)- mu
         gaussian_random_numbers(2*idx) = r1*sin(r2) -mu
     end do
@@ -285,7 +285,7 @@ contains
     sll_real64 :: fx(size(x))
     !integer :: idx
 
-    fx = (1.0_f64/(sqrt(2.0_f64*sll_pi)*sigma)) * &
+    fx = (1.0_f64/(sqrt(2.0_f64*sll_p_pi)*sigma)) * &
          exp( -(x-mu)**2/(2.0_f64*sigma**2) )
   end function sll_normal_prb_kernel
 
@@ -335,7 +335,7 @@ contains
     SLL_ASSERT(sigma>0.0_f64)
     do idx=1,N
         if (uniformrandom(idx)==0.0_f64) uniformrandom(idx)=0.00001_f64
-        call normal_cdf_inv( uniformrandom(idx), &
+        call sll_s_normal_cdf_inv( uniformrandom(idx), &
             0.0_f64 , 1.0_f64, normal(idx))
     end do
 
@@ -354,7 +354,7 @@ contains
     sll_real64 :: fx(size(x))
     !integer :: idx
 
-    fx = (1.0_f64/(sqrt(2.0_f64*sll_pi)*sigma)) * &
+    fx = (1.0_f64/(sqrt(2.0_f64*sll_p_pi)*sigma)) * &
       exp( (x-mu)/(2.0_f64*sigma**2))*(1.0_f64 + alpha*cos(k*x))
 
   end function sll_normal_landaudamp_prb_kernel
@@ -371,12 +371,12 @@ contains
     sll_int64  :: idx, ndx
     sll_real64 :: scale_par
 
-    scale_par=sqrt(sll_kb*T/m)
+    scale_par=sqrt(sll_p_kb*T/m)
 
     ndx = int(size(velocity),i64)
     forall (idx=1:ndx)
-        prob(idx)=(sqrt(2*sll_pi )*scale_par) *  &
-            4.0_f64*sll_pi* velocity(idx)**2 &
+        prob(idx)=(sqrt(2*sll_p_pi )*scale_par) *  &
+            4.0_f64*sll_p_pi* velocity(idx)**2 &
             *exp(-  velocity(idx)**2 /(2*scale_par**2))
     end forall
   end function sll_maxwellboltzmann1d
@@ -447,7 +447,7 @@ contains
     do stream_idx=1,numberofstreams
         do i=(nparticles)*(stream_idx-1)/numberofstreams +1, (nparticles)*(stream_idx)/numberofstreams
             if (uniform_random_numbers(i)==0.0_f64) uniform_random_numbers(i)=0.00001_f64
-            call normal_cdf_inv( uniform_random_numbers(i) , 0.0_f64 ,&
+            call sll_s_normal_cdf_inv( uniform_random_numbers(i) , 0.0_f64 ,&
                 stream_widths(stream_idx) , particlespeed(i) )
             particlespeed(i) = particlespeed(i) +stream_offsets(stream_idx)
         enddo
@@ -483,13 +483,13 @@ contains
     percentage=1.0_f64/(1.0_f64+a)
     do i=1,floor(percentage*np*1.0_f64  )
         if (uniform_random_numbers(i)==0.0_f64) uniform_random_numbers(i)=0.00001_f64
-        call normal_cdf_inv( uniform_random_numbers(i) , 0.0_f64 ,&
+        call sll_s_normal_cdf_inv( uniform_random_numbers(i) , 0.0_f64 ,&
             1.0_f64 , particlespeed(i) )
     enddo
 
     do i=floor(percentage*np*1.0_f64  )+1,np
         if (uniform_random_numbers(i)==0.0_f64) uniform_random_numbers(i)=0.00001_f64
-        call normal_cdf_inv( uniform_random_numbers(i) , v0,&
+        call sll_s_normal_cdf_inv( uniform_random_numbers(i) , v0,&
             sigma , particlespeed(i) )
     enddo
 
@@ -538,7 +538,7 @@ contains
 !
 !    !!sll_real64 :: landau_damping=0.01_f64
 !    !Plasma temperature in Kelvin 150000273.15
-!    !maxwellian_a=sqrt(sll_kb*150000273.15_f64/sll_e_mass)
+!    !maxwellian_a=sqrt(sll_p_kb*150000273.15_f64/sll_p_mass)
 !    !funlandau(x)=cos(x)
 !
 !    interval_a=interval_a_user
@@ -551,20 +551,20 @@ contains
 !    sigma=1.0_f64
 !
 !    !!!!!!!!!REMOVE THIS FROM HERE!!!! LATER WE HAVE ONE PIC MODULE
-!    coll_rank = sll_get_collective_rank( sll_world_collective )
-!    coll_size = sll_get_collective_size( sll_world_collective )
-!    call sll_collective_barrier(sll_world_collective)
+!    coll_rank = sll_f_get_collective_rank( sll_v_world_collective )
+!    coll_size = sll_f_get_collective_size( sll_v_world_collective )
+!    call sll_s_collective_barrier(sll_v_world_collective)
 !
 !    selectcase (pic1d_testcase)
 !        !######################################################################
-!        case(SLL_PIC1D_TESTCASE_LANDAU)
+!        case(sll_p_pic1d_testcase_landau)
 !            !Generate random numbers
 !            SLL_CLEAR_ALLOCATE(phasespace(1:3,1:nparticles),ierr)
-!            call i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
+!            call sll_s_i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
 !                particle_qm=-1.0_f64 !Electrons
 !
 !            particleweight_constant=0
-!            if (enable_deltaf .eqv. .TRUE.) then
+!            if (sll_v_enable_deltaf .eqv. .TRUE.) then
 !                !Landau damping
 !                !Load deltaf and set weights
 !
@@ -586,12 +586,12 @@ contains
 !                control_variate_x=>sll_pic_1d_landaudamp_PDF
 !                sampling_dist_x=>sll_pic_1d_landaudamp_PDF
 !                call sll_pic1d_load_landau(landau_alpha,landau_mode, interval_a,interval_b, phasespace(3,:) ,particleposition)
-!                particleposition=sll_pic1d_ensure_periodicity(particleposition, interval_a, interval_b)
+!                particleposition=sll_f_pic1d_ensure_periodicity(particleposition, interval_a, interval_b)
 !                particleweight_constant=initial_dist_x(particleposition)/sampling_dist_x(particleposition)
 !
 !                particleweight_constant=initial_dist_xv(particleposition,particlespeed)/sampling_dist_xv(particleposition,particlespeed)
 !                particleweight=particleweight_constant                             &
-    !                                -control_variate_xv(particleposition,particlespeed) /&
+    !                                -sll_f_control_variate_xv(particleposition,particlespeed) /&
     !                                  sampling_dist_xv(particleposition,particlespeed)
 !
 !
@@ -638,17 +638,17 @@ contains
 !                !where (particleposition==0) particleweight=1.0_f64
 !                !particleposition=phasespace(3,:)*(interval_b-interval_a)+ interval_a
 !
-!                ! particleposition=sll_pic1d_ensure_periodicity(particleposition, interval_a, interval_b)
+!                ! particleposition=sll_f_pic1d_ensure_periodicity(particleposition, interval_a, interval_b)
 !
 !
 !                print *, "DELTA-F LOADING DONE"
 !
 !                !project from 0-1 on actual interval
 !                steadyparticleposition=interval_a + phasespace(2,:)*(interval_b-interval_a)
-!                steadyparticleposition=sll_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
+!                steadyparticleposition=sll_f_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
 !            else
 !                steadyparticleposition=interval_a + phasespace(2,:)*(interval_b-interval_a)
-!                steadyparticleposition=sll_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
+!                steadyparticleposition=sll_f_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
 !
 !                if  (landau_alpha/=0) then
 !                    call sll_pic1d_load_landau(landau_alpha,landau_mode, interval_a,interval_b, &
@@ -657,20 +657,20 @@ contains
 !                    particleposition=phasespace(3,:)*(interval_b-interval_a) - interval_a
 !                endif
 !                particleweight=(1.0_f64/(nparticles*coll_size*1.0_f64))
-!                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+!                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
 !
 !                call sll_pic1d_load_stream(phasespace(1,:) , particlespeed, numberof_streams)
 !            endif
 !            SLL_DEALLOCATE_ARRAY(phasespace,ierr)
 !            !######################################################################
-!        case(SLL_PIC1D_TESTCASE_BUMPONTAIL)
+!        case(sll_p_pic1d_testcase_bumpontail)
 !                particle_qm=-1.0_f64 !Electrons
 !
 !            !Generate random numbers
 !            SLL_CLEAR_ALLOCATE(phasespace(1:2,1:nparticles),ierr)
-!            call i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
+!            call sll_s_i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
 !
-!            if (enable_deltaf .eqv. .TRUE.) then
+!            if (sll_v_enable_deltaf .eqv. .TRUE.) then
 !
 !
 !                print *, "DELTA-F NOT IMPLEMENTED YET"
@@ -686,22 +686,22 @@ contains
 !                    particleposition=phasespace(2,:)*(interval_b-interval_a) - interval_a
 !                endif
 !                steadyparticleposition=interval_a + phasespace(2,:)*(interval_b-interval_a)
-!                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
-!                steadyparticleposition=sll_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
+!                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+!                steadyparticleposition=sll_f_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
 !                particleweight=(1.0_f64/(nparticles*coll_size*1.0_f64))
 !            endif
 !            SLL_DEALLOCATE_ARRAY(phasespace,ierr)
 !
 !        !######################################################################
-!        case(SLL_PIC1D_TESTCASE_IONBEAM)
+!        case(sll_p_pic1d_testcase_ionbeam)
 !            !Generate random numbers
 !!            SLL_CLEAR_ALLOCATE(phasespace(1:4,1:nparticles/2),ierr)
-!!            call i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
+!!            call sll_s_i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
 !
 !            SLL_CLEAR_ALLOCATE(phasespace(1:6,1:nparticles/2),ierr)
-!            call i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
+!            call sll_s_i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
 !
-!            if (enable_deltaf .eqv. .TRUE.) then
+!            if (sll_v_enable_deltaf .eqv. .TRUE.) then
 !                print *, "DELTA-F NOT IMPLEMENTED YET"
 !                stop
 !            else
@@ -723,10 +723,10 @@ contains
 !
 !                !Load Slow H+
 !                particlespeed(nparticles/2+1:nparticles)=sll_normal_rnd(0.0_f64, &
-    !                                        sqrt(sll_e_mass/sll_proton_mass ),phasespace(3,:))
+    !                                        sqrt(sll_p_mass/sll_p_proton_mass ),phasespace(3,:))
 !   
 !                particleposition(nparticles/2+1:nparticles)=interval_a + (phasespace(4,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
-!                particle_qm(nparticles/2+1:nparticles)=sll_e_mass/sll_proton_mass
+!                particle_qm(nparticles/2+1:nparticles)=sll_p_mass/sll_p_proton_mass
 !
 !
 !                !Load fast electrons
@@ -740,11 +740,11 @@ contains
 !                idx_up=nparticles/2
 !                particlespeed(idx_low:idx_up  )= sll_normal_rnd(0.0_f64, 1.0_f64,phasespace(5,idx_low:idx_up))
 !                !particleposition(idx_low:idx_up)=interval_a + (phasespace(6,idx_low:idx_up)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
-!                particle_qm(idx_low:idx_up)=-sll_e_mass/sll_proton_mass
+!                particle_qm(idx_low:idx_up)=-sll_p_mass/sll_p_proton_mass
 !                particleposition(idx_low:idx_up)=interval_b
 !                particleweight(idx_low:idx_up)=0
 !
-!                call sll_pic1d_ensure_boundary_conditions(particleposition, particlespeed)
+!                call sll_s_pic1d_ensure_boundary_conditions(particleposition, particlespeed)
 !
 !
 !
@@ -760,26 +760,26 @@ contains
 !!
 !!                !Load Slow H ions
 !!                particlespeed(nparticles/2+1:nparticles)=sll_normal_rnd(0.0_f64, &
-    !!                                        sqrt(sll_e_mass/sll_proton_mass ),phasespace(3,:))
+    !!                                        sqrt(sll_p_mass/sll_p_proton_mass ),phasespace(3,:))
 !!
 !!                particleposition(nparticles/2+1:nparticles)=interval_a + (phasespace(4,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
-!!                particle_qm(nparticles/2+1:nparticles)=sll_e_mass/sll_proton_mass
+!!                particle_qm(nparticles/2+1:nparticles)=sll_p_mass/sll_p_proton_mass
 !!
 !!
-!!                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+!!                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
 !!
 !!                !particleposition=steadyparticleposition
 !!
 !!                particleweight=(2.0_f64/(nparticles*coll_size*1.0_f64))
 !            endif
 !            !######################################################################
-!        case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
+!        case(sll_p_pic1d_testcase_ionbeam_electrons)
 !            !Generate random numbers
 !            SLL_CLEAR_ALLOCATE(phasespace(1:3,1:nparticles),ierr)
-!            call i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
+!            call sll_s_i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
 !                particle_qm=-1.0_f64
 !
-!            if (enable_deltaf .eqv. .TRUE.) then
+!            if (sll_v_enable_deltaf .eqv. .TRUE.) then
 !                print *, "DELTA-F NOT IMPLEMENTED YET"
 !                stop
 !            else
@@ -787,25 +787,25 @@ contains
 !                steadyparticleposition=interval_a + (phasespace(2,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
 !                particleposition=interval_a + (phasespace(3,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
 !
-!                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
-!                steadyparticleposition=sll_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
+!                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+!                steadyparticleposition=sll_f_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
 !                !particleposition=steadyparticleposition
 !                particleweight=(1.0_f64/(nparticles*coll_size*1.0_f64))
 !            endif
 !
 !            !######################################################################
-!        case(SLL_PIC1D_TESTCASE_QUIET)
+!        case(sll_p_pic1d_testcase_quiet)
 !            SLL_CLEAR_ALLOCATE(phasespace(1:2,1:nparticles),ierr)
-!            call i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
+!            call sll_s_i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
 !                particle_qm=-1.0_f64
 !
-!            if (enable_deltaf .eqv. .TRUE.) then
+!            if (sll_v_enable_deltaf .eqv. .TRUE.) then
 !                print *, "DELTA-F NOT IMPLEMENTED YET"
 !                stop
 !            else
 !                call sll_pic1d_load_stream(phasespace(1,:) , particlespeed, numberof_streams)
 !                particleposition=interval_a + phasespace(2,:)*(interval_b-interval_a)
-!                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+!                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
 !                steadyparticleposition =particleposition
 !                particleweight=(1.0_f64/(nparticles*coll_size*1.0_f64))
 !
@@ -826,7 +826,7 @@ contains
 !
 !
 !    !particleweight=1.0_f64
-!    !    particleweight=sll_normal_landaudamp_prb_kernel(mu, sigma, 0.01_f64, sll_pi*2*0.1, particlespeed)/&
+!    !    particleweight=sll_normal_landaudamp_prb_kernel(mu, sigma, 0.01_f64, sll_p_pi*2*0.1, particlespeed)/&
     !        !                                sll_normal_prb_ kernel(mu, sigma, particlespeed)
 !
 !    !call random_number(steadyparticleposition);
@@ -860,7 +860,7 @@ contains
 !
 !    !
 !    !    do i=2,nparticles
-!    !        call normal_cdf_inv( phasespace(1,i) , 0.0_f64 , maxwellian_a , particlespeed(i) )
+!    !        call sll_s_normal_cdf_inv( phasespace(1,i) , 0.0_f64 , maxwellian_a , particlespeed(i) )
 !    !    enddo
 !    !call sll_pic1d_load_stream(phasespace(1,:) , particlespeed, 2,  (/ -5.0_f64,5.0_f64 /))
 !
@@ -896,14 +896,14 @@ contains
 !end subroutine load_particles
 
 
-  subroutine sll_initialize_intrinsic_mpi_random( collective )
-    type(sll_collective_t), pointer :: collective
+  subroutine sll_s_initialize_intrinsic_mpi_random( collective )
+    type(sll_t_collective_t), pointer :: collective
 
     sll_int32 :: coll_rank
     sll_int32 :: seed_size, idx
     sll_int32, allocatable :: seed(:)
 
-    coll_rank = sll_get_collective_rank( collective )
+    coll_rank = sll_f_get_collective_rank( collective )
 
     call random_seed(size=seed_size)  ! output: the size of the seed array
     allocate(seed(seed_size))
@@ -912,19 +912,19 @@ contains
     end do
     call random_seed(put=seed)
 
-    call sll_collective_barrier(collective)
+    call sll_s_collective_barrier(collective)
 
-  end subroutine sll_initialize_intrinsic_mpi_random
+  end subroutine sll_s_initialize_intrinsic_mpi_random
 
 
-  subroutine load_particle_species( nparticles, &
+  subroutine sll_s_load_particle_species( nparticles, &
       interval_a_user, interval_b_user, particle_species, pic1d_testcase )
     !    steadyparticleposition, &
     !        particleposition, particlespeed, particleweight, particleweight_constant, particle_qm)
     sll_int32 ,                  intent(in)    :: nparticles
     sll_real64,                  intent(in)    :: interval_a_user
     sll_real64,                  intent(in)    :: interval_b_user
-    type(sll_particle_1d_group), intent(inout) :: particle_species(10)
+    type(sll_t_particle_1d_group), intent(inout) :: particle_species(10)
     sll_int32,                   intent(in)    :: pic1d_testcase
 
     sll_int32 :: idx
@@ -944,7 +944,7 @@ contains
 
     !!sll_real64 :: landau_damping=0.01_f64
     !Plasma temperature in Kelvin 150000273.15
-    !maxwellian_a=sqrt(sll_kb*150000273.15_f64/sll_e_mass)
+    !maxwellian_a=sqrt(sll_p_kb*150000273.15_f64/sll_p_mass)
 
     interval_a=interval_a_user
     interval_b=interval_b_user
@@ -956,28 +956,28 @@ contains
     sigma=1.0_f64
 
     !!!!!!!!!REMOVE THIS FROM HERE!!!! LATER WE HAVE ONE PIC MODULE
-    coll_rank = sll_get_collective_rank( sll_world_collective )
-    coll_size = sll_get_collective_size( sll_world_collective )
-    call sll_collective_barrier(sll_world_collective)
+    coll_rank = sll_f_get_collective_rank( sll_v_world_collective )
+    coll_size = sll_f_get_collective_size( sll_v_world_collective )
+    call sll_s_collective_barrier(sll_v_world_collective)
 
-    num_species=0
+    sll_v_num_species=0
 
     selectcase (pic1d_testcase)
         !######################################################################
-        case(SLL_PIC1D_TESTCASE_LANDAU)
-            num_species=1
+        case(sll_p_pic1d_testcase_landau)
+            sll_v_num_species=1
             SLL_ALLOCATE( particle_species(1)%particle(1:nparticles),ierr)
             SLL_ALLOCATE( particle_species(2)%particle(1:nparticles),ierr)
 
             !Generate random numbers
             SLL_CLEAR_ALLOCATE(phasespace(1:3,1:nparticles),ierr)
-            !call i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
+            !call sll_s_i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
             call random_number(phasespace(1:3,1:nparticles))
             particle_species(1)%qm=-1.0_f64 !Electrons
             particle_species(2)%qm=1.0_f64 !Ions
 
             particle_species(1)%particle%weight_const=0.0_f64
-            if (enable_deltaf .eqv. .TRUE.) then
+            if (sll_v_enable_deltaf .eqv. .TRUE.) then
                 !Landau damping
                 !Load deltaf and set weights
 
@@ -1000,12 +1000,12 @@ contains
                     particle_species(1)%particle%dx)
 
 
-                particle_species(1)%particle%dx=sll_pic1d_ensure_periodicity(particle_species(1)%particle%dx, interval_a, interval_b)
+                particle_species(1)%particle%dx=sll_f_pic1d_ensure_periodicity(particle_species(1)%particle%dx, interval_a, interval_b)
                 particle_species(1)%particle%weight=initial_dist_x(particle_species(1)%particle%dx)/sampling_dist_x(particle_species(1)%particle%dx)
 
                 particle_species(1)%particle%weight_const=initial_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)/sampling_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)
                 particle_species(1)%particle%weight=particle_species(1)%particle%weight_const                             &
-                    -control_variate_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx) /&
+                    -sll_f_control_variate_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx) /&
                     sampling_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)
 
 
@@ -1017,10 +1017,10 @@ contains
 
                 !project from 0-1 on actual interval
                 particle_species(2)%particle%dx=interval_a + phasespace(2,:)*(interval_b-interval_a)
-                particle_species(2)%particle%dx=sll_pic1d_ensure_periodicity(   particle_species(2)%particle%dx,  interval_a, interval_b)
+                particle_species(2)%particle%dx=sll_f_pic1d_ensure_periodicity(   particle_species(2)%particle%dx,  interval_a, interval_b)
             else
                 particle_species(2)%particle%dx=interval_a + phasespace(2,:)*(interval_b-interval_a)
-                particle_species(2)%particle%dx=sll_pic1d_ensure_periodicity(   particle_species(2)%particle%dx,  interval_a, interval_b)
+                particle_species(2)%particle%dx=sll_f_pic1d_ensure_periodicity(   particle_species(2)%particle%dx,  interval_a, interval_b)
 
                 if  (landau_alpha/=0) then
                     call sll_pic1d_load_landau(landau_alpha,landau_mode, interval_a,interval_b, &
@@ -1029,25 +1029,25 @@ contains
                     particle_species(1)%particle%dx=phasespace(3,:)*(interval_b-interval_a) - interval_a
                 endif
                 particle_species(1)%particle%weight=(1.0_f64/(nparticles*coll_size*1.0_f64))
-                particle_species(1)%particle%dx=sll_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
+                particle_species(1)%particle%dx=sll_f_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
 
                 call sll_pic1d_load_stream(phasespace(1,:) , particle_species(1)%particle%vx, numberof_streams)
             endif
             SLL_DEALLOCATE_ARRAY(phasespace,ierr)
             !######################################################################
-        case(SLL_PIC1D_TESTCASE_BUMPONTAIL)
+        case(sll_p_pic1d_testcase_bumpontail)
             particle_species(1)%qm=-1.0_f64 !Electrons
             !Generate random numbers
-            num_species=1
+            sll_v_num_species=1
             SLL_ALLOCATE( particle_species(1)%particle(1:nparticles),ierr)
 
             !Generate random numbers
             SLL_CLEAR_ALLOCATE(phasespace(1:2,1:nparticles),ierr)
-            call i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
+            call sll_s_i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
 
 
             particle_species(1)%particle%weight_const=0.0_f64
-            if (enable_deltaf .eqv. .TRUE.) then
+            if (sll_v_enable_deltaf .eqv. .TRUE.) then
 
                 call sll_pic1d_load_bumpontail_velocity(phasespace(1,:)  , particle_species(1)%particle%vx, &
                     bumpontail_a, bumpontail_v0  ,bumpontail_sigma)
@@ -1067,13 +1067,13 @@ contains
                 else
                     particle_species(1)%particle%dx=phasespace(2,:)*(interval_b-interval_a) - interval_a
                 endif
-                particle_species(1)%particle%dx=sll_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
+                particle_species(1)%particle%dx=sll_f_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
 
                 particle_species(1)%particle%weight=initial_dist_x(particle_species(1)%particle%dx)/sampling_dist_x(particle_species(1)%particle%dx)
 
                 particle_species(1)%particle%weight_const=initial_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)/sampling_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)
                 particle_species(1)%particle%weight=particle_species(1)%particle%weight_const                             &
-                    -control_variate_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx) /&
+                    -sll_f_control_variate_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx) /&
                     sampling_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)
 
 
@@ -1091,7 +1091,7 @@ contains
                 else
                     particle_species(1)%particle%dx=phasespace(2,:)*(interval_b-interval_a) - interval_a
                 endif
-                particle_species(1)%particle%dx=sll_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
+                particle_species(1)%particle%dx=sll_f_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
 
 
                 particle_species(1)%particle%weight=(1.0_f64/(nparticles*coll_size*1.0_f64))
@@ -1099,16 +1099,16 @@ contains
             SLL_DEALLOCATE_ARRAY(phasespace,ierr)
 
             !######################################################################
-        case(SLL_PIC1D_TESTCASE_IONBEAM)
+        case(sll_p_pic1d_testcase_ionbeam)
             !Generate random numbers
             !            SLL_CLEAR_ALLOCATE(phasespace(1:4,1:nparticles/2),ierr)
-            !            call i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
+            !            call sll_s_i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
 
             SLL_CLEAR_ALLOCATE(phasespace(1:6,1:nparticles/2),ierr)
-            call i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
-            num_species=3
+            call sll_s_i8_sobol_generate ( 6_f64, nparticles/2, coll_rank*(nparticles/2), phasespace )
+            sll_v_num_species=3
 
-            if (enable_deltaf .eqv. .TRUE.) then
+            if (sll_v_enable_deltaf .eqv. .TRUE.) then
                 print *, "DELTA-F NOT IMPLEMENTED YET"
                 stop
             else
@@ -1133,7 +1133,7 @@ contains
                     hplus_temp,phasespace(3,:))
 
                 particle_species(1)%particle%dx=interval_a + (phasespace(4,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
-                particle_species(1)%qm=sll_e_mass/sll_proton_mass
+                particle_species(1)%qm=sll_p_mass/sll_p_proton_mass
                 particle_species(1)%particle%weight=(2.0_f64/(nparticles*coll_size*1.0_f64))
 
 
@@ -1153,24 +1153,24 @@ contains
 
                 particle_species(3)%particle%vx= sll_normal_rnd(0.0_f64, hminus_temp,phasespace(5,idx_low:idx_up))
                 !particleposition(idx_low:idx_up)=interval_a + (phasespace(6,idx_low:idx_up)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
-                particle_species(3)%qm=-sll_e_mass/sll_proton_mass
+                particle_species(3)%qm=-sll_p_mass/sll_p_proton_mass
                 particle_species(3)%particle%dx=interval_b
                 particle_species(3)%particle%weight=0.0_f64
 
-                do idx=1,num_species
-                    call sll_pic1d_ensure_boundary_conditions(  particle_species(idx)%particle%dx, particle_species(idx)%particle%vx,pic1d_testcase)
+                do idx=1,sll_v_num_species
+                    call sll_s_pic1d_ensure_boundary_conditions(  particle_species(idx)%particle%dx, particle_species(idx)%particle%vx,pic1d_testcase)
                 enddo
 
             endif
 
             !######################################################################
-            !        case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
+            !        case(sll_p_pic1d_testcase_ionbeam_electrons)
             !            !Generate random numbers
             !            SLL_CLEAR_ALLOCATE(phasespace(1:3,1:nparticles),ierr)
-            !            call i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
+            !            call sll_s_i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
             !                particle_qm=-1.0_f64
             !
-            !            if (enable_deltaf .eqv. .TRUE.) then
+            !            if (sll_v_enable_deltaf .eqv. .TRUE.) then
             !                print *, "DELTA-F NOT IMPLEMENTED YET"
             !                stop
             !            else
@@ -1178,25 +1178,25 @@ contains
             !                steadyparticleposition=interval_a + (phasespace(2,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
             !                particleposition=interval_a + (phasespace(3,:)+1.0_f64)*(interval_b-interval_a)*plasma_size/2.0_f64
             !
-            !                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
-            !                steadyparticleposition=sll_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
+            !                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+            !                steadyparticleposition=sll_f_pic1d_ensure_periodicity(steadyparticleposition,  interval_a, interval_b)
             !                !particleposition=steadyparticleposition
             !                particleweight=(1.0_f64/(nparticles*coll_size*1.0_f64))
             !            endif
             !
             !            !######################################################################
-            !        case(SLL_PIC1D_TESTCASE_QUIET)
+            !        case(sll_p_pic1d_testcase_quiet)
             !            SLL_CLEAR_ALLOCATE(phasespace(1:2,1:nparticles),ierr)
-            !            call i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
+            !            call sll_s_i8_sobol_generate ( 2_f64, nparticles, coll_rank*nparticles, phasespace )
             !                particle_qm=-1.0_f64
             !
-            !            if (enable_deltaf .eqv. .TRUE.) then
+            !            if (sll_v_enable_deltaf .eqv. .TRUE.) then
             !                print *, "DELTA-F NOT IMPLEMENTED YET"
             !                stop
             !            else
             !                call sll_pic1d_load_stream(phasespace(1,:) , particlespeed, numberof_streams)
             !                particleposition=interval_a + phasespace(2,:)*(interval_b-interval_a)
-            !                particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+            !                particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
             !                steadyparticleposition =particleposition
             !                particleweight=(1.0_f64/(nparticles*coll_size*1.0_f64))
             !
@@ -1209,7 +1209,7 @@ contains
     !particleweight=particleweight/sum(particleweight)
 
     !particleweight=1.0_f64
-    !    particleweight=sll_normal_landaudamp_prb_kernel(mu, sigma, 0.01_f64, sll_pi*2*0.1, particlespeed)/&
+    !    particleweight=sll_normal_landaudamp_prb_kernel(mu, sigma, 0.01_f64, sll_p_pi*2*0.1, particlespeed)/&
         !                                sll_normal_prb_ kernel(mu, sigma, particlespeed)
 
     !call random_number(steadyparticleposition);
@@ -1239,7 +1239,7 @@ contains
 
     !
     !    do i=2,nparticles
-    !        call normal_cdf_inv( phasespace(1,i) , 0.0_f64 , maxwellian_a , particlespeed(i) )
+    !        call sll_s_normal_cdf_inv( phasespace(1,i) , 0.0_f64 , maxwellian_a , particlespeed(i) )
     !    enddo
     !call sll_pic1d_load_stream(phasespace(1,:) , particlespeed, 2,  (/ -5.0_f64,5.0_f64 /))
 
@@ -1269,7 +1269,7 @@ contains
     !    SLL_ASSERT(minval(particleposition)>=interval_a)
     !    SLL_ASSERT(maxval(particleposition)<=interval_b)
 
-  end subroutine load_particle_species
+  end subroutine sll_s_load_particle_species
 
 
   subroutine sll_pic1d_load_landau( landau_alpha, landau_mode, &
@@ -1309,7 +1309,7 @@ contains
         !!                                        +interval_a
     !            enddo
 
-    !        particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+    !        particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
 
     !Direct inverse sampling
     particleposition=sll_pic_1d_landaudamp_CDF(landau_alpha,landau_mode, &
@@ -1319,36 +1319,36 @@ contains
     !particleposition=particleposition*(interval_length)
 
     particleposition=interval_a + particleposition
-    particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+    particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
 
   end subroutine sll_pic1d_load_landau
 
 
-  subroutine sll_pic1d_ensure_boundary_conditions_species( particle_species, &
+  subroutine sll_s_pic1d_ensure_boundary_conditions_species( particle_species, &
       pic1d_testcase )
-    type(sll_particle_1d_group), intent(inout) :: particle_species(:)
+    type(sll_t_particle_1d_group), intent(inout) :: particle_species(:)
     sll_int32                  , intent(in)    :: pic1d_testcase
 
-    sll_int32 :: num_species, jdx
+    sll_int32 :: sll_v_num_species, jdx
 
-    num_species=size(particle_species)
-    SLL_ASSERT(num_species==size(particle_species))
+    sll_v_num_species=size(particle_species)
+    SLL_ASSERT(sll_v_num_species==size(particle_species))
 
-    do jdx=1,num_species
-        call sll_pic1d_ensure_boundary_conditions(particle_species(jdx)%particle%dx,&
+    do jdx=1,sll_v_num_species
+        call sll_s_pic1d_ensure_boundary_conditions(particle_species(jdx)%particle%dx,&
             particle_species(jdx)%particle%vx,pic1d_testcase )
     end do
-  end subroutine sll_pic1d_ensure_boundary_conditions_species
+  end subroutine sll_s_pic1d_ensure_boundary_conditions_species
 
 
-  subroutine sll_pic1d_ensure_boundary_conditions( particle_position, &
+  subroutine sll_s_pic1d_ensure_boundary_conditions( particle_position, &
       particlespeed, pic1d_testcase )
     sll_real64, intent(inout) :: particle_position(:)
     sll_real64, intent(inout) :: particlespeed(:)
     sll_int32 , intent(in)    :: pic1d_testcase
 
     selectcase (pic1d_testcase)
-        case(SLL_PIC1D_TESTCASE_IONBEAM)
+        case(sll_p_pic1d_testcase_ionbeam)
             !Deflect particles
             where (particle_position>interval_b)
                 !particle_position=particle_position -2.0_f64*(particle_position- interval_b)
@@ -1361,13 +1361,13 @@ contains
                 particlespeed=-particlespeed
             end where
         case default
-            particle_position=sll_pic1d_ensure_periodicity( particle_position, &
+            particle_position=sll_f_pic1d_ensure_periodicity( particle_position, &
                 interval_a, interval_b)
     end select
-  end subroutine sll_pic1d_ensure_boundary_conditions
+  end subroutine sll_s_pic1d_ensure_boundary_conditions
 
 
-  function sll_pic1d_ensure_periodicity( particle_position, &
+  function sll_f_pic1d_ensure_periodicity( particle_position, &
         interval_a, interval_b) result( particle_position_out)
     sll_real64, intent(in) :: particle_position(:)
     sll_real64, intent(in) :: interval_a
@@ -1390,7 +1390,7 @@ contains
     !            enddo
     !        enddo
     particle_position_out=particle_position- interval_a
-    !        if (sll_pic1d_testcase==SLL_PIC1D_TESTCASE_IONBEAM)
+    !        if (sll_pic1d_testcase==sll_p_pic1d_testcase_ionbeam)
     !            where (particle_position>interval_b) particle_position_out=interval_b*0.99999_f64
 
     do while (minval(particle_position_out)<0.0_f64)
@@ -1400,9 +1400,9 @@ contains
     particle_position_out=mod(particle_position_out, interval_length)&
         +interval_a
     !    do i=1, nparticles
-    !            particleposition(i)= (particleposition(i)-interval_a )*(1.0_f64+ 0.01_f64*cos((sll_kx/(interval_b-interval_a))*1.0_f64*(particleposition(i)-interval_a ))) + interval_a
+    !            particleposition(i)= (particleposition(i)-interval_a )*(1.0_f64+ 0.01_f64*cos((sll_p_kx/(interval_b-interval_a))*1.0_f64*(particleposition(i)-interval_a ))) + interval_a
     !    enddo
-    !    particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+    !    particleposition=sll_f_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
     !    if (minval(particle_position_out)==NaN) then
     !        print *, "NaN appeared"
     !    endif
@@ -1411,7 +1411,7 @@ contains
     SLL_ASSERT(maxval(particle_position_out)<interval_b)
     !            print *, maxval(particle_position_out)
 
-  end function sll_pic1d_ensure_periodicity
+  end function sll_f_pic1d_ensure_periodicity
 
 
   !The Original is 1+alpha*sin(2pi*x)
@@ -1443,8 +1443,8 @@ contains
     do while (numerror>=1D-28 .AND. idx<=20 )
         idx=idx+1
         !        inverseCDF=inverseCDF - &
-            !                        (uniform_random + (alpha/((sll_kx)*mode))*cos(sll_kx*mode*inverseCDF))/&
-            !                        (alpha*sin(sll_kx*mode*inverseCDF))
+            !                        (uniform_random + (alpha/((sll_p_kx)*mode))*cos(sll_p_kx*mode*inverseCDF))/&
+            !                        (alpha*sin(sll_p_kx*mode*inverseCDF))
         inverseCDF_new=(interval_length*uniform_random - (alpha/(mode))*sin(mode*inverseCDF))
         numerror=maxval((inverseCDF_new-inverseCDF)**2)/(maxval(inverseCDF_new)/maxval(inverseCDF))
         !print *, idx, "#Fixpoint Iter Error:" ,numerror
@@ -1472,9 +1472,9 @@ contains
     sll_real64, intent(in) :: v(:)
     sll_real64 :: y(size(v))
     y = 1.0_f64/(1.0_f64+bumpontail_a)*( &
-        exp(-0.5_f64*v**2)/sqrt(sll_kx) + &
+        exp(-0.5_f64*v**2)/sqrt(sll_p_kx) + &
         bumpontail_a*exp(-0.5_f64*((v-bumpontail_v0)/bumpontail_sigma)**2)&
-        /sqrt(sll_kx)/bumpontail_sigma)
+        /sqrt(sll_p_kx)/bumpontail_sigma)
   end function sll_pic_1d_bumpontail_PDF
 
 
@@ -1483,14 +1483,14 @@ contains
     sll_real64, intent(in) :: v(:)
     sll_real64 :: y(size(x))
     y = (1.0_f64 + landau_alpha*cos(landau_mode*x))/(interval_length) * &
-      exp(-0.5_f64*v**2)/sqrt(sll_kx)
+      exp(-0.5_f64*v**2)/sqrt(sll_p_kx)
   end function sll_pic_1d_landaudamp_PDFxv
 
 
   function sll_pic1d_normalPDF(x) result(y)
     sll_real64, intent(in) :: x(:)
     sll_real64 :: y(size(x))
-    y = 1.0_f64/sqrt(sll_kx)*exp(-0.5_f64*x**2)
+    y = 1.0_f64/sqrt(sll_p_kx)*exp(-0.5_f64*x**2)
   end function sll_pic1d_normalPDF
 
 
@@ -1507,7 +1507,7 @@ contains
     sll_real64, intent(in) :: x(:)
     sll_real64 :: y(size(x))
     SLL_ASSERT(L>0)
-    y = abs(cos(k*x))/(L*4.0_f64/sll_kx)
+    y = abs(cos(k*x))/(L*4.0_f64/sll_p_kx)
   end function sll_pic1d_abscosPDF
 
 
@@ -1518,7 +1518,7 @@ contains
     L=interval_length
     k=landau_mode
     SLL_ASSERT(L>0)
-    y = abs(cos(k*x))/(L*4.0_f64/sll_kx)
+    y = abs(cos(k*x))/(L*4.0_f64/sll_p_kx)
   end function sll_pic1d_abscosPDFlandau
 
 
@@ -1538,11 +1538,11 @@ contains
 
     SLL_ASSERT(L>0)
 
-    where ( mod(x*k*(L/sll_kx),0.5_f64)<0.25_f64)  y=asin(  mod((L*4.0_f64/sll_kx)*x*k,1.0_f64) )/k
-    where ( mod(x*k*(L/sll_kx),0.5_f64)>0.25_f64) &
-        y=acos((0.5_f64-mod(2.0_f64*x*(L/sll_kx),1.0_f64/k)/2.0_f64*k )*4.0_f64)/k  + sll_pi/2.0_f64/k
+    where ( mod(x*k*(L/sll_p_kx),0.5_f64)<0.25_f64)  y=asin(  mod((L*4.0_f64/sll_p_kx)*x*k,1.0_f64) )/k
+    where ( mod(x*k*(L/sll_p_kx),0.5_f64)>0.25_f64) &
+        y=acos((0.5_f64-mod(2.0_f64*x*(L/sll_p_kx),1.0_f64/k)/2.0_f64*k )*4.0_f64)/k  + sll_p_pi/2.0_f64/k
 
-    y = y+real(floor( x*k*(L/sll_kx)/0.5_f64),f64)*sll_pi/k
+    y = y+real(floor( x*k*(L/sll_p_kx)/0.5_f64),f64)*sll_p_pi/k
 
     !Matlab Code
     !f=@(x)
@@ -1579,7 +1579,7 @@ contains
     sll_real64, intent(in) :: density
     sll_real64 :: omega
 
-    omega = sqrt(density/(sll_e_mass*sll_epsilon_0) )*sll_e_charge
+    omega = sqrt(density/(sll_p_mass*sll_p_epsilon_0) )*sll_p_charge
   end function sll_plasma_frequency
 
 
@@ -1587,7 +1587,7 @@ contains
   function sll_thermal_velocity(T) result(vth)
     sll_real64, intent(in) :: T
     sll_real64 :: vth
-    vth = sqrt(sll_kb*T/sll_e_mass)
+    vth = sqrt(sll_p_kb*T/sll_p_mass)
   end function sll_thermal_velocity
 
 
@@ -1607,12 +1607,12 @@ contains
   end function sampling_dist_xv
 
 
-  function control_variate_xv(x,v) result(p)
+  function sll_f_control_variate_xv(x,v) result(p)
     sll_real64, intent(in) :: x(:)
     sll_real64, intent(in) :: v(:)
     sll_real64 :: p(size(x))
     p = control_variate_x(x)*control_variate_v(v)
-  end function control_variate_xv
+  end function sll_f_control_variate_xv
 
 
   elemental sll_real64 function sll_local_maxwellian(v, vtherm, temperature)

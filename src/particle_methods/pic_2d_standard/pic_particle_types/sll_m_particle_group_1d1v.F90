@@ -62,9 +62,9 @@ module sll_m_particle_group_1d1v
   endtype
 
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_particle_2d_group
-  end interface sll_delete
+  end interface sll_o_delete
 
 
     !Probability

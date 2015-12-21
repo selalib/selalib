@@ -9,62 +9,62 @@ module sll_m_sim_pic_vm_1d2v_cart
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_1d, &
-    sll_cartesian_mesh_1d
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
   use sll_m_collective, only: &
-    sll_collective_allreduce, &
-    sll_collective_reduce_real64, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_o_collective_allreduce, &
+    sll_s_collective_reduce_real64, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_hamiltonian_splitting_base, only: &
-    sll_t_hamiltonian_splitting_base
+    sll_c_hamiltonian_splitting_base
 
   use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v, only: &
-    sll_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
+    sll_f_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
 
   use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
-    sll_new_hamiltonian_splitting_pic_vm_1d2v, &
+    sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
   use sll_m_kernel_smoother_base, only: &
-    sll_galerkin, &
+    sll_p_galerkin, &
     sll_c_kernel_smoother
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_new_smoother_spline_1d
+    sll_f_new_smoother_spline_1d
 
   use sll_m_maxwell_1d_base, only: &
-    sll_maxwell_1d_base
+    sll_c_maxwell_1d_base
 
   use sll_m_maxwell_1d_fem, only: &
-    sll_maxwell_1d_fem, &
-    sll_new_maxwell_1d_fem
+    sll_t_maxwell_1d_fem, &
+    sll_f_new_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
-    sll_new_particle_group_1d2v, &
-    sll_particle_group_1d2v
+    sll_f_new_particle_group_1d2v, &
+    sll_t_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   use sll_m_particle_initializer, only: &
-    sll_particle_initialize_random_landau_1d2v, &
-    sll_particle_initialize_sobol_landau_1d2v, &
-    sll_particle_initialize_random_landau_symmetric_1d2v
+    sll_s_particle_initialize_random_landau_1d2v, &
+    sll_s_particle_initialize_sobol_landau_1d2v, &
+    sll_s_particle_initialize_random_landau_symmetric_1d2v
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_mpi, only: &
     mpi_sum
@@ -84,21 +84,21 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: SLL_SPLITTING_SYMPLECTIC=0
   sll_int32, parameter :: SLL_SPLITTING_CEF=1
 
-    type, extends(sll_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart
+    type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart
 
      ! Abstract particle group
-     class(sll_particle_group_base), pointer :: particle_group
+     class(sll_c_particle_group_base), pointer :: particle_group
 
      ! 
      sll_real64, pointer :: efield_dofs(:,:)
      sll_real64, pointer :: bfield_dofs(:)
 
      ! Cartesian mesh
-     type(sll_cartesian_mesh_1d), pointer    :: mesh 
+     type(sll_t_cartesian_mesh_1d), pointer    :: mesh 
 
      ! Maxwell solver 
      ! Abstract 
-     class(sll_maxwell_1d_base), pointer :: maxwell_solver
+     class(sll_c_maxwell_1d_base), pointer :: maxwell_solver
 
      ! Abstract kernel smoothers
      class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
@@ -106,7 +106,7 @@ module sll_m_sim_pic_vm_1d2v_cart
 
 
      ! Specific operator splitting
-     class(sll_t_hamiltonian_splitting_base), pointer :: propagator
+     class(sll_c_hamiltonian_splitting_base), pointer :: propagator
      sll_int32 :: splitting_case
 
      ! Fields on the grid
@@ -183,18 +183,18 @@ contains
     close (input_file)
 
     ! Set MPI parameters
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    sim%rank = sll_get_collective_rank(sll_world_collective)
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%rank = sll_f_get_collective_rank(sll_v_world_collective)
 
     ! Copy the read parameters into the simulation parameters
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
-    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_pi/(x1_max - x1_min)]
+    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_p_pi/(x1_max - x1_min)]
     sim%thermal_velocity = [thermal_v, thermal_v* sqrt(T_r)]
     sim%beta = beta
 
     sim%n_gcells = ng_x
-    sim%mesh => new_cartesian_mesh_1d( ng_x, &
+    sim%mesh => sll_f_new_cartesian_mesh_1d( ng_x, &
          x1_min, x1_max)
     sim%domain = [x1_min, x1_max, x1_max - x1_min ]
 
@@ -249,24 +249,24 @@ contains
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
-       call sll_ascii_file_create('thdiag5.dat', th_diag_id, ierr)
+       call sll_s_ascii_file_create('thdiag5.dat', th_diag_id, ierr)
     end if
 
     ! Initialize the particles   (mass and charge set to 1.0)
-     sim%particle_group => sll_new_particle_group_1d2v(sim%n_particles, &
+     sim%particle_group => sll_f_new_particle_group_1d2v(sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
 
     ! Initialize the field solver
-    sim%maxwell_solver => sll_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
+    sim%maxwell_solver => sll_f_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
          sim%degree_smoother)
 
     ! Initialize kernel smoother    
-    sim%kernel_smoother_1 => sll_new_smoother_spline_1d(&
+    sim%kernel_smoother_1 => sll_f_new_smoother_spline_1d(&
          sim%domain(1:2), [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother-1, SLL_GALERKIN) 
+         sim%n_particles, sim%degree_smoother-1, sll_p_galerkin) 
     sim%kernel_smoother_0 => &
-         sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother, SLL_GALERKIN) 
+         sll_f_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
+         sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
     
 
     if (sim%init_case == SLL_INIT_RANDOM) then
@@ -279,8 +279,8 @@ contains
 
        ! Initialize position and velocity of the particles.
        ! Random initialization
-       !call sll_particle_initialize_random_landau_1d2v &
-       call sll_particle_initialize_random_landau_symmetric_1d2v &
+       !call sll_s_particle_initialize_random_landau_1d2v &
+       call sll_s_particle_initialize_random_landau_symmetric_1d2v &
             (sim%particle_group, sim%landau_param, &
             sim%domain(1) , &
             sim%domain(3), &
@@ -289,7 +289,7 @@ contains
        sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
        ! Pseudorandom initialization with sobol numbers
        !sim%thermal_velocity = 0.1_f64
-       call sll_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
+       call sll_s_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
             sim%landau_param, sim%domain(1),sim%domain(3), &
             sim%thermal_velocity, sobol_seed)
     end if
@@ -300,12 +300,12 @@ contains
 
     ! Initialize the time-splitting propagator
     if (sim%splitting_case == SLL_SPLITTING_SYMPLECTIC) then
-       sim%propagator => sll_new_hamiltonian_splitting_pic_vm_1d2v(sim%maxwell_solver, &
+       sim%propagator => sll_f_new_hamiltonian_splitting_pic_vm_1d2v(sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
     elseif (sim%splitting_case == SLL_SPLITTING_CEF) then
-       sim%propagator =>  sll_new_hamiltonian_splitting_cef_pic_vm_1d2v(sim%maxwell_solver, &
+       sim%propagator =>  sll_f_new_hamiltonian_splitting_cef_pic_vm_1d2v(sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
@@ -323,7 +323,7 @@ contains
     end do
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
-    call sll_collective_allreduce( sll_world_collective, &
+    call sll_o_collective_allreduce( sll_v_world_collective, &
          rho_local, &
          sim%n_gcells, MPI_SUM, rho)
     ! Solve Poisson problem
@@ -352,7 +352,7 @@ contains
             (vi(1)**2+vi(2)**2)*wi(1)
     end do
     total_energy = 0.0_f64
-    call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
+    call sll_s_collective_reduce_real64(sll_v_world_collective, kinetic_energy, 1,&
          MPI_SUM, 0, total_energy)
     if (sim%rank == 0) then
        potential_energy(1) = sim%maxwell_solver%L2norm_squared&
@@ -381,7 +381,7 @@ contains
                (vi(1)**2+vi(2)**2)*wi(1)
        end do
        total_energy = 0.0_f64
-       call sll_collective_reduce_real64(sll_world_collective, kinetic_energy, 1,&
+       call sll_s_collective_reduce_real64(sll_v_world_collective, kinetic_energy, 1,&
             MPI_SUM, 0, total_energy)
 
        if (sim%rank == 0) then
@@ -407,7 +407,7 @@ contains
     end do
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
-    call sll_collective_allreduce( sll_world_collective, &
+    call sll_o_collective_allreduce( sll_v_world_collective, &
          rho_local, &
          sim%n_gcells, MPI_SUM, rho)
     !write(32,'(D16.25)') rho
@@ -442,7 +442,7 @@ contains
       sll_real64             :: beta_cos_k
       sll_real64, intent(in) :: x
 
-      beta_cos_k = sim%beta * cos(2*sll_pi*x/sim%domain(3)) 
+      beta_cos_k = sim%beta * cos(2*sll_p_pi*x/sim%domain(3)) 
     end function beta_cos_k
   end subroutine run_pic_vm_1d2v
 

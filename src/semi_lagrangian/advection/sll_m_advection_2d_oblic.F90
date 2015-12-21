@@ -24,24 +24,24 @@ module sll_m_advection_2d_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_lagrange_interpolation, only: &
-    lagrange_interpolate
+    sll_f_lagrange_interpolate
 
   implicit none
 
   public :: &
-    new_oblic_2d_advector, &
-    oblic_2d_advector, &
-    oblic_advect_2d_constant
+    sll_f_new_oblic_2d_advector, &
+    sll_t_oblic_2d_advector, &
+    sll_s_oblic_advect_2d_constant
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type  :: oblic_2d_advector
+  type  :: sll_t_oblic_2d_advector
     sll_int32 :: Nc_x1
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32 :: Nc_x2
     sll_real64  :: x2_min
     sll_real64  :: x2_max
@@ -50,14 +50,14 @@ module sll_m_advection_2d_oblic
     sll_real64, dimension(:), pointer :: xx
     sll_real64, dimension(:,:), pointer :: buf
   
-  end type oblic_2d_advector
+  end type sll_t_oblic_2d_advector
    
 
 
 
 
 contains
-  function new_oblic_2d_advector( &
+  function sll_f_new_oblic_2d_advector( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -66,9 +66,9 @@ contains
     stencil_r, &
     stencil_s ) &
     result(adv)      
-    type(oblic_2d_advector), pointer :: adv
+    type(sll_t_oblic_2d_advector), pointer :: adv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -88,7 +88,7 @@ contains
       x2_max, &
       stencil_r, &
       stencil_s )
-  end function  new_oblic_2d_advector
+  end function  sll_f_new_oblic_2d_advector
 
 
   subroutine initialize_oblic_2d_advector( &
@@ -100,9 +100,9 @@ contains
     x2_max, &
     stencil_r, &
     stencil_s )
-    type(oblic_2d_advector), intent(inout) :: adv
+    type(sll_t_oblic_2d_advector), intent(inout) :: adv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -156,7 +156,7 @@ contains
 !> periodic conditions are used in both x1 and x2 directions
 
 
-  subroutine oblic_advect_2d_constant(&
+  subroutine sll_s_oblic_advect_2d_constant(&
     adv, &
     !iota, &
     A1, &
@@ -164,7 +164,7 @@ contains
     dt, &
     input, &
     output)
-    type(oblic_2d_advector) :: adv
+    type(sll_t_oblic_2d_advector) :: adv
     !sll_real64, intent(in) :: iota
     sll_real64, intent(in) :: A1
     sll_real64, intent(in) :: A2
@@ -184,7 +184,7 @@ contains
     sll_int32 :: ell
     sll_real64, dimension(:,:), pointer :: buf
     sll_real64, dimension(:), pointer :: xx
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_real64 :: delta_x2
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
@@ -216,14 +216,14 @@ contains
       enddo
       !interpolate between these values 
       do i1=1,Nc_x1+1
-        output(i1,i2) = lagrange_interpolate(alpha, d, xx, buf(r:s,i1) )
+        output(i1,i2) = sll_f_lagrange_interpolate(alpha, d, xx, buf(r:s,i1) )
       enddo
     enddo    
 
 
 
           
-  end subroutine oblic_advect_2d_constant
+  end subroutine sll_s_oblic_advect_2d_constant
 
   subroutine oblic_advect_2d(&
     adv, &
@@ -233,7 +233,7 @@ contains
     dt, &
     input, &
     output)
-    type(oblic_2d_advector) :: adv
+    type(sll_t_oblic_2d_advector) :: adv
     !sll_real64, intent(in) :: iota
     sll_real64, dimension(:,:), intent(in) :: A1
     sll_real64, dimension(:,:), intent(in) :: A2

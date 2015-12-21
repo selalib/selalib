@@ -8,8 +8,8 @@ module sll_m_operator_splitting_pic_vp_2d2v
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
-    sll_collective_allreduce, &
-    sll_world_collective
+    sll_o_collective_allreduce, &
+    sll_v_world_collective
 
   use sll_m_control_variate, only: &
     sll_t_control_variate
@@ -18,10 +18,10 @@ module sll_m_operator_splitting_pic_vp_2d2v
     sll_c_kernel_smoother
 
   use sll_m_operator_splitting, only: &
-    operator_splitting
+    sll_t_operator_splitting
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   use sll_m_pic_poisson_base, only: &
     sll_c_pic_poisson
@@ -32,16 +32,16 @@ module sll_m_operator_splitting_pic_vp_2d2v
   implicit none
 
   public :: &
-    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_f_new_hamiltonian_splitting_pic_vp_2d2v, &
     sll_t_operator_splitting_pic_vp_2d2v
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Operator splitting type for 2d2v Vlasov-Poisson
-  type, extends(operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
+  type, extends(sll_t_operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
      class(sll_c_pic_poisson), pointer :: solver
-     class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
+     class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
 
 
      ! For version with control variate
@@ -156,7 +156,7 @@ contains
   subroutine initialize_operator_splitting_pic_vp_2d2v(this, solver, particle_group)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< object 
     class(sll_c_pic_poisson),pointer, intent(in) :: solver !< poisson solver
-    class(sll_particle_group_base),pointer, intent(in) :: particle_group !< particle group
+    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< particle group
 
     !local variables
     sll_int32 :: ierr
@@ -169,14 +169,14 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Constructor.
-  function sll_new_hamiltonian_splitting_pic_vp_2d2v &
+  function sll_f_new_hamiltonian_splitting_pic_vp_2d2v &
        (solver, &
        particle_group, &
        control_variate, &
        i_weight) result(this)
     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: this !< time splitting object 
     class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
-    class(sll_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
+    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
     class(sll_t_control_variate), optional, pointer, intent(in) :: control_variate
     sll_int32, optional, intent(in) :: i_weight
  
@@ -192,7 +192,7 @@ contains
     if(present(i_weight)) this%i_weight = i_weight
     if(present(control_variate)) this%control_variate => control_variate
 
-  end function sll_new_hamiltonian_splitting_pic_vp_2d2v
+  end function sll_f_new_hamiltonian_splitting_pic_vp_2d2v
 
 
 

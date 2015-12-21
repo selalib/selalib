@@ -26,17 +26,17 @@ module sll_m_bspline_interpolator_1d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_bsplines, only: &
-    compute_bspline_1d, &
-    delete_bspline_1d, &
-    interpolate_array_derivatives_1d, &
-    interpolate_array_values_1d, &
-    interpolate_derivative_1d, &
-    interpolate_value_1d, &
-    new_bspline_1d, &
-    sll_bspline_1d
+    sll_s_compute_bspline_1d, &
+    sll_s_delete_bspline_1d, &
+    sll_s_interpolate_array_derivatives_1d, &
+    sll_s_interpolate_array_values_1d, &
+    sll_f_interpolate_derivative_1d, &
+    sll_f_interpolate_value_1d, &
+    sll_f_new_bspline_1d, &
+    sll_t_bspline_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -44,16 +44,16 @@ module sll_m_bspline_interpolator_1d
   implicit none
 
   public :: &
-    sll_bspline_interpolator_1d, &
-    sll_delete
+    sll_t_bspline_interpolator_1d, &
+    sll_o_delete
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Class for arbitrary degree spline 1d interpolator
-type, extends(sll_c_interpolator_1d) :: sll_bspline_interpolator_1d
+type, extends(sll_c_interpolator_1d) :: sll_t_bspline_interpolator_1d
 
-  type(sll_bspline_1d), pointer :: bspline    !< bspline data
+  type(sll_t_bspline_1d), pointer :: bspline    !< bspline data
   sll_int32                     :: num_pts
   sll_int32                     :: spl_deg
   sll_real64                    :: eta_min
@@ -95,12 +95,12 @@ contains
   !> Destory the derived type and free memory
   procedure :: delete => delete_bs1d_interpolator
 
-end type sll_bspline_interpolator_1d
+end type sll_t_bspline_interpolator_1d
 
 !> Deallocate
-interface sll_delete
+interface sll_o_delete
    module procedure delete_bs1d_interpolator
-end interface sll_delete
+end interface sll_o_delete
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -110,12 +110,12 @@ contains
 !> @brief Delete interpolator arbitrary degree splines.
 !> @details
 !> The parameters are
-!> @param interpolator the type sll_bspline_interpolator_1d
+!> @param interpolator the type sll_t_bspline_interpolator_1d
 subroutine delete_bs1d_interpolator( interpolator )
 
-class(sll_bspline_interpolator_1d), intent(inout) :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
-call delete_bspline_1d(interpolator%bspline)
+call sll_s_delete_bspline_1d(interpolator%bspline)
 
 end subroutine delete_bs1d_interpolator
 
@@ -139,7 +139,7 @@ function new_bspline_interpolator_1d( &
   slope_l,                            &
   slope_r) result(interpolator)
 
-class(sll_bspline_interpolator_1d),pointer :: interpolator
+class(sll_t_bspline_interpolator_1d),pointer :: interpolator
 
 sll_int32,  intent(in) :: num_pts
 sll_real64, intent(in) :: eta_min
@@ -186,7 +186,7 @@ end function new_bspline_interpolator_1d
 !> @param[in]  eta_max  the maximun
 !> @param[in]  bc_type  the boundary condition (periodic or not)
 !> @param[in]  spl_deg  the degree of B-spline
-!> @param[out] interpolator the type sll_bspline_interpolator_1d
+!> @param[out] interpolator the type sll_t_bspline_interpolator_1d
 
 subroutine initialize_bs1d_interpolator( interpolator,  &
                                          num_pts,  &
@@ -197,7 +197,7 @@ subroutine initialize_bs1d_interpolator( interpolator,  &
                                          slope_l,  &
                                          slope_r)
 
-class(sll_bspline_interpolator_1d), intent(inout) :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
 sll_int32,       intent(in) :: num_pts
 sll_real64,      intent(in) :: eta_min
@@ -214,7 +214,7 @@ interpolator%eta_max = eta_max
 
 if (present(slope_l) .and. present(slope_r)) then
 
-  interpolator%bspline => new_bspline_1d( num_pts, &
+  interpolator%bspline => sll_f_new_bspline_1d( num_pts, &
                                           spl_deg, &
                                           eta_min, &
                                           eta_max, &
@@ -223,7 +223,7 @@ if (present(slope_l) .and. present(slope_r)) then
                                           slope_r)
 else
 
-  interpolator%bspline => new_bspline_1d( num_pts, &
+  interpolator%bspline => sll_f_new_bspline_1d( num_pts, &
                                           spl_deg, &
                                           eta_min, &
                                           eta_max, &
@@ -239,14 +239,14 @@ end subroutine initialize_bs1d_interpolator
 !> @param[in]  value_r contains the value in the right
 !> @param[in]  slope_l contains the value in the left for derivative
 !> @param[in]  slope_r contains the value in the right for derivative
-!> @param[out] interpolator the type sll_bspline_interpolator_1d
+!> @param[out] interpolator the type sll_t_bspline_interpolator_1d
 subroutine set_values_at_boundary1d( interpolator, &
                                      value_l, &
                                      value_r, &
                                      slope_l, &
                                      slope_r)
 
-class(sll_bspline_interpolator_1d), intent(inout) :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
 sll_real64, intent(in), optional :: value_l
 sll_real64, intent(in), optional :: value_r
@@ -286,13 +286,13 @@ end subroutine set_values_at_boundary1d
 !> @param[in]  data_array the 1d arrays corresponding at the values of a function
 !> @param[in]  eta_coords the 1d arrays
 !> @param[in]  size_eta_coords the size of eta_coords
-!> @param[out] interpolator the type sll_bspline_interpolator_1d
+!> @param[out] interpolator the type sll_t_bspline_interpolator_1d
 subroutine compute_interpolants_bs1d( interpolator,    &
                                       data_array,      &
                                       eta_coords,      &
                                       size_eta_coords)
 
-class(sll_bspline_interpolator_1d), &
+class(sll_t_bspline_interpolator_1d), &
             intent(inout)           :: interpolator
 sll_real64, intent(in   )           :: data_array(:)
 sll_real64, intent(in   ), optional :: eta_coords(:)
@@ -304,7 +304,7 @@ if(present(eta_coords) .or. present(size_eta_coords)) then
    SLL_ERROR( this_sub_name, 'This case is not yet implemented' )
 end if
 
-call compute_bspline_1d ( interpolator%bspline, data_array )
+call sll_s_compute_bspline_1d ( interpolator%bspline, data_array )
 
 end subroutine compute_interpolants_bs1d
 
@@ -314,12 +314,12 @@ end subroutine compute_interpolants_bs1d
 !> @details computing the values with the interpolator 
 !> arbitrary degree splines 1d
 !> on the points eta of arbitrary degree splines 1d
-!> @param[in] interpolator the type sll_bspline_interpolator_1d
+!> @param[in] interpolator the type sll_t_bspline_interpolator_1d
 !> @param[in] eta1 the point
 !> @return val the values on the points eta
 function interpolate_value_bs1d( interpolator, eta1) result(val)
 
-class(sll_bspline_interpolator_1d), intent(in)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
 
 sll_real64, intent(in)          :: eta1
 sll_real64                      :: val
@@ -327,7 +327,7 @@ sll_real64                      :: res
 
 res = eta1
 
-if (interpolator%bc_type == SLL_PERIODIC) then ! periodic
+if (interpolator%bc_type == sll_p_periodic) then ! periodic
 
   if( res < interpolator%eta_min ) then
      res = res+interpolator%bspline%length
@@ -337,7 +337,7 @@ if (interpolator%bc_type == SLL_PERIODIC) then ! periodic
 
 end if
 
-val = interpolate_value_1d( interpolator%bspline, res)
+val = sll_f_interpolate_value_1d( interpolator%bspline, res)
 
 end function interpolate_value_bs1d
 
@@ -346,13 +346,13 @@ end function interpolate_value_bs1d
 !> @details  initializing the coefficients of splines
 !>  fot the arbitrary degree splines interpolator 1d
 !> The parameters are
-!> @param interpolator the type sll_bspline_interpolator_1d
+!> @param interpolator the type sll_t_bspline_interpolator_1d
 !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
-!> @param[out] interpolator the type sll_bspline_interpolator_1d
+!> @param[out] interpolator the type sll_t_bspline_interpolator_1d
 
 subroutine set_coefficients_bs1d( interpolator, coeffs)
 
-class(sll_bspline_interpolator_1d), intent(inout)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(inout)  :: interpolator
 sll_real64, dimension(:), optional, intent(in)     :: coeffs
 
 print*, 'num_pts =', interpolator%num_pts
@@ -368,13 +368,13 @@ end subroutine set_coefficients_bs1d
 !> on the points eta of arbitrary degree splines 1d
 !>
 !> The parameters are
-!> @param interpolator the type sll_bspline_interpolator_1d
+!> @param interpolator the type sll_t_bspline_interpolator_1d
 !> @param[in] eta1 the point
 !> @return val the values on the point eta of the first derivative
 
 function interpolate_derivative_bs1d( interpolator, eta1 ) result(val)
 
-class(sll_bspline_interpolator_1d), intent(in)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
 
 sll_real64, intent(in)           :: eta1
 sll_real64                       :: val
@@ -382,7 +382,7 @@ sll_real64                       :: res
 
 res = eta1
 
-if (interpolator%bspline%bc_type == SLL_PERIODIC ) then 
+if (interpolator%bspline%bc_type == sll_p_periodic ) then 
 
   if( res < interpolator%eta_min ) then
     res = res+interpolator%bspline%length
@@ -395,7 +395,7 @@ end if
 SLL_ASSERT( res >= interpolator%eta_min )
 SLL_ASSERT( res <= interpolator%eta_max )
 
-val = interpolate_derivative_1d( interpolator%bspline, res )
+val = sll_f_interpolate_derivative_1d( interpolator%bspline, res )
 
 end function interpolate_derivative_bs1d
 
@@ -405,14 +405,14 @@ subroutine interpolate_array_bs1d( this,         &
                                  coordinates, &
                                  output_array)
 
-class(sll_bspline_interpolator_1d), intent(in) :: this
+class(sll_t_bspline_interpolator_1d), intent(in) :: this
 sll_int32,  intent(in)               :: num_pts
 sll_real64, dimension(num_pts), intent(in) :: coordinates
 sll_real64, dimension(:), intent(in) :: data
 sll_real64, dimension(num_pts), intent(out)    :: output_array
 
-call compute_bspline_1d( this%bspline, data)
-call interpolate_array_values_1d( this%bspline, num_pts, coordinates, output_array)
+call sll_s_compute_bspline_1d( this%bspline, data)
+call sll_s_interpolate_array_values_1d( this%bspline, num_pts, coordinates, output_array)
 
 end subroutine interpolate_array_bs1d
 
@@ -422,7 +422,7 @@ subroutine interpolate_1d_array_disp_bs1d( this,       &
                                          alpha, &
                                          output_array)
 
-class(sll_bspline_interpolator_1d), intent(in) :: this
+class(sll_t_bspline_interpolator_1d), intent(in) :: this
 sll_int32,                          intent(in) :: num_pts
 sll_real64, dimension(:),           intent(in) :: data
 sll_real64, intent(in)                         :: alpha
@@ -439,7 +439,7 @@ subroutine interpolate_1d_array_disp_inplace_bs1d( this,       &
                                          data,       &
                                          alpha)
 
-class(sll_bspline_interpolator_1d), intent(in) :: this
+class(sll_t_bspline_interpolator_1d), intent(in) :: this
 sll_int32,                          intent(in) :: num_pts
 sll_real64, dimension(num_pts),           intent(inout) :: data
 sll_real64, intent(in)                         :: alpha
@@ -451,7 +451,7 @@ end subroutine interpolate_1d_array_disp_inplace_bs1d
 
 function get_coefficients_bs1d(interpolator)
 
-class(sll_bspline_interpolator_1d), intent(in)    :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)    :: interpolator
 sll_real64, dimension(:), pointer            :: get_coefficients_bs1d
 
 get_coefficients_bs1d => interpolator%bspline%bcoef
@@ -463,12 +463,12 @@ subroutine interpolate_values_bs1d( interpolator,        &
                                     vals_to_interpolate, &
                                     output_array )
 
-class(sll_bspline_interpolator_1d), intent(in)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
 sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(num_pts),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(num_pts),           intent(out) :: output_array
 
-call interpolate_array_values_1d(interpolator%bspline, &
+call sll_s_interpolate_array_values_1d(interpolator%bspline, &
                               num_pts,              &
                               vals_to_interpolate,  &
                               output_array)
@@ -481,12 +481,12 @@ subroutine interpolate_derivatives_bs1d( interpolator,        &
                                          vals_to_interpolate, &
                                          output_array )
 
-class(sll_bspline_interpolator_1d), intent(in)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
 sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(:),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(:),           intent(out) :: output_array
 
-call interpolate_array_derivatives_1d(interpolator%bspline, &
+call sll_s_interpolate_array_derivatives_1d(interpolator%bspline, &
                                    num_pts,              &
                                    vals_to_interpolate,  &
                                    output_array)

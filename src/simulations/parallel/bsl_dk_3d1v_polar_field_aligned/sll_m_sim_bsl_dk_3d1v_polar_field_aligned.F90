@@ -42,7 +42,7 @@
 !>  type(sll_simulation_4d_vp_polar)    :: simulation
 !>  call simulation%init_from_file(trim(filename))
 !>  call simulation%run()
-!>  call delete(simulation)
+!>  call sll_o_delete(simulation)
 !> \endcode
 
 module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
@@ -53,78 +53,78 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
-    new_periodic_1d_advector
+    sll_f_new_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_advection_2d_base
+    sll_c_advection_2d_base
 
   use sll_m_advection_2d_bsl, only: &
-    new_bsl_2d_advector
+    sll_f_new_bsl_2d_advector
 
   use sll_m_advection_2d_oblic, only: &
-    new_oblic_2d_advector, &
-    oblic_2d_advector, &
-    oblic_advect_2d_constant
+    sll_f_new_oblic_2d_advector, &
+    sll_t_oblic_2d_advector, &
+    sll_s_oblic_advect_2d_constant
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_hermite, &
-    sll_neumann, &
-    sll_neumann_mode_0, &
-    sll_periodic, &
-    sll_set_to_limit
+    sll_p_dirichlet, &
+    sll_p_hermite, &
+    sll_p_neumann, &
+    sll_p_neumann_mode_0, &
+    sll_p_periodic, &
+    sll_p_set_to_limit
 
   use sll_m_cartesian_meshes, only: &
-    get_node_positions, &
-    new_cartesian_mesh_1d, &
-    sll_cartesian_mesh_1d
+    sll_o_get_node_positions, &
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
   use sll_m_characteristics_2d_base, only: &
-    sll_characteristics_2d_base
+    sll_c_characteristics_2d_base
 
   use sll_m_characteristics_2d_explicit_euler, only: &
-    new_explicit_euler_2d_charac
+    sll_f_new_explicit_euler_2d_charac
 
   use sll_m_characteristics_2d_verlet, only: &
-    new_verlet_2d_charac
+    sll_f_new_verlet_2d_charac
 
   use sll_m_collective, only: &
-    sll_collective_barrier, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_collective_barrier, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    new_cubic_spline_interpolator_1d
+    sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    new_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_derivative_2d_oblic, only: &
-    compute_oblic_derivative_2d, &
-    new_oblic_2d_derivative, &
-    oblic_2d_derivative
+    sll_s_compute_oblic_derivative_2d, &
+    sll_f_new_oblic_2d_derivative, &
+    sll_t_oblic_2d_derivative
 
   use sll_m_fdistribu4d_dk, only: &
-    init_fequilibrium
+    sll_s_init_fequilibrium
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_1d
+    sll_o_gnuplot_1d
 
   use sll_m_hdf5_io_serial, only: &
-    sll_hdf5_file_close, &
-    sll_hdf5_file_create, &
-    sll_hdf5_write_array
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -133,44 +133,44 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_c_interpolator_2d
 
   use sll_m_periodic_interp, only: &
-    lagrange, &
-    spline
+    sll_p_lagrange, &
+    sll_p_spline
 
   use sll_m_poisson_2d_base, only: &
-    sll_poisson_2d_base
+    sll_c_poisson_2d_base
 
   use sll_m_poisson_3d_base, only: &
-    sll_poisson_3d_base
+    sll_c_poisson_3d_base
 
   use sll_m_qn_solver_3d_polar_parallel_x1_wrapper, only: &
-    new_qn_solver_3d_polar_parallel_x1_wrapper
+    sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper
 
   use sll_m_reduction, only: &
-    compute_reduction_2d_to_0d, &
-    compute_reduction_4d_to_3d_direction4
+    sll_s_compute_reduction_2d_to_0d, &
+    sll_s_compute_reduction_4d_to_3d_direction4
 
   use sll_m_remapper, only: &
-    apply_remap_3d, &
-    apply_remap_4d, &
-    compute_local_sizes, &
-    global_to_local, &
-    initialize_layout_with_distributed_array, &
-    layout_2d, &
-    layout_3d, &
-    layout_4d, &
-    local_to_global, &
-    new_layout_2d, &
-    new_layout_3d_from_layout_4d, &
-    new_layout_4d, &
-    new_remap_plan, &
-    remap_plan_3d_real64, &
-    remap_plan_4d_real64
+    sll_o_apply_remap_3d, &
+    sll_o_apply_remap_4d, &
+    sll_o_compute_local_sizes, &
+    sll_o_global_to_local, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_t_layout_3d, &
+    sll_t_layout_4d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_f_new_layout_3d_from_layout_4d, &
+    sll_f_new_layout_4d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_3d_real64, &
+    sll_t_remap_plan_4d_real64
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_m_utilities, only: &
-    int2string
+    sll_s_int2string
 
   use sll_xdmf_io, only: &
     sll_t_hdf5_serial
@@ -181,8 +181,8 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
   implicit none
 
   public :: &
-    delete, &
-    sll_simulation_4d_drift_kinetic_field_aligned_polar
+    sll_o_delete, &
+    sll_t_simulation_4d_drift_kinetic_field_aligned_polar
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -202,8 +202,8 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
   !============================================================================
   ! SIMULATION TYPE: Drift-kinetic, 3D-1V, field-aligned, cylindrical coords.
   !============================================================================
-  type, extends(sll_simulation_base_class) :: &
-    sll_simulation_4d_drift_kinetic_field_aligned_polar
+  type, extends(sll_c_simulation_base_class) :: &
+    sll_t_simulation_4d_drift_kinetic_field_aligned_polar
 
     ! Parallel environment parameters
     sll_int32  :: world_size
@@ -214,14 +214,14 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_int32  :: nproc_x2
     sll_int32  :: nproc_x3
     sll_int32  :: nproc_x4
-!    type(sll_collective_t), pointer :: new_collective_per_locx3
-!    type(sll_collective_t), pointer :: new_collective_per_locx4
+!    type(sll_t_collective_t), pointer :: new_collective_per_locx3
+!    type(sll_t_collective_t), pointer :: new_collective_per_locx4
 
     ! Mesh parameters
-    type(sll_cartesian_mesh_1d), pointer :: m_x1
-    type(sll_cartesian_mesh_1d), pointer :: m_x2
-    type(sll_cartesian_mesh_1d), pointer :: m_x3
-    type(sll_cartesian_mesh_1d), pointer :: m_x4
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x1
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x2
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x3
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x4
     
     ! Instantaneous time value (updated at the end of the time-step)
     sll_real64 :: time
@@ -278,62 +278,62 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_real64, pointer :: feq_x1x4(:,:)
 
     !----> parallel in x1
-    type(layout_4D), pointer :: layout4d_parx1
+    type(sll_t_layout_4d), pointer :: layout4d_parx1
     sll_real64,      pointer ::      f4d_parx1(:,:,:,:)
 
     !----> parallel in (x3,x4)
-    type(layout_4D), pointer :: layout4d_parx3x4
+    type(sll_t_layout_4d), pointer :: layout4d_parx3x4
     sll_real64,      pointer ::      f4d_parx3x4(:,:,:,:)
 
     !----> definition of remap
-    type(remap_plan_4D_real64), pointer :: remap_plan_parx1_to_parx3x4
-    type(remap_plan_4D_real64), pointer :: remap_plan_parx3x4_to_parx1
+    type(sll_t_remap_plan_4d_real64), pointer :: remap_plan_parx1_to_parx3x4
+    type(sll_t_remap_plan_4d_real64), pointer :: remap_plan_parx3x4_to_parx1
 
     !----> parallel in x1
-    type(layout_3D), pointer ::       layout3d_parx1
+    type(sll_t_layout_3d), pointer ::       layout3d_parx1
     sll_real64,      pointer ::          rho3d_parx1(:,:,:)
     sll_real64,      pointer ::          phi3d_parx1(:,:,:)
     sll_real64,      pointer :: Daligned_phi3d_parx1(:,:,:)
     sll_real64,      pointer ::             A3_parx1(:,:,:)
 
     !----> parallel in x3
-    type(layout_3D), pointer :: layout3d_parx3
+    type(sll_t_layout_3d), pointer :: layout3d_parx3
     sll_real64,      pointer ::    rho3d_parx3(:,:,:)
     sll_real64,      pointer ::    phi3d_parx3(:,:,:)
     sll_real64,      pointer ::       A1_parx3(:,:,:)
     sll_real64,      pointer ::       A2_parx3(:,:,:)
-    type(remap_plan_3D_real64), pointer ::remap_plan_parx1_to_parx3
+    type(sll_t_remap_plan_3d_real64), pointer ::remap_plan_parx1_to_parx3
 
     !----> for Poisson
-    type(layout_2D), pointer :: layout2d_parx1
-    type(layout_2D), pointer :: layout2d_parx2
+    type(sll_t_layout_2d), pointer :: layout2d_parx1
+    type(sll_t_layout_2d), pointer :: layout2d_parx2
 
     !--> cubic splines interpolation
-    !type(sll_cubic_spline_2d), pointer :: interp_x1x2
-    !type(sll_cubic_spline_1d), pointer :: interp_x3
-    !type(sll_cubic_spline_1d), pointer :: interp_x4
+    !type(sll_t_cubic_spline_2d), pointer :: interp_x1x2
+    !type(sll_t_cubic_spline_1d), pointer :: interp_x3
+    !type(sll_t_cubic_spline_1d), pointer :: interp_x4
 
     sll_real64, pointer :: x1_node(:)
     sll_real64, pointer :: x2_node(:)
     sll_real64, pointer :: x3_node(:)
     sll_real64, pointer :: x4_node(:)
 
-    class(sll_advection_2d_base), pointer :: adv_x1x2
+    class(sll_c_advection_2d_base), pointer :: adv_x1x2
     !class(sll_c_interpolator_2d), pointer :: interp_x1x2
-    class(sll_characteristics_2d_base), pointer :: charac_x1x2
-    class(sll_advection_1d_base), pointer :: adv_x3
-    class(sll_advection_1d_base), pointer :: adv_x4
-    type(oblic_2d_advector),      pointer :: adv_x2x3
+    class(sll_c_characteristics_2d_base), pointer :: charac_x1x2
+    class(sll_c_advection_1d_base), pointer :: adv_x3
+    class(sll_c_advection_1d_base), pointer :: adv_x4
+    type(sll_t_oblic_2d_advector),      pointer :: adv_x2x3
     
-    class(sll_poisson_2d_base), pointer :: poisson2d
-    class(sll_poisson_2d_base), pointer :: poisson2d_mean
-    class(sll_poisson_3d_base), pointer :: poisson3d
+    class(sll_c_poisson_2d_base), pointer :: poisson2d
+    class(sll_c_poisson_2d_base), pointer :: poisson2d_mean
+    class(sll_c_poisson_3d_base), pointer :: poisson3d
 
     !for computing advection field from phi
     class(sll_c_interpolator_2d), pointer :: phi_interp_x1x2
     class(sll_c_interpolator_1d), pointer :: phi_interp_x3
-    class(sll_advection_1d_base),    pointer :: adv_x2
-    type(oblic_2d_derivative),       pointer :: deriv
+    class(sll_c_advection_1d_base),    pointer :: adv_x2
+    type(sll_t_oblic_2d_derivative),       pointer :: deriv
     !class(sll_c_interpolator_1d), pointer   :: phi_interp_fa !for field aligned interp.
     !should replace phi_interp_x3 in future
 
@@ -342,14 +342,14 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
      procedure :: run            =>  run_dk4d_field_aligned_polar
      procedure :: init_from_file => init_dk4d_field_aligned_polar
 
-  end type sll_simulation_4d_drift_kinetic_field_aligned_polar
+  end type sll_t_simulation_4d_drift_kinetic_field_aligned_polar
 
   !============================================================================
-  ! DELETE SUBROUTINE (overloaded)
+  ! sll_o_delete SUBROUTINE (overloaded)
   !============================================================================
-  interface delete
+  interface sll_o_delete
      module procedure delete_dk4d_field_aligned_polar
-  end interface delete
+  end interface sll_o_delete
 
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
@@ -357,7 +357,7 @@ contains
 
   ! Initialize simulation from input file
   subroutine init_dk4d_field_aligned_polar( sim, filename )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
                       intent(inout) :: sim
     character(len=*), intent(in)    :: filename
 
@@ -366,7 +366,7 @@ contains
 
     sll_int32            :: IO_stat
     sll_int32, parameter :: input_file = 99  ! TODO: use Pierre's I/O
-    class(sll_characteristics_2d_base), pointer :: charac2d   ! computation of characteristics
+    class(sll_c_characteristics_2d_base), pointer :: charac2d   ! computation of characteristics
 
     !> 2D interpolator (in poloidal plane) for r component of adv. field
     class(sll_c_interpolator_2d), pointer   :: A1_interp2d 
@@ -591,11 +591,11 @@ contains
     !==========================================================================
 
     !--> Mesh
-    sim%m_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
-    sim%m_x2 => new_cartesian_mesh_1d(num_cells_x2,&
-      eta_min=0._f64,eta_max=2._f64*sll_pi)
-    sim%m_x3 => new_cartesian_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
-    sim%m_x4 => new_cartesian_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
+    sim%m_x1 => sll_f_new_cartesian_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
+    sim%m_x2 => sll_f_new_cartesian_mesh_1d(num_cells_x2,&
+      eta_min=0._f64,eta_max=2._f64*sll_p_pi)
+    sim%m_x3 => sll_f_new_cartesian_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
+    sim%m_x4 => sll_f_new_cartesian_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
     
     !--> Equilibrium
     sim%tau0     = tau0
@@ -619,11 +619,11 @@ contains
 
     select case (poisson2d_BC_rmin)
       case ("SLL_DIRICHLET")
-        poisson2d_BC(1) = SLL_DIRICHLET
+        poisson2d_BC(1) = sll_p_dirichlet
       case ("SLL_NEUMANN")
-        poisson2d_BC(1) = SLL_NEUMANN
+        poisson2d_BC(1) = sll_p_neumann
       case ("SLL_NEUMANN_MODE_0")
-        poisson2d_BC(1) = SLL_NEUMANN_MODE_0      
+        poisson2d_BC(1) = sll_p_neumann_mode_0      
       case default
         print *,'#bad choice for poisson2d_BC_rmin'
         print *,'#in init_dk4d_polar'
@@ -632,11 +632,11 @@ contains
 
     select case (poisson2d_BC_rmax)
       case ("SLL_DIRICHLET")
-        poisson2d_BC(2) = SLL_DIRICHLET
+        poisson2d_BC(2) = sll_p_dirichlet
       case ("SLL_NEUMANN")
-        poisson2d_BC(2) = SLL_NEUMANN
+        poisson2d_BC(2) = sll_p_neumann
       case ("SLL_NEUMANN_MODE_0")
-        poisson2d_BC(2) = SLL_NEUMANN_MODE_0
+        poisson2d_BC(2) = sll_p_neumann_mode_0
       case default
         print *,'#bad choice for poisson2d_BC_rmax'
         print *,'#in i nit_dk4d_polar'
@@ -684,12 +684,12 @@ contains
     sim%use_field_aligned_interpolation = use_field_aligned_interpolation
 
     ! MPI info: no. of tasks and processor rank
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%my_rank    = sll_f_get_collective_rank(sll_v_world_collective)
 
     ! Master prints info to standard output
     ! TODO: add subroutine: sim%print_info()
-    if(sll_get_collective_rank(sll_world_collective)==0)then
+    if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
       print *,'##Mesh'
       print *,'#num_cells_x1=',num_cells_x1
       print *,'#num_cells_x2=',num_cells_x2
@@ -726,10 +726,10 @@ contains
 
     ! TODO: check if equivalent to
     ! call sim%m_x1%get_node_positions( sim%x1_node )
-    call get_node_positions(sim%m_x1,sim%x1_node)
-    call get_node_positions(sim%m_x2,sim%x2_node)
-    call get_node_positions(sim%m_x3,sim%x3_node)
-    call get_node_positions(sim%m_x4,sim%x4_node)
+    call sll_o_get_node_positions(sim%m_x1,sim%x1_node)
+    call sll_o_get_node_positions(sim%m_x2,sim%x2_node)
+    call sll_o_get_node_positions(sim%m_x3,sim%x3_node)
+    call sll_o_get_node_positions(sim%m_x4,sim%x4_node)
 
     ! Allocate iota_r
     SLL_ALLOCATE(sim%iota_r(num_cells_x1+1),ierr)
@@ -778,7 +778,7 @@ contains
         ! Input/output data is parallelized in x1=r
         ! Internally it also uses parallelization in x2=theta
         ! Needs both par-x1 and par-x2 layouts
-        sim%poisson3d => new_qn_solver_3d_polar_parallel_x1_wrapper( &
+        sim%poisson3d => sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper( &
           sim%layout2d_parx2, &
           sim%layout2d_parx1, &
           sim%m_x1%eta_min, &
@@ -815,51 +815,51 @@ contains
     !       - sll_m_lagrange_interpolation/sll_lagrange_interpolation.F90
     select case (interp_x1x2)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_interpolator_2d( &
+        f_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
-          SLL_HERMITE, &
-          SLL_PERIODIC, &
+          sll_p_hermite, &
+          sll_p_periodic, &
           const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
           const_eta1_max_slope = 0._f64)
-        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
+        A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           sim%m_x1%num_cells+1, &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
-          SLL_HERMITE, &
+          sll_p_hermite, &
           slope_left  = 0._f64, &
           slope_right = 0._f64 )
-        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
+        A2_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           sim%m_x1%num_cells+1, &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
-          SLL_HERMITE, &
+          sll_p_hermite, &
           slope_left  = 0._f64, &
           slope_right = 0._f64 )
-        A1_interp2d => new_cubic_spline_interpolator_2d( &
+        A1_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
-          SLL_HERMITE, &
-          SLL_PERIODIC, &
+          sll_p_hermite, &
+          sll_p_periodic, &
           const_eta1_min_slope = 0._f64, &
           const_eta1_max_slope = 0._f64)
-        A2_interp2d => new_cubic_spline_interpolator_2d( &
+        A2_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
-          SLL_HERMITE, &
-          SLL_PERIODIC, &
+          sll_p_hermite, &
+          sll_p_periodic, &
           const_eta1_min_slope = 0._f64, &
           const_eta1_max_slope = 0._f64)
       case default
@@ -872,18 +872,18 @@ contains
     ! Create (r,theta) interpolator for phi, used ONLY to obtain E = -dphi/dx
     ! For better mass conservation, here we should use the same interpolator
     ! used for f
-    ! NOTE: BC at r=r_min only consistent with SLL_NEUMANN_MODE_0 option
+    ! NOTE: BC at r=r_min only consistent with sll_p_neumann_mode_0 option
     select case (phi_interp_x1x2)
       case ("SLL_CUBIC_SPLINES")
-         sim%phi_interp_x1x2 => new_cubic_spline_interpolator_2d( &
+         sim%phi_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
-          SLL_HERMITE, &
-          SLL_PERIODIC, &
+          sll_p_hermite, &
+          sll_p_periodic, &
           const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
           const_eta1_max_slope = 0._f64)
       case default
@@ -897,11 +897,11 @@ contains
     ! when field-aligned interpolation option is not chosen.
     select case (phi_interp_x3)
       case ("SLL_CUBIC_SPLINES")
-        sim%phi_interp_x3 => new_cubic_spline_interpolator_1d( &
+        sim%phi_interp_x3 => sll_f_new_cubic_spline_interpolator_1d( &
           sim%m_x3%num_cells+1, &
           sim%m_x3%eta_min, &
           sim%m_x3%eta_max, &
-          SLL_PERIODIC)
+          sll_p_periodic)
       case default
         print *,'#bad phi_interp_x3',phi_interp_x3
         print *,'#not implemented'
@@ -914,25 +914,25 @@ contains
     ! TODO: implement wrapper to explicit RK integrators
     select case (charac2d_case)
       case("SLL_CHARAC_EULER")
-        charac2d => new_explicit_euler_2d_charac(&
+        charac2d => sll_f_new_explicit_euler_2d_charac(&
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
-          bc_type_1= SLL_SET_TO_LIMIT, &
-          bc_type_2= SLL_PERIODIC, &
+          bc_type_1= sll_p_set_to_limit, &
+          bc_type_2= sll_p_periodic, &
           eta1_min = sim%m_x1%eta_min, &
           eta1_max = sim%m_x1%eta_max, &
           eta2_min = sim%m_x2%eta_min, &
           eta2_max = sim%m_x2%eta_max)
       case("SLL_CHARAC_VERLET")
-        charac2d => new_verlet_2d_charac(&
+        charac2d => sll_f_new_verlet_2d_charac(&
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           A1_interp2d, &
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1= SLL_SET_TO_LIMIT, &
-          bc_type_2= SLL_PERIODIC, &
+          bc_type_1= sll_p_set_to_limit, &
+          bc_type_2= sll_p_periodic, &
           eta1_min = sim%m_x1%eta_min, &
           eta1_max = sim%m_x1%eta_max, &
           eta2_min = sim%m_x2%eta_min, &
@@ -953,7 +953,7 @@ contains
     ! 2D advector in (r,theta): given f and poloidal A=(A1,A2), advance by dt
     select case(advect2d_case)
       case ("SLL_BSL")
-      sim%adv_x1x2 => new_BSL_2d_advector(&
+      sim%adv_x1x2 => sll_f_new_bsl_2d_advector(&
         f_interp2d, &
         charac2d, &
         sim%m_x1%num_cells+1, &
@@ -972,18 +972,18 @@ contains
     ! 1D advector in theta: needed by field-aligned algorithm
     select case (advector_x2)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%adv_x2 => new_periodic_1d_advector( &
+        sim%adv_x2 => sll_f_new_periodic_1d_advector( &
           sim%m_x2%num_cells, &
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
-          SPLINE, & 
+          sll_p_spline, & 
           order_x2) 
-      case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%adv_x2 => new_periodic_1d_advector( &
+      case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
+        sim%adv_x2 => sll_f_new_periodic_1d_advector( &
           sim%m_x2%num_cells, &
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
-          LAGRANGE, & 
+          sll_p_lagrange, & 
           order_x2) 
        case default
          print*,'#advector in x2', advector_x2, ' not implemented'
@@ -993,18 +993,18 @@ contains
     ! 1D advector along z: not for field-aligned
     select case (advector_x3)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%adv_x3 => new_periodic_1d_advector( &
+        sim%adv_x3 => sll_f_new_periodic_1d_advector( &
           sim%m_x3%num_cells, &
           sim%m_x3%eta_min, &
           sim%m_x3%eta_max, &
-          SPLINE, & 
+          sll_p_spline, & 
           order_x3) 
-      case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%adv_x3 => new_periodic_1d_advector( &
+      case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
+        sim%adv_x3 => sll_f_new_periodic_1d_advector( &
           sim%m_x3%num_cells, &
           sim%m_x3%eta_min, &
           sim%m_x3%eta_max, &
-          LAGRANGE, & 
+          sll_p_lagrange, & 
           order_x3) 
        case default
          print*,'#advector in x3', advector_x3, ' not implemented'
@@ -1014,18 +1014,18 @@ contains
     ! 1D advector along v
     select case (advector_x4)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%adv_x4 => new_periodic_1d_advector( &
+        sim%adv_x4 => sll_f_new_periodic_1d_advector( &
           sim%m_x4%num_cells, &
           sim%m_x4%eta_min, &
           sim%m_x4%eta_max, &
-          SPLINE, & 
+          sll_p_spline, & 
           order_x4) 
-      case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%adv_x4 => new_periodic_1d_advector( &
+      case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
+        sim%adv_x4 => sll_f_new_periodic_1d_advector( &
           sim%m_x4%num_cells, &
           sim%m_x4%eta_min, &
           sim%m_x4%eta_max, &
-          LAGRANGE, & 
+          sll_p_lagrange, & 
           order_x4) 
        case default
          print*,'#advector in x4', advector_x4, ' not implemented'
@@ -1033,7 +1033,7 @@ contains
     end select
     
     ! Create object for computing field aligned derivatives
-    sim%deriv => new_oblic_2d_derivative( &
+    sim%deriv => sll_f_new_oblic_2d_derivative( &
       sim%m_x2%num_cells, &
       sim%adv_x2, &
       sim%m_x3%num_cells, &
@@ -1044,7 +1044,7 @@ contains
 
     ! 2D advector, field aligned
     ! TODO: add Hermite interpolation option
-    sim%adv_x2x3 => new_oblic_2d_advector( &
+    sim%adv_x2x3 => sll_f_new_oblic_2d_advector( &
       sim%m_x2%num_cells, &
       sim%adv_x2, &
       sim%m_x3%num_cells, &
@@ -1060,11 +1060,11 @@ contains
 !==============================================================================
 
   subroutine run_dk4d_field_aligned_polar(sim)
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
 
     !--> For initial profile HDF5 saving
-    sll_int32                    :: file_err
-    sll_int32                    :: file_id
+    !sll_int32                    :: file_err
+    !sll_int32                    :: file_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
     sll_real64, allocatable      :: f4d_store(:,:,:,:)  ! for field prediction
     sll_int32  :: loc4d_sz_x1
@@ -1086,7 +1086,8 @@ contains
     character(len=4)        :: cplot
     character(len=*), parameter :: filetype="HDF"
     character(len=64)       :: hdf5_file_name, xml_file_name, field_name
-    sll_int32               :: hdf5_file_id, error
+    !sll_int32               :: hdf5_file_id
+    !sll_int32               :: error
     type( sll_t_hdf5_serial ) :: hdf5_file
     type( sll_t_xdmf_parallel_file ) :: xdmf_file
     logical                 :: to_file
@@ -1104,7 +1105,7 @@ contains
     nc_x4 = sim%m_x4%num_cells
     
     !*** Saving of the radial profiles in HDF5 file ***
-    if (sll_get_collective_rank(sll_world_collective)==0) then
+    if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
       call hdf5_file%init( filename_prof )
       call hdf5_file%create()
       call hdf5_file%write_array( sim%n0_r, 'n0_r' )
@@ -1113,16 +1114,16 @@ contains
       call hdf5_file%delete()
 
       ierr = 1
-      call sll_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
-      call sll_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
-      call sll_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
-      call sll_gnuplot_1d(sim%iota_r,'iota_r_init',ierr)
-      call sll_gnuplot_1d(sim%b_unit_x2,'b_theta_init',ierr)
-      call sll_gnuplot_1d(sim%b_unit_x3,'b_z_init',ierr)
+      call sll_o_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
+      call sll_o_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
+      call sll_o_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
+      call sll_o_gnuplot_1d(sim%iota_r,'iota_r_init',ierr)
+      call sll_o_gnuplot_1d(sim%b_unit_x2,'b_theta_init',ierr)
+      call sll_o_gnuplot_1d(sim%b_unit_x3,'b_z_init',ierr)
     end if
 
     ! Allocate temp. storage, distributed in r
-    call compute_local_sizes( sim%layout4d_parx1, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx1, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1130,8 +1131,8 @@ contains
     SLL_ALLOCATE(f4d_store(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
 
     ! Master MPI task writes time diagnostics (scalar quantities) to file
-    if(sll_get_collective_rank(sll_world_collective)==0) then
-      call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+    if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
+      call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
     endif
 
     ! Initialize all parallel arrays
@@ -1143,7 +1144,7 @@ contains
 
     ! (r,theta) slice: poloidal plane
     dims_x1x2 = [sim%m_x1%num_cells+1, sim%m_x2%num_cells+1]
-    if(sll_get_collective_rank(sll_world_collective)==0) then
+    if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
       call write_mesh_x1x2_polar( sim%m_x1, sim%m_x2, &
         dataset_x1_polar, dataset_x2_polar )
     else     
@@ -1154,7 +1155,7 @@ contains
 
     ! (theta,z) slice: flux surface
     dims_x2x3 = [sim%m_x2%num_cells+1, sim%m_x3%num_cells+1]
-    if(sll_get_collective_rank(sll_world_collective)==0) then
+    if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
       call write_mesh_x2x3_cart( sim%m_x2, sim%m_x3, &
         dataset_x2_cart , dataset_x3_cart  )
     else
@@ -1168,7 +1169,7 @@ contains
     do iter=1,sim%num_iterations
 
       ! Compute 3D charge density from 4D distribution function
-      call compute_local_sizes( sim%layout4d_parx1, &
+      call sll_o_compute_local_sizes( sim%layout4d_parx1, &
         loc4d_sz_x1, &
         loc4d_sz_x2, &
         loc4d_sz_x3, &
@@ -1176,7 +1177,7 @@ contains
       call compute_rho_dk(sim)    
 
       if(modulo(iter,sim%freq_diag)==0)then
-        if(sll_get_collective_rank(sll_world_collective)==0) then
+        if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
           print*,'#iteration=',iter      
         endif
       endif
@@ -1238,7 +1239,7 @@ contains
           call advection_x3( sim, 0.5_f64*dt )
 
         case default
-          call sll_halt_collective()
+          call sll_s_halt_collective()
           print *,'#sim%time_case=',sim%time_case
           print *, '#not implemented'
           print *,'#in run_dk4d_polar'
@@ -1260,7 +1261,7 @@ contains
         i_plot = i_plot+1
 
         ! Determine file names
-        call int2string( i_plot, cplot )
+        call sll_s_int2string( i_plot, cplot )
         hdf5_file_name = 'diag2d_'//cplot//'.h5'  ! HDF5 file (heavy data)
         xml_file_name  = 'diag2d_'//cplot//'.xmf' ! XML  file (light data)
 
@@ -1268,16 +1269,16 @@ contains
         call hdf5_file%init( hdf5_file_name )
 
         ! MASTER: Create new HDF5 file and close it
-        if (sll_get_collective_rank(sll_world_collective)==0) then
+        if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
           call hdf5_file%create()
           call hdf5_file%close()
         end if
 
         ! Wait for HDF5 file to be available to other processors
-        call sll_collective_barrier( sll_world_collective )
+        call sll_s_collective_barrier( sll_v_world_collective )
 
         ! Initialize parallel XDMF file
-        call xdmf_file%init( sim%time, sll_world_collective )
+        call xdmf_file%init( sim%time, sll_v_world_collective )
 
         ! Add cartesian grid (x2,x3) to XDMF file
         call xdmf_file%add_grid( &
@@ -1304,7 +1305,7 @@ contains
         !  . theta = 0
         !  . z = 0
         !  . v = 0 (center value)
-        loc4d(1:4)  = global_to_local( &
+        loc4d(1:4)  = sll_o_global_to_local( &
           sim%layout4d_parx1, &
           [nc_x1/2+1,1,1,nc_x4/2+1] )
 
@@ -1330,7 +1331,7 @@ contains
         !----------------------------------------------------------------------
 
         ! Copy f distributed in x1 into f distributed in (x3,x4)
-        call apply_remap_4D( &
+        call sll_o_apply_remap_4d( &
           sim%remap_plan_parx1_to_parx3x4, &
           sim%f4d_parx1, &
           sim%f4d_parx3x4 )
@@ -1340,7 +1341,7 @@ contains
         !  . theta = 0
         !  . z = 0
         !  . v = 0 (center value)
-        loc4d(1:4) = global_to_local( sim%layout4d_parx3x4, [1,1,1,nc_x4/2+1] )
+        loc4d(1:4) = sll_o_global_to_local( sim%layout4d_parx3x4, [1,1,1,nc_x4/2+1] )
 
         ! If point is in local domain, print slice of f on poloidal plane z=0
         if(loc4d(3) > 0) then
@@ -1362,12 +1363,12 @@ contains
         call xdmf_file%add_field( gid_x1x2, field_name, field_path, to_file )
 
         !----------------------------------------------------------------------
-        ! Write XML document, then delete XDMF file contents
+        ! Write XML document, then sll_o_delete XDMF file contents
         !----------------------------------------------------------------------
         call xdmf_file%write( xml_file_name )
         call xdmf_file%delete()
 
-        ! Delete HDF5 wrapper (will be initialized again)
+        ! sll_o_delete HDF5 wrapper (will be initialized again)
         call hdf5_file%delete()
 
       endif !if (modulo(iter,sim%freq_diag)==0)
@@ -1383,7 +1384,7 @@ contains
 !> if is_q_file=.false. and is_Dq_file=.true., error
 !> if is_q_file=.true. and is_Dq_file=.false., takes q(r) from q_file Dq(r) by interp of q
 !> if is_q_file=.true. and is_Dq_file=.false., takes q(r) from q_file Dq(r) from Dq_file
-!> when q (or Dq) are taken from q_file, we use cubic spline interpolation for getting
+!> when q (or Dq) are taken from q_file, we use cubic sll_p_spline interpolation for getting
 !> values on grid points
   subroutine initialize_iota_profile( &
     iota0_r, &
@@ -1417,19 +1418,19 @@ contains
     
     ! some checking
     if (size(iota)<num_points_r) then
-      call sll_halt_collective()
+      call sll_s_halt_collective()
       print *,'#bad size for iota in initialize_iota_profile'
       stop
     endif
     !if(size(Diota)<num_points_r)then
-    !  call sll_halt_collective()
+    !  call sll_s_halt_collective()
     !  print *,'#bad size for Diota in initialize_iota_profile'
     !  stop
     !endif
     
     if ((is_iota_file .eqv. .false.)) then ! .and. (is_Diota_file .eqv. .false.)) then
       if(size(r_array)<num_points_r)then
-        call sll_halt_collective()
+        call sll_s_halt_collective()
         print *,'#bad size for r_array in initialize_iota_profile'
         stop
       endif
@@ -1440,20 +1441,20 @@ contains
     endif
 
     !if ((is_iota_file .eqv. .false.) .and. (is_Diota_file .eqv. .true.)) then
-    !  call sll_halt_collective()
+    !  call sll_s_halt_collective()
     !  print *,'#bad value for is_iota_file and is_Diota_file in initialize_iota_profile'
     !  stop      
     !endif
 
     !if ((is_iota_file .eqv. .true.) .and. (is_Diota_file .eqv. .false.))then
-    !  call sll_halt_collective()
+    !  call sll_s_halt_collective()
     !  print *,'#not implemented for the moment'
     !  print *,'#in initialize_iota_profile'
     !  stop
     !endif
 
     if ((is_iota_file .eqv. .true.) ) then !.and. (is_Diota_file .eqv. .true.))then
-      call sll_halt_collective()
+      call sll_s_halt_collective()
       print *,'#not implemented for the moment'
       print *,'#in initialize_iota_profile'
       stop
@@ -1479,24 +1480,24 @@ contains
 !
 !    ! some checking
 !    if(size(iota)<num_points_r)then
-!      call sll_halt_collective()
+!      call sll_s_halt_collective()
 !      print *,'#bad size for iota in initialize_c_from_iota_profile'
 !      stop
 !    endif
 !
 !    if(size(r_array)<num_points_r)then
-!      call sll_halt_collective()
+!      call sll_s_halt_collective()
 !      print *,'#bad size for r_array in initialize_c_from_iota_profile'
 !      stop
 !    endif
 !
 !    if(size(c_r)<num_points_r)then
-!      call sll_halt_collective()
+!      call sll_s_halt_collective()
 !      print *,'#bad size for c_r in initialize_c_from_iota_profile'
 !      stop
 !    endif
 !
-!    big_R = L/(2._f64*sll_pi)
+!    big_R = L/(2._f64*sll_p_pi)
 !
 !    do i=1,num_points_r
 !      c_r(i) = r_array(i)*iota(i)/big_R
@@ -1527,30 +1528,30 @@ contains
 
     ! some checking
     if(size(iota)<num_points_r)then
-      call sll_halt_collective()
+      call sll_s_halt_collective()
       print *,'#bad size for iota in initialize_b_unit_from_iota_profile'
       stop
     endif
 
     if(size(r_array)<num_points_r)then
-      call sll_halt_collective()
+      call sll_s_halt_collective()
       print *,'#bad size for r_array in initialize_b_unit_from_iota_profile'
       stop
     endif
 
     if(size(b_unit_x2)<num_points_r)then
-      call sll_halt_collective()
+      call sll_s_halt_collective()
       print *,'#bad size for b_unit_x2 in initialize_b_unit_from_iota_profile'
       stop
     endif
 
     if(size(b_unit_x3)<num_points_r)then
-      call sll_halt_collective()
+      call sll_s_halt_collective()
       print *,'#bad size for b_unit_x3 in initialize_b_unit_from_iota_profile'
       stop
     endif
 
-    big_R = L/(2._f64*sll_pi)
+    big_R = L/(2._f64*sll_p_pi)
     
     do i=1,num_points_r
       c = r_array(i)*iota(i)/big_R
@@ -1582,19 +1583,19 @@ contains
 !    sll_int32 :: spaghetti_size0
 !
 !    if(size(iota)<num_points_r)then
-!      call sll_halt_collective()
+!      call sll_s_halt_collective()
 !      print *,'#bad size for iota in initialize_iota_modif'
 !      stop
 !    endif
 !
 !    if(size(shift_r)<num_points_r)then
-!      call sll_halt_collective()
+!      call sll_s_halt_collective()
 !      print *,'#bad size for shift_R in initialize_iota_modif'
 !      stop
 !    endif
 !
 !    do i=1,num_points_r
-!      call compute_spaghetti_and_shift_from_guess( &
+!      call sll_s_compute_spaghetti_and_shift_from_guess( &
 !        Nc_x1, &
 !        Nc_x2, &
 !        iota(i), &
@@ -1615,7 +1616,7 @@ contains
 
 
   subroutine time_history_diagnostic_dk_polar( sim, file_id, step )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
                intent(in) :: sim
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
@@ -1633,7 +1634,7 @@ contains
     delta2 = sim%m_x2%delta_eta
 
     nrj = 0._f64
-    call compute_reduction_2d_to_0d(&
+    call sll_s_compute_reduction_2d_to_0d(&
       sim%phi3d_parx3(:,:,1)**2, &
       nrj, &
       Nc_x1+1, &
@@ -1641,15 +1642,15 @@ contains
       delta1, &    
       delta2)
 
-    if (sll_get_collective_rank(sll_world_collective)==0) then
+    if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
       write(file_id,'(f12.5,2g20.12)') real(step,f64)*sim%dt, nrj
       if (step==0) then
         ierr = 1
-        call sll_gnuplot_1d(sim%phi3d_parx3(:,1,1),'phi_0',ierr)
-        !call sll_gnuplot_1d(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
-        call sll_gnuplot_1d(sim%Ti_r(:),'Ti_r',ierr)
-        call sll_gnuplot_1d(sim%Te_r(:),'Te_r',ierr)
-        call sll_gnuplot_1d(sim%n0_r(:),'n0_r',ierr)
+        call sll_o_gnuplot_1d(sim%phi3d_parx3(:,1,1),'phi_0',ierr)
+        !call sll_o_gnuplot_1d(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
+        call sll_o_gnuplot_1d(sim%Ti_r(:),'Ti_r',ierr)
+        call sll_o_gnuplot_1d(sim%Te_r(:),'Te_r',ierr)
+        call sll_o_gnuplot_1d(sim%n0_r(:),'n0_r',ierr)
       endif
     endif
  
@@ -1658,8 +1659,8 @@ contains
 
   subroutine compute_field_from_phi_polar(phi,mesh1,mesh2,A1,A2,interp2d,B0)
     sll_real64,                      intent(in)  :: phi(:,:)
-    type(sll_cartesian_mesh_1d),     pointer     :: mesh1
-    type(sll_cartesian_mesh_1d),     pointer     :: mesh2
+    type(sll_t_cartesian_mesh_1d),     pointer     :: mesh1
+    type(sll_t_cartesian_mesh_1d),     pointer     :: mesh2
     sll_real64,                      intent(out) :: A1(:,:)
     sll_real64,                      intent(out) :: A2(:,:)
     class(sll_c_interpolator_2d), pointer     :: interp2d
@@ -1699,7 +1700,7 @@ contains
 
   subroutine compute_field_from_phi_cartesian_1d( phi, mesh, A, interp )
     sll_real64,                      intent(in)  :: phi(:)
-    type(sll_cartesian_mesh_1d),     pointer     :: mesh
+    type(sll_t_cartesian_mesh_1d),     pointer     :: mesh
     sll_real64,                      intent(out) :: A(:)
     class(sll_c_interpolator_1d), pointer     :: interp
 
@@ -1728,7 +1729,7 @@ contains
   !  - phi3d_parx1       - A3_parx1
   !----------------------------------------------------------------------------
   subroutine compute_field_dk_parx1( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
 
     sll_int32 :: loc4d_sz_x1
     sll_int32 :: loc4d_sz_x2
@@ -1747,7 +1748,7 @@ contains
     nc_x3 = sim%m_x3%num_cells
     
     ! Use layout parallel in (z,v)
-    call compute_local_sizes( &
+    call sll_o_compute_local_sizes( &
       sim%layout4d_parx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
@@ -1755,7 +1756,7 @@ contains
       loc4d_sz_x4 )
     
     !print *,'#phi3d_parx3=',maxval(sim%phi3d_parx3),minval(sim%phi3d_parx3), &
-    !  sll_get_collective_rank(sll_world_collective)
+    !  sll_f_get_collective_rank(sll_v_world_collective)
 
     ! Compute A1_parx3 and A2_parx3 from phi3d_parx3
     ! 2D gradient of phi in poloidal plane (r,theta)
@@ -1771,7 +1772,7 @@ contains
     enddo
 
     ! Use layout parallel in r (we now work on 2D flux surfaces)
-    call compute_local_sizes( &
+    call sll_o_compute_local_sizes( &
       sim%layout4d_parx1, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
@@ -1782,8 +1783,8 @@ contains
     ! Option a) Field-aligned algorithm on (theta,z) flux surface
     if (sim%use_field_aligned_derivative .eqv. .true.) then
       do i1=1, loc4d_sz_x1
-        glob_ind(1:4) = local_to_global( sim%layout4d_parx1, [i1,1,1,1] )
-        call compute_oblic_derivative_2d( &
+        glob_ind(1:4) = sll_o_local_to_global( sim%layout4d_parx1, [i1,1,1,1] )
+        call sll_s_compute_oblic_derivative_2d( &
           sim%deriv, &
           sim%b_unit_x2(glob_ind(1)), &
           sim%b_unit_x3(glob_ind(1)), &
@@ -1812,20 +1813,20 @@ contains
 ! Compute 3D charge density from 4D distribution function
 !------------------------------------------------------------------------------
   subroutine compute_rho_dk( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
 
     sll_int32 :: loc_sz_x1
     sll_int32 :: loc_sz_x2
     sll_int32 :: loc_sz_x3
     sll_int32 :: loc_sz_x4
     
-    call compute_local_sizes( sim%layout4d_parx1, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
       loc_sz_x4 )
 
-    call compute_reduction_4d_to_3d_direction4(&
+    call sll_s_compute_reduction_4d_to_3d_direction4(&
       sim%f4d_parx1, &
       sim%rho3d_parx1, &
       loc_sz_x1, &
@@ -1839,7 +1840,7 @@ contains
 !------------------------------------------------------------------------------
 
   subroutine advection_x3( sim, dt )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
                 intent(inout) :: sim
     sll_real64, intent(in)    :: dt
 
@@ -1866,7 +1867,7 @@ contains
     nc_x3 = sim%m_x3%num_cells
     nc_x4 = sim%m_x4%num_cells
 
-    call compute_local_sizes( sim%layout4d_parx1, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1876,10 +1877,10 @@ contains
       SLL_ALLOCATE(f2d(nc_x2+1,nc_x3+1),ierr)
       do i1=1,loc_sz_x1
         do i4=1,loc_sz_x4
-          glob_ind(1:4) = local_to_global( sim%layout4d_parx1, [i1,1,1,i4] )
+          glob_ind(1:4) = sll_o_local_to_global( sim%layout4d_parx1, [i1,1,1,i4] )
           alpha = sim%m_x4%eta_min+real(glob_ind(4)-1,f64)*sim%m_x4%delta_eta
           f2d(1:nc_x2+1,1:nc_x3+1) = sim%f4d_parx1(i1,1:nc_x2+1,1:nc_x3+1,i4)
-          call oblic_advect_2d_constant( &
+          call sll_s_oblic_advect_2d_constant( &
             sim%adv_x2x3, &
             sim%b_unit_x2(glob_ind(1)), &
             sim%b_unit_x3(glob_ind(1)), &
@@ -1895,7 +1896,7 @@ contains
       do i2=1,loc_sz_x2
         do i1=1,loc_sz_x1
           do i4=1,loc_sz_x4
-            glob_ind(1:4) = local_to_global( sim%layout4d_parx1, [i1,i2,1,i4] )
+            glob_ind(1:4) = sll_o_local_to_global( sim%layout4d_parx1, [i1,i2,1,i4] )
             alpha = sim%m_x4%eta_min+real(glob_ind(4)-1,f64)*sim%m_x4%delta_eta
             f1d(1:nc_x3+1) = sim%f4d_parx1(i1,i2,1:nc_x3+1,i4)
             call sim%adv_x3%advect_1d_constant(&
@@ -1915,7 +1916,7 @@ contains
   
 
   subroutine advection_x4( sim, dt )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
                 intent(inout) :: sim
     sll_real64, intent(in)    :: dt
 
@@ -1944,7 +1945,7 @@ contains
     SLL_ALLOCATE(f1d(nc_x4+1),ierr)
     SLL_ALLOCATE(f1d_new(nc_x4+1),ierr)
       
-    call compute_local_sizes( sim%layout4d_parx1, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1972,7 +1973,7 @@ contains
 
 
   subroutine advection_x1x2( sim, dt )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
                 intent(inout) :: sim
     sll_real64, intent(in)    :: dt
 
@@ -1999,7 +2000,7 @@ contains
     nc_x3 = sim%m_x3%num_cells
     nc_x4 = sim%m_x4%num_cells
 
-    call apply_remap_4D( &
+    call sll_o_apply_remap_4d( &
       sim%remap_plan_parx1_to_parx3x4, &
       sim%f4d_parx1, &
       sim%f4d_parx3x4 )
@@ -2009,7 +2010,7 @@ contains
     SLL_ALLOCATE(A2(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(v_array(nc_x4+1),ierr)
 
-    call compute_local_sizes( sim%layout4d_parx3x4, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx3x4, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -2024,7 +2025,7 @@ contains
 
     do i4 = 1,loc_sz_x4
       do i3 = 1,loc_sz_x3
-        glob_ind(:) = local_to_global( sim%layout4d_parx3x4, [1,1,i3,i4] )
+        glob_ind(:) = sll_o_local_to_global( sim%layout4d_parx3x4, [1,1,i3,i4] )
         do i1=1,nc_x1+1
           A2(i1,1:nc_x2+1) = sim%A2_parx3(i1,1:nc_x2+1,i3) &
             -v_array(glob_ind(4))*sim%b_unit_x2(i1)
@@ -2046,7 +2047,7 @@ contains
     SLL_DEALLOCATE_ARRAY(A2,ierr)
     SLL_DEALLOCATE_ARRAY(v_array,ierr)
 
-    call apply_remap_4D( &
+    call sll_o_apply_remap_4d( &
       sim%remap_plan_parx3x4_to_parx1, &
       sim%f4d_parx3x4, &
       sim%f4d_parx1 )
@@ -2055,10 +2056,10 @@ contains
 
   
   subroutine delete_dk4d_field_aligned_polar( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
       intent(inout) :: sim
 
-    if (sll_get_collective_rank(sll_world_collective)==0) then
+    if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
       print *,'#delete_dk4d_polar not implemented'
       print *,sim%dt
     endif
@@ -2069,7 +2070,7 @@ contains
   !< Initialize equilibrium profiles with analytical functions 
   ! TODO: maybes these profiles should not be part of sim object
   subroutine initialize_profiles_analytic(sim)
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
       intent(inout) :: sim
 
     sll_int32  :: i,ierr,nc_x1
@@ -2096,7 +2097,7 @@ contains
     Lr = x1_max-x1_min
     Lz = x3_max-x3_min
     
-    R0 = Lz/(2._f64*sll_pi)
+    R0 = Lz/(2._f64*sll_p_pi)
     inv_Ln   = sim%kappan  / R0
     inv_LTi  = sim%kappaTi / R0
     inv_LTe  = sim%kappaTe / R0
@@ -2150,7 +2151,7 @@ contains
   !   drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine allocate_fdistribu4d_and_QN_DK_parx1( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
       intent(inout) :: sim
 
     sll_int32 :: ierr !, itemp
@@ -2159,32 +2160,32 @@ contains
     sll_int32 :: power2_x3
 !    sll_int32 :: k_min
  
-    sim%nproc_x1 = sll_get_collective_size(sll_world_collective)
+    sim%nproc_x1 = sll_f_get_collective_size(sll_v_world_collective)
     sim%nproc_x2 = 1
     sim%nproc_x3 = 1
     sim%nproc_x4 = 1
    
-    if(sll_get_collective_rank(sll_world_collective)==0)then
+    if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
     
       print *,'#num_points=',sim%m_x1%num_cells+1, &
         sim%m_x2%num_cells+1, &
         sim%m_x3%num_cells+1, &
         sim%m_x4%num_cells+1
    
-      print *,'#num_proc=',sll_get_collective_size(sll_world_collective)
+      print *,'#num_proc=',sll_f_get_collective_size(sll_v_world_collective)
    
       print *,'#num_proc_parx1:',sim%nproc_x1,sim%nproc_x2,sim%nproc_x3,sim%nproc_x4
     endif
     
-    power2 = int(log(real(sll_get_collective_size(sll_world_collective)))/log(2.0))
+    power2 = int(log(real(sll_f_get_collective_size(sll_v_world_collective)))/log(2.0))
     power2_x3 = int(log(real(sim%m_x3%num_cells+1))/log(2.0))
     power2_x3 = min(power2_x3,power2)
 
     !--> Initialization of parallel layout of f4d in x1 direction (r)
     !-->  (x2,x3,x4) : sequential
     !-->  x1 : parallelized layout
-    sim%layout4d_parx1  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_array( &
+    sim%layout4d_parx1  => sll_f_new_layout_4d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -2200,7 +2201,7 @@ contains
     ! local sizes. Since the remap operations
     ! are out-of-place, we will allocate two different arrays, 
     ! one for each layout.
-    call compute_local_sizes( sim%layout4d_parx1, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx1, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -2214,8 +2215,8 @@ contains
     !--> Initialization of parallel layout for various arrays in poloidal plane
     !--> x1 (r)     : parallel
     !--> x2 (theta) : sequential
-    sim%layout2d_parx1  => new_layout_2D( sll_world_collective )
-    call initialize_layout_with_distributed_array( &
+    sim%layout2d_parx1  => sll_f_new_layout_2d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells, &     ! TODO: check if we should add "+1"
       sim%nproc_x1, &
@@ -2223,8 +2224,8 @@ contains
       sim%layout2d_parx1 )
 
     ! As above, but parallelized in theta
-    sim%layout2d_parx2  => new_layout_2D( sll_world_collective )
-    call initialize_layout_with_distributed_array( &
+    sim%layout2d_parx2  => sll_f_new_layout_2d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells, &    ! TODO: check if we should add "+1" 
       sim%nproc_x2, &
@@ -2240,8 +2241,8 @@ contains
     sim%nproc_x3 = 2**(power2_x3)
     sim%nproc_x4 = 2**(power2-power2_x3)
      
-    sim%layout4d_parx3x4  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_array( &
+    sim%layout4d_parx3x4  => sll_f_new_layout_4d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -2253,7 +2254,7 @@ contains
       sim%layout4d_parx3x4 )
         
     ! Compute size of local arrays, then allocate them (A3 not needed)
-    call compute_local_sizes( sim%layout4d_parx3x4, &
+    call sll_o_compute_local_sizes( sim%layout4d_parx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -2273,12 +2274,12 @@ contains
     ! MPI communication will happen when "remap" is called
     !--------------------------------------------------------------------------
 
-    sim%remap_plan_parx1_to_parx3x4 => NEW_REMAP_PLAN( &
+    sim%remap_plan_parx1_to_parx3x4 => sll_o_new_remap_plan( &
       sim%layout4d_parx1, &
       sim%layout4d_parx3x4, &
       sim%f4d_parx1)
 
-    sim%remap_plan_parx3x4_to_parx1 => NEW_REMAP_PLAN( &
+    sim%remap_plan_parx3x4_to_parx1 => sll_o_new_remap_plan( &
       sim%layout4d_parx3x4, &
       sim%layout4d_parx1, &
       sim%f4d_parx3x4)
@@ -2286,10 +2287,10 @@ contains
     ! Get 3D layouts from 4D layout, by discarding x4 dimension (v)
     ! If there was parallelization in v, after conversion multiple tasks will
     ! end up working on the same array chunk!
-    sim%layout3d_parx1  => new_layout_3D_from_layout_4D( sim%layout4d_parx1 )
-    sim%layout3d_parx3  => new_layout_3D_from_layout_4D( sim%layout4d_parx3x4 )
+    sim%layout3d_parx1  => sll_f_new_layout_3d_from_layout_4d( sim%layout4d_parx1 )
+    sim%layout3d_parx3  => sll_f_new_layout_3d_from_layout_4d( sim%layout4d_parx3x4 )
     
-    sim%remap_plan_parx1_to_parx3 => NEW_REMAP_PLAN( &
+    sim%remap_plan_parx1_to_parx3 => sll_o_new_remap_plan( &
       sim%layout3d_parx1, &
       sim%layout3d_parx3, &
       sim%phi3d_parx1)
@@ -2297,7 +2298,7 @@ contains
     !--------------------------------------------------------------------------
 
     ! Print new domain decomposition
-    if(sll_get_collective_rank(sll_world_collective)==0)then
+    if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
       print *,'#num_proc_parx3x4:', sim%nproc_x1, sim%nproc_x2, &
                                     sim%nproc_x3, sim%nproc_x4
     endif
@@ -2306,19 +2307,19 @@ contains
     ! Use MPI colors to deal with redundant data
     !--------------------------------------------------------------------------
 
-!    k_min = get_layout_k_min( &
+!    k_min = sll_o_get_layout_k_min( &
 !      sim%layout4d_parx3x4, &
-!      sll_get_collective_rank(sll_world_collective) )
+!      sll_f_get_collective_rank(sll_v_world_collective) )
 !
-!    sim%new_collective_per_locx3 => sll_new_collective( &
-!      sll_world_collective, &
+!    sim%new_collective_per_locx3 => sll_f_new_collective( &
+!      sll_v_world_collective, &
 !      k_min, &
-!      sll_get_collective_rank(sll_world_collective))    
+!      sll_f_get_collective_rank(sll_v_world_collective))    
 !
-!    sim%new_collective_per_locx4 => sll_new_collective( &
-!      sll_world_collective, &
-!      sll_get_collective_rank(sim%new_collective_per_locx3), &
-!      sll_get_collective_rank(sll_world_collective))    
+!    sim%new_collective_per_locx4 => sll_f_new_collective( &
+!      sll_v_world_collective, &
+!      sll_f_get_collective_rank(sim%new_collective_per_locx3), &
+!      sll_f_get_collective_rank(sll_v_world_collective))    
 
   end subroutine allocate_fdistribu4d_and_QN_DK_parx1
 
@@ -2331,8 +2332,8 @@ contains
   ! TODO: use more specific input arguments instead of 'sim'
   !----------------------------------------------------
   subroutine initialize_fdistribu4d_DK(sim,layout,f4d)
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
-    type(layout_4D), pointer :: layout
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
+    type(sll_t_layout_4d), pointer :: layout
     sll_real64     , pointer :: f4d(:,:,:,:)
 
     sll_int32  :: ierr
@@ -2354,12 +2355,12 @@ contains
     x1_min = sim%m_x1%eta_min
     x1_max = sim%m_x1%eta_max
         
-    call get_node_positions(sim%m_x1,x1_node)
-    call get_node_positions(sim%m_x2,x2_node)
-    call get_node_positions(sim%m_x3,x3_node)
-    call get_node_positions(sim%m_x4,x4_node)
+    call sll_o_get_node_positions(sim%m_x1,x1_node)
+    call sll_o_get_node_positions(sim%m_x2,x2_node)
+    call sll_o_get_node_positions(sim%m_x3,x3_node)
+    call sll_o_get_node_positions(sim%m_x4,x4_node)
     
-    call init_fequilibrium( &
+    call sll_s_init_fequilibrium( &
       sim%m_x1%num_cells+1, &
       sim%m_x4%num_cells+1, &
       x1_node, &
@@ -2375,14 +2376,14 @@ contains
 !    enddo
 
     !--> Initialization of the distribution function f4d_x3x4
-    call compute_local_sizes( layout, &
+    call sll_o_compute_local_sizes( layout, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )
    
-    k_x2  = 2._f64*sll_pi/(sim%m_x2%eta_max - sim%m_x2%eta_min)
-    k_x3  = 2._f64*sll_pi/(sim%m_x3%eta_max - sim%m_x3%eta_min)
+    k_x2  = 2._f64*sll_p_pi/(sim%m_x2%eta_max - sim%m_x2%eta_min)
+    k_x3  = 2._f64*sll_p_pi/(sim%m_x3%eta_max - sim%m_x3%eta_min)
       
     rpeak = x1_min+sim%rho_peak*(x1_max-x1_min) 
     
@@ -2390,7 +2391,7 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind(:) = local_to_global( layout, [iloc1,iloc2,iloc3,iloc4] )
+            glob_ind(:) = sll_o_local_to_global( layout, [iloc1,iloc2,iloc3,iloc4] )
             i1 = glob_ind(1)
             i2 = glob_ind(2)
             i3 = glob_ind(3)
@@ -2414,7 +2415,7 @@ contains
 
 
   function compute_equil_analytic(sim,x1,x4)
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), &
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), &
                 intent(in) :: sim
     sll_real64, intent(in) :: x1, x4
 
@@ -2426,7 +2427,7 @@ contains
     rpeak  = x1_min+sim%rho_peak*(x1_max-x1_min)
     tmp(1) = sim%n0_at_rpeak*exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
     tmp(2) = exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))
-    compute_equil_analytic = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*x4**2/tmp(2))
+    compute_equil_analytic = tmp(1)/sqrt(2._f64*sll_p_pi*tmp(2))*exp(-0.5_f64*x4**2/tmp(2))
   
   end function compute_equil_analytic
 
@@ -2435,7 +2436,7 @@ contains
 ! Quasi-neutral solver
 !------------------------------------------------------------------------------
   subroutine solve_quasi_neutral_parx1(sim)
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
+    class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
 
     sll_int32 :: glob_ind(4)
     sll_int32 :: loc4d_sz_x1
@@ -2447,7 +2448,7 @@ contains
 
     select case (sim%QN_case)
       case (SLL_NO_QUASI_NEUTRAL)
-        call compute_local_sizes( &
+        call sll_o_compute_local_sizes( &
           sim%layout4d_parx1, &
           loc4d_sz_x1, &
           loc4d_sz_x2, &
@@ -2455,7 +2456,7 @@ contains
           loc4d_sz_x4 )        
         sim%phi3d_parx1(:,1:loc4d_sz_x2,:) = 0._f64
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
-        call compute_local_sizes( &
+        call sll_o_compute_local_sizes( &
           sim%layout4d_parx1, &
           loc4d_sz_x1, &
           loc4d_sz_x2, &
@@ -2465,7 +2466,7 @@ contains
         ! Compute RHS for QNP solver (divide by n0 and subtract 1)
         ! Store result in place!! (rho3d_parx1)
         do i=1,loc4d_sz_x1
-          glob_ind(:) = local_to_global( sim%layout4d_parx1, [i,1,1,1] )
+          glob_ind(:) = sll_o_local_to_global( sim%layout4d_parx1, [i,1,1,1] )
           n0 = sim%n0_r(glob_ind(1))
           sim%rho3d_parx1(i,:,:) = sim%rho3d_parx1(i,:,:) / n0 - 1._f64
         enddo
@@ -2479,7 +2480,7 @@ contains
         sim%phi3d_parx1(:,loc4d_sz_x2,:) = sim%phi3d_parx1(:,1,:)  
        
         ! Copy phi3d_parx1 into phi3d_parx3
-        call apply_remap_3D( &
+        call sll_o_apply_remap_3d( &
           sim%remap_plan_parx1_to_parx3, &
           sim%phi3d_parx1, &
           sim%phi3d_parx3 )           
@@ -2497,15 +2498,15 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine write_mesh_x1x2_polar( mesh_x1, mesh_x2, dataset_x1, dataset_x2 )
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x1
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x1
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x2
     character(len=*)           , intent(  out) :: dataset_x1
     character(len=*)           , intent(  out) :: dataset_x2
 
     sll_real64, allocatable :: x1(:,:), x2(:,:)
     sll_real64              :: r, dr, rmin, rmax, theta, dtheta
     sll_int32               :: i, j, nnodes_x1, nnodes_x2
-    sll_int32               :: file_id, error
+    sll_int32               :: error
     type(sll_t_hdf5_serial) :: hdf5_file
 
     nnodes_x1 = mesh_x1%num_cells+1
@@ -2543,16 +2544,16 @@ contains
 
 
   subroutine write_mesh_x1x2_polar_light( mesh_x1, mesh_x2, dataset_x1, dataset_x2 )
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x1
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x1
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x2
     character(len=*)           , intent(  out) :: dataset_x1
     character(len=*)           , intent(  out) :: dataset_x2
 
-    sll_real64, allocatable :: x1(:,:), x2(:,:)
-    sll_real64              :: r, dr, rmin, rmax, theta, dtheta
-    sll_int32               :: i, j, nnodes_x1, nnodes_x2
-    sll_int32               :: file_id, error
-    type(sll_t_hdf5_serial) :: hdf5_file
+    !sll_real64, allocatable :: x1(:,:), x2(:,:)
+    !sll_real64              :: r, dr, rmin, rmax, theta, dtheta
+    !sll_int32               :: i, j, nnodes_x1, nnodes_x2
+    !sll_int32               :: file_id, error
+    !type(sll_t_hdf5_serial) :: hdf5_file
 
     !nnodes_x1 = mesh_x1%num_cells+1
     !nnodes_x2 = mesh_x2%num_cells+1
@@ -2592,8 +2593,8 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine write_mesh_x2x3_cart( mesh_x2, mesh_x3, dataset_x2, dataset_x3 )
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x3
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x3
     character(len=*)           , intent(  out) :: dataset_x2
     character(len=*)           , intent(  out) :: dataset_x3
 
@@ -2615,10 +2616,10 @@ contains
       x3(:,j) = mesh_x3%eta1_node( j )
     end do
 
-    call sll_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
-    call sll_hdf5_write_array( file_id, x2, "/x2", error )
-    call sll_hdf5_write_array( file_id, x3, "/x3", error )
-    call sll_hdf5_file_close ( file_id, error )
+    call sll_o_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
+    call sll_o_hdf5_write_array( file_id, x2, "/x2", error )
+    call sll_o_hdf5_write_array( file_id, x3, "/x3", error )
+    call sll_o_hdf5_file_close ( file_id, error )
 
     dataset_x2 = "mesh_x2x3_cart.h5:/x2"
     dataset_x3 = "mesh_x2x3_cart.h5:/x3"
@@ -2631,14 +2632,14 @@ contains
 
 
   subroutine write_mesh_x2x3_cart_light( mesh_x2, mesh_x3, dataset_x2, dataset_x3 )
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
-    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x3
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    type(sll_t_cartesian_mesh_1d), intent(in   ) :: mesh_x3
     character(len=*)           , intent(  out) :: dataset_x2
     character(len=*)           , intent(  out) :: dataset_x3
 
-    sll_real64, allocatable :: x2(:,:), x3(:,:)
-    sll_int32               :: i, j, nnodes_x2, nnodes_x3
-    sll_int32               :: file_id, error
+    !sll_real64, allocatable :: x2(:,:), x3(:,:)
+    !sll_int32               :: i, j, nnodes_x2, nnodes_x3
+    !sll_int32               :: file_id, error
 
     !nnodes_x2 = mesh_x2%num_cells+1
     !nnodes_x3 = mesh_x3%num_cells+1
@@ -2654,10 +2655,10 @@ contains
     !  x3(:,j) = mesh_x3%eta1_node( j )
     !end do
 
-    !call sll_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
-    !call sll_hdf5_write_array( file_id, x2, "/x2", error )
-    !call sll_hdf5_write_array( file_id, x3, "/x3", error )
-    !call sll_hdf5_file_close ( file_id, error )
+    !call sll_o_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
+    !call sll_o_hdf5_write_array( file_id, x2, "/x2", error )
+    !call sll_o_hdf5_write_array( file_id, x3, "/x3", error )
+    !call sll_o_hdf5_file_close ( file_id, error )
 
     dataset_x2 = "mesh_x2x3_cart.h5:/x2"
     dataset_x3 = "mesh_x2x3_cart.h5:/x3"

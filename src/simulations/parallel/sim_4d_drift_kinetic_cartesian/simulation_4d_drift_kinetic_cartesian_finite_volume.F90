@@ -14,7 +14,7 @@ module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
   use sll_m_gnuplot_parallel
   implicit none
 
-  type, extends(sll_simulation_base_class) :: &
+  type, extends(sll_c_simulation_base_class) :: &
        sll_simulation_4d_drift_kinetic_cart_finite_volume
      ! Parallel environment parameters
      sll_int32  :: world_size
@@ -59,9 +59,9 @@ module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
     
   end type sll_simulation_4d_drift_kinetic_cart_finite_volume
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_dk_cart
-  end interface sll_delete
+  end interface sll_o_delete
 
 contains
 
@@ -144,13 +144,13 @@ contains
     sll_real64,dimension(:,:),allocatable :: plotf2d
     sll_int32,dimension(4)  :: global_indices
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)  
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)  
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)  
+    sim%my_rank    = sll_f_get_collective_rank(sll_v_world_collective)  
 
     ! allocate the layouts...
-    sim%sequential_v3x1x2  => new_layout_4D( sll_world_collective )
-    sim%rho_seq_x1x2       => new_layout_3D( sll_world_collective )
-    sim%phi_seq_x1x2       => new_layout_3D( sll_world_collective )
+    sim%sequential_v3x1x2  => new_layout_4D( sll_v_world_collective )
+    sim%rho_seq_x1x2       => sll_f_new_layout_3d( sll_v_world_collective )
+    sim%phi_seq_x1x2       => sll_f_new_layout_3d( sll_v_world_collective )
 
     nc_v3 = sim%mesh4d%num_cells1
     nc_x1 = sim%mesh4d%num_cells2   
@@ -164,7 +164,7 @@ contains
     
     ! init the layout for the distribution function
     ! the mesh is split only in the x3 direction
-    call initialize_layout_with_distributed_array( &
+    call sll_o_initialize_layout_with_distributed_array( &
          nc_v3, &
          nc_x1, &
          nc_x2, &
@@ -176,7 +176,7 @@ contains
          sim%sequential_v3x1x2)
 
     ! charge density layout
-    call initialize_layout_with_distributed_array( &
+    call sll_o_initialize_layout_with_distributed_array( &
          nc_x1, &
          nc_x2, &
          nc_x3, &
@@ -186,7 +186,7 @@ contains
          sim%rho_seq_x1x2)
     
     ! potential layout
-    call initialize_layout_with_distributed_array( &
+    call sll_o_initialize_layout_with_distributed_array( &
          nc_x1, &
          nc_x2, &
          nc_x3, &
@@ -196,7 +196,7 @@ contains
          sim%phi_seq_x1x2)
     
     
-    call compute_local_sizes( sim%rho_seq_x1x2, loc_sz_x1, loc_sz_x2, &
+    call sll_o_compute_local_sizes( sim%rho_seq_x1x2, loc_sz_x1, loc_sz_x2, &
          loc_sz_x3)
 
     ! iz=0 corresponds to the mean values of rho and phi 
@@ -206,7 +206,7 @@ contains
        
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes.
-    call compute_local_sizes( sim%sequential_v3x1x2, &
+    call sll_o_compute_local_sizes( sim%sequential_v3x1x2, &
          loc_sz_v3, &
          loc_sz_x1, &
          loc_sz_x2, &
@@ -295,7 +295,7 @@ contains
 
     write(*,*) 'end comm',sim%my_rank
 
-    call compute_local_sizes( sim%sequential_v3x1x2, &
+    call sll_o_compute_local_sizes( sim%sequential_v3x1x2, &
          loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 
     
     allocate (plotf2d(loc_sz_v3,loc_sz_x1))
@@ -306,7 +306,7 @@ contains
        end do
     end do
     
-    global_indices(1:4) =  local_to_global(sim%sequential_v3x1x2, (/1,1,1,1/) )
+    global_indices(1:4) =  sll_o_local_to_global(sim%sequential_v3x1x2, (/1,1,1,1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1, &
@@ -331,9 +331,9 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%fstar_v3x1x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x1x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x1x2, ierr )
-    call sll_delete( sim%sequential_v3x1x2 )
-    call sll_delete( sim%rho_seq_x1x2 )
-    call sll_delete( sim%phi_seq_x1x2 )
+    call sll_o_delete( sim%sequential_v3x1x2 )
+    call sll_o_delete( sim%rho_seq_x1x2 )
+    call sll_o_delete( sim%phi_seq_x1x2 )
   end subroutine delete_dk_cart
 
   ! we put the reduction functions here for now, since we are only using
@@ -411,7 +411,7 @@ contains
 !!$    sll_int32             :: i_layout
 !!$    character(len=1)      :: c_layout
 !!$    class(sll_simulation_4d_vlasov_poisson_cart), intent(in) :: sim
-!!$    type(layout_2D), pointer :: my_layout
+!!$    type(sll_t_layout_2d), pointer :: my_layout
 !!$    character(len=7),  parameter :: hdf_file = "data.h5"  ! File name
 !!$    sll_real64 :: tcpu1, tcpu2
 !!$    sll_int32  :: my_rank
@@ -448,8 +448,8 @@ contains
 !!$
 !!$    array_dims(1) = nc_x1
 !!$    array_dims(2) = nc_x2
-!!$    world_size    = sll_get_collective_size(sll_world_collective)
-!!$    my_rank       = sll_get_collective_rank(sll_world_collective)
+!!$    world_size    = sll_f_get_collective_size(sll_v_world_collective)
+!!$    my_rank       = sll_f_get_collective_rank(sll_v_world_collective)
 !!$
 !!$    tcpu1 = MPI_WTIME()
 !!$
@@ -461,7 +461,7 @@ contains
 !!$          my_layout => sim%rho_seq_x2
 !!$       end if
 !!$
-!!$       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
+!!$       call sll_o_compute_local_sizes( my_layout, local_nx1, local_nx2)        
 !!$    
 !!$       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
 !!$       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
@@ -487,7 +487,7 @@ contains
 !!$   
 !!$          do j = 1, local_nx2
 !!$             do i = 1, local_nx1
-!!$                global_indices =  local_to_global( my_layout, (/i, j/) )
+!!$                global_indices =  sll_o_local_to_global( my_layout, (/i, j/) )
 !!$                gi = global_indices(1)
 !!$                gj = global_indices(2)
 !!$                x1(i,j) = x1_min + (gi-1._f64)*delta_x1

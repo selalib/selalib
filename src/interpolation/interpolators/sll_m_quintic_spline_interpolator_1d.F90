@@ -15,7 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-#define sll_interpolator class(sll_quintic_spline_interpolator_1d)
+#define sll_interpolator class(sll_t_quintic_spline_interpolator_1d)
 
 !> @ingroup interpolators
 !> @brief 
@@ -34,27 +34,27 @@ module sll_m_quintic_spline_interpolator_1d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_quintic_splines, only: &
-    inspl5, &
-    splin5
+    sll_s_inspl5, &
+    sll_s_splin5
 
   implicit none
 
   public :: &
-    set_values_at_boundary, &
-    sll_delete, &
-    sll_quintic_spline_interpolator_1d
+    sll_s_set_values_at_boundary, &
+    sll_o_delete, &
+    sll_t_quintic_spline_interpolator_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Quintic spline interpolator 1d
-type, extends(sll_c_interpolator_1d) :: sll_quintic_spline_interpolator_1d
+type, extends(sll_c_interpolator_1d) :: sll_t_quintic_spline_interpolator_1d
 
   sll_real64, dimension(:),   pointer  :: x          !< points position
   sll_int32                            :: n          !< number of points
@@ -86,17 +86,17 @@ contains
   procedure :: set_coefficients                 !< Not implemented
   procedure :: get_coefficients                 !< Not implemented
 
-end type sll_quintic_spline_interpolator_1d
+end type sll_t_quintic_spline_interpolator_1d
 
 !> Pointer to quintic spline interpolator implementation 1D
 type :: sll_quintic_spline_interpolator_1d_ptr
-  type(sll_quintic_spline_interpolator_1d), pointer :: interp
+  type(sll_t_quintic_spline_interpolator_1d), pointer :: interp
 end type sll_quintic_spline_interpolator_1d_ptr
 
 !> Deallocate the interpolator object
-interface sll_delete
+interface sll_o_delete
    module procedure delete_1d
-end interface sll_delete
+end interface sll_o_delete
 
 
 contains  ! ****************************************************************
@@ -146,7 +146,7 @@ subroutine initialize( interpolator, &
   sll_int32                        :: i
   sll_real64                       :: dx
 
-  if (bc_min == SLL_PERIODIC .or. bc_max == SLL_PERIODIC) then
+  if (bc_min == sll_p_periodic .or. bc_max == sll_p_periodic) then
     SLL_ERROR( this_sub_name, 'These boundary conditions are not implemented' )
   end if
 
@@ -177,7 +177,7 @@ end subroutine
 !> @param[in]  slope_min  contains the value in the min for derivative
 !> @param[in]  slope_max contains the value in the max for derivative
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
-subroutine set_values_at_boundary( interpolator, &
+subroutine sll_s_set_values_at_boundary( interpolator, &
                                    value_min,    &
                                    value_max,    &
                                    slope_min,    &
@@ -194,7 +194,7 @@ subroutine set_values_at_boundary( interpolator, &
   if (present(slope_min)) interpolator%slope_min = slope_min
   if (present(slope_max)) interpolator%slope_max = slope_max
   
-end subroutine set_values_at_boundary
+end subroutine sll_s_set_values_at_boundary
 
 !--------------------------------------------------------------------------
 
@@ -219,7 +219,7 @@ subroutine compute_interpolants( interpolator, &
 
   if(present(eta_coords) .and. present(size_eta_coords))then
   
-    call inspl5(size_eta_coords,  &
+    call sll_s_inspl5(size_eta_coords,  &
                 eta_coords,       &
                 1,                &
                 1,                &
@@ -231,7 +231,7 @@ subroutine compute_interpolants( interpolator, &
  
   else
   
-    call inspl5(interpolator%n,    &
+    call sll_s_inspl5(interpolator%n,    &
                 interpolator%x,    &
                 interpolator%ind1, &
                 interpolator%indn, &
@@ -259,7 +259,7 @@ function interpolate_from_interpolant_value( interpolator, eta1 ) result(val)
     res = eta1
   end if
 
-  call splin5(interpolator%n,  &
+  call sll_s_splin5(interpolator%n,  &
               interpolator%x,  &
               interpolator%cf, &
               res,             &
@@ -300,9 +300,9 @@ subroutine interpolate_array(this,        &
   c(2,1) = this%slope_min
   c(2,n) = this%slope_max 
   
-  call inspl5(this%n,this%x,this%ind1,this%indn,c,h)
+  call sll_s_inspl5(this%n,this%x,this%ind1,this%indn,c,h)
   do i = 1, num_pts
-    call splin5(this%n,this%x,c,coordinates(i),0,output_array(i))
+    call sll_s_splin5(this%n,this%x,c,coordinates(i),0,output_array(i))
   end do
 
 end subroutine interpolate_array
@@ -316,7 +316,7 @@ function interpolate_from_interpolant_derivative_eta1( interpolator, eta1 ) resu
   sll_real64             :: val
   sll_real64, intent(in) :: eta1
 
-  call splin5(interpolator%n,  &
+  call sll_s_splin5(interpolator%n,  &
               interpolator%x,  &
               interpolator%cf, &
               eta1,            &
@@ -375,10 +375,10 @@ subroutine interpolate_from_interpolant_derivatives_eta1( interpolator,        &
   c(2,1) = interpolator%slope_min
   c(2,n) = interpolator%slope_max 
 
-  call inspl5(num_pts, interpolator%x, interpolator%ind1, interpolator%indn, c, h)
+  call sll_s_inspl5(num_pts, interpolator%x, interpolator%ind1, interpolator%indn, c, h)
 
   do i = 1, num_pts
-    call splin5(num_pts, interpolator%x, c, interpolator%x(i), 1, output_array(i))
+    call sll_s_splin5(num_pts, interpolator%x, c, interpolator%x(i), 1, output_array(i))
   end do
 
 end subroutine interpolate_from_interpolant_derivatives_eta1

@@ -6,77 +6,77 @@ module sll_m_qn_solver_2d_parallel
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_neumann
+    sll_p_neumann
 
   use sll_m_collective, only: &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_fft, only: &
-    fft_apply_plan_c2c_1d, &
-    fft_backward, &
-    fft_delete_plan, &
-    fft_forward, &
-    fft_new_plan_c2c_1d, &
-    sll_fft_plan
+    sll_s_fft_apply_plan_c2c_1d, &
+    sll_p_fft_backward, &
+    sll_s_fft_delete_plan, &
+    sll_p_fft_forward, &
+    sll_f_fft_new_plan_c2c_1d, &
+    sll_t_fft_plan
 
   use sll_m_qn_solver_2d, only: &
-    dirichlet_matrix, &
-    neumann_matrix
+    sll_s_dirichlet_matrix, &
+    sll_s_neumann_matrix
 
   use sll_m_remapper, only: &
-    apply_remap_3d, &
-    initialize_layout_with_distributed_array, &
-    layout_3d, &
-    local_to_global, &
-    new_layout_3d, &
-    new_remap_plan, &
-    remap_plan_3d_comp64, &
-    sll_delete
+    sll_o_apply_remap_3d, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_3d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_3d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_3d_comp64, &
+    sll_o_delete
 
   use sll_m_tridiagonal, only: &
-    setup_cyclic_tridiag, &
-    solve_cyclic_tridiag
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   use sll_m_utilities, only: &
-    is_power_of_two
+    sll_f_is_power_of_two
 
   implicit none
 
   public :: &
-    qn_solver_2d_parallel, &
-    new_qn_solver_2d_parallel, &
-    solve_qn_solver_2d_parallel, &
-    delete_qn_solver_2d_parallel
+    sll_t_qn_solver_2d_parallel, &
+    sll_f_new_qn_solver_2d_parallel, &
+    sll_s_solve_qn_solver_2d_parallel, &
+    sll_s_delete_qn_solver_2d_parallel
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type qn_solver_2d_parallel
+  type sll_t_qn_solver_2d_parallel
      sll_int32                             :: BC 
      sll_int32                             :: NP_r 
      sll_int32                             :: NP_theta 
      sll_real64                            :: rmin
      sll_real64                            :: rmax
-     type(sll_fft_plan), pointer           :: fft_plan
-     type(sll_fft_plan), pointer           :: inv_fft_plan
-     type(layout_3D),  pointer             :: layout_fft
-     type(layout_3D),  pointer             :: layout_lin_sys
+     type(sll_t_fft_plan), pointer           :: fft_plan
+     type(sll_t_fft_plan), pointer           :: inv_fft_plan
+     type(sll_t_layout_3d),  pointer             :: layout_fft
+     type(sll_t_layout_3d),  pointer             :: layout_lin_sys
      sll_comp64, dimension(:,:,:), pointer :: array_fft
      sll_comp64, dimension(:,:,:), pointer :: array_lin_sys
      sll_comp64, dimension(:,:,:), pointer :: c_remap, Te_remap
-     type(remap_plan_3D_comp64), pointer   :: rmp3_1
-     type(remap_plan_3D_comp64), pointer   :: rmp3_2
-  end type qn_solver_2d_parallel
+     type(sll_t_remap_plan_3d_comp64), pointer   :: rmp3_1
+     type(sll_t_remap_plan_3d_comp64), pointer   :: rmp3_2
+  end type sll_t_qn_solver_2d_parallel
 
 contains
 
 
-  function new_qn_solver_2d_parallel(BC,rmin,rmax,NP_r, NP_theta) &
+  function sll_f_new_qn_solver_2d_parallel(BC,rmin,rmax,NP_r, NP_theta) &
                                                                result (plan)
 
     sll_int32                               :: BC 
@@ -87,9 +87,9 @@ contains
     sll_int32                               :: NP_r_loc, NP_theta_loc
     sll_int32                               :: ierr
     sll_int32                               :: colsz
-    type(qn_solver_2d_parallel), pointer    :: plan
+    type(sll_t_qn_solver_2d_parallel), pointer    :: plan
 
-    colsz  = sll_get_collective_size(sll_world_collective)
+    colsz  = sll_f_get_collective_size(sll_v_world_collective)
     NP_r_loc = NP_r/int(colsz)
     NP_theta_loc = NP_theta/int(colsz)
 
@@ -100,14 +100,14 @@ contains
        stop
     end if
 
-    if ( (.not.is_power_of_two(int(NP_theta,i64))) ) then
+    if ( (.not.sll_f_is_power_of_two(int(NP_theta,i64))) ) then
        print *, 'The number of points in theta-direction needs to be a power of 2'
        print *, 'Exiting...'
        stop
     end if
 
-    if ( (.not.is_power_of_two(int(NP_r,i64))) ) then
-       if (BC==SLL_NEUMANN) then
+    if ( (.not.sll_f_is_power_of_two(int(NP_r,i64))) ) then
+       if (BC==sll_p_neumann) then
           print *, 'The number of points in r-direction needs to be a power of 2'
           print *, 'Exiting...'
           stop
@@ -127,17 +127,17 @@ contains
     plan%rmin     = rmin
     plan%rmax     = rmax
     
-    plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
+    plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
 
-    plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
+    plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
 
-    plan%layout_fft => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
+    plan%layout_fft => sll_f_new_layout_3d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
                                        int(colsz), 1, 1, plan%layout_fft )
 
     ! Layout for Linear systems in r-direction
-    plan%layout_lin_sys => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
+    plan%layout_lin_sys => sll_f_new_layout_3d( sll_v_world_collective )
+    call sll_o_initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
                                    1, int(colsz), 1, plan%layout_lin_sys )
 
     SLL_ALLOCATE(plan%array_fft(NP_r_loc,NP_theta,1), ierr)
@@ -145,19 +145,19 @@ contains
     SLL_ALLOCATE(plan%c_remap(NP_r,NP_theta_loc,1), ierr)
     SLL_ALLOCATE(plan%Te_remap(NP_r,NP_theta_loc,1), ierr)
 
-    plan%rmp3_1 => new_remap_plan( plan%layout_fft, plan%layout_lin_sys, &
+    plan%rmp3_1 => sll_o_new_remap_plan( plan%layout_fft, plan%layout_lin_sys, &
                                    plan%array_fft )
-    plan%rmp3_2 => new_remap_plan( plan%layout_lin_sys,plan%layout_fft, &
+    plan%rmp3_2 => sll_o_new_remap_plan( plan%layout_lin_sys,plan%layout_fft, &
                                    plan%array_lin_sys )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
-  end function new_qn_solver_2d_parallel
+  end function sll_f_new_qn_solver_2d_parallel
 
 
- subroutine solve_qn_solver_2d_parallel(plan, rho, c, Te, f, g, Zi, phi)
+ subroutine sll_s_solve_qn_solver_2d_parallel(plan, rho, c, Te, f, g, Zi, phi)
 
-    type(qn_solver_2d_parallel), pointer :: plan
+    type(sll_t_qn_solver_2d_parallel), pointer :: plan
     sll_real64                           :: dr, dtheta, Zi
     sll_int32                            :: NP_r, NP_theta
     sll_int32                            :: NP_r_loc, NP_theta_loc
@@ -172,35 +172,35 @@ contains
     sll_int32, dimension(1:3)            :: global
     sll_int32                            :: ind
 
-    colsz = sll_get_collective_size(sll_world_collective)
+    colsz = sll_f_get_collective_size(sll_v_world_collective)
 
     NP_r         = plan%NP_r
     NP_theta     = plan%NP_theta
     NP_r_loc     = NP_r/int(colsz)
     NP_theta_loc = NP_theta/int(colsz)
 
-    if (plan%BC==SLL_NEUMANN) then
+    if (plan%BC==sll_p_neumann) then
        dr = (plan%rmax-plan%rmin)/(NP_r-1)
     else ! 'dirichlet'
        dr = (plan%rmax-plan%rmin)/(NP_r+1)
     endif
-    dtheta = 2*sll_pi/NP_theta
+    dtheta = 2*sll_p_pi/NP_theta
 
     plan%array_fft(:,:,1) = cmplx(rho, 0_f64, kind=f64)
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
+    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
 
     do i=1,NP_r_loc
 
-       call fft_apply_plan_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
+       call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
                                               plan%array_fft(i,:,1) )
-       global = local_to_global( plan%layout_fft, (/i, 1, 1/))
+       global = sll_o_local_to_global( plan%layout_fft, (/i, 1, 1/))
        ind = global(1)
        if (ind==1) then
-          if (plan%BC==SLL_NEUMANN) then
+          if (plan%BC==sll_p_neumann) then
              plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + &
                                              (c(i)-2/dr)*hat_f 
           else ! 'dirichlet'
@@ -208,7 +208,7 @@ contains
                                  (1/dr**2 - c(i)/(2*dr))*hat_f
           endif
        elseif(ind==NP_r) then
-          if (plan%BC==SLL_NEUMANN) then
+          if (plan%BC==sll_p_neumann) then
              plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + &
                                              (c(i)+2/dr)*hat_g
           else ! 'dirichlet'
@@ -218,65 +218,65 @@ contains
        endif 
     enddo
 
-    ! Remapping to solve linear systems
-    call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%array_lin_sys ) 
+    ! Remapping to sll_o_solve linear systems
+    call sll_o_apply_remap_3d( plan%rmp3_1, plan%array_fft, plan%array_lin_sys ) 
 
     do i=1,NP_r_loc
        plan%array_fft(i,:,1) = cmplx(c(i),0.0_f64,f64)
     enddo
-    call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%c_remap )
+    call sll_o_apply_remap_3d( plan%rmp3_1, plan%array_fft, plan%c_remap )
 
     do i=1,NP_r_loc
        plan%array_fft(i,:,1) = cmplx(Te(i),0.0_f64,f64)
     enddo
-    call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%Te_remap )
+    call sll_o_apply_remap_3d( plan%rmp3_1, plan%array_fft, plan%Te_remap )
 
-    ! Solve linear systems (r-direction)
+    ! sll_o_solve linear systems (r-direction)
     do j=1,NP_theta_loc
-       global = local_to_global( plan%layout_lin_sys, (/1, j, 1/))
+       global = sll_o_local_to_global( plan%layout_lin_sys, (/1, j, 1/))
        ind = global(2)
        if (ind<=NP_theta/2) then
           ind = ind-1
        else
           ind = NP_theta-(ind-1)
        endif
-       if (plan%BC==SLL_NEUMANN) then
-          call neumann_matrix(plan%np_r, plan%rmin, plan%rmax, plan%np_theta, &
+       if (plan%BC==sll_p_neumann) then
+          call sll_s_neumann_matrix(plan%np_r, plan%rmin, plan%rmax, plan%np_theta, &
                               ind, real(plan%c_remap(:,1,1), f64),         &
                               real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix(plan%np_r, plan%rmin, plan%rmax, plan%np_theta, &
+          call sll_s_dirichlet_matrix(plan%np_r, plan%rmin, plan%rmax, plan%np_theta, &
                                 ind, real(plan%c_remap(:,1,1), f64),            &
                                 real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
        endif 
-       call setup_cyclic_tridiag( a_resh, NP_r, cts, ipiv )
-       call solve_cyclic_tridiag(cts,ipiv,plan%array_lin_sys(:,j,1), &
+       call sll_s_setup_cyclic_tridiag( a_resh, NP_r, cts, ipiv )
+       call sll_o_solve_cyclic_tridiag(cts,ipiv,plan%array_lin_sys(:,j,1), &
                                        NP_r,plan%array_lin_sys(:,j,1))         
     enddo
 
-    call apply_remap_3D( plan%rmp3_2, plan%array_lin_sys, plan%array_fft ) 
+    call sll_o_apply_remap_3d( plan%rmp3_2, plan%array_lin_sys, plan%array_fft ) 
 
     do i=1,NP_r_loc
-       !call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
-       call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
+       !call sll_s_fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
+       call sll_s_fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
                                                   plan%array_fft(i,:,1) ) 
     enddo
 
     phi = real(plan%array_fft(:,:,1), f64)/real(NP_theta,f64)
 
-  end subroutine solve_qn_solver_2d_parallel
+  end subroutine sll_s_solve_qn_solver_2d_parallel
 
-  subroutine delete_qn_solver_2d_parallel(plan)
+  subroutine sll_s_delete_qn_solver_2d_parallel(plan)
 
-       type (qn_solver_2d_parallel), pointer :: plan
+       type (sll_t_qn_solver_2d_parallel), pointer :: plan
        sll_int32                             :: ierr
 
        SLL_ASSERT( associated(plan) )
 
-       call fft_delete_plan(plan%fft_plan)
-       call fft_delete_plan(plan%inv_fft_plan)
-       call sll_delete( plan%layout_fft )
-       call sll_delete( plan%layout_lin_sys )
+       call sll_s_fft_delete_plan(plan%fft_plan)
+       call sll_s_fft_delete_plan(plan%inv_fft_plan)
+       call sll_o_delete( plan%layout_fft )
+       call sll_o_delete( plan%layout_lin_sys )
 
        SLL_DEALLOCATE_ARRAY(plan%array_fft,ierr)
        SLL_DEALLOCATE_ARRAY(plan%array_lin_sys,ierr)
@@ -285,7 +285,7 @@ contains
 
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_qn_solver_2d_parallel
+  end subroutine sll_s_delete_qn_solver_2d_parallel
 
 
 end module sll_m_qn_solver_2d_parallel

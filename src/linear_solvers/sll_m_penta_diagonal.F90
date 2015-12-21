@@ -28,16 +28,16 @@ module sll_m_penta_diagonal
   implicit none
 
   public :: &
-    sll_create, &
-    sll_delete, &
-    sll_penta_diagonal_solver, &
-    sll_solve
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_penta_diagonal_solver, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Initialize the penta diagonal solver
-  type sll_penta_diagonal_solver  
+  type sll_t_penta_diagonal_solver  
     sll_int32                         :: n
     sll_real64, dimension(:), pointer :: e1
     sll_real64, dimension(:), pointer :: e2
@@ -45,19 +45,19 @@ module sll_m_penta_diagonal
     sll_real64, dimension(:), pointer :: z
     sll_real64, dimension(:), pointer :: w
     sll_real64, dimension(:), pointer :: solution
-  end type sll_penta_diagonal_solver
+  end type sll_t_penta_diagonal_solver
 
-interface sll_create
+interface sll_o_create
    module procedure new_penta_diagonal
-end interface sll_create
+end interface sll_o_create
 
-interface sll_solve
+interface sll_o_solve
    module procedure solve_penta_diagonal
-end interface sll_solve
+end interface sll_o_solve
 
-interface sll_delete
+interface sll_o_delete
    module procedure delete_penta_diagonal
-end interface sll_delete
+end interface sll_o_delete
 
 
 contains 
@@ -66,7 +66,7 @@ contains
   function new_penta_diagonal(n) result(plan)
 
     sll_int32                               :: n, ierr
-    type(sll_penta_diagonal_solver), pointer :: plan
+    type(sll_t_penta_diagonal_solver), pointer :: plan
 
     if (n<3) then
       print*, 'Matrix size must be at least 3x3'
@@ -94,7 +94,7 @@ contains
 
     sll_real64                              :: a, b, c
     sll_real64, dimension(:)                :: f
-    type(sll_penta_diagonal_solver), pointer :: plan
+    type(sll_t_penta_diagonal_solver), pointer :: plan
     sll_real64                              :: s, t, p, l1, l2
     sll_real64                              :: d, d1, d2
     sll_int32                               :: n, i, sign_of_a=0
@@ -183,7 +183,7 @@ contains
   !> deallocat the solver
   subroutine delete_penta_diagonal(plan)
 
-    type(sll_penta_diagonal_solver), pointer :: plan
+    type(sll_t_penta_diagonal_solver), pointer :: plan
     sll_int32                               :: ierr
 
     ! Plan components deallocation 

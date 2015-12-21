@@ -15,11 +15,11 @@ module sll_m_xdmf_light_parallel
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
-    sll_collective_bcast, &
-    sll_collective_gather, &
-    sll_collective_t, &
-    sll_get_collective_rank, &
-    sll_get_collective_size
+    sll_o_collective_bcast, &
+    sll_o_collective_gather, &
+    sll_t_collective_t, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size
 
   use sll_m_xdmf_light_serial, only: &
     sll_t_xdmf_file
@@ -51,7 +51,7 @@ module sll_m_xdmf_light_parallel
   !> XDMF parallel file
   type :: sll_t_xdmf_parallel_file
 
-    type(sll_collective_t), pointer    :: comm => null()
+    type(sll_t_collective_t), pointer    :: comm => null()
     sll_int32                          :: rank = -1
     type(sll_t_xdmf_file), allocatable :: xdmf_file
 
@@ -71,11 +71,11 @@ contains
   subroutine t_xdmf_parallel__init( self, time, comm )
     class(sll_t_xdmf_parallel_file), intent(  out) :: self
     sll_real64                     , intent(in   ) :: time
-    type(sll_collective_t)         , pointer       :: comm
+    type(sll_t_collective_t)         , pointer       :: comm
 
     ! Fill in fields
     self%comm => comm
-    self%rank =  sll_get_collective_rank( comm )
+    self%rank =  sll_f_get_collective_rank( comm )
     
     ! MASTER: Allocate and initialize sequential XDMF file
     if (self%rank == 0) then
@@ -134,7 +134,7 @@ contains
     end if
 
     ! Broadcast grid ID to all other processes
-    call sll_collective_bcast( self%comm, buf_gid, 0 )
+    call sll_o_collective_bcast( self%comm, buf_gid, 0 )
     gid = buf_gid(1)
 
   end subroutine t_xdmf_parallel__add_grid
@@ -166,7 +166,7 @@ contains
     character(len=maxlen) :: buf_fp   ! field_path
 
     ! Some info about communicator
-    nprocs = sll_get_collective_size( self%comm )
+    nprocs = sll_f_get_collective_size( self%comm )
     comm   = self%comm%comm
 
     ! Fill in send buffer (all processes)
@@ -176,7 +176,7 @@ contains
     if (self%rank == 0) then
       ! Allocate receive buffer for 'to_file' logicals, then gather all of them
       allocate( recbuf(0:nprocs-1) )
-      call sll_collective_gather( self%comm, buf, 0, recbuf )
+      call sll_o_collective_gather( self%comm, buf, 0, recbuf )
       print *, "PROC #0: gather"
 
       ! Write array info on XDMF file
@@ -216,7 +216,7 @@ contains
     ! NOT MASTER ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     else
       allocate( recbuf(0) ) ! allocate empty buffer (ifort complains otherwise)
-      call sll_collective_gather( self%comm, buf, 0, recbuf )
+      call sll_o_collective_gather( self%comm, buf, 0, recbuf )
       write( rank_str, '(i8)' ) self%rank
       print *, "PROC #"//trim( adjustl( rank_str ) )//": gather"
 

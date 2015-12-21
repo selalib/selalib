@@ -13,9 +13,9 @@ module sll_m_pic_poisson_2d
   use sll_m_kernel_smoother_base, only : &
        sll_c_kernel_smoother
   use sll_m_poisson_2d_base, only : &
-       sll_poisson_2d_base, sll_f_function_of_position
+       sll_c_poisson_2d_base, sll_f_function_of_position
   use sll_m_collective, only : &
-       sll_world_collective, sll_collective_allreduce
+       sll_v_world_collective, sll_o_collective_allreduce
   use sll_mpi, only: &
        MPI_SUM
 
@@ -33,7 +33,7 @@ module sll_m_pic_poisson_2d
      sll_int32 :: no_dofs
 
      class(sll_c_kernel_smoother), pointer :: kernel
-     class(sll_poisson_2d_base),   pointer :: solver
+     class(sll_c_poisson_2d_base),   pointer :: solver
      sll_real64, allocatable               :: rho_dofs(:)
      sll_real64, allocatable               :: rho_dofs_local(:)
      sll_real64, allocatable               :: rho_analyt_dofs(:)
@@ -83,7 +83,7 @@ contains
     if (this%rho_collected .EQV. .FALSE.) then
        this%rho_collected = .TRUE.
        this%rho_dofs = 0.0_f64
-       call sll_collective_allreduce( sll_world_collective, this%rho_dofs_local, &
+       call sll_o_collective_allreduce( sll_v_world_collective, this%rho_dofs_local, &
             this%no_dofs, MPI_SUM, this%rho_dofs)
     end if
 
@@ -127,7 +127,7 @@ contains
     if (this%rho_collected .EQV. .FALSE.) then
        this%rho_collected = .TRUE.
        this%rho_dofs = 0.0_f64
-       call sll_collective_allreduce( sll_world_collective, this%rho_dofs_local, &
+       call sll_o_collective_allreduce( sll_v_world_collective, this%rho_dofs_local, &
             this%no_dofs, MPI_SUM, this%rho_dofs)
     end if
     this%rho2d = reshape(this%rho_dofs, this%no_gridpts)
@@ -142,7 +142,7 @@ contains
     if (this%rho_collected .EQV. .FALSE.) then
        this%rho_collected = .TRUE.
        this%rho_dofs = 0.0_f64
-       call sll_collective_allreduce( sll_world_collective, this%rho_dofs_local, &
+       call sll_o_collective_allreduce( sll_v_world_collective, this%rho_dofs_local, &
             this%no_dofs, MPI_SUM, this%rho_dofs)
     end if
     this%rho2d = reshape(this%rho_dofs, this%no_gridpts)
@@ -197,7 +197,7 @@ contains
   !< Constructor 
   function sll_f_new_pic_poisson_2d(no_gridpts, solver, kernel) result (this)
     sll_int32, intent(in) :: no_gridpts(2)
-    class( sll_poisson_2d_base), pointer, intent(in) :: solver
+    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
     class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
     class( sll_t_pic_poisson_2d), pointer :: this
 

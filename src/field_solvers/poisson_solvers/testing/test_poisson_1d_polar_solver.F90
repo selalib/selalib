@@ -21,15 +21,15 @@ program test_poisson_1d_polar_solver
 #include "sll_working_precision.h"
 
   use sll_m_poisson_1d_base, only: &
-    sll_poisson_1d_base
+    sll_c_poisson_1d_base
 
   use sll_m_poisson_1d_polar_solver, only: &
-    new_poisson_1d_polar_solver
+    sll_f_new_poisson_1d_polar_solver
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_poisson_1d_base), pointer :: poisson 
+  class(sll_c_poisson_1d_base), pointer :: poisson 
   sll_real64 :: err
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -60,7 +60,7 @@ program test_poisson_1d_polar_solver
   rho = 1._f64
   
   
-  poisson =>new_poisson_1d_polar_solver( &
+  poisson =>sll_f_new_poisson_1d_polar_solver( &
     x1_min, &
     x1_max, &
     Nc_x1)  

@@ -7,14 +7,14 @@ module sll_m_pic_postprocessing
   implicit none
 
   public :: &
-    det_landau_damping
+    sll_s_det_landau_damping
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 
 
-    subroutine det_landau_damping( time, energy)
+    subroutine sll_s_det_landau_damping( time, energy)
         sll_real64, dimension(:), intent(in) :: energy
         sll_real64, dimension(:), intent(in)  :: time
         sll_real64, dimension(:,:), allocatable :: mintab, maxtab

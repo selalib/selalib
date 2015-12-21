@@ -23,38 +23,38 @@ module sll_m_particle_initializers_2d
 #include "particle_representation.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_hammersley, only: &
-    suite_hamm
+    sll_f_suite_hamm
 
   use sll_m_particle_group_2d, only: &
-    sll_particle_group_2d
+    sll_t_particle_group_2d
 
   implicit none
 
   public :: &
-    sll_initial_particles_2d, &
-    sll_initial_particles_2d_kh
+    sll_s_initial_particles_2d, &
+    sll_s_initial_particles_2d_kh
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 
-  subroutine sll_initial_particles_2d_KH( &
+  subroutine sll_s_initial_particles_2d_kh( &
               alpha, kx, &
               m2d,                     &
               num_particles,           &
               p_group,                 &
               rand_seed, rank, worldsize )
     sll_real64, intent(in) :: alpha, kx
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
-    type(sll_particle_group_2d), pointer, intent(inout) :: p_group
+    type(sll_t_particle_group_2d), pointer, intent(inout) :: p_group
     sll_int32  :: j
     sll_int32  :: ncx, ic_x, ic_y
     sll_real64 :: x, y, z
@@ -113,20 +113,20 @@ contains
      return
      SLL_ASSERT(present(rank))
 
-  end subroutine sll_initial_particles_2d_KH
+  end subroutine sll_s_initial_particles_2d_kh
 
 
 
-   subroutine sll_initial_particles_2d( &
+   subroutine sll_s_initial_particles_2d( &
                alpha, k, &
                m2d,                     &
                num_particles,           &
                p_group,                 &
                rand_seed, rank, worldsize )
      sll_real64, intent(in) :: alpha, k
-     type(sll_cartesian_mesh_2d), intent(in) :: m2d
+     type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
      sll_int32, intent(in)  :: num_particles
-     type(sll_particle_group_2d), pointer, intent(inout) :: p_group
+     type(sll_t_particle_group_2d), pointer, intent(inout) :: p_group
      sll_int32  :: j
      sll_int32  :: ncx, ic_x, ic_y
      sll_real64 :: x, y, xmin, ymin, rdx, rdy
@@ -175,7 +175,7 @@ contains
         call random_number(y)
         y = 2._f64 * y
         if (eval_landau(alpha, k, x) >= y ) then
-           y = (m2d%eta2_max - ymin)*suite_hamm(j,3) + ymin
+           y = (m2d%eta2_max - ymin)*sll_f_suite_hamm(j,3) + ymin
 !!$           write(90,*) x, y
            SET_2DPARTICLE_VALUES(p_group%p_list(j),x,y,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
            j = j + 1          
@@ -185,7 +185,7 @@ contains
  
      return
      SLL_ASSERT(present(rank))
-   end subroutine sll_initial_particles_2d
+   end subroutine sll_s_initial_particles_2d
 
 
   function eval_landau(alp, kx, x)

@@ -6,13 +6,13 @@ module m_ode_collection
 #include "sll_working_precision.h"
 
   use sll_m_ode_integrator_base, only: &
-    sll_ode_base
+    sll_c_ode_base
 
   use sll_m_vector_space_base, only: &
-    sll_vector_space_base
+    sll_c_vector_space_base
 
   use sll_m_vector_space_real_arrays, only: &
-    sll_vector_space_real_1d
+    sll_t_vector_space_real_1d
 
   implicit none
 
@@ -25,7 +25,7 @@ module m_ode_collection
   !----------------------------------------------------------------------------
   ! Harmonic oscillator
   !----------------------------------------------------------------------------
-  type, extends( sll_ode_base ) :: harmonic_oscillator
+  type, extends( sll_c_ode_base ) :: harmonic_oscillator
     sll_int32  :: ndof  = 2
     sll_real64 :: omega = 1.0_f64
   contains
@@ -43,15 +43,15 @@ contains
   subroutine rhs__harmonic_oscillator( self, t, y, ydot )
     class( harmonic_oscillator )  , intent( inout ) :: self
     sll_real64                    , intent( in    ) :: t
-    class( sll_vector_space_base ), intent( in    ) :: y
-    class( sll_vector_space_base ), intent( inout ) :: ydot
+    class( sll_c_vector_space_base ), intent( in    ) :: y
+    class( sll_c_vector_space_base ), intent( inout ) :: ydot
 
     character( len=* ), parameter :: this_sub_name = "rhs__harmonic_oscillator"
     character( len=* ), parameter :: err_msg = &
-      " not of type( sll_vector_space_real_1d )"
+      " not of type( sll_t_vector_space_real_1d )"
 
-    select type( y    ); type is( sll_vector_space_real_1d )
-    select type( ydot ); type is( sll_vector_space_real_1d )
+    select type( y    ); type is( sll_t_vector_space_real_1d )
+    select type( ydot ); type is( sll_t_vector_space_real_1d )
 
       SLL_ASSERT( size( y   %array ) .eq. 2 )
       SLL_ASSERT( size( ydot%array ) .eq. 2 )

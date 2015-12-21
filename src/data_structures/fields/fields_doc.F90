@@ -22,12 +22,12 @@
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library
 !> \code
-!> type(sll_cartesian_mesh_2d),                       pointer :: mesh_2d
+!> type(sll_t_cartesian_mesh_2d),                       pointer :: mesh_2d
 !> class(sll_coordinate_transformation_2d_base),      pointer :: tau
 !> class(sll_scalar_field_2d_base),                   pointer :: rho
 !> 
 !> 
-!> mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, &
+!> mesh_2d => sll_f_new_cartesian_mesh_2d( NUM_CELLS1, &
 !>                                   NUM_CELLS2, &
 !>                                   ETA1MIN,    &
 !>                                   ETA1MAX,    &
@@ -50,10 +50,10 @@
 !> &    rhs,                            &
 !> &    "rho",                          &     
 !> &    tau,                            &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
 !> &    [0.0_f64]                       )
 !> 
 !> 

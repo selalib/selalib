@@ -1,6 +1,4 @@
-#if OMPI_V_MAJOR <= 1
-#if OMPI_V_MINOR <= 7
-#if OMPI_V_REVSN <= 5
+#if OMPI_VERSION < 10705
   external ::       &
     mpi_bcast,      &
     mpi_allgather,  &
@@ -18,6 +16,4 @@
     mpi_recv,       &
     mpi_send,       &
     mpi_sendrecv
-#endif
-#endif
 #endif
