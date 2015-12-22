@@ -20,7 +20,8 @@ program test_arbitrary_degree_splines
     sll_o_delete, &
     sll_f_uniform_b_spline_derivatives_at_x, &
     sll_f_uniform_b_splines_and_derivs_at_x, &
-    sll_f_uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x, &
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -703,6 +704,13 @@ contains
     end do
     time = sll_f_time_elapsed_since(t0)
     print *, 'Computing time for  sll_f_uniform_b_splines_at_x: ', time
+    ! computing all non zero uniform splines  at point x:
+    call sll_s_set_time_mark(t0)
+    do j=1,num_tests
+       call sll_s_uniform_b_splines_at_x(degree, xx(j), answer1)
+    end do
+    time = sll_f_time_elapsed_since(t0)
+    print *, 'Computing time for  sll_s_uniform_b_splines_at_x: ', time
     ! computing all non zero uniform splines derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
