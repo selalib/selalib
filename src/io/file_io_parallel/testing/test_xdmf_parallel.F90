@@ -1,5 +1,5 @@
 !> - <b> Examples </b>
-!>      + Variables and array initialization from a layout_2d
+!>      + Variables and array initialization from a sll_t_layout_2d
 !>
 !>        \code
 !>        sll_int32   :: nx, ny          !local sizes of fields
@@ -12,7 +12,7 @@
 !>  
 !>        do j = 1, my
 !>           do i = 1, mx
-!>             global_indices =  local_to_global( layout, (/i, j/) )
+!>             global_indices =  sll_o_local_to_global( layout, (/i, j/) )
 !>             gi = global_indices(1)
 !>             gj = global_indices(2)
 !>             xdata(i,j) = float(gi-1)/(nx-1)

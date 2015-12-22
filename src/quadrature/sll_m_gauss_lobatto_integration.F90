@@ -12,11 +12,11 @@ module sll_m_gauss_lobatto_integration
   implicit none
 
   public :: &
-    gauss_lobatto_derivative_matrix, &
-    gauss_lobatto_integrate_1d, &
-    gauss_lobatto_points, &
-    gauss_lobatto_points_and_weights, &
-    gauss_lobatto_weights
+    sll_f_gauss_lobatto_derivative_matrix, &
+    sll_o_gauss_lobatto_integrate_1d, &
+    sll_f_gauss_lobatto_points, &
+    sll_f_gauss_lobatto_points_and_weights, &
+    sll_f_gauss_lobatto_weights
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -35,7 +35,7 @@ end interface
 #endif
 
 !> Integrate numerically with Gauss-Lobatto formula
-interface gauss_lobatto_integrate_1d
+interface sll_o_gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
 end interface
 
@@ -114,16 +114,16 @@ contains
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return array containing points (1,:) and weights (2,:)
-  function gauss_lobatto_points_and_weights(n,a,b) result(wx)
+  function sll_f_gauss_lobatto_points_and_weights(n,a,b) result(wx)
     sll_int32,  intent(in)     :: n 
     sll_real64, intent(in),optional    :: a
     sll_real64, intent(in),optional    :: b
     sll_real64, dimension(2,n) :: wx !< wx points and weights
     
-    wx(1,1:n) = gauss_lobatto_points( n, a, b )
-    wx(2,1:n) = gauss_lobatto_weights(n, a, b)
+    wx(1,1:n) = sll_f_gauss_lobatto_points( n, a, b )
+    wx(2,1:n) = sll_f_gauss_lobatto_weights(n, a, b)
 
-  end function gauss_lobatto_points_and_weights
+  end function sll_f_gauss_lobatto_points_and_weights
   
   
   !> Returns a 1d array of size (n) containing gauss-lobatto 
@@ -132,7 +132,7 @@ contains
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return xk array containing points
-  function gauss_lobatto_points( n, a, b ) result(xk)
+  function sll_f_gauss_lobatto_points( n, a, b ) result(xk)
     sll_int32,  intent(in)          :: n 
     sll_real64, intent(in),optional :: a
     sll_real64, intent(in),optional :: b
@@ -171,7 +171,7 @@ contains
        xk = c1*xk + c2
     end if
     
-    end function gauss_lobatto_points
+    end function sll_f_gauss_lobatto_points
 
   !> Returns a 1d array of size (n) containing gauss-lobatto 
   !> weights in the interval [a,b].
@@ -179,7 +179,7 @@ contains
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return wk array containing points
-  function gauss_lobatto_weights( n,a,b ) result(wk)
+  function sll_f_gauss_lobatto_weights( n,a,b ) result(wk)
     sll_int32,  intent(in)           :: n 
     sll_real64, intent(in), optional :: a
     sll_real64, intent(in), optional :: b
@@ -210,14 +210,14 @@ contains
        c1 = 0.5_f64*(b-a)
        wk = c1*wk
     end if
-  end function gauss_lobatto_weights
+  end function sll_f_gauss_lobatto_weights
   
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
   !>  der(i,j)=(Phi_i.Phi'_j)
   !> \f]
-  function  gauss_lobatto_derivative_matrix(n, y) result(d)
+  function  sll_f_gauss_lobatto_derivative_matrix(n, y) result(d)
     sll_int32,  intent(in) :: n
     sll_real64, optional :: y(n)
     sll_real64 :: x(n)
@@ -228,7 +228,7 @@ contains
     if (present(y)) then
        x = y
     else
-       x =  gauss_lobatto_points(n)
+       x =  sll_f_gauss_lobatto_points(n)
     end if
 
     d = 0.0_f64
@@ -266,7 +266,7 @@ contains
        end do
     end do
 
-  end function gauss_lobatto_derivative_matrix
+  end function sll_f_gauss_lobatto_derivative_matrix
 
 !> This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements
 !> To use those functions, READ the documentation beside and find more information 

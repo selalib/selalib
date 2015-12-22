@@ -30,13 +30,13 @@ module sll_m_bsl_lt_pic_4d_particle
   implicit none
 
   public :: &
-    sll_bsl_lt_pic_4d_particle
+    sll_t_bsl_lt_pic_4d_particle
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! <<sll_bsl_lt_pic_4d_particle>>
-  type :: sll_bsl_lt_pic_4d_particle
+  ! <<sll_t_bsl_lt_pic_4d_particle>>
+  type :: sll_t_bsl_lt_pic_4d_particle
     !> cell index in the x dimension (can be outside physical domain)
     sll_int32  :: i_cell_x
 
@@ -69,6 +69,6 @@ module sll_m_bsl_lt_pic_4d_particle
     sll_int32  :: ngb_vyright_index
     !> @}
 
-  end type sll_bsl_lt_pic_4d_particle
+  end type sll_t_bsl_lt_pic_4d_particle
 
 end module sll_m_bsl_lt_pic_4d_particle

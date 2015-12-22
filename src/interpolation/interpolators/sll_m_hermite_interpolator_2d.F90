@@ -36,10 +36,10 @@ module sll_m_hermite_interpolator_2d
 #include "sll_working_precision.h"
 
   use sll_m_hermite_interpolation_2d, only: &
-    compute_interpolants_hermite_2d, &
-    interpolate_value_hermite_2d, &
-    new_hermite_interpolation_2d, &
-    sll_hermite_interpolation_2d
+    sll_s_compute_interpolants_hermite_2d, &
+    sll_f_interpolate_value_hermite_2d, &
+    sll_f_new_hermite_interpolation_2d, &
+    sll_t_hermite_interpolation_2d
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -47,7 +47,7 @@ module sll_m_hermite_interpolator_2d
   implicit none
 
   public :: &
-    new_hermite_interpolator_2d
+    sll_f_new_hermite_interpolator_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -62,7 +62,7 @@ module sll_m_hermite_interpolator_2d
 !! We basically copy the analog for cubic splines
   type, extends(sll_c_interpolator_2d) :: sll_hermite_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
-    type(sll_hermite_interpolation_2d), pointer :: hermite
+    type(sll_t_hermite_interpolation_2d), pointer :: hermite
     !> PLEASE ADD DOCUMENTATION
     sll_int32 :: npts1
     !> PLEASE ADD DOCUMENTATION
@@ -96,7 +96,7 @@ module sll_m_hermite_interpolator_2d
 contains
 
     !> PLEASE ADD DOCUMENTATION
-  function new_hermite_interpolator_2d( &
+  function sll_f_new_hermite_interpolator_2d( &
     npts1, &
     npts2, &
     eta1_min, &
@@ -170,7 +170,7 @@ contains
       eta2_max_slopes )    
 
      
-  end function  new_hermite_interpolator_2d
+  end function  sll_f_new_hermite_interpolator_2d
   
   subroutine initialize_hermite_interpolator_2d( &
     interpolator, &    
@@ -217,7 +217,7 @@ contains
     sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes
     sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes
        
-    interpolator%hermite  => new_hermite_interpolation_2d( &
+    interpolator%hermite  => sll_f_new_hermite_interpolation_2d( &
       npts1, &
       npts2, &
       eta1_min, &
@@ -268,7 +268,7 @@ contains
     if(present(size_eta2_coords))then
       !print *,'#Warning size_eta2_coords not used'
     endif    
-    call compute_interpolants_hermite_2d( interpolator%hermite, data_array )
+    call sll_s_compute_interpolants_hermite_2d( interpolator%hermite, data_array )
   end subroutine wrap_compute_interpolants_hermite_2d
   
   function wrap_interpolate_value_hermite_2d( interpolator, eta1, eta2 ) result(val)
@@ -276,7 +276,7 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = interpolate_value_hermite_2d( eta1, eta2, interpolator%hermite )
+    val = sll_f_interpolate_value_hermite_2d( eta1, eta2, interpolator%hermite )
       
   end function wrap_interpolate_value_hermite_2d
   
@@ -323,7 +323,7 @@ contains
     sll_real64,                 intent(out)          :: data_out(num_points1,num_points2) 
     sll_int32 :: i
     sll_int32 :: j
-    call compute_interpolants_hermite_2d( this%hermite, data_in )
+    call sll_s_compute_interpolants_hermite_2d( this%hermite, data_in )
     do j = 1, num_points2
       do i = 1, num_points1
         data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))

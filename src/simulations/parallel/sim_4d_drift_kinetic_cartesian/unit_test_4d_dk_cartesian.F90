@@ -17,7 +17,7 @@ program dk_cartesian_4d
   sll_real64, dimension(1:2) :: landau_params
 
   print *, 'Booting parallel environment...'
-  call sll_boot_collective() ! Wrap this up somewhere else
+  call sll_s_boot_collective() ! Wrap this up somewhere else
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
@@ -53,7 +53,7 @@ program dk_cartesian_4d
 
   ! define the values of the parameters for the landau initializer
   landau_params(1) = 0.1
-  landau_params(2) = 2.0*sll_pi
+  landau_params(2) = 2.0*sll_p_pi
 
   ! initialize simulation object with the above parameters
   call initialize_dk4d( &
@@ -63,11 +63,11 @@ program dk_cartesian_4d
        landau_params )
 
   call simulation%run( )
-  call sll_delete(simulation)
+  call sll_o_delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 
 end program dk_cartesian_4d

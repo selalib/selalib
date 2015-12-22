@@ -9,12 +9,12 @@ module sll_m_particle_method_descriptors
   implicit none
 
   public :: &
-    sll_collisions_none, &
-    sll_controlvariate_maxwellian, &
-    sll_controlvariate_none, &
-    sll_controlvariate_standard, &
-    sll_moment_match_initial, &
-    sll_moment_match_none
+    sll_p_collisions_none, &
+    sll_p_controlvariate_maxwellian, &
+    sll_p_controlvariate_none, &
+    sll_p_controlvariate_standard, &
+    sll_p_moment_match_initial, &
+    sll_p_moment_match_none
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -23,13 +23,13 @@ module sll_m_particle_method_descriptors
   !> Descriptors concerning simulations with control variate
   
   !> No Control Variate - also known as full-f
-  sll_int32, parameter :: SLL_CONTROLVARIATE_NONE = 0
+  sll_int32, parameter :: sll_p_controlvariate_none = 0
   
   !> standard control variate for simulation
-  sll_int32, parameter :: SLL_CONTROLVARIATE_STANDARD=1
+  sll_int32, parameter :: sll_p_controlvariate_standard=1
   
   !>Maxwellian control variate
-  sll_int32, parameter :: SLL_CONTROLVARIATE_MAXWELLIAN=2
+  sll_int32, parameter :: sll_p_controlvariate_maxwellian=2
   
   !>Local Maxwellian control variate, estimates temperature etc.
   sll_int32, parameter :: SLL_CONTROLVARIATE_MAXWELLIAN_LOCAL=3
@@ -39,9 +39,9 @@ module sll_m_particle_method_descriptors
 
 !  character(len=*), parameter :: &
 !          sll_controlvariate_key(0:4) = &
-!         (/"SLL_CONTROLVARIATE_NONE            ",&
-!           "SLL_CONTROLVARIATE_STANDARD        ",&
-!           "SLL_CONTROLVARIATE_MAXWELLIAN      ",&
+!         (/"sll_p_controlvariate_none            ",&
+!           "sll_p_controlvariate_standard        ",&
+!           "sll_p_controlvariate_maxwellian      ",&
 !           "SLL_CONTROLVARIATE_MAXWELLIAN_LOCAL",&
 !           "SLL_CONTROLVARIATE_INITIAL         "/)
 !  
@@ -59,9 +59,9 @@ module sll_m_particle_method_descriptors
  
  
   !---------------- MOMENT MATCHING ---------------------------
-  sll_int32, parameter :: SLL_MOMENT_MATCH_NONE = 0
+  sll_int32, parameter :: sll_p_moment_match_none = 0
   !>Match initial moments
-  sll_int32, parameter :: SLL_MOMENT_MATCH_INITIAL = 1
+  sll_int32, parameter :: sll_p_moment_match_initial = 1
   !>match the moments of the sampling density
   sll_int32, parameter :: SLL_MOMENT_MATCH_PRIOR = 2
   !>match the moments of the sampling density, only velocity
@@ -74,7 +74,7 @@ module sll_m_particle_method_descriptors
   
   !------------- COLLISION OPERATORS -------------------------
   !> do not implement collisions
-  sll_int32, parameter :: SLL_COLLISIONS_NONE = 0
+  sll_int32, parameter :: sll_p_collisions_none = 0
   
   !>use the standard operator
   sll_int32, parameter :: SLL_COLLISIONS_STANDARD = 1
@@ -88,7 +88,7 @@ module sll_m_particle_method_descriptors
   !>Key for collision operators
 !   character(len=*), parameter :: &
 !          sll_collisions_key(0:3) = &
-!         (/"SLL_COLLISIONS_NONE       ",&
+!         (/"sll_p_collisions_none       ",&
 !           "SLL_COLLISIONS_STANDARD   ",&
 !           "SLL_COLLISIONS_KROOK      ",&
 !           "SLL_COLLISIONS_LANDAU     " /) 

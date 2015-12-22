@@ -4,15 +4,15 @@ program arbitrary_degree_splines_1d_neumann
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
-    set_values_at_boundary1d, &
-    sll_arbitrary_degree_spline_interpolator_1d, &
-    sll_delete
+    sll_s_set_values_at_boundary1d, &
+    sll_t_arbitrary_degree_spline_interpolator_1d, &
+    sll_o_delete
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_neumann
+    sll_p_neumann
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -22,7 +22,7 @@ program arbitrary_degree_splines_1d_neumann
 #define XMIN 0.0_f64
 #define XMAX 1.0_f64
 
-type(sll_arbitrary_degree_spline_interpolator_1d) :: interpolator
+type(sll_t_arbitrary_degree_spline_interpolator_1d) :: interpolator
 
 sll_real64, dimension(NPTS) :: x
 sll_real64, dimension(NPTS) :: y
@@ -46,9 +46,9 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%initialize(NPTS,XMIN,XMAX,SLL_NEUMANN,SLL_NEUMANN,SPL_DEG)
+call interpolator%initialize(NPTS,XMIN,XMAX,sll_p_neumann,sll_p_neumann,SPL_DEG)
 
-call set_values_at_boundary1d(interpolator,         &
+call sll_s_set_values_at_boundary1d(interpolator,         &
                               value_left =1.0_f64,  &
                               value_right=1.0_f64,  &
                               slope_left =0.0_f64,  &
@@ -89,7 +89,7 @@ else
   print *, 'FAILED'
 end if
 
-call sll_delete(interpolator)
+call sll_o_delete(interpolator)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -100,7 +100,7 @@ function f(x)
   sll_real64 :: x
   sll_real64 :: f
 
-  f = cos(2.0_f64*sll_pi*x)
+  f = cos(2.0_f64*sll_p_pi*x)
 
 end function f
 
@@ -109,7 +109,7 @@ function df(x)
   sll_real64 :: x
   sll_real64 :: df
 
-  df = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*x)
+  df = -2.0_f64*sll_p_pi*sin(2.0_f64*sll_p_pi*x)
 
 end function df
 

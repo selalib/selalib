@@ -23,49 +23,49 @@ module sll_m_bsl_lt_pic_4d_utilities
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_utilities, only: &
-    int2string, &
-    sll_new_file_id
+    sll_s_int2string, &
+    sll_s_new_file_id
 
   implicit none
 
   public :: &
-    apply_periodic_bc_x, &
-    apply_periodic_bc_y, &
-    eval_hat_function, &
-    eval_landau_fx, &
-    get_initial_position_on_cartesian_grid_from_particle_index, &
-    get_particle_index_from_initial_position_on_cartesian_grid, &
-    get_poisson_cell_index, &
-    global_to_cell_offset_extended, &
-    sll_pic_shape, &
-    update_closest_particle_arrays
+    sll_s_apply_periodic_bc_x, &
+    sll_s_apply_periodic_bc_y, &
+    sll_f_eval_hat_function, &
+    sll_f_eval_landau_fx, &
+    sll_s_get_init_position_on_cart_grid_from_particle_index, &
+    sll_s_get_particle_index_from_init_position_on_cart_grid, &
+    sll_s_get_poisson_cell_index, &
+    sll_s_global_to_cell_offset_extended, &
+    sll_f_pic_shape, &
+    sll_s_update_closest_particle_arrays
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
-! <<get_particle_index_from_initial_position_on_cartesian_grid>>
+! <<sll_s_get_particle_index_from_init_position_on_cart_grid>>
 
 
   !! transforms a standard particle position (x,y) in (i_cell_x, i_cell_y, dx, dy)
   !! -> here the indices i_cell_x and i_cell_y do not need to be within [1, m2d%num_cells1] or [1, m2d%num_cells2]
   !!    so that in non-periodic domains we can track outside particles (markers)
   !!    (in periodic domains I don't think this is useful)
-  subroutine global_to_cell_offset_extended( x, y, &
+  subroutine sll_s_global_to_cell_offset_extended( x, y, &
                       m2d,      &
                       i_cell_x, &
                       i_cell_y, &
                       offset_x, offset_y )
 
     sll_real64, intent(in)  :: x, y
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(out) :: i_cell_x       !! not necessarily in [1, m2d%num_cells1], see comments above
     sll_int32,  intent(out) :: i_cell_y       !! not necessarily in [1, m2d%num_cells2], see comments above
     sll_real32, intent(out) :: offset_x, offset_y
@@ -83,11 +83,11 @@ contains
     SLL_ASSERT(offset_y >= 0)
     SLL_ASSERT(offset_y <= 1 )
 
-    !! note: the (integer) index of the Poisson cell (within space computational domain) is then obtained with get_poisson_cell_index
+    !! note: the (integer) index of the Poisson cell (within space computational domain) is then obtained with sll_s_get_poisson_cell_index
 
-  end subroutine global_to_cell_offset_extended
+  end subroutine sll_s_global_to_cell_offset_extended
 
-  !> <<cell_offset_to_global_extended>> performs the inverse transformation of global_to_cell_offset_extended above
+  !> <<cell_offset_to_global_extended>> performs the inverse transformation of sll_s_global_to_cell_offset_extended above
   !!
   subroutine cell_offset_to_global_extended ( offset_x, offset_y, &
                                    i_cell_x, i_cell_y, m2d, &
@@ -95,7 +95,7 @@ contains
   ! transforms sll_type of a particle (i_cell, dx, dy) into the standard
   ! particle position (x,y)
     sll_real64, intent(out)  :: x, y
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(in) :: i_cell_x, i_cell_y
     sll_real32, intent(in) :: offset_x, offset_y
 
@@ -105,8 +105,8 @@ contains
   end subroutine cell_offset_to_global_extended
 
 
-  subroutine get_poisson_cell_index( m2d, i_cell_x, i_cell_y, i_cell )
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+  subroutine sll_s_get_poisson_cell_index( m2d, i_cell_x, i_cell_y, i_cell )
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(in) :: i_cell_x       !! not necessarily in [1, m2d%num_cells1]
     sll_int32,  intent(in) :: i_cell_y      !! not necessarily in [1, m2d%num_cells2]
     sll_int32,  intent(out) :: i_cell        !! in [1, m2d%num_cells1 * m2d%num_cells2]
@@ -116,10 +116,10 @@ contains
     SLL_ASSERT( i_cell >= 1)
     SLL_ASSERT( i_cell <= m2d%num_cells1 * m2d%num_cells2 )
 
-  end subroutine get_poisson_cell_index
+  end subroutine sll_s_get_poisson_cell_index
 
 
-  subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                            &
+  subroutine sll_s_get_particle_index_from_init_position_on_cart_grid (j_x, j_y, j_vx, j_vy,                            &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        k                                                &
                                                                        )
@@ -144,12 +144,12 @@ contains
 
     SLL_ASSERT( k <= n_parts_x * n_parts_y * n_parts_vx * n_parts_vy )
 
-  end subroutine get_particle_index_from_initial_position_on_cartesian_grid
+  end subroutine sll_s_get_particle_index_from_init_position_on_cart_grid
 
 
-  ! <<get_initial_position_on_cartesian_grid_from_particle_index>>
+  ! <<sll_s_get_init_position_on_cart_grid_from_particle_index>>
 
-  subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,                                               &
+  subroutine sll_s_get_init_position_on_cart_grid_from_particle_index (k,                                               &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        j_x, j_y, j_vx, j_vy                             &
                                                                        )
@@ -186,8 +186,8 @@ contains
   end subroutine
 
 
-  ! <<sll_pic_shape>>
-  !> sll_pic_shape(degree, x, y, vx, vy, inv_hx, inv_hy, inv_hvx, inv_hvy)
+  ! <<sll_f_pic_shape>>
+  !> sll_f_pic_shape(degree, x, y, vx, vy, inv_hx, inv_hy, inv_hvx, inv_hvy)
   !! computes the value of the 4d B-spline particle shape (no particle transformation here)
   !!
   !! note:
@@ -196,10 +196,10 @@ contains
   !!
   !!  - x, y, vx, vy are phase-space coordinates relative to the particle center
   !!    and they are not scaled: for instance if degree = 1 (resp. if degree = 3),
-  !!    and |x| >= hx (resp. |x| >= 2*hx), then sll_pic_shape returns 0
+  !!    and |x| >= hx (resp. |x| >= 2*hx), then sll_f_pic_shape returns 0
   !!    (and similarly for y, vx, vy)
 
-  function sll_pic_shape( &
+  function sll_f_pic_shape( &
     degree,             &
     x, y, vx, vy,       &
     inv_hx, inv_hy, inv_hvx, inv_hvy   &
@@ -218,7 +218,7 @@ contains
             * inv_hy  * sll_b_spline(degree,inv_hy  * y ) &
             * inv_hvx * sll_b_spline(degree,inv_hvx * vx) &
             * inv_hvy * sll_b_spline(degree,inv_hvy * vy)
-  end function sll_pic_shape
+  end function sll_f_pic_shape
 
 
   !> added by MCP
@@ -320,36 +320,36 @@ contains
     return
   end function sll_b_spline
 
-  subroutine apply_periodic_bc_x( mesh, x)
+  subroutine sll_s_apply_periodic_bc_x( mesh, x)
 
 !    use sll_m_cartesian_meshes
     ! [[file:../working_precision/sll_m_working_precision.h]]
 !    use sll_m_working_precision
 
-    type(sll_cartesian_mesh_2d), pointer :: mesh
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
 
     x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
-  end subroutine apply_periodic_bc_x
+  end subroutine sll_s_apply_periodic_bc_x
 
 
-  subroutine apply_periodic_bc_y( mesh, y)
+  subroutine sll_s_apply_periodic_bc_y( mesh, y)
 
 !    use sll_m_cartesian_meshes
     ! [[file:../working_precision/sll_m_working_precision.h]]
 !    use sll_m_working_precision
 
-    type(sll_cartesian_mesh_2d), pointer, intent(in) :: mesh
+    type(sll_t_cartesian_mesh_2d), pointer, intent(in) :: mesh
     sll_real64, intent(inout) :: y
 
     y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
-  end subroutine apply_periodic_bc_y
+  end subroutine sll_s_apply_periodic_bc_y
 
   ! update the arrays closest_particle and closest_particle_distance with the index of the given particle
   ! if closer to what had been stored up to now.
 
   ! x_aux : x_particle - x_min_virtual_mesh   and  similarly for y, vx, vy
-  subroutine update_closest_particle_arrays(k_part,                         &
+  subroutine sll_s_update_closest_particle_arrays(k_part,                         &
                                             x_aux, y_aux, vx_aux, vy_aux,   &
                                             i, j, l, m,                     &
                                             h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy,   &
@@ -378,20 +378,20 @@ contains
          closest_particle_distance(i,j,l,m) = square_dist_to_cell_center
       end if
 
-  end subroutine update_closest_particle_arrays
+  end subroutine sll_s_update_closest_particle_arrays
 
-  function eval_landau_fx(alpha, kx, x)
+  function sll_f_eval_landau_fx(alpha, kx, x)
     sll_real64 :: alpha, kx, x
-    sll_real64 :: eval_landau_fx
-    eval_landau_fx = 1._f64 + alpha * cos(kx * x)
-  end function eval_landau_fx
+    sll_real64 :: sll_f_eval_landau_fx
+    sll_f_eval_landau_fx = 1._f64 + alpha * cos(kx * x)
+  end function sll_f_eval_landau_fx
 
-  function eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, x, y, vx, vy)
+  function sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, x, y, vx, vy)
     sll_real64 :: x0,y0,vx0,vy0             ! centers of the hat
     sll_real64 :: r_x,r_y,r_vx,r_vy         ! radii of the hat
     sll_real64 :: basis_height, hat_shift
     sll_real64 :: x, y, vx, vy
-    sll_real64 :: eval_hat_function
+    sll_real64 :: sll_f_eval_hat_function
 
     sll_real64 :: inv_r_x
     sll_real64 :: inv_r_y
@@ -403,10 +403,10 @@ contains
     inv_r_vx = 1./r_vx
     inv_r_vy = 1./r_vy
 
-    eval_hat_function = basis_height + hat_shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
+    sll_f_eval_hat_function = basis_height + hat_shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
                                                  * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
                                                  * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
                                                  * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
-  end function eval_hat_function
+  end function sll_f_eval_hat_function
 
 end module  sll_m_bsl_lt_pic_4d_utilities

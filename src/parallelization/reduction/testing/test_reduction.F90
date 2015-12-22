@@ -4,7 +4,7 @@ program test_reduction
 #include "sll_working_precision.h"
 
   use sll_m_reduction, only: &
-    compute_reduction_4d_to_3d_direction4
+    sll_s_compute_reduction_4d_to_3d_direction4
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -24,7 +24,7 @@ program test_reduction
   
   data_4d = 1._f64
   
-  call compute_reduction_4d_to_3d_direction4(&
+  call sll_s_compute_reduction_4d_to_3d_direction4(&
     data_4d, &
     data_3d, &
     Npts(1), &
@@ -35,7 +35,7 @@ program test_reduction
 
   err=maxval(abs(data_3d-1._f64))
   
-  call compute_reduction_4d_to_3d_direction4(&
+  call sll_s_compute_reduction_4d_to_3d_direction4(&
     data_4d, &
     data_3d, &
     Npts(1), &

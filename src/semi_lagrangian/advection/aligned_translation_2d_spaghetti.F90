@@ -192,10 +192,10 @@ implicit none
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_init(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
       x1 = x1 - A1*real(nb_step,f64)*dt
       x2 = x2 - A2*real(nb_step,f64)*dt
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
     enddo
   enddo
   

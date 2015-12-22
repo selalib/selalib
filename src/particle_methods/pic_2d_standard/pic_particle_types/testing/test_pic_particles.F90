@@ -14,7 +14,7 @@ program test_pic_particles
 !!$       PARTICLE_ARRAY_SIZE, &
 !!$       GUARD_SIZE )
 !!$
-!!$  call sll_delete( p_group )
+!!$  call sll_o_delete( p_group )
 
   print *, 'PASSED'
 

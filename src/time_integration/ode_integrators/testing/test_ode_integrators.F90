@@ -8,19 +8,19 @@ program test_ode_integrators
     harmonic_oscillator
 
   use sll_m_ode_integrator_base, only: &
-    sll_ode_base, &
-    sll_ode_integrator_base
+    sll_c_ode_base, &
+    sll_c_ode_integrator_base
 
   use sll_m_rk_explicit, only: &
-    sll_rk1e_fwd_euler, &
-    sll_rk2e_heun, &
-    sll_rk2e_midpoint, &
-    sll_rk2e_ralston, &
-    sll_rk3e_heun3, &
-    sll_rk4e_classic
+    sll_t_rk1e_fwd_euler, &
+    sll_t_rk2e_heun, &
+    sll_t_rk2e_midpoint, &
+    sll_t_rk2e_ralston, &
+    sll_t_rk3e_heun3, &
+    sll_t_rk4e_classic
 
   use sll_m_vector_space_real_arrays, only: &
-    sll_vector_space_real_1d
+    sll_t_vector_space_real_1d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,10 +60,10 @@ program test_ode_integrators
   sll_real64, target                            :: z(2), znew(2)
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err
-  type( sll_vector_space_real_1d )              :: y   , ynew
-  class( sll_ode_base ), allocatable, target    :: ode
-  class( sll_ode_base ), pointer                :: p_ode  ! pointer to ODE
-  class( sll_ode_integrator_base ), allocatable :: odeint
+  type( sll_t_vector_space_real_1d )              :: y   , ynew
+  class( sll_c_ode_base ), allocatable, target    :: ode
+  class( sll_c_ode_base ), pointer                :: p_ode  ! pointer to ODE
+  class( sll_c_ode_integrator_base ), allocatable :: odeint
 
   !----------------------------------------------------------------------------
   ! Get input arguments (from command line)
@@ -91,12 +91,12 @@ program test_ode_integrators
 
   ! Create ODE integrator
   select case( odeint_selector )
-   case( 0 ); allocate( sll_rk1e_fwd_euler::odeint )
-   case( 1 ); allocate( sll_rk2e_midpoint ::odeint )
-   case( 2 ); allocate( sll_rk2e_heun     ::odeint )
-   case( 3 ); allocate( sll_rk2e_ralston  ::odeint )
-   case( 4 ); allocate( sll_rk3e_heun3    ::odeint )
-   case( 5 ); allocate( sll_rk4e_classic  ::odeint )
+   case( 0 ); allocate( sll_t_rk1e_fwd_euler::odeint )
+   case( 1 ); allocate( sll_t_rk2e_midpoint ::odeint )
+   case( 2 ); allocate( sll_t_rk2e_heun     ::odeint )
+   case( 3 ); allocate( sll_t_rk2e_ralston  ::odeint )
+   case( 4 ); allocate( sll_t_rk3e_heun3    ::odeint )
+   case( 5 ); allocate( sll_t_rk4e_classic  ::odeint )
   end select
 
   ! Initialize ODE integrator

@@ -4,15 +4,15 @@ module sll_m_hex_poisson
 #include "sll_working_precision.h"
 
   use sll_m_hexagonal_meshes, only: &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   implicit none
 
   public :: &
-    compute_hex_fields, &
-    hex_matrix_poisson, &
-    hex_second_terme_poisson
+    sll_s_compute_hex_fields, &
+    sll_s_hex_matrix_poisson, &
+    sll_s_hex_second_terme_poisson
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -30,8 +30,8 @@ module sll_m_hex_poisson
 
 contains
 
-  subroutine hex_matrix_poisson( matrix_poisson, mesh,type)
-    type(sll_hex_mesh_2d), pointer         :: mesh
+  subroutine sll_s_hex_matrix_poisson( matrix_poisson, mesh,type)
+    type(sll_t_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(out):: matrix_poisson
 
     sll_int32,                   intent(in):: type ! unused parameter atm
@@ -217,12 +217,12 @@ contains
        endif
     enddo
 
-  end subroutine hex_matrix_poisson
+  end subroutine sll_s_hex_matrix_poisson
 
   
   
-  subroutine hex_second_terme_poisson( second_terme, mesh, rho )
-    type(sll_hex_mesh_2d), pointer        :: mesh
+  subroutine sll_s_hex_second_terme_poisson( second_terme, mesh, rho )
+    type(sll_t_hex_mesh_2d), pointer        :: mesh
     sll_real64, dimension(:), intent(out) :: second_terme
     sll_real64, dimension(:), intent(in)  :: rho
     sll_int32                             :: num_cells, i, index_tab, k1, k2
@@ -350,11 +350,11 @@ contains
        enddo
 
 
-  end subroutine hex_second_terme_poisson
+  end subroutine sll_s_hex_second_terme_poisson
 
   !> @details test to check if a point is inside the mesh or not
   function value_if_inside_rho(k1,k2,mesh,rho) result(f)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: rho
     sll_int32  :: k1, k2, n
     sll_real64 :: f
@@ -372,8 +372,8 @@ contains
 ! subroutine to compute the fields and its derivatives from the results 
 ! of solving the poisson equation . Precision is of order 4
 
-subroutine compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
-    type(sll_hex_mesh_2d), pointer :: mesh
+subroutine sll_s_compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: uxn, uyn, phi,dxuxn,dyuxn,dxuyn,dyuyn
     sll_int32,          intent(in) :: type
     sll_int32  :: i,h1,h2
@@ -511,12 +511,12 @@ subroutine compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
     endif
 
 
-  end subroutine compute_hex_fields
+  end subroutine sll_s_compute_hex_fields
 
 
 
   function value_if_inside_phi(k1,k2,mesh,phi) result(f)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: phi
     sll_int32  :: k1, k2, n
     sll_real64 :: f

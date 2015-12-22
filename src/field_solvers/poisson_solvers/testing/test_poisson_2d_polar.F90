@@ -4,20 +4,20 @@ program test_poisson_2d_polar
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet
+    sll_p_dirichlet
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_poisson_2d_polar, only: &
-    sll_create, &
-    sll_plan_poisson_polar, &
-    solve_poisson_polar
+    sll_o_create, &
+    sll_t_plan_poisson_polar, &
+    sll_s_solve_poisson_polar
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_plan_poisson_polar) :: poisson_fft
+type(sll_t_plan_poisson_polar) :: poisson_fft
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -40,12 +40,12 @@ r_min       = 1.0_f64
 r_max       = 2.0_f64
 
 theta_min   = 0.0_f64
-theta_max   = 2.0_f64 * sll_pi
+theta_max   = 2.0_f64 * sll_p_pi
 
 nr          = 33
 ntheta      = 129
 delta_r     = (r_max-r_min)/real(nr-1,f64)
-delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
+delta_theta = 2.0_f64*sll_p_pi/real(ntheta-1,f64)
 
 SLL_CLEAR_ALLOCATE(rhs(1:nr,1:ntheta),error)
 SLL_CLEAR_ALLOCATE(phi(1:nr,1:ntheta),error)
@@ -68,13 +68,13 @@ do j=1,ntheta
    end do
 end do
 
-call sll_create( poisson_fft,   &
+call sll_o_create( poisson_fft,   &
                  r_min,         &
                  r_max,         &
                  nr-1,          &
                  ntheta-1,      &
-                 SLL_DIRICHLET, &
-                 SLL_DIRICHLET)
+                 sll_p_dirichlet, &
+                 sll_p_dirichlet)
 
 do i =1,nr
    do j=1,ntheta
@@ -82,7 +82,7 @@ do i =1,nr
    end do
 end do
 
-call solve_poisson_polar(poisson_fft, rhs, phi)
+call sll_s_solve_poisson_polar(poisson_fft, rhs, phi)
 
 
 do i =1,nr

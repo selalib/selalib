@@ -3,10 +3,10 @@ module sll_m_scalar_field_2d_base_old
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   implicit none
 
@@ -18,7 +18,7 @@ module sll_m_scalar_field_2d_base_old
   type, abstract :: sll_scalar_field_2d_base
      ! consider eliminating this transformation from this base class,
      ! it is already in the derived classes and is confusing...
-     class(sll_coordinate_transformation_2d_base), pointer :: coord_trans 
+     class(sll_c_coordinate_transformation_2d_base), pointer :: coord_trans 
    contains
      procedure(function_get_mesh), deferred, pass :: get_cartesian_mesh
      procedure(function_get_transformation), deferred, pass :: &
@@ -55,7 +55,7 @@ module sll_m_scalar_field_2d_base_old
        use sll_m_cartesian_meshes
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
-       class(sll_cartesian_mesh_2d), pointer :: res
+       class(sll_t_cartesian_mesh_2d), pointer :: res
      end function function_get_mesh
   end interface
 
@@ -81,7 +81,7 @@ module sll_m_scalar_field_2d_base_old
        use sll_m_coordinate_transformation_2d_base
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
-       class(sll_coordinate_transformation_2d_base), pointer :: res
+       class(sll_c_coordinate_transformation_2d_base), pointer :: res
      end function function_get_transformation
   end interface
 

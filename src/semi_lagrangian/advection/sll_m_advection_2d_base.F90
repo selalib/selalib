@@ -22,7 +22,7 @@ module sll_m_advection_2d_base
   implicit none
 
   public :: &
-    sll_advection_2d_base
+    sll_c_advection_2d_base
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32,12 +32,12 @@ module sll_m_advection_2d_base
    ! dt <=> dt  
    ! f(dt) <=> input
    ! f(0) <=> output
-  type, abstract :: sll_advection_2d_base 
+  type, abstract :: sll_c_advection_2d_base 
   contains
     procedure(signature_advect_2d), deferred, pass(adv) :: &
       advect_2d
   
-  end type sll_advection_2d_base
+  end type sll_c_advection_2d_base
 
  abstract interface
     subroutine signature_advect_2d(&
@@ -48,8 +48,8 @@ module sll_m_advection_2d_base
       input, &
       output)
       use sll_m_working_precision
-      import sll_advection_2d_base       
-      class(sll_advection_2d_base) :: adv
+      import sll_c_advection_2d_base       
+      class(sll_c_advection_2d_base) :: adv
       sll_real64, dimension(:,:), intent(in) :: A1
       sll_real64, dimension(:,:), intent(in) :: A2
       sll_real64, intent(in) :: dt 

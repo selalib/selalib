@@ -21,15 +21,15 @@ module sll_m_poisson_2d_periodic_fftpack
 !   zffti
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   implicit none
 
   public :: &
-    initialize, &
-    new, &
-    poisson_2d_periodic_fftpack, &
-    solve
+    sll_o_initialize, &
+    sll_o_new, &
+    sll_t_poisson_2d_periodic_fftpack, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -45,9 +45,9 @@ type :: fftclass
    sll_int32  :: n  !< number of samples in each sequence
 end type fftclass
 
-!> Object with data to solve Poisson equation on 2d domain with
+!> Object with data to sll_o_solve Poisson equation on 2d domain with
 !> periodic boundary conditions
-type :: poisson_2d_periodic_fftpack
+type :: sll_t_poisson_2d_periodic_fftpack
   sll_int32   :: nc_x  !< number of cells direction x
   sll_int32   :: nc_y  !< number of cells direction y
   sll_real64  :: x_min !< left corner direction x
@@ -64,21 +64,21 @@ type :: poisson_2d_periodic_fftpack
   sll_real64, dimension(:,:), pointer :: k2   !< \f$ k_x^2+k_y^2 \f$
   type(fftclass)                      :: fftx !< fft plan in direction x
   type(fftclass)                      :: ffty !< fft plan in direction y
-end type poisson_2d_periodic_fftpack
+end type sll_t_poisson_2d_periodic_fftpack
 
-!> Create a new poisson solver on 1d mesh
-interface new
+!> Create a sll_o_new poisson solver on 1d mesh
+interface sll_o_new
   module procedure new_poisson_2d_periodic_fftpack
 end interface
 
 
-!> Initialize
-interface initialize
+!> sll_o_initialize
+interface sll_o_initialize
   module procedure initialize_poisson_2d_periodic_fftpack
 end interface
 
-!> Solve
-interface solve
+!> sll_o_solve
+interface sll_o_solve
    module procedure solve_potential_poisson_2d_periodic_fftpack
    module procedure solve_e_fields_poisson_2d_periodic_fftpack
 end interface
@@ -98,7 +98,7 @@ end interface
 
 contains
 
-  !> Create a new solver
+  !> Create a sll_o_new solver
   !> @return
   function new_poisson_2d_periodic_fftpack(&
     x_min, &
@@ -110,7 +110,7 @@ contains
     error) &
     result(this)
 
-   type(poisson_2d_periodic_fftpack),pointer :: this   !< self object
+   type(sll_t_poisson_2d_periodic_fftpack),pointer :: this   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -126,9 +126,9 @@ contains
   end function new_poisson_2d_periodic_fftpack 
 
 
-!> delete poisson_2d_periodic_fftpack
+!> delete sll_t_poisson_2d_periodic_fftpack
 subroutine free_poisson_2d_periodic_fftpack( this, error )
-   type(poisson_2d_periodic_fftpack) :: this   !< self object
+   type(sll_t_poisson_2d_periodic_fftpack) :: this   !< self object
    sll_int32,  intent(out)   :: error  !< error code
 
    SLL_DEALLOCATE(this%rhst, error)
@@ -155,12 +155,12 @@ subroutine free_poisson_2d_periodic_fftpack( this, error )
       
 end subroutine free_poisson_2d_periodic_fftpack
 
-!> Create an object to solve Poisson equation on 2D mesh with periodic
+!> Create an object to sll_o_solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:
 subroutine initialize_poisson_2d_periodic_fftpack( &
            this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
 
-   type(poisson_2d_periodic_fftpack) :: this   !< self object
+   type(sll_t_poisson_2d_periodic_fftpack) :: this   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -197,11 +197,11 @@ subroutine initialize_poisson_2d_periodic_fftpack( &
 
 end subroutine initialize_poisson_2d_periodic_fftpack
 
-!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
+!> sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
 
-   type(poisson_2d_periodic_fftpack)       :: this !< self object
+   type(sll_t_poisson_2d_periodic_fftpack)       :: this !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs  !< charge density
    sll_real64, dimension(:,:), intent(out) :: sol  !< electric potential
    sll_int32                               :: nc_x !< number of cells direction x
@@ -241,12 +241,12 @@ subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
 
 end subroutine solve_potential_poisson_2d_periodic_fftpack
 
-!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
+!> sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,nrj)
 ! THIS routine changes the RHS despite its declaration as intent(in)
 ! this should be fixed !!!
-   type(poisson_2d_periodic_fftpack)       :: this    !< self object
+   type(sll_t_poisson_2d_periodic_fftpack)       :: this    !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs     !< charge density
    sll_real64, dimension(:,:), intent(out) :: field_x !< electric field direction x
    sll_real64, dimension(:,:), intent(out) :: field_y !< electric field direction y
@@ -309,7 +309,7 @@ end subroutine solve_e_fields_poisson_2d_periodic_fftpack
 
 subroutine wave_number_vectors(this)
 
-   type(poisson_2d_periodic_fftpack) :: this
+   type(sll_t_poisson_2d_periodic_fftpack) :: this
    sll_int32  :: ik, jk
    sll_int32  :: nc_x, nc_y
    sll_real64 :: kx, ky, kx0, ky0
@@ -317,8 +317,8 @@ subroutine wave_number_vectors(this)
    nc_x = this%nc_x
    nc_y = this%nc_y
    
-   kx0 = 2._f64*sll_pi/(this%x_max-this%x_min)
-   ky0 = 2._f64*sll_pi/(this%y_max-this%y_min)
+   kx0 = 2._f64*sll_p_pi/(this%x_max-this%x_min)
+   ky0 = 2._f64*sll_p_pi/(this%y_max-this%y_min)
    
    do ik=1,nc_x/2+1
       kx = (ik-1)*kx0

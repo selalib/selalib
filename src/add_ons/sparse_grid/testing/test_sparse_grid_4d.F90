@@ -7,13 +7,13 @@ program test_interpolation_4d
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_sparse_grid_2d, only: &
-    sparse_grid_interpolator_2d
+    sll_t_sparse_grid_interpolator_2d
 
   use sll_m_sparse_grid_4d, only: &
-    sparse_grid_interpolator_4d
+    sll_t_sparse_grid_interpolator_4d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,8 +31,8 @@ program test_interpolation_4d
   sll_real64, dimension(:), allocatable :: displacement
   sll_real64, dimension(:), allocatable :: displacement2d
 
-  type(sparse_grid_interpolator_4d), target   :: interp
-  type(sparse_grid_interpolator_2d), target   :: interp2d
+  type(sll_t_sparse_grid_interpolator_4d), target   :: interp
+  type(sll_t_sparse_grid_interpolator_2d), target   :: interp2d
 
   sll_real64 :: tol(8)
   logical :: fail
@@ -43,10 +43,10 @@ program test_interpolation_4d
   ALLOCATE(errorvec(4*its));
 
   ! Set parameters
-  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_pi;
-  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_pi;
-  eta_min(3) = 0.0_f64; eta_max(3) = 4.0_f64*sll_pi;
-  eta_min(4) = 0.0_f64; eta_max(4) = 4.0_f64*sll_pi;
+  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_p_pi;
+  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_p_pi;
+  eta_min(3) = 0.0_f64; eta_max(3) = 4.0_f64*sll_p_pi;
+  eta_min(4) = 0.0_f64; eta_max(4) = 4.0_f64*sll_p_pi;
 
   levels =  8; 
   order(1) = 1;

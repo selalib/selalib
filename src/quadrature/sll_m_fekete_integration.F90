@@ -15,8 +15,8 @@ module sll_m_fekete_integration
   implicit none
 
   public :: &
-    fekete_order_num, &
-    fekete_points_and_weights
+    sll_s_fekete_order_num, &
+    sll_f_fekete_points_and_weights
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -91,7 +91,7 @@ contains
   !>   Volume 38, Number 5, 2000, pages 1707-1720.
   !> @param[IN] rule integer the index of the rule
   !> @param[OUT] order_num integer the order (number of points) of the rule
-  subroutine fekete_order_num(rule, order_num)
+  subroutine sll_s_fekete_order_num(rule, order_num)
     sll_int32, intent(in)  ::  rule
     sll_int32, intent(out) ::  order_num
     sll_int32, allocatable, dimension(:) :: suborder
@@ -107,7 +107,7 @@ contains
     order_num = sum (suborder(1:suborder_num))
 
     SLL_DEALLOCATE_ARRAY(suborder, ierr)
-  end subroutine fekete_order_num
+  end subroutine sll_s_fekete_order_num
 
   !---------------------------------------------------------------------------
   !> @brief returns the points and weights of a Fekete rule.
@@ -770,7 +770,7 @@ contains
   !>             xyw(1,:) contains the x coordinates
   !>             of the fekete points, xyw(2, :) the y coordinates and
   !>             xyw(3, :) contains the associated weights.
-  function fekete_points_and_weights(node_xy2, rule) result(xyw)
+  function sll_f_fekete_points_and_weights(node_xy2, rule) result(xyw)
     sll_real64, dimension(2,3), intent(in) :: node_xy2
     sll_int32,  intent(in) :: rule
     !sll_int32  :: order
@@ -781,7 +781,7 @@ contains
     sll_real64, allocatable :: w(:)
     sll_real64, allocatable :: xyw(:,:)
 
-    call fekete_order_num(rule, order_num)
+    call sll_s_fekete_order_num(rule, order_num)
 
     SLL_ALLOCATE(xy(1:2,1:order_num), ierr)
     SLL_ALLOCATE(xy2(1:2,1:order_num), ierr)
@@ -799,7 +799,7 @@ contains
     SLL_DEALLOCATE_ARRAY(xy2, ierr)
     SLL_DEALLOCATE_ARRAY(w,   ierr)
 
-  end function fekete_points_and_weights
+  end function sll_f_fekete_points_and_weights
 
 
   !---------------------------------------------------------------------------
@@ -830,7 +830,7 @@ contains
 
     ! Initialiting the fekete points and weigths ......
     xyw(:,:) = 0._f64
-    xyw = fekete_points_and_weights(pxy, 1)
+    xyw = sll_f_fekete_points_and_weights(pxy, 1)
 
     N = 10
     fekete_integral = 0._f64
