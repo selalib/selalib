@@ -8,39 +8,39 @@ program parallel_advection
     output_unit
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_collective, only: &
-    sll_boot_collective, &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_halt_collective, &
-    sll_world_collective
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_cubic_spline_interpolator_1d, &
-    sll_delete
+    sll_t_cubic_spline_interpolator_1d, &
+    sll_o_delete
 
   use sll_m_gnuplot_parallel, only: &
-    sll_gnuplot_2d_parallel
+    sll_o_gnuplot_2d_parallel
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
   use sll_m_remapper, only: &
-    apply_remap_2d, &
-    compute_local_sizes, &
-    initialize_layout_with_distributed_array, &
-    layout_2d, &
-    local_to_global, &
-    new_layout_2d, &
-    new_remap_plan, &
-    remap_plan_2d_real64, &
-    sll_view_lims, &
-    sll_delete
+    sll_o_apply_remap_2d, &
+    sll_o_compute_local_sizes, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_2d_real64, &
+    sll_o_view_lims, &
+    sll_o_delete
 
   use sll_m_utilities, only: &
-    is_power_of_two
+    sll_f_is_power_of_two
 
   use sll_mpi, only: &
     mpi_wtime
@@ -52,14 +52,14 @@ program parallel_advection
 
   class(sll_c_interpolator_1d), pointer   :: interp_eta1
   class(sll_c_interpolator_1d), pointer   :: interp_eta2
-  type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
-  type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_eta1
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_eta2
   sll_real64, dimension(:,:),  pointer       :: f_eta1
   sll_real64, dimension(:,:),  pointer       :: f_eta2
-  type(layout_2D), pointer                   :: layout_eta1
-  type(layout_2D), pointer                   :: layout_eta2
-  type(remap_plan_2D_real64), pointer        :: eta1_to_eta2 
-  type(remap_plan_2D_real64), pointer        :: eta2_to_eta1
+  type(sll_t_layout_2d), pointer                   :: layout_eta1
+  type(sll_t_layout_2d), pointer                   :: layout_eta2
+  type(sll_t_remap_plan_2d_real64), pointer        :: eta1_to_eta2 
+  type(sll_t_remap_plan_2d_real64), pointer        :: eta2_to_eta1
 
   sll_int32  :: i_step
   sll_int32  :: prank, comm
@@ -94,55 +94,55 @@ program parallel_advection
 
   sll_int32 :: i, j
 
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
-  prank = sll_get_collective_rank(sll_world_collective)
-  psize = int(sll_get_collective_size(sll_world_collective),kind=i64)
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = int(sll_f_get_collective_size(sll_v_world_collective),kind=i64)
+  comm  = sll_v_world_collective%comm
 
   tcpu1 = MPI_WTIME()
-  if (.not. is_power_of_two(psize)) then     
+  if (.not. sll_f_is_power_of_two(psize)) then     
      print *, 'This test needs to run in a number of processes which is ',&
           'a power of 2.'
      stop
   end if
 
-  call spl_eta1%initialize(nc_eta1+1,eta1_min,eta1_max,SLL_PERIODIC)
+  call spl_eta1%initialize(nc_eta1+1,eta1_min,eta1_max,sll_p_periodic)
 
-  call spl_eta2%initialize(nc_eta2+1,eta2_min,eta2_max,SLL_PERIODIC)
+  call spl_eta2%initialize(nc_eta2+1,eta2_min,eta2_max,sll_p_periodic)
 
   interp_eta1 => spl_eta1
   interp_eta2 => spl_eta2
 
-  layout_eta1 => new_layout_2D( sll_world_collective )        
+  layout_eta1 => sll_f_new_layout_2d( sll_v_world_collective )        
 
-  call initialize_layout_with_distributed_array( &
+  call sll_o_initialize_layout_with_distributed_array( &
              nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta1 )
+  if ( prank == MPI_MASTER ) call sll_o_view_lims( layout_eta1 )
   flush( output_unit )
 
-  call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
+  call sll_o_compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f_eta1(1:loc_sz_i,1:loc_sz_j),error)
 
-  layout_eta2 => new_layout_2D( sll_world_collective )
+  layout_eta2 => sll_f_new_layout_2d( sll_v_world_collective )
 
-  call initialize_layout_with_distributed_array( &
+  call sll_o_initialize_layout_with_distributed_array( &
               nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta2 )
+  if ( prank == MPI_MASTER ) call sll_o_view_lims( layout_eta2 )
   flush( output_unit )
 
-  call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
+  call sll_o_compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f_eta2(1:loc_sz_i,1:loc_sz_j),error)
 
-  eta1_to_eta2 => new_remap_plan( layout_eta1, layout_eta2, f_eta1)     
-  eta2_to_eta1 => new_remap_plan( layout_eta2, layout_eta1, f_eta2)     
+  eta1_to_eta2 => sll_o_new_remap_plan( layout_eta1, layout_eta2, f_eta1)     
+  eta2_to_eta1 => sll_o_new_remap_plan( layout_eta2, layout_eta1, f_eta2)     
   
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global(layout_eta2,(/i,j/)) 
+     global_indices = sll_o_local_to_global(layout_eta2,(/i,j/)) 
      gi = global_indices(1)
      gj = global_indices(2)
 
@@ -154,24 +154,24 @@ program parallel_advection
   end do
   end do
 
-  call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
+  call sll_o_apply_remap_2d( eta2_to_eta1, f_eta2, f_eta1 )
   call advection_eta1(0.5*delta_t)
 
-  offset = local_to_global(layout_eta1,(/1,1/)) 
+  offset = sll_o_local_to_global(layout_eta1,(/1,1/)) 
   offset_eta1 = (offset(1)-1)*delta_eta1
   offset_eta2 = (offset(2)-1)*delta_eta2
 
   do i_step=1, n_step
 
-      call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
+      call sll_o_apply_remap_2d( eta1_to_eta2, f_eta1, f_eta2 )
 
       call advection_eta2(delta_t)
 
-      call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
+      call sll_o_apply_remap_2d( eta2_to_eta1, f_eta2, f_eta1 )
 
       call advection_eta1(delta_t)
 
-      call sll_gnuplot_2d_parallel( offset_eta1, delta_eta1, &
+      call sll_o_gnuplot_2d_parallel( offset_eta1, delta_eta1, &
                                     offset_eta2, delta_eta2, &
                                     size(f_eta1,1), size(f_eta1,2), &
                                     f_eta1, 'f_parallel', &
@@ -183,12 +183,12 @@ program parallel_advection
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call sll_delete(layout_eta1)
-  call sll_delete(layout_eta2)
+  call sll_o_delete(layout_eta1)
+  call sll_o_delete(layout_eta2)
   SLL_DEALLOCATE_ARRAY(f_eta1, error)
   SLL_DEALLOCATE_ARRAY(f_eta2, error)
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 contains
 
@@ -197,11 +197,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)
+  call sll_o_compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)
 
   do j=1,loc_sz_j
 
-     global_indices = local_to_global(layout_eta1,(/1,j/)) 
+     global_indices = sll_o_local_to_global(layout_eta1,(/1,j/)) 
      gj = global_indices(2)
      alpha = -dt
      call interp_eta1%interpolate_array_disp_inplace(loc_sz_i,f_eta1(:,j),alpha)
@@ -215,11 +215,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
+  call sll_o_compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 
   do i=1,loc_sz_i
 
-     global_indices = local_to_global(layout_eta2,(/i,1/)) 
+     global_indices = sll_o_local_to_global(layout_eta2,(/i,1/)) 
      gi = global_indices(1)
      alpha = -dt
      call interp_eta2%interpolate_array_disp_inplace(loc_sz_j,f_eta2(i,:),alpha)

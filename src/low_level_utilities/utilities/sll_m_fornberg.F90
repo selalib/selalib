@@ -36,8 +36,8 @@ module sll_m_fornberg
   implicit none
 
   public :: &
-    apply_fd, &
-    populate_weights
+    sll_s_apply_fd, &
+    sll_s_populate_weights
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,7 +51,7 @@ contains
   !> @param[in] ydata ordinates vector
   !> @param[in] xtgt position where the derivatives will be evaluated
   !> @param[out] out(0:n) values of n th derivatives at xtgt
-  subroutine apply_fd(nin, maxorder, xdata, ydata, xtgt, out)
+  subroutine sll_s_apply_fd(nin, maxorder, xdata, ydata, xtgt, out)
     sll_int32,  intent(in)  :: nin, maxorder
     sll_real64, intent(in)  :: xdata(0:nin-1), ydata(0:nin-1), xtgt
     sll_real64, intent(out) :: out(0:maxorder)
@@ -59,7 +59,7 @@ contains
     sll_int32 :: j
     sll_real64 :: c(0:nin-1, 0:maxorder)
 
-    call populate_weights(xtgt, xdata, nin-1, maxorder, c)
+    call sll_s_populate_weights(xtgt, xdata, nin-1, maxorder, c)
     forall(j=0:maxorder) out(j) = sum(c(0:,j)*ydata)
     
   end subroutine
@@ -77,7 +77,7 @@ contains
   !>      Generation of Finite Difference Formulas on Arbitrarily
   !>          Spaced Grids, Bengt Fornberg,
   !>          Mathematics of compuation, 51, 184, 1988, 699-706
-  subroutine populate_weights (z, x, nd, m, c)
+  subroutine sll_s_populate_weights (z, x, nd, m, c)
 
     sll_real64, intent(in)  :: z
     sll_int32,  intent(in)  :: nd, m
@@ -112,6 +112,6 @@ contains
       end do
       c1 = c2
     end do
-  end subroutine populate_weights
+  end subroutine sll_s_populate_weights
 
 end module

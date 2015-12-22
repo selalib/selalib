@@ -23,26 +23,26 @@ module sll_m_charge_to_density
 #include "sll_accumulators.h"
 
   use sll_m_accumulators, only: &
-    electric_field_accumulator, &
-    electric_field_accumulator_cs, &
-    sll_charge_accumulator_2d, &
-    sll_charge_accumulator_2d_cs
+    sll_t_electric_field_accumulator, &
+    sll_t_electric_field_accumulator_cs, &
+    sll_t_charge_accumulator_2d, &
+    sll_t_charge_accumulator_2d_cs
 
   implicit none
 
   public :: &
-    sll_accumulate_field, &
-    sll_accumulate_field_cs, &
-    sll_convert_charge_to_rho_2d_per_per, &
-    sll_convert_charge_to_rho_2d_per_per_cs
+    sll_s_accumulate_field, &
+    sll_s_accumulate_field_cs, &
+    sll_s_convert_charge_to_rho_2d_per_per, &
+    sll_s_convert_charge_to_rho_2d_per_per_cs
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 
-  subroutine sll_convert_charge_to_rho_2d_per_per( charge, rho )
-    type(sll_charge_accumulator_2d), pointer :: charge
+  subroutine sll_s_convert_charge_to_rho_2d_per_per( charge, rho )
+    type(sll_t_charge_accumulator_2d), pointer :: charge
     sll_real64, dimension(:,:), intent(out)  :: rho
     sll_int32  :: i
     sll_int32  :: j
@@ -106,10 +106,10 @@ contains
 !!$       density(i  ,j+1) = density(i,  j+1) + all_charge(k)%q_nw
 !!$       density(i+1,j+1) = density(i+1,j+1) + all_charge(k)%q_ne
 !!$    enddo
-  end subroutine sll_convert_charge_to_rho_2d_per_per
+  end subroutine sll_s_convert_charge_to_rho_2d_per_per
 
-  subroutine sll_convert_charge_to_rho_2d_per_per_CS( charge, rho )
-    type(sll_charge_accumulator_2d_CS), pointer :: charge
+  subroutine sll_s_convert_charge_to_rho_2d_per_per_cs( charge, rho )
+    type(sll_t_charge_accumulator_2d_cs), pointer :: charge
     sll_real64, dimension(:,:), intent(out)  :: rho
     sll_int32  :: i, im1, im2, ip1
     sll_int32  :: j, jm1, jm2, jp1!   k
@@ -177,7 +177,7 @@ contains
     enddo
     rho(ncx+1,ncy+1) = rho(1,1)
     
-  end subroutine sll_convert_charge_to_rho_2d_per_per_CS
+  end subroutine sll_s_convert_charge_to_rho_2d_per_per_cs
 
 
 ! ------------   COMMENTS  -------------
@@ -188,9 +188,9 @@ contains
 ! --------------------------------------
 !
 
-  subroutine sll_accumulate_field( E1, E2, E_accumulator)
+  subroutine sll_s_accumulate_field( E1, E2, E_accumulator)
     sll_real64, dimension(:,:), pointer, intent(in)        :: E1, E2
-    type(electric_field_accumulator), pointer, intent(out) :: E_accumulator
+    type(sll_t_electric_field_accumulator), pointer, intent(out) :: E_accumulator
     sll_int32  ::  i, j
     sll_int32  ::  ncx, ncy
 
@@ -210,13 +210,13 @@ contains
        enddo
     enddo
 
-  end subroutine sll_accumulate_field
+  end subroutine sll_s_accumulate_field
 
 
-  subroutine sll_accumulate_field_CS( E1, E2, E_accumulator)
+  subroutine sll_s_accumulate_field_cs( E1, E2, E_accumulator)
 ! ------   Recall : CS is for Cubic Splines  ------
     sll_real64, dimension(:,:), pointer, intent(in)        :: E1, E2
-    type(electric_field_accumulator_CS), pointer, intent(out) :: E_accumulator
+    type(sll_t_electric_field_accumulator_cs), pointer, intent(out) :: E_accumulator
     sll_int32  ::  i, j, im1, ip2, jm1, jp2
     sll_int32  ::  ncx, ncy
 
@@ -283,6 +283,6 @@ contains
        enddo
     enddo
 
-  end subroutine sll_accumulate_field_CS
+  end subroutine sll_s_accumulate_field_cs
 
 end module sll_m_charge_to_density

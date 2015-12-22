@@ -4,31 +4,31 @@ program test_advection_2d_tri_mesh
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_tri_mesh, only: &
-    advection_2d, &
-    new_advection_2d_tri_mesh, &
-    sll_advection_tri_mesh
+    sll_s_advection_2d, &
+    sll_f_new_advection_2d_tri_mesh, &
+    sll_t_advection_tri_mesh
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_2d
+    sll_o_gnuplot_2d
 
   use sll_m_hexagonal_meshes, only: &
-    new_hex_mesh_2d, &
-    sll_hex_mesh_2d
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
 
   use sll_m_triangular_meshes, only: &
-    analyze_triangular_mesh, &
-    map_to_circle, &
-    new_triangular_mesh_2d, &
-    sll_delete, &
-    sll_triangular_mesh_2d, &
-    write_triangular_mesh_mtv
+    sll_s_analyze_triangular_mesh, &
+    sll_s_map_to_circle, &
+    sll_o_new_triangular_mesh_2d, &
+    sll_o_delete, &
+    sll_t_triangular_mesh_2d, &
+    sll_s_write_triangular_mesh_mtv
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_triangular_mesh_2d), pointer :: t_mesh
-type(sll_hex_mesh_2d), pointer        :: h_mesh
-type(sll_advection_tri_mesh), pointer :: t_adv
+type(sll_t_triangular_mesh_2d), pointer :: t_mesh
+type(sll_t_hex_mesh_2d), pointer        :: h_mesh
+type(sll_t_advection_tri_mesh), pointer :: t_adv
 
 sll_real64, dimension(:), allocatable :: df
 sll_real64, dimension(:), allocatable :: ex 
@@ -51,16 +51,16 @@ sll_int32  :: is1, is2, ic, iv, it, iac, nbc
 !Reference on the boundary is set to "one"
 
 num_cells = 2
-h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
-t_mesh => new_triangular_mesh_2d(h_mesh) 
+h_mesh => sll_f_new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
+t_mesh => sll_o_new_triangular_mesh_2d(h_mesh) 
 
 SLL_CLEAR_ALLOCATE(df(1:t_mesh%num_nodes), ierr)
 SLL_CLEAR_ALLOCATE(ex(1:t_mesh%num_nodes), ierr)
 SLL_CLEAR_ALLOCATE(ey(1:t_mesh%num_nodes), ierr)
 
-call map_to_circle(t_mesh, num_cells)
+call sll_s_map_to_circle(t_mesh, num_cells)
 
-call write_triangular_mesh_mtv(t_mesh, "positions_mesh.mtv")
+call sll_s_write_triangular_mesh_mtv(t_mesh, "positions_mesh.mtv")
 
 x1 => t_mesh%coord(1,:)
 x2 => t_mesh%coord(2,:)
@@ -69,16 +69,16 @@ df = exp(-((x1-0.5)**2+x2*x2)/0.04_f64)
 ex = -1.0_f64 !- x2
 ey =  0.0_f64 !+ x1
 
-t_adv => new_advection_2d_tri_mesh(t_mesh)
+t_adv => sll_f_new_advection_2d_tri_mesh(t_mesh)
 
 do istep = 1, 1
-  call advection_2d(t_adv, df, ex, ey, dt)
-  call sll_gnuplot_2d( df, "f_tri", t_mesh%coord, t_mesh%nodes, istep)
+  call sll_s_advection_2d(t_adv, df, ex, ey, dt)
+  call sll_o_gnuplot_2d( df, "f_tri", t_mesh%coord, t_mesh%nodes, istep)
 end do
 
 print*, 'error =', sum(abs(df-exp(-(x1*x1+x2*x2)/0.04_f64)))/real(t_mesh%num_nodes,f64)
 
-call analyze_triangular_mesh(t_mesh) 
+call sll_s_analyze_triangular_mesh(t_mesh) 
 
 !Compute  Mitchell corners
 allocate(mitchell_corners(3,t_mesh%num_triangles))
@@ -103,6 +103,6 @@ end do
 do it = 1, t_mesh%num_triangles
   write(*,"(i3,2x,3i4,2x,3i4)") it, t_mesh%nodes(:,it), mitchell_corners(:,it)
 end do
-call sll_delete(t_mesh)
+call sll_o_delete(t_mesh)
 
 end program test_advection_2d_tri_mesh

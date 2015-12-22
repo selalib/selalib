@@ -20,18 +20,18 @@ program test_characteristics_1d_explicit_euler
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_characteristics_1d_base, only: &
-    sll_characteristics_1d_base
+    sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    new_explicit_euler_1d_charac
+    sll_f_new_explicit_euler_1d_charac
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_characteristics_1d_base), pointer :: euler 
+  class(sll_c_characteristics_1d_base), pointer :: euler 
   
   sll_int32 :: Npts
   sll_real64, dimension(:), allocatable :: input
@@ -52,9 +52,9 @@ program test_characteristics_1d_explicit_euler
   !initialization for explicit_euler_1d
   
   euler => &
-    new_explicit_euler_1d_charac(&
+    sll_f_new_explicit_euler_1d_charac(&
       Npts, &
-      SLL_PERIODIC)
+      sll_p_periodic)
 
   
 

@@ -8,10 +8,10 @@ program test_interpolation_3d
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_sparse_grid_3d, only: &
-    sparse_grid_interpolator_3d
+    sll_t_sparse_grid_interpolator_3d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,7 +28,7 @@ program test_interpolation_3d
 
   sll_int32, dimension(3) :: dorder, levelsini
 
-  type(sparse_grid_interpolator_3d)   :: interp
+  type(sll_t_sparse_grid_interpolator_3d)   :: interp
 
   logical :: fail
 
@@ -39,9 +39,9 @@ program test_interpolation_3d
   ALLOCATE(tol(4*its));
 
   ! Set parameters
-  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_pi;
-  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_pi;
-  eta_min(3) = 0.0_f64; eta_max(3) = 4.0_f64*sll_pi;
+  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_p_pi;
+  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_p_pi;
+  eta_min(3) = 0.0_f64; eta_max(3) = 4.0_f64*sll_p_pi;
 
   levels =  8; order(1) = 1; order(2) = 3;
 

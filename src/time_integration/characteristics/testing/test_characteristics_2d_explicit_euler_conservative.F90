@@ -20,19 +20,19 @@ program test_characteristics_2d_explicit_euler_conservative
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic, &
-    sll_set_to_limit
+    sll_p_periodic, &
+    sll_p_set_to_limit
 
   use sll_m_characteristics_2d_base, only: &
-    sll_characteristics_2d_base
+    sll_c_characteristics_2d_base
 
   use sll_m_characteristics_2d_explicit_euler_conservative, only: &
-    new_explicit_euler_conservative_2d_charac
+    sll_f_new_explicit_euler_conservative_2d_charac
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_characteristics_2d_base), pointer :: euler 
+  class(sll_c_characteristics_2d_base), pointer :: euler 
   
   sll_int32 :: Npts1
   sll_int32 :: Npts2
@@ -59,11 +59,11 @@ program test_characteristics_2d_explicit_euler_conservative
   !initialization for explicit_euler_conservative_2d
   
   euler => &
-    new_explicit_euler_conservative_2d_charac(&
+    sll_f_new_explicit_euler_conservative_2d_charac(&
       Npts1, &
       Npts2, &
-      SLL_SET_TO_LIMIT, &
-      SLL_PERIODIC)
+      sll_p_set_to_limit, &
+      sll_p_periodic)
 
   
 

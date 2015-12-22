@@ -12,19 +12,19 @@ module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_poisson_2d_sparse_grid_fft, only: &
-    sll_fft_derivative
+    sll_t_fft_derivative
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   use sll_m_sparse_grid_2d, only: &
-    sparse_grid_interpolator_2d
+    sll_t_sparse_grid_interpolator_2d
 
   use sll_m_sparse_grid_4d, only: &
-    sparse_grid_interpolator_4d
+    sll_t_sparse_grid_interpolator_4d
 
   implicit none
 
@@ -38,7 +38,7 @@ module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
   sll_int32, parameter :: SLL_TSI = 1
 
   
-  type, extends(sll_simulation_base_class) :: sll_t_sim_sl_vp_2d2v_cart_fullsparsegrid
+  type, extends(sll_c_simulation_base_class) :: sll_t_sim_sl_vp_2d2v_cart_fullsparsegrid
      logical     :: is_mdeltaf
      sll_int32   :: test_case
      sll_int32   :: levelxv
@@ -67,11 +67,11 @@ module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
      sll_real64, dimension(:), allocatable :: rho
 
      !Poisson solver
-     type(sll_fft_derivative)  :: poisson
+     type(sll_t_fft_derivative)  :: poisson
      
      ! Interpolator
-     type(sparse_grid_interpolator_2d)   :: interp_x
-     type(sparse_grid_interpolator_4d)   :: interp_xv
+     type(sll_t_sparse_grid_interpolator_2d)   :: interp_x
+     type(sll_t_sparse_grid_interpolator_4d)   :: interp_xv
 
      !Diagnostics
      sll_real64, dimension(:), allocatable :: nrj
@@ -151,15 +151,15 @@ contains
     ! Set the domain for one of the two test cases
     if (sim%test_case == SLL_LANDAU ) then
        !x domain
-       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  4.0_f64 * sll_pi
+       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  4.0_f64 * sll_p_pi
        sim%eta_min(2) = sim%eta_min(1); sim%eta_max(2) = sim%eta_max(1)
        !v domain
        sim%eta_min(3) = -6.0_f64; sim%eta_max(3) = 6.0_f64
        sim%eta_min(4) = sim%eta_min(3); sim%eta_max(4) = sim%eta_max(3)
     elseif (sim%test_case  == SLL_TSI) then
        !x domain
-       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  10.0_f64 * sll_pi
-       sim%eta_min(2) =  0.0_f64; sim%eta_max(2) =  4.0_f64 * sll_pi
+       sim%eta_min(1) =  0.0_f64; sim%eta_max(1) =  10.0_f64 * sll_p_pi
+       sim%eta_min(2) =  0.0_f64; sim%eta_max(2) =  4.0_f64 * sll_p_pi
        !v domain
        sim%eta_min(3) = -8.0_f64; sim%eta_max(3) = 8.0_f64
        sim%eta_min(4) = -6.0_f64; sim%eta_max(4) = 6.0_f64
@@ -198,12 +198,12 @@ contains
   
     ! Set initial value
     do j=1,2
-       kxy(j)  = 2.0_f64*sll_pi/(sim%eta_max(j)-sim%eta_min(j))
+       kxy(j)  = 2.0_f64*sll_p_pi/(sim%eta_max(j)-sim%eta_min(j))
     end do
 
     do i1=1,sim%size_basis
        eta = sim%interp_xv%hierarchy(i1)%coordinate
-       sim%f_xv(i1) = 1.0_f64/(2.0_f64*sll_pi)*&
+       sim%f_xv(i1) = 1.0_f64/(2.0_f64*sll_p_pi)*&
             (1.0_f64+sim%eps*(cos(kxy(1)*eta(1))+&
             cos(kxy(2)*eta(2))))
        if (sim%test_case == SLL_TSI) then
@@ -407,7 +407,7 @@ contains
                            sim%interp_xv%index(l1,l2,l3,l4)+ no*(counter2+1)-1
                          if (sim%test_case == SLL_LANDAU) then
                             if(sim%interp_xv%hierarchy(k)%level(3) == 0) then
-                               factor = sqrt(2.0_f64*sll_pi)
+                               factor = sqrt(2.0_f64*sll_p_pi)
                             else
                                h = sim%interp_xv%length(3)/ &
                                     (real(2**sim%interp_xv%hierarchy(k)%level(3), f64))
@@ -419,7 +419,7 @@ contains
                                  real(max(2**(sim%interp_xv%hierarchy(k)%level(3)),2), f64)
                          end if
                          if(sim%interp_xv%hierarchy(k)%level(4) == 0) then
-                            factor = factor*sqrt(2.0_f64*sll_pi)
+                            factor = factor*sqrt(2.0_f64*sll_p_pi)
                          else
                             h = sim%interp_xv%length(4)/ &
                                  (real(2**sim%interp_xv%hierarchy(k)%level(4), f64))
@@ -467,7 +467,7 @@ function int_f0_alpha(x0,h,alpha) result(intf0)
   sll_real64, intent(in) :: x0, h, alpha
   sll_real64 :: intf0
 
-  intf0 = sqrt(sll_pi/alpha)*0.5_f64*(&
+  intf0 = sqrt(sll_p_pi/alpha)*0.5_f64*(&
        (1.0_f64-x0/h)*(erf(x0*sqrt(alpha))-erf((x0-h)*sqrt(alpha)))+&
        (1.0_f64+x0/h)*(erf((x0+h)*sqrt(alpha))-erf(x0*sqrt(alpha))))+&
        (exp(-(x0-h)**2*alpha)+exp(-(x0+h)**2*alpha)-2.0_f64*exp(-x0**2*alpha))/&
@@ -534,7 +534,7 @@ subroutine scale_gaussian(sim, dim,dt,efield,fscale)
 
 !------------------------------------------------------------------------------!
  subroutine dehira_landau(interpolator,data)
-    class(sparse_grid_interpolator_2d) :: interpolator
+    class(sll_t_sparse_grid_interpolator_2d) :: interpolator
     sll_real64, dimension(:), intent(inout)   :: data
     sll_int32                                :: counter,level,l1,k1,k2
     sll_int32, dimension(2) :: l,no
@@ -564,7 +564,7 @@ subroutine scale_gaussian(sim, dim,dt,efield,fscale)
 
 !------------------------------------------------------------------------------!
   recursive subroutine dehira_landau_d_dimension(interpolator,surplus,data_array,level,factor,index,d)
-  class(sparse_grid_interpolator_2d) :: interpolator
+  class(sll_t_sparse_grid_interpolator_2d) :: interpolator
   sll_real64, intent(inout) :: surplus
   sll_real64, dimension(:), intent(in) :: data_array
   sll_int32, dimension(:), intent(in) :: level

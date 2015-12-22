@@ -21,22 +21,22 @@ program test_advection_1d_BSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_csl_periodic, only: &
-    new_csl_periodic_1d_advector
+    sll_f_new_csl_periodic_1d_advector
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_characteristics_1d_base, only: &
-    sll_characteristics_1d_base
+    sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    new_explicit_euler_1d_charac
+    sll_f_new_explicit_euler_1d_charac
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    new_cubic_spline_interpolator_1d
+    sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -44,9 +44,9 @@ program test_advection_1d_BSL
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_advection_1d_base), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv
   class(sll_c_interpolator_1d), pointer :: interp
-  class(sll_characteristics_1d_base), pointer :: charac
+  class(sll_c_characteristics_1d_base), pointer :: charac
   sll_real64 :: x_min
   sll_real64 :: x_max
   sll_int32 :: num_cells
@@ -83,18 +83,18 @@ program test_advection_1d_BSL
   err=0._f64
 
 
-  interp => new_cubic_spline_interpolator_1d( &
+  interp => sll_f_new_cubic_spline_interpolator_1d( &
     num_cells+1, &
     x_min, &
     x_max, &
-    SLL_PERIODIC)
+    sll_p_periodic)
 
 
-  charac => new_explicit_euler_1d_charac(&
+  charac => sll_f_new_explicit_euler_1d_charac(&
       num_cells+1, &
-      SLL_PERIODIC)
+      sll_p_periodic)
   
-  adv => new_CSL_periodic_1d_advector(&
+  adv => sll_f_new_csl_periodic_1d_advector(&
     interp, &
     charac, &
     num_cells+1, &

@@ -9,57 +9,57 @@ module sll_m_sim_pic_vp_2d2v_cart
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_2d, &
-    sll_cartesian_mesh_2d
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_collective, only: &
-    sll_get_collective_rank, &
-    sll_get_collective_size, &
-    sll_world_collective
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_kernel_smoother_base, only: &
-    sll_collocation, &
-    sll_kernel_smoother_base
+    sll_p_collocation, &
+    sll_c_kernel_smoother_base
 
   use sll_m_kernel_smoother_spline_2d, only: &
-    sll_kernel_smoother_spline_2d, &
-    sll_new_smoother_spline_2d
+    sll_t_kernel_smoother_spline_2d, &
+    sll_f_new_smoother_spline_2d
 
   use sll_m_operator_splitting, only: &
-    operator_splitting
+    sll_t_operator_splitting
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
-    sll_new_hamiltonian_splitting_pic_vp_2d2v, &
+    sll_f_new_hamiltonian_splitting_pic_vp_2d2v, &
     sll_t_operator_splitting_pic_vp_2d2v
 
   use sll_m_particle_group_2d2v, only: &
-    sll_new_particle_group_2d2v, &
-    sll_particle_group_2d2v
+    sll_f_new_particle_group_2d2v, &
+    sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   use sll_m_particle_initializer, only: &
-    sll_particle_initialize_random_landau_2d2v, &
-    sll_particle_initialize_sobol_landau_2d2v
+    sll_s_particle_initialize_random_landau_2d2v, &
+    sll_s_particle_initialize_sobol_landau_2d2v
 
   use sll_m_poisson_2d_fft, only: &
-    new_poisson_2d_fft_solver, &
-    poisson_2d_fft_solver
+    sll_f_new_poisson_2d_fft_solver, &
+    sll_t_poisson_2d_fft_solver
 
   use sll_m_sim_base, only: &
-    sll_simulation_base_class
+    sll_c_simulation_base_class
 
   implicit none
 
   public :: &
-    sll_delete, &
+    sll_o_delete, &
     sll_t_sim_pic_vp_2d2v_cart
 
   private
@@ -68,29 +68,29 @@ module sll_m_sim_pic_vp_2d2v_cart
   sll_int32, parameter :: SLL_INIT_RANDOM=0
   sll_int32, parameter :: SLL_INIT_SOBOL=1
 
-  type, extends(sll_simulation_base_class) :: sll_t_sim_pic_vp_2d2v_cart
+  type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vp_2d2v_cart
 
      ! Abstract particle group
-     class(sll_particle_group_base), pointer :: particle_group
+     class(sll_c_particle_group_base), pointer :: particle_group
      ! Specific particle group
-     class(sll_particle_group_2d2v), pointer :: specific_particle_group 
+     class(sll_t_particle_group_2d2v), pointer :: specific_particle_group 
 
      ! Array for efield
      sll_real64, pointer :: efield(:,:)
 
      ! Cartesian mesh
-     type(sll_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+     type(sll_t_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_t_cartesian_mesh_2d]]
 
      ! Abstract kernel smoother
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother
+     class(sll_c_kernel_smoother_base), pointer :: kernel_smoother
      ! Specific kernel smoother
-     class(sll_kernel_smoother_spline_2d), pointer :: specific_kernel_smoother
+     class(sll_t_kernel_smoother_spline_2d), pointer :: specific_kernel_smoother
 
      ! Poisson solver
-     class(poisson_2d_fft_solver), pointer :: poisson_solver 
+     class(sll_t_poisson_2d_fft_solver), pointer :: poisson_solver 
 
      ! Abstract operator splitting
-     class(operator_splitting), pointer :: propagator
+     class(sll_t_operator_splitting), pointer :: propagator
      ! Specific operator splitting
      class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: specific_propagator
      
@@ -117,9 +117,9 @@ module sll_m_sim_pic_vp_2d2v_cart
 
   end type sll_t_sim_pic_vp_2d2v_cart
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_pic_2d2v
-  end interface sll_delete
+  end interface sll_o_delete
   
 contains
 !------------------------------------------------------------------------------!
@@ -157,15 +157,15 @@ contains
     read(input_file, pic_params)
     close (input_file)
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    sim%rank = sll_get_collective_rank(sll_world_collective)
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%rank = sll_f_get_collective_rank(sll_v_world_collective)
 
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
-    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_pi/(x1_max - x1_min)]
+    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_p_pi/(x1_max - x1_min)]
     sim%thermal_velocity = [thermal_v1, thermal_v2]
 
-    sim%mesh => new_cartesian_mesh_2d( ng_x1, ng_x2, &
+    sim%mesh => sll_f_new_cartesian_mesh_2d( ng_x1, ng_x2, &
          x1_min, x1_max, x2_min, x2_max)
 
     sim%n_particles = n_particles/sim%world_size
@@ -199,11 +199,11 @@ contains
 
 
     if (sim%rank == 0) then
-       call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+       call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
     end if
 
     ! Initialize the particles   
-     sim%specific_particle_group => sll_new_particle_group_2d2v(sim%n_particles, &
+     sim%specific_particle_group => sll_f_new_particle_group_2d2v(sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
     
     !print*, 'size', size(sim%specific_particle_group%particle_array,1)
@@ -220,15 +220,15 @@ contains
 
        ! Initialize position and velocity of the particles.
        ! Random initialization
-       call sll_particle_initialize_random_landau_2d2v &
+       call sll_s_particle_initialize_random_landau_2d2v &
             (sim%particle_group, sim%landau_param, &
             [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
             [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = 10 + sim%rank*sim%particle_group%n_particles
+       sobol_seed = 10_8 + sim%rank*sim%particle_group%n_particles
        ! Pseudorandom initialization with sobol numbers
-       call sll_particle_initialize_sobol_landau_2d2v(sim%particle_group, &
+       call sll_s_particle_initialize_sobol_landau_2d2v(sim%particle_group, &
             sim%landau_param,  [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
             [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
             sim%thermal_velocity, sobol_seed)
@@ -238,22 +238,22 @@ contains
     !print*, 'rd', rnd_seed_size
 
     ! Initialize the field solver
-    sim%poisson_solver => new_poisson_2d_fft_solver( &
+    sim%poisson_solver => sll_f_new_poisson_2d_fft_solver( &
          sim%mesh%eta1_min, sim%mesh%eta1_max, sim%mesh%num_cells1, &
          sim%mesh%eta2_min, sim%mesh%eta2_max, sim%mesh%num_cells2)
 
     ! Initialize the kernel smoother
     domain(:,1) = [sim%mesh%eta1_min, sim%mesh%eta2_min]
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
-    sim%specific_kernel_smoother => sll_new_smoother_spline_2d(&
+    sim%specific_kernel_smoother => sll_f_new_smoother_spline_2d(&
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
-         sim%degree_smoother, SLL_COLLOCATION)
+         sim%degree_smoother, sll_p_collocation)
     sim%kernel_smoother => sim%specific_kernel_smoother
 
 
     ! Initialize the time-splitting propagator
     SLL_ALLOCATE(sim%efield(sim%kernel_smoother%n_dofs,2),ierr)
-    sim%specific_propagator => sll_new_hamiltonian_splitting_pic_vp_2d2v(sim%poisson_solver, sim%kernel_smoother, sim%particle_group, sim%efield)
+    sim%specific_propagator => sll_f_new_hamiltonian_splitting_pic_vp_2d2v(sim%poisson_solver, sim%kernel_smoother, sim%particle_group, sim%efield)
     sim%propagator => sim%specific_propagator
 
 

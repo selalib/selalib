@@ -12,53 +12,53 @@ module sll_m_pic_1d_field_solver
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_periodic
+    sll_p_dirichlet, &
+    sll_p_periodic
 
   use sll_m_cartesian_meshes, only: &
-    new_cartesian_mesh_1d, &
-    sll_cartesian_mesh_1d
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
   use sll_m_collective, only: &
-    sll_collective_bcast_real64, &
-    sll_collective_globalsum, &
-    sll_collective_globalsum_array_comp64, &
-    sll_collective_globalsum_array_real64, &
-    sll_collective_t, &
-    sll_get_collective_rank, &
-    sll_get_collective_size
+    sll_s_collective_bcast_real64, &
+    sll_o_collective_globalsum, &
+    sll_s_collective_globalsum_array_comp64, &
+    sll_s_collective_globalsum_array_real64, &
+    sll_t_collective_t, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size
 
   use sll_m_particle_1d_description, only: &
-    sll_particle_1d_group
+    sll_t_particle_1d_group
 
   use sll_m_poisson_1d_fd, only: &
-    new_poisson_1d_fd, &
-    poisson_1d_fd
+    sll_f_new_poisson_1d_fd, &
+    sll_t_poisson_1d_fd
 
   use sll_m_poisson_1d_fem, only: &
-    new_poisson_1d_fem, &
-    poisson_1d_fem, &
-    poisson_1d_fem_rhs_function
+    sll_f_new_poisson_1d_fem, &
+    sll_t_poisson_1d_fem, &
+    sll_i_poisson_1d_fem_rhs_function
 
   use sll_m_poisson_1d_fourier, only: &
-    new_poisson_1d_fourier, &
-    poisson_1d_fourier
+    sll_f_new_poisson_1d_fourier, &
+    sll_t_poisson_1d_fourier
 
   use sll_m_poisson_1d_periodic, only: &
-    new, &
-    poisson_1d_periodic, &
-    solve
+    sll_o_new, &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
 
   implicit none
 
   public :: &
-    new_pic_1d_field_solver, &
-    pic_1d_field_solver
+    sll_f_new_pic_1d_field_solver, &
+    sll_t_pic_1d_field_solver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    !initialize
-    !solve
+    !sll_o_initialize
+    !sll_o_solve
     !interpolate_solution
     !destroy
 
@@ -68,11 +68,11 @@ module sll_m_pic_1d_field_solver
     sll_int32, parameter :: SLL_SOLVER_FOURIER = 4
 
 
-    type  :: pic_1d_field_solver
-        class(poisson_1d_fem), private , pointer ::  femsolver
-        type(poisson_1d_periodic), pointer :: spectralsolver
-        class(poisson_1d_fd), pointer :: fdsolver
-        class(poisson_1d_fourier), pointer :: fouriersolver
+    type  :: sll_t_pic_1d_field_solver
+        class(sll_t_poisson_1d_fem), private , pointer ::  femsolver
+        type(sll_t_poisson_1d_periodic), pointer :: spectralsolver
+        class(sll_t_poisson_1d_fd), pointer :: fdsolver
+        class(sll_t_poisson_1d_fourier), pointer :: fouriersolver
 
 
         !This should not be here. It belongs to the solver, we just
@@ -80,7 +80,7 @@ module sll_m_pic_1d_field_solver
         sll_real64, dimension(:), allocatable :: poisson_solution
 
 
-        class(sll_cartesian_mesh_1d),pointer ::  mesh
+        class(sll_t_cartesian_mesh_1d),pointer ::  mesh
 
         sll_real64, private :: scalar_inhomogenity
         sll_real64, dimension(:), allocatable :: inhomogenity
@@ -103,7 +103,7 @@ module sll_m_pic_1d_field_solver
 
         !Collective
         sll_int32, private :: coll_rank, coll_size
-        type(sll_collective_t), pointer, private :: collective
+        type(sll_t_collective_t), pointer, private :: collective
     contains
         procedure, pass(this)         :: initialize => pic_1d_field_solver_initialize
         procedure, pass(this), public :: delete     => pic_1d_field_solver_delete
@@ -112,7 +112,7 @@ module sll_m_pic_1d_field_solver
         !Solving
         procedure, pass(this), public :: BC => pic_1d_field_solver_boundary_conditions
 
-        !Setting up solve
+        !Setting up sll_o_solve
         procedure, pass(this), public :: set_ions_constant           => pic_1d_field_solver_set_ions_constant
         procedure, pass(this), public :: set_ions_constant_particles => pic_1d_field_solver_set_ions_constant_particles
         procedure, pass(this), public :: set_ions_constant_function  => pic_1d_field_solver_set_ions_constant_function
@@ -136,7 +136,7 @@ module sll_m_pic_1d_field_solver
 
 
         procedure, pass(this), public :: fieldenergy => pic_1d_field_solver_fieldenergy
-        !procedure,  pass(this) :: initialize =>pic_1d_field_solver_initialize
+        !procedure,  pass(this) :: sll_o_initialize =>pic_1d_field_solver_initialize
 
         procedure, pass(this), public :: get_problemsize => pic_1d_field_solver_get_problemsize
 
@@ -151,7 +151,7 @@ module sll_m_pic_1d_field_solver
         procedure, pass(this), private:: get_rhs_cic    => pic_1d_field_solver_get_rhs_cic
         procedure, pass(this), public :: set_num_sample => pic_1d_field_solver_set_num_sample
 
-    end type pic_1d_field_solver
+    end type sll_t_pic_1d_field_solver
 
 
     integer :: ierr !!!FIX THIS , DECIDE THIS
@@ -171,11 +171,11 @@ module sll_m_pic_1d_field_solver
     !    sll_real64 :: scale_matrix_equation    !<Scale for the stiffnes matrix and the inhomogenity
     !
     !    !Boundary Description handeled by the solver
-    !    sll_int32 :: sll_bspline_fem_solver_boundary_type = SLL_PERIODIC
+    !    sll_int32 :: sll_bspline_fem_solver_boundary_type = sll_p_periodic
     !
     !
     !    !Poisson Finite Differences Solver
-    !    type (poisson_1d_periodic),pointer           :: poissonsolverFD => null()
+    !    type (sll_t_poisson_1d_periodic),pointer           :: poissonsolverFD => null()
     !
 
 
@@ -190,7 +190,7 @@ module sll_m_pic_1d_field_solver
 
 contains
 
-    function new_pic_1d_field_solver(eta_min, eta_max, &
+    function sll_f_new_pic_1d_field_solver(eta_min, eta_max, &
             spline_degree, num_cells, poisson_solver_type, collective ,boundary_type ) &
             result(qn_solver)
         sll_int32, intent(in):: spline_degree
@@ -198,9 +198,9 @@ contains
         sll_int32, intent(in)::  num_cells
         sll_real64, intent(in) :: eta_min, eta_max
         sll_int32, intent(in) :: boundary_type
-        type(sll_collective_t), pointer , intent(in):: collective
+        type(sll_t_collective_t), pointer , intent(in):: collective
 
-        class(pic_1d_field_solver), pointer :: qn_solver
+        class(sll_t_pic_1d_field_solver), pointer :: qn_solver
 
         SLL_ALLOCATE(qn_solver,ierr)
 
@@ -210,20 +210,20 @@ contains
 
     subroutine pic_1d_field_solver_initialize( this, eta_min, eta_max, &
             spline_degree, num_cells, poisson_solver_type, collective ,boundary_type )
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_int32, intent(in):: spline_degree
         sll_int32, intent(in)::  poisson_solver_type
         sll_int32, intent(in)::  num_cells
         sll_real64, intent(in) :: eta_min, eta_max
         sll_int32, intent(in) :: boundary_type
 
-        class(sll_cartesian_mesh_1d), pointer :: mesh
-        type(sll_collective_t), pointer , intent(in):: collective
+        class(sll_t_cartesian_mesh_1d), pointer :: mesh
+        type(sll_t_collective_t), pointer , intent(in):: collective
 
         !Pepare collective
         this%collective=>collective
-        this%coll_size=sll_get_collective_size( collective )
-        this%coll_rank=sll_get_collective_rank( collective )
+        this%coll_size=sll_f_get_collective_size( collective )
+        this%coll_rank=sll_f_get_collective_rank( collective )
 
         !Boundary Conditions
         this%boundary_type=boundary_type
@@ -237,20 +237,20 @@ contains
 
 
         !Generate logical mesh
-        mesh=>new_cartesian_mesh_1d( num_cells, eta_min, eta_max )
+        mesh=>sll_f_new_cartesian_mesh_1d( num_cells, eta_min, eta_max )
         this%mesh=>mesh
         selectcase (poisson_solver_type)
             case(SLL_SOLVER_FEM)
-                this%femsolver=>new_poisson_1d_fem(this%mesh, spline_degree,this%boundary_type, ierr)
+                this%femsolver=>sll_f_new_poisson_1d_fem(this%mesh, spline_degree,this%boundary_type, ierr)
                 this%problemsize=num_cells
 
             case(SLL_SOLVER_FD)
                 this%problemsize=num_cells
-                this%fdsolver=>new_poisson_1d_fd(this%mesh,2,spline_degree,this%boundary_type,ierr)
+                this%fdsolver=>sll_f_new_poisson_1d_fd(this%mesh,2,spline_degree,this%boundary_type,ierr)
             case(SLL_SOLVER_FOURIER)
                 this%num_fourier_modes=spline_degree
                 this%problemsize=this%num_fourier_modes
-                this%fouriersolver=>new_poisson_1d_fourier(this%mesh,   this%num_fourier_modes,this%boundary_type, ierr)
+                this%fouriersolver=>sll_f_new_poisson_1d_fourier(this%mesh,   this%num_fourier_modes,this%boundary_type, ierr)
                 SLL_ALLOCATE(this%inhomogenity_comp(this%num_fourier_modes),ierr)
                 this%inhomogenity_comp=(0.0_f64,0.0_f64)
                 SLL_ALLOCATE(this%inhomogenity_comp_steady(this%num_fourier_modes),ierr)
@@ -259,7 +259,7 @@ contains
                 !All Knots, for boundary set first and last knot to zero
                 this%problemsize=num_cells+1 !FIXED
                 SLL_CLEAR_ALLOCATE(this%poisson_solution(this%problemsize),ierr)
-                this%spectralsolver=>new(eta_min,eta_max, num_cells,ierr)
+                this%spectralsolver=>sll_o_new(eta_min,eta_max, num_cells,ierr)
         endselect
 
         SLL_CLEAR_ALLOCATE(this%inhomogenity(this%problemsize),ierr)
@@ -272,7 +272,7 @@ contains
     endsubroutine
 
     subroutine pic_1d_field_solver_delete(this)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         !        print *, this%inhomogenity
         !!SLL_DEALLOCATE_ARRAY(this%inhomogenity_steady, ierr  )
         !!SLL_DEALLOCATE_ARRAY(this%inhomogenity, ierr  )
@@ -289,14 +289,14 @@ contains
 
     pure function pic_1d_field_solver_get_problemsize(this) &
             result(problemsize)
-        class(pic_1d_field_solver), intent(in) :: this
+        class(sll_t_pic_1d_field_solver), intent(in) :: this
         sll_int32 :: problemsize
         problemsize=this%problemsize
     endfunction
 
     !
     !    function pic_1d_field_solver_fourier_rhs(this,  ppos, pweight  )
-    !        class(pic_1d_field_solver), intent(inout) :: this
+    !        class(sll_t_pic_1d_field_solver), intent(inout) :: this
     !        sll_real64, dimension(:) ,intent(in) :: ppos
     !        sll_real64, dimension(:) ,intent(in) :: pweight
     !        SLL_ASSERT(size(ppos)==size(pweight))
@@ -307,7 +307,7 @@ contains
     !    endfunction
     function pic_1d_field_solver_calc_variance_rhs(this)&
             result(variance)
-        class(pic_1d_field_solver), intent(in) :: this
+        class(sll_t_pic_1d_field_solver), intent(in) :: this
         sll_real64, dimension(this%problemsize) :: variance_v
         sll_real64 :: variance
 
@@ -325,7 +325,7 @@ contains
 
 
     subroutine pic_1d_field_solver_set_num_sample(this, num_sample)
-        class(pic_1d_field_solver) , intent(inout) :: this
+        class(sll_t_pic_1d_field_solver) , intent(inout) :: this
         sll_int32, intent(in) :: num_sample
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FEM)
@@ -338,7 +338,7 @@ contains
 
 
     subroutine pic_1d_field_solver_solve(this)
-        class(pic_1d_field_solver) , intent(inout) :: this
+        class(sll_t_pic_1d_field_solver) , intent(inout) :: this
 
         !        if  (.NOT. allocated(this%inhomogenity))  then
         !            SLL_CLEAR_ALLOCATE(this%inhomogenity(this%problemsize),ierr)
@@ -346,57 +346,57 @@ contains
 
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FEM)
-                !Here one would also have the option to solve on each core and
+                !Here one would also have the option to sll_o_solve on each core and
                 !omit the broadcast
-                call sll_collective_globalsum(this%collective, this%inhomogenity, 0)
+                call sll_o_collective_globalsum(this%collective, this%inhomogenity, 0)
                 this%inhomogenity=this%scalar_inhomogenity*(this%inhomogenity_steady+this%inhomogenity)
-                !On machines with more than 6 cores, we solve on each core
+                !On machines with more than 6 cores, we sll_o_solve on each core
                 !We do this, because a HexaCore is the biggest PC used in development
                 if (this%coll_rank==0 .OR. this%coll_size>6) then
 
                     call this%femsolver%solve(this%inhomogenity)
 
                 endif
-                ! call sll_collective_barrier(sll_world_collective)
+                ! call sll_s_collective_barrier(sll_v_world_collective)
                 !Broadcast result so it lies on every core for interpolation
                 if (this%coll_size<=6) then
-                    call sll_collective_bcast_real64(this%collective, this%femsolver%fem_solution,&
+                    call sll_s_collective_bcast_real64(this%collective, this%femsolver%fem_solution,&
                         this%problemsize, 0 )
 
                 endif
             case(SLL_SOLVER_FD)
-                call sll_collective_globalsum(this%collective, this%inhomogenity, 0)
+                call sll_o_collective_globalsum(this%collective, this%inhomogenity, 0)
                 this%inhomogenity=this%scalar_inhomogenity*(this%inhomogenity_steady+this%inhomogenity)
-                !On machines with more than 6 cores, we solve on each core
+                !On machines with more than 6 cores, we sll_o_solve on each core
                 !We do this, because a HexaCore is the biggest PC used in development
                 if (this%coll_rank==0 .OR. this%coll_size>6) then
                     call this%fdsolver%solve(this%inhomogenity)
                 endif
-                ! call sll_collective_barrier(sll_world_collective)
+                ! call sll_s_collective_barrier(sll_v_world_collective)
                 !Broadcast result so it lies on every core for interpolation
                 if (this%coll_size<=6) then
-                    call sll_collective_bcast_real64(this%collective, this%fdsolver%fd_solution,&
+                    call sll_s_collective_bcast_real64(this%collective, this%fdsolver%fd_solution,&
                         this%problemsize, 0 )
 
                 endif
             case(SLL_SOLVER_SPECTRAL)
-                call sll_collective_globalsum(this%collective, this%inhomogenity, 0)
+                call sll_o_collective_globalsum(this%collective, this%inhomogenity, 0)
                 this%inhomogenity=this%scalar_inhomogenity*(this%inhomogenity_steady+this%inhomogenity)
-                call solve(this%spectralsolver, this%poisson_solution, this%inhomogenity)
+                call sll_o_solve(this%spectralsolver, this%poisson_solution, this%inhomogenity)
             case(SLL_SOLVER_FOURIER)
                 !Distribute fourier modes on each Core
-                call sll_collective_globalsum(this%collective, this%inhomogenity_comp)
+                call sll_o_collective_globalsum(this%collective, this%inhomogenity_comp)
                 call this%fouriersolver%solve(this%inhomogenity_comp+this%inhomogenity_comp_steady)
         endselect
 
     endsubroutine
 
     !<@brief Takes negative particles with charge one and custom weights
-    !>@param this pointer to a pic_1d_field_solver object.
+    !>@param this pointer to a sll_t_pic_1d_field_solver object.
     !>@param ppos spatial position of the negative ion/electron
     !>@param pweight corresponding weight of the negative ion/electron
     subroutine pic_1d_field_solver_set_electrons_only_weighted(this,  ppos, pweight  )
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:) ,intent(in) :: ppos
         sll_real64, dimension(:) ,intent(in) :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -425,12 +425,12 @@ contains
 
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
-    !>@param this pointer to a pic_1d_field_solver object.
+    !>@param this pointer to a sll_t_pic_1d_field_solver object.
     !>@param ppos spatial position of the negative ion/electron
     !>@param pweight corresponding weight of particle
     subroutine pic_1d_field_solver_set_charged_allparticles_weighted(this,&
             ppos, pweight)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in) :: ppos
         sll_real64, dimension(:),intent(in)  :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -441,12 +441,12 @@ contains
 
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
-    !>@param this pointer to a pic_1d_field_solver object.
+    !>@param this pointer to a sll_t_pic_1d_field_solver object.
     !>@param ppos spatial position of the negative ion/electron
     !>@param pweight corresponding weight of particle
     subroutine pic_1d_field_solver_add_particles_weighted(this,&
             ppos, pweight)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in) :: ppos
         sll_real64, dimension(:),intent(in)  :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -472,7 +472,7 @@ contains
 
 
     subroutine pic_1d_field_solver_reset_particles(this)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
 
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FOURIER)
@@ -487,11 +487,11 @@ contains
     endsubroutine
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
-    !>@param this pointer to a pic_1d_field_solver object.
+    !>@param this pointer to a sll_t_pic_1d_field_solver object.
     subroutine pic_1d_field_solver_add_species(this, pspecies)
 
-      class(pic_1d_field_solver),  intent(inout) :: this
-      type(sll_particle_1d_group), intent(in)    :: pspecies
+      class(sll_t_pic_1d_field_solver),  intent(inout) :: this
+      type(sll_t_particle_1d_group), intent(in)    :: pspecies
 
       selectcase(this%poisson_solver)
 
@@ -531,13 +531,13 @@ contains
     end subroutine
 
 
-    !<@brief Takes an array of all species and sets them as the foreground for the field solve
-    !>@param this pointer to a pic_1d_field_solver object.
+    !<@brief Takes an array of all species and sets them as the foreground for the field sll_o_solve
+    !>@param this pointer to a sll_t_pic_1d_field_solver object.
     !>@param species array of particle species containing ions and electrons
     subroutine pic_1d_field_solver_set_species(this,&
             species)
-        class(pic_1d_field_solver), intent(inout) :: this
-        type(sll_particle_1d_group), dimension(:), intent(in) :: species
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
+        type(sll_t_particle_1d_group), dimension(:), intent(in) :: species
         sll_int32 :: num_species,jdx
         num_species=size(species)
 
@@ -550,14 +550,14 @@ contains
     endsubroutine
 
     !<@brief Takes negative and positive particles with charge one and custom weights
-    !>@param this pointer to a pic_1d_field_solver object.
+    !>@param this pointer to a sll_t_pic_1d_field_solver object.
     !>@param ppos_neg spatial position of the negative ion/electron
     !>@param pweight_neg corresponding weight of the negative ion/electron
     !>@param ppos_pos spatial position of the positive ion
     !>@param pweight_pos corresponding weight of the positive ion
     subroutine pic_1d_field_solver_set_posneg_particles_weighted(this,&
             ppos_pos, pweight_pos,  ppos_neg, pweight_neg )
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in) :: ppos_pos
         sll_real64, dimension(:),intent(in)  :: pweight_pos
         sll_real64, dimension(:) ,intent(in) :: ppos_neg
@@ -580,19 +580,19 @@ contains
     endsubroutine
 
     subroutine pic_1d_field_solver_set_ions_constant_particles(this,  ppos)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in)  :: ppos
         sll_int32 :: np
         np=size(ppos)
 
         this%inhomogenity_steady=&
             this%femsolver%get_rhs_from_klimontovich_density(this%BC(ppos)) / (np*this%coll_size  )
-        call sll_collective_globalsum_array_real64(this%collective,this%inhomogenity_steady )
+        call sll_s_collective_globalsum_array_real64(this%collective,this%inhomogenity_steady )
     endsubroutine
 
-    !<Set the constant background, that will be added to each poisson solve
+    !<Set the constant background, that will be added to each poisson sll_o_solve
     subroutine pic_1d_field_solver_set_background_particles(this, ppos, pweight)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in)  :: ppos  !< Particle Position
         sll_real64, dimension(:),intent(in)  :: pweight !< Particleweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -604,11 +604,11 @@ contains
                 this%fouriersolver%get_rhs_from_klimontovich_density_weighted&
                         (this%BC(ppos), pweight  )
 
-             call sll_collective_globalsum_array_comp64(this%collective,this%inhomogenity_comp_steady)
+             call sll_s_collective_globalsum_array_comp64(this%collective,this%inhomogenity_comp_steady)
         case(SLL_SOLVER_FEM)
             this%inhomogenity_steady= this%femsolver%get_rhs_from_klimontovich_density_weighted&
             (this%BC(ppos), pweight  )
-             call sll_collective_globalsum_array_real64(this%collective,this%inhomogenity_steady )
+             call sll_s_collective_globalsum_array_real64(this%collective,this%inhomogenity_steady )
 
         case default
 
@@ -619,7 +619,7 @@ contains
     endsubroutine
 
     subroutine pic_1d_field_solver_set_ions_constant(this, const)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, intent(in) :: const
 
          selectcase(this%poisson_solver)
@@ -632,15 +632,15 @@ contains
     endsubroutine
 
     subroutine pic_1d_field_solver_set_ions_constant_function(this,  sll_m_distribution_function)
-        class(pic_1d_field_solver), intent(inout) :: this
-        procedure (poisson_1d_fem_rhs_function) :: sll_m_distribution_function
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
+        procedure (sll_i_poisson_1d_fem_rhs_function) :: sll_m_distribution_function
         this%inhomogenity_steady=&
             this%femsolver%get_rhs_from_function( sll_m_distribution_function,10)
     endsubroutine
 
     subroutine pic_1d_field_solver_eval_electricfield(this,eval_points,eval_solution)
 
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: eval_points
         sll_real64, dimension(:), intent(out)     :: eval_solution
 
@@ -663,7 +663,7 @@ contains
     endsubroutine
 
     subroutine pic_1d_field_solver_eval_potential(this,eval_points,eval_solution)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: eval_points
         sll_real64, dimension(:), intent(out)     :: eval_solution
 
@@ -690,7 +690,7 @@ contains
 
     function pic_1d_field_solver_get_potential(this) &
             result(potential)
-        class(pic_1d_field_solver), intent(inout) :: this
+        class(sll_t_pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(this%problemsize) :: potential
 
         selectcase (this%poisson_solver)
@@ -702,7 +702,7 @@ contains
     endfunction
 
     function  pic_1d_field_solver_get_solution(this) result(solution)
-        class(pic_1d_field_solver), intent(in) :: this
+        class(sll_t_pic_1d_field_solver), intent(in) :: this
 
         sll_real64, dimension(this%problemsize) :: solution
 
@@ -710,14 +710,14 @@ contains
     endfunction
 
     function  pic_1d_field_solver_get_inhomogenity(this) result(inhomogenity)
-        class(pic_1d_field_solver), intent(in) :: this
+        class(sll_t_pic_1d_field_solver), intent(in) :: this
         sll_real64, dimension(this%problemsize) :: inhomogenity
 
         inhomogenity=this%inhomogenity
     endfunction
 
     function pic_1d_field_solver_boundary_conditions(this, x)  result(xout)
-        class(pic_1d_field_solver) , intent(in) :: this
+        class(sll_t_pic_1d_field_solver) , intent(in) :: this
         sll_real64, dimension(:), intent(in) ::x
         sll_real64, dimension(size(x))  :: xout
         sll_real64 :: interval_a, interval_b,interval_length
@@ -728,7 +728,7 @@ contains
         SLL_ASSERT(interval_a < interval_b)
 
         selectcase(this%boundary_type)
-            case(SLL_PERIODIC)
+            case(sll_p_periodic)
                 xout=x-interval_a
 
                 do while (minval(xout)<0.0_f64)
@@ -738,7 +738,7 @@ contains
                     +interval_a
                 SLL_ASSERT(minval(xout)>=interval_a)
                 SLL_ASSERT(maxval(xout)<interval_b)
-            case(SLL_DIRICHLET)
+            case(sll_p_dirichlet)
                 xout=x
                 where (x<interval_a) xout=interval_a
                 where (x>interval_b) xout=interval_b
@@ -755,7 +755,7 @@ contains
 
     function  pic_1d_field_solver_fieldenergy(this) &
             result(energy)
-        class(pic_1d_field_solver) , intent(inout) :: this
+        class(sll_t_pic_1d_field_solver) , intent(inout) :: this
         sll_real64 :: energy
         energy=0.0_f64
         selectcase(this%poisson_solver)
@@ -776,7 +776,7 @@ contains
 
     !< Cloud in Cell scheme for logical mesh
     function  pic_1d_field_solver_get_rhs_cic( this, ppos, pweight) result(rhs)
-        class(pic_1d_field_solver),intent(inout) :: this
+        class(sll_t_pic_1d_field_solver),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%problemsize) :: rhs
@@ -823,13 +823,13 @@ contains
         enddo
 
         selectcase(this%boundary_type )
-            case(SLL_PERIODIC)
+            case(sll_p_periodic)
                 !Last knot is identical with the first knot
                 SLL_ASSERT(this%problemsize==num_cells)
                 rhs=knotsvals(1:num_cells)
                 rhs(1)=rhs(1)+knotsvals(num_cells+1)
 
-            case(SLL_DIRICHLET)
+            case(sll_p_dirichlet)
                 SLL_ASSERT(this%problemsize==num_cells)
                 rhs=knotsvals(1:num_cells)
                 rhs(1)=0.0_f64 !homogenous dirichlet
@@ -874,9 +874,9 @@ contains
     !                    fem_inhomogenity= interpolate_particles_bsplines( bspline_arbitrary_degree, knots_mesh,&
         !                        particleposition, b_splines_at_x,weights )
     !
-    !                    !Here one would also have the option to solve on each core and
+    !                    !Here one would also have the option to sll_o_solve on each core and
     !                    !omit the broadcast
-    !                    call sll_collective_globalsum(collective, fem_inhomogenity, 0)
+    !                    call sll_o_collective_globalsum(collective, fem_inhomogenity, 0)
     !
     !                    if (collective_rank==0) then
     !                        !fem_inhomogenity=scalar_inhomogenity *( fem_inhomogenity_steady-fem_inhomogenity)
@@ -894,9 +894,9 @@ contains
     !
     !                        fem_solution=bspline_fem_solver_1d_solve_matrix_equation(fem_inhomogenity)
     !                    endif
-    !                    ! call sll_collective_barrier(sll_world_collective)
+    !                    ! call sll_s_collective_barrier(sll_v_world_collective)
     !                    !Broadcast result so it lies on every core for interpolation
-    !                    call sll_collective_bcast_real64( collective, fem_solution, n_cells, 0 )
+    !                    call sll_s_collective_bcast_real64( collective, fem_solution, n_cells, 0 )
     !                else
     !
     !                    if (present(particleposition)) then
@@ -913,23 +913,23 @@ contains
     !                    else
     !                        fem_inhomogenity=scalar_inhomogenity*fem_inhomogenity_steady
     !                    endif
-    !                    !Solve
+    !                    !sll_o_solve
     !                    fem_solution=bspline_fem_solver_1d_solve_matrix_equation(fem_inhomogenity)
     !
     !                endif
     !            case(SLL_SOLVER_FD)
     !                if (present(particleposition)) then
     !                    fem_inhomogenity=sll_cloudincell_1d(particleposition,weights)
-    !                    if (associated(collective)) call sll_collective_globalsum(collective, fem_inhomogenity, 0)
+    !                    if (associated(collective)) call sll_o_collective_globalsum(collective, fem_inhomogenity, 0)
     !                endif
     !
     !                if ( ( .NOT. associated(collective) ) .OR. collective_rank==0) then
     !                    fem_inhomogenity=scalar_inhomogenity*(fem_inhomogenity_steady-fem_inhomogenity)
     !
-    !                    call solve(poissonsolverFD,fem_solution, fem_inhomogenity)
+    !                    call sll_o_solve(poissonsolverFD,fem_solution, fem_inhomogenity)
     !                endif
     !
-    !                if (associated(collective)) call sll_collective_bcast_real64( collective, fem_solution, n_knots, 0 )
+    !                if (associated(collective)) call sll_s_collective_bcast_real64( collective, fem_solution, n_knots, 0 )
     !        endselect
     !
     !
