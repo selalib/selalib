@@ -9,6 +9,7 @@ module sll_m_kernel_smoother_spline_1d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
+    sll_s_uniform_b_splines_at_x, &
     sll_f_uniform_b_splines_at_x
 
   use sll_m_gauss_legendre_integration, only : &
@@ -50,6 +51,7 @@ module sll_m_kernel_smoother_spline_1d
      sll_int32  :: n_quad_points
 
      sll_real64, allocatable :: spline_val(:)
+     sll_real64, allocatable :: spline_val_more(:)
      sll_real64, allocatable :: quad_xw(:,:)
 
      
@@ -80,7 +82,8 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+    !this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(1), this%spline_val)
 
     do i1 = 1, this%n_span
        index1d = modulo(index+i1-2,this%n_grid(1))+1
@@ -165,20 +168,29 @@ contains
 
    !Local variables
    sll_int32  :: ind, i_grid, i_mod, n_cells, j
+   sll_real64 :: c1, c2
 
 
    n_cells = this%n_grid(1)
 
-   this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
-
-   this%spline_val = this%quad_xw(2,1) * &
-        sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,1))
+   !this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
+   c1 =  0.5_f64*(upper-lower)
+   c2 =  0.5_f64*(upper+lower)
+   
+   call sll_s_uniform_b_splines_at_x(this%spline_degree, c1*this%quad_xw(1,1)+c2, &
+        this%spline_val)
+   this%spline_val = this%spline_val * (this%quad_xw(2,1)*c1)
+   !this%spline_val = this%quad_xw(2,1) * &
+   !     sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,1))
    do j=2,this%n_quad_points
-      this%spline_val = this%spline_val + &
-           this%quad_xw(2,j) * &
-           sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,j))
+      call sll_s_uniform_b_splines_at_x(this%spline_degree, c1*this%quad_xw(1,j)+c2, &
+           this%spline_val_more)
+      this%spline_val = this%spline_val + this%spline_val_more * (this%quad_xw(2,j)*c1)
+      !this%spline_val = this%spline_val + &
+      !     this%quad_xw(2,j) * &
+      !    sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,j))
    end do
-   this%spline_val = this%spline_val * sign*this%delta_x(1)
+   this%spline_val = this%spline_val * (sign*this%delta_x(1))
 
    ind = 1
    do i_grid = index - this%spline_degree , index
@@ -231,7 +243,8 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - this%spline_degree
-    this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+    !this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(1), this%spline_val)
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
@@ -263,8 +276,9 @@ contains
     xi(1) = (position(1) - this%domain(1,1))/this%delta_x(1)
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
-    index = index - this%spline_degree
-    this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+    index = index - this%spline_degree    
+    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(1), this%spline_val)
+    !this%spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
 
     field_value = 0.0_f64
     do i1 = 1, this%n_span
@@ -322,7 +336,11 @@ contains
     this%n_quad_points = (this%spline_degree+2)/2
 
     ALLOCATE( this%spline_val(this%n_span))
+    ALLOCATE( this%spline_val_more(this%n_span) )
     ALLOCATE( this%quad_xw(2,this%n_quad_points))
+
+    ! normalized Gauss Legendre points and weights
+    this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points)
 
   end function sll_f_new_smoother_spline_1d
 
