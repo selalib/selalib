@@ -143,6 +143,7 @@ program test_kernel_smoother_spline_1d
   error = maxval(abs(j_dofs-j_dofs_ref))
   if (error > 1.e-14) then
      passed = .FALSE.
+     print*, 'Error in procedure add_current_update_v.'
   end if
 
 
