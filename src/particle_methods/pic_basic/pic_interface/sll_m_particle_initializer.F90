@@ -309,7 +309,6 @@ contains
     sll_real64                                                  :: rnd_no
     sll_int32                                                   :: i_part
     sll_int32                                                   :: i_v
-    sll_real64                                                  :: wi
     sll_int32                                                   :: ip
     
     ! Set random seed.
@@ -327,40 +326,44 @@ contains
     call particle_group%set_common_weight &
          (1.0_f64/real(particle_group%n_total_particles, f64))
 
-    do i_part = 1, particle_group%n_particles
+    i_part = 0
+    do while( i_part < particle_group%n_particles)
        ! Generate random number on [0,1]
        call random_number(rnd_no)
        ! Transform rdn to the interval
        x(1) = xmin + Lx * rnd_no
-       ! Landau perturbation for position 
-       wi = (1.0_f64 + landau_param(1)*cos(landau_param(2)*x(1)))*Lx
 
-       ip = modulo(i_part, 4)
-       if (ip == 1) then
-          ! Maxwellian distribution of the temperature
-          do i_v = 1,2
-             call random_number(rnd_no)
-             call sll_s_normal_cdf_inv( rnd_no, 0.0_f64, 1.0_f64, &
-                  v(i_v))
-             v(i_v) = v(i_v)*(thermal_velocity(i_v))
-          end do
-       elseif (ip == 2) then
-          v(2) = -v(2)
-       elseif (ip == 3) then
-          v(1) = -v(1)
-       elseif (ip == 0) then
-          v(2) = -v(2)
+       call random_number(rnd_no)
+       rnd_no = (1.0_f64 + landau_param(1)) * rnd_no
+       if ( (1.0_f64 + landau_param(1) * cos(landau_param(2)*x(1))) >= rnd_no ) then 
+
+          i_part = i_part + 1
+
+          ip = modulo(i_part, 4)
+          if (ip == 1) then
+             ! Maxwellian distribution of the temperature
+             do i_v = 1,2
+                call random_number(rnd_no)
+                call sll_s_normal_cdf_inv( rnd_no, 0.0_f64, 1.0_f64, &
+                     v(i_v))
+                v(i_v) = v(i_v)*(thermal_velocity(i_v))
+             end do
+          elseif (ip == 2) then
+             v(2) = -v(2)
+          elseif (ip == 3) then
+             v(1) = -v(1)
+          elseif (ip == 0) then
+             v(2) = -v(2)
+          end if
+          
+          ! Copy the generated numbers to the particle
+          call particle_group%set_x(i_part, x)
+          call particle_group%set_v(i_part, v)
+          ! Set weights.
+          call particle_group%set_weights(i_part, &
+               [1.0_f64])
        end if
-
-       ! Copy the generated numbers to the particle
-       call particle_group%set_x(i_part, x)
-       call particle_group%set_v(i_part, v)
-       ! Set weights.
-       call particle_group%set_weights(i_part, &
-            [wi])
-
-       
-
+      
     end do
 
 
