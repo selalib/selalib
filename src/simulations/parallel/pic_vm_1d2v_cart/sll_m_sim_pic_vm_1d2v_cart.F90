@@ -61,7 +61,8 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_particle_initializer, only: &
     sll_s_particle_initialize_random_landau_1d2v, &
     sll_s_particle_initialize_sobol_landau_1d2v, &
-    sll_s_particle_initialize_random_landau_symmetric_1d2v
+    sll_s_particle_initialize_random_landau_symmetric_1d2v, &
+    sll_s_particle_initialize_sobol_landau_symmetric_1d2v
 
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
@@ -286,10 +287,11 @@ contains
             sim%domain(3), &
             sim%thermal_velocity, rnd_seed)
     elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
+       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles/8, 8)
        ! Pseudorandom initialization with sobol numbers
        !sim%thermal_velocity = 0.1_f64
-       call sll_s_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
+       !call sll_s_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
+       call sll_s_particle_initialize_sobol_landau_symmetric_1d2v(sim%particle_group, &
             sim%landau_param, sim%domain(1),sim%domain(3), &
             sim%thermal_velocity, sobol_seed)
     end if
