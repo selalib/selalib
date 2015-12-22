@@ -205,9 +205,9 @@ contains
     call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
 
-    jnorm = sum(this%j_dofs(:,1))/n_cells
-    print*, 'sum j', jnorm
-    this%j_dofs(:,1) = this%j_dofs(:,1)-jnorm
+    !jnorm = sum(this%j_dofs(:,1))/n_cells
+    !print*, 'sum j', jnorm
+    !this%j_dofs(:,1) = this%j_dofs(:,1)-jnorm
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
     !this%j_dofs(:,1) = this%j_dofs(:,1)*dt/2!this%delta_x!/this%Lx
@@ -215,22 +215,22 @@ contains
 !!$    print*, 'ea', this%efield_dofs(:,1)
 !!$    print*, 'j++++++'
 !!$
-    ! Test if efield_dofs(:,1) is the same when computed from Poisson
-    this%j_dofs_local(:,1) = 0.0_f64
-    do i_part=1,this%particle_group%n_particles
-       x_new = this%particle_group%get_x(i_part)
-       wi = this%particle_group%get_charge(i_part)
-       call this%kernel_smoother_0%add_charge(x_new(1), wi(1), this%j_dofs_local(:,1))
-       !print*, 'a', wi, x_new
-       !print*, this%j_dofs_local(:,1)
-    end do
-    this%j_dofs(:,1) = 0.0_f64
-    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
-         n_cells, MPI_SUM, this%j_dofs(:,1))
-    call this%maxwell_solver%compute_E_from_rho(efield_test,&
-         this%j_dofs(:,1))
-    !print*, this%efield_dofs(:,1)
-    print*, 'Error efield: ',  maxval(abs(efield_test - this%efield_dofs(:,1))), maxval(abs(this%efield_dofs(:,1)))
+!!$    ! Test if efield_dofs(:,1) is the same when computed from Poisson
+!!$    this%j_dofs_local(:,1) = 0.0_f64
+!!$    do i_part=1,this%particle_group%n_particles
+!!$       x_new = this%particle_group%get_x(i_part)
+!!$       wi = this%particle_group%get_charge(i_part)
+!!$       call this%kernel_smoother_0%add_charge(x_new(1), wi(1), this%j_dofs_local(:,1))
+!!$       !print*, 'a', wi, x_new
+!!$       !print*, this%j_dofs_local(:,1)
+!!$    end do
+!!$    this%j_dofs(:,1) = 0.0_f64
+!!$    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
+!!$         n_cells, MPI_SUM, this%j_dofs(:,1))
+!!$    call this%maxwell_solver%compute_E_from_rho(efield_test,&
+!!$         this%j_dofs(:,1))
+!!$    !print*, this%efield_dofs(:,1)
+!!$    print*, 'Error efield: ',  maxval(abs(efield_test - this%efield_dofs(:,1))), maxval(abs(this%efield_dofs(:,1)))
 !!$    print*, this%j_dofs(:,1)
 !!$    print*, 'rho1++++++'
 !!$    print*, 'ep', efield_test
@@ -460,9 +460,9 @@ contains
     ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
     this%j_dofs(:,2) = this%j_dofs(:,2)*dt!/this%Lx
 
-    jnorm = sum(this%j_dofs(:,2))/n_cells
-    print*, 'sum j2', jnorm
-    this%j_dofs(:,2) = this%j_dofs(:,2)-jnorm
+    !jnorm = sum(this%j_dofs(:,2))/n_cells
+    !print*, 'sum j2', jnorm
+    !this%j_dofs(:,2) = this%j_dofs(:,2)-jnorm
 
     call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,2), 2, this%efield_dofs(:,2))
     !!this%efield_dofs(:,2) = this%efield_dofs(:,2) - this%j_dofs(:,2)/this%Lx*dt
