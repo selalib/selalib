@@ -4,12 +4,12 @@ program test_poisson_1d_periodic
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_poisson_1d_periodic, only: &
-    initialize, &
-    poisson_1d_periodic, &
-    solve
+    sll_o_initialize, &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -18,7 +18,7 @@ program test_poisson_1d_periodic
   sll_real64, dimension(:), allocatable :: ex_exact
   sll_real64, dimension(:), allocatable :: rho
 
-  type (poisson_1d_periodic)            :: poisson
+  type (sll_t_poisson_1d_periodic)            :: poisson
 
   sll_int32   :: nc_eta1
   sll_real64  :: eta1_min
@@ -36,7 +36,7 @@ program test_poisson_1d_periodic
   SLL_ALLOCATE(ex_exact(nc_eta1+1),error)
 
   eta1_min = 0.0_f64
-  eta1_max = 2*sll_pi
+  eta1_max = 2*sll_p_pi
   delta_eta1 = (eta1_max-eta1_min) / nc_eta1
   mode = 4
   do i=1,nc_eta1+1
@@ -45,9 +45,9 @@ program test_poisson_1d_periodic
    ex_exact(i) = -real(mode,f64)*cos(mode*x)
   end do
 
-  call initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
+  call sll_o_initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
 
-  call solve(poisson, ex, rho)
+  call sll_o_solve(poisson, ex, rho)
 
   print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
 

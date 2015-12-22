@@ -22,19 +22,19 @@ program test_poisson_2d_polar_wrapper
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_dirichlet, &
-    sll_neumann_mode_0
+    sll_p_dirichlet, &
+    sll_p_neumann_mode_0
 
   use sll_m_poisson_2d_base, only: &
-    sll_poisson_2d_base
+    sll_c_poisson_2d_base
 
   use sll_m_poisson_2d_polar_wrapper, only: &
-    new_poisson_2d_polar
+    sll_f_new_poisson_2d_polar
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_poisson_2d_base), pointer     :: poisson 
+  class(sll_c_poisson_2d_base), pointer     :: poisson 
   sll_real64                              :: err
   sll_real64                              :: x1_min
   sll_real64                              :: x1_max
@@ -57,12 +57,12 @@ program test_poisson_2d_polar_wrapper
   
   err = 0._f64
   
-  poisson =>new_poisson_2d_polar( &
+  poisson =>sll_f_new_poisson_2d_polar( &
     x1_min, &
     x1_max, &
     Nc_x1, &
     Nc_x2, &
-    (/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
+    (/sll_p_neumann_mode_0, sll_p_dirichlet/))
   
   call poisson%compute_phi_from_rho( phi, rho )
 

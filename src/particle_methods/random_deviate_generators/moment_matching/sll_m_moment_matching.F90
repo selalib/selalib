@@ -12,7 +12,7 @@ module sll_m_moment_matching
   implicit none
 
   public :: &
-    match_moment_1d_weight_linear_real64
+    sll_s_match_moment_1d_weight_linear_real64
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,7 +26,7 @@ module sll_m_moment_matching
   !> @brief !Match mean E[W X] and E[W X^2]  = first and second order moment
   !>       modifies only X,  montecarlo estimate is: sum(W X)/N, N=len(X)
    interface match_moment_1D_weight_linear
-      module procedure match_moment_1D_weight_linear_real64
+      module procedure sll_s_match_moment_1d_weight_linear_real64
    end interface
 
 contains
@@ -48,7 +48,7 @@ end subroutine match_moment_1D_linear_real64
 
 
 
-subroutine match_moment_1D_weight_linear_real64( x, w, mean, mom2, num)
+subroutine sll_s_match_moment_1d_weight_linear_real64( x, w, mean, mom2, num)
 sll_real64, dimension(:), intent(inout) :: x !random samples
 sll_real64, dimension(:), intent(in) :: w !weights
 sll_int32, intent(in) :: num    !number of samples, doestn have to coincide with size of x
@@ -60,5 +60,5 @@ mom2x=sum(w*x**2)/real(num,f64)
 sumw=sum(w)/real(num,f64)
 
 x= (x- meanx/sumw)*sqrt((sumw*mom2 - mean**2)/(sumw*mom2x-meanx**2)) + mean/sumw
-end subroutine match_moment_1D_weight_linear_real64
+end subroutine sll_s_match_moment_1d_weight_linear_real64
 end module sll_m_moment_matching

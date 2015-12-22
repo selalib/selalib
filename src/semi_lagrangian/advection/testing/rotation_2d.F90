@@ -25,26 +25,26 @@ program rotation_2d
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_advection_2d_base
+    sll_c_advection_2d_base
 
   use sll_m_advection_2d_bsl, only: &
-    new_bsl_2d_advector
+    sll_f_new_bsl_2d_advector
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_hermite, &
-    sll_set_to_limit
+    sll_p_hermite, &
+    sll_p_set_to_limit
 
   use sll_m_characteristics_2d_base, only: &
-    sll_characteristics_2d_base
+    sll_c_characteristics_2d_base
 
   use sll_m_characteristics_2d_verlet, only: &
-    new_verlet_2d_charac
+    sll_f_new_verlet_2d_charac
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    new_cubic_spline_interpolator_1d
+    sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    new_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -79,9 +79,9 @@ program rotation_2d
   sll_real64 :: delta_x2
   sll_real64 :: dt
   
-  class(sll_advection_2d_base), pointer :: adv
+  class(sll_c_advection_2d_base), pointer :: adv
   class(sll_c_interpolator_2d), pointer :: interp
-  class(sll_characteristics_2d_base), pointer :: charac
+  class(sll_c_characteristics_2d_base), pointer :: charac
   class(sll_c_interpolator_2d), pointer   :: A1_interp_x1x2
   class(sll_c_interpolator_2d), pointer   :: A2_interp_x1x2
   class(sll_c_interpolator_1d), pointer   :: A1_interp_x1
@@ -126,62 +126,62 @@ program rotation_2d
   f = f_init
   
   !we initialize the interpolator
-  interp => new_cubic_spline_interpolator_2d( &
+  interp => sll_f_new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
     x1_max, &
     x2_min, &
     x2_max, &
-    SLL_HERMITE, &
-    SLL_HERMITE)
+    sll_p_hermite, &
+    sll_p_hermite)
 
   
 
 
 
   !we initialize the characteristics
-  A1_interp_x1 => new_cubic_spline_interpolator_1d( &
+  A1_interp_x1 => sll_f_new_cubic_spline_interpolator_1d( &
     Nc_x1+1, &
     x1_min, &
     x1_max, &
-    SLL_HERMITE)
-  A2_interp_x1 => new_cubic_spline_interpolator_1d( &
+    sll_p_hermite)
+  A2_interp_x1 => sll_f_new_cubic_spline_interpolator_1d( &
     Nc_x1+1, &
     x1_min, &
     x1_max, &
-    SLL_HERMITE)
-  A1_interp_x1x2 => new_cubic_spline_interpolator_2d( &
-    Nc_x1+1, &
-    Nc_x2+1, &
-    x1_min, &
-    x1_max, &
-    x2_min, &
-    x2_max, &
-    SLL_HERMITE, &
-    SLL_HERMITE)
-  A2_interp_x1x2 => new_cubic_spline_interpolator_2d( &
+    sll_p_hermite)
+  A1_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
     x1_max, &
     x2_min, &
     x2_max, &
-    SLL_HERMITE, &
-    SLL_HERMITE)
-  charac => new_verlet_2d_charac(&
+    sll_p_hermite, &
+    sll_p_hermite)
+  A2_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
+    Nc_x1+1, &
+    Nc_x2+1, &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max, &
+    sll_p_hermite, &
+    sll_p_hermite)
+  charac => sll_f_new_verlet_2d_charac(&
     Nc_x1+1, &
     Nc_x2+1, &
     A1_interp_x1x2, &
     A2_interp_x1x2, &
     A1_interp_x1, &
     A2_interp_x1, &
-    bc_type_1=SLL_SET_TO_LIMIT, &
-    bc_type_2=SLL_SET_TO_LIMIT)
+    bc_type_1=sll_p_set_to_limit, &
+    bc_type_2=sll_p_set_to_limit)
 
 
 
-  adv => new_BSL_2d_advector(&
+  adv => sll_f_new_bsl_2d_advector(&
     interp, &
     charac, &
     Nc_x1+1, &

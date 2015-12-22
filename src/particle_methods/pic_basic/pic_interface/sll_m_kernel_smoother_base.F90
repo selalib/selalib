@@ -8,24 +8,24 @@ module sll_m_kernel_smoother_base
 #include "sll_working_precision.h"
 
   use sll_m_particle_group_base, only: &
-    sll_particle_group_base
+    sll_c_particle_group_base
 
   implicit none
 
   public :: &
-    sll_collocation, &
-    sll_galerkin, &
-    sll_kernel_smoother_base
+    sll_p_collocation, &
+    sll_p_galerkin, &
+    sll_c_kernel_smoother_base
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! Define parameters to set if Galerkin or collocation scaling should be used in accumulation routines
-  sll_int32, parameter :: SLL_GALERKIN = 0
-  sll_int32, parameter :: SLL_COLLOCATION = 1
+  sll_int32, parameter :: sll_p_galerkin = 0
+  sll_int32, parameter :: sll_p_collocation = 1
 
   !> Basic type of a kernel smoother used for PIC simulations
-  type, abstract :: sll_kernel_smoother_base
+  type, abstract :: sll_c_kernel_smoother_base
      sll_int32              :: n_dofs  !< Number of degrees of freedom of the smoothing kernels.
      sll_int32, allocatable :: n_grid(:) !< Number of grid points per dimension for use on tensor product grid based smoothing kernels.
      
@@ -35,16 +35,16 @@ module sll_m_kernel_smoother_base
      procedure(update_dofs_component), deferred :: accumulate_j_from_klimontovich !< Accumulate the current density
      procedure(evaluate_particle), deferred     :: evaluate_kernel_function_particle !< Evaluate function for a certain particle based on the precomputed shape factors
      procedure    :: evaluate_kernel_function_particles !< Evaluate function for all particle based on the precomputed shape factors
-  end type sll_kernel_smoother_base
+  end type sll_c_kernel_smoother_base
 
 !---------------------------------------------------------------------------!
   abstract interface
      subroutine update_this(this, particle_group)
        use sll_m_working_precision
-       import sll_particle_group_base
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(inout) :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
+       import sll_c_particle_group_base
+       import sll_c_kernel_smoother_base
+       class( sll_c_kernel_smoother_base), intent(inout) :: this !< Kernel smoother object.
+       class( sll_c_particle_group_base), intent(in)     :: particle_group !< Particle group object.
      end subroutine update_this
   end interface
   
@@ -52,10 +52,10 @@ module sll_m_kernel_smoother_base
   abstract interface
      subroutine update_dofs(this, particle_group, rho_dofs)       
        use sll_m_working_precision
-       import sll_particle_group_base
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
+       import sll_c_particle_group_base
+       import sll_c_kernel_smoother_base
+       class( sll_c_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
+       class( sll_c_particle_group_base), intent(in)     :: particle_group !< Particle group object.
        sll_real64, intent(inout)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation (can be point values or weights in a basis function representation).
      end subroutine update_dofs
   end interface
@@ -67,10 +67,10 @@ module sll_m_kernel_smoother_base
           j_dofs, &
           component)       
        use sll_m_working_precision
-       import sll_particle_group_base
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
+       import sll_c_particle_group_base
+       import sll_c_kernel_smoother_base
+       class( sll_c_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
+       class( sll_c_particle_group_base), intent(in)     :: particle_group !< Particle group object.
        sll_real64, intent(inout)                       :: j_dofs(:)!< Degrees of freedom in kernel representation (can be point values or weights in a basis function representation).
        sll_int32, intent (in)                          :: component !< Component of the current density that should be evaluated.
      end subroutine update_dofs_component
@@ -80,8 +80,8 @@ module sll_m_kernel_smoother_base
   abstract interface
      subroutine evaluate_particle(this, rho_dofs, i_part, particle_value)       
        use sll_m_working_precision
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in) :: this !< Kernel smoother object.
+       import sll_c_kernel_smoother_base
+       class( sll_c_kernel_smoother_base), intent(in) :: this !< Kernel smoother object.
        sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
        sll_int32, intent(in)                        :: i_part !< particle number
        sll_real64, intent(out)                      :: particle_value !< Value of the function at the position of particle \a i_part
@@ -92,8 +92,8 @@ contains
   
   !---------------------------------------------------------------------------!
   subroutine evaluate_kernel_function_particles(this, particle_group, rho_dofs, particle_values)       
-    class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-    class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
+    class( sll_c_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
+    class( sll_c_particle_group_base), intent(in)     :: particle_group !< Particle group object.
     sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
     sll_real64, intent(out)                      :: particle_values(:) !< Values of the function represented by \a rho_dofs at particle positions.
     

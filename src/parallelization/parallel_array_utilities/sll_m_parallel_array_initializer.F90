@@ -3,30 +3,30 @@ module sll_m_parallel_array_initializer
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_1d, &
-    sll_cartesian_mesh_2d, &
-    sll_cartesian_mesh_4d
+    sll_t_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_4d
 
   use sll_m_common_array_initializers, only: &
-    sll_scalar_initializer_2d, &
-    sll_scalar_initializer_4d
+    sll_i_scalar_initializer_2d, &
+    sll_i_scalar_initializer_4d
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_remapper, only: &
-    compute_local_sizes, &
-    layout_2d, &
-    layout_4d, &
-    local_to_global
+    sll_o_compute_local_sizes, &
+    sll_t_layout_2d, &
+    sll_t_layout_4d, &
+    sll_o_local_to_global
 
   implicit none
 
   public :: &
-    sll_2d_parallel_array_initializer_cartesian, &
-    sll_4d_parallel_array_initializer, &
-    sll_4d_parallel_array_initializer_cartesian, &
-    sll_4d_parallel_array_initializer_finite_volume
+    sll_o_2d_parallel_array_initializer_cartesian, &
+    sll_o_4d_parallel_array_initializer, &
+    sll_o_4d_parallel_array_initializer_cartesian, &
+    sll_s_4d_parallel_array_initializer_finite_volume
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -44,18 +44,18 @@ module sll_m_parallel_array_initializer
 
 
 
-  interface sll_4d_parallel_array_initializer_cartesian
+  interface sll_o_4d_parallel_array_initializer_cartesian
     module procedure sll_4d_parallel_array_initializer_cartesian_aux    
     module procedure sll_4d_parallel_array_initializer_cartesian_logical_1d_1d_1d_1d
     !module procedure sll_4d_parallel_array_initializer_cartesian_logical_2d_2d
     module procedure sll_4d_parallel_array_initializer_cartesian_logical_4d  
   end interface 
   
-  interface sll_4d_parallel_array_initializer
+  interface sll_o_4d_parallel_array_initializer
     module procedure sll_2d_times_2d_parallel_array_initializer
   end interface
   
-  interface  sll_2d_parallel_array_initializer_cartesian
+  interface  sll_o_2d_parallel_array_initializer_cartesian
     module procedure sll_2d_parallel_array_initializer_cartesian_logical_2d
     module procedure sll_2d_parallel_array_initializer_cartesian_array_1d_1d
   end interface 
@@ -73,10 +73,10 @@ contains
        func, &
        func_params)
 
-    type(layout_2D), pointer                    :: layout
-    type(sll_cartesian_mesh_2d), pointer          :: mesh2d
+    type(sll_t_layout_2d), pointer                    :: layout
+    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d
     sll_real64, dimension(:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_2d)        :: func
+    procedure(sll_i_scalar_initializer_2d)        :: func
     sll_real64, dimension(:), optional          :: func_params
 
 
@@ -95,26 +95,26 @@ contains
     sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#passed layout is uninitialized.'
     end if
 
     if( .not. associated(mesh2d) ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#passed mesh2d_eta1_eta2 argument is uninitialized.'
     end if
 
 
-    call compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
 
     if( size(array,1) .lt. loc_size_x1 ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#first dimension of passed array is inconsistent with ', &
             '#the size contained in the passed layout.'
     end if
 
     if( size(array,2) .lt. loc_size_x2 ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#second dimension of passed array is inconsistent with ', &
             '#the size contained in the passed layout.'
     end if
@@ -132,7 +132,7 @@ contains
 
     do j=1,loc_size_x2
       do i=1,loc_size_x1
-        gi(:) = local_to_global( layout, (/i,j/) )
+        gi(:) = sll_o_local_to_global( layout, (/i,j/) )
         eta1 = eta1_min + real(gi(1)-1,f64)*delta1
         eta2 = eta2_min + real(gi(2)-1,f64)*delta2
         array(i,j) = func(eta1,eta2,func_params)
@@ -149,11 +149,11 @@ contains
        func, &
        func_params)
 
-    type(layout_2D), pointer                    :: layout
+    type(sll_t_layout_2d), pointer                    :: layout
     sll_real64, dimension(:), intent(in) :: x1_array
     sll_real64, dimension(:), intent(in) :: x2_array
     sll_real64, dimension(:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_2d)        :: func
+    procedure(sll_i_scalar_initializer_2d)        :: func
     sll_real64, dimension(:), optional          :: func_params
 
 
@@ -166,26 +166,26 @@ contains
     sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#passed layout is uninitialized.'
     end if
 
 !    if( .not. associated(mesh2d) ) then
-!       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+!       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
 !            '#passed mesh2d_eta1_eta2 argument is uninitialized.'
 !    end if
 
 
-    call compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
 
     if( size(array,1) .lt. loc_size_x1 ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#first dimension of passed array is inconsistent with ', &
             '#the size contained in the passed layout.'
     end if
 
     if( size(array,2) .lt. loc_size_x2 ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+       print *, '#sll_o_2d_parallel_array_initializer_cartesian error: ', &
             '#second dimension of passed array is inconsistent with ', &
             '#the size contained in the passed layout.'
     end if
@@ -194,7 +194,7 @@ contains
 
     do j=1,loc_size_x2
       do i=1,loc_size_x1
-        gi(:) = local_to_global( layout, (/i,j/) )
+        gi(:) = sll_o_local_to_global( layout, (/i,j/) )
         eta1 = x1_array(gi(1))
         eta2 = x2_array(gi(2))
         array(i,j) = func(eta1,eta2,func_params)
@@ -218,7 +218,7 @@ contains
        array, &
        func, &
        func_params) 
-    type(layout_4D), pointer                    :: layout
+    type(sll_t_layout_4d), pointer                    :: layout
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta2_min
     sll_real64, intent(in) :: eta3_min
@@ -228,7 +228,7 @@ contains
     sll_real64, intent(in) :: delta3
     sll_real64, intent(in) :: delta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_4d)        :: func
+    procedure(sll_i_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
     sll_int32  :: i
     sll_int32  :: j
@@ -249,33 +249,33 @@ contains
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed layout is uninitialized.'
     end if
 
-    call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
          loc_size_x4 ) 
 
     if( size(array,1) .lt. loc_size_x1 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'first dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,2) .lt. loc_size_x2 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'second dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,3) .lt. loc_size_x3 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'third dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,4) .lt. loc_size_x4 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'fourth dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
@@ -284,7 +284,7 @@ contains
       do k=1,loc_size_x3
         do j=1,loc_size_x2
           do i=1,loc_size_x1
-            gi(:) = local_to_global( layout, (/i,j,k,l/) )
+            gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
             eta1 = eta1_min + real(gi(1)-1,f64)*delta1
             eta2 = eta2_min + real(gi(2)-1,f64)*delta2
             eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -306,13 +306,13 @@ contains
     array, &
     func, &
     func_params) 
-    type(layout_4D), pointer                    :: layout
-    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta1
-    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta2
-    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta3
-    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta4
+    type(sll_t_layout_4d), pointer                    :: layout
+    type(sll_t_cartesian_mesh_1d), pointer          :: mesh1d_eta1
+    type(sll_t_cartesian_mesh_1d), pointer          :: mesh1d_eta2
+    type(sll_t_cartesian_mesh_1d), pointer          :: mesh1d_eta3
+    type(sll_t_cartesian_mesh_1d), pointer          :: mesh1d_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_4d)        :: func
+    procedure(sll_i_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
@@ -332,7 +332,7 @@ contains
     eta4_min = mesh1d_eta4%eta_min
     delta4 = mesh1d_eta4%delta_eta
     
-    call sll_4d_parallel_array_initializer_cartesian( &
+    call sll_o_4d_parallel_array_initializer_cartesian( &
        layout, &
        eta1_min, &
        eta2_min, &
@@ -358,10 +358,10 @@ contains
        func, &
        func_params)
 
-    type(layout_4D), pointer                    :: layout
-    type(sll_cartesian_mesh_4d), pointer          :: mesh4d
+    type(sll_t_layout_4d), pointer                    :: layout
+    type(sll_t_cartesian_mesh_4d), pointer          :: mesh4d
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_4d)        :: func
+    procedure(sll_i_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
 
     sll_real64 :: delta1
@@ -382,7 +382,7 @@ contains
     delta3   = mesh4d%delta_eta3
     delta4   = mesh4d%delta_eta4
 
-    call sll_4d_parallel_array_initializer_cartesian( &
+    call sll_o_4d_parallel_array_initializer_cartesian( &
        layout, &
        eta1_min, &
        eta2_min, &
@@ -417,17 +417,17 @@ contains
        transf_x1_x2, &
        transf_x3_x4 )
 
-    type(layout_4D), pointer                    :: layout
-    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
-    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
+    type(sll_t_layout_4d), pointer                    :: layout
+    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
+    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_4d)        :: func
+    procedure(sll_i_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
 
-    class(sll_coordinate_transformation_2d_base), pointer, optional :: &
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x1_x2
 
-    class(sll_coordinate_transformation_2d_base), pointer, optional :: &
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x3_x4
 
     sll_int32  :: i
@@ -458,43 +458,43 @@ contains
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed layout is uninitialized.'
     end if
 
     if( .not. associated(mesh2d_eta1_eta2) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed mesh2d_eta1_eta2 argument is uninitialized.'
     end if
 
     if( .not. associated(mesh2d_eta3_eta4) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed mesh2d_eta3_eta4 argument is uninitialized.'
     end if
 
-    call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
          loc_size_x4 ) 
 
     if( size(array,1) .lt. loc_size_x1 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'first dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,2) .lt. loc_size_x2 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'second dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,3) .lt. loc_size_x3 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'third dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,4) .lt. loc_size_x4 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'fourth dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
@@ -503,7 +503,7 @@ contains
     !    if(.not. associated(transf_x1_x2%get_cartesian_mesh(),mesh2d_eta1_eta2) )&
     !       then 
 
-    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !       print *, 'sll_o_4d_parallel_array_initializer warning: ', &
     !            'the mesh associated to the transf_x1_x2 transformation ', &
     !            'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
     !            'Unless the parameters of these meshes are the same, ', &
@@ -515,7 +515,7 @@ contains
     !    if(.not. associated(transf_x3_x4%get_cartesian_mesh(),mesh2d_eta3_eta4) )&
     !       then 
 
-    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !       print *, 'sll_o_4d_parallel_array_initializer warning: ', &
     !            'the mesh associated to the transf_x3_x4 transformation ', &
     !            'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
     !            'Unless the parameters of these meshes are the same, ', &
@@ -551,7 +551,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -566,7 +566,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -584,7 +584,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -601,7 +601,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -619,7 +619,7 @@ contains
 
   end subroutine sll_2d_times_2d_parallel_array_initializer
 
-!  subroutine sll_4d_parallel_array_initializer( &
+!  subroutine sll_o_4d_parallel_array_initializer( &
 !       layout, &
 !       mesh2d_eta1_eta2, &
 !       mesh2d_eta3_eta4, &
@@ -629,17 +629,17 @@ contains
 !       transf_x1_x2, &
 !       transf_x3_x4 )
 !
-!    type(layout_4D), pointer                    :: layout
-!    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
-!    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
+!    type(sll_t_layout_4d), pointer                    :: layout
+!    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
+!    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
 !    sll_real64, dimension(:,:,:,:), intent(out) :: array
-!    procedure(sll_scalar_initializer_4d)        :: func
+!    procedure(sll_i_scalar_initializer_4d)        :: func
 !    sll_real64, dimension(:), optional          :: func_params
 !
-!    class(sll_coordinate_transformation_2d_base), pointer, optional :: &
+!    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
 !         transf_x1_x2
 !
-!    class(sll_coordinate_transformation_2d_base), pointer, optional :: &
+!    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
 !         transf_x3_x4
 !
 !    sll_int32  :: i
@@ -670,7 +670,7 @@ contains
 !    sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 !
 !    if( .not. associated(layout) ) then
-!       print *, 'sll_4d_parallel_array_initializer error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer error: ', &
 !            'passed layout is uninitialized.'
 !    end if
 !
@@ -680,40 +680,40 @@ contains
 !    end if
 !
 !    if( .not. associated(mesh2d_eta3_eta4) ) then
-!       print *, 'sll_4d_parallel_array_initializer error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer error: ', &
 !            'passed mesh2d_eta3_eta4 argument is uninitialized.'
 !    end if
 !
-!    call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
+!    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
 !         loc_size_x4 ) 
 !
 !    if( size(array,1) .lt. loc_size_x1 ) then
-!       print *, 'sll_4d_parallel_array_initializer error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer error: ', &
 !            'first dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !
 !    if( size(array,2) .lt. loc_size_x2 ) then
-!       print *, 'sll_4d_parallel_array_initializer error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer error: ', &
 !            'second dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !
 !    if( size(array,3) .lt. loc_size_x3 ) then
-!       print *, 'sll_4d_parallel_array_initializer error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer error: ', &
 !            'third dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !
 !    if( size(array,4) .lt. loc_size_x4 ) then
-!       print *, 'sll_4d_parallel_array_initializer error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer error: ', &
 !            'fourth dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !
 !    if(present( transf_x1_x2 ) ) then
 !       if( .not. associated(transf_x1_x2%get_cartesian_mesh(), mesh2d_eta1_eta2) ) then 
-!          print *, 'sll_4d_parallel_array_initializer warning: ', &
+!          print *, 'sll_o_4d_parallel_array_initializer warning: ', &
 !               'the mesh associated to the transf_x1_x2 transformation ', &
 !               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
 !               'Unless the parameters of these meshes are the same, ', &
@@ -723,7 +723,7 @@ contains
 !
 !    if(present( transf_x3_x4 ) ) then
 !       if( .not. associated(transf_x3_x4%get_cartesian_mesh(), mesh2d_eta3_eta4) ) then 
-!          print *, 'sll_4d_parallel_array_initializer warning: ', &
+!          print *, 'sll_o_4d_parallel_array_initializer warning: ', &
 !               'the mesh associated to the transf_x3_x4 transformation ', &
 !               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
 !               'Unless the parameters of these meshes are the same, ', &
@@ -759,7 +759,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+!                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -774,7 +774,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+!                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -791,7 +791,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+!                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -808,7 +808,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+!                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -824,10 +824,10 @@ contains
 !       end do
 !    end select
 !
-!  end subroutine sll_4d_parallel_array_initializer
+!  end subroutine sll_o_4d_parallel_array_initializer
 
 !in case of interpolation in the vx, vy, x, y direction
-  subroutine sll_4d_parallel_array_initializer_finite_volume( &
+  subroutine sll_s_4d_parallel_array_initializer_finite_volume( &
        layout, &
        mesh2d_eta1_eta2, &
        mesh2d_eta3_eta4, &
@@ -842,11 +842,11 @@ contains
        subcells3, &
        subcells4)
     
-    type(layout_4D), pointer                    :: layout
-    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
-    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
+    type(sll_t_layout_4d), pointer                    :: layout
+    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
+    type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_4d)        :: func
+    procedure(sll_i_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
     sll_int32,optional   :: subcells1
     sll_int32,optional   :: subcells2
@@ -854,10 +854,10 @@ contains
     sll_int32,optional   :: subcells4
 
 
-    class(sll_coordinate_transformation_2d_base), pointer, optional :: &
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x1_x2
     
-    class(sll_coordinate_transformation_2d_base), pointer, optional :: &
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x3_x4
     
     sll_int32  :: i
@@ -889,43 +889,43 @@ contains
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed layout is uninitialized.'
     end if
     
     if( .not. associated(mesh2d_eta1_eta2) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed mesh2d_eta1_eta2 argument is uninitialized.'
     end if
     
     if( .not. associated(mesh2d_eta3_eta4) ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'passed mesh2d_eta3_eta4 argument is uninitialized.'
     end if
     
-    call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
          loc_size_x4 ) 
 
     if( size(array,1) .lt. loc_size_x1 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'first dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,2) .lt. loc_size_x2 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'second dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,3) .lt. loc_size_x3 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'third dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
 
     if( size(array,4) .lt. loc_size_x4 ) then
-       print *, 'sll_4d_parallel_array_initializer error: ', &
+       print *, 'sll_o_4d_parallel_array_initializer error: ', &
             'fourth dimension of passed array is inconsistent with ', &
             'the size contained in the passed layout.'
     end if
@@ -934,7 +934,7 @@ contains
     !    if(.not. associated(transf_x1_x2%get_cartesian_mesh(), mesh2d_eta1_eta2) )&
     !       then 
 
-    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !       print *, 'sll_o_4d_parallel_array_initializer warning: ', &
     !            'the mesh associated to the transf_x1_x2 transformation ', &
     !            'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
     !            'Unless the parameters of these meshes are the same, ', &
@@ -946,7 +946,7 @@ contains
     !    if(.not. associated(transf_x3_x4%get_cartesian_mesh(),mesh2d_eta3_eta4) )&
     !       then 
 
-    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !       print *, 'sll_o_4d_parallel_array_initializer warning: ', &
     !            'the mesh associated to the transf_x3_x4 transformation ', &
     !            'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
     !            'Unless the parameters of these meshes are the same, ', &
@@ -1009,7 +1009,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1024,7 +1024,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1041,7 +1041,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1058,7 +1058,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
+                   gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1074,22 +1074,22 @@ contains
        end do
     end select
 
-  end subroutine sll_4d_parallel_array_initializer_finite_volume
+  end subroutine sll_s_4d_parallel_array_initializer_finite_volume
 
 
 
 
-!  subroutine sll_4d_parallel_array_initializer_cartesian( &
+!  subroutine sll_o_4d_parallel_array_initializer_cartesian( &
 !       layout, &
 !       mesh4d, &
 !       array, &
 !       func, &
 !       func_params)
 !
-!    type(layout_4D), pointer                    :: layout
-!    type(sll_cartesian_mesh_4d), pointer          :: mesh4d
+!    type(sll_t_layout_4d), pointer                    :: layout
+!    type(sll_t_cartesian_mesh_4d), pointer          :: mesh4d
 !    sll_real64, dimension(:,:,:,:), intent(out) :: array
-!    procedure(sll_scalar_initializer_4d)        :: func
+!    procedure(sll_i_scalar_initializer_4d)        :: func
 !    sll_real64, dimension(:), optional          :: func_params
 !
 !
@@ -1116,38 +1116,38 @@ contains
 !    sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 !
 !    if( .not. associated(layout) ) then
-!       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer_cartesian error: ', &
 !            'passed layout is uninitialized.'
 !    end if
 !
 !    if( .not. associated(mesh4d) ) then
-!       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer_cartesian error: ', &
 !            'passed mesh2d_eta1_eta2 argument is uninitialized.'
 !    end if
 !
 !
-!    call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
+!    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
 !         loc_size_x4 ) 
 !
 !    if( size(array,1) .lt. loc_size_x1 ) then
-!       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer_cartesian error: ', &
 !            'first dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !
 !    if( size(array,2) .lt. loc_size_x2 ) then
-!       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer_cartesian error: ', &
 !            'second dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !    if( size(array,3) .lt. loc_size_x3 ) then
-!       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer_cartesian error: ', &
 !            'third dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
 !
 !    if( size(array,4) .lt. loc_size_x4 ) then
-!       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+!       print *, 'sll_o_4d_parallel_array_initializer_cartesian error: ', &
 !            'fourth dimension of passed array is inconsistent with ', &
 !            'the size contained in the passed layout.'
 !    end if
@@ -1170,7 +1170,7 @@ contains
 !       do k=1,loc_size_x3
 !          do j=1,loc_size_x2
 !             do i=1,loc_size_x1
-!                gi(:) = local_to_global( layout, (/i,j,k,l/) )
+!                gi(:) = sll_o_local_to_global( layout, (/i,j,k,l/) )
 !                eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1181,7 +1181,7 @@ contains
 !       end do
 !    end do
 !
-!  end subroutine sll_4d_parallel_array_initializer_cartesian
+!  end subroutine sll_o_4d_parallel_array_initializer_cartesian
 
 
 

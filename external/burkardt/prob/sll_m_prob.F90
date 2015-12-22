@@ -3,7 +3,7 @@ module sll_m_prob
   implicit none
 
   public :: &
-    normal_cdf_inv
+    sll_s_normal_cdf_inv
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -16480,9 +16480,9 @@ subroutine folded_normal_cdf_inv ( cdf, a, b, x )
 !  Find X1, for which the value of CDF will be too small.
 !
   if ( 0.0D+00 <= a ) then
-    call normal_cdf_inv ( cdf, a, b, x1 )
+    call sll_s_normal_cdf_inv ( cdf, a, b, x1 )
   else
-    call normal_cdf_inv ( cdf, -a, b, x1 )
+    call sll_s_normal_cdf_inv ( cdf, -a, b, x1 )
   end if
   x1 = max ( x1, 0.0D+00 )
   call folded_normal_cdf ( x1, a, b, cdf1 )
@@ -16491,8 +16491,8 @@ subroutine folded_normal_cdf_inv ( cdf, a, b, x )
 !
   cdf2 = ( 1.0D+00 - cdf ) / 2.0D+00
 
-  call normal_cdf_inv ( cdf2, a, b, xa )
-  call normal_cdf_inv ( cdf2, -a, b, xb )
+  call sll_s_normal_cdf_inv ( cdf2, a, b, xa )
+  call sll_s_normal_cdf_inv ( cdf2, -a, b, xb )
   x2 = max ( abs ( xa ), abs ( xb ) )
   call folded_normal_cdf ( x2, a, b, cdf2 )
 !
@@ -19688,7 +19688,7 @@ subroutine half_normal_cdf_inv ( cdf, a, b, x )
 
   cdf2 = 0.5D+00 * ( cdf + 1.0D+00 )
 
-  call normal_cdf_inv ( cdf2, a, b, x )
+  call sll_s_normal_cdf_inv ( cdf2, a, b, x )
 
   return
 end subroutine
@@ -22669,7 +22669,7 @@ subroutine log_normal_cdf_inv ( cdf, a, b, x )
     stop
   end if
 
-  call normal_cdf_inv ( cdf, a, b, logx )
+  call sll_s_normal_cdf_inv ( cdf, a, b, logx )
 
   x = exp ( logx )
 
@@ -26560,11 +26560,11 @@ subroutine normal_cdf ( x, a, b, cdf )
 
   return
 end subroutine
-subroutine normal_cdf_inv ( cdf, a, b, x )
+subroutine sll_s_normal_cdf_inv ( cdf, a, b, x )
 
 !*****************************************************************************80
 !
-!! NORMAL_CDF_INV inverts the Normal CDF.
+!! sll_s_normal_cdf_inv inverts the Normal CDF.
 !
 !  Licensing:
 !
@@ -26598,7 +26598,7 @@ subroutine normal_cdf_inv ( cdf, a, b, x )
 
   if ( cdf < 0.0D+00 .or. 1.0D+00 < cdf ) then
     write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'NORMAL_CDF_INV - Fatal error!'
+    write ( *, '(a)' ) 'sll_s_normal_cdf_inv - Fatal error!'
     write ( *, '(a)' ) '  CDF < 0 or 1 < CDF.'
     stop
   end if

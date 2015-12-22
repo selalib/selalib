@@ -74,7 +74,7 @@ delta_eta2 = (eta2_max-eta2_min)/real(Neta2,f64)
 k = 0.05_f64  !T*delta_eta1
 nb_step = floor(T/k)
 eps=0.001_f64
-h=2.0_f64*sll_pi/ntau
+h=2.0_f64*sll_p_pi/ntau
 
 ! ---- * Messages * ----
 
@@ -114,7 +114,7 @@ enddo
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
 m=Nn/2
-lx=(/ (n, n=0,m-1), (n, n=-m,-1 )/)*2.0_f64*sll_pi/(eta1_max-eta1_min)
+lx=(/ (n, n=0,m-1), (n, n=-m,-1 )/)*2.0_f64*sll_p_pi/(eta1_max-eta1_min)
 t=0.0_f64
 do step=1,nb_step ! ---- * Evolution in time * ----
     f0=fh_fsl(1:Nn,1:Nn)

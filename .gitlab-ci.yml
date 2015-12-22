@@ -31,6 +31,16 @@ mavericks-openmpi:
     - osx
     - openmpi
     
+mavericks-mpich:
+  stage: ctest
+  script: 
+    - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - osx
+    - mpich    
+    
 fedora-openmpi:
   stage: ctest
   script: 

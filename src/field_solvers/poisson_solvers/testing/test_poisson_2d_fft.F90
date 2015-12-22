@@ -22,15 +22,15 @@ program test_poisson_2d_fft
 #include "sll_working_precision.h"
 
   use sll_m_poisson_2d_base, only: &
-    sll_poisson_2d_base
+    sll_c_poisson_2d_base
 
   use sll_m_poisson_2d_fft, only: &
-    new_poisson_2d_fft_solver
+    sll_f_new_poisson_2d_fft_solver
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_poisson_2d_base), pointer :: poisson 
+  class(sll_c_poisson_2d_base), pointer :: poisson 
   sll_real64 :: x1_min
   sll_real64 :: x1_max
   sll_real64 :: x2_min
@@ -61,7 +61,7 @@ program test_poisson_2d_fft
   
   rho = 1._f64
   
-  poisson => new_poisson_2d_fft_solver(x1_min,x1_max,Nc_x1,x2_min,x2_max,Nc_x2)
+  poisson => sll_f_new_poisson_2d_fft_solver(x1_min,x1_max,Nc_x1,x2_min,x2_max,Nc_x2)
   
   call poisson%compute_phi_from_rho( phi, rho )
 

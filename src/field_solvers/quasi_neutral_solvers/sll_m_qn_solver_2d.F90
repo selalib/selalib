@@ -22,56 +22,56 @@ module sll_m_qn_solver_2d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_neumann
+    sll_p_neumann
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_fft, only: &
-    fft_apply_plan_c2c_1d, &
-    fft_backward, &
-    fft_delete_plan, &
-    fft_forward, &
-    fft_new_plan_c2c_1d, &
-    sll_fft_plan
+    sll_s_fft_apply_plan_c2c_1d, &
+    sll_p_fft_backward, &
+    sll_s_fft_delete_plan, &
+    sll_p_fft_forward, &
+    sll_f_fft_new_plan_c2c_1d, &
+    sll_t_fft_plan
 
   use sll_m_tridiagonal, only: &
-    setup_cyclic_tridiag, &
-    solve_cyclic_tridiag
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   implicit none
 
   public :: &
-    delete, &
-    dirichlet_matrix, &
-    neumann_matrix, &
-    new, &
-    qn_solver_2d, &
-    solve
+    sll_o_delete, &
+    sll_s_dirichlet_matrix, &
+    sll_s_neumann_matrix, &
+    sll_o_new, &
+    sll_t_qn_solver_2d, &
+    sll_o_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type qn_solver_2d
+  type sll_t_qn_solver_2d
      sll_int32                   :: BC ! Boundary_conditions
      sll_int32                   :: NP_r!Number of points in r-direction
      sll_int32                   :: NP_theta!Number of points in theta-direction
      sll_real64                  :: rmin
      sll_real64                  :: rmax
-     type(sll_fft_plan), pointer :: fft_plan
-     type(sll_fft_plan), pointer :: inv_fft_plan
-  end type qn_solver_2d
+     type(sll_t_fft_plan), pointer :: fft_plan
+     type(sll_t_fft_plan), pointer :: inv_fft_plan
+  end type sll_t_qn_solver_2d
 
 
-interface new
+interface sll_o_new
 module procedure new_qn_solver_2d
-end interface new
-interface solve
+end interface sll_o_new
+interface sll_o_solve
 module procedure solve_qn_solver_2d
-end interface solve
-interface delete
+end interface sll_o_solve
+interface sll_o_delete
 module procedure delete_qn_solver_2d
-end interface delete
+end interface sll_o_delete
 
 contains
 
@@ -84,7 +84,7 @@ contains
     sll_real64                                    :: rmax
     sll_comp64, dimension(:),   allocatable       :: x
     sll_int32                                     :: NP_r, NP_theta, ierr
-    type(qn_solver_2d), pointer :: plan
+    type(sll_t_qn_solver_2d), pointer :: plan
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE( x(NP_theta), ierr )
@@ -96,12 +96,12 @@ contains
     plan%rmax   = rmax
 
     ! For FFTs in theta-direction
-    !plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
-    plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
+    !plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
+    plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
 
     ! For inverse FFTs in theta-direction
-    !plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
-    plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_BACKWARD )
+    !plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
+    plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
@@ -110,7 +110,7 @@ contains
 
   subroutine solve_qn_solver_2d(plan, rho, c, Te, f, g, Zi, phi)
 
-    type(qn_solver_2d),pointer   :: plan
+    type(sll_t_qn_solver_2d),pointer   :: plan
     sll_real64                                     :: dr, dtheta, Zi
     sll_int32                                      :: NP_r, NP_theta, i, j, k
     sll_real64, dimension(:,:)                     :: rho, phi
@@ -123,29 +123,29 @@ contains
 
     NP_r = plan%NP_r
     NP_theta = plan%NP_theta
-    if (plan%BC==SLL_NEUMANN) then
+    if (plan%BC==sll_p_neumann) then
        dr = (plan%rmax-plan%rmin)/(NP_r-1)
     else ! 'dirichlet'
        dr = (plan%rmax-plan%rmin)/(NP_r+1)
     endif
-    dtheta = 2*sll_pi/NP_theta
+    dtheta = 2*sll_p_pi/NP_theta
 
     hat_rho = cmplx(rho, 0_f64, kind=f64)
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
+    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
     !
-    !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
-    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
+    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
+    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
+    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
     
-    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
+    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
+    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
 
-    if (plan%BC==SLL_NEUMANN) then
+    if (plan%BC==sll_p_neumann) then
        hat_rho(1,:)  = hat_rho(1,:) + (c(1)-2/dr)*hat_f 
        hat_rho(NP_r,:) = hat_rho(NP_r,:) + (c(NP_r)+2/dr)*hat_g
     else ! 'dirichlet'
@@ -154,8 +154,8 @@ contains
     endif
 
     do i=2,NP_r-1
-       !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
-       call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
+       !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
+       call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
     enddo
 
     do j=1,NP_theta
@@ -164,24 +164,24 @@ contains
        else
           k = NP_theta-(j-1)
        endif
-       if (plan%BC==SLL_NEUMANN) then
-          call neumann_matrix(plan%np_r, plan%rmin, plan%rmax, &
+       if (plan%BC==sll_p_neumann) then
+          call sll_s_neumann_matrix(plan%np_r, plan%rmin, plan%rmax, &
                               plan%np_theta, k, c, Te, Zi, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix(plan%np_r, plan%rmin, plan%rmax, &
+          call sll_s_dirichlet_matrix(plan%np_r, plan%rmin, plan%rmax, &
                                 plan%np_theta, k, c, Te, Zi, a_resh)
        endif
        ! b is given by taking the FFT in the theta-direction of rho_{r,theta}      
        ! Solving the linear system: Ax = b  
-       call setup_cyclic_tridiag( a_resh, NP_r, cts, ipiv )
-       call solve_cyclic_tridiag( cts, ipiv, hat_rho(:,j), NP_r, hat_phi(:,j))         
+       call sll_s_setup_cyclic_tridiag( a_resh, NP_r, cts, ipiv )
+       call sll_o_solve_cyclic_tridiag( cts, ipiv, hat_rho(:,j), NP_r, hat_phi(:,j))         
     enddo
 
     ! Solution phi of the Quasi-neutral equation is given by taking the inverse
     ! FFT in the k-direction of Tild_phi (storaged in phi)  
     do i=1,NP_r
-       !call fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
-       call fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
+       !call sll_s_fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
+       call sll_s_fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
     phi = real(hat_phi, f64)/real(NP_theta,f64)
@@ -191,22 +191,22 @@ contains
 
   subroutine delete_qn_solver_2d(plan)
 
-    type (qn_solver_2d), pointer :: plan
+    type (sll_t_qn_solver_2d), pointer :: plan
     sll_int32                                      :: ierr
 
     ! Fixme: some error checking, whether the poisson pointer is associated
     ! for instance
     SLL_ASSERT( associated(plan) )
 
-    call fft_delete_plan(plan%fft_plan)
-    call fft_delete_plan(plan%inv_fft_plan)
+    call sll_s_fft_delete_plan(plan%fft_plan)
+    call sll_s_fft_delete_plan(plan%inv_fft_plan)
 
     SLL_DEALLOCATE(plan, ierr)
 
   end subroutine delete_qn_solver_2d
 
 
-  subroutine dirichlet_matrix(np_r, rmin, rmax, &
+  subroutine sll_s_dirichlet_matrix(np_r, rmin, rmax, &
                                              np_theta, k, c, Te, Zi, a_resh)
 
     sll_real64, dimension(:)                      :: c, Te
@@ -216,7 +216,7 @@ contains
     sll_real64, dimension(:)                      :: a_resh
 
     dr = (rmax-rmin)/(NP_r+1)
-    dtheta = 2*sll_pi / NP_theta        
+    dtheta = 2*sll_p_pi / NP_theta        
 
     a_resh = 0._f64
 
@@ -231,10 +231,10 @@ contains
        endif
     enddo
 
-  end subroutine dirichlet_matrix
+  end subroutine sll_s_dirichlet_matrix
 
 
-  subroutine neumann_matrix(np_r, rmin, rmax, np_theta, &
+  subroutine sll_s_neumann_matrix(np_r, rmin, rmax, np_theta, &
                             k, c, Te, Zi, a_resh)
 
     sll_real64, dimension(:)                      :: c, Te
@@ -244,7 +244,7 @@ contains
     sll_real64, dimension(:)                      :: a_resh
 
     dr = (rmax-rmin)/(NP_r-1)
-    dtheta = 2*sll_pi / NP_theta
+    dtheta = 2*sll_p_pi / NP_theta
 
     a_resh = 0._f64
 
@@ -261,7 +261,7 @@ contains
     a_resh(3*(NP_r-1)+1) = -2/dr**2
     a_resh(3*(NP_r-1)+2) = 2/dr**2 + 1/(Zi*Te(NP_r)) + (k/rmax)**2
 
-  end subroutine neumann_matrix
+  end subroutine sll_s_neumann_matrix
 
 
 end module sll_m_qn_solver_2d

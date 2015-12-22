@@ -25,52 +25,52 @@ module sll_m_pic_visu
 #include "sll_working_precision.h"
 
   use sll_m_ascii_io, only: &
-    sll_ascii_file_create
+    sll_s_ascii_file_create
 
   use sll_m_gnuplot, only: &
-    sll_gnuplot_2d
+    sll_o_gnuplot_2d
 
   use sll_m_utilities, only: &
-    int2string, &
-    sll_new_file_id
+    sll_s_int2string, &
+    sll_s_new_file_id
 
   use sll_m_xdmf, only: &
-    sll_xdmf_corect2d_nodes
+    sll_s_xdmf_corect2d_nodes
 
   implicit none
 
   public :: &
-    compute_df_cic, &
-    distribution_gnuplot, &
-    distribution_m4_gnuplot, &
-    distribution_tsc_gnuplot, &
-    distribution_xdmf, &
-    electricpotential_gnuplot_inline, &
-    energies_electrostatic_gnuplot_inline, &
-    particles_center_gnuplot, &
-    particles_center_gnuplot_inline, &
-    plot_format_points3d, &
-    plot_format_xmdv
+    sll_s_compute_df_cic, &
+    sll_o_distribution_gnuplot, &
+    sll_s_distribution_m4_gnuplot, &
+    sll_s_distribution_tsc_gnuplot, &
+    sll_s_distribution_xdmf, &
+    sll_s_electricpotential_gnuplot_inline, &
+    sll_s_energies_electrostatic_gnuplot_inline, &
+    sll_o_particles_center_gnuplot, &
+    sll_s_particles_center_gnuplot_inline, &
+    sll_o_plot_format_points3d, &
+    sll_s_plot_format_xmdv
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> plot particles centers with gnuplot
-interface particles_center_gnuplot
+interface sll_o_particles_center_gnuplot
    module procedure xv_particles_center_gnuplot
-end interface particles_center_gnuplot
+end interface sll_o_particles_center_gnuplot
 
 !> plot particles distribution with gnuplot
-interface distribution_gnuplot
+interface sll_o_distribution_gnuplot
    module procedure distribution_xv_gnuplot
-end interface distribution_gnuplot
+end interface sll_o_distribution_gnuplot
 
 !> write point3d file to plot particles characteristics
-interface plot_format_points3d
+interface sll_o_plot_format_points3d
    module procedure pq_plot_format_points3d
    module procedure pqr_plot_format_points3d
    module procedure pqrs_plot_format_points3d
-end interface plot_format_points3d
+end interface sll_o_plot_format_points3d
 
 
 contains
@@ -87,9 +87,9 @@ sll_int32 :: file_id
 sll_int32 :: nbpart
 sll_int32 :: k
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
-call sll_new_file_id(file_id, error)
+call sll_s_new_file_id(file_id, error)
 open( file_id, file = plot_name//'.gnu', position="append" )
 if ( iplot <= 1 ) then
    rewind(file_id)
@@ -157,28 +157,28 @@ sll_int32 :: error
 
 delta_x = (xmax-xmin)/nx
 delta_v = (vmax-vmin)/nv
-call int2string(iplot,fin)
+call sll_s_int2string(iplot,fin)
 
 SLL_ASSERT(size(x)==size(v))
 
 write(*,"(A7,G10.3)")"Time = ",time
 call compute_df( df, x, v, xmin, xmax, nx, vmin, vmax, nv)
 
-!call sll_new_file_id(file_id, error)
+!call sll_s_new_file_id(file_id, error)
 !open( file_id, file = plot_name//'.gnu', position="append" )
 !if ( iplot == 1 ) rewind(file_id)
 !write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 !write(file_id,*)"splot  '"//plot_name//"_"//fin//".dat' w l"
 !close(file_id)
 
-call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
+call sll_o_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
 
 end subroutine distribution_xv_gnuplot
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Call this function inline with | gnuplot
-subroutine particles_center_gnuplot_inline( x, v, xmin, xmax, ymin, ymax, time )
+subroutine sll_s_particles_center_gnuplot_inline( x, v, xmin, xmax, ymin, ymax, time )
 sll_real64, dimension(:), intent(in) :: x, v
 sll_real64, intent(in) :: time
 sll_real64 :: xmin, xmax, ymin, ymax
@@ -200,7 +200,7 @@ end do
 print*, 'e'
 
 
-end subroutine particles_center_gnuplot_inline
+end subroutine sll_s_particles_center_gnuplot_inline
 
 !> point3D format http://www.visitusers.org/index.php?title=Reading_point_data
 !> This format is designed to plot x,y,z particles with one weight (only for
@@ -215,9 +215,9 @@ sll_int32 :: file_id, error
 sll_int32 :: nbpart
 sll_int32  :: k
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
-call sll_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
+call sll_s_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
 nbpart = size(x)
 SLL_ASSERT( size(v) == nbpart)
 write(file_id,"(a)") 'x v zero zero'
@@ -240,9 +240,9 @@ sll_int32 :: file_id, error
 sll_int32 :: nbpart
 sll_int32  :: k
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
-call sll_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
+call sll_s_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
 nbpart = size(x)
 SLL_ASSERT( size(y) == nbpart)
 SLL_ASSERT( size(z) == nbpart)
@@ -267,9 +267,9 @@ sll_int32 :: file_id, error
 sll_int32 :: nbpart
 sll_int32  :: k
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
-call sll_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
+call sll_s_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
 nbpart = size(p)
 SLL_ASSERT( size(q) == nbpart)
 SLL_ASSERT( size(r) == nbpart)
@@ -288,7 +288,7 @@ end subroutine pqrs_plot_format_points3d
 !> This format is designed for particles with a lot of
 !> characteristics. We have to give max and min values.
 !> This format is readable by VisIt
-subroutine plot_format_xmdv( plot_name, x, v, iplot, xmin, xmax, vmin, vmax)
+subroutine sll_s_plot_format_xmdv( plot_name, x, v, iplot, xmin, xmax, vmin, vmax)
 character(len=*), intent(in) :: plot_name
 sll_real64, dimension(:), intent(in) :: x
 sll_real64, dimension(:), intent(in) :: v
@@ -302,9 +302,9 @@ sll_int32  :: k
 nbpart = size(x)
 
 SLL_ASSERT( size(v) == nbpart)
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
-call sll_ascii_file_create(plot_name//"_"//fin//".okc", file_id, error)
+call sll_s_ascii_file_create(plot_name//"_"//fin//".okc", file_id, error)
 
 write(file_id,"(2i7)") 2, nbpart, 1   ! two characteristics, the number 1 is unused
 write(file_id,"(a)") 'x'
@@ -316,13 +316,13 @@ do k = 1, nbpart
 end do
 close(file_id)
 
-end subroutine plot_format_xmdv
+end subroutine sll_s_plot_format_xmdv
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !>VisIt readable output for particles density
 !>Data file format could be XML, HDF5 or Binary (not fully implemented yet)
-subroutine distribution_xdmf(plot_name, x, v, w, &
+subroutine sll_s_distribution_xdmf(plot_name, x, v, w, &
                              xmin, xmax, nx,     &
                              vmin, vmax, nv, iplot)
 character(len=*), intent(in) :: plot_name
@@ -336,14 +336,14 @@ sll_real64, dimension(nx,nv) :: df
 sll_real64 :: delta_x, delta_v, xmin, xmax, vmin, vmax
 character(len=4) :: fin
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
-call compute_df_cic(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)
+call sll_s_compute_df_cic(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)
 delta_x = (xmax-xmin)/(nx-1)
 delta_v = (vmax-vmin)/(nv-1)
-call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x, vmin, delta_v)
+call sll_s_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x, vmin, delta_v)
 
-end subroutine distribution_xdmf
+end subroutine sll_s_distribution_xdmf
 
 !>Compute grid field from particles distribution with the NGP scheme
 !> (Nearest Grid Point)
@@ -379,7 +379,7 @@ end subroutine compute_df_ngp
 
 !>Compute grid field from particles distribution with the CIC scheme (Cloud In
 !Cell)
-subroutine compute_df_cic(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)
+subroutine sll_s_compute_df_cic(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)
 sll_real64, dimension(:), intent(in) :: xp, yp, wp
 sll_real64, intent(in) :: xmin, xmax, ymin, ymax
 sll_int32 :: ip, jp, kp
@@ -429,7 +429,7 @@ do kp = 1,nbpart
    endif
 end do
 
-end subroutine compute_df_cic
+end subroutine sll_s_compute_df_cic
 
 subroutine compute_df_m4(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)
 sll_real64, intent(in ) :: xp(:)
@@ -526,7 +526,7 @@ return
 end function f_m4
 
 !>GNUplot readable output for particles density
-subroutine distribution_m4_gnuplot(plot_name, x, v, w, &
+subroutine sll_s_distribution_m4_gnuplot(plot_name, x, v, w, &
                              xmin, xmax, nx,     &
                              vmin, vmax, nv, iplot)
 character(len=*), intent(in) :: plot_name
@@ -545,13 +545,13 @@ sll_int32        :: error
 sll_real64       :: df(nx,nv)
 character(len=4) :: fin
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
 call compute_df_m4(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)
 
-call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
+call sll_o_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
 
-end subroutine distribution_m4_gnuplot
+end subroutine sll_s_distribution_m4_gnuplot
 
 #define FONCTION1( X ) (0.75_f64-(X)*(X))
 
@@ -611,7 +611,7 @@ end do
 end subroutine compute_df_tsc
 
 !>GNUplot readable output for particles density
-subroutine distribution_tsc_gnuplot(plot_name, x, v, w, &
+subroutine sll_s_distribution_tsc_gnuplot(plot_name, x, v, w, &
                              xmin, xmax, nx,     &
                              vmin, vmax, nv, iplot)
 character(len=*), intent(in) :: plot_name
@@ -625,13 +625,13 @@ sll_real64, dimension(nx,nv) :: df
 sll_real64 :: xmin, xmax, vmin, vmax
 character(len=4) :: fin
 
-call int2string(iplot, fin)
+call sll_s_int2string(iplot, fin)
 
 call compute_df_tsc(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)
 
-call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
+call sll_o_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
 
-end subroutine distribution_tsc_gnuplot
+end subroutine sll_s_distribution_tsc_gnuplot
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -639,7 +639,7 @@ end subroutine distribution_tsc_gnuplot
 !> Call this function inline with | gnuplot
 !> Plots different energies for Electrostatic Particle-in-Cell
 !> Pseudo/Virtual file plot in gnuplot using plot "-"
-subroutine energies_electrostatic_gnuplot_inline( kinetic_energy, &
+subroutine sll_s_energies_electrostatic_gnuplot_inline( kinetic_energy, &
                                                     electrostatic_energy, impulse, timestepwidth)
 sll_real64, dimension(:), intent(in) :: kinetic_energy, electrostatic_energy, impulse
 sll_int32  :: timesteps, k
@@ -722,14 +722,14 @@ print*, "e"
 !print*, "e"
 
   endif
-end subroutine energies_electrostatic_gnuplot_inline
+end subroutine sll_s_energies_electrostatic_gnuplot_inline
 
 
 
 !> Call this function inline with | gnuplot
 !> Plots different energies for Electrostatic Particle-in-Cell
 !> Pseudo/Virtual file plot in gnuplot using plot "-"
-subroutine electricpotential_gnuplot_inline( values, eval_knots)
+subroutine sll_s_electricpotential_gnuplot_inline( values, eval_knots)
 sll_real64, dimension(:), intent(in) :: values, eval_knots
 sll_int32  :: nknots, k
 
@@ -749,7 +749,7 @@ end do
 print*, "e"
 
 
-end subroutine electricpotential_gnuplot_inline
+end subroutine sll_s_electricpotential_gnuplot_inline
 
 
 

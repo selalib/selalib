@@ -1,4 +1,4 @@
-#define sll_transformation class(sll_coordinate_transformation_2d_base)
+#define sll_transformation class(sll_c_coordinate_transformation_2d_base)
 
 !> @ingroup maxwell_solvers
 !> @brief DG for Maxwell
@@ -14,33 +14,33 @@ module sll_m_maxwell_2d_diga
 #include "sll_maxwell_solvers_macros.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_conductor, &
-    sll_interior, &
-    sll_silver_muller
+    sll_p_conductor, &
+    sll_p_interior, &
+    sll_p_silver_muller
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d
 
   use sll_m_coordinate_transformation_2d_base, only: &
-    sll_coordinate_transformation_2d_base
+    sll_c_coordinate_transformation_2d_base
 
   use sll_m_dg_fields, only: &
-    sll_dg_field_2d, &
-    sll_new
+    sll_t_dg_field_2d, &
+    sll_o_new
 
   use sll_m_gauss_lobatto_integration, only: &
-    gauss_lobatto_derivative_matrix, &
-    gauss_lobatto_points, &
-    gauss_lobatto_weights
+    sll_f_gauss_lobatto_derivative_matrix, &
+    sll_f_gauss_lobatto_points, &
+    sll_f_gauss_lobatto_weights
 
   implicit none
 
   public :: &
-    sll_create, &
-    sll_maxwell_2d_diga, &
-    sll_new, &
-    sll_solve, &
-    sll_uncentered
+    sll_o_create, &
+    sll_t_maxwell_2d_diga, &
+    sll_o_new, &
+    sll_o_solve, &
+    sll_p_uncentered
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -70,7 +70,7 @@ type :: cell_type
 end type cell_type
 
 !> DG method in 2D with general coordinates
-type :: sll_maxwell_2d_diga
+type :: sll_t_maxwell_2d_diga
    private
    sll_int32                           :: nc_eta1      !< x cells number
    sll_int32                           :: nc_eta2      !< y cells number
@@ -85,7 +85,7 @@ type :: sll_maxwell_2d_diga
    sll_real64                          :: eta2_max     !< top side
    sll_real64                          :: delta_eta2   !< step size
    sll_transformation, pointer         :: tau          !< transformation
-   type(sll_cartesian_mesh_2d), pointer  :: mesh         !< Logical mesh
+   type(sll_t_cartesian_mesh_2d), pointer  :: mesh         !< Logical mesh
    sll_int32                           :: degree       !< degree of gauss integration
    type(cell_type), pointer            :: cell(:,:)    !< mesh cells
    sll_real64, pointer                 :: f(:,:)       !< cell flux
@@ -96,30 +96,30 @@ type :: sll_maxwell_2d_diga
    sll_int32                           :: bc_north
    sll_int32                           :: bc_west
    sll_int32                           :: flux_type
-   type(sll_dg_field_2d), pointer      :: po           !< Potential
+   type(sll_t_dg_field_2d), pointer      :: po           !< Potential
    sll_real64                          :: xi 
 
-end type sll_maxwell_2d_diga
+end type sll_t_maxwell_2d_diga
 
 !> Create a Maxwell solver using DG method in 2D
-interface sll_new
+interface sll_o_new
    module procedure new_maxwell_2d_digal
-end interface sll_new
+end interface sll_o_new
 
 !> Create a Maxwell solver object using Discontinuous Galerkine 
-interface sll_create
+interface sll_o_create
    module procedure initialize_maxwell_2d_diga
-end interface sll_create
+end interface sll_o_create
 
 !> Solve Maxwell system
-interface sll_solve
+interface sll_o_solve
    module procedure solve_maxwell_2d_diga
-end interface sll_solve
+end interface sll_o_solve
 
 !> Flux parameter
 sll_int32, parameter :: SLL_CENTERED       = 20
 !> Flux parameter
-sll_int32, parameter :: SLL_UNCENTERED     = 21
+sll_int32, parameter :: sll_p_uncentered     = 21
 
 
 
@@ -134,7 +134,7 @@ function new_maxwell_2d_digal( tau,          &
                                bc_west,      &
                                flux_type) result(this)
 
-   type( sll_maxwell_2d_diga ), pointer :: this !< solver data object
+   type( sll_t_maxwell_2d_diga ), pointer :: this !< solver data object
    sll_transformation, pointer      :: tau
    sll_int32                        :: polarization
    sll_int32                        :: degree
@@ -171,7 +171,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
                                        bc_west,      &
                                        flux_type)
 
-   type(sll_maxwell_2d_diga)       :: this !< solver data object
+   type(sll_t_maxwell_2d_diga)       :: this !< solver data object
    sll_transformation, pointer :: tau  !< transformation
    sll_int32                   :: polarization !< TE or TM
    sll_int32                   :: degree !< degree of DG method
@@ -229,9 +229,9 @@ subroutine initialize_maxwell_2d_diga( this,         &
 
    SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
-   x    = gauss_lobatto_points(degree+1,0.0_f64,1.0_f64)
-   w    = gauss_lobatto_weights(degree+1,0.0_f64,1.0_f64)
-   dlag = gauss_lobatto_derivative_matrix(degree+1,x)
+   x    = sll_f_gauss_lobatto_points(degree+1,0.0_f64,1.0_f64)
+   w    = sll_f_gauss_lobatto_weights(degree+1,0.0_f64,1.0_f64)
+   dlag = sll_f_gauss_lobatto_derivative_matrix(degree+1,x)
 
    dtau_ij_mat(1,1) = this%mesh%delta_eta1
    dtau_ij_mat(1,2) = 0.0_f64
@@ -244,9 +244,12 @@ subroutine initialize_maxwell_2d_diga( this,         &
       call compute_normals(tau,bc_south,bc_east,bc_north,bc_west, &
                            i,j,degree,this%cell(i,j))
 
-      SLL_CLEAR_ALLOCATE(this%cell(i,j)%MassMatrix(1:nddl)     , error)
-      SLL_CLEAR_ALLOCATE(this%cell(i,j)%DxMatrix(1:nddl,1:nddl), error)
-      SLL_CLEAR_ALLOCATE(this%cell(i,j)%DyMatrix(1:nddl,1:nddl), error)
+      allocate(this%cell(i,j)%MassMatrix(nddl))
+      this%cell(i,j)%MassMatrix(nddl) = 0.0_f64
+      allocate(this%cell(i,j)%DxMatrix(nddl, nddl))
+      this%cell(i,j)%DxMatrix = 0.0_f64
+      allocate(this%cell(i,j)%DyMatrix(nddl, nddl))
+      this%cell(i,j)%DyMatrix = 0.0_f64
 
       xa = this%cell(i,j)%eta1_min ; xb  = this%cell(i,j)%eta1_max 
       ya = this%cell(i,j)%eta2_min ; yb  = this%cell(i,j)%eta2_max 
@@ -309,15 +312,15 @@ subroutine initialize_maxwell_2d_diga( this,         &
    end do
    end do
 
-   !call sll_display(this%cell(1,1)%MassMatrix,"f9.4")
-   !call sll_display(this%cell(1,1)%DxMatrix,"f9.4")
-   !call sll_display(this%cell(1,1)%DyMatrix,"f9.4")
+   !call sll_o_display(this%cell(1,1)%MassMatrix,"f9.4")
+   !call sll_o_display(this%cell(1,1)%DxMatrix,"f9.4")
+   !call sll_o_display(this%cell(1,1)%DyMatrix,"f9.4")
 
    SLL_CLEAR_ALLOCATE(this%w((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%f((degree+1)*(degree+1),4),error)
 
-   this%po => sll_new( degree, tau) 
+   this%po => sll_o_new( degree, tau) 
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -325,15 +328,15 @@ end subroutine initialize_maxwell_2d_diga
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
-   type( sll_maxwell_2d_diga )  :: this !< Maxwell solver object
+   type( sll_t_maxwell_2d_diga )  :: this !< Maxwell solver object
 
-   type(sll_dg_field_2d)  :: fx   !< x electric field
-   type(sll_dg_field_2d)  :: fy   !< y electric field
-   type(sll_dg_field_2d)  :: fz   !< z magnetic field
+   type(sll_t_dg_field_2d)  :: fx   !< x electric field
+   type(sll_t_dg_field_2d)  :: fy   !< y electric field
+   type(sll_t_dg_field_2d)  :: fz   !< z magnetic field
 
-   type(sll_dg_field_2d)  :: dx   !< x size step
-   type(sll_dg_field_2d)  :: dy   !< y size step
-   type(sll_dg_field_2d)  :: dz   !< z size step
+   type(sll_t_dg_field_2d)  :: dx   !< x size step
+   type(sll_t_dg_field_2d)  :: dy   !< y size step
+   type(sll_t_dg_field_2d)  :: dz   !< z size step
 
    sll_int32  :: left, right, node, side, bc_type, flux_type
    sll_int32  :: i, j, k, l, ii, jj, kk
@@ -448,7 +451,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
             select case (bc_type)
 
-            case(SLL_CONDUCTOR)
+            case(sll_p_conductor)
 
                A(1,:) = [-1.0_f64, 0.0_f64, 0.0_f64, 0.0_f64]
                A(2,:) = [ 0.0_f64,-1.0_f64, 0.0_f64, 0.0_f64]
@@ -460,7 +463,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
                this%f(left,:) = this%f(left,:)-flux
 
-            case(SLL_SILVER_MULLER)
+            case(sll_p_silver_muller)
 
                A(1,:) = [(n2*n2+xi*n1*n1)/r,    n2*n1*(xi-1)/r, 0.0_f64, 0.0_f64]
                A(2,:) = [    n2*n1*(xi-1)/r,(n1*n1+xi*n2*n2)/r, 0.0_f64, 0.0_f64]
@@ -471,7 +474,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
             case default
 
-               if (this%flux_type == SLL_UNCENTERED) then
+               if (this%flux_type == sll_p_uncentered) then
 
                   this%f(left,:) = this%f(left,:) &
                                    -0.5*matmul(A_p,this%w(left,:)) &
@@ -577,7 +580,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_west
    sll_int32                   :: k
    sll_int32                   :: error
-   class(sll_cartesian_mesh_2d), pointer :: lm
+   class(sll_t_cartesian_mesh_2d), pointer :: lm
 
    lm => tau%get_cartesian_mesh()
    
@@ -596,7 +599,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
 
    do side = 1, 4
       SLL_CLEAR_ALLOCATE(cell%edge(side)%vec_norm(1:d+1,1:2),error)
-      cell%edge(side)%bc_type = SLL_INTERIOR
+      cell%edge(side)%bc_type = sll_p_interior
    end do
 
    if (j ==                   1) cell%edge(SOUTH)%bc_type = bc_south
@@ -604,8 +607,8 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    if (j == lm%num_cells2) cell%edge(NORTH)%bc_type = bc_north
    if (i ==                   1) cell%edge(WEST)%bc_type  = bc_west
    
-   x = gauss_lobatto_points(d+1)
-   w = gauss_lobatto_weights(d+1)
+   x = sll_f_gauss_lobatto_points(d+1)
+   w = sll_f_gauss_lobatto_weights(d+1)
 
    length = 0._f64
    a  = cell%eta1_min

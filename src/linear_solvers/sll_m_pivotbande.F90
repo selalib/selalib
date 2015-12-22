@@ -6,9 +6,9 @@ module sll_m_pivotbande
   implicit none
 
   public :: &
-    factolub_bande, &
-    residue_bande, &
-    solvlub_bande
+    sll_s_factolub_bande, &
+    sll_s_residue_bande, &
+    sll_s_solvlub_bande
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -101,7 +101,7 @@ contains
   end subroutine factolub
   !***********************************************
 
-  subroutine factolub_bande(a,l,u,n,l1,l2)
+  subroutine sll_s_factolub_bande(a,l,u,n,l1,l2)
     implicit none
     sll_real64,dimension(:,:),intent(in)::a
     sll_real64,dimension(:,:),intent(out)::l,u
@@ -135,7 +135,7 @@ contains
        enddo
     enddo
 
-  end subroutine factolub_bande
+  end subroutine sll_s_factolub_bande
 
   !***********************************************
 
@@ -179,7 +179,7 @@ contains
 
   !***********************************************
 
-  subroutine solvlub_bande(l,u,x,b,n,l1,l2)
+  subroutine sll_s_solvlub_bande(l,u,x,b,n,l1,l2)
     implicit none
     sll_real64,dimension(:,:),   intent(in)::l,u
     sll_real64,dimension(:)  ,   intent(in)::b
@@ -215,7 +215,7 @@ contains
 
 
 
-  end subroutine solvlub_bande
+  end subroutine sll_s_solvlub_bande
 
 
   !***********************************************
@@ -329,7 +329,7 @@ contains
 
        enddo
 
-       call residue_bande(a,x_k1,b,l1,l2,n,error_l2)
+       call sll_s_residue_bande(a,x_k1,b,l1,l2,n,error_l2)
        x_k = x_k1
 
     enddo
@@ -340,7 +340,7 @@ contains
 
   end subroutine gauss_seidel_bande
 
-  subroutine residue_bande(a,x,b,l1,l2,n,error_l2)
+  subroutine sll_s_residue_bande(a,x,b,l1,l2,n,error_l2)
     sll_real64,dimension(:,:), intent(in)  :: a
     sll_real64,dimension(:)  , intent(in)  :: x
     sll_real64,dimension(:)  , intent(in ) :: b
@@ -368,6 +368,6 @@ contains
 
     error_l2 = sqrt( error_l2 ) 
 
-  end subroutine residue_bande
+  end subroutine sll_s_residue_bande
 
 end module sll_m_pivotbande

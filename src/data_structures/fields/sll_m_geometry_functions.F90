@@ -231,14 +231,14 @@ contains
     sll_real64  :: sinprod_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_x1 = eta1 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+    sinprod_x1 = eta1 + 0.1_f64 * sin(2*sll_p_pi*eta1) * sin(2*sll_p_pi*eta2)
   end function sinprod_x1
 
   function sinprod_x2 ( eta1, eta2 )
     sll_real64  :: sinprod_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_x2 = eta2 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+    sinprod_x2 = eta2 + 0.1_f64 * sin(2*sll_p_pi*eta1) * sin(2*sll_p_pi*eta2)
   end function sinprod_x2
 
   ! inverse mapping 
@@ -266,28 +266,28 @@ contains
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+    sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_p_pi * cos (2*sll_p_pi*eta1) * sin (2*sll_p_pi*eta2)
   end function sinprod_jac11
 
     function sinprod_jac12 ( eta1, eta2 )
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac12 = 0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
+    sinprod_jac12 = 0.2_f64 *sll_p_pi * sin (2*sll_p_pi*eta1) * cos (2*sll_p_pi*eta2)
   end function sinprod_jac12
 
   function sinprod_jac21 ( eta1, eta2 )
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac21 = 0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+    sinprod_jac21 = 0.2_f64 * sll_p_pi * cos (2*sll_p_pi*eta1) * sin (2*sll_p_pi*eta2)
   end function sinprod_jac21
 
   function sinprod_jac22 ( eta1, eta2 )
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac22 = 1.0_f64 + 0.2_f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
+    sinprod_jac22 = 1.0_f64 + 0.2_f64 * sll_p_pi * sin (2*sll_p_pi*eta1) * cos (2*sll_p_pi*eta2)
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -295,11 +295,11 @@ contains
     sll_real64  :: sinprod_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
-    sinprod_jac = (1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)) * &
-         (1.0_f64 + 0.2_f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)) - &
-         0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2) * &
-         0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_p_pi * sin (2*sll_p_pi**(eta1+eta2)) 
+    sinprod_jac = (1.0_f64 + 0.2_f64 *sll_p_pi * cos (2*sll_p_pi*eta1) * sin (2*sll_p_pi*eta2)) * &
+         (1.0_f64 + 0.2_f64 * sll_p_pi * sin (2*sll_p_pi*eta1) * cos (2*sll_p_pi*eta2)) - &
+         0.2_f64 *sll_p_pi * sin (2*sll_p_pi*eta1) * cos (2*sll_p_pi*eta2) * &
+         0.2_f64 * sll_p_pi * cos (2*sll_p_pi*eta1) * sin (2*sll_p_pi*eta2)
     
   end function sinprod_jac
 
@@ -310,7 +310,7 @@ contains
     sll_real64  :: test_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_x1 = eta1 + c1_test * sin( 2.0_f64* sll_pi * eta1 )
+    test_x1 = eta1 + c1_test * sin( 2.0_f64* sll_p_pi * eta1 )
     !test_x1 = eta1**2
   end function test_x1
 
@@ -318,7 +318,7 @@ contains
     sll_real64  :: test_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_x2 = eta2 + c2_test * sin( 2.0_f64* sll_pi * eta2 )
+    test_x2 = eta2 + c2_test * sin( 2.0_f64* sll_p_pi * eta2 )
   end function test_x2
 
   ! inverse mapping
@@ -341,7 +341,7 @@ contains
     sll_real64  :: test_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1))
+    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_p_pi* c1_test * cos( 2.0_f64* sll_p_pi * eta1))
   end function test_jac11
 
     function test_jac12 ( eta1, eta2 )
@@ -362,7 +362,7 @@ contains
     sll_real64  :: test_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_p_pi* c2_test * cos( 2.0_f64* sll_p_pi * eta2))
   end function test_jac22
 
   ! jacobian ie determinant of jacobian matrix
@@ -370,8 +370,8 @@ contains
     sll_real64  :: test_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1)) * &
-         (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+    test_jac =  (1.0_f64 + 2.0_f64 * sll_p_pi* c1_test * cos( 2.0_f64* sll_p_pi * eta1)) * &
+         (1.0_f64 + 2.0_f64 * sll_p_pi* c2_test * cos( 2.0_f64* sll_p_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
 
@@ -389,52 +389,52 @@ contains
   function x1_polar_f( eta1, eta2 )
     sll_real64 :: x1_polar_f
     sll_real64, intent(in) :: eta1, eta2
-    x1_polar_f = (R1 + (R2-R1)*eta1)*cos(2.0_f64*sll_pi*eta2)
+    x1_polar_f = (R1 + (R2-R1)*eta1)*cos(2.0_f64*sll_p_pi*eta2)
   end function x1_polar_f
 
   function x2_polar_f( eta1, eta2 )
     sll_real64 :: x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
-    x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_pi*eta2)
+    x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_p_pi*eta2)
   end function x2_polar_f
 
   function deriv_x1_polar_f_eta1( eta1, eta2 )
     sll_real64 :: deriv_x1_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
-    deriv_x1_polar_f_eta1 = (R2-R1)*cos(2.0_f64*sll_pi*eta2)
+    deriv_x1_polar_f_eta1 = (R2-R1)*cos(2.0_f64*sll_p_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
   function deriv_x1_polar_f_eta2( eta1, eta2 )
     sll_real64 :: deriv_x1_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
     sll_real64 :: k
-    k = 2.0_f64*sll_pi
+    k = 2.0_f64*sll_p_pi
     deriv_x1_polar_f_eta2 = -(R1+(R2-R1)*eta1)*sin(k*eta2)*k
   end function deriv_x1_polar_f_eta2
 
   function deriv_x2_polar_f_eta1( eta1, eta2 )
     sll_real64 :: deriv_x2_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
-    deriv_x2_polar_f_eta1 = (R2-R1)*sin(2.0_f64*sll_pi*eta2)
+    deriv_x2_polar_f_eta1 = (R2-R1)*sin(2.0_f64*sll_p_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
   function deriv_x2_polar_f_eta2( eta1, eta2 )
     sll_real64 :: deriv_x2_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
     sll_real64 :: k
-    k = 2.0_f64*sll_pi
+    k = 2.0_f64*sll_p_pi
     deriv_x2_polar_f_eta2 = (R1+(R2-R1)*eta1)*cos(k*eta2)*k
   end function deriv_x2_polar_f_eta2
 
   function jacobian_polar_f( eta1, eta2 ) result(jac)
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1, eta2
-    jac = 2.0_f64*sll_pi*(R1+(R2-R1)*eta1)*(R2-R1)
+    jac = 2.0_f64*sll_p_pi*(R1+(R2-R1)*eta1)*(R2-R1)
   end function jacobian_polar_f
 
   function deriv1_jacobian_polar_f( ) result(deriv)
     sll_real64             :: deriv
-    deriv = 2.0_f64*sll_pi*(R2-R1)**2
+    deriv = 2.0_f64*sll_p_pi*(R2-R1)**2
   end function deriv1_jacobian_polar_f
 
 

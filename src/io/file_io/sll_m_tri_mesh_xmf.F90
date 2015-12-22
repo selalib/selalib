@@ -3,7 +3,7 @@ module sll_m_tri_mesh_xmf
   implicit none
 
   public :: &
-    write_tri_mesh_xmf
+    sll_s_write_tri_mesh_xmf
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -15,7 +15,7 @@ module sll_m_tri_mesh_xmf
 contains
 
 
-subroutine write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field, label)
+subroutine sll_s_write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field, label)
 
 character(len=*), intent(in) :: filename
 character(len=*), intent(in) :: label
@@ -60,6 +60,6 @@ write(xmf,"(a)") "</Grid>"
 write(xmf,"(a)") "</Domain>"
 write(xmf,"(a)") "</Xdmf>" 
 
-end subroutine write_tri_mesh_xmf
+end subroutine sll_s_write_tri_mesh_xmf
 
 end module sll_m_tri_mesh_xmf

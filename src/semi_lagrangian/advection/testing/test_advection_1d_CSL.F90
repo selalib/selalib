@@ -21,28 +21,28 @@ program test_advection_1d_CSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_advection_1d_base
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_csl, only: &
-    new_csl_1d_advector
+    sll_f_new_csl_1d_advector
 
   use sll_m_advection_1d_psm, only: &
-    new_psm_1d_advector
+    sll_f_new_psm_1d_advector
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_periodic
+    sll_p_periodic
 
   use sll_m_characteristics_1d_base, only: &
-    sll_characteristics_1d_base
+    sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_trapezoid_conservative, only: &
-    new_trapezoid_conservative_1d_charac
+    sll_f_new_trapezoid_conservative_1d_charac
 
   use sll_m_constants, only: &
-    sll_pi
+    sll_p_pi
 
   use sll_m_cubic_spline_interpolator_1d, only: &
-    new_cubic_spline_interpolator_1d
+    sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -50,11 +50,11 @@ program test_advection_1d_CSL
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_advection_1d_base), pointer :: adv
-  class(sll_advection_1d_base), pointer :: adv_ref
+  class(sll_c_advection_1d_base), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv_ref
   class(sll_c_interpolator_1d), pointer :: interp
   class(sll_c_interpolator_1d), pointer :: A_interp
-  class(sll_characteristics_1d_base), pointer :: charac
+  class(sll_c_characteristics_1d_base), pointer :: charac
   sll_real64 :: x_min
   sll_real64 :: x_max
   sll_real64 :: x_min_bis
@@ -97,43 +97,43 @@ program test_advection_1d_CSL
   
   do i=1,num_cells+1
     x = x_min+real(i,f64)*delta
-    A(i) = sin(2._f64*sll_pi*x)
-    input(i) = sin(2._f64*sll_pi*x)
+    A(i) = sin(2._f64*sll_p_pi*x)
+    input(i) = sin(2._f64*sll_p_pi*x)
   enddo
 
   err=0._f64
 
 
-  interp => new_cubic_spline_interpolator_1d( &
+  interp => sll_f_new_cubic_spline_interpolator_1d( &
     num_cells+1, &
     x_min_bis, &
     x_max_bis, &
-    SLL_PERIODIC)
+    sll_p_periodic)
 
-  A_interp => new_cubic_spline_interpolator_1d( &
+  A_interp => sll_f_new_cubic_spline_interpolator_1d( &
     num_cells+1, &
     x_min, &
     x_max, &
-    SLL_PERIODIC)
+    sll_p_periodic)
 
 
 
-  charac => new_trapezoid_conservative_1d_charac(&
+  charac => sll_f_new_trapezoid_conservative_1d_charac(&
     num_cells+1, &
     A_interp, &
     eta_min=x_min_bis, &
     eta_max=x_max_bis, &
-    bc_type=SLL_PERIODIC)    
+    bc_type=sll_p_periodic)    
   
-  adv => new_CSL_1d_advector(&
+  adv => sll_f_new_csl_1d_advector(&
     interp, &
     charac, &
     num_cells+1, &
     eta_min = x_min_bis, &
     eta_max = x_max_bis, &
-    bc_type = SLL_PERIODIC)
+    bc_type = sll_p_periodic)
 
-  adv_ref => new_PSM_1d_advector(&
+  adv_ref => sll_f_new_psm_1d_advector(&
     num_cells+1, &
     eta_min = x_min, &
     eta_max = x_max)

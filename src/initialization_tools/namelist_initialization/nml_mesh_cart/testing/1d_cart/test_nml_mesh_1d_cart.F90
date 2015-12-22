@@ -26,29 +26,29 @@ program test_nml_mesh_1d_cart
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_cartesian_mesh_1d
+    sll_t_cartesian_mesh_1d
 
   use sll_m_nml_mesh_1d_cart, only: &
-    sll_s_nml_mesh_1d_cart
+    sll_o_nml_mesh_1d_cart
 
   use sll_m_nml_mesh_1d_landau_cart, only: &
-    sll_s_nml_mesh_1d_landau_cart
+    sll_o_nml_mesh_1d_landau_cart
 
   use sll_m_nml_mesh_1d_two_grid_cart, only: &
-    sll_s_nml_mesh_1d_two_grid_cart
+    sll_o_nml_mesh_1d_two_grid_cart
 
   use sll_m_nml_mesh_1d_unif_cart, only: &
-    sll_s_nml_mesh_1d_unif_cart
+    sll_o_nml_mesh_1d_unif_cart
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_cartesian_mesh_1d), pointer :: mesh
-  type(sll_cartesian_mesh_1d), pointer :: mesh_1
+  type(sll_t_cartesian_mesh_1d), pointer :: mesh
+  type(sll_t_cartesian_mesh_1d), pointer :: mesh_1
   sll_real64, pointer :: array(:)
   sll_real64, pointer :: array_1(:)
   sll_real64, pointer :: array_2(:)
-  !type(sll_cartesian_mesh_1d), pointer :: mesh_landau
+  !type(sll_t_cartesian_mesh_1d), pointer :: mesh_landau
   sll_real64 :: err
   sll_real64 :: err_loc
   character(len=256) :: filename
@@ -60,28 +60,28 @@ program test_nml_mesh_1d_cart
     SLL_ERROR( 'test_nml_mesh_1d_cart', trim( err_msg ))
   endif
 
-  call sll_s_nml_mesh_1d_landau_cart(trim(filename))
-  call sll_s_nml_mesh_1d_landau_cart(trim(filename),clone="_1")
-  call sll_s_nml_mesh_1d_landau_cart(trim(filename),clone="_2")
+  call sll_o_nml_mesh_1d_landau_cart(trim(filename))
+  call sll_o_nml_mesh_1d_landau_cart(trim(filename),clone="_1")
+  call sll_o_nml_mesh_1d_landau_cart(trim(filename),clone="_2")
 
-  call sll_s_nml_mesh_1d_unif_cart(trim(filename))
-  call sll_s_nml_mesh_1d_unif_cart(trim(filename),clone="_1")
-  call sll_s_nml_mesh_1d_unif_cart(trim(filename),clone="_2")
+  call sll_o_nml_mesh_1d_unif_cart(trim(filename))
+  call sll_o_nml_mesh_1d_unif_cart(trim(filename),clone="_1")
+  call sll_o_nml_mesh_1d_unif_cart(trim(filename),clone="_2")
 
-  call sll_s_nml_mesh_1d_two_grid_cart(trim(filename))
-  call sll_s_nml_mesh_1d_two_grid_cart(trim(filename),clone="_1")
-  call sll_s_nml_mesh_1d_two_grid_cart(trim(filename),clone="_2")
+  call sll_o_nml_mesh_1d_two_grid_cart(trim(filename))
+  call sll_o_nml_mesh_1d_two_grid_cart(trim(filename),clone="_1")
+  call sll_o_nml_mesh_1d_two_grid_cart(trim(filename),clone="_2")
 
-  call sll_s_nml_mesh_1d_cart(trim(filename),array)
-  call sll_s_nml_mesh_1d_cart(trim(filename),array_1,clone="_1")
-  call sll_s_nml_mesh_1d_cart(trim(filename),array_2,clone="_2")
+  call sll_o_nml_mesh_1d_cart(trim(filename),array)
+  call sll_o_nml_mesh_1d_cart(trim(filename),array_1,clone="_1")
+  call sll_o_nml_mesh_1d_cart(trim(filename),array_2,clone="_2")
   
   print *,'#array=',size(array)-1,array(1),array(size(array))
   print *,'#array1=',size(array_1)-1,array_1(1),array_1(size(array_1))
   print *,'#array2=',size(array_2)-1,array_2(1),array_2(size(array_2))
 
-  call sll_s_nml_mesh_1d_landau_cart(trim(filename),mesh)
-  call sll_s_nml_mesh_1d_unif_cart(trim(filename),mesh_1,clone="_1")
+  call sll_o_nml_mesh_1d_landau_cart(trim(filename),mesh)
+  call sll_o_nml_mesh_1d_unif_cart(trim(filename),mesh_1,clone="_1")
   
   print *,'#array=',size(array)-1,array(1),array(size(array))
   print *,'#array1=',size(array_1)-1,array_1(1),array_1(size(array_1))
