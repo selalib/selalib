@@ -343,59 +343,22 @@ contains
     SLL_ALLOCATE(sim%fields_grid(sim%n_gcells,3), ierr)
 
     ! Diagnostics
-    ! Kinetic energy
-    kinetic_energy = 0.0_f64
-    do i_part=1,sim%particle_group%n_particles
-       vi = sim%particle_group%get_v(i_part)
-       wi = sim%particle_group%get_mass(i_part)
-       kinetic_energy = kinetic_energy + &
-            (vi(1)**2+vi(2)**2)*wi(1)
-    end do
-    total_energy = 0.0_f64
-    call sll_s_collective_reduce_real64(sll_v_world_collective, kinetic_energy, 1,&
-         MPI_SUM, 0, total_energy)
-    if (sim%rank == 0) then
-       potential_energy(1) = sim%maxwell_solver%L2norm_squared&
-            (sim%efield_dofs(:,1), sim%degree_smoother-1)
-       potential_energy(2) = sim%maxwell_solver%L2norm_squared&
-            (sim%efield_dofs(:,2), sim%degree_smoother)
-       potential_energy(3) = sim%maxwell_solver%L2norm_squared&
-            ( sim%bfield_dofs, sim%degree_smoother-1)
-       write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
-            0.0_f64,  &
-            potential_energy, total_energy, total_energy + sum(potential_energy)
-       print*, 'Time loop'
-    end if
+    call sll_s_time_history_diagnostics_pic_vm_1d2v( &
+         sim%particle_group, sim%maxwell_solver, 0.0_f64, &
+         sim%degree_smoother, sim%efield_dofs, sim%bfield_dofs, &
+         sim%rank, th_diag_id)
+
     ! Time loop
     do j=1, sim%n_time_steps
        ! Strang splitting
        call sim%propagator%strang_splitting(sim%delta_t,1)
 
        ! Diagnostics
-       ! Kinetic energy
-       kinetic_energy = 0.0_f64
-       do i_part=1,sim%particle_group%n_particles
-          vi = sim%particle_group%get_v(i_part)
-          wi = sim%particle_group%get_mass(i_part)
-          kinetic_energy = kinetic_energy + &
-               (vi(1)**2+vi(2)**2)*wi(1)
-       end do
-       total_energy = 0.0_f64
-       call sll_s_collective_reduce_real64(sll_v_world_collective, kinetic_energy, 1,&
-            MPI_SUM, 0, total_energy)
+       call sll_s_time_history_diagnostics_pic_vm_1d2v( &
+         sim%particle_group, sim%maxwell_solver, sim%delta_t*real(j,f64), &
+         sim%degree_smoother, sim%efield_dofs, sim%bfield_dofs, &
+         sim%rank, th_diag_id)
 
-       if (sim%rank == 0) then
-          print*, 'Iteration=', j 
-          potential_energy(1) = sim%maxwell_solver%L2norm_squared&
-               (sim%efield_dofs(:,1), sim%degree_smoother-1)
-          potential_energy(2) = sim%maxwell_solver%L2norm_squared&
-               (sim%efield_dofs(:,2), sim%degree_smoother)
-          potential_energy(3) = sim%maxwell_solver%L2norm_squared&
-               ( sim%bfield_dofs, sim%degree_smoother-1)
-          write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
-               real(j,f64)*sim%delta_t,  &
-               potential_energy, total_energy, total_energy + sum(potential_energy)
-       end if
     end do
     
     ! Compute final rho
@@ -455,7 +418,57 @@ contains
 
 !------------------------------------------------------------------------------!
 
+!> Diagnostics for PIC Vlasov-Maxwell 1d2v 
+!> @todo (should be part of the library)
+  subroutine sll_s_time_history_diagnostics_pic_vm_1d2v(particle_group, maxwell_solver, time, degree, efield_dofs, bfield_dofs, mpi_rank, file_id)
+    class(sll_c_particle_group_base), intent(in) :: particle_group
+    class(sll_c_maxwell_1d_base), intent(in) :: maxwell_solver
+    sll_real64, intent(in) :: time
+    sll_real64, intent(in) :: efield_dofs(:,:)
+    sll_real64, intent(in) :: bfield_dofs(:)
+    sll_int32, intent(in) :: degree
+    sll_int32, intent(in) :: mpi_rank
+    sll_int32, intent(in)                  :: file_id
 
+    ! local variables
+    sll_real64 :: diagnostics_local(3)
+    sll_real64 :: diagnostics(3)
+    sll_real64 :: potential_energy(3)
+    sll_int32  :: i_part
+    sll_real64 :: vi(3)
+    sll_real64 :: wi(1)
+
+    diagnostics_local = 0.0_f64
+    do i_part=1,particle_group%n_particles
+       vi = particle_group%get_v(i_part)
+       wi = particle_group%get_mass(i_part)
+       ! Kinetic energy
+       diagnostics_local(1) = diagnostics_local(1) + &
+            (vi(1)**2+vi(2)**2)*wi(1)
+       ! Momentum 1
+       diagnostics_local(2) = diagnostics_local(2) + &
+            vi(1)*wi(1)
+       ! Momentum 2
+       diagnostics_local(3) = diagnostics_local(3) + &
+            vi(2)*wi(1)
+    end do
+    diagnostics = 0.0_f64
+    call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 3,&
+         MPI_SUM, 0, diagnostics)
+    
+    if (mpi_rank == 0) then
+       potential_energy(1) = maxwell_solver%L2norm_squared&
+            ( efield_dofs(:,1), degree-1 )
+       potential_energy(2) = maxwell_solver%L2norm_squared&
+            ( efield_dofs(:,2), degree )
+       potential_energy(3) = maxwell_solver%L2norm_squared&
+            ( bfield_dofs, degree-1 )
+       write(file_id,'(f12.5,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12,2g20.12)' ) &
+            time,  potential_energy, diagnostics(1), &
+            diagnostics(1) + sum(potential_energy), diagnostics(2:3)
+    end if
+
+  end subroutine sll_s_time_history_diagnostics_pic_vm_1d2v
 
 
 end module sll_m_sim_pic_vm_1d2v_cart
