@@ -47,7 +47,8 @@ module sll_m_arbitrary_degree_splines
     sll_o_delete, &
     sll_f_uniform_b_spline_derivatives_at_x, &
     sll_f_uniform_b_splines_and_derivs_at_x, &
-    sll_f_uniform_b_splines_at_x
+    sll_f_uniform_b_splines_at_x, &
+    sll_s_uniform_b_splines_at_x
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -657,6 +658,45 @@ contains
        bspl(j) = saved
     end do
   end function sll_f_uniform_b_splines_at_x
+
+  !> @brief Evaluate all non vanishing uniform B-Splines in unit cell. 
+  !> As sll_f_uniform_b_splines_at_x but subroutine instead of function.
+  subroutine sll_s_uniform_b_splines_at_x( spline_degree, normalized_offset , bspl)
+    implicit none
+    sll_int32, intent(in)                      :: spline_degree
+    sll_real64, intent(in)                     :: normalized_offset
+    sll_real64, dimension(0:spline_degree), intent(out)     :: bspl
+    ! local variables
+    sll_real64                                 :: inv_j
+    sll_real64                                 :: x,xx
+    sll_real64                                 :: j_real
+    sll_int32                                  :: j, r
+    sll_real64                                 :: temp
+    sll_real64                                 :: saved
+
+    SLL_ASSERT( spline_degree >= 0 )
+    SLL_ASSERT( normalized_offset >= 0.0_f64 )
+    SLL_ASSERT( normalized_offset <= 1.0_f64 )
+
+    x = normalized_offset
+    bspl(0) = 1.0_f64
+    do j = 1, spline_degree
+       saved = 0.0_f64
+       j_real = real(j,f64)
+       inv_j = 1.0_f64 / j_real
+       xx = - x
+       do r = 0, j-1
+          xx = xx + 1.0_f64
+          temp = bspl(r) * inv_j
+          bspl(r) = saved + xx * temp
+          saved = (j_real - xx) * temp
+       end do
+       bspl(j) = saved
+    end do
+  end subroutine sll_s_uniform_b_splines_at_x
+
+
+
 
   !> @brief Evaluate all derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
