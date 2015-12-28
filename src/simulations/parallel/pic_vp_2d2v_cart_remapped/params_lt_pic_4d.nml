@@ -2,7 +2,7 @@
         THERM_SPEED         = 1.0
         dt                  =  0.1
         number_iterations   = 120
-        plot_period         = 1
+        plot_period         = 20
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
         ALPHA  = 0.5                   ! amplitude of initial perturbation
@@ -40,14 +40,15 @@
     remapping_cart_grid_number_cells_y  = 10            ! for splines
     remapping_cart_grid_number_cells_vx = 20            ! for splines
     remapping_cart_grid_number_cells_vy = 6             ! for splines
-    remapping_sparse_grid_max_level_x = 10                 ! for the sparse grid
+    remapping_sparse_grid_max_level_x = 11                 ! for the sparse grid
     remapping_sparse_grid_max_level_y = 7                 ! for the sparse grid
-    remapping_sparse_grid_max_level_vx = 10                 ! for the sparse grid
+    remapping_sparse_grid_max_level_vx = 11                 ! for the sparse grid
     remapping_sparse_grid_max_level_vy = 7                 ! for the sparse grid
 /
 
 &lt_pic_deposition_params
-    number_deposition_particles = 1000                ! lower bound for the number of deposition particles
+    deposition_particles_type = 1               ! 0 = on a fixed grid,   1 = random and transported with the flow
+    number_deposition_particles = 200000       ! lower bound for the number of deposition particles
 /
 
 &lt_pic_markers_params
