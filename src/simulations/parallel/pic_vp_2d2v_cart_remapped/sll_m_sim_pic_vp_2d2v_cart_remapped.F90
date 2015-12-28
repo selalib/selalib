@@ -37,6 +37,8 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
   ! use sll_m_particle_sort
   use sll_m_charge_to_density
   use sll_m_pic_utilities
+  use sll_m_remapped_pic_utilities, only: x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+
   ! use sll_m_representation_conversion
 
   implicit none
@@ -211,6 +213,7 @@ contains
     sll_int32   :: remapping_sparse_grid_max_level_y
     sll_int32   :: remapping_sparse_grid_max_level_vx
     sll_int32   :: remapping_sparse_grid_max_level_vy
+    sll_int32   :: deposition_particles_type
     sll_int32   :: number_deposition_particles
     sll_int32   :: number_markers_x
     sll_int32   :: number_markers_y
@@ -285,7 +288,8 @@ contains
 
     ! discretization of the deposited f
     !   -> number of deposition particles
-    namelist /lt_pic_deposition_params/ number_deposition_particles
+    namelist /lt_pic_deposition_params/deposition_particles_type, &
+                                    number_deposition_particles
 
     ! discretization of the flow:
     !   -> number of markers to be pushed forward
@@ -302,7 +306,7 @@ contains
 
     namelist /simple_pic_params/    NUM_PARTICLES
 
-    print *, "AA0"
+    ! print *, "AA0"
 
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -310,7 +314,7 @@ contains
        STOP
     end if
 
-    print *, "AA1"
+    ! print *, "AA1"
     read(input_file, sim_params)
     read(input_file, elec_params)
     read(input_file, poisson_grid_params)
@@ -372,15 +376,16 @@ contains
         DOMAIN_IS_Y_PERIODIC,                       &
         remap_f_type,                               &
         remap_degree,                               &
-        remapping_grid_vx_min,                          &
-        remapping_grid_vx_max,                          &
-        remapping_grid_vy_min,                          &
-        remapping_grid_vy_max,                          &
-        remapping_cart_grid_number_cells_x,                  &   ! for splines
-        remapping_cart_grid_number_cells_y,                  &   ! for splines
-        remapping_cart_grid_number_cells_vx,                 &   ! for splines
-        remapping_cart_grid_number_cells_vy,                 &   ! for splines
-        remapping_sparse_grid_max_levels,                     &   ! for the sparse grid: for now, same level in each dimension
+        remapping_grid_vx_min,                      &
+        remapping_grid_vx_max,                      &
+        remapping_grid_vy_min,                      &
+        remapping_grid_vy_max,                      &
+        remapping_cart_grid_number_cells_x,         &   ! for splines
+        remapping_cart_grid_number_cells_y,         &   ! for splines
+        remapping_cart_grid_number_cells_vx,        &   ! for splines
+        remapping_cart_grid_number_cells_vy,        &   ! for splines
+        remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
+        deposition_particles_type,                  &
         number_deposition_particles,                &
         number_markers_x,                           &
         number_markers_y,                           &
@@ -427,42 +432,43 @@ contains
     call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
     rand_seed_size = 10
-    print *, "rand_seed_size = ", rand_seed_size
-    print *, "sim%my_rank = ", sim%my_rank
     call random_seed (SIZE=rand_seed_size)
-    print *, "AA BB"
 
     SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
     do j=1, rand_seed_size
       rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
     end do
 
-    print *, "BBB"
-
     initial_density_identifier = 0     ! for the moment we only use one density (landau)
     call sim%particle_group%initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
     SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
 
-    print *, "CCC"
-
     sim%n_threads = 1
     print*, 'number of threads is ', sim%n_threads
 
-   SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
+    SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
 
-   thread_id = 0
-   sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
-   sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
+    thread_id = 0
+    sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
+    sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
 
-   !! -- --  First charge deposition [begin]  -- --
+    !! -- --  First charge deposition [begin]  -- --
 
-   charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
+    charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-   target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-   enforce_total_charge = .true.
-   call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
+    target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+    enforce_total_charge = .false.
+    call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
 
-   !! -- --  First charge deposition [end]  -- --
+    print *, "[DEBUG 98786758] target_total_charge = ", SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+    print *, "[DEBUG 98786758] size of domain = ", (XMAX - XMIN) * (YMAX - YMIN)
+    print *, "[DEBUG 98786758] ", XMAX
+    print *, "[DEBUG 98786758] ", XMIN
+    print *, "[DEBUG 98786758] ", YMAX
+    print *, "[DEBUG 98786758] ", YMIN
+    print *, "[DEBUG 98786758] )------------------------------------------------------------------------------------------------"
+
+    !! -- --  First charge deposition [end]  -- --
 
 
   end subroutine init_4d_generic_pic_cartesian
@@ -476,8 +482,6 @@ contains
   !! \note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
   !!
   !! \note 2: use of cubic spline particles (routines with _CS) is disabled for now
-  !!
-  !! \todo 1: write and check the remapping step with adequate frequency
   !!
   !!
   !! @author this version written by MCP, ALH
@@ -595,7 +599,7 @@ contains
 
     call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
 
-    print*,  "aaa bb"
+    !    print*,  "aaa bb"
 
     !! -- --  ?? [end]  -- --
 
@@ -612,7 +616,7 @@ contains
     call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
          MPI_SUM, rho1d_receive   )
 
-    print*,  "aaaa cc"
+    !     print*,  "aaaa cc"
 
     do j = 1, ncy+1
        do i = 1, ncx+1
@@ -622,16 +626,16 @@ contains
 
     !! -- --  MPI communications of rho [end]  -- --
 
-    print*,  "aa  dd"
-
-    print*,  "aa  dd 1 ", xmin
-    print*,  "aa  dd 2 ", sim%mesh_2d%eta1_max
-    print*,  "aa  dd 3 ", ncx+1
-    print*,  "aa  dd 4 ", ymin
-    print*,  "aa  dd 5 ", sim%mesh_2d%eta2_max
-    print*, sim%my_rank
-    print*, sim%rho
-    print*, size(sim%rho)
+    !    print*,  "aa  dd"
+    !
+    !    print*,  "aa  dd 1 ", xmin
+    !    print*,  "aa  dd 2 ", sim%mesh_2d%eta1_max
+    !    print*,  "aa  dd 3 ", ncx+1
+    !    print*,  "aa  dd 4 ", ymin
+    !    print*,  "aa  dd 5 ", sim%mesh_2d%eta2_max
+    !    print*, sim%my_rank
+    !    print*, sim%rho
+    !    print*, size(sim%rho)
 
 
     if (sim%my_rank == 0) then
@@ -642,7 +646,7 @@ contains
        ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%rho, 'rho_init_standPUSH', it+1, ierr )
+            sim%rho, 'rho_init', it+1, ierr )
     endif
 
     !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
@@ -666,11 +670,11 @@ contains
        print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%E1, 'Ex', it+1, ierr )
+            sim%E1, 'Ex_init', it+1, ierr )
 
        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
             sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%E2, 'Ey', it+1, ierr )
+            sim%E2, 'Ey_init', it+1, ierr )
 
     endif
 
@@ -911,6 +915,15 @@ contains
 
       !! -- --  parallel communications for rho ?? [end]  -- --
 
+      if (sim%my_rank == 0) then
+         ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
+
+         ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
+         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+              sim%mesh_2d%eta2_max, ncy+1,                            &
+              sim%rho, 'rho', it+1, ierr )
+      end if
+
       !> ### Poisson solver (computing \f$E^{n+1}\f$)
 
       !> In the time loop, the field \f$E^{n+1}\f$ is obtained with a call to the Poisson solver.  Again, sim\%rho has
@@ -923,9 +936,9 @@ contains
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
         print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
-        plot_np_x  = 100
-        plot_np_y  = 6
-        plot_np_vx = 30
+        plot_np_x  = 50
+        plot_np_y  = 3
+        plot_np_vx = 20
         plot_np_vy = 5
 
         ! <<f_slice>> base class definition of visualize_f_slice_x_vx:
