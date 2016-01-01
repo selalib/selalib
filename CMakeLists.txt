@@ -14,7 +14,7 @@ ENDIF()
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
@@ -26,6 +26,7 @@ SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
+SET(BUILD_AGMG            OFF CACHE BOOL   "Build AGMG libraries")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 
@@ -78,9 +79,7 @@ ADD_CUSTOM_TARGET( clear
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
-INCLUDE(HDF5Config)
 INCLUDE(DoxygenConfig)
-INCLUDE(CTest)
 INCLUDE(PreprocessorTarget)
 
 IF(MPI_ENABLED)
@@ -88,6 +87,9 @@ IF(MPI_ENABLED)
   INCLUDE(ProcessorCount)
   INCLUDE(POEConfig)
 ENDIF()
+
+INCLUDE(CTest)
+INCLUDE(HDF5Config)
 
 IF(PASTIX_ENABLED)
   FIND_PACKAGE(SCOTCH)
@@ -171,9 +173,9 @@ IF(BUILD_SPRNG)
      URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
      SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
      BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-     UPDATE_COMMAND autoreconf -if
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
-     BUILD_COMMAND ${MAKE} 
+     #UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --enable-silent-rules --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS} "CXXFLAGS=-w -g -O2"
+     BUILD_COMMAND ${MAKE}
      INSTALL_COMMAND ""
   )
 ENDIF()

@@ -1,9 +1,25 @@
 module sll_m_hermite_interpolation_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_boundary_condition_descriptors
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
+
+  implicit none
+
+  public :: &
+    sll_s_compute_interpolants_hermite_1d, &
+    sll_s_compute_w_hermite_1d, &
+    sll_f_interpolate_value_hermite_1d, &
+    sll_f_new_hermite_interpolation_1d, &
+    sll_p_hermite_1d_c0, &
+    sll_t_hermite_interpolation_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !Hermite interpolation in 1d
 !derivatives are given with finite stencil formulae of order p
@@ -13,7 +29,7 @@ implicit none
 !p=6 should be quite similar to cubic splines
 !do not hesitate to take large odd p, like the favourite p=17
 !see also sll_m_hermite_interpolation_2d
-  type :: sll_hermite_interpolation_1d
+  type :: sll_t_hermite_interpolation_1d
     sll_real64 :: eta_min !< eta1 min
     sll_real64 :: eta_max !< eta1 max
     sll_int32 :: Nc !< number of cells in eta1     
@@ -24,17 +40,17 @@ implicit none
     sll_int32 :: continuity !< can be SLL_HERMITE_C0 or SLL_HERMITE_C1
     sll_int32 :: deriv_size !< 3 for SLL_HERMITE_C0 and 2 for SLL_HERMITE_C1
                             !< deriv_size = size(deriv,1)                              
-  end type sll_hermite_interpolation_1d 
+  end type sll_t_hermite_interpolation_1d 
   
   !integer, parameter :: SLL_HERMITE_PERIODIC = 0, SLL_HERMITE_DIRICHLET = 1
-  integer, parameter :: SLL_HERMITE_1d_C0 = 0, SLL_HERMITE_1d_C1 = 1
+  integer, parameter :: sll_p_hermite_1d_c0 = 0, SLL_HERMITE_1d_C1 = 1
 
 !  interface delete
 !    module procedure delete_hermite_interpolation_1d
 !  end interface
 
 contains  !*****************************************************************************
-  function new_hermite_interpolation_1d( &
+  function sll_f_new_hermite_interpolation_1d( &
     npts, &
     eta_min, &
     eta_max, &
@@ -47,7 +63,7 @@ contains  !*********************************************************************
     eta_max_slopes) &
     result(interp)
     
-    type(sll_hermite_interpolation_1d), pointer :: interp
+    type(sll_t_hermite_interpolation_1d), pointer :: interp
     sll_int32, intent(in) :: npts
     sll_real64, intent(in) :: eta_min
     sll_real64, intent(in) :: eta_max
@@ -75,7 +91,7 @@ contains  !*********************************************************************
       eta_min_slopes, &
       eta_max_slopes)
 
-  end function new_hermite_interpolation_1d
+  end function sll_f_new_hermite_interpolation_1d
 
   subroutine initialize_hermite_interpolation_1d( &
     interp, &
@@ -90,7 +106,7 @@ contains  !*********************************************************************
     eta_min_slopes, &
     eta_max_slopes)
 
-    type(sll_hermite_interpolation_1d) :: interp
+    type(sll_t_hermite_interpolation_1d) :: interp
 
     sll_int32, intent(in) :: npts
     sll_real64, intent(in) :: eta_min
@@ -114,7 +130,7 @@ contains  !*********************************************************************
     interp%eta_max = eta_max
     
       select case (interp%continuity)
-        case (SLL_HERMITE_1d_C0)
+        case (sll_p_hermite_1d_c0)
           interp%deriv_size = 3
         case (SLL_HERMITE_1d_C1)
           interp%deriv_size = 2
@@ -135,49 +151,49 @@ contains  !*********************************************************************
     
   end subroutine initialize_hermite_interpolation_1d
 
-  subroutine compute_interpolants_hermite_1d( &
+  subroutine sll_s_compute_interpolants_hermite_1d( &
     interp, &
     f)
-    type(sll_hermite_interpolation_1d) :: interp
+    type(sll_t_hermite_interpolation_1d) :: interp
     sll_real64, dimension(:), intent(in) :: f
     
     
-    if((interp%bc==SLL_HERMITE)) then
-      if(interp%continuity==SLL_HERMITE_1d_C0) then         
+    if((interp%bc==sll_p_hermite)) then
+      if(interp%continuity==sll_p_hermite_1d_c0) then         
         call hermite_coef_nat_1d(f,interp%deriv,interp%Nc,interp%degree)
       else
         print *,'#interp%continuity=', interp%continuity
-        print *,'#possible_value=', SLL_HERMITE_1d_C0
+        print *,'#possible_value=', sll_p_hermite_1d_c0
         print *,'#not implemented for the moment'
-        print *,'#in compute_interpolants_hermite_1d'
+        print *,'#in sll_s_compute_interpolants_hermite_1d'
         stop          
       endif
-    else if((interp%bc==SLL_PERIODIC)) then
-      if(interp%continuity==SLL_HERMITE_1d_C0) then         
+    else if((interp%bc==sll_p_periodic)) then
+      if(interp%continuity==sll_p_hermite_1d_c0) then         
         call hermite_coef_per_1d(f,interp%deriv,interp%Nc,interp%degree)
       else
         print *,'#interp%continuity=', interp%continuity
-        print *,'#possible_value=', SLL_HERMITE_1d_C0
+        print *,'#possible_value=', sll_p_hermite_1d_c0
         print *,'#not implemented for the moment'
-        print *,'#in compute_interpolants_hermite_1d'
+        print *,'#in sll_s_compute_interpolants_hermite_1d'
         stop          
       endif
     
     else  
        
       print *,'#interp%bc=', interp%bc
-      print *,'#possible_value=', SLL_HERMITE, SLL_PERIODIC     
+      print *,'#possible_value=', sll_p_hermite, sll_p_periodic     
       print *,'#not implemented for the moment'
-      print *,'#in compute_interpolants_hermite_1d'
+      print *,'#in sll_s_compute_interpolants_hermite_1d'
       stop          
     endif
     
     
-  end subroutine compute_interpolants_hermite_1d
+  end subroutine sll_s_compute_interpolants_hermite_1d
 
 
 
-subroutine compute_w_hermite_1d(w,r,s)
+subroutine sll_s_compute_w_hermite_1d(w,r,s)
     sll_int32,intent(in)::r,s
     sll_real64,dimension(r:s),intent(out)::w
     sll_int32 ::i,j
@@ -252,7 +268,7 @@ subroutine compute_w_hermite_1d(w,r,s)
     !
 
   
-  end subroutine compute_w_hermite_1d
+  end subroutine sll_s_compute_w_hermite_1d
 
 
 
@@ -271,7 +287,7 @@ subroutine hermite_coef_per_1d(f,buf2d,N,d)
     
     
     
-    call compute_w_hermite_1d(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite_1d(w_left,r_left,s_left)
     if((2*(d/2)-d)==0)then
       w_right(r_right:s_right) = w_left(r_left:s_left)
     else
@@ -315,7 +331,7 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
     s_right=d/2+1
     
     
-    call compute_w_hermite_1d(w_left,r_left,s_left)
+    call sll_s_compute_w_hermite_1d(w_left,r_left,s_left)
     if((2*(d/2)-d)==0)then
       w_right(r_right:s_right) = w_left(r_left:s_left)
     else
@@ -348,7 +364,7 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
 
   function interpolate_value_hermite_per_1d( eta, interp ) result(res)
     sll_real64,intent(in) :: eta
-    type(sll_hermite_interpolation_1d), pointer :: interp
+    type(sll_t_hermite_interpolation_1d), pointer :: interp
     sll_real64 :: res
     sll_real64 :: eta_tmp
     sll_int32 :: ii
@@ -360,9 +376,9 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
     
   end function interpolate_value_hermite_per_1d
 
-  function interpolate_value_hermite_1d( eta, interp ) result(res)
+  function sll_f_interpolate_value_hermite_1d( eta, interp ) result(res)
     sll_real64,intent(in) :: eta
-    type(sll_hermite_interpolation_1d), pointer :: interp
+    type(sll_t_hermite_interpolation_1d), pointer :: interp
     sll_real64 :: res
     sll_real64 :: eta_tmp
     sll_int32 :: ii
@@ -376,7 +392,7 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
     call interpolate_hermite_1d(interp%deriv,ii,eta_tmp,res,interp%Nc)
     
     
-  end function interpolate_value_hermite_1d
+  end function sll_f_interpolate_value_hermite_1d
 
 
 
@@ -384,7 +400,7 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
 
   function interpolate_value_hermite_nat_1d( eta, interp ) result(res)
     sll_real64,intent(in) :: eta
-    type(sll_hermite_interpolation_1d), pointer :: interp
+    type(sll_t_hermite_interpolation_1d), pointer :: interp
     sll_real64 :: res
     sll_real64 :: eta_tmp
     sll_int32 :: ii

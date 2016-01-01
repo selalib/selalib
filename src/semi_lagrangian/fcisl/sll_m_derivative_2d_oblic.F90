@@ -21,18 +21,29 @@
 
 
 module sll_m_derivative_2d_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_fcisl
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
 
-  type  :: oblic_2d_derivative
+  use sll_m_fcisl, only: &
+    sll_s_compute_w_hermite
+
+  implicit none
+
+  public :: &
+    sll_s_compute_oblic_derivative_2d, &
+    sll_f_new_oblic_2d_derivative, &
+    sll_t_oblic_2d_derivative
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type  :: sll_t_oblic_2d_derivative
     sll_int32 :: Nc_x1
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x2_min    
     sll_real64 :: x2_max
@@ -41,11 +52,11 @@ implicit none
     sll_real64, dimension(:), pointer :: weights
     sll_real64, dimension(:,:), pointer :: buf
         
-  end type oblic_2d_derivative
+  end type sll_t_oblic_2d_derivative
 
 contains
   
-  function new_oblic_2d_derivative( &
+  function sll_f_new_oblic_2d_derivative( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -54,9 +65,9 @@ contains
     stencil_r, &
     stencil_s ) &
     result(deriv)      
-    type(oblic_2d_derivative), pointer :: deriv
+    type(sll_t_oblic_2d_derivative), pointer :: deriv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -76,7 +87,7 @@ contains
       stencil_r, &
       stencil_s )
     
-  end function new_oblic_2d_derivative
+  end function sll_f_new_oblic_2d_derivative
 
   subroutine initialize_oblic_2d_derivative( &
     deriv, &
@@ -87,9 +98,9 @@ contains
     x2_max, &
     stencil_r, &
     stencil_s )
-    type(oblic_2d_derivative), intent(inout) :: deriv
+    type(sll_t_oblic_2d_derivative), intent(inout) :: deriv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -113,7 +124,7 @@ contains
     SLL_ALLOCATE(deriv%weights(r:s),ierr)
     SLL_ALLOCATE(deriv%buf(r:s,Nc_x1+1),ierr)
     
-    call compute_w_hermite(deriv%weights(r:s),r,s)  
+    call sll_s_compute_w_hermite(deriv%weights(r:s),r,s)  
 
     
   end subroutine initialize_oblic_2d_derivative
@@ -122,13 +133,13 @@ contains
 !< = A1*Dx1_f(i,j)+A2*Dx2_f(i,j)
 !< for i=1,..,Nc_x1+1, j=1,..,Nc_x2+1 
 !< note that iota= (A1/(x1_max-x1_min))/(A2/(x2_max-x2_min)) 
-  subroutine compute_oblic_derivative_2d(&
+  subroutine sll_s_compute_oblic_derivative_2d(&
     deriv, &
     A1, &
     A2, &
     input, &
     output)
-    type(oblic_2d_derivative), pointer :: deriv
+    type(sll_t_oblic_2d_derivative), pointer :: deriv
     sll_real64, intent(in) :: A1
     sll_real64, intent(in) :: A2
     sll_real64, dimension(:,:), intent(in) :: input
@@ -139,7 +150,7 @@ contains
     sll_int32 :: i2_loc
     sll_real64, dimension(:,:), pointer :: buf
     sll_real64, dimension(:), pointer :: w
-    class(sll_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32 :: r
     sll_int32 :: s
     sll_real64 :: delta_x2
@@ -188,7 +199,7 @@ contains
 
     
     
-  end subroutine compute_oblic_derivative_2d  
+  end subroutine sll_s_compute_oblic_derivative_2d  
   
   
 end module sll_m_derivative_2d_oblic

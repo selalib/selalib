@@ -3,13 +3,13 @@ program unit_test
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-     use sll_m_collective , only :       sll_world_collective , sll_collective_barrier ,&
-     sll_boot_collective
+     use sll_m_collective , only :       sll_v_world_collective , sll_collective_barrier ,&
+     sll_s_boot_collective
     
     
     use sll_m_pic_1d  , only : new_sll_pic_1d, sll_solver_fourier, sll_solver_fd, sll_solver_fem, sll_pic1d_testcase_quiet ,&
     sll_pic1d_testcase_landau, sll_pic1d_testcase_ionbeam, sll_pic1d_testcase_bumpontail, sll_pic1d_ppusher_verlet ,&     
-    enable_deltaf, interval_a, interval_b, landau_alpha, landau_mode, pic1d_testcase, root_path, sll_pi ,&
+    enable_deltaf, interval_a, interval_b, landau_alpha, landau_mode, pic1d_testcase, root_path, sll_p_pi ,&
     sll_pic1d_ppusher_euler, sll_pic1d_ppusher_shift, sll_pic1d_ppusher_rk2, sll_pic1d_ppusher_rk4, sll_pic1d_ppusher_none ,&
     sll_pic1d_ppusher_merson, sll_pic1d_ppusher_leapfrog_v, set_loading_parameters ,&
     sll_pic1d_ppusher_leapfrog, sll_pic1d_ppusher_heun, sll_solver_spectral, sll_pic_1d_run, destroy_sll_pic_1d
@@ -96,7 +96,7 @@ NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
 
 !**************************************************************
     ! Read input data from file
-    call getarg(1,filename)
+    call get_command_argument(1,filename)
     open(unit=input_file, file=trim(filename), IOStat=IO_stat)
     if( IO_stat /= 0 ) then
         print *, 'init_file() failed to open file ', filename
@@ -113,9 +113,9 @@ tsteps=final_time/tstepw
     !Add input variables to namelist
     
 
-    call sll_boot_collective()
+    call sll_s_boot_collective()
 
-    call sll_collective_barrier(sll_world_collective)
+    call sll_collective_barrier(sll_v_world_collective)
 
     !---------------------------------------------------------------------------
     CALL get_command_argument(1,string)                ! get command line arguments
@@ -137,8 +137,8 @@ tsteps=final_time/tstepw
  
 
     if(pi_unit)then
-    interval_a=interval_a*sll_pi
-    interval_b=interval_b*sll_pi
+    interval_a=interval_a*sll_p_pi
+    interval_b=interval_b*sll_p_pi
     endif
     selectcase (scenario)
         case("landau")

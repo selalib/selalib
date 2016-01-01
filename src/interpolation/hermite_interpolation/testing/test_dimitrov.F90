@@ -1,21 +1,18 @@
-program test_hctc
+program test_dimitrov
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  use sll_m_constants
-
-! small test to verify each part of the computation of an interpolation using 
-! the hctc hermite finite element
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   sll_int32    :: i, num_degree 
   sll_real64   :: x1, x2, x3, y1, y2, y3, f,sol,step
   sll_real64   :: x1x,x2x,x3x,y1y,y2y,y3y, aire,a2
   sll_real64   :: l1, l2, l3
   sll_real64   :: x, y
-  sll_real64   :: dfni_1, dfni, dfni1, dfni2 
-  sll_real64,dimension(2) :: dfi_1, dfi, dfi1, dfi2 
+  !sll_real64   :: dfni_1, dfni, dfni1, dfni2 
+  !sll_real64,dimension(2) :: dfi_1, dfi, dfi1, dfi2 
   sll_real64,dimension(2) :: n1_r_r,n2_r_r,n3_r_r,n1_r_l,n2_r_l,n3_r_l
   sll_real64,dimension(2) :: df, h1,h2,h3,n1_l,n2_l,n3_l,n1_r,n2_r,n3_r
   sll_real64,dimension(:),allocatable :: freedom, base

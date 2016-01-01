@@ -60,7 +60,7 @@ FILE( GLOB INPUT_FILES "${INPUT_FILES_DIR}/*.nml" )
 FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
 ADD_EXECUTABLE( test_general_coordinate_elliptic_solver_multipatch 
-                test_functions.F90 
+                m_multipatch_helper_functions.F90 
                 test_general_coordinate_elliptic_solver_multipatch.F90)
 
 TARGET_LINK_LIBRARIES( test_general_coordinate_elliptic_solver_multipatch

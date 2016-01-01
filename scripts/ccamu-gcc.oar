@@ -5,19 +5,16 @@
 #OAR -O selalib.out
 #OAR -E selalib.err
 source /etc/profile
-export MODULEPATH=${MODULEPATH}:/softs/cemracs/modules
-module load cemracs/gcc/4.8.0 
-module load cemracs/openmpi/1.8.1
-export PETSC_DIR=/softs/cemracs/petsc-3.5.3
-export PETSC_ARCH=arch-linux2-c-debug
-module load cemracs/hdf5/1.8.13
-module load cemracs/fftw/3.3.4
+module load hdf5/gcc49/1.8.13
+export HDF5_ROOT=/softs/hdf5/gcc49/1.8.13/
+export OMPI_FC=/softs/gcc/4.9.2/bin/gfortran
+export FC=/softs/gcc/4.9.2/bin/gfortran
+module load fftw/gcc47/3.3
+export FFTW_ROOT=/softs/fftw/gcc47/3.3/
 mkdir selalib-gnu
 cd selalib-gnu; {
-cmake ${HOME}/selalib/src -DHDF5_PARALLEL_ENABLED=ON \
-                          -DBUILD_JOREK=ON \
-                          -DGIT_LOGIN=navaro \
-                          -DCMAKE_BUILD_TYPE=Release 
+cmake ${HOME}/selalib -DHDF5_PARALLEL_ENABLED=ON \
+                      -DCMAKE_BUILD_TYPE=Release 
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild

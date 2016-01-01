@@ -1,8 +1,15 @@
 program sim_bsl_ad_2d0v_curv
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_sim_bsl_ad_2d0v_curv
+
+  use sll_m_sim_bsl_ad_2d0v_curv, only: &
+    sll_s_delete_analytic_field_2d_curvilinear, &
+    sll_f_new_analytic_field_2d_curvilinear, &
+    sll_t_simulation_2d_analytic_field_curvilinear
+
   implicit none
-  class(sll_simulation_2d_analytic_field_curvilinear), pointer :: sim  
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  class(sll_t_simulation_2d_analytic_field_curvilinear), pointer :: sim  
   character(len=256) :: filename
   character(len=256) :: filename_local
   sll_int32 :: count
@@ -15,12 +22,12 @@ program sim_bsl_ad_2d0v_curv
  
   call get_command_argument(1, filename)
   if (len_trim(filename) == 0)then
-    sim => new_analytic_field_2d_curvilinear( )
+    sim => sll_f_new_analytic_field_2d_curvilinear( )
   else
     filename_local = trim(filename)
     call get_command_argument(2, str)
     if(len_trim(str) == 0)then
-      sim => new_analytic_field_2d_curvilinear( filename_local )
+      sim => sll_f_new_analytic_field_2d_curvilinear( filename_local )
       call sim%run( )
     else
       read(str , *) num_max
@@ -31,9 +38,9 @@ program sim_bsl_ad_2d0v_curv
         read(str , *) num_max
       endif
       do i=num_min,num_max
-        sim => new_analytic_field_2d_curvilinear( filename_local, i)
+        sim => sll_f_new_analytic_field_2d_curvilinear( filename_local, i)
         call sim%run( )
-        call delete_analytic_field_2d_curvilinear( sim )
+        call sll_s_delete_analytic_field_2d_curvilinear( sim )
       enddo  
     endif  
   endif

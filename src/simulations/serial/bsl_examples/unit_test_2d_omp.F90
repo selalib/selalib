@@ -1,20 +1,27 @@
 program unit_test_4d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_constants
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_utilities, only: int2string
-use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
 
-implicit none
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_t_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_utilities, only: &
+    sll_s_int2string
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifdef _OPENMP
   integer :: OMP_GET_NUM_THREADS, OMP_GET_THREAD_NUM
-  real(8) :: OMP_GET_WTIME
-  sll_real64 :: t0,t1,t2
+  !real(8) :: OMP_GET_WTIME
+  !sll_real64 :: t0,t1,t2
 #endif
 
   sll_int32  :: n_x, n_vx, n_y, n_vy
@@ -31,11 +38,11 @@ implicit none
   sll_real64, dimension(:),       allocatable :: vx, vy
   sll_real64, dimension(:,:,:,:), allocatable :: df
 
-  class(sll_interpolator_2d_base), pointer    :: interp_xy
-  class(sll_interpolator_2d_base), pointer    :: interp_vxvy
+  class(sll_c_interpolator_2d), pointer    :: interp_xy
+  class(sll_c_interpolator_2d), pointer    :: interp_vxvy
 
-  type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
-  type(sll_cubic_spline_interpolator_2d), target  :: spline_vxvy
+  type(sll_t_cubic_spline_interpolator_2d), target  :: spline_xy
+  type(sll_t_cubic_spline_interpolator_2d), target  :: spline_vxvy
 
   print*,'*******************************'
   print*,' 4D case                       '
@@ -72,11 +79,11 @@ implicit none
   delta_vy = (vy_max-vy_min)/(n_vy-1)
 
   call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
-                            SLL_PERIODIC, SLL_PERIODIC )
+                            sll_p_periodic, sll_p_periodic )
   interp_xy   => spline_xy
 
   call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              SLL_PERIODIC, SLL_PERIODIC )
+                              sll_p_periodic, sll_p_periodic )
   interp_vxvy => spline_vxvy
 
   do i = 1, n_x
@@ -108,7 +115,7 @@ implicit none
 
   ! run BSL method using 10 time steps and second order splitting
   n_steps = 200
-  dt = 0.05
+  dt = 0.05_f64
 
   do it = 1, n_steps
 
@@ -150,7 +157,7 @@ implicit none
               eta2 = eta2 - y_max + y_min
            end if
 
-           df(i,j,k,l) = interp_xy%interpolate_value(eta1,eta2)
+           df(i,j,k,l) = interp_xy%interpolate_from_interpolant_value(eta1,eta2)
         end do
         end do
   
@@ -179,7 +186,7 @@ implicit none
 !           eta2 = vy_min + (l-1)*delta_vy
 !           eta1 = vx_min + modulo(eta1-vx_min-dvx,vx_max-vx_min)
 !           eta2 = vy_min + modulo(eta2-vy_min-dvy,vy_max-vy_min)
-!           df(i,j,k,l) = interp_vxvy%interpolate_value(eta1,eta2)
+!           df(i,j,k,l) = interp_vxvy%interpolate_from_interpolant_value(eta1,eta2)
 !        end do
 !        end do
 !
@@ -213,7 +220,7 @@ contains
    integer :: iplot
    character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+   call sll_s_int2string(iplot,cplot)
 
    open(11, file="dfvxvy-"//cplot//".dat")
    do l = 1, size(df,4)
@@ -244,7 +251,7 @@ contains
    integer :: iplot
    character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+   call sll_s_int2string(iplot,cplot)
 
    open(11, file="dfxy-"//cplot//".dat")
    do i = 1, size(df,1)

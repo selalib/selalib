@@ -1,10 +1,22 @@
 module sll_m_deboor_splines_2d
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_deboor_splines_1d
-  
-implicit none 
+
+! use F77_deboor, only: &
+!   banfac, &
+!   banslv
+
+  use sll_m_deboor_splines_1d, only: &
+    bsplvb, &
+    deboor_type, &
+    splint_der
+
+  implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
   
@@ -115,6 +127,7 @@ sll_real64,dimension(:),pointer:: t!(n+k)
 sll_real64,dimension(:),pointer:: tau!(n)
 sll_real64:: taui
 sll_real64,dimension(n):: work!(n)
+type(deboor_type) :: deboor
 
 left = k
 
@@ -176,7 +189,7 @@ do i = 1, n
   !  nonzero.  These K numbers are returned, in WORK (used for
   !  temporary storage here), by the following call:
  
-  call bsplvb ( t, k, 1, taui, left, work )
+  call bsplvb ( deboor, t, k, 1, taui, left, work )
   
   !  We therefore want
   !
@@ -736,6 +749,7 @@ sll_int32,  dimension(:), pointer  :: tau_der!np
 sll_real64, dimension(n)           :: work!(n)
 sll_real64, dimension(np)          :: work_der
 sll_real64, dimension(n+np)        :: work_result
+type(deboor_type)                  :: deboor
 
 work_result = 0.0_f64
 
@@ -744,6 +758,7 @@ do j = 1, m
   work(1:n) = gtau(:,j)
   work_der(1:np) = gtau_der(1:np,j)
   call splint_der( &
+       deboor,     &
        tau,        &
        work,       &
        tau_der,    &

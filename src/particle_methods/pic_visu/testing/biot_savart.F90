@@ -1,15 +1,26 @@
 !test example to visualize particles
 module biot_savart
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_utilities, only : &
-       sll_new_file_id
+  use sll_m_constants, only: &
+    sll_p_pi
 
-implicit none
+  use sll_m_utilities, only: &
+    sll_s_new_file_id
+
+  implicit none
+
+  public :: &
+    deplace, &
+    getrealtimer, &
+    initialize, &
+    vitesse
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> vortex circulation
 real(8) :: gam0
@@ -150,17 +161,17 @@ delta = 0.01_f64
 
 u0 = amach 
 
-gam0   = u0 * 2.0_f64 * sll_pi / 0.7_f64 * r0!gaussienne
-!gam0   = 2. * sll_pi * r0 * u0	!constant
-!gam0   = 2. * sll_pi / 10.0
+gam0   = u0 * 2.0_f64 * sll_p_pi / 0.7_f64 * r0!gaussienne
+!gam0   = 2. * sll_p_pi * r0 * u0	!constant
+!gam0   = 2. * sll_p_pi / 10.0
 
-aom    = gam0 / ( sll_pi * r0**2 )  ! Amplitude du vortex
-tau    = 8.0_f64 * sll_pi**2 / gam0     ! Periode de co-rotation
-gomeg  = gam0/ (4.0_f64*sll_pi)         ! Vitesse angulaire
+aom    = gam0 / ( sll_p_pi * r0**2 )  ! Amplitude du vortex
+tau    = 8.0_f64 * sll_p_pi**2 / gam0     ! Periode de co-rotation
+gomeg  = gam0/ (4.0_f64*sll_p_pi)         ! Vitesse angulaire
 ur     = gomeg                  ! Vitesse tangentielle du vortex
 al     = 0.5_f64 * tau              ! Longeur d'onde
 
-call sll_new_file_id(file_id, error)
+call sll_s_new_file_id(file_id, error)
 open(file_id, file="particles.out")
 write(file_id,*) " iterations : ", nstep
 write(file_id,*) " pas de temps : ", dt
@@ -242,13 +253,13 @@ integer :: file_id, error
 
 dr      = ray / ( nray + 0.5_f64 )
 dray    = 0.5_f64 * dr                !rayon de la section centrale
-surf    = sll_pi * ray * ray 
-dteta   = 2.0_f64 * sll_pi / real(nsec0,f64)
+surf    = sll_p_pi * ray * ray 
+dteta   = 2.0_f64 * sll_p_pi / real(nsec0,f64)
 
 k       = 1
 rf(  1) = 0.0_f64
 zf(  1) = 0.0_f64
-ds(  1) = sll_pi * dray * dray
+ds(  1) = sll_p_pi * dray * dray
 
 if ( gauss ) then
    gamt = gam0 / ( 1._f64 - exp( -1.0_f64 ) )
@@ -258,12 +269,12 @@ else
 end if
 sgam    = cir( 1 )
 
-call sll_new_file_id(file_id, error)
+call sll_s_new_file_id(file_id, error)
 open(file_id, file="particles_begin.out")
 write(file_id,1000) rf(1), zf(1), cir(1), ds(1)
 
 r1    = dray
-s1    = sll_pi * r1**2
+s1    = sll_p_pi * r1**2
 nsec  = 0
 
 !cpn   *** parametre de l'ellipse ***
@@ -274,11 +285,11 @@ nsec  = 0
 do i = 1, nray
 
    nsec  = nsec + nsec0
-   dteta = 2.0_f64 * sll_pi / real(nsec,f64)
+   dteta = 2.0_f64 * sll_p_pi / real(nsec,f64)
    r     = real( i, f64 ) * dr 
 
    r2  = r + 0.5_f64 * dr
-   s2  = sll_pi * r2**2 
+   s2  = sll_p_pi * r2**2 
    dss = s2 - s1
    s1  = s2
 
@@ -296,7 +307,7 @@ do i = 1, nray
 
       if ( gauss ) then
          q       = 0.5_f64 * (exp(-(r1/ray)**2)-exp(-(r2/ray)**2) )
-         cir( k ) = gamt * dteta / sll_pi * q    ! gauss
+         cir( k ) = gamt * dteta / sll_p_pi * q    ! gauss
       else
          cir( k ) = gam0 * ds( k ) / surf    ! uniforme
       end if

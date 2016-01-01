@@ -16,15 +16,30 @@
 !**************************************************************
 
 program test_advection_2d_CSL
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_2d_CSL
-use sll_m_characteristics_2d_explicit_euler_conservative
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_2d_base, only: &
+    sll_c_advection_2d_base
+
+  use sll_m_advection_2d_csl, only: &
+    sll_f_new_csl_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_c_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler_conservative, only: &
+    sll_f_new_explicit_euler_conservative_2d_charac
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_advection_2d_base), pointer :: adv
-  class(sll_characteristics_2d_base), pointer :: charac
+  class(sll_c_advection_2d_base), pointer :: adv
+  class(sll_c_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
   sll_real64 :: x2_min
@@ -80,13 +95,13 @@ implicit none
 
 
 
-  charac => new_explicit_euler_conservative_2d_charac(&
+  charac => sll_f_new_explicit_euler_conservative_2d_charac(&
       num_cells_x1+1, &
       num_cells_x2+1, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC)
+      sll_p_periodic, &
+      sll_p_periodic)
   
-  adv => new_CSL_2d_advector(&
+  adv => sll_f_new_csl_2d_advector(&
     charac, &
     num_cells_x1+1, &
     num_cells_x2+1, &

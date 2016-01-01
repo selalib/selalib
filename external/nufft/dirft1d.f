@@ -15,8 +15,8 @@ cc
 c***********************************************************************
       subroutine dirft1d1(nj,xj,cj, iflag, ms,fk)
       implicit none
-      integer nj, iflag, ms
-      real(8) :: xj(nj)
+      integer    :: nj, iflag, ms
+      real(8)    :: xj(nj)
       complex(8) :: cj(nj), fk(-ms/2:(ms-1)/2)
 c ----------------------------------------------------------------------
 c     direct computation of nonuniform FFT
@@ -35,24 +35,24 @@ c***********************************************************************
       complex(8) :: zf, cm1
 c
       do k1 = -ms/2, (ms-1)/2
-         fk(k1) = dcmplx(0d0,0d0)
+         fk(k1) = cmplx(0d0,0d0,kind=8)
       enddo
 c
       do j = 1, nj
          if (iflag .ge. 0) then
-            zf = dcmplx(dcos(xj(j)),+dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),+dsin(xj(j)), kind=8)
          else
-            zf = dcmplx(dcos(xj(j)),-dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),-dsin(xj(j)), kind=8)
          endif
 c
-         cm1 = cj(j) / dble(nj)
+         cm1 = cj(j) / real(nj,kind=8)
          do k1 = 0, (ms-1)/2
             fk(k1) = fk(k1) + cm1
             cm1 = cm1 * zf
          enddo
 c
          zf = dconjg(zf)
-         cm1 = cj(j) / dble(nj)
+         cm1 = cj(j) / real(nj,kind=8)
          do k1 = -1, -ms/2, -1
             cm1 = cm1 * zf
             fk(k1) = fk(k1) + cm1
@@ -88,9 +88,9 @@ c***********************************************************************
 c
       do j = 1, nj
          if (iflag .ge. 0) then
-            zf = dcmplx(dcos(xj(j)),+dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),+dsin(xj(j)),kind=8)
          else
-            zf = dcmplx(dcos(xj(j)),-dsin(xj(j)))
+            zf = cmplx(dcos(xj(j)),-dsin(xj(j)),kind=8)
          endif
 c
          cj(j) = fk(0)
@@ -137,9 +137,10 @@ c
             ssk =  -sk(k)
          endif
 c
-         fk(k) = dcmplx(0d0, 0d0)
+         fk(k) = cmplx(0d0, 0d0, kind=8)
          do j = 1, nj
-            fk(k) = fk(k) + cj(j)*dcmplx(cos(ssk*xj(j)),sin(ssk*xj(j)))
+            fk(k)=fk(k) 
+     &        +cj(j)*cmplx(cos(ssk*xj(j)),sin(ssk*xj(j)),kind=8)
          enddo
       enddo
       end

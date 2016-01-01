@@ -43,22 +43,52 @@
 !>      A_{1,1}\partial_{1,1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} = \hat{\rho}
 !> \f]
 module sll_m_poisson_2d_mudpack
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_poisson_2d_base
-use sll_m_mudpack_curvilinear
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_interpolators_1d_base
-use sll_m_interpolators_2d_base
+! use F77_mudpack, only: &
+!   mud2, &
+!   mud24, &
+!   mud24cr, &
+!   mud24sp, &
+!   mud2cr, &
+!   mud2sp
 
-implicit none
-private
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_periodic
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_f_new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_f_new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_p_non_separable_with_cross_terms, &
+    sll_p_non_separable_without_cross_terms, &
+    sll_p_separable
+
+  use sll_m_poisson_2d_base, only: &
+    sll_c_poisson_2d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_poisson_2d_mudpack
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Derived type to solve Poisson equation on 2d curvilinear mesh
-  type, public, extends(sll_poisson_2d_base) :: poisson_2d_mudpack
+  type, extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack
   
     !> PLEASE ADD DOCUMENTATION
     sll_real64, dimension(:,:), pointer :: cxx_2d
@@ -97,29 +127,29 @@ private
     !> PLEASE ADD DOCUMENTATION
     sll_int32  :: mudpack_case
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cxy_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cx_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: cy_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
+    class(sll_c_interpolator_2d), pointer   :: ce_2d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cxx_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cxx_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cyy_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cyy_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cx_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cx_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cy_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cy_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cex_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cex_1d_interp
     !> PLEASE ADD DOCUMENTATION
-    class(sll_interpolator_1d_base), pointer   :: cey_1d_interp
+    class(sll_c_interpolator_1d), pointer   :: cey_1d_interp
 
     sll_real64, dimension(:), pointer :: work !< array for tmp data
     sll_int32  :: mgopt(4) !< Option to control multigrid
@@ -139,14 +169,13 @@ private
   end type poisson_2d_mudpack
 
   !> PLEASE ADD DOCUMENTATION
-  class(poisson_2d_mudpack), public, pointer :: mudpack_wrapper => null()
+  class(poisson_2d_mudpack), pointer :: mudpack_wrapper => null()
 
-  public :: new_poisson_2d_mudpack
 
 contains
 
   !> PLEASE ADD DOCUMENTATION
-  function new_poisson_2d_mudpack( &
+  function sll_f_new_poisson_2d_mudpack( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -244,7 +273,7 @@ contains
       cy, &
       ce)
     
-  end function new_poisson_2d_mudpack
+  end function sll_f_new_poisson_2d_mudpack
   
   
   subroutine initialize_poisson_2d_mudpack( &
@@ -309,6 +338,7 @@ contains
     sll_real64, intent(in), optional  :: cy
     sll_real64, intent(in), optional  :: ce
     sll_int32 :: ierr
+
     !!!! begin variables for mudpack 
     sll_int32,  parameter   :: iixp = 2 , jjyq = 2
     sll_int32               :: icall, iiex, jjey, llwork
@@ -328,12 +358,7 @@ contains
     common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
     equivalence(intl,iprm)
     equivalence(xa,fprm)
-    !declare coefficient and boundary condition input subroutines external
-    external mudpack_cofx,mudpack_cofy,mudpack_bndsp
-    external mudpack_cof,mudpack_cofcr
     !!!! end variables for mudpack 
-
-
 
     nx = nc_eta1+1
     ny = nc_eta2+1
@@ -405,13 +430,6 @@ contains
 
 !call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
-
-
-
-
-
-
-        
     poisson%mudpack_case = mudpack_case 
 
     poisson%cxx_2d_interp => null()
@@ -430,7 +448,7 @@ contains
 
 
     select case (mudpack_case)
-      case (SLL_SEPARABLE)
+      case (sll_p_separable)
         if(present(cxx_2d).or.present(cxy_2d).or.present(cyy_2d)&
           .or.present(cx_2d).or.present(cy_2d).or.present(ce_2d)) then
           print *,'#2d arrays should not be here'
@@ -573,46 +591,46 @@ contains
           poisson%cey_1d(1:nc_eta2+1)=0.5_f64*ce
         endif
 
-        poisson%cxx_1d_interp => new_cubic_spline_interpolator_1d( &
+        poisson%cxx_1d_interp => sll_f_new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC)          
+          sll_p_periodic)          
         call poisson%cxx_1d_interp%compute_interpolants( poisson%cxx_1d )          
 
-        poisson%cyy_1d_interp => new_cubic_spline_interpolator_1d( &
+        poisson%cyy_1d_interp => sll_f_new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC)          
+          sll_p_periodic)          
         call poisson%cyy_1d_interp%compute_interpolants( poisson%cyy_1d )          
 
-        poisson%cx_1d_interp => new_cubic_spline_interpolator_1d( &
+        poisson%cx_1d_interp => sll_f_new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC)          
+          sll_p_periodic)          
         call poisson%cx_1d_interp%compute_interpolants( poisson%cx_1d )          
 
-        poisson%cy_1d_interp => new_cubic_spline_interpolator_1d( &
+        poisson%cy_1d_interp => sll_f_new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC)          
+          sll_p_periodic)          
         call poisson%cy_1d_interp%compute_interpolants( poisson%cy_1d )          
 
-        poisson%cex_1d_interp => new_cubic_spline_interpolator_1d( &
+        poisson%cex_1d_interp => sll_f_new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC)          
+          sll_p_periodic)          
         call poisson%cex_1d_interp%compute_interpolants( poisson%cex_1d )          
 
-        poisson%cey_1d_interp => new_cubic_spline_interpolator_1d( &
+        poisson%cey_1d_interp => sll_f_new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC)          
+          sll_p_periodic)          
         call poisson%cey_1d_interp%compute_interpolants( poisson%cey_1d )          
 
 
@@ -635,7 +653,7 @@ contains
 
                 
         
-      case (SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS)
+      case (sll_p_non_separable_without_cross_terms)
       
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
@@ -757,59 +775,59 @@ contains
         endif
 
 
-        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cxx_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )          
 
-        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cyy_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )          
 
-        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cx_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cy_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%ce_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%ce_2d_interp%compute_interpolants( poisson%ce_2d )          
 
                  
@@ -827,7 +845,7 @@ contains
           error)
         mudpack_wrapper => null() 
 
-      case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
+      case (sll_p_non_separable_with_cross_terms)
       
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
@@ -972,70 +990,70 @@ contains
         endif
 
 
-        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cxx_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )   
                
-        poisson%cxy_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cxy_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d ) 
         
-        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cyy_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )          
 
-        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cx_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%cy_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
+        poisson%ce_2d_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
         call poisson%ce_2d_interp%compute_interpolants( poisson%ce_2d )          
 
                  
@@ -1059,7 +1077,6 @@ contains
         stop 
     end select
 
-        
   end subroutine initialize_poisson_2d_mudpack
   
   ! solves \Delta phi = -rho in 2d
@@ -1086,9 +1103,6 @@ contains
     equivalence(intl,iprm)
     equivalence(xa,fprm)
 
-    !declare coefficient and boundary condition input subroutines external
-    external mudpack_cofx,mudpack_cofy,mudpack_bndsp
-    external mudpack_cof,mudpack_cofcr
     !set initial guess because solve should be called every time step in a
     !time dependent problem and the elliptic operator does not depend on time.
     iguess = poisson%iguess
@@ -1097,28 +1111,28 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
         
-    if(nxa == SLL_DIRICHLET) then
+    if(nxa == sll_p_dirichlet) then
        do i2=1,ny
           phi(1,i2) = 0._f64
        end do
     endif
-    if(nxb == SLL_DIRICHLET) then
+    if(nxb == sll_p_dirichlet) then
        do i2=1,ny
           phi(nx,i2) = 0._f64
        end do
     endif
-    if(nyc == SLL_DIRICHLET) then
+    if(nyc == sll_p_dirichlet) then
        do i1=1,nx
           phi(i1,1) = 0._f64
        end do
     endif
-    if(nyd == SLL_DIRICHLET) then
+    if(nyd == sll_p_dirichlet) then
        do i1=1,nx
           phi(i1,ny) = 0._f64
        end do
     endif 
     select case (poisson%mudpack_case)
-      case (SLL_SEPARABLE)
+      case (sll_p_separable)
         if(associated(mudpack_wrapper))then
           print *,'#Problem mudpack_wrapper is not null()'
           stop
@@ -1145,7 +1159,7 @@ contains
         
          mudpack_wrapper => null()
         
-      case (SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS)
+      case (sll_p_non_separable_without_cross_terms)
       if(associated(mudpack_wrapper))then
           print *,'#Problem mudpack_wrapper is not null()'
           stop
@@ -1170,7 +1184,7 @@ contains
         
          mudpack_wrapper => null()
         
-      case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
+      case (sll_p_non_separable_with_cross_terms)
         if(associated(mudpack_wrapper))then
           print *,'#Problem mudpack_wrapper is not null()'
           stop
@@ -1231,80 +1245,67 @@ contains
       
   end subroutine compute_E_from_rho_2d_mudpack
   
+  !> input x dependent coefficients
+  subroutine mudpack_cofx(x,cxx,cx,cex)
+    real(8)  :: x,cxx,cx,cex
+    cxx = mudpack_wrapper%cxx_1d_interp%interpolate_from_interpolant_value(x)
+    cx  = mudpack_wrapper%cx_1d_interp%interpolate_from_interpolant_value(x)
+    cex = mudpack_wrapper%cex_1d_interp%interpolate_from_interpolant_value(x)
+  end subroutine mudpack_cofx
+
+  !> input y dependent coefficients
+  subroutine mudpack_cofy(y,cyy,cy,cey)
+    real(8)  :: y,cyy,cy,cey
+    cyy = mudpack_wrapper%cyy_1d_interp%interpolate_from_interpolant_value(y)
+    cy  = mudpack_wrapper%cy_1d_interp%interpolate_from_interpolant_value(y)
+    cey = mudpack_wrapper%cey_1d_interp%interpolate_from_interpolant_value(y)
+  end subroutine mudpack_cofy
+
+  subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
+    real(8)  :: x,cxx,cx
+    real(8)  :: y,cyy,cy,ce
+    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+    cx  = mudpack_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cy  = mudpack_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+    ce  = mudpack_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
+  end subroutine mudpack_cof
+
+  subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
+    real(8)  :: x,cxx,cx,cxy
+    real(8)  :: y,cyy,cy,ce
+    cxx = mudpack_wrapper%cxx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cxy = mudpack_wrapper%cxy_2d_interp%interpolate_from_interpolant_value(x,y)
+    cyy = mudpack_wrapper%cyy_2d_interp%interpolate_from_interpolant_value(x,y)
+    cx  = mudpack_wrapper%cx_2d_interp%interpolate_from_interpolant_value(x,y)
+    cy  = mudpack_wrapper%cy_2d_interp%interpolate_from_interpolant_value(x,y)
+    ce  = mudpack_wrapper%ce_2d_interp%interpolate_from_interpolant_value(x,y)
+  end subroutine mudpack_cofcr
+
+  !> input mixed derivative b.c. to mud2sp
+  subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
+    integer  :: kbdy
+    real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
+    real(8)  :: xa,xb,yc,yd,tolmax,relmax
+    common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+
+    pe = 0.0_8
+    !subroutine not used in periodic case
+    if (kbdy == 1) then  ! x=xa boundary
+       y = xory
+       x = xa
+       alfa = -1.0_8
+       gbdy = px + alfa*pe
+       return
+    end if
+
+    if (kbdy == 4) then  ! y=yd boundary
+       y = yd
+       x = xory
+       alfa = 1.0_8
+       gbdy = py + alfa*pe
+       return
+    end if
+  end subroutine mudpack_bndsp
+
 end module sll_m_poisson_2d_mudpack
-
-!> input x dependent coefficients
-subroutine mudpack_cofx(x,cxx,cx,cex)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: x,cxx,cx,cex
-cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
-cx  = mudpack_wrapper%cx_1d_interp%interpolate_value(x)
-cex = mudpack_wrapper%cex_1d_interp%interpolate_value(x)
-return
-end
-
-!> input y dependent coefficients
-subroutine mudpack_cofy(y,cyy,cy,cey)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: y,cyy,cy,cey
-cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
-cy  = mudpack_wrapper%cy_1d_interp%interpolate_value(y)
-cey = mudpack_wrapper%cey_1d_interp%interpolate_value(y)
-return
-end
-
-subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: x,cxx,cx
-real(8)  :: y,cyy,cy,ce
-cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
-return
-end
-
-subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_m_poisson_2d_mudpack
-implicit none
-real(8)  :: x,cxx,cx,cxy
-real(8)  :: y,cyy,cy,ce
-cxx = mudpack_wrapper%cxx_2d_interp%interpolate_value(x,y)
-cxy = mudpack_wrapper%cxy_2d_interp%interpolate_value(x,y)
-cyy = mudpack_wrapper%cyy_2d_interp%interpolate_value(x,y)
-cx  = mudpack_wrapper%cx_2d_interp%interpolate_value(x,y)
-cy  = mudpack_wrapper%cy_2d_interp%interpolate_value(x,y)
-ce  = mudpack_wrapper%ce_2d_interp%interpolate_value(x,y)
-return
-end
-!> input mixed derivative b.c. to mud2sp
-subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
-use sll_m_poisson_2d_mudpack
-implicit none
-integer  :: kbdy
-real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
-real(8)  :: xa,xb,yc,yd,tolmax,relmax
-common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
-
-pe = 0.0d0
-!subroutine not used in periodic case
-if (kbdy == 1) then  ! x=xa boundary
-   y = xory
-   x = xa
-   alfa = -1.0d0
-   gbdy = px + alfa*pe
-   return
-end if
-
-if (kbdy == 4) then  ! y=yd boundary
-   y = yd
-   x = xory
-   alfa = 1.0d0
-   gbdy = py + alfa*pe
-   return
-end if
-end

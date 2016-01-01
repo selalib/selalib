@@ -1,16 +1,26 @@
 program sequential_advection
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_gnuplot
+#include "sll_working_precision.h"
 
-use sll_m_interpolators_2d_base
-use sll_m_arbitrary_degree_spline_interpolator_2d
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_t_arbitrary_degree_spline_interpolator_2d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
 
-class(sll_interpolator_2d_base), pointer                  :: interp
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: spl
+  use sll_m_gnuplot, only: &
+    sll_o_gnuplot_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class(sll_c_interpolator_2d), pointer                  :: interp
+type(sll_t_arbitrary_degree_spline_interpolator_2d), target :: spl
 
 sll_real64, dimension(:,:),  pointer       :: f
 
@@ -49,10 +59,10 @@ call spl%initialize(nc_eta1+1,    &
                     eta1_max,     &
                     eta2_min,     &
                     eta2_max,     &
-                    SLL_PERIODIC, &
-                    SLL_PERIODIC, &
-                    SLL_PERIODIC, &
-                    SLL_PERIODIC, &
+                    sll_p_periodic, &
+                    sll_p_periodic, &
+                    sll_p_periodic, &
+                    sll_p_periodic, &
                     5, 5)
 
 interp => spl
@@ -79,11 +89,11 @@ do i_step=1, 3*n_step
      eta2 = eta2_min + (j-1)*delta_eta2 - alpha1
      do i = 1, nc_eta1+1
         eta1 = eta1_min + (i-1)*delta_eta1 - alpha2
-        f(i,j) = interp%interpolate_value(eta1,eta2)
+        f(i,j) = interp%interpolate_from_interpolant_value(eta1,eta2)
      end do
   end do
 
-  call sll_gnuplot_2d( eta1_min, eta1_max, nc_eta1+1, &
+  call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1+1, &
                        eta2_min, eta2_max, nc_eta2+1, &
                        f, 'f_sequential', i_step, error)
 

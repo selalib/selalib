@@ -1,0 +1,76 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!> @internal [example]
+program test_poisson_2d_polar_wrapper
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann_mode_0
+
+  use sll_m_poisson_2d_base, only: &
+    sll_c_poisson_2d_base
+
+  use sll_m_poisson_2d_polar_wrapper, only: &
+    sll_f_new_poisson_2d_polar
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  class(sll_c_poisson_2d_base), pointer     :: poisson 
+  sll_real64                              :: err
+  sll_real64                              :: x1_min
+  sll_real64                              :: x1_max
+  sll_int32                               :: Nc_x1
+  sll_int32                               :: Nc_x2
+  sll_real64, dimension(:,:), allocatable :: phi
+  sll_real64, dimension(:,:), allocatable :: rho
+  sll_int32                               :: ierr
+  
+  x1_min = 0._f64
+  x1_max = 1._f64
+  
+  Nc_x1 = 32
+  Nc_x2 = 64
+  
+  SLL_ALLOCATE(phi(Nc_x1+1,Nc_x2+1),ierr)
+  SLL_ALLOCATE(rho(Nc_x1+1,Nc_x2+1),ierr)
+  
+  rho = 1._f64
+  
+  err = 0._f64
+  
+  poisson =>sll_f_new_poisson_2d_polar( &
+    x1_min, &
+    x1_max, &
+    Nc_x1, &
+    Nc_x2, &
+    (/sll_p_neumann_mode_0, sll_p_dirichlet/))
+  
+  call poisson%compute_phi_from_rho( phi, rho )
+
+  print *,maxval(phi),minval(phi)
+  
+  if(err==0)then    
+    print *, '#PASSED'
+  endif
+
+end program test_poisson_2d_polar_wrapper
+!> @internal [example]

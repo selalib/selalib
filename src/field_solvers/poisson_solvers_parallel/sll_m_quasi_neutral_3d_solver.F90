@@ -17,24 +17,41 @@
 
 !> @ingroup poisson_solvers
 module sll_m_quasi_neutral_3d_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!use sll_m_boundary_condition_descriptors
-use sll_m_poisson_3d_base
-use sll_m_poisson_2d_base
-use sll_m_remapper
-use sll_m_collective
-use sll_m_utilities, only : &
-     is_even
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_collective, only: &
+    sll_t_collective_t, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
-  type,extends(sll_poisson_3d_base) :: quasi_neutral_3d_solver     
+  use sll_m_poisson_2d_base, only: &
+    sll_c_poisson_2d_base
+
+  use sll_m_poisson_3d_base, only: &
+    sll_c_poisson_3d_base
+
+  use sll_m_remapper, only: &
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_collective, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_3d, &
+    sll_f_new_layout_3d
+
+  use sll_m_utilities, only: &
+    sll_f_is_even
+
+  implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_poisson_3d_base) :: quasi_neutral_3d_solver     
   
-  class(sll_poisson_2d_base), pointer                   :: poiss
-  type(layout_3D),  pointer           :: layout_seq_x1x2 !< layout sequential in x
-  type(layout_3D),  pointer           :: layout_seq_x3   !< layout sequential in y
+  class(sll_c_poisson_2d_base), pointer                   :: poiss
+  type(sll_t_layout_3d),  pointer           :: layout_seq_x1x2 !< layout sequential in x
+  type(sll_t_layout_3d),  pointer           :: layout_seq_x3   !< layout sequential in y
 
   contains
     procedure, pass(poisson) :: initialize => &
@@ -60,7 +77,7 @@ contains
     sll_int32, intent(in) :: nc_eta1
     sll_int32, intent(in) :: nc_eta2
     sll_int32, intent(in) :: nc_eta3
-    type(layout_3D),  pointer           :: start_layout
+    type(sll_t_layout_3d),  pointer           :: start_layout
     
     sll_int32 :: ierr
       
@@ -84,11 +101,11 @@ contains
     sll_int32, intent(in) :: nc_eta1
     sll_int32, intent(in) :: nc_eta2
     sll_int32, intent(in) :: nc_eta3
-    type(layout_3D),  pointer           :: start_layout
+    type(sll_t_layout_3d),  pointer           :: start_layout
     !sll_int32, intent(in) :: bc(2)
     !sll_int32 :: ierr
     sll_int32                        :: colsz ! collective size
-    type(sll_collective_t), pointer  :: collective
+    type(sll_t_collective_t), pointer  :: collective
     sll_int32                        :: loc_sz_x1
     sll_int32                        :: loc_sz_x2
     sll_int32                        :: loc_sz_x3
@@ -99,12 +116,12 @@ contains
     sll_int32                        :: nproc_x3 
 
     ! The collective to be used is the one that comes with the given layout.
-    collective => get_layout_collective( start_layout )
-    colsz      = sll_get_collective_size( collective )
-    world_size = sll_get_collective_size(sll_world_collective)
+    collective => sll_o_get_layout_collective( start_layout )
+    colsz      = sll_f_get_collective_size( collective )
+    world_size = sll_f_get_collective_size(sll_v_world_collective)
     power2 = int(log(real(world_size))/log(2.0))
 
-    call compute_local_sizes( &
+    call sll_o_compute_local_sizes( &
       start_layout, &
       loc_sz_x1, &
       loc_sz_x2, &
@@ -112,7 +129,7 @@ contains
     
     if((loc_sz_x1==nc_eta1+1).and.(loc_sz_x2==nc_eta2+1))then
       poisson%layout_seq_x1x2 => start_layout
-      if(is_even(power2)) then
+      if(sll_f_is_even(power2)) then
         nproc_x1 = 2**(power2/2)
         nproc_x2 = 2**(power2/2)
       else 
@@ -120,7 +137,7 @@ contains
         nproc_x2 = 2**((power2+1)/2)
       end if
       nproc_x3 = 1
-      call initialize_layout_with_distributed_array( &
+      call sll_o_initialize_layout_with_distributed_array( &
         nc_eta1+1, & 
         nc_eta2+1, & 
         nc_eta3+1, &
@@ -130,11 +147,11 @@ contains
         poisson%layout_seq_x3 )
     else if (loc_sz_x3==nc_eta3+1) then
       poisson%layout_seq_x3 => start_layout
-      poisson%layout_seq_x1x2  => new_layout_3D( sll_world_collective )
+      poisson%layout_seq_x1x2  => sll_f_new_layout_3d( sll_v_world_collective )
       nproc_x1 = 1
       nproc_x2 = 1
       nproc_x3 = world_size 
-      call initialize_layout_with_distributed_array( &
+      call sll_o_initialize_layout_with_distributed_array( &
         nc_eta1+1, & 
         nc_eta2+1, & 
         nc_eta3+1, &

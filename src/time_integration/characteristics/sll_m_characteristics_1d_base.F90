@@ -16,17 +16,28 @@
 !**************************************************************
 
 module sll_m_characteristics_1d_base
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! For computing the characteristics in 1d
-  type, abstract :: sll_characteristics_1d_base 
+  type, abstract :: sll_c_characteristics_1d_base 
   contains
     procedure(signature_compute_characteristics_1d), deferred, pass(charac) :: &
       compute_characteristics
   
-  end type sll_characteristics_1d_base
+  end type sll_c_characteristics_1d_base
   
   abstract interface
     !solves eta'(t) = A(eta1(t))
@@ -42,8 +53,8 @@ module sll_m_characteristics_1d_base
         input, &
         output)       
       use sll_m_working_precision
-      import sll_characteristics_1d_base       
-      class(sll_characteristics_1d_base) :: charac
+      import sll_c_characteristics_1d_base       
+      class(sll_c_characteristics_1d_base) :: charac
       sll_real64,dimension(:),intent(in) :: A
       sll_real64,intent(in) :: dt
       sll_real64,dimension(:),intent(in) :: input
@@ -55,20 +66,20 @@ module sll_m_characteristics_1d_base
   abstract interface
     ! change the value of eta when eta<=eta_min or eta>=eta_max
     ! depending on boundary conditions
-    function signature_process_outside_point_1d( eta, eta_min, eta_max ) result(eta_out)
+    function sll_i_signature_process_outside_point_1d( eta, eta_min, eta_max ) result(eta_out)
       use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
       sll_real64 :: eta_out      
-    end function signature_process_outside_point_1d
+    end function sll_i_signature_process_outside_point_1d
   end interface
   
 contains
 
   ! periodic case
   ! called when bc_type = SLL_PERIODIC
-  function process_outside_point_periodic( eta, eta_min, eta_max ) result(eta_out)
+  function sll_f_process_outside_point_periodic( eta, eta_min, eta_max ) result(eta_out)
       use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
@@ -92,12 +103,12 @@ contains
       eta_out = eta_min+eta_out*(eta_max-eta_min) 
       SLL_ASSERT((eta_out>=eta_min).and.(eta_out<eta_max))      
       
-  end function process_outside_point_periodic
+  end function sll_f_process_outside_point_periodic
 
   ! set to limit case
   ! called when bc_type = SLL_SET_TO_LIMIT
   
-  function process_outside_point_set_to_limit( eta, eta_min, eta_max ) result(eta_out)
+  function sll_f_process_outside_point_set_to_limit( eta, eta_min, eta_max ) result(eta_out)
       use sll_m_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
@@ -115,7 +126,7 @@ contains
       eta_out = eta_min+eta_out*(eta_max-eta_min) 
       SLL_ASSERT((eta_out>=eta_min).and.(eta_out<=eta_max))      
       
-  end function process_outside_point_set_to_limit
+  end function sll_f_process_outside_point_set_to_limit
   
   
   

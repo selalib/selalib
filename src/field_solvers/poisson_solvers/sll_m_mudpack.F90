@@ -8,13 +8,34 @@
 !> You have to download and install mudpack 
 !> http://www2.cisl.ucar.edu/resources/legacy/mudpack
 module sll_m_mudpack
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
 
-implicit none
+! use F77_mudpack, only: &
+!   mud24cr, &
+!   mud24sp, &
+!   mud2cr, &
+!   mud2sp
+
+  implicit none
+
+  public :: &
+    sll_s_delete_mudpack_cartesian, &
+    sll_s_initialize_mudpack_cartesian, &
+    sll_s_initialize_mudpack_polar, &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_mudpack_solver, &
+    sll_o_solve, &
+    sll_s_solve_mudpack_cartesian, &
+    sll_s_solve_mudpack_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Mudpack solver cartesian 2d
-type, public :: sll_mudpack_solver
+type :: sll_t_mudpack_solver
 
    sll_real64, dimension(:), allocatable :: work !< array for tmp data
    sll_int32  :: mgopt(4)           !< Option to control multigrid
@@ -23,29 +44,29 @@ type, public :: sll_mudpack_solver
    sll_int32  :: iguess             !< Initial solution or loop over time
    sll_int32, pointer :: iwork(:,:) !< Internal work array for mudpack library
 
-end type sll_mudpack_solver
+end type sll_t_mudpack_solver
 
-integer, parameter, public :: CARTESIAN_2D = 2    !< geometry parameter
-integer, parameter, public :: CARTESIAN_3D = 3    !< geometry parameter
-integer, parameter, public :: POLAR        = 11   !< geometry parameter
-integer, parameter, public :: CYLINDRICAL  = 12   !< geometry parameter
+integer, parameter :: CARTESIAN_2D = 2    !< geometry parameter
+integer, parameter :: CARTESIAN_3D = 3    !< geometry parameter
+integer, parameter :: POLAR        = 11   !< geometry parameter
+integer, parameter :: CYLINDRICAL  = 12   !< geometry parameter
 
-interface sll_create
-  module procedure initialize_mudpack_cartesian
-end interface sll_create
+interface sll_o_create
+  module procedure sll_s_initialize_mudpack_cartesian
+end interface sll_o_create
 
-interface sll_solve
-  module procedure solve_mudpack_cartesian
-end interface sll_solve
+interface sll_o_solve
+  module procedure sll_s_solve_mudpack_cartesian
+end interface sll_o_solve
 
-interface sll_delete
-  module procedure delete_mudpack_cartesian
-end interface sll_delete
+interface sll_o_delete
+  module procedure sll_s_delete_mudpack_cartesian
+end interface sll_o_delete
 
 contains
 
 !> Initialize the Poisson solver using mudpack library
-subroutine initialize_mudpack_cartesian( this,                        &
+subroutine sll_s_initialize_mudpack_cartesian( this,                        &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
                                         bc_eta1_left, bc_eta1_right, &
@@ -53,7 +74,7 @@ subroutine initialize_mudpack_cartesian( this,                        &
 implicit none
 
 ! set grid size params
-type(sll_mudpack_solver):: this          !< Data structure for solver
+type(sll_t_mudpack_solver):: this          !< Data structure for solver
 sll_real64, intent(in)  :: eta1_min      !< left corner x direction
 sll_real64, intent(in)  :: eta1_max      !< right corner x direction
 sll_real64, intent(in)  :: eta2_min      !< left corner x direction
@@ -89,9 +110,6 @@ sll_int32 :: i
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
-
-!declare coefficient and boundary condition input subroutines external
-external cofx,cofy,bndsp
 
 nx = nc_eta1+1
 ny = nc_eta2+1
@@ -187,13 +205,13 @@ if (error > 0) call exit(0)
 200 format('# error = ',i2, ' minimum work space = ',i7)
      
 #endif
-end subroutine initialize_mudpack_cartesian
+end subroutine sll_s_initialize_mudpack_cartesian
 
 
 !> Compute the potential using mudpack library on cartesian mesh
-subroutine solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
+subroutine sll_s_solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
 
-type(sll_mudpack_solver)     :: this      !< Data structure for Poisson solver
+type(sll_t_mudpack_solver)     :: this      !< Data structure for Poisson solver
 sll_real64           :: phi(:,:)  !< Electric potential
 sll_real64           :: rhs(:,:)  !< Charge density
 sll_real64, optional :: ex(:,:)   !< Electric field
@@ -217,9 +235,6 @@ common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
-
-!declare coefficient and boundary condition input subroutines external
-external cofx,cofy,bndsp
 
 !set initial guess because solve should be called every time step in a
 !time dependent problem and the elliptic operator does not depend on time.
@@ -289,26 +304,26 @@ if (present(ex) .and. present(ey)) then
 
 end if
 
-end subroutine solve_mudpack_cartesian
+end subroutine sll_s_solve_mudpack_cartesian
 
 !> deallocate the mudpack solver
-subroutine delete_mudpack_cartesian(this)
-type(sll_mudpack_solver)        :: this          !< Data structure for solver
+subroutine sll_s_delete_mudpack_cartesian(this)
+type(sll_t_mudpack_solver)        :: this          !< Data structure for solver
 
    deallocate(this%work)
 
-end subroutine delete_mudpack_cartesian
+end subroutine sll_s_delete_mudpack_cartesian
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine initialize_mudpack_polar(this,                      &
+subroutine sll_s_initialize_mudpack_polar(this,                      &
                                     r_min, r_max, nr,          &
                                     theta_min, theta_max, nth, &
                                     bc_r_min, bc_r_max,        &
                                     bc_theta_min, bc_theta_max )
 implicit none
 
-type(sll_mudpack_solver)       :: this      !< Solver object
+type(sll_t_mudpack_solver)       :: this      !< Solver object
 sll_real64, intent(in) :: r_min     !< radius min
 sll_real64, intent(in) :: r_max     !< radius min
 sll_real64, intent(in) :: theta_min !< theta min
@@ -343,9 +358,6 @@ sll_real64 :: fprm(6)
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
-
-! declare coefficient and boundary condition input subroutines external
-external coef_polar,bndcr
 
 nx = nr
 ny = nth
@@ -440,15 +452,15 @@ if (ierror > 0) call exit(0)
 200 format(' ierror = ',i2, ' minimum work space = ',i7)
 
 return
-end subroutine initialize_mudpack_polar
+end subroutine sll_s_initialize_mudpack_polar
 
 
 !> Solve the Poisson equation and get the potential
-subroutine solve_mudpack_polar(this, phi, rhs)
+subroutine sll_s_solve_mudpack_polar(this, phi, rhs)
 implicit none
 
 ! set grid size params
-type(sll_mudpack_solver) :: this  !< solver data object
+type(sll_t_mudpack_solver) :: this  !< solver data object
 sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
@@ -472,9 +484,6 @@ common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-! declare coefficient and boundary condition input subroutines external
-external coef_polar,bndcr
-
 icall = 1
 intl  = 1
 write(*,106) intl,method,iguess
@@ -488,16 +497,11 @@ SLL_ASSERT(ierror == 0)
 106 format(/' approximation call to mud2cr', &
     /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 
-return
-end subroutine solve_mudpack_polar
-
-end module sll_m_mudpack
-
+end subroutine sll_s_solve_mudpack_polar
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 subroutine coef_polar(x,y,cxx,cxy,cyy,cx,cy,ce)
-implicit none
 real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
 cxx = 1.0_8 +0.0_8*y
 cxy = 0.0_8 
@@ -505,13 +509,11 @@ cyy = 1.0_8 / (x*x)
 cx  = 1.0_8 / x 
 cy  = 0.0_8 
 ce  = 0.0_8 
-return
-end subroutine
+end subroutine coef_polar
 
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,beta,gama,gbdy
 
@@ -529,9 +531,7 @@ if (kbdy.eq.2) then
 
 end if
 
-return
-end subroutine
-
+end subroutine bndcr
 
 !the form of the pde solved is:
 !
@@ -550,27 +550,22 @@ end subroutine
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
-implicit none
 real(8)  :: x,cxx,cx,cex
 cxx = 1.0_8 +0.0_8*x 
 cx  = 0.0_8
 cex = 0.0_8
-return
-end
+end subroutine cofx
 
 !> input y dependent coefficients
 subroutine cofy(y,cyy,cy,cey)
-implicit none
 real(8)  :: y,cyy,cy,cey
 cyy = 1.0_8 +0.0_8*y
 cy  = 0.0_8
 cey = 0.0_8
-return
-end
+end subroutine cofy
 
 !> input mixed derivative b.c. to mud2sp
 subroutine bndsp(kbdy,xory,alfa,gbdy)
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
@@ -592,6 +587,8 @@ if (kbdy == 4) then  ! y=yd boundary
    gbdy = py + alfa*pe
    return
 end if
-end
+end subroutine bndsp
+
+end module sll_m_mudpack
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

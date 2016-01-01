@@ -16,19 +16,36 @@
 !**************************************************************
 
 module sll_m_characteristics_1d_explicit_euler_conservative
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_1d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  type,extends(sll_characteristics_1d_base) :: explicit_euler_conservative_1d_charac_computer
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic, &
+    sll_p_set_to_limit, &
+    sll_p_user_defined
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_explicit_euler_conservative_1d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_characteristics_1d_base) :: explicit_euler_conservative_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max
     sll_int32 :: bc_type  
-    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
      
   contains
@@ -39,7 +56,7 @@ implicit none
   end type explicit_euler_conservative_1d_charac_computer
 
 contains
-  function new_explicit_euler_conservative_1d_charac(&
+  function sll_f_new_explicit_euler_conservative_1d_charac(&
       Npts, &
       bc_type, &
       eta_min, &
@@ -52,7 +69,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     sll_int32 :: ierr
       
@@ -66,7 +83,7 @@ contains
       process_outside_point)
 
     
-  end function new_explicit_euler_conservative_1d_charac
+  end function sll_f_new_explicit_euler_conservative_1d_charac
   
   
   subroutine initialize_explicit_euler_conservative_1d_charac(&
@@ -82,7 +99,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
 
 
@@ -105,7 +122,7 @@ contains
     
     if(present(process_outside_point)) then
       charac%process_outside_point => process_outside_point
-      charac%bc_type = SLL_USER_DEFINED
+      charac%bc_type = sll_p_user_defined
     else if(.not.(present(bc_type))) then
       print *,'#provide boundary condition'
       print *,'#bc_type or process_outside_point function'
@@ -114,10 +131,10 @@ contains
     else
       charac%bc_type = bc_type
       select case (bc_type)
-        case (SLL_PERIODIC)
-          charac%process_outside_point => process_outside_point_periodic                    
-        case (SLL_SET_TO_LIMIT)
-          charac%process_outside_point => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          charac%process_outside_point => sll_f_process_outside_point_periodic                    
+        case (sll_p_set_to_limit)
+          charac%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_explicit_euler_1d_charac'
@@ -169,13 +186,13 @@ contains
       output(i) = 0.5_f64*(input(i)+input(i+1))-dt*A(i)
     enddo
     select case (charac%bc_type)
-      case (SLL_PERIODIC)
+      case (sll_p_periodic)
         output_min = output(Npts-1) - (eta_max-eta_min)
         output_max = output(1) + (eta_max-eta_min)
         !print *,"output_min=",output_min
         !print *,"output_max=",output_max
         !stop
-      case (SLL_SET_TO_LIMIT)
+      case (sll_p_set_to_limit)
         output_min = 2._f64*eta_min-output(1)
         output_max = 2._f64*eta_max-output(Npts-1)
       case default

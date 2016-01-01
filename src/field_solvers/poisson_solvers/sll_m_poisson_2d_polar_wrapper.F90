@@ -35,25 +35,38 @@
 !> <b> Example </b>
 !> @snippet poisson_solvers/test_poisson_2d_polar.F90 example
 module sll_m_poisson_2d_polar_wrapper
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_polar
+  use sll_m_poisson_2d_base, only: &
+    sll_c_poisson_2d_base
+
+  use sll_m_poisson_2d_polar, only: &
+    sll_f_new_plan_poisson_polar, &
+    sll_s_poisson_solve_polar, &
+    sll_t_plan_poisson_polar, &
+    sll_s_solve_poisson_polar
+
   implicit none
+
+  public :: &
+    sll_f_new_poisson_2d_polar, &
+    sll_p_poisson_drift_kinetic
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Classic Poisson solver
   sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
   !> Poisson solver for drift kinetic simulation
-  sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1
+  sll_int32, parameter :: sll_p_poisson_drift_kinetic = 1
 
   !> Poisson solver in polar coordinates
-  type, public, extends(sll_poisson_2d_base) :: poisson_2d_polar_solver     
+  type, extends(sll_c_poisson_2d_base) :: poisson_2d_polar_solver     
 
     !> PLEASE ADD DOCUMENTATION
-    type(sll_plan_poisson_polar), pointer :: solver
+    type(sll_t_plan_poisson_polar), pointer :: solver
     !> PLEASE ADD DOCUMENTATION
     sll_int32                             :: poisson_case
     !> PLEASE ADD DOCUMENTATION
@@ -72,14 +85,12 @@ module sll_m_poisson_2d_polar_wrapper
 
   end type poisson_2d_polar_solver
 
-  public :: new_poisson_2d_polar
-  public :: SLL_POISSON_DRIFT_KINETIC
 
 contains
 
   !> Allocate a new Poisson solver in polar coordinates
   !> @returns a pointer to the derived type
-  function new_poisson_2d_polar( &
+  function sll_f_new_poisson_2d_polar( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -113,7 +124,7 @@ contains
       inv_Te, &
       poisson_case)
     
-  end function new_poisson_2d_polar
+  end function sll_f_new_poisson_2d_polar
   
   subroutine initialize_poisson_2d_polar_solver( &
     poisson, &
@@ -150,13 +161,13 @@ contains
     
     select case(poisson%poisson_case)
       case (SLL_POISSON_CLASSIC)
-         poisson%solver => new_plan_poisson_polar( &
+         poisson%solver => sll_f_new_plan_poisson_polar( &
           delta_eta,& 
           eta1_min, &
           nc_eta1, &
           nc_eta2, &
           bc)
-     case (SLL_POISSON_DRIFT_KINETIC)    
+     case (sll_p_poisson_drift_kinetic)    
         SLL_ALLOCATE(poisson%dlog_density(nc_eta1+1),ierr)
         SLL_ALLOCATE(poisson%inv_Te(nc_eta1+1),ierr)
         if(.not.(present(dlog_density)))then
@@ -178,7 +189,7 @@ contains
         endif
         poisson%dlog_density(1:nc_eta1+1)=dlog_density(1:nc_eta1+1)
         poisson%inv_Te(1:nc_eta1+1)=inv_Te(1:nc_eta1+1)
-        poisson%solver => new_plan_poisson_polar( &
+        poisson%solver => sll_f_new_plan_poisson_polar( &
           delta_eta,& 
           eta1_min, &
           nc_eta1, &
@@ -201,9 +212,9 @@ contains
     
     select case(poisson%poisson_case)
       case (SLL_POISSON_CLASSIC)
-        call poisson_solve_polar(poisson%solver,rho,phi)            
-      case (SLL_POISSON_DRIFT_KINETIC)    
-        call solve_poisson_polar(poisson%solver,rho,phi)
+        call sll_s_poisson_solve_polar(poisson%solver,rho,phi)            
+      case (sll_p_poisson_drift_kinetic)    
+        call sll_s_solve_poisson_polar(poisson%solver,rho,phi)
       case default
         print *,'#bad value of poisson_case=', poisson%poisson_case
         print *,'#not implemented'

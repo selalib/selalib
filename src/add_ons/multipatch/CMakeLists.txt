@@ -6,7 +6,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
             sll_m_cartesian_meshes_multipatch.F90
             sll_m_coordinate_transformation_multipatch.F90
             sll_m_scalar_field_2d_multipatch.F90
-            connectivity_qn.f90
+            #connectivity_qn.f90
             sll_m_general_coordinate_elliptic_solver_multipatch.F90)
 
    TARGET_LINK_LIBRARIES(sll_multipatch
@@ -20,7 +20,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
      sll_timer
      sll_meshes
      sll_assert
-     sll_working_precision
      sll_memory)
 
 

@@ -32,14 +32,14 @@
 !>The Poisson solver uses the FFT, so you also need to link the FFT
 !>
 !>1. Declare a Poisson polar plan
-!>\code type(sll_plan_poisson_polar), pointer :: plan \endcode
+!>\code type(sll_t_plan_poisson_polar), pointer :: plan \endcode
 !>2. Initialize the plan
 !>\code plan => new_poisson_polar(dr,rmin,nr,ntheta,boundary_conditions) \endcode
 !> `nr` and `ntheta` are step numbers in direction r and theta
 !> 3. Execute the plan
-!> \code call poisson_solve_polar(plan,in,out) \endcode
+!> \code call sll_s_poisson_solve_polar(plan,in,out) \endcode
 !> 4. Delete the plan
-!> \code call sll_delete(plan) \endcode
+!> \code call sll_o_delete(plan) \endcode
 !>
 !>\section bc Boundary conditions :
 !>
@@ -69,7 +69,7 @@
 !>integer :: nr, ntheta
 !>real :: dr, rmin
 !>integer :: bc
-!>type(sll_plan_poisson_polar), pointer :: plan
+!>type(sll_t_plan_poisson_polar), pointer :: plan
 !>real, dimension(:,:), allocatable :: in, out
 !>
 !>!define all parameters
@@ -88,27 +88,52 @@
 !>plan => new_poisson_polar(dr,rmin,nr,ntheta,bc)
 !>
 !>!computation of Poisson
-!>call poisson_solve_polar(plan,in,out)
+!>call sll_s_poisson_solve_polar(plan,in,out)
 !>
 !>!deletion of plan
-!>call sll_delete(plan)
+!>call sll_o_delete(plan)
 !>\endcode
 
 module sll_m_poisson_2d_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann, &
+    sll_p_neumann_mode_0
+
+  use sll_m_fft, only: &
+    sll_s_fft_apply_plan_r2r_1d, &
+    sll_p_fft_backward, &
+    sll_s_fft_delete_plan, &
+    sll_p_fft_forward, &
+    sll_f_fft_get_mode_r2c_1d, &
+    sll_f_fft_new_plan_r2r_1d, &
+    sll_s_fft_set_mode_c2r_1d, &
+    sll_t_fft_plan
+
+  use sll_m_tridiagonal, only: &
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    sll_f_new_plan_poisson_polar, &
+    sll_s_poisson_solve_polar, &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_plan_poisson_polar, &
+    sll_o_solve, &
+    sll_s_solve_poisson_polar
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>type for the Poisson solver in polar coordinate
-  type, public :: sll_plan_poisson_polar
+  type :: sll_t_plan_poisson_polar
 
      sll_real64                          :: rmin   !< r min
      sll_real64                          :: rmax   !< r max
@@ -116,8 +141,8 @@ module sll_m_poisson_2d_polar
      sll_int32                           :: nr     !< number of points in r
      sll_int32                           :: ntheta !< number of points in theta
      sll_int32                           :: bc(2)  !< boundary conditon type
-     type(sll_fft_plan), pointer         :: pfwd   !< fft plan in theta
-     type(sll_fft_plan), pointer         :: pinv   !< inverse fft plan in theta
+     type(sll_t_fft_plan), pointer         :: pfwd   !< fft plan in theta
+     type(sll_t_fft_plan), pointer         :: pinv   !< inverse fft plan in theta
      sll_real64, dimension(:,:), pointer :: f_fft  !< potential fft in theta
      sll_comp64, dimension(:),   pointer :: fk     !< \f$ f_k \f$
      sll_comp64, dimension(:),   pointer :: phik   !< \f$ phi_k \f$
@@ -127,33 +152,30 @@ module sll_m_poisson_2d_polar
      sll_real64, dimension(:),   pointer :: dlog_density !<for quasi neutral solver
      sll_real64, dimension(:),   pointer :: inv_Te !<for quasi neutral solver
 
-  end type sll_plan_poisson_polar
+  end type sll_t_plan_poisson_polar
 
   !> Initialize the polar poisson solver
-  interface sll_create
+  interface sll_o_create
      module procedure initialize_poisson_polar
-  end interface sll_create
+  end interface sll_o_create
 
   !> Get potential from the polar poisson solver
-  interface sll_solve
-     module procedure solve_poisson_polar
-  end interface sll_solve
+  interface sll_o_solve
+     module procedure sll_s_solve_poisson_polar
+  end interface sll_o_solve
 
   !> Deallocate memory
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_plan_poisson_polar
-  end interface sll_delete
+  end interface sll_o_delete
 
-  public :: sll_create, sll_solve, sll_delete
-  public :: new_plan_poisson_polar
-  public :: poisson_solve_polar, solve_poisson_polar
 
 contains
 
-!> Creation of sll_plan_poisson_polar object for the 
+!> Creation of sll_t_plan_poisson_polar object for the 
 !> Poisson solver in polar coordinate
 !> @returns a Poisson solver object for polar coordinates
-  function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc,dlog_density,inv_Te) result(this)
+  function sll_f_new_plan_poisson_polar(dr,rmin,nr,ntheta,bc,dlog_density,inv_Te) result(this)
 
     implicit none
 
@@ -164,7 +186,7 @@ contains
     sll_int32, optional :: bc(2) !< Boundary conditions, can be combined with +
                                  !< optional and default is Dirichlet in rmin and rmax
 
-    type(sll_plan_poisson_polar), pointer :: this    !< Poisson solver structure
+    type(sll_t_plan_poisson_polar), pointer :: this    !< Poisson solver structure
     sll_real64,dimension(:),optional :: dlog_density !< for quasi neutral solver
     sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
 
@@ -210,12 +232,12 @@ contains
       this%bc(2)=-1
     end if
 
-    this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    this%pfwd => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
+    this%pinv => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_backward)
     
     SLL_DEALLOCATE_ARRAY(buf,err)
 
-  end function new_plan_poisson_polar
+  end function sll_f_new_plan_poisson_polar
 
   !> Initialize the Poisson solver in polar coordinates
   subroutine initialize_poisson_polar(this,         &
@@ -228,7 +250,7 @@ contains
                                       dlog_density, &
                                       inv_Te)
 
-    type(sll_plan_poisson_polar) :: this !< Poisson solver object
+    type(sll_t_plan_poisson_polar) :: this !< Poisson solver object
 
     sll_real64, intent(in)             :: rmin         !< r min
     sll_real64, intent(in)             :: rmax         !< r max
@@ -277,25 +299,25 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    this%pfwd => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
+    this%pinv => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_backward)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
   end subroutine initialize_poisson_polar
 
 !======================================
-! deletion of sll_plan_poisson_polar
+! deletion of sll_t_plan_poisson_polar
 !======================================
 
-  !>delete a sll_plan_poisson_polar object
+  !>delete a sll_t_plan_poisson_polar object
   subroutine delete_plan_poisson_polar(this)
 
-    type(sll_plan_poisson_polar), pointer :: this
+    type(sll_t_plan_poisson_polar), pointer :: this
     sll_int32 :: err
 
     if (associated(this)) then
-       call fft_delete_plan(this%pfwd)
-       call fft_delete_plan(this%pinv)
+       call sll_s_fft_delete_plan(this%pfwd)
+       call sll_s_fft_delete_plan(this%pinv)
        SLL_DEALLOCATE_ARRAY(this%f_fft,err)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
@@ -311,17 +333,17 @@ contains
 !  Poisson solver
 !===================
 
-  !>subroutine solve_poisson_polar(plan,f,phi)
+  !>subroutine sll_s_solve_poisson_polar(plan,f,phi)
   !>poisson solver for polar system : \f$ -\Delta (phi)=f \f$
-  !>@param plan : sll_plan_poisson_polar, contains data for the solver
+  !>@param plan : sll_t_plan_poisson_polar, contains data for the solver
   !>@param f : distribution function, size (nr+1)*(ntheta+1), input
   !>@param phi : unknown field, size (nr+1)*(ntheta+1), output
   !>initialization must be done outside the solver
-  subroutine solve_poisson_polar(plan,f,phi)
+  subroutine sll_s_solve_poisson_polar(plan,f,phi)
 
     implicit none
 
-    type(sll_plan_poisson_polar) :: plan
+    type(sll_t_plan_poisson_polar) :: plan
     sll_real64, dimension(:,:), intent(in)  :: f
     sll_real64, dimension(:,:), intent(out) :: phi
 
@@ -345,7 +367,7 @@ contains
     plan%f_fft = f
 
     do i=1,nr+1
-      call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
+      call sll_s_fft_apply_plan_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
 
     do k = 0,ntheta/2
@@ -361,21 +383,21 @@ contains
         plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2+plan%inv_Te(i)
         plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r)+plan%dlog_density(i)/(2._f64*dr)
         
-        plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)
+        plan%fk(i)=sll_f_fft_get_mode_r2c_1d(plan%pfwd,plan%f_fft(i,1:ntheta),k)
 
       enddo
       
       plan%phik=(0.0_f64,0.0_f64)
 
       !boundary condition at rmin
-      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(1)==sll_p_dirichlet)then !Dirichlet
         plan%a(1)=0.0_f64
       endif
-      if(bc(1)==SLL_NEUMANN)then
+      if(bc(1)==sll_p_neumann)then
         plan%a(2)=plan%a(2)+plan%a(1) !Neumann
         plan%a(1)=0._f64
       endif
-      if(bc(1)==SLL_NEUMANN_MODE_0)then 
+      if(bc(1)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(2)=plan%a(2)+plan%a(1)
           plan%a(1)=0._f64
@@ -385,14 +407,14 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(2)==sll_p_dirichlet)then !Dirichlet
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==SLL_NEUMANN)then
+      if(bc(2)==sll_p_neumann)then
         plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==SLL_NEUMANN_MODE_0)then 
+      if(bc(2)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
           plan%a(3*(nr-1))=0.0_f64
@@ -401,17 +423,17 @@ contains
         endif
       endif
 
-      call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
-      call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
+      call sll_s_setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
+      call sll_o_solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
 
       !boundary condition at rmin
-      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(1)==sll_p_dirichlet)then !Dirichlet
         plan%phik(1)=(0.0_f64,0.0_f64)
       endif
-      if(bc(1)==SLL_NEUMANN)then
+      if(bc(1)==sll_p_neumann)then
         plan%phik(1)=plan%phik(2) !Neumann
       endif
-      if(bc(1)==SLL_NEUMANN_MODE_0)then 
+      if(bc(1)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%phik(1)=plan%phik(2)
         else !Dirichlet for other modes
@@ -420,13 +442,13 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(2)==sll_p_dirichlet)then !Dirichlet
         plan%phik(nr+1)=(0.0_f64,0.0_f64)
       endif
-      if(bc(2)==SLL_NEUMANN)then
+      if(bc(2)==sll_p_neumann)then
         plan%phik(nr+1)=plan%phik(nr) !Neumann
       endif
-      if(bc(2)==SLL_NEUMANN_MODE_0)then 
+      if(bc(2)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%phik(nr+1)=plan%phik(nr)
         else !Dirichlet for other modes
@@ -435,7 +457,7 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)
+        call sll_s_fft_set_mode_c2r_1d(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)
       end do
     end do
 
@@ -459,24 +481,24 @@ contains
       endif
     ! FFT INVERSE
     do i=1,nr+1
-      call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+      call sll_s_fft_apply_plan_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
     phi(:,ntheta+1)=phi(:,1)
     
-  end subroutine solve_poisson_polar
+  end subroutine sll_s_solve_poisson_polar
 
-  !>subroutine poisson_solve_polar(plan,f,phi)
+  !>subroutine sll_s_poisson_solve_polar(plan,f,phi)
   !>poisson solver for polar system : \f$ -\Delta (phi)=fa\f$
-  !>@param plan : sll_plan_poisson_polar, contains data for the solver
+  !>@param plan : sll_t_plan_poisson_polar, contains data for the solver
   !>@param f : distribution function, size (nr+1)*(ntheta+1), input
   !>@param phi : unknown field, size (nr+1)*(ntheta+1), output
   !>initialization must be done outside the solver
-  subroutine poisson_solve_polar(plan,f,phi,ierr)
+  subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
 
     implicit none
 
-    type(sll_plan_poisson_polar), pointer :: plan
+    type(sll_t_plan_poisson_polar), pointer :: plan
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in)  :: f
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
     sll_int32 ,                           optional              :: ierr !< error code
@@ -499,7 +521,7 @@ contains
     plan%f_fft = f
 
     do i=1,nr+1
-      call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
+      call sll_s_fft_apply_plan_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
 
     ierr_sup_1em12 = 0
@@ -514,20 +536,20 @@ contains
         plan%a(3*(i-1)-1)=2.0_f64/dr**2+(kval/r)**2
         plan%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
 
-        plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
+        plan%fk(i)=sll_f_fft_get_mode_r2c_1d(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
       enddo
 
       plan%phik=(0.0_f64,0.0_f64)
 
       !boundary condition at rmin
-      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(1)==sll_p_dirichlet)then !Dirichlet
         plan%a(1)=0.0_f64
       endif
-      if(bc(1)==SLL_NEUMANN)then
+      if(bc(1)==sll_p_neumann)then
         plan%a(2)=plan%a(2)+plan%a(1) !Neumann
         plan%a(1)=0._f64
       endif
-      if(bc(1)==SLL_NEUMANN_MODE_0)then 
+      if(bc(1)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(2)=plan%a(2)+plan%a(1)
           plan%a(1)=0._f64
@@ -537,14 +559,14 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(2)==sll_p_dirichlet)then !Dirichlet
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==SLL_NEUMANN)then
+      if(bc(2)==sll_p_neumann)then
         plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==SLL_NEUMANN_MODE_0)then 
+      if(bc(2)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
           plan%a(3*(nr-1))=0.0_f64
@@ -553,17 +575,17 @@ contains
         endif
       endif
 
-      call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
-      call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
+      call sll_s_setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
+      call sll_o_solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
 
       !boundary condition at rmin
-      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(1)==sll_p_dirichlet)then !Dirichlet
         plan%phik(1)=(0.0_f64,0.0_f64)
       endif
-      if(bc(1)==SLL_NEUMANN)then
+      if(bc(1)==sll_p_neumann)then
         plan%phik(1)=plan%phik(2) !Neumann
       endif
-      if(bc(1)==SLL_NEUMANN_MODE_0)then 
+      if(bc(1)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%phik(1)=plan%phik(2)
         else !Dirichlet for other modes
@@ -572,13 +594,13 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(2)==sll_p_dirichlet)then !Dirichlet
         plan%phik(nr+1)=(0.0_f64,0.0_f64)
       endif
-      if(bc(2)==SLL_NEUMANN)then
+      if(bc(2)==sll_p_neumann)then
         plan%phik(nr+1)=plan%phik(nr) !Neumann
       endif
-      if(bc(2)==SLL_NEUMANN_MODE_0)then 
+      if(bc(2)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           plan%phik(nr+1)=plan%phik(nr)
         else !Dirichlet for other modes
@@ -614,13 +636,13 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
+        call sll_s_fft_set_mode_c2r_1d(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
       end do
     end do
 
     ! FFT INVERSE
     do i=1,nr+1
-      call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+      call sll_s_fft_apply_plan_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
     phi(:,ntheta+1)=phi(:,1)
@@ -629,7 +651,7 @@ contains
       if (present(ierr)) &
         ierr = ierr_sup_1em12 
     end if
-  end subroutine poisson_solve_polar
+  end subroutine sll_s_poisson_solve_polar
 
 end module sll_m_poisson_2d_polar
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

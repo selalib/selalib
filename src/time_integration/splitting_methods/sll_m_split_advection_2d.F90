@@ -1,22 +1,48 @@
-!> @ingroup operator_splitting
+!> @ingroup sll_t_operator_splitting
 !> @brief Implements split operators for constant coefficient advection
 module sll_m_split_advection_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-  use sll_m_characteristics_1d_base
-  use sll_m_interpolators_1d_base
-  use sll_m_operator_splitting
-  use sll_m_cartesian_meshes  
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_cubic_non_uniform_splines
-  use sll_m_ode_solvers
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    sll_t_cubic_nonunif_spline_1d, &
+    sll_f_new_cubic_nonunif_spline_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    sll_s_initialize_operator_splitting, &
+    sll_t_operator_splitting
 
   implicit none
 
-  sll_int32, parameter :: SLL_ADVECTIVE    = 0
-  sll_int32, parameter :: SLL_CONSERVATIVE = 1
+  public :: &
+    sll_f_new_split_advection_2d, &
+    sll_p_advective, &
+    sll_p_conservative, &
+    sll_t_split_advection_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  sll_int32, parameter :: sll_p_advective    = 0
+  sll_int32, parameter :: sll_p_conservative = 1
 
   !> @brief 
   !> Simple operator splitting type for 2D  advection
@@ -24,19 +50,19 @@ module sll_m_split_advection_2d
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
   !> comment: how to change then the advection fields in time?
-  type, extends(operator_splitting) :: split_advection_2d
+  type, extends(sll_t_operator_splitting) :: sll_t_split_advection_2d
      !> interpolator object in first direction
-     class(sll_interpolator_1d_base), pointer  :: interp1
+     class(sll_c_interpolator_1d), pointer  :: interp1
      !> interpolator object in second direction
-     class(sll_interpolator_1d_base), pointer  :: interp2
+     class(sll_c_interpolator_1d), pointer  :: interp2
      !> characteristics object in first direction
-     class(sll_characteristics_1d_base), pointer  :: charac1
-     procedure(signature_process_outside_point_1d), pointer, nopass :: process_outside_point1 !< for bdr direction 1
+     class(sll_c_characteristics_1d_base), pointer  :: charac1
+     procedure(sll_i_signature_process_outside_point_1d), pointer, nopass :: process_outside_point1 !< for bdr direction 1
      !> characteristics object in second direction
-     class(sll_characteristics_1d_base), pointer  :: charac2
-     procedure(signature_process_outside_point_1d), pointer, nopass :: process_outside_point2 !< for bdr direction 1
+     class(sll_c_characteristics_1d_base), pointer  :: charac2
+     procedure(sll_i_signature_process_outside_point_1d), pointer, nopass :: process_outside_point2 !< for bdr direction 1
      !> mesh common for charac and interp
-     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
      !> function do be evolved
      sll_real64, dimension(:,:), pointer :: f
      !> dimension in first direction for f
@@ -47,16 +73,16 @@ module sll_m_split_advection_2d
      sll_real64, dimension(:), pointer  :: dof_positions1
      !> DOF positions in second direction for f
      sll_real64, dimension(:), pointer  :: dof_positions2
-     !> advection form (SLL_ADVECTIVE or SLL_CONSERVATIVE)
+     !> advection form (sll_p_advective or sll_p_conservative)
      sll_int32 :: advection_form
      !> advection coefficient in first direction
      sll_real64, dimension(:,:), pointer  :: a1
      !> advection coefficient in second direction
      sll_real64, dimension(:,:), pointer  :: a2
 
-     class(sll_coordinate_transformation_2d_base), pointer :: transformation !< coordinate transformation
-     type (cubic_nonunif_spline_1D), pointer :: spl_eta1
-     type (cubic_nonunif_spline_1D), pointer :: spl_eta2
+     class(sll_c_coordinate_transformation_2d_base), pointer :: transformation !< coordinate transformation
+     type (sll_t_cubic_nonunif_spline_1d), pointer :: spl_eta1
+     type (sll_t_cubic_nonunif_spline_1d), pointer :: spl_eta2
 
      
       
@@ -89,11 +115,11 @@ module sll_m_split_advection_2d
    contains
      procedure, pass(this) :: operatorT => adv1  !< advection in first direction
      procedure, pass(this) :: operatorV => adv2  !< advection in second direction
-  end type split_advection_2d
+  end type sll_t_split_advection_2d
 
 
 contains
-  function new_split_advection_2d( &
+  function sll_f_new_split_advection_2d( &
       f, &
       a1, &
       a2, &
@@ -113,24 +139,24 @@ contains
       transformation, &
       csl_2012) &
       result(this)  
-    class(split_advection_2d), pointer :: this  !< object to be initialised
+    class(sll_t_split_advection_2d), pointer :: this  !< object to be initialised
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, dimension(:,:), pointer, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_interpolator_1d_base), pointer  :: interp1 !< interpolator direction 1
-    class(sll_interpolator_1d_base), pointer  :: interp2 !< interpolator direction 1
-    class(sll_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
-    procedure(signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
-    class(sll_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
-    procedure(signature_process_outside_point_1d), pointer :: process_outside_point2 !< for bdr direction 2
-    type(sll_cartesian_mesh_2d), pointer :: mesh_2d !< cartesian mesh common to interp and charac
+    class(sll_c_interpolator_1d), pointer  :: interp1 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp2 !< interpolator direction 1
+    class(sll_c_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
+    procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
+    class(sll_c_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
+    procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point2 !< for bdr direction 2
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d !< cartesian mesh common to interp and charac
     sll_int32, intent(in) :: advection_form
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step   
-    class(sll_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
     logical, intent(in), optional :: csl_2012
     ! local variable
     sll_int32 :: ierr
@@ -180,24 +206,24 @@ contains
       dt, &
       transformation, &
       csl_2012)
-    class(split_advection_2d), intent(inout)   :: this !< object 
+    class(sll_t_split_advection_2d), intent(inout)   :: this !< object 
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, dimension(:,:), pointer, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_interpolator_1d_base), pointer  :: interp1 !< interpolator direction 1
-    class(sll_interpolator_1d_base), pointer  :: interp2 !< interpolator direction 1
-    class(sll_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
-    procedure(signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
-    class(sll_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
-    procedure(signature_process_outside_point_1d), pointer :: process_outside_point2 !< for bdr direction 2
-    type(sll_cartesian_mesh_2d), pointer :: mesh_2d !< cartesian mesh common to interp and charac
+    class(sll_c_interpolator_1d), pointer  :: interp1 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp2 !< interpolator direction 1
+    class(sll_c_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
+    procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
+    class(sll_c_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
+    procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point2 !< for bdr direction 2
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d !< cartesian mesh common to interp and charac
     sll_int32, intent(in) :: advection_form
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step
-    class(sll_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
     logical, intent(in), optional :: csl_2012
     sll_int32 :: ierr
     sll_int32 :: n1
@@ -240,10 +266,10 @@ contains
     eta2_max = mesh_2d%eta2_max
     
     select case (this%advection_form)
-      case (SLL_ADVECTIVE)
+      case (sll_p_advective)
         this%num_dof1 = n1
         this%num_dof2 = n2
-      case (SLL_CONSERVATIVE)
+      case (sll_p_conservative)
         this%num_dof1 = n1-1
         this%num_dof2 = n2-1
       case default
@@ -312,13 +338,13 @@ contains
       this%origin_middle2(i) = 0.5_f64*(this%origin2(i)+this%origin2(i+1))
     enddo
 
-    this%spl_eta1 => new_cubic_nonunif_spline_1D( &
+    this%spl_eta1 => sll_f_new_cubic_nonunif_spline_1d( &
       n1-1, &
-      SLL_PERIODIC)
-    this%spl_eta2 => new_cubic_nonunif_spline_1D( n2-1, SLL_PERIODIC)
+      sll_p_periodic)
+    this%spl_eta2 => sll_f_new_cubic_nonunif_spline_1d( n2-1, sll_p_periodic)
     
 
-    call initialize_operator_splitting( &
+    call sll_s_initialize_operator_splitting( &
       this, &
       split_case, &
       split_step, &
@@ -329,7 +355,7 @@ contains
 
   !> @brief Advection operator in first direction
   subroutine adv1(this, dt)
-    class(split_advection_2d), intent(inout) :: this !< object 
+    class(sll_t_split_advection_2d), intent(inout) :: this !< object 
     sll_real64, intent(in) :: dt   !< time step
     ! local variables
     sll_int32 :: i
@@ -378,7 +404,7 @@ contains
       !        num_dof+1, &
       !        eta_1, &
       !        eta_1+eta_max-eta_min, &
-      !        SLL_PERIODIC)
+      !        sll_p_periodic)
 
 !      do j=1,num_dof2
 !
@@ -463,12 +489,12 @@ contains
 !          this%feet1(i) = this%xi1(i)-this%A1jac(i)*dt
 !        enddo  
 !           
-!        call compute_spline_nonunif( &
+!        call sll_s_compute_spline_nonunif( &
 !          this%primitive1, &
 !          this%spl_eta1, &
 !          this%xi1)
 !        ! interpolate primitive at origin of characteritics
-!        call interpolate_array_value_nonunif( &
+!        call sll_s_interpolate_array_value_nonunif( &
 !          this%feet_inside1, &
 !          this%primitive1, &
 !          n1, &
@@ -538,7 +564,7 @@ contains
 !        maxval(this%input1(1:num_dof1))
 
 
-      if(this%advection_form==SLL_CONSERVATIVE)then      
+      if(this%advection_form==sll_p_conservative)then      
         call function_to_primitive_adv( &
           this%input1, &
           this%origin1, &
@@ -565,7 +591,7 @@ contains
       
 
       !advection
-!      if(this%advection_form==SLL_CONSERVATIVE)then      
+!      if(this%advection_form==sll_p_conservative)then      
 !        do i=1,num_dof1
 !          this%A1jac(i) = 0.5_f64*(this%A1(i,j)+this%A1(i+1,j))
 !        enddo
@@ -602,13 +628,14 @@ contains
       enddo  
 
 
-      this%output1(1:n1) = this%interp1%interpolate_array( &
+      call this%interp1%interpolate_array( &
         n1, &
         this%input1(1:n1), &
-        this%feet_inside1(1:n1))      
+        -this%feet_inside1(1:n1),&
+        this%output1(1:n1))      
       
       
-      if(this%advection_form==SLL_CONSERVATIVE)then      
+      if(this%advection_form==sll_p_conservative)then      
         call primitive_to_function_adv( &
           this%output1(1:n1), &
           this%origin1(1:n1), &
@@ -634,7 +661,7 @@ contains
 !      
 !      print *,'#mean_adv1=',mean
       
-!      if(this%advection_form==SLL_CONSERVATIVE)then      
+!      if(this%advection_form==sll_p_conservative)then      
 !        call function_to_primitive_adv( &
 !          this%output1, &
 !          this%origin1, &
@@ -652,7 +679,7 @@ contains
 
   !> @brief Advection operator in second direction
   subroutine adv2(this, dt)
-    class(split_advection_2d), intent(inout) :: this !< object 
+    class(sll_t_split_advection_2d), intent(inout) :: this !< object 
     sll_real64, intent(in) :: dt   !< time step
     ! local variables
     sll_int32 :: i
@@ -680,7 +707,7 @@ contains
       this%input2(1:num_dof2) = this%f(i,1:num_dof2)
       !print *,'#input2=',minval(this%input2(1:num_dof2)),maxval(this%input2(1:num_dof2))
      
-      if(this%advection_form==SLL_CONSERVATIVE)then      
+      if(this%advection_form==sll_p_conservative)then      
         call function_to_primitive_adv( &
           this%input2, &
           this%origin2, &
@@ -709,7 +736,7 @@ contains
       
 
       !advection
-!      if(this%advection_form==SLL_CONSERVATIVE)then      
+!      if(this%advection_form==sll_p_conservative)then      
 !        do j=1,num_dof2
 !          this%A2jac(j) = 0.5_f64*(this%A2(i,j)+this%A2(i,j+1))
 !        enddo
@@ -744,13 +771,14 @@ contains
           eta2_min, &
           eta2_max)
       enddo  
-      this%output2(1:n2) = this%interp2%interpolate_array( &
-        n2, &
-        this%input2(1:n2), &
-        this%feet_inside2(1:n2))      
+      call this%interp2%interpolate_array( &
+           n2, &
+           this%input2(1:n2), &
+           -this%feet_inside2(1:n2), &
+           this%output2(1:n2))      
       
       
-      if(this%advection_form==SLL_CONSERVATIVE)then      
+      if(this%advection_form==sll_p_conservative)then      
         call primitive_to_function_adv( &
           this%output2(1:n2), &
           this%origin2(1:n2), &

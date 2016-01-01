@@ -11,19 +11,21 @@
 !------------------------------------------------------------------------------
 module sll_m_io_utilities
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
 
   public :: &
-    sll_s_remove_file,       &
-    sll_s_read_file,         &
+    sll_f_check_empty_file, &
     sll_f_check_equal_files, &
-    sll_f_check_empty_file,  &
-    sll_s_ints_to_string,    &
+    sll_s_ints_to_string, &
+    sll_s_read_file, &
+    sll_s_remove_file, &
     sll_s_split_path
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !==============================================================================
 contains

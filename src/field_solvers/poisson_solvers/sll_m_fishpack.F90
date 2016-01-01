@@ -17,17 +17,32 @@
 !> @snippet poisson_solvers/test_fishpack.F90 example_polar
 module sll_m_fishpack
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
+! use F77_fishpack, only: &
+!   hw3crt, &
+!   hwscrt, &
+!   hwsplr
 
-implicit none
-private
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  implicit none
+
+  public :: &
+    sll_p_cartesian_2d, &
+    sll_p_cartesian_3d, &
+    sll_t_fishpack_2d, &
+    sll_t_fishpack_3d, &
+    sll_p_polar_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Fishpack solver cartesian 2d
-type, public :: fishpack_2d
+type :: sll_t_fishpack_2d
    sll_int32           :: nc_eta1  !< number of cells
    sll_int32           :: nc_eta2  !< number of cells
    sll_real64          :: eta1_min !< geometry parameter
@@ -49,10 +64,10 @@ contains
    procedure :: create => new_2d   
    !> compute the potential
    procedure :: solve => solve_2d      
-end type fishpack_2d
+end type sll_t_fishpack_2d
 
 !> Fishpack solver cartesian 3d
-type, public :: fishpack_3d
+type :: sll_t_fishpack_3d
    sll_int32           :: nc_eta1  !< number of cells
    sll_int32           :: nc_eta2  !< number of cells
    sll_int32           :: nc_eta3  !< number of cells
@@ -80,14 +95,14 @@ contains
    procedure :: create => new_3d    
    !> compute the potential
    procedure :: solve => solve_3d 
-end type fishpack_3d
+end type sll_t_fishpack_3d
 
 !> Parameter to solve poisson equation on cartesian mesh 2d
-sll_int32, parameter, public :: CARTESIAN_2D = 0
+sll_int32, parameter :: sll_p_cartesian_2d = 0
 !> Parameter to solve poisson equation on polar mesh 2d
-sll_int32, parameter, public :: POLAR_2D     = 1
+sll_int32, parameter :: sll_p_polar_2d     = 1
 !> Parameter to solve poisson equation on cartesian mesh 3d
-sll_int32, parameter, public :: CARTESIAN_3D = 2
+sll_int32, parameter :: sll_p_cartesian_3d = 2
 
 contains
 
@@ -96,7 +111,7 @@ contains
                     eta1_min,eta1_max,nc_eta1,bc_eta1, &
                     eta2_min,eta2_max,nc_eta2,bc_eta2)
 
-    class(fishpack_2d),intent(out) :: this      !< Fishpack solver
+    class(sll_t_fishpack_2d),intent(out) :: this      !< Fishpack solver
     sll_int32, intent(in)          :: nc_eta1   !< x number of cells
     sll_int32, intent(in)          :: nc_eta2   !< y number of cells
     sll_real64, intent(in)         :: eta1_min  !< left side of the domain
@@ -122,11 +137,11 @@ contains
     this%bc_eta1 = bc_eta1
     this%bc_eta2 = bc_eta2
 
-    if (bc_eta1 /= SLL_PERIODIC) then
+    if (bc_eta1 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bda(nc_eta2+1),this%error)
        SLL_ALLOCATE(this%bdb(nc_eta2+1),this%error)
     end if
-    if (bc_eta2 /= SLL_PERIODIC) then
+    if (bc_eta2 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bdc(nc_eta1+1),this%error)
        SLL_ALLOCATE(this%bdd(nc_eta1+1),this%error)
     end if
@@ -139,7 +154,7 @@ contains
                     eta2_min,eta2_max,nc_eta2,bc_eta2, &
                     eta3_min,eta3_max,nc_eta3,bc_eta3  )
 
-    class(fishpack_3d),intent(out) :: this
+    class(sll_t_fishpack_3d),intent(out) :: this
     sll_int32,         intent(in)  :: nc_eta1
     sll_int32,         intent(in)  :: nc_eta2
     sll_int32,         intent(in)  :: nc_eta3
@@ -171,15 +186,15 @@ contains
     this%bc_eta2  = bc_eta2
     this%bc_eta3  = bc_eta3
 
-    if (bc_eta1 /= SLL_PERIODIC) then
+    if (bc_eta1 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bda(nc_eta2+1,nc_eta3+1),this%error)
        SLL_ALLOCATE(this%bdb(nc_eta2+1,nc_eta3+1),this%error)
     end if
-    if (bc_eta2 /= SLL_PERIODIC) then
+    if (bc_eta2 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bdc(nc_eta1+1,nc_eta3+1),this%error)
        SLL_ALLOCATE(this%bdd(nc_eta1+1,nc_eta3+1),this%error)
     end if
-    if (bc_eta3 /= SLL_PERIODIC) then
+    if (bc_eta3 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bde(nc_eta1+1,nc_eta2+1),this%error)
        SLL_ALLOCATE(this%bdf(nc_eta1+1,nc_eta2+1),this%error)
     end if
@@ -191,7 +206,7 @@ contains
   subroutine solve_2d(this, field)
 
      implicit none
-     class(fishpack_2d),intent(in)     :: this
+     class(sll_t_fishpack_2d),intent(in)     :: this
      sll_real64, dimension(:,:)        :: field
      sll_real64                        :: w
      sll_int32                         :: idimf
@@ -205,7 +220,7 @@ contains
      ldimf = this%nc_eta1+1
      mdimf = this%nc_eta2+1
 
-     if ( this%geometry == CARTESIAN_2D ) then
+     if ( this%geometry == sll_p_cartesian_2d ) then
   
         call hwscrt (this%eta1_min, this%eta1_max, this%nc_eta1, &
                      this%bc_eta1, this%bda, this%bdb, &
@@ -213,7 +228,7 @@ contains
                      this%bc_eta2, this%bdc, this%bdd, &
                      this%elmbda, field, idimf, this%pertrb, this%error)
 
-     else if ( this%geometry == POLAR_2D ) then
+     else if ( this%geometry == sll_p_polar_2d ) then
 
 
         call hwsplr (this%eta1_min, this%eta1_max, this%nc_eta1, &
@@ -234,7 +249,7 @@ contains
   subroutine solve_3d(this, field)
 
      implicit none
-     class(fishpack_3d),intent(in)     :: this
+     class(sll_t_fishpack_3d),intent(in)     :: this
      sll_real64, dimension(:,:,:)      :: field
      sll_real64                        :: w
      sll_int32                         :: ldimf
@@ -244,7 +259,7 @@ contains
      ldimf = this%nc_eta1+1
      mdimf = this%nc_eta2+1
 
-     if ( this%geometry == CARTESIAN_3D) then
+     if ( this%geometry == sll_p_cartesian_3d) then
 
         call hw3crt (this%eta1_min,this%eta1_max,this%nc_eta1, &
                      this%bc_eta1,this%bda,this%bdb, &

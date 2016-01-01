@@ -25,25 +25,39 @@
 !> This is controlled by the variable <code>HDF5_ENABLE</code>.
 !>
 module sll_m_binary_io
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_s_binary_file_close, &
+    sll_s_binary_file_create, &
+    sll_s_binary_read_array_0d, &
+    sll_s_binary_read_array_2d, &
+    sll_o_binary_write_array, &
+    sll_s_binary_write_array_0d, &
+    sll_s_binary_write_array_1d, &
+    sll_s_binary_write_array_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Write a nD array in a binary file
   !> \param[in] file_id file unit number
   !> \param[in] array array
   !> \param[out] error error code
-  interface sll_binary_write_array
-     module procedure sll_binary_write_array_1d
-     module procedure sll_binary_write_array_2d
-     module procedure sll_binary_write_array_3d
+  interface sll_o_binary_write_array
+     module procedure sll_s_binary_write_array_1d
+     module procedure sll_s_binary_write_array_2d
+     module procedure sll_s_binary_write_array_3d
   end interface
 
 contains
   
   !> Create binary file
-  subroutine sll_binary_file_create(filename,file_id,error)
+  subroutine sll_s_binary_file_create(filename,file_id,error)
     character(len=*) , intent(in)  :: filename   !<file name
     sll_int32        , intent(out) :: file_id    !<file unit number
     sll_int32        , intent(out) :: error      !<error code
@@ -76,7 +90,7 @@ contains
             FORM='UNFORMATTED', &
             IOSTAT=error)
 
-     end subroutine sll_binary_file_create
+     end subroutine sll_s_binary_file_create
 
 !> Open binary file
 !subroutine sll_binary_file_open(file_id,error)
@@ -89,16 +103,16 @@ contains
 
 
 !> Close binary file
-subroutine sll_binary_file_close(file_id,error)
+subroutine sll_s_binary_file_close(file_id,error)
 sll_int32, intent(in)  :: file_id !<file unit number
 sll_int32, intent(out) :: error   !<error code
 
 close(file_id, IOSTAT=error)
      
-end subroutine sll_binary_file_close
+end subroutine sll_s_binary_file_close
 
 !> Write a 0D array in the binary file file_id
-subroutine sll_binary_write_array_0d(file_id,array,error)
+subroutine sll_s_binary_write_array_0d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id  !< file unit number
 sll_int32 , intent(out)      :: error    !< error code
 sll_real64, intent(in)       :: array !< data array
@@ -107,7 +121,7 @@ end subroutine
 
 
 !> Write a 1D array in the binary file file_id
-subroutine sll_binary_write_array_1d(file_id,array,error)
+subroutine sll_s_binary_write_array_1d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id  !< file unit number
 sll_int32 , intent(out)      :: error    !< error code
 sll_real64, intent(in)       :: array(:) !< data array
@@ -115,7 +129,7 @@ write(file_id,IOSTAT=error) array
 end subroutine
 
 !> Write a 2D array in the binary file file_id
-subroutine sll_binary_write_array_2d(file_id,array,error)
+subroutine sll_s_binary_write_array_2d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id    !< file unit number
 sll_int32 , intent(out)      :: error      !< error code
 sll_real64, intent(in)       :: array(:,:) !< adata array
@@ -123,7 +137,7 @@ write(file_id,IOSTAT=error) array
 end subroutine
 
 !> Write a 3D array in the binary file file_id
-subroutine sll_binary_write_array_3d(file_id,array,error)
+subroutine sll_s_binary_write_array_3d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id      !< file unit number
 sll_int32 , intent(out)      :: error        !< error code
 sll_real64, intent(in)       :: array(:,:,:) !< data array
@@ -132,7 +146,7 @@ end subroutine
 
 
 !> Read a 0D array in the binary file file_id
-subroutine sll_binary_read_array_0d(file_id,array,error)
+subroutine sll_s_binary_read_array_0d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id  !< file unit number
 sll_int32 , intent(out)      :: error    !< error code
 sll_real64, intent(out)       :: array !< data array
@@ -140,7 +154,7 @@ read(file_id,IOSTAT=error) array
 end subroutine
 
 !> Read a 2D array in the binary file file_id
-subroutine sll_binary_read_array_2d(file_id,array,error)
+subroutine sll_s_binary_read_array_2d(file_id,array,error)
 sll_int32 , intent(in)       :: file_id    !< file unit number
 sll_int32 , intent(out)      :: error      !< error code
 sll_real64, intent(out)       :: array(:,:) !< adata array

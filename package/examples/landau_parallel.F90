@@ -4,8 +4,8 @@ program landau_parallel
 
   implicit none
 
-  class(sll_interpolator_1d_base), pointer   :: interp_x
-  class(sll_interpolator_1d_base), pointer   :: interp_v
+  class(sll_c_interpolator_1d), pointer   :: interp_x
+  class(sll_c_interpolator_1d), pointer   :: interp_v
   type(sll_cubic_spline_interpolator_1d), target :: spl_x
   type(sll_cubic_spline_interpolator_1d), target :: spl_v
   sll_real64, dimension(:,:),  pointer       :: f
@@ -209,7 +209,7 @@ contains
      global_indices = local_to_global(layout_x,(/1,j/)) 
      gj = global_indices(2)
      alpha = (v_min +(gj-1)*delta_v)*dt
-     f(:,j) = interp_x%interpolate_array_disp(loc_sz_i,f(:,j),alpha)
+     call interp_x%interpolate_array_disp_inplace(loc_sz_i,f(:,j),-alpha)
 
   end do
 
@@ -227,7 +227,7 @@ contains
      global_indices = local_to_global(layout_v,(/i,1/)) 
      gi = global_indices(1)
      alpha = efield(gi)*dt
-     ft(i,:) = interp_v%interpolate_array_disp(loc_sz_j,ft(i,:),alpha)
+     call interp_v%interpolate_array_disp_inplace(loc_sz_j,ft(i,:),-alpha)
 
   end do
 

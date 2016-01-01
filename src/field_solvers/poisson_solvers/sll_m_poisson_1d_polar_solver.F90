@@ -21,15 +21,22 @@
 !> @ingroup poisson_solvers
 !> solves axisymmetric poisson
 module sll_m_poisson_1d_polar_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!use sll_m_boundary_condition_descriptors
-use sll_m_poisson_1d_base
-!use sll_m_poisson_2d_polar
-implicit none
+#include "sll_working_precision.h"
 
-  type,extends(sll_poisson_1d_base) :: poisson_1d_polar_solver     
+  use sll_m_poisson_1d_base, only: &
+    sll_c_poisson_1d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_poisson_1d_polar_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_poisson_1d_base) :: poisson_1d_polar_solver     
     sll_real64 :: length
     sll_int32 :: nc_eta1
   !type(sll_plan_poisson_polar), pointer                   :: poiss
@@ -48,7 +55,7 @@ implicit none
   end type poisson_1d_polar_solver
 
 contains
-  function new_poisson_1d_polar_solver( &
+  function sll_f_new_poisson_1d_polar_solver( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -70,7 +77,7 @@ contains
       nc_eta1, &
       bc )
     
-  end function new_poisson_1d_polar_solver
+  end function sll_f_new_poisson_1d_polar_solver
   
   
   subroutine initialize_poisson_1d_polar_solver( &

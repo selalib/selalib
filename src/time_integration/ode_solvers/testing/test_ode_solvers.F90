@@ -1,20 +1,28 @@
 program test_ode_solvers
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_ode_solvers
-  use sll_m_constants
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_ode_solvers, only: &
+    sll_p_compact_ode, &
+    sll_s_implicit_ode_nonuniform, &
+    sll_p_periodic_ode
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32 :: i, ncells, ierr, order
   sll_real64 :: xmin, xmax, deltax, deltat, x, error, a
   sll_real64, dimension(:), pointer :: a_n, a_np1, xin, xout
 
-  print*, 'checking implicit_ode_nonuniform'
+  print*, 'checking sll_s_implicit_ode_nonuniform'
   print*, ' '
   ncells = 100
   xmin = 0.0_f64
-  xmax = sll_pi
+  xmax = sll_p_pi
   deltax = (xmax-xmin) / ncells
   
   deltat = 0.01_f64
@@ -28,7 +36,7 @@ program test_ode_solvers
   do i=1, ncells
      xin(i+1) = xin(i) + xin(i+1)
   end do
-  xin = (xin-xin(1))/(xin(ncells+1)-xin(1))*sll_pi
+  xin = (xin-xin(1))/(xin(ncells+1)-xin(1))*sll_p_pi
 
   print*, 'checking compact boundary conditions'
   print*, '------------------------------------'
@@ -43,7 +51,7 @@ program test_ode_solvers
 
   print*, 'testing order 1:'
   order = 1
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, COMPACT_ODE, xout,  a_n ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_compact_ode, xout,  a_n ) 
 print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
@@ -55,7 +63,7 @@ print *, 'do I see this?'
 
     print*, 'testing order 2:'
   order = 2
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, COMPACT_ODE, xout,  a_n, a_np1 ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_compact_ode, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
@@ -72,22 +80,22 @@ print *, 'do I see this?'
 
   print*, 'testing order 1 on a(x) = sin(x)'
   order = 1
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, COMPACT_ODE, xout,  a_n ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_compact_ode, xout,  a_n ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(xmin+modulo(2.0_f64*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
      !print*, i, x*exp(-deltat**2/2), xout(i)
   end do
   print*,'     error=', error
 
     print*, 'testing order 2 on a(x) = sin(x)'
   order = 2
-  call implicit_ode_nonuniform( order, deltat, xin, ncells,  COMPACT_ODE, xout,  a_n, a_np1 ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells,  sll_p_compact_ode, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(xmin+modulo(2.0_f64*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error
@@ -103,7 +111,7 @@ print *, 'do I see this?'
   a_n(:) = a
   a_np1(:) = a 
   order = 2
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n, a_np1 ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_periodic_ode, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
@@ -117,7 +125,7 @@ print *, 'do I see this?'
   a_n(:) = a
   a_np1(:) = a
   order = 2
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n, a_np1 ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_periodic_ode, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
@@ -136,7 +144,7 @@ print *, 'do I see this?'
 
   print*, 'testing order 1:'
   order = 1
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_periodic_ode, xout,  a_n ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
@@ -147,11 +155,11 @@ print *, 'do I see this?'
 
     print*, 'testing order 2:'
   order = 2
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n, a_np1 ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_periodic_ode, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error, abs(modulo(x*exp(-deltat**2/2), xmax-xmin) - xout(i)))
+     error = max(error, abs(modulo(x*exp(-deltat**2/2.0_f64), xmax-xmin) - xout(i)))
      !print*, i, modulo(xmin+(i-1)*deltax - deltat, xmax-xmin), xout(i)
   end do
   print*,'     error=', error
@@ -164,21 +172,21 @@ print *, 'do I see this?'
 
   print*, 'testing order 1 on a(x) = sin(x)'
   order = 1
-  call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells, sll_p_periodic_ode, xout,  a_n ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
+     error = max(error,abs(2.0_f64*atan(tan(x/2)*exp(-deltat))-xout(i)))
   end do
   print*,'     error=', error
 
     print*, 'testing order 2 on a(x) = sin(x)'
   order = 2
-  call implicit_ode_nonuniform( order, deltat, xin, ncells,  PERIODIC_ODE, xout,  a_n, a_np1 ) 
+  call sll_s_implicit_ode_nonuniform( order, deltat, xin, ncells,  sll_p_periodic_ode, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
+     error = max(error,abs(2.0_f64*atan(tan(x/2.0_f64)*exp(-deltat))-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error

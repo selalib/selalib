@@ -4,29 +4,47 @@
 !plot 'Conv_collela_rot_f3.dat' u 1:2 w lp title 'BSL', 'Conv_collela_rot_f3.dat' u 1:3 w lp title 'BSL NC', 'Conv_collela_rot_f3.dat' u 1:4 w lp title 'FSL', 'Conv_collela_rot_f3.dat' u 1:5 w lp title 'FSL NC'
 
 program test_deposit_cubic_splines
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_cubic_splines
-use sll_m_constants
-use sll_m_boundary_condition_descriptors
-use sll_m_fft
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_p_pi
 
-type(sll_cubic_spline_2D), pointer :: spl_bsl
-type(sll_cubic_spline_2D), pointer :: spl_fsl
+  use sll_m_cubic_splines, only: &
+    sll_s_compute_cubic_spline_2d, &
+    sll_s_deposit_value_2d, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_cubic_spline_2d, &
+    sll_t_cubic_spline_2d
+
+  use sll_m_fft, only: &
+    sll_s_fft_apply_plan_c2r_1d, &
+    sll_s_fft_apply_plan_r2c_1d, &
+    sll_s_fft_delete_plan, &
+    sll_f_fft_new_plan_c2r_1d, &
+    sll_f_fft_new_plan_r2c_1d, &
+    sll_t_fft_plan
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type(sll_t_cubic_spline_2d), pointer :: spl_bsl
+type(sll_t_cubic_spline_2d), pointer :: spl_fsl
 
 sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
-sll_int32  :: i,j,bc1_type,bc2_type,err,it
+sll_int32  :: i,j,bc1_type,bc2_type,err
 sll_int32  :: i1,i2,i3
 sll_real64 :: eta1,delta_eta1,eta1_min,eta1_max,eta2,delta_eta2,eta2_min,eta2_max
-sll_real64 :: x1,x2,x1_min,x2_min,x1_max,x2_max,x1c,x2c,x1t,x2t,dt
-sll_real64 :: T,alpha_mesh, errN
-sll_real64 :: val,val_bsl,val_fsl,tmp1,tmp2
+sll_real64 :: x1,x2,x1_min,x2_min,x1_max,x2_max,x1c,x2c,dt
+sll_real64 :: T
+sll_real64 :: val,val_bsl,val_fsl,tmp1
 sll_real64 :: val_spe 
-sll_real64 :: a1,a2,eta1t,eta2t,eta1c,eta2c,k1eta1,k2eta1,k3eta1,k4eta1,k1eta2,k2eta2,k3eta2,k4eta2
+sll_real64 :: a1,a2,eta1c,eta2c
 sll_real64,dimension(:,:), pointer :: f
 sll_real64,dimension(:,:), pointer :: fh_bsl
 sll_real64,dimension(:,:), pointer :: fh_fsl
@@ -39,8 +57,8 @@ character(len=3)  :: mesh_name, field_name, time_name
 sll_int32                         :: nc_eta1, nc_eta2
 sll_real64, dimension(:), pointer :: d_dx1, d_dx2
 sll_real64, dimension(:), pointer :: kx1, kx2
-type(sll_fft_plan),       pointer :: fwx1, fwx2
-type(sll_fft_plan),       pointer :: bwx1, bwx2
+type(sll_t_fft_plan),       pointer :: fwx1, fwx2
+type(sll_t_fft_plan),       pointer :: bwx1, bwx2
 sll_comp64, dimension(:), pointer :: fk1, fk2
 
 sll_int32     :: error
@@ -55,9 +73,9 @@ Neta2 = N
 ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
 ! BC        : periodic-periodic
 eta1_min = 0._f64
-eta1_max = 2._f64*sll_pi
+eta1_max = 2._f64*sll_p_pi
 eta2_min = 0._f64
-eta2_max = 2._f64*sll_pi
+eta2_max = 2._f64*sll_p_pi
 
 
 nc_eta1    = Neta1
@@ -65,19 +83,21 @@ nc_eta2    = Neta2
 
 SLL_CLEAR_ALLOCATE(d_dx1(1:nc_eta1), error)
 SLL_CLEAR_ALLOCATE(d_dx2(1:nc_eta2), error)
-SLL_CLEAR_ALLOCATE(fk1(1:nc_eta1/2+1), error)
-SLL_CLEAR_ALLOCATE(fk2(1:nc_eta2/2+1), error)
+SLL_ALLOCATE(fk1(1:nc_eta1/2+1), error)
+fk1 = cmplx(0.0,0.0, kind=f64)
+SLL_ALLOCATE(fk2(1:nc_eta2/2+1), error)
+fk2 = cmplx(0.0,0.0, kind=f64)
 
-fwx1 => fft_new_plan(nc_eta1, d_dx1, fk1)
-bwx1 => fft_new_plan(nc_eta1,   fk1, d_dx1)
-fwx2 => fft_new_plan(nc_eta2, d_dx2, fk2)
-bwx2 => fft_new_plan(nc_eta2,   fk2, d_dx2)
+fwx1 => sll_f_fft_new_plan_r2c_1d(nc_eta1, d_dx1, fk1)
+bwx1 => sll_f_fft_new_plan_c2r_1d(nc_eta1,   fk1, d_dx1)
+fwx2 => sll_f_fft_new_plan_r2c_1d(nc_eta2, d_dx2, fk2)
+bwx2 => sll_f_fft_new_plan_c2r_1d(nc_eta2,   fk2, d_dx2)
 
 SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
 SLL_CLEAR_ALLOCATE(kx2(1:nc_eta2/2+1), error)
  
-kx10 = 2._f64*sll_pi/(eta1_max-eta1_min)
-kx20 = 2._f64*sll_pi/(eta2_max-eta2_min)
+kx10 = 2._f64*sll_p_pi/(eta1_max-eta1_min)
+kx20 = 2._f64*sll_p_pi/(eta2_max-eta2_min)
 
 kx1(1) = 1.0_f64
 do i=2,nc_eta1/2+1
@@ -122,8 +142,8 @@ visu_step = 1
   
 ! ---- * Construction of the mesh * ----
   
-bc1_type = SLL_PERIODIC
-bc2_type = SLL_PERIODIC
+bc1_type = sll_p_periodic
+bc2_type = sll_p_periodic
   
 eta1c = 0.5_f64*(eta1_max+eta1_min)
 eta2c = 0.5_f64*(eta2_max+eta2_min)
@@ -164,14 +184,14 @@ SLL_ALLOCATE(x2tot(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
 ! creation of the splines
-spl_bsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
+spl_bsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
   eta1_min, eta1_max, &
-  0._f64, 2._f64*sll_pi, &
+  0._f64, 2._f64*sll_p_pi, &
   bc1_type, bc2_type)
 
-spl_fsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
+spl_fsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
   eta1_min, eta1_max, &
-  0._f64, 2._f64*sll_pi, &
+  0._f64, 2._f64*sll_p_pi, &
   bc1_type, bc2_type)
   
 ! ---- * Initializations * ----
@@ -223,8 +243,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   fh_bsl(:,Neta2+1)    = fh_bsl(:,1)
   fh_fsl(:,Neta2+1)    = fh_fsl(:,1)
       
-  call compute_cubic_spline_2D(fh_bsl,spl_bsl)
-  call compute_cubic_spline_2D(fh_fsl,spl_fsl)
+  call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
+  call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
     
   do i=1,Neta1+1
     do j=1,Neta2+1
@@ -273,7 +293,7 @@ do step=1,nb_step ! ---- * Evolution in time * ----
       call apply_bc()
       
       ! --- Interpolation ---
-      fh_bsl(i,j)    = interpolate_value_2D(eta1,eta2,spl_bsl)
+      fh_bsl(i,j)    = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl)
         
       ! ------------ FSL part -----------------
         
@@ -293,18 +313,18 @@ do step=1,nb_step ! ---- * Evolution in time * ----
 
   ! --- Deposition FSL ---
     
-  call deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl)
+  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,fh_fsl)
 
   ! --- Spectral ---
 
   do j = 1, nc_eta2+1
 
     d_dx1 = fh_spe(1:nc_eta1,j)
-    call fft_apply_plan(fwx1, d_dx1, fk1)
+    call sll_s_fft_apply_plan_r2c_1d(fwx1, d_dx1, fk1)
     do i = 2, nc_eta1/2+1
       fk1(i) = fk1(i)*cmplx(cos(kx1(i)*0.01*a1*dt),sin(kx1(i)*0.01*a1*dt),kind=f64)
     end do
-    call fft_apply_plan(bwx1, fk1, d_dx1)
+    call sll_s_fft_apply_plan_c2r_1d(bwx1, fk1, d_dx1)
   
     fh_spe(1:nc_eta1,j) = d_dx1 / nc_eta1
 
@@ -315,11 +335,11 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   do i = 1, nc_eta1+1
 
     d_dx2 = fh_spe(i,1:nc_eta2)
-    call fft_apply_plan(fwx2, d_dx2, fk2)
+    call sll_s_fft_apply_plan_r2c_1d(fwx2, d_dx2, fk2)
     do j = 2, nc_eta2/2+1
       fk2(j) = fk2(j)*cmplx(cos(kx2(j)*0.01*a2*dt),sin(kx2(j)*0.01*a2*dt),kind=f64)
     end do
-    call fft_apply_plan(bwx2, fk2, d_dx2)
+    call sll_s_fft_apply_plan_c2r_1d(bwx2, fk2, d_dx2)
   
     fh_spe(i,1:nc_eta2) = d_dx2 / nc_eta2
 
@@ -377,20 +397,20 @@ do i=1,Neta1+1
 enddo
 close(850)
 
-call fft_delete_plan(fwx1)
-call fft_delete_plan(bwx1)
-call fft_delete_plan(fwx2)
-call fft_delete_plan(bwx2)
+call sll_s_fft_delete_plan(fwx1)
+call sll_s_fft_delete_plan(bwx1)
+call sll_s_fft_delete_plan(fwx2)
+call sll_s_fft_delete_plan(bwx2)
   
 contains
 
 subroutine apply_bc()
 
   ! --- Corrections on the BC ---
-  if (bc1_type.eq.SLL_HERMITE) eta1 = min(max(eta1,eta1_min),eta1_max)
-  if (bc2_type.eq.SLL_HERMITE) eta2 = min(max(eta2,eta2_min),eta2_max)
+  if (bc1_type.eq.sll_p_hermite) eta1 = min(max(eta1,eta1_min),eta1_max)
+  if (bc2_type.eq.sll_p_hermite) eta2 = min(max(eta2,eta2_min),eta2_max)
 
-  if (bc1_type==SLL_PERIODIC) then
+  if (bc1_type==sll_p_periodic) then
     do while (eta1>eta1_max)
       eta1 = eta1-(eta1_max-eta1_min)
     enddo
@@ -399,7 +419,7 @@ subroutine apply_bc()
     enddo
   endif
 
-  if (bc2_type==SLL_PERIODIC) then
+  if (bc2_type==sll_p_periodic) then
     do while (eta2>eta2_max)
       eta2 = eta2-(eta2_max-eta2_min)
     enddo
