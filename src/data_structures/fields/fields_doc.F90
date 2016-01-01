@@ -50,10 +50,10 @@
 !> &    rhs,                            &
 !> &    "rho",                          &     
 !> &    tau,                            &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
-!> &    SLL_DIRICHLET,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
+!> &    sll_p_dirichlet,                  &
 !> &    [0.0_f64]                       )
 !> 
 !> 
@@ -79,7 +79,7 @@
 !> real(8), dimension(:), intent(in) :: params
 !> real(8) :: res
 !> real(8) :: pi
-!> pi = 4d0*atan(1d0)
+!> pi = 4.0_f64*atan(1.0_f64)
 !> res = -8*pi*pi*sin(2*pi*eta1)*sin(2*pi*eta2)
 !> 
 !> end function rhs

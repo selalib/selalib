@@ -38,7 +38,7 @@ Install dependencies with macports
 
 Install macports (http://www.macports.org/install.php) and ::
 
-	$ sudo port install gcc48 
+	$ sudo port install gcc5 
 	$ sudo port install openmpi
 	$ sudo port install hdf5 +gfortran+openmpi
 	$ sudo port install fftw-3

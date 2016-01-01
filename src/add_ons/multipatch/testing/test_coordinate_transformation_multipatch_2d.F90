@@ -1,9 +1,12 @@
 program unit_test_2d
-#include "sll_working_precision.h"
-  use sll_m_coordinate_transformation_multipatch
-  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_t_coordinate_transformation_multipatch_2d
 
-  type(sll_coordinate_transformation_multipatch_2d) :: mp
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type(sll_t_coordinate_transformation_multipatch_2d) :: mp
 
 !  call mp%read_from_file("identity_mp_info.nml")
   call mp%read_from_file("circle_mp5_pts12")

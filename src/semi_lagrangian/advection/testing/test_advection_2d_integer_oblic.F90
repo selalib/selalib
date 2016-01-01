@@ -16,20 +16,47 @@
 !**************************************************************
 
 program test_advection_2d_integer_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_2d_integer_oblic
-use sll_m_characteristics_2d_explicit_euler
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_advection_1d_periodic
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    sll_f_new_periodic_1d_advector
+
+  use sll_m_advection_2d_integer_oblic, only: &
+    sll_t_integer_oblic_2d_advector, &
+    sll_s_integer_oblic_advect_2d, &
+    sll_f_new_integer_oblic_2d_advector
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_c_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    sll_f_new_explicit_euler_2d_charac
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_f_new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    sll_p_spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type(integer_oblic_2d_advector), pointer :: adv
-  class(sll_advection_1d_base), pointer :: adv_x1
-  class(sll_advection_1d_base), pointer :: adv_aligned
-  class(sll_interpolator_2d_base), pointer :: interp
-  class(sll_characteristics_2d_base), pointer :: charac
+  type(sll_t_integer_oblic_2d_advector), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv_x1
+  class(sll_c_advection_1d_base), pointer :: adv_aligned
+  class(sll_c_interpolator_2d), pointer :: interp
+  class(sll_c_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
   sll_real64 :: x2_min
@@ -81,39 +108,39 @@ implicit none
 
   err=0._f64
 
-  adv_x1 => new_periodic_1d_advector( &
+  adv_x1 => sll_f_new_periodic_1d_advector( &
     num_cells_x1, &
     x1_min, &
     x1_max, &
-    SPLINE, & 
+    sll_p_spline, & 
     4) 
 
-  adv_aligned => new_periodic_1d_advector( &
+  adv_aligned => sll_f_new_periodic_1d_advector( &
     num_cells_x1, &
     x1_min, &
     x1_max, &
-    SPLINE, & 
+    sll_p_spline, & 
     4) 
 
 
-  interp => new_cubic_spline_interpolator_2d( &
+  interp => sll_f_new_cubic_spline_interpolator_2d( &
     num_cells_x1+1, &
     num_cells_x2+1, &
     x1_min, &
     x1_max, &
     x2_min, &
     x2_max, &
-    SLL_PERIODIC, &
-    SLL_PERIODIC)
+    sll_p_periodic, &
+    sll_p_periodic)
 
 
-  charac => new_explicit_euler_2d_charac(&
+  charac => sll_f_new_explicit_euler_2d_charac(&
       num_cells_x1+1, &
       num_cells_x2+1, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC)
+      sll_p_periodic, &
+      sll_p_periodic)
   
-  adv => new_integer_oblic_2d_advector(&
+  adv => sll_f_new_integer_oblic_2d_advector(&
     adv_x1, &
     adv_aligned, &
     interp, &
@@ -124,7 +151,7 @@ implicit none
     eta2_coords = x2_mesh)
   
   
-  call integer_oblic_advect_2d(adv, phi, shift, dt, input, output)
+  call sll_s_integer_oblic_advect_2d(adv, phi, shift, dt, input, output)
   
   err=maxval(abs(input-output))
   

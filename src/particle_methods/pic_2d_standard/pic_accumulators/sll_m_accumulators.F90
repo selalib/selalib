@@ -16,11 +16,39 @@
 !**************************************************************
 
 module sll_m_accumulators
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
   implicit none
+
+  public :: &
+    sll_t_charge_accumulator_cell_2d, &
+    sll_t_electric_field_accumulator, &
+    sll_t_electric_field_accumulator_cs, &
+    sll_t_field_accumulator_cell, &
+    sll_t_field_accumulator_cs, &
+    sll_f_new_charge_accumulator_2d, &
+    sll_f_new_charge_accumulator_2d_cs, &
+    sll_f_new_field_accumulator_2d, &
+    sll_f_new_field_accumulator_cs_2d, &
+    sll_s_reset_charge_accumulator_to_zero, &
+    sll_s_reset_charge_accumulator_to_zero_cs, &
+    sll_s_reset_field_accumulator_cs_to_zero, &
+    sll_s_reset_field_accumulator_to_zero, &
+    sll_t_charge_accumulator_2d, &
+    sll_t_charge_accumulator_2d_cs, &
+    sll_t_charge_accumulator_2d_cs_ptr, &
+    sll_t_charge_accumulator_2d_ptr, &
+    sll_o_delete, &
+    sll_s_sum_accumulators, &
+    sll_s_sum_accumulators_cs
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! The idea of having this data structure is to precompute the values of
   ! the electric field, store them redundantly on a cell-based structure and
@@ -49,21 +77,21 @@ module sll_m_accumulators
   ! Each corner represents a point with two electric field components defined:
   ! ex and ey (x-component and y-component of the field respectively).
   
-  type charge_accumulator_cell_2d
+  type sll_t_charge_accumulator_cell_2d
      sll_real64 :: q_sw
      sll_real64 :: q_se
      sll_real64 :: q_nw
      sll_real64 :: q_ne
-  end type charge_accumulator_cell_2d
+  end type sll_t_charge_accumulator_cell_2d
 
-  type sll_charge_accumulator_2d
-     type(sll_cartesian_mesh_2d), pointer :: mesh
-     type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
-  end type sll_charge_accumulator_2d
+  type sll_t_charge_accumulator_2d
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh
+     type(sll_t_charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
+  end type sll_t_charge_accumulator_2d
 
-  type sll_charge_accumulator_2d_ptr
-     type(sll_charge_accumulator_2d), pointer :: q
-  end type sll_charge_accumulator_2d_ptr
+  type sll_t_charge_accumulator_2d_ptr
+     type(sll_t_charge_accumulator_2d), pointer :: q
+  end type sll_t_charge_accumulator_2d_ptr
 
 
   type charge_accumulator_cell_2d_CS
@@ -88,16 +116,16 @@ module sll_m_accumulators
      sll_real64 :: q_ip2jp2
   end type charge_accumulator_cell_2d_CS
 
-  type sll_charge_accumulator_2d_CS
-     type(sll_cartesian_mesh_2d), pointer :: mesh
+  type sll_t_charge_accumulator_2d_cs
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d_CS), dimension(:), pointer :: q_acc
-  end type sll_charge_accumulator_2d_CS
+  end type sll_t_charge_accumulator_2d_cs
   
-  type sll_charge_accumulator_2d_CS_ptr
-     type(sll_charge_accumulator_2d_CS), pointer :: q
-  end type sll_charge_accumulator_2d_CS_ptr
+  type sll_t_charge_accumulator_2d_cs_ptr
+     type(sll_t_charge_accumulator_2d_cs), pointer :: q
+  end type sll_t_charge_accumulator_2d_cs_ptr
   
-  type field_accumulator_cell
+  type sll_t_field_accumulator_cell
      sll_real64 :: Ex_sw
      sll_real64 :: Ex_se
      sll_real64 :: Ex_nw
@@ -106,14 +134,14 @@ module sll_m_accumulators
      sll_real64 :: Ey_se
      sll_real64 :: Ey_nw
      sll_real64 :: Ey_ne
-  end type field_accumulator_cell
+  end type sll_t_field_accumulator_cell
 
-  type electric_field_accumulator
-     type(sll_cartesian_mesh_2d), pointer :: mesh
-     type(field_accumulator_cell), dimension(:), pointer :: e_acc
-  end type electric_field_accumulator
+  type sll_t_electric_field_accumulator
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh
+     type(sll_t_field_accumulator_cell), dimension(:), pointer :: e_acc
+  end type sll_t_electric_field_accumulator
 
-  type field_accumulator_CS! needed for the Cubic Spline interpolation
+  type sll_t_field_accumulator_cs! needed for the Cubic Spline interpolation
      sll_real64 :: Ex_im1j,    Ey_im1j
      sll_real64 :: Ex_ij,      Ey_ij
      sll_real64 :: Ex_ip1j,    Ey_ip1j
@@ -133,16 +161,16 @@ module sll_m_accumulators
      sll_real64 :: Ex_ijp2,    Ey_ijp2
      sll_real64 :: Ex_ip1jp2,  Ey_ip1jp2
      sll_real64 :: Ex_ip2jp2,  Ey_ip2jp2
-  end type field_accumulator_CS
+  end type sll_t_field_accumulator_cs
 
-  type electric_field_accumulator_CS
-     type(sll_cartesian_mesh_2d), pointer :: mesh
-     type(field_accumulator_CS), dimension(:), pointer :: e_acc
-  end type electric_field_accumulator_CS
+  type sll_t_electric_field_accumulator_cs
+     type(sll_t_cartesian_mesh_2d), pointer :: mesh
+     type(sll_t_field_accumulator_cs), dimension(:), pointer :: e_acc
+  end type sll_t_electric_field_accumulator_cs
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_charge_accumulator_2d
-  end interface sll_delete
+  end interface sll_o_delete
 
   interface operator(+)
      module procedure q_acc_add, q_acc_add_CS
@@ -150,16 +178,16 @@ module sll_m_accumulators
 
 contains
   
-  function new_charge_accumulator_2d( mesh_2d ) result(acc)
-    type(sll_cartesian_mesh_2d), pointer       :: mesh_2d
-    type(sll_charge_accumulator_2d), pointer :: acc
+  function sll_f_new_charge_accumulator_2d( mesh_2d ) result(acc)
+    type(sll_t_cartesian_mesh_2d), pointer       :: mesh_2d
+    type(sll_t_charge_accumulator_2d), pointer :: acc
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
     sll_int32  :: num_cells_total
     sll_int32  :: ierr
 
     if( .not. associated(mesh_2d) ) then
-       print *, 'ERROR: new_charge_accumulator_2d(), passed mesh is not ', &
+       print *, 'ERROR: sll_f_new_charge_accumulator_2d(), passed mesh is not ', &
             'associated. Exiting...'
        stop
     end if
@@ -170,14 +198,14 @@ contains
     num_cells2      = mesh_2d%num_cells2
     num_cells_total = num_cells1*num_cells2
     SLL_ALLOCATE( acc%q_acc(num_cells_total), ierr)
-    call reset_charge_accumulator_to_zero( acc )
+    call sll_s_reset_charge_accumulator_to_zero( acc )
 
-  end function new_charge_accumulator_2d
+  end function sll_f_new_charge_accumulator_2d
   
   function q_acc_add( q1, q2 ) result(res)
-    type(charge_accumulator_cell_2d) :: res
-    type(charge_accumulator_cell_2d), intent(in) :: q1
-    type(charge_accumulator_cell_2d), intent(in) :: q2
+    type(sll_t_charge_accumulator_cell_2d) :: res
+    type(sll_t_charge_accumulator_cell_2d), intent(in) :: q1
+    type(sll_t_charge_accumulator_cell_2d), intent(in) :: q2
 
     res%q_sw = q1%q_sw + q2%q_sw
     res%q_se = q1%q_se + q2%q_se
@@ -211,8 +239,8 @@ contains
     res%q_ip2jp2 = q1%q_ip2jp2 + q2%q_ip2jp2
   end function q_acc_add_CS
 
-  subroutine reset_charge_accumulator_to_zero( acc )
-    type(sll_charge_accumulator_2d), pointer :: acc
+  subroutine sll_s_reset_charge_accumulator_to_zero( acc )
+    type(sll_t_charge_accumulator_2d), pointer :: acc
     sll_int32 :: i
     sll_int32 :: num_cells
 
@@ -224,12 +252,12 @@ contains
        acc%q_acc(i)%q_nw = 0.0_f64
        acc%q_acc(i)%q_ne = 0.0_f64
     end do
-  end subroutine reset_charge_accumulator_to_zero
+  end subroutine sll_s_reset_charge_accumulator_to_zero
 
 
 
   subroutine delete_charge_accumulator_2d( acc )
-     type(sll_charge_accumulator_2d), pointer :: acc
+     type(sll_t_charge_accumulator_2d), pointer :: acc
      sll_int32  :: ierr
      
      if ( .not.associated(acc) ) then
@@ -245,16 +273,16 @@ contains
    end subroutine delete_charge_accumulator_2d
 
 
-   function new_charge_accumulator_2d_CS( mesh_2d ) result(acc)
-     type(sll_cartesian_mesh_2d), pointer       :: mesh_2d
-     type(sll_charge_accumulator_2d_CS), pointer :: acc
+   function sll_f_new_charge_accumulator_2d_cs( mesh_2d ) result(acc)
+     type(sll_t_cartesian_mesh_2d), pointer       :: mesh_2d
+     type(sll_t_charge_accumulator_2d_cs), pointer :: acc
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
      sll_int32  :: num_cells_total
      sll_int32  :: ierr
      
      if( .not. associated(mesh_2d) ) then
-        print *, 'ERROR: new_charge_accumulator_2d(), passed mesh is not ', &
+        print *, 'ERROR: sll_f_new_charge_accumulator_2d(), passed mesh is not ', &
              'associated. Exiting...'
         stop
      end if
@@ -265,11 +293,11 @@ contains
      num_cells2      = mesh_2d%num_cells2
      num_cells_total = num_cells1*num_cells2
      SLL_ALLOCATE( acc%q_acc(num_cells_total), ierr)
-     call reset_charge_accumulator_to_zero_CS( acc )
-   end function new_charge_accumulator_2d_CS
+     call sll_s_reset_charge_accumulator_to_zero_cs( acc )
+   end function sll_f_new_charge_accumulator_2d_cs
 
-   subroutine reset_charge_accumulator_to_zero_CS( acc )
-     type(sll_charge_accumulator_2d_CS), pointer :: acc
+   subroutine sll_s_reset_charge_accumulator_to_zero_cs( acc )
+     type(sll_t_charge_accumulator_2d_cs), pointer :: acc
      sll_int32 :: i
      sll_int32 :: num_cells
      
@@ -286,10 +314,10 @@ contains
         acc%q_acc(i)%q_ip1jp1 = 0.0_f64 ; acc%q_acc(i)%q_ip1jp2 = 0.0_f64
         acc%q_acc(i)%q_ip2jp1 = 0.0_f64 ; acc%q_acc(i)%q_ip2jp2 = 0.0_f64 
      end do
-   end subroutine reset_charge_accumulator_to_zero_CS
+   end subroutine sll_s_reset_charge_accumulator_to_zero_cs
 
    subroutine delete_charge_accumulator_2d_CS( acc )
-     type(sll_charge_accumulator_2d_CS), pointer :: acc
+     type(sll_t_charge_accumulator_2d_cs), pointer :: acc
      sll_int32  :: ierr
      
      if ( .not.associated(acc) ) then
@@ -309,16 +337,16 @@ contains
 
 
 
-   function new_field_accumulator_2d( mesh_2d ) result(E_acc)
-     type(sll_cartesian_mesh_2d), pointer        ::  mesh_2d
-     type(electric_field_accumulator), pointer ::  E_acc
+   function sll_f_new_field_accumulator_2d( mesh_2d ) result(E_acc)
+     type(sll_t_cartesian_mesh_2d), pointer        ::  mesh_2d
+     type(sll_t_electric_field_accumulator), pointer ::  E_acc
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
      sll_int32  :: num_cells_total
      sll_int32  :: ierr
      
      if( .not. associated(mesh_2d) ) then
-        print *, 'ERROR: new_charge_accumulator_2d(), passed mesh is not ', &
+        print *, 'ERROR: sll_f_new_charge_accumulator_2d(), passed mesh is not ', &
              'associated. Exiting...'
         stop
      end if
@@ -329,19 +357,19 @@ contains
      num_cells2      = mesh_2d%num_cells2
      num_cells_total = num_cells1*num_cells2
      SLL_ALLOCATE( E_acc%e_acc(num_cells_total), ierr)
-     call reset_field_accumulator_to_zero( E_acc )
-   end function new_field_accumulator_2d
+     call sll_s_reset_field_accumulator_to_zero( E_acc )
+   end function sll_f_new_field_accumulator_2d
    
-  function new_field_accumulator_CS_2d( mesh_2d ) result(E_acc)
-    type(sll_cartesian_mesh_2d), pointer           ::  mesh_2d
-    type(electric_field_accumulator_CS), pointer ::  E_acc
+  function sll_f_new_field_accumulator_cs_2d( mesh_2d ) result(E_acc)
+    type(sll_t_cartesian_mesh_2d), pointer           ::  mesh_2d
+    type(sll_t_electric_field_accumulator_cs), pointer ::  E_acc
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
     sll_int32  :: num_cells_total
     sll_int32  :: ierr
 
     if( .not. associated(mesh_2d) ) then
-       print *, 'ERROR: new_charge_accumulator_2d(), passed mesh is not ', &
+       print *, 'ERROR: sll_f_new_charge_accumulator_2d(), passed mesh is not ', &
             'associated. Exiting...'
        stop
     end if
@@ -352,13 +380,13 @@ contains
     num_cells2      = mesh_2d%num_cells2
     num_cells_total = num_cells1*num_cells2
     SLL_ALLOCATE( E_acc%e_acc(num_cells_total), ierr)
-    call reset_field_accumulator_CS_to_zero( E_acc )
+    call sll_s_reset_field_accumulator_cs_to_zero( E_acc )
 
-  end function new_field_accumulator_CS_2d
+  end function sll_f_new_field_accumulator_cs_2d
   
 
-  subroutine reset_field_accumulator_to_zero( E_acc )
-    type(electric_field_accumulator), pointer :: E_acc
+  subroutine sll_s_reset_field_accumulator_to_zero( E_acc )
+    type(sll_t_electric_field_accumulator), pointer :: E_acc
     sll_int32 :: i
     sll_int32 :: num_cells
 
@@ -373,11 +401,11 @@ contains
        E_acc%e_acc(i)%Ey_nw = 0.0_f64
        E_acc%e_acc(i)%Ey_ne = 0.0_f64
     end do
-  end subroutine reset_field_accumulator_to_zero
+  end subroutine sll_s_reset_field_accumulator_to_zero
 
-  subroutine reset_field_accumulator_CS_to_zero( E_acc )
+  subroutine sll_s_reset_field_accumulator_cs_to_zero( E_acc )
 ! -------------   CS is for Cubic Spline   -------------
-    type(electric_field_accumulator_CS), pointer :: E_acc
+    type(sll_t_electric_field_accumulator_cs), pointer :: E_acc
     sll_int32 :: i
     sll_int32 :: num_cells
 
@@ -400,11 +428,11 @@ contains
        E_acc%e_acc(i)%Ex_ip1jp2 = 0.0_f64 ;  E_acc%e_acc(i)%Ey_ip1jp2 = 0.0_f64
        E_acc%e_acc(i)%Ex_ip2jp2 = 0.0_f64 ;  E_acc%e_acc(i)%Ey_ip2jp2 = 0.0_f64
     end do
-  end subroutine reset_field_accumulator_CS_to_zero
+  end subroutine sll_s_reset_field_accumulator_cs_to_zero
 
-  subroutine sum_accumulators( tab, n_threads, n_cells )
+  subroutine sll_s_sum_accumulators( tab, n_threads, n_cells )
     sll_int32, intent(in)  :: n_threads, n_cells
-    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer, intent(inout) :: tab
+    type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer, intent(inout) :: tab
     sll_int32  :: i, j   
     
     do i = 1, n_cells  
@@ -412,11 +440,11 @@ contains
           tab(1)%q%q_acc(i) = tab(1)%q%q_acc(i) + tab(j)%q%q_acc(i)
        enddo
     enddo
-  end subroutine sum_accumulators
+  end subroutine sll_s_sum_accumulators
 
-  subroutine sum_accumulators_CS( tab, n_threads, n_cells )
+  subroutine sll_s_sum_accumulators_cs( tab, n_threads, n_cells )
     sll_int32, intent(in)  :: n_threads, n_cells
-    type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer, intent(inout) :: tab
+    type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer, intent(inout) :: tab
     sll_int32  :: i, j   
     
     do i = 1, n_cells  
@@ -424,7 +452,7 @@ contains
           tab(1)%q%q_acc(i) = tab(1)%q%q_acc(i) + tab(j)%q%q_acc(i)
        enddo
     enddo
-  end subroutine sum_accumulators_CS
+  end subroutine sll_s_sum_accumulators_cs
   
    ! The above are the only routines that should live here. Something like taking
    ! a list of particules and accumulating the charge, will change the charge but

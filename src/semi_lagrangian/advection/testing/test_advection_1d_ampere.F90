@@ -16,19 +16,29 @@
 !**************************************************************
 
 program test_advection_1d_ampere
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base
-use sll_m_advection_1d_ampere
-use sll_m_boundary_condition_descriptors
-use sll_m_gnuplot
+  use sll_m_advection_1d_ampere, only: &
+    sll_f_new_ampere_1d_advector
 
-!$ use omp_lib
+  use sll_m_advection_1d_base, only: &
+    sll_t_advection_1d_base_ptr
 
-implicit none
+  use sll_m_gnuplot, only: &
+    sll_o_gnuplot_1d
+
+#ifdef _OPENMP
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
+
+#endif
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-type(sll_advection_1d_base_ptr), pointer  :: adv(:)
+type(sll_t_advection_1d_base_ptr), pointer  :: adv(:)
 
 sll_real64                            :: xmin, vmin
 sll_real64                            :: xmax, vmax
@@ -75,12 +85,12 @@ SLL_ALLOCATE(adv(psize),            ierr)
 solution = exp(-(x*x)/0.01)
 input = solution
 
-adv(prank+1)%ptr => new_ampere_1d_advector(nc_x, xmin, xmax  )
+adv(prank+1)%ptr => sll_f_new_ampere_1d_advector(nc_x, xmin, xmax  )
 
 do istep = 1, nstep
    call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
    input = output
-   call sll_gnuplot_1d(output, x, 'f_ampere', istep)
+   call sll_o_gnuplot_1d(output, x, 'f_ampere', istep)
 end do
 
 err = maxval(abs(solution-input))

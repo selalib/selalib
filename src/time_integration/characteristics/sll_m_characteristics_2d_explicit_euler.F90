@@ -16,28 +16,44 @@
 !**************************************************************
 
 module sll_m_characteristics_2d_explicit_euler
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_2d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  type,extends(sll_characteristics_2d_base) :: explicit_euler_2d_charac_computer
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic, &
+    sll_p_set_to_limit
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point, &
+    sll_c_characteristics_2d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_explicit_euler_2d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_characteristics_2d_base) :: explicit_euler_2d_charac_computer
     sll_int32                               :: Npts1
     sll_int32                               :: Npts2
     sll_real64                              :: eta1_min   
     sll_real64                              :: eta1_max  
     sll_real64                              :: eta2_min   
     sll_real64                              :: eta2_max
-    procedure(signature_process_outside_point), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point), pointer, nopass    :: &
       process_outside_point1
-    procedure(signature_process_outside_point), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point), pointer, nopass    :: &
       process_outside_point2
      
   contains
     !function, pass(charac) :: new => &
-    !  new_explicit_euler_2d_charac
+    !  sll_f_new_explicit_euler_2d_charac
     procedure, pass(charac) :: initialize => &
       initialize_explicit_euler_2d_charac
     procedure, pass(charac) :: compute_characteristics => &
@@ -45,7 +61,7 @@ implicit none
   end type explicit_euler_2d_charac_computer
 
 contains
-  function new_explicit_euler_2d_charac(&
+  function sll_f_new_explicit_euler_2d_charac(&
       Npts1, &
       Npts2, &
       bc_type_1, &
@@ -67,9 +83,9 @@ contains
     sll_real64, intent(in), optional  :: eta1_max
     sll_real64, intent(in), optional  :: eta2_min
     sll_real64, intent(in), optional  :: eta2_max
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(sll_i_signature_process_outside_point), optional    :: &
       process_outside_point1
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(sll_i_signature_process_outside_point), optional    :: &
       process_outside_point2
     sll_int32 :: ierr
       
@@ -88,7 +104,7 @@ contains
       process_outside_point2)
 
     
-  end function new_explicit_euler_2d_charac
+  end function sll_f_new_explicit_euler_2d_charac
   
   
   subroutine initialize_explicit_euler_2d_charac(&
@@ -113,9 +129,9 @@ contains
     sll_real64, intent(in), optional  :: eta1_max
     sll_real64, intent(in), optional  :: eta2_min
     sll_real64, intent(in), optional  :: eta2_max
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(sll_i_signature_process_outside_point), optional    :: &
       process_outside_point1
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(sll_i_signature_process_outside_point), optional    :: &
       process_outside_point2
 
 
@@ -159,10 +175,10 @@ contains
       stop
     else
       select case (bc_type_1)
-        case (SLL_PERIODIC)
-          charac%process_outside_point1 => process_outside_point_periodic          
-        case (SLL_SET_TO_LIMIT)
-          charac%process_outside_point1 => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          charac%process_outside_point1 => sll_f_process_outside_point_periodic          
+        case (sll_p_set_to_limit)
+          charac%process_outside_point1 => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_explicit_euler_2d_charac_computer'
@@ -187,10 +203,10 @@ contains
       stop
     else
       select case (bc_type_2)
-        case (SLL_PERIODIC)
-          charac%process_outside_point2 => process_outside_point_periodic          
-        case (SLL_SET_TO_LIMIT)
-          charac%process_outside_point2 => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          charac%process_outside_point2 => sll_f_process_outside_point_periodic          
+        case (sll_p_set_to_limit)
+          charac%process_outside_point2 => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_explicit_euler_2d_charac_computer'

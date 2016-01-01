@@ -8,14 +8,16 @@
 
 
 program sim_eul_vp_1d1v_cart_fe_ft
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
 
-  use sll_m_sim_eul_vp_1d1v_cart_fe_ft
+  use sll_m_sim_eul_vp_1d1v_cart_fe_ft, only: &
+    sll_t_simulation_vp1d_fourier_fem
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    type(sll_simulation_vp1d_fourier_fem) :: simulation
+    type(sll_t_simulation_vp1d_fourier_fem) :: simulation
 
     print *, 'Begin of vp1d_fourier_fem test'
     call simulation%run( )

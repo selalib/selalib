@@ -1,7 +1,15 @@
 module sll_m_choleski
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_s_choles, &
+    sll_s_desrem
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
@@ -22,7 +30,7 @@ contains
 !  programmeur : 
 !  f hecht - juin 84 inria
 !
-subroutine choles(mudl,ae,as)
+subroutine sll_s_choles(mudl,ae,as)
 
 !**********************************************************************
 
@@ -34,7 +42,7 @@ sll_int32  :: kj, jid, jmi, ij, jj, id, imi, ii, ntest
 sll_int32  :: i, j
 sll_real64 :: s, xii
 
-sll_real64, parameter  :: eps = 1.0d-10
+sll_real64, parameter  :: eps = 1.0e-10_f64
 
 ntest = 0
 as(1) = sqrt(ae(1))
@@ -44,7 +52,7 @@ ii    = mudl(1)
 
 do  i=2,size(mudl)
 
-  xii = 0d0
+  xii = 0.0_f64
   imi = ii+1
   ii  = mudl(i)
   id  = i - ii
@@ -55,7 +63,7 @@ do  i=2,size(mudl)
     jmi = jj+1
     jj  = mudl(j)
     jid = j - jj -id
-    s   = 0d0
+    s   = 0.0_f64
 
     do  kj = max( jmi , imi-jid )  ,  jj-1
       s = s + as( kj ) * as( kj + jid )
@@ -86,12 +94,12 @@ end if
  900 format(/10x,'resultats a verifier : le coefficient diagonal du dl'  &
              ,i6,' est inferieur au seuil de precision',e14.7)
  901 format(/10x,'xii:',e14.7,e14.7,e14.7)
- 902 format(/10x,'************  Erreur dans CHOLES *************'/)
+ 902 format(/10x,'************  Erreur dans sll_s_choles *************'/)
 
-end subroutine choles
+end subroutine sll_s_choles
 
 
-!Function: desrem
+!Function: sll_s_desrem
 !descente et/ou remontee d'un systeme lineaire ( cholesky )
 !
 ! in:
@@ -103,7 +111,7 @@ end subroutine choles
 !
 !  programmeur: 
 !f hecht  - juin 84 inria , f. hermeline aout 89 cel/v
-subroutine desrem(mudl,a,be,ntdl,bs)
+subroutine sll_s_desrem(mudl,a,be,ntdl,bs)
 
 sll_int32,  intent(in)    :: mudl(0:*)
 sll_real64, intent(in)    :: a(*)
@@ -125,7 +133,7 @@ do i=1,ntdl
    ij = ii + 1
    ii = mudl(i)
    kj = i  - ii
-   y  = 0d0
+   y  = 0.0_f64
    do  il=ij,ii-1
       y = y +  a(il) * bs(il+kj)
    end do
@@ -146,7 +154,7 @@ do i = ntdl , 1 , -1
    end do
 end do
 
-end subroutine desrem
+end subroutine sll_s_desrem
 
 
 end module sll_m_choleski

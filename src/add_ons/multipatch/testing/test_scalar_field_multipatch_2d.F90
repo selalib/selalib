@@ -1,15 +1,33 @@
 program unit_test_fields_multipatch
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_scalar_field_2d_multipatch
-  use sll_m_coordinate_transformation_multipatch
+#include "sll_working_precision.h"
+
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_f_new_coordinate_transformation_multipatch_2d, &
+    sll_t_coordinate_transformation_multipatch_2d, &
+    sll_o_delete
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_t_coordinate_transformation_2d_nurbs
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    sll_f_new_scalar_field_multipatch_2d, &
+    sll_s_set_slope_mp, &
+    sll_o_delete, &
+    sll_t_scalar_field_multipatch_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
-  type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-  class(sll_scalar_field_multipatch_2d), pointer             :: F
-  class(sll_cartesian_mesh_2d), pointer                        :: m
-  class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
+  type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
+  class(sll_t_scalar_field_multipatch_2d), pointer             :: F
+  class(sll_t_cartesian_mesh_2d), pointer                        :: m
+  class(sll_t_coordinate_transformation_2d_nurbs), pointer     :: transf
   sll_int32  :: ipatch
   sll_int32  :: i
   sll_int32  :: j
@@ -23,11 +41,11 @@ program unit_test_fields_multipatch
   sll_real64 :: delta2
   sll_real64 :: x1,x2
 
-  T => new_coordinate_transformation_multipatch_2d("square_4p_n10")
+  T => sll_f_new_coordinate_transformation_multipatch_2d("square_4p_n10")
   print *, 'initialized multipatch transformation'
   
   
-  F => new_scalar_field_multipatch_2d("test_field_multipatch", T)
+  F => sll_f_new_scalar_field_multipatch_2d("test_field_multipatch", T)
   print *, 'initialized scalar field multipatch'
 
   call F%allocate_memory()
@@ -68,7 +86,7 @@ program unit_test_fields_multipatch
      end do
   
      print *, 'updating multipatch field coefficients in the boundary'
-     call set_slope_mp(F,ipatch)
+     call sll_s_set_slope_mp(F,ipatch)
 
   end do
 
@@ -78,8 +96,8 @@ program unit_test_fields_multipatch
   print *, 'writing to file...'
   call F%write_to_file(1)
 
-  call sll_delete(T) 
-  call sll_delete(F)
+  call sll_o_delete(T) 
+  call sll_o_delete(F)
 !  call delete_field_sfmp2d_ptr(F)
   print *, 'PASSED'
   

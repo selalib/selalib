@@ -1,9 +1,15 @@
 program utils_tester
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
-  use sll_m_utilities
+  use sll_m_utilities, only: &
+    sll_p_byte_size, &
+    sll_f_is_power_of_two, &
+    sll_o_factorial
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64 :: re64
   sll_real32 :: re32
@@ -14,8 +20,8 @@ program utils_tester
 
 
   ! for factorial
-  sll_int32  :: n1
-  sll_int64  :: n2
+  !sll_int32  :: n1
+  !sll_int64  :: n2
   logical    :: test_passed
   sll_int64  :: largest_int64
   sll_int64  :: largest_int32
@@ -35,7 +41,7 @@ program utils_tester
 
   ! **********************************************************************
   !
-  !          First test: is_power_of_two()
+  !          First test: sll_f_is_power_of_two()
   !
   ! **********************************************************************
 
@@ -54,7 +60,7 @@ program utils_tester
   print *, 'and 2^31-1... (should be 31, powers 0 through 30, inclusive)'
   acc = 0
   do i=1,in64
-     if( is_power_of_two(i) ) then
+     if( sll_f_is_power_of_two(i) ) then
         acc = acc+1
      end if
   end do
@@ -64,12 +70,12 @@ program utils_tester
      print *, '... yes, 31.'
   else
      test_passed = test_passed .and. .false.
-     print *, 'Error with is_power_of_two(), acc = ', acc
+     print *, 'Error with sll_f_is_power_of_two(), acc = ', acc
   end if
 
   ! **********************************************************************
   !
-  !          Second test: is_power_of_two()
+  !          Second test: sll_f_is_power_of_two()
   !
   ! **********************************************************************
 
@@ -94,17 +100,17 @@ program utils_tester
   !
   ! **********************************************************************
 !!$  do i=0,22
-!!$     acc64 = sll_factorial(int(i,i64))
+!!$     acc64 = sll_o_factorial(int(i,i64))
 !!$     print *, 'n = ', i, 'factorial = ', acc64
 !!$  end do
 
   print *, 'largest int32 = ', in64
   print *, 'largest int64 = ', largest_int64
-  acc64 = sll_factorial(20_i64)
+  acc64 = sll_o_factorial(20_i64)
   if( acc64 .ne. 2432902008176640000_i64 ) then
      test_passed = test_passed .and. .false.
      print *, 'test of factorial function failed'
-     print *, 'factorial = ', sll_factorial(22_i32)
+     print *, 'factorial = ', sll_o_factorial(22_i32)
   else
      test_passed = test_passed .and. .true.
      print *, 'factorial is OK...'

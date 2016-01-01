@@ -3,19 +3,38 @@
 !> @details This solver works with geometry defined on gauss points
 
 module sll_m_poisson_2d_curvilinear
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_boundary_condition_descriptors
-use sll_m_sparse_matrix
-use sll_m_deboor_splines_1d
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_periodic
 
-implicit none
+  use sll_m_gauss_legendre_integration, only: &
+    sll_f_gauss_legendre_points_and_weights
 
-type, public :: poisson_2d_curvilinear
+  use sll_m_gauss_lobatto_integration, only: &
+    sll_f_gauss_lobatto_points_and_weights
+
+  use sll_m_sparse_matrix, only: &
+    sll_f_new_csr_matrix, &
+    sll_t_csr_matrix, &
+    sll_s_factorize_csr_matrix
+
+  implicit none
+
+  public :: &
+    sll_f_new_poisson_2d_curvilinear, &
+    sll_t_poisson_2d_curvilinear, &
+    sll_p_poisson_gauss_legendre, &
+    sll_p_poisson_open_knots, &
+    sll_p_poisson_periodic_knots
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type :: sll_t_poisson_2d_curvilinear
 
   private
   sll_int32 :: num_cells1
@@ -39,27 +58,25 @@ type, public :: poisson_2d_curvilinear
   sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
   sll_int32 :: solution_size1
   sll_int32 :: solution_size2
-  type(sll_csr_matrix), pointer :: sll_csr_mat
+  type(sll_t_csr_matrix), pointer :: sll_csr_mat
 
 
 
 
-end type poisson_2d_curvilinear
+end type sll_t_poisson_2d_curvilinear
 
 !> For the integration mode.  
-sll_int32, parameter, public :: POISSON_GAUSS_LEGENDRE = 0
+sll_int32, parameter :: sll_p_poisson_gauss_legendre = 0
 !> For the integration mode.  
-sll_int32, parameter, public :: POISSON_GAUSS_LOBATTO = 1
+sll_int32, parameter :: POISSON_GAUSS_LOBATTO = 1
 
 !> For the knots defined on the boundary  
-sll_int32, parameter, public :: SLL_POISSON_PERIODIC_KNOTS = 0
+sll_int32, parameter :: sll_p_poisson_periodic_knots = 0
 !> For the knots defined on the boundary  
-sll_int32, parameter, public :: SLL_POISSON_OPEN_KNOTS = 1
+sll_int32, parameter :: sll_p_poisson_open_knots = 1
 
 
-public new_poisson_2d_curvilinear
 
-private
 
 ! *******************************************************************
 
@@ -103,9 +120,9 @@ contains
 !> @param[in] knots_max1 knots at eta1_max in direction eta1
 !> @param[in] knots_min2 knots at eta2_min in direction eta2
 !> @param[in] knots_max2 knots at eta2_max in direction eta2
-!> @return the type poisson_2d_curvilinear as a pointer
+!> @return the type sll_t_poisson_2d_curvilinear as a pointer
 
-function new_poisson_2d_curvilinear( &
+function sll_f_new_poisson_2d_curvilinear( &
   spline_degree1, &
   spline_degree2, &
   num_cells1, &
@@ -138,7 +155,7 @@ function new_poisson_2d_curvilinear( &
   knots_max2 &  
   ) result(poisson)
 
-  type(poisson_2d_curvilinear), pointer :: poisson
+  type(sll_t_poisson_2d_curvilinear), pointer :: poisson
   sll_int32,  intent(in) :: spline_degree1
   sll_int32,  intent(in) :: spline_degree2
   sll_int32,  intent(in) :: num_cells1
@@ -207,7 +224,7 @@ function new_poisson_2d_curvilinear( &
     knots_min2, &
     knots_max2 )
    
-end function new_poisson_2d_curvilinear
+end function sll_f_new_poisson_2d_curvilinear
 
 
 
@@ -284,7 +301,7 @@ subroutine initialize_poisson_2d_curvilinear( &
   knots_min2, &
   knots_max2 )
     
-  type(poisson_2d_curvilinear), intent(out) :: poisson
+  type(sll_t_poisson_2d_curvilinear), intent(out) :: poisson
   sll_int32,  intent(in) :: spline_degree1
   sll_int32,  intent(in) :: spline_degree2
   sll_int32,  intent(in) :: num_cells1
@@ -454,7 +471,7 @@ subroutine initialize_poisson_2d_curvilinear( &
  
   print*,'#num_nz=',num_nz
 
-  poisson%sll_csr_mat => new_csr_matrix( &
+  poisson%sll_csr_mat => sll_f_new_csr_matrix( &
     solution_size, &
     solution_size, &
     num_cells1*num_cells2, &
@@ -464,16 +481,16 @@ subroutine initialize_poisson_2d_curvilinear( &
     total_num_splines_loc)
 
 
-  print *,'#begin of sll_factorize_csr_matrix'
-  call sll_factorize_csr_matrix(poisson%sll_csr_mat)
-  print *,'#end of sll_factorize_csr_matrix'
+  print *,'#begin of sll_s_factorize_csr_matrix'
+  call sll_s_factorize_csr_matrix(poisson%sll_csr_mat)
+  print *,'#end of sll_s_factorize_csr_matrix'
 
 !  if (es%perper) then
 !
-!   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
+!   es%sll_csr_mat_with_constraint => sll_f_new_csr_matrix_with_constraint(es%sll_csr_mat)  
 !
 !
-!   call csr_add_one_constraint( &
+!   call sll_s_csr_add_one_constraint( &
 !    es%sll_csr_mat%row_ptr, & 
 !    es%sll_csr_mat%col_ind, &
 !    es%sll_csr_mat%val, &
@@ -484,13 +501,13 @@ subroutine initialize_poisson_2d_curvilinear( &
 !    es%sll_csr_mat_with_constraint%col_ind, &
 !    es%sll_csr_mat_with_constraint%val)  
 !
-!    print *,'#begin of sll_factorize_csr_matrix'
-!    call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
-!    print *,'#end of sll_factorize_csr_matrix'
+!    print *,'#begin of sll_s_factorize_csr_matrix'
+!    call sll_s_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+!    print *,'#end of sll_s_factorize_csr_matrix'
 !  else   
-!    print *,'#begin of sll_factorize_csr_matrix'
-!    call sll_factorize_csr_matrix(es%sll_csr_mat)
-!    print *,'#end of sll_factorize_csr_matrix'
+!    print *,'#begin of sll_s_factorize_csr_matrix'
+!    call sll_s_factorize_csr_matrix(es%sll_csr_mat)
+!    print *,'#end of sll_s_factorize_csr_matrix'
 !  end if 
 
 !
@@ -664,18 +681,18 @@ subroutine new_quadrature( &
       print *,'#are provided'
     endif
   else
-    quadrature_type_value = POISSON_GAUSS_LEGENDRE
+    quadrature_type_value = sll_p_poisson_gauss_legendre
     if(present(quadrature_type))then
       quadrature_type_value = quadrature_type
     endif
     SLL_ALLOCATE(pts_and_weights(2,num_quadrature_points_out),ierr)
     select case(quadrature_type_value)
-      case (POISSON_GAUSS_LEGENDRE)
+      case (sll_p_poisson_gauss_legendre)
         pts_and_weights(1:2,1:num_quadrature_points_out) = &
-          gauss_legendre_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
+          sll_f_gauss_legendre_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
       case (POISSON_GAUSS_LOBATTO)
         pts_and_weights(1:2,1:num_quadrature_points_out) = &
-          gauss_lobatto_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
+          sll_f_gauss_lobatto_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
       case default
         print *, '#bad choice for quadrature_type'
         print *,'#error at line',__LINE__,'in file',__FILE__
@@ -764,14 +781,14 @@ function new_knots( &
       print *,'is ignored at line/file',__LINE__,__FILE__
     endif
   else
-    bc_min_value = SLL_POISSON_OPEN_KNOTS
+    bc_min_value = sll_p_poisson_open_knots
     if(present(bc_min))then
       bc_min_value = bc_min
     endif
     select case (bc_min_value)
-      case (SLL_POISSON_OPEN_KNOTS)
+      case (sll_p_poisson_open_knots)
         knots(1:spline_degree) = knots(spline_degree+1)
-      case (SLL_POISSON_PERIODIC_KNOTS)
+      case (sll_p_poisson_periodic_knots)
         knots(1:spline_degree) = knots(num_cells+1:num_cells+spline_degree)-L
       case default
         print *, '#bad choice for bc_min'
@@ -795,15 +812,15 @@ function new_knots( &
       print *,'is ignored at line/file',__LINE__,__FILE__
     endif
   else
-    bc_max_value = SLL_POISSON_OPEN_KNOTS
+    bc_max_value = sll_p_poisson_open_knots
     if(present(bc_max))then
       bc_max_value = bc_max
     endif
     select case (bc_max_value)
-      case (SLL_POISSON_OPEN_KNOTS)
+      case (sll_p_poisson_open_knots)
         knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
           = knots(num_cells+spline_degree+1)
-      case (SLL_POISSON_PERIODIC_KNOTS)
+      case (sll_p_poisson_periodic_knots)
         knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
           = knots(spline_degree+2:2*spline_degree+1)+L
       case default
@@ -869,16 +886,16 @@ subroutine compute_bc_indices(num_cells,spline_degree,bc_min,bc_max,index)
   
   !eta_min boundary correction  
   select case (bc_min)
-    case (SLL_DIRICHLET)
+    case (sll_p_dirichlet)
       index(1) = 0
     case default     
   end select
       
   !eta_max boundary correction
   select case (bc_max)
-    case (SLL_DIRICHLET)
+    case (sll_p_dirichlet)
       index(num_cells+spline_degree) = 0
-    case (SLL_PERIODIC)
+    case (sll_p_periodic)
       do i=1,spline_degree
         index(num_cells+i)=index(i)
       end do  
@@ -1044,15 +1061,15 @@ function compute_solution_size(bc_min,bc_max,num_cells, spline_degree) result(re
   sll_int32, intent(in) :: spline_degree
   sll_int32 :: res   
   
-  if((bc_min==SLL_PERIODIC).and.(bc_max==SLL_PERIODIC))then
+  if((bc_min==sll_p_periodic).and.(bc_max==sll_p_periodic))then
     res = num_cells
   else
     res = num_cells+spline_degree
   endif
-  if(bc_min==SLL_DIRICHLET)then
+  if(bc_min==sll_p_dirichlet)then
     res = res-1
   endif
-  if(bc_max==SLL_DIRICHLET)then
+  if(bc_max==sll_p_dirichlet)then
     res = res-1
   endif
   
@@ -1270,7 +1287,7 @@ end function compute_solution_size
 !PN   enddo
 !PN 
 !PN 
-!PN   if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+!PN   if((bc_left==sll_p_periodic).and.(bc_right==sll_p_periodic))then
 !PN     do i = 1, spline_degree+num_cells+1+2*spline_degree
 !PN       knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
 !PN     enddo

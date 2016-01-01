@@ -166,7 +166,7 @@ c -------------------------------
          rat = 2.0d0
       endif
       nspread = int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
-      nf1 = rat*ms
+      nf1 = int(rat*ms,kind=4)
       if (2*nspread.gt.nf1) then
          nf1 = next235(2d0*nspread) 
       endif 
@@ -199,7 +199,7 @@ c     ---------------------------------------------------------------
 c     Initialize fine grid data to zero.
 c     ---------------------------------------------------------------
       do k1 = 0, 2*nf1-1
-         fw(k1) = dcmplx(0d0,0d0)
+         fw(k1) = 0d0 !dcmplx(0d0,0d0)
       enddo
 c
 c     ---------------------------------------------------------------
@@ -216,7 +216,7 @@ c
 c    ---------------------------------------------------------------
 c
       do j = 1, nj
-         ccj = cj(j)/dble(nj)
+         ccj = cj(j)/cmplx(nj,0,kind=8)
 
          jb1 = int((xj(j)+pi)/hx)
          diff1 = (xj(j)+pi)/hx - jb1
@@ -274,19 +274,19 @@ c
 c
       tau = pi * r2lamb / dble(nf1)**2
       cross1 = 1d0/sqrt(r2lamb)
-      zz = dcmplx(fw(0),fw(1))
+      zz = cmplx(fw(0),fw(1),kind=8)
       fk(0) = cross1*zz
       do k1 = 1, (ms-1)/2
          cross1 = -cross1
          cross = cross1*exp(tau*dble(k1)**2)
-            zz = dcmplx(fw(2*k1),fw(2*k1+1))
+            zz = cmplx(fw(2*k1),fw(2*k1+1),kind=8)
          fk(k1) = cross*zz
-            zz = dcmplx(fw(2*(nf1-k1)),fw(2*(nf1-k1)+1))
+            zz = cmplx(fw(2*(nf1-k1)),fw(2*(nf1-k1)+1),kind=8)
          fk(-k1) = cross*zz
       enddo
       if (ms/2*2.eq.ms) then
          cross = -cross1*exp(tau*dble(ms/2)**2)
-         zz = dcmplx(fw(2*nf1-ms),fw(2*nf1-ms+1))
+         zz = cmplx(fw(2*nf1-ms),fw(2*nf1-ms+1),kind=8)
          fk(-ms/2) = cross*zz
       endif
       deallocate(fw)
@@ -301,7 +301,7 @@ c
       subroutine nufft1d2f90(nj,xj,cj, iflag,eps, ms,fk,ier)
       implicit none
       integer ier,iflag,iw1,iwsav,iwtot,j,jb1,jb1u,jb1d,k1
-      integer ms,next235,nf1,nj,nspread,nw
+      integer ms,next235,nf1,nj,nspread!,nw
       real(8):: cross,cross1,diff1,eps,hx,pi,rat,r2lamb,t1
       real(8):: xj(nj),xc(-47:47)
       parameter (pi=3.141592653589793d0)
@@ -370,7 +370,7 @@ c     -------------------------------
          rat = 2.0d0
       endif
       nspread = int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
-      nf1 = rat*ms
+      nf1 = int(rat*ms,kind=4)
       if (2*nspread.gt.nf1) then
          nf1 = next235(2d0*nspread) 
       endif 
@@ -391,7 +391,7 @@ c     -------------------------------
       endif
 c
       nspread = int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
-      nf1 = rat*ms
+      nf1 = int(rat*ms,kind=4)
       if (2*nspread.gt.nf1) then
          nf1 = next235(2d0*nspread) 
       endif 
@@ -444,8 +444,8 @@ c
          fw(2*nf1-ms+1) = dimag(zz)
       endif
       do k1 = (ms+1)/2, nf1-ms/2-1
-         fw(2*k1) = dcmplx(0d0, 0d0)
-         fw(2*k1+1) = dcmplx(0d0, 0d0)
+         fw(2*k1) = 0d0 !dcmplx(0d0, 0d0)
+         fw(2*k1+1) = 0d0 !dcmplx(0d0, 0d0)
       enddo
 c
       if (iflag .ge. 0) then
@@ -463,7 +463,7 @@ c          locations using Gaussian convolution.
 c     ---------------------------------------------------------------
       t1 = pi/r2lamb
       do j = 1, nj
-         cj(j) = dcmplx(0d0,0d0)
+         cj(j) = cmplx(0d0,0d0,kind=8)
          jb1 = int((xj(j)+pi)/hx)
          diff1 = (xj(j)+pi)/hx - jb1
          jb1 = mod(jb1, nf1)
@@ -485,15 +485,15 @@ c
          jb1d = min(nspread-1, jb1)
          jb1u = min(nspread, nf1-jb1-1)
          do k1 = -nspread+1, -jb1d-1
-            zz = dcmplx(fw(2*(jb1+k1+nf1)),fw(2*(jb1+k1+nf1)+1))
+            zz = cmplx(fw(2*(jb1+k1+nf1)),fw(2*(jb1+k1+nf1)+1),kind=8)
             cj(j) = cj(j) + xc(k1)*zz
          enddo
          do k1 = -jb1d, jb1u
-            zz = dcmplx(fw(2*(jb1+k1)),fw(2*(jb1+k1)+1))
+            zz = cmplx(fw(2*(jb1+k1)),fw(2*(jb1+k1)+1),kind=8)
             cj(j) = cj(j) + xc(k1)*zz
          enddo
          do k1 = jb1u+1, nspread
-            zz = dcmplx(fw(2*(jb1+k1-nf1)),fw(2*(jb1+k1-nf1)+1))
+            zz = cmplx(fw(2*(jb1+k1-nf1)),fw(2*(jb1+k1-nf1)+1),kind=8)
             cj(j) = cj(j) + xc(k1)*zz
          enddo
       enddo
@@ -518,7 +518,7 @@ c
       complex(8):: cj(nj), fk(nk), zz, cs
 c
 c ----------------------------------------------------------------------
-      integer nw, istart
+      integer istart
       real(8), allocatable, save :: fw(:)
 c ----------------------------------------------------------------------
 c     if (iflag .ge. 0) then
@@ -624,7 +624,7 @@ c
       nspread = int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
       t1 = 2d0/pi * xm*sm
       nf1 = next235(rat*max(rat*t1+2*nspread,2*nspread/(rat-1)))
-      rat = (sqrt(nf1*t1+nspread**2)-nspread)/t1
+      rat = (sqrt(nf1*t1+nspread**2)-real(nspread,kind=8))/t1
 c
       r2lamb1 = rat*rat * nspread / (rat*(rat-.5d0))
       hx = pi/(rat*sm)
@@ -656,7 +656,7 @@ c     ---------------------------------------------------------------
 c     Initialize fine grid data to zero.
 c     ---------------------------------------------------------------
       do k1 = 0, 2*nf1-1
-         fw(k1) = dcmplx(0d0,0d0)
+         fw(k1) = 0d0 !dcmplx(0d0,0d0)
       enddo
 c
 c     ---------------------------------------------------------------
@@ -667,9 +667,9 @@ c
       if (iflag .lt. 0) sb = -sb
       do j = 1, nj
          jb1 = int(dble(nf1/2) + (xj(j)-xb)/hx)
-         diff1 = dble(nf1/2) + (xj(j)-xb)/hx - jb1
+         diff1 = dble(nf1/2) + (xj(j)-xb)/hx - real(jb1,kind=8)
          ang = sb*xj(j)
-         cs = dcmplx(cos(ang),sin(ang)) * cj(j)
+         cs = cmplx(cos(ang),sin(ang),kind=8) * cj(j)
 
          xc(0) = exp(-t1*diff1**2)
          cross = xc(0)
@@ -702,18 +702,18 @@ c ---------------------------------------------------------------
 c
       t1 = pi * r2lamb1 / dble(nf1)**2
       cross1 = (1d0-2d0*mod(nf1/2,2))/r2lamb1
-      zz = dcmplx(fw(nf1),fw(nf1+1))
+      zz = cmplx(fw(nf1),fw(nf1+1),kind=8)
       zz = cross1*zz
       fw(nf1) = dreal(zz)
       fw(nf1+1) = dimag(zz)
       do k1 = 1, kmax
          cross1 = -cross1
          cross = cross1*exp(t1*dble(k1)**2)
-         zz = dcmplx(fw(nf1-2*k1),fw(nf1-2*k1+1))
+         zz = cmplx(fw(nf1-2*k1),fw(nf1-2*k1+1),kind=8)
          zz = cross*zz
          fw(nf1-2*k1) = dreal(zz)
          fw(nf1-2*k1+1) = dimag(zz)
-         zz = dcmplx(fw(nf1+2*k1),fw(nf1+2*k1+1))
+         zz = cmplx(fw(nf1+2*k1),fw(nf1+2*k1+1),kind=8)
          zz = cross*zz
          fw(nf1+2*k1) = dreal(zz)
          fw(nf1+2*k1+1) = dimag(zz)
@@ -738,7 +738,7 @@ c     ---------------------------------------------------------------
       t1 = pi/r2lamb1
       do j = 1, nk
          kb1 = int(dble(nf1/2) + (sk(j)-sb)/hs)
-         diff1 = dble(nf1/2) + (sk(j)-sb)/hs - kb1
+         diff1 = dble(nf1/2) + (sk(j)-sb)/hs - real(kb1,kind=8)
 
          ! exp(-t1*(diff1-k1)**2) = xc(k1)
          xc(0) = exp(-t1*diff1**2)
@@ -755,9 +755,9 @@ c     ---------------------------------------------------------------
             xc(-k1) = fw(iw1+k1)*cross
          enddo
 c
-         fk(j) = dcmplx(0d0,0d0)
+         fk(j) = cmplx(0d0,0d0,kind=8)
          do k1 = -nspread+1, nspread
-            zz = dcmplx(fw(2*(kb1+k1)),fw(2*(kb1+k1)+1))
+            zz = cmplx(fw(2*(kb1+k1)),fw(2*(kb1+k1)+1),kind=8)
             fk(j) = fk(j) + xc(k1)*zz
          enddo
       enddo
@@ -767,7 +767,7 @@ c
       do j = 1, nk
          fk(j) = (exp(t1*(sk(j)-sb)**2))*fk(j)
          ang = (sk(j)-sb)*xb
-         fk(j) = dcmplx(cos(ang),sin(ang)) * fk(j)
+         fk(j) = cmplx(cos(ang),sin(ang),kind=8) * fk(j)
       enddo
       deallocate(fw)
       return

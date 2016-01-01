@@ -14,17 +14,24 @@
 
 module sll_m_poisson_2d_dirichlet_cartesian
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-!  use sll_m_fft
-  use sll_m_constants
+
   implicit none
+
+  public :: &
+    sll_f_new_poisson_2d_dirichlet_cartesian_plan, &
+    sll_t_poisson_2d_dirichlet_cartesian, &
+    sll_o_delete, &
+    sll_o_solve
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to store data from Poisson solver. This
   !> solver is parallel on structured cartesian mesh. 
-  type, public :: poisson_2d_dirichlet_cartesian
+  type :: sll_t_poisson_2d_dirichlet_cartesian
      sll_int32                           :: ncx    !< number of cells  
      sll_int32                           :: ncy    !< number of cells
 
@@ -41,30 +48,27 @@ module sll_m_poisson_2d_dirichlet_cartesian
      sll_real64, dimension(:),pointer    :: f
      sll_real64, dimension(:),pointer    :: vx
      sll_int32                           :: nsky
-  end type poisson_2d_dirichlet_cartesian
+  end type sll_t_poisson_2d_dirichlet_cartesian
 
-  interface sll_solve
+  interface sll_o_solve
      module procedure solve_poisson_2d_dirichlet_cartesian
-  end interface sll_solve
+  end interface sll_o_solve
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_poisson_2d_dirichlet_cartesian
-  end interface sll_delete
+  end interface sll_o_delete
 
-  public :: new_poisson_2d_dirichlet_cartesian_plan
-  public :: sll_solve
-  public :: sll_delete
 
 contains
 
   !> @returns the pointer to poisson solver object
-  function new_poisson_2d_dirichlet_cartesian_plan( &
+  function sll_f_new_poisson_2d_dirichlet_cartesian_plan( &
     ncx, &            
     ncy, &            
     Lx, &    
     Ly ) result(plan)
 
-    type (poisson_2d_dirichlet_cartesian), pointer :: plan
+    type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan
     sll_int32                        :: ncx          !< number of cells in x
     sll_int32                        :: ncy          !< number of cells in y
     sll_real64                       :: Lx           !< length x
@@ -139,8 +143,8 @@ contains
     SLL_ALLOCATE(plan%vkgs(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgi(plan%nsky),ierr)
     SLL_ALLOCATE(plan%vkgd(n),ierr)
-    plan%vkgs=0.d0
-    plan%vkgi=0.d0
+    plan%vkgs=0._f64
+    plan%vkgi=0._f64
     !definir vkgs,vkgi,vkgd
     do l=1,ch
        i=plan%indi(l)
@@ -161,7 +165,7 @@ contains
     SLL_ALLOCATE(plan%f(n),ierr)
     SLL_ALLOCATE(plan%vx(n),ierr)
 
-  end function new_poisson_2d_dirichlet_cartesian_plan
+  end function sll_f_new_poisson_2d_dirichlet_cartesian_plan
 
 
 
@@ -169,7 +173,7 @@ contains
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   subroutine solve_poisson_2d_dirichlet_cartesian(plan, rho, phi)
-    type (poisson_2d_dirichlet_cartesian), pointer :: plan !< self object
+    type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan !< self object
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
@@ -207,7 +211,7 @@ contains
 
 !> Delete the Poisson solver object
   subroutine delete_poisson_2d_dirichlet_cartesian(plan)
-    type (poisson_2d_dirichlet_cartesian), pointer :: plan
+    type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan
     sll_int32                                           :: ierr
 
     if( .not. associated(plan) ) then

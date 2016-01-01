@@ -1,32 +1,67 @@
 program parallel_advection
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_gnuplot_parallel
-use sll_m_collective
-use sll_m_remapper
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite
+
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_o_gnuplot_2d_parallel
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_quintic_spline_interpolator_1d, only: &
+    sll_o_delete, &
+    sll_t_quintic_spline_interpolator_1d
+
+  use sll_m_remapper, only: &
+    sll_o_apply_remap_2d, &
+    sll_o_compute_local_sizes, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_2d_real64, &
+    sll_o_view_lims, &
+    sll_o_delete
+
+  use sll_m_utilities, only: &
+    sll_f_is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_wtime
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #define MPI_MASTER 0
-use sll_m_utilities, only : &
-     is_power_of_two
 
-use sll_m_interpolators_1d_base
-use sll_m_quintic_spline_interpolator_1d
- 
+class(sll_c_interpolator_1d), pointer   :: interp_eta1
+class(sll_c_interpolator_1d), pointer   :: interp_eta2
 
-implicit none
-
-class(sll_interpolator_1d_base), pointer   :: interp_eta1
-class(sll_interpolator_1d_base), pointer   :: interp_eta2
-
-type(sll_quintic_spline_interpolator_1d), target :: spl_eta1
-type(sll_quintic_spline_interpolator_1d), target :: spl_eta2
+type(sll_t_quintic_spline_interpolator_1d), target :: spl_eta1
+type(sll_t_quintic_spline_interpolator_1d), target :: spl_eta2
 
 sll_real64, dimension(:,:),  pointer       :: f_eta1
 sll_real64, dimension(:,:),  pointer       :: f_eta2
-type(layout_2D), pointer                   :: layout_eta1
-type(layout_2D), pointer                   :: layout_eta2
-type(remap_plan_2D_real64), pointer        :: eta1_to_eta2 
-type(remap_plan_2D_real64), pointer        :: eta2_to_eta1
+type(sll_t_layout_2d), pointer                   :: layout_eta1
+type(sll_t_layout_2d), pointer                   :: layout_eta2
+type(sll_t_remap_plan_2d_real64), pointer        :: eta1_to_eta2 
+type(sll_t_remap_plan_2d_real64), pointer        :: eta2_to_eta1
 
 sll_int32  :: i_step
 sll_int32  :: prank, comm
@@ -61,55 +96,55 @@ sll_int32,  parameter :: n_step     = 200                           !
 
 sll_int32 :: i, j
 
-call sll_boot_collective()
+call sll_s_boot_collective()
 
-prank = sll_get_collective_rank(sll_world_collective)
-psize = sll_get_collective_size(sll_world_collective)
-comm  = sll_world_collective%comm
+prank = sll_f_get_collective_rank(sll_v_world_collective)
+psize = int(sll_f_get_collective_size(sll_v_world_collective),kind=i64)
+comm  = sll_v_world_collective%comm
 
 tcpu1 = MPI_WTIME()
-if (.not. is_power_of_two(psize)) then     
+if (.not. sll_f_is_power_of_two(psize)) then     
    print *, 'This test needs to run in a number of processes which is ',&
         'a power of 2.'
    stop
 end if
 
-call spl_eta1%initialize(nc_eta1+1,eta1_min,eta1_max,SLL_HERMITE,SLL_HERMITE)
+call spl_eta1%initialize(nc_eta1+1,eta1_min,eta1_max,sll_p_hermite,sll_p_hermite)
 
-call spl_eta2%initialize(nc_eta2+1,eta2_min,eta2_max,SLL_HERMITE,SLL_HERMITE)
+call spl_eta2%initialize(nc_eta2+1,eta2_min,eta2_max,sll_p_hermite,sll_p_hermite)
 
 interp_eta1 => spl_eta1
 interp_eta2 => spl_eta2
 
-layout_eta1 => new_layout_2D( sll_world_collective )        
+layout_eta1 => sll_f_new_layout_2d( sll_v_world_collective )        
 
-call initialize_layout_with_distributed_array( &
+call sll_o_initialize_layout_with_distributed_array( &
            nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
-if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta1 )
-call flush(6)
+if ( prank == MPI_MASTER ) call sll_o_view_lims( layout_eta1 )
+flush( output_unit )
 
-call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
+call sll_o_compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
 SLL_CLEAR_ALLOCATE(f_eta1(1:loc_sz_i,1:loc_sz_j),error)
 
-layout_eta2 => new_layout_2D( sll_world_collective )
+layout_eta2 => sll_f_new_layout_2d( sll_v_world_collective )
 
-call initialize_layout_with_distributed_array( &
+call sll_o_initialize_layout_with_distributed_array( &
             nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
-if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta2 )
-call flush(6)
+if ( prank == MPI_MASTER ) call sll_o_view_lims( layout_eta2 )
+flush( output_unit )
 
-call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
+call sll_o_compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 SLL_CLEAR_ALLOCATE(f_eta2(1:loc_sz_i,1:loc_sz_j),error)
 
-eta1_to_eta2 => new_remap_plan( layout_eta1, layout_eta2, f_eta1)     
-eta2_to_eta1 => new_remap_plan( layout_eta2, layout_eta1, f_eta2)     
+eta1_to_eta2 => sll_o_new_remap_plan( layout_eta1, layout_eta2, f_eta1)     
+eta2_to_eta1 => sll_o_new_remap_plan( layout_eta2, layout_eta1, f_eta2)     
 
 do j=1,loc_sz_j
 do i=1,loc_sz_i
 
-   global_indices = local_to_global(layout_eta2,(/i,j/)) 
+   global_indices = sll_o_local_to_global(layout_eta2,(/i,j/)) 
    gi = global_indices(1)
    gj = global_indices(2)
 
@@ -121,24 +156,24 @@ do i=1,loc_sz_i
 end do
 end do
 
-call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
+call sll_o_apply_remap_2d( eta2_to_eta1, f_eta2, f_eta1 )
 call advection_eta1(0.5*delta_t)
 
-offset = local_to_global(layout_eta1,(/1,1/)) 
+offset = sll_o_local_to_global(layout_eta1,(/1,1/)) 
 offset_eta1 = (offset(1)-1)*delta_eta1
 offset_eta2 = (offset(2)-1)*delta_eta2
 
 do i_step=1, n_step
 
-  call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
+  call sll_o_apply_remap_2d( eta1_to_eta2, f_eta1, f_eta2 )
 
   call advection_eta2(delta_t)
 
-  call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
+  call sll_o_apply_remap_2d( eta2_to_eta1, f_eta2, f_eta1 )
 
   call advection_eta1(delta_t)
 
-  call sll_gnuplot_2d_parallel( offset_eta1, delta_eta1, &
+  call sll_o_gnuplot_2d_parallel( offset_eta1, delta_eta1, &
                                 offset_eta2, delta_eta2, &
                                 size(f_eta1,1), size(f_eta1,2), &
                                 f_eta1, 'f_parallel', &
@@ -149,12 +184,12 @@ tcpu2 = MPI_WTIME()
 if (prank == MPI_MASTER) &
      write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-call sll_delete(layout_eta1)
-call sll_delete(layout_eta2)
+call sll_o_delete(layout_eta1)
+call sll_o_delete(layout_eta2)
 SLL_DEALLOCATE_ARRAY(f_eta1, error)
 SLL_DEALLOCATE_ARRAY(f_eta2, error)
 
-call sll_halt_collective()
+call sll_s_halt_collective()
 
 contains
 
@@ -163,14 +198,14 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: eta1, alpha
 
-  call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)
+  call sll_o_compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)
 
   alpha = dt
   do j=1,loc_sz_j
      call interp_eta1%compute_interpolants(f_eta1(:,j))
      do i = 1, loc_sz_i
        eta1 = eta1_min + (i-1)*delta_eta1 - alpha
-       f_eta1(i,j) =  interp_eta1%interpolate_value(eta1) 
+       f_eta1(i,j) =  interp_eta1%interpolate_from_interpolant_value(eta1) 
      end do
 
   end do
@@ -182,14 +217,14 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha, eta2
 
-  call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
+  call sll_o_compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 
   alpha = dt
   do i=1,loc_sz_i
     call interp_eta2%compute_interpolants(f_eta2(i,:))
     do j=1,loc_sz_j
        eta2 = eta2_min + (j-1)*delta_eta2 - alpha
-       f_eta2(i,j) =  interp_eta2%interpolate_value(eta2) 
+       f_eta2(i,j) =  interp_eta2%interpolate_from_interpolant_value(eta2) 
     end do
   end do
 

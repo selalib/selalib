@@ -1,13 +1,24 @@
 program test_poisson_2d_dirichlet_cartesian
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_constants
-  use sll_m_poisson_2d_dirichlet_cartesian
-  use sll_m_gnuplot
-  implicit none
+#include "sll_working_precision.h"
 
-  type (poisson_2d_dirichlet_cartesian), pointer :: plan
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_poisson_2d_dirichlet_cartesian, only: &
+    sll_f_new_poisson_2d_dirichlet_cartesian_plan, &
+    sll_t_poisson_2d_dirichlet_cartesian, &
+    sll_o_delete, &
+    sll_o_solve
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan
 
   sll_int32                               :: ncx, ncy
   sll_int32                               :: nx_loc, ny_loc
@@ -26,13 +37,13 @@ program test_poisson_2d_dirichlet_cartesian
   ! Number of cells is equal to number of points in this case
   ncx = 10
   ncy = 10
-  Lx  = 2.0*sll_pi
-  Ly  = 2.0*sll_pi
+  Lx  = 2.0*sll_p_pi
+  Ly  = 2.0*sll_p_pi
 
-  dx = Lx/ncx
-  dy = Ly/ncy
+  dx = Lx/real(ncx,f64)
+  dy = Ly/real(ncy,f64)
 
-  plan => new_poisson_2d_dirichlet_cartesian_plan(ncx, ncy, Lx, Ly)
+  plan => sll_f_new_poisson_2d_dirichlet_cartesian_plan(ncx, ncy, Lx, Ly)
 
   SLL_ALLOCATE(rho(nx_loc,ny_loc), error)
   SLL_ALLOCATE(phi_an(nx_loc,ny_loc), error)
@@ -48,19 +59,19 @@ program test_poisson_2d_dirichlet_cartesian
      end do
   end do
 
-  call sll_solve(plan, rho, phi)
+  call sll_o_solve(plan, rho, phi)
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_dirichlet" failure'
-     !call sll_halt_collective()
+     !call sll_s_halt_collective()
      !stop
   endif
  
@@ -68,20 +79,20 @@ program test_poisson_2d_dirichlet_cartesian
   SLL_DEALLOCATE_ARRAY(rho,    error)
   SLL_DEALLOCATE_ARRAY(phi_an, error)
 
-  call sll_delete(plan)
+  call sll_o_delete(plan)
 
 !!$  call sll_gnuplot_rect_2d(dble(offset(1)), dble(1), &
 !!$       dble(offset(2)), dble(1), &
 !!$       size(rho,1), size(rho,2), &
 !!$       rho, "rho", 1, error)  
 
-  average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
+  average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
+  flush( output_unit ); print*, ' ------------------'
+  flush( output_unit ); print*, ' myrank ', myrank
+  flush( output_unit ); print*, 'local average error:', average_err
+  flush( output_unit ); print*, 'dx*dy =', dx*dy
+  flush( output_unit ); print*, ' ------------------'
 
   print *, 'PASSED'
 end program test_poisson_2d_dirichlet_cartesian

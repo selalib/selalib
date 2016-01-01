@@ -9,16 +9,28 @@
 !> * Linear system solve with lapack (Choleski)
 !> This solver is not fully tested, please use it carefully.
 module sll_m_fem_2d_periodic
-#include "sll_poisson_solvers_macros.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_poisson_solvers_macros.h"
 
-implicit none
-private
+! use F77_lapack, only: &
+!   dgetrf, &
+!   dgetrs
+
+  implicit none
+
+  public :: &
+    sll_o_create, &
+    sll_t_fem_poisson_2d_periodic, &
+    sll_o_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Structure to solve Poisson equation on 2d irregular cartesian mesh
 !> with finite element numerical method
-type, public :: sll_fem_poisson_2d_periodic
+type :: sll_t_fem_poisson_2d_periodic
    sll_int32                           :: nx    !< cells number along x
    sll_int32                           :: ny    !< cells number along y
    sll_real64, dimension(:,:), pointer :: A     !< Mass matrix
@@ -26,19 +38,18 @@ type, public :: sll_fem_poisson_2d_periodic
    sll_real64, dimension(:)  , pointer :: hx    !< step size x
    sll_real64, dimension(:)  , pointer :: hy    !< step size y
    sll_int32,  dimension(:)  , pointer :: ipiv  !< Lapack array for pivoting
-end type sll_fem_poisson_2d_periodic
+end type sll_t_fem_poisson_2d_periodic
 
 !> Initialize the solver
-interface sll_create
+interface sll_o_create
    module procedure initialize_poisson_2d_periodic_fem
-end interface sll_create
+end interface sll_o_create
 
 !> Compute the electric potential
-interface sll_solve
+interface sll_o_solve
    module procedure solve_poisson_2d_periodic_fem
-end interface sll_solve
+end interface sll_o_solve
 
-public :: sll_create, sll_solve
 
 contains
 
@@ -46,7 +57,7 @@ contains
 !> Indices are shifted from \f$ [1:n+1] \f$ to \f$ [0:n] \f$ only 
 !> inside this subroutine.
 subroutine initialize_poisson_2d_periodic_fem( this, x, y ,nn_x, nn_y)
-type( sll_fem_poisson_2d_periodic ) :: this !< Solver data structure
+type( sll_t_fem_poisson_2d_periodic ) :: this !< Solver data structure
 sll_int32,  intent(in)          :: nn_x !< number of cells along x
 sll_int32,  intent(in)          :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x)     :: x    !< x nodes coordinates
@@ -86,24 +97,24 @@ Axelem(2,:) = (/ -2.0_f64,  2.0_f64,  1.0_f64, -1.0_f64 /)
 Axelem(3,:) = (/ -1.0_f64,  1.0_f64,  2.0_f64, -2.0_f64 /)
 Axelem(4,:) = (/  1.0_f64, -1.0_f64, -2.0_f64,  2.0_f64 /)
 
-Axelem = 1.d0/6.d0 * Axelem
+Axelem = 1._f64/6._f64 * Axelem
 
 Ayelem(1,:) = (/  2.0_f64,  1.0_f64, -1.0_f64, -2.0_f64 /)
 Ayelem(2,:) = (/  1.0_f64,  2.0_f64, -2.0_f64, -1.0_f64 /)
 Ayelem(3,:) = (/ -1.0_f64, -2.0_f64,  2.0_f64,  1.0_f64 /)
 Ayelem(4,:) = (/ -2.0_f64, -1.0_f64,  1.0_f64,  2.0_f64 /)
 
-Ayelem = 1.d0/6.d0 * Ayelem
+Ayelem = 1._f64/6._f64 * Ayelem
 
 Melem(1,:) = (/ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64/)
 Melem(2,:) = (/ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64/)
 Melem(3,:) = (/ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64/)
 Melem(4,:) = (/ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64/)
 
-Melem = 1.d0/36.d0 * Melem
+Melem = 1._f64/36._f64 * Melem
 
-this%A = 0.d0
-this%M = 0.d0
+this%A = 0._f64
+this%M = 0._f64
 
 !***  Interior mesh ***
 do j=1,this%ny-1
@@ -172,7 +183,7 @@ end function som
 
 !> Build matrices and factorize
 subroutine build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-type( sll_fem_poisson_2d_periodic ) :: this     !< Poisson solver object
+type( sll_t_fem_poisson_2d_periodic ) :: this     !< Poisson solver object
 sll_real64, dimension(:,:)      :: Axelem   !< x electric field
 sll_real64, dimension(:,:)      :: Ayelem   !< y electric field
 sll_real64, dimension(:,:)      :: Melem    !< charge density
@@ -197,7 +208,7 @@ end subroutine build_matrices
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_periodic_fem( this, ex, ey, rho )
-type( sll_fem_poisson_2d_periodic )        :: this !< Poisson solver object
+type( sll_t_fem_poisson_2d_periodic )        :: this !< Poisson solver object
 sll_real64, dimension(:,:)             :: ex   !< x electric field
 sll_real64, dimension(:,:)             :: ey   !< y electric field
 sll_real64, dimension(:,:)             :: rho  !< charge density

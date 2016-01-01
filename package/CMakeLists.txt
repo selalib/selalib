@@ -36,8 +36,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/time_integration/characteristics/sll_m_characteristics_2d_base.F90
     ${SLL_DIR}/linear_solvers/sll_m_tridiagonal.F90
     ${SLL_DIR}/linear_solvers/sll_m_penta_diagonal.F90
-    ${SLL_DIR}/../external/deboor/banfac.f90
-    ${SLL_DIR}/../external/deboor/banslv.f90
+    ${SLL_DIR}/../external/pppack/banfac.f90
+    ${SLL_DIR}/../external/pppack/banslv.f90
     ${SLL_DIR}/interpolation/lagrange_interpolation/sll_m_lagrange_interpolation_1d.F90
     ${SLL_DIR}/io/file_io/sll_m_binary_io.F90
     ${SLL_DIR}/io/file_io/sll_m_gnuplot.F90
@@ -164,6 +164,10 @@ ENDIF(SUITESPARSE_ENABLED)
 
 IF(MPI_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+  ${SLL_DIR}/interfaces/mpi/sll_mpi.F90
+  ${SLL_DIR}/interfaces/mpi/external_intel.F90	
+  ${SLL_DIR}/interfaces/mpi/external_mpich.F90	
+  ${SLL_DIR}/interfaces/mpi/external_openmpi.F90
   ${SLL_DIR}/parallelization/collective/sll_m_collective.F90
   ${SLL_DIR}/parallelization/remap/sll_m_remapper.F90
   ${SLL_DIR}/parallelization/point_to_point_communications/sll_m_point_to_point_comms.F90

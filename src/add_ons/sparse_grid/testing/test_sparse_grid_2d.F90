@@ -2,14 +2,18 @@
 !  test 2D sparse grid
 !-------------------------------------------------------------------
 program test_interpolation_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_sparse_grid_2d
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_sparse_grid_2d, only: &
+    sll_t_sparse_grid_interpolator_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, dimension(:), allocatable :: order
   sll_int32 :: levels
@@ -24,7 +28,7 @@ program test_interpolation_2d
   sll_int32, dimension(2) :: dorder,levelsini
   sll_real64, dimension(:), allocatable :: displacement
 
-  type(sparse_grid_interpolator_2d), target   :: interp
+  type(sll_t_sparse_grid_interpolator_2d), target   :: interp
 
   logical :: fail
 
@@ -36,8 +40,8 @@ program test_interpolation_2d
   ALLOCATE(errorvecFFT(its));
 
   ! Set parameters
-  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_pi;
-  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_pi;
+  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_p_pi;
+  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_p_pi;
 
   levels = 8;
   order(1) = 1;
@@ -87,7 +91,7 @@ program test_interpolation_2d
              -eta_min(1)+disp,&
              eta_max(1)-eta_min(1));
         dx(2) = interp%hierarchy(j)%coordinate(2);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
      end do
      error = 0.0_f64;
      do j=1,interp%size_basis
@@ -125,7 +129,7 @@ program test_interpolation_2d
              -eta_min(2)+disp,&
              eta_max(2)-eta_min(2));
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -184,7 +188,7 @@ print*, 'Non-constant displacement'
              -eta_min(1)+disp*interp%hierarchy(j)%coordinate(2),&
              eta_max(1)-eta_min(1));
         dx(2) = interp%hierarchy(j)%coordinate(2);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
      end do
      error = 0.0_f64;
      do j=1,interp%size_basis
@@ -235,7 +239,7 @@ print*, 'Non-constant displacement'
              -eta_min(2)+disp*interp%hierarchy(j)%coordinate(1),&
              eta_max(2)-eta_min(2));
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error

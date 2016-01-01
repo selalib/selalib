@@ -18,32 +18,52 @@
 ! example a flag like SLL_DIRICHLET_NEUMANN could indicate two BC's along
 ! a particular dimension...
 module sll_m_boundary_condition_descriptors
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
 
+  public :: &
+    sll_p_conductor, &
+    sll_p_dirichlet, &
+    sll_p_hermite, &
+    sll_p_interior, &
+    sll_p_neumann, &
+    sll_p_neumann_mode_0, &
+    sll_p_periodic, &
+    sll_p_set_to_limit, &
+    sll_p_silver_muller, &
+    sll_p_user_defined
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
   !> User defined boundary condition
-  sll_int32, parameter :: SLL_USER_DEFINED   = -1 
+  sll_int32, parameter :: sll_p_user_defined   = -1 
   !> Periodic boundary condition u(1)=u(n)
-  sll_int32, parameter :: SLL_PERIODIC       = 0 
+  sll_int32, parameter :: sll_p_periodic       = 0 
   !> Dirichlet boundary condition 
-  sll_int32, parameter :: SLL_DIRICHLET      = 1 
+  sll_int32, parameter :: sll_p_dirichlet      = 1 
   !> Neumann boundary condition 
-  sll_int32, parameter :: SLL_NEUMANN        = 2
+  sll_int32, parameter :: sll_p_neumann        = 2
   !> Hermite boundary condition
-  sll_int32, parameter :: SLL_HERMITE        = 3
+  sll_int32, parameter :: sll_p_hermite        = 3
   !> Neumann boundary condition
-  sll_int32, parameter :: SLL_NEUMANN_MODE_0 = 4
+  sll_int32, parameter :: sll_p_neumann_mode_0 = 4
   !> PLEASE ADD DOCUMENTATION
-  sll_int32, parameter :: SLL_SET_TO_LIMIT   = 5
+  sll_int32, parameter :: sll_p_set_to_limit   = 5
   !> Interior of domain
-  sll_int32, parameter :: SLL_INTERIOR       = 6
+  sll_int32, parameter :: sll_p_interior       = 6
   !> Incoming wave boundar condition for Maxwell
   sll_int32, parameter :: SLL_INCOMING_WAVE  = 7
   !> Metallic boundary condition for Maxwell
-  sll_int32, parameter :: SLL_CONDUCTOR      = 8
+  sll_int32, parameter :: sll_p_conductor      = 8
   !> Absorbing boundary condition fro Maxwell
-  sll_int32, parameter :: SLL_SILVER_MULLER  = 9
+  sll_int32, parameter :: sll_p_silver_muller  = 9
+  !> Use a one-sided stencil at the boundary
+  sll_int32, parameter :: SLL_D_ONE_SIDED    = 10
+  !> Values outside the domain are provided as halo cells (for domain decomposition)
+  sll_int32, parameter :: SLL_D_HALO         = 11
 
 
 end module sll_m_boundary_condition_descriptors

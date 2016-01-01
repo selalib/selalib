@@ -81,7 +81,7 @@ contains
              y = transf%x2_at_node(i,j)
              x = transf%x1_at_node(i,j)
              data_out(i,j) = &
-                  1.0_f64/(2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
+                  1.0_f64/(2*sll_p_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
                   (y-init_obj%yc)**2/init_obj%sigma_y**2))
           end do
@@ -94,7 +94,7 @@ contains
              x = transf%x1_at_cell(i,j)
              jac = transf%jacobian_at_cell(i,j)
              data_out(i,j) = &
-                  jac / (2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
+                  jac / (2*sll_p_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
                   (y-init_obj%yc)**2/init_obj%sigma_y**2))
           end do

@@ -21,8 +21,20 @@
 !> @details
 !> With XDMF file you can describe data to plot them with VisIt
 module sll_m_xml_io
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_o_xml_field, &
+    sll_s_xml_file_close, &
+    sll_s_xml_file_create, &
+    sll_o_xml_grid_geometry
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
  !> write a data item in the xml file
  interface sll_xml_dataitem
@@ -31,13 +43,13 @@ module sll_m_xml_io
  end interface
  
  !> write a data attribute in the xml file
- interface sll_xml_field
+ interface sll_o_xml_field
     module procedure sll_xml_field_2d
     module procedure sll_xml_field_3d
  end interface
   
  !> write grid description in the xml file
- interface sll_xml_grid_geometry
+ interface sll_o_xml_grid_geometry
     module procedure sll_xml_grid_geometry_2d_high_level
     module procedure sll_xml_grid_geometry_2d_low_level
     module procedure sll_xml_grid_geometry_3d_high_level
@@ -48,7 +60,7 @@ contains
   
  !> Create the XML file and begin to write first lines.
  !> You get the file unit number.
- subroutine sll_xml_file_create(filename,file_id,error)
+ subroutine sll_s_xml_file_create(filename,file_id,error)
 
     character(len=*) , intent(in)  :: filename   !< file name
     sll_int32        , intent(out) :: file_id    !< file unit number
@@ -83,13 +95,13 @@ contains
     write(file_id,"(a)")"<Xdmf Version='2.0'>"
     write(file_id,"(a)")"<Domain>"
        
-  end subroutine sll_xml_file_create
+  end subroutine sll_s_xml_file_create
      
   !> Close the XML file and finish to write last lines.
   !> You give the file unit number.
   !> \param[in]  file_id - the unit number or your xml file
   !> \param[out] error   - error parameter
-  subroutine sll_xml_file_close(file_id,error)
+  subroutine sll_s_xml_file_close(file_id,error)
 
      sll_int32, intent(in)  :: file_id !< xml file unit number
      sll_int32, intent(out) :: error   !< error code
@@ -99,7 +111,7 @@ contains
      write(file_id,"(a)")"</Xdmf>"
      close(file_id)
      error = 0
-  end subroutine sll_xml_file_close
+  end subroutine sll_s_xml_file_close
      
   !> Write the description of a scalar field on a 2D mesh.
   !> \param[in] file_id is the unit number or your xml file

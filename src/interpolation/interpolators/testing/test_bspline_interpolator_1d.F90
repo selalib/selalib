@@ -1,20 +1,27 @@
 program bspline_1d_dirichlet
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-use sll_m_bspline_interpolator_1d
-use sll_m_boundary_condition_descriptors
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet
 
-implicit none
+  use sll_m_bspline_interpolator_1d, only: &
+    sll_t_bspline_interpolator_1d, &
+    sll_o_delete
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS 65
 #define SPL_DEG 3
 #define XMIN 0.0_f64
 #define XMAX 1.0_f64
 
-type(sll_bspline_interpolator_1d) :: interpolator
+type(sll_t_bspline_interpolator_1d) :: interpolator
 
 sll_real64, dimension(NPTS) :: x
 sll_real64, dimension(NPTS) :: y
@@ -38,7 +45,7 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%initialize(NPTS,XMIN,XMAX,SPL_DEG,SLL_DIRICHLET)
+call interpolator%initialize(NPTS,XMIN,XMAX,SPL_DEG,sll_p_dirichlet)
 !call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
 
 call interpolator%compute_interpolants(y)
@@ -46,9 +53,9 @@ call interpolator%compute_interpolants(y)
 normL2 = 0.0_f64
 normH1 = 0.0_f64
 do i=1,NPTS
-  y_int(i)  = interpolator%interpolate_value(x(i))
+  y_int(i)  = interpolator%interpolate_from_interpolant_value(x(i))
   y_ref(i)  = f(x(i))
-  dy_int(i) = interpolator%interpolate_derivative_eta1(x(i))
+  dy_int(i) = interpolator%interpolate_from_interpolant_derivative_eta1(x(i))
   dy_ref(i) = df(x(i))
   write(10,*) x(i), y_int(i), y_ref(i)
   write(11,*) x(i), dy_int(i), dy_ref(i)
@@ -58,10 +65,10 @@ normL2 = sum((y_int-y_ref)**2*h)
 normH1 = sum((dy_int-dy_ref)**2*h)
   
 print*,'--------------------------------------------'
-print*,' Average error in nodes', sum(abs(y_int-y_ref))/NPTS
+print*,' Average error in nodes', sum(abs(y_int-y_ref))/real(NPTS,f64)
 print*,' Max     error in nodes', maxval(abs(y_int-y_ref))
 print*,'--------------------------------------------'
-print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/NPTS
+print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/real(NPTS,f64)
 print*,' Max     error in nodes first derivative',maxval(abs(dy_int-dy_ref))
 print*,'--------------------------------------------'
 print*,' Norm L2 error ', sqrt(normL2), h**(SPL_DEG)
@@ -76,7 +83,7 @@ else
   print *, 'FAILED'
 end if
 
-call sll_delete(interpolator)
+call sll_o_delete(interpolator)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -86,7 +93,7 @@ contains
     sll_real64 :: x
     sll_real64 :: f
   
-    f = sin(2.0_f64*sll_pi*x)+1
+    f = sin(2.0_f64*sll_p_pi*x)+1.0_f64
   
   end function f
   
@@ -95,7 +102,7 @@ contains
     sll_real64 :: x
     sll_real64 :: df
   
-    df = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*x)
+    df = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*x)
   
   end function df
 

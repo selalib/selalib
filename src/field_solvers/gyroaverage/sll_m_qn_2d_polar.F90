@@ -18,22 +18,54 @@
 
 
 module sll_m_qn_2d_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_timer
-  use sll_m_gnuplot
-  use sll_m_gyroaverage_utilities
+! use F77_fftpack, only: &
+!   zfftb, &
+!   zfftf, &
+!   zffti
+
+! use F77_lapack, only: &
+!   zgetrf, &
+!   zgetri
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_gnuplot, only: &
+    sll_o_gnuplot_2d
+
+  use sll_m_gyroaverage_utilities, only: &
+    sll_s_compute_shape_circle, &
+    sll_s_zero_bessel_dir_dir
 
   implicit none
 
-  type sll_plan_qn_polar
+  public :: &
+    sll_s_compute_error, &
+    sll_s_compute_gamma0, &
+    sll_f_compute_gamma0_quadrature, &
+    sll_s_compute_splines_coefs_matrix_nat_1d, &
+    sll_s_compute_splines_coefs_matrix_per_1d, &
+    sll_s_contribution_spl, &
+    sll_s_initialize_mu_quadr_for_phi, &
+    sll_s_localize_polar, &
+    sll_s_matrix_product_compf, &
+    sll_f_new_plan_qn_polar_splines, &
+    sll_s_precompute_gyroaverage_index, &
+    sll_s_precompute_inverse_qn_matrix_polar_splines, &
+    sll_t_plan_qn_polar, &
+    sll_s_solve_qn_polar_splines, &
+    sll_s_splcoefnat1d0old, &
+    sll_s_splcoefper1d0old, &
+    sll_s_test_solve_qn_polar_splines
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type sll_t_plan_qn_polar
      
      sll_real64          :: eta_min(2)     !< r min et theta min
      sll_real64          :: eta_max(2)     !< r max et theta max
@@ -63,12 +95,12 @@ module sll_m_qn_2d_polar
      sll_real64, dimension(:), pointer        :: mu_weights_for_phi
      sll_int32                                :: N_mu_for_phi
 
-  end type sll_plan_qn_polar
+  end type sll_t_plan_qn_polar
 
 contains
 
 
-  function new_plan_qn_polar_splines(eta_min,eta_max,Nc,N_points,lambda,T_i) result(this)
+  function sll_f_new_plan_qn_polar_splines(eta_min,eta_max,Nc,N_points,lambda,T_i) result(this)
 
     implicit none
 
@@ -78,7 +110,7 @@ contains
     sll_int32, intent(in)  :: N_points
     sll_real64, dimension(:), intent(in)    :: lambda
     sll_real64, dimension(:), intent(in)    :: T_i
-    type(sll_plan_qn_polar), pointer :: this
+    type(sll_t_plan_qn_polar), pointer :: this
 
     sll_int32 :: err
 
@@ -87,7 +119,7 @@ contains
     SLL_ALLOCATE(this%lambda(1:Nc(1)+1),err)
     SLL_ALLOCATE(this%T_i(1:Nc(1)+1),err)
     
-    call compute_shape_circle(this%points,N_points) 
+    call sll_s_compute_shape_circle(this%points,N_points) 
        
     this%eta_min=eta_min
     this%eta_max=eta_max
@@ -98,11 +130,11 @@ contains
     this%lambda=lambda
     this%T_i=T_i
     
-  end function new_plan_qn_polar_splines
+  end function sll_f_new_plan_qn_polar_splines
 
   
   
-  subroutine compute_splines_coefs_matrix_nat_1D(mat,dnat,lnat,N)
+  subroutine sll_s_compute_splines_coefs_matrix_nat_1d(mat,dnat,lnat,N)
     sll_int32,intent(in)::N
     sll_real64,dimension(0:N+2,1:N+1),intent(inout) :: mat
     sll_real64,dimension(0:N+2),intent(in)::dnat,lnat
@@ -145,11 +177,11 @@ contains
     
     mat(0:N+2,1:N+1) = matb(0:N+2,1:N+1)
   
-  end subroutine compute_splines_coefs_matrix_nat_1D
+  end subroutine sll_s_compute_splines_coefs_matrix_nat_1d
   
   
   
-  subroutine compute_splines_coefs_matrix_per_1D(mat,dper,lper,mper,N)
+  subroutine sll_s_compute_splines_coefs_matrix_per_1d(mat,dper,lper,mper,N)
     sll_int32,intent(in)::N
     sll_real64,dimension(0:N-1,0:N-1),intent(inout) :: mat
     sll_real64,dimension(0:N+2),intent(in)::dper,lper,mper
@@ -191,7 +223,7 @@ contains
       mat(0,j) = dper(0)*(mat(0,j)-mat(1,j)-mat(N-1,j))
     enddo
   
-  end subroutine compute_splines_coefs_matrix_per_1D
+  end subroutine sll_s_compute_splines_coefs_matrix_per_1d
   
   
   subroutine kronecker_product(A,NxA,NyA,B,NxB,NyB,kronecker)
@@ -238,7 +270,7 @@ contains
     
   end subroutine matrix_product
  
-   subroutine matrix_product_compf(A,NxA,NyA,B,NxB,NyB,prod)
+   subroutine sll_s_matrix_product_compf(A,NxA,NyA,B,NxB,NyB,prod)
     sll_int32,intent(in)::NxA,NyA,NxB,NyB
     sll_comp64,dimension(:,:),intent(in)::A
     sll_comp64,dimension(:,:),intent(in)::B
@@ -261,7 +293,7 @@ contains
       enddo
     endif
     
-  end subroutine matrix_product_compf
+  end subroutine sll_s_matrix_product_compf
  
  
   
@@ -322,8 +354,8 @@ contains
 
 
   
-   subroutine precompute_gyroaverage_index(quasineutral,rho,N_rho)
-    type(sll_plan_qn_polar)  :: quasineutral
+   subroutine sll_s_precompute_gyroaverage_index(quasineutral,rho,N_rho)
+    type(sll_t_plan_qn_polar)  :: quasineutral
     sll_int32 :: N_rho
     sll_real64,dimension(1:N_rho),intent(in) :: rho
     sll_int32,dimension(:,:),allocatable :: buf
@@ -352,7 +384,7 @@ contains
       do k=1,quasineutral%N_points
         x(1) = eta(1)*cos(eta(2))+rho(p)*quasineutral%points(1,k)
         x(2) = eta(1)*sin(eta(2))+rho(p)*quasineutral%points(2,k)
-        call localize_polar(x,quasineutral%eta_min,quasineutral%eta_max,ii,eta_star,quasineutral%Nc)
+        call sll_s_localize_polar(x,quasineutral%eta_min,quasineutral%eta_max,ii,eta_star,quasineutral%Nc)
         do ell_2=-1,2
           ind(2)=modulo(ii(2)+ell_2,quasineutral%Nc(2))
           do ell_1=-1,2
@@ -390,9 +422,9 @@ contains
       do k=1,quasineutral%N_points
         x(1) = eta(1)*cos(eta(2))+rho(p)*quasineutral%points(1,k)
         x(2) = eta(1)*sin(eta(2))+rho(p)*quasineutral%points(2,k)
-        call localize_polar(x,quasineutral%eta_min,quasineutral%eta_max,ii,eta_star,quasineutral%Nc)
+        call sll_s_localize_polar(x,quasineutral%eta_min,quasineutral%eta_max,ii,eta_star,quasineutral%Nc)
 
-        call contribution_spl(eta_star,val)
+        call sll_s_contribution_spl(eta_star,val)
         
         val=val*quasineutral%points(3,k)
         
@@ -422,12 +454,12 @@ contains
   
     SLL_DEALLOCATE_ARRAY(buf,error)
   
-  end subroutine precompute_gyroaverage_index  
+  end subroutine sll_s_precompute_gyroaverage_index  
 
 
 
-   subroutine precompute_inverse_qn_matrix_polar_splines(quasineutral,mu_points,mu_weights,N_mu)
-    type(sll_plan_qn_polar) :: quasineutral
+   subroutine sll_s_precompute_inverse_qn_matrix_polar_splines(quasineutral,mu_points,mu_weights,N_mu)
+    type(sll_t_plan_qn_polar) :: quasineutral
     sll_int32,intent(in) :: N_mu
     sll_real64,dimension(1:N_mu),intent(in) :: mu_points
     sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
@@ -480,8 +512,8 @@ contains
 
  
  ! Initialise les coefficients de splines  
-    call splcoefnat1d0old(dnat,lnat,Nr)
-    call splcoefper1d0old(dper,lper,mper,Ntheta)
+    call sll_s_splcoefnat1d0old(dnat,lnat,Nr)
+    call sll_s_splcoefper1d0old(dper,lper,mper,Ntheta)
     
  ! Pointeurs    
     pointer_dnat => dnat
@@ -495,8 +527,8 @@ contains
     pointer_mat_contribution_circ => mat_contribution_circ
    
  ! Construction de la matrice des coefficients de splines    
-    call compute_splines_coefs_matrix_nat_1D(pointer_mat_nat,pointer_dnat,pointer_lnat,Nr)    
-    call compute_splines_coefs_matrix_per_1D(pointer_mat_per,pointer_dper,pointer_lper,pointer_mper,Ntheta) 
+    call sll_s_compute_splines_coefs_matrix_nat_1d(pointer_mat_nat,pointer_dnat,pointer_lnat,Nr)    
+    call sll_s_compute_splines_coefs_matrix_per_1d(pointer_mat_per,pointer_dper,pointer_lper,pointer_mper,Ntheta) 
     do j=0,Ntheta-1  
       pointer_mat_spl2D_circ(j,:,:)=pointer_mat_per(0,j)*pointer_mat_nat
     enddo
@@ -520,8 +552,8 @@ contains
     D_contr = (0.0_f64,0.0_f64)
     do m=0,Ntheta-1
       do j=0,Ntheta-1
-        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-        exp_comp=dcmplx(dcos(mode),dsin(mode))
+        mode=real(-2._f64*sll_p_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
+        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
         D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
         do p=1,N_mu
           D_contr(p,m,:,:) = D_contr(p,m,:,:) + pointer_mat_contribution_circ(p,j,:,:)*exp_comp
@@ -547,7 +579,7 @@ contains
           quasineutral%mat_qn_inverse(m,i,:) = &
           quasineutral%mat_qn_inverse(m,i,:)   &
           - mu_weights(p)*mat_stock2(i,:)*  &
-          cmplx(dexp(-mu_points(p)/quasineutral%T_i(i+1)),0d0,f64)
+          cmplx(exp(-mu_points(p)/quasineutral%T_i(i+1)),0._f64,f64)
         enddo
       enddo 
     enddo     
@@ -574,7 +606,7 @@ contains
     SLL_DEALLOCATE_ARRAY(IPIV,error)
     SLL_DEALLOCATE_ARRAY(WORK,error) 
     
-  end subroutine precompute_inverse_qn_matrix_polar_splines
+  end subroutine sll_s_precompute_inverse_qn_matrix_polar_splines
 
 
 
@@ -583,8 +615,8 @@ contains
 
  
  
-   subroutine solve_qn_polar_splines(quasineutral,phi)
-    type(sll_plan_qn_polar) :: quasineutral
+   subroutine sll_s_solve_qn_polar_splines(quasineutral,phi)
+    type(sll_t_plan_qn_polar) :: quasineutral
     sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
     sll_comp64,dimension(:,:),allocatable :: phi_comp,phi_old
     sll_real64,dimension(:),allocatable::buf_fft
@@ -642,11 +674,11 @@ contains
     SLL_DEALLOCATE_ARRAY(phi_old,error)
     SLL_DEALLOCATE_ARRAY(buf_fft,error)
     
-  end subroutine solve_qn_polar_splines
+  end subroutine sll_s_solve_qn_polar_splines
 
 
 
- subroutine test_solve_qn_polar_splines(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,T_i,phi_init,phi_qn)
+ subroutine sll_s_test_solve_qn_polar_splines(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,T_i,phi_init,phi_qn)
   sll_int32,intent(in)  :: Nc(2)
   sll_real64,intent(in) :: eta_min(2)
   sll_real64,intent(in) :: eta_max(2)
@@ -682,7 +714,7 @@ contains
     rho2d(2) = sqrt(2._f64*mu_points(p))
     call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
     do i = 1, Nc(1)+1
-      gamma0(i) = gamma0(i) + mu_weights(p)*dexp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
+      gamma0(i) = gamma0(i) + mu_weights(p)*exp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
     enddo
   enddo
   do i = 1, Nc(1)+1
@@ -698,7 +730,7 @@ contains
   print *,'#error whole domain=',error
 
 
-             call sll_gnuplot_2d( &
+             call sll_o_gnuplot_2d( &
                   eta_min(1), &
                   eta_max(1), &
                   Nc(1)+1, &
@@ -711,12 +743,12 @@ contains
                   ierr)
 
 
-  end subroutine test_solve_qn_polar_splines
+  end subroutine sll_s_test_solve_qn_polar_splines
 
 
 
 
-  function compute_gamma0_quadrature( &
+  function sll_f_compute_gamma0_quadrature( &
     Nc, &
     eta_min, &
     eta_max, &
@@ -742,7 +774,7 @@ contains
       rho2d(1) = sqrt(2._f64*mu_points(p))
       rho2d(2) = sqrt(2._f64*mu_points(p))
       call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-      !gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(1._f64-tmp1**2)
+      !gamma0 = gamma0 + mu_weights(p)*exp(-mu_points(p))*(1._f64-tmp1**2)
       gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
       !gamma0 = gamma0 + mu_weights(p)*(tmp1**2)
      enddo
@@ -752,7 +784,7 @@ contains
     return
     print*, nc
     
-  end function compute_gamma0_quadrature 
+  end function sll_f_compute_gamma0_quadrature 
   
 
 subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
@@ -790,8 +822,8 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     Dm = (0._f64  ,0.0_f64)
     do m=0,Ntheta-1
       do j=0,Ntheta-1
-        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-        exp_comp=dcmplx(dcos(mode),dsin(mode))
+        mode=real(-2._f64*sll_p_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
+        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
         Dm(m,:,:) = Dm(m,:,:) + mat_circ(j,:,:)*exp_comp
       enddo
       
@@ -817,7 +849,7 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     call zfftb(Ntheta,sol_comp(i,:),buf_fft)
   enddo
   
-  sol=real(sol_comp/cmplx(Ntheta,0d0,f64),f64)
+  sol=real(sol_comp/cmplx(Ntheta,0._f64,f64),f64)
 
 end subroutine solve_circulant_system
 
@@ -1120,7 +1152,7 @@ subroutine compute_w_hermite(w,r,s)
   end subroutine compute_w_hermite
 
 
-  subroutine localize_polar(x,eta_min,eta_max,ii,eta,N)
+  subroutine sll_s_localize_polar(x,eta_min,eta_max,ii,eta,N)
     sll_real64,intent(in)::x(2),eta_min(2),eta_max(2)
     sll_int32,intent(out)::ii(2)
     sll_int32,intent(in)::N(2)
@@ -1128,9 +1160,9 @@ subroutine compute_w_hermite(w,r,s)
     
     eta(1)=sqrt(x(1)**2+x(2)**2)
     call localize_nat(ii(1),eta(1),eta_min(1),eta_max(1),N(1))
-    eta(2)=datan2(x(2),x(1))
+    eta(2)=atan2(x(2),x(1))
     call localize_per(ii(2),eta(2),eta_min(2),eta_max(2),N(2))
-  end subroutine localize_polar
+  end subroutine sll_s_localize_polar
 
   subroutine localize_per(i,x,xmin,xmax,N)
     sll_int32,intent(out)::i
@@ -1313,7 +1345,7 @@ subroutine compute_w_hermite(w,r,s)
   end subroutine contribution_hermite_c1
   
   
-  subroutine contribution_spl(x,val)
+  subroutine sll_s_contribution_spl(x,val)
     sll_real64,intent(in)::x(0:1)
     sll_real64,intent(out)::val(-1:2,-1:2)
     sll_int32::s
@@ -1347,7 +1379,7 @@ subroutine compute_w_hermite(w,r,s)
     val(2,1)=w(2,0)*w(1,1)  
     val(2,2)=w(2,0)*w(2,1)  
 
-  end subroutine contribution_spl
+  end subroutine sll_s_contribution_spl
   
   
   subroutine splcoefnat1d0(lunat,N)
@@ -1395,7 +1427,7 @@ subroutine compute_w_hermite(w,r,s)
   end subroutine splcoefnat1d
   
   
-   subroutine splcoefnat1d0old(dnat,lnat,N)
+   subroutine sll_s_splcoefnat1d0old(dnat,lnat,N)
     sll_int32,intent(in)::N
     sll_real64,dimension(0:N+2),intent(inout)::dnat,lnat
     sll_int32::i
@@ -1414,7 +1446,7 @@ subroutine compute_w_hermite(w,r,s)
     lnat(N+2)=a(0)/dnat(N);
     lnat(N+1)=(a(1)-lnat(N+2))/dnat(N+1);
     dnat(N+2)=a(2)-lnat(N+1);
-  end subroutine splcoefnat1d0old
+  end subroutine sll_s_splcoefnat1d0old
 
 
 
@@ -1548,7 +1580,7 @@ subroutine splper1d(f,xx,xmin,xmax,fval,N)
   end subroutine splnat1d
   
   
-  subroutine splcoefper1d0old(dper,lper,mper,N)
+  subroutine sll_s_splcoefper1d0old(dper,lper,mper,N)
     sll_int32,intent(in)::N
     sll_real64,dimension(0:N-1),intent(out)::dper,lper,mper
     sll_int32::i
@@ -1564,7 +1596,7 @@ subroutine splper1d(f,xx,xmin,xmax,fval,N)
     do i=0,N-1
       dper(i)=1._f64/dper(i)
     enddo
-  end subroutine splcoefper1d0old
+  end subroutine sll_s_splcoefper1d0old
   
   
   
@@ -1734,7 +1766,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     enddo   
   end subroutine compute_factor_bounds
 
-  subroutine compute_error(f,f_init,J_factor,err,N_min,N_max)
+  subroutine sll_s_compute_error(f,f_init,J_factor,err,N_min,N_max)
     sll_real64,dimension(:,:),intent(in)::f,f_init
     sll_int32,intent(in)::N_min(2),N_max(2)
     sll_real64,intent(in)::J_factor
@@ -1756,7 +1788,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     err(1)=err(1)*delta
     err(2)=sqrt(err(2)*delta)
       
-  end subroutine compute_error
+  end subroutine sll_s_compute_error
 
 
   subroutine compute_error_1D(f,f_init,J_factor,err,N_min,N_max)
@@ -1796,13 +1828,13 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       print *,'#for the moment rho(1)=rho(2) is needed'
       return
     endif
-    call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
+    call sll_s_zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
     val = 0._f64 !temporary because DBESJ not recognized on helios and curie
     !val = DBESJN(0,tmp*rho(1)/eta_max(1))
     !print *,i,j,mode_max,alpha,tmp      
   end subroutine solution_polar_circle
 
-  subroutine compute_gamma0(mode,eta_min,eta_max,val)
+  subroutine sll_s_compute_gamma0(mode,eta_min,eta_max,val)
     sll_real64,intent(in)::eta_min(2),eta_max(2)
     sll_int32,intent(in)::mode(2)
     sll_real64,intent(out)::val
@@ -1813,7 +1845,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !    mu_max = 50._f64
 !    sum1=0._f64
 !    sum2=0._f64
-    call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
+    call sll_s_zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
     !print *,"tmp=",tmp
     !print *,"eta_max(1)=",eta_max(1)
     if(abs(tmp-3.9651944700162098_f64)>1.e-12)then
@@ -1828,19 +1860,19 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !    delta_x=real(real(mu_max,f64)/real(N_approx,f64),f64)
 !    do i=1,N_approx/2-1
 !      mu = real(2._f64*real(i,f64)*delta_x,f64)
-!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
 !    do i=1,N_approx/2
 !      mu = real((2._f64*real(i,f64)-1._f64)*delta_x,f64)
-!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*exp(-mu)
 !    enddo
-!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*dexp(-mu_max)
+!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*exp(-mu_max)
 !    val = val*real(delta_x/3._f64,f64)
-  end subroutine compute_gamma0
+  end subroutine sll_s_compute_gamma0
 
   
   
-  subroutine initialize_mu_quadr_for_phi( &
+  subroutine sll_s_initialize_mu_quadr_for_phi( &
     quasineutral, &
     mu_quadr_for_phi_case, &
     N_mu_for_phi, &
@@ -1849,7 +1881,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     mu_weights_user_defined, &
     N_mu_user_defined)
     
-    type(sll_plan_qn_polar)                        :: quasineutral
+    type(sll_t_plan_qn_polar)                        :: quasineutral
     character(len=256), intent(in)                 :: mu_quadr_for_phi_case 
     sll_int32, intent(in)                          :: N_mu_for_phi
     sll_real64, intent(in)                         :: mu_max_for_phi
@@ -1868,7 +1900,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       if( .not.( (present(mu_points_user_defined)) &
         .and.(present(mu_weights_user_defined)) )) then
         print *,'#provide mu_points_user_defined, mu_weights_user_defined'
-        print *,'#in initialize_mu_quadr_for_phi'
+        print *,'#in sll_s_initialize_mu_quadr_for_phi'
         stop
       endif  
 !    else
@@ -1877,7 +1909,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !        .or.(present(mu_weights_user_defined)) &
 !        )then
 !        print *,'# do not provide mu_points_user_defined, mu_weights_user_defined'
-!        print *,'#in initialize_mu_quadr_for_phi'
+!        print *,'#in sll_s_initialize_mu_quadr_for_phi'
 !        stop       
 !      endif
     endif  
@@ -1887,12 +1919,12 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         if(size(mu_points_user_defined) /= N_mu_user_defined) then
           print *,'#incompatible sizes for mu_points_user_defined :',size(mu_points_user_defined)
           print *,'#and N_mu_user_defined :',N_mu_user_defined
-          print *,'#in initialize_mu_quadr_for_phi'
+          print *,'#in sll_s_initialize_mu_quadr_for_phi'
           stop
         elseif(size(mu_weights_user_defined) /= N_mu_user_defined) then
           print *,'#incompatible sizes for mu_weights_user_defined :',size(mu_weights_user_defined)
           print *,'#and N_mu_user_defined :',N_mu_user_defined
-          print *,'#in initialize_mu_quadr_for_phi'
+          print *,'#in sll_s_initialize_mu_quadr_for_phi'
           stop
         else
           quasineutral%mu_points_for_phi(1:N_mu_user_defined)=mu_points_user_defined
@@ -1920,7 +1952,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
             quasineutral%mu_weights_for_phi(3) = 0.1413_f64 
           case default  
             print *,'# bad N_mu_user_defined in SLL_LIN_LEE (must be 1, 2 or 3) : ', N_mu_for_phi
-            print *,'#in initialize_mu_quadr_for_phi'
+            print *,'#in sll_s_initialize_mu_quadr_for_phi'
             stop  
         end select
       case ("SLL_RECTANGLES") 
@@ -1938,7 +1970,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         do i=1,N_mu_for_phi
           quasineutral%mu_points_for_phi(i) = mu_max_for_phi*real(i-1,f64)/real(N_mu_for_phi-1,f64)
         enddo     
-        h = mu_max_for_phi/(3d0*real(N_mu_for_phi,f64))
+        h = mu_max_for_phi/(3._f64*real(N_mu_for_phi,f64))
         quasineutral%mu_weights_for_phi(1) = h
         do i=1,(N_mu_for_phi-1)/2-1
           quasineutral%mu_weights_for_phi(2*i) = 4._f64*h
@@ -1948,10 +1980,10 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         quasineutral%mu_weights_for_phi(N_mu_for_phi) = h
       case default
         print *,'#mu_quadr_for_phi_case not defined'
-        print *,'#in initialize_mu_quadr_for_phi'
+        print *,'#in sll_s_initialize_mu_quadr_for_phi'
         stop    
     end select
-  end subroutine initialize_mu_quadr_for_phi
+  end subroutine sll_s_initialize_mu_quadr_for_phi
   
   
 

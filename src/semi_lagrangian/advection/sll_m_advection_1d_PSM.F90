@@ -20,17 +20,23 @@
 
 
 module sll_m_advection_1d_PSM
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_characteristics_1d_base
-use sll_m_interpolators_1d_base
-use sll_m_constants
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  type,extends(sll_advection_1d_base) :: PSM_1d_advector
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_psm_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_advection_1d_base) :: PSM_1d_advector
     sll_real64, dimension(:), pointer :: buf1d    
     sll_real64, dimension(:), pointer :: buf1d_out
     sll_real64, dimension(:), pointer :: dtab     
@@ -60,7 +66,7 @@ implicit none
 
 
 contains
-  function new_PSM_1d_advector( &
+  function sll_f_new_psm_1d_advector( &
     Npts, &
     eta_min, &
     eta_max, &
@@ -82,7 +88,7 @@ contains
       eta_max, &
       Nbdr)    
     
-  end function  new_PSM_1d_advector
+  end function  sll_f_new_psm_1d_advector
 
 
   subroutine initialize_PSM_1d_advector(&
