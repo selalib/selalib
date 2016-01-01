@@ -1,24 +1,66 @@
 module sll_m_general_coordinate_elliptic_solver_multipatch
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_gauss_legendre_integration
-use sll_m_gauss_lobatto_integration
-use sll_m_timer 
-use sll_m_sparse_matrix
-use sll_m_sparse_matrix_mp
-use sll_m_scalar_field_2d_multipatch
-use sll_m_general_coordinate_elliptic_solver
-use sll_m_deboor_splines_1d
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
 
-implicit none
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_t_coordinate_transformation_multipatch_2d
+
+  use sll_m_deboor_splines_1d, only: &
+    sll_s_bsplvd, &
+    sll_t_deboor_type, &
+    sll_s_interv
+
+  use sll_m_gauss_legendre_integration, only: &
+    sll_f_gauss_legendre_points_and_weights
+
+  use sll_m_gauss_lobatto_integration, only: &
+    sll_f_gauss_lobatto_points_and_weights
+
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    sll_p_es_gauss_legendre, &
+    sll_p_es_gauss_lobatto
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    sll_o_delete, &
+    sll_t_scalar_field_multipatch_2d
+
+  use sll_m_sparse_matrix, only: &
+    sll_s_add_to_csr_matrix, &
+    sll_t_csr_matrix, &
+    sll_s_mult_csr_matrix_vector, &
+    sll_s_solve_csr_matrix, &
+    sll_o_delete
+
+  use sll_m_sparse_matrix_mp, only: &
+    sll_f_new_csr_matrix_mp
+
+  use sll_m_timer, only: &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
+
+  implicit none
+
+  public :: &
+    sll_s_factorize_mat_es_mp, &
+    sll_t_general_coordinate_elliptic_solver_mp, &
+    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_f_new_general_elliptic_solver_mp, &
+    sll_o_solve_mp, &
+    sll_s_solve_general_coordinates_elliptic_eq_mp
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 integer, parameter :: KNOTS_PERIODIC = 0, KNOTS_DIRICHLET = 1
 
-type :: general_coordinate_elliptic_solver_mp
+type :: sll_t_general_coordinate_elliptic_solver_mp
    private
-   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
+   type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
    sll_int32,dimension(:),pointer        :: total_num_splines_loc
    sll_int32                             :: total_num_splines_eta1
    sll_int32                             :: total_num_splines_eta2
@@ -44,22 +86,22 @@ type :: general_coordinate_elliptic_solver_mp
    sll_int32,  dimension(:,:,:), pointer :: local_to_global_spline_indices_source_col
    sll_int32,  dimension(:,:,:), pointer :: local_to_global_spline_indices_source_row
 
-   type(sll_csr_matrix),         pointer :: sll_csr_mat
-   type(sll_csr_matrix),         pointer :: sll_csr_mat_source
+   type(sll_t_csr_matrix),         pointer :: sll_csr_mat
+   type(sll_t_csr_matrix),         pointer :: sll_csr_mat_source
 
-end type general_coordinate_elliptic_solver_mp
+end type sll_t_general_coordinate_elliptic_solver_mp
 
 interface delete
   module procedure delete_elliptic_mp
 end interface delete
 
 interface initialize
-  module procedure initialize_general_elliptic_solver_mp
+  module procedure sll_s_initialize_general_elliptic_solver_mp
 end interface initialize
 
-interface sll_solve_mp
-  module procedure solve_general_coordinates_elliptic_eq_mp
-end interface sll_solve_mp
+interface sll_o_solve_mp
+  module procedure sll_s_solve_general_coordinates_elliptic_eq_mp
+end interface sll_o_solve_mp
   
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains ! *******************************************************************
@@ -74,23 +116,23 @@ contains ! *******************************************************************
 !>  phi is given with a B-spline interpolator  
 !> 
 !> The parameters are
-!> @param es the type general_coordinate_elliptic_solver_mp
+!> @param es the type sll_t_general_coordinate_elliptic_solver_mp
 !> @param[in] spline_degree_eta1 the degre of B-spline in the direction eta1
 !> @param[in] spline_degree_eta2 the degre of B-spline in the direction eta2
 !> @param[in] quadrature_type1 the type of quadrature in the direction eta1
 !> @param[in] quadrature_type2 the type of quadrature in the direction eta2
 !> @param[in] T the transformation multipatch
-!> @return the type general_coordinate_elliptic_solver_mp
+!> @return the type sll_t_general_coordinate_elliptic_solver_mp
 
-subroutine initialize_general_elliptic_solver_mp( &
+subroutine sll_s_initialize_general_elliptic_solver_mp( &
      es_mp,                                       &
      quadrature_type1,                            &
      quadrature_type2,                            &
      T)
   
-type(general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
-type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-type(sll_cartesian_mesh_2d), pointer                         :: lm
+type(sll_t_general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
+type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
+type(sll_t_cartesian_mesh_2d), pointer                         :: lm
 sll_int32, intent(in) :: quadrature_type1
 sll_int32, intent(in) :: quadrature_type2
 sll_int32 :: knots1_size
@@ -124,26 +166,26 @@ SLL_ALLOCATE(es_mp%gauss_pts1(num_patches,2,max_degspline1+2),ierr)
 SLL_ALLOCATE(es_mp%gauss_pts2(num_patches,2,max_degspline2+2),ierr)
 
 select case(quadrature_type1)
-case (ES_GAUSS_LEGENDRE)
+case (sll_p_es_gauss_legendre)
   do i = 1, es_mp%T%number_patches
-    es_mp%gauss_pts1(i,:,1:es_mp%spline_degree1(i)+2) = gauss_legendre_points_and_weights(es_mp%spline_degree1(i)+2)
+    es_mp%gauss_pts1(i,:,1:es_mp%spline_degree1(i)+2) = sll_f_gauss_legendre_points_and_weights(es_mp%spline_degree1(i)+2)
   end do
-case (ES_GAUSS_LOBATTO)
+case (sll_p_es_gauss_lobatto)
   do i = 1, es_mp%T%number_patches
-    es_mp%gauss_pts1(i,:,1:es_mp%spline_degree1(i)+2) = gauss_lobatto_points_and_weights(es_mp%spline_degree1(i)+2)
+    es_mp%gauss_pts1(i,:,1:es_mp%spline_degree1(i)+2) = sll_f_gauss_lobatto_points_and_weights(es_mp%spline_degree1(i)+2)
   end do
 case DEFAULT
    print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
 end select
   
 select case(quadrature_type2)
-case (ES_GAUSS_LEGENDRE)
+case (sll_p_es_gauss_legendre)
   do i = 1, es_mp%T%number_patches
-    es_mp%gauss_pts2(i,:,1:es_mp%spline_degree2(i)+2) = gauss_legendre_points_and_weights(es_mp%spline_degree2(i)+2)
+    es_mp%gauss_pts2(i,:,1:es_mp%spline_degree2(i)+2) = sll_f_gauss_legendre_points_and_weights(es_mp%spline_degree2(i)+2)
   end do
-case (ES_GAUSS_LOBATTO)
+case (sll_p_es_gauss_lobatto)
   do i = 1, es_mp%T%number_patches
-    es_mp%gauss_pts2(i,:,1:es_mp%spline_degree2(i)+2) = gauss_lobatto_points_and_weights(es_mp%spline_degree2(i)+2)
+    es_mp%gauss_pts2(i,:,1:es_mp%spline_degree2(i)+2) = sll_f_gauss_lobatto_points_and_weights(es_mp%spline_degree2(i)+2)
   end do
 case DEFAULT
    print *, 'new_general_qn_solver(): have not type of gauss points in the second direction'
@@ -222,7 +264,7 @@ end do
        
 es_mp%intjac = 0.0_f64
 
-es_mp%sll_csr_mat => new_csr_matrix_mp( es_mp%solution_size_final,     &
+es_mp%sll_csr_mat => sll_f_new_csr_matrix_mp( es_mp%solution_size_final,     &
                                         es_mp%solution_size_final,     &
                                         es_mp%T%number_patches,        &
                                         es_mp%num_elts_no_null_patchs, &
@@ -243,7 +285,7 @@ es_mp%values_jacobian = 0.0_f64
 SLL_ALLOCATE(es_mp%tab_index_coeff1(num_patches,max_num_cells_eta1*(max_degspline1+2)),ierr)
 SLL_ALLOCATE(es_mp%tab_index_coeff2(num_patches,max_num_cells_eta2*(max_degspline2+2)),ierr)
    
-end subroutine initialize_general_elliptic_solver_mp
+end subroutine sll_s_initialize_general_elliptic_solver_mp
  
 !> @brief Initialization for elleptic solver.
 !> @details To have the function phi such that 
@@ -259,35 +301,35 @@ end subroutine initialize_general_elliptic_solver_mp
 !> @param[in] quadrature_type1 the type of quadrature in the direction eta1
 !> @param[in] quadrature_type2 the type of quadrature in the direction eta2
 !> @param[in] T the transformation multipatch
-!> @return the type general_coordinate_elliptic_solver such that a pointer
-function new_general_elliptic_solver_mp( quadrature_type1, &
+!> @return the type sll_t_general_coordinate_elliptic_solver such that a pointer
+function sll_f_new_general_elliptic_solver_mp( quadrature_type1, &
                                          quadrature_type2, &
                                          T) result(es_mp)
   
-type(general_coordinate_elliptic_solver_mp),       pointer :: es_mp
-type(sll_coordinate_transformation_multipatch_2d), pointer :: T
+type(sll_t_general_coordinate_elliptic_solver_mp),       pointer :: es_mp
+type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
 
 sll_int32, intent(in) :: quadrature_type1
 sll_int32, intent(in) :: quadrature_type2
 sll_int32             :: ierr
-type(sll_time_mark)   :: t0 
+type(sll_t_time_mark)   :: t0 
 double precision      :: time
 
-call sll_set_time_mark(t0)
+call sll_s_set_time_mark(t0)
 SLL_ALLOCATE(es_mp,ierr)
 call initialize( es_mp, quadrature_type1, quadrature_type2, T)
 
-time = sll_time_elapsed_since(t0)
-print*, '#time for new_general_elliptic_solver', time
+time = sll_f_time_elapsed_since(t0)
+print*, '#time for sll_f_new_general_elliptic_solver', time
   
-end function new_general_elliptic_solver_mp
+end function sll_f_new_general_elliptic_solver_mp
  
-!> @brief Deallocate the type general_coordinate_elliptic_solver
+!> @brief Deallocate the type sll_t_general_coordinate_elliptic_solver
 !> The parameters are
-!> @param[in] es the type general_coordinate_elliptic_solver
+!> @param[in] es the type sll_t_general_coordinate_elliptic_solver
 
 subroutine delete_elliptic_mp( es_mp )
-type(general_coordinate_elliptic_solver_mp) :: es_mp
+type(sll_t_general_coordinate_elliptic_solver_mp) :: es_mp
 sll_int32 :: ierr
 ! it is not good to check some cases and not others, fix...
 if(associated(es_mp%knots1)) then
@@ -308,8 +350,8 @@ SLL_DEALLOCATE(es_mp%local_to_global_row,ierr)
 SLL_DEALLOCATE(es_mp%local_to_global_col,ierr)
 SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_row,ierr)
 SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_col,ierr)
-call sll_delete(es_mp%sll_csr_mat)
-call sll_delete(es_mp%sll_csr_mat_source)
+call sll_o_delete(es_mp%sll_csr_mat)
+call sll_o_delete(es_mp%sll_csr_mat_source)
 SLL_DEALLOCATE(es_mp%rho_vec,ierr)
 SLL_DEALLOCATE(es_mp%phi_vec,ierr)
 SLL_DEALLOCATE(es_mp%knots1_rho,ierr)
@@ -332,7 +374,7 @@ end subroutine delete_elliptic_mp
 !>  phi is given with a B-spline interpolator  
 !> 
 !> The parameters are
-!> @param es the type general_coordinate_elliptic_solver
+!> @param es the type sll_t_general_coordinate_elliptic_solver
 !> @param[in] a11_field_mat the field corresponding to the coefficient A(1,1) of the matrix A  
 !> @param[in] a12_field_mat the field corresponding to the coefficient A(1,2) of the matrix A 
 !> @param[in] a21_field_mat the field corresponding to the coefficient A(2,1) of the matrix A  
@@ -340,9 +382,9 @@ end subroutine delete_elliptic_mp
 !> @param[in] b1_field_vect the field corresponding to the coefficient B(1) of the vector B  
 !> @param[in] b2_field_vect the field corresponding to the coefficient B(2) of the vector B
 !> @param[in] c_field the field corresponding to the coefficient B(1) of the scalar C
-!> @return the type general_coordinate_elliptic_solver contains the matrix to solve the equation
+!> @return the type sll_t_general_coordinate_elliptic_solver contains the matrix to solve the equation
 
-subroutine factorize_mat_es_mp( es_mp,          &
+subroutine sll_s_factorize_mat_es_mp( es_mp,          &
                                 a11_field_mat,  &
                                 a12_field_mat,  &
                                 a21_field_mat,  &
@@ -351,15 +393,15 @@ subroutine factorize_mat_es_mp( es_mp,          &
                                 b2_field_vect,  &
                                 c_field)
 use sll_m_timer
-type(general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
+type(sll_t_general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
 
-class(sll_scalar_field_multipatch_2d), pointer :: a11_field_mat
-class(sll_scalar_field_multipatch_2d), pointer :: a12_field_mat
-class(sll_scalar_field_multipatch_2d), pointer :: a21_field_mat
-class(sll_scalar_field_multipatch_2d), pointer :: a22_field_mat
-class(sll_scalar_field_multipatch_2d), pointer :: b1_field_vect
-class(sll_scalar_field_multipatch_2d), pointer :: b2_field_vect
-class(sll_scalar_field_multipatch_2d), pointer :: c_field
+class(sll_t_scalar_field_multipatch_2d), pointer :: a11_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer :: a12_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer :: a21_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer :: a22_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer :: b1_field_vect
+class(sll_t_scalar_field_multipatch_2d), pointer :: b2_field_vect
+class(sll_t_scalar_field_multipatch_2d), pointer :: c_field
 
 sll_real64, dimension(:,:), allocatable :: M_c_loc
 sll_real64, dimension(:,:), allocatable :: K_a11_loc
@@ -398,9 +440,9 @@ sll_int32  :: index2
 sll_int32  :: index3
 sll_int32  :: index4
 
-type(sll_time_mark)                  :: t0 
+type(sll_t_time_mark)                  :: t0 
 double precision                     :: time
-type(sll_cartesian_mesh_2d), pointer :: lm
+type(sll_t_cartesian_mesh_2d), pointer :: lm
 character(len=*),parameter           :: as_file1='mat'
 
 sll_real64 :: val_jac
@@ -444,8 +486,9 @@ sll_int32 :: li_A, li_Aprime
 sll_int32 :: nbsp,nbsp1
 sll_int32 :: index_coef1,index_coef2,index
 sll_real64 :: elt_mat_global
+type(sll_t_deboor_type) :: deboor
 
-call sll_set_time_mark(t0)
+call sll_s_set_time_mark(t0)
 
 total_num_splines_loc = maxval(es_mp%total_num_splines_loc)
 
@@ -507,10 +550,13 @@ do patch = 1,es_mp%T%number_patches
       wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
       gtmp2 = gpt2
       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
-      call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
+      call sll_s_interv(deboor, &
+        es_mp%knots2(patch,:), &
+        size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
       if (mflag_y .eq. -1) stop "Problem : interv2 returned flag = -1"
     
-      call bsplvd( es_mp%knots2(patch,:),        &
+      call sll_s_bsplvd( deboor,                       &
+                   es_mp%knots2(patch,:),        &
                    es_mp%spline_degree2(patch)+1,&
                    gtmp2,                        &
                    left_y,                       &
@@ -525,9 +571,11 @@ do patch = 1,es_mp%T%number_patches
         wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
         gtmp1   = gpt1
         local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
-        call interv(es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
+        call sll_s_interv(deboor, &
+         es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
 
-        call bsplvd( es_mp%knots1(patch,:),        &
+        call sll_s_bsplvd( deboor,                       &
+                     es_mp%knots1(patch,:),        &
                      es_mp%spline_degree1(patch)+1,&
                      gtmp1,                        &
                      left_x,                       &
@@ -712,7 +760,7 @@ do mm = 0,es_mp%spline_degree2(patch)
               
               if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                  
-                 call sll_add_to_csr_matrix( &
+                 call sll_s_add_to_csr_matrix( &
                       es_mp%sll_csr_mat, &
                       elt_mat_global, &
                       li_A, &
@@ -735,7 +783,7 @@ do mm = 0,es_mp%spline_degree2(patch)
 
 end do
 
-es_mp%sll_csr_mat_source => new_csr_matrix_mp( &
+es_mp%sll_csr_mat_source => sll_f_new_csr_matrix_mp( &
      es_mp%solution_size_final,                &
      es_mp%solution_size_final,                &
      es_mp%T%number_patches,                   &
@@ -757,10 +805,10 @@ SLL_DEALLOCATE_ARRAY(M_b_vect_loc,ierr)
 SLL_DEALLOCATE_ARRAY(S_b1_loc,ierr)
 SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
 
-time = sll_time_elapsed_since(t0)
-print*, '#time for factorize_mat_es', time
+time = sll_f_time_elapsed_since(t0)
+print*, '#time for sll_s_factorize_mat_es', time
 
-end subroutine factorize_mat_es_mp
+end subroutine sll_s_factorize_mat_es_mp
   
 !> @brief Assemble the matrix for elliptic solver.
 !> @details To have the function phi such that 
@@ -771,22 +819,22 @@ end subroutine factorize_mat_es_mp
 !>  phi is given with a B-spline interpolator  
 !> 
 !> The parameters are
-!> @param es the type general_coordinate_elliptic_solver
+!> @param es the type sll_t_general_coordinate_elliptic_solver
 !> @param[in] rho the field corresponding to the source term   
 !> @param[out] phi the field corresponding to the solution of the equation
 !> @return phi the field solution of the equation
 
-subroutine solve_general_coordinates_elliptic_eq_mp( es_mp, rho, phi)
+subroutine sll_s_solve_general_coordinates_elliptic_eq_mp( es_mp, rho, phi)
 
-class(general_coordinate_elliptic_solver_mp) :: es_mp
-class(sll_scalar_field_multipatch_2d), intent(inout)  :: phi
-class(sll_scalar_field_multipatch_2d), intent(in),target  :: rho
-type(sll_cartesian_mesh_2d), pointer                         :: lm
+class(sll_t_general_coordinate_elliptic_solver_mp) :: es_mp
+class(sll_t_scalar_field_multipatch_2d), intent(inout)  :: phi
+class(sll_t_scalar_field_multipatch_2d), intent(in),target  :: rho
+type(sll_t_cartesian_mesh_2d), pointer                         :: lm
 sll_int32 :: i,k
 sll_int32 :: j,ierr
 sll_int32 :: patch,sz_coef2,sz_coef1
 sll_int32 :: num_pts_g1, num_pts_g2
-class(sll_scalar_field_multipatch_2d),pointer  :: base_field_pointer
+class(sll_t_scalar_field_multipatch_2d),pointer  :: base_field_pointer
 sll_real64, dimension(:,:), pointer :: coeff_rho
 sll_real64, dimension(:), pointer :: rho_coeff_1d
 sll_real64, dimension(:), pointer :: tmp_phi_vec
@@ -805,7 +853,7 @@ k = 0
 
 base_field_pointer => rho
 select type( type_field => base_field_pointer)
-class is (sll_scalar_field_multipatch_2d)
+class is (sll_t_scalar_field_multipatch_2d)
    
 ! put the spline coefficients in a 1d array
 do patch = 1,es_mp%T%number_patches
@@ -829,7 +877,7 @@ do patch = 1,es_mp%T%number_patches
 end do
 
 es_mp%rho_vec(1:es_mp%solution_size_final) = 0.0_f64
-call sll_mult_csr_matrix_vector(&
+call sll_s_mult_csr_matrix_vector(&
      es_mp%sll_csr_mat_source,&
      rho_coeff_1d(1:es_mp%solution_size_final),es_mp%rho_vec(1:es_mp%solution_size_final))
    
@@ -865,12 +913,12 @@ end do
 
 SLL_DEALLOCATE_ARRAY(rho_coeff_1d,ierr)
 
-end subroutine solve_general_coordinates_elliptic_eq_mp
+end subroutine sll_s_solve_general_coordinates_elliptic_eq_mp
 
 subroutine solve_linear_system_mp( es_mp,k )
 ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
 ! is given in terms of the spline coefficients that represent phi.
-class(general_coordinate_elliptic_solver_mp) :: es_mp
+class(sll_t_general_coordinate_elliptic_solver_mp) :: es_mp
 !type(csr_matrix)  :: csr_masse
 integer :: k
 
@@ -879,7 +927,7 @@ call solve_gen_elliptic_eq_mp(es_mp,es_mp%rho_vec(1:k),es_mp%phi_vec(1:k))
 end subroutine solve_linear_system_mp
 
 subroutine solve_gen_elliptic_eq_mp(es_mp,apr_B,apr_U)
-class(general_coordinate_elliptic_solver_mp) :: es_mp
+class(sll_t_general_coordinate_elliptic_solver_mp) :: es_mp
 sll_real64, dimension(:) :: apr_U
 sll_real64, dimension(:) :: apr_B 
 sll_int32  :: ai_maxIter
@@ -888,13 +936,13 @@ sll_real64 :: ar_eps
 ar_eps = 1.d-13
 ai_maxIter = 100000
 
-call sll_solve_csr_matrix(es_mp%sll_csr_mat, apr_B, apr_U)
+call sll_s_solve_csr_matrix(es_mp%sll_csr_mat, apr_B, apr_U)
 
 end subroutine solve_gen_elliptic_eq_mp
   
 subroutine compute_Source_matrice_mp(es_mp,Source_loc)
-type(general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
-type(sll_cartesian_mesh_2d), pointer           :: lm
+type(sll_t_general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
+type(sll_t_cartesian_mesh_2d), pointer           :: lm
 sll_real64, dimension(:,:,:,:), pointer :: Source_loc
 sll_int32 :: cell_j,cell_i
 sll_int32 :: cell_index
@@ -934,7 +982,7 @@ do patch = 1, es_mp%T%number_patches
          
          if ( (li_A > 0) .and. (li_Aprime > 0)) then
             
-            call sll_add_to_csr_matrix( &
+            call sll_s_add_to_csr_matrix( &
                  es_mp%sll_csr_mat_source, &
                  elt_mat_global, &
                  li_A, &

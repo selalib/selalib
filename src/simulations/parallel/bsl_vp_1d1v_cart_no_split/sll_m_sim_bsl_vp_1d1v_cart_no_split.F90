@@ -24,49 +24,141 @@
 
 module sll_m_sim_bsl_vp_1d1v_cart_no_split
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_field_2d.h"
-#include "sll_poisson_solvers.h"
-  use sll_m_constants
-  use sll_m_cartesian_meshes  
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_common_coordinate_transformations
-  use sll_m_common_array_initializers
-  use sll_m_advection_2d_bsl
-  use sll_m_advection_2d_tensor_product
-  use sll_m_characteristics_2d_explicit_euler
-  use sll_m_characteristics_2d_verlet
-  use sll_m_advection_1d_BSL
-  use sll_m_advection_1d_CSL
-  use sll_m_characteristics_1d_explicit_euler
-  use sll_m_characteristics_1d_trapezoid
-  use sll_m_characteristics_1d_explicit_euler_conservative
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_poisson_1d_periodic  
-  use sll_m_fft
-  use sll_m_sim_base
-  use sll_m_poisson_1d_periodic_solver
-  use sll_m_poisson_1d_polar_solver
-  use sll_m_parallel_array_initializer
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
 
+  use sll_m_advection_1d_bsl, only: &
+    sll_f_new_bsl_1d_advector
+
+  use sll_m_advection_1d_csl, only: &
+    sll_f_new_csl_1d_advector
+
+  use sll_m_advection_2d_base, only: &
+    sll_c_advection_2d_base
+
+  use sll_m_advection_2d_bsl, only: &
+    sll_f_new_bsl_2d_advector
+
+  use sll_m_advection_2d_tensor_product, only: &
+    sll_f_new_tensor_product_2d_advector
+
+  use sll_m_ascii_io, only: &
+    sll_s_ascii_file_close, &
+    sll_s_ascii_file_create
+
+  use sll_m_binary_io, only: &
+    sll_s_binary_file_close, &
+    sll_s_binary_file_create, &
+    sll_s_binary_write_array_0d, &
+    sll_s_binary_write_array_1d, &
+    sll_s_binary_write_array_2d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_o_get_node_positions, &
+    sll_f_new_cartesian_mesh_1d, &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_c_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    sll_f_new_explicit_euler_1d_charac
+
+  use sll_m_characteristics_1d_explicit_euler_conservative, only: &
+    sll_f_new_explicit_euler_conservative_1d_charac
+
+  use sll_m_characteristics_1d_trapezoid, only: &
+    sll_f_new_trapezoid_1d_charac
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_c_characteristics_2d_base
+
+  use sll_m_characteristics_2d_explicit_euler, only: &
+    sll_f_new_explicit_euler_2d_charac
+
+  use sll_m_characteristics_2d_verlet, only: &
+    sll_f_new_verlet_2d_charac
+
+  use sll_m_common_array_initializers, only: &
+    sll_f_beam_initializer_2d, &
+    sll_f_landau_initializer_2d, &
+    sll_i_scalar_initializer_2d
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_f_new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_f_new_cubic_spline_interpolator_2d
+
+  use sll_m_fft, only: &
+    sll_s_fft_apply_plan_r2r_1d, &
+    sll_p_fft_forward, &
+    sll_f_fft_get_mode_r2c_1d, &
+    sll_f_fft_new_plan_r2r_1d, &
+    sll_t_fft_plan
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_poisson_1d_base, only: &
+    sll_c_poisson_1d_base
+
+  use sll_m_poisson_1d_periodic_solver, only: &
+    sll_f_new_poisson_1d_periodic_solver
+
+  use sll_m_poisson_1d_polar_solver, only: &
+    sll_f_new_poisson_1d_polar_solver
+
+  use sll_m_sim_base, only: &
+    sll_c_simulation_base_class
+
+  use sll_m_utilities, only: &
+    sll_s_int2string, &
+    sll_s_pfenvelope
+
+  use sll_m_xdmf, only: &
+    sll_s_xdmf_close, &
+    sll_o_xdmf_open, &
+    sll_o_xdmf_write_array
 
   implicit none
+
+  public :: &
+    sll_f_new_vp2d_no_split
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
   sll_int32, parameter :: SLL_LEAP_FROG = 2 
 
 
-  type, extends(sll_simulation_base_class) :: &
+  type, extends(sll_c_simulation_base_class) :: &
        sll_simulation_2d_vlasov_poisson_no_split
 
    !geometry
-   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+   type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
    sll_real64, dimension(:), pointer :: x1_array
    sll_real64, dimension(:), pointer :: x2_array
    sll_real64, dimension(:), pointer :: integration_weight
@@ -76,7 +168,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
    sll_real64  :: eps
 
    !initial function
-   procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
+   procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
    sll_real64 :: nrj0
    
@@ -102,15 +194,15 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
    logical :: turn_drive_off
 
    !advector
-   class(sll_advection_2d_base), pointer    :: advect_2d
+   class(sll_c_advection_2d_base), pointer    :: advect_2d
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
    sll_real64 :: factor_x1
    sll_real64 :: factor_x2_rho
    sll_real64 :: factor_x2_1
 
    !poisson solver
-   class(sll_poisson_1d_base), pointer   :: poisson
+   class(sll_c_poisson_1d_base), pointer   :: poisson
            
    contains
      procedure, pass(sim) :: run => run_vp2d_no_split
@@ -123,7 +215,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
 
 contains
 
-  function new_vp2d_no_split( &
+  function sll_f_new_vp2d_no_split( &
     filename ) &
     result(sim)    
     type(sll_simulation_2d_vlasov_poisson_no_split), pointer :: sim    
@@ -135,7 +227,7 @@ contains
       sim, &
       filename)
        
-  end function new_vp2d_no_split
+  end function sll_f_new_vp2d_no_split
 
 
 
@@ -205,25 +297,25 @@ contains
     intrinsic :: trim
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
-    type(sll_cartesian_mesh_1d), pointer :: mesh_x1
-    type(sll_cartesian_mesh_1d), pointer :: mesh_x2
+    type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
+    type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
-    class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_characteristics_1d_base), pointer :: charac1d_x1
-    class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
-    class(sll_advection_1d_base), pointer    :: advect_1d_x1
-    class(sll_advection_1d_base), pointer    :: advect_1d_x2
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
+    class(sll_c_characteristics_2d_base), pointer :: charac2d
+    class(sll_c_characteristics_1d_base), pointer :: charac1d_x1
+    class(sll_c_characteristics_1d_base), pointer :: charac1d_x2
+    class(sll_c_interpolator_2d), pointer   :: A1_interp2d
+    class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+    class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
+    class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
+    class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
+    class(sll_c_advection_1d_base), pointer    :: advect_1d_x1
+    class(sll_c_advection_1d_base), pointer    :: advect_1d_x2
     sll_real64 :: x1_min_bis
     sll_real64 :: x1_max_bis
     sll_real64 :: x2_min_bis
@@ -373,7 +465,7 @@ contains
         print *, '#init_vp2d_par_cart() failed to open file ', trim(filename)//'.nml'
         stop
       end if
-      !if(sll_get_collective_rank(sll_world_collective)==0)then
+      !if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
         print *,'#initialization with filename:'
         print *,'#',trim(filename)//'.nml'
       !endif
@@ -385,7 +477,7 @@ contains
       read(input_file, drive)
       close(input_file)
     else
-      !if(sll_get_collective_rank(sll_world_collective)==0)then
+      !if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
         print *,'#initialization with default parameters'
       !endif      
     endif
@@ -398,12 +490,12 @@ contains
     
     select case (mesh_case_x1)
       case ("SLL_LANDAU_MESH")
-        x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode
-        mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
-        call get_node_positions( mesh_x1, sim%x1_array )
+        x1_max = real(nbox_x1,f64) * 2._f64 * sll_p_pi / kmode
+        mesh_x1 => sll_f_new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
+        call sll_o_get_node_positions( mesh_x1, sim%x1_array )
       case ("SLL_CARTESIAN_MESH")
-        mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
-        call get_node_positions( mesh_x1, sim%x1_array )
+        mesh_x1 => sll_f_new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
+        call sll_o_get_node_positions( mesh_x1, sim%x1_array )
       case default
         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
         print*,'#in init_vp2d_par_cart'
@@ -411,14 +503,14 @@ contains
     end select
     select case (mesh_case_x2)
       case ("SLL_CARTESIAN_MESH")
-        mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
-        call get_node_positions( mesh_x2, sim%x2_array )
+        mesh_x2 => sll_f_new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+        call sll_o_get_node_positions( mesh_x2, sim%x2_array )
       case default
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
         print*,'#in init_vp2d_par_cart'
         stop 
     end select
-    !sim%mesh2d => tensor_product_1d_1d( mesh_x1, mesh_x2)
+    !sim%mesh2d => sll_f_tensor_product_1d_1d( mesh_x1, mesh_x2)
     
     
     !initial function
@@ -427,18 +519,18 @@ contains
     sim%eps = eps
     select case (initial_function_case)
       case ("SLL_LANDAU")
-        sim%init_func => sll_landau_initializer_2d
+        sim%init_func => sll_f_landau_initializer_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = kmode
         sim%params(2) = eps
         sim%nrj0 = 0._f64  !compute the right value
-        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+        !(0.5_f64*eps*sll_p_pi)**2/(kmode_x1*kmode_x2) &
           !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
         !for the moment
         sim%kx = kmode
         sim%eps = eps
       case ("SLL_BEAM")  
-        sim%init_func => sll_beam_initializer_2d
+        sim%init_func => sll_f_beam_initializer_2d
         SLL_ALLOCATE(sim%params(1),ierr)
         sim%params(1) = alpha_gaussian             
       case default
@@ -470,7 +562,7 @@ contains
     end select
 
     !advector 
-    sim%mesh_2d => new_cartesian_mesh_2d( &
+    sim%mesh_2d => sll_f_new_cartesian_mesh_2d( &
       num_cells_x1, &
       num_cells_x2, &
       eta1_min = x1_min, &
@@ -482,15 +574,15 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_interpolator_2d( &
+        f_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)
+          sll_p_periodic, &
+          sll_p_periodic)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -503,44 +595,44 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => new_cubic_spline_interpolator_2d( &
+        A1_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_interpolator_2d( &
+          sll_p_periodic, &
+          sll_p_periodic)
+        A2_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)  
-        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
+          sll_p_periodic, &
+          sll_p_periodic)  
+        A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
-          SLL_PERIODIC)
-        A1_interp1d_x2 => new_cubic_spline_interpolator_1d( &
+          sll_p_periodic)
+        A1_interp1d_x2 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x2+1, &
           x2_min, &
           x2_max, &
-          SLL_PERIODIC)
-        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
+          sll_p_periodic)
+        A2_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
-          SLL_PERIODIC)
-        A2_interp1d_x2 => new_cubic_spline_interpolator_1d( &
+          sll_p_periodic)
+        A2_interp1d_x2 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x2+1, &
           x2_min, &
           x2_max, &
-          SLL_PERIODIC)
+          sll_p_periodic)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -550,15 +642,15 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => new_cubic_spline_interpolator_2d( &
+        phi_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)         
+          sll_p_periodic, &
+          sll_p_periodic)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
@@ -569,25 +661,25 @@ contains
 
     select case(charac2d_case)
       case ("SLL_EULER")
-        charac2d => new_explicit_euler_2d_charac(&
+        charac2d => sll_f_new_explicit_euler_2d_charac(&
           Nc_x1+1, &
           Nc_x2+1, &
           eta1_min=x1_min, &
           eta1_max=x1_max, &
           eta2_min=x2_min, &
           eta2_max=x2_max, &
-          bc_type_1=SLL_PERIODIC, &!&SLL_SET_TO_LIMIT, &
-          bc_type_2=SLL_PERIODIC)    
+          bc_type_1=sll_p_periodic, &!&sll_p_set_to_limit, &
+          bc_type_2=sll_p_periodic)    
       case ("SLL_VERLET")      
-        charac2d => new_verlet_2d_charac(&
+        charac2d => sll_f_new_verlet_2d_charac(&
           Nc_x1+1, &
           Nc_x2+1, &
           A1_interp2d, &
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1=SLL_PERIODIC, &!&SLL_SET_TO_LIMIT, &
-          bc_type_2=SLL_PERIODIC, &
+          bc_type_1=sll_p_periodic, &!&sll_p_set_to_limit, &
+          bc_type_2=sll_p_periodic, &
           eta1_min=x1_min, &
           eta1_max=x1_max, &
           eta2_min=x2_min, &
@@ -635,11 +727,11 @@ contains
 
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
+        f_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x1_bis+1, &
           x1_min_bis, &
           x1_max_bis, &
-          SLL_PERIODIC)
+          sll_p_periodic)
       case default
         print *,'#bad f_interp1d_x1_case',f_interp1d_x1_case
         print *,'#not implemented'
@@ -650,11 +742,11 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
+        f_interp1d_x2 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x2_bis+1, &
           x2_min_bis, &
           x2_max_bis, &
-          SLL_PERIODIC)
+          sll_p_periodic)
       case default
         print *,'#bad f_interp1d_x2_case',f_interp1d_x2_case
         print *,'#not implemented'
@@ -665,25 +757,25 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        charac1d_x1 => new_explicit_euler_1d_charac(&
+        charac1d_x1 => sll_f_new_explicit_euler_1d_charac(&
           Nc_x1_bis+1, &
           eta_min=x1_min_bis, &
           eta_max=x1_max_bis, &
-          bc_type=SLL_PERIODIC)    
+          bc_type=sll_p_periodic)    
       case ("SLL_TRAPEZOID")
         charac1d_x1 => &
-          new_trapezoid_1d_charac(&
+          sll_f_new_trapezoid_1d_charac(&
           Nc_x1_bis+1, &
           A1_interp1d_x1, &
-          bc_type=SLL_PERIODIC, &
+          bc_type=sll_p_periodic, &
           eta_min=x1_min_bis, &
           eta_max=x1_max_bis)
       case ("SLL_EULER_CONSERVATIVE")
-        charac1d_x1 => new_explicit_euler_conservative_1d_charac(&
+        charac1d_x1 => sll_f_new_explicit_euler_conservative_1d_charac(&
           Nc_x1_bis+1, &
           eta_min=x1_min_bis, &
           eta_max=x1_max_bis, &
-          bc_type=SLL_PERIODIC)    
+          bc_type=sll_p_periodic)    
       case default
         print *,'#bad charac1d_x1_case',charac1d_x1_case
         print *,'#not implemented'
@@ -693,25 +785,25 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        charac1d_x2 => new_explicit_euler_1d_charac(&
+        charac1d_x2 => sll_f_new_explicit_euler_1d_charac(&
           Nc_x2_bis+1, &
           eta_min=x2_min_bis, &
           eta_max=x2_max_bis, &
-          bc_type=SLL_PERIODIC)    
+          bc_type=sll_p_periodic)    
       case ("SLL_TRAPEZOID")
         charac1d_x2 => &
-          new_trapezoid_1d_charac(&
+          sll_f_new_trapezoid_1d_charac(&
           Nc_x2_bis+1, &
           A2_interp1d_x2, &
-          bc_type=SLL_PERIODIC, &
+          bc_type=sll_p_periodic, &
           eta_min=x2_min_bis, &
           eta_max=x2_max_bis)
       case ("SLL_EULER_CONSERVATIVE")
-        charac1d_x2 => new_explicit_euler_conservative_1d_charac(&
+        charac1d_x2 => sll_f_new_explicit_euler_conservative_1d_charac(&
           Nc_x2_bis+1, &
           eta_min=x2_min_bis, &
           eta_max=x2_max_bis, &
-          bc_type=SLL_PERIODIC)    
+          bc_type=sll_p_periodic)    
       case default
         print *,'#bad charac1d_x2_case',charac1d_x2_case
         print *,'#not implemented'
@@ -721,14 +813,14 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        advect_1d_x1 => new_BSL_1d_advector(&
+        advect_1d_x1 => sll_f_new_bsl_1d_advector(&
           f_interp1d_x1, &
           charac1d_x1, &
           Nc_x1_bis+1, &
           eta_min = x1_min_bis, &
           eta_max = x1_max_bis)
       case ("SLL_CSL")
-        advect_1d_x1 => new_CSL_1d_advector(&
+        advect_1d_x1 => sll_f_new_csl_1d_advector(&
           f_interp1d_x1, &
           charac1d_x1, &
           Nc_x1_bis+1, &
@@ -743,14 +835,14 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        advect_1d_x2 => new_BSL_1d_advector(&
+        advect_1d_x2 => sll_f_new_bsl_1d_advector(&
           f_interp1d_x2, &
           charac1d_x2, &
           Nc_x2_bis+1, &
           eta_min = x2_min_bis, &
           eta_max = x2_max_bis)
       case ("SLL_CSL")
-        advect_1d_x2 => new_CSL_1d_advector(&
+        advect_1d_x2 => sll_f_new_csl_1d_advector(&
           f_interp1d_x2, &
           charac1d_x2, &
           Nc_x2_bis+1, &
@@ -767,7 +859,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-        sim%advect_2d => new_BSL_2d_advector(&
+        sim%advect_2d => sll_f_new_bsl_2d_advector(&
           f_interp2d, &
           charac2d, &
           Nc_x1+1, &
@@ -777,7 +869,7 @@ contains
           eta2_min = x2_min, &
           eta2_max = x2_max)
       case ("SLL_TENSOR_PRODUCT")
-        sim%advect_2d => new_tensor_product_2d_advector(&
+        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
           advect_1d_x1, &
           advect_1d_x2, &
           Nc_x1+1, &
@@ -822,12 +914,12 @@ contains
     !poisson
     select case (poisson_solver)
       case ("SLL_FFT")
-        sim%poisson => new_poisson_1d_periodic_solver( &
+        sim%poisson => sll_f_new_poisson_1d_periodic_solver( &
           x1_min, &
           x1_max, &
           num_cells_x1)
       case ("SLL_POLAR")
-        sim%poisson => new_poisson_1d_polar_solver( &
+        sim%poisson => sll_f_new_poisson_1d_polar_solver( &
           x1_min, &
           x1_max, &
           num_cells_x1)
@@ -962,7 +1054,7 @@ contains
     !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
-    type(sll_fft_plan), pointer         :: pfwd
+    type(sll_t_fft_plan), pointer         :: pfwd
     sll_real64, dimension(:), allocatable :: buf_fft
     sll_comp64,dimension(:),allocatable :: rho_mode
 
@@ -1001,7 +1093,7 @@ contains
 
         
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-      pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+      pfwd => sll_f_fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
 
@@ -1042,13 +1134,13 @@ contains
         
 
     if(sim%driven)then
-      call sll_binary_file_create("x.bdat", file_id, ierr)
-      call sll_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
-      call sll_binary_file_close(file_id,ierr)                    
-      call sll_binary_file_create("v.bdat", file_id, ierr)
-      !call sll_binary_write_array_1d(file_id,x2_array(1:np_x2-1),ierr)
-      call sll_binary_write_array_1d(file_id,sim%x2_array(1:np_x2-1),ierr)
-      call sll_binary_file_close(file_id,ierr)                                             
+      call sll_s_binary_file_create("x.bdat", file_id, ierr)
+      call sll_s_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
+      call sll_s_binary_file_close(file_id,ierr)                    
+      call sll_s_binary_file_create("v.bdat", file_id, ierr)
+      !call sll_s_binary_write_array_1d(file_id,x2_array(1:np_x2-1),ierr)
+      call sll_s_binary_write_array_1d(file_id,sim%x2_array(1:np_x2-1),ierr)
+      call sll_s_binary_file_close(file_id,ierr)                                             
     endif
 
 
@@ -1069,16 +1161,16 @@ contains
       x2=sim%x2_array(i2)
       do i1=1,np_x1
         x1=sim%x1_array(i1)
-        f_x1_init(i1,i2) =  sll_landau_initializer_2d(x1,x2,(/ sim%kx,0._f64 /))
+        f_x1_init(i1,i2) =  sll_f_landau_initializer_2d(x1,x2,(/ sim%kx,0._f64 /))
       end do
     end do
 
 
 
 
-      call sll_binary_file_create('f0.bdat', file_id, ierr)
-      call sll_binary_write_array_2d(file_id,f_x1(1:np_x1-1,1:np_x2-1),ierr)
-      call sll_binary_file_close(file_id,ierr)
+      call sll_s_binary_file_create('f0.bdat', file_id, ierr)
+      call sll_s_binary_write_array_2d(file_id,f_x1(1:np_x1-1,1:np_x2-1),ierr)
+      call sll_s_binary_file_close(file_id,ierr)
 #ifndef NOHDF5
       iplot = 1
       call plot_f_cartesian(iplot,f_x1,sim%mesh_2d)
@@ -1099,7 +1191,7 @@ contains
     istep = 0
     e_app = 0._f64
     if (sim%driven) then
-      call PFenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
+      call sll_s_pfenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
           sim%t0, sim%turn_drive_off)
       do i = 1, np_x1
         e_app(i) = sim%Edrmax*adr*sim%kx&
@@ -1109,23 +1201,23 @@ contains
     endif
 
     ! write initial fields
-      call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
-      call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
+      call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+      call sll_s_binary_file_create('deltaf.bdat', deltaf_id, ierr)
       if(sim%driven)then
-        call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
-        call sll_binary_file_create('efield.bdat', efield_id, ierr)
-        call sll_binary_file_create('adr.bdat', adr_id, ierr)
-        call sll_binary_file_create('Edr.bdat', Edr_id, ierr)
-        call sll_binary_file_create('t.bdat', t_id, ierr)
-        call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
-        call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
-        call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
-        call sll_binary_write_array_0d(adr_id,adr,ierr)
-        call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
+        call sll_s_binary_file_create('rhotot.bdat', rhotot_id, ierr)
+        call sll_s_binary_file_create('efield.bdat', efield_id, ierr)
+        call sll_s_binary_file_create('adr.bdat', adr_id, ierr)
+        call sll_s_binary_file_create('Edr.bdat', Edr_id, ierr)
+        call sll_s_binary_file_create('t.bdat', t_id, ierr)
+        call sll_s_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
+        call sll_s_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
+        call sll_s_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
+        call sll_s_binary_write_array_0d(adr_id,adr,ierr)
+        call sll_s_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
       endif                    
     
     
-    call sll_binary_write_array_2d( &
+    call sll_s_binary_write_array_2d( &
         deltaf_id, &
         f_x1(1:np_x1-1,1:np_x2-1)-f_x1_init(1:np_x1-1,1:np_x2-1), &
         ierr )
@@ -1155,7 +1247,7 @@ contains
           
           t_step = real(istep-1,f64)
           if (sim%driven) then
-            call PFenvelope(adr, t_step*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
+            call sll_s_pfenvelope(adr, t_step*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
               sim%t0, sim%turn_drive_off)
             do i = 1, np_x1
               e_app(i) = sim%Edrmax*adr*sim%kx&
@@ -1199,7 +1291,7 @@ contains
           
           t_step = real(istep-1,f64) + 0.5_f64
           if (sim%driven) then
-            call PFenvelope(adr, t_step*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
+            call sll_s_pfenvelope(adr, t_step*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
               sim%t0, sim%turn_drive_off)
             do i = 1, np_x1
               e_app(i) = sim%Edrmax*adr*sim%kx&
@@ -1280,9 +1372,9 @@ contains
         enddo
         potential_energy = 0.5_f64*potential_energy* sim%mesh_2d%delta_eta1
           buf_fft = rho(1:np_x1-1)
-          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
-            rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+            rho_mode(k)=sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k)
           enddo  
           write(th_diag_id,'(f12.5,13g20.12)') &
             time, &
@@ -1300,16 +1392,16 @@ contains
             abs(rho_mode(4)), &
             abs(rho_mode(5))
           if(sim%driven)then
-            call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
-            call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
-            call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
-            call sll_binary_write_array_0d(adr_id,adr,ierr)
-            call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
+            call sll_s_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
+            call sll_s_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
+            call sll_s_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
+            call sll_s_binary_write_array_0d(adr_id,adr,ierr)
+            call sll_s_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
           endif   
           
         if (mod(istep,sim%freq_diag)==0) then          
           !we substract f0
-          call sll_binary_write_array_2d( &
+          call sll_s_binary_write_array_2d( &
             deltaf_id, &
             f_x1(1:np_x1-1,1:np_x2-1)-f_x1_init(1:np_x1-1,1:np_x2-1), &
             ierr)  
@@ -1333,14 +1425,14 @@ contains
     enddo
     
     ! close files
-      call sll_ascii_file_close(th_diag_id,ierr) 
-      call sll_binary_file_close(deltaf_id,ierr) 
+      call sll_s_ascii_file_close(th_diag_id,ierr) 
+      call sll_s_binary_file_close(deltaf_id,ierr) 
       if(sim%driven)then
-        call sll_binary_file_close(efield_id,ierr)
-        call sll_binary_file_close(rhotot_id,ierr)
-        call sll_binary_file_close(Edr_id,ierr)
-        call sll_binary_file_close(adr_id,ierr)
-        call sll_binary_file_close(t_id,ierr)
+        call sll_s_binary_file_close(efield_id,ierr)
+        call sll_s_binary_file_close(rhotot_id,ierr)
+        call sll_s_binary_file_close(Edr_id,ierr)
+        call sll_s_binary_file_close(adr_id,ierr)
+        call sll_s_binary_file_close(t_id,ierr)
       endif   
 
 
@@ -1370,7 +1462,7 @@ contains
     sll_real64, intent(in) :: v
     sll_real64 :: f_equilibrium
 
-    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+    f_equilibrium = 1.0_f64/sqrt(2*sll_p_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
 #ifndef NOHDF5
@@ -1391,7 +1483,7 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     !sll_real64 :: r
     !sll_real64 :: theta
@@ -1420,27 +1512,27 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = x1_min+real(i-1,f64)*dx1
+          x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
-      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
+      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
+      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(file_id, error)
       deallocate(x1)
       deallocate(x2)
 
     end if
 
-    call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
+    call sll_s_int2string(iplot,cplot)
+    call sll_o_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
+    call sll_o_xdmf_write_array("f"//cplot,f,"values", &
       error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
+    call sll_s_xdmf_close(file_id,error)
   end subroutine plot_f_cartesian
 
 #endif

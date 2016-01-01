@@ -1,17 +1,42 @@
 module sll_m_qn_2d_polar_precompute
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!#include "sll_field_2d.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_timer
-  use sll_m_qn_2d_polar
+! use F77_blas, only: &
+!   dgemm, &
+!   zgemm
+
+! use F77_fftpack, only: &
+!   zfftb, &
+!   zfftf, &
+!   zffti
+
+! use F77_lapack, only: &
+!   zgetrf, &
+!   zgetri
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_qn_2d_polar, only: &
+    sll_s_compute_splines_coefs_matrix_nat_1d, &
+    sll_s_compute_splines_coefs_matrix_per_1d, &
+    sll_s_contribution_spl, &
+    sll_s_localize_polar, &
+    sll_s_matrix_product_compf, &
+    sll_s_splcoefnat1d0old, &
+    sll_s_splcoefper1d0old
 
   implicit none
+
+  public :: &
+    sll_s_compute_qns_inverse_polar_splines, &
+    sll_s_compute_qns_matrix_polar_splines, &
+    sll_s_solve_qns_polar_splines
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
@@ -42,7 +67,7 @@ contains
     sll_int32 :: Nc(2)
     
     delta_eta(1)=(r_max-r_min)/real(num_cells_r,f64)
-    delta_eta(2)=2._f64*sll_pi/real(num_cells_theta,f64)
+    delta_eta(2)=2._f64*sll_p_pi/real(num_cells_theta,f64)
     
     Nc(1) = num_cells_r
     Nc(2) = num_cells_theta
@@ -50,7 +75,7 @@ contains
     eta_min(1) = r_min
     eta_min(2) = 0._f64
     eta_max(1) = r_max
-    eta_max(2) = 2._f64*sll_pi
+    eta_max(2) = 2._f64*sll_p_pi
     
     SLL_ALLOCATE(buf(0:num_cells_r+2,0:num_cells_theta-1),error)      
     
@@ -65,7 +90,7 @@ contains
       do k=1,N_points
         x(1) = eta(1)*cos(eta(2))+rho(i)*points(1,k)
         x(2) = eta(1)*sin(eta(2))+rho(i)*points(2,k)
-        call localize_polar( &
+        call sll_s_localize_polar( &
           x, &
           eta_min, &
           eta_max, &
@@ -125,7 +150,7 @@ contains
     sll_int32 :: Nc(2)
     
     delta_eta(1)=(r_max-r_min)/real(num_cells_r,f64)
-    delta_eta(2)=2._f64*sll_pi/real(num_cells_theta,f64)
+    delta_eta(2)=2._f64*sll_p_pi/real(num_cells_theta,f64)
     
     Nc(1) = num_cells_r
     Nc(2) = num_cells_theta
@@ -133,7 +158,7 @@ contains
     eta_min(1) = r_min
     eta_min(2) = 0._f64
     eta_max(1) = r_max
-    eta_max(2) = 2._f64*sll_pi
+    eta_max(2) = 2._f64*sll_p_pi
     
     SLL_ALLOCATE(buf(0:num_cells_r+2,0:num_cells_theta-1),error)      
     
@@ -152,9 +177,9 @@ contains
       do k=1,N_points
         x(1) = eta(1)*cos(eta(2))+rho(i)*points(1,k)
         x(2) = eta(1)*sin(eta(2))+rho(i)*points(2,k)
-        call localize_polar(x,eta_min,eta_max,ii,eta_star,Nc)
+        call sll_s_localize_polar(x,eta_min,eta_max,ii,eta_star,Nc)
 
-        call contribution_spl(eta_star,val)
+        call sll_s_contribution_spl(eta_star,val)
         
         val=val*points(3,k)
         
@@ -275,11 +300,11 @@ contains
     pointer_mat_per => mat_per
     pointer_mat_spl2D_circ => mat_spl2D_circ
 
-    call splcoefnat1d0old(dnat,lnat,Nr)
-    call splcoefper1d0old(dper,lper,mper,Ntheta)
+    call sll_s_splcoefnat1d0old(dnat,lnat,Nr)
+    call sll_s_splcoefper1d0old(dper,lper,mper,Ntheta)
  
-    call compute_splines_coefs_matrix_nat_1D(pointer_mat_nat,pointer_dnat,pointer_lnat,Nr)    
-    call compute_splines_coefs_matrix_per_1D(pointer_mat_per,pointer_dper,pointer_lper,pointer_mper,Ntheta) 
+    call sll_s_compute_splines_coefs_matrix_nat_1d(pointer_mat_nat,pointer_dnat,pointer_lnat,Nr)    
+    call sll_s_compute_splines_coefs_matrix_per_1d(pointer_mat_per,pointer_dper,pointer_lper,pointer_mper,Ntheta) 
     do j=0,Ntheta-1  
       pointer_mat_spl2D_circ(j,:,:)=pointer_mat_per(0,j)*pointer_mat_nat
     enddo
@@ -300,8 +325,8 @@ contains
 !    D_spl2D = 0._f64
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
-!        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        mode=real(-2._f64*sll_p_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !        D_spl2D(m,:,:) = D_spl2D(m,:,:) + pointer_mat_spl2D_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo
@@ -353,8 +378,8 @@ contains
 !    D_contr = 0._f64  
 !    do m=0,Ntheta-1
 !      do j=0,Ntheta-1
-!        mode=real(-2._f64*sll_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
-!        exp_comp=dcmplx(dcos(mode),dsin(mode))
+!        mode=real(-2._f64*sll_p_pi*real(j,f64)*real(m,f64)/real(Ntheta,f64),f64)
+!        exp_comp = cmplx( cos(mode), sin(mode), kind=f64 )
 !          D_contr(m,:,:) = D_contr(m,:,:) + pointer_mat_contribution_circ(j,:,:)*exp_comp
 !      enddo
 !    enddo
@@ -396,7 +421,7 @@ contains
     do m=1,Ntheta
       mat_stock1 = (0._f64,0._f64)
       mat_stock2 = (0._f64,0._f64)
-      call matrix_product_compf( &
+      call sll_s_matrix_product_compf( &
         D_contr(m,:,:), &
         Nr+1, &
         Nr+3, &
@@ -418,7 +443,7 @@ contains
 
       !mat_stock3 = transpose(mat_stock1)
       mat_stock3 = mat_stock1
-      call matrix_product_compf( &
+      call sll_s_matrix_product_compf( &
         mat_stock3, &
         Nr+1, &
         Nr+1, &
@@ -662,7 +687,7 @@ contains
 
 
 
-  subroutine compute_qns_matrix_polar_splines( &
+  subroutine sll_s_compute_qns_matrix_polar_splines( &
     r_min, &
     r_max, &
     num_cells_r, &
@@ -816,9 +841,9 @@ contains
 
 
     
-  end subroutine compute_qns_matrix_polar_splines
+  end subroutine sll_s_compute_qns_matrix_polar_splines
 
-  subroutine compute_qns_inverse_polar_splines( &
+  subroutine sll_s_compute_qns_inverse_polar_splines( &
     mat, &
     lambda, &
     num_cells_r, &
@@ -866,9 +891,9 @@ contains
     print *,INFO
 
 
-  end subroutine compute_qns_inverse_polar_splines
+  end subroutine sll_s_compute_qns_inverse_polar_splines
 
-  subroutine solve_qns_polar_splines( &
+  subroutine sll_s_solve_qns_polar_splines( &
     mat, &
     phi, &
     num_cells_r, &
@@ -930,7 +955,7 @@ contains
     SLL_DEALLOCATE_ARRAY(phi_old,ierr)
     SLL_DEALLOCATE_ARRAY(buf_fft,ierr)
         
-  end subroutine solve_qns_polar_splines
+  end subroutine sll_s_solve_qns_polar_splines
   
   
 !PN  subroutine precompute_matrix( &

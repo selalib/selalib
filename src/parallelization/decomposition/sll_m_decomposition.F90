@@ -44,17 +44,38 @@
 !> @author
 !> Klaus Reuter, Max Planck Computing and Data Facility (MPCDF)
 module sll_m_decomposition
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-   use sll_m_collective
-   use mpi
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-   implicit none
+  use sll_m_collective, only: &
+    sll_t_collective_t
+
+  use sll_mpi, only: &
+    mpi_cart_create, &
+    mpi_cart_get, &
+    mpi_cart_shift, &
+    mpi_double, &
+    mpi_sendrecv, &
+    mpi_status_ignore, &
+    mpi_success
+
+  implicit none
+
+  public :: &
+    sll_o_apply_halo_exchange, &
+    sll_t_cartesian_topology_6d, &
+    sll_t_decomposition_6d, &
+    sll_o_new_cartesian_domain_decomposition, &
+    sll_o_new_cartesian_topology
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
    !> @brief    Information on the cartesian process topology.
-   type :: cartesian_topology_6d
+   type :: sll_t_cartesian_topology_6d
       ! topology-associated MPI communicator
       sll_int32 :: comm
       ! array containing the number of MPI processes to use along the n-th dimension
@@ -65,7 +86,7 @@ module sll_m_decomposition
       sll_int32 :: coords(6)
       ! MPI ranks of the topological neighbors of the current MPI process
       sll_int32 :: neighbors(12)
-   end type cartesian_topology_6d
+   end type sll_t_cartesian_topology_6d
 
 
 
@@ -94,33 +115,33 @@ module sll_m_decomposition
 
 
    !> @brief    Global array size information and local information.
-   type :: decomposition_6d
+   type :: sll_t_decomposition_6d
       sll_int32, dimension(:) :: global(6)
       type(decomposition_local_6d) :: local
-   end type decomposition_6d
+   end type sll_t_decomposition_6d
 
 
-   interface new_cartesian_topology
+   interface sll_o_new_cartesian_topology
       module procedure new_cartesian_topology_6d
-   end interface new_cartesian_topology
+   end interface sll_o_new_cartesian_topology
 
 
-   interface new_cartesian_domain_decomposition
+   interface sll_o_new_cartesian_domain_decomposition
       module procedure new_cartesian_domain_decomposition_6d
-   end interface new_cartesian_domain_decomposition
+   end interface sll_o_new_cartesian_domain_decomposition
 
 
-   interface apply_halo_exchange
+   interface sll_o_apply_halo_exchange
       module procedure apply_halo_exchange_6d_real64
-   end interface apply_halo_exchange
+   end interface sll_o_apply_halo_exchange
 
 
    contains
 
 
    function new_cartesian_topology_6d(top_collective, procs_per_dimension, periodic)
-      type(cartesian_topology_6d), pointer :: new_cartesian_topology_6d
-      type(sll_collective_t), intent(in) :: top_collective
+      type(sll_t_cartesian_topology_6d), pointer :: new_cartesian_topology_6d
+      type(sll_t_collective_t), intent(in) :: top_collective
       integer, parameter :: nd=6
       sll_int32, intent(in) :: procs_per_dimension(nd)
       logical, intent(in) :: periodic(nd)
@@ -164,8 +185,8 @@ module sll_m_decomposition
 
 
    function new_cartesian_domain_decomposition_6d(topology, grid_size, halo_width)
-      type(decomposition_6d), pointer :: new_cartesian_domain_decomposition_6d
-      type(cartesian_topology_6d), pointer, intent(in) :: topology
+      type(sll_t_decomposition_6d), pointer :: new_cartesian_domain_decomposition_6d
+      type(sll_t_cartesian_topology_6d), pointer, intent(in) :: topology
       integer, parameter :: nd=6
       sll_int32, intent(in) :: grid_size(nd)
       sll_int32, intent(in) :: halo_width(nd)
@@ -281,8 +302,8 @@ module sll_m_decomposition
 
 
    subroutine apply_halo_exchange_6d_real64(topo, decomp, arr)
-      type(cartesian_topology_6d), intent(in) :: topo
-      type(decomposition_6d), intent(in) :: decomp
+      type(sll_t_cartesian_topology_6d), intent(in) :: topo
+      type(sll_t_decomposition_6d), intent(in) :: decomp
       sll_real64, dimension(:,:,:,:,:,:), intent(inout) :: arr
 
       integer, save :: bufsize = 0

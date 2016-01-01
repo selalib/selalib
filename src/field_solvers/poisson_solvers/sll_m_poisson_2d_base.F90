@@ -4,12 +4,19 @@
 !> @details
 !> Contains the abstract class to create a Poisson solver in 2D.
 module sll_m_poisson_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_c_poisson_2d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> PLEASE ADD DOCUMENTATION
-  type, abstract :: sll_poisson_2d_base 
+  type, abstract :: sll_c_poisson_2d_base 
 
   contains
 
@@ -21,7 +28,7 @@ module sll_m_poisson_2d_base
     procedure(signature_compute_E_from_rho_2d), deferred, pass(poisson) :: &
       compute_E_from_rho
 
-  end type sll_poisson_2d_base
+  end type sll_c_poisson_2d_base
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
@@ -32,9 +39,9 @@ module sll_m_poisson_2d_base
     subroutine signature_compute_phi_from_rho_2d( poisson, phi, rho )
 
       use sll_m_working_precision
-      import sll_poisson_2d_base      
+      import sll_c_poisson_2d_base      
 
-      class(sll_poisson_2d_base), target     :: poisson
+      class(sll_c_poisson_2d_base), target     :: poisson
       sll_real64,dimension(:,:), intent(in)  :: rho
       sll_real64,dimension(:,:), intent(out) :: phi
 
@@ -47,9 +54,9 @@ module sll_m_poisson_2d_base
     subroutine signature_compute_E_from_rho_2d( poisson, E1, E2, rho )
 
       use sll_m_working_precision
-      import sll_poisson_2d_base       
+      import sll_c_poisson_2d_base       
 
-      class(sll_poisson_2d_base)              :: poisson
+      class(sll_c_poisson_2d_base)              :: poisson
       sll_real64, dimension(:,:), intent(in)  :: rho
       sll_real64, dimension(:,:), intent(out) :: E1
       sll_real64, dimension(:,:), intent(out) :: E2

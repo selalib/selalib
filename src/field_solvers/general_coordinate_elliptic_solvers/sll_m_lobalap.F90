@@ -5,10 +5,26 @@
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
 module sll_m_lobalap
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_map_function, only : map
-  
+
+  use sll_m_map_function, only: &
+    sll_s_map
+
   implicit none
+
+  public :: &
+    sll_s_assemb, &
+    sll_s_assemb_rhs, &
+    sll_s_compute_electric_field, &
+    sll_s_compute_phi, &
+    sll_s_computelu, &
+    sll_s_init, &
+    sll_s_plotgmsh, &
+    sll_s_release
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! ordre de l'interpolation élément fini
   integer :: order
   ! nombre de noeuds locaux dans chaque élément
@@ -16,9 +32,9 @@ module sll_m_lobalap
 
   ! tableaux pour intégration de Gauss-Lobatto
   ! points et poids
-  real(8),dimension(:),allocatable :: xpg,wpg
+  sll_real64,dimension(:),allocatable :: xpg,wpg
   ! dérivées des polynômes de Lagrange aux points de gauss
-  real(8),dimension(:,:),allocatable :: dlag
+  sll_real64,dimension(:,:),allocatable :: dlag
 
   ! variable pour vérifier que les initialisations ont eu lieu
   logical :: is_init=.false.
@@ -33,7 +49,7 @@ module sll_m_lobalap
   integer :: nbc
 
   ! noeuds du maillage
-  real(8),dimension(:,:),allocatable :: node
+  sll_real64,dimension(:,:),allocatable :: node
   ! connectivité
   integer,dimension(:,:),allocatable :: connec
 
@@ -41,19 +57,19 @@ module sll_m_lobalap
   ! indices de ligne et de colonne des valeurs non nulles
   !integer,dimension(:),allocatable :: icol,irow
   ! valeurs correspondantes de la matrice
-  !real(8),dimension(:),allocatable :: matval
+  !sll_real64,dimension(:),allocatable :: matval
 
   ! tableaux pour le stockage skyline de la matrice
   ! profil, début des colonnes
   integer,dimension(:),allocatable :: prof,kld
-  real(8),dimension(:),allocatable :: vdiag,vsup,vinf
+  sll_real64,dimension(:),allocatable :: vdiag,vsup,vinf
   ! taille de ces tableaux
   integer :: nsky
   ! grand pivot pour les cl
-  real(8),parameter :: big=1.d20
+  sll_real64,parameter :: big=1.e20_f64
 
   ! vecteur pour le second membre et la solution
-  real(8),dimension(:),allocatable :: phi,rho
+  sll_real64,dimension(:),allocatable :: phi,rho
 
   ! liste des noeuds du bord
   integer,dimension(:),allocatable :: indexbc
@@ -63,8 +79,8 @@ contains
   ! fonction donnant le potentiel exact (debug) et/ou les conditions aux limites
   function potexact(x,y)
     implicit none
-    real(8),intent(in) :: x,y
-    real(8) :: potexact
+    sll_real64,intent(in) :: x,y
+    sll_real64 :: potexact
     !potexact=x*x+y*y
     potexact=0.0_f64+x-x+y-y
   end function potexact
@@ -72,8 +88,8 @@ contains
   ! fonction donnant le terme source
   function source(x,y)
     implicit none
-    real(8),intent(in) :: x,y
-    real(8) :: source
+    sll_real64,intent(in) :: x,y
+    sll_real64 :: source
     source=-4.0_f64+x-x+y-y
   end function source
 
@@ -82,14 +98,14 @@ contains
   ! variables physiques: (x,y)
   ! autres données calculées:
   ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
-!  ! subroutine map(u,v,x,y,jac,invjac,det)
+!  ! subroutine sll_s_map(u,v,x,y,jac,invjac,det)
 !  ! pour l'instant on n'utilise pas la jacobienne
-!  subroutine map(u,v,x,y)
+!  subroutine sll_s_map(u,v,x,y)
 !    implicit none
-!    real(8),intent(in) :: u,v
-!    real(8),intent(out) :: x,y
-!    real(8) :: jac(2,2),invjac(2,2),det
-!    real(8),parameter :: pi=4*atan(1.d0)
+!    sll_real64,intent(in) :: u,v
+!    sll_real64,intent(out) :: x,y
+!    sll_real64 :: jac(2,2),invjac(2,2),det
+!    sll_real64,parameter :: pi=4*atan(1._f64)
 !
 !    x=(1+u)*(1+v)*cos(pi*v)
 !    y=(1+u)*sin(pi*v)
@@ -106,7 +122,7 @@ contains
 !    invjac=jac
 !    det=1
 !
-!  end subroutine map
+!  end subroutine sll_s_map
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -115,7 +131,7 @@ contains
     implicit none
 
 
-    write(*,*) 'Init tableaux points de Gauss...'
+    write(*,*) 'sll_s_init tableaux points de Gauss...'
 
     allocate(xpg(order+1))
     allocate(wpg(order+1))
@@ -125,8 +141,8 @@ contains
     case(1)
        xpg(1)=0.0_f64
        xpg(2)=1.0_f64
-       wpg(1)=0.5d0
-       wpg(2)=0.5d0
+       wpg(1)=0.5_f64
+       wpg(2)=0.5_f64
        dlag(1,1) = -1.0_f64
        dlag(1,2) = -1.0_f64
        dlag(2,1) = 1.0_f64
@@ -134,80 +150,80 @@ contains
 
     case(2)
        xpg(1)=0.0_f64
-       xpg(2)=0.5d0
+       xpg(2)=0.5_f64
        xpg(3)=1.0_f64
-       wpg(1)=1.d0/6
-       wpg(2)=4.d0/6
-       wpg(3)=1.d0/6
-       dlag(1,1) = -0.300000000000000000000000000000D1
-       dlag(1,2) = -0.100000000000000000000000000000D1
-       dlag(1,3) = 0.100000000000000000000000000000D1
-       dlag(2,1) = 0.400000000000000000000000000000D1
-       dlag(2,3) = -0.400000000000000000000000000000D1
-       dlag(3,1) = -0.100000000000000000000000000000D1
-       dlag(3,2) = 0.100000000000000000000000000000D1
-       dlag(3,3) = 0.300000000000000000000000000000D1
+       wpg(1)=1.0_f64/6.0_f64
+       wpg(2)=4.0_f64/6.0_f64
+       wpg(3)=1.0_f64/6.0_f64
+       dlag(1,1) = -0.300000000000000000000000000000e1_f64
+       dlag(1,2) = -0.100000000000000000000000000000e1_f64
+       dlag(1,3) = 0.100000000000000000000000000000e1_f64
+       dlag(2,1) = 0.400000000000000000000000000000e1_f64
+       dlag(2,3) = -0.400000000000000000000000000000e1_f64
+       dlag(3,1) = -0.100000000000000000000000000000e1_f64
+       dlag(3,2) = 0.100000000000000000000000000000e1_f64
+       dlag(3,3) = 0.300000000000000000000000000000e1_f64
     case(3)
        xpg(1)=0.0_f64
-       xpg(2)=(1.d0-sqrt(1.d0/5))/2.0_f64
-       xpg(3)=(1.d0+sqrt(1.d0/5))/2.0_f64
+       xpg(2)=(1.0_f64-sqrt(1.0_f64/5.0_f64))/2.0_f64
+       xpg(3)=(1.0_f64+sqrt(1.0_f64/5.0_f64))/2.0_f64
        xpg(4)=1.0_f64
-       wpg(1)=1.d0/12.0_f64
-       wpg(2)=5.d0/12.0_f64
-       wpg(3)=5.d0/12.0_f64
-       wpg(4)=1.d0/12.0_f64
-       dlag(1,1) = -0.599999999999999999999999999998D1
-       dlag(1,2) = -0.161803398874989484820458683436D1
-       dlag(1,3) = 0.618033988749894848204586834362D0
-       dlag(1,4) = -0.999999999999999999999999999994D0
-       dlag(2,1) = 0.809016994374947424102293417177D1
+       wpg(1)=1.0_f64/12.0_f64
+       wpg(2)=5.0_f64/12.0_f64
+       wpg(3)=5.0_f64/12.0_f64
+       wpg(4)=1.0_f64/12.0_f64
+       dlag(1,1) = -0.599999999999999999999999999998e1_f64
+       dlag(1,2) = -0.161803398874989484820458683436e1_f64
+       dlag(1,3) = 0.618033988749894848204586834362e0_f64
+       dlag(1,4) = -0.999999999999999999999999999994e0_f64
+       dlag(2,1) = 0.809016994374947424102293417177e1_f64
        dlag(2,2) = -0.1D-28
-       dlag(2,3) = -0.223606797749978969640917366872D1
-       dlag(2,4) = 0.309016994374947424102293417184D1
-       dlag(3,1) = -0.309016994374947424102293417182D1
-       dlag(3,2) = 0.223606797749978969640917366872D1
+       dlag(2,3) = -0.223606797749978969640917366872e1_f64
+       dlag(2,4) = 0.309016994374947424102293417184e1_f64
+       dlag(3,1) = -0.309016994374947424102293417182e1_f64
+       dlag(3,2) = 0.223606797749978969640917366872e1_f64
        dlag(3,3) = 0.1D-28
-       dlag(3,4) = -0.809016994374947424102293417177D1
-       dlag(4,1) = 0.999999999999999999999999999994D0
-       dlag(4,2) = -0.618033988749894848204586834362D0
-       dlag(4,3) = 0.161803398874989484820458683436D1
-       dlag(4,4) = 0.599999999999999999999999999998D1
+       dlag(3,4) = -0.809016994374947424102293417177e1_f64
+       dlag(4,1) = 0.999999999999999999999999999994e0_f64
+       dlag(4,2) = -0.618033988749894848204586834362e0_f64
+       dlag(4,3) = 0.161803398874989484820458683436e1_f64
+       dlag(4,4) = 0.599999999999999999999999999998e1_f64
     case(4)
        xpg(1)=0.0_f64
-       xpg(2)=(1.d0-sqrt(3.d0/7))/2.0_f64
-       xpg(3)=0.5d0
-       xpg(4)=(1.d0+sqrt(3.d0/7))/2.0_f64
+       xpg(2)=(1.0_f64-sqrt(3.0_f64/7.0_f64))/2.0_f64
+       xpg(3)=0.5_f64
+       xpg(4)=(1.0_f64+sqrt(3.0_f64/7.0_f64))/2.0_f64
        xpg(5)=1.0_f64
-       wpg(1)=1.d0/20.0_f64
-       wpg(2)=49.d0/180.0_f64
-       wpg(3)=32.d0/90.0_f64
-       wpg(4)=49.d0/180.0_f64
-       wpg(5)=1.d0/20.0_f64
-       dlag(1,1) = -0.100000000000000000000000000000D2
-       dlag(1,2) = -0.248198050606196571569743868439D1
-       dlag(1,3) = 0.750000000000000000000000000000D0
-       dlag(1,4) = -0.518019493938034284302561315633D0
-       dlag(1,5) = 0.100000000000000000000000000002D1
-       dlag(2,1) = 0.135130049774484800076860550594D2
-       dlag(2,2) = -0.2D-28
-       dlag(2,3) = -0.267316915539090667050969419638D1
-       dlag(2,4) = 0.152752523165194666886268239794D1
-       dlag(2,5) = -0.282032835588485332564727827395D1
-       dlag(3,1) = -0.533333333333333333333333333328D1
-       dlag(3,2) = 0.349148624377587810025755976661D1
-       dlag(3,3) = 0.2D-28
-       dlag(3,4) = -0.349148624377587810025755976659D1
-       dlag(3,5) = 0.533333333333333333333333333332D1
-       dlag(4,1) = 0.282032835588485332564727827398D1
-       dlag(4,2) = -0.152752523165194666886268239791D1
-       dlag(4,3) = 0.267316915539090667050969419635D1
-       dlag(4,4) = -0.4D-28
-       dlag(4,5) = -0.135130049774484800076860550595D2
-       dlag(5,1) = -0.100000000000000000000000000000D1
-       dlag(5,2) = 0.518019493938034284302561315635D0
-       dlag(5,3) = -0.750000000000000000000000000006D0
-       dlag(5,4) = 0.248198050606196571569743868439D1
-       dlag(5,5) = 0.100000000000000000000000000000D2
+       wpg(1)=1.0_f64/20.0_f64
+       wpg(2)=49.0_f64/180.0_f64
+       wpg(3)=32.0_f64/90.0_f64
+       wpg(4)=49.0_f64/180.0_f64
+       wpg(5)=1.0_f64/20.0_f64
+       dlag(1,1) = -0.100000000000000000000000000000e2_f64
+       dlag(1,2) = -0.248198050606196571569743868439e1_f64
+       dlag(1,3) = 0.750000000000000000000000000000e0_f64
+       dlag(1,4) = -0.518019493938034284302561315633e0_f64
+       dlag(1,5) = 0.100000000000000000000000000002e1_f64
+       dlag(2,1) = 0.135130049774484800076860550594e2_f64
+       dlag(2,2) = -0.2e-28_f64
+       dlag(2,3) = -0.267316915539090667050969419638e1_f64
+       dlag(2,4) = 0.152752523165194666886268239794e1_f64
+       dlag(2,5) = -0.282032835588485332564727827395e1_f64
+       dlag(3,1) = -0.533333333333333333333333333328e1_f64
+       dlag(3,2) = 0.349148624377587810025755976661e1_f64
+       dlag(3,3) = 0.2e-28_f64
+       dlag(3,4) = -0.349148624377587810025755976659e1_f64
+       dlag(3,5) = 0.533333333333333333333333333332e1_f64
+       dlag(4,1) = 0.282032835588485332564727827398e1_f64
+       dlag(4,2) = -0.152752523165194666886268239791e1_f64
+       dlag(4,3) = 0.267316915539090667050969419635e1_f64
+       dlag(4,4) = -0.4e-28_f64
+       dlag(4,5) = -0.135130049774484800076860550595e2_f64
+       dlag(5,1) = -0.100000000000000000000000000000e1_f64
+       dlag(5,2) = 0.518019493938034284302561315635e0_f64
+       dlag(5,3) = -0.750000000000000000000000000006e0_f64
+       dlag(5,4) = 0.248198050606196571569743868439e1_f64
+       dlag(5,5) = 0.100000000000000000000000000000e2_f64
     case default
        write(*,*) 'pas prévu...'
        stop
@@ -219,7 +235,7 @@ contains
 
 
   ! tracé de la solution avec gmsh
-  subroutine plotgmsh()
+  subroutine sll_s_plotgmsh()
     implicit none
     integer,parameter :: nlocmax=25
     integer :: typelem
@@ -262,7 +278,7 @@ contains
     write(101,'(A)') '$Nodes'
     write(101,*) neq
     do i=1,neq
-       write(101,*) i,node(1,i),node(2,i),0.d0
+       write(101,*) i,node(1,i),node(2,i),0._f64
     end do
     write(101,'(A)') '$EndNodes'
     write(101,'(A)') '$Elements'
@@ -287,13 +303,13 @@ contains
 
     close(101)
 
-  end subroutine plotgmsh
+  end subroutine sll_s_plotgmsh
 
   ! construction du maillage
   subroutine build_mesh()
     implicit none
-    integer :: iix,ix,iiy,iy,inoloc,ino,iel
-    real(8) :: du,dv,u,v,x,y,eps
+    integer    :: iix,ix,iiy,iy,inoloc,ino,iel
+    sll_real64 :: du,dv,u,v,x,y,eps
 
     ! construit les tableaux de pg
     call init_gauss()
@@ -303,13 +319,13 @@ contains
     allocate(node(2,neq))
     allocate(connec(nloc,neq))
 
-    du=1.d0/nx
-    dv=1.d0/ny
+    du=1._f64/nx
+    dv=1._f64/ny
 
     ! compteur pour les noeuds du bord
     nbc=0
     ! tolérance
-    eps=1.d-12
+    eps=1.0e-12_f64
 
     ! construit la connectivité éléments --> noeuds
     ! boucle sur les éléments
@@ -342,7 +358,7 @@ contains
     do ino=1,neq
        u=node(1,ino)
        v=node(2,ino)
-       if (dabs(u*(1-u)*v*(1-v)).lt.eps) nbc=nbc+1
+       if (abs(u*(1-u)*v*(1-v)).lt.eps) nbc=nbc+1
     end do
     
     allocate(indexbc(nbc))
@@ -354,11 +370,11 @@ contains
     do ino=1,neq
        u=node(1,ino)
        v=node(2,ino)
-       if (dabs(u*(1-u)*v*(1-v)).lt.eps) then
+       if (abs(u*(1-u)*v*(1-v)).lt.eps) then
           nbc=nbc+1
           indexbc(nbc)=ino
        end if
-       call map(u,v,x,y)
+       call sll_s_map(u,v,x,y)
        node(1,ino)=x
        node(2,ino)=y
     end do
@@ -374,7 +390,7 @@ contains
   end subroutine build_mesh
 
   ! alloue et prépare les données pour le calcul
-  subroutine init(nx0,ny0,order0)
+  subroutine sll_s_init(nx0,ny0,order0)
     implicit none
     integer,intent(in) :: nx0,ny0,order0
     integer :: ino,iel,i,ii,j,jj
@@ -443,13 +459,13 @@ contains
     vsup=0.0_f64
     
 
-  end subroutine init
+  end subroutine sll_s_init
 
   ! symbole de kronecker delta
   function delta(i,j)
     implicit none
-    integer :: i,j
-    real(8) :: delta
+    integer    :: i,j
+    sll_real64 :: delta
     if (i.eq.j) then
        delta=1.0_f64
     else
@@ -464,8 +480,8 @@ contains
   ! point de Guass-Lobatto
   subroutine gradpg(iloc,ipg,grad,poids)
     implicit none
-    integer,intent(in) :: iloc,ipg
-    real(8),intent(out) :: grad(2),poids
+    integer,    intent(in)  :: iloc,ipg
+    sll_real64, intent(out) :: grad(2),poids
     integer :: ilocx,ilocy,ipgx,ipgy
     ! indices locaux du pg
     ! dans les directions de référence 
@@ -488,14 +504,14 @@ contains
 
 
   ! calcul du champ électrique
-  subroutine compute_electric_field(dg_ex,dg_ey)
+  subroutine sll_s_compute_electric_field(dg_ex,dg_ey)
     implicit none
     ! matrice locale
-    real(8) :: jac(2,2),cojac(2,2),det
-    real(8) :: gradref(2),xg,yg
-    real(8) :: grad(2),dxy(2),poids
+    sll_real64 :: jac(2,2),cojac(2,2),det
+    sll_real64 :: gradref(2),xg,yg
+    sll_real64 :: grad(2),dxy(2),poids
     integer :: iel,ipg,ii,jj,ig,ib,iib,ielx,iely
-    real(8),dimension(order+1,order+1,nx,ny) :: dg_ex,dg_ey
+    sll_real64, dimension(order+1,order+1,nx,ny) :: dg_ex,dg_ey
     
     ! assemblage de la matrice de rigidité
     ! et du second membre
@@ -519,7 +535,7 @@ contains
           xg=node(1,ig)
           yg=node(2,ig)
           ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec map plus tard
+          ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
@@ -558,19 +574,19 @@ contains
     end do
 
        
-  end subroutine compute_electric_field
+  end subroutine sll_s_compute_electric_field
 
 
 
 
 
   ! assemblage de la matrice élément fini et des conditions aux limites
-  subroutine assemb()
+  subroutine sll_s_assemb()
     implicit none
     ! matrice locale
-    real(8) :: jac(2,2),cojac(2,2),det
-    real(8) :: gradref_i(2),gradref_j(2),xg,yg
-    real(8) :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
+    sll_real64 :: jac(2,2),cojac(2,2),det
+    sll_real64 :: gradref_i(2),gradref_j(2),xg,yg
+    sll_real64 :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
     integer :: iel,ipg,i,ii,j,jj,ig,ib,iib
     
     ! assemblage de la matrice de rigidité
@@ -590,7 +606,7 @@ contains
           ! on calcule la charge au point de Gauss
           vf=source(xg,yg)
           ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec map plus tard
+          ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
@@ -652,15 +668,15 @@ contains
 
 
        
-  end subroutine assemb
+  end subroutine sll_s_assemb
     
   ! assemblage du second membre
-  subroutine assemb_rhs(dg_rho)
+  subroutine sll_s_assemb_rhs(dg_rho)
     implicit none
     ! matrice locale
-    real(8) :: jac(2,2),det
-    real(8) :: dxy(2),poids,vf
-    real(8),dimension(order+1,order+1,nx,ny) :: dg_rho
+    sll_real64 :: jac(2,2),det
+    sll_real64 :: dxy(2),poids,vf
+    sll_real64, dimension(order+1,order+1,nx,ny) :: dg_rho
     integer :: iel,ipg,i,ii,jj,ig,ib,iib,ielx,iely
     
     ! assemblage de la matrice de rigidité
@@ -687,7 +703,7 @@ contains
           !write(*,*) 'vf=',vf
 
           ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec map plus tard
+          ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
@@ -730,32 +746,32 @@ contains
 
 
 
-  end subroutine assemb_rhs
+  end subroutine sll_s_assemb_rhs
 
 
 
 
   ! compute (in place) the LU decomposition
-  subroutine computeLU()
+  subroutine sll_s_computelu()
     implicit none
 
     integer :: nsym=1,mp=6,ifac=1,isol=0,ier
-    real(8) :: energ,vu,vfg
+    sll_real64 :: energ,vu,vfg
 
     write(*,*) 'Factorisation LU...'
 
     call sol(vsup,vdiag,vinf,   &
          vfg,kld,vu,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)  
-  end subroutine computeLU
+  end subroutine sll_s_computelu
 
 
   ! résout le système linéaire
-  subroutine compute_phi()
+  subroutine sll_s_compute_phi()
     implicit none
 
     integer :: nsym=1,mp=6,ifac=0,isol=1,ier
-    real(8) :: energ !,solution(neq),rhs(neq)
+    sll_real64 :: energ !,solution(neq),rhs(neq)
 
     write(*,*) 'Résolution...'
     
@@ -763,7 +779,7 @@ contains
          rho,kld,phi,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)  
 
-  end subroutine compute_phi
+  end subroutine sll_s_compute_phi
 
 
   ! ajoute la valeur val  à la position (i,j)
@@ -772,7 +788,7 @@ contains
     implicit none
     integer,intent(in) :: i,j
     integer :: ll
-    real(8),intent(in) :: val
+    sll_real64, intent(in) :: val
  
     if (i-j.gt.prof(i).or.j-i.gt.prof(j)) then
        write(*,*) '(',i,',',j,') out of matrix profile'
@@ -794,7 +810,7 @@ contains
   end subroutine add
 
   ! libère la mémoire
-  subroutine release()
+  subroutine sll_s_release()
     implicit none
 
     write(*,*) 'Libération mémoire...'
@@ -813,7 +829,7 @@ contains
     deallocate(phi)
     deallocate(rho)
 
-  end subroutine release
+  end subroutine sll_s_release
 
 
 

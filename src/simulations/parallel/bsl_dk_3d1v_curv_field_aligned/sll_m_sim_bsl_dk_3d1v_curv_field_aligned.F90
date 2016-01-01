@@ -24,44 +24,45 @@
 
 module sll_m_sim_bsl_dk_3d1v_curv_field_aligned
 
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-!#include "sll_field_2d.h"
-!#include "sll_m_utilities.h"
 
-  use sll_m_sim_base, only : &
-    sll_simulation_base_class
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_2d
 
-  use sll_m_utilities, only : &
-    sll_new_file_id
-    
-  use sll_m_collective, only : &
-    sll_world_collective, &
-    sll_get_collective_rank
+  use sll_m_collective, only: &
+    sll_f_get_collective_rank, &
+    sll_v_world_collective
 
-  use sll_m_cartesian_meshes, only : &
-    sll_cartesian_mesh_2d, &
-    sll_cartesian_mesh_1d
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base
 
-  use sll_m_coordinate_transformation_2d_base, only : &
-    sll_coordinate_transformation_2d_base
+  use sll_m_dk_curv_mesh, only: &
+    sll_s_init_dk_curv_mesh
 
-  
-  use sll_m_dk_curv_mesh, only : &
-    init_dk_curv_mesh    
+  use sll_m_sim_base, only: &
+    sll_c_simulation_base_class
+
+  use sll_m_utilities, only: &
+    sll_s_new_file_id
 
   implicit none
 
-  type, extends(sll_simulation_base_class) :: &
+  public :: &
+    sll_t_sim_sl_dk_3d1v_curv_field_aligned
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type, extends(sll_c_simulation_base_class) :: &
     sll_t_sim_sl_dk_3d1v_curv_field_aligned
 
     !mesh
-    type(sll_cartesian_mesh_2d), pointer :: m_x1x2
-    type(sll_cartesian_mesh_1d), pointer :: m_x3
-    type(sll_cartesian_mesh_1d), pointer :: m_x4
-    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    type(sll_t_cartesian_mesh_2d), pointer :: m_x1x2
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x3
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x4
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transformation
 
 
 
@@ -86,13 +87,13 @@ contains
                       intent(inout) :: sim
     character(len=*), intent(in)    :: filename
 
-    call init_dk_curv_mesh( &
+    call sll_s_init_dk_curv_mesh( &
       filename, &
       sim%m_x1x2, &
       sim%m_x3, &
       sim%m_x4, &
       sim%transformation, &
-      sll_get_collective_rank(sll_world_collective))
+      sll_f_get_collective_rank(sll_v_world_collective))
     
   end subroutine init_sim_sl_dk_3d1v_curv_field_aligned
 

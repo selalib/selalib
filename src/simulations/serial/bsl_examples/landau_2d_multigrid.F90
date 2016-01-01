@@ -1,17 +1,32 @@
 program landau_4d_multigrid
 
-#include "sll_assert.h"
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_constants
-use sll_m_interpolators_1d_base
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_utilities, only: int2string
-use sll_m_mudpack
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_t_cubic_spline_interpolator_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_mudpack, only: &
+    sll_s_delete_mudpack_cartesian, &
+    sll_s_initialize_mudpack_cartesian, &
+    sll_t_mudpack_solver, &
+    sll_s_solve_mudpack_cartesian
+
+  use sll_m_utilities, only: &
+    sll_s_int2string
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !Geometry
 sll_real64 :: eta1, eta2, eta3, eta4
@@ -41,17 +56,17 @@ sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
-type(sll_mudpack_solver) :: poisson
+type(sll_t_mudpack_solver) :: poisson
 
-class(sll_interpolator_1d_base), pointer       :: interp_1
-class(sll_interpolator_1d_base), pointer       :: interp_2
-class(sll_interpolator_1d_base), pointer       :: interp_3
-class(sll_interpolator_1d_base), pointer       :: interp_4
+class(sll_c_interpolator_1d), pointer       :: interp_1
+class(sll_c_interpolator_1d), pointer       :: interp_2
+class(sll_c_interpolator_1d), pointer       :: interp_3
+class(sll_c_interpolator_1d), pointer       :: interp_4
 
-type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
-type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
-type(sll_cubic_spline_interpolator_1d), target :: spl_eta3
-type(sll_cubic_spline_interpolator_1d), target :: spl_eta4
+type(sll_t_cubic_spline_interpolator_1d), target :: spl_eta1
+type(sll_t_cubic_spline_interpolator_1d), target :: spl_eta2
+type(sll_t_cubic_spline_interpolator_1d), target :: spl_eta3
+type(sll_t_cubic_spline_interpolator_1d), target :: spl_eta4
 
 !Diagnostics and errors
 sll_int32                             :: error
@@ -62,8 +77,8 @@ sll_real64 :: start_time, end_time
 sll_int32  :: i1, i2, i3, i4
 
 !x domain
-eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_pi
-eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_pi
+eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_p_pi
+eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_p_pi
 
 nc_eta1 = 32; nc_eta2 = 32
 
@@ -88,23 +103,23 @@ SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jx(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
-call initialize_mudpack_cartesian(poisson, &
+call sll_s_initialize_mudpack_cartesian(poisson, &
                          eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2)
 
-call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC )
-call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC )
-call spl_eta3%initialize(nc_eta3+1, eta3_min, eta3_max, SLL_PERIODIC )
-call spl_eta4%initialize(nc_eta4+1, eta4_min, eta4_max, SLL_PERIODIC )
+call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, sll_p_periodic )
+call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, sll_p_periodic )
+call spl_eta3%initialize(nc_eta3+1, eta3_min, eta3_max, sll_p_periodic )
+call spl_eta4%initialize(nc_eta4+1, eta4_min, eta4_max, sll_p_periodic )
 
 interp_1 => spl_eta1
 interp_2 => spl_eta2
 interp_3 => spl_eta3
 interp_4 => spl_eta4
 
-eps = 0.05
-kx  = 2*sll_pi/(eta1_max-eta1_min)
-ky  = 2*sll_pi/(eta2_max-eta2_min)
+eps = 0.05_f64
+kx  = 2*sll_p_pi/(eta1_max-eta1_min)
+ky  = 2*sll_p_pi/(eta2_max-eta2_min)
 
 eta4 = eta4_min
 do i4=1,nc_eta4+1
@@ -115,7 +130,7 @@ do i4=1,nc_eta4+1
       do i2=1,nc_eta2+1
          eta1 = eta1_min
          do i1=1,nc_eta1+1
-            f(i1,i2,i3,i4)=(1+eps*cos(kx*eta1))/(2*sll_pi)*exp(-.5*v2)
+            f(i1,i2,i3,i4)=(1.0_f64+eps*cos(kx*eta1))/(2*sll_p_pi)*exp(-.5*v2)
             eta1 = eta1 + delta_eta1
          end do
          eta2 = eta2 + delta_eta2
@@ -128,7 +143,7 @@ end do
 n_step = 1000
 SLL_CLEAR_ALLOCATE(nrj(1:n_step), error)
 delta_t = .01_f64
-time = 0.0_f32
+time = 0.0_f64
 
 if ( delta_t > 0.5/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))) &
   stop 'Warning CFL'
@@ -142,7 +157,7 @@ time  = time + 0.5 * delta_t
 do i_step = 1, n_step !Loop over time
 
    call compute_rho()
-   call solve_mudpack_cartesian(poisson,phi,rho,ex,ey,nrj(i_step))
+   call sll_s_solve_mudpack_cartesian(poisson,phi,rho,ex,ey,nrj(i_step))
    call online_plot() 
 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
@@ -163,7 +178,7 @@ do i_step = 1, n_step !Loop over time
 end do !next time step
 
 call cpu_time(end_time)
-call delete_mudpack_cartesian(poisson)
+call sll_s_delete_mudpack_cartesian(poisson)
 
 contains
 
@@ -205,8 +220,8 @@ subroutine advection_x1(dt)
       eta3 = eta3_min
       do i3 = 1, nc_eta3+1
          do i2 = 1, nc_eta2+1
-            f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
-                            f(:,i2,i3,i4),dt*eta3)
+            call interp_1%interpolate_array_disp_inplace(nc_eta1+1, &
+                 f(:,i2,i3,i4),-dt*eta3)
          end do
          eta3 = eta3 + delta_eta3
       end do
@@ -223,8 +238,8 @@ subroutine advection_x2(dt)
    do i4 = 1, nc_eta4+1
       do i3 = 1, nc_eta3+1
          do i1 = 1, nc_eta1+1
-            f(i1,:,i3,i4) = interp_2%interpolate_array_disp(nc_eta2+1, &
-                            f(i1,:,i3,i4),dt*eta4)
+            call interp_2%interpolate_array_disp_inplace(nc_eta2+1, &
+                 f(i1,:,i3,i4),-dt*eta4)
          end do
       end do
       eta4 = eta4 + delta_eta4
@@ -239,8 +254,8 @@ subroutine advection_v1(dt)
    do i4 = 1, nc_eta4+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
-      f(i1,i2,:,i4) = interp_3%interpolate_array_disp(nc_eta3+1, &
-                      f(i1,i2,:,i4),ex(i1,i2)*dt)
+      call interp_3%interpolate_array_disp_inplace(nc_eta3+1, &
+           f(i1,i2,:,i4),-ex(i1,i2)*dt)
    end do
    end do
    end do
@@ -254,8 +269,8 @@ subroutine advection_v2(dt)
    do i3 = 1, nc_eta3+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
-      f(i1,i2,i3,:) = interp_4%interpolate_array_disp(nc_eta4+1, &
-                      f(i1,i2,i3,:),ey(i1,i2)*dt)
+      call interp_4%interpolate_array_disp_inplace(nc_eta4+1, &
+           f(i1,i2,i3,:),-ey(i1,i2)*dt)
    end do
    end do
    end do
@@ -270,7 +285,7 @@ subroutine plot_field(f, fname, iplot)
    character(len=*) :: fname
    character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+   call sll_s_int2string(iplot,cplot)
 
    open(11, file=fname//cplot//".dat")
    do i = 1, size(f,1)

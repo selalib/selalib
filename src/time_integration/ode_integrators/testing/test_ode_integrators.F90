@@ -1,103 +1,29 @@
-module ode_collection
-
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_errors.h"
-
-  use sll_m_vector_space_base       , only: sll_vector_space_base
-  use sll_m_vector_space_real_arrays, only: sll_vector_space_real_1d
-  use sll_m_ode_integrator_base     , only: sll_ode_base
-
-  implicit none
-!  public :: harmonic_oscillator
-  private
-
-  !----------------------------------------------------------------------------
-  ! Harmonic oscillator
-  !----------------------------------------------------------------------------
-  type, public, extends( sll_ode_base ) :: harmonic_oscillator
-    sll_int32  :: ndof  = 2
-    sll_real64 :: omega = 1.0_f64
-  contains
-    procedure :: rhs => rhs__harmonic_oscillator
-    procedure :: y_ex => y_ex__harmonic_oscillator
-  end type harmonic_oscillator
-
-!==============================================================================
-contains
-!==============================================================================
-
-  !----------------------------------------------------------------------------
-  ! Harmonic oscillator
-  !----------------------------------------------------------------------------
-  subroutine rhs__harmonic_oscillator( self, t, y, ydot )
-    class( harmonic_oscillator )  , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_vector_space_base ), intent( in    ) :: y
-    class( sll_vector_space_base ), intent( inout ) :: ydot
-
-    character( len=* ), parameter :: this_sub_name = "rhs__harmonic_oscillator"
-    character( len=* ), parameter :: err_msg = &
-      " not of type( sll_vector_space_real_1d )"
-
-    select type( y    ); type is( sll_vector_space_real_1d )
-    select type( ydot ); type is( sll_vector_space_real_1d )
-
-      SLL_ASSERT( size( y   %array ) .eq. 2 )
-      SLL_ASSERT( size( ydot%array ) .eq. 2 )
-
-      ! Actual R.H.S. computation
-      ydot%array(1) = -self%omega * y%array(2)
-      ydot%array(2) =  self%omega * y%array(1)
-
-    class default; SLL_ERROR( this_sub_name, "ydot"//err_msg ); end select
-    class default; SLL_ERROR( this_sub_name, "y"   //err_msg ); end select
-  end subroutine rhs__harmonic_oscillator
-
-  ! Exact solution
-  subroutine y_ex__harmonic_oscillator( self, t, y0, y_ex )
-    class( harmonic_oscillator )  , intent( in    ) :: self
-    sll_real64                    , intent( in    ) :: t
-    sll_real64                    , intent( in    ) :: y0(2)
-    sll_real64                    , intent(   out ) :: y_ex(2)
-
-    sll_real64 :: theta
-    theta = self%omega * t
-
-    y_ex(1) = y0(1)*cos( theta ) - y0(2)*sin( theta )
-    y_ex(2) = y0(1)*sin( theta ) + y0(2)*cos( theta )
-    
-  end subroutine
-
-end module ode_collection
-
-!==============================================================================
 program test_ode_integrators
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
-  use sll_m_working_precision
-  use sll_m_errors
+#include "sll_working_precision.h"
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_vector_space_real_1d
-
-  use sll_m_rk_explicit, only: &
-    sll_rk1e_fwd_euler, &
-    sll_rk2e_midpoint , &
-    sll_rk2e_heun     , &
-    sll_rk2e_ralston  , &
-    sll_rk3e_heun3    , &
-    sll_rk4e_classic
-
-  use sll_m_ode_integrator_base, only: &
-    sll_ode_base, &
-    sll_ode_integrator_base
-
-  use ode_collection, only: &
+  use m_ode_collection, only: &
     harmonic_oscillator
 
+  use sll_m_ode_integrator_base, only: &
+    sll_c_ode_base, &
+    sll_c_ode_integrator_base
+
+  use sll_m_rk_explicit, only: &
+    sll_t_rk1e_fwd_euler, &
+    sll_t_rk2e_heun, &
+    sll_t_rk2e_midpoint, &
+    sll_t_rk2e_ralston, &
+    sll_t_rk3e_heun3, &
+    sll_t_rk4e_classic
+
+  use sll_m_vector_space_real_arrays, only: &
+    sll_t_vector_space_real_1d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !----------------------------------------------------------------------------
   ! Input arguments
@@ -125,19 +51,19 @@ program test_ode_integrators
 
   ! Error handling
   character(len=*), parameter :: this_prog_name = "test_ode_integrators"
-  character(len=128)          :: err_msg
+  !character(len=128)          :: err_msg
 
   ! Other variables
   sll_real64                                    :: h_max, tend
   sll_real64                                    :: h, t
-  sll_int32                                     :: i
+  !sll_int32                                     :: i
   sll_real64, target                            :: z(2), znew(2)
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err
-  type( sll_vector_space_real_1d )              :: y   , ynew
-  class( sll_ode_base ), allocatable, target    :: ode
-  class( sll_ode_base ), pointer                :: p_ode  ! pointer to ODE
-  class( sll_ode_integrator_base ), allocatable :: odeint
+  type( sll_t_vector_space_real_1d )              :: y   , ynew
+  class( sll_c_ode_base ), allocatable, target    :: ode
+  class( sll_c_ode_base ), pointer                :: p_ode  ! pointer to ODE
+  class( sll_c_ode_integrator_base ), allocatable :: odeint
 
   !----------------------------------------------------------------------------
   ! Get input arguments (from command line)
@@ -165,12 +91,12 @@ program test_ode_integrators
 
   ! Create ODE integrator
   select case( odeint_selector )
-   case( 0 ); allocate( sll_rk1e_fwd_euler::odeint )
-   case( 1 ); allocate( sll_rk2e_midpoint ::odeint )
-   case( 2 ); allocate( sll_rk2e_heun     ::odeint )
-   case( 3 ); allocate( sll_rk2e_ralston  ::odeint )
-   case( 4 ); allocate( sll_rk3e_heun3    ::odeint )
-   case( 5 ); allocate( sll_rk4e_classic  ::odeint )
+   case( 0 ); allocate( sll_t_rk1e_fwd_euler::odeint )
+   case( 1 ); allocate( sll_t_rk2e_midpoint ::odeint )
+   case( 2 ); allocate( sll_t_rk2e_heun     ::odeint )
+   case( 3 ); allocate( sll_t_rk2e_ralston  ::odeint )
+   case( 4 ); allocate( sll_t_rk3e_heun3    ::odeint )
+   case( 5 ); allocate( sll_t_rk4e_classic  ::odeint )
   end select
 
   ! Initialize ODE integrator

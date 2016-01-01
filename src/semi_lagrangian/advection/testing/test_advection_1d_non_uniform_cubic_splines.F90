@@ -16,13 +16,19 @@
 !**************************************************************
 
 program test_advection_1d_non_uniform_cubic_splines
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_advection_1d_base
-use sll_m_advection_1d_non_uniform_cubic_splines
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_advection_1d_non_uniform_cubic_splines, only: &
+    sll_f_new_non_uniform_cubic_splines_1d_advector
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_advection_1d_base), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv
   sll_real64 :: xmin
   sll_real64 :: xmax
   sll_int32 :: num_cells
@@ -50,7 +56,7 @@ implicit none
   
   input = 1._f64
   
-  adv => new_non_uniform_cubic_splines_1d_advector( &
+  adv => sll_f_new_non_uniform_cubic_splines_1d_advector( &
     num_cells, &
     xmin, &
     xmax, &

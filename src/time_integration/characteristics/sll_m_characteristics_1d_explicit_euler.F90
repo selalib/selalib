@@ -16,19 +16,34 @@
 !**************************************************************
 
 module sll_m_characteristics_1d_explicit_euler
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_1d_base
-implicit none
-private
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  type,public,extends(sll_characteristics_1d_base) :: explicit_euler_1d_charac_computer
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic, &
+    sll_p_set_to_limit
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_explicit_euler_1d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_characteristics_1d_base) :: explicit_euler_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
-    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
     logical :: feet_inside
  
@@ -40,10 +55,9 @@ private
   end type explicit_euler_1d_charac_computer
 
 
-public :: new_explicit_euler_1d_charac
 
 contains
-  function new_explicit_euler_1d_charac(&
+  function sll_f_new_explicit_euler_1d_charac(&
       Npts, &
       bc_type, &
       eta_min, &
@@ -57,7 +71,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     logical, optional :: feet_inside 
     sll_int32 :: ierr
@@ -73,7 +87,7 @@ contains
       feet_inside)
 
     
-  end function new_explicit_euler_1d_charac
+  end function sll_f_new_explicit_euler_1d_charac
   
   
   subroutine initialize_explicit_euler_1d_charac(&
@@ -90,7 +104,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
     logical, optional :: feet_inside
 
@@ -120,10 +134,10 @@ contains
       stop
     else
       select case (bc_type)
-        case (SLL_PERIODIC)
-          charac%process_outside_point => process_outside_point_periodic          
-        case (SLL_SET_TO_LIMIT)
-          charac%process_outside_point => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          charac%process_outside_point => sll_f_process_outside_point_periodic          
+        case (sll_p_set_to_limit)
+          charac%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_explicit_euler_1d_charac'

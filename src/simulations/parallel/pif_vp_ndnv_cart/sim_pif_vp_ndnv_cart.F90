@@ -4,9 +4,21 @@
 ! - parallel
 
 program sim_pif_vp_ndnv_cart
-   use sll_m_sim_pif_vp_ndnv_cart
-   use sll_m_collective
-   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_sim_pif_vp_ndnv_cart, only: &
+    sll_t_simulation_general_vlasov_poisson_pif
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! 
    character(len=256) :: filename
    character(len=256) :: filename_local
@@ -14,21 +26,21 @@ program sim_pif_vp_ndnv_cart
    integer :: idx
    
    !print *, 'Booting parallel environment for simulation...'
-   call sll_boot_collective() ! Wrap this up in something else
+   call sll_s_boot_collective() ! Wrap this up in something else
   
-   coll_rank=sll_get_collective_rank( sll_world_collective )
+   coll_rank=sll_f_get_collective_rank( sll_v_world_collective )
  
    if (coll_rank == 0) then
        print *, 'Proceed to run simulation.'
        print *, 'There are ', COMMAND_ARGUMENT_COUNT(), ' simulation files to be run.'
    endif
-   call flush(6)
+   flush( output_unit )
    
   ! Provide files to open as a command line argument, seprated by spaces
   ! argument.
   
   do idx=1, COMMAND_ARGUMENT_COUNT()
-  call getarg(idx, filename)
+  call get_command_argument(idx, filename)
   filename_local = trim(filename)
   call run_from_file(filename)
   end do
@@ -36,12 +48,12 @@ program sim_pif_vp_ndnv_cart
 !   call delete_vp6d_par_cart(simulation)
    print *, 'reached end of PIF test'
    print *, 'PASSED'
-   call sll_halt_collective()
+   call sll_s_halt_collective()
 
    contains
    
    subroutine run_from_file(filename)
-      type(sll_simulation_general_vlasov_poisson_pif) :: simulation
+      type(sll_t_simulation_general_vlasov_poisson_pif) :: simulation
       character(len=256), intent(in) :: filename
       call simulation%init_from_file(filename)
       call simulation%run()    

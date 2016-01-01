@@ -1,12 +1,20 @@
 
 module sll_m_pic_postprocessing
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-    implicit none
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_s_det_landau_damping
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 
 
-    subroutine det_landau_damping( time, energy)
+    subroutine sll_s_det_landau_damping( time, energy)
         sll_real64, dimension(:), intent(in) :: energy
         sll_real64, dimension(:), intent(in)  :: time
         sll_real64, dimension(:,:), allocatable :: mintab, maxtab

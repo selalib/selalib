@@ -1,9 +1,38 @@
 program collective_test
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_collective
+#include "sll_working_precision.h"
+
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_o_collective_allgather, &
+    sll_o_collective_allgatherv, &
+    sll_s_collective_allreduce_logical, &
+    sll_s_collective_allreduce_real32, &
+    sll_s_collective_alltoall_int, &
+    sll_s_collective_alltoallv_int_simple, &
+    sll_s_collective_alltoallv_real, &
+    sll_s_collective_barrier, &
+    sll_o_collective_bcast, &
+    sll_o_collective_gather, &
+    sll_s_collective_gatherv_real, &
+    sll_o_collective_globalsum, &
+    sll_s_collective_reduce_int, &
+    sll_s_collective_reduce_logical, &
+    sll_s_collective_reduce_real32, &
+    sll_o_collective_scatter, &
+    sll_s_collective_scatterv_real, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_mpi, only: &
+    mpi_land, &
+    mpi_sum
+
   implicit none
-  intrinsic :: int
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! NOTE: some poor choices were made when implementing this test. For example,
   ! the sendbuf, recvbuf, etc. arrays are continually allocated and
@@ -26,19 +55,19 @@ program collective_test
   sll_int32, allocatable, dimension(:) :: sdispls, rdispls
 
 
-  call sll_boot_collective()
-  rank = sll_get_collective_rank( sll_world_collective )
-  size = sll_get_collective_size( sll_world_collective )
+  call sll_s_boot_collective()
+  rank = sll_f_get_collective_rank( sll_v_world_collective )
+  size = sll_f_get_collective_size( sll_v_world_collective )
 
   SLL_ALLOCATE(sendbuf_real(1),ierr)
   sendbuf_real(:)=real(rank,f32)
   SLL_ALLOCATE(recvbuf_real(1),ierr)
 
-  call sll_collective_reduce_real32( sll_world_collective, sendbuf_real, &
+  call sll_s_collective_reduce_real32( sll_v_world_collective, sendbuf_real, &
                                       1    , MPI_SUM,0,recvbuf_real)
 
   if( rank == 0 ) then
-   if( recvbuf_real(1) .eq. (size-1)*size/2.0 ) then
+   if( recvbuf_real(1) .eq. (size-1)*size/2.0_f64 ) then
     print *,'(REDUCE REAL) PASS'
    else
     stop '(REDUCE REAL) NOT PASS'
@@ -48,19 +77,19 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_int(1),ierr)
   sendbuf_int(:)=rank+1
   SLL_ALLOCATE(recvbuf_int(1),ierr)
 
-  call sll_collective_reduce_int( sll_world_collective, sendbuf_int, &
+  call sll_s_collective_reduce_int( sll_v_world_collective, sendbuf_int, &
                                       1    , MPI_SUM,0,recvbuf_int)
 
   if( rank == 0 ) then
-   if( recvbuf_int(1) .eq. (1 + size)*size/2 ) then
+   if( recvbuf_int(1) .eq. (1 + size)*size/2.0_f64 ) then
     print *,'(REDUCE INT) PASS'
    else
     stop '(REDUCE INT) NOT PASS'
@@ -70,16 +99,16 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_int,ierr)
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_log(1),ierr)
   sendbuf_log(:)=.true.
   SLL_ALLOCATE(recvbuf_log(1),ierr)
   !recvbuf_log(:)=.false.
 
-  call sll_collective_reduce_logical( sll_world_collective, sendbuf_log, &
+  call sll_s_collective_reduce_logical( sll_v_world_collective, sendbuf_log, &
                                       1    , MPI_LAND,0,recvbuf_log)
 
   if( rank == 0 ) then
@@ -93,21 +122,21 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendbuf_log,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_log,ierr)
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_log(1),ierr)
   sendbuf_log(:)=.true.
   SLL_ALLOCATE(recvbuf_log(1),ierr)
   recvbuf_log(1)=.false.
 
-  call sll_collective_allreduce_logical( sll_world_collective,&
+  call sll_s_collective_allreduce_logical( sll_v_world_collective,&
          sendbuf_log,1,MPI_LAND,recvbuf_log )
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
-  call sll_collective_reduce_logical( sll_world_collective,recvbuf_log,&
+  call sll_s_collective_reduce_logical( sll_v_world_collective,recvbuf_log,&
                                       1    , MPI_LAND,0,sendbuf_log)
 
   if( rank == 0 ) then
@@ -121,24 +150,24 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendbuf_log,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_log,ierr)
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_real(1),ierr)
   sendbuf_real(:)=real(rank,f32)
   SLL_ALLOCATE(recvbuf_real(1),ierr)
 
-  call sll_collective_allreduce_real32( sll_world_collective,&
+  call sll_s_collective_allreduce_real32( sll_v_world_collective,&
          sendbuf_real,1,MPI_SUM,recvbuf_real )
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
-  call sll_collective_reduce_real32( sll_world_collective,recvbuf_real,&
+  call sll_s_collective_reduce_real32( sll_v_world_collective,recvbuf_real,&
                                       1    , MPI_SUM,0,sendbuf_real)
 
   if( rank == 0 ) then
-   if( sendbuf_real(1) .eq. size*(size-1)*size/2.0 ) then
+   if( sendbuf_real(1) .eq. size*(size-1)*size/2.0_f64 ) then
     print *,'(ALLREDUCE REAL) PASS'
    else
     stop '(ALLREDUCE REAL) NOT PASS'
@@ -148,9 +177,9 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_real(1),ierr)
   SLL_ALLOCATE(somme(1),ierr)
@@ -158,11 +187,11 @@ program collective_test
    sendbuf_real(1)=1.0
   endif
 
-  call sll_collective_bcast( sll_world_collective, sendbuf_real, 1, 0)
+  call sll_o_collective_bcast( sll_v_world_collective, sendbuf_real, 1, 0)
   !PRINT *,'(BCAST) ','Me, process ',rank,', I''ve received  ',values,&
   !        ' from process 0'
 
-  call sll_collective_reduce_real32(sll_world_collective, sendbuf_real,1,&
+  call sll_s_collective_reduce_real32(sll_v_world_collective, sendbuf_real,1,&
                                   MPI_SUM,0,somme)
 
   if( rank == 0 ) then
@@ -173,11 +202,11 @@ program collective_test
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(somme,ierr)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_real(size),ierr)
 
@@ -191,34 +220,34 @@ program collective_test
   SLL_ALLOCATE(recvbuf_real(1),ierr)
   SLL_ALLOCATE(somme(1),ierr)
 
-  call sll_collective_scatter( sll_world_collective, sendbuf_real, 1, &
+  call sll_o_collective_scatter( sll_v_world_collective, sendbuf_real, 1, &
                                  0,  recvbuf_real)
   !PRINT *,'(SCATTER REAL) ', 'Me, process ', rank, ', I''ve received', recvbuf_real, &
   !         ' from process 0'
 
-  call sll_collective_reduce_real32(sll_world_collective, recvbuf_real,1,&
+  call sll_s_collective_reduce_real32(sll_v_world_collective, recvbuf_real,1,&
                                   MPI_SUM,0,somme)
 
   if( rank .eq. 0 ) then
-   if( somme(1) .eq. size*(size-1)/2.0) then
+   if( somme(1) .eq. size*(size-1)/2.0_f64) then
     print *,'(SCATTER REAL) PASS'
    else
     stop '(SCATTER REAL) NOT PASS'
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(somme,ierr)
   if( rank .eq. 0 ) then
    print *,'-----------------------------'
    SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   endif
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   if( rank .eq. 0 ) then
     SLL_ALLOCATE(sendbuf_real(size+1),ierr)
-    sendbuf_real(:)=1.D0
+    sendbuf_real(:)=1.0_f64
   endif
 
   SLL_ALLOCATE(sendcounts(size),ierr)
@@ -240,14 +269,14 @@ program collective_test
 
   !if(rank==0) print *, 'Me process 0, send ',sendbuf_real
 
-  call sll_collective_scatterv_real( sll_world_collective,sendbuf_real,&
+  call sll_s_collective_scatterv_real( sll_v_world_collective,sendbuf_real,&
                                     sendcounts,sdispls,&
                                     recvcounts(1),0,recvbuf_real )
 
   !print *, 'Me process ',rank,' I''ve receveid ', recvbuf_real
 
   SLL_ALLOCATE(somme(1), ierr)
-  call sll_collective_reduce_real32(sll_world_collective, &
+  call sll_s_collective_reduce_real32(sll_v_world_collective, &
                                   (/ SUM(recvbuf_real) /), &
                                   1,MPI_SUM,0,somme)
 
@@ -259,7 +288,7 @@ program collective_test
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(sendcounts,ierr)
   SLL_DEALLOCATE_ARRAY(recvcounts,ierr)
@@ -271,7 +300,7 @@ program collective_test
 !   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   endif
    SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 !___________________________________________________________________
 
   SLL_ALLOCATE(sendcounts(1),ierr)
@@ -302,9 +331,9 @@ program collective_test
     sendcounts(1)=1
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
-  call sll_collective_gatherv_real(sll_world_collective, sendbuf_real,&
+  call sll_s_collective_gatherv_real(sll_v_world_collective, sendbuf_real,&
                         sendcounts(1),recvcounts,sdispls,0,recvbuf_real)
 
  if( rank == 0 ) then
@@ -318,7 +347,7 @@ program collective_test
    SLL_DEALLOCATE_ARRAY(somme,ierr)
  endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(sendcounts,ierr)
 
@@ -326,7 +355,7 @@ program collective_test
    print *,'-----------------------------'
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
   SLL_ALLOCATE(sendbuf_real(2),ierr)
@@ -337,11 +366,11 @@ program collective_test
   !PRINT *,'(GATHER) ', 'Me, process ', rank, 'send the values : ', sendbuf_real, &
   !         'to the process 0'
 
-  call sll_collective_gather( sll_world_collective, sendbuf_real, 2, 0,&
+  call sll_o_collective_gather( sll_v_world_collective, sendbuf_real, 2, 0,&
                                   recvbuf_real )
 
   SLL_ALLOCATE(somme(1),ierr)
-  call sll_collective_reduce_real32(sll_world_collective,&
+  call sll_s_collective_reduce_real32(sll_v_world_collective,&
        (/ SUM(sendbuf_real) /), 1,MPI_SUM,0,somme)
 
   !IF(rank==0) THEN
@@ -356,12 +385,12 @@ program collective_test
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(somme,ierr)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_int(2),ierr)
   SLL_ALLOCATE(recvbuf_int(size*2),ierr)
@@ -369,7 +398,7 @@ program collective_test
   !PRINT *,'(ALLGATHER) ', 'Me, process ', rank, 'send the values : ',&
   !         sendbuf_int,'to all process'
 
-  call sll_collective_allgather( sll_world_collective, sendbuf_int, 2, &
+  call sll_o_collective_allgather( sll_v_world_collective, sendbuf_int, 2, &
                                   recvbuf_int, 2 )
   SLL_ALLOCATE(somme(1),ierr)
   somme(1) = SUM(real(recvbuf_int,f32))
@@ -379,7 +408,7 @@ program collective_test
    logic(1)=.false.
   endif
 
-  call sll_collective_reduce_logical(sll_world_collective,logic,&
+  call sll_s_collective_reduce_logical(sll_v_world_collective,logic,&
                                       1,MPI_LAND,0,logic2)
 
   !PRINT *,'(ALLGATHER) Me, process ', rank, &
@@ -393,12 +422,12 @@ program collective_test
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
   SLL_DEALLOCATE_ARRAY(recvbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(sendbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(somme,ierr)
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   if(rank.eq.0) then
     SLL_ALLOCATE(sendbuf_real(2),ierr)
@@ -426,8 +455,8 @@ program collective_test
   endif
   SLL_ALLOCATE(recvbuf_real(SUM(recvcounts)),ierr)
 
-  call sll_collective_allgatherv( &
-       sll_world_collective, &
+  call sll_o_collective_allgatherv( &
+       sll_v_world_collective, &
        sendbuf_real, &
        sendcounts(1), &
        recvcounts, &
@@ -441,7 +470,7 @@ program collective_test
     logic(1)=.false.
   endif
 
-  call sll_collective_reduce_logical(sll_world_collective,logic,&
+  call sll_s_collective_reduce_logical(sll_v_world_collective,logic,&
                                       1,MPI_LAND,0,logic2)
 
   if( rank == 0 ) then
@@ -452,14 +481,14 @@ program collective_test
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
   SLL_DEALLOCATE_ARRAY(sendcounts,ierr)
   SLL_DEALLOCATE_ARRAY(recvcounts,ierr)
   SLL_DEALLOCATE_ARRAY(sdispls,ierr)
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_int(size),ierr)
   sendbuf_int(:)=(/(0+i,i=0,size-1)/)
@@ -469,8 +498,8 @@ program collective_test
   !                                 sendbuf_int(:)
 
 
-  call sll_collective_alltoall_int( sendbuf_int ,1 ,1, &
-                                   recvbuf_int, sll_world_collective)
+  call sll_s_collective_alltoall_int( sendbuf_int ,1 ,1, &
+                                   recvbuf_int, sll_v_world_collective)
 
   !PRINT *,'Moi, processus ',rank,', j''ai recu ',recvbuf_int
 
@@ -482,7 +511,7 @@ program collective_test
    logic(1)=.false.
   endif
 
-  call sll_collective_reduce_logical(sll_world_collective,logic,&
+  call sll_s_collective_reduce_logical(sll_v_world_collective,logic,&
                                       1,MPI_LAND,0,logic2)
 
   if( rank == 0 ) then
@@ -493,12 +522,12 @@ program collective_test
    endif
   endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
   SLL_DEALLOCATE_ARRAY(recvbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(sendbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(somme,ierr)
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_int(size+1),ierr)
   sendbuf_int(:)=rank
@@ -513,11 +542,11 @@ program collective_test
    sendcounts(1)=2
   endif
 
-   call sll_collective_alltoallV_int_simple( sendbuf_int, sendcounts, &
-                                  recvbuf_int,sll_world_collective)
+   call sll_s_collective_alltoallv_int_simple( sendbuf_int, sendcounts, &
+                                  recvbuf_int,sll_v_world_collective)
 
  SLL_ALLOCATE(somme(1),ierr)
- call sll_collective_reduce_int(sll_world_collective,&
+ call sll_s_collective_reduce_int(sll_v_world_collective,&
                           (/ SUM(recvbuf_int) /) ,1,MPI_SUM,0, sendbuf_int )
  if( rank .eq. 0 ) then
    if( sendbuf_int(1) .eq. (size+1)*(size-1)*size/2 ) then
@@ -527,13 +556,13 @@ program collective_test
    endif
  endif
 
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
   if(rank==0) print *,'-----------------------------'
   SLL_DEALLOCATE_ARRAY(recvbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(sendbuf_int,ierr)
   SLL_DEALLOCATE_ARRAY(somme,ierr)
   SLL_DEALLOCATE_ARRAY(sendcounts,ierr)
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
   SLL_ALLOCATE(sendbuf_real(size+1),ierr)
   sendbuf_real(:)=real(rank,f32)
@@ -550,8 +579,8 @@ program collective_test
 
  ! Define RECV_CNTS
     SLL_ALLOCATE(recvcounts(size),ierr)
-    call sll_collective_alltoall_int( sendcounts ,1 ,1, &
-                                   recvcounts, sll_world_collective)
+    call sll_s_collective_alltoall_int( sendcounts ,1 ,1, &
+                                   recvcounts, sll_v_world_collective)
 
     ! Define RECV_BUF
     SLL_ALLOCATE(recvbuf_real(SUM(recvcounts)),ierr)
@@ -570,13 +599,13 @@ program collective_test
       rdispls(i)=rdispls(i-1)+recvcounts(i-1)
     enddo
 
-  call sll_collective_alltoallV_real( sendbuf_real, sendcounts, &
+  call sll_s_collective_alltoallv_real( sendbuf_real, sendcounts, &
                                           sdispls, &
                                           recvbuf_real, recvcounts, &
-                                          rdispls, sll_world_collective)
+                                          rdispls, sll_v_world_collective)
 
  SLL_ALLOCATE(somme(1),ierr)
- call sll_collective_reduce_real32(sll_world_collective,&
+ call sll_s_collective_reduce_real32(sll_v_world_collective,&
                           (/ SUM(recvbuf_real(:)) /) ,1,MPI_SUM,0,somme)
  if(rank.eq.0) then
    if ( somme(1) .eq. (size+1)*(size-1)*size/2.0 ) then
@@ -597,13 +626,13 @@ program collective_test
 
   call test_sll_collective_globalsum()
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 
 contains
 
 
-!> @brief tests sll_collective_globalsum interface
+!> @brief tests sll_o_collective_globalsum interface
 !> If this test passes, the reduce and allreduce are also working
 subroutine test_sll_collective_globalsum
   sll_real64 :: summand_real64
@@ -615,22 +644,22 @@ subroutine test_sll_collective_globalsum
 
 
   if(rank==0) print *,'-----------------------------'
-  call sll_collective_barrier(sll_world_collective)
+  call sll_s_collective_barrier(sll_v_world_collective)
 
-  summand_real64=1.0_f64 !or better sll_pi
-  call sll_collective_globalsum( sll_world_collective, summand_real64, 0)
+  summand_real64=1.0_f64 !or better sll_p_pi
+  call sll_o_collective_globalsum( sll_v_world_collective, summand_real64, 0)
 
   summand_comp64=(1.0_f64, 0.0_f64)
-  call sll_collective_globalsum( sll_world_collective, summand_comp64, 0)
+  call sll_o_collective_globalsum( sll_v_world_collective, summand_comp64, 0)
 
   summand_comp32=(1.0_f32, 0.0_f32)
-  call sll_collective_globalsum( sll_world_collective, summand_comp32, 0)
+  call sll_o_collective_globalsum( sll_v_world_collective, summand_comp32, 0)
 
   summand_real32=1.0_f32
-  call sll_collective_globalsum( sll_world_collective, summand_real32, 0)
+  call sll_o_collective_globalsum( sll_v_world_collective, summand_real32, 0)
 
   summand_int32=1
-  call sll_collective_globalsum( sll_world_collective, summand_int32, 0)
+  call sll_o_collective_globalsum( sll_v_world_collective, summand_int32, 0)
 
 
 

@@ -16,21 +16,28 @@
 !**************************************************************
 
 module sll_m_advection_2d_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
+
   implicit none
+
+  public :: &
+    sll_c_advection_2d_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !solves \partial_t f +A1\partial_x1 f+A2\partial_x2 f = 0
    ! A1 <=> A1
    ! A2 <=> A2
    ! dt <=> dt  
    ! f(dt) <=> input
    ! f(0) <=> output
-  type, abstract :: sll_advection_2d_base 
+  type, abstract :: sll_c_advection_2d_base 
   contains
     procedure(signature_advect_2d), deferred, pass(adv) :: &
       advect_2d
   
-  end type sll_advection_2d_base
+  end type sll_c_advection_2d_base
 
  abstract interface
     subroutine signature_advect_2d(&
@@ -41,8 +48,8 @@ module sll_m_advection_2d_base
       input, &
       output)
       use sll_m_working_precision
-      import sll_advection_2d_base       
-      class(sll_advection_2d_base) :: adv
+      import sll_c_advection_2d_base       
+      class(sll_c_advection_2d_base) :: adv
       sll_real64, dimension(:,:), intent(in) :: A1
       sll_real64, dimension(:,:), intent(in) :: A2
       sll_real64, intent(in) :: dt 

@@ -26,26 +26,33 @@
 !> @image html gnuplot.png
 module sll_m_gnuplot
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
+#include "sll_working_precision.h"
 
-! use sll_m_ascii_io                                      !OLD VERSION
-! use sll_m_utilities, only: sll_new_file_id, int2string  !OLD VERSION
-use sll_m_utilities, only: int2string
+  use sll_m_utilities, only: &
+    sll_s_int2string
 
-implicit none
+  implicit none
 
-private
+  public :: &
+    sll_o_gnuplot_1d, &
+    sll_o_gnuplot_2d, &
+    sll_s_gnuplot_write
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> write file plotable by gnuplot to visualize 2d field
-interface sll_gnuplot_1d
+interface sll_o_gnuplot_1d
    module procedure  sll_gnuplot_write_1d
-   module procedure  sll_gnuplot_write
+   module procedure  sll_s_gnuplot_write
    module procedure  sll_gnuplot_write_two_arrays_1d
 end interface
 
 !> Write file for gnuplot to display 2d field.
-interface sll_gnuplot_2d
+interface sll_o_gnuplot_2d
    module procedure sll_gnuplot_corect_2d
    module procedure sll_gnuplot_rect_2d
    module procedure sll_gnuplot_curv_2d
@@ -53,14 +60,13 @@ interface sll_gnuplot_2d
    module procedure write_unstructured_field
 end interface
 
-public sll_gnuplot_1d, sll_gnuplot_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Write an array to display with gnuplot
-subroutine sll_gnuplot_write(array, array_name, iplot)
+subroutine sll_s_gnuplot_write(array, array_name, iplot)
 
   sll_real64, dimension(:), intent(in) :: array      !< data
   character(len=*),         intent(in) :: array_name !< field name
@@ -79,7 +85,7 @@ subroutine sll_gnuplot_write(array, array_name, iplot)
   SLL_ASSERT( iplot > 0 )
 
   ! Convert plot index to string
-  call int2string( iplot, cplot )
+  call sll_s_int2string( iplot, cplot )
 
   ! Determine Gnuplot file status
   if (iplot == 1) then
@@ -117,8 +123,8 @@ subroutine sll_gnuplot_write(array, array_name, iplot)
 
 ! OLD VERSION
 !------------
-!  call sll_new_file_id(file_id, error)
-!  call int2string(iplot,cplot)
+!  call sll_s_new_file_id(file_id, error)
+!  call sll_s_int2string(iplot,cplot)
 !
 !  open(file_id,file=trim(array_name)//".gnu", &
 !               position="append",             &
@@ -132,7 +138,7 @@ subroutine sll_gnuplot_write(array, array_name, iplot)
 !     write(file_id,*) sngl(array(ipoints))
 !  end do
 !  close(file_id)
-end subroutine sll_gnuplot_write
+end subroutine sll_s_gnuplot_write
 
 
 !> Write two arrays to display with gnuplot
@@ -157,7 +163,7 @@ subroutine sll_gnuplot_write_two_arrays_1d(array_name, array1, array2, iplot)
   SLL_ASSERT( iplot > 0 )
 
   ! Convert plot index to string
-  call int2string( iplot, cplot )
+  call sll_s_int2string( iplot, cplot )
 
   ! Determine Gnuplot file status
   if (iplot == 1) then
@@ -196,8 +202,8 @@ subroutine sll_gnuplot_write_two_arrays_1d(array_name, array1, array2, iplot)
 
 ! OLD VERSION
 !------------
-!  call sll_new_file_id(file_id, error)
-!  call int2string(iplot,cplot)
+!  call sll_s_new_file_id(file_id, error)
+!  call sll_s_int2string(iplot,cplot)
 !
 !  open(file_id,file=trim(array_name)//".gnu", &
 !               position="append",             &
@@ -229,31 +235,39 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
 
   sll_int32        :: error      ! error code
   sll_int32        :: file_id    ! file unit number
-!  sll_int32        :: fgnu_id    ! file unit number !OLD VERSION
   sll_int32        :: npoints
   sll_int32        :: ipoints    
   character(len=4) :: cplot
   character(len=8) :: gnu_status
+  logical          :: l_exist
+  character(len=*), parameter :: sub_name = "sll_o_gnuplot_1d"
+  character(len=200) :: message 
   
   npoints = size(x_array)
  
-
   if (present( iplot )) then
     ! Check that plot index is strictly positive
     SLL_ASSERT( iplot > 0 )
 
     ! Convert plot index to string
-    call int2string( iplot, cplot )
+    call sll_s_int2string( iplot, cplot )
 
     ! Determine Gnuplot file status
-    if (iplot == 1) then
+    if (iplot==1) then
       gnu_status = 'replace'
     else
-      gnu_status = 'old'
+      inquire (file= trim(array_name)//'.gnu', exist=l_exist)
+      if (l_exist) then
+        gnu_status = 'old'
+      else
+        message = "The file "//trim(array_name)//'.gnu' &
+                & //" does not exist and iplot>1. A first call with iplot=1 is needed"
+        SLL_ERROR(sub_name, message)
+      end if
     end if
 
     ! Open Gnuplot file
-    open( file= trim( array_name )//'.gnu', &
+    open( file= trim(array_name)//'.gnu', &
       status  = gnu_status,  &
       form    = 'formatted', &
       position= 'append',    &
@@ -287,12 +301,12 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
 
 ! OLD VERSION
 !------------
-!   call sll_new_file_id(file_id, error)
+!   call sll_s_new_file_id(file_id, error)
 ! 
 !   if(present(iplot))then
-!     call int2string(iplot,cplot)
+!     call sll_s_int2string(iplot,cplot)
 !     open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
-!     call sll_new_file_id(fgnu_id, error)
+!     call sll_s_new_file_id(fgnu_id, error)
 !     open(fgnu_id,file=trim(array_name)//".gnu", &
 !                  position="append",             &
 !                  form='formatted',iostat=error)
@@ -350,7 +364,7 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
   SLL_ASSERT( iplot > 0 )
 
   ! Convert plot index to string
-  call int2string( iplot, fin )
+  call sll_s_int2string( iplot, fin )
   
   ! Determine Gnuplot file status
   if (iplot == 1) then
@@ -398,7 +412,7 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
 ! OLD VERSION
 !------------
 !  if ( iplot == 1 ) then
-!     call sll_new_file_id(gnu_id, error)
+!     call sll_s_new_file_id(gnu_id, error)
 !  end if
 !  
 !  open(gnu_id,file=array_name//".gnu", position="append")
@@ -454,7 +468,7 @@ subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
   SLL_ASSERT( iplot > 0 )
 
   ! Convert plot index to string
-  call int2string( iplot, fin )
+  call sll_s_int2string( iplot, fin )
   
   ! Determine Gnuplot file status
   if (iplot == 1) then
@@ -497,10 +511,10 @@ subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
 
 ! OLD VERSION
 !------------
-!  call int2string(iplot, fin)
+!  call sll_s_int2string(iplot, fin)
 !  
 !  if ( iplot == 1 ) then
-!     call sll_new_file_id(gnu_id, error)
+!     call sll_s_new_file_id(gnu_id, error)
 !  end if
 !  
 !  open(gnu_id,file=array_name//".gnu", position="append")
@@ -573,7 +587,7 @@ subroutine sll_gnuplot_mesh_2d( nx, ny, xcoord, ycoord, array_name, error)
 
 ! OLD VERSION
 !------------
-!  call sll_new_file_id(gnu_id, error)
+!  call sll_s_new_file_id(gnu_id, error)
 !  
 !  open(gnu_id,file=array_name//".gnu")
 !  write(gnu_id,*)"set view 0,0"
@@ -625,7 +639,7 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)
   SLL_ASSERT( iplot > 0 )
 
   ! Convert plot index to string
-  call int2string( iplot, fin )
+  call sll_s_int2string( iplot, fin )
   
   ! Determine Gnuplot file status
   if (iplot == 1) then
@@ -670,7 +684,7 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)
 ! OLD VERSION
 !------------
 !  if ( iplot == 1 ) then
-!     call sll_new_file_id(gnu_id, error)
+!     call sll_s_new_file_id(gnu_id, error)
 !  end if
 !  
 !  open(gnu_id,file=array_name//".gnu", position="append")
@@ -727,7 +741,7 @@ subroutine write_unstructured_field( field_at_node,  &
   SLL_ASSERT( plot_number > 0 )
 
   ! Convert plot index to string
-  call int2string( plot_number, cplot )
+  call sll_s_int2string( plot_number, cplot )
 
   ! Print message
   write(*,"(/10x, 'Output file GNUplot ',a/)") field_name//'_'//cplot//'.dat'
@@ -782,11 +796,11 @@ subroutine write_unstructured_field( field_at_node,  &
 !------------
 ! num_cells = size(nodes,2)
 ! SLL_ASSERT( size(nodes,1) == 3)
-! call int2string(plot_number, cplot)
+! call sll_s_int2string(plot_number, cplot)
 ! 
 ! write(*,"(/10x, 'Output file GNUplot ',a/)") field_name//'_'//cplot//'.dat'
 ! 
-! call sll_new_file_id(gnu_id, ierr)
+! call sll_s_new_file_id(gnu_id, ierr)
 ! open(gnu_id, file = field_name//'.gnu', position="append")
 ! if (plot_number == 1) rewind(gnu_id)
 ! write(gnu_id,*)"set title 'Field "//field_name//"'"

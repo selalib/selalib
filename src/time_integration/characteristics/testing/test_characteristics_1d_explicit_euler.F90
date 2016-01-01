@@ -16,14 +16,22 @@
 !**************************************************************
 
 program test_characteristics_1d_explicit_euler
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_base
-use sll_m_characteristics_1d_explicit_euler
-use sll_m_boundary_condition_descriptors
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_c_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    sll_f_new_explicit_euler_1d_charac
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_characteristics_1d_base), pointer :: euler 
+  class(sll_c_characteristics_1d_base), pointer :: euler 
   
   sll_int32 :: Npts
   sll_real64, dimension(:), allocatable :: input
@@ -44,9 +52,9 @@ implicit none
   !initialization for explicit_euler_1d
   
   euler => &
-    new_explicit_euler_1d_charac(&
+    sll_f_new_explicit_euler_1d_charac(&
       Npts, &
-      SLL_PERIODIC)
+      sll_p_periodic)
 
   
 
@@ -82,7 +90,7 @@ implicit none
   
   do i=1,Npts   
     tmp = input(i)-dt*A(i)
-    tmp = tmp-floor(tmp)
+    tmp = tmp-real(floor(tmp),f64)
     tmp=abs(tmp-output(i))
     if(tmp>err)then
         err=tmp

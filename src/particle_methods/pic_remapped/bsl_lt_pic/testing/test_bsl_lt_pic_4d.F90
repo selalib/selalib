@@ -27,20 +27,36 @@
 program test_bsl_lt_pic_4d
 
   ! [[file:../working_precision/sll_m_working_precision.h]]
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  ! [[file:../memory/sll_m_memory.h]]
-#include "sll_memory.h"
+  use sll_m_bsl_lt_pic_4d_group, only: &
+    sll_t_bsl_lt_pic_4d_group, &
+    sll_f_bsl_lt_pic_4d_group_new
 
-  ! [[file:../assert/sll_m_assert.h]]
-#include "sll_assert.h"
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    sll_f_eval_hat_function
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_bsl_lt_pic_4d_group
-  use sll_m_cartesian_meshes
-  use sll_m_timer
-  use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_remapped_pic_utilities, only: &
+    sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
+    sll_f_is_in_domain_2d
+
+  use sll_m_timer, only: &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
 #define SPECIES_CHARGE  1._f64
 #define SPECIES_MASS    1._f64
 #define particle_group_id 1_i32
@@ -74,7 +90,7 @@ program test_bsl_lt_pic_4d
 #define OMEGA   1.323_f64
 #define GAMMA  -0.151_f64
 #define X_MIN 0._f64
-#define X_MAX (2._f64*sll_pi/KX)
+#define X_MAX (2._f64*sll_p_pi/KX)
 #define NC_Y 64_i32
 #define Y_MIN 0._f64
 #define Y_MAX 1._f64
@@ -99,17 +115,15 @@ program test_bsl_lt_pic_4d
 #define X4_PLOT_CST 0._f64
 
 
-  implicit none
-  
-  type(sll_bsl_lt_pic_4d_group),        pointer     :: particle_group
-  type(sll_cartesian_mesh_2d),          pointer     :: mesh_2d
-  type(sll_cartesian_mesh_2d),          pointer     :: plotting_mesh_2d
+  type(sll_t_bsl_lt_pic_4d_group),        pointer     :: particle_group
+  type(sll_t_cartesian_mesh_2d),          pointer     :: mesh_2d
+  !type(sll_t_cartesian_mesh_2d),          pointer     :: plotting_mesh_2d
 
-  character(len=30) :: file_name
+  !character(len=30) :: file_name
   character(5)      :: ncx_name, ncy_name
 
   sll_int32 :: k
-  sll_int64 :: j, j_x, j_y, j_vx, j_vy
+  sll_int64 :: j_x, j_y, j_vx, j_vy
 !  sll_int32 :: part_array_size, part_guard_size
   sll_real64 :: error, tolerance, f_target
   sll_real64 :: f_j
@@ -145,23 +159,23 @@ program test_bsl_lt_pic_4d
   sll_real64 :: basis_height
 
 
-  sll_real64 :: x_j_bsl_before_per
-  sll_real64 :: y_j_bsl_before_per
-  sll_real64 :: vx_j_bsl_before_per
-  sll_real64 :: vy_j_bsl_before_per
+  !sll_real64 :: x_j_bsl_before_per
+  !sll_real64 :: y_j_bsl_before_per
+  !sll_real64 :: vx_j_bsl_before_per
+  !sll_real64 :: vy_j_bsl_before_per
 
-  sll_real64 :: x_j_bsl
-  sll_real64 :: y_j_bsl
-  sll_real64 :: vx_j_bsl
-  sll_real64 :: vy_j_bsl
+  !sll_real64 :: x_j_bsl
+  !sll_real64 :: y_j_bsl
+  !sll_real64 :: vx_j_bsl
+  !sll_real64 :: vy_j_bsl
 
-  sll_real64 :: x_j_bsl_end
-  sll_real64 :: y_j_bsl_end
-  sll_real64 :: vx_j_bsl_end
-  sll_real64 :: vy_j_bsl_end
+  !sll_real64 :: x_j_bsl_end
+  !sll_real64 :: y_j_bsl_end
+  !sll_real64 :: vx_j_bsl_end
+  !sll_real64 :: vy_j_bsl_end
 
   ! Benchmarking remap performance
-  type(sll_time_mark) :: remapstart
+  type(sll_t_time_mark) :: remapstart
   sll_real64 :: remaptime
 
   sll_real64, dimension(3) :: coords
@@ -177,9 +191,9 @@ program test_bsl_lt_pic_4d
   ! --- end of declarations
 
 
-  mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, X_MIN, X_MAX, Y_MIN, Y_MAX )
+  mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, X_MIN, X_MAX, Y_MIN, Y_MAX )
 
-  particle_group => sll_bsl_lt_pic_4d_group_new( &
+  particle_group => sll_f_bsl_lt_pic_4d_group_new( &
         SPECIES_CHARGE,                                             &
         SPECIES_MASS,                                               &
         particle_group_id,                                          &
@@ -217,8 +231,8 @@ program test_bsl_lt_pic_4d
 
   !MCP: for a constant (1) function, take hat_shift = 0 and basis_height = 1
   !MCP: for the std tensor-product hat function, take hat_shift = 1 and basis_height = 0
-  hat_shift = 1.
-  basis_height = 0.
+  hat_shift = 1.0_f64
+  basis_height = 0.0_f64
 
   ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
 
@@ -251,14 +265,14 @@ program test_bsl_lt_pic_4d
      ! set particle position
      coords(1) = new_x_k
      coords(2) = new_y_k
-     coords(3) = 0
+     coords(3) = 0.0_f64
      call particle_group%set_x(k, coords)
 
 
      ! set particle speed
      coords(1) = new_vx_k
      coords(2) = new_vy_k
-     coords(3) = 0
+     coords(3) = 0.0_f64
      call particle_group%set_v(k, coords)
 
     ! SHOULD WE PUT THE PARTICLES BACK INTO THE DOMAIN ???
@@ -271,10 +285,10 @@ program test_bsl_lt_pic_4d
     remap_type = 'bsl_ltp'
   else
     ! called as an executable, with an argument
-    call getarg(1,remap_type)
+    call get_command_argument(1,remap_type)
   end if
 
-  call sll_set_time_mark(remapstart)
+  call sll_s_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
     ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
@@ -290,7 +304,7 @@ program test_bsl_lt_pic_4d
     stop
   end if
 
-  remaptime = sll_time_elapsed_since(remapstart)
+  remaptime = sll_f_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
   write(*,'(A,A,ES8.2,A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec',&
@@ -298,10 +312,10 @@ program test_bsl_lt_pic_4d
   
   ! result should still be exact on the new grid because all the transformations have been linear
 
-  number_nodes_x  = particle_group%number_parts_x
-  number_nodes_y  = particle_group%number_parts_y
-  number_nodes_vx = particle_group%number_parts_vx
-  number_nodes_vy = particle_group%number_parts_vy
+  number_nodes_x  = int(particle_group%number_parts_x, i64)
+  number_nodes_y  = int(particle_group%number_parts_y, i64)
+  number_nodes_vx = int(particle_group%number_parts_vx, i64)
+  number_nodes_vy = int(particle_group%number_parts_vy, i64)
 
   h_nodes_x    = particle_group%remapping_grid%delta_eta1
   h_nodes_y    = particle_group%remapping_grid%delta_eta2
@@ -314,7 +328,7 @@ program test_bsl_lt_pic_4d
   nodes_vy_min   = particle_group%remapping_grid%eta4_min
 
   open(80,file='target_values_test_init4D.dat')
-  error = 0
+  error = 0.0_f64
   x_j = nodes_x_min
   do j_x = 1, number_nodes_x
     y_j = nodes_y_min
@@ -323,17 +337,17 @@ program test_bsl_lt_pic_4d
       do j_vx = 1, number_nodes_vx
         vy_j = nodes_vy_min
         do j_vy = 1, number_nodes_vy
-          f_j = real( particle_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
+          f_j = real( particle_group%target_values(j_x,j_y,j_vx,j_vy) ,f64)
           call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
 
-          if( .not. x_is_in_domain_2d( new_x, new_y, particle_group%space_mesh_2d,   &
+          if( .not. sll_f_is_in_domain_2d( new_x, new_y, particle_group%space_mesh_2d,   &
                                        DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
                ) then
             !! -- -- put outside particles back in domain
-            call apply_periodic_bc_on_cartesian_mesh_2d( particle_group%space_mesh_2d, new_x, new_y)
+            call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( particle_group%space_mesh_2d, new_x, new_y)
           end if
 
-          f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, new_x, new_y, new_vx, new_vy)
+          f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, new_x, new_y, new_vx, new_vy)
 
           !! MCP: old implementation
           !          f_target = max_f * max(0._f64, 1.-inv_r_x*abs(new_x-x0) )       &
@@ -381,7 +395,7 @@ program test_bsl_lt_pic_4d
 
   ! todo: we could plot a slice of f here, but this seems heavy in a unit test...
 
-    !  plotting_mesh_2d =>  new_cartesian_mesh_2d( NC_X1_PLOT, NC_X2_PLOT, &
+    !  plotting_mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X1_PLOT, NC_X2_PLOT, &
     !         X1_MIN_PLOT, X1_MAX_PLOT, X2_MIN_PLOT, X2_MAX_PLOT )
     !
     !  file_name = "lt_pic_density_test_init4D.dat"
@@ -421,10 +435,10 @@ program test_bsl_lt_pic_4d
   write(82,*) "(maximum) error : ", error
   close(82)
   
-!  call sll_delete( particle_group )
-!  call sll_delete( mesh_2d )
+!  call sll_o_delete( particle_group )
+!  call sll_o_delete( mesh_2d )
 
-  tolerance = 1e-6
+  tolerance = 1.0d-6
   if( error < tolerance )then
     ! print*, "TEST PASSED: error = ", error
     print *, 'PASSED'

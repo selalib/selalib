@@ -6,10 +6,16 @@
 !> that applies the 
 !> Rectangle method to compute numeric integrals.
 module sll_m_rectangle_integration
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  
-implicit none
+
+  implicit none
+
+  public :: &
+    sll_o_rectangle_integrate_1d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
@@ -25,7 +31,7 @@ end interface
 #endif
 
 !> Integrate numerically with Gauss-Lobatto formula
-interface rectangle_integrate_1d
+interface sll_o_rectangle_integrate_1d
   module procedure rectangle_integral_1d 
 end interface
 

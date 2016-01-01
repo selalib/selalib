@@ -16,14 +16,28 @@
 !**************************************************************
 
 program test_characteristics_1d_trapezoid
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_1d_trapezoid
-use sll_m_boundary_condition_descriptors
-use sll_m_cubic_spline_interpolator_1d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_c_characteristics_1d_base
+
+  use sll_m_characteristics_1d_trapezoid, only: &
+    sll_f_new_trapezoid_1d_charac
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_f_new_cubic_spline_interpolator_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_characteristics_1d_base),pointer :: trap
+  class(sll_c_characteristics_1d_base),pointer :: trap
 
   
   sll_int32 :: Npts
@@ -34,7 +48,7 @@ implicit none
   sll_int32 :: i
   sll_real64 :: dt
   sll_real64 :: err
-  class(sll_interpolator_1d_base), pointer   :: A_interp
+  class(sll_c_interpolator_1d), pointer   :: A_interp
 
   
   
@@ -46,21 +60,21 @@ implicit none
 
   
   !initialization for verlet
-  A_interp => new_cubic_spline_interpolator_1d( &
+  A_interp => sll_f_new_cubic_spline_interpolator_1d( &
     Npts, &
     0._f64, &
     1._f64, &
-    SLL_PERIODIC)
+    sll_p_periodic)
 
 
 
 
 
   trap => &
-    new_trapezoid_1d_charac(&
+    sll_f_new_trapezoid_1d_charac(&
       Npts, &
       A_interp, &
-      bc_type=SLL_PERIODIC)
+      bc_type=sll_p_periodic)
                   
 
   allocate(input(Npts))
