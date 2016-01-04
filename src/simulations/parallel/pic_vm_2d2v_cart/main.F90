@@ -108,8 +108,8 @@ do istep = 1, nstep
     iplot = iplot + 1
     ! call plot_particles_center( p, time)  
     ! call plot_particle_density( p, iplot)  
-    call plot_particles_points3d(p, iplot)
-    call plot_particles_xmdv( p, iplot, xmin, xmax, ymin, ymax)  
+    ! call plot_particles_points3d(p, iplot)
+    ! call plot_particles_xmdv( p, iplot, xmin, xmax, ymin, ymax)  
     ! call diag_coc( f0, p, time, iplot )
     ! call diag_champ_part( p, time, iplot )
     ! call plot_champ( f0, iplot, time )
@@ -119,6 +119,7 @@ do istep = 1, nstep
   endif
 
   if (nomcas == 'plasma') call modeE( f0, iplot, time )
+  write(*,"('istep = ', i6, ' time = ')", advance='no') istep
 
 end do
 
