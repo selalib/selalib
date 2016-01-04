@@ -4,11 +4,12 @@
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
 !!
 !! @brief
-!! ODE time integrators, with a common interface.  The user should provide
-!! a state vector of \c class(sll_vector_space_base), and an ODE system of
-!! \c class(sll_ode_base).
+!! ODE time integrators, with a common interface.  
 !!
 !! @details
+!! The user should provide
+!! a state vector of \c class(sll_vector_space_base), and an ODE system of
+!! \c class(sll_ode_base).
 !! This library defines an abstract type \c sll_ode_base for a generic ODE
 !! system \f$ dy/dt = f(t,y) \f$, and an abstract type
 !! \c sll_ode_integrator_base for a generic ODE time integrator.

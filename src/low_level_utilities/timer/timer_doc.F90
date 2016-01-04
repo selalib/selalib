@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup timer sll_m_timer 
+!> @defgroup timer sll_timer 
 !> @brief 
 !> Description of timer library (72 characters)
 !> @author Selalib team 
