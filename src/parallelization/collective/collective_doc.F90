@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup collective sll_m_collective
+!> @defgroup collective sll_collective
 !> @brief 
 !> Interface to simplify MPI library calls
 !> @authors Edwin Chacon-Golcher, Pierre Navaro.

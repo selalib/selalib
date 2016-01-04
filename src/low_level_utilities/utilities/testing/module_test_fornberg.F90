@@ -29,6 +29,8 @@
 !Björn Dahlgren
 !Ondřej Čertík
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 module test_fornberg
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -88,3 +90,4 @@ contains
   end subroutine test_forward_5pts
 
 end module test_fornberg
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

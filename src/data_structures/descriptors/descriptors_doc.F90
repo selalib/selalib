@@ -1,4 +1,4 @@
-!> @defgroup descriptors sll_m_descriptors
+!> @defgroup descriptors sll_descriptors
 !> @brief
 !> Descriptors with parsing functionality gnerated by a m4 macro
 !> @author Jakob Ameres

@@ -15,6 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup particle_methods
 !> \brief
 !> This module provides some routines for plotting during PIC simulations.
 

@@ -1,4 +1,4 @@
-!> @defgroup pif sll_m_pif_fieldsolver
+!> @defgroup pif sll_pif
 !> @brief
 !> Particle in Fourier library - methods specific for Particle in Fourier
 !> @author Jakob Ameres
