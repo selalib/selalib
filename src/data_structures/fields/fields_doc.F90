@@ -1,14 +1,3 @@
-! This file is read by doxygen software
-! Change it to match with your library
-! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
-! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup fieldss.html 
-! The following lines will be read by doxygen to generate documentation:
-
-
 !> @defgroup fields sll_fields 
 !> @brief 
 !> Field objects.
@@ -20,7 +9,7 @@
 !> - Add <code> use sll_fields </code>
 !>
 !> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
+!>
 !> \code
 !> type(sll_cartesian_mesh_2d),                       pointer :: mesh_2d
 !> class(sll_coordinate_transformation_2d_base),      pointer :: tau
