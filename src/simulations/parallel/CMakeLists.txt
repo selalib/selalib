@@ -101,6 +101,9 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ## Vlasov-Maxwell 1Dx2D
     ADD_SUBDIRECTORY( pic_vm_1d2v_cart                         )
 
+    ## Vlasov-Maxwell 2Dx2D
+    ADD_SUBDIRECTORY( pic_vm_2d2v_cart                         )
+
     ## Vlasov-Poisson 2Dx2D
     ADD_SUBDIRECTORY( pic_vp_2d2v_cart                         )
     ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim                   )
