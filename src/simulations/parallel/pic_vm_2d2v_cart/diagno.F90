@@ -514,6 +514,7 @@ open(34,file='modeE.dat',position="append")
 if (iplot==1) rewind(34)
 write(34,*) time, aux
 close(34)
+write(*,*) time, aux
 
 end subroutine modeE
 
