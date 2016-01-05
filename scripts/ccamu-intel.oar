@@ -8,6 +8,7 @@ source /etc/profile
 export MODULEPATH=${MODULEPATH}:/home/pnavaro/Modules
 module purge
 module load hdf5/intel/1.8.16 
+module load fftw/intel/3.3.4
 cd /scratch/pnavaro
 mkdir selalib-intel
 cd selalib-intel; {
