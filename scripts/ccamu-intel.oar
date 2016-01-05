@@ -5,18 +5,14 @@
 #OAR -O selalib.out
 #OAR -E selalib.err
 source /etc/profile
-export MODULEPATH=${MODULEPATH}:/softs/cemracs/modules
+export MODULEPATH=${MODULEPATH}:/home/pnavaro/Modules
 module purge
-export PETSC_ARCH=arch-intel-c-debug
-export PETSC_DIR=/softs/cemracs/petsc-3.5.3
-module load  cemracs/intel/13.1.2 cemracs/openmpi/1.8.1 cemracs/hdf5/1.8.13 
+module load hdf5/intel/1.8.16 
 cd /scratch/pnavaro
 mkdir selalib-intel
 cd selalib-intel; {
 cmake ${HOME}/selalib/src -DHDF5_PARALLEL_ENABLED=ON \
-                          -DBUILD_JOREK=ON \
-                          -DCMAKE_BUILD_TYPE=Release \
-                          -DGIT_LOGIN=navaro
+                          -DCMAKE_BUILD_TYPE=Release
 make
 make NightlyUpdate
 make NightlyConfigure
