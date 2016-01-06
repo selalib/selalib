@@ -112,7 +112,6 @@ sll_real64, intent(in) :: eta2_max    !< eta2 max
 sll_int32, intent(in)  :: nc_eta1     !<  number of cells
 sll_int32, intent(in)  :: nc_eta2     !<  number of cells
 sll_int32 :: icall
-!sll_int32 :: iiex,jjey
 sll_int32 :: llwork
 sll_int32 :: bc_eta1_left             !< left boundary condition r
 sll_int32 :: bc_eta1_right            !< right boundary condition r
