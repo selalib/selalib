@@ -3,7 +3,7 @@
 !> @brief
 !> Poisson solver using finite element
 !> @details
-!> Solve Poisson equation on cartesian domain with finite elements.
+!> Solve Poisson equation on irregular cartesian domain with finite elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
 module sll_m_fem_2d
@@ -11,10 +11,6 @@ module sll_m_fem_2d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_poisson_solvers_macros.h"
-
-! use F77_lapack, only: &
-!   dpbtrf, &
-!   dpbtrs
 
   use sll_m_utilities, only: &
     sll_o_display
@@ -59,16 +55,15 @@ interface sll_o_solve
    module procedure solve_poisson_2d_fem
 end interface sll_o_solve
 
-
 contains
 
 !> Initialize Poisson solver object using finite elements method.
 subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
 type( sll_t_fem_poisson_2d )  :: this !< solver data structure
-sll_int32,  intent(in)      :: nn_x !< number of cells along x
-sll_int32,  intent(in)      :: nn_y !< number of cells along y
-sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
-sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
+sll_int32,  intent(in)      :: nn_x   !< number of cells along x
+sll_int32,  intent(in)      :: nn_y   !< number of cells along y
+sll_real64, dimension(nn_x) :: x      !< x nodes coordinates
+sll_real64, dimension(nn_y) :: y      !< y nodes coordinates
 sll_int32                   :: ii
 sll_int32                   :: jj
 
@@ -76,7 +71,7 @@ sll_real64, dimension(4,4)  :: Axelem
 sll_real64, dimension(4,4)  :: Ayelem
 sll_real64, dimension(4,4)  :: Mmelem
 sll_real64, dimension(2,2)  :: Mfelem
-sll_int32, dimension(4)     :: isom
+sll_int32,  dimension(4)    :: isom
 sll_int32                   :: i
 sll_int32                   :: j
 sll_int32                   :: k
@@ -200,12 +195,6 @@ if (nx < 5) call sll_o_display(this%A, 'f5.2')
 kd = nx+2
 SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
 this%mat = 0.0_f64
-!do k = 0, kd   ! Loop over diagonals
-!  i = kd+1-k   ! Row number in this%mat
-!  do j = (nx+1)*(ny+1)-k, 1+k,-1
-!    this%mat(i,j+k) = this%A(j+k,j) 
-!  end do
-!end do
 n = (nx+1)*(ny+1)
 do i = 1, n
   do j=i,min(n,i+kd)
@@ -266,7 +255,6 @@ sll_int32 :: error
 nx = this%nx
 ny = this%ny
 
-!** Construction du second membre 
 k = 0
 do j=1,ny+1
 do i=1,nx+1
