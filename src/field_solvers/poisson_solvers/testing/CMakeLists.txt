@@ -68,6 +68,8 @@ SET_TESTS_PROPERTIES( poisson_3d_periodic_seq PROPERTIES PASS_REGULAR_EXPRESSION
 
 ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
 TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
+ADD_TEST( NAME fishpack_interface COMMAND test_fishpack )
+SET_TESTS_PROPERTIES( fishpack_interface PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_2d_fem test_poisson_2d_fem.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_poisson_solvers
