@@ -21,11 +21,6 @@ module sll_m_fishpack
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_fishpack, only: &
-!   hw3crt, &
-!   hwscrt, &
-!   hwsplr
-
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
@@ -112,8 +107,10 @@ contains
                     eta2_min,eta2_max,nc_eta2,bc_eta2)
 
     class(sll_t_fishpack_2d),intent(out) :: this      !< Fishpack solver
+
     sll_int32, intent(in)          :: nc_eta1   !< x number of cells
     sll_int32, intent(in)          :: nc_eta2   !< y number of cells
+
     sll_real64, intent(in)         :: eta1_min  !< left side of the domain
     sll_real64, intent(in)         :: eta1_max  !< right side of the domain
     sll_real64, intent(in)         :: eta2_min  !< bottom side of the domain
@@ -140,10 +137,16 @@ contains
     if (bc_eta1 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bda(nc_eta2+1),this%error)
        SLL_ALLOCATE(this%bdb(nc_eta2+1),this%error)
+    else
+       SLL_ALLOCATE(this%bda(1),this%error)
+       SLL_ALLOCATE(this%bdb(1),this%error)
     end if
     if (bc_eta2 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bdc(nc_eta1+1),this%error)
        SLL_ALLOCATE(this%bdd(nc_eta1+1),this%error)
+    else
+       SLL_ALLOCATE(this%bdc(1),this%error)
+       SLL_ALLOCATE(this%bdd(1),this%error)
     end if
 
   end subroutine new_2d
@@ -189,14 +192,23 @@ contains
     if (bc_eta1 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bda(nc_eta2+1,nc_eta3+1),this%error)
        SLL_ALLOCATE(this%bdb(nc_eta2+1,nc_eta3+1),this%error)
+    else
+       SLL_ALLOCATE(this%bda(1,1),this%error)
+       SLL_ALLOCATE(this%bdb(1,1),this%error)
     end if
     if (bc_eta2 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bdc(nc_eta1+1,nc_eta3+1),this%error)
        SLL_ALLOCATE(this%bdd(nc_eta1+1,nc_eta3+1),this%error)
+    else
+       SLL_ALLOCATE(this%bdc(1,1),this%error)
+       SLL_ALLOCATE(this%bdd(1,1),this%error)
     end if
     if (bc_eta3 /= sll_p_periodic) then
        SLL_ALLOCATE(this%bde(nc_eta1+1,nc_eta2+1),this%error)
        SLL_ALLOCATE(this%bdf(nc_eta1+1,nc_eta2+1),this%error)
+    else
+       SLL_ALLOCATE(this%bde(1,1),this%error)
+       SLL_ALLOCATE(this%bdf(1,1),this%error)
     end if
 
   end subroutine new_3d
