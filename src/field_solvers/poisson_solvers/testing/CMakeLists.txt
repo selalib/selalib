@@ -75,6 +75,8 @@ TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_poisson_solvers
   sll_utilities
   ${LAPACK_LIBRARIES}
   ${BLAS_LIBRARIES})
+ADD_TEST( NAME poisson_2d_fem COMMAND test_poisson_2d_fem )
+SET_TESTS_PROPERTIES( poisson_2d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_hex_poisson test_hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_utilities )
