@@ -15,7 +15,7 @@ SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_2d_elliptic_solver.F90
                  sll_m_poisson_2d_curvilinear.F90
                  sll_m_poisson_3d_base.F90
-                 sll_m_poisson_3d_periodic_seq.F90
+                 sll_m_poisson_3d_periodic.F90
                  sll_m_fishpack.F90
                  sll_m_mudpack.F90
                  sll_m_mudpack_curvilinear.F90
