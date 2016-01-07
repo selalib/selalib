@@ -1,9 +1,8 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 !> @brief 
-!> 3D poisson solver
+!> 3D poisson solver with periodic boundary conditions
 
-module sll_m_poisson_3d_periodic_seq
+module sll_m_poisson_3d_periodic
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -24,17 +23,17 @@ module sll_m_poisson_3d_periodic_seq
   implicit none
 
   public :: &
-    sll_s_delete_poisson_3d_periodic_plan_seq, &
-    sll_f_new_poisson_3d_periodic_plan_seq, &
-    sll_t_poisson_3d_periodic_plan_seq, &
-    sll_s_solve_poisson_3d_periodic_seq
+    sll_s_delete_poisson_3d_periodic, &
+    sll_f_new_poisson_3d_periodic, &
+    sll_t_poisson_3d_periodic, &
+    sll_s_solve_poisson_3d_periodic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Structure to solve Poisson equation on 3d domain. Mesh is cartesian and
   !> all boundary conditions are periodic. Numerical method is FFT based.
-  type sll_t_poisson_3d_periodic_plan_seq
+  type sll_t_poisson_3d_periodic
      sll_int32                   :: nx     !< Number of points-1 in x-direction
      sll_int32                   :: ny     !< Number of points-1 in y-direction
      sll_int32                   :: nz     !< Number of points-1 in z-direction
@@ -49,7 +48,7 @@ module sll_m_poisson_3d_periodic_seq
      type(sll_t_fft_plan), pointer :: pz_inv !< backward fft plan along z
      sll_comp64, dimension(:,:,:), pointer :: hat_rho !< fft of RHS
      sll_comp64, dimension(:,:,:), pointer :: hat_phi !< fft of potential
-  end type sll_t_poisson_3d_periodic_plan_seq
+  end type sll_t_poisson_3d_periodic
 
 contains
 
@@ -57,7 +56,7 @@ contains
   !> Allocate a structure to solve Poisson equation on 3d cartesian mesh
   !> with periodic boundary conditions
   !> @return
-  function sll_f_new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz) &
+  function sll_f_new_poisson_3d_periodic(nx ,ny ,nz, Lx, Ly, Lz) &
                                                          result(plan)
 
     sll_int32                                    :: nx   !< number of points in x
@@ -70,7 +69,7 @@ contains
     sll_real64                                   :: Lx   !< Length along x
     sll_real64                                   :: Ly   !< Length along y
     sll_real64                                   :: Lz   !< Length along z
-    type (sll_t_poisson_3d_periodic_plan_seq), pointer :: plan !< Poisson solver type
+    type (sll_t_poisson_3d_periodic), pointer :: plan !< Poisson solver type
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE(plan%hat_rho(nx,ny,nz), ierr)
@@ -94,12 +93,12 @@ contains
     plan%py_inv => sll_f_fft_new_plan_c2c_1d( ny, y, y, sll_p_fft_backward )
     plan%pz_inv => sll_f_fft_new_plan_c2c_1d( nz, z, z, sll_p_fft_backward )
 
-  end function sll_f_new_poisson_3d_periodic_plan_seq
+  end function sll_f_new_poisson_3d_periodic
 
   !> Compute the potential from 3d Poisson solver
-  subroutine sll_s_solve_poisson_3d_periodic_seq(plan, rho, phi)
+  subroutine sll_s_solve_poisson_3d_periodic(plan, rho, phi)
 
-    type (sll_t_poisson_3d_periodic_plan_seq), pointer :: plan !< Solver structure
+    type (sll_t_poisson_3d_periodic), pointer :: plan !< Solver structure
     sll_real64, dimension(:,:,:)                 :: rho  !< charge density
     sll_real64, dimension(:,:,:)                 :: phi  !< Electric potential
     sll_int32                                    :: nx, ny, nz
@@ -110,7 +109,7 @@ contains
 
     ! Checking input arguments consistency
     if (flag) then
-       call verify_argument_sizes_seq(plan, rho, phi)
+       call verify_argument_sizes(plan, rho, phi)
        flag = .false.
     end if
 
@@ -198,13 +197,13 @@ contains
 
     phi = real(plan%hat_phi, f64)
 
-  end subroutine sll_s_solve_poisson_3d_periodic_seq
+  end subroutine sll_s_solve_poisson_3d_periodic
 
 
   !> Delete the 3d poisson solver object
-  subroutine sll_s_delete_poisson_3d_periodic_plan_seq(plan)
+  subroutine sll_s_delete_poisson_3d_periodic(plan)
 
-    type(sll_t_poisson_3d_periodic_plan_seq), pointer :: plan !< Poisson solver object
+    type(sll_t_poisson_3d_periodic), pointer :: plan !< Poisson solver object
     sll_int32                                    :: ierr
 
     ! Fixme: some error checking, whether the poisson pointer is associated
@@ -223,12 +222,12 @@ contains
     SLL_DEALLOCATE_ARRAY(plan%hat_phi, ierr)
     SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine sll_s_delete_poisson_3d_periodic_plan_seq
+  end subroutine sll_s_delete_poisson_3d_periodic
 
   !> Subroutine to check that arrays are compatible with the solver
-  subroutine verify_argument_sizes_seq(plan, rho, phi)
+  subroutine verify_argument_sizes(plan, rho, phi)
 
-    type (sll_t_poisson_3d_periodic_plan_seq), pointer :: plan
+    type (sll_t_poisson_3d_periodic), pointer :: plan
     sll_real64, dimension(:,:,:)                 :: rho
     sll_real64, dimension(:,:,:)                 :: phi
     sll_int32,  dimension(3)                     :: n ! nx_loc, ny_loc, nz_loc
@@ -255,8 +254,6 @@ contains
        endif
     enddo
 
-  end subroutine verify_argument_sizes_seq
+  end subroutine verify_argument_sizes
 
-
-end module sll_m_poisson_3d_periodic_seq
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+end module sll_m_poisson_3d_periodic
