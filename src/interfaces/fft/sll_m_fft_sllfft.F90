@@ -380,7 +380,7 @@ contains
     sll_int32, dimension(2)                         :: fft_shape
     sll_real64 :: factor
 
-    if( loc(array_in(1)) .ne. loc(array_out(1))) then ! out-place transform
+    if( loc(array_in(1,1)) .ne. loc(array_out(1,1))) then ! out-place transform
        array_out = array_in  ! copy source
     endif
     fft_shape(1:2) = plan%problem_shape(1:2)
