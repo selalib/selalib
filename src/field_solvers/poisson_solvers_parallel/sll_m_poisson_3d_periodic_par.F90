@@ -372,9 +372,6 @@ contains
     type (sll_t_poisson_3d_periodic_plan_par)     :: plan
     sll_int32                                    :: ierr
 
-    ! Fixme: some error checking, whether the poisson pointer is associated
-    ! for instance
-    SLL_ASSERT( associated(plan) )
 
     call sll_s_fft_delete_plan(plan%px)
     call sll_s_fft_delete_plan(plan%py)
