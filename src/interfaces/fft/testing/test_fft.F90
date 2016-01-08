@@ -51,7 +51,9 @@ program unit_test
   enddo
   rdata_copy(1:s) = rdata(1:s)
   ALLOCATE(ar_data(1:s))
-  p => sll_f_fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),sll_p_fft_forward)
+  
+  allocate(p)
+  call sll_s_fft_init_plan_r2r_1d(p, s,rdata(1:s),rdata(1:s),sll_p_fft_forward)
   !call sll_s_fft_apply_plan_r2r_1d(p, rdata(1:s), rdata(1:s))
   do j=1,s/2+1
      data_comp(j) =  sll_f_fft_get_mode_r2c_1d(p,rdata(1:s), j-1)
@@ -138,11 +140,13 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => sll_f_fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),sll_p_fft_forward)
+    allocate(p)
+    call sll_s_fft_init_plan_r2r_1d(p,s,rdata(1:s),rdata(1:s),sll_p_fft_forward)
     call sll_s_fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call sll_s_fft_delete_plan(p)
 
-    p => sll_f_fft_new_plan_r2r_1d(s,rdata(1:s),rdata(1:s),sll_p_fft_backward,normalized = .TRUE.)
+    allocate(p)
+    call sll_s_fft_init_plan_r2r_1d(p,s,rdata(1:s),rdata(1:s),sll_p_fft_backward,normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call sll_s_fft_delete_plan(p)
     
@@ -162,9 +166,11 @@ program unit_test
   ! Allocate aligned memory
   ar_data => sll_f_fft_allocate_aligned_real(m1)
  
-  ! Initialize the plans 
-  pf => sll_f_fft_new_plan_r2r_1d(m1,ar_data,ar_data,sll_p_fft_forward, aligned = .TRUE., optimization = sll_p_fft_measure)
-  pb => sll_f_fft_new_plan_r2r_1d(m1,ar_data,ar_data,sll_p_fft_backward,normalized=.TRUE., aligned = .TRUE., optimization = sll_p_fft_patient)
+  ! Initialize the plans
+  allocate(pf)
+  call sll_s_fft_init_plan_r2r_1d(pf,m1,ar_data,ar_data,sll_p_fft_forward, aligned = .TRUE., optimization = sll_p_fft_measure)
+  allocate(pb)
+  call sll_s_fft_init_plan_r2r_1d(pb,m1,ar_data,ar_data,sll_p_fft_backward,normalized=.TRUE., aligned = .TRUE., optimization = sll_p_fft_patient)
  
   ! Initialize the data (note that this has to be done after initializing the plans due to the optimization level.
   do j=1,m1
@@ -200,11 +206,13 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => sll_f_fft_new_plan_r2c_1d(s,rdata(1:s),data_comp(1:s/2+1))
+    allocate(p)
+    call sll_s_fft_init_plan_r2c_1d(p,s,rdata(1:s),data_comp(1:s/2+1))
     call sll_s_fft_apply_plan_r2c_1d(p,rdata(1:s),data_comp(1:s/2+1))
     call sll_s_fft_delete_plan(p)
 
-    p => sll_f_fft_new_plan_c2r_1d(s,data_comp(1:s/2+1),rdata(1:s), normalized = .TRUE.)
+    allocate(p)
+    call sll_s_fft_init_plan_c2r_1d(p,s,data_comp(1:s/2+1),rdata(1:s), normalized = .TRUE.)
     call sll_s_fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata(1:s))
     call sll_s_fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
@@ -224,11 +232,13 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata_comp(1:s)
   
-    p => sll_f_fft_new_plan_r2c_1d(s,rdata_comp(1:s),data_comp(1:s/2+1), normalized = .TRUE.)
+    allocate(p)
+    call sll_s_fft_init_plan_r2c_1d(p,s,rdata_comp(1:s),data_comp(1:s/2+1), normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2c_1d(p,rdata_comp(1:s),data_comp(1:s/2+1))
     call sll_s_fft_delete_plan(p)
     
-    p => sll_f_fft_new_plan_c2r_1d(s,data_comp(1:s/2+1),rdata_comp(1:s))
+    allocate(p)
+    call sll_s_fft_init_plan_c2r_1d(p,s,data_comp(1:s/2+1),rdata_comp(1:s))
     call sll_s_fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata_comp(1:s))
     call sll_s_fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata_comp(1:s) - rdata_copy(1:s)))

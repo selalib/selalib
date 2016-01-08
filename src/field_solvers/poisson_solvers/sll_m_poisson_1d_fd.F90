@@ -28,8 +28,8 @@ module sll_m_poisson_1d_fd
     sll_s_fft_apply_plan_c2r_1d, &
     sll_s_fft_apply_plan_r2c_1d, &
     sll_s_fft_delete_plan, &
-    sll_f_fft_new_plan_c2r_1d, &
-    sll_f_fft_new_plan_r2c_1d, &
+    sll_s_fft_init_plan_c2r_1d, &
+    sll_s_fft_init_plan_r2c_1d, &
     sll_t_fft_plan
 
   implicit none
@@ -213,10 +213,12 @@ contains
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%fd_matrix_first_line_fourier = (0._f64,0._f64)
-        this%forward_fftplan => sll_f_fft_new_plan_r2c_1d(this%num_cells, &
+        allocate(this%forward_fftplan) 
+        call sll_s_fft_init_plan_r2c_1d(this%forward_fftplan,this%num_cells, &
              this%fd_solution,this%fd_matrix_first_line_fourier)
-        this%backward_fftplan=>sll_f_fft_new_plan_c2r_1d(this%num_cells, &
-             this%fd_matrix_first_line_fourier,this%fd_solution)!  + FFT_NORMALIZE_INVERSE)
+        allocate(this%backward_fftplan)
+        call sll_s_fft_init_plan_c2r_1d(this%backward_fftplan, this%num_cells, &
+             this%fd_matrix_first_line_fourier,this%fd_solution)
         SLL_DEALLOCATE_ARRAY(this%fd_matrix_first_line_fourier, ierr)
 
         !------------------------------------------------------------------------------------------

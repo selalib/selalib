@@ -34,8 +34,8 @@ module sll_m_advection_1d_ampere
     sll_s_fft_apply_plan_c2r_1d, &
     sll_s_fft_apply_plan_r2c_1d, &
     sll_s_fft_delete_plan, &
-    sll_f_fft_new_plan_c2r_1d, &
-    sll_f_fft_new_plan_r2c_1d, &
+    sll_s_fft_init_plan_c2r_1d, &
+    sll_s_fft_init_plan_r2c_1d, &
     sll_t_fft_plan
 
   implicit none
@@ -124,8 +124,10 @@ subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
   adv%r0 = (0.0_f64, 0.0_f64)
   adv%r1 = (0.0_f64, 0.0_f64)
 
-  adv%fwx => sll_f_fft_new_plan_r2c_1d(nc_eta1, adv%d_dx,  adv%fk)
-  adv%bwx => sll_f_fft_new_plan_c2r_1d(nc_eta1, adv%fk, adv%d_dx)
+  allocate(adv%fwx)
+  call sll_s_fft_init_plan_r2c_1d(adv%fwx, nc_eta1, adv%d_dx,  adv%fk)
+  allocate(adv%bwx)
+  call sll_s_fft_init_plan_c2r_1d(adv%bwx, nc_eta1, adv%fk, adv%d_dx)
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:nc_eta1/2+1), error)
    

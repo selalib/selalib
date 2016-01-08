@@ -33,8 +33,8 @@ module sll_m_poisson_1d_fem
     sll_s_fft_apply_plan_c2r_1d, &
     sll_s_fft_apply_plan_r2c_1d, &
     sll_s_fft_delete_plan, &
-    sll_f_fft_new_plan_c2r_1d, &
-    sll_f_fft_new_plan_r2c_1d, &
+    sll_s_fft_init_plan_c2r_1d, &
+    sll_s_fft_init_plan_r2c_1d, &
     sll_t_fft_plan
 
   use sll_m_gauss_legendre_integration, only: &
@@ -216,9 +216,12 @@ contains
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
-        this%forward_fftplan => sll_f_fft_new_plan_r2c_1d(this%num_cells, &
+        allocate(this%forward_fftplan)
+        call sll_s_fft_init_plan_r2c_1d(this%forward_fftplan, this%num_cells, &
              this%fem_solution,this%stiffn_matrix_first_line_fourier)
-        this%backward_fftplan=>sll_f_fft_new_plan_c2r_1d(this%num_cells, &
+        allocate(this%backward_fftplan)
+        call sll_s_fft_init_plan_c2r_1d(this%backward_fftplan, &
+             this%num_cells, &
              this%stiffn_matrix_first_line_fourier,this%fem_solution)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
 
