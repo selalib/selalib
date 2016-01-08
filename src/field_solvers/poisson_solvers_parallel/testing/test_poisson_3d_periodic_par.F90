@@ -198,6 +198,7 @@ program test_poisson_3d_periodic_par
      endif           
 
   call sll_s_delete_poisson_3d_periodic_plan_par(plan)
+  deallocate(plan)
 
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
   SLL_DEALLOCATE_ARRAY(rho, ierr)
