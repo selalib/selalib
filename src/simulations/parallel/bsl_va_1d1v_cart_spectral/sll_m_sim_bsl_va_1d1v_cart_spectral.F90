@@ -95,7 +95,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
     sll_s_fft_apply_plan_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_f_fft_new_plan_r2r_1d, &
+    sll_s_fft_init_plan_r2r_1d, &
     sll_t_fft_plan
 
   use sll_m_gnuplot, only: &
@@ -1193,7 +1193,8 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
     
     SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    pfwd => sll_f_fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
+    allocate(pfwd)
+    call sll_s_fft_init_plan_r2r_1d(pfwd,np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
     
     layout_x1       => sll_f_new_layout_2d( sll_v_world_collective )
     layout_x2       => sll_f_new_layout_2d( sll_v_world_collective )    

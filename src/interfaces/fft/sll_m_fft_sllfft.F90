@@ -49,9 +49,9 @@ module sll_m_fft
     sll_s_print_defaultfftlib, &
     sll_f_fft_allocate_aligned_complex, &
     sll_f_fft_allocate_aligned_real, &
-    sll_f_fft_new_plan_r2r_1d, &
-    sll_f_fft_new_plan_c2r_1d, &
-    sll_f_fft_new_plan_r2c_1d, &
+    sll_s_fft_init_plan_r2r_1d, &
+    sll_s_fft_init_plan_c2r_1d, &
+    sll_s_fft_init_plan_r2c_1d, &
     sll_f_fft_new_plan_c2c_1d, &
     sll_f_fft_new_plan_r2c_2d, &
     sll_f_fft_new_plan_c2r_2d, &
@@ -412,7 +412,7 @@ contains
 
 ! REAL
 !> Create new 1d real to real plan
-  function sll_f_fft_new_plan_r2r_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
+  function sll_s_fft_init_plan_r2r_1d(nx,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
@@ -510,7 +510,7 @@ contains
 
 ! REAL TO COMPLEX
   !> Create new 1d real to complex plan for forward FFT
-  function sll_f_fft_new_plan_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
+  function sll_s_fft_init_plan_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_comp64, dimension(:), intent(out)        :: array_out !< (Typical) output array (gets overwritten for certain options)
@@ -576,7 +576,7 @@ contains
 
 ! COMPLEX TO REAL
   !> Create new 1d complex to real plan for backward FFT
-  function sll_f_fft_new_plan_c2r_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
+  function sll_s_fft_init_plan_c2r_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_comp64, dimension(:)                     :: array_in  !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:)                     :: array_out !< (Typical) output array (gets overwritten for certain options)
