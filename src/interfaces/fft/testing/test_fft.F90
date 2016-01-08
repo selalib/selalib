@@ -253,12 +253,14 @@ program unit_test
         enddo
         data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
         
-        p => sll_f_fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+        allocate(p)
+        call sll_s_fft_init_plan_c2c_2d(p,s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
              sll_p_fft_forward)
         call sll_s_fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call sll_s_fft_delete_plan(p)
         
-        p => sll_f_fft_new_plan_c2c_2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+        allocate(p)
+        call sll_s_fft_init_plan_c2c_2d(p,s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
              sll_p_fft_backward,normalized = .TRUE.)
         call sll_s_fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call sll_s_fft_delete_plan(p)
