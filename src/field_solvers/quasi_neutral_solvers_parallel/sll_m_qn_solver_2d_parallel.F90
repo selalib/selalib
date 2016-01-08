@@ -274,7 +274,9 @@ contains
        SLL_ASSERT( associated(plan) )
 
        call sll_s_fft_delete_plan(plan%fft_plan)
+       deallocate(plan%fft_plan)
        call sll_s_fft_delete_plan(plan%inv_fft_plan)
+       deallocate(plan%inv_fft_plan)
        call sll_o_delete( plan%layout_fft )
        call sll_o_delete( plan%layout_lin_sys )
 

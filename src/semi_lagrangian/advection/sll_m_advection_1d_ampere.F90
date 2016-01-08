@@ -162,7 +162,9 @@ subroutine delete(adv)
   class(ampere_1d_advector), intent(inout) :: adv
 
   call sll_s_fft_delete_plan(adv%fwx)
+  deallocate(adv%fwx)
   call sll_s_fft_delete_plan(adv%bwx)
+  deallocate(adv%bwx)
 
 end subroutine delete
 

@@ -402,10 +402,14 @@ enddo
 close(850)
 
 call sll_s_fft_delete_plan(fwx1)
+deallocate(fwx1)
 call sll_s_fft_delete_plan(bwx1)
+deallocate(bwx1)
 call sll_s_fft_delete_plan(fwx2)
+deallocate(fwx2)
 call sll_s_fft_delete_plan(bwx2)
-  
+deallocate(bwx2)  
+
 contains
 
 subroutine apply_bc()

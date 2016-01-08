@@ -262,7 +262,9 @@ contains
     sll_int32 :: err
     if (associated(this)) then
        call sll_s_fft_delete_plan(this%fw)
+       deallocate(this%fw)
        call sll_s_fft_delete_plan(this%bw)
+       deallocate(this%bw)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
        SLL_DEALLOCATE_ARRAY(this%mat,err)
