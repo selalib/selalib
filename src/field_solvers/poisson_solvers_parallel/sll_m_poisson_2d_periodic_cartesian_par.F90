@@ -580,9 +580,13 @@ contains
     end if
 
     call sll_s_fft_delete_plan(plan%px)
+    deallocate(plan%px)
     call sll_s_fft_delete_plan(plan%py)
+    deallocate(plan%py)
     call sll_s_fft_delete_plan(plan%px_inv)
+    deallocate(plan%px_inv)
     call sll_s_fft_delete_plan(plan%py_inv)
+    deallocate(plan%py_inv)
 
 !    call delete( plan%layout_x ) ! can't delete this, the plan does not own it
     call sll_o_delete( plan%layout_seq_x1 )

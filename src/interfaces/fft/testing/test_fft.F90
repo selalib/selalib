@@ -67,6 +67,7 @@ program unit_test
     print *,'get and set mode real ok'
   endif
   call sll_s_fft_delete_plan(p)
+  deallocate(p)
   DEALLOCATE(ar_data)
 
 
@@ -84,10 +85,12 @@ program unit_test
     p => sll_f_fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),sll_p_fft_forward)
     call sll_s_fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
 
     p => sll_f_fft_new_plan_c2c_1d(s,data_comp(1:s),data_comp(1:s),sll_p_fft_backward,normalized=.TRUE.)
     call sll_s_fft_apply_plan_c2c_1d(p,data_comp(1:s),data_comp(1:s))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
     if( ierr > err_max ) then
       stop 'Average error too big'
@@ -117,10 +120,12 @@ program unit_test
   ! Forward transform
   call sll_s_fft_apply_plan_c2c_1d(pf,in,in)
   call sll_s_fft_delete_plan(pf)
-  
+  deallocate(pf)
+
   ! Backward transform
   call sll_s_fft_apply_plan_c2c_1d(pb,in,in)
   call sll_s_fft_delete_plan(pb)
+  deallocate(pb)
   ierr = ERROR_MAX(data_comp(1:m1) - in)
   if( ierr > err_max ) then
      stop 'Average error too big'
@@ -144,12 +149,14 @@ program unit_test
     call sll_s_fft_init_plan_r2r_1d(p,s,rdata(1:s),rdata(1:s),sll_p_fft_forward)
     call sll_s_fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
 
     allocate(p)
     call sll_s_fft_init_plan_r2r_1d(p,s,rdata(1:s),rdata(1:s),sll_p_fft_backward,normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2r_1d(p,rdata(1:s),rdata(1:s))
     call sll_s_fft_delete_plan(p)
-    
+    deallocate(p)
+
     ierr = MAXVAL(ABS( rdata(1:s) - rdata_copy(1:s) ))
     if( ierr > err_max ) then
       print*,'Average error too big ',ierr
@@ -181,10 +188,12 @@ program unit_test
   ! Forward transform
   call sll_s_fft_apply_plan_r2r_1d(pf,ar_data,ar_data)
   call sll_s_fft_delete_plan(pf)
+  deallocate(pf)
   
   ! Backward transform
   call sll_s_fft_apply_plan_r2r_1d(pb,ar_data, ar_data)
   call sll_s_fft_delete_plan(pb)
+  deallocate(pb)
   ierr = MAXVAL(ABS(rdata(1:m1) - ar_data))
   if( ierr > err_max ) then
      stop 'Average error too big'
@@ -210,11 +219,13 @@ program unit_test
     call sll_s_fft_init_plan_r2c_1d(p,s,rdata(1:s),data_comp(1:s/2+1))
     call sll_s_fft_apply_plan_r2c_1d(p,rdata(1:s),data_comp(1:s/2+1))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
 
     allocate(p)
     call sll_s_fft_init_plan_c2r_1d(p,s,data_comp(1:s/2+1),rdata(1:s), normalized = .TRUE.)
     call sll_s_fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata(1:s))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
     ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
       stop 'Average error too big'
@@ -236,11 +247,13 @@ program unit_test
     call sll_s_fft_init_plan_r2c_1d(p,s,rdata_comp(1:s),data_comp(1:s/2+1), normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2c_1d(p,rdata_comp(1:s),data_comp(1:s/2+1))
     call sll_s_fft_delete_plan(p)
-    
+    deallocate(p)
+
     allocate(p)
     call sll_s_fft_init_plan_c2r_1d(p,s,data_comp(1:s/2+1),rdata_comp(1:s))
     call sll_s_fft_apply_plan_c2r_1d(p,data_comp(1:s/2+1),rdata_comp(1:s))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
     ierr = MAXVAL(ABS(rdata_comp(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
       stop 'Average error too big'
@@ -268,12 +281,14 @@ program unit_test
              sll_p_fft_forward)
         call sll_s_fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call sll_s_fft_delete_plan(p)
-        
+        deallocate(p)
+
         allocate(p)
         call sll_s_fft_init_plan_c2c_2d(p,s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
              sll_p_fft_backward,normalized = .TRUE.)
         call sll_s_fft_apply_plan_c2c_2d(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
         call sll_s_fft_delete_plan(p)
+        deallocate(p)
         ierr = 0._f64
         do j=1,t
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
@@ -306,11 +321,13 @@ program unit_test
     call sll_s_fft_init_plan_r2c_2d(p,s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call sll_s_fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
 
     allocate(p)
     call sll_s_fft_init_plan_c2r_2d(p,s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),normalized = .TRUE.)
     call sll_s_fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
  
     ierr = 0._f64
     do j=1,t
@@ -342,11 +359,13 @@ program unit_test
          normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
 
     allocate(p)
     call sll_s_fft_init_plan_c2r_2d(p,s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call sll_s_fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call sll_s_fft_delete_plan(p)
+    deallocate(p)
 
     ierr = 0._f64
     do j=1,t

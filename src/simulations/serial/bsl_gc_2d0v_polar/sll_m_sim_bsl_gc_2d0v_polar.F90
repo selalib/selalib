@@ -1126,6 +1126,7 @@ contains
 
 
     call sll_s_fft_delete_plan(pfwd)
+    deallocate(pfwd)
     
 !    call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
 !

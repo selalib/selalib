@@ -165,7 +165,9 @@ contains
         SLL_DEALLOCATE_ARRAY(this%mass_matrix_first_line_fourier,ierr)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier,ierr)
         call sll_s_fft_delete_plan(this%backward_fftplan)
+        deallocate(this%backward_fftplan)
         call sll_s_fft_delete_plan(this%forward_fftplan)
+        deallocate(this%forward_fftplan)
     endsubroutine
 
 
