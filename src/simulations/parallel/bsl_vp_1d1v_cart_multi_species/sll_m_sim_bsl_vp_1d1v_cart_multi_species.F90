@@ -60,7 +60,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_multi_species
     sll_s_fft_apply_plan_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_f_fft_new_plan_r2r_1d, &
+    sll_s_fft_init_plan_r2r_1d, &
     sll_t_fft_plan
 
   use sll_m_periodic_interp, only: &
@@ -881,7 +881,8 @@ endif
 
 
 SLL_ALLOCATE(sim%buf_fft(nc_x1),ierr)
-sim%pfwd => sll_f_fft_new_plan_r2r_1d(nc_x1,sim%buf_fft,sim%buf_fft,sll_p_fft_forward,normalized = .TRUE.)
+allocate(sim%pfwd)
+call sll_s_fft_init_plan_r2r_1d(sim%pfwd,nc_x1,sim%buf_fft,sim%buf_fft,sll_p_fft_forward,normalized = .TRUE.)
 SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)      
 SLL_ALLOCATE(sim%efield(np_x1),ierr)
 SLL_ALLOCATE(sim%e_app(np_x1),ierr)

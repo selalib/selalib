@@ -38,8 +38,8 @@ module sll_m_advection_1d_spectral
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_f_fft_new_plan_c2r_1d, &
-    sll_f_fft_new_plan_r2c_1d, &
+    sll_s_fft_init_plan_c2r_1d, &
+    sll_s_fft_init_plan_r2c_1d, &
     sll_s_fft_apply_plan_c2r_1d, &
     sll_s_fft_apply_plan_r2c_1d, &
     sll_s_fft_delete_plan, &
@@ -118,8 +118,10 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
   SLL_ALLOCATE(adv%fk(1:num_cells/2+1), error)
   adv%fk(1:num_cells/2+1) = cmplx(0.0,0.0,kind=f64)
   !$OMP CRITICAL
-  adv%fwx => sll_f_fft_new_plan_r2c_1d(num_cells, adv%d_dx,  adv%fk)
-  adv%bwx => sll_f_fft_new_plan_c2r_1d(num_cells, adv%fk, adv%d_dx)
+  allocate(adv%fwx) 
+  call sll_s_fft_init_plan_r2c_1d(adv%fwx, num_cells, adv%d_dx,  adv%fk)
+  allocate(adv%bwx)
+  call sll_s_fft_init_plan_c2r_1d(adv%bwx, num_cells, adv%fk, adv%d_dx)
   !$OMP END CRITICAL
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:num_cells/2+1), error)

@@ -26,8 +26,8 @@ program test_deposit_cubic_splines
     sll_s_fft_apply_plan_c2r_1d, &
     sll_s_fft_apply_plan_r2c_1d, &
     sll_s_fft_delete_plan, &
-    sll_f_fft_new_plan_c2r_1d, &
-    sll_f_fft_new_plan_r2c_1d, &
+    sll_s_fft_init_plan_c2r_1d, &
+    sll_s_fft_init_plan_r2c_1d, &
     sll_t_fft_plan
 
   implicit none
@@ -88,10 +88,14 @@ fk1 = cmplx(0.0,0.0, kind=f64)
 SLL_ALLOCATE(fk2(1:nc_eta2/2+1), error)
 fk2 = cmplx(0.0,0.0, kind=f64)
 
-fwx1 => sll_f_fft_new_plan_r2c_1d(nc_eta1, d_dx1, fk1)
-bwx1 => sll_f_fft_new_plan_c2r_1d(nc_eta1,   fk1, d_dx1)
-fwx2 => sll_f_fft_new_plan_r2c_1d(nc_eta2, d_dx2, fk2)
-bwx2 => sll_f_fft_new_plan_c2r_1d(nc_eta2,   fk2, d_dx2)
+allocate(fwx1)
+call sll_s_fft_init_plan_r2c_1d(fwx1, nc_eta1, d_dx1, fk1)
+allocate(bwx1)
+call sll_s_fft_init_plan_c2r_1d(bwx1, nc_eta1,   fk1, d_dx1)
+allocate(fwx2)
+call sll_s_fft_init_plan_r2c_1d(fwx2, nc_eta2, d_dx2, fk2)
+allocate(bwx2)
+call sll_s_fft_init_plan_c2r_1d(bwx2, nc_eta2,   fk2, d_dx2)
 
 SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
 SLL_CLEAR_ALLOCATE(kx2(1:nc_eta2/2+1), error)

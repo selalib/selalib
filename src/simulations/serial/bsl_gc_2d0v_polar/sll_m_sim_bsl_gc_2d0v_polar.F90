@@ -75,7 +75,7 @@ module sll_m_sim_bsl_gc_2d0v_polar
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_f_fft_new_plan_r2r_1d, &
+    sll_s_fft_init_plan_r2r_1d, &
     sll_t_fft_plan
 
   use sll_m_general_coordinate_elliptic_solver, only: &
@@ -1060,7 +1060,8 @@ contains
     
     SLL_ALLOCATE(int_r(Nc_x2),ierr)
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
-    pfwd => sll_f_fft_new_plan_r2r_1d(Nc_x2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
+    allocate(pfwd)
+    call sll_s_fft_init_plan_r2r_1d(pfwd,Nc_x2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64

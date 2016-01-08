@@ -110,7 +110,7 @@ module sll_m_poisson_2d_polar
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_f_fft_new_plan_r2r_1d, &
+    sll_s_fft_init_plan_r2r_1d, &
     sll_s_fft_set_mode_c2r_1d, &
     sll_t_fft_plan
 
@@ -232,8 +232,9 @@ contains
       this%bc(2)=-1
     end if
 
-    this%pfwd => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
-    this%pinv => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_backward)
+    allocate(this%pfwd)
+    call sll_s_fft_init_plan_r2r_1d(this%pfwd,ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
+    call sll_s_fft_init_plan_r2r_1d(this%pinv,ntheta,buf,buf,sll_p_fft_backward)
     
     SLL_DEALLOCATE_ARRAY(buf,err)
 
@@ -299,8 +300,10 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%pfwd => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
-    this%pinv => sll_f_fft_new_plan_r2r_1d(ntheta,buf,buf,sll_p_fft_backward)
+    allocate(this%pfwd)
+    call sll_s_fft_init_plan_r2r_1d(this%pfwd,ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
+    allocate(this%pinv) 
+    call sll_s_fft_init_plan_r2r_1d(this%pinv,ntheta,buf,buf,sll_p_fft_backward)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
   end subroutine initialize_poisson_polar
