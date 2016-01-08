@@ -47,7 +47,7 @@ module sll_mpi
 !  external :: mpi_init, mpi_init_thread, mpi_initialized, mpi_finalize, &
 !    mpi_comm_size, mpi_comm_rank, mpi_comm_split, mpi_comm_free, &
 !    mpi_type_create_f90_real, &
-!    mpi_barrier, mpi_wait, mpi_waitall
+!    mpi_barrier, mpi_wait, mpi_waitall 
 
 !-----------------------------------------------------------------------
 ! Module interface

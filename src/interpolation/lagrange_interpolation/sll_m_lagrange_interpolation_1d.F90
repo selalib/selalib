@@ -28,8 +28,8 @@ module sll_m_lagrange_interpolation_1d
    sll_real64                           :: xmin
    sll_real64                           :: xmax
    sll_real64                           :: deta !< \a deta is the grid spacing
-   sll_real64, dimension(:), pointer    :: wj
-   sll_real64, dimension(:), pointer    :: wj_scale
+   sll_real64, dimension(:), pointer  :: wj
+   sll_real64, dimension(:), pointer  :: wj_scale
    sll_real64, dimension(:), pointer    :: data_out !result=p(x) where p is the polynomial of interpolation
    sll_int32                            :: periodic_last !< \a periodic_last indicates if the input data repeats the first point at the end if we have periodic data. It takes the values 0 (not repeated) or 1 (repeated).  Default : 1.
  end type sll_t_lagrange_interpolation_1d
