@@ -292,11 +292,13 @@ program unit_test
     enddo
     rdata_copy2d(1:s,1:t) = data_real2d(1:s,1:t)
  
-    p => sll_f_fft_new_plan_r2c_2d(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
+    allocate(p)
+    call sll_s_fft_init_plan_r2c_2d(p,s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call sll_s_fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call sll_s_fft_delete_plan(p)
 
-    p => sll_f_fft_new_plan_c2r_2d(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),normalized = .TRUE.)
+    allocate(p)
+    call sll_s_fft_init_plan_c2r_2d(p,s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t),normalized = .TRUE.)
     call sll_s_fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call sll_s_fft_delete_plan(p)
  
@@ -325,12 +327,14 @@ program unit_test
     enddo
     rdata_copy2d(1:s,1:t) = data_real2d(1:s,1:t)
  
-    p => sll_f_fft_new_plan_r2c_2d(s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t),&
+    allocate(p)
+    call sll_s_fft_init_plan_r2c_2d(p,s,t,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t),&
          normalized = .TRUE.)
     call sll_s_fft_apply_plan_r2c_2d(p,data_real2d(1:s,1:t),data_comp2d(1:s/2+1,1:t))
     call sll_s_fft_delete_plan(p)
 
-    p => sll_f_fft_new_plan_c2r_2d(s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
+    allocate(p)
+    call sll_s_fft_init_plan_c2r_2d(p,s,t,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call sll_s_fft_apply_plan_c2r_2d(p,data_comp2d(1:s/2+1,1:t),data_real2d(1:s,1:t))
     call sll_s_fft_delete_plan(p)
 
