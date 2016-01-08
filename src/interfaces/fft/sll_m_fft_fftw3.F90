@@ -143,7 +143,7 @@ contains
 
   !> Function to reconstruct the complex FFT mode from the data of a r2r transform
   function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
-    type(sll_t_fft_plan), pointer, intent(in) :: plan !< FFT plan
+    type(sll_t_fft_plan),      intent(in)   :: plan !< FFT plan
     sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
     sll_int32, intent(in)                   :: k    !< mode to be extracted
     sll_comp64                              :: mode !< Complex value of kth mode
@@ -169,7 +169,7 @@ contains
 
   !> Function to set a complex mode to the real representation of r2r.
   subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
-    type(sll_t_fft_plan), pointer, intent(in)  :: plan !< FFT planner object
+    type(sll_t_fft_plan),      intent(in)    :: plan !< FFT planner object
     sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
     sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
     sll_int32, intent(in)                    :: k !< mode to be set
@@ -243,7 +243,7 @@ contains
 
   !> Compute fast Fourier transform in complex to complex mode.
   subroutine sll_s_fft_apply_plan_c2c_1d(plan,array_in,array_out)
-    type(sll_t_fft_plan), pointer, intent(in)         :: plan !< FFT planner object
+    type(sll_t_fft_plan),     intent(in)            :: plan !< FFT planner object
     sll_comp64, dimension(:), intent(inout)         :: array_in !< Complex data to be Fourier transformed
     sll_comp64, dimension(:), intent(inout)         :: array_out !< Fourier coefficients on output
 
@@ -312,7 +312,7 @@ contains
 
   !> Compute fast Fourier transform in complex to complex mode.
   subroutine sll_s_fft_apply_plan_c2c_2d(plan,array_in,array_out)
-    type(sll_t_fft_plan), pointer, intent(in)      :: plan !< FFT planner object
+    type(sll_t_fft_plan),  intent(in)            :: plan !< FFT planner object
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< Complex data to be Fourier transformed 
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_out !< Fourier coefficients on output
 
@@ -396,7 +396,7 @@ contains
   !> Compute fast Fourier transform in real to real mode.
   subroutine sll_s_fft_apply_plan_r2r_1d(plan,array_in,array_out)
 
-    type(sll_t_fft_plan), pointer, intent(inout) :: plan !< FFT planner object
+    type(sll_t_fft_plan),     intent(inout) :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
     sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
 
@@ -480,7 +480,7 @@ contains
   
   !> Compute fast Fourier transform in real to complex mode.
   subroutine sll_s_fft_apply_plan_r2c_1d(plan,array_in,array_out)
-    type(sll_t_fft_plan), pointer, intent(in)         :: plan !< FFT planner object
+    type(sll_t_fft_plan),     intent(in)            :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout)         :: array_in !< Real input data to be Fourier transformed
     sll_comp64, dimension(:), intent(out)           :: array_out !< Complex Fourier mode (only first half due to symmetry)
 
@@ -544,17 +544,12 @@ contains
 
   !> Compute fast Fourier transform in real to complex mode.
   subroutine sll_s_fft_apply_plan_r2c_2d(plan,array_in,array_out)
-    type(sll_t_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
+    type(sll_t_fft_plan),       intent(in)           :: plan      !< FFT planner object
     sll_real64, dimension(:,:), intent(inout)         :: array_in  !< Real input data to be Fourier transformed
     sll_comp64, dimension(:,:), intent(out)           :: array_out !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
     sll_int32     :: nx, ny
     sll_real64    :: factor
 
-    if( .not. associated(plan) ) then
-      print*,'Eroor in subroutine fftw_apply_plan_r2c_2d'
-      print*,'      plan not associated'
-      stop ''
-    endif
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
@@ -631,7 +626,7 @@ contains
 
   !> Compute fast Fourier transform in complex to real mode.
   subroutine sll_s_fft_apply_plan_c2r_1d(plan,array_in,array_out)
-    type(sll_t_fft_plan), pointer, intent(in)    :: plan !< FFT planner objece
+    type(sll_t_fft_plan),         intent(in)    :: plan !< FFT planner objece
     sll_comp64, dimension(:),    intent(inout) :: array_in !< Complex Fourier coefficient to be transformed back
     sll_real64, dimension(:),    intent(inout) :: array_out !< Real result of Fourier transform
 
@@ -694,18 +689,12 @@ contains
   
   !> Compute fast Fourier transform in complex to real mode.
   subroutine sll_s_fft_apply_plan_c2r_2d(plan,array_in,array_out)
-    type(sll_t_fft_plan), pointer, intent(in)           :: plan      !< FFT planner object
+    type(sll_t_fft_plan),         intent(in)          :: plan      !< FFT planner object
     sll_comp64, dimension(1:,1:), intent(inout)       :: array_in  !< Complex Fourier coefficient to be transformed back
     sll_real64, dimension(1:,1:), intent(out)         :: array_out !< Real output of Fourier transform
 
     sll_int32                                         :: nx, ny
     sll_real64                                        :: factor
-
-    if( .not. associated(plan) ) then
-      print*,'Error in subroutine fftw_apply_plan_c2r_2d'
-      print*,'      plan not associated'
-      stop ''
-    endif
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
@@ -726,12 +715,6 @@ contains
    type(sll_t_fft_plan), pointer :: plan !< FFT planner object
 
    sll_int32 :: ierr
-
-    if( .not. associated(plan) ) then
-      print * , '  Error in sll_s_fft_delete_plan subroutine'
-      print * , '  you try to delete a plan not associated'
-      stop 
-    endif
 
     call fftw_destroy_plan(plan%fftw)
     if(associated(plan%problem_shape)) then
