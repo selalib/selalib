@@ -374,12 +374,18 @@ contains
 
 
     call sll_s_fft_delete_plan(plan%px)
+    deallocate(plan%px)
     call sll_s_fft_delete_plan(plan%py)
+    deallocate(plan%py)
     call sll_s_fft_delete_plan(plan%pz)
+    deallocate(plan%pz)
 
     call sll_s_fft_delete_plan(plan%px_inv)
+    deallocate(plan%px_inv)
     call sll_s_fft_delete_plan(plan%py_inv)
+    deallocate(plan%py_inv)
     call sll_s_fft_delete_plan(plan%pz_inv)
+    deallocate(plan%pz_inv)
 
     call sll_o_delete( plan%layout_x )
     call sll_o_delete( plan%layout_y )

@@ -2405,7 +2405,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       time_mode(1:8)!,mode_slope
 
     call sll_s_fft_delete_plan(pfwd)
-
+    deallocate(pfwd)
     
   end subroutine time_history_diagnostic_polar
   
@@ -2527,6 +2527,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       time_mode(1:8)!,mode_slope
 
     call sll_s_fft_delete_plan(pfwd)
+    deallocate(pfwd)
 
     
   end subroutine time_history_diagnostic_gc3

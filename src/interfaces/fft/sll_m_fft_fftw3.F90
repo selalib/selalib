@@ -711,7 +711,7 @@ contains
 
   !> Delete a plan
   subroutine sll_s_fft_delete_plan(plan)
-   type(sll_t_fft_plan), pointer :: plan !< FFT planner object
+   type(sll_t_fft_plan) :: plan !< FFT planner object
 
    sll_int32 :: ierr
 
@@ -719,7 +719,7 @@ contains
     if(associated(plan%problem_shape)) then
       SLL_DEALLOCATE(plan%problem_shape,ierr)
     endif
-    plan => null()
+    
   end subroutine
 
 end module sll_m_fft

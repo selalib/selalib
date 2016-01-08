@@ -188,8 +188,10 @@ subroutine delete(adv)
   class(spectral_1d_advector), intent(inout) :: adv
 
   call sll_s_fft_delete_plan(adv%fwx)
+  deallocate(adv%fwx)
   call sll_s_fft_delete_plan(adv%bwx)
-   
+  deallocate(adv%bwx)
+
 end subroutine delete
 
 end module sll_m_advection_1d_spectral

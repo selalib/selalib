@@ -320,7 +320,9 @@ contains
 
     if (associated(this)) then
        call sll_s_fft_delete_plan(this%pfwd)
+       deallocate(this%pfwd)
        call sll_s_fft_delete_plan(this%pinv)
+       deallocate(this%pinv)
        SLL_DEALLOCATE_ARRAY(this%f_fft,err)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
