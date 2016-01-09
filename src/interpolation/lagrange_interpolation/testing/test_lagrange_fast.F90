@@ -2,7 +2,7 @@ program test_lagrange_fast
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only : sll_pi
+  use sll_m_constants, only : sll_p_pi
 
   use sll_m_lagrange_fast, only : &
     sll_s_interpolate_array_disp_lagrange_fixed_no_bc
@@ -65,7 +65,7 @@ contains
     sll_int32, intent(in) :: num_points
     sll_real64, intent(in) :: x
     sll_real64 :: f
-    f = cos(2*sll_pi*x/num_points)
+    f = cos(2*sll_p_pi*x/num_points)
   end function
 
 end program test_lagrange_fast
