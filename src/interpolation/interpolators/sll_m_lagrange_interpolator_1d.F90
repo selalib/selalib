@@ -10,9 +10,9 @@ module sll_m_lagrange_interpolator_1d
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_d_one_sided, &
-    sll_d_halo, &
-    sll_periodic
+    sll_p_one_sided, &
+    sll_p_halo, &
+    sll_p_periodic
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -44,7 +44,7 @@ module sll_m_lagrange_interpolator_1d
    sll_int32                                    :: bc_type
    !> Number of points used for interpolation
    sll_int32                                    :: stencil_width 
-   !> Flag specifying how the Lagrange interpolation points should be chosen (either SLL_D_INTERP_LAGRANGE_CENTERED or SLL_D_INTERP_LAGRANGE_FIXED)
+   !> Flag specifying how the Lagrange interpolation points should be chosen (either sll_p_lagrange_centered or sll_p_lagrange_fixed)
    sll_int32                                    :: interval_selection
  contains
    !> PLEASE ADD DOCUMENTATION
@@ -79,8 +79,8 @@ module sll_m_lagrange_interpolator_1d
 
 
   ! Flags for way how to choose the Lagrange points
-  sll_int32, parameter :: SLL_D_INTERP_LAGRANGE_CENTERED = 0 !< Flag to specify Lagrange interpolation centered around the interpolation point
-  sll_int32, parameter :: SLL_D_INTERP_LAGRANGE_FIXED    = 1 !< Flag to specify Lagrange interpolation on a fixed interval centered around the point that is displace (for interpolate_array_disp)
+  sll_int32, parameter :: sll_p_lagrange_centered = 0 !< Flag to specify Lagrange interpolation centered around the interpolation point
+  sll_int32, parameter :: sll_p_lagrange_fixed    = 1 !< Flag to specify Lagrange interpolation on a fixed interval centered around the point that is displace (for interpolate_array_disp)
  
 
 contains  !**********************************************************
@@ -112,13 +112,13 @@ subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_typ
     if (present(interval_selection)) then
        interpolator%interval_selection = interval_selection
     else
-       interpolator%interval_selection = SLL_D_INTERP_LAGRANGE_CENTERED
+       interpolator%interval_selection = sll_p_lagrange_centered
     end if
 
     select case (interpolator%interval_selection)
-    case (SLL_D_INTERP_LAGRANGE_CENTERED)  
+    case (sll_p_lagrange_centered)  
        interpolator%stencil_width = 2*d
-    case (SLL_D_INTERP_LAGRANGE_FIXED)
+    case (sll_p_lagrange_fixed)
        interpolator%stencil_width = 2*d+1
     case default
        SLL_ERROR('interpolate_array_disp_li1d', 'Interval selection not implemented.')
@@ -173,16 +173,16 @@ subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
   sll_real64, dimension(1:num_pts), intent(out)    :: output_array
 
   select case (this%interval_selection)
-  case (SLL_D_INTERP_LAGRANGE_CENTERED)  
+  case (sll_p_lagrange_centered)  
      call sll_s_interpolate_from_interpolant_array(data,-alpha,this%lagrange)
      output_array=this%lagrange%data_out
-  case (SLL_D_INTERP_LAGRANGE_FIXED)
+  case (sll_p_lagrange_fixed)
      select case (this%bc_type)
-     case (SLL_PERIODIC)
+     case (sll_p_periodic)
         call sll_s_interpolate_array_disp_lagrange_fixed_periodic(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
-     case (SLL_D_ONE_SIDED)
+     case (sll_p_one_sided)
         call sll_s_interpolate_array_disp_lagrange_fixed_no_bc(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
-     case (SLL_D_HALO)
+     case (sll_p_halo)
         call sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
      case default
         SLL_ERROR('interpolate_array_disp_li1d', 'Boundary type not implemented.')

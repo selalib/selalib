@@ -194,7 +194,7 @@ contains
     character(len=256), intent(in) :: bc
     sll_int32 :: res
     select case(bc)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         res = sll_p_periodic
       case ("SLL_DIRICHLET")
         res = sll_p_dirichlet
