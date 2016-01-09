@@ -17,24 +17,24 @@ program test_lagrange_fast_parallel
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_m_constants, only : sll_pi
+  use sll_m_constants, only : sll_p_pi
 
   use sll_m_lagrange_fast, only : &
        sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
   use sll_m_collective, only : &
-       sll_boot_collective, &
-       sll_get_collective_rank, &
-       sll_get_collective_size, &
-       sll_halt_collective, &
-       sll_world_collective
+       sll_s_boot_collective, &
+       sll_f_get_collective_rank, &
+       sll_f_get_collective_size, &
+       sll_s_halt_collective, &
+       sll_v_world_collective
 
   use sll_m_decomposition, only : &
-       apply_halo_exchange, &
-       cartesian_topology_6d, &
-       decomposition_6d, &
-       new_cartesian_domain_decomposition, &
-       new_cartesian_topology
+       sll_o_apply_halo_exchange, &
+       sll_t_cartesian_topology_6d, &
+       sll_t_decomposition_6d, &
+       sll_o_new_cartesian_domain_decomposition, &
+       sll_o_new_cartesian_topology
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -42,8 +42,8 @@ program test_lagrange_fast_parallel
   sll_int32, parameter :: nd = 6
   sll_int32 :: procs_per_dimension(nd)
   logical :: periodic(nd), check(2*nd+1)
-  type(cartesian_topology_6d), pointer :: topology
-  type(decomposition_6d), pointer :: decomposition
+  type(sll_t_cartesian_topology_6d), pointer :: topology
+  type(sll_t_decomposition_6d), pointer :: decomposition
   sll_int32 :: ierr
   sll_int32 :: world_size, my_rank
   sll_int32 :: global_grid_points_per_dimension(nd)
@@ -57,9 +57,9 @@ program test_lagrange_fast_parallel
 
   ! --- initialize and perform 6d domain decomposition and interpolation
 
-  call sll_boot_collective()
-  world_size = sll_get_collective_size(sll_world_collective)
-  my_rank = sll_get_collective_rank(sll_world_collective)
+  call sll_s_boot_collective()
+  world_size = sll_f_get_collective_size(sll_v_world_collective)
+  my_rank = sll_f_get_collective_rank(sll_v_world_collective)
   write (rank_str,'(I6.6)') my_rank
 
   procs_per_dimension(1) = world_size
@@ -68,7 +68,7 @@ program test_lagrange_fast_parallel
   periodic(1) = .true.
   periodic(2:6) = .false.
   topology => &
-    new_cartesian_topology(sll_world_collective, procs_per_dimension, periodic)
+    sll_o_new_cartesian_topology(sll_v_world_collective, procs_per_dimension, periodic)
 
 
   global_grid_points_per_dimension(1) = 128
@@ -76,7 +76,7 @@ program test_lagrange_fast_parallel
   halo_width_per_dimension(1) = 2
   halo_width_per_dimension(2:6) = 0
   decomposition => &
-    new_cartesian_domain_decomposition(topology, global_grid_points_per_dimension, halo_width_per_dimension)
+    sll_o_new_cartesian_domain_decomposition(topology, global_grid_points_per_dimension, halo_width_per_dimension)
 
   !write(*,*) decomposition%local%lo, decomposition%local%hi
 
@@ -131,7 +131,7 @@ program test_lagrange_fast_parallel
   end do
 
   ! --- exchange boundaries
-  call apply_halo_exchange(topology, decomposition, fi)
+  call sll_o_apply_halo_exchange(topology, decomposition, fi)
 
 
   ! --- apply interpolation
@@ -175,7 +175,7 @@ program test_lagrange_fast_parallel
     print *, "MPI rank=", my_rank, ", error =", diff
   end if
 
-101 call sll_halt_collective()
+101 call sll_s_halt_collective()
   stop
 
 contains
@@ -184,7 +184,7 @@ contains
     sll_int32, intent(in) :: num_points
     sll_real64, intent(in) :: x
     sll_real64 :: f
-    f = cos(2*sll_pi*x/num_points)
+    f = cos(2*sll_p_pi*x/num_points)
   end function
 
   subroutine dump(x, y, filename)
