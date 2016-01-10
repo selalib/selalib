@@ -234,6 +234,7 @@ contains
 
     allocate(this%pfwd)
     call sll_s_fft_init_plan_r2r_1d(this%pfwd,ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
+    allocate(this%pinv)
     call sll_s_fft_init_plan_r2r_1d(this%pinv,ntheta,buf,buf,sll_p_fft_backward)
     
     SLL_DEALLOCATE_ARRAY(buf,err)
