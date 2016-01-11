@@ -78,8 +78,8 @@ ADD_CUSTOM_TARGET( clear
   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 INCLUDE(FortranConfig)
-INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
+INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
 INCLUDE(PreprocessorTarget)
 

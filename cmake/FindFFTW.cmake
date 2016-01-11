@@ -44,12 +44,13 @@ FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3
                           HINTS ${TRIAL_PATHS} $ENV{FFTW_LIB}
                           PATH_SUFFIXES lib lib64)
 
+SET(FFTW_LIBRARIES ${FFTW_LIBRARY})
+
 INCLUDE(FindPackageHandleStandardArgs)
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW 
                                   DEFAULT_MSG 
                                   FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
-
 IF(USE_MKL AND NOT FFTW_FOUND)
 
    IF(FFTW_F2003)
@@ -62,15 +63,12 @@ IF(USE_MKL AND NOT FFTW_FOUND)
    SET(FFTW_F2003 OFF CACHE BOOL "Use FFTW Fortran 2003 interface" FORCE)
    REMOVE_DEFINITIONS(-DFFTW_F2003)
 
-ELSE()
-
-   SET(FFTW_LIBRARIES ${FFTW_LIBRARY})
+   FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW 
+                                     DEFAULT_MSG 
+                                     FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
 
 ENDIF()
 
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW 
-                                  DEFAULT_MSG 
-                                  FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
 
 IF(FFTW_FOUND)
 
