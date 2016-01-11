@@ -68,6 +68,9 @@ ELSE()
 
 ENDIF()
 
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW 
+                                  DEFAULT_MSG 
+                                  FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
 
 IF(FFTW_FOUND)
 
