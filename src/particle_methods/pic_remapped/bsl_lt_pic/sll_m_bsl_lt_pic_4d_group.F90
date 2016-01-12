@@ -2892,7 +2892,7 @@ contains
     sll_real64, intent(out) :: d31,d32,d33,d34
     sll_real64, intent(out) :: d41,d42,d43,d44
 
-    type(int_list_element),  pointer  :: new_int_list_element
+    type(int_list_element),  pointer  :: head_int_list
 
     sll_real64, dimension(4)    :: flow_cell_eta_min
     sll_real64, dimension(4)    :: flow_cell_eta_mid
@@ -2907,6 +2907,10 @@ contains
     logical    :: ok_flag
     logical    :: domain_is_x_periodic
     logical    :: domain_is_y_periodic
+
+    sll_int32  :: cell_step
+    sll_int32  :: nb_markers_in_cell
+    sll_int32  :: j_aux_x, j_aux_y, j_aux_vx, j_aux_vy
     sll_int32  :: i_closest_marker
     sll_int32  :: i_marker
     sll_int32  :: i_first_relevant_marker
@@ -2944,17 +2948,56 @@ contains
     SLL_ASSERT( j_y  >= 1 .and. j_y  <= p_group%flow_grid%num_cells2 )
     SLL_ASSERT( j_vx >= 1 .and. j_vx <= p_group%flow_grid%num_cells3 )
     SLL_ASSERT( j_vy >= 1 .and. j_vy <= p_group%flow_grid%num_cells4 )
-    new_int_list_element => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
-    do while( associated(new_int_list_element) )
-      i_marker = new_int_list_element%value
+    head_int_list => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+    nb_markers_in_cell = 0
+    do while( associated(head_int_list) )
+      i_marker = head_int_list%value
       eta_marker = p_group%unstruct_markers_eta(i_marker, :)
       this_marker_distance = p_group%anisotropic_flow_grid_distance(eta_marker, flow_cell_eta_mid)
       if( this_marker_distance < closest_marker_distance )then
         i_closest_marker = i_marker
         closest_marker_distance = this_marker_distance
       end if
-      new_int_list_element => new_int_list_element%next
+      nb_markers_in_cell = nb_markers_in_cell + 1
+      head_int_list => head_int_list%next
     end do
+
+    ! if the given cell had no marker (this is always possible), we take any marker in a neighboring cell
+    if( i_closest_marker == 0 )then
+      SLL_ASSERT( nb_markers_in_cell == 0 )
+      cell_step = 0
+      do while( i_closest_marker == 0 )
+        cell_step = cell_step + 1
+        do j_aux_x = j_x - cell_step, j_x + cell_step
+          if( i_closest_marker > 0 ) EXIT
+          if( j_aux_x < 1 .or. j_aux_x > p_group%flow_grid%num_cells1 ) CYCLE
+
+          do j_aux_y = j_y - cell_step, j_y + cell_step
+            if( i_closest_marker > 0 ) EXIT
+            if( j_aux_y < 1 .or. j_aux_y > p_group%flow_grid%num_cells2 ) CYCLE
+
+            do j_aux_vx = j_vx - cell_step, j_vx + cell_step
+              if( i_closest_marker > 0 ) EXIT
+              if( j_aux_vx < 1 .or. j_aux_vx > p_group%flow_grid%num_cells3 ) CYCLE
+
+              do j_aux_vy = j_vy - cell_step, j_vy + cell_step
+                if( i_closest_marker > 0 ) EXIT
+                if( j_aux_vy < 1 .or. j_aux_vy > p_group%flow_grid%num_cells4 ) CYCLE
+
+                ! take the first marker in the first cell at distance cell_step from given cell (here l_1 but could be l_inf)
+                if( abs(j_aux_x - j_x) + abs(j_aux_y - j_y) + abs(j_aux_vx - j_vx) + abs(j_aux_vy - j_vy) == cell_step )then
+                  head_int_list => p_group%unstruct_markers_in_flow_cell(j_aux_x,j_aux_y,j_aux_vx,j_aux_vy)%pointed_element
+                  if( associated(head_int_list) )then
+                    ! then there is a marker in that cell, just take it
+                    i_closest_marker = head_int_list%value
+                  end if
+                end if
+              end do
+            end do
+          end do
+        end do
+      end do
+    end if
 
     SLL_ASSERT( i_closest_marker > 0 )
 
