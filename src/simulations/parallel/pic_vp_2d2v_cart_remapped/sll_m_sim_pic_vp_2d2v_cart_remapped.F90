@@ -222,8 +222,7 @@ contains
     sll_int32   :: number_markers_y
     sll_int32   :: number_markers_vx
     sll_int32   :: number_markers_vy
-    sll_int32   :: init_nb_unstruct_markers_per_cell
-    sll_int32   :: max_nb_unstruct_markers_per_cell
+    sll_int32   :: nb_unstruct_markers_per_cell
     sll_int32   :: flow_grid_number_cells_x
     sll_int32   :: flow_grid_number_cells_y
     sll_int32   :: flow_grid_number_cells_vx
@@ -306,8 +305,7 @@ contains
                                     number_markers_y,                   &
                                     number_markers_vx,                  &
                                     number_markers_vy,                  &
-                                    init_nb_unstruct_markers_per_cell,  &
-                                    max_nb_unstruct_markers_per_cell,   &
+                                    nb_unstruct_markers_per_cell,       &
                                     flow_grid_number_cells_x,           &
                                     flow_grid_number_cells_y,           &
                                     flow_grid_number_cells_vx,          &
@@ -401,8 +399,7 @@ contains
         number_markers_y,                           &
         number_markers_vx,                          &
         number_markers_vy,                          &
-        init_nb_unstruct_markers_per_cell,          &
-        max_nb_unstruct_markers_per_cell,           &
+        nb_unstruct_markers_per_cell,               &
         flow_grid_number_cells_x,                   &
         flow_grid_number_cells_y,                   &
         flow_grid_number_cells_vx,                  &
