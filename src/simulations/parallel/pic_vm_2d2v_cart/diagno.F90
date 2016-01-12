@@ -318,9 +318,9 @@ character(len=4) :: fin
 
 call sll_s_int2string(iplot, fin)
 
-open( 11, file = 'part_'//nomcas//jname//'.gnu', position="append" )
-open( 12, file = 'xvx_'//nomcas//jname//'.gnu', position="append" )
-open( 13, file = 'yvy_'//nomcas//jname//'.gnu', position="append" )
+open( 11, file = 'part.gnu', position="append" )
+open( 12, file = 'xvx.gnu' , position="append" )
+open( 13, file = 'yvy.gnu' , position="append" )
 
 if ( iplot .eq. 1 ) then
    rewind(11)
@@ -335,16 +335,16 @@ if ( iplot .eq. 1 ) then
 end if
 
 write(11,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(11,*)"plot 'part_"//nomcas//jname//fin//"' w d "
+write(11,*)"plot 'part_"//fin//"' w d "
 close(11)
 write(12,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(12,*)"plot 'part_"//nomcas//jname//fin//"' u 1:3 w d "
+write(12,*)"plot 'part_"//fin//"' u 1:3 w d "
 close(12)
 write(13,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(13,*)"plot 'part_"//nomcas//jname//fin//"' u 2:4 w d "
+write(13,*)"plot 'part_"//fin//"' u 2:4 w d "
 close(13)
 
-open( 14, file = 'part_'//nomcas//jname//fin )
+open( 14, file = 'part_'//fin )
 do ipart=1,nbpart
    speed = sqrt( ele%vit(ipart,1)*ele%vit(ipart,1) + &
         &        ele%vit(ipart,2)*ele%vit(ipart,2) )
@@ -396,18 +396,18 @@ open( 27, file = 'df_v.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(27)
 write(27,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-open( 28, file = 'df_v_'//nomcas//jname//fin )
+open( 28, file = 'df_v_'//fin )
 
-write(27,*)"splot  'df_v_"//nomcas//jname//fin//"' w l, 'df_theo_"//nomcas//jname//"' w l"
+write(27,*)"splot  'df_v_"//fin//"' w l, 'df_theo' w l"
 write(27,*)"pause 1"
 
 do i=1,nv
-   do j=1,nv
-      vx = vmin+(i-0.5)*delta_v
-      vy = vmin+(j-0.5)*delta_v
-      write(28,*) vx,vy,df(i,j)/(delta_v*delta_v)
-   end do
-   write(28,*)
+  do j=1,nv
+    vx = vmin+(i-0.5)*delta_v
+    vy = vmin+(j-0.5)*delta_v
+    write(28,*) vx,vy,df(i,j)/(delta_v*delta_v)
+  end do
+  write(28,*)
 enddo
 
 close(27)
@@ -418,9 +418,9 @@ if ( iplot .eq. 1 ) then
    rewind(37)
    write(37,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-   open( 38, file = 'df_theo_'//nomcas//jname )
+   open( 38, file = 'df_theo')
 
-   write(37,*)"splot  'df_theo_"//nomcas//jname//"' w l"
+   write(37,*)"splot  'df_theo' w l"
    write(37,*)"pause 1"
 
    do i=1,nv
@@ -458,16 +458,16 @@ df = 0.d0
 delta_x = dimx/100
 delta_y = dimy/100
 do ipart=1,nbpart
-   do i=1,100
-      do j=1,100
-         if ((i-1)*delta_x <= ele%pos(ipart,1) .and. &
-              & ele%pos(ipart,1) < i*delta_x  .and. & 
-              & (j-1)*delta_y <= ele%pos(ipart,2) .and. &
-              & ele%pos(ipart,2) < j*delta_y) then
-            df(i,j) = df(i,j) + ele%p(ipart)
-         endif
-      enddo
-   enddo
+  do i=1,100
+    do j=1,100
+      if ((i-1)*delta_x <= ele%pos(ipart,1) .and. &
+        & ele%pos(ipart,1) < i*delta_x  .and. & 
+        & (j-1)*delta_y <= ele%pos(ipart,2) .and. &
+        & ele%pos(ipart,2) < j*delta_y) then
+        df(i,j) = df(i,j) + ele%p(ipart)
+      endif
+    enddo
+  enddo
 enddo
 
 
@@ -475,9 +475,9 @@ open( 27, file = 'df_x.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(27)
 write(27,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-open( 28, file = 'df_x_'//nomcas//jname//fin )
+open( 28, file = 'df_x_'//fin )
 
-write(27,*)"splot  'df_x_"//nomcas//jname//fin//"' w l"
+write(27,*)"splot  'df_x_"//fin//"' w l"
 write(27,*)"pause 1"
 
 do i=1,100  

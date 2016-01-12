@@ -21,53 +21,7 @@ subroutine creapa( ele, time )
 type  (particle) :: ele
 sll_real64 :: time
 
-select case (nomcas)
-
-case ("viry__")
-
-   nbpart = 1
-   allocate(ele%pos(nbpart,2))
-   allocate(ele%case(nbpart,2))
-   allocate(ele%vit(nbpart,2))
-   allocate(ele%epx(nbpart))
-   allocate(ele%epy(nbpart))
-   allocate(ele%bpz(nbpart))
-   allocate(ele%p(nbpart))
-   
-   ele%pos(1,1) = 0.1*dimx 
-   ele%pos(1,2) = 0.1*dimy
-   
-   ele%vit(1,1) = 0.0d0         ! 3d0*c
-   ele%vit(1,2) = 0.d0
-
-   i = 0
-   do while (ele%pos(1,1) >= x(i)) 
-      i=i+1
-   enddo
-   ele%case(1,1) = i-1
-   
-   j = 0
-   do while (ele%pos(1,2) >= y(j)) 
-      j=j+1 
-   enddo
-   ele%case(1,2) = j-1
-
-   ele%p(1) = poids
-
-
-case("faisce")
-
-   call faisceau_aleatoire( ele, time )
-
-case("gaussv")
-
-   call gaussienne( ele, time )
-
-case("plasma")
-
-   call plasma( ele, time )
-
-end select
+call plasma( ele, time )
 
 end subroutine creapa
 
@@ -77,8 +31,8 @@ subroutine interpol_eb( tm1, ele )
 
 type  (particle) :: ele
 type(tm_mesh_fields) :: tm1
-real(kind = prec) :: a1, a2, a3, a4
-real(kind = prec) :: xp, yp, dum
+sll_real64 :: a1, a2, a3, a4
+sll_real64 :: xp, yp, dum
 !   ______________
 !  |     |        |
 !  | a2  |  a1    |
@@ -140,7 +94,7 @@ do ipart = 1, nbpart
 
    else
 
-      gamma=1.
+      gamma=1.0_f64
 
    end if
 
@@ -320,17 +274,15 @@ if (bcname == 'period') then
    end do
 end if
 
-if (nomcas == 'gaussv' .or. nomcas == 'plasma' ) then
-   rho_total = 0.d0
-   do i=0,nx-1
-      do j=0,ny-1
-         rho_total = rho_total + tm%r1(i,j)*hhx(i)*hhy(j)
-      enddo
+rho_total = 0.d0
+do i=0,nx-1
+   do j=0,ny-1
+      rho_total = rho_total + tm%r1(i,j)*hhx(i)*hhy(j)
    enddo
-   print*,'rho total',rho_total 
-   ! Neutralisation du milieu
-   tm%r1 = tm%r1 - rho_total/dimx/dimy
-endif
+enddo
+print*,'rho total',rho_total 
+! Neutralisation du milieu
+tm%r1 = tm%r1 - rho_total/dimx/dimy
 
 end subroutine calcul_rho
 
@@ -398,153 +350,6 @@ end do
 
 end subroutine calcul_j_cic
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine faisceau_aleatoire( ele, time )
-
-type (particle) :: ele
-sll_real64 :: time, vitesse, intensite, y0, y1
-sll_int32, parameter :: maxnbpart=100000
-sll_int32 :: nbnewpart, error
-sll_real64 :: aux
-
-intensite = 1.d0
-vitesse = 0.2
-y0 = 0.4*dimy 
-y1 = 0.6*dimy
-nbnewpart = 30 !int( intensite/nx/vitesse )
-!print*,'nb de nouvelles particules = ',nbnewpart
-
-if( time == 0. ) then
-
-   SLL_ALLOCATE(ele%pos(maxnbpart,2),error)
-   SLL_ALLOCATE(ele%case(maxnbpart,2),error)
-   SLL_ALLOCATE(ele%vit(maxnbpart,2),error)
-   SLL_ALLOCATE(ele%epx(maxnbpart),error)
-   SLL_ALLOCATE(ele%epy(maxnbpart),error)
-   SLL_ALLOCATE(ele%bpz(maxnbpart),error)
-   SLL_ALLOCATE(ele%p(maxnbpart),error)
-
-end if
-
-do i = 1,nbnewpart
-   nbpart=nbpart+1
-   aux= modulo(kiss(),int(1e6))*1.e-6
-   ele%pos(nbpart,1) = 0.
-   ele%pos(nbpart,2) = y0+aux*(y1-y0)
-   ele%case(nbpart,1) = 0
-   ele%vit(nbpart,1) = 0.0 !vitesse 
-   ele%vit(nbpart,2) = 0.0
-   ele%p(nbpart) = charge
-   j = 0
-   do while (ele%pos(nbpart,2) >= y(j) .and. ele%pos(nbpart,2)<dimy)
-      j=j+1
-   end do
-   ele%case(nbpart,2) = j-1
-end do
-
-end subroutine faisceau_aleatoire
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine faisceau_regulier( ele, time )
-
-type (particle) :: ele
-sll_real64 :: time, vitesse
-sll_int32, parameter :: maxnbpart=100000
-sll_int32 :: nbnewpart, error
-
-vitesse = 0.5d0
-nbnewpart = 0
-print*,'nb de nouvelles particules = ',nbnewpart
-
-if( time == 0. ) then
-
-   SLL_ALLOCATE(ele%pos(maxnbpart,2),error)
-   SLL_ALLOCATE(ele%case(maxnbpart,2),error)
-   SLL_ALLOCATE(ele%vit(maxnbpart,2),error)
-   SLL_ALLOCATE(ele%epx(maxnbpart),error)
-   SLL_ALLOCATE(ele%epy(maxnbpart),error)
-   SLL_ALLOCATE(ele%bpz(maxnbpart),error)
-   SLL_ALLOCATE(ele%p(maxnbpart),error)
-
-end if
-
-do j = 16,24
-   nbpart=nbpart+1
-   nbnewpart=nbnewpart+1
-   ele%pos(nbpart,1) = 0.
-   ele%pos(nbpart,2) = y(j)
-   ele%case(nbpart,1) = 0
-   ele%case(nbpart,2) = j
-   ele%vit(nbpart,1) = vitesse 
-   ele%vit(nbpart,2) = 0.0
-   ele%p(nbpart) = poids
-
-end do
-
-print*,'nb de nouvelles particules = ',nbnewpart
-
-end subroutine faisceau_regulier
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine gaussienne( ele, time )
-
-type (particle) :: ele
-sll_real64 :: time, speed, theta, vth, n, aux
-sll_int32 :: k, error
-
-if( time == 0 ) then
- 
-   vth = 1.
-   nbpart = 100*nx*ny !je joue sur le nb de part/maille
-   n = 1.d0/nbpart
-
-   SLL_ALLOCATE(ele%pos(nbpart,2),error)
-   SLL_ALLOCATE(ele%case(nbpart,2),error)
-   SLL_ALLOCATE(ele%vit(nbpart,2),error)
-   SLL_ALLOCATE(ele%epx(nbpart),error)
-   SLL_ALLOCATE(ele%epy(nbpart),error)
-   SLL_ALLOCATE(ele%bpz(nbpart),error)
-   SLL_ALLOCATE(ele%p(nbpart),error)
-
-
-   do k=0,nbpart-1
-
-      speed = vth * sqrt(-2 * log( (k+0.5)*n ))
-      aux = trinary_reversing( k )
-      theta = aux * 2 * pi
-
-      aux =  bit_reversing( k )
-      ele%pos(k+1,1) = dimx * aux
-      aux = penta_reversing( k ) 
-      ele%pos(k+1,2) = dimy * aux 
-
-      i = 0
-      do while (ele%pos(k+1,1) >= x(i)) 
-         i=i+1
-      enddo
-      ele%case(k+1,1) = i-1
-
-      j = 0
-      do while (ele%pos(k+1,2) >= y(j)) 
-         j=j+1 
-      enddo
-      ele%case(k+1,2) = j-1
-      
-      ele%vit(k+1,1) = speed * cos(theta)
-      ele%vit(k+1,2) = speed * sin(theta) 
-
-      ele%p(k+1) = poids * n
-
-   enddo
-
-end if
-
-end subroutine gaussienne
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine plasma( ele, time )
 
@@ -557,7 +362,7 @@ if( time == 0 ) then
 
    eps = 1.d-12
 
-   vth =  1.
+   vth =  1.0_f64
    nbpart = 100*(nx)*(ny)
    n = 1.d0/nbpart
 
@@ -571,11 +376,11 @@ if( time == 0 ) then
 
    do k=0,nbpart-1
 
-      speed = vth * sqrt(-2 * log( (k+0.5)*n ))
+      speed = vth * sqrt(-2.0_f64 * log( (k+0.5)*n ))
 
-      theta = trinary_reversing( k ) * 2 * pi
+      theta = trinary_reversing( k ) * 2.0_f64 * pi
 
-      a = 0; b = dimx ! 2*pi/kx 
+      a = 0.0_f64; b = dimx ! 2*pi/kx 
       R = bit_reversing( k )
       call dichotomie_x(a,b,R,eps) 
       ele%pos(k+1,1) = a

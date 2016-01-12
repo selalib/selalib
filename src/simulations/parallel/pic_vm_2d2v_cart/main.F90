@@ -5,8 +5,6 @@ program test_pic2d
 use zone
 use particules
 use initialisation
-use poisson
-use villasenor
 use maxwell
 use diagno
 
@@ -65,11 +63,10 @@ call init( f0 )                 !initialisation des champs et densites
 xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
+call creapa( p, time ) !creation des particules
+
 do istep = 1, nstep
 
-  if ((nomcas == "faisce") .or. istep == 1) then
-    call creapa( p, time ) !creation des particules
-  endif
   if (istep > 1) then
     call faraday( f0 )     !Calcul de B(n-1/2) --> B(n)			
   end if
@@ -79,20 +76,11 @@ do istep = 1, nstep
 
   call avancee_vitesse( p )
 
-  if (jname == 'jcico1') then
-    call avancee_part( p, 0.5d0 )  ! x(n) --> x(n+1/2)
-    call sortie_part( p )
-    call calcul_j_cic( p, f0 )
-    call avancee_part( p, 0.5d0 )  ! x(n+1/2) -- x(n+1)
-    call sortie_part( p )
-  else if (jname == 'jcoco1') then
-    call avancee_part( p, 1.d0 )
-    call calcul_j_villa( p, f0 )
-    call sortie_part( p )
-  else
-    call avancee_part( p, 1.d0 )
-    call sortie_part( p )
-  end if
+  call avancee_part( p, 0.5d0 )  ! x(n) --> x(n+1/2)
+  call sortie_part( p )
+  call calcul_j_cic( p, f0 )
+  call avancee_part( p, 0.5d0 )  ! x(n+1/2) -- x(n+1)
+  call sortie_part( p )
        
   !call calcul_rho( p, f0 )
 
@@ -118,7 +106,7 @@ do istep = 1, nstep
     ! call distribution_x( p, iplot, time )
   endif
 
-  if (nomcas == 'plasma') call modeE( f0, iplot, time )
+  call modeE( f0, iplot, time )
   write(*,"('istep = ', i6, ' time = ')", advance='no') istep
 
 end do
