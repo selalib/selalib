@@ -6,8 +6,6 @@ $donnees
   ny       = 10   	!nombre de pts suivant y
   cfl      = 0.9 		!nombre de Courant-Friedrich-Levy
   tfinal   = 10.0   	!temps final
-  nomcas   = 'plasma'	!nom du cas traite (6 lettres)
-  jname    = 'jcico1'	!methode de calcul des courants
   icrea    = 1		!frequence d'emission des particules
   idiag    = 10    	!frequence des sorties graphiques
   bcname   = "period"	!type de conditions limites

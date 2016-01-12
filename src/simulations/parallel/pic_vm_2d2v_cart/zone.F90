@@ -2,8 +2,6 @@ module zone
 #include "sll_working_precision.h"
 use sll_m_working_precision
 
-sll_int32, parameter :: prec=8
-
 type tm_mesh_fields
    sll_real64, dimension(:,:), pointer :: ex
    sll_real64, dimension(:,:), pointer :: ey
@@ -28,7 +26,6 @@ logical :: relativ
 
 sll_real64 :: pi 
 
-character(len=6) :: nomcas
 character(len=6) :: bcname 
 character(len=6) :: jname
 
@@ -40,7 +37,7 @@ sll_int32 :: nbpart
 sll_int32, private :: i, j
 
 sll_real64 :: dt, alpha, kx, ky, c, csq, e0
-sll_real64, private :: dx, dy, dx1, dy1, dx2, dy2
+sll_real64, private :: dx, dy
 sll_real64, dimension(:), pointer :: x, y
 sll_real64, dimension(:), allocatable :: hx, hy    ! les h_i+1/2
 sll_real64, dimension(:), allocatable :: hhx, hhy  ! les h_i
@@ -69,7 +66,6 @@ namelist/donnees/ dimx,  & !dimensions du domaine
                    cfl,  & !nbre de Courant
                 tfinal,  & !duree maxi
               nstepmax,  & !nbre d'iterations maxi
-                nomcas,  & !nom du cas ce calcul
                  jname,  & !calcul de j   
                  icrea,  & !frequence d'emission des particules
                  idiag,  & !frequence des diagnostics
@@ -96,13 +92,11 @@ csq     = c*c
 q_sur_m = charge / masse
 poids   = charge
 
-if (nomcas == "plasma") then
-  alpha = 0.1
-  kx    = 0.5
-  ky    = 0.
-  dimx  = 2*pi/kx
-  poids = dimx * dimy ! car int(f0) = dimx*dimy
-endif
+alpha = 0.10_f64
+kx    = 0.50_f64
+ky    = 0.0_f64
+dimx  = 2*pi/kx
+poids = dimx * dimy ! car int(f0) = dimx*dimy
 
 !Creation du maillage
 
@@ -116,25 +110,15 @@ allocate(hhy(0:ny))
 dx = dimx / nx
 dy = dimy / ny
 
-x(0) = 0.
-y(0) = 0.
+x(0) = 0.0_f64
+y(0) = 0.0_f64
 
-if (nomcas == "plasma") then
-  do i=1,nx
-     x(i) = (i*dx) *(i*dx+1)/(1+dimx)
-  enddo
-  do j=1,ny
-     y(j) = (j*dy) *(j*dy+1)/(1+dimy)
-  enddo
-else
-  do i=1,nx
-     x(i) = i*dx 
-  enddo
-  do j=1,ny
-     y(j) = j*dy
-  enddo
-end if
-
+do i=1,nx
+  x(i) = (i*dx) *(i*dx+1)/(1+dimx)
+enddo
+do j=1,ny
+  y(j) = (j*dy) *(j*dy+1)/(1+dimy)
+enddo
 
 do i=0,nx-1
    hx(i) = x(i+1)-x(i)

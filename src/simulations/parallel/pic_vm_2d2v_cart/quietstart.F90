@@ -121,7 +121,7 @@ subroutine dichotomie_x( a, b, R, eps )
 
 ! il faut D(a)<R<D(b), on cherche x tq R=D(x), resu dans a 
 
-real(kind = prec) :: a, b, R, eps, x, D
+sll_real64 :: a, b, R, eps, x, D
 
 D = ( kx*a + alpha * sin(kx*a) ) / (2*pi)
 do while ( D<R-eps .or. D>R+eps )

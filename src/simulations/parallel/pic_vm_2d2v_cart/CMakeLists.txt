@@ -1,11 +1,8 @@
 SET(PIC2D_SRC zone.F90 
               initialisation.F90 
-              kiss.F90 
               quietstart.F90 
               particules.F90
-	        poisson.F90 
-              villasenor.F90 
-              maxwell.F90 
+	        maxwell.F90 
               diagno.F90 )
 
 ADD_LIBRARY(pic2d STATIC ${PIC2D_SRC})
