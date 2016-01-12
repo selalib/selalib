@@ -65,6 +65,10 @@
 *** Parameters file
       file:params_lt_pic_4d.nml
       file:params_simple_pic_4d.nml
+
+   - copy the files in the run directory (launch from build, src or usr directory) :
+     cp ../src/simulations/parallel/pic_vp_2d2v_cart_remapped/*.nml ../usr/simulations/sim_parallel/pic_vp_2d2v_cart_remapped/
+
 ** Run
 *** 
 
