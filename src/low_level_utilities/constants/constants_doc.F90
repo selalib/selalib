@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup constants sll_m_constants 
+!> @defgroup constants sll_constants 
 !> @brief
 !> Some physical and mathematical constants.
 !> @details

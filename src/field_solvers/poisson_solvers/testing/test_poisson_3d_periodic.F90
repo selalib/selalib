@@ -14,7 +14,7 @@
 !                                  
 !***************************************************************************
 
-program test_poisson_3d_periodic_seq
+program test_poisson_3d_periodic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -22,11 +22,11 @@ program test_poisson_3d_periodic_seq
   use sll_m_constants, only: &
     sll_p_pi
 
-  use sll_m_poisson_3d_periodic_seq, only: &
-    sll_s_delete_poisson_3d_periodic_plan_seq, &
-    sll_f_new_poisson_3d_periodic_plan_seq, &
-    sll_t_poisson_3d_periodic_plan_seq, &
-    sll_s_solve_poisson_3d_periodic_seq
+  use sll_m_poisson_3d_periodic, only: &
+    sll_s_delete_poisson_3d_periodic, &
+    sll_f_new_poisson_3d_periodic, &
+    sll_t_poisson_3d_periodic, &
+    sll_s_solve_poisson_3d_periodic
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -38,7 +38,7 @@ program test_poisson_3d_periodic_seq
   sll_real64, dimension(:,:,:), allocatable :: x, y, z
   sll_real64, dimension(:,:,:), allocatable :: rho, phi_an, phi
   sll_int32                                 :: i, j, k
-  type (sll_t_poisson_3d_periodic_plan_seq), pointer  :: plan
+  type (sll_t_poisson_3d_periodic), pointer :: plan
   sll_real64                                :: average_err
   sll_real64                                :: time_0, time_1, time_2
   sll_int32                                 :: i_test
@@ -77,7 +77,7 @@ program test_poisson_3d_periodic_seq
   SLL_ALLOCATE(phi(nx,ny,nz),error)
   SLL_ALLOCATE(phi_an(nx,ny,nz),error)
 
-  plan => sll_f_new_poisson_3d_periodic_plan_seq(nx, ny, nz, Lx, Ly, Lz)
+  plan => sll_f_new_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
 
   print*, ' '
   call cpu_time(time_1)
@@ -100,7 +100,7 @@ program test_poisson_3d_periodic_seq
      end if
 
      call cpu_time(time_1)
-     call sll_s_solve_poisson_3d_periodic_seq(plan, rho, phi)
+     call sll_s_solve_poisson_3d_periodic(plan, rho, phi)
      call cpu_time(time_2)
 
      average_err = sum( abs(phi_an-phi) ) / real(nx*ny*nz,f64)
@@ -109,23 +109,18 @@ program test_poisson_3d_periodic_seq
      print*, 'CPU time = ', time_2-time_1
 
      if ( average_err > dx*dx*dy) then
-        print*, ' '
-        print*, 'sll_m_poisson_3d_periodic_seq test not passed'
+        print*, 'i_test = ', i_test
+        stop 'sll_m_poisson_3d_periodic test not passed'
+     else
+        print*, 'sll_m_poisson_3d_periodic test: PASSED'
      end if
-
-
-     !call write_vec1d(rho,nx,ny,nz,"rho"//char(i_test+48),"mesh3d",0)
-     !call write_vec1d(phi,nx,ny,nz,"phi"//char(i_test+48),"mesh3d",0)
 
   end do
 
-  call sll_s_delete_poisson_3d_periodic_plan_seq(plan)
-
-
-  print*, 'sll_m_poisson_3d_periodic_seq test: PASSED'
+  call sll_s_delete_poisson_3d_periodic(plan)
 
   call cpu_time(time_2)
   print*, 'Total CPU time : ', time_2-time_0
 
 
-end program test_poisson_3d_periodic_seq
+end program test_poisson_3d_periodic

@@ -216,7 +216,7 @@ contains
   !> Compute the 3d potential from the Poisson equation with periodic
   !> boundary conditions.
   subroutine sll_s_solve_poisson_3d_periodic_par(plan, rho, phi)
-    type (sll_t_poisson_3d_periodic_plan_par), pointer :: plan !< Solver structure
+    type (sll_t_poisson_3d_periodic_plan_par)    :: plan !< Solver structure
     sll_real64, dimension(:,:,:)                 :: rho  !< Charge density
     sll_real64, dimension(:,:,:)                 :: phi  !< Electric potential
     sll_int32                                    :: nx, ny, nz
@@ -369,12 +369,9 @@ contains
 
   !> Delete the solver structure
   subroutine sll_s_delete_poisson_3d_periodic_plan_par(plan)
-    type (sll_t_poisson_3d_periodic_plan_par), pointer :: plan
+    type (sll_t_poisson_3d_periodic_plan_par)     :: plan
     sll_int32                                    :: ierr
 
-    ! Fixme: some error checking, whether the poisson pointer is associated
-    ! for instance
-    SLL_ASSERT( associated(plan) )
 
     call sll_s_fft_delete_plan(plan%px)
     call sll_s_fft_delete_plan(plan%py)
@@ -391,7 +388,7 @@ contains
     SLL_DEALLOCATE_ARRAY(plan%array_x, ierr)
     SLL_DEALLOCATE_ARRAY(plan%array_y, ierr)
     SLL_DEALLOCATE_ARRAY(plan%array_z, ierr)
-    SLL_DEALLOCATE(plan, ierr)
+    
   end subroutine sll_s_delete_poisson_3d_periodic_plan_par
 
   !> Check sizes of arrays in input
