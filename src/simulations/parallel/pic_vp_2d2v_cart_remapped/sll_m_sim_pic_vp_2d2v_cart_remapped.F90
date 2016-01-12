@@ -971,7 +971,7 @@ contains
         call sim%particle_group%remap()
       end if
 
-      if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
+      if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
         print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
                " # plot = ",it+1
