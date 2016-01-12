@@ -4,20 +4,10 @@ program test_poisson_2d_fem
 #include "sll_working_precision.h"
 #include "sll_poisson_solvers_macros.h"
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_constants
+use sll_m_poisson_2d_fem
 
-  use sll_m_fem_2d, only: &
-    sll_t_fem_poisson_2d, &
-    sll_o_create, &
-    sll_o_solve
-
-  use sll_m_fem_2d_periodic, only: &
-    sll_t_fem_poisson_2d_periodic, &
-    sll_o_create, &
-    sll_o_solve
-
-  implicit none
+implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32                           :: i
@@ -38,10 +28,9 @@ sll_real64, dimension(:,:), pointer :: e_x
 sll_real64, dimension(:,:), pointer :: e_y
 sll_real64, dimension(:,:), pointer :: rho
 sll_real64, dimension(:,:), pointer :: phi
-sll_real64 :: errmax
 
-nc_x = 40
-nc_y = 40
+nc_x = 64
+nc_y = 64
 
 SLL_CLEAR_ALLOCATE(e_x(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(e_y(1:nc_x+1,1:nc_y+1),error) 
@@ -79,55 +68,24 @@ rho(2:nc_x,2:nc_y) = -4.0_f64
 
 call test_compact()
 
-dpi = 2*sll_p_pi
-do j = 1, nc_y+1
-  do i = 1, nc_x+1
-   phi(i,j) = sin(dpi*x(i))*sin(dpi*y(j))
-   rho(i,j) = 2_f64 * dpi**2 * phi(i,j)
-  end do
-end do
-
-call test_periodic()
+print*, 'PASSED'
 
 contains
 
 subroutine test_compact()
-type( sll_t_fem_poisson_2d ) :: poisson
+type( sll_t_poisson_2d_fem ) :: poisson
+sll_real64 :: errmax
 
 call sll_o_create(poisson, x, y, nc_x+1, nc_y+1)
 call sll_o_solve(poisson, e_x, e_y, rho)
 
-errmax = 0._f64
-do j = 1, nc_y+1
-  do i = 1, nc_x+1
-    errmax = errmax + abs(rho(i,j)-phi(i,j))
-    write(12,*) x(i), y(j), rho(i,j),phi(i,j)
-  end do
-  write(12,*)
-end do
-close(12)
-print*, 'compact, error = ', errmax / (nc_x+1) / (nc_y+1)
+errmax = sum(abs(rho-phi)) / real((nc_x+1)*(nc_y+1),f64)
+
+if ( errmax > 0.01 ) then
+  stop 'Compact BC : FAILED'
+end if
 
 end subroutine test_compact
-
-subroutine test_periodic()
-type( sll_t_fem_poisson_2d_periodic ) :: poisson
-
-call sll_o_create(poisson, x, y, nc_x+1, nc_y+1)
-call sll_o_solve(poisson, e_x, e_y, rho)
-
-errmax = 0._f64
-do j = 1, nc_y+1
-  do i = 1, nc_x+1
-    errmax = errmax+abs(rho(i,j)-sin(dpi*x(i))*sin(dpi*y(j)))
-    write(13,*) x(i), y(j), rho(i,j),sin(dpi*x(i))*sin(dpi*y(j))
-  end do
-  write(13,*)
-end do
-close(13)
-print*, 'periodic, error = ', errmax / (nc_x*nc_y)
-
-end subroutine test_periodic
 
 function fbc( x, y)
 sll_real64 :: fbc

@@ -14,7 +14,7 @@ ENDIF()
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.10)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
@@ -29,6 +29,7 @@ SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
 SET(BUILD_AGMG            OFF CACHE BOOL   "Build AGMG libraries")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+SET(USE_MKL               OFF CACHE BOOL "Using Intel Math Kernel Library")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE)
