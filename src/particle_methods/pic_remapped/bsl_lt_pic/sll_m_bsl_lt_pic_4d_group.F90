@@ -83,8 +83,7 @@ module sll_m_bsl_lt_pic_4d_group
     type(sll_cartesian_mesh_4d), pointer                        :: initial_markers_grid
     type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: struct_markers_list
     ! When using unstructured flow markers, we store their indices in chained lists attached to the flow cells
-    sll_int32                                                   :: init_nb_unstruct_markers_per_cell
-    sll_int32                                                   :: max_nb_unstruct_markers_per_cell
+    sll_int32                                                   :: nb_unstruct_markers_per_cell
     sll_int32                                                   :: max_nb_unstruct_markers
     sll_int32                                                   :: number_flow_markers      !< used for struct or unstruct markers
 
@@ -946,8 +945,7 @@ contains
         number_flow_markers_y,                      &
         number_flow_markers_vx,                     &
         number_flow_markers_vy,                     &
-        init_nb_unstruct_markers_per_cell,          &
-        max_nb_unstruct_markers_per_cell,           &
+        nb_unstruct_markers_per_cell,               &
         flow_grid_number_cells_x,                   &
         flow_grid_number_cells_y,                   &
         flow_grid_number_cells_vx,                  &
@@ -980,8 +978,7 @@ contains
     sll_int32,                intent(in)  :: number_flow_markers_y
     sll_int32,                intent(in)  :: number_flow_markers_vx
     sll_int32,                intent(in)  :: number_flow_markers_vy
-    sll_int32,                intent(in)  :: init_nb_unstruct_markers_per_cell
-    sll_int32,                intent(in)  :: max_nb_unstruct_markers_per_cell
+    sll_int32,                intent(in)  :: nb_unstruct_markers_per_cell
     sll_int32,                intent(in)  :: flow_grid_number_cells_x
     sll_int32,                intent(in)  :: flow_grid_number_cells_y
     sll_int32,                intent(in)  :: flow_grid_number_cells_vx
@@ -1128,18 +1125,16 @@ contains
 
       !>      A.3.a initialize parameters of unstructured flow markers
 
-      SLL_ASSERT( init_nb_unstruct_markers_per_cell <= max_nb_unstruct_markers_per_cell )
-      if( max_nb_unstruct_markers_per_cell < 5 )then
+      if( nb_unstruct_markers_per_cell < 5 )then
         err_msg = "Error (875765786): we need at least 5 markers per cell (to create local simplexes defining the linearized flow)"
         SLL_ERROR(this_fun_name, err_msg)
       end if
 
-      res%init_nb_unstruct_markers_per_cell = init_nb_unstruct_markers_per_cell
-      res%max_nb_unstruct_markers_per_cell = max_nb_unstruct_markers_per_cell
-      res%max_nb_unstruct_markers = res%max_nb_unstruct_markers_per_cell * flow_grid_number_cells_x   &
-                                                                         * flow_grid_number_cells_y   &
-                                                                         * flow_grid_number_cells_vx  &
-                                                                         * flow_grid_number_cells_vy
+      res%nb_unstruct_markers_per_cell = nb_unstruct_markers_per_cell
+      res%max_nb_unstruct_markers = res%nb_unstruct_markers_per_cell * flow_grid_number_cells_x   &
+                                                                     * flow_grid_number_cells_y   &
+                                                                     * flow_grid_number_cells_vx  &
+                                                                     * flow_grid_number_cells_vy
 
       !>      A.3.b allocate arrays for unstructured flow markers
 
@@ -2186,10 +2181,10 @@ contains
     sll_int32  :: i_dim
     sll_int32  :: i_marker
     sll_int32  :: i_local_marker
-    sll_int32  :: init_nb_unstruct_markers_per_cell
+    sll_int32  :: nb_unstruct_markers_per_cell
 
     ! place a few markers in each flow cell with quasi-random sequences
-    init_nb_unstruct_markers_per_cell = p_group%init_nb_unstruct_markers_per_cell
+    nb_unstruct_markers_per_cell = p_group%nb_unstruct_markers_per_cell
 
     i_marker = 1      ! index of marker in global list
     sobol_seed = int(675,8)  ! initial value of the seed (it is incremented by one in the call to i8_sobol)
@@ -2215,7 +2210,7 @@ contains
             flow_cell_eta_min(4) = p_group%flow_grid%eta4_min + (j_vy-1) * p_group%flow_grid%delta_eta4
             flow_cell_eta_max(4) = p_group%flow_grid%eta4_min + (j_vy)   * p_group%flow_grid%delta_eta4
 
-            do i_local_marker = 1, init_nb_unstruct_markers_per_cell
+            do i_local_marker = 1, nb_unstruct_markers_per_cell
 
               ! Generate 4 Sobol numbers on [0,1]
               call i8_sobol(int(4,8), sobol_seed, rdn)
@@ -2527,8 +2522,8 @@ contains
               i_marker = new_int_list_element%value
               if( p_group%unstruct_markers_relevant_neighbor(i_marker) == 0 )then
                 ! then this marker is not relevant
-                if( nb_unrelevant_markers_in_this_cell == p_group%max_nb_unstruct_markers_per_cell - 5 )then
-                  ! we have already reached the max nb of unrelevant markers in cell: add its index in the removal list
+                if( nb_unrelevant_markers_in_this_cell == p_group%nb_unstruct_markers_per_cell - 5 )then
+                  ! we have already reached the nb of unrelevant markers in cell: add its index in the removal list
                   SLL_ALLOCATE( new_aux_int_list_element, ierr )
                   new_aux_int_list_element%value = i_marker
                   ! increment the proper linked list
@@ -2544,7 +2539,7 @@ contains
               end if
               new_int_list_element => new_int_list_element%next
             end do
-            do while( nb_unrelevant_markers_in_this_cell < p_group%max_nb_unstruct_markers_per_cell - 5 )
+            do while( nb_unrelevant_markers_in_this_cell < p_group%nb_unstruct_markers_per_cell - 5 )
 
               ! not enough markers in cell: create a new one with quasi-random coordinates
               call i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
@@ -2572,7 +2567,7 @@ contains
               nb_unrelevant_markers_in_this_cell = nb_unrelevant_markers_in_this_cell + 1
             end do
 
-            SLL_ASSERT( nb_unrelevant_markers_in_this_cell == p_group%max_nb_unstruct_markers_per_cell - 5 )
+            SLL_ASSERT( nb_unrelevant_markers_in_this_cell == p_group%nb_unstruct_markers_per_cell - 5 )
           end do  ! 4-fold loop over the flow cells
         end do
       end do
@@ -2719,11 +2714,13 @@ contains
             ! close the loop by making the first relevant marker point to the last one just seen
             p_group%unstruct_markers_relevant_neighbor(i_first_relevant_marker) = i_last_relevant_marker
 
-            print *, "cell = ", j_x, j_y, j_vx, j_vy
-            print *, "nb_relevant_markers_in_this_cell = ", nb_relevant_markers_in_this_cell
-            print *, "nb_unrelevant_markers_in_this_cell = ", nb_unrelevant_markers_in_this_cell
+            if( local_verbose )then
+              print *, "cell = ", j_x, j_y, j_vx, j_vy
+              print *, "nb_relevant_markers_in_this_cell = ", nb_relevant_markers_in_this_cell
+              print *, "nb_unrelevant_markers_in_this_cell = ", nb_unrelevant_markers_in_this_cell
+            end if
             SLL_ASSERT( nb_relevant_markers_in_this_cell == 5 )
-            SLL_ASSERT( nb_unrelevant_markers_in_this_cell + 5 <= p_group%max_nb_unstruct_markers_per_cell )
+            SLL_ASSERT( nb_unrelevant_markers_in_this_cell + 5 == p_group%nb_unstruct_markers_per_cell )
 
             ! todo: add a test when computing the jacobian matrices, to check that the determinant is large enough
 

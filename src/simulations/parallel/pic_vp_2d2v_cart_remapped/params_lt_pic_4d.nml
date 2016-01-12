@@ -48,8 +48,9 @@
 /
 
 &lt_pic_deposition_params
-    deposition_particles_type = 1               ! 0 = on a fixed grid,   1 = random and transported with the flow
-    number_deposition_particles = 50000         ! lower bound for the number of deposition particles
+    deposition_particles_type = 1          ! 0 = on a structured grid,   1 = random
+    deposition_particles_move = 0          ! 0 = new particles are created at each step,  1 = they move until next remap step
+    number_deposition_particles = 50000    ! lower bound for the number of deposition particles
 /
 
 &lt_pic_markers_params
@@ -58,8 +59,7 @@
     number_markers_y  = 20
     number_markers_vx = 60
     number_markers_vy = 10
-    init_nb_unstruct_markers_per_cell = 7   ! for unstructured flow markers
-    max_nb_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
+    nb_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
     flow_grid_number_cells_x = 30   ! the cartesian flow grid defines the cells where the flow is linearized
     flow_grid_number_cells_y = 10   ! (also used with the unstructured flow markers)
     flow_grid_number_cells_vx = 20
