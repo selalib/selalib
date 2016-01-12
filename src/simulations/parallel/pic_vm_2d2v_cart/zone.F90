@@ -134,28 +134,28 @@ x(nx+1) = x(nx) + hx(0)
 y(-1)   = y(0) - hy(ny-1)
 y(ny+1) = y(ny) + hy(0)
 
-hhx(0) =  0.5 * ( hx(0) + hx(nx-1) )  !0.5 * hx(0)
+hhx(0)  =  0.5 * ( hx(0) + hx(nx-1) )  !0.5 * hx(0)
 hhx(nx) =  0.5 * ( hx(0) + hx(nx-1) )   !0.5 * hx(nx-1)
 do i=1,nx-1
    hhx(i) = 0.5 * ( hx(i) + hx(i-1) )
 enddo
-hhy(0) = 0.5 * ( hy(0) + hy(ny-1) )   !0.5 * hy(0)
+hhy(0)  = 0.5 * ( hy(0) + hy(ny-1) )   !0.5 * hy(0)
 hhy(ny) = 0.5 * ( hy(0) + hy(ny-1) )   !0.5 * hy(ny-1)
 do j=1,ny-1
-   hhy(j) = 0.5 * ( hy(j) + hy(j-1) )
+  hhy(j) = 0.5 * ( hy(j) + hy(j-1) )
 enddo
 
 dx = hx(0)  !on calcule le plus petit pas
 do i=1,nx-1
-   if (hx(i)<dx)  dx = hx(i)
+  if (hx(i)<dx)  dx = hx(i)
 end do
 
 dy = hy(0)
 do j=1,ny-1
-   if (hy(j)<dy)  dy = hy(j)
+  if (hy(j)<dy)  dy = hy(j)
 end do
 
-dt    = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
+dt = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 
 nstep = floor(tfinal/dt)
 

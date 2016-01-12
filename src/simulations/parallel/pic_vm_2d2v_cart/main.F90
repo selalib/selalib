@@ -8,10 +8,13 @@ use initialisation
 use maxwell
 use diagno
 
+use sll_m_poisson_2d_periodic_fftpack
+
 implicit none
 
 type(tm_mesh_fields) :: f0
 type(tm_mesh_fields) :: f1
+type(tm_mesh_fields) :: f2
 type(particle)       :: p
 
 sll_real64 :: time
@@ -28,6 +31,7 @@ sll_int32  :: i
 sll_int32  :: error
 
 character(len=272) :: argv
+type(sll_t_poisson_2d_periodic_fftpack) :: poisson
 
 n = iargc()
 if (n == 0) stop 'Usage: ./bin/test_pic2d fichier-de-donnees.nml'
@@ -49,6 +53,11 @@ SLL_ALLOCATE(f1%ex(0:nx,0:ny),    error) !decales sur maillage de Maxwell
 SLL_ALLOCATE(f1%ey(0:nx,0:ny),    error)
 SLL_ALLOCATE(f1%bz(0:nx,0:ny),    error)
 
+SLL_ALLOCATE(f2%ex(0:nx,0:ny), error)
+SLL_ALLOCATE(f2%ey(0:nx,0:ny), error)
+SLL_ALLOCATE(f2%r0(0:nx,0:ny), error)
+SLL_ALLOCATE(f2%r1(0:nx,0:ny), error)
+
 time  = 0.d0
 iplot = 0
 
@@ -64,6 +73,18 @@ xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
 call plasma( p, time ) !creation des particules
+
+call calcul_rho( p, f2 )
+!call sll_o_initialize( poisson, xmin, xmax, nx, &
+!                       ymin, ymax, ny, error) 
+!
+!call sll_o_solve( poisson, f2%ex, f2%ey, f2%r0)
+!
+!call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
+!                      ymin, ymax, ny+1, &
+!                      f2%ex, 'ex', 1, error)
+
+stop
 
 do istep = 1, nstep
 
