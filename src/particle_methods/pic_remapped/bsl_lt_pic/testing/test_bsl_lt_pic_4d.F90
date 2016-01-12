@@ -50,6 +50,9 @@ program test_bsl_lt_pic_4d
 #define NUM_MARKERS_VX 10_i32
 #define NUM_MARKERS_VY 10_i32
 
+#define INIT_NB_UNSTRUCT_MARKERS_PER_CELL 7
+#define MAX_NB_UNSTRUCT_MARKERS_PER_CELL  7
+
 #define REMAP_NC_X   20_i32
 #define REMAP_NC_Y   20_i32
 #define REMAP_NC_VX  20_i32
@@ -198,26 +201,29 @@ program test_bsl_lt_pic_4d
         DOMAIN_IS_X_PERIODIC,                         &
         DOMAIN_IS_Y_PERIODIC,                         &
         SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,       &       !! other option SLL_BSL_LT_PIC_REMAP_WITH_SPLINES
-        REMAP_DEGREE,             &
-        REMAP_GRID_VX_MIN,        &
-        REMAP_GRID_VX_MAX,        &
-        REMAP_GRID_VY_MIN,        &
-        REMAP_GRID_VY_MAX,        &
-        REMAP_NC_X,               &
-        REMAP_NC_Y,               &
-        REMAP_NC_VX,              &
-        REMAP_NC_VY,              &
-        remapping_sparse_grid_max_levels, &
-        SLL_BSL_LT_PIC_FIXED_GRID,&
-        NUM_DEPOSITION_PARTS,     &
-        NUM_MARKERS_X,            &
-        NUM_MARKERS_Y,            &
-        NUM_MARKERS_VX,           &
-        NUM_MARKERS_VY,           &
-        int(NUM_MARKERS_X/2),          &
-        int(NUM_MARKERS_Y/2),          &
-        int(NUM_MARKERS_VX/2),         &
-        int(NUM_MARKERS_VY/2),         &
+        REMAP_DEGREE,                                 &
+        REMAP_GRID_VX_MIN,                            &
+        REMAP_GRID_VX_MAX,                            &
+        REMAP_GRID_VY_MIN,                            &
+        REMAP_GRID_VY_MAX,                            &
+        REMAP_NC_X,                                   &
+        REMAP_NC_Y,                                   &
+        REMAP_NC_VX,                                  &
+        REMAP_NC_VY,                                  &
+        remapping_sparse_grid_max_levels,             &
+        SLL_BSL_LT_PIC_FIXED_GRID,                    &
+        NUM_DEPOSITION_PARTS,                         &
+        SLL_BSL_LT_PIC_STRUCTURED,                    &
+        NUM_MARKERS_X,                                &
+        NUM_MARKERS_Y,                                &
+        NUM_MARKERS_VX,                               &
+        NUM_MARKERS_VY,                               &
+        INIT_NB_UNSTRUCT_MARKERS_PER_CELL,            &
+        MAX_NB_UNSTRUCT_MARKERS_PER_CELL,             &
+        int(NUM_MARKERS_X/2),                         &
+        int(NUM_MARKERS_Y/2),                         &
+        int(NUM_MARKERS_VX/2),                        &
+        int(NUM_MARKERS_VY/2),                        &
         mesh_2d )
 
   ! MCP: parameters for f_target (a hat function, with given centers and radius in every dimension)

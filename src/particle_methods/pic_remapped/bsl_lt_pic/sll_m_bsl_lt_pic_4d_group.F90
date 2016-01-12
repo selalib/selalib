@@ -35,8 +35,12 @@ module sll_m_bsl_lt_pic_4d_group
   use sll_m_sparse_grid_4d, only: sparse_grid_interpolator_4d
   use sll_m_remapped_pic_base
   use sll_m_bsl_lt_pic_4d_particle
-  use sll_m_bsl_lt_pic_4d_utilities !, only: int_list_element, int_list_element_ptr, add_element_in_list
-  use sll_m_remapped_pic_utilities, only: x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+  use sll_m_bsl_lt_pic_4d_utilities !, only: int_list_element, int_list_element_ptr, add_element_in_int_list
+  use sll_m_remapped_pic_utilities, only:           &
+            x_is_in_domain_2d,                      &
+            apply_periodic_bc_on_cartesian_mesh_2d, &
+            get_inverse_matrix_with_given_size,     &
+            get_4d_cell_containing_point
   use sll_m_gnuplot
   use sll_m_sobol, only: i8_sobol
 
@@ -60,24 +64,49 @@ module sll_m_bsl_lt_pic_4d_group
   sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED_GRID = 0
   sll_int32, parameter :: SLL_BSL_LT_PIC_TRANSPORTED_RANDOM = 1
 
+  ! types of flow markers
+  sll_int32, parameter :: SLL_BSL_LT_PIC_STRUCTURED = 0
+  sll_int32, parameter :: SLL_BSL_LT_PIC_UNSTRUCTURED = 1
 
   !> Group of @ref sll_bsl_lt_pic_4d_particle
   type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group
 
-    !> @name The markers (particles pushed forward, carry no weights)
+    !> @name The markers (particles pushed forward, carry no weights) -- structured case
     !> @{
+    sll_int32                                                   :: flow_markers_type        ! structured or unstructured
+    ! structured flow markers always start from a cartesian grid in phase space (at initialization and remapping steps)
     sll_int32                                                   :: number_flow_markers_x
     sll_int32                                                   :: number_flow_markers_y
     sll_int32                                                   :: number_flow_markers_vx
     sll_int32                                                   :: number_flow_markers_vy
-    sll_int32                                                   :: number_flow_markers
+    sll_int32                                                   :: number_struct_flow_markers
     type(sll_cartesian_mesh_4d), pointer                        :: initial_markers_grid
-    type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: markers_list
+    type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: struct_markers_list
+    ! When using unstructured flow markers, we store their indices in chained lists attached to the flow cells
+    sll_int32                                                   :: init_nb_unstruct_markers_per_cell
+    sll_int32                                                   :: max_nb_unstruct_markers_per_cell
+    sll_int32                                                   :: max_nb_unstruct_markers
+    sll_int32                                                   :: number_flow_markers      !< used for struct or unstruct markers
+
+    type(int_list_element_ptr), dimension(:,:,:,:), allocatable :: unstruct_markers_in_flow_cell   !< to track markers in each cell
+    type(int_list_element),     pointer                         :: unstruct_markers_outside_flow_grid   !< to track markers outside
+    sll_real64, dimension(:,:), allocatable                     :: unstruct_markers_eta
+    sll_real64, dimension(:,:), allocatable                     :: unstruct_markers_eta_at_remapping_time
+    sll_int32,  dimension(:),   allocatable                     :: unstruct_markers_relevant_neighbor
     !> @}
 
     !> @name The flow grid (4d cartesian cells where the flow is linearized)
     !> @{
     type(sll_cartesian_mesh_4d), pointer    :: flow_grid
+    sll_real64                              :: flow_grid_h    !< average step in grid
+    sll_real64                              :: flow_grid_a1   !< anisotropic parameters: h_dim = flow_grid_h * flow_grid_a_dim
+    sll_real64                              :: flow_grid_a2
+    sll_real64                              :: flow_grid_a3
+    sll_real64                              :: flow_grid_a4
+    !> @}
+
+    !> @name When using unstructured flow markers, we store their indices in 
+    !> @{
     !> @}
 
     !> @name The physical mesh used eg in the Poisson solver
@@ -186,13 +215,22 @@ module sll_m_bsl_lt_pic_4d_group
     procedure :: bsl_lt_pic_4d_reset_markers_position
     procedure :: bsl_lt_pic_4d_set_markers_connectivity
 
+    procedure :: bsl_lt_pic_4d_initialize_unstruct_markers         !> creates quasi-random distribution of unstructured markers
+    procedure :: bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians  !> build simplexes of relevant markers in each flow cell
+
     procedure :: bsl_lt_pic_set_deposition_particles_coordinates
     procedure :: bsl_lt_pic_set_deposition_particles_weights
 
     procedure :: bsl_lt_pic_4d_write_f_on_grid_or_deposit
     procedure :: bsl_lt_pic_4d_interpolate_value_of_remapped_f
 
-    procedure :: get_ltp_deformation_matrix
+    procedure :: update_flow_cell_lists_with_new_marker_position
+
+    procedure :: get_ltp_deformation_matrix                           !> the local bwd flow using structured flow markers
+    procedure :: get_deformation_matrix_from_unstruct_markers_in_cell !> the local bwd flow using unstructured flow markers
+                                                                      ! name was get_affine_back_flow_in_cell_from_unstruct_markers
+    procedure :: anisotropic_flow_grid_scalar_product
+    procedure :: anisotropic_flow_grid_distance
     procedure :: periodic_correction
 
   end type sll_bsl_lt_pic_4d_group
@@ -228,7 +266,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%q * self%markers_list(i)%weight
+    r = self%species%q * self%struct_markers_list(i)%weight
 
   end function bsl_lt_pic_4d_get_charge
 
@@ -239,7 +277,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%m * self%markers_list(i)%weight
+    r = self%species%m * self%struct_markers_list(i)%weight
 
   end function bsl_lt_pic_4d_get_mass
 
@@ -255,21 +293,28 @@ contains
     sll_real64 :: r(3)
 
     if( i < 1 .or. i > self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! returning an error would be nice...
-      r(1000) = 0   ! will this be caught as an error ?
+      ! returning an error would be nice but this is not possible in a pure function
+      r = 1d30
       return
     end if
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then the particle is a flow marker
 
-      ! get x
-      r(1) = self%space_mesh_2d%eta1_min + &
-             self%space_mesh_2d%delta_eta1*(                            &
-             real(self%markers_list(i)%offset_x + self%markers_list(i)%i_cell_x - 1, f64)      )
-      ! get y
-      r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*( &
-             real(self%markers_list(i)%offset_y + self%markers_list(i)%i_cell_y - 1, f64)      )
+      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+        ! get x
+        r(1) = self%space_mesh_2d%eta1_min + &
+               self%space_mesh_2d%delta_eta1*(                            &
+               real(self%struct_markers_list(i)%offset_x + self%struct_markers_list(i)%i_cell_x - 1, f64)      )
+        ! get y
+        r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*( &
+               real(self%struct_markers_list(i)%offset_y + self%struct_markers_list(i)%i_cell_y - 1, f64)      )
+      else
+        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        r(1) = self%unstruct_markers_eta(i, 1)
+        r(2) = self%unstruct_markers_eta(i, 2)
+        ! todo continue here and below (look for occurences of number_flow_markers) -- and check that
+      end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then the particle is a deposition particle
@@ -295,23 +340,33 @@ contains
     sll_real64 :: r(3)
 
     if( i < 1 .or. i > self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! returning an error would be nice...
-      r(1000) = 0   ! will this be caught as an error ?
+      ! returning an error would be nice but this is not possible in a pure function
+      r = 1d30
       return
     end if
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then the particle is a flow marker
 
-      ! get vx
-      r(1) = self%markers_list(i)%vx
-      ! get vy
-      r(2) = self%markers_list(i)%vy
+      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+        ! get vx
+        r(1) = self%struct_markers_list(i)%vx
+        ! get vy
+        r(2) = self%struct_markers_list(i)%vy
+      else
+        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        ! get vx
+        r(1) = self%unstruct_markers_eta(i, 3)
+        ! get vy
+        r(2) = self%unstruct_markers_eta(i, 4)
+      end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then the particle is a deposition particle
 
+      ! get vx
       r(1) = self%deposition_particles_eta(i - self%number_flow_markers, 3)
+      ! get vy
       r(2) = self%deposition_particles_eta(i - self%number_flow_markers, 4)
 
     end if
@@ -339,34 +394,44 @@ contains
     sll_real64 ::  x_part
     sll_real64 ::  y_part
     sll_real64 ::  tmp !, dx, dy
+    logical    ::  use_x_and_y_part
 
     if( i < 1 .or. i > self%number_flow_markers + self%number_moving_deposition_particles )then
       ! returning an error would be nice...
-      i_out = -1000   ! will this be caught as an error ?
+      i_out = 1000000000   ! will this be caught as an error ?
       return
     end if
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then the particle is a flow marker
 
-      i_cell_x    = self%markers_list(i)%i_cell_x
-      i_cell_y    = self%markers_list(i)%i_cell_y
+      use_x_and_y_part = .true.
+      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+        i_cell_x    = self%struct_markers_list(i)%i_cell_x
+        i_cell_y    = self%struct_markers_list(i)%i_cell_y
+        use_x_and_y_part = .false.
+      else
+        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        x_part = self%unstruct_markers_eta(i, 1)
+        y_part = self%unstruct_markers_eta(i, 2)
+      end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then the particle is a deposition particle
 
-      ! find poisson (x-)cell containing this deposition particle, and relative position in the cell
       x_part = self%deposition_particles_eta(i - self%number_flow_markers, 1)
+      y_part = self%deposition_particles_eta(i - self%number_flow_markers, 2)
+
+    end if
+
+    if( use_x_and_y_part )then
+      ! compute the x and y indices of the cell
       tmp = ( x_part - self%space_mesh_2d%eta1_min ) / self%space_mesh_2d%delta_eta1
       i_cell_x = int( tmp ) + 1
-      !! NOTE: if we need the relative position within the cell (between 0 and 1), it is: dx = tmp - (i_cell_x - 1)
-
-      ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
-      y_part = self%deposition_particles_eta(i - self%number_flow_markers, 2)
+      ! NOTE: if we need the relative position within the cell (between 0 and 1), it is: dx = tmp - (i_cell_x - 1)
       tmp = ( y_part - self%space_mesh_2d%eta2_min ) / self%space_mesh_2d%delta_eta2
       i_cell_y = int( tmp ) + 1
-      !! NOTE: if we need the relative position within the cell (between 0 and 1), it is: dy = tmp - (i_cell_y - 1)
-
+      ! NOTE: if we need the relative position within the cell (between 0 and 1), it is: dy = tmp - (i_cell_y - 1)
     end if
 
     ! then get the integer index for this cell
@@ -400,40 +465,56 @@ contains
 
     type(sll_cartesian_mesh_2d),      pointer :: space_mesh_2d
     type(sll_bsl_lt_pic_4d_particle), pointer :: particle
-    sll_int32               :: i_cell_x, i_cell_y
-    sll_real32              :: offset_x, offset_y
-    sll_real64              :: temp
+    sll_int32                :: i_cell_x, i_cell_y
+    sll_real32               :: offset_x, offset_y
+    sll_real64               :: temp
+    sll_real64, dimension(4) :: eta_marker
+    sll_int32 :: old_j_x, old_j_y, old_j_vx, old_j_vy
+    logical   :: marker_is_outside
 
-    if( i < 1 .or. i > self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! returning an error would be nice...
-      temp = x(1000)   ! will this be caught as an error ?
-      return
-    end if
+    SLL_ASSERT( i >= 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then we set the physical coordinates of a flow marker
       ! (maybe change the name of the structure sll_bsl_lt_pic_4d_particle -> sll_bsl_lt_pic_4d_flow_marker ?)
 
-      space_mesh_2d => self%space_mesh_2d
-      particle => self%markers_list(i)
+      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+        space_mesh_2d => self%space_mesh_2d
+        particle => self%struct_markers_list(i)
 
-      temp = (x(1) - space_mesh_2d%eta1_min) / space_mesh_2d%delta_eta1
-      i_cell_x  = 1 + int(floor(temp))
-      offset_x = real(temp - real(i_cell_x - 1,f64), f32)
+        temp = (x(1) - space_mesh_2d%eta1_min) / space_mesh_2d%delta_eta1
+        i_cell_x  = 1 + int(floor(temp))
+        offset_x = real(temp - real(i_cell_x - 1,f64), f32)
 
-      temp = (x(2) - space_mesh_2d%eta2_min) / space_mesh_2d%delta_eta2
-      i_cell_y  = 1 + int(floor(temp))
-      offset_y = real(temp - real(i_cell_y - 1,f64), f32)
+        temp = (x(2) - space_mesh_2d%eta2_min) / space_mesh_2d%delta_eta2
+        i_cell_y  = 1 + int(floor(temp))
+        offset_y = real(temp - real(i_cell_y - 1,f64), f32)
 
-      SLL_ASSERT(offset_x >= 0)
-      SLL_ASSERT(offset_x <= 1 )
-      SLL_ASSERT(offset_y >= 0)
-      SLL_ASSERT(offset_y <= 1 )
+        SLL_ASSERT(offset_x >= 0)
+        SLL_ASSERT(offset_x <= 1 )
+        SLL_ASSERT(offset_y >= 0)
+        SLL_ASSERT(offset_y <= 1 )
 
-      particle%i_cell_x = i_cell_x
-      particle%i_cell_y = i_cell_y
-      particle%offset_x = offset_x
-      particle%offset_y = offset_y
+        particle%i_cell_x = i_cell_x
+        particle%i_cell_y = i_cell_y
+        particle%offset_x = offset_x
+        particle%offset_y = offset_y
+      else
+        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+
+        ! we also need to update the flow cell's lists:
+        ! store previous flow cell index
+        eta_marker = self%unstruct_markers_eta(i, :)
+        call get_4d_cell_containing_point(eta_marker, self%flow_grid, old_j_x, old_j_y, old_j_vx, old_j_vy, marker_is_outside)
+
+        ! set x and y
+        self%unstruct_markers_eta(i, 1) = x(1)
+        self%unstruct_markers_eta(i, 2) = x(2)
+
+        ! update flow cell lists
+        call self%update_flow_cell_lists_with_new_marker_position(i, old_j_x, old_j_y, old_j_vx, old_j_vy)
+
+      end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then we set the physical coordinates of a deposition particle
@@ -459,20 +540,39 @@ contains
     sll_real64                      , intent( in    ) :: x(3)  !> this is the velocity, but argument name in abstract interface is x
 
     type(sll_bsl_lt_pic_4d_particle), pointer :: particle
+    sll_real64, dimension(4) :: eta_marker
+    sll_int32  :: old_j_x, old_j_y, old_j_vx, old_j_vy
+    logical    :: marker_is_outside
 
-    if( i < 1 .or. i > self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! returning an error would be nice...
-      particle => self%markers_list(i)   ! will this be caught as an error ?
-      return
-    end if
+    SLL_ASSERT( i >= 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then we set the velocity coordinates of a flow marker
       ! (maybe change the name of the structure sll_bsl_lt_pic_4d_particle -> sll_bsl_lt_pic_4d_flow_marker ?)
 
-      particle => self%markers_list(i)
-      particle%vx = x(1)
-      particle%vy = x(2)
+
+      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+        particle => self%struct_markers_list(i)
+        particle%vx = x(1)
+        particle%vy = x(2)
+      else
+        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+
+        ! we also need to update the flow cell's lists:
+        ! store previous flow cell index
+        eta_marker = self%unstruct_markers_eta(i, :)
+        call get_4d_cell_containing_point(eta_marker, self%flow_grid, old_j_x, old_j_y, old_j_vx, old_j_vy, marker_is_outside)
+
+        ! set vx and vy
+        self%unstruct_markers_eta(i, 3) = x(1)
+        self%unstruct_markers_eta(i, 4) = x(2)
+
+        ! update flow cell lists
+        call self%update_flow_cell_lists_with_new_marker_position(i, old_j_x, old_j_y, old_j_vx, old_j_vy)
+
+        ! todo ici: add outside flag and decide what to do if marker leaves the grid
+
+      end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then we set the physical coordinates of a deposition particle
@@ -502,7 +602,7 @@ contains
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (97658758) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects", s, storage_size(self)
+    print*, "Error (97658758) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects", i, s, storage_size(self)
     stop
 
   end subroutine bsl_lt_pic_4d_set_particle_weight
@@ -559,7 +659,6 @@ contains
     sll_int32                                       :: this_rank
     sll_int32                                       :: i_part
     sll_int32                                       :: i_dim
-    sll_int32                                       :: ierr
     sll_int64                                       :: sobol_seed
     sll_real64                                      :: rdn(4)
 
@@ -571,7 +670,7 @@ contains
     else
       this_rank = 0
     end if
-    sobol_seed = 10 + this_rank * self%number_moving_deposition_particles
+    sobol_seed = int(10 + this_rank * self%number_moving_deposition_particles, 8)
 
     do i_part = 1, self%number_moving_deposition_particles
       ! Generate Sobol numbers on [0,1]
@@ -842,10 +941,13 @@ contains
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         deposition_particles_type,                  &
         minimum_number_of_deposition_particles,     &   ! lower bound if deposition particles = fixed_grid, actual nb if transported
+        flow_markers_type,                          &
         number_flow_markers_x,                      &
         number_flow_markers_y,                      &
         number_flow_markers_vx,                     &
         number_flow_markers_vy,                     &
+        init_nb_unstruct_markers_per_cell,          &
+        max_nb_unstruct_markers_per_cell,           &
         flow_grid_number_cells_x,                   &
         flow_grid_number_cells_y,                   &
         flow_grid_number_cells_vx,                  &
@@ -873,14 +975,18 @@ contains
     sll_int32,  dimension(4), intent(in)  :: remapping_sparse_grid_max_levels
     sll_int32,                intent(in)  :: deposition_particles_type
     sll_int32,                intent(in)  :: minimum_number_of_deposition_particles
+    sll_int32,                intent(in)  :: flow_markers_type
     sll_int32,                intent(in)  :: number_flow_markers_x
     sll_int32,                intent(in)  :: number_flow_markers_y
     sll_int32,                intent(in)  :: number_flow_markers_vx
     sll_int32,                intent(in)  :: number_flow_markers_vy
+    sll_int32,                intent(in)  :: init_nb_unstruct_markers_per_cell
+    sll_int32,                intent(in)  :: max_nb_unstruct_markers_per_cell
     sll_int32,                intent(in)  :: flow_grid_number_cells_x
     sll_int32,                intent(in)  :: flow_grid_number_cells_y
     sll_int32,                intent(in)  :: flow_grid_number_cells_vx
     sll_int32,                intent(in)  :: flow_grid_number_cells_vy
+
 
     type(sll_cartesian_mesh_2d), pointer, intent(in) :: space_mesh_2d
 
@@ -917,7 +1023,7 @@ contains
 
     sll_int32  :: cst_int
     sll_real64 :: cst_real, ratio_vx, ratio_vy
-    sll_real64 :: tmp, tmp1, tmp2
+    sll_real64 :: tmp !, tmp1, tmp2
 
     if (.not.associated(space_mesh_2d) ) then
        err_msg = 'Error: given space_mesh_2d is not associated'
@@ -934,49 +1040,15 @@ contains
     res%dimension_v = 2
 
     !> A. discretization of the flow:
-    !>    - A.1 list of marker coordinates (pushed forward)
-    !>    - A.2 cartesian grid of initial markers
-    !>    - A.3 flow grid: 4d cartesian cells where the flow is linearized
-
-    !> A.1 list of marker coordinates
-    res%number_flow_markers_x  = number_flow_markers_x
-    res%number_flow_markers_y  = number_flow_markers_y
-    res%number_flow_markers_vx = number_flow_markers_vx
-    res%number_flow_markers_vy = number_flow_markers_vy
-    res%number_flow_markers    = number_flow_markers_x * number_flow_markers_y * number_flow_markers_vx * number_flow_markers_vy
-
-    SLL_ALLOCATE( res%markers_list(res%number_flow_markers), ierr )
-
-    !> A.2 cartesian grid of initial markers
-    if( domain_is_x_periodic )then
-        number_cells_initial_markers_grid_x = number_flow_markers_x
-    else
-        number_cells_initial_markers_grid_x = number_flow_markers_x - 1
-    end if
-    if( domain_is_y_periodic )then
-        number_cells_initial_markers_grid_y = number_flow_markers_y
-    else
-        number_cells_initial_markers_grid_y = number_flow_markers_y - 1
-    end if
-    number_cells_initial_markers_grid_vx = number_flow_markers_vx - 1
-    number_cells_initial_markers_grid_vy = number_flow_markers_vy - 1
-
-    res%initial_markers_grid => new_cartesian_mesh_4d( &
-      number_cells_initial_markers_grid_x, &
-      number_cells_initial_markers_grid_y, &
-      number_cells_initial_markers_grid_vx, &
-      number_cells_initial_markers_grid_vy, &
-      space_mesh_2d%eta1_min, &
-      space_mesh_2d%eta1_max, &
-      space_mesh_2d%eta2_min, &
-      space_mesh_2d%eta2_max, &
-      remapping_grid_vx_min, &
-      remapping_grid_vx_max, &
-      remapping_grid_vy_min, &
-      remapping_grid_vy_max )
+    !>    - A.1 flow grid: 4d cartesian cells where the flow is linearized
+    !>    - A.2 if structured flow marker:
+    !>      A.2.a list of marker coordinates (pushed forward)
+    !>      A.2.b cartesian grid of initial markers
+    !>    - A.3 if unstructured flow marker:
+    !>      A.3.a allocate arrays for unstructured flow markers
 
 
-    !> A.2 flow grid
+    !> A.1 flow grid
     res%flow_grid => new_cartesian_mesh_4d( &
       flow_grid_number_cells_x, &
       flow_grid_number_cells_y, &
@@ -990,6 +1062,105 @@ contains
       remapping_grid_vx_max, &
       remapping_grid_vy_min, &
       remapping_grid_vy_max )
+
+    ! set parameters of the anisotropic distance in the flow_grid:
+    !   we define  flow_grid_h  and  flow_grid_a1, .. , flow_grid_a4
+    !   such that  flow_grid%delta_eta1 = flow_grid_a1 * flow_grid_h  and similarly in the other directions
+    res%flow_grid_h = (1./4)*real(  res%flow_grid%delta_eta1  &
+                                  + res%flow_grid%delta_eta2  &
+                                  + res%flow_grid%delta_eta3  &
+                                  + res%flow_grid%delta_eta4, f64)
+    res%flow_grid_a1 = res%flow_grid%delta_eta1 / res%flow_grid_h
+    res%flow_grid_a2 = res%flow_grid%delta_eta2 / res%flow_grid_h
+    res%flow_grid_a3 = res%flow_grid%delta_eta3 / res%flow_grid_h
+    res%flow_grid_a4 = res%flow_grid%delta_eta4 / res%flow_grid_h
+
+    !> A.1-2 flow markers:
+
+    res%flow_markers_type = flow_markers_type
+
+    if( res%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      !> A.2.a list of marker coordinates (pushed forward)
+      res%number_flow_markers_x  = number_flow_markers_x
+      res%number_flow_markers_y  = number_flow_markers_y
+      res%number_flow_markers_vx = number_flow_markers_vx
+      res%number_flow_markers_vy = number_flow_markers_vy
+      res%number_struct_flow_markers =   number_flow_markers_x  &
+                                       * number_flow_markers_y  &
+                                       * number_flow_markers_vx &
+                                       * number_flow_markers_vy
+
+      SLL_ALLOCATE( res%struct_markers_list(res%number_struct_flow_markers), ierr )
+
+      !> A.2.b cartesian grid of initial markers
+      if( domain_is_x_periodic )then
+          number_cells_initial_markers_grid_x = number_flow_markers_x
+      else
+          number_cells_initial_markers_grid_x = number_flow_markers_x - 1
+      end if
+      if( domain_is_y_periodic )then
+          number_cells_initial_markers_grid_y = number_flow_markers_y
+      else
+          number_cells_initial_markers_grid_y = number_flow_markers_y - 1
+      end if
+      number_cells_initial_markers_grid_vx = number_flow_markers_vx - 1
+      number_cells_initial_markers_grid_vy = number_flow_markers_vy - 1
+
+      res%initial_markers_grid => new_cartesian_mesh_4d( &
+        number_cells_initial_markers_grid_x, &
+        number_cells_initial_markers_grid_y, &
+        number_cells_initial_markers_grid_vx, &
+        number_cells_initial_markers_grid_vy, &
+        space_mesh_2d%eta1_min, &
+        space_mesh_2d%eta1_max, &
+        space_mesh_2d%eta2_min, &
+        space_mesh_2d%eta2_max, &
+        remapping_grid_vx_min, &
+        remapping_grid_vx_max, &
+        remapping_grid_vy_min, &
+        remapping_grid_vy_max )
+
+        res%number_flow_markers = res%number_struct_flow_markers
+
+    else
+
+      SLL_ASSERT( res% flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+
+      !>      A.3.a initialize parameters of unstructured flow markers
+
+      SLL_ASSERT( init_nb_unstruct_markers_per_cell <= max_nb_unstruct_markers_per_cell )
+      if( max_nb_unstruct_markers_per_cell < 5 )then
+        err_msg = "Error (875765786): we need at least 5 markers per cell (to create local simplexes defining the linearized flow)"
+        SLL_ERROR(this_fun_name, err_msg)
+      end if
+
+      res%init_nb_unstruct_markers_per_cell = init_nb_unstruct_markers_per_cell
+      res%max_nb_unstruct_markers_per_cell = max_nb_unstruct_markers_per_cell
+      res%max_nb_unstruct_markers = res%max_nb_unstruct_markers_per_cell * flow_grid_number_cells_x   &
+                                                                         * flow_grid_number_cells_y   &
+                                                                         * flow_grid_number_cells_vx  &
+                                                                         * flow_grid_number_cells_vy
+
+      !>      A.3.b allocate arrays for unstructured flow markers
+
+      ! (we do not use the macro SLL_ALLOCATE here because the line is too long)
+      allocate(res%unstruct_markers_in_flow_cell( flow_grid_number_cells_x,     &
+                                                  flow_grid_number_cells_y,     &
+                                                  flow_grid_number_cells_vx,    &
+                                                  flow_grid_number_cells_vy )   &
+               , stat=ierr)
+      call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+      ! no need to do something for the list unstruct_markers_outside_flow_grid, it will just be nullified at the initialization
+
+      SLL_ALLOCATE( res%unstruct_markers_eta(res%max_nb_unstruct_markers, 4) , ierr )
+      SLL_ALLOCATE( res%unstruct_markers_eta_at_remapping_time(res%max_nb_unstruct_markers, 4) , ierr )
+      SLL_ALLOCATE( res%unstruct_markers_relevant_neighbor(res%max_nb_unstruct_markers) , ierr )
+
+      ! for the moment we are conservative and set this to the max number, to avoid the risk of forgetting some markers
+      ! in the external push loops that would use a static (say, initial) number of particles (or markers)
+      res%number_flow_markers = res%max_nb_unstruct_markers
+
+    end if
 
 
     !> B. discretization of the field (Poisson grid)
@@ -1096,7 +1267,20 @@ contains
     !     - D.1 on a fixed grid (with new charges computed at every time step)
     !     - D.2 or transported with the flow (like sdt particles), and re-initialized from time to time, using BSL_LT_PIC techniques
 
+
     res%deposition_particles_type = deposition_particles_type
+
+    if( res%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED .and. res%deposition_particles_type == SLL_BSL_LT_PIC_FIXED_GRID )then
+      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
+      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
+      print *, " "
+      print *, "   Because the flow markers are set of 'UNSTRUCTURED' type, "
+      print *, "   I am overriding the 'FIXED_GRID' status for the deposition particles and setting them to 'TRANSPORTED_RANDOM'. "
+      print *, " "
+      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
+      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
+      res%deposition_particles_type = SLL_BSL_LT_PIC_TRANSPORTED_RANDOM
+    end if
 
     if( res%deposition_particles_type == SLL_BSL_LT_PIC_FIXED_GRID )then
 
@@ -1114,11 +1298,11 @@ contains
       !     dg_np = dg_np_x * dg_np_y * dg_nc_vx * dg_nc_vy >= minimum_number_of_deposition_particles
 
       ! we will have  dg_np_vx ~ cst_int * cst_int * ratio_vx
-      ratio_vx = res%number_flow_markers_vx * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)       &
-                                           * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2
+      ratio_vx = real(res%number_flow_markers_vx * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)          &
+                                            * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2   ,f64)
       ! and           dg_np_vy ~ cst_int * cst_int * ratio_vy
-      ratio_vy = res%number_flow_markers_vy * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)       &
-                                           * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2
+      ratio_vy = real(res%number_flow_markers_vy * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)          &
+                                            * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2   ,f64)
 
       ! and           dg_np ~ cst_int * cst_int * cst_int * cst_int * num_cells1 * num_cells2 * ratio_vx * ratio_vy
       !                     >=  minimum_number_of_deposition_particles
@@ -1175,6 +1359,8 @@ contains
                                                     deposition_grid_vy_max   &
                                                    )
 
+      res%number_moving_deposition_particles = 0
+
     else if( res%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )then
 
       ! D.2 deposition particles will be transported with the flow (like sdt particles)
@@ -1193,7 +1379,8 @@ contains
     res%number_particles = res%number_flow_markers + res%number_moving_deposition_particles
 
     else
-      SLL_ERROR("sll_bsl_lt_pic_4d_group_new", "ahem, a test must be broken -- you should not be reading this :)")
+      err_msg = "ahem, a test must be broken -- you should not be reading this :)"
+      SLL_ERROR( this_fun_name, err_msg )
     end if
 
   end function sll_bsl_lt_pic_4d_group_new
@@ -1211,7 +1398,7 @@ contains
 
     !> A. initialize the remapping tool:
     !>    - A.1  write the nodal values of f0 on the arrays of interpolation coefs
-    print *, "bsl_lt_pic_4d_initializer -- step A"
+    print *, "bsl_lt_pic_4d_initializer -- step A: initialize the remapping tool"
     if( initial_density_identifier == SLL_BSL_LT_PIC_LANDAU_F0 )then
       call self%bsl_lt_pic_4d_write_landau_density_on_remapping_grid( self%thermal_speed, self%alpha, self%k_landau )
     else if( initial_density_identifier == SLL_BSL_LT_PIC_HAT_F0 )then
@@ -1236,14 +1423,22 @@ contains
     end if
 
     !> B. initialize the (flow) markers
-    print *, "bsl_lt_pic_4d_initializer -- step B"
+    print *, "bsl_lt_pic_4d_initializer -- step B: initialize the flow markers"
+    if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      call self%bsl_lt_pic_4d_reset_markers_position()
+      call self%bsl_lt_pic_4d_set_markers_connectivity()
+    else
+      SLL_ASSERT( self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+      call self%bsl_lt_pic_4d_initialize_unstruct_markers()
+      call self%bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians()
+    end if
 
-    call self%bsl_lt_pic_4d_reset_markers_position()
-    call self%bsl_lt_pic_4d_set_markers_connectivity()
+
+
 
     !> D. if deposition particles are transported, initialize them -- this must be done after the remapping tool is operational!
 
-    print *, "bsl_lt_pic_4d_initializer -- step C"
+    print *, "bsl_lt_pic_4d_initializer -- step C: initialize the deposition cells"
 
     if( self%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )then
       if(present(rank))then
@@ -1298,7 +1493,7 @@ contains
     sll_real64 :: one_over_thermal_velocity
     sll_real64 :: one_over_two_pi
 
-    sll_real64 :: total_density ! DEBUG
+    !    sll_real64 :: total_density ! DEBUG
 
     one_over_thermal_velocity = 1./thermal_speed
     one_over_two_pi = 1./(2*sll_pi)
@@ -1901,69 +2096,69 @@ contains
             if(j_x == 1)then
                 ! [neighbor index = own index] means: no neighbor
                 ! in the x-periodic case this will be changed when dealing with the last marker in the x dimension
-                p_group%markers_list(k)%ngb_xleft_index = k
+                p_group%struct_markers_list(k)%ngb_xleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = markers_indices(j_x-1,j_y,j_vx,j_vy)
-                p_group%markers_list(k)%ngb_xleft_index = k_ngb
-                p_group%markers_list(k_ngb)%ngb_xright_index = k
+                p_group%struct_markers_list(k)%ngb_xleft_index = k_ngb
+                p_group%struct_markers_list(k_ngb)%ngb_xright_index = k
                 if(j_x == number_flow_markers_x)then
                     if( p_group%domain_is_periodic(1) )then
                         ! set the connectivity (in both directions) with right neighbor
                         k_ngb = markers_indices(1,j_y,j_vx,j_vy)
-                        p_group%markers_list(k)%ngb_xright_index = k_ngb
-                        p_group%markers_list(k_ngb)%ngb_xleft_index = k
+                        p_group%struct_markers_list(k)%ngb_xright_index = k_ngb
+                        p_group%struct_markers_list(k_ngb)%ngb_xleft_index = k
                     else
                         ! [neighbor index = own index] means: no neighbor
-                        p_group%markers_list(k)%ngb_xright_index = k
+                        p_group%struct_markers_list(k)%ngb_xright_index = k
                     end if
                 end if
             end if
             if(j_y == 1)then
                 ! [neighbor index = own index] means: no neighbor
                 ! in the y-periodic case this will be changed when dealing with the last marker in the y dimension
-                p_group%markers_list(k)%ngb_yleft_index = k
+                p_group%struct_markers_list(k)%ngb_yleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = markers_indices(j_x,j_y-1,j_vx,j_vy)
-                p_group%markers_list(k)%ngb_yleft_index = k_ngb
-                p_group%markers_list(k_ngb)%ngb_yright_index = k
+                p_group%struct_markers_list(k)%ngb_yleft_index = k_ngb
+                p_group%struct_markers_list(k_ngb)%ngb_yright_index = k
                 if(j_y == number_flow_markers_y)then
                     if( p_group%domain_is_periodic(2) )then
                         ! set the connectivity (in both directions) with right neighbor
                         k_ngb = markers_indices(j_x,1,j_vx,j_vy)
-                        p_group%markers_list(k)%ngb_yright_index = k_ngb
-                        p_group%markers_list(k_ngb)%ngb_yleft_index = k
+                        p_group%struct_markers_list(k)%ngb_yright_index = k_ngb
+                        p_group%struct_markers_list(k_ngb)%ngb_yleft_index = k
                     else
                         ! [neighbor index = own index] means: no neighbor
-                        p_group%markers_list(k)%ngb_yright_index = k
+                        p_group%struct_markers_list(k)%ngb_yright_index = k
                     end if
                 end if
             end if
             if(j_vx == 1)then
                 ! [neighbor index = own index] means: no neighbor
-                p_group%markers_list(k)%ngb_vxleft_index = k
+                p_group%struct_markers_list(k)%ngb_vxleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = markers_indices(j_x,j_y,j_vx-1,j_vy)
-                p_group%markers_list(k)%ngb_vxleft_index = k_ngb
-                p_group%markers_list(k_ngb)%ngb_vxright_index = k
+                p_group%struct_markers_list(k)%ngb_vxleft_index = k_ngb
+                p_group%struct_markers_list(k_ngb)%ngb_vxright_index = k
                 if(j_vx == number_flow_markers_vx)then
                     ! [neighbor index = own index] means: no neighbor
-                    p_group%markers_list(k)%ngb_vxright_index = k
+                    p_group%struct_markers_list(k)%ngb_vxright_index = k
                 end if
             end if
             if(j_vy == 1)then
                 ! [neighbor index = own index] means: no neighbor
-                p_group%markers_list(k)%ngb_vyleft_index = k
+                p_group%struct_markers_list(k)%ngb_vyleft_index = k
             else
                 ! set the connectivity (in both directions) with left neighbor
                 k_ngb = markers_indices(j_x,j_y,j_vx,j_vy-1)
-                p_group%markers_list(k)%ngb_vyleft_index = k_ngb
-                p_group%markers_list(k_ngb)%ngb_vyright_index = k
+                p_group%struct_markers_list(k)%ngb_vyleft_index = k_ngb
+                p_group%struct_markers_list(k_ngb)%ngb_vyright_index = k
                 if(j_vy == number_flow_markers_vy)then
                     ! [neighbor index = own index] means: no neighbor
-                    p_group%markers_list(k)%ngb_vyright_index = k
+                    p_group%struct_markers_list(k)%ngb_vyright_index = k
                 end if
             end if
 
@@ -1975,7 +2170,892 @@ contains
   end subroutine bsl_lt_pic_4d_set_markers_connectivity
 
 
-  !> reset the markers on the initial (markers) grid
+  !> initialize the markers on the initial (markers) grid
+  subroutine bsl_lt_pic_4d_initialize_unstruct_markers( p_group )
+    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+
+    type(int_list_element),  pointer   :: new_int_list_element, head
+    sll_real64, dimension(4) :: flow_cell_eta_min
+    sll_real64, dimension(4) :: flow_cell_eta_max
+
+    logical    :: local_verbose
+    sll_int64  :: sobol_seed
+    sll_real64 :: rdn(4)
+    sll_int32  :: ierr
+    sll_int32  :: j_x, j_y, j_vx, j_vy
+    sll_int32  :: i_dim
+    sll_int32  :: i_marker
+    sll_int32  :: i_local_marker
+    sll_int32  :: init_nb_unstruct_markers_per_cell
+
+    ! place a few markers in each flow cell with quasi-random sequences
+    init_nb_unstruct_markers_per_cell = p_group%init_nb_unstruct_markers_per_cell
+
+    i_marker = 1      ! index of marker in global list
+    sobol_seed = int(675,8)  ! initial value of the seed (it is incremented by one in the call to i8_sobol)
+
+    local_verbose = .true.
+
+    do j_x = 1, p_group%flow_grid%num_cells1
+      if( local_verbose )then
+        print *, "loading unstructured flow markers in flow cells: j_x = ", j_x, "/", p_group%flow_grid%num_cells1, "..."
+      end if
+      flow_cell_eta_min(1) = p_group%flow_grid%eta1_min + (j_x-1) * p_group%flow_grid%delta_eta1
+      flow_cell_eta_max(1) = p_group%flow_grid%eta1_min + (j_x)   * p_group%flow_grid%delta_eta1
+
+      do j_y = 1, p_group%flow_grid%num_cells2
+        flow_cell_eta_min(2) = p_group%flow_grid%eta2_min + (j_y-1) * p_group%flow_grid%delta_eta2
+        flow_cell_eta_max(2) = p_group%flow_grid%eta2_min + (j_y)   * p_group%flow_grid%delta_eta2
+
+        do j_vx = 1, p_group%flow_grid%num_cells3
+          flow_cell_eta_min(3) = p_group%flow_grid%eta3_min + (j_vx-1) * p_group%flow_grid%delta_eta3
+          flow_cell_eta_max(3) = p_group%flow_grid%eta3_min + (j_vx)   * p_group%flow_grid%delta_eta3
+
+          do j_vy = 1, p_group%flow_grid%num_cells4
+            flow_cell_eta_min(4) = p_group%flow_grid%eta4_min + (j_vy-1) * p_group%flow_grid%delta_eta4
+            flow_cell_eta_max(4) = p_group%flow_grid%eta4_min + (j_vy)   * p_group%flow_grid%delta_eta4
+
+            do i_local_marker = 1, init_nb_unstruct_markers_per_cell
+
+              ! Generate 4 Sobol numbers on [0,1]
+              call i8_sobol(int(4,8), sobol_seed, rdn)
+
+              ! Transform rdn to the proper intervals
+              do i_dim = 1, 4
+                p_group%unstruct_markers_eta(i_marker, i_dim) =   flow_cell_eta_min(i_dim) * (1 - rdn(i_dim)) &
+                                                                + flow_cell_eta_max(i_dim) * rdn(i_dim)
+              end do
+
+              ! increment the proper linked list (see other uses in this module)
+              SLL_ALLOCATE( new_int_list_element, ierr )
+              new_int_list_element%value = i_marker
+              head => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+              p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element &
+                    => add_element_in_int_list(head, new_int_list_element)
+
+              ! increment the global marker index
+              i_marker = i_marker + 1
+
+            end do
+          end do
+        end do
+      end do
+    end do
+
+    ! initialize the linked list of outside markers
+    nullify(p_group%unstruct_markers_outside_flow_grid)
+
+  end subroutine bsl_lt_pic_4d_initialize_unstruct_markers
+
+  ! ------------------------------------------------------------------------------------------------------------------------------
+  !> prepare a relevant set of 5 (D+1) markers to be able to later compute the flow Jacobian matrix in each cell
+  !> after this routine, each cell will have a list of 5 markers defining a simplex of sufficient volume
+  !>
+  !> the rule for selecting 5 relevant markers (x^1, .. x^5) in a cell Omega_j is the following:
+  !>    - the marker #1 is relevant if its distance to the cell's center C^j is > diam(Omega_j)/4.
+  !>      Note: considering that   diam_d(Omega)_j = h * a_d   for  d = 1, .., D (here D=4)  we will use the anisotropic l2 distance
+  !>        (|| x ||_a)^2 := <x, x>_a       where      <x, y >_a  := sum_{d = 1, .. D}  (x_d / a_d) * (y_d / a_d)
+  !>        and test if
+  !>        || ( (x^1_d - C^j_d) / diam_d(Omega_j) )_{d = 1, .. D} ||_a > h/4
+  !>    - for i = 2, .. 5 the marker #i is relevant if its a-distance to the space < x^2-x^1, .. x^{i-1}-x^1 >  is > diam(Omega_j)/4
+  !>      again in the anisotropic l2 distance.
+  !>      To test this we loop over the markers x in the cell and compute their anisotropic l2 projection
+  !>      in the affine space,   Px = x^1 + sum_l=2^{i-1} c_{l-1} (x^l - x^1)   defined by
+  !>        < Px - x^1, x^m - x^1 >_a = < x - x^1, x^m - x^1 >_a      for    m = 2, .. i-1
+  !>      (for i=2 we have Px = x^1) and test whether || x - Px ||_a > h/4
+  !>      Note: if one marker was too close from a low-dimensional space we can discard it from further searches
+  !>    - at each stage, if no marker is relevant we add a new marker with quasi-random position that makes it relevant in the cell
+  !> Note: Maybe 1/4 is not the best choice.
+  !> Note: We will also remove some markers in the cells if they are non-relevant and too many
+  !>
+  !> Note: in constructor we should have defined the parameters  flow_grid_a1, .. flow_grid_a4 and flow_grid_h  such that
+  !> p_group%flow_grid%delta_eta1 = p_group%flow_grid_a1 * p_group%flow_grid_h
+  !> p_group%flow_grid%delta_eta2 = p_group%flow_grid_a2 * p_group%flow_grid_h
+  !> p_group%flow_grid%delta_eta3 = p_group%flow_grid_a3 * p_group%flow_grid_h
+  !> p_group%flow_grid%delta_eta4 = p_group%flow_grid_a4 * p_group%flow_grid_h
+
+  subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians( p_group )
+    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+
+
+    type(int_list_element),       pointer           :: list_of_marker_indices_to_be_discarded
+    type(int_list_element),       pointer           :: new_int_list_element, head_int_list
+    type(int_list_element),       pointer           :: new_aux_int_list_element
+    type(marker_list_element),    pointer           :: list_of_markers_to_be_added
+    type(marker_list_element),    pointer           :: new_marker_list_element, head_marker_list
+
+    sll_real64, dimension(4)    :: flow_cell_eta_min
+    sll_real64, dimension(4)    :: flow_cell_eta_mid
+    sll_real64, dimension(4)    :: flow_cell_eta_max
+    sll_real64, dimension(4)    :: eta_marker
+    sll_real64, dimension(4)    :: eta_projected
+    sll_real64, dimension(5,4)  :: eta_relevant_marker
+    sll_real64, dimension(4)    :: eta_marker_to_remove
+    sll_real64, dimension(4)    :: projection_coef
+    sll_real64, dimension(4)    :: aux_b
+    sll_real64, dimension(4,4)  :: aux_matrix
+    sll_real64, dimension(4,4)  :: projection_matrix
+
+    logical    :: relevant_marker_found
+    !    logical    :: marker_found_and_removed
+    logical    :: ok_flag
+    logical    :: local_verbose
+    logical    :: marker_is_outside
+    sll_int32  :: ierr
+    sll_int64  :: sobol_seed
+    sll_real64 :: rdn(4)
+    sll_real64 :: a_distance
+    sll_int32  :: j_x, j_y, j_vx, j_vy
+    sll_int32  :: old_j_x, old_j_y, old_j_vx, old_j_vy
+    sll_int32  :: l, m
+    sll_int32  :: i_dim
+    sll_int32  :: i_relevant
+    sll_int32  :: i_marker
+    sll_int32  :: matrix_size
+    sll_int32  :: nb_unrelevant_markers_in_this_cell
+    sll_int32  :: nb_relevant_markers_in_this_cell
+    sll_int32  :: i_first_relevant_marker
+    sll_int32  :: i_last_relevant_marker
+    sll_int32  :: nb_markers_created
+
+    local_verbose = .false.
+
+    SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+
+    ! list of markers that will be temporary stored for removal
+    nullify( list_of_marker_indices_to_be_discarded )
+
+    ! list of markers that will be temporary stored for insertion
+    nullify( list_of_markers_to_be_added )
+
+    ! reset the array: 0 means no relevant neighbor
+    p_group%unstruct_markers_relevant_neighbor(:) = 0
+
+    sobol_seed = int(876,8) ! seed for newly added markers (we could reuse the one from initial loading...)
+    nb_markers_created = 0    ! to count
+
+    do j_x = 1, p_group%flow_grid%num_cells1
+
+      if( local_verbose )then
+        print *, "[preparing the unstruct markers], A. searching/creating relevant markers in flow cells: j_x = ", &
+                      j_x, "/", p_group%flow_grid%num_cells1, "..."
+      end if
+
+      flow_cell_eta_min(1) = p_group%flow_grid%eta1_min + (j_x-1) * p_group%flow_grid%delta_eta1
+      flow_cell_eta_max(1) = p_group%flow_grid%eta1_min + (j_x)   * p_group%flow_grid%delta_eta1
+      flow_cell_eta_mid(1) = flow_cell_eta_min(1) + 0.5*p_group%flow_grid%delta_eta1
+
+      do j_y = 1, p_group%flow_grid%num_cells2
+        flow_cell_eta_min(2) = p_group%flow_grid%eta2_min + (j_y-1) * p_group%flow_grid%delta_eta2
+        flow_cell_eta_max(2) = p_group%flow_grid%eta2_min + (j_y)   * p_group%flow_grid%delta_eta2
+        flow_cell_eta_mid(2) = flow_cell_eta_min(2) + 0.5*p_group%flow_grid%delta_eta2
+
+        do j_vx = 1, p_group%flow_grid%num_cells3
+          flow_cell_eta_min(3) = p_group%flow_grid%eta3_min + (j_vx-1) * p_group%flow_grid%delta_eta3
+          flow_cell_eta_max(3) = p_group%flow_grid%eta3_min + (j_vx)   * p_group%flow_grid%delta_eta3
+          flow_cell_eta_mid(3) = flow_cell_eta_min(3) + 0.5*p_group%flow_grid%delta_eta3
+
+          do j_vy = 1, p_group%flow_grid%num_cells4
+            flow_cell_eta_min(4) = p_group%flow_grid%eta4_min + (j_vy-1) * p_group%flow_grid%delta_eta4
+            flow_cell_eta_max(4) = p_group%flow_grid%eta4_min + (j_vy)   * p_group%flow_grid%delta_eta4
+            flow_cell_eta_mid(4) = flow_cell_eta_min(4) + 0.5*p_group%flow_grid%delta_eta4
+
+            if( local_verbose )then
+              print *, "[pum], A. -- Going in flow cell ", j_x, j_y, j_vx, j_vy, " ++++++++++++++++++++++++++++++++++++++++++++++++"
+            end if
+
+            do i_relevant = 1, 5
+
+              if( local_verbose )then
+                print *, "[pum], A. -- LOOKING FOR NEW RELEVANT MARKER: i_relevant = ", i_relevant
+                print *, "           relevant markers already found: "
+                do m = 1, i_relevant - 1
+                  print *, " m = ", m
+                  print *, " eta_relevant_marker(m) = ", eta_relevant_marker(m,:)
+                  print *, " eta_relevant_marker(m)-eta_relevant_marker(1) = ", eta_relevant_marker(m,:)-eta_relevant_marker(1,:)
+                end do
+              end if
+
+              ! start search for the relevant pointer #i_relevant, using the criteria specified above
+
+              if( i_relevant <= 2 )then
+                ! for the 1st relevant marker we look at every marker in cell, and restart once afterwards
+                new_int_list_element => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+              else
+                ! we can discard markers that are too close from the first relevant one.
+                ! Moreover we will need the projection matrix for i_relevant > 2
+                aux_matrix = 0.0d0
+                do l = 2, i_relevant-1
+                  do m = 2, i_relevant-1
+                    ! aux_matrix will be seen as a matrix of size (i_relevant-2) x (i_relevant-2)
+                    aux_matrix(m-1,l-1) = p_group%anisotropic_flow_grid_scalar_product( &
+                      eta_relevant_marker(l, :) - eta_relevant_marker(1, :),        &
+                      eta_relevant_marker(m, :) - eta_relevant_marker(1, :)         &
+                    )
+                  end do
+                end do
+                ! compute the inverse matrix
+                matrix_size = i_relevant-2
+                call get_inverse_matrix_with_given_size(matrix_size, aux_matrix, projection_matrix, ok_flag)
+                SLL_ASSERT( ok_flag )
+              end if
+
+              ! loop over the markers in cell to search for the relevant marker #i_relevant
+              ! (do not start over the loop, as markers already seen can be discarded: either relevant already, or too close)
+              relevant_marker_found = .false.
+              do while( .not. relevant_marker_found )
+
+                if( associated(new_int_list_element) )then
+                  ! there is a marker in cell: take it
+                  i_marker = new_int_list_element%value
+                  eta_marker = p_group%unstruct_markers_eta(i_marker, :)
+                  new_int_list_element => new_int_list_element%next
+
+                  if( local_verbose )then
+                    print *, "[pum], A. -- trying marker in cell,   i_marker = ", i_marker, "-------------"
+                    print *, " eta               = ", eta_marker
+                    print *, " flow_cell_eta_min = ", flow_cell_eta_min
+                    print *, " flow_cell_eta_mid = ", flow_cell_eta_mid
+                    print *, " flow_cell_eta_max = ", flow_cell_eta_max
+                  end if
+
+
+                else
+                  ! no more markers in cell: create a new one with quasi-random coordinates
+                  call i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
+
+                  ! Transform rdn to the proper intervals
+                  do i_dim = 1, 4
+                    eta_marker(i_dim) =   flow_cell_eta_min(i_dim) * (1 - rdn(i_dim)) &
+                                        + flow_cell_eta_max(i_dim) * rdn(i_dim)
+                  end do
+                  i_marker = 0  ! local trick to mean that this marker has no global index, hence is not stored in the global array
+                  nb_markers_created = nb_markers_created + 1
+                  if( local_verbose )then
+                    print *, "[pum], A. -- created new marker ---------------------------------------------------------------------"
+                    print *, " eta               = ", eta_marker
+                    print *, " flow_cell_eta_min = ", flow_cell_eta_min
+                    print *, " flow_cell_eta_mid = ", flow_cell_eta_mid
+                    print *, " flow_cell_eta_max = ", flow_cell_eta_max
+                  end if
+                end if
+
+                ! compute the projection projected_marker on the affine space of previous relevant markers
+                if( i_relevant == 1 )then
+                  ! for the first relevant marker we measure its distance to the center (midpoint) of the cell
+                  eta_projected = flow_cell_eta_mid
+                else if( i_relevant == 2 )then
+                  ! trivial projection for the second relevant marker
+                  eta_projected = eta_relevant_marker(1, :)
+                else
+                  ! getting the projected marker with the projection matrix
+                  do l = 2, i_relevant-1
+                    aux_b(l-1) = p_group%anisotropic_flow_grid_scalar_product(    &
+                      eta_marker                - eta_relevant_marker(1, :),    &
+                      eta_relevant_marker(l, :) - eta_relevant_marker(1, :)     &
+                    )
+                  end do
+                  ! compute projection coefs, ie the c_{l-1} such that Px = x^1 + sum_{l=2}^{i-1} c_{l-1} (x^l - x^1)
+                  ! (see subroutine description above)
+                  eta_projected = eta_relevant_marker(1, :)
+                  do l = 2, i_relevant-1
+                    projection_coef(l-1) = 0.0d0
+                    do m = 2, i_relevant-1
+                      projection_coef(l-1) = projection_coef(l-1) + projection_matrix(l-1,m-1) * aux_b(m-1)
+                    end do
+                    eta_projected = eta_projected + projection_coef(l-1) * (eta_relevant_marker(l, :) - eta_relevant_marker(1, :))
+                  end do
+                end if
+
+                ! measure the distance between new marker and its projection
+
+                a_distance = p_group%anisotropic_flow_grid_distance(eta_marker, eta_projected)
+                if( local_verbose )then
+                  print *, "[pum], A. -- i_relevant, p_group%flow_grid_h = ", i_relevant, p_group%flow_grid_h
+                  print *, "[pum], A. -- p_group%flow_grid%delta_eta1 = ", p_group%flow_grid%delta_eta1
+                  print *, "[pum], A. -- p_group%flow_grid%delta_eta2 = ", p_group%flow_grid%delta_eta2
+                  print *, "[pum], A. -- p_group%flow_grid%delta_eta3 = ", p_group%flow_grid%delta_eta3
+                  print *, "[pum], A. -- p_group%flow_grid%delta_eta4 = ", p_group%flow_grid%delta_eta4
+                  print *, "           eta_projected     = ", eta_projected
+                  print *, "[pum], A. ++ distance(eta, eta_projected)    = ", a_distance
+                end if
+
+                if( a_distance > p_group%flow_grid_h / 4 )then
+                  ! then this marker is relevant, store its coordinates to continue the search
+                  eta_relevant_marker(i_relevant,:) = eta_marker
+                  relevant_marker_found = .true.
+                  if( local_verbose ) print *, "[pum], A. -- found relevant marker !"
+                  if( i_marker > 0 )then
+                    ! this marker is already in the cell, and we know its index
+                    p_group%unstruct_markers_relevant_neighbor(i_marker) = i_marker  ! means: relevant but neighbor unknown
+                    if( local_verbose ) print *, "[pum], A. -- marker already present: i_marker = ", i_marker
+
+                  else
+                    if( local_verbose ) print *, "[pum], A. -- (newly created marker)"
+                    ! it is a new marker: we must add its coordinates in the markers list
+                    ! -> store cell index and marker coordinates in a new element of the temporary insertion list
+                    SLL_ALLOCATE( new_marker_list_element, ierr )
+                    new_marker_list_element%cell_j_x = j_x
+                    new_marker_list_element%cell_j_y = j_y
+                    new_marker_list_element%cell_j_vx = j_vx
+                    new_marker_list_element%cell_j_vy = j_vy
+                    new_marker_list_element%eta = eta_marker
+                    ! increment the proper linked list
+                    head_marker_list => list_of_markers_to_be_added
+                    list_of_markers_to_be_added => add_element_in_marker_list(head_marker_list, new_marker_list_element)
+                  end if
+                else
+                  ! if the test is failed then this marker is not relevant, just ignore it. Its index may be stored later for removal
+                  if( local_verbose ) print *, "[pum], A. --  relevant marker not found. try again..."
+                end if
+
+              end do   ! looping over the (remaining) markers in cell to find the relevant marker #i_relevant
+
+            end do   ! loop over the index i_relevant
+
+            ! now that we have found 5 relevant markers we should remove (ie, mark for removal) or insert (ie, mark for insertion)
+            ! some unrelevant markers in the cell.
+            ! Specifically, we should have M-5 unrelevant markers per cell, where M is the prescribed (max) nb of markers per cell
+            !
+            ! Note: for this we can run through the list unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy) which contains
+            ! all the unrelevant markers in the cell (some new relevant markers may be not therein yet, but we know their number)
+            nb_unrelevant_markers_in_this_cell = 0
+            new_int_list_element => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+            do while( associated(new_int_list_element) )
+              ! there is a marker in cell: check status
+              i_marker = new_int_list_element%value
+              if( p_group%unstruct_markers_relevant_neighbor(i_marker) == 0 )then
+                ! then this marker is not relevant
+                if( nb_unrelevant_markers_in_this_cell == p_group%max_nb_unstruct_markers_per_cell - 5 )then
+                  ! we have already reached the max nb of unrelevant markers in cell: add its index in the removal list
+                  SLL_ALLOCATE( new_aux_int_list_element, ierr )
+                  new_aux_int_list_element%value = i_marker
+                  ! increment the proper linked list
+                  head_int_list => list_of_marker_indices_to_be_discarded
+                  list_of_marker_indices_to_be_discarded => add_element_in_int_list(      &
+                                                              head_int_list,              &
+                                                              new_aux_int_list_element)
+                else
+                  nb_unrelevant_markers_in_this_cell = nb_unrelevant_markers_in_this_cell + 1
+                end if
+              else
+                SLL_ASSERT( p_group%unstruct_markers_relevant_neighbor(i_marker) == i_marker )
+              end if
+              new_int_list_element => new_int_list_element%next
+            end do
+            do while( nb_unrelevant_markers_in_this_cell < p_group%max_nb_unstruct_markers_per_cell - 5 )
+
+              ! not enough markers in cell: create a new one with quasi-random coordinates
+              call i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
+
+              ! Transform rdn to the proper intervals
+              do i_dim = 1, 4
+                eta_marker(i_dim) =   flow_cell_eta_min(i_dim) * (1 - rdn(i_dim)) &
+                                    + flow_cell_eta_max(i_dim) * rdn(i_dim)
+              end do
+
+              ! it is a new marker: we must add its coordinates in the markers list
+              ! -> store cell index and marker coordinates in a new element of the temporary insertion list
+              SLL_ALLOCATE( new_marker_list_element, ierr )
+              new_marker_list_element%cell_j_x = j_x
+              new_marker_list_element%cell_j_y = j_y
+              new_marker_list_element%cell_j_vx = j_vx
+              new_marker_list_element%cell_j_vy = j_vy
+              new_marker_list_element%eta = eta_marker
+              ! increment the proper linked list
+              head_marker_list => list_of_markers_to_be_added
+              list_of_markers_to_be_added => add_element_in_marker_list(head_marker_list, new_marker_list_element)
+
+              nb_markers_created = nb_markers_created + 1
+              nb_unrelevant_markers_in_this_cell = nb_unrelevant_markers_in_this_cell + 1
+            end do
+
+            SLL_ASSERT( nb_unrelevant_markers_in_this_cell == p_group%max_nb_unstruct_markers_per_cell - 5 )
+          end do  ! 4-fold loop over the flow cells
+        end do
+      end do
+    end do
+
+    ! next step, we add in the removal list every marker outside the flow grid (do that now so that they are removed first)
+
+    new_int_list_element => p_group%unstruct_markers_outside_flow_grid
+    do while( associated(new_int_list_element))
+      i_marker = new_int_list_element%value
+
+      ! the  marker # i_marker is outside the cell domain: add its index in the removal list (as done above)
+      SLL_ALLOCATE( new_aux_int_list_element, ierr )
+      new_aux_int_list_element%value = i_marker
+      ! increment the proper linked list
+      head_int_list => list_of_marker_indices_to_be_discarded
+      list_of_marker_indices_to_be_discarded => add_element_in_int_list(      &
+                                                  head_int_list,              &
+                                                  new_aux_int_list_element)
+
+      new_int_list_element => new_int_list_element%next
+    end do
+
+    if( local_verbose )then
+      print *, "preparing the unstruct markers  A-end -------------- -------------- -------------- -------------- -------------- "
+      print *, "preparing the unstruct markers,                    nb_markers_created = ", nb_markers_created
+      print *, "preparing the unstruct markers,   -> nb_markers_created per flow cell = ", nb_markers_created    &
+          * 1./(p_group%flow_grid%num_cells1*p_group%flow_grid%num_cells2*p_group%flow_grid%num_cells3*p_group%flow_grid%num_cells4)
+      print *, "preparing the unstruct markers  A-end -------------- -------------- -------------- -------------- -------------- "
+    end if
+
+    ! now add in the main array the markers that have been stored in the temporary list (using those that were stored for removal)
+    if( local_verbose )then
+      print *, "preparing the unstruct markers, B. adding in main array the markers that have been stored in the temporary list... "
+    end if
+
+    new_marker_list_element => list_of_markers_to_be_added
+    new_int_list_element => list_of_marker_indices_to_be_discarded
+    do while( associated(new_marker_list_element) )
+      ! there should be one marker index stored for removal
+      SLL_ASSERT( associated(new_int_list_element) )
+      i_marker = new_int_list_element%value
+      ! it should not be flagged as relevant
+      SLL_ASSERT( p_group%unstruct_markers_relevant_neighbor(i_marker) == 0 )
+      ! store index of the flow cell containing the obsolete marker, to remove its index from cell list
+      eta_marker_to_remove = p_group%unstruct_markers_eta(i_marker,:)
+      call get_4d_cell_containing_point(    &
+              eta_marker_to_remove,                     &
+              p_group%flow_grid,                        &
+              old_j_x, old_j_y, old_j_vx, old_j_vy,     &
+              marker_is_outside                         &
+           )
+      ! store this marker coordinates in main array
+      p_group%unstruct_markers_eta(i_marker,:) = new_marker_list_element%eta
+      ! test whether the new (relevant) marker is in a different cell than the old (unrelevant) one
+      j_x  = new_marker_list_element%cell_j_x
+      j_y  = new_marker_list_element%cell_j_y
+      j_vx = new_marker_list_element%cell_j_vx
+      j_vy = new_marker_list_element%cell_j_vy
+      call p_group%update_flow_cell_lists_with_new_marker_position(   &
+              i_marker,                             &
+              old_j_x, old_j_y, old_j_vx, old_j_vy, &
+              j_x, j_y, j_vx, j_vy                  &
+           )
+      ! this marker is added as a relevant one, so flag it as such (with a temporary value in unstruct_markers_relevant_neighbor)
+      p_group%unstruct_markers_relevant_neighbor(i_marker) = i_marker
+      ! move forward in the two temporary lists
+      new_marker_list_element => new_marker_list_element%next
+      new_int_list_element => new_int_list_element%next
+    end do
+
+    ! there should be no markers left in the removal list, since every cell now contains the maximum number of markers per cell
+    SLL_ASSERT( .not. associated(new_int_list_element) )
+
+    ! Final step: now that we have 5 relevant markers in each cell, we can build the local sets of relevant markers which need
+    ! to be accessible from every marker.
+    ! This will be done by storing the indices of the relevant markers inside the 'unstruct_markers_relevant_neighbor' array
+    ! in such a way that given any marker with index i_marker, the indices of the 5 relevant markers in the flow cell are:
+    ! i_relevant_marker_1 = p_group%unstruct_markers_relevant_neighbor(i_marker)
+    ! i_relevant_marker_2 = p_group%unstruct_markers_relevant_neighbor(i_relevant_marker_1)
+    ! i_relevant_marker_3 = p_group%unstruct_markers_relevant_neighbor(i_relevant_marker_2)
+    ! i_relevant_marker_4 = p_group%unstruct_markers_relevant_neighbor(i_relevant_marker_3)
+    ! i_relevant_marker_5 = p_group%unstruct_markers_relevant_neighbor(i_relevant_marker_4)
+    !
+    ! Note that here, i_marker may or may not be relevant itself, but it will always point to a relevant marker
+    ! In particular we have
+    !   i_marker == i_relevant_marker_5                                                             if i_marker was relevant,
+    ! and
+    ! i_relevant_marker_1 == p_group%unstruct_markers_relevant_neighbor(i_relevant_marker_5)         otherwise
+    do j_x = 1, p_group%flow_grid%num_cells1
+      if( local_verbose )then
+        print *, "preparing the unstruct markers, C. building the loops of relevant markers in the flow cells: j_x = ", &
+                      j_x, "/", p_group%flow_grid%num_cells1, "..."
+      end if
+
+      do j_y = 1, p_group%flow_grid%num_cells2
+        do j_vx = 1, p_group%flow_grid%num_cells3
+          do j_vy = 1, p_group%flow_grid%num_cells4
+
+            ! first loop through the markers in the cell, search for one that is relevant:
+            ! called 'first' here even if it was not first found above (order does not matter now, this is just to create a loop)
+            i_first_relevant_marker = 0
+            new_int_list_element => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+            do while( associated(new_int_list_element) .and. i_first_relevant_marker == 0 )
+              i_marker = new_int_list_element%value
+              if( p_group%unstruct_markers_relevant_neighbor(i_marker) > 0 )then
+                i_first_relevant_marker = i_marker
+              end if
+              new_int_list_element => new_int_list_element%next
+            end do
+            SLL_ASSERT( i_first_relevant_marker > 0 )
+
+            ! second loop through the markers in the cell to create the loop
+            i_last_relevant_marker = i_first_relevant_marker
+            nb_relevant_markers_in_this_cell = 0      ! this counter just to check
+            nb_unrelevant_markers_in_this_cell = 0    ! this counter just to check
+
+            new_int_list_element => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+            do while( associated(new_int_list_element))
+              i_marker = new_int_list_element%value
+              if( p_group%unstruct_markers_relevant_neighbor(i_marker) > 0 )then
+                ! then this marker is relevant, will point to the last relevant marker seen (unless it is the first, for the loop)
+                SLL_ASSERT( p_group%unstruct_markers_relevant_neighbor(i_marker) == i_marker )
+                if( .not. i_marker == i_first_relevant_marker )then
+                  ! will set value of p_group%unstruct_markers_relevant_neighbor(i_marker) at the end, for the loop
+                  p_group%unstruct_markers_relevant_neighbor(i_marker) = i_last_relevant_marker
+                  i_last_relevant_marker = i_marker
+                end if
+                nb_relevant_markers_in_this_cell = nb_relevant_markers_in_this_cell + 1
+              else
+                ! then this marker is not relevant, may point to any relevant marker
+                p_group%unstruct_markers_relevant_neighbor(i_marker) = i_first_relevant_marker
+                nb_unrelevant_markers_in_this_cell = nb_unrelevant_markers_in_this_cell + 1
+              end if
+              ! also set the remapped coordinates field (not affected by push) to store the position at remapping time
+              p_group%unstruct_markers_eta_at_remapping_time(i_marker,:) = p_group%unstruct_markers_eta(i_marker,:)
+              new_int_list_element => new_int_list_element%next
+            end do
+            ! close the loop by making the first relevant marker point to the last one just seen
+            p_group%unstruct_markers_relevant_neighbor(i_first_relevant_marker) = i_last_relevant_marker
+
+            print *, "cell = ", j_x, j_y, j_vx, j_vy
+            print *, "nb_relevant_markers_in_this_cell = ", nb_relevant_markers_in_this_cell
+            print *, "nb_unrelevant_markers_in_this_cell = ", nb_unrelevant_markers_in_this_cell
+            SLL_ASSERT( nb_relevant_markers_in_this_cell == 5 )
+            SLL_ASSERT( nb_unrelevant_markers_in_this_cell + 5 <= p_group%max_nb_unstruct_markers_per_cell )
+
+            ! todo: add a test when computing the jacobian matrices, to check that the determinant is large enough
+
+          end do  ! 4-fold loop over the flow cells
+        end do
+      end do
+    end do
+
+  end subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians
+
+  ! ------------------------------------------------------------------------------------------------------------------------
+  ! This subroutine updates the list of markers in the flow cells ('unstruct_markers_in_flow_cell') given a marker
+  ! (of global index 'i_marker') that was in some cell old_j and is now in a (possibly different) cell j.
+  ! Note: markers outside the flow grid are listed in a special list: unstruct_markers_outside_flow_grid
+  !
+  subroutine update_flow_cell_lists_with_new_marker_position(p_group,   &
+                                                             i_marker,  &
+                                                             old_j_x, old_j_y, old_j_vx, old_j_vy, &
+                                                             new_j_x, new_j_y, new_j_vx, new_j_vy)
+    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    sll_int32,                      intent(in)  :: i_marker
+    sll_int32,                      intent(in)  :: old_j_x, old_j_y, old_j_vx, old_j_vy
+    sll_int32,                      intent(in), optional  :: new_j_x, new_j_y, new_j_vx, new_j_vy
+    type(int_list_element),       pointer           :: new_int_list_element, head_int_list
+    sll_real64, dimension(4)    :: eta_marker
+    sll_int32  :: j_x, j_y, j_vx, j_vy
+    sll_int32  :: ierr
+    logical    :: eta_is_outside_grid
+    logical    :: old_eta_is_outside_grid
+    logical    :: old_and_new_etas_are_in_same_cell
+    logical    :: marker_found_and_removed
+
+    if( .not. present(new_j_x) )then
+      ! this is usually the case when the marker has just been moved and we do not know in which flow cell it is
+      SLL_ASSERT( (.not. present(new_j_y)) .and. (.not. present(new_j_vx)) .and. (.not. present(new_j_vy)) )
+      eta_marker = p_group%unstruct_markers_eta(i_marker, :)
+      call get_4d_cell_containing_point(eta_marker, p_group%flow_grid, j_x, j_y, j_vx, j_vy, eta_is_outside_grid)
+    else
+      SLL_ASSERT( (present(new_j_y)) .and. (present(new_j_vx)) .and. (present(new_j_vy)) )
+      j_x = new_j_x
+      j_y = new_j_y
+      j_vx = new_j_vx
+      j_vy = new_j_vy
+      eta_is_outside_grid = (    &
+             j_x  < 1 .or. j_x >  p_group%flow_grid%num_cells1 &
+        .or. j_y  < 1 .or. j_y >  p_group%flow_grid%num_cells2 &
+        .or. j_vx < 1 .or. j_vx > p_group%flow_grid%num_cells3 &
+        .or. j_vy < 1 .or. j_vy > p_group%flow_grid%num_cells4 &
+      )
+    end if
+
+    old_eta_is_outside_grid = (  &
+           old_j_x  < 1 .or. old_j_x >  p_group%flow_grid%num_cells1 &
+      .or. old_j_y  < 1 .or. old_j_y >  p_group%flow_grid%num_cells2 &
+      .or. old_j_vx < 1 .or. old_j_vx > p_group%flow_grid%num_cells3 &
+      .or. old_j_vy < 1 .or. old_j_vy > p_group%flow_grid%num_cells4 &
+    )
+
+    ! see whether old and current marker positions are in different cells (the exterior domain is treated as one cell)
+    old_and_new_etas_are_in_same_cell =                                                       &
+        (j_x == old_j_x .and. j_y == old_j_y .and. j_vx == old_j_vx .and. j_vy == old_j_vy)   &
+        .or.                                                                                  &
+        (eta_is_outside_grid .and. old_eta_is_outside_grid)
+
+    if( .not. old_and_new_etas_are_in_same_cell )then
+      ! Then we must change the corresponding lists:
+      ! 1. add the element i_marker in the list of the new cell
+      SLL_ALLOCATE( new_int_list_element, ierr )
+      new_int_list_element%value = i_marker
+      if( eta_is_outside_grid )then
+        head_int_list => p_group%unstruct_markers_outside_flow_grid
+        p_group%unstruct_markers_outside_flow_grid &
+                        => add_element_in_int_list(head_int_list, new_int_list_element)
+      else
+        head_int_list => p_group%unstruct_markers_in_flow_cell(j_x, j_y, j_vx, j_vy)%pointed_element
+        p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element &
+                        => add_element_in_int_list(head_int_list, new_int_list_element)
+      end if
+      ! 2. remove the element i_marker from the list of the old cell
+      marker_found_and_removed = .false.
+      if( old_eta_is_outside_grid )then
+        head_int_list => p_group%unstruct_markers_outside_flow_grid
+      else
+        head_int_list => p_group%unstruct_markers_in_flow_cell(old_j_x, old_j_y, old_j_vx, old_j_vy)%pointed_element
+      end if
+      ! test the first element in the list (requires separate treatment)
+      if( head_int_list%value == i_marker )then
+        ! first element is i_marker, then the cell list should point to the second one
+        if( old_eta_is_outside_grid )then
+          p_group%unstruct_markers_outside_flow_grid &
+                => head_int_list%next
+        else
+          p_group%unstruct_markers_in_flow_cell(old_j_x, old_j_y, old_j_vx, old_j_vy)%pointed_element &
+                => head_int_list%next
+        end if
+        marker_found_and_removed = .true.
+      end if
+      ! test the other elements in the list if needed
+!      print*, "DEBUG 654654654 --                 looking for i_marker = ", i_marker
+      do while( associated(head_int_list%next) .and. (.not. marker_found_and_removed) )
+!        print*, "associated(head_int_list%next) = ", associated(head_int_list%next)
+!        print*, "head_int_list%next%value = ", head_int_list%next%value
+        if( head_int_list%next%value == i_marker )then
+          ! remove the next element in list
+          head_int_list%next => head_int_list%next%next
+!          print*, "element FOUND and REMOVED. Now,"
+!          print*, " associated(head_int_list%next) = ", associated(head_int_list%next)
+!          if( associated(head_int_list%next) ) print*, "head_int_list%next%value = ", head_int_list%next%value
+          marker_found_and_removed = .true.
+        else
+!          print*, "moving forward..."
+!          if( associated(head_int_list%next) ) print*, " [BEFORE MOVING FWD] head_int_list%next%value = ", head_int_list%next%value
+          head_int_list => head_int_list%next
+        end if
+      end do
+      SLL_ASSERT( marker_found_and_removed )
+      ! 3. (optional) check it is well removed:
+      if( old_eta_is_outside_grid )then
+        head_int_list => p_group%unstruct_markers_outside_flow_grid
+      else
+        head_int_list => p_group%unstruct_markers_in_flow_cell(old_j_x, old_j_y, old_j_vx, old_j_vy)%pointed_element
+      end if
+      do while( associated(head_int_list) )
+        SLL_ASSERT( head_int_list%value .ne. i_marker )
+        head_int_list => head_int_list%next
+      end do
+    end if
+
+  end subroutine update_flow_cell_lists_with_new_marker_position
+
+  ! ------------------------------------------------------------------------------------------------------------------------
+  ! This subroutine computes
+  !   - the current coordinates of the marker closest from cell center: x_k, y_k, vx_k, vy_k
+  !   - the past (last remapping time) coordinates of this marker : x_k_t0, y_k_t0, vx_k_t0, vy_k_t0
+  !   - the coefficients of the deformation matrix (backward Jacobian) : d11, d12, .. d44
+  !
+  ! To do so we proceed as follows:
+  !   1.  we find the marker that is closest from the cell center, and its group of relevant neighbors with positions x^1, .. x^5
+  !       (they have been prepared in the subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians)
+  !   2.  then we define the forward Jacobian matrix: J = (J_{l,m})_{l,m = 1, .. 4} by the relations
+  !           J (hat x^{r+1} - hat x^1) = x^{r+1} - x^1     for   r = 1, .. 4
+  !       where x^r is the position of the r-th relevant marker at the current time
+  !       and hat x^r is its position at the last remapping time
+  !       In particular, if we set
+  !           hat_delta_eta(m,r) = (hat x^{r+1} - hat x^1)_m
+  !       and
+  !           delta_eta(m,r)     = (x^{r+1} - x^1)_m
+  !       for  m,r = 1, .. 4, then we have
+  !           J * hat_delta_eta = delta_eta
+  !       which yields D = J^{-1} = hat_delta_eta * (delta_eta)^{-1}
+
+  subroutine get_deformation_matrix_from_unstruct_markers_in_cell(  &
+                      p_group,                                      &
+                      j_x, j_y, j_vx, j_vy,                         &
+                      mesh_period_x, mesh_period_y,                 &
+                      x_k, y_k, vx_k, vy_k,                         &
+                      x_k_t0, y_k_t0, vx_k_t0, vy_k_t0,             &
+                      d11, d12, d13, d14,                           &
+                      d21, d22, d23, d24,                           &
+                      d31, d32, d33, d34,                           &
+                      d41, d42, d43, d44                            &
+                   )
+
+    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    sll_int32,  intent(in)  :: j_x, j_y, j_vx, j_vy                 !< indices of the flow cell
+    sll_real64, intent(in)  :: mesh_period_x
+    sll_real64, intent(in)  :: mesh_period_y
+
+    sll_real64, intent(out) :: x_k, y_k, vx_k, vy_k                 !< marker coordinates at current time
+    sll_real64, intent(out) :: x_k_t0, y_k_t0, vx_k_t0, vy_k_t0     !< marker coordinates in the past (last remapping time)
+    sll_real64, intent(out) :: d11,d12,d13,d14  ! coefs of deformation matrix D (backward Jacobian)
+    sll_real64, intent(out) :: d21,d22,d23,d24
+    sll_real64, intent(out) :: d31,d32,d33,d34
+    sll_real64, intent(out) :: d41,d42,d43,d44
+
+    type(int_list_element),  pointer  :: new_int_list_element
+
+    sll_real64, dimension(4)    :: flow_cell_eta_min
+    sll_real64, dimension(4)    :: flow_cell_eta_mid
+    sll_real64, dimension(4)    :: flow_cell_eta_max
+    sll_real64, dimension(4)    :: eta_marker
+    !    sll_real64, dimension(4)    :: eta_projected
+    sll_real64, dimension(4,4)  :: hat_delta_eta
+    sll_real64, dimension(4,4)  :: delta_eta
+    sll_real64, dimension(4,4)  :: inverse_delta_eta
+    sll_real64, dimension(4,4)  :: bwd_jacobian
+
+    logical    :: ok_flag
+    logical    :: domain_is_x_periodic
+    logical    :: domain_is_y_periodic
+    sll_int32  :: i_closest_marker
+    sll_int32  :: i_marker
+    sll_int32  :: i_first_relevant_marker
+    sll_int32  :: i_next_relevant_marker
+    sll_int32  :: matrix_size
+    sll_int32  :: l, m, r
+    sll_real64 :: closest_marker_distance
+    sll_real64 :: this_marker_distance
+
+    domain_is_x_periodic = p_group%domain_is_periodic(1)
+    domain_is_y_periodic = p_group%domain_is_periodic(2)
+
+    SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+
+    flow_cell_eta_min(1) = p_group%flow_grid%eta1_min + (j_x-1) * p_group%flow_grid%delta_eta1
+    flow_cell_eta_max(1) = p_group%flow_grid%eta1_min + (j_x)   * p_group%flow_grid%delta_eta1
+    flow_cell_eta_mid(1) = flow_cell_eta_min(1) + 0.5*p_group%flow_grid%delta_eta1
+
+    flow_cell_eta_min(2) = p_group%flow_grid%eta2_min + (j_y-1) * p_group%flow_grid%delta_eta2
+    flow_cell_eta_max(2) = p_group%flow_grid%eta2_min + (j_y)   * p_group%flow_grid%delta_eta2
+    flow_cell_eta_mid(2) = flow_cell_eta_min(2) + 0.5*p_group%flow_grid%delta_eta2
+
+    flow_cell_eta_min(3) = p_group%flow_grid%eta3_min + (j_vx-1) * p_group%flow_grid%delta_eta3
+    flow_cell_eta_max(3) = p_group%flow_grid%eta3_min + (j_vx)   * p_group%flow_grid%delta_eta3
+    flow_cell_eta_mid(3) = flow_cell_eta_min(3) + 0.5*p_group%flow_grid%delta_eta3
+
+    flow_cell_eta_min(4) = p_group%flow_grid%eta4_min + (j_vy-1) * p_group%flow_grid%delta_eta4
+    flow_cell_eta_max(4) = p_group%flow_grid%eta4_min + (j_vy)   * p_group%flow_grid%delta_eta4
+    flow_cell_eta_mid(4) = flow_cell_eta_min(4) + 0.5*p_group%flow_grid%delta_eta4
+
+    ! 1-a. loop through the markers in cell to find the one closest to the center
+    i_closest_marker = 0
+    closest_marker_distance = 1d30
+    SLL_ASSERT( j_x  >= 1 .and. j_x  <= p_group%flow_grid%num_cells1 )
+    SLL_ASSERT( j_y  >= 1 .and. j_y  <= p_group%flow_grid%num_cells2 )
+    SLL_ASSERT( j_vx >= 1 .and. j_vx <= p_group%flow_grid%num_cells3 )
+    SLL_ASSERT( j_vy >= 1 .and. j_vy <= p_group%flow_grid%num_cells4 )
+    new_int_list_element => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
+    do while( associated(new_int_list_element) )
+      i_marker = new_int_list_element%value
+      eta_marker = p_group%unstruct_markers_eta(i_marker, :)
+      this_marker_distance = p_group%anisotropic_flow_grid_distance(eta_marker, flow_cell_eta_mid)
+      if( this_marker_distance < closest_marker_distance )then
+        i_closest_marker = i_marker
+        closest_marker_distance = this_marker_distance
+      end if
+      new_int_list_element => new_int_list_element%next
+    end do
+
+    SLL_ASSERT( i_closest_marker > 0 )
+
+    ! 1-b. get the 5 relevant markers close to this marker, and store their positions at current and remapping time
+    ! reminder: hat_delta_eta(m,r) = (hat x^{r+1} - hat x^1)_m
+
+    ! (i_closest_marker may not be relevant, but its relevant_neighbor is always one)
+    i_first_relevant_marker = p_group%unstruct_markers_relevant_neighbor(i_closest_marker)
+    i_next_relevant_marker = i_first_relevant_marker
+    do r = 1, 4
+      i_next_relevant_marker = p_group%unstruct_markers_relevant_neighbor(i_next_relevant_marker)
+      hat_delta_eta(:,r) =  p_group%unstruct_markers_eta_at_remapping_time(i_next_relevant_marker, :)  &
+                          - p_group%unstruct_markers_eta_at_remapping_time(i_first_relevant_marker,:)
+      delta_eta(:,r)     =  p_group%unstruct_markers_eta(i_next_relevant_marker, :)  &
+                          - p_group%unstruct_markers_eta(i_first_relevant_marker,:)
+      ! rectify the values in periodic case: difference should not be too large
+      if( domain_is_x_periodic )then
+        if( delta_eta(1,r) > +0.5*mesh_period_x ) delta_eta(1,r) = delta_eta(1,r) - mesh_period_x
+        if( delta_eta(1,r) < -0.5*mesh_period_x ) delta_eta(1,r) = delta_eta(1,r) + mesh_period_x
+      end if
+      if( domain_is_y_periodic )then
+        if( delta_eta(2,r) > +0.5*mesh_period_y ) delta_eta(2,r) = delta_eta(2,r) - mesh_period_y
+        if( delta_eta(2,r) < -0.5*mesh_period_y ) delta_eta(2,r) = delta_eta(2,r) + mesh_period_y
+      end if
+      ! note: no need to rectify hat_delta_eta which corresponds to relative positions at remapping time, within flow cells
+    end do
+
+    ! check that the relevant markers form a loop of length 5
+    SLL_ASSERT( p_group%unstruct_markers_relevant_neighbor(i_next_relevant_marker) == i_first_relevant_marker )
+
+    ! 2. compute D = J^{-1} = hat_delta_eta * (delta_eta)^{-1}
+    matrix_size = 4
+    call get_inverse_matrix_with_given_size( matrix_size, delta_eta, inverse_delta_eta, ok_flag )
+    SLL_ASSERT( ok_flag )
+    bwd_jacobian = 0.0d0
+    do l = 1, 4
+      do m = 1, 4
+        do r = 1, 4
+          bwd_jacobian(l,m) =  hat_delta_eta(l,r) * inverse_delta_eta(r,m)
+        end do
+      end do
+    end do
+
+    ! then store the results in output variables
+    x_k  = p_group%unstruct_markers_eta(i_closest_marker,1)
+    y_k  = p_group%unstruct_markers_eta(i_closest_marker,2)
+    vx_k = p_group%unstruct_markers_eta(i_closest_marker,3)
+    vy_k = p_group%unstruct_markers_eta(i_closest_marker,4)
+
+    x_k_t0  = p_group%unstruct_markers_eta_at_remapping_time(i_closest_marker,1)
+    y_k_t0  = p_group%unstruct_markers_eta_at_remapping_time(i_closest_marker,2)
+    vx_k_t0 = p_group%unstruct_markers_eta_at_remapping_time(i_closest_marker,3)
+    vy_k_t0 = p_group%unstruct_markers_eta_at_remapping_time(i_closest_marker,4)
+
+    d11 = bwd_jacobian(1,1)
+    d12 = bwd_jacobian(1,2)
+    d13 = bwd_jacobian(1,3)
+    d14 = bwd_jacobian(1,4)
+
+    d21 = bwd_jacobian(2,1)
+    d22 = bwd_jacobian(2,2)
+    d23 = bwd_jacobian(2,3)
+    d24 = bwd_jacobian(2,4)
+
+    d31 = bwd_jacobian(3,1)
+    d32 = bwd_jacobian(3,2)
+    d33 = bwd_jacobian(3,3)
+    d34 = bwd_jacobian(3,4)
+
+    d41 = bwd_jacobian(4,1)
+    d42 = bwd_jacobian(4,2)
+    d43 = bwd_jacobian(4,3)
+    d44 = bwd_jacobian(4,4)
+
+  end subroutine get_deformation_matrix_from_unstruct_markers_in_cell
+
+  function anisotropic_flow_grid_scalar_product(p_group, eta_a, eta_b) result(val)
+    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    sll_real64, dimension(4),       intent(in)    :: eta_a
+    sll_real64, dimension(4),       intent(in)    :: eta_b
+    sll_real64                                    :: val
+
+    val =   ( eta_a(1) / p_group%flow_grid_a1 * eta_b(1) / p_group%flow_grid_a1 )   &
+          + ( eta_a(2) / p_group%flow_grid_a2 * eta_b(2) / p_group%flow_grid_a2 )   &
+          + ( eta_a(3) / p_group%flow_grid_a3 * eta_b(3) / p_group%flow_grid_a3 )   &
+          + ( eta_a(4) / p_group%flow_grid_a4 * eta_b(4) / p_group%flow_grid_a4 )
+
+  end function
+
+  function anisotropic_flow_grid_distance(p_group, eta_a, eta_b) result(val)
+    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    sll_real64, dimension(4),       intent(in)    :: eta_a
+    sll_real64, dimension(4),       intent(in)    :: eta_b
+    sll_real64                                    :: val
+
+    val = sqrt(p_group%anisotropic_flow_grid_scalar_product(eta_a - eta_b, eta_a - eta_b))
+
+  end function
+
+
+  !> reset the structured markers on the initial (markers) grid
   subroutine bsl_lt_pic_4d_reset_markers_position( p_group )
     class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
@@ -2003,6 +3083,8 @@ contains
     sll_real64 :: y_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
+
+    SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )
 
     number_flow_markers_x  = p_group%number_flow_markers_x
     number_flow_markers_y  = p_group%number_flow_markers_y
@@ -2058,7 +3140,7 @@ contains
   !> compute new interpolation coefficients so that the remapped_f is an approximation of the current f
   !> and
   !> reset the markers on the initial grid
-  subroutine bsl_lt_pic_4d_remap ( self )
+  subroutine bsl_lt_pic_4d_remap( self )
     class(sll_bsl_lt_pic_4d_group),intent(inout) :: self
 
     !> A. write the nodal values of the remapped_f (evaluated with the bsl_lt_pic method) and compute the new interpolation coefs
@@ -2067,7 +3149,12 @@ contains
 
     !> B. and reset the (flow) markers on the initial (cartesian) grid -- no need to reset their connectivity
     print *, "bsl_lt_pic_4d_remap -- step B"
-    call self%bsl_lt_pic_4d_reset_markers_position()
+    if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      call self%bsl_lt_pic_4d_reset_markers_position()
+    else
+      SLL_ASSERT( self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+      call self%bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians()
+    end if
 
     !> D. if deposition particles are transported, initialize them -- this must be done after the remapping tool is operational!
 
@@ -2333,38 +3420,7 @@ contains
     sll_real64 :: markers_vx_min
     sll_real64 :: markers_vy_min
 
-    !    sll_real64 :: h_virtual_parts_x
-    !    sll_real64 :: h_virtual_parts_y
-    !    sll_real64 :: h_virtual_parts_vx
-    !    sll_real64 :: h_virtual_parts_vy
-    !
-    !    sll_real64 :: inv_h_virtual_parts_x
-    !    sll_real64 :: inv_h_virtual_parts_y
-    !    sll_real64 :: inv_h_virtual_parts_vx
-    !    sll_real64 :: inv_h_virtual_parts_vy
-
-!    sll_int32 :: number_virtual_particles_x
-!    sll_int32 :: number_virtual_particles_y
-!    sll_int32 :: number_virtual_particles_vx
-!    sll_int32 :: number_virtual_particles_vy
-
-!    sll_real64 :: phase_space_virtual_dvol
-!
-!    sll_real64 :: virtual_parts_x_min
-!    sll_real64 :: virtual_parts_y_min
-!    sll_real64 :: virtual_parts_vx_min
-!    sll_real64 :: virtual_parts_vy_min
-
-!    sll_real64 :: virtual_grid_x_min
-!    sll_real64 :: virtual_grid_x_max
-!    sll_real64 :: virtual_grid_y_min
-!    sll_real64 :: virtual_grid_y_max
-!    sll_real64 :: virtual_grid_vx_min
-!    sll_real64 :: virtual_grid_vx_max
-!    sll_real64 :: virtual_grid_vy_min
-!    sll_real64 :: virtual_grid_vy_max
-!
-    sll_int32 :: number_of_deposition_particles_per_flow_cell
+    !    sll_int32 :: number_of_deposition_particles_per_flow_cell
 
     sll_real64 :: x
     sll_real64 :: y
@@ -2379,8 +3435,6 @@ contains
 
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
-    ! sll_real64 :: inv_period_x
-    ! sll_real64 :: inv_period_y
 
     ! results from [[get_ltp_deformation_matrix]]
 
@@ -2568,7 +3622,7 @@ contains
         deposition_particle_charge_factor = phase_space_volume * p_group%species%q / p_group%number_moving_deposition_particles
 
         ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
-        p_group%deposition_particles_weight = 0
+        p_group%deposition_particles_weight = 0.0d0
 
       end if
 
@@ -2613,7 +3667,7 @@ contains
           SLL_ALLOCATE( new_int_list_element, ierr )
           new_int_list_element%value = node_index
           head => nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
-          nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element => add_element_in_list(head, new_int_list_element)
+          nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element => add_element_in_int_list(head, new_int_list_element)
 
         end if
 
@@ -2667,79 +3721,88 @@ contains
       end if
     end if
 
-    !> B. Preparatory work for the linearization of the flow on the flow cells:
+    !> B. Preparatory work for the linearization of the flow on the flow cells -- in the case of structured markers
     !>    - find out the closest marker to each cell center,
     !>      by looping over all markers and noting which flow cell contains it.
     !>      (The leftmost flow cell in each dimension may not be complete.)
+    if( p_group%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      SLL_ALLOCATE(closest_marker(flow_grid_num_cells_x,flow_grid_num_cells_y,flow_grid_num_cells_vx,flow_grid_num_cells_vy),ierr)
+      closest_marker(:,:,:,:) = 0
 
-    SLL_ALLOCATE(closest_marker(flow_grid_num_cells_x,flow_grid_num_cells_y,flow_grid_num_cells_vx,flow_grid_num_cells_vy),ierr)
-    closest_marker(:,:,:,:) = 0
+      allocate(closest_marker_distance(flow_grid_num_cells_x,   &
+                                       flow_grid_num_cells_y,   &
+                                       flow_grid_num_cells_vx,  &
+                                       flow_grid_num_cells_vy)  &
+                 , stat=ierr)
+      call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+      closest_marker_distance(:,:,:,:) = 0.0_f64
 
-    allocate(closest_marker_distance(flow_grid_num_cells_x,   &
-                                     flow_grid_num_cells_y,   &
-                                     flow_grid_num_cells_vx,  &
-                                     flow_grid_num_cells_vy)  &
-               , stat=ierr)
-    call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
-    closest_marker_distance(:,:,:,:) = 0.0_f64
+      closest_marker_distance_to_first_corner = 1d30
+      k_marker_closest_to_first_corner = 0
 
-    closest_marker_distance_to_first_corner = 1d30
-    k_marker_closest_to_first_corner = 0
+      do k=1, p_group%number_flow_markers    ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
 
-    do k=1, p_group%number_flow_markers    ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
+        ! find absolute (x_k,y_k,vx_k,vy_k) coordinates for k-th marker.
+        coords = p_group%get_x(k)
+        x_k = coords(1)
+        y_k = coords(2)
+        coords = p_group%get_v(k)
+        vx_k = coords(1)
+        vy_k = coords(2)
 
-      ! find absolute (x_k,y_k,vx_k,vy_k) coordinates for k-th marker.
-      coords = p_group%get_x(k)
-      x_k = coords(1)
-      y_k = coords(2)
-      coords = p_group%get_v(k)
-      vx_k = coords(1)
-      vy_k = coords(2)
+        ! which _virtual_ cell is this particle in?
 
-      ! which _virtual_ cell is this particle in?
+        x_aux = x_k - flow_grid_x_min
+        j_x = int( x_aux / h_flow_grid_x ) + 1
 
-      x_aux = x_k - flow_grid_x_min
-      j_x = int( x_aux / h_flow_grid_x ) + 1
+        y_aux = y_k - flow_grid_y_min
+        j_y = int( y_aux / h_flow_grid_y ) + 1
 
-      y_aux = y_k - flow_grid_y_min
-      j_y = int( y_aux / h_flow_grid_y ) + 1
+        vx_aux = vx_k - flow_grid_vx_min
+        j_vx = int( vx_aux / h_flow_grid_vx ) + 1
 
-      vx_aux = vx_k - flow_grid_vx_min
-      j_vx = int( vx_aux / h_flow_grid_vx ) + 1
+        vy_aux = vy_k - flow_grid_vy_min
+        j_vy = int( vy_aux / h_flow_grid_vy ) + 1
 
-      vy_aux = vy_k - flow_grid_vy_min
-      j_vy = int( vy_aux / h_flow_grid_vy ) + 1
+        ! discard this marker if the flow cell is off-bounds
+        if(  j_x >= 1 .and. j_x <= flow_grid_num_cells_x .and. &
+             j_y >= 1 .and. j_y <= flow_grid_num_cells_y .and. &
+             j_vx >= 1 .and. j_vx <= flow_grid_num_cells_vx .and. &
+             j_vy >= 1 .and. j_vy <= flow_grid_num_cells_vy  )then
 
-      ! discard this marker if the flow cell is off-bounds
-      if(  j_x >= 1 .and. j_x <= flow_grid_num_cells_x .and. &
-           j_y >= 1 .and. j_y <= flow_grid_num_cells_y .and. &
-           j_vx >= 1 .and. j_vx <= flow_grid_num_cells_vx .and. &
-           j_vy >= 1 .and. j_vy <= flow_grid_num_cells_vy  )then
+          call update_closest_marker_arrays(k,                              &
+                                            x_aux, y_aux, vx_aux, vy_aux,   &
+                                            j_x, j_y, j_vx, j_vy,           &
+                                            h_flow_grid_x,                  &
+                                            h_flow_grid_y,                  &
+                                            h_flow_grid_vx,                 &
+                                            h_flow_grid_vy,                 &
+                                            closest_marker,                 &
+                                            closest_marker_distance)
+        end if
 
-        call update_closest_marker_arrays(k,                              &
-                                          x_aux, y_aux, vx_aux, vy_aux,   &
-                                          j_x, j_y, j_vx, j_vy,           &
-                                          h_flow_grid_x,                  &
-                                          h_flow_grid_y,                  &
-                                          h_flow_grid_vx,                 &
-                                          h_flow_grid_vy,                 &
-                                          closest_marker,                 &
-                                          closest_marker_distance)
-      end if
+        marker_distance_to_first_corner = abs(x_aux) + abs(y_aux) + abs(vx_aux) + abs(vy_aux)
+        if( marker_distance_to_first_corner < closest_marker_distance_to_first_corner )then
+          closest_marker_distance_to_first_corner = marker_distance_to_first_corner
+          k_marker_closest_to_first_corner = k
+        end if
+      end do
 
-      marker_distance_to_first_corner = abs(x_aux) + abs(y_aux) + abs(vx_aux) + abs(vy_aux)
-      if( marker_distance_to_first_corner < closest_marker_distance_to_first_corner )then
-        closest_marker_distance_to_first_corner = marker_distance_to_first_corner
-        k_marker_closest_to_first_corner = k
-      end if
-    end do
-
-    closest_marker(1,1,1,1) = k_marker_closest_to_first_corner
+      closest_marker(1,1,1,1) = k_marker_closest_to_first_corner
+    end if
 
     if( .not. ( p_group%domain_is_periodic(1) .and. p_group%domain_is_periodic(2) ) )then
       print*, "WARNING -- STOP -- verify that the non-periodic case is well implemented"
       stop
     end if
+
+    !> C. loop on the flow cells (main loop) -- on each flow cell, we
+    !>   - C.1 linearize the flow using the position of the markers
+    !>   - C.2 find the relevant points where f should be reconstructed
+    !>   - C.3 reconstruct f on these points (using the affine backward flow and the interpolation tool for the remapped_f)
+    !>   - C.4 write the resulting f value or deposit the deposition particle just created (depending on the scenario)
+
+    ! <<loop_on_flow_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
 
     if(p_group%domain_is_periodic(1)) then
       ! here the domain corresponds to the Poisson mesh
@@ -2754,15 +3817,6 @@ contains
     else
       mesh_period_y = 0.0_f64
     end if
-
-
-    !> C. loop on the flow cells (main loop) -- on each flow cell, we
-    !>   - C.1 linearize the flow using the position of the markers
-    !>   - C.2 find the relevant points where f should be reconstructed
-    !>   - C.3 reconstruct f on these points (using the affine backward flow and the interpolation tool for the remapped_f)
-    !>   - C.4 write the resulting f value or deposit the deposition particle just created (depending on the scenario)
-
-    ! <<loop_on_flow_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
 
     ! cell size of the initial_markers_grid, for finite differencing of the flow  - same as in [[write_f_on_remap_grid-h_parts_x]]
     h_markers_x    = p_group%initial_markers_grid%delta_eta1
@@ -2786,80 +3840,101 @@ contains
         do j_vx = 1,flow_grid_num_cells_vx
           do j_vy = 1,flow_grid_num_cells_vy
 
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
-            ! which is closest to the flow cell center.  Note: speed-wise, it may be necessary to find a way not to scan
-            ! all the markers for every cell.  We avoid scanning all the markers for each cell by using the
-            ! precomputed array [[closest_marker]]. Flow cells which do not contain any marker are skipped.
+            if( p_group%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+              ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
+              ! which is closest to the flow cell center.  Note: speed-wise, it may be necessary to find a way not to scan
+              ! all the markers for every cell.  We avoid scanning all the markers for each cell by using the
+              ! precomputed array [[closest_marker]]. Flow cells which do not contain any marker are skipped.
 
-            k = closest_marker(j_x,j_y,j_vx,j_vy)
+              k = closest_marker(j_x,j_y,j_vx,j_vy)
 
-            if(k == 0) then
-              if( j_x > 1 )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(-1,0,0,0)
-              end if
-              if( j_x < flow_grid_num_cells_x )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS( 1,0,0,0)
+              if(k == 0) then
+                if( j_x > 1 )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(-1,0,0,0)
+                end if
+                if( j_x < flow_grid_num_cells_x )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS( 1,0,0,0)
+                end if
+
+                if( j_y > 1 )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,-1,0,0)
+                end if
+                if( j_y < flow_grid_num_cells_y )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0, 1,0,0)
+                end if
+
+                if( j_vx > 1 )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0,-1,0)
+                end if
+                if( j_vx < flow_grid_num_cells_vx )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0, 1,0)
+                end if
+
+                if( j_vy > 1 )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0,0,-1)
+                end if
+                if( j_vy < flow_grid_num_cells_vy )then
+                  UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0,0, 1)
+                end if
               end if
 
-              if( j_y > 1 )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,-1,0,0)
-              end if
-              if( j_y < flow_grid_num_cells_y )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0, 1,0,0)
-              end if
+              k = closest_marker(j_x,j_y,j_vx,j_vy)
+              SLL_ASSERT(k /= 0)
 
-              if( j_vx > 1 )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0,-1,0)
-              end if
-              if( j_vx < flow_grid_num_cells_vx )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0, 1,0)
-              end if
+              !>   - C.1 linearize the flow using the position of the markers
 
-              if( j_vy > 1 )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0,0,-1)
-              end if
-              if( j_vy < flow_grid_num_cells_vy )then
-                UPDATE_CLOSEST_MARKER_ARRAYS_USING_NEIGHBOR_CELLS(0,0,0, 1)
-              end if
+              ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] In this flow cell we will use the
+              ! k-th backward flow, obtained with the deformation matrix for the k-th marker see [[get_ltp_deformation_matrix]].
+              ! Call below uses parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
+
+              call p_group%get_ltp_deformation_matrix (       &
+                   k,                                         &
+                   mesh_period_x,                             &
+                   mesh_period_y,                             &
+                   h_markers_x,                               &
+                   h_markers_y,                               &
+                   h_markers_vx,                              &
+                   h_markers_vy,                              &
+                   x_k,y_k,vx_k,vy_k,                         &
+                   d11,d12,d13,d14,                           &
+                   d21,d22,d23,d24,                           &
+                   d31,d32,d33,d34,                           &
+                   d41,d42,d43,d44                            &
+                   )
+
+              ! Find position of marker k at time 0
+              ! [[get_initial_position_on_cartesian_grid_from_marker_index]]
+
+              call get_initial_position_on_cartesian_grid_from_marker_index(k,                    &
+                   p_group%number_flow_markers_x, p_group%number_flow_markers_y,                  &
+                   p_group%number_flow_markers_vx, p_group%number_flow_markers_vy,                &
+                   m_x,m_y,m_vx,m_vy)
+
+              x_k_t0  = markers_x_min  + (m_x-1)  * h_markers_x
+              y_k_t0  = markers_y_min  + (m_y-1)  * h_markers_y
+              vx_k_t0 = markers_vx_min + (m_vx-1) * h_markers_vx
+              vy_k_t0 = markers_vy_min + (m_vy-1) * h_markers_vy
+
+            else
+              ! unstructured flow markers
+              SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+
+              ! using the lists of markers and relevant markers in cells, compute:
+              !   - the current coordinates of the marker closest from cell center: x_k, y_k, vx_k, vy_k
+              !   - the past (last remapping time) coordinates of this marker : x_k_t0, y_k_t0, vx_k_t0, vy_k_t0
+              !   - the coefficients of the deformation matrix (backward Jacobian) : d11, d12, .. d44
+              call p_group%get_deformation_matrix_from_unstruct_markers_in_cell(    &
+                      j_x, j_y, j_vx, j_vy,                                         &
+                      mesh_period_x, mesh_period_y,                                 &
+                      x_k, y_k, vx_k, vy_k,                                         &
+                      x_k_t0, y_k_t0, vx_k_t0, vy_k_t0,                             &
+                      d11, d12, d13, d14,                                           &
+                      d21, d22, d23, d24,                                           &
+                      d31, d32, d33, d34,                                           &
+                      d41, d42, d43, d44                                            &
+                   )
+
             end if
-
-            k = closest_marker(j_x,j_y,j_vx,j_vy)
-            SLL_ASSERT(k /= 0)
-
-            !>   - C.1 linearize the flow using the position of the markers
-
-            ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] In this flow cell we will use the
-            ! k-th backward flow, obtained with the deformation matrix for the k-th marker see [[get_ltp_deformation_matrix]].
-            ! Call below uses parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
-
-            call p_group%get_ltp_deformation_matrix (       &
-                 k,                                         &
-                 mesh_period_x,                             &
-                 mesh_period_y,                             &
-                 h_markers_x,                               &
-                 h_markers_y,                               &
-                 h_markers_vx,                              &
-                 h_markers_vy,                              &
-                 x_k,y_k,vx_k,vy_k,                         &
-                 d11,d12,d13,d14,                           &
-                 d21,d22,d23,d24,                           &
-                 d31,d32,d33,d34,                           &
-                 d41,d42,d43,d44                            &
-                 )
-
-            ! Find position of marker k at time 0
-            ! [[get_initial_position_on_cartesian_grid_from_marker_index]]
-
-            call get_initial_position_on_cartesian_grid_from_marker_index(k,                    &
-                 p_group%number_flow_markers_x, p_group%number_flow_markers_y,                  &
-                 p_group%number_flow_markers_vx, p_group%number_flow_markers_vy,                &
-                 m_x,m_y,m_vx,m_vy)
-
-            x_k_t0  = markers_x_min  + (m_x-1)  * h_markers_x
-            y_k_t0  = markers_y_min  + (m_y-1)  * h_markers_y
-            vx_k_t0 = markers_vx_min + (m_vx-1) * h_markers_vx
-            vy_k_t0 = markers_vy_min + (m_vy-1) * h_markers_vy
-
 
             ! comment below (and pointers) should be udated
             ! <<loop_on_virtual_particles_in_one_flow_cell>>
@@ -3467,7 +4542,7 @@ contains
         ! ------   d/d_x terms
         factor = 1./(2*h_markers_x)
 
-        k_ngb  = p_group%markers_list(k)%ngb_xright_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_xright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3490,7 +4565,7 @@ contains
         end if
 
 
-        k_ngb  = p_group%markers_list(k)%ngb_xleft_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_xleft_index
         if( k_ngb == k )then
            ! no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3520,7 +4595,7 @@ contains
         ! ------   d/d_y terms
         factor = 1./(2*h_markers_y)
 
-        k_ngb  = p_group%markers_list(k)%ngb_yright_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_yright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3542,7 +4617,7 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = p_group%markers_list(k)%ngb_yleft_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_yleft_index
         if( k_ngb == k )then
            ! no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3573,7 +4648,7 @@ contains
         ! ------   d/d_vx terms
         factor = 1./(2*h_markers_vx)
 
-        k_ngb  = p_group%markers_list(k)%ngb_vxright_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_vxright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3595,7 +4670,7 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = p_group%markers_list(k)%ngb_vxleft_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_vxleft_index
         if( k_ngb == k )then
             ! no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
@@ -3626,7 +4701,7 @@ contains
         ! ------   d/d_vy terms
         factor = 1./(2*h_markers_vy)
 
-        k_ngb  = p_group%markers_list(k)%ngb_vyright_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_vyright_index
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -3648,7 +4723,7 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = p_group%markers_list(k)%ngb_vyleft_index
+        k_ngb  = p_group%struct_markers_list(k)%ngb_vyleft_index
         if( k_ngb == k )then
             ! no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
@@ -3870,7 +4945,7 @@ subroutine periodic_correction(p_group, x, y)
     if(.not. associated(particle_group) ) then
        print *, 'sll_bsl_lt_pic_4d_group_delete(): ERROR (9087987578996), passed group was not associated.'
     end if
-    SLL_DEALLOCATE(particle_group%markers_list, ierr)
+    SLL_DEALLOCATE(particle_group%struct_markers_list, ierr)
     SLL_DEALLOCATE(particle_group%space_mesh_2d, ierr)
     SLL_DEALLOCATE(particle_group, ierr)
 
