@@ -1,14 +1,14 @@
 program test_fishpack
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  use sll_m_fishpack, only: &
-    sll_p_cartesian_2d, &
-    sll_p_cartesian_3d, &
-    sll_t_fishpack_2d, &
-    sll_t_fishpack_3d, &
-    sll_p_polar_2d
+use sll_m_fishpack, only: &
+  sll_p_cartesian_2d, &
+  sll_p_cartesian_3d, &
+  sll_t_fishpack_2d, &
+  sll_t_fishpack_3d, &
+  sll_p_polar_2d
 
-  implicit none
+implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 integer :: l, m, n, mp1, np1
 integer :: i, j, k
@@ -29,7 +29,6 @@ xs =  0._8; xf =  2._8; ys = -1._8; yf =  3._8
 allocate(f_2d(mp1,np1)); f_2d = 0._8
 call test_cartesian_2d(f_2d,xs,xf,m,2,ys,yf,n,0)
 
-
 m = 50; n = 48
 mp1 = m + 1; np1 = n + 1
 xs = 0._8; xf = 1._8; ys = 0._8; yf = 0.5_8*pi
@@ -49,6 +48,8 @@ call test_cartesian_3d(f_3d,xs,xf,l,1,ys,yf,m,0,zs,zf,n,2)
 deallocate(f_2d)
 deallocate(f_polar)
 deallocate(f_3d)
+
+print*, 'PASSED'
 
 contains
 
@@ -123,6 +124,8 @@ write (*, *) '    previous 32 bit floating point arithmetic result '
 write (*, *) '    ierror = 0,  discretization error = 4.9305e-4'
 write (*, *) '    the output from your computer is: '
 write (*, *) '    ierror =', poisson%error, ' discretization error = ', err
+
+if (poisson%error > 5.4e-4) stop 'cartesian 2d FAILED'
 
 end subroutine test_cartesian_2d
 !> @internal [example_2d]
@@ -209,6 +212,8 @@ write (*, *) '    Previous 32 bit floating point arithmetic result '
 write (*, *) '    IERROR = 0,  Discretization Error = 6.20723E-4'
 write (*, *) '    The output from your computer is: '
 write (*, *) '    IERROR =', poisson%error, ' Discretization Error = ', ERR
+
+if (poisson%error > 6.2e-4) stop 'polar FAILED'
 
 end subroutine test_polar_2d
 !> @internal [example_polar]
@@ -313,6 +318,8 @@ write (*, *) '    previous 32 bit floating point arithmetic result '
 write (*, *) '    ierror = 0,  discretization error = 9.6480e-3'
 write (*, *) '    the output from your computer is: '
 write (*, *) '    ierror =', poisson%error, ' discretization error = ', err
+
+if (poisson%error > 9.7e-3) stop 'cartesian 3d FAILED'
 
 end subroutine test_cartesian_3d
 !> @internal [example_3d]

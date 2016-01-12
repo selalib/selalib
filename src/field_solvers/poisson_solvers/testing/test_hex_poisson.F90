@@ -21,7 +21,7 @@ program test_hex_poisson
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_hex_mesh_2d), pointer          :: mesh
+  type(sll_t_hex_mesh_2d), pointer        :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
   sll_real64, dimension(:),allocatable    :: uxn, uyn,dxuxn,dyuxn,dxuyn,dyuyn
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
@@ -31,7 +31,7 @@ program test_hex_poisson
   sll_real64                              :: erreur1, erreur2, erreur3
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 80
+  num_cells = 40
 
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1)
@@ -190,6 +190,8 @@ program test_hex_poisson
   SLL_DEALLOCATE_ARRAY(matrix_poisson,ierr)
   SLL_DEALLOCATE_ARRAY(l,ierr)
   SLL_DEALLOCATE_ARRAY(u,ierr)
+
+  print*, 'PASSED'
 
 
 end program test_hex_poisson

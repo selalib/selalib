@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup operator_splitting sll_m_operator_splitting 
+!> @defgroup operator_splitting sll_operator_splitting 
 !> @brief 
 !> The operator_splitting library implements operator splitting methods
 !> @author Selalib team <br>
