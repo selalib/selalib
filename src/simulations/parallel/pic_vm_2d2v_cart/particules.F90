@@ -2,28 +2,14 @@ module particules
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use zone
-use marsaglia
 use quietstart
 
 implicit none
 
-sll_int32, private :: ipart 
-sll_int32, private :: i, j, k
-sll_int32, private :: ivarx, ivary
-sll_real64, private :: varx, vary
+sll_int32,  private :: ipart 
+sll_int32,  private :: i, j
 
 CONTAINS
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine creapa( ele, time )
-
-type  (particle) :: ele
-sll_real64 :: time
-
-call plasma( ele, time )
-
-end subroutine creapa
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
