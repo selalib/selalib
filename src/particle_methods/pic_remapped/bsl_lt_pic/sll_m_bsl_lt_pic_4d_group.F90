@@ -2500,6 +2500,7 @@ contains
                     new_marker_list_element%cell_j_vx = j_vx
                     new_marker_list_element%cell_j_vy = j_vy
                     new_marker_list_element%eta = eta_marker
+                    new_marker_list_element%flag = 1      ! means: relevant
                     ! increment the proper linked list
                     head_marker_list => list_of_markers_to_be_added
                     list_of_markers_to_be_added => add_element_in_marker_list(head_marker_list, new_marker_list_element)
@@ -2562,6 +2563,7 @@ contains
               new_marker_list_element%cell_j_vx = j_vx
               new_marker_list_element%cell_j_vy = j_vy
               new_marker_list_element%eta = eta_marker
+              new_marker_list_element%flag = 0      ! means: not relevant
               ! increment the proper linked list
               head_marker_list => list_of_markers_to_be_added
               list_of_markers_to_be_added => add_element_in_marker_list(head_marker_list, new_marker_list_element)
@@ -2577,7 +2579,6 @@ contains
     end do
 
     ! next step, we add in the removal list every marker outside the flow grid (do that now so that they are removed first)
-
     new_int_list_element => p_group%unstruct_markers_outside_flow_grid
     do while( associated(new_int_list_element))
       i_marker = new_int_list_element%value
@@ -2635,8 +2636,14 @@ contains
               old_j_x, old_j_y, old_j_vx, old_j_vy, &
               j_x, j_y, j_vx, j_vy                  &
            )
-      ! this marker is added as a relevant one, so flag it as such (with a temporary value in unstruct_markers_relevant_neighbor)
-      p_group%unstruct_markers_relevant_neighbor(i_marker) = i_marker
+      ! see whether this marker is relevant, and flag it as such using a temporary value in unstruct_markers_relevant_neighbor
+      if( new_marker_list_element%flag == 1 )then
+        ! the marker is relevant
+        p_group%unstruct_markers_relevant_neighbor(i_marker) = i_marker
+      else
+        ! the marker is not relevant
+        p_group%unstruct_markers_relevant_neighbor(i_marker) = 0
+      end if
       ! move forward in the two temporary lists
       new_marker_list_element => new_marker_list_element%next
       new_int_list_element => new_int_list_element%next
