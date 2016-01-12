@@ -50,6 +50,7 @@ implicit none
     sll_int32 :: cell_j_vx
     sll_int32 :: cell_j_vy
     sll_real64, dimension(4) :: eta
+    sll_int32 :: flag
     type(marker_list_element), pointer :: next
   end type marker_list_element
 
