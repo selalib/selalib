@@ -63,7 +63,7 @@ call init( f0 )                 !initialisation des champs et densites
 xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
-call creapa( p, time ) !creation des particules
+call plasma( p, time ) !creation des particules
 
 do istep = 1, nstep
 
@@ -82,7 +82,7 @@ do istep = 1, nstep
   call avancee_part( p, 0.5d0 )  ! x(n+1/2) -- x(n+1)
   call sortie_part( p )
        
-  !call calcul_rho( p, f0 )
+  call calcul_rho( p, f0 )
 
   call faraday( f0 )   !Calcul de B(n) --> B(n+1/2)
   call ampere( f0 )    !Calcul de E(n) --> E(n+1)

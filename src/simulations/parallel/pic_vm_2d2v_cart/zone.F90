@@ -27,7 +27,6 @@ logical :: relativ
 sll_real64 :: pi 
 
 character(len=6) :: bcname 
-character(len=6) :: jname
 
 sll_int32 :: nx, ny
 sll_int32 :: nstep, nstepmax
@@ -66,7 +65,6 @@ namelist/donnees/ dimx,  & !dimensions du domaine
                    cfl,  & !nbre de Courant
                 tfinal,  & !duree maxi
               nstepmax,  & !nbre d'iterations maxi
-                 jname,  & !calcul de j   
                  icrea,  & !frequence d'emission des particules
                  idiag,  & !frequence des diagnostics
                 bcname,  & !type de conditions limites
@@ -81,7 +79,7 @@ namelist/donnees/ dimx,  & !dimensions du domaine
 
 !*** Initialisation des valeurs pas default
 
-pi = 4. * atan(1.)
+pi = 4.0_f64 * atan(1.)
 
 write(*,*) " Input file name :"// filename
 open(93,file=filename,status='old')
@@ -114,10 +112,10 @@ x(0) = 0.0_f64
 y(0) = 0.0_f64
 
 do i=1,nx
-  x(i) = (i*dx) *(i*dx+1)/(1+dimx)
+  x(i) = i*dx 
 enddo
 do j=1,ny
-  y(j) = (j*dy) *(j*dy+1)/(1+dimy)
+  y(j) = j*dy
 enddo
 
 do i=0,nx-1
@@ -160,12 +158,6 @@ end do
 dt    = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 
 nstep = floor(tfinal/dt)
-
-!write(*,*) " cfl = ", cfl
-!write(*,*) " dx = ", dx, " dy = ", dy, " dt = ", dt
-!if( nstep > nstepmax ) nstep = nstepmax
-!write(*,*) " Nombre d'iteration nstep = ", nstep
-!write(*,*)
 
 end subroutine readin
 
