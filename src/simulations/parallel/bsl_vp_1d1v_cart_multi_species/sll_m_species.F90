@@ -104,49 +104,49 @@ module sll_m_species
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type sll_t_species
-  character                                              :: label
-  sll_int32                                              :: num_bloc_x2
-  sll_int32                                              :: num_dof_x2
+  character                                                :: label
+  sll_int32                                                :: num_bloc_x2
+  sll_int32                                                :: num_dof_x2
   type(sll_t_cartesian_mesh_2d),                   pointer :: mesh2d
   procedure(sll_i_scalar_initializer_2d), nopass,  pointer :: init_func
-  sll_real64, dimension(:),                      pointer :: params
-  sll_real64                                             :: nrj0
-  sll_real64, dimension(:),                      pointer :: x1_array
-  sll_real64, dimension(:),                      pointer :: x2_array
-  sll_int32,  dimension(:),                      pointer :: bloc_index_x2
-  sll_real64                                             :: kx
-  sll_real64                                             :: eps
-  sll_real64, dimension(:),                      pointer :: integration_weight
-  sll_real64                                             :: factor_x1
+  sll_real64, dimension(:),                        pointer :: params
+  sll_real64                                               :: nrj0
+  sll_real64, dimension(:),                        pointer :: x1_array
+  sll_real64, dimension(:),                        pointer :: x2_array
+  sll_int32,  dimension(:),                        pointer :: bloc_index_x2
+  sll_real64                                               :: kx
+  sll_real64                                               :: eps
+  sll_real64, dimension(:),                        pointer :: integration_weight
+  sll_real64                                               :: factor_x1
   type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1
   type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
-  sll_int32                                              :: advection_form_x2
-  sll_real64                                             :: alpha
-  type(sll_t_remap_plan_2d_real64),                    pointer :: remap_plan_x1_x2
-  type(sll_t_remap_plan_2d_real64),                    pointer :: remap_plan_x2_x1
-  type(sll_t_layout_2d),                               pointer :: layout_x1
-  type(sll_t_layout_2d),                               pointer :: layout_x2
-  sll_real64, dimension(:,:),                    pointer :: f_x1
-  sll_real64, dimension(:,:),                    pointer :: f_x2
-  sll_real64, dimension(:,:),                    pointer :: f_x1_init
-  sll_real64, dimension(:),                      pointer :: rho
-  sll_real64, dimension(:),                      pointer :: rho_loc
-  sll_real64, dimension(:),                  allocatable :: x2_array_unit
-  sll_real64, dimension(:),                  allocatable :: x2_array_middle
-  sll_real64, dimension(:),                  allocatable :: node_positions_x2
-  sll_real64, dimension(:,:),                    pointer :: f_visu 
-  sll_real64, dimension(:),                      pointer :: f_visu_buf1d
-  sll_real64, dimension(:),                      pointer :: f_x1_buf1d
-  sll_real64, dimension(:),                      pointer :: f_hat_x2_loc
-  sll_real64, dimension(:),                      pointer :: f_hat_x2
-  sll_real64, dimension(:,:),                    pointer :: f1d_omp_in
-  sll_real64, dimension(:,:),                    pointer :: f1d_omp_out
+  sll_int32                                                :: advection_form_x2
+  sll_real64                                               :: alpha
+  type(sll_t_remap_plan_2d_real64),                pointer :: remap_plan_x1_x2
+  type(sll_t_remap_plan_2d_real64),                pointer :: remap_plan_x2_x1
+  type(sll_t_layout_2d),                           pointer :: layout_x1
+  type(sll_t_layout_2d),                           pointer :: layout_x2
+  sll_real64, dimension(:,:),                      pointer :: f_x1
+  sll_real64, dimension(:,:),                      pointer :: f_x2
+  sll_real64, dimension(:,:),                      pointer :: f_x1_init
+  sll_real64, dimension(:),                        pointer :: rho
+  sll_real64, dimension(:),                        pointer :: rho_loc
+  sll_real64, dimension(:),                        pointer :: x2_array_unit
+  sll_real64, dimension(:),                        pointer :: x2_array_middle
+  sll_real64, dimension(:),                        pointer :: node_positions_x2
+  sll_real64, dimension(:,:),                      pointer :: f_visu 
+  sll_real64, dimension(:),                        pointer :: f_visu_buf1d
+  sll_real64, dimension(:),                        pointer :: f_x1_buf1d
+  sll_real64, dimension(:),                        pointer :: f_hat_x2_loc
+  sll_real64, dimension(:),                        pointer :: f_hat_x2
+  sll_real64, dimension(:,:),                      pointer :: f1d_omp_in
+  sll_real64, dimension(:,:),                      pointer :: f1d_omp_out
 
-  sll_real64                                             :: mass           
-  sll_real64                                             :: momentum       
-  sll_real64                                             :: l1norm         
-  sll_real64                                             :: l2norm         
-  sll_real64                                             :: kinetic_energy 
+  sll_real64                                               :: mass           
+  sll_real64                                               :: momentum       
+  sll_real64                                               :: l1norm         
+  sll_real64                                               :: l2norm         
+  sll_real64                                               :: kinetic_energy 
 
 end type sll_t_species
 

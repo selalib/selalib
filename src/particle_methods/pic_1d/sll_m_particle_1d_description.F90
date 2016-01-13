@@ -47,7 +47,7 @@ module sll_m_particle_1d_description
 
 
   type :: sll_t_particle_1d_group
-    type(sll_particle_1d), allocatable, dimension(:) :: particle
+    type(sll_particle_1d), pointer, dimension(:) :: particle
     sll_real64 :: qm
   !contains
   !remove

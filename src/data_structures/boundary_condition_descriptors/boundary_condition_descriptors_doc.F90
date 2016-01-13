@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup boundary_condition_descriptors sll_m_boundary_condition_descriptors 
+!> @defgroup boundary_condition_descriptors sll_boundary_condition_descriptors 
 !> @brief 
 !> Descriptors for boundary conditions 
 !> @details
