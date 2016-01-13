@@ -11,7 +11,7 @@ module sll_m_control_variate
   implicit none
   private
 
-  public :: sll_f_control_variate, sll_new_control_variate
+  public :: sll_f_control_variate
 
   !> Control variate object
   type, public :: sll_t_control_variate
@@ -23,7 +23,8 @@ module sll_m_control_variate
    contains
 
      procedure :: update_df_weight !< function defining the control variate
-     !procedure :: initialize => initialize_control_variate !< initialize the type
+     procedure :: initialize => initialize_control_variate !< initialize the type
+     procedure :: delete => delete_control_variate
 
   end type sll_t_control_variate
 
@@ -59,21 +60,27 @@ module sll_m_control_variate
 
     end function update_df_weight
 
-    !> Create a new control variate object
-    function sll_new_control_variate(control_function, parameters) result(control_variate)
+    !> Constructor
+    subroutine initialize_control_variate( this, control_function, parameters ) 
+      class(sll_t_control_variate), intent(out) :: this !< Control variate object
       procedure(sll_f_control_variate) :: control_function !< Function defining the control variate
-      class(sll_t_control_variate), pointer :: control_variate !< Control variate object
       sll_real64, pointer, intent(in) :: parameters(:) !< Parameter values needed in control variate function
 
-      sll_int32 :: ierr
-
-      SLL_ALLOCATE(control_variate,ierr)
-      control_variate%control_variate => control_function
+      this%control_variate => control_function
       
-      control_variate%control_variate_parameters => parameters
+      this%control_variate_parameters => parameters
 
+      
+    end subroutine initialize_control_variate
 
-    end function sll_new_control_variate
+    !> Destructor
+    subroutine delete_control_variate( this ) 
+      class(sll_t_control_variate), intent(inout) :: this !< Control variate object
+     
+      deallocate(this%control_variate_parameters)
+
+    end subroutine delete_control_variate
+
 
 
 end module sll_m_control_variate
