@@ -43,15 +43,38 @@ implicit none
     type(int_list_element), pointer :: pointed_element
   end type int_list_element_ptr
 
+  ! linked lists of unstructured flow markers
+  type marker_list_element
+    sll_int32 :: cell_j_x
+    sll_int32 :: cell_j_y
+    sll_int32 :: cell_j_vx
+    sll_int32 :: cell_j_vy
+    sll_real64, dimension(4) :: eta
+    sll_int32 :: flag
+    type(marker_list_element), pointer :: next
+  end type marker_list_element
+
+  type marker_list_element_ptr ! we need this type for arrays of lists
+    type(marker_list_element), pointer :: pointed_element
+  end type marker_list_element_ptr
+
 
 contains
 
-  function add_element_in_list(head, new_element)
+  function add_element_in_int_list(head, new_element)
     type( int_list_element ), pointer :: head, new_element
-    type( int_list_element ), pointer :: add_element_in_list
+    type( int_list_element ), pointer :: add_element_in_int_list
 
     new_element%next => head
-    add_element_in_list => new_element
+    add_element_in_int_list => new_element
+  end function
+
+  function add_element_in_marker_list(head, new_element)
+    type( marker_list_element ), pointer :: head, new_element
+    type( marker_list_element ), pointer :: add_element_in_marker_list
+
+    new_element%next => head
+    add_element_in_marker_list => new_element
   end function
 
 
