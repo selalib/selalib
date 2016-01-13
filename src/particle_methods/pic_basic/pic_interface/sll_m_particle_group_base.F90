@@ -8,7 +8,7 @@ module sll_m_particle_group_base
 
   public :: &
     sll_c_particle_group_base, &
-    sll_f_species_new
+    sll_t_species
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,7 +34,7 @@ module sll_m_particle_group_base
   !============================================================================
   type, abstract :: sll_c_particle_group_base
 
-    class( sll_t_species ), pointer :: species
+    class( sll_t_species ), allocatable :: species
     sll_int32                     :: id
     sll_int32                     :: n_particles !< number of particles local to the processor
     sll_int32                     :: n_total_particles !< number of particles in total simulation    
@@ -178,20 +178,5 @@ contains
 
   end subroutine initialize_species
 
-  !----------------------------------------------------------------------------
-  function sll_f_species_new( &
-      species_charge,     &
-      species_mass        &
-  ) result(res)
-    sll_real64, intent ( in )   :: species_charge
-    sll_real64, intent ( in )   :: species_mass
-    type(sll_t_species), pointer  :: res
-    sll_int32  :: ierr
 
-    SLL_ALLOCATE( res, ierr )
-    !    res%name =
-    res%q = species_charge
-    res%m = species_mass
-
-  end function sll_f_species_new
 end module sll_m_particle_group_base
