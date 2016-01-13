@@ -1,32 +1,24 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 !> @brief
 !> Poisson solver using finite element
 !> @details
-!> Solve Poisson equation on cartesian domain with finite elements.
+!> Solve Poisson equation on irregular cartesian domain with finite elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
-module sll_m_fem_2d
+module sll_m_poisson_2d_fem
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_poisson_solvers_macros.h"
 
-! use F77_lapack, only: &
-!   dpbtrf, &
-!   dpbtrs
+implicit none
 
-  use sll_m_utilities, only: &
-    sll_o_display
+public :: &
+  sll_o_create, &
+  sll_t_poisson_2d_fem, &
+  sll_o_solve
 
-  implicit none
-
-  public :: &
-    sll_o_create, &
-    sll_t_fem_poisson_2d, &
-    sll_o_solve
-
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
@@ -35,7 +27,7 @@ module sll_m_fem_2d
 !> @details
 !> finite element numerical method with
 !> Compact boundary conditions
-type :: sll_t_fem_poisson_2d
+type :: sll_t_poisson_2d_fem
    sll_real64, dimension(:,:), pointer :: A   !< Mass matrix
    sll_real64, dimension(:,:), pointer :: M   !< Stiffness matrix
    sll_real64, dimension(:,:), pointer :: mat !< Matrix solve by Lapack
@@ -47,7 +39,7 @@ type :: sll_t_fem_poisson_2d
    sll_int32,  dimension(:)  , pointer :: id
    sll_real64, dimension(:)  , pointer :: xd
    sll_real64, dimension(:)  , pointer :: yd
-end type sll_t_fem_poisson_2d
+end type sll_t_poisson_2d_fem
 
 !> Initialize the solver
 interface sll_o_create
@@ -59,16 +51,16 @@ interface sll_o_solve
    module procedure solve_poisson_2d_fem
 end interface sll_o_solve
 
-
 contains
 
 !> Initialize Poisson solver object using finite elements method.
 subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( sll_t_fem_poisson_2d )  :: this !< solver data structure
-sll_int32,  intent(in)      :: nn_x !< number of cells along x
-sll_int32,  intent(in)      :: nn_y !< number of cells along y
-sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
-sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
+
+type(sll_t_poisson_2d_fem)  :: this !< solver data structure
+sll_int32,  intent(in)      :: nn_x   !< number of cells along x
+sll_int32,  intent(in)      :: nn_y   !< number of cells along y
+sll_real64, dimension(nn_x) :: x      !< x nodes coordinates
+sll_real64, dimension(nn_y) :: y      !< y nodes coordinates
 sll_int32                   :: ii
 sll_int32                   :: jj
 
@@ -76,7 +68,7 @@ sll_real64, dimension(4,4)  :: Axelem
 sll_real64, dimension(4,4)  :: Ayelem
 sll_real64, dimension(4,4)  :: Mmelem
 sll_real64, dimension(2,2)  :: Mfelem
-sll_int32, dimension(4)     :: isom
+sll_int32,  dimension(4)    :: isom
 sll_int32                   :: i
 sll_int32                   :: j
 sll_int32                   :: k
@@ -113,8 +105,6 @@ Axelem(2,:) = [-2.0_f64,  2.0_f64,  1.0_f64, -1.0_f64 ]
 Axelem(3,:) = [-1.0_f64,  1.0_f64,  2.0_f64, -2.0_f64 ]
 Axelem(4,:) = [ 1.0_f64, -1.0_f64, -2.0_f64,  2.0_f64 ]
 
-call sll_o_display(Axelem, 'f7.3')
-
 Axelem = Axelem/6.0_f64
 
 Ayelem(1,:) = [ 2.0_f64,  1.0_f64, -1.0_f64, -2.0_f64 ]
@@ -122,16 +112,12 @@ Ayelem(2,:) = [ 1.0_f64,  2.0_f64, -2.0_f64, -1.0_f64 ]
 Ayelem(3,:) = [-1.0_f64, -2.0_f64,  2.0_f64,  1.0_f64 ]
 Ayelem(4,:) = [-2.0_f64, -1.0_f64,  1.0_f64,  2.0_f64 ]
 
-call sll_o_display(Ayelem, 'f7.3')
-
 Ayelem = Ayelem/6.0_f64
 
 Mmelem(1,:) = [ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64 ]
 Mmelem(2,:) = [ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64 ]
 Mmelem(3,:) = [ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64 ]
 Mmelem(4,:) = [ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64 ]
-
-call sll_o_display(Mmelem, 'f7.3')
 
 Mmelem = Mmelem/36.0_f64
 
@@ -162,9 +148,6 @@ do i=1,nx
   end do
 end do
 
-call write_mtv_file( x, y)
-!call sll_o_display(this%A, 'f5.2')
-
 !Set nodes dirichlet boundary conditions
 this%nd = 2*(nx+ny)
 allocate(this%id(this%nd))
@@ -186,26 +169,14 @@ do i = nx+1, nx*(ny+1), nx+1
   this%id(nd) = k
 end do
 
-call sll_o_display(this%id, 'i5')
-
-if (nx<5) call sll_o_display(this%A, 'f5.2')
-
 do i = 1, this%nd
   k = this%id(i)
   this%A(k,k) = 1d20
 end do
 
-if (nx < 5) call sll_o_display(this%A, 'f5.2')
-
 kd = nx+2
 SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
 this%mat = 0.0_f64
-!do k = 0, kd   ! Loop over diagonals
-!  i = kd+1-k   ! Row number in this%mat
-!  do j = (nx+1)*(ny+1)-k, 1+k,-1
-!    this%mat(i,j+k) = this%A(j+k,j) 
-!  end do
-!end do
 n = (nx+1)*(ny+1)
 do i = 1, n
   do j=i,min(n,i+kd)
@@ -213,10 +184,7 @@ do i = 1, n
   end do
 end do
 
-if (nx < 5) call sll_o_display(this%mat, 'f5.2')
-
 call dpbtrf('U',(nx+1)*(ny+1),kd,this%mat,kd+1,error)
-print*, 'info=', error
 
 allocate(this%xd((nx+1)*(ny+1)))
 allocate(this%yd((nx+1)*(ny+1)))
@@ -252,7 +220,7 @@ end function som
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( sll_t_fem_poisson_2d ) :: this !< Poisson solver object
+type( sll_t_poisson_2d_fem ) :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
@@ -266,7 +234,6 @@ sll_int32 :: error
 nx = this%nx
 ny = this%ny
 
-!** Construction du second membre 
 k = 0
 do j=1,ny+1
 do i=1,nx+1
@@ -281,8 +248,6 @@ do i = 1, this%nd
   k = this%id(i)
   b(k) = 1.0e20 * (this%xd(k)*this%xd(k)+this%yd(k)*this%yd(k))
 end do
-
-if (nx < 5) call sll_o_display(b, 'f5.2')
 
 call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 
@@ -309,71 +274,4 @@ end do
 
 end subroutine solve_poisson_2d_fem
 
-!> Write the Plotmtv file to plot the irregular mesh with node number and cell number
-subroutine write_mtv_file( x, y )
-real(8), dimension(:) :: x
-real(8), dimension(:) :: y
-integer :: iel, isom, nx, ny
-real(8) :: x1, y1
-sll_int32 :: i, j
-
-nx = size(x)-1
-ny = size(y)-1
-open(10, file="mesh.mtv")
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%xmin=", 1.1*minval(x), " xmax = ", 1.1*maxval(x)
-write(10,*)"%ymin=", 1.1*minval(y), " ymax = ", 1.1*maxval(y)
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Elements number ' "
-   
-do i=1,nx
-  do j=1,ny
-    write(10,*) x(i  ), y(j  ), 0.
-    write(10,*) x(i+1), y(j  ), 0.
-    write(10,*) x(i+1), y(j+1), 0.
-    write(10,*) x(i  ), y(j+1), 0.
-    write(10,*) x(i  ), y(j  ), 0.
-    write(10,*)
-  end do
-end do
-
-!Numeros des elements
-iel = 0
-do i=1,nx
-  do j=1,ny
-    iel = iel+1
-    x1 = 0.5*(x(i)+x(i+1))
-    y1 = 0.5*(y(j)+y(j+1))
-    write(10,"(a)"   ,  advance="no")"@text x1="
-    write(10,"(g15.3)", advance="no") x1
-    write(10,"(a)"   ,  advance="no")" y1="
-    write(10,"(g15.3)", advance="no") y1
-    write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
-    write(10,"(i4)"  ,  advance="no") iel
-    write(10,"(a)")"'"
-  end do
-end do
-
-!Numeros des noeud
-isom = 0
-do j=1,ny+1
-  do i=1,nx+1
-    isom = isom+1
-    write(10,"(a)"   ,  advance="no")"@text x1="
-    write(10,"(g15.3)", advance="no") x(i)
-    write(10,"(a)"   ,  advance="no")" y1="
-    write(10,"(g15.3)", advance="no") y(j)
-    write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-    write(10,"(i4)"  ,  advance="no") isom
-    write(10,"(a)")"'"
-  end do
-end do
-   
-write(10,*)"$END"
-close(10)
-
-end subroutine write_mtv_file
-
-
-end module sll_m_fem_2d
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+end module sll_m_poisson_2d_fem

@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup utilities sll_m_utilities 
+!> @defgroup utilities sll_utilities 
 !> @brief 
 !> Some numerical low level utilities
 !> @details

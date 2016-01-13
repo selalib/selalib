@@ -140,11 +140,11 @@ module sll_m_sim_pic_vp_1d1v_cart
     sll_real64 :: initial_fem_inhom , fem_inhom
     sll_int64  :: fastest_particle_idx
     sll_int32  :: frequency_of_printing ! number of timesteps needed to generate one output_file 
-    sll_real64, allocatable:: eval_solution(:)
-    sll_real64,  allocatable:: particleposition(:)
-    sll_real64,  allocatable :: particlespeed(:)
-    sll_real64,  allocatable:: steadyparticleposition(:) !Steady non-moving objects aka Ions
-    sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
+    sll_real64, pointer:: eval_solution(:)
+    sll_real64, pointer:: particleposition(:)
+    sll_real64, pointer :: particlespeed(:)
+    sll_real64, pointer:: steadyparticleposition(:) !Steady non-moving objects aka Ions
+    sll_real64, dimension(:), pointer :: fieldenergy, kineticenergy, impulse, &
     thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
     push_error_mean, push_error_var, total_momentum
      
@@ -1144,7 +1144,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         do jdx=1,sll_v_num_species
             numpart= size(original_species(jdx)%particle)
-            if (allocated(species(jdx)%particle)) then
+            if (associated(species(jdx)%particle)) then
                 if (size(species(jdx)%particle)==numpart) then
                 else
                     SLL_DEALLOCATE_ARRAY(species(jdx)%particle,ierr)

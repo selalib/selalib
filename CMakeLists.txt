@@ -14,7 +14,7 @@ ENDIF()
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.10)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
@@ -24,11 +24,11 @@ SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
 SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
-SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
 SET(BUILD_AGMG            OFF CACHE BOOL   "Build AGMG libraries")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+SET(USE_MKL               OFF CACHE BOOL   "Using Intel Math Kernel Library")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE)
@@ -77,8 +77,8 @@ ADD_CUSTOM_TARGET( clear
   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 INCLUDE(FortranConfig)
-INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
+INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
 INCLUDE(PreprocessorTarget)
 
@@ -107,39 +107,15 @@ MACRO(SLL_TEST _NAME)
   SET(${_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDMACRO(SLL_TEST)
 
-EXECUTE_PROCESS(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT)
-STRING(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\3\\2\\1" 
-TODAY ${RESULT})
-STRING(REGEX REPLACE "([0-9][0-9][0-9][0-9])[0-9][0-9][0-9][0-9]" "\\1" 
-CPACK_PACKAGE_VERSION_MAJOR ${TODAY})
-STRING(REGEX REPLACE "[0-9][0-9][0-9][0-9]([0-9][0-9])[0-9][0-9]" "\\1" 
-CPACK_PACKAGE_VERSION_MINOR ${TODAY} )
-STRING(REGEX REPLACE "[0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9])" "\\1" 
-CPACK_PACKAGE_VERSION_PATCH ${TODAY} )
-
-IF(BUILD_PACKAGE)
-  SET(CMAKE_BUILD_TYPE Release
-    CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
-  INCLUDE(CPackConfig) 
-ELSE()
-  ENABLE_TESTING()
-ENDIF(BUILD_PACKAGE)
+ENABLE_TESTING()
 
 FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/src/*.h)
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
 
-
-IF(BUILD_PACKAGE)
-  ADD_SUBDIRECTORY(external/fftpack)
-  ADD_SUBDIRECTORY(external/mudpack)
-  ADD_SUBDIRECTORY(package)
-  MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
-ELSE()
-  ADD_SUBDIRECTORY(external)
-  ADD_SUBDIRECTORY(src)
-ENDIF(BUILD_PACKAGE)
+ADD_SUBDIRECTORY(external)
+ADD_SUBDIRECTORY(src)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
@@ -203,8 +179,4 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
-IF(BUILD_PACKAGE)
-  MESSAGE(STATUS "Type make release to create an archive of selalib")
-ELSE()
-  ADD_PREPROCESSOR_TARGET()
-ENDIF()
+ADD_PREPROCESSOR_TARGET()

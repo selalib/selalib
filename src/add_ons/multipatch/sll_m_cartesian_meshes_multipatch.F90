@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @file sll_cartesian_multipatch.F90
-!> @defgroup meshes_multipatch sll_m_cartesian_meshes_multipatch
+!> @ingroup sll_multipatch 
 !> @brief basic types to describe a collection of logical meshes
 !> associated with the decomposition of a physical region with the 
 !> multipatch approach.

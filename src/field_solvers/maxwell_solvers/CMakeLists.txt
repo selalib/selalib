@@ -16,6 +16,8 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 ELSE()
 
    SET(MAXWELL_SOLVERS_SRCS sll_m_maxwell_solvers_base.F90
+                            sll_m_maxwell_1d_base.F90
+                            sll_m_maxwell_1d_fem.F90
                             sll_m_maxwell_2d_fdtd.F90
                             sll_m_maxwell_2d_diga.F90)
 

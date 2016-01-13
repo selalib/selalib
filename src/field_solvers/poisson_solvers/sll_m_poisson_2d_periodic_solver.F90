@@ -72,10 +72,10 @@ contains
     type(poisson_2d_periodic_solver),pointer :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
-    sll_int32, intent(in) :: nc_eta1
+    sll_int32,  intent(in) :: nc_eta1
     sll_real64, intent(in) :: eta2_min
     sll_real64, intent(in) :: eta2_max
-    sll_int32, intent(in) :: nc_eta2
+    sll_int32,  intent(in) :: nc_eta2
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
@@ -102,10 +102,10 @@ contains
     class(poisson_2d_periodic_solver) :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
-    sll_int32, intent(in) :: nc_eta1
+    sll_int32,  intent(in) :: nc_eta1
     sll_real64, intent(in) :: eta2_min
     sll_real64, intent(in) :: eta2_max
-    sll_int32, intent(in) :: nc_eta2
+    sll_int32,  intent(in) :: nc_eta2
     sll_int32 :: ierr
 
     
@@ -118,8 +118,6 @@ contains
       nc_eta2, &
       ierr)
 
-
-    
   end subroutine initialize_poisson_2d_periodic_solver
   
   ! solves -\Delta phi = rho in 2d
@@ -133,15 +131,8 @@ contains
     
   end subroutine compute_phi_from_rho_2d_periodic
 
-    ! solves E = -\nabla Phi in 2d
-!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(sll_t_poisson_2d_fft_solver) :: poisson
-!      sll_real64,dimension(:,:),intent(in) :: phi
-!      sll_real64,dimension(:,:),intent(out) :: E1
-!      sll_real64,dimension(:,:),intent(out) :: E2
-!    end subroutine compute_E_from_phi_2d_fft
 
-    ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
+  ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
   subroutine compute_E_from_rho_2d_periodic( poisson, E1, E2, rho )
     class(poisson_2d_periodic_solver) :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
@@ -152,6 +143,7 @@ contains
            
   end subroutine compute_E_from_rho_2d_periodic
   
+
   function l2norm_squarred_2d_periodic(poisson, coefs_dofs) result(r)
     class( poisson_2d_periodic_solver) , intent(in)        :: poisson !< Poisson solver object.
     sll_real64   , intent(in)                                  :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
@@ -169,7 +161,6 @@ contains
     print*, 'compute_rhs_from_function not implemented for poisson_2d_periodic_solver.'
     
   end subroutine compute_rhs_from_function_2d_periodic
-  
   
 end module sll_m_poisson_2d_periodic_solver
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

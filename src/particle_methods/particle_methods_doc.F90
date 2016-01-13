@@ -18,12 +18,12 @@
   ! file is [[selalib:doc/doxygen/Doxyfile]].
 
   !> @defgroup particle_methods sll_particle_methods
+  !> @brief Centralized location for all particle methods
   !! @authors Martin Campos Pinto   - <campos@ann.jussieu.fr>
   !! @authors Antoine Le Hyaric     - <Antoine.Le_Hyaric@upmc.fr>
 
   ! This "brief" appears in the Doxygen list of "Libraries" at [[selalib:doc/build/html/doxygen/html/modules.html]].
   
-  !> @brief Centralized location for all particle methods
   
   !> @details
   !! In this directory we are implementing an abstract class of particle method and two classes which 

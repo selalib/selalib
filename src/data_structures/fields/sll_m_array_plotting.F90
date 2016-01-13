@@ -1,3 +1,4 @@
+!> @ingroup fields
 module sll_m_array_plotting
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

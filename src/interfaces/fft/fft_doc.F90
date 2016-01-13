@@ -4,7 +4,7 @@
 ! MODULE: sll_m_fft
 !
 ! DESCRIPTION:
-!> @defgroup fft sll_m_fft
+!> @defgroup fft sll_fft
 !> @author Edwin Chacon-Golcher, Samuel De Santis, Pierre Navaro, Katharina Kormann
 !> @brief Interface around fftpack, fftw and the selalib fft.
 !> @details 
