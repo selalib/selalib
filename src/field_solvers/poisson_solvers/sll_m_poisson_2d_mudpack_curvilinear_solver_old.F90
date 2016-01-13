@@ -122,6 +122,9 @@ module sll_m_poisson_2d_mudpack_curvilinear_solver_old
     !> Compute the right hand side from a given function
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_mudpack_curvilinear
+    !> Destructor
+    procedure :: delete => delete_2d_mudpack_curvilinear_solver
+
 
   end type poisson_2d_mudpack_curvilinear_solver
 
@@ -694,7 +697,7 @@ contains
   end function l2norm_squarred_2d_mudpack_curvilinear
   
   subroutine compute_rhs_from_function_2d_mudpack_curvilinear(poisson, func, coefs_dofs)
-    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Maxwell solver object.
+    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
     procedure(sll_f_function_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
@@ -702,6 +705,12 @@ contains
     
   end subroutine compute_rhs_from_function_2d_mudpack_curvilinear
   
+  subroutine delete_2d_mudpack_curvilinear_solver(poisson)
+    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+  
+  end subroutine delete_2d_mudpack_curvilinear_solver
+
+
 subroutine coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cxx_array,cyy_array)
   implicit none                     

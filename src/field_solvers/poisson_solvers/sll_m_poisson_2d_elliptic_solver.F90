@@ -117,6 +117,7 @@ module sll_m_poisson_2d_elliptic_solver
 
     procedure :: l2norm_squared => l2norm_squarred_2d_elliptic_solver
     procedure :: compute_rhs_from_function => compute_rhs_from_function_2d_elliptic_solver
+    procedure :: delete => delete_poisson_2d_elliptic_solver
 
   end type poisson_2d_elliptic_solver
 
@@ -883,6 +884,10 @@ contains
        print*, 'compute_rhs_from_function not implemented for 2d elliptic solver.'
 
      end subroutine compute_rhs_from_function_2d_elliptic_solver
+
+     subroutine delete_poisson_2d_elliptic_solver(poisson)
+       class( poisson_2d_elliptic_solver)                    :: poisson !< Maxwell solver object.
+     end subroutine delete_poisson_2d_elliptic_solver
 
  end module sll_m_poisson_2d_elliptic_solver
   

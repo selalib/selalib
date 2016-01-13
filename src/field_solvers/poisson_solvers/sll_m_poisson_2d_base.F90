@@ -37,6 +37,9 @@ module sll_m_poisson_2d_base
     procedure(signature_update_dofs_function), deferred :: &
          compute_rhs_from_function
 
+    procedure(signature_empty), deferred :: &
+         delete
+
   end type sll_c_poisson_2d_base
 
 
@@ -107,6 +110,18 @@ module sll_m_poisson_2d_base
      end subroutine signature_update_dofs_function
   end interface
   
+
+  abstract interface
+
+     ! Destructor
+
+    subroutine signature_empty( poisson )
+      import sll_c_poisson_2d_base
+      class(sll_c_poisson_2d_base)   :: poisson
+
+    end subroutine signature_empty
+
+  end interface
 
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

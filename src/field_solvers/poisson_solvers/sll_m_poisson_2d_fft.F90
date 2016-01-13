@@ -74,7 +74,8 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
     !> Compute the right hand side from a given function
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_fft
-    
+    !> Destructor
+    procedure :: delete => delete_poisson_2d_fft_solver
       
   end type sll_t_poisson_2d_fft_solver
 
@@ -191,7 +192,9 @@ contains
     
   end subroutine compute_rhs_from_function_2d_fft
 
+  subroutine delete_poisson_2d_fft_solver(poisson)
+    class( sll_t_poisson_2d_fft_solver)                    :: poisson !< Maxwell solver object.
 
-
+  end subroutine delete_poisson_2d_fft_solver
   
 end module sll_m_poisson_2d_fft

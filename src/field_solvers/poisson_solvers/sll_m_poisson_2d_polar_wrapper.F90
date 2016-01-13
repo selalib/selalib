@@ -90,6 +90,9 @@ module sll_m_poisson_2d_polar_wrapper
     !> Compute the right hand side from a given function
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_polar
+    !> Destructor
+    procedure :: delete => delete_2d_polar
+
   end type poisson_2d_polar_solver
 
 
@@ -273,5 +276,10 @@ contains
     
   end subroutine compute_rhs_from_function_2d_polar
 
+  
+  subroutine delete_2d_polar(poisson)
+    class( poisson_2d_polar_solver)                    :: poisson !< Maxwell solver object.
+
+  end subroutine delete_2d_polar
   
 end module sll_m_poisson_2d_polar_wrapper

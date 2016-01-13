@@ -4,8 +4,7 @@
 !> @details 
 
 module sll_m_pic_poisson_2d
-
-
+#include "sll_assert.h"
 #include "sll_working_precision.h"
 
   use sll_m_pic_poisson_base, only : &
@@ -22,7 +21,8 @@ module sll_m_pic_poisson_2d
 
   implicit none
 
-  public :: sll_t_pic_poisson_2d, sll_f_new_pic_poisson_2d
+  public :: sll_t_pic_poisson_2d, &
+       sll_f_new_pic_poisson_2d
 
   private
 
@@ -58,6 +58,8 @@ module sll_m_pic_poisson_2d
        procedure :: add_analytic_charge => add_analytic_charge_2d !< !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
        procedure :: set_analytic_charge => set_analytic_charge_2d  !< Set the value of the analytic charge contribution from a given function.
        procedure :: compute_field_energy => compute_field_energy_2d !< Compute the field energy.
+       procedure :: initialize => initialize_pic_poisson_2d
+       procedure :: delete => delete_pic_poisson_2d
 
 
     end type sll_t_pic_poisson_2d
@@ -195,16 +197,14 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  function sll_f_new_pic_poisson_2d(no_gridpts, solver, kernel) result (this)
+  subroutine initialize_pic_poisson_2d(this, no_gridpts, solver, kernel)
+    class( sll_t_pic_poisson_2d), intent(out) :: this
     sll_int32, intent(in) :: no_gridpts(2)
     class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
     class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
-    class( sll_t_pic_poisson_2d), pointer :: this
 
     !local variables
     sll_int32 :: ierr
-
-    ALLOCATE( this, stat=ierr)
 
     this%dim = 1
     this%no_gridpts = no_gridpts
@@ -214,18 +214,60 @@ contains
     this%solver => solver
     this%kernel => kernel
 
-    ALLOCATE(this%rho_dofs(this%no_dofs), stat=ierr)
-    ALLOCATE(this%rho_dofs_local(this%no_dofs), stat=ierr)
-    ALLOCATE(this%rho_analyt_dofs(this%no_dofs), stat=ierr)
-    ALLOCATE(this%efield_dofs(this%no_dofs, 2), stat=ierr)
-    ALLOCATE(this%phi_dofs(this%no_dofs), stat=ierr)
-    ALLOCATE(this%rho2d(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
-    ALLOCATE(this%efield1(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
-    ALLOCATE(this%efield2(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)    
-    ALLOCATE(this%phi2d(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    allocate(this%rho_dofs(this%no_dofs), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%rho_dofs_local(this%no_dofs), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%rho_analyt_dofs(this%no_dofs), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%efield_dofs(this%no_dofs, 2), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%phi_dofs(this%no_dofs), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%rho2d(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%efield1(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+    allocate(this%efield2(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)  
+    SLL_ASSERT( ierr == 0 )  
+    allocate(this%phi2d(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    SLL_ASSERT( ierr == 0 )
+
+  end subroutine initialize_pic_poisson_2d
+
+  
+  subroutine delete_pic_poisson_2d(this)
+    class( sll_t_pic_poisson_2d), intent(inout) :: this
+
+    deallocate(this%rho_dofs)
+    deallocate(this%rho_dofs_local)
+    deallocate(this%rho_analyt_dofs)
+    deallocate(this%efield_dofs)
+    deallocate(this%phi_dofs)
+    deallocate(this%rho2d)
+    deallocate(this%efield1)
+    deallocate(this%efield2)
+    deallocate(this%phi2d)
+    deallocate(this%solver)
+    deallocate(this%kernel)
+
+  end subroutine delete_pic_poisson_2d
+
+
+  !< Constructor 
+  function sll_f_new_pic_poisson_2d(no_gridpts, solver, kernel) result (poisson_solver)
+    sll_int32, intent(in) :: no_gridpts(2)
+    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
+    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
+    class( sll_t_pic_poisson_2d), pointer :: poisson_solver
+
+    !local variables
+    sll_int32 :: ierr
+ 
+    allocate( poisson_solver, stat=ierr)
+
+    call initialize_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)
 
   end function sll_f_new_pic_poisson_2d
-
-
 
 end module sll_m_pic_poisson_2d
