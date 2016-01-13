@@ -18,5 +18,11 @@ ADD_CUSTOM_TARGET( package ALL
   COMMENT "Repackage all static libraries into a single archive: 'libselalib.a'"
   VERBATIM )
 
-# Installation
+# Header files
+FILE( GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/sll_*.h )
+
+# Installation (library, headers, mod files)
 INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/libselalib.a DESTINATION lib )
+INSTALL( FILES ${SLL_MACROS} DESTINATION "include/selalib" )
+INSTALL( DIRECTORY "${CMAKE_Fortran_MODULE_DIRECTORY}/"
+  DESTINATION "include/selalib" FILES_MATCHING PATTERN "sll_m_*.mod" )
