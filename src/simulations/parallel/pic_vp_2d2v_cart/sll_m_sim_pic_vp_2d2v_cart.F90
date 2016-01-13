@@ -24,7 +24,6 @@ module sll_m_sim_pic_vp_2d2v_cart
     sll_p_pi
 
   use sll_m_control_variate, only: &
-    sll_new_control_variate, &
     sll_t_control_variate
 
   use sll_m_kernel_smoother_base, only: &
@@ -234,9 +233,9 @@ contains
     ! Initialize control variate
     SLL_ALLOCATE(control_variate_parameter(2), ierr)
     control_variate_parameter = sim%thermal_velocity
-    sim%control_variate => sll_new_control_variate(control_variate_equi, &
+    allocate(sim%control_variate)
+    call sim%control_variate%initialize(control_variate_equi, &
          control_variate_parameter)
-    !sim%control_variate%control_variate => control_variate_equi
 
 
     if (sim%init_case == SLL_INIT_RANDOM) then
