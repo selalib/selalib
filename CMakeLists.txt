@@ -179,4 +179,6 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
+ADD_SUBDIRECTORY( package )
+
 ADD_PREPROCESSOR_TARGET()
