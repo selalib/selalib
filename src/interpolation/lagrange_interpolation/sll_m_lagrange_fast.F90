@@ -370,7 +370,7 @@ contains
 
 
 !------------------------------------------------------------------------------!
-  !> @brief Lagrange interpolation, without boundary conditions
+  !> @brief Lagrange interpolation, without boundary conditions.  One sided a the outermost points.
   !> @param [in] fi(:)      input array of length n
   !> @param [out] fp(:)      output array of length n
   !> @param [in]  p          offset in units of dx
@@ -416,7 +416,7 @@ contains
   !> @param [in]  fi(:)      input array of length n
   !> @param [out] fp(:)      output array of length n
   !> @param [in]  p          offset in units of dx
-  !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
+  !> @param [in]  stencil    number of points in fi used for interpolation (currently possible values 3,5)
   subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in)   :: fi(:)
