@@ -10,7 +10,7 @@ module sll_m_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base, &
-    sll_f_species_new
+    sll_t_species
 
   implicit none
 
@@ -75,7 +75,7 @@ contains
 
     SLL_ALLOCATE(self%particle_array(3+n_weights, n_particles), ierr) 
 
-    self%species => sll_f_species_new( charge, mass )
+    call self%species%initialize( charge, mass )
 
     self%n_weights = n_weights
 
