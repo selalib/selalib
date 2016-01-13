@@ -256,7 +256,7 @@ sll_int32 :: iplot
 aux =0.d0
 do i=0,nx-1
    do j=0,ny-1
-      aux = aux + tm%ex(i,j)*tm%ex(i,j)*hx(i)*hhy(j)
+      aux = aux + tm%ex(i,j)*tm%ex(i,j)*dx*dy
    end do
 end do
 aux = 0.5*log(aux)
