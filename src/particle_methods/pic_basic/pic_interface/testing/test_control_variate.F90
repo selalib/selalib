@@ -5,8 +5,7 @@ program test_control_variate
 
   use sll_m_control_variate, only : &
        sll_t_control_variate, &
-       sll_f_control_variate, &
-       sll_new_control_variate
+       sll_f_control_variate
   use sll_m_particle_group_base, only : &
        sll_c_particle_group_base
   use sll_m_particle_group_2d2v, only : &
@@ -29,7 +28,8 @@ program test_control_variate
   ! Initialize the control variate
   allocate(control_variate_parameter(2))
   control_variate_parameter = [1.0_f64, 1.0_f64]
-  control_variate => sll_new_control_variate(control_variate_equi, &
+  allocate(control_variate)
+  call control_variate%initialize(control_variate_equi, &
        control_variate_parameter)
 
   ! Initialize a particle group
