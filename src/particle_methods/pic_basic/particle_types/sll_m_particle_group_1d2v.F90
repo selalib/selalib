@@ -5,6 +5,7 @@
 module sll_m_particle_group_1d2v
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -75,6 +76,8 @@ contains
 
     SLL_ALLOCATE(self%particle_array(3+n_weights, n_particles), ierr) 
 
+    allocate(self%species, stat=ierr)
+    SLL_ASSERT( ierr == 0)
     call self%species%initialize( charge, mass )
 
     self%n_weights = n_weights
