@@ -200,8 +200,8 @@ contains
   subroutine initialize_pic_poisson_2d(this, no_gridpts, solver, kernel)
     class( sll_t_pic_poisson_2d), intent(out) :: this
     sll_int32, intent(in) :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
-    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
+    class( sll_c_poisson_2d_base), target, intent(in) :: solver
+    class( sll_c_kernel_smoother), target, intent(in)   :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr
