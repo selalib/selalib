@@ -34,6 +34,7 @@ module sll_m_kernel_smoother_base
 !     procedure(add_single), deferred        :: add_current_single !> Add the contribution of one particle to the charge density
      procedure(eval_single), deferred       :: evaluate
      procedure(eval_multiple), deferred     :: evaluate_multiple
+     procedure(empty), deferred             :: delete !< Destructor
 
 
   end type sll_c_kernel_smoother
@@ -96,7 +97,13 @@ module sll_m_kernel_smoother_base
      end subroutine eval_multiple
   end interface
 
+ !---------------------------------------------------------------------------!  
+  abstract interface
+     subroutine empty(this)
+       import sll_c_kernel_smoother
+       class (sll_c_kernel_smoother), intent( inout ) :: this !< Kernel smoother object 
 
-
+     end subroutine empty
+  end interface
 
 end module sll_m_kernel_smoother_base

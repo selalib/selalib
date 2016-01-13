@@ -5,6 +5,7 @@
 module sll_m_kernel_smoother_spline_2d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -54,7 +55,9 @@ module sll_m_kernel_smoother_spline_2d
      procedure :: evaluate => evaluate_field_single_spline_2d !> Evaluate the spline with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_2d
      procedure :: add_current_update_v => add_current_update_v_spline_2d
- 
+     procedure :: initialize => initialize_spline_2d
+     procedure :: delete => delete_spline_2d
+
 
   end type sll_t_kernel_smoother_spline_2d
   
@@ -230,9 +233,20 @@ contains
   end subroutine evaluate_multiple_spline_2d
 
   !-------------------------------------------------------------------------------------------
+  !> Destructor
+    subroutine delete_spline_2d(this)
+    class (sll_t_kernel_smoother_spline_2d), intent( inout ) :: this !< Kernel smoother object 
+
+    deallocate(this%spline_val)
+    
+
+  end subroutine delete_spline_2d
+
+
+  !-------------------------------------------------------------------------------------------
   !< Constructor 
-  function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
-    class( sll_t_kernel_smoother_spline_2d), pointer   :: this
+  subroutine initialize_spline_2d(this, domain, n_grid, no_particles, spline_degree, smoothing_type)
+    class( sll_t_kernel_smoother_spline_2d), intent(out)   :: this
     sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
     sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
     sll_int32, intent(in) :: no_particles !< no. of particles
@@ -241,9 +255,6 @@ contains
 
     !local variables
     sll_int32 :: ierr
-
-    SLL_ALLOCATE( this, ierr)
-
 
     this%dim = 2
 
@@ -270,7 +281,24 @@ contains
        print*, 'Smoothing Type ', smoothing_type, ' not implemented for kernel_smoother_spline_2d.'
     end if
 
-    allocate( this%spline_val(this%n_span, 2))
+    allocate( this%spline_val(this%n_span, 2), stat = ierr)
+    SLL_ASSERT(stat == 0)
+
+  end subroutine initialize_spline_2d
+
+  function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
+    class( sll_t_kernel_smoother_spline_2d), pointer   :: this
+    sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
+    sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
+    sll_int32, intent(in) :: no_particles !< no. of particles
+    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
+    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
+
+    !local variables
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE( this, ierr)
+    call this%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type)
 
   end function sll_f_new_smoother_spline_2d
 
