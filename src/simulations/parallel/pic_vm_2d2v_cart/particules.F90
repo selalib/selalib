@@ -221,8 +221,7 @@ type(tm_mesh_fields) :: tm
 sll_real64 :: a1, a2, a3, a4, dum, xp, yp
 sll_real64 :: rho_total
 
-tm%r0 = tm%r1   
-tm%r1 = 0.d0    
+tm%r0 = 0.d0    
                 
 !   ______________
 !  |     |        |
@@ -243,99 +242,34 @@ do ipart=1,nbpart
    a2 = (xp-x(i)) * (y(j+1)-yp) * dum
    a3 = (xp-x(i)) * (yp-y(j)) * dum
    a4 = (x(i+1)-xp) * (yp-y(j)) * dum
-   tm%r1(i,j)     = tm%r1(i,j)     + a1/(hhx(i)*hhy(j)) !charge unite = 1
-   tm%r1(i+1,j)   = tm%r1(i+1,j)   + a2/(hhx(i+1)*hhy(j)) 
-   tm%r1(i+1,j+1) = tm%r1(i+1,j+1) + a3/(hhx(i+1)*hhy(j+1))
-   tm%r1(i,j+1)   = tm%r1(i,j+1)   + a4/(hhx(i)*hhy(j+1))
+   tm%r0(i,j)     = tm%r0(i,j)     + a1/(hhx(i)*hhy(j)) !charge unite = 1
+   tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2/(hhx(i+1)*hhy(j)) 
+   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3/(hhx(i+1)*hhy(j+1))
+   tm%r0(i,j+1)   = tm%r0(i,j+1)   + a4/(hhx(i)*hhy(j+1))
 end do
 
 if (bcname == 'period') then
    do i=0,nx
-      tm%r1(i,0)  = tm%r1(i,0) + tm%r1(i,ny)
-      tm%r1(i,ny) = tm%r1(i,0)
+      tm%r0(i,0)  = tm%r0(i,0) + tm%r0(i,ny)
+      tm%r0(i,ny) = tm%r0(i,0)
    end do
    do j=0,ny
-      tm%r1(0,j)  = tm%r1(0,j) + tm%r1(nx,j)
-      tm%r1(nx,j) = tm%r1(0,j)
+      tm%r0(0,j)  = tm%r0(0,j) + tm%r0(nx,j)
+      tm%r0(nx,j) = tm%r0(0,j)
    end do
 end if
 
 rho_total = 0.d0
 do i=0,nx-1
    do j=0,ny-1
-      rho_total = rho_total + tm%r1(i,j)*hhx(i)*hhy(j)
+      rho_total = rho_total + tm%r0(i,j)*hhx(i)*hhy(j)
    enddo
 enddo
 print*,'rho total',rho_total 
 ! Neutralisation du milieu
-tm%r1 = tm%r1 - rho_total/dimx/dimy
+tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine calcul_j_cic( ele, tm )
-
-type(particle) :: ele
-type(tm_mesh_fields) :: tm
-sll_real64 :: a1, a2, a3, a4, dum, xp, yp
-sll_real64, dimension(0:nx,0:ny) :: jx, jy
-
-jx = 0.d0
-jy = 0.d0
-
-do ipart=1,nbpart
-   i = ele%case(ipart,1)
-   j = ele%case(ipart,2)
-   xp = ele%pos(ipart,1)
-   yp = ele%pos(ipart,2)
-   dum = ele%p(ipart) / (hx(i)*hy(j))
-   a1 = (x(i+1)-xp) * (y(j+1)-yp) * dum
-   a2 = (xp-x(i)) * (y(j+1)-yp) * dum
-   a3 = (xp-x(i)) * (yp-y(j)) * dum
-   a4 = (x(i+1)-xp) * (yp-y(j)) * dum
-   dum = ele%vit(ipart,1) / (hx(i)*hy(j)) !charge unite = 1
-   jx(i,j)     = jx(i,j)     + a1*dum  
-   jx(i+1,j)   = jx(i+1,j)   + a2*dum 
-   jx(i+1,j+1) = jx(i+1,j+1) + a3*dum 
-   jx(i,j+1)   = jx(i,j+1)   + a4*dum 
-   dum = ele%vit(ipart,2) / (hx(i)*hy(j)) 
-   jy(i,j)     = jy(i,j)     + a1*dum  
-   jy(i+1,j)   = jy(i+1,j)   + a2*dum 
-   jy(i+1,j+1) = jy(i+1,j+1) + a3*dum 
-   jy(i,j+1)   = jy(i,j+1)   + a4*dum 
-end do
-
-if (bcname == 'period') then
-   do i=0,nx
-      jx(i,0)  = jx(i,0) + jx(i,ny)
-      jx(i,ny) = jx(i,0)
-      jy(i,0)  = jy(i,0) + jy(i,ny)
-      jy(i,ny) = jy(i,0)
-   end do
-   do j=0,ny
-      jx(0,j)  = jx(0,j) + jx(nx,j)
-      jx(nx,j) = jx(0,j)
-      jy(0,j)  = jy(0,j) + jy(nx,j)
-      jy(nx,j) = jy(0,j)
-   end do
-end if
-
-
-do i=0,nx-1
-do j=0,ny
-   tm%jx(i,j) = 0.5 * (jx(i,j)+jx(i+1,j))
-end do
-end do
-
-do i=0,nx
-do j=0,ny-1
-   tm%jy(i,j) = 0.5 * (jy(i,j)+jy(i,j+1))
-end do
-end do
-
-end subroutine calcul_j_cic
-
 
 subroutine plasma( ele, time )
 

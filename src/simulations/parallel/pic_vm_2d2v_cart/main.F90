@@ -41,13 +41,10 @@ end do
 
 call readin( trim(argv) )
 
-SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny),  error)
-SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),  error)
+SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
+SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny), error)
-SLL_CLEAR_ALLOCATE(f%jx(0:nx,0:ny),  error)
-SLL_CLEAR_ALLOCATE(f%jy(0:nx,0:ny),  error)
-SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),    error) !rho au temps n
-SLL_CLEAR_ALLOCATE(f%r1(0:nx,0:ny),    error) !rho au temps n+1
+SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error) 
 
 time  = 0.d0
 iplot = 0
@@ -63,7 +60,7 @@ do i=0,nx-1
   aux2 = alpha * cos(kx*x(i))
   do j=0,ny
     f%ex(i,j) = aux1
-    f%r1(i,j) = aux2
+    f%r0(i,j) = aux2
   enddo
 enddo
       
