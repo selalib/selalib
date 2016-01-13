@@ -153,19 +153,37 @@ contains
   
   !---------------------------------------------------------------------------!
   !> Initialization function
-  subroutine initialize_operator_splitting_pic_vp_2d2v(this, solver, particle_group)
-    class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< object 
-    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< poisson solver
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< particle group
+  subroutine initialize_operator_splitting_pic_vp_2d2v(&
+       this, &
+       solver, &
+       particle_group, &
+       control_variate, &
+       i_weight)
+    class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< time splitting object 
+    class(sll_c_pic_poisson),target, intent(in) :: solver !< Poisson solver
+    class(sll_c_particle_group_base),target, intent(in) :: particle_group !< Particle group
+    class(sll_t_control_variate), optional, target, intent(in) :: control_variate
+    sll_int32, optional, intent(in) :: i_weight
 
-    !local variables
-    sll_int32 :: ierr
-
-    this%solver => this%solver
+    this%solver => solver
     this%particle_group => particle_group
+
+    this%i_weight = 1
+    if(present(i_weight)) this%i_weight = i_weight
+    if(present(control_variate)) this%control_variate => control_variate
 
   end subroutine initialize_operator_splitting_pic_vp_2d2v
 
+  !---------------------------------------------------------------------------!
+  !> Destructor
+  subroutine delete_operator_splitting_pic_vp_2d2v( this )
+    class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
+
+    deallocate(this%solver)
+    deallocate(this%particle_group)
+    deallocate(this%control_variate)
+
+  end subroutine delete_operator_splitting_pic_vp_2d2v
 
   !---------------------------------------------------------------------------!
   !> Constructor.
@@ -185,12 +203,7 @@ contains
 
     SLL_ALLOCATE(this, ierr)
 
-    this%solver => solver
-    this%particle_group => particle_group
-
-    this%i_weight = 1
-    if(present(i_weight)) this%i_weight = i_weight
-    if(present(control_variate)) this%control_variate => control_variate
+    call this%initialize(solver, particle_group, control_variate, i_weight)
 
   end function sll_f_new_hamiltonian_splitting_pic_vp_2d2v
 

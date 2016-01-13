@@ -4,6 +4,7 @@
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
 module sll_m_hamiltonian_splitting_pic_vm_1d2v
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -67,6 +68,9 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
      procedure :: operatorHp1_pic_vm_1d2v_prim
+
+     procedure :: initialize => initialize_pic_vm_1d2v
+     procedure :: delete => delete_pic_vm_1d2v
 
   end type sll_t_hamiltonian_splitting_pic_vm_1d2v
 
@@ -533,6 +537,72 @@ contains
   end subroutine operatorHB_pic_vm_1d2v
 
 
+ !---------------------------------------------------------------------------!
+  !> Constructor.
+  subroutine initialize_pic_vm_1d2v(&
+       this, &
+       maxwell_solver, &
+       kernel_smoother_0, &
+       kernel_smoother_1, &
+       particle_group, &
+       efield_dofs, &
+       bfield_dofs, &
+       x_min, &
+       Lx) 
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(out) :: this !< time splitting object 
+    class(sll_c_maxwell_1d_base), target, intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_kernel_smoother), target, intent(in) :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), target, intent(in) :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_group_base), target, intent(in) :: particle_group !< Particle group
+    sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
+    sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
+    sll_real64, intent(in) :: x_min !< Lower bound of x domain
+    sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
+
+    !local variables
+    sll_int32 :: ierr
+
+    this%maxwell_solver => maxwell_solver
+    this%kernel_smoother_0 => kernel_smoother_0
+    this%kernel_smoother_1 => kernel_smoother_1
+    this%particle_group => particle_group
+    this%efield_dofs => efield_dofs
+    this%bfield_dofs => bfield_dofs
+
+    ! Check that n_dofs is the same for both kernel smoothers.
+    SLL_ASSERT( this%kernel_smoother_0%n_dofs == this%kernel_smoother_1%n_dofs )
+
+    SLL_ALLOCATE(this%j_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
+    SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother_0%n_dofs,2), ierr)
+
+    this%spline_degree = 3
+    this%x_min = x_min
+    this%Lx = Lx
+    this%delta_x = this%Lx/this%kernel_smoother_1%n_dofs
+    
+    this%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
+    this%cell_integrals_1 = this%cell_integrals_1 / 3.0_f64
+
+    this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
+    this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
+
+  end subroutine initialize_pic_vm_1d2v
+
+  !---------------------------------------------------------------------------!
+  !> Destructor.
+  subroutine delete_pic_vm_1d2v(this)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent( inout ) :: this !< time splitting object 
+
+    deallocate(this%j_dofs)
+    deallocate(this%j_dofs_local)
+    deallocate(this%maxwell_solver)
+    deallocate(this%kernel_smoother_0)
+    deallocate(this%kernel_smoother_1)
+    deallocate(this%particle_group)
+    deallocate(this%efield_dofs)
+    deallocate(this%bfield_dofs)
+
+  end subroutine delete_pic_vm_1d2v
 
   !---------------------------------------------------------------------------!
   !> Constructor.
@@ -560,28 +630,15 @@ contains
 
     SLL_ALLOCATE(this, ierr)
 
-    this%maxwell_solver => maxwell_solver
-    this%kernel_smoother_0 => kernel_smoother_0
-    this%kernel_smoother_1 => kernel_smoother_1
-    this%particle_group => particle_group
-    this%efield_dofs => efield_dofs
-    this%bfield_dofs => bfield_dofs
-
-    ! TODO: Check that n_dofs is the same for both kernel smoothers.
-
-    SLL_ALLOCATE(this%j_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
-    SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother_0%n_dofs,2), ierr)
-
-    this%spline_degree = 3
-    this%x_min = x_min
-    this%Lx = Lx
-    this%delta_x = this%Lx/this%kernel_smoother_1%n_dofs
-    
-    this%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
-    this%cell_integrals_1 = this%cell_integrals_1 / 3.0_f64
-
-    this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
-    this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
+    call this%initialize(&
+       maxwell_solver, &
+       kernel_smoother_0, &
+       kernel_smoother_1, &
+       particle_group, &
+       efield_dofs, &
+       bfield_dofs, &
+       x_min, &
+       Lx)
 
   end function sll_f_new_hamiltonian_splitting_pic_vm_1d2v
 
