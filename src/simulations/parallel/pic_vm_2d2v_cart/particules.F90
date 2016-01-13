@@ -28,17 +28,18 @@ sll_real64 :: xp, yp, dum
 !  |     |        |
 !  |_____|________|
 
+dum = 1./(dx*dy)
+
 do ipart=1,nbpart
    i = ele%case(ipart,1)
    j = ele%case(ipart,2)
    xp = ele%pos(ipart,1)
    yp = ele%pos(ipart,2)
 
-   dum = 1./(hx(i)*hy(j))
-   a1 = (x(i+1)-xp) * (y(j+1)-yp) * dum
-   a2 = (xp-x(i)) * (y(j+1)-yp) * dum
-   a3 = (xp-x(i)) * (yp-y(j)) * dum
-   a4 = (x(i+1)-xp) * (yp-y(j)) * dum
+   a1 = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
+   a2 = (xp-(i)*dx) * ((j+1)*dy-yp) * dum
+   a3 = (xp-(i)*dx) * (yp-(j)*dy) * dum
+   a4 = ((i+1)*dx-xp) * (yp-(j)*dy) * dum
 
    ele%epx(ipart) = a1 * tm1%ex(i,j) + a2 * tm1%ex(i+1,j) &
         & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i,j+1) 
@@ -140,38 +141,32 @@ enddo
 !*** Mise a jour des "cases"
 
 do ipart=1,nbpart
-   i = 0
-   do while (ele%pos(ipart,1) >= x(i) .and. ele%pos(ipart,1)<dimx) 
-      i=i+1
-   enddo
-   if ( ele%pos(ipart,1) >= dimx ) i=nx+1
-   ele%case(ipart,1) = i-1
-   j = 0
-   do while (ele%pos(ipart,2) >= y(j) .and. ele%pos(ipart,2)<dimy) 
-      j=j+1 
-   enddo
-   if ( ele%pos(ipart,2) >= dimy ) j=ny+1
-   ele%case(ipart,2) = j-1
+   ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
+   ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
 end do
-
-end subroutine avancee_part
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine sortie_part( ele )
-
-type(particle) :: ele
 
 !*** Traitement de la sortie des particules
 
 if (bcname == 'period') then
 
-   do ipart=1,nbpart
-      if( ele%pos(ipart,1) >= dimx ) ele%pos(ipart,1) = ele%pos(ipart,1) - dimx
-      if( ele%pos(ipart,2) >= dimy ) ele%pos(ipart,2) = ele%pos(ipart,2) - dimy
-      if( ele%pos(ipart,1) < 0.d0 )  ele%pos(ipart,1) = ele%pos(ipart,1) + dimx
-      if( ele%pos(ipart,2) < 0.d0 )  ele%pos(ipart,2) = ele%pos(ipart,2) + dimy
-   end do   
+  do ipart=1,nbpart
+    if( ele%pos(ipart,1) >= dimx ) then
+      ele%pos(ipart,1) = ele%pos(ipart,1) - dimx
+      ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
+    end if
+    if( ele%pos(ipart,2) >= dimy ) then
+      ele%pos(ipart,2) = ele%pos(ipart,2) - dimy
+      ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
+    end if
+    if( ele%pos(ipart,1) < 0.d0 ) then
+      ele%pos(ipart,1) = ele%pos(ipart,1) + dimx
+      ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
+    end if
+    if( ele%pos(ipart,2) < 0.d0 ) then
+      ele%pos(ipart,2) = ele%pos(ipart,2) + dimy
+      ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
+    end if
+  end do   
 
 else
    ipart = 1
@@ -186,31 +181,18 @@ else
          ele%vit(ipart,1) = ele%vit(nbpart,1)
          ele%vit(ipart,2) = ele%vit(nbpart,2)
          ele%p(ipart)     = ele%p(nbpart)
+         ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
+         ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
          nbpart = nbpart - 1
          if (nbpart == 0) stop 'plus de particule'
       else
          ipart = ipart + 1
       end if
    end do
+
 end if
 
-
-!*** Mise a jour des "cases"
-
-do ipart=1,nbpart
-   i = 0
-   do while (ele%pos(ipart,1) >= x(i) .and. ele%pos(ipart,1)<=dimx) 
-      i=i+1
-   enddo
-   ele%case(ipart,1) = i-1
-   j = 0
-   do while (ele%pos(ipart,2) >= y(j) .and. ele%pos(ipart,2)<=dimy) 
-      j=j+1 
-   enddo
-   ele%case(ipart,2) = j-1
-end do
-
-end subroutine sortie_part
+end subroutine avancee_part
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -233,20 +215,22 @@ tm%r0 = 0.d0
 !  |_____|________|
 
 do ipart=1,nbpart
-   i = ele%case(ipart,1)
-   j = ele%case(ipart,2)
-   xp = ele%pos(ipart,1)
-   yp = ele%pos(ipart,2)
-   dum = ele%p(ipart) / (hx(i)*hy(j))
-   a1 = (x(i+1)-xp) * (y(j+1)-yp) * dum
-   a2 = (xp-x(i)) * (y(j+1)-yp) * dum
-   a3 = (xp-x(i)) * (yp-y(j)) * dum
-   a4 = (x(i+1)-xp) * (yp-y(j)) * dum
-   tm%r0(i,j)     = tm%r0(i,j)     + a1/(hhx(i)*hhy(j)) !charge unite = 1
-   tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2/(hhx(i+1)*hhy(j)) 
-   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3/(hhx(i+1)*hhy(j+1))
-   tm%r0(i,j+1)   = tm%r0(i,j+1)   + a4/(hhx(i)*hhy(j+1))
+   i   = ele%case(ipart,1)
+   j   = ele%case(ipart,2)
+   xp  = ele%pos(ipart,1)
+   yp  = ele%pos(ipart,2)
+   dum = ele%p(ipart) 
+   a1  = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
+   a2  = (xp-(i)*dx)   * ((j+1)*dy-yp) * dum
+   a3  = (xp-(i)*dx)   * (yp-(j)*dy)   * dum
+   a4  = ((i+1)*dx-xp) * (yp-(j)*dy)   * dum
+   tm%r0(i,j)     = tm%r0(i,j)     + a1 
+   tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2 
+   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3
+   tm%r0(i,j+1)   = tm%r0(i,j+1)   + a4
 end do
+
+tm%r0 = tm%r0 / (dx*dy) / (dx*dy)
 
 if (bcname == 'period') then
    do i=0,nx
@@ -262,7 +246,7 @@ end if
 rho_total = 0.d0
 do i=0,nx-1
    do j=0,ny-1
-      rho_total = rho_total + tm%r0(i,j)*hhx(i)*hhy(j)
+      rho_total = rho_total + tm%r0(i,j)*dx*dy
    enddo
 enddo
 print*,'rho total',rho_total 

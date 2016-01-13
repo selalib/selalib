@@ -33,10 +33,8 @@ sll_int32 :: nbpart
 sll_int32, private :: i, j
 
 sll_real64 :: dt, alpha, kx, ky, c, csq, e0
-sll_real64, private :: dx, dy
+sll_real64 :: dx, dy
 sll_real64, dimension(:), pointer :: x, y
-sll_real64, dimension(:), allocatable :: hx, hy    ! les h_i+1/2
-sll_real64, dimension(:), allocatable :: hhx, hhy  ! les h_i
 
 sll_real64 :: dimx, dimy
 sll_real64 :: cfl
@@ -97,10 +95,6 @@ poids = dimx * dimy ! car int(f0) = dimx*dimy
 
 allocate(x(-1:nx+1))  !0:nx))
 allocate(y(-1:ny+1))  !0:ny))
-allocate(hx(-1:nx))
-allocate(hy(-1:ny))
-allocate(hhx(0:nx))
-allocate(hhy(0:ny))
 
 dx = dimx / nx
 dy = dimy / ny
@@ -115,42 +109,10 @@ do j=1,ny
   y(j) = j*dy
 enddo
 
-do i=0,nx-1
-   hx(i) = x(i+1)-x(i)
-end do
-do j=0,ny-1
-   hy(j) = y(j+1)-y(j)
-end do
-hx(nx) = hx(0)  ! CL periodiques
-hx(-1) = hx(nx-1)
-hy(ny) = hy(0)
-hy(-1) = hy(ny-1)
-
-x(-1)   = x(0) - hx(nx-1)  !points utiles pour le cas period
-x(nx+1) = x(nx) + hx(0)
-y(-1)   = y(0) - hy(ny-1)
-y(ny+1) = y(ny) + hy(0)
-
-hhx(0)  =  0.5 * ( hx(0) + hx(nx-1) )  !0.5 * hx(0)
-hhx(nx) =  0.5 * ( hx(0) + hx(nx-1) )   !0.5 * hx(nx-1)
-do i=1,nx-1
-   hhx(i) = 0.5 * ( hx(i) + hx(i-1) )
-enddo
-hhy(0)  = 0.5 * ( hy(0) + hy(ny-1) )   !0.5 * hy(0)
-hhy(ny) = 0.5 * ( hy(0) + hy(ny-1) )   !0.5 * hy(ny-1)
-do j=1,ny-1
-  hhy(j) = 0.5 * ( hy(j) + hy(j-1) )
-enddo
-
-dx = hx(0)  !on calcule le plus petit pas
-do i=1,nx-1
-  if (hx(i)<dx)  dx = hx(i)
-end do
-
-dy = hy(0)
-do j=1,ny-1
-  if (hy(j)<dy)  dy = hy(j)
-end do
+x(-1)   = x(0) - dx
+x(nx+1) = x(nx) + dx
+y(-1)   = y(0) - dy
+y(ny+1) = y(ny) + dy
 
 dt = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 
