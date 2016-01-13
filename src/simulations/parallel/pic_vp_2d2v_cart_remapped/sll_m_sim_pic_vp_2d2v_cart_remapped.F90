@@ -115,6 +115,7 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      sll_int32 :: my_rank
      sll_int32 :: world_size
      sll_int32 :: n_threads
+     sll_int32 :: run_nb
    contains
      procedure, pass(sim) :: init_from_file => init_4d_generic_pic_cartesian
      procedure, pass(sim) :: run => run_4d_generic_pic_cartesian
@@ -192,6 +193,7 @@ contains
     sll_int32   :: NUM_PARTICLES, GUARD_SIZE, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
     sll_real64  :: SPECIES_CHARGE, SPECIES_MASS, ALPHA
+    sll_int32   :: run_nb
     logical     :: UseLtPicScheme
     logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     sll_int32   :: NC_X,  NC_Y
@@ -215,10 +217,13 @@ contains
     sll_int32   :: remapping_sparse_grid_max_level_vy
     sll_int32   :: deposition_particles_type
     sll_int32   :: number_deposition_particles
+    sll_int32   :: flow_markers_type
     sll_int32   :: number_markers_x
     sll_int32   :: number_markers_y
     sll_int32   :: number_markers_vx
     sll_int32   :: number_markers_vy
+    sll_int32   :: init_nb_unstruct_markers_per_cell
+    sll_int32   :: max_nb_unstruct_markers_per_cell
     sll_int32   :: flow_grid_number_cells_x
     sll_int32   :: flow_grid_number_cells_y
     sll_int32   :: flow_grid_number_cells_vx
@@ -251,7 +256,8 @@ contains
                                     SPECIES_CHARGE,         &
                                     SPECIES_MASS,           &
                                     ALPHA,                  &
-                                    UseLtPicScheme
+                                    UseLtPicScheme,         &
+                                    run_nb
 
     namelist /elec_params/          er, psi, omega_r, omega_i
 
@@ -295,13 +301,16 @@ contains
     !   -> number of markers to be pushed forward
     !   -> size of the cells where the flow is linearized (the flow grid)
     !      note: the bounds of the flow grid are the same as those of the remap grid
-    namelist /lt_pic_markers_params/number_markers_x,             &
-                                    number_markers_y,             &
-                                    number_markers_vx,            &
-                                    number_markers_vy,            &
-                                    flow_grid_number_cells_x,     &
-                                    flow_grid_number_cells_y,     &
-                                    flow_grid_number_cells_vx,    &
+    namelist /lt_pic_markers_params/flow_markers_type,                  &
+                                    number_markers_x,                   &
+                                    number_markers_y,                   &
+                                    number_markers_vx,                  &
+                                    number_markers_vy,                  &
+                                    init_nb_unstruct_markers_per_cell,  &
+                                    max_nb_unstruct_markers_per_cell,   &
+                                    flow_grid_number_cells_x,           &
+                                    flow_grid_number_cells_y,           &
+                                    flow_grid_number_cells_vx,          &
                                     flow_grid_number_cells_vy
 
     namelist /simple_pic_params/    NUM_PARTICLES
@@ -334,7 +343,7 @@ contains
 
     XMAX = (2._f64*sll_pi/KX_LANDAU)
     sim%use_lt_pic_scheme = UseLtPicScheme
-    print *, "AAA"
+    sim%run_nb = run_nb
 
     sim%thermal_speed_ions = THERM_SPEED
     sim%total_density = 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
@@ -387,10 +396,13 @@ contains
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         deposition_particles_type,                  &
         number_deposition_particles,                &
+        flow_markers_type,                          &
         number_markers_x,                           &
         number_markers_y,                           &
         number_markers_vx,                          &
         number_markers_vy,                          &
+        init_nb_unstruct_markers_per_cell,          &
+        max_nb_unstruct_markers_per_cell,           &
         flow_grid_number_cells_x,                   &
         flow_grid_number_cells_y,                   &
         flow_grid_number_cells_vx,                  &
@@ -460,13 +472,13 @@ contains
     enforce_total_charge = .false.
     call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
 
-    print *, "[DEBUG 98786758] target_total_charge = ", SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-    print *, "[DEBUG 98786758] size of domain = ", (XMAX - XMIN) * (YMAX - YMIN)
-    print *, "[DEBUG 98786758] ", XMAX
-    print *, "[DEBUG 98786758] ", XMIN
-    print *, "[DEBUG 98786758] ", YMAX
-    print *, "[DEBUG 98786758] ", YMIN
-    print *, "[DEBUG 98786758] )------------------------------------------------------------------------------------------------"
+    !print *, "[DEBUG 98786758] target_total_charge = ", SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+    !print *, "[DEBUG 98786758] size of domain = ", (XMAX - XMIN) * (YMAX - YMIN)
+    !print *, "[DEBUG 98786758] ", XMAX
+    !print *, "[DEBUG 98786758] ", XMIN
+    !print *, "[DEBUG 98786758] ", YMAX
+    !print *, "[DEBUG 98786758] ", YMIN
+    !print *, "[DEBUG 98786758] )------------------------------------------------------------------------------------------------"
 
     !! -- --  First charge deposition [end]  -- --
 
@@ -537,6 +549,7 @@ contains
     sll_real64 :: coords(3)
     sll_real64 :: target_total_charge
     logical    :: enforce_total_charge
+    character(len=1024) :: field_name
 
 
     ! Timings and statistics
@@ -574,8 +587,6 @@ contains
     ymin = sim%mesh_2d%eta2_min
     rdx = 1._f64/sim%mesh_2d%delta_eta1
     rdy = 1._f64/sim%mesh_2d%delta_eta2
-
-    print*,  "aaaaaa"
 
     !  ----------------------------------------------------------------------------------------------------
     !> ## Time loop initialisation
@@ -641,12 +652,11 @@ contains
     if (sim%my_rank == 0) then
        it = 0
 
-       ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
-
-       ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
-            sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%rho, 'rho_init', it+1, ierr )
+      ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
+      write (field_name, "(A13,I4)") 'rho_init_run=', sim%run_nb
+      call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+          sim%mesh_2d%eta2_max, ncy+1,                            &
+          sim%rho, trim(field_name), it+1, ierr )
     endif
 
     !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
@@ -666,15 +676,16 @@ contains
        it = 0
        
        ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
+      print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
+      write (field_name, "(A12,I4)") 'Ex_init_run=', sim%run_nb
+      call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+          sim%mesh_2d%eta2_max, ncy+1,                            &
+          sim%rho, trim(field_name), it+1, ierr )
 
-       print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
-            sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%E1, 'Ex_init', it+1, ierr )
-
-       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
-            sim%mesh_2d%eta2_max, ncy+1,                            &
-            sim%E2, 'Ey_init', it+1, ierr )
+      write (field_name, "(A12,I4)") 'Ey_init_run=', sim%run_nb
+      call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+           sim%mesh_2d%eta2_max, ncy+1,                            &
+           sim%E2, trim(field_name), it+1, ierr )
 
     endif
 
@@ -744,7 +755,9 @@ contains
     psi = sim%elec_params(4)
 
     ! [[logE_standPush]]
-    if (sim%my_rank ==0) open(65,file='logE_standPush.dat')
+    write (field_name, "(A9,I4,A4)") 'logE_run=', sim%run_nb, '.dat'
+    if (sim%my_rank ==0) open(65,file=trim(field_name))
+
     !#ifdef _OPENMP
     !    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
     !#endif
@@ -919,9 +932,10 @@ contains
          ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
 
          ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
-         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+        write (field_name, "(A8,I4)") 'rho_run=', sim%run_nb
+        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
               sim%mesh_2d%eta2_max, ncy+1,                            &
-              sim%rho, 'rho', it+1, ierr )
+              sim%rho, trim(field_name), it+1, ierr )
       end if
 
       !> ### Poisson solver (computing \f$E^{n+1}\f$)
@@ -947,7 +961,8 @@ contains
         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
 
-        call sim%particle_group%visualize_f_slice_x_vx("f_slice", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
+        write (field_name, "(A12,I4)") 'f_slice_run=', sim%run_nb
+        call sim%particle_group%visualize_f_slice_x_vx(trim(field_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
 
       end if
 
@@ -958,20 +973,22 @@ contains
         call sim%particle_group%remap()
       end if
 
-       if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
+      if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-          print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
+        print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
                " # plot = ",it+1
-            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-                                sim%mesh_2d%eta2_max, ncy+1,                        &
-                                sim%E1, 'Ex', it+1, ierr )
+        write (field_name, "(A7,I4)") 'Ex_run=', sim%run_nb
+        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                              sim%mesh_2d%eta2_max, ncy+1,                        &
+                              sim%E1, trim(field_name), it+1, ierr )
 
-            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-                                sim%mesh_2d%eta2_max, ncy+1,                        &
-                                sim%E2, 'Ey', it+1, ierr )
-            print *, "done."
+        write (field_name, "(A7,I4)") 'Ey_run=', sim%run_nb
+        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                              sim%mesh_2d%eta2_max, ncy+1,                        &
+                              sim%E2, trim(field_name), it+1, ierr )
+        print *, "done."
 
-       end if
+      end if
 
        !! -- --  diagnostics (plotting E ) [end]  -- --
 
