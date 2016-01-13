@@ -28,6 +28,7 @@ sll_int32  :: j
 sll_int32  :: error
 
 sll_real64 :: aux1, aux2
+sll_real64 :: t0, t1
 
 character(len=272) :: argv
 type(sll_t_poisson_2d_periodic_fftpack) :: poisson
@@ -84,22 +85,24 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%ex, 'ex', 1, error)
 
+call cpu_time(t0)
 do istep = 1, nstep
 
   call interpol_eb( f, p )
   call avancee_vitesse( p )
   call avancee_part( p, 1.d0 )
-  call sortie_part( p )
   call calcul_rho( p, f )
   call sll_o_solve( poisson, f%ex, f%ey, f%r0)
 
   time = time + dt
 
   call modeE( f, istep, time )
-  write(*,"('istep = ', i6, ' time = ')", advance='no') istep
+  write(*,"('istep = ', i6, ' time = ',g15.3)", advance='no') istep, time
 
 end do
 
+call cpu_time(t1)
+print"('CPU time = ', g15.3)", t1-t0
 print*,'PASSED'
 
 end program test_pic2d
