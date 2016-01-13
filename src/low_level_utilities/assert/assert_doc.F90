@@ -1,4 +1,4 @@
-!> @defgroup assert sll_m_assert
+!> @defgroup assert sll_assert
 !!
 !! @authors
 !! Selalib team <br>

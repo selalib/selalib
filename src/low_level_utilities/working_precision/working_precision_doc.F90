@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup working_precision sll_m_working_precision 
+!> @defgroup working_precision sll_working_precision 
 !> @brief 
 !> Define the kind type parameter for intern type data.
 !> @author Edwin Chacon-Golcher
