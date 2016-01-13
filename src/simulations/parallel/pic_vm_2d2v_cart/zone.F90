@@ -7,9 +7,6 @@ type tm_mesh_fields
    sll_real64, dimension(:,:), pointer :: ey
    sll_real64, dimension(:,:), pointer :: bz
    sll_real64, dimension(:,:), pointer :: r0
-   sll_real64, dimension(:,:), pointer :: r1
-   sll_real64, dimension(:,:), pointer :: jx
-   sll_real64, dimension(:,:), pointer :: jy
 end type tm_mesh_fields
 
 type particle
@@ -47,7 +44,6 @@ sll_real64 :: tfinal
 sll_real64 :: exext, eyext, bzext
 sll_real64 :: charge, masse, poids
 sll_real64 :: q_sur_m 
-
 
 contains
 
