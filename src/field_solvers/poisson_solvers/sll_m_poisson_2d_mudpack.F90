@@ -173,6 +173,8 @@ module sll_m_poisson_2d_mudpack
     !> Compute the right hand side from a given function
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_mudpack
+    !> Delete
+    procedure :: delete => delete_2d_mudpack
 
   end type poisson_2d_mudpack
 
@@ -1272,7 +1274,10 @@ contains
     
   end subroutine compute_rhs_from_function_2d_mudpack
 
-
+  subroutine delete_2d_mudpack(poisson)
+    class( poisson_2d_mudpack)                    :: poisson !< Maxwell solver object.
+    
+  end subroutine delete_2d_mudpack
   
   !> input x dependent coefficients
   subroutine mudpack_cofx(x,cxx,cx,cex)

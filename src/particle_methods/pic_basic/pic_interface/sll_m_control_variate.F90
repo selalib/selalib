@@ -23,6 +23,7 @@ module sll_m_control_variate
    contains
 
      procedure :: update_df_weight !< function defining the control variate
+     !procedure :: initialize => initialize_control_variate !< initialize the type
 
   end type sll_t_control_variate
 
