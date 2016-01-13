@@ -1,13 +1,11 @@
-# 
 # Summary of commands for BSL-LT-PIC compilation
+# ==============================================
 # 
-# ======================================================================
 # MCP and ALH
-# ======================================================================
+# 
 #+STARTUP: showeverything
-# ======================================================================
-# [[shell:header\alh 'README']] (cf [[file:~/alh/bin/headeralh]])
-# emacs-keywords authors="MCP and ALH" brief="Summary of commands for BSL-LT-PIC compilation" default=0 org start=26/10/15
+# [[elisp:(alh-set-keywords)]] ([[file:~/.emacs::alh-set-keywords]])
+# emacs-keywords authors="MCP and ALH" brief="Summary of commands for BSL-LT-PIC compilation" org start=26/10/15
 
 # <<<<BSL-LT-PIC_Simulation>>>> [[file:.]] uses [[[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::BSL-LT-PIC_Library]]]
 

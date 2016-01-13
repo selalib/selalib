@@ -754,7 +754,7 @@ contains
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
 
-    ! [[logE_standPush]]
+    ! [[logE_run]]
     write (field_name, "(A9,I4,A4)") 'logE_run=', sim%run_nb, '.dat'
     if (sim%my_rank ==0) open(65,file=trim(field_name))
 
@@ -784,7 +784,7 @@ contains
        print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%num_iterations
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
 
-       ! <<logE_standPush>>
+       ! <<logE_run>>
 
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64 * omega_i * real(it,f64) * sim%dt)                          &
