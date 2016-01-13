@@ -26,7 +26,7 @@ logical :: relativ
 
 sll_real64 :: pi 
 
-character(len=6) :: bcname 
+character(len=6) :: bcname = 'period' 
 
 sll_int32 :: nx, ny
 sll_int32 :: nstep, nstepmax
@@ -40,7 +40,8 @@ sll_real64, private :: dx, dy
 sll_real64, dimension(:), pointer :: x, y
 sll_real64, dimension(:), allocatable :: hx, hy    ! les h_i+1/2
 sll_real64, dimension(:), allocatable :: hhx, hhy  ! les h_i
-sll_real64 :: dimx, dimy, dimx1, dimy1, dimx2, dimy2
+
+sll_real64 :: dimx, dimy
 sll_real64 :: cfl
 sll_real64 :: tfinal
 sll_real64 :: exext, eyext, bzext

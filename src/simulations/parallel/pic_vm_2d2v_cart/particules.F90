@@ -349,7 +349,7 @@ if( time == 0 ) then
    eps = 1.d-12
 
    vth =  1.0_f64
-   nbpart = 100*(nx)*(ny)
+   nbpart = 20*(nx)*(ny)
    n = 1.d0/nbpart
 
    SLL_ALLOCATE(ele%pos(nbpart,2),error)
