@@ -5,13 +5,15 @@ Members
 Scientific Staff
 ----------------
 * `Eric SONNENDRUCKER (IPP Garching) <http://www.ipp.mpg.de/ippcms/eng/pr/institut/organigramm/leitung/sonnendruecker.html>`_
+* `Katharina KORMANN (IPP Garching) <http://www-m16.ma.tum.de/Allgemeines/KatharinaKormann>`_
+* `Ahmed RATNANI (IPP Garching) <https://www.linkedin.com/in/ahmed-ratnani-0a77344>`_
+* `Philippe HELLUY (IRMA Strasbourg) <http://www.linkedin.com/pub/philippe-helluy/34/147/952>`_
 * `Michel MEHRENBERGER (IRMA Strasbourg) <http://www-irma.u-strasbg.fr/~mehrenbe/>`_
 * `Sever HIRSTOAGA (IRMA Strasbourg) <http://www-irma.u-strasbg.fr/~hirstoag/>`_
-* `Katharina KORMANN (IPP Garching) <http://www-m16.ma.tum.de/Allgemeines/KatharinaKormann>`_
 * `Laurent NAVORET (IRMA Strasbourg)  <http://www-irma.u-strasbg.fr/~navoret>`_
 * `Virgine GRANDGIRARD (CEA Cadarache) <http://www.researchgate.net/profile/Virginie_Grandgirard/>`_
-* `Philippe HELLUY (IRMA Strasbourg) <http://www.linkedin.com/pub/philippe-helluy/34/147/952>`_
 * `Martin CAMPOS-PINTO (LJLL Paris VI) <https://www.ljll.math.upmc.fr/~campos/>`_
+* `Antoine LE HYARIC (LJLL Paris VI) <https://www.ljll.math.upmc.fr/~lehyaric/>`_
 * `Nicolas CROUSEILLES (IRMAR Rennes) <http://people.rennes.inria.fr/Nicolas.Crouseilles/>`_
 
 Software engineering
