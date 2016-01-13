@@ -5,6 +5,7 @@
 module sll_m_kernel_smoother_spline_1d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -61,6 +62,8 @@ module sll_m_kernel_smoother_spline_1d
      procedure :: evaluate => evaluate_field_single_spline_1d !> Evaluate spline function with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_1d !> Evaluate multiple spline functions with given coefficients
      procedure :: update_jv !> elper function to compute the integral of j using Gauss quadrature
+     procedure :: initialize => initialize_spline_1d !> Constructor
+     procedure :: delete => delete_spline_1d !> Destructor
 
   end type sll_t_kernel_smoother_spline_1d
   
@@ -290,10 +293,23 @@ contains
 
   end subroutine evaluate_multiple_spline_1d
 
+  !> Destructor
+  subroutine delete_spline_1d(this)
+    class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: this !< Kernel smoother object 
+
+    deallocate(this%spline_val)
+    deallocate(this%spline_val_more)
+    deallocate(this%quad_xw)
+    
+
+  end subroutine delete_spline_1d
 
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
+  
+
+
   function sll_f_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
     class( sll_t_kernel_smoother_spline_1d), pointer   :: this !< kernel smoother object
     sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
@@ -307,6 +323,24 @@ contains
 
 
     SLL_ALLOCATE( this, ierr)
+    SLL_ASSERT( ierr == 0)
+    
+    call this%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type )
+
+  end function sll_f_new_smoother_spline_1d
+
+
+  subroutine initialize_spline_1d( this, domain, n_grid, no_particles, spline_degree, smoothing_type )
+    class( sll_t_kernel_smoother_spline_1d), intent(out)  :: this !< kernel smoother object
+    sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
+    sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
+    sll_int32, intent(in) :: no_particles !< number of particles
+    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
+    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
+
+    !local variables
+    sll_int32 :: ierr
+
 
     this%dim = 1
 
@@ -335,14 +369,17 @@ contains
     
     this%n_quad_points = (this%spline_degree+2)/2
 
-    ALLOCATE( this%spline_val(this%n_span))
-    ALLOCATE( this%spline_val_more(this%n_span) )
-    ALLOCATE( this%quad_xw(2,this%n_quad_points))
+    ALLOCATE( this%spline_val(this%n_span), stat = ierr)
+    SLL_ASSERT( stat == 0 )
+    ALLOCATE( this%spline_val_more(this%n_span), stat = ierr )
+    SLL_ASSERT( stat == 0 )
+    ALLOCATE( this%quad_xw(2,this%n_quad_points), stat = ierr )
+    SLL_ASSERT( stat == 0 )
 
     ! normalized Gauss Legendre points and weights
     this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points)
 
-  end function sll_f_new_smoother_spline_1d
+  end subroutine initialize_spline_1d
 
   
 
