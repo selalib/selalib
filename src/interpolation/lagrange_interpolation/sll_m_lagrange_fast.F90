@@ -371,9 +371,9 @@ contains
 
 !------------------------------------------------------------------------------!
   !> @brief Lagrange interpolation, without boundary conditions.  One sided a the outermost points.
-  !> @param [in] fi(:)      input array of length n
+  !> @param [in]  fi(:)      input array of length n
   !> @param [out] fp(:)      output array of length n
-  !> @param [in]  p          offset in units of dx
+  !> @param [in]  p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement) 
   !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
   subroutine sll_s_interpolate_array_disp_lagrange_fixed_no_bc(fi, fp, p, stencil)
     implicit none
@@ -415,7 +415,7 @@ contains
   !> @brief Lagrange interpolation, periodic boundary conditions
   !> @param [in]  fi(:)      input array of length n
   !> @param [out] fp(:)      output array of length n
-  !> @param [in]  p          offset in units of dx
+  !> @param [in]  p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
   !> @param [in]  stencil    number of points in fi used for interpolation (currently possible values 3,5)
   subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic(fi, fp, p, stencil)
     implicit none
@@ -457,7 +457,7 @@ contains
   !> @param [in]  fi(:)      input array of length n, including the halos
   !> @param [out] fp(:)      output array of length n, only the inner part is overwritten
   !>            (ie boundaries of half stencil width are untouched)
-  !> @param [in] p          offset in units of dx
+  !> @param [in] p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
   !> @param [in] stencil    number of points {3,5,7,9,11} in fi used for interpolation
   subroutine sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(fi, fp, p, stencil)
     implicit none
