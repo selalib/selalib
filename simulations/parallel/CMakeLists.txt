@@ -1,7 +1,7 @@
 #############################################################################
 ###      Parallel simulations
 #############################################################################
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
+IF( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
 
   ADD_LIBRARY( sll_sim_parallel STATIC ${SIM_BASE_CLASS})
 
@@ -121,13 +121,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
  
 ENDIF()
 
-IF(MPI_ENABLED)
-   # here are some other examples of simulations
-   # they can serve as examples for selalib beginners
-   # you can add some new examples
-   # the interface is more free
-   # requirements of the simulations that are
-   # present in the developer guide are not
-   # mandatory here
-   ADD_SUBDIRECTORY(bsl_examples)
-ENDIF(MPI_ENABLED)
+
+# here are some other examples of simulations
+# they can serve as examples for selalib beginners
+# you can add some new examples
+# the interface is more free
+# requirements of the simulations that are
+# present in the developer guide are not
+# mandatory here
+ADD_SUBDIRECTORY(bsl_examples)
