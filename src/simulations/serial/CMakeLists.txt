@@ -2,7 +2,7 @@
 ###      Serial simulations
 ##############################################################################
 
-ADD_LIBRARY( sll_sim_serial STATIC ../simulation_base_class.F90 )
+ADD_LIBRARY( sll_sim_serial STATIC ${SIM_BASE_CLASS})
 
 TARGET_LINK_LIBRARIES( sll_sim_serial
                        sll_interpolators

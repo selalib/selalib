@@ -3,7 +3,7 @@
 #############################################################################
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
-   ADD_LIBRARY( sll_sim_parallel STATIC ../simulation_base_class.F90)
+  ADD_LIBRARY( sll_sim_parallel STATIC ${SIM_BASE_CLASS})
 
    # Add new dependencies concerning SIMNAME/sim_SIMNAME.F90 
    # and or SIMNAME/sll_m_sim_SIMNAME.F90
