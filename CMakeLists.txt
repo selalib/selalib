@@ -179,6 +179,16 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
+# Create single library 'libselalib.a' from smaller libraries in src
 ADD_SUBDIRECTORY( package )
 
+# Simulations
+IF( BUILD_SIMULATIONS )
+  GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE )
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH 
+    "simulations install dir")
+  ADD_SUBDIRECTORY( simulations )
+ENDIF( BUILD_SIMULATIONS )
+
+# CMake target for running C preprocessor on all source files used in build
 ADD_PREPROCESSOR_TARGET()
