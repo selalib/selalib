@@ -46,7 +46,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          )
 
     # Variables passed to simulations' CMakeFiles in subdirectories
-    SET( INSTALL_DIR "${INSTALL_DIR}/sim_parallel" )
+    SET( INSTALL_DIR "${INSTALL_DIR}/parallel" )
 
     # Semi-Lagrangian simulations
     
