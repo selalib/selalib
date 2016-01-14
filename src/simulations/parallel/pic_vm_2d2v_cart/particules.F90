@@ -9,6 +9,16 @@ implicit none
 sll_int32,  private :: ipart 
 sll_int32,  private :: i, j
 
+type particle
+  sll_real64, pointer :: pos(:,:)
+  sll_int32 , pointer :: case(:,:)
+  sll_real64, pointer :: vit(:,:)
+  sll_real64, pointer :: epx(:)
+  sll_real64, pointer :: epy(:)
+  sll_real64, pointer :: bpz(:)
+  sll_real64, pointer :: p(:)
+end type particle
+
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -215,102 +225,94 @@ tm%r0 = 0.d0
 !  |_____|________|
 
 do ipart=1,nbpart
-   i   = ele%case(ipart,1)
-   j   = ele%case(ipart,2)
-   xp  = ele%pos(ipart,1)
-   yp  = ele%pos(ipart,2)
-   dum = ele%p(ipart) 
-   a1  = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
-   a2  = (xp-(i)*dx)   * ((j+1)*dy-yp) * dum
-   a3  = (xp-(i)*dx)   * (yp-(j)*dy)   * dum
-   a4  = ((i+1)*dx-xp) * (yp-(j)*dy)   * dum
-   tm%r0(i,j)     = tm%r0(i,j)     + a1 
-   tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2 
-   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3
-   tm%r0(i,j+1)   = tm%r0(i,j+1)   + a4
+
+  i   = ele%case(ipart,1)
+  j   = ele%case(ipart,2)
+  xp  = ele%pos(ipart,1)
+  yp  = ele%pos(ipart,2)
+  dum = ele%p(ipart) 
+  a1  = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
+  a2  = (xp-(i)*dx)   * ((j+1)*dy-yp) * dum
+  a3  = (xp-(i)*dx)   * (yp-(j)*dy)   * dum
+  a4  = ((i+1)*dx-xp) * (yp-(j)*dy)   * dum
+  tm%r0(i,j)     = tm%r0(i,j)     + a1 
+  tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2 
+  tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3
+  tm%r0(i,j+1)   = tm%r0(i,j+1)   + a4
+
 end do
 
 tm%r0 = tm%r0 / (dx*dy) / (dx*dy)
 
 if (bcname == 'period') then
-   do i=0,nx
-      tm%r0(i,0)  = tm%r0(i,0) + tm%r0(i,ny)
-      tm%r0(i,ny) = tm%r0(i,0)
-   end do
-   do j=0,ny
-      tm%r0(0,j)  = tm%r0(0,j) + tm%r0(nx,j)
-      tm%r0(nx,j) = tm%r0(0,j)
-   end do
+  do i=0,nx
+    tm%r0(i,0)  = tm%r0(i,0) + tm%r0(i,ny)
+    tm%r0(i,ny) = tm%r0(i,0)
+  end do
+  do j=0,ny
+    tm%r0(0,j)  = tm%r0(0,j) + tm%r0(nx,j)
+    tm%r0(nx,j) = tm%r0(0,j)
+  end do
 end if
 
-rho_total = 0.d0
-do i=0,nx-1
-   do j=0,ny-1
-      rho_total = rho_total + tm%r0(i,j)*dx*dy
-   enddo
-enddo
+rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
 print*,'rho total',rho_total 
 ! Neutralisation du milieu
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho
 
-subroutine plasma( ele, time )
+subroutine plasma( ele )
 
 type (particle) :: ele
-sll_real64 :: time, speed, theta, vth, n
+sll_real64 :: speed, theta, vth, n
 sll_real64 :: a, b, eps, R
 sll_int32 :: k, error
 
-if( time == 0 ) then
+eps = 1.d-12
 
-   eps = 1.d-12
+vth =  1.0_f64
+nbpart = 100*(nx)*(ny)
+n = 1.d0/nbpart
 
-   vth =  1.0_f64
-   nbpart = 20*(nx)*(ny)
-   n = 1.d0/nbpart
+SLL_ALLOCATE(ele%pos(nbpart,2),error)
+SLL_ALLOCATE(ele%case(nbpart,2),error)
+SLL_ALLOCATE(ele%vit(nbpart,2),error)
+SLL_ALLOCATE(ele%epx(nbpart),error)
+SLL_ALLOCATE(ele%epy(nbpart),error)
+SLL_ALLOCATE(ele%bpz(nbpart),error)
+SLL_ALLOCATE(ele%p(nbpart),error)
 
-   SLL_ALLOCATE(ele%pos(nbpart,2),error)
-   SLL_ALLOCATE(ele%case(nbpart,2),error)
-   SLL_ALLOCATE(ele%vit(nbpart,2),error)
-   SLL_ALLOCATE(ele%epx(nbpart),error)
-   SLL_ALLOCATE(ele%epy(nbpart),error)
-   SLL_ALLOCATE(ele%bpz(nbpart),error)
-   SLL_ALLOCATE(ele%p(nbpart),error)
+do k=0,nbpart-1
 
-   do k=0,nbpart-1
+  speed = vth * sqrt(-2.0_f64 * log( (k+0.5)*n ))
 
-      speed = vth * sqrt(-2.0_f64 * log( (k+0.5)*n ))
+  theta = trinary_reversing( k ) * 2.0_f64 * pi
 
-      theta = trinary_reversing( k ) * 2.0_f64 * pi
+  a = 0.0_f64; b = dimx ! 2*pi/kx 
+  R = bit_reversing( k )
+  call dichotomie_x(a,b,R,eps) 
+  ele%pos(k+1,1) = a
+  ele%pos(k+1,2) = dimy * penta_reversing( k ) 
 
-      a = 0.0_f64; b = dimx ! 2*pi/kx 
-      R = bit_reversing( k )
-      call dichotomie_x(a,b,R,eps) 
-      ele%pos(k+1,1) = a
-      ele%pos(k+1,2) = dimy * penta_reversing( k ) 
+  i = 0
+  do while (ele%pos(k+1,1) >= i*dx) 
+     i=i+1
+  enddo
+  ele%case(k+1,1) = i-1
+  
+  j = 0
+  do while (ele%pos(k+1,2) >= j*dy) 
+     j=j+1 
+  enddo
+  ele%case(k+1,2) = j-1
+  
+  ele%vit(k+1,1) = speed * cos(theta)  !
+  ele%vit(k+1,2) = speed * sin(theta)  !
 
-      i = 0
-      do while (ele%pos(k+1,1) >= x(i)) 
-         i=i+1
-      enddo
-      ele%case(k+1,1) = i-1
-      
-      j = 0
-      do while (ele%pos(k+1,2) >= y(j)) 
-         j=j+1 
-      enddo
-      ele%case(k+1,2) = j-1
-      
-      ele%vit(k+1,1) = speed * cos(theta)  !
-      ele%vit(k+1,2) = speed * sin(theta)  !
+  ele%p(k+1) = poids * n
 
-      ele%p(k+1) = poids * n
-
-   enddo
-
-
-end if
+enddo
 
 end subroutine plasma
 
