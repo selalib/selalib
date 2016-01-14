@@ -9,15 +9,6 @@ type tm_mesh_fields
    sll_real64, dimension(:,:), pointer :: r0
 end type tm_mesh_fields
 
-type particle
-   sll_real64, pointer :: pos(:,:)
-   sll_int32 , pointer :: case(:,:)
-   sll_real64, pointer :: vit(:,:)
-   sll_real64, pointer :: epx(:)
-   sll_real64, pointer :: epy(:)
-   sll_real64, pointer :: bpz(:)
-   sll_real64, pointer :: p(:)
-end type particle
 
 logical :: relativ 
 
@@ -34,7 +25,6 @@ sll_int32, private :: i, j
 
 sll_real64 :: dt, alpha, kx, ky, c, csq, e0
 sll_real64 :: dx, dy
-sll_real64, dimension(:), pointer :: x, y
 
 sll_real64 :: dimx, dimy
 sll_real64 :: cfl
@@ -91,28 +81,8 @@ ky    = 0.0_f64
 dimx  = 2*pi/kx
 poids = dimx * dimy ! car int(f0) = dimx*dimy
 
-!Creation du maillage
-
-allocate(x(-1:nx+1))  !0:nx))
-allocate(y(-1:ny+1))  !0:ny))
-
 dx = dimx / nx
 dy = dimy / ny
-
-x(0) = 0.0_f64
-y(0) = 0.0_f64
-
-do i=1,nx
-  x(i) = i*dx 
-enddo
-do j=1,ny
-  y(j) = j*dy
-enddo
-
-x(-1)   = x(0) - dx
-x(nx+1) = x(nx) + dx
-y(-1)   = y(0) - dy
-y(ny+1) = y(ny) + dy
 
 dt = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 

@@ -56,9 +56,9 @@ if( nstep > nstepmax ) nstep = nstepmax
 
 istep = 1
 
-do i=0,nx-1
-  aux1 = alpha/kx * sin(kx*x(i))
-  aux2 = alpha * cos(kx*x(i))
+do i=0,nx
+  aux1 = alpha/kx * sin(kx*i*dx)
+  aux2 = alpha * cos(kx*i*dx)
   do j=0,ny
     f%ex(i,j) = aux1
     f%r0(i,j) = aux2
@@ -68,10 +68,11 @@ enddo
 xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
-call plasma( p, time ) 
+call plasma( p ) 
 
 call calcul_rho( p, f )
 
+!gnuplot -p rho.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%r0, 'rho', 1, error)
@@ -81,6 +82,7 @@ call sll_o_initialize( poisson, xmin, xmax, nx, &
 
 call sll_o_solve( poisson, f%ex, f%ey, f%r0)
 
+!gnuplot -p ex.gnu (to plot the initial ex field)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%ex, 'ex', 1, error)
