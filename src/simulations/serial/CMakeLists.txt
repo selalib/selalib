@@ -10,7 +10,7 @@ TARGET_LINK_LIBRARIES( sll_sim_serial
                        sll_poisson_solvers
                        sll_reduction
                        sll_splitting_methods
-                       sll_common_array_initializers
+                       sll_initial_profiles
                        sll_gyroaverage
                      )
 
