@@ -9,7 +9,7 @@ program test_control_variate
   use sll_m_particle_group_base, only : &
        sll_c_particle_group_base
   use sll_m_particle_group_2d2v, only : &
-       sll_f_new_particle_group_2d2v
+       sll_s_new_particle_group_2d2v
 
   class(sll_t_control_variate), pointer :: control_variate
   sll_real64, pointer :: control_variate_parameter(:)
@@ -45,7 +45,7 @@ program test_control_variate
        0.15915494309189535D0, 0.15915494309189535D0]/w_vec(:,2)
 
   ! We need to initialize the particle group
-  particle_group => sll_f_new_particle_group_2d2v(n_particles, &
+  call sll_s_new_particle_group_2d2v(particle_group, n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 3)
   
   call particle_group%set_common_weight( 1.0_f64/real(n_particles,f64))

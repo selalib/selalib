@@ -22,7 +22,8 @@ module sll_m_pic_poisson_2d
   implicit none
 
   public :: sll_t_pic_poisson_2d, &
-       sll_f_new_pic_poisson_2d
+       sll_f_new_pic_poisson_2d, &
+       sll_s_new_pic_poisson_2d
 
   private
 
@@ -200,8 +201,8 @@ contains
   subroutine initialize_pic_poisson_2d(this, no_gridpts, solver, kernel)
     class( sll_t_pic_poisson_2d), intent(out) :: this
     sll_int32, intent(in) :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), target, intent(in) :: solver
-    class( sll_c_kernel_smoother), target, intent(in)   :: kernel !< kernel smoother object
+    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
+    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr
@@ -254,7 +255,7 @@ contains
   end subroutine delete_pic_poisson_2d
 
 
-  !< Constructor 
+  !< Constructor (legacy version)
   function sll_f_new_pic_poisson_2d(no_gridpts, solver, kernel) result (poisson_solver)
     sll_int32, intent(in) :: no_gridpts(2)
     class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
@@ -269,5 +270,24 @@ contains
     call initialize_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)
 
   end function sll_f_new_pic_poisson_2d
+
+
+  !< Constructor for abstract type
+  subroutine sll_s_new_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)    
+    class( sll_c_pic_poisson), pointer, intent(out) :: poisson_solver
+    sll_int32, intent(in) :: no_gridpts(2)
+    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
+    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
+
+    !local variables
+    sll_int32 :: ierr
+ 
+    allocate( sll_t_pic_poisson_2d :: poisson_solver, stat=ierr)
+    select type( poisson_solver)
+    type is ( sll_t_pic_poisson_2d )
+       call initialize_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)
+    end select
+
+  end subroutine sll_s_new_pic_poisson_2d
 
 end module sll_m_pic_poisson_2d

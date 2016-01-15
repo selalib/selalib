@@ -8,11 +8,10 @@ program test_kernel_smoother_spline_1d
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_f_new_smoother_spline_1d
+    sll_s_new_smoother_spline_1d
 
   use sll_m_particle_group_1d2v, only: &
-    sll_f_new_particle_group_1d2v, &
-    sll_t_particle_group_1d2v
+    sll_s_new_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
@@ -24,8 +23,6 @@ program test_kernel_smoother_spline_1d
   class(sll_t_kernel_smoother_spline_1d),pointer :: kernel
   ! Abstract particle group
   class(sll_c_particle_group_base), pointer :: particle_group
-  ! Specific particle group
-  class(sll_t_particle_group_1d2v), pointer :: specific_particle_group 
 
   ! Parameters for the test
   sll_int32 :: n_cells
@@ -72,7 +69,7 @@ program test_kernel_smoother_spline_1d
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
-  particle_group => sll_f_new_particle_group_1d2v(n_particles, &
+  call sll_s_new_particle_group_1d2v(particle_group, n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
   
@@ -94,7 +91,8 @@ program test_kernel_smoother_spline_1d
        0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
 
   ! Initialize the kernel
-  kernel => sll_f_new_smoother_spline_1d&
+  allocate(kernel)
+  call kernel%initialize &
        (domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
   
   ! Accumulate rho
@@ -166,6 +164,11 @@ program test_kernel_smoother_spline_1d
      print*, 'FAILED'
      stop
   end if
+
+  call kernel%delete()
+  deallocate(kernel)
+  call particle_group%delete()
+  deallocate(particle_group)
 
 
 end program test_kernel_smoother_spline_1d

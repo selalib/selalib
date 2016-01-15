@@ -32,17 +32,13 @@ module sll_m_sim_pic_vp_2d2v_cart
 
   use sll_m_kernel_smoother_spline_2d, only: &
     sll_t_kernel_smoother_spline_2d, &
-    sll_f_new_smoother_spline_2d
-
-  use sll_m_operator_splitting, only: &
-    sll_t_operator_splitting
+    sll_s_new_smoother_spline_2d
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
-    sll_f_new_hamiltonian_splitting_pic_vp_2d2v, &
     sll_t_operator_splitting_pic_vp_2d2v
 
   use sll_m_particle_group_2d2v, only: &
-    sll_f_new_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v, &
     sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
@@ -56,7 +52,8 @@ module sll_m_sim_pic_vp_2d2v_cart
     sll_c_pic_poisson
 
   use  sll_m_pic_poisson_2d, only: &
-    sll_f_new_pic_poisson_2d
+    sll_s_new_pic_poisson_2d, &
+    sll_t_pic_poisson_2d
 
   use sll_m_poisson_2d_fft, only: &
     sll_f_new_poisson_2d_fft_solver, &
@@ -225,9 +222,9 @@ contains
     end if
 
     ! Initialize the particles   
-     sim%particle_group => sll_f_new_particle_group_2d2v&
-          (sim%n_particles, &
-          sim%n_total_particles ,1.0_f64, 1.0_f64, sim%no_weights)
+    call sll_s_new_particle_group_2d2v&
+         (sim%particle_group, sim%n_particles, &
+         sim%n_total_particles ,1.0_f64, 1.0_f64, sim%no_weights)
     
     
     ! Initialize control variate
@@ -264,8 +261,6 @@ contains
     end if
 
 
-    !print*, 'rd', rnd_seed_size
-
     ! Initialize the field solver
     sim%poisson_solver => sll_f_new_poisson_2d_fft_solver( &
          sim%mesh%eta1_min, sim%mesh%eta1_max, sim%mesh%num_cells1, &
@@ -274,23 +269,23 @@ contains
     ! Initialize the kernel smoother
     domain(:,1) = [sim%mesh%eta1_min, sim%mesh%eta2_min]
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
-    sim%kernel_smoother => sll_f_new_smoother_spline_2d(&
+    call sll_s_new_smoother_spline_2d(sim%kernel_smoother, &
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
          sim%degree_smoother, sll_p_collocation)
 
     ! Initialize the PIC field solver
-    sim%solver => sll_f_new_pic_poisson_2d([sim%mesh%num_cells1, sim%mesh%num_cells2], &
+    call sll_s_new_pic_poisson_2d(sim%solver, &
+         [sim%mesh%num_cells1, sim%mesh%num_cells2], &
          sim%poisson_solver, sim%kernel_smoother)
 
 
     ! Initialize the time-splitting propagator
-    !SLL_ALLOCATE(sim%efield(sim%kernel_smoother%n_dofs,2),ierr)
+    allocate( sim%propagator )
     if (sim%no_weights == 1) then
-       sim%propagator => sll_f_new_hamiltonian_splitting_pic_vp_2d2v(sim%solver, &
-            sim%particle_group)
+       call sim%propagator%initialize(sim%solver, sim%particle_group)
     elseif (sim%no_weights == 3) then
-       sim%propagator => sll_f_new_hamiltonian_splitting_pic_vp_2d2v(sim%solver, &
-            sim%particle_group, sim%control_variate, 3)
+       call sim%propagator%initialize( &
+            sim%solver, sim%particle_group, sim%control_variate, 3)
     end if
 
 
@@ -302,13 +297,17 @@ contains
 
        ! Diagnostics
        if (sim%rank == 0) then
-          !eenergy = sim%solver%compute_field_energy()
-          !eenergy = sum(sim%efield(:,1)**2)*&
-          !     sim%mesh%delta_eta1*sim%mesh%delta_eta2
           eenergy = sim%solver%compute_field_energy(1)
           write(th_diag_id,'(f12.5,2g20.12)' ) real(j,f64)*sim%delta_t,  eenergy
        end if
     end do
+
+!!$    if (sim%rank == 0) then
+!!$       select type( q => sim%solver )
+!!$       type is ( sll_t_pic_poisson_2d )
+!!$          print*,  q%rho_dofs
+!!$       end select
+!!$    end if
     
 
   end subroutine run_pic_2d2v

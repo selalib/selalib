@@ -4,14 +4,13 @@ program test_particle_group_2d2v
 #include "sll_working_precision.h"
 
   use sll_m_particle_group_2d2v, only: &
-    sll_f_new_particle_group_2d2v, &
     sll_t_particle_group_2d2v
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   
-  class(sll_t_particle_group_2d2v), pointer :: particle_group
+  type(sll_t_particle_group_2d2v) :: particle_group
 
   sll_int32  :: n_particles
   sll_int32  :: n_total_particles
@@ -30,7 +29,7 @@ program test_particle_group_2d2v
   mass = 1.0_f64
   n_weights = 1
 
-  particle_group =>  sll_f_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass, n_weights)
+  call particle_group%initialize(n_particles, n_total_particles, charge, mass, n_weights)
 
   do i_part = 1, n_particles
      call particle_group%set_x(i_part, [real(i_part,f64), 0.0_f64, 0.0_f64])
