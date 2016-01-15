@@ -71,6 +71,9 @@ module sll_m_maxwell_1d_fem
           L2norm_squared => L2norm_squared_1d_fem
      procedure :: &
           L2projection => L2projection_1d_fem
+     procedure :: &
+          delete => delete_1d_fem
+
   end type sll_t_maxwell_1d_fem
 
 contains
@@ -427,6 +430,19 @@ contains
      this%eig_weak_poisson(n_dofs) = 1.0_f64 / (coef1 *4.0_f64) 
    end function sll_f_new_maxwell_1d_fem
 
+   subroutine delete_1d_fem(this)
+     class(sll_t_maxwell_1d_fem) :: this
+
+     deallocate(this%mass_0)
+     deallocate(this%mass_1)
+     deallocate(this%eig_mass0)
+     deallocate(this%eig_mass1)
+     deallocate(this%eig_weak_ampere)
+     deallocate(this%eig_weak_poisson)
+     deallocate(this%wsave)
+     deallocate(this%work)
+
+   end subroutine delete_1d_fem
 
 
 end module sll_m_maxwell_1d_fem
