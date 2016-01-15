@@ -1,9 +1,9 @@
 #############################################################################
 ###      Parallel simulations
 #############################################################################
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
+IF( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
 
-   ADD_LIBRARY( sll_sim_parallel STATIC ../simulation_base_class.F90)
+  ADD_LIBRARY( sll_sim_parallel STATIC ${SIM_BASE_CLASS})
 
    # Add new dependencies concerning SIMNAME/sim_SIMNAME.F90 
    # and or SIMNAME/sll_m_sim_SIMNAME.F90
@@ -46,7 +46,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          )
 
     # Variables passed to simulations' CMakeFiles in subdirectories
-    SET( INSTALL_DIR "${INSTALL_DIR}/sim_parallel" )
+    SET( INSTALL_DIR "${INSTALL_DIR}/parallel" )
 
     # Semi-Lagrangian simulations
     
@@ -124,13 +124,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
  
 ENDIF()
 
-IF(MPI_ENABLED)
-   # here are some other examples of simulations
-   # they can serve as examples for selalib beginners
-   # you can add some new examples
-   # the interface is more free
-   # requirements of the simulations that are
-   # present in the developer guide are not
-   # mandatory here
-   ADD_SUBDIRECTORY(bsl_examples)
-ENDIF(MPI_ENABLED)
+
+# here are some other examples of simulations
+# they can serve as examples for selalib beginners
+# you can add some new examples
+# the interface is more free
+# requirements of the simulations that are
+# present in the developer guide are not
+# mandatory here
+ADD_SUBDIRECTORY(bsl_examples)
