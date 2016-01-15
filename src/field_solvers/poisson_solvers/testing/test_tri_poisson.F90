@@ -111,6 +111,8 @@ deallocate(e_x,e_y,phi,rho)
 call sll_o_delete(square)
 call sll_o_delete(poisson)
 
+print*, 'PASSED'
+
 !!Second test, the unstructured mesh is created from an hexagonal mesh.
 !
 !num_cells = 50
