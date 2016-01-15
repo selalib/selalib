@@ -8,7 +8,7 @@ get_property( library_targets GLOBAL PROPERTY LIBRARY_TARGETS )
 
 # Distinguish between "internal" and "external" libraries
 foreach( lib ${library_targets} )
-  if( ${lib} MATCHES "sll_[a-zA-Z0-9]+" )
+  if( ${lib} MATCHES "sll_[a-zA-Z0-9]" )
     list( APPEND SLL_LIBS ${lib} )
   else()
     list( APPEND SLL_EXT ${lib} )
