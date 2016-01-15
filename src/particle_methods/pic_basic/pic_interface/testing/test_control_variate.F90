@@ -74,6 +74,10 @@ program test_control_variate
      stop
   end if
 
+  call particle_group%delete()
+  deallocate(particle_group)
+  call control_variate%delete()
+  deallocate(control_variate)
   deallocate(control_variate_parameter)
 
 contains

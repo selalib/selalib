@@ -303,7 +303,7 @@ contains
     qm = this%particle_group%species%q_over_m()
 
     ! Here we have to accumulate j and integrate over the time interval.
-    ! At each k=1,...,n_grid, we have for s \in [0,dt]:
+    ! At each k=1,...,n_grid, we hav for s \in [0,dt]:
     ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
     ! where h is the grid spacing and N the normalized B-spline
     ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
@@ -596,9 +596,10 @@ contains
 
     deallocate(this%j_dofs)
     deallocate(this%j_dofs_local)
-    deallocate(this%maxwell_solver)
-    deallocate(this%kernel_smoother_0)
-    deallocate(this%kernel_smoother_1)
+    this%maxwell_solver => null()
+    this%kernel_smoother_0 => null()
+    this%kernel_smoother_1 => null()
+    this%particle_group => null()
     deallocate(this%particle_group)
     deallocate(this%efield_dofs)
     deallocate(this%bfield_dofs)

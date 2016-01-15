@@ -63,7 +63,7 @@ program test_operator_splitting_pic_vp_2d2v
   class(sll_c_pic_poisson), pointer  :: solver
   
   ! Specific operator splitting
-  class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
+  type(sll_t_operator_splitting_pic_vp_2d2v) :: propagator
   
   ! Parameters
   sll_int32  :: n_particles
@@ -134,9 +134,7 @@ program test_operator_splitting_pic_vp_2d2v
 
   call sll_s_new_pic_poisson_2d(solver, num_cells, poisson_solver, kernel_smoother)
 
-  allocate(propagator)
   call propagator%initialize(solver, particle_group)
-
 
   call propagator%operatorT(delta_t)
 
@@ -200,6 +198,15 @@ program test_operator_splitting_pic_vp_2d2v
      print*, 'FAILED'
      stop
   end if
+
+  call particle_group%delete()
+  deallocate(particle_group)
+  call kernel_smoother%delete()
+  deallocate(kernel_smoother)
+  call poisson_solver%delete()
+  deallocate(poisson_solver)
+  call solver%delete()
+  deallocate(solver)
   
   call sll_s_halt_collective()
 

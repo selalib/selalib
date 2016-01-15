@@ -197,6 +197,8 @@ program test_kernel_smoother_spline_2d
 
   call kernel%delete()
   deallocate(kernel)
+  call particle_group%delete()
+  deallocate(particle_group)
 
 
 end program test_kernel_smoother_spline_2d

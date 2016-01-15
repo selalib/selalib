@@ -77,7 +77,7 @@ module sll_m_control_variate
     subroutine delete_control_variate( this ) 
       class(sll_t_control_variate), intent(inout) :: this !< Control variate object
      
-      deallocate(this%control_variate_parameters)
+      this%control_variate_parameters => null()
 
     end subroutine delete_control_variate
 
