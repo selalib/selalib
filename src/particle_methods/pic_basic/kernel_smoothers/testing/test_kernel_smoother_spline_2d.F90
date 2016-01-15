@@ -8,10 +8,10 @@ program test_kernel_smoother_spline_2d
 
   use sll_m_kernel_smoother_spline_2d, only: &
     sll_t_kernel_smoother_spline_2d, &
-    sll_f_new_smoother_spline_2d
+    sll_s_new_smoother_spline_2d
 
   use sll_m_particle_group_2d2v, only: &
-    sll_f_new_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v, &
     sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
@@ -72,7 +72,7 @@ program test_kernel_smoother_spline_2d
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
-  particle_group => sll_f_new_particle_group_2d2v(n_particles, &
+  call sll_s_new_particle_group_2d2v(particle_group, n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
   call particle_group%set_common_weight(1.0_f64/real(n_particles,f64))
@@ -88,7 +88,8 @@ program test_kernel_smoother_spline_2d
 
 
   ! Initialize the kernel
-  kernel => sll_f_new_smoother_spline_2d&
+  allocate(kernel)
+  call kernel%initialize &
        (domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
 
   
@@ -193,6 +194,9 @@ program test_kernel_smoother_spline_2d
      print*, 'FAILED'
      stop
   end if
+
+  call kernel%delete()
+  deallocate(kernel)
 
 
 end program test_kernel_smoother_spline_2d

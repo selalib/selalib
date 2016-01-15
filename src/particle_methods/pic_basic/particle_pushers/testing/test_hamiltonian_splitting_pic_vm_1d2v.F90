@@ -18,7 +18,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
     sll_p_pi
 
   use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
-    sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
   use sll_m_kernel_smoother_base, only: &
@@ -27,7 +26,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_f_new_smoother_spline_1d
+    sll_s_new_smoother_spline_1d
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -37,7 +36,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
     sll_f_new_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
-    sll_f_new_particle_group_1d2v, &
     sll_t_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
@@ -70,7 +68,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   class(sll_c_maxwell_1d_base), pointer :: maxwell_solver
   
   ! Specific Hamiltonian splitting
-  class(sll_t_hamiltonian_splitting_pic_vm_1d2v), pointer :: propagator
+  type(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: propagator
   
   ! Parameters
   sll_int32  :: n_particles
@@ -105,7 +103,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   domain = [eta_min, eta_max, eta_max - eta_min]
 
   ! Initialize
-  pg => sll_f_new_particle_group_1d2v(n_particles, &
+  allocate(pg)
+  call pg%initialize(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   particle_group => pg
 
@@ -144,11 +143,11 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   call particle_group%set_common_weight (1.0_f64)
 
   ! Initialize kernel smoother    
-  kernel_smoother_1 => sll_f_new_smoother_spline_1d(&
+  call sll_s_new_smoother_spline_1d(kernel_smoother_1, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, sll_p_galerkin) 
-  kernel_smoother_0 => &
-       sll_f_new_smoother_spline_1d(domain(1:2), [num_cells], &
+  call sll_s_new_smoother_spline_1d(kernel_smoother_0, &
+       domain(1:2), [num_cells], &
        n_particles, degree_smoother, sll_p_galerkin) 
   
   ! Initialize Maxwell solver
@@ -180,10 +179,10 @@ program test_hamiltonian_splitting_pic_1d2v_vm
        rho)
   bfield = 1.0_f64
 
-  propagator => sll_f_new_hamiltonian_splitting_pic_vm_1d2v(maxwell_solver, &
-            kernel_smoother_0, kernel_smoother_1, particle_group, &
-            efield, bfield, &
-            eta_min, eta_max-eta_min)
+  call propagator%initialize( maxwell_solver, &
+       kernel_smoother_0, kernel_smoother_1, particle_group, &
+       efield, bfield, &
+       eta_min, eta_max-eta_min)
 
   call propagator%operatorHp1(delta_t)
 

@@ -17,6 +17,7 @@ module sll_m_particle_group_1d2v
 
   public :: &
     sll_f_new_particle_group_1d2v, &
+    sll_s_new_particle_group_1d2v, &
     sll_t_particle_group_1d2v
 
   private
@@ -101,6 +102,29 @@ contains
     call self%initialize( n_particles, n_total_particles, charge, mass, n_weights )
     
   end function sll_f_new_particle_group_1d2v
+
+
+  !----------------------------------------------------------------------!
+  !> Constructor (legacy version)
+  subroutine sll_s_new_particle_group_1d2v(particle_group, n_particles, n_total_particles, charge, mass, n_weights)
+    class( sll_c_particle_group_base ),  pointer, intent( out ) :: particle_group
+    sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
+    sll_int32                       , intent( in )    :: n_total_particles !< number of particles in total simulation
+    sll_real64                      , intent( in )    :: charge !< charge of the particle species
+    sll_real64                      , intent( in )    :: mass   !< mass of the particle species
+    sll_int32                       , intent( in )    :: n_weights !< number of weights
+    
+    sll_int32                                         :: ierr
+
+    SLL_ALLOCATE( sll_t_particle_group_1d2v :: particle_group, ierr)
+
+    select type (particle_group)
+    type is (sll_t_particle_group_1d2v)
+       call particle_group%initialize( n_particles, n_total_particles, charge, mass, n_weights )
+    end select
+
+  end subroutine sll_s_new_particle_group_1d2v
+
   
   !----------------------------------------------------------------------!
   pure function get_x_1d2v( self, i ) result( r )

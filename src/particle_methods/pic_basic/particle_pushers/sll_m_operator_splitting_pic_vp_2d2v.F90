@@ -32,8 +32,9 @@ module sll_m_operator_splitting_pic_vp_2d2v
   implicit none
 
   public :: &
-    sll_f_new_hamiltonian_splitting_pic_vp_2d2v, &
-    sll_t_operator_splitting_pic_vp_2d2v
+    sll_s_new_operator_splitting_pic_vp_2d2v, &
+    sll_t_operator_splitting_pic_vp_2d2v, &
+    sll_f_new_hamiltonian_splitting_pic_vp_2d2v
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -160,8 +161,8 @@ contains
        control_variate, &
        i_weight)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< time splitting object 
-    class(sll_c_pic_poisson),target, intent(in) :: solver !< Poisson solver
-    class(sll_c_particle_group_base),target, intent(in) :: particle_group !< Particle group
+    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
+    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
     class(sll_t_control_variate), optional, target, intent(in) :: control_variate
     sll_int32, optional, intent(in) :: i_weight
 
@@ -186,7 +187,34 @@ contains
   end subroutine delete_operator_splitting_pic_vp_2d2v
 
   !---------------------------------------------------------------------------!
-  !> Constructor.
+  !> Constructor for abstract type
+  subroutine sll_s_new_operator_splitting_pic_vp_2d2v &
+       (splitting, &
+       solver, &
+       particle_group, &
+       control_variate, &
+       i_weight) 
+    class(sll_t_operator_splitting), pointer, intent(out) :: splitting !< time splitting object 
+    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
+    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
+    class(sll_t_control_variate), optional, pointer, intent(in) :: control_variate
+    sll_int32, optional, intent(in) :: i_weight
+ 
+    !local variables
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE( sll_t_operator_splitting_pic_vp_2d2v :: splitting , ierr)
+
+    select type( splitting )
+    type is ( sll_t_operator_splitting_pic_vp_2d2v )
+       call splitting%initialize(solver, particle_group, control_variate, i_weight)
+    end select
+
+  end subroutine sll_s_new_operator_splitting_pic_vp_2d2v
+
+
+  !---------------------------------------------------------------------------!
+  !> Constructor (legacy version)
   function sll_f_new_hamiltonian_splitting_pic_vp_2d2v &
        (solver, &
        particle_group, &

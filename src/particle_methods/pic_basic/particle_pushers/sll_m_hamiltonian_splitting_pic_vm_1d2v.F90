@@ -34,6 +34,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
 
   public :: &
     sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
+    sll_s_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
   private
@@ -550,10 +551,10 @@ contains
        x_min, &
        Lx) 
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(out) :: this !< time splitting object 
-    class(sll_c_maxwell_1d_base), target, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), target, intent(in) :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), target, intent(in) :: kernel_smoother_1  !< Kernel smoother
-    class(sll_c_particle_group_base), target, intent(in) :: particle_group !< Particle group
+    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_group_base), pointer, intent(in) :: particle_group !< Particle group
     sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
     sll_real64, intent(in) :: x_min !< Lower bound of x domain
@@ -604,8 +605,51 @@ contains
 
   end subroutine delete_pic_vm_1d2v
 
+
   !---------------------------------------------------------------------------!
-  !> Constructor.
+  !> Constructor for abstract type.
+  subroutine sll_s_new_hamiltonian_splitting_pic_vm_1d2v(&
+       splitting, &
+       maxwell_solver, &
+       kernel_smoother_0, &
+       kernel_smoother_1, &
+       particle_group, &
+       efield_dofs, &
+       bfield_dofs, &
+       x_min, &
+       Lx) 
+    class(sll_c_hamiltonian_splitting_base), pointer, intent(out) :: splitting !< time splitting object 
+    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
+    sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
+    sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
+    sll_real64, intent(in) :: x_min !< Lower bound of x domain
+    sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
+
+    !local variables
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(sll_t_hamiltonian_splitting_pic_vm_1d2v :: splitting, ierr)
+
+    select type (splitting)
+    type is ( sll_t_hamiltonian_splitting_pic_vm_1d2v )
+       call splitting%initialize(&
+            maxwell_solver, &
+            kernel_smoother_0, &
+            kernel_smoother_1, &
+            particle_group, &
+            efield_dofs, &
+            bfield_dofs, &
+            x_min, &
+            Lx)
+    end select
+
+  end subroutine sll_s_new_hamiltonian_splitting_pic_vm_1d2v
+
+  !---------------------------------------------------------------------------!
+  !> Constructor (legacy version)
   function sll_f_new_hamiltonian_splitting_pic_vm_1d2v(&
        maxwell_solver, &
        kernel_smoother_0, &
