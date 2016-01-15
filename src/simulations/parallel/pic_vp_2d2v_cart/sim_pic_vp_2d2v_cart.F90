@@ -28,6 +28,7 @@ program sim_pic_vp_2d2v_cart
   call sim%init_from_file(trim(filename))
   
   call sim%run()
+  call sim%delete()
 
   call sll_s_halt_collective()
 

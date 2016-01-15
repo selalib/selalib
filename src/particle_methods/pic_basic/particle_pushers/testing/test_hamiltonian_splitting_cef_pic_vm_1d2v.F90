@@ -239,6 +239,20 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
      print*, 'FAILED'
      stop
   end if
+
+  call particle_group%delete()
+  deallocate(particle_group)
+  deallocate(efield)
+  deallocate(efield_ref)
+  deallocate(bfield)
+  deallocate(bfield_ref)
+  call kernel_smoother_0%delete()
+  deallocate(kernel_smoother_0)
+  call kernel_smoother_1%delete()
+  deallocate(kernel_smoother_1)
+  call maxwell_solver%delete()
+  deallocate(maxwell_solver)
+  call propagator%delete()
   
   call sll_s_halt_collective()
 

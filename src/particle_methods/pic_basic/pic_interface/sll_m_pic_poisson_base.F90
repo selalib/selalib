@@ -42,6 +42,8 @@ module sll_m_pic_poisson_base
      procedure(linear_combination), deferred    :: add_analytic_charge !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
      procedure(update_dofs_function), deferred  :: set_analytic_charge !< Set the value of the analytic charge contribution from a given function.
 
+     procedure(empty), deferred                  :: delete
+
 
      generic :: add_charge => add_charge_single, add_charge_vector
      generic :: evaluate_field => evaluate_field_single, evaluate_field_vector

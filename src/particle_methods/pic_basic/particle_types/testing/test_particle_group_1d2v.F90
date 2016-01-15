@@ -63,4 +63,6 @@ program test_particle_group_1d2v
      stop
   end if
 
+  call particle_group%delete()
+
 end program test_particle_group_1d2v
