@@ -40,8 +40,19 @@ module sll_m_maxwell_1d_base
           L2norm_squared !< Square of the L2norm
      procedure(update_dofs_function), deferred :: &
             L2projection !< L2 projection
+     procedure(empty), deferred :: &
+          delete !< destructor
 
   end type sll_c_maxwell_1d_base
+
+!---------------------------------------------------------------------------!
+  abstract interface
+     subroutine empty(this) 
+       import sll_c_maxwell_1d_base
+       class( sll_c_maxwell_1d_base)                    :: this !< Maxwell solver object.
+       
+     end subroutine empty
+  end interface
 
 !---------------------------------------------------------------------------!
   abstract interface
