@@ -348,6 +348,24 @@ program test_hamiltonian_splitting_pic_1d2v_vm
      print*, 'FAILED'
      stop
   end if
+
+  particle_group => null()
+  deallocate(particle_group)
+  call propagator%delete()
+  call pg%delete()
+  deallocate(pg)
+  deallocate(efield)
+  deallocate(efield_ref)
+  deallocate(bfield)
+  deallocate(bfield_ref)
+  deallocate(rho)
+  deallocate(rho_local)
+  call kernel_smoother_0%delete()
+  deallocate(kernel_smoother_0)
+  call kernel_smoother_1%delete()
+  deallocate(kernel_smoother_1)
+  call maxwell_solver%delete()
+  deallocate(maxwell_solver)
   
   call sll_s_halt_collective()
 

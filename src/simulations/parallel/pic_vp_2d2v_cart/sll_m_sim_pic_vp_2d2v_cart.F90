@@ -68,7 +68,6 @@ module sll_m_sim_pic_vp_2d2v_cart
   implicit none
 
   public :: &
-    sll_delete, &
     sll_t_sim_pic_vp_2d2v_cart
 
   private
@@ -98,7 +97,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      class(sll_c_pic_poisson), pointer :: solver
 
      ! Abstract operator splitting
-     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
+     type(sll_t_operator_splitting_pic_vp_2d2v) :: propagator
      !class(sll_t_operator_splitting), pointer :: propagator
 
      ! Control variate
@@ -125,12 +124,10 @@ module sll_m_sim_pic_vp_2d2v_cart
    contains
      procedure :: init_from_file => init_pic_2d2v
      procedure :: run => run_pic_2d2v
+     procedure :: delete => delete_pic_2d2v
 
   end type sll_t_sim_pic_vp_2d2v_cart
 
-  interface sll_delete
-     module procedure delete_pic_2d2v
-  end interface sll_delete
   
 contains
 !------------------------------------------------------------------------------!
@@ -280,7 +277,6 @@ contains
 
 
     ! Initialize the time-splitting propagator
-    allocate( sim%propagator )
     if (sim%no_weights == 1) then
        call sim%propagator%initialize(sim%solver, sim%particle_group)
     elseif (sim%no_weights == 3) then
@@ -316,6 +312,20 @@ contains
 
   subroutine delete_pic_2d2v (sim)
     class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
+    
+    call sim%solver%delete()
+    deallocate(sim%solver)
+    call sim%particle_group%delete()
+    deallocate (sim%particle_group)
+    call sim%mesh%delete()
+    deallocate(sim%mesh)
+    call sim%poisson_solver%delete()
+    deallocate(sim%poisson_solver)
+    call sim%kernel_smoother%delete()
+    deallocate(sim%kernel_smoother)
+    call sim%control_variate%delete()
+    deallocate(sim%control_variate)
+
   end subroutine delete_pic_2d2v
 
 !------------------------------------------------------------------------------!

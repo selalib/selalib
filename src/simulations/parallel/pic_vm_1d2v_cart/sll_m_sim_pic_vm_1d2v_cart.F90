@@ -77,7 +77,6 @@ module sll_m_sim_pic_vm_1d2v_cart
   implicit none
 
   public :: &
-    sll_delete, &
     sll_t_sim_pic_vm_1d2v_cart
 
   private
@@ -142,12 +141,10 @@ module sll_m_sim_pic_vm_1d2v_cart
    contains
      procedure :: init_from_file => init_pic_vm_1d2v
      procedure :: run => run_pic_vm_1d2v
+     procedure :: delete => delete_pic_vm_1d2v
 
   end type sll_t_sim_pic_vm_1d2v_cart
 
-  interface sll_delete
-     module procedure delete_pic_vm_1d2v
-  end interface sll_delete
   
 contains
 !------------------------------------------------------------------------------!
@@ -240,11 +237,6 @@ contains
     sll_real64, allocatable :: rho(:), rho_local(:)
     sll_int32 :: th_diag_id
 
-    ! For diagnostics
-    sll_real64 :: kinetic_energy(1)
-    sll_real64 :: total_energy(1)
-    sll_real64 :: potential_energy(3)
-    sll_real64 :: vi(3)
     sll_real64 :: wi(1)
     sll_real64 :: xi(3)
    
@@ -428,6 +420,22 @@ contains
   subroutine delete_pic_vm_1d2v (sim)
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
     SLL_ASSERT(storage_size(sim)>0)
+
+    call sim%propagator%delete()
+    deallocate(sim%propagator)
+    call sim%particle_group%delete()
+    deallocate (sim%particle_group)
+    call sim%mesh%delete()
+    deallocate(sim%mesh)
+    call sim%maxwell_solver%delete()
+    deallocate(sim%maxwell_solver)
+    call sim%kernel_smoother_0%delete()
+    deallocate(sim%kernel_smoother_0)
+    call sim%kernel_smoother_1%delete()
+    deallocate(sim%kernel_smoother_1)
+
+    deallocate(sim%fields_grid)
+
   end subroutine delete_pic_vm_1d2v
 
 !------------------------------------------------------------------------------!

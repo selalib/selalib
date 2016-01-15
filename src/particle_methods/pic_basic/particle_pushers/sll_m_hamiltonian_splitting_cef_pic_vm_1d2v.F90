@@ -593,9 +593,10 @@ contains
 
     deallocate(this%j_dofs)
     deallocate(this%j_dofs_local)
-    deallocate(this%maxwell_solver)
-    deallocate(this%kernel_smoother_0)
-    deallocate(this%kernel_smoother_1)
+    this%maxwell_solver => null()
+    this%kernel_smoother_0 => null()
+    this%kernel_smoother_1 => null()
+    this%particle_group => null()
     deallocate(this%particle_group)
     deallocate(this%efield_dofs)
     deallocate(this%bfield_dofs)

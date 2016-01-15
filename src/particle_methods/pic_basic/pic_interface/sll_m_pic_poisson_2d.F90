@@ -249,8 +249,8 @@ contains
     deallocate(this%efield1)
     deallocate(this%efield2)
     deallocate(this%phi2d)
-    deallocate(this%solver)
-    deallocate(this%kernel)
+    this%solver => null()
+    this%kernel => null()
 
   end subroutine delete_pic_poisson_2d
 

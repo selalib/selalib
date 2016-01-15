@@ -180,9 +180,9 @@ contains
   subroutine delete_operator_splitting_pic_vp_2d2v( this )
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
 
-    deallocate(this%solver)
-    deallocate(this%particle_group)
-    deallocate(this%control_variate)
+    this%solver => null()
+    this%particle_group => null()
+    this%control_variate => null()
 
   end subroutine delete_operator_splitting_pic_vp_2d2v
 
