@@ -77,7 +77,6 @@ program test_operator_splitting_pic_vp_2d2v
   sll_int32  :: i_part
   sll_real64 :: xi(3)
   logical    :: passed
-  sll_int32  :: ierr   ! error code for SLL_ALLOCATE
 
   ! References
   sll_real64, allocatable :: particle_info_ref(:,:)
