@@ -2,7 +2,7 @@
 ###      Serial simulations
 ##############################################################################
 
-ADD_LIBRARY( sll_sim_serial STATIC ../simulation_base_class.F90 )
+ADD_LIBRARY( sll_sim_serial STATIC ${SIM_BASE_CLASS})
 
 TARGET_LINK_LIBRARIES( sll_sim_serial
                        sll_interpolators
@@ -10,11 +10,11 @@ TARGET_LINK_LIBRARIES( sll_sim_serial
                        sll_poisson_solvers
                        sll_reduction
                        sll_splitting_methods
-                       sll_common_array_initializers
+                       sll_initial_profiles
                        sll_gyroaverage
                      )
 
-SET( INSTALL_DIR "${INSTALL_DIR}/sim_serial" )
+SET( INSTALL_DIR "${INSTALL_DIR}/serial" )
 
 
 IF(HDF5_ENABLED)
