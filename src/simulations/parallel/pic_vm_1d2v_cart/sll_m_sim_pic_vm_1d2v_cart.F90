@@ -36,6 +36,10 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
+  use sll_m_io_utilities, only : &
+    sll_s_read_data_real_array, &
+    sll_s_concatenate_filename_and_path
+
   use sll_m_kernel_smoother_base, only: &
     sll_p_galerkin, &
     sll_c_kernel_smoother
@@ -244,9 +248,6 @@ contains
     sll_real64 :: wi(1)
     sll_real64 :: xi(3)
    
-    ! For testing
-    sll_int32  :: reffile_id 
-    sll_real64 :: error
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
@@ -375,31 +376,23 @@ contains
     call sll_o_collective_allreduce( sll_v_world_collective, &
          rho_local, &
          sim%n_gcells, MPI_SUM, rho)
-    !write(32,'(D16.25)') rho
-    !write(33,*) sim%efield_dofs(:,1)
-    !write(34,*) sim%efield_dofs(:,2)
-    !write(35,*) sim%bfield_dofs
-    !close(32)
-    !close(33)
-    !close(34)
-    !close(35)
 
     if (sim%rank == 0) then
-       reffile_id = 21
-       rho_local = 0.0_f64
-       open(unit=reffile_id, &
-            file='reffile_pic_vm_1d2v_cart.dat', &
-            IOStat=ierr)
-       read(reffile_id,*,IOSTAT=ierr) rho_local
-       !call sll_binary_read_array_1d(reffile_id, rho_local, ierr)
-       rho_local = rho_local -  rho
-       error = maxval(rho_local)
-       print*, error
-       if (abs(error)> 1E-14) then
-          print*, 'FAILED'
-       else
-          print*, 'PASSED'
-       end if
+
+       call ctest( rho, rho_local )
+
+!!$       call sll_s_concatenate_filename_and_path( "reffile_pic_vm_1d2v_cart.dat", __FILE__,&
+!!$            reffile)
+!!$       call sll_s_read_data_real_array( reffile, rho_local)
+!!$
+!!$       rho_local = rho_local -  rho
+!!$       error = maxval(rho_local)
+!!$       print*, 'Maximum error in rho is', error, '.'
+!!$       if (abs(error)> 1E-14) then
+!!$          print*, 'FAILED'
+!!$       else
+!!$          print*, 'PASSED'
+!!$       end if
     end if
     
   contains
@@ -410,6 +403,32 @@ contains
       beta_cos_k = sim%beta * cos(2*sll_p_pi*x/sim%domain(3)) 
     end function beta_cos_k
   end subroutine run_pic_vm_1d2v
+
+!------------------------------------------------------------------------------!
+  ! local subroutine to handle ctest
+  subroutine ctest(rho_simulated, rho_ref)
+    sll_real64, intent(in   ) :: rho_simulated(:)
+    sll_real64, intent(inout) :: rho_ref(:)
+
+    ! For testing
+    character(len=256) :: reffile
+    sll_real64 :: error
+
+    call sll_s_concatenate_filename_and_path( "reffile_pic_vm_1d2v_cart.dat", __FILE__,&
+         reffile)
+    call sll_s_read_data_real_array( reffile, rho_ref)
+    
+    rho_ref = rho_ref -  rho_simulated
+    error = maxval(rho_ref)
+    print*, 'Maximum error in rho is', error, '.'
+    if (abs(error)> 1E-14) then
+       print*, 'FAILED'
+    else
+       print*, 'PASSED'
+    end if
+
+  end subroutine ctest
+
 
 !------------------------------------------------------------------------------!
 
