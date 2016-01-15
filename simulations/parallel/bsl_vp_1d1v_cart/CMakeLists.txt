@@ -6,39 +6,32 @@ set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
 file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
-TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel )
+add_executable( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+target_link_libraries( ${EXECUTABLE} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} )
 
-INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
-INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+install( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
+install( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 
+file( GLOB INPUT_FILES "*.nml"         )
+file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-
-FILE( GLOB INPUT_FILES "*.nml"         )
-FILE( GLOB   POST_PROC "*.dat" "*.gnu" )
-
-
-
-
-IF(BUILD_TESTING)
-  FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-  SET(  ARGS ${CMAKE_CURRENT_BINARY_DIR}/vpsim2d_cartesian_input )
-  ADD_MPI_TEST( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  file( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+  set(  ARGS ${CMAKE_CURRENT_BINARY_DIR}/vpsim2d_cartesian_input )
+  add_mpi_test( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
+  set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+endif(BUILD_TESTING)
 
 #==============================================================================
 # Postprocessing code for KEEN
 #==============================================================================
-IF(Fortran_COMPILER MATCHES IBM)
-   SET_SOURCE_FILES_PROPERTIES( VPpostprocessing_drive_KEEN.f 
+if(Fortran_COMPILER MATCHES IBM)
+   set_source_files_properties( VPpostprocessing_drive_KEEN.f 
                                 PROPERTIES COMPILE_FLAGS -qfixed )
-ENDIF(Fortran_COMPILER MATCHES IBM)
+endif(Fortran_COMPILER MATCHES IBM)
 
-ADD_EXECUTABLE( VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f )
-TARGET_LINK_LIBRARIES( VPpostprocessing_drive_KEEN dfftpack )
+add_executable( VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f )
+target_link_libraries( VPpostprocessing_drive_KEEN dfftpack )
 
-INSTALL( TARGETS VPpostprocessing_drive_KEEN DESTINATION ${INSTALL_DIR} )
-INSTALL( FILES vp_plots.py DESTINATION ${INSTALL_DIR} )
-
-
+install( TARGETS VPpostprocessing_drive_KEEN DESTINATION ${INSTALL_DIR} )
+install( FILES vp_plots.py DESTINATION ${INSTALL_DIR} )
