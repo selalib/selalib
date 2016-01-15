@@ -29,6 +29,7 @@ module sll_m_kernel_smoother_spline_1d
 
   public :: &
     sll_t_kernel_smoother_spline_1d, &
+    sll_s_new_smoother_spline_1d, &
     sll_f_new_smoother_spline_1d
 
   private
@@ -306,10 +307,7 @@ contains
 
 
   !-------------------------------------------------------------------------------------------
-  !< Constructor 
-  
-
-
+  !< Constructor (legacy version)
   function sll_f_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
     class( sll_t_kernel_smoother_spline_1d), pointer   :: this !< kernel smoother object
     sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
@@ -329,6 +327,31 @@ contains
 
   end function sll_f_new_smoother_spline_1d
 
+
+
+  !-------------------------------------------------------------------------------------------
+  !< Constructor for abstract type
+  subroutine sll_s_new_smoother_spline_1d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
+    class( sll_c_kernel_smoother), pointer, intent(out)   :: smoother !< kernel smoother object
+    sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
+    sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
+    sll_int32, intent(in) :: no_particles !< number of particles
+    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
+    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
+
+    !local variables
+    sll_int32 :: ierr
+
+
+    SLL_ALLOCATE( sll_t_kernel_smoother_spline_1d :: smoother , ierr)
+    SLL_ASSERT( ierr == 0)
+    
+    select type( smoother )
+    type is ( sll_t_kernel_smoother_spline_1d )
+       call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type )
+    end select
+
+  end subroutine sll_s_new_smoother_spline_1d
 
   subroutine initialize_spline_1d( this, domain, n_grid, no_particles, spline_degree, smoothing_type )
     class( sll_t_kernel_smoother_spline_1d), intent(out)  :: this !< kernel smoother object
@@ -370,11 +393,11 @@ contains
     this%n_quad_points = (this%spline_degree+2)/2
 
     ALLOCATE( this%spline_val(this%n_span), stat = ierr)
-    SLL_ASSERT( stat == 0 )
+    SLL_ASSERT( ierr == 0 )
     ALLOCATE( this%spline_val_more(this%n_span), stat = ierr )
-    SLL_ASSERT( stat == 0 )
+    SLL_ASSERT( ierr == 0 )
     ALLOCATE( this%quad_xw(2,this%n_quad_points), stat = ierr )
-    SLL_ASSERT( stat == 0 )
+    SLL_ASSERT( ierr == 0 )
 
     ! normalized Gauss Legendre points and weights
     this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points)

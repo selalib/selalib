@@ -14,14 +14,13 @@ program test_operator_splitting_pic_vp_2d2v
 
   use sll_m_kernel_smoother_spline_2d, only: &
     sll_t_kernel_smoother_spline_2d, &
-    sll_f_new_smoother_spline_2d
+    sll_s_new_smoother_spline_2d
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
-    sll_f_new_hamiltonian_splitting_pic_vp_2d2v, &
     sll_t_operator_splitting_pic_vp_2d2v
 
   use sll_m_particle_group_2d2v, only: &
-    sll_f_new_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v, &
     sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
@@ -37,7 +36,7 @@ program test_operator_splitting_pic_vp_2d2v
        sll_c_pic_poisson
 
   use sll_m_pic_poisson_2d, only : &
-       sll_f_new_pic_poisson_2d
+       sll_s_new_pic_poisson_2d
 
   use sll_m_collective, only : &
        sll_s_boot_collective, sll_s_halt_collective
@@ -61,7 +60,7 @@ program test_operator_splitting_pic_vp_2d2v
   class(sll_c_poisson_2d_base), pointer :: poisson_solver 
 
   ! PIC Poisson solver
-  class(sll_c_pic_poisson), pointer :: solver
+  class(sll_c_pic_poisson), pointer  :: solver
   
   ! Specific operator splitting
   class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
@@ -80,7 +79,7 @@ program test_operator_splitting_pic_vp_2d2v
   logical    :: passed
   sll_int32  :: ierr   ! error code for SLL_ALLOCATE
 
-  ! Reference
+  ! References
   sll_real64, allocatable :: particle_info_ref(:,:)
    
   call sll_s_boot_collective()
@@ -96,7 +95,7 @@ program test_operator_splitting_pic_vp_2d2v
   rnd_seed = 10
   
   ! Initialize
-  particle_group => sll_f_new_particle_group_2d2v(n_particles, &
+  call sll_s_new_particle_group_2d2v(particle_group, n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
 
   ! Initial particle information   
@@ -125,7 +124,7 @@ program test_operator_splitting_pic_vp_2d2v
 
   domain(:,1) = eta_min
   domain(:,2) = eta_max
-  kernel_smoother => sll_f_new_smoother_spline_2d(&
+  call sll_s_new_smoother_spline_2d(kernel_smoother, &
          domain, num_cells, n_particles, &
          degree_smoother, sll_p_collocation)
   
@@ -133,11 +132,10 @@ program test_operator_splitting_pic_vp_2d2v
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
 
-  solver => sll_f_new_pic_poisson_2d(num_cells, poisson_solver, kernel_smoother)
+  call sll_s_new_pic_poisson_2d(solver, num_cells, poisson_solver, kernel_smoother)
 
-  !SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
-  propagator => sll_f_new_hamiltonian_splitting_pic_vp_2d2v(solver, &
-       particle_group)
+  allocate(propagator)
+  call propagator%initialize(solver, particle_group)
 
 
   call propagator%operatorT(delta_t)

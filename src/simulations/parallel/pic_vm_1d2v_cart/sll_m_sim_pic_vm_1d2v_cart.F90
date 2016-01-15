@@ -29,11 +29,11 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_c_hamiltonian_splitting_base
 
   use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v, only: &
-    sll_f_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
+    sll_s_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
 
   use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
-    sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
+    sll_s_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
   use sll_m_io_utilities, only : &
@@ -46,7 +46,7 @@ module sll_m_sim_pic_vm_1d2v_cart
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_f_new_smoother_spline_1d
+    sll_s_new_smoother_spline_1d
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -56,7 +56,7 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_f_new_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
-    sll_f_new_particle_group_1d2v, &
+    sll_s_new_particle_group_1d2v, &
     sll_t_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
@@ -255,7 +255,7 @@ contains
     end if
 
     ! Initialize the particles   (mass and charge set to 1.0)
-     sim%particle_group => sll_f_new_particle_group_1d2v(sim%n_particles, &
+     call sll_s_new_particle_group_1d2v(sim%particle_group, sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
 
     ! Initialize the field solver
@@ -263,11 +263,11 @@ contains
          sim%degree_smoother)
 
     ! Initialize kernel smoother    
-    sim%kernel_smoother_1 => sll_f_new_smoother_spline_1d(&
+    call sll_s_new_smoother_spline_1d(sim%kernel_smoother_1, &
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother-1, sll_p_galerkin) 
-    sim%kernel_smoother_0 => &
-         sll_f_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
+    call sll_s_new_smoother_spline_1d(sim%kernel_smoother_0, &
+         sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
     
 
@@ -303,12 +303,14 @@ contains
 
     ! Initialize the time-splitting propagator
     if (sim%splitting_case == SLL_SPLITTING_SYMPLECTIC) then
-       sim%propagator => sll_f_new_hamiltonian_splitting_pic_vm_1d2v(sim%maxwell_solver, &
+       call sll_s_new_hamiltonian_splitting_pic_vm_1d2v(&
+            sim%propagator, sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
     elseif (sim%splitting_case == SLL_SPLITTING_CEF) then
-       sim%propagator =>  sll_f_new_hamiltonian_splitting_cef_pic_vm_1d2v(sim%maxwell_solver, &
+       call sll_s_new_hamiltonian_splitting_cef_pic_vm_1d2v(&
+            sim%propagator, sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3))
@@ -364,6 +366,7 @@ contains
 
     end do
     
+    !!! Part for ctest
     ! Compute final rho
     rho_local = 0.0_f64
     do i_part = 1, sim%particle_group%n_particles
@@ -381,20 +384,10 @@ contains
 
        call ctest( rho, rho_local )
 
-!!$       call sll_s_concatenate_filename_and_path( "reffile_pic_vm_1d2v_cart.dat", __FILE__,&
-!!$            reffile)
-!!$       call sll_s_read_data_real_array( reffile, rho_local)
-!!$
-!!$       rho_local = rho_local -  rho
-!!$       error = maxval(rho_local)
-!!$       print*, 'Maximum error in rho is', error, '.'
-!!$       if (abs(error)> 1E-14) then
-!!$          print*, 'FAILED'
-!!$       else
-!!$          print*, 'PASSED'
-!!$       end if
     end if
-    
+    !!! Part for ctest end
+
+
   contains
     function beta_cos_k(x)
       sll_real64             :: beta_cos_k

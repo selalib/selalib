@@ -12,7 +12,6 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
        sll_s_boot_collective, sll_s_halt_collective
 
   use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v, only: &
-    sll_f_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
 
   use sll_m_kernel_smoother_base, only: &
@@ -21,7 +20,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_f_new_smoother_spline_1d
+    sll_s_new_smoother_spline_1d
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -31,7 +30,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
     sll_f_new_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
-    sll_f_new_particle_group_1d2v
+    sll_s_new_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
@@ -93,7 +92,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   domain = [eta_min, eta_max, eta_max - eta_min]
   
   ! Initialize
-  particle_group => sll_f_new_particle_group_1d2v(n_particles, &
+  call sll_s_new_particle_group_1d2v(particle_group, n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
 
   ! Initial particle information   
@@ -119,11 +118,11 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   end do
 
   ! Initialize kernel smoother    
-  kernel_smoother_1 => sll_f_new_smoother_spline_1d(&
+  call sll_s_new_smoother_spline_1d(kernel_smoother_1,&
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, sll_p_galerkin) 
-  kernel_smoother_0 => &
-       sll_f_new_smoother_spline_1d(domain(1:2), [num_cells], &
+  call sll_s_new_smoother_spline_1d(kernel_smoother_0, &
+       domain(1:2), [num_cells], &
        n_particles, degree_smoother, sll_p_galerkin) 
   
   ! Initialize Maxwell solver
@@ -138,7 +137,8 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   efield = 1.0_f64
   bfield = 1.0_f64
 
-  propagator => sll_f_new_hamiltonian_splitting_cef_pic_vm_1d2v(maxwell_solver, &
+  allocate(propagator)
+  call propagator%initialize(maxwell_solver, &
             kernel_smoother_0, kernel_smoother_1, particle_group, &
             efield, bfield, &
             eta_min, eta_max-eta_min)
