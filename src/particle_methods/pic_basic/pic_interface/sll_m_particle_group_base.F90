@@ -171,7 +171,6 @@ contains
     sll_real64, intent ( in )   :: species_charge
     sll_real64, intent ( in )   :: species_mass
 
-    sll_int32  :: ierr
 
     self%q = species_charge
     self%m = species_mass

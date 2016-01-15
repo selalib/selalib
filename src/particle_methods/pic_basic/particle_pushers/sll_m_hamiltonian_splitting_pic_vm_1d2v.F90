@@ -124,15 +124,17 @@ contains
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
-    sll_int32 :: i_part, ind
-    sll_real64 :: xi, x_new(3), vi(3), wi(1), x_old(3)
+    sll_int32 :: i_part
+    sll_real64 :: x_new(3), vi(3), wi(1), x_old(3)
     sll_int32  :: n_cells
-    sll_real64 :: r_new, r_old, qoverm, bfield
-    sll_int32 :: index_new, index_old
+    sll_real64 :: qoverm
+    !sll_real64 :: xi
+    !sll_real64 :: r_new, r_old, qoverm, bfield
+    !sll_int32 :: index_new, index_old, ind
     !sll_real64 :: primitive_1(3)
-    sll_real64 :: jnorm
+    !sll_real64 :: jnorm
 
-    sll_real64 :: efield_test(this%kernel_smoother_0%n_dofs), rho0(this%kernel_smoother_0%n_dofs), jk(this%kernel_smoother_0%n_dofs)
+    !sll_real64 :: efield_test(this%kernel_smoother_0%n_dofs), rho0(this%kernel_smoother_0%n_dofs), jk(this%kernel_smoother_0%n_dofs)
 
     n_cells = this%kernel_smoother_0%n_dofs
 
@@ -426,12 +428,11 @@ contains
     !local variables
     sll_int32  :: i_part, n_cells
     sll_real64 :: vi(3), xi(3), wi(1)
-    sll_real64 :: x_box, r_box
-    sll_int32  :: index_box, ind, i_mod, i_grid
-    sll_real64 :: values_0(4)
+    !sll_real64 :: x_box, r_box
+    !sll_real64 :: values_0(4)
     sll_real64 :: bfield
     sll_real64 :: qm
-    sll_real64 :: jnorm
+    !sll_real64 :: jnorm
     
     n_cells = this%kernel_smoother_0%n_dofs
 

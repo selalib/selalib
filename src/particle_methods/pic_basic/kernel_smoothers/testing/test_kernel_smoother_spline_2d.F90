@@ -45,9 +45,6 @@ program test_kernel_smoother_spline_2d
   ! Rho dofs
   sll_real64 :: rho_dofs(100)
   sll_real64 :: rho_dofs_ref(100)
-  ! J dofs
-  sll_real64 :: j_dofs(100)
-  sll_real64 :: j_dofs_ref(100)
 
   ! For evaluation check
   sll_real64 :: particle_values(4)
