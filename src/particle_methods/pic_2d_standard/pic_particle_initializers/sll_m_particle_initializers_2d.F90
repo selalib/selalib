@@ -20,7 +20,7 @@ module sll_m_particle_initializers_2d
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "particle_representation.h"
+#include "sll_particle_representation.h"
 
   use sll_m_cartesian_meshes, only: &
     sll_t_cartesian_mesh_2d

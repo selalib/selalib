@@ -2,7 +2,7 @@ program particle_sorter
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "particle_representation.h"
+#include "sll_particle_representation.h"
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_2d, &

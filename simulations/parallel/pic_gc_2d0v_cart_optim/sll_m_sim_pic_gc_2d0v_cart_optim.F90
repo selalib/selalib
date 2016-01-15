@@ -4,7 +4,7 @@ module sll_m_sim_pic_gc_2d0v_cart_optim
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_accumulators.h"
-#include "particle_representation.h"
+#include "sll_particle_representation.h"
 
   use sll_m_accumulators, only: &
     sll_t_electric_field_accumulator, &
