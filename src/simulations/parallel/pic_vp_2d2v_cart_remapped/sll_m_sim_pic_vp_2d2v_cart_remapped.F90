@@ -216,7 +216,13 @@ contains
     sll_int32   :: remapping_sparse_grid_max_level_vx
     sll_int32   :: remapping_sparse_grid_max_level_vy
     sll_int32   :: deposition_particles_type
+    sll_int32   :: deposition_particles_pos_type
+    sll_int32   :: deposition_particles_move_type
     sll_int32   :: number_deposition_particles
+    sll_int32   :: nb_deposition_particles_per_cell_x
+    sll_int32   :: nb_deposition_particles_per_cell_y
+    sll_int32   :: nb_deposition_particles_vx
+    sll_int32   :: nb_deposition_particles_vy
     sll_int32   :: flow_markers_type
     sll_int32   :: number_markers_x
     sll_int32   :: number_markers_y
@@ -293,8 +299,15 @@ contains
 
     ! discretization of the deposited f
     !   -> number of deposition particles
-    namelist /lt_pic_deposition_params/deposition_particles_type, &
-                                    number_deposition_particles
+    namelist /lt_pic_deposition_params/deposition_particles_type,               &
+                                    deposition_particles_pos_type,              &
+                                    deposition_particles_move_type,             &
+                                    number_deposition_particles,                &
+                                    nb_deposition_particles_per_cell_x,         &
+                                    nb_deposition_particles_per_cell_y,         &
+                                    nb_deposition_particles_vx,                 &
+                                    nb_deposition_particles_vy
+
 
     ! discretization of the flow:
     !   -> number of markers to be pushed forward
@@ -393,7 +406,13 @@ contains
         remapping_cart_grid_number_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         deposition_particles_type,                  &
-        number_deposition_particles,                &
+        deposition_particles_pos_type,              &
+        deposition_particles_move_type,             &
+        number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
+        nb_deposition_particles_per_cell_x,         &
+        nb_deposition_particles_per_cell_y,         &
+        nb_deposition_particles_vx,                 &
+        nb_deposition_particles_vy,                 &
         flow_markers_type,                          &
         number_markers_x,                           &
         number_markers_y,                           &

@@ -48,9 +48,14 @@
 /
 
 &lt_pic_deposition_params
-    deposition_particles_type = 1          ! 0 = on a structured grid,   1 = random
-    deposition_particles_move = 0          ! 0 = new particles are created at each step,  1 = they move until next remap step
-    number_deposition_particles = 50000    ! lower bound for the number of deposition particles
+    deposition_particles_type = 1           ! 0 = basic (first implementation), 1 = flexible (new, able to change type)
+    deposition_particles_pos_type = 0       ! 0 = on a structured grid,   1 = unstructured (random)
+    deposition_particles_move_type = 1      ! 0 = new particles are created at each step,  1 = they move until next remap step
+    number_deposition_particles = 50000     ! used for unstructured deposition particles
+    nb_deposition_particles_per_cell_x = 3  ! used for structured deposition particles
+    nb_deposition_particles_per_cell_y = 3  ! used for structured deposition particles
+    nb_deposition_particles_vx = 20         ! used for structured deposition particles
+    nb_deposition_particles_vy = 5          ! used for structured deposition particles
 /
 
 &lt_pic_markers_params
