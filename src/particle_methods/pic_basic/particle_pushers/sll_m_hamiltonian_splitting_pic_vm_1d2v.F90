@@ -601,7 +601,6 @@ contains
     this%kernel_smoother_0 => null()
     this%kernel_smoother_1 => null()
     this%particle_group => null()
-    deallocate(this%particle_group)
     deallocate(this%efield_dofs)
     deallocate(this%bfield_dofs)
 
