@@ -1,4 +1,5 @@
-IF (HDF5_ENABLED)
+if (HDF5_ENABLED)
+
 set(    SIM_NAME bsl_ad_2d0v_polar_rot        )
 set(   TEST_NAME "sim_${SIM_NAME}"            )
 set(  EXECUTABLE "${TEST_NAME}"               )
@@ -7,15 +8,11 @@ set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
 file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-ADD_EXECUTABLE( ${EXECUTABLE} ${TEST_NAME}.F90 )
-TARGET_LINK_LIBRARIES( ${EXECUTABLE} 
-  sll_sim_serial
-  sll_hermite_interpolation
-  sll_splines
-  sll_meshes)
+add_executable( ${EXECUTABLE} ${TEST_NAME}.F90 )
+target_link_libraries( ${EXECUTABLE} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} )
 
-INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
-INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+install( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
+install( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 
 # Ctest
 # IF(BUILD_TESTING)
@@ -24,4 +21,4 @@ INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 #   SET_TESTS_PROPERTIES(${TEST_NAME1} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 # ENDIF(BUILD_TESTING)
 
-ENDIF (HDF5_ENABLED)
+endif (HDF5_ENABLED)

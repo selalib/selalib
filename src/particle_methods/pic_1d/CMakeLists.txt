@@ -17,7 +17,7 @@ TARGET_LINK_LIBRARIES( sll_pic_1d
   sll_utilities
   sll_interpolators
   sll_collective
-  sll_prob
-  sll_sobol
   sll_pic_visu
-  sll_timer )
+  sll_timer
+  prob
+  sobol )
