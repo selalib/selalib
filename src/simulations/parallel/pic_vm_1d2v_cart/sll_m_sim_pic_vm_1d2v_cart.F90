@@ -137,6 +137,9 @@ module sll_m_sim_pic_vm_1d2v_cart
      
      ! Case definitions
      sll_int32  :: init_case
+
+     ! For ctest
+     logical    :: ctest_passed
      
    contains
      procedure :: init_from_file => init_pic_vm_1d2v
@@ -374,7 +377,7 @@ contains
 
     if (sim%rank == 0) then
 
-       call ctest( rho, rho_local )
+       call ctest( rho, rho_local, sim%ctest_passed )
 
     end if
     !!! Part for ctest end
@@ -391,9 +394,10 @@ contains
 
 !------------------------------------------------------------------------------!
   ! local subroutine to handle ctest
-  subroutine ctest(rho_simulated, rho_ref)
+  subroutine ctest(rho_simulated, rho_ref, passed)
     sll_real64, intent(in   ) :: rho_simulated(:)
     sll_real64, intent(inout) :: rho_ref(:)
+    logical,    intent(  out) :: passed     
 
     ! For testing
     character(len=256) :: reffile
@@ -407,9 +411,9 @@ contains
     error = maxval(rho_ref)
     print*, 'Maximum error in rho is', error, '.'
     if (abs(error)> 1E-14) then
-       print*, 'FAILED'
+       passed = .FALSE.
     else
-       print*, 'PASSED'
+       passed = .TRUE.
     end if
 
   end subroutine ctest
