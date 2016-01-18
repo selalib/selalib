@@ -1,4 +1,4 @@
-ADD_LIBRARY(sll_prob STATIC sll_m_prob.F90)
+ADD_LIBRARY(prob STATIC sll_m_prob.F90)
 
 # 
 # # Test

@@ -40,6 +40,8 @@ SET_TESTS_PROPERTIES( poisson_3d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PA
 
 ADD_EXECUTABLE( test_tri_poisson test_tri_poisson.F90 )
 TARGET_LINK_LIBRARIES( test_tri_poisson tri_poisson sll_mesh_calculus sll_file_io )
+ADD_TEST( NAME tri_poisson  COMMAND test_tri_poisson     )
+SET_TESTS_PROPERTIES( tri_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ### BEGIN MACRO ###
 MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
