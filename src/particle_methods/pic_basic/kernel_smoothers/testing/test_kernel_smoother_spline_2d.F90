@@ -7,15 +7,10 @@ program test_kernel_smoother_spline_2d
     sll_p_collocation
 
   use sll_m_kernel_smoother_spline_2d, only: &
-    sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_smoother_spline_2d
+    sll_t_kernel_smoother_spline_2d
 
   use sll_m_particle_group_2d2v, only: &
-    sll_s_new_particle_group_2d2v, &
     sll_t_particle_group_2d2v
-
-  use sll_m_particle_group_base, only: &
-    sll_c_particle_group_base
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -23,7 +18,7 @@ program test_kernel_smoother_spline_2d
   
   type(sll_t_kernel_smoother_spline_2d) :: kernel
   ! Abstract particle group
-  class(sll_c_particle_group_base), pointer :: particle_group
+  type(sll_t_particle_group_2d2v) :: particle_group
   ! Parameters for the test
   sll_int32 :: n_cells
   sll_int32 :: n_particles
@@ -69,7 +64,7 @@ program test_kernel_smoother_spline_2d
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
-  call sll_s_new_particle_group_2d2v(particle_group, n_particles, &
+  call particle_group%initialize( n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
   call particle_group%set_common_weight(1.0_f64/real(n_particles,f64))
@@ -193,7 +188,6 @@ program test_kernel_smoother_spline_2d
 
   call kernel%delete()
   call particle_group%delete()
-  deallocate(particle_group)
 
 
 end program test_kernel_smoother_spline_2d

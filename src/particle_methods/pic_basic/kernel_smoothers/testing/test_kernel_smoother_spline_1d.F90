@@ -10,10 +10,7 @@ program test_kernel_smoother_spline_1d
     sll_t_kernel_smoother_spline_1d
 
   use sll_m_particle_group_1d2v, only: &
-    sll_s_new_particle_group_1d2v
-
-  use sll_m_particle_group_base, only: &
-    sll_c_particle_group_base
+    sll_t_particle_group_1d2v
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -21,7 +18,7 @@ program test_kernel_smoother_spline_1d
   
   type(sll_t_kernel_smoother_spline_1d) :: kernel
   ! Abstract particle group
-  class(sll_c_particle_group_base), pointer :: particle_group
+  type(sll_t_particle_group_1d2v) :: particle_group
 
   ! Parameters for the test
   sll_int32 :: n_cells
@@ -68,7 +65,7 @@ program test_kernel_smoother_spline_1d
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
-  call sll_s_new_particle_group_1d2v(particle_group, n_particles, &
+  call particle_group%initialize( n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
   
@@ -165,7 +162,6 @@ program test_kernel_smoother_spline_1d
 
   call kernel%delete()
   call particle_group%delete()
-  deallocate(particle_group)
 
 
 end program test_kernel_smoother_spline_1d
