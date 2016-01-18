@@ -55,7 +55,7 @@
     nb_deposition_particles_per_cell_x = 4  ! used for structured deposition particles
     nb_deposition_particles_per_cell_y = 2  ! used for structured deposition particles
     nb_deposition_particles_vx = 20         ! used for structured deposition particles
-    nb_deposition_particles_vy = 2          ! used for structured deposition particles
+    nb_deposition_particles_vy = 10          ! used for structured deposition particles
 /
 
 &lt_pic_markers_params
