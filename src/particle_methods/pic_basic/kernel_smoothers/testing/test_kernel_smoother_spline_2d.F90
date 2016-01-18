@@ -21,7 +21,7 @@ program test_kernel_smoother_spline_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
-  class(sll_t_kernel_smoother_spline_2d),pointer :: kernel
+  type(sll_t_kernel_smoother_spline_2d) :: kernel
   ! Abstract particle group
   class(sll_c_particle_group_base), pointer :: particle_group
   ! Parameters for the test
@@ -85,7 +85,6 @@ program test_kernel_smoother_spline_2d
 
 
   ! Initialize the kernel
-  allocate(kernel)
   call kernel%initialize &
        (domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
 
@@ -193,7 +192,6 @@ program test_kernel_smoother_spline_2d
   end if
 
   call kernel%delete()
-  deallocate(kernel)
   call particle_group%delete()
   deallocate(particle_group)
 
