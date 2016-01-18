@@ -29,7 +29,8 @@ module sll_m_kernel_smoother_spline_1d
 
   public :: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_smoother_spline_1d, &
+    sll_s_new_kernel_smoother_spline_1d_ptr, &
+    sll_s_new_kernel_smoother_spline_1d, &
     sll_f_new_smoother_spline_1d
 
   private
@@ -331,7 +332,7 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor for abstract type
-  subroutine sll_s_new_smoother_spline_1d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
+  subroutine sll_s_new_kernel_smoother_spline_1d_ptr(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
     class( sll_c_kernel_smoother), pointer, intent(out)   :: smoother !< kernel smoother object
     sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
     sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
@@ -351,7 +352,32 @@ contains
        call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type )
     end select
 
-  end subroutine sll_s_new_smoother_spline_1d
+  end subroutine sll_s_new_kernel_smoother_spline_1d_ptr
+
+  !-------------------------------------------------------------------------------------------
+  !< Constructor for abstract type
+  subroutine sll_s_new_kernel_smoother_spline_1d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
+    class( sll_c_kernel_smoother), allocatable, intent(out)   :: smoother !< kernel smoother object
+    sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
+    sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
+    sll_int32, intent(in) :: no_particles !< number of particles
+    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
+    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
+
+    !local variables
+    sll_int32 :: ierr
+
+
+    allocate( sll_t_kernel_smoother_spline_1d :: smoother , stat=ierr)
+    SLL_ASSERT( ierr == 0)
+    
+    select type( smoother )
+    type is ( sll_t_kernel_smoother_spline_1d )
+       call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type )
+    end select
+
+  end subroutine sll_s_new_kernel_smoother_spline_1d
+
 
   subroutine initialize_spline_1d( this, domain, n_grid, no_particles, spline_degree, smoothing_type )
     class( sll_t_kernel_smoother_spline_1d), intent(out)  :: this !< kernel smoother object

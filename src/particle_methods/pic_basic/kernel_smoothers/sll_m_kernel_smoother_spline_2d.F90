@@ -24,7 +24,8 @@ module sll_m_kernel_smoother_spline_2d
 
   public :: &
        sll_f_new_smoother_spline_2d, &
-       sll_s_new_smoother_spline_2d, &
+       sll_s_new_kernel_smoother_spline_2d_ptr, & 
+       sll_s_new_kernel_smoother_spline_2d, &
        sll_t_kernel_smoother_spline_2d
   
   private
@@ -287,8 +288,8 @@ contains
 
   end subroutine initialize_spline_2d
 
-  !> Constructor for abstract type
-  subroutine sll_s_new_smoother_spline_2d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type) 
+  !> Constructor for abstract type (pointer)
+  subroutine sll_s_new_kernel_smoother_spline_2d_ptr(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type) 
     class( sll_c_kernel_smoother), pointer, intent(out)   :: smoother
     sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
     sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
@@ -305,7 +306,30 @@ contains
        call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type)
     end select
 
-  end subroutine sll_s_new_smoother_spline_2d
+  end subroutine sll_s_new_kernel_smoother_spline_2d_ptr
+
+
+ !> Constructor for abstract type (allocatable)
+  subroutine sll_s_new_kernel_smoother_spline_2d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type) 
+    class( sll_c_kernel_smoother), allocatable, intent(out)   :: smoother
+    sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
+    sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
+    sll_int32, intent(in) :: no_particles !< no. of particles
+    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
+    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
+
+    !local variables
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE( sll_t_kernel_smoother_spline_2d :: smoother, ierr)
+    select type (smoother)
+    type is (sll_t_kernel_smoother_spline_2d)
+       call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type)
+    end select
+
+  end subroutine sll_s_new_kernel_smoother_spline_2d
+
+
 
   !> Constructor (legacy version)
   function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)

@@ -26,7 +26,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_smoother_spline_1d
+    sll_s_new_kernel_smoother_spline_1d_ptr
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -143,10 +143,10 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   call particle_group%set_common_weight (1.0_f64)
 
   ! Initialize kernel smoother    
-  call sll_s_new_smoother_spline_1d(kernel_smoother_1, &
+  call sll_s_new_kernel_smoother_spline_1d_ptr(kernel_smoother_1, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, sll_p_galerkin) 
-  call sll_s_new_smoother_spline_1d(kernel_smoother_0, &
+  call sll_s_new_kernel_smoother_spline_1d_ptr(kernel_smoother_0, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother, sll_p_galerkin) 
   
