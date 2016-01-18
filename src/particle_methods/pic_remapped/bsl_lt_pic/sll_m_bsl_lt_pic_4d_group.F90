@@ -61,12 +61,20 @@ module sll_m_bsl_lt_pic_4d_group
   sll_int32, parameter :: SLL_BSL_LT_PIC_HAT_F0 = 1
 
   ! types of deposition particles
-  sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED_GRID = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_TRANSPORTED_RANDOM = 1
+  sll_int32, parameter :: SLL_BSL_LT_PIC_BASIC = 0
+  sll_int32, parameter :: SLL_BSL_LT_PIC_FLEXIBLE = 1
 
-  ! types of flow markers
+  ! types of deposition particles positions  //  and of flow markers
   sll_int32, parameter :: SLL_BSL_LT_PIC_STRUCTURED = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_UNSTRUCTURED = 1
+  sll_int32, parameter :: SLL_BSL_LT_PIC_UNSTRUCTURED  = 1
+
+  ! types of deposition particles movement
+  sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED = 0
+  sll_int32, parameter :: SLL_BSL_LT_PIC_PUSHED = 1
+
+  ! old values:
+  !  sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED_GRID = 0
+  !  sll_int32, parameter :: SLL_BSL_LT_PIC_TRANSPORTED_RANDOM = 1
 
   !> Group of @ref sll_bsl_lt_pic_4d_particle
   type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group
@@ -104,10 +112,6 @@ module sll_m_bsl_lt_pic_4d_group
     sll_real64                              :: flow_grid_a4
     !> @}
 
-    !> @name When using unstructured flow markers, we store their indices in 
-    !> @{
-    !> @}
-
     !> @name The physical mesh used eg in the Poisson solver
     !> @{
     type(sll_cartesian_mesh_2d), pointer    :: space_mesh_2d
@@ -115,12 +119,30 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The deposition particles (will be created on the fly in each cell of the flow_grid, when depositing the charge)
     !> @{
-    sll_int32                                 :: deposition_particles_type          ! fixed_grid or transported
-    type(sll_cartesian_mesh_4d), pointer      :: deposition_grid                    !< used if type = fixed_grid
-    sll_int32                                 :: number_moving_deposition_particles !<  = 0  if  type == fixed_grid
-    sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta           !< used if type = transported
-    sll_real64, dimension(:), allocatable     :: deposition_particles_weight        !< used if type = transported (weight = charge)
+    sll_int32                                 :: deposition_particles_type       !< basic (=first implementation) or flexible (new)
+    sll_int32                                 :: deposition_particles_pos_type   !< structured  or  unstructured (random)
+    sll_int32                                 :: deposition_particles_move_type  !< fixed (new at each step) or pushed (until remap)
+    type(sll_cartesian_mesh_4d), pointer      :: deposition_particles_grid                 !< used if type = struct_grid
+    sll_int32                                 :: number_deposition_particles        !< number of deposition particles
+    sll_int32                                 :: number_moving_deposition_particles !< number of pushed deposition particles
+    sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta           !< used for if type = flexible
+    sll_real64, dimension(:), allocatable     :: deposition_particles_weight        !< used for if type = flexible (weight = charge)
     !> @}
+
+    !> This is how the deposition particles are used, depending on their type:
+    !> if type = flexible, we allow deposition particles to be :
+    !>  - move_type = fixed (always on the same grid, structured or not) or pushed (until remapping step)
+    !>  - pos_type = structured or unstructured (random), when reset
+    !>
+    !> if move_type = fixed,
+    !>    - positions and weights of deposition particles are reset in the deposition routine (called at each time step)
+    !> if move_type = pushed,
+    !>    - positions and weights of deposition particles are reset in the remapping routine (called at remapping step)
+    !>      in particular, computing the weights can be done with direct interpolation (no bsl_lt_pic reconstruction)
+    !>
+    !> The "basic" type corresponds to fixed and structured deposition particles, first implemented.
+    !> In this case, the deposition particles are not stored but only computed inside the "write_f_or_deposit" routine
+
 
     !> @name General parameters for the interpolation of the remapped density f
     !> @{
@@ -217,8 +239,9 @@ module sll_m_bsl_lt_pic_4d_group
     procedure :: bsl_lt_pic_4d_initialize_unstruct_markers         !> creates quasi-random distribution of unstructured markers
     procedure :: bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians  !> build simplexes of relevant markers in each flow cell
 
-    procedure :: bsl_lt_pic_set_deposition_particles_coordinates
-    procedure :: bsl_lt_pic_set_deposition_particles_weights
+    procedure :: reset_deposition_particles_coordinates
+    procedure :: reset_deposition_particles_weights_with_bsl_reconstruction
+    procedure :: reset_deposition_particles_weights_with_direct_interpolation
 
     procedure :: bsl_lt_pic_4d_write_f_on_grid_or_deposit
     procedure :: bsl_lt_pic_4d_interpolate_value_of_remapped_f
@@ -312,11 +335,9 @@ contains
         ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
         r(1) = self%unstruct_markers_eta(i, 1)
         r(2) = self%unstruct_markers_eta(i, 2)
-        ! todo continue here and below (look for occurences of number_flow_markers) -- and check that
       end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! then the particle is a deposition particle
 
       r(1) = self%deposition_particles_eta(i - self%number_flow_markers, 1)
       r(2) = self%deposition_particles_eta(i - self%number_flow_markers, 2)
@@ -361,7 +382,7 @@ contains
       end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! then the particle is a deposition particle
+      ! then the particle is a (flexible, pushed) deposition particle
 
       ! get vx
       r(1) = self%deposition_particles_eta(i - self%number_flow_markers, 3)
@@ -516,9 +537,13 @@ contains
       end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! then we set the physical coordinates of a deposition particle
-      ! (maybe use a structure closer to the simple_pic particles, cell-based ?)
 
+      ! then the particle is a (pushed, flexible) deposition particle
+      SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
+      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+      SLL_ASSERT( self%number_moving_deposition_particles == self%number_deposition_particles )
+
+      ! (maybe use a structure closer to the simple_pic particles, cell-based ?)
       self%deposition_particles_eta(i - self%number_flow_markers, 1) = x(1)
       self%deposition_particles_eta(i - self%number_flow_markers, 2) = x(2)
 
@@ -569,12 +594,15 @@ contains
         ! update flow cell lists
         call self%update_flow_cell_lists_with_new_marker_position(i, old_j_x, old_j_y, old_j_vx, old_j_vy)
 
-        ! todo ici: add outside flag and decide what to do if marker leaves the grid
-
       end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then we set the physical coordinates of a deposition particle
+
+      ! then the particle is a (pushed, flexible) deposition particle
+      SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
+      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+      SLL_ASSERT( self%number_moving_deposition_particles == self%number_deposition_particles )
 
       self%deposition_particles_eta(i - self%number_flow_markers, 3) = x(1)
       self%deposition_particles_eta(i - self%number_flow_markers, 4) = x(2)
@@ -650,37 +678,66 @@ contains
 
 
   !--------------------------------------------------------------------------------------------------------------------------
-  !> This subroutine places the deposition particles with a quasi-random (Sobol) sequence. It does not compute the weights.
+  !> This subroutine places the deposition particles with the sepcified method. It does not compute the weights.
   !> The weights are computed in an external call to the 'write_f_on_grid_or_deposit' subroutine
-  subroutine bsl_lt_pic_set_deposition_particles_coordinates(self, rank)
+  subroutine reset_deposition_particles_coordinates(self, rank)
     class(sll_bsl_lt_pic_4d_group), intent(inout)   :: self
     sll_int32, intent(in), optional                 :: rank
     sll_int32                                       :: this_rank
+    sll_int32                                       :: i_x, i_y, i_vx, i_vy
     sll_int32                                       :: i_part
     sll_int32                                       :: i_dim
     sll_int64                                       :: sobol_seed
     sll_real64                                      :: rdn(4)
+    sll_real64                                      :: eta_part(4)
 
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )
+    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
 
-    ! initial value of the seed (it is incremented by one in the call to i8_sobol)
-    if(present(rank))then
-      this_rank = rank
-    else
-      this_rank = 0
-    end if
-    sobol_seed = int(10 + this_rank * self%number_moving_deposition_particles, 8)
+    if( self%deposition_particles_pos_type == SLL_BSL_LT_PIC_UNSTRUCTURED )then
 
-    do i_part = 1, self%number_moving_deposition_particles
-      ! Generate Sobol numbers on [0,1]
-      call i8_sobol(int(4,8), sobol_seed, rdn)
+      ! uses a quasi-random (Sobol) sequence
+      ! initial value of the seed (it is incremented by one in the call to i8_sobol)
+      if(present(rank))then
+        this_rank = rank
+      else
+        this_rank = 0
+      end if
+      sobol_seed = int(10 + this_rank * self%number_deposition_particles, 8)
 
-      ! Transform rdn to the proper intervals
-      do i_dim = 1, 4
-        self%deposition_particles_eta(i_part, i_dim) =   self%remapping_grid_eta_min(i_dim) * (1 - rdn(i_dim)) &
-                                                       + self%remapping_grid_eta_max(i_dim) * rdn(i_dim)
+      do i_part = 1, self%number_deposition_particles
+        ! Generate Sobol numbers on [0,1]
+        call i8_sobol(int(4,8), sobol_seed, rdn)
+
+        ! Transform rdn to the proper intervals
+        do i_dim = 1, 4
+          self%deposition_particles_eta(i_part, i_dim) =   self%remapping_grid_eta_min(i_dim) * (1 - rdn(i_dim)) &
+                                                         + self%remapping_grid_eta_max(i_dim) * rdn(i_dim)
+        end do
       end do
-    end do
+
+    else
+
+      SLL_ASSERT( self%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )
+
+      i_part = 0
+      do i_x = 1, self%deposition_particles_grid%num_cells1
+        eta_part(1) = self%deposition_particles_grid%eta1_min + (i_x-1) * self%deposition_particles_grid%delta_eta1
+        do i_y = 1, self%deposition_particles_grid%num_cells2
+          eta_part(2) = self%deposition_particles_grid%eta2_min + (i_y-1) * self%deposition_particles_grid%delta_eta2
+          do i_vx = 1, self%deposition_particles_grid%num_cells3
+            eta_part(3) = self%deposition_particles_grid%eta3_min + (i_vx-1) * self%deposition_particles_grid%delta_eta3
+            do i_vy = 1, self%deposition_particles_grid%num_cells4
+              eta_part(4) = self%deposition_particles_grid%eta4_min + (i_vy-1) * self%deposition_particles_grid%delta_eta4
+              i_part = i_part + 1
+              self%deposition_particles_eta(i_part, :) = eta_part
+            end do
+          end do
+        end do
+      end do
+
+      SLL_ASSERT( i_part == self%number_deposition_particles )
+
+    end if
 
   end subroutine
 
@@ -689,7 +746,7 @@ contains
   ! do not change the position of the deposition particles, but compute (and set)
   ! their weights using the BSL_LT_PIC reconstruction
 
-  subroutine bsl_lt_pic_set_deposition_particles_weights(self)
+  subroutine reset_deposition_particles_weights_with_bsl_reconstruction(self)
     class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
     type(sll_charge_accumulator_2d),  pointer :: void_charge_accumulator
     type(sll_cartesian_mesh_4d),      pointer :: void_grid_4d
@@ -707,7 +764,11 @@ contains
     dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )
+    ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
+    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+
+    ! for pushed deposition particles, the reconstruction is always done at the remapping step, using a direct interpolation
+    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FIXED )
 
     call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(void_charge_accumulator,             &
                                                           scenario,                         &
@@ -717,7 +778,30 @@ contains
                                                           enforce_total_charge              &
                                                           )
 
-  end subroutine
+  end subroutine reset_deposition_particles_weights_with_bsl_reconstruction
+
+  !----------------------------------------------------------------------------------
+  ! do not change the position of the deposition particles, but compute (and set)
+  ! their weights using a direct interpolation with the remapping tool (ie with flow = Id)
+
+  subroutine reset_deposition_particles_weights_with_direct_interpolation(self)
+    class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+
+    sll_real64    :: eta(4)
+    sll_int32     :: i_part
+
+    ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
+    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+
+    ! for fixed deposition particles, the reconstruction is done at each time step using a bsl_lt_pic reconstruction
+    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_PUSHED )
+
+    do i_part = 1, self%number_deposition_particles
+      eta = self%deposition_particles_eta(i_part, :)
+      self%deposition_particles_weight(i_part) = self%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+    end do
+
+  end subroutine reset_deposition_particles_weights_with_direct_interpolation
 
 
   !----------------------------------------------------------------------------
@@ -746,7 +830,7 @@ contains
     sll_real64 :: y_part
 
 
-    if( self%deposition_particles_type == SLL_BSL_LT_PIC_FIXED_GRID )then
+    if( self%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )then
       ! then we compute new weights on the deposition grid, as follows
       nullify(void_grid_4d)
       nullify(void_array_2d)
@@ -762,10 +846,17 @@ contains
                                                          )
 
     else
-      ! then we simply deposit the charge carried by the deposition particles
+      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
 
-      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )
-      do i_part = 1, self%number_moving_deposition_particles
+      ! then we deposit the charge carried by the deposition particles with a quite standard technique
+
+      ! but first: for flexible deposition particles of "fixed" type, we re-initialize their positions and weights
+      if( self%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )then
+        call self%reset_deposition_particles_coordinates()
+        call self%reset_deposition_particles_weights_with_bsl_reconstruction()
+      end if
+
+      do i_part = 1, self%number_deposition_particles
 
         particle_charge = self%deposition_particles_weight(i_part)
         x_part = self%deposition_particles_eta(i_part, 1)
@@ -939,7 +1030,13 @@ contains
         remapping_cart_grid_number_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         deposition_particles_type,                  &
-        minimum_number_of_deposition_particles,     &   ! lower bound if deposition particles = fixed_grid, actual nb if transported
+        deposition_particles_pos_type,              &
+        deposition_particles_move_type,             &
+        number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
+        nb_deposition_particles_per_cell_x,         &
+        nb_deposition_particles_per_cell_y,         &
+        nb_deposition_particles_vx,                 &
+        nb_deposition_particles_vy,                 &
         flow_markers_type,                          &
         number_flow_markers_x,                      &
         number_flow_markers_y,                      &
@@ -972,7 +1069,13 @@ contains
     sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vy
     sll_int32,  dimension(4), intent(in)  :: remapping_sparse_grid_max_levels
     sll_int32,                intent(in)  :: deposition_particles_type
-    sll_int32,                intent(in)  :: minimum_number_of_deposition_particles
+    sll_int32,                intent(in)  :: deposition_particles_pos_type
+    sll_int32,                intent(in)  :: deposition_particles_move_type
+    sll_int32,                intent(in)  :: number_deposition_particles
+    sll_int32,                intent(in)  :: nb_deposition_particles_per_cell_x   !< used with deposition particles on a struct grid
+    sll_int32,                intent(in)  :: nb_deposition_particles_per_cell_y   !< used with deposition particles on a struct grid
+    sll_int32,                intent(in)  :: nb_deposition_particles_vx           !< used with deposition particles on a struct grid
+    sll_int32,                intent(in)  :: nb_deposition_particles_vy           !< used with deposition particles on a struct grid
     sll_int32,                intent(in)  :: flow_markers_type
     sll_int32,                intent(in)  :: number_flow_markers_x
     sll_int32,                intent(in)  :: number_flow_markers_y
@@ -996,31 +1099,35 @@ contains
     character(len=*), parameter :: this_fun_name = "sll_bsl_lt_pic_4d_group_new"
     character(len=128)      :: err_msg
 
-    sll_int32  :: nb_deposition_particles_x
-    sll_int32  :: nb_deposition_particles_y
-    sll_int32  :: nb_deposition_particles_vx
-    sll_int32  :: nb_deposition_particles_vy
+    sll_int32  :: effective_nb_deposition_particles_x
+    sll_int32  :: effective_nb_deposition_particles_y
+    sll_int32  :: effective_nb_deposition_particles_vx
+    sll_int32  :: effective_nb_deposition_particles_vy
 
-    sll_int32  :: deposition_grid_num_cells_x
-    sll_int32  :: deposition_grid_num_cells_y
-    sll_int32  :: deposition_grid_num_cells_vx
-    sll_int32  :: deposition_grid_num_cells_vy
+    sll_int32  :: deposition_particles_grid_num_cells_x
+    sll_int32  :: deposition_particles_grid_num_cells_y
+    sll_int32  :: deposition_particles_grid_num_cells_vx
+    sll_int32  :: deposition_particles_grid_num_cells_vy
 
-    sll_real64 :: deposition_grid_x_min
-    sll_real64 :: deposition_grid_x_max
-    sll_real64 :: deposition_grid_y_min
-    sll_real64 :: deposition_grid_y_max
-    sll_real64 :: deposition_grid_vx_min
-    sll_real64 :: deposition_grid_vx_max
-    sll_real64 :: deposition_grid_vy_min
-    sll_real64 :: deposition_grid_vy_max
+    sll_real64 :: deposition_particles_grid_x_min
+    sll_real64 :: deposition_particles_grid_x_max
+    sll_real64 :: deposition_particles_grid_y_min
+    sll_real64 :: deposition_particles_grid_y_max
+    sll_real64 :: deposition_particles_grid_vx_min
+    sll_real64 :: deposition_particles_grid_vx_max
+    sll_real64 :: deposition_particles_grid_vy_min
+    sll_real64 :: deposition_particles_grid_vy_max
 
-    sll_real64 :: h_deposition_grid_x
-    sll_real64 :: h_deposition_grid_y
+    sll_real64 :: h_deposition_particles_grid_x
+    sll_real64 :: h_deposition_particles_grid_y
+
+    logical    :: use_deposition_particles_grid
+    sll_int32  :: effective_nb_deposition_particles_on_grid
 
     sll_int32  :: cst_int
     sll_real64 :: cst_real, ratio_vx, ratio_vy
     sll_real64 :: tmp !, tmp1, tmp2
+    logical    :: derive_deposition_particles_grid_from_other_parameters
 
     if (.not.associated(space_mesh_2d) ) then
        err_msg = 'Error: given space_mesh_2d is not associated'
@@ -1255,128 +1362,166 @@ contains
       SLL_ALLOCATE( res%remapped_f_sparse_grid_coefficients(res%sparse_grid_interpolator%size_basis), ierr )
       res%remapped_f_sparse_grid_coefficients = 0.0_f64
 
+    end if
 
 
-
-    !> D. discretization of the deposited f -- uses deposition particles which can either be:
-    !     - D.1 on a fixed grid (with new charges computed at every time step)
-    !     - D.2 or transported with the flow (like sdt particles), and re-initialized from time to time, using BSL_LT_PIC techniques
-
+    !> D. discretization of the deposited f -- uses deposition particles which can be of several types (see comments on top of file)
 
     res%deposition_particles_type = deposition_particles_type
 
-    if( res%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED .and. res%deposition_particles_type == SLL_BSL_LT_PIC_FIXED_GRID )then
-      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
-      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
-      print *, " "
-      print *, "   Because the flow markers are set of 'UNSTRUCTURED' type, "
-      print *, "   I am overriding the 'FIXED_GRID' status for the deposition particles and setting them to 'TRANSPORTED_RANDOM'. "
-      print *, " "
-      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
-      print *, " [ ***************** ***************** WARNING ***************** ***************** ] "
-      res%deposition_particles_type = SLL_BSL_LT_PIC_TRANSPORTED_RANDOM
-    end if
+    use_deposition_particles_grid = ( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC   &
+                                      .or. res%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )
 
-    if( res%deposition_particles_type == SLL_BSL_LT_PIC_FIXED_GRID )then
+    derive_deposition_particles_grid_from_other_parameters = .false.
 
-      ! D.1 deposition particles on a fixed (cartesian) grid denoted 'deposition_grid', with the following properties:
-      !
-      !   - it matches the poisson grid in the sense that its nb of cells satisfies (with dg_np_d = deposition_grid_num_points_d)
-      !     dg_np_x ~ cst_int * p_group%space_mesh_2d%num_cells1  and
-      !     dg_np_y ~ cst_int * p_group%space_mesh_2d%num_cells2  for some  cst_int
-      !
-      !   - the griding in vx, vy is obtained from that of the initial markers, using the linear scaling
-      !     dg_np_vx / (dg_np_x * dg_np_y) = (approx) number_flow_markers_vx / (number_flow_markers_x * number_flow_markers_y)
-      !     dg_np_vy / (dg_np_x * dg_np_y) = (approx) number_flow_markers_vy / (number_flow_markers_x * number_flow_markers_y)
-      !
-      !   - its number of nodes satisfies
-      !     dg_np = dg_np_x * dg_np_y * dg_nc_vx * dg_nc_vy >= minimum_number_of_deposition_particles
+    if( use_deposition_particles_grid )then
 
-      ! we will have  dg_np_vx ~ cst_int * cst_int * ratio_vx
-      ratio_vx = real(res%number_flow_markers_vx * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)          &
-                                            * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2   ,f64)
-      ! and           dg_np_vy ~ cst_int * cst_int * ratio_vy
-      ratio_vy = real(res%number_flow_markers_vy * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)          &
-                                            * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2   ,f64)
+      ! deposition particles will be reset on a cartesian grid denoted 'deposition_particles_grid'.
 
-      ! and           dg_np ~ cst_int * cst_int * cst_int * cst_int * num_cells1 * num_cells2 * ratio_vx * ratio_vy
-      !                     >=  minimum_number_of_deposition_particles
+      if( derive_deposition_particles_grid_from_other_parameters )then
 
-      ! cst_real is the float approx of cst_int above
-      cst_real = (real(minimum_number_of_deposition_particles, f64)   &
-             / real( ratio_vx * ratio_vy * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2, f64)) ** (1./6)
+        ! this is how the deposition grid was created before January 17, 2016, just kept for memory (discard at some point)
+        ! here we need parameters of a struct grid for the flow markers
+        SLL_ASSERT( res%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )
 
-      cst_int = int(ceiling( cst_real ))
+        ! In this implementation, we create the grid of deposition particles with the following properties:
+        !
+        !   - it matches the poisson grid in the sense that its nb of cells satisfies (with dg_np_d = deposition_particles_grid_num_points_d)
+        !     dg_np_x ~ cst_int * p_group%space_mesh_2d%num_cells1  and
+        !     dg_np_y ~ cst_int * p_group%space_mesh_2d%num_cells2  for some  cst_int
+        !
+        !   - the griding in vx, vy is obtained from that of the initial markers, using the linear scaling
+        !     dg_np_vx / (dg_np_x * dg_np_y) = (approx) number_flow_markers_vx / (number_flow_markers_x * number_flow_markers_y)
+        !     dg_np_vy / (dg_np_x * dg_np_y) = (approx) number_flow_markers_vy / (number_flow_markers_x * number_flow_markers_y)
+        !
+        !   - its number of nodes satisfies
+        !     dg_np = dg_np_x * dg_np_y * dg_nc_vx * dg_nc_vy >= number_deposition_particles
 
+        ! we will have  dg_np_vx ~ cst_int * cst_int * ratio_vx
+        ratio_vx = real(res%number_flow_markers_vx * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)          &
+                                              * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2   ,f64)
+        ! and           dg_np_vy ~ cst_int * cst_int * ratio_vy
+        ratio_vy = real(res%number_flow_markers_vy * 1./ (res%number_flow_markers_x * res%number_flow_markers_y)          &
+                                              * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2   ,f64)
 
-      nb_deposition_particles_x  = max( cst_int * res%space_mesh_2d%num_cells1, 2 )
-      nb_deposition_particles_y  = max( cst_int * res%space_mesh_2d%num_cells2, 2 )
-      nb_deposition_particles_vx = max( int(ceiling( cst_real * cst_real * ratio_vx )), 2 )
-      nb_deposition_particles_vy = max( int(ceiling( cst_real * cst_real * ratio_vy )), 2 )
+        ! and           dg_np ~ cst_int * cst_int * cst_int * cst_int * num_cells1 * num_cells2 * ratio_vx * ratio_vy
+        !                     >=  number_deposition_particles
 
-      deposition_grid_num_cells_x  = nb_deposition_particles_x  - 1
-      deposition_grid_num_cells_y  = nb_deposition_particles_y  - 1
-      deposition_grid_num_cells_vx = nb_deposition_particles_vx - 1
-      deposition_grid_num_cells_vy = nb_deposition_particles_vy - 1
+        ! cst_real is the float approx of cst_int above
+        cst_real = (real(number_deposition_particles, f64)   &
+               / real( ratio_vx * ratio_vy * res%space_mesh_2d%num_cells1 * res%space_mesh_2d%num_cells2, f64)) ** (1./6)
 
-      tmp=real(nb_deposition_particles_x * nb_deposition_particles_y * nb_deposition_particles_vx * nb_deposition_particles_vy, f64)
-      print*, "[", this_fun_name, "] will use ", tmp, "deposition particles"
-      print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F] should be at least ", minimum_number_of_deposition_particles
-      SLL_ASSERT( tmp >= minimum_number_of_deposition_particles )
+        cst_int = int(ceiling( cst_real ))
 
-      ! then we position the grid of deposition cells so that every deposition particle is _inside_ a poisson cell
+        effective_nb_deposition_particles_x  = max( cst_int * res%space_mesh_2d%num_cells1, 2 )
+        effective_nb_deposition_particles_y  = max( cst_int * res%space_mesh_2d%num_cells2, 2 )
+        effective_nb_deposition_particles_vx = max( int(ceiling( cst_real * cst_real * ratio_vx )), 2 )
+        effective_nb_deposition_particles_vy = max( int(ceiling( cst_real * cst_real * ratio_vy )), 2 )
+
+        h_deposition_particles_grid_x = res%space_mesh_2d%delta_eta1 / cst_int    ! distance between two deposition particles in x dimension
+        h_deposition_particles_grid_y = res%space_mesh_2d%delta_eta2 / cst_int    ! same in y
+
+        effective_nb_deposition_particles_on_grid =   effective_nb_deposition_particles_x  * effective_nb_deposition_particles_y   &
+                                                    * effective_nb_deposition_particles_vx * effective_nb_deposition_particles_vy
+        print*, "[", this_fun_name, "] will use ", effective_nb_deposition_particles_on_grid, "deposition particles"
+        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F] should be at least ", number_deposition_particles
+        SLL_ASSERT( effective_nb_deposition_particles_on_grid >= number_deposition_particles )
+
+      else
+
+        ! this is now the default construction for the grid of deposition particles
+
+        effective_nb_deposition_particles_x  = max( res%space_mesh_2d%num_cells1 * nb_deposition_particles_per_cell_x, 2 )
+        effective_nb_deposition_particles_y  = max( res%space_mesh_2d%num_cells2 * nb_deposition_particles_per_cell_y, 2 )
+        effective_nb_deposition_particles_vx = max( nb_deposition_particles_vx, 2 )
+        effective_nb_deposition_particles_vy = max( nb_deposition_particles_vy, 2 )
+
+        ! distance between two deposition particles will be:
+        h_deposition_particles_grid_x = res%space_mesh_2d%delta_eta1 / nb_deposition_particles_per_cell_x
+        h_deposition_particles_grid_y = res%space_mesh_2d%delta_eta2 / nb_deposition_particles_per_cell_y
+
+        effective_nb_deposition_particles_on_grid =   effective_nb_deposition_particles_x  * effective_nb_deposition_particles_y   &
+                                                    * effective_nb_deposition_particles_vx * effective_nb_deposition_particles_vy
+
+      end if
+
+      ! we create the deposition grid so that every deposition particle is _inside_ a poisson cell
       ! (so that we do not have to do something special for periodic boundary conditions)
 
-      h_deposition_grid_x = res%space_mesh_2d%delta_eta1 / cst_int    ! distance between two depos. particles in x dimension
-      h_deposition_grid_y = res%space_mesh_2d%delta_eta2 / cst_int    ! same in y
-      deposition_grid_x_min  = res%space_mesh_2d%eta1_min + 0.5 * h_deposition_grid_x
-      deposition_grid_x_max  = res%space_mesh_2d%eta1_max - 0.5 * h_deposition_grid_x
-      deposition_grid_y_min  = res%space_mesh_2d%eta2_min + 0.5 * h_deposition_grid_y
-      deposition_grid_y_max  = res%space_mesh_2d%eta2_max - 0.5 * h_deposition_grid_y
+      deposition_particles_grid_num_cells_x  = effective_nb_deposition_particles_x  - 1
+      deposition_particles_grid_num_cells_y  = effective_nb_deposition_particles_y  - 1
+      deposition_particles_grid_num_cells_vx = effective_nb_deposition_particles_vx - 1
+      deposition_particles_grid_num_cells_vy = effective_nb_deposition_particles_vy - 1
+
+      deposition_particles_grid_x_min  = res%space_mesh_2d%eta1_min + 0.5 * h_deposition_particles_grid_x
+      deposition_particles_grid_x_max  = res%space_mesh_2d%eta1_max - 0.5 * h_deposition_particles_grid_x
+      deposition_particles_grid_y_min  = res%space_mesh_2d%eta2_min + 0.5 * h_deposition_particles_grid_y
+      deposition_particles_grid_y_max  = res%space_mesh_2d%eta2_max - 0.5 * h_deposition_particles_grid_y
 
       ! in velocity the bounds are those of the remapping grid
-      deposition_grid_vx_min = res%remapping_grid_eta_min(3)
-      deposition_grid_vx_max = res%remapping_grid_eta_max(3)
-      deposition_grid_vy_min = res%remapping_grid_eta_min(4)
-      deposition_grid_vy_max = res%remapping_grid_eta_max(4)
+      deposition_particles_grid_vx_min = res%remapping_grid_eta_min(3)
+      deposition_particles_grid_vx_max = res%remapping_grid_eta_max(3)
+      deposition_particles_grid_vy_min = res%remapping_grid_eta_min(4)
+      deposition_particles_grid_vy_max = res%remapping_grid_eta_max(4)
 
-      res%deposition_grid => new_cartesian_mesh_4d( deposition_grid_num_cells_x,        &
-                                                    deposition_grid_num_cells_y,        &
-                                                    deposition_grid_num_cells_vx,       &
-                                                    deposition_grid_num_cells_vy,       &
-                                                    deposition_grid_x_min,   &
-                                                    deposition_grid_x_max,   &
-                                                    deposition_grid_y_min,   &
-                                                    deposition_grid_y_max,   &
-                                                    deposition_grid_vx_min,  &
-                                                    deposition_grid_vx_max,  &
-                                                    deposition_grid_vy_min,  &
-                                                    deposition_grid_vy_max   &
+      res%deposition_particles_grid => new_cartesian_mesh_4d( deposition_particles_grid_num_cells_x,        &
+                                                    deposition_particles_grid_num_cells_y,        &
+                                                    deposition_particles_grid_num_cells_vx,       &
+                                                    deposition_particles_grid_num_cells_vy,       &
+                                                    deposition_particles_grid_x_min,   &
+                                                    deposition_particles_grid_x_max,   &
+                                                    deposition_particles_grid_y_min,   &
+                                                    deposition_particles_grid_y_max,   &
+                                                    deposition_particles_grid_vx_min,  &
+                                                    deposition_particles_grid_vx_max,  &
+                                                    deposition_particles_grid_vy_min,  &
+                                                    deposition_particles_grid_vy_max   &
                                                    )
 
-      res%number_moving_deposition_particles = 0
-
-    else if( res%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )then
-
-      ! D.2 deposition particles will be transported with the flow (like sdt particles)
-      !     and re-initialized from time to time, using BSL_LT_PIC techniques
-
-      res%number_moving_deposition_particles = minimum_number_of_deposition_particles
-      SLL_ALLOCATE( res%deposition_particles_eta(res%number_moving_deposition_particles, 4), ierr )
-      SLL_ALLOCATE( res%deposition_particles_weight(res%number_moving_deposition_particles), ierr )
-
-    else
-       err_msg = 'Error: incorrect value for deposition_particles_type'
-       SLL_ERROR( this_fun_name, err_msg )
+      tmp = abs(h_deposition_particles_grid_x - res%deposition_particles_grid%delta_eta1)
+      SLL_ASSERT( tmp < 0.00001 * h_deposition_particles_grid_x )
+      tmp = abs(h_deposition_particles_grid_y - res%deposition_particles_grid%delta_eta2)
+      SLL_ASSERT( tmp < 0.00001 * h_deposition_particles_grid_y )
 
     end if
 
+    if( res%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )then
+
+      ! Flexible deposition particles will have their weights and coordinates stored in the arrays initialized below
+      !     they may be transported with the flow (like sdt particles) and re-initialized on remapping steps
+      !     or stay on the grid and have new weights computed at each time step
+
+      res%deposition_particles_pos_type = deposition_particles_pos_type
+      res%deposition_particles_move_type = deposition_particles_move_type
+
+      if( res%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )then
+        res%number_deposition_particles        = effective_nb_deposition_particles_on_grid
+      else
+        SLL_ASSERT( res%deposition_particles_pos_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+        res%number_deposition_particles        = number_deposition_particles
+      end if
+
+      if( res%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )then
+        res%number_moving_deposition_particles = 0
+      else
+        SLL_ASSERT( res%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
+        res%number_moving_deposition_particles = res%number_deposition_particles
+      end if
+
+      SLL_ALLOCATE( res%deposition_particles_eta(res%number_deposition_particles, 4), ierr )
+      SLL_ALLOCATE( res%deposition_particles_weight(res%number_deposition_particles), ierr )
+
+    else
+       SLL_ASSERT( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )
+    end if
+
+    ! the variable "number_particles" is used in the interface to push particles
     res%number_particles = res%number_flow_markers + res%number_moving_deposition_particles
 
-    else
-      err_msg = "ahem, a test must be broken -- you should not be reading this :)"
-      SLL_ERROR( this_fun_name, err_msg )
-    end if
+    !    else
+    !      err_msg = "ahem, a test must be broken -- you should not be reading this :)"
+    !      SLL_ERROR( this_fun_name, err_msg )
+    !    end if
 
   end function sll_bsl_lt_pic_4d_group_new
 
@@ -1428,20 +1573,18 @@ contains
       call self%bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians()
     end if
 
-
-
-
-    !> D. if deposition particles are transported, initialize them -- this must be done after the remapping tool is operational!
-
+    !> C. if deposition particles are pushed, we initialize them now -- this requires that the remapping tool is initialized
     print *, "bsl_lt_pic_4d_initializer -- step C: initialize the deposition cells"
-
-    if( self%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )then
+    if( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE     &
+        .and. self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )then
+      ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       if(present(rank))then
-        call self%bsl_lt_pic_set_deposition_particles_coordinates(rank)
+        call self%reset_deposition_particles_coordinates(rank)
       else
-        call self%bsl_lt_pic_set_deposition_particles_coordinates()
+        call self%reset_deposition_particles_coordinates()
       end if
-      call self%bsl_lt_pic_set_deposition_particles_weights()
+      ! since the remapping tool has been set, computing the weights can be done with straightforward interpolation (flow = Id)
+      call self%reset_deposition_particles_weights_with_direct_interpolation()
     end if
 
     return
@@ -3203,12 +3346,14 @@ contains
       call self%bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians()
     end if
 
-    !> D. if deposition particles are transported, initialize them -- this must be done after the remapping tool is operational!
-
+    !> C. if deposition particles are pushed, we remap them now
     print *, "bsl_lt_pic_4d_remap -- step C"
-    if( self%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )then
-      call self%bsl_lt_pic_set_deposition_particles_coordinates()    ! todo: try without resetting the particles coordinates?
-      call self%bsl_lt_pic_set_deposition_particles_weights()
+    if( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE     &
+        .and. self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )then
+      ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
+      call self%reset_deposition_particles_coordinates()
+      ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
+      call self%reset_deposition_particles_weights_with_direct_interpolation()
     end if
 
   end subroutine bsl_lt_pic_4d_remap
@@ -3467,8 +3612,6 @@ contains
     sll_real64 :: markers_vx_min
     sll_real64 :: markers_vy_min
 
-    !    sll_int32 :: number_of_deposition_particles_per_flow_cell
-
     sll_real64 :: x
     sll_real64 :: y
     sll_real64 :: vx
@@ -3546,6 +3689,13 @@ contains
     debug_charge = 0.0_f64
     debug_count = 0
 
+    if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+        ! then the deposition particles should be of flexible and fixed type
+        ! (indeed in the pushed type the weights are set after remapping with a simple interpolation, no BSL_LT_PIC reconstruction)
+        SLL_ASSERT( p_group%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+        SLL_ASSERT( p_group%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )
+    end if
+
     ! getting the parameters of the flow grid
     flow_grid_x_min    = p_group%flow_grid%eta1_min
     flow_grid_y_min    = p_group%flow_grid%eta2_min
@@ -3581,7 +3731,7 @@ contains
       if( create_deposition_particles_on_a_grid )then
 
         reconstruct_f_on_g_grid = .true.
-        g => p_group%deposition_grid
+        g => p_group%deposition_particles_grid
 
         ! the boundary nodes of the deposition grid are inside the domain, even with periodic boundary conditions
         g_num_points_x  = g%num_cells1 + 1
@@ -3593,7 +3743,7 @@ contains
       else
 
         ! the deposition particles will be created to deposit their charge but not stored in memory
-        !        number_of_deposition_particles_per_flow_cell = number_of_deposition_particles / (  flow_grid_num_cells_x    &
+        !        number_of_deposition_particles_per_flow_cell = number_deposition_particles / (  flow_grid_num_cells_x    &
   !                                                                                               * flow_grid_num_cells_y    &
     !                                                                                             * flow_grid_num_cells_vx   &
     !                                                                                             * flow_grid_num_cells_vy )
@@ -3657,16 +3807,16 @@ contains
         tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
       else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
-        SLL_ASSERT( p_group%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )
+
         !        nodes_coordinate_list => p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate
-        nodes_number = p_group%number_moving_deposition_particles
+        nodes_number = p_group%number_deposition_particles
 
         phase_space_volume =    (p_group%remapping_grid_eta_max(4) - p_group%remapping_grid_eta_min(4))    &
                               * (p_group%remapping_grid_eta_max(3) - p_group%remapping_grid_eta_min(3))    &
                               * (p_group%remapping_grid_eta_max(2) - p_group%remapping_grid_eta_min(2))    &
                               * (p_group%remapping_grid_eta_max(1) - p_group%remapping_grid_eta_min(1))
 
-        deposition_particle_charge_factor = phase_space_volume * p_group%species%q / p_group%number_moving_deposition_particles
+        deposition_particle_charge_factor = phase_space_volume * p_group%species%q / p_group%number_deposition_particles
 
         ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
         p_group%deposition_particles_weight = 0.0d0
@@ -4057,7 +4207,6 @@ contains
                   tmp_f_values_on_remapping_sparse_grid(node_index) = reconstructed_f_value
                 else
                   SLL_ASSERT( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )
-                  SLL_ASSERT( p_group%deposition_particles_type == SLL_BSL_LT_PIC_TRANSPORTED_RANDOM )
                   p_group%deposition_particles_weight(node_index) = reconstructed_f_value * deposition_particle_charge_factor
                 end if
 
@@ -4163,7 +4312,6 @@ contains
                   i_cell_x = int( tmp ) + 1
                   cell_offset_x = tmp - (i_cell_x-1)  ! between 0 and 1
 
-                  ! SLL_ASSERT( abs(h_deposition_grid_x - h_g_grid_x) < 0.00001 * h_g_grid_x )
                 end if
 
                 do i_y = i_min_y, i_max_y
