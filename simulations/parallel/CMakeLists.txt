@@ -1,120 +1,78 @@
 #############################################################################
 ###      Parallel simulations
 #############################################################################
-IF( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
-
-  ADD_LIBRARY( sll_sim_parallel STATIC ${SIM_BASE_CLASS})
-
-   # Add new dependencies concerning SIMNAME/sim_SIMNAME.F90 
-   # and or SIMNAME/sll_m_sim_SIMNAME.F90
-   # refer to the developer guide for choosing the right SIMNAME
-
-   TARGET_LINK_LIBRARIES(sll_sim_parallel
-                         sll_collective
-                         sll_parallel_array_utilities
-                         sll_advection
-                         sll_parallel_utilities
-                         sll_poisson_solvers
-                         sll_splitting_methods
-                         sll_file_io_parallel
-                         sll_poisson_parallel
-                         sll_fcisl
-                         sll_quasi_neutral_solvers_parallel
-                         sll_reduction
-                         sll_gyroaverage
-                         sll_pic_accumulators
-                         sll_pic_utilities
-                         sll_pic_initializers
-                         sll_fft
-                         sll_distribution_function
-                         sll_general_coordinate_elliptic_solvers
-                         sll_fields
-                         sll_pic_particles
-                         sll_random_deviate_generators
-                         sll_interpolators
-                         sll_point_to_point_communications
-                         sll_splines
-                         sll_remap
-                         sll_mesh_calculus
-                         sll_quadrature
-                         sll_coordinate_transformations
-                         sll_meshes
-                         sll_utilities
-                         sll_timer
-                         sll_memory
-                         sll_assert
-                         )
+if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
 
     # Variables passed to simulations' CMakeFiles in subdirectories
-    SET( INSTALL_DIR "${INSTALL_DIR}/parallel" )
+    set( INSTALL_DIR "${INSTALL_DIR}/parallel" )
 
     # Semi-Lagrangian simulations
     
     ## Vlasov-Poisson 1Dx1D
-    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart                         )
-    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_two_species             )
-    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_multi_species           )
-    ADD_SUBDIRECTORY( bsl_vp_1d1v_cart_no_split                )
+    add_subdirectory( bsl_vp_1d1v_cart                         )
+    add_subdirectory( bsl_vp_1d1v_cart_two_species             )
+    add_subdirectory( bsl_vp_1d1v_cart_multi_species           )
+    add_subdirectory( bsl_vp_1d1v_cart_no_split                )
 
     ## Vlasov-Ampere 1Dx1D
-    ADD_SUBDIRECTORY( bsl_va_1d1v_cart_berk_breizman           )
-    ADD_SUBDIRECTORY( bsl_va_1d1v_cart_spectral                )
+    add_subdirectory( bsl_va_1d1v_cart_berk_breizman           )
+    add_subdirectory( bsl_va_1d1v_cart_spectral                )
 
     ## Vlasov-Poisson 2Dx2D
-    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart                         )
-    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_poisson_serial          )
-    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_sparsegrid              )
-    ADD_SUBDIRECTORY( bsl_vp_2d2v_cart_multipatch              )
-    ADD_SUBDIRECTORY( bsl_vp_2d2v_polar                        )
-    ADD_SUBDIRECTORY( bsl_vp_2d2v_curv                         )
+    add_subdirectory( bsl_vp_2d2v_cart                         )
+    add_subdirectory( bsl_vp_2d2v_cart_poisson_serial          )
+    add_subdirectory( bsl_vp_2d2v_cart_sparsegrid              )
+    add_subdirectory( bsl_vp_2d2v_cart_multipatch              )
+    add_subdirectory( bsl_vp_2d2v_polar                        )
+    add_subdirectory( bsl_vp_2d2v_curv                         )
 
     ## Vlasov-Poisson 3Dx3D
-    ADD_SUBDIRECTORY( bsl_vp_3d3v_cart                         )
-    ADD_SUBDIRECTORY( bsl_vp_3d3v_cart_sparsegrid              )
+    add_subdirectory( bsl_vp_3d3v_cart                         )
+    add_subdirectory( bsl_vp_3d3v_cart_sparsegrid              )
 
     ## Guiding-Center 2D
-    ADD_SUBDIRECTORY( bsl_gc_2d0v_curv )
+    add_subdirectory( bsl_gc_2d0v_curv )
 
     ## Drift/gyro-kinetic 3Dx1D
-    ADD_SUBDIRECTORY( bsl_dk_3d1v_polar                        )
-    ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_one_mu                 )
-    ADD_SUBDIRECTORY( bsl_gk_3d1v_polar_multi_mu               )
-    IF(FULL_FORTRAN2003)
-      ADD_SUBDIRECTORY( bsl_dk_3d1v_polar_field_aligned          )
-    ENDIF(FULL_FORTRAN2003)
-    ADD_SUBDIRECTORY( bsl_dk_3d1v_curv                         )
-    ADD_SUBDIRECTORY( bsl_dk_3d1v_curv_field_aligned           )
+    add_subdirectory( bsl_dk_3d1v_polar                        )
+    add_subdirectory( bsl_gk_3d1v_polar_one_mu                 )
+    add_subdirectory( bsl_gk_3d1v_polar_multi_mu               )
+    if(FULL_FORTRAN2003)
+      add_subdirectory( bsl_dk_3d1v_polar_field_aligned          )
+    endif(FULL_FORTRAN2003)
+    add_subdirectory( bsl_dk_3d1v_curv                         )
+    add_subdirectory( bsl_dk_3d1v_curv_field_aligned           )
 
 
     # Eulerian simulations
 
     ## Vlasov-Poisson 2Dx2D
-    IF(FULL_FORTRAN2003)
-    ADD_SUBDIRECTORY( eul_vp_2d2v_cart_fv                      )
-    ENDIF(FULL_FORTRAN2003)
+    if(FULL_FORTRAN2003)
+      add_subdirectory( eul_vp_2d2v_cart_fv                      )
+    endif(FULL_FORTRAN2003)
 
     # Particle simulations
 
     ## Vlasov-Poisson 1Dx1D
-    ADD_SUBDIRECTORY( pic_vp_1d1v_cart                         )
+    add_subdirectory( pic_vp_1d1v_cart                         )
 
     ## Vlasov-Maxwell 1Dx2D
-    ADD_SUBDIRECTORY( pic_vm_1d2v_cart                         )
+    add_subdirectory( pic_vm_1d2v_cart                         )
 
     ## Vlasov-Maxwell 2Dx2D
     ADD_SUBDIRECTORY( pic_vm_2d2v_cart                         )
 
     ## Vlasov-Poisson 2Dx2D
-    ADD_SUBDIRECTORY( pic_vp_2d2v_cart                         )
-    ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim                   )
-    ADD_SUBDIRECTORY( pic_vp_2d2v_cart_optim_push              )
-    ADD_SUBDIRECTORY( pic_vp_2d2v_cart_remapped                )
+    add_subdirectory( pic_vp_2d2v_cart                         )
+    add_subdirectory( pic_vp_2d2v_cart_optim                   )
+    add_subdirectory( pic_vp_2d2v_cart_optim_push              )
+    add_subdirectory( pic_vp_2d2v_cart_remapped                )
 
     ## Vlasov-Poisson NDxND
-    ADD_SUBDIRECTORY( pif_vp_ndnv_cart                         )
+    add_subdirectory( pif_vp_ndnv_cart                         )
 
     ## Guiding-Center 2D
-    ADD_SUBDIRECTORY( pic_gc_2d0v_cart_optim                   )
+    add_subdirectory( pic_gc_2d0v_cart_optim                   )
     
     
     #To delete/put somewhere else
@@ -122,7 +80,7 @@ IF( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     #is indicated
     #ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian          )
  
-ENDIF()
+endif()
 
 
 # here are some other examples of simulations
@@ -132,4 +90,4 @@ ENDIF()
 # requirements of the simulations that are
 # present in the developer guide are not
 # mandatory here
-ADD_SUBDIRECTORY(bsl_examples)
+add_subdirectory(bsl_examples)

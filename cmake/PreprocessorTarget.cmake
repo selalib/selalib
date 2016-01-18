@@ -27,6 +27,7 @@
 #   - 02 Nov 2015: also preprocess executable sources (YG).
 #   - 26 Nov 2015: add OpenMP flag (YG).
 #   - 02 Dec 2015: fix dependency bug (YG).
+#   - 15 Jan 2016: store names of all libraries (YG).
 
 if(__add_all_preproc)
    return()
@@ -34,7 +35,10 @@ endif()
 
 set(__add_all_preproc YES)
 
-# The list of source files to be analyzed
+# List of targets created by "add_library" instructions
+set_property(GLOBAL PROPERTY LIBRARY_TARGETS "")
+
+# List of source files to be analyzed
 set_property(GLOBAL PROPERTY CPP_SOURCES "")
 set_property(GLOBAL PROPERTY CPP_PREPROC_SOURCES "")
 
@@ -98,12 +102,23 @@ function( collect_source_info _name )
 endfunction()
 
 #==============================================================================
+# FUNCTION: collect_library_name
+#==============================================================================
+# Collect names of all library targets.
+function( collect_library_name _name )
+  get_property( _library_targets GLOBAL PROPERTY LIBRARY_TARGETS )
+  list( APPEND _library_targets "${_name}" )
+  set_property( GLOBAL PROPERTY LIBRARY_TARGETS ${_library_targets} )
+endfunction()
+
+#==============================================================================
 # FUNCTION: add_library
 #==============================================================================
 # We override the add_library built in function.
 function( add_library _name )
   _add_library( ${_name} ${ARGN} ) # Call the original function
-  collect_source_info( ${_name} )  # Create a list of source files
+  collect_library_name( ${_name} ) # Store library name in proper list
+  collect_source_info ( ${_name} ) # Create a list of source files
 endfunction()
 
 #==============================================================================
