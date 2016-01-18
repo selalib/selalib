@@ -57,7 +57,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   class(sll_c_maxwell_1d_base), pointer :: maxwell_solver
   
   ! Specific operator splitting
-  class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), pointer :: propagator
+  class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), allocatable :: propagator
   
   ! Parameters
   sll_int32  :: n_particles

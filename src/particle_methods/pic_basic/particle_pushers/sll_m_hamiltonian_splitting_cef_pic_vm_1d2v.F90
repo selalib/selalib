@@ -468,7 +468,7 @@ contains
        bfield_dofs, &
        x_min, &
        Lx)
-    class(sll_c_hamiltonian_splitting_base), pointer, intent(out) :: splitting !< time splitting object 
+    class(sll_c_hamiltonian_splitting_base), allocatable, intent(out) :: splitting !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother

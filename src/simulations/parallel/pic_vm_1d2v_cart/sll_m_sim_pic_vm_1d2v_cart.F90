@@ -110,7 +110,7 @@ module sll_m_sim_pic_vm_1d2v_cart
 
 
      ! Specific operator splitting
-     class(sll_c_hamiltonian_splitting_base), pointer :: propagator
+     class(sll_c_hamiltonian_splitting_base), allocatable :: propagator
      sll_int32 :: splitting_case
 
      ! Fields on the grid
