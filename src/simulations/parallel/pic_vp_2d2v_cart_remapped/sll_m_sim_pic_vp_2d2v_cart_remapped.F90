@@ -796,6 +796,8 @@ contains
                                  sim%E1,                                            &
                                  sim%mesh_2d%delta_eta1, sim%mesh_2d%delta_eta2 )
           counter = 1 + mod(it,save_nb)
+
+          ! <<logE_run_columns>>
           diag_energy(counter,:) = (/ it*sim%dt, val_lee, log(sqrt(exval_ee)), &
                val_ee, exval_ee /)
 
