@@ -14,13 +14,13 @@ program test_operator_splitting_pic_vp_2d2v
 
   use sll_m_kernel_smoother_spline_2d, only: &
     sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_smoother_spline_2d
+    sll_s_new_kernel_smoother_spline_2d_ptr
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
     sll_t_operator_splitting_pic_vp_2d2v
 
   use sll_m_particle_group_2d2v, only: &
-    sll_s_new_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v_ptr, &
     sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
@@ -94,7 +94,7 @@ program test_operator_splitting_pic_vp_2d2v
   rnd_seed = 10
   
   ! Initialize
-  call sll_s_new_particle_group_2d2v(particle_group, n_particles, &
+  call sll_s_new_particle_group_2d2v_ptr(particle_group, n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
 
   ! Initial particle information   
@@ -123,7 +123,7 @@ program test_operator_splitting_pic_vp_2d2v
 
   domain(:,1) = eta_min
   domain(:,2) = eta_max
-  call sll_s_new_smoother_spline_2d(kernel_smoother, &
+  call sll_s_new_kernel_smoother_spline_2d_ptr(kernel_smoother, &
          domain, num_cells, n_particles, &
          degree_smoother, sll_p_collocation)
   

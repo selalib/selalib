@@ -287,7 +287,7 @@ contains
              v(i_v) = v(i_v)*(thermal_velocity(i_v))
           end do
        elseif ( ip == 5) then
-          x(1) = Lx - x(1)
+          x(1) = Lx - x(1) + 2.0_f64*xmin
        elseif ( modulo(ip,2) == 0 ) then
           v(2) = - v(2)
        else
@@ -418,7 +418,7 @@ contains
              v(i_v) = v(i_v)*(thermal_velocity(i_v))
           end do
        elseif ( ip == 5) then
-          x(1) = Lx - x(1)
+          x(1) = Lx - x(1) + 2.0_f64*xmin
        elseif ( modulo(ip,2) == 0 ) then
           v(2) = - v(2)
        else

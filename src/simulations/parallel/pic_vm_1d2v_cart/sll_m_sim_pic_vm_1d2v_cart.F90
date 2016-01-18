@@ -46,7 +46,7 @@ module sll_m_sim_pic_vm_1d2v_cart
 
   use sll_m_kernel_smoother_spline_1d, only: &
     sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_smoother_spline_1d
+    sll_s_new_kernel_smoother_spline_1d_ptr
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -56,7 +56,7 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_f_new_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
-    sll_s_new_particle_group_1d2v, &
+    sll_s_new_particle_group_1d2v_ptr, &
     sll_t_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
@@ -250,18 +250,18 @@ contains
     end if
 
     ! Initialize the particles   (mass and charge set to 1.0)
-     call sll_s_new_particle_group_1d2v(sim%particle_group, sim%n_particles, &
-         sim%n_total_particles ,1.0_f64, 1.0_f64, 1)
+     call sll_s_new_particle_group_1d2v_ptr(sim%particle_group, sim%n_particles, &
+         sim%n_total_particles, 1.0_f64, 1.0_f64, 1)
 
     ! Initialize the field solver
     sim%maxwell_solver => sll_f_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
          sim%degree_smoother)
 
     ! Initialize kernel smoother    
-    call sll_s_new_smoother_spline_1d(sim%kernel_smoother_1, &
+    call sll_s_new_kernel_smoother_spline_1d_ptr(sim%kernel_smoother_1, &
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother-1, sll_p_galerkin) 
-    call sll_s_new_smoother_spline_1d(sim%kernel_smoother_0, &
+    call sll_s_new_kernel_smoother_spline_1d_ptr(sim%kernel_smoother_0, &
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
     
