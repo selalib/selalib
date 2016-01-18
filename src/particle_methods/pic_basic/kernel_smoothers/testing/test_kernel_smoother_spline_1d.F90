@@ -7,8 +7,7 @@ program test_kernel_smoother_spline_1d
     sll_p_collocation
 
   use sll_m_kernel_smoother_spline_1d, only: &
-    sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_smoother_spline_1d
+    sll_t_kernel_smoother_spline_1d
 
   use sll_m_particle_group_1d2v, only: &
     sll_s_new_particle_group_1d2v
@@ -20,7 +19,7 @@ program test_kernel_smoother_spline_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
-  class(sll_t_kernel_smoother_spline_1d),pointer :: kernel
+  type(sll_t_kernel_smoother_spline_1d) :: kernel
   ! Abstract particle group
   class(sll_c_particle_group_base), pointer :: particle_group
 
@@ -91,7 +90,6 @@ program test_kernel_smoother_spline_1d
        0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
 
   ! Initialize the kernel
-  allocate(kernel)
   call kernel%initialize &
        (domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
   
@@ -166,7 +164,6 @@ program test_kernel_smoother_spline_1d
   end if
 
   call kernel%delete()
-  deallocate(kernel)
   call particle_group%delete()
   deallocate(particle_group)
 
