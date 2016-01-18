@@ -17,6 +17,7 @@ program sim_pic_vm_1d2v_cart
   type(sll_t_sim_pic_vm_1d2v_cart)  :: sim
   character(len=256)                               :: filename
   integer                                          :: rank, size
+  logical                                          :: passed
  
 
   call sll_s_boot_collective()
@@ -28,9 +29,21 @@ program sim_pic_vm_1d2v_cart
   call sim%init_from_file(trim(filename))
   
   call sim%run()
+
+  if (rank == 0) then
+     passed = sim%ctest_passed
+  end if
+
   call sim%delete()
 
   call sll_s_halt_collective()
 
+  if (rank == 0) then
+     if ( passed .eqv. .true. ) then
+        print*, 'PASSED.'
+     else
+        print*, 'FAILED.'
+     end if
+  end if
 
 end program sim_pic_vm_1d2v_cart
