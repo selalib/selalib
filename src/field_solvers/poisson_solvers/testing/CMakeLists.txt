@@ -39,7 +39,7 @@ ADD_TEST( NAME poisson_3d_periodic  COMMAND test_poisson_3d_periodic     )
 SET_TESTS_PROPERTIES( poisson_3d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_tri_poisson test_tri_poisson.F90 )
-TARGET_LINK_LIBRARIES( test_tri_poisson tri_poisson sll_mesh_calculus sll_file_io )
+TARGET_LINK_LIBRARIES( test_tri_poisson sll_poisson_solvers sll_mesh_calculus sll_file_io )
 ADD_TEST( NAME tri_poisson  COMMAND test_tri_poisson     )
 SET_TESTS_PROPERTIES( tri_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
@@ -82,6 +82,6 @@ ADD_TEST( NAME poisson_2d_fem COMMAND test_poisson_2d_fem )
 SET_TESTS_PROPERTIES( poisson_2d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_hex_poisson test_hex_poisson.F90 )
-TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_utilities )
+TARGET_LINK_LIBRARIES( test_hex_poisson sll_poisson_solvers )
 ADD_TEST( NAME hex_poisson COMMAND test_hex_poisson )
 SET_TESTS_PROPERTIES( hex_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
