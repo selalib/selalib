@@ -242,6 +242,7 @@ module sll_m_bsl_lt_pic_4d_group
     procedure :: reset_deposition_particles_coordinates
     procedure :: reset_deposition_particles_weights_with_bsl_reconstruction
     procedure :: reset_deposition_particles_weights_with_direct_interpolation
+    procedure :: get_deposition_particle_charge_factor
 
     procedure :: bsl_lt_pic_4d_write_f_on_grid_or_deposit
     procedure :: bsl_lt_pic_4d_interpolate_value_of_remapped_f
@@ -492,6 +493,11 @@ contains
     sll_int32 :: old_j_x, old_j_y, old_j_vx, old_j_vy
     logical   :: marker_is_outside
 
+    !print *, " *********** *********** *********** *********** *********** *********** *********** ***********         i = ", i
+    !print *, " number_flow_markers = ", self%number_flow_markers
+    !print *, " number_moving_deposition_particles = ", self%number_moving_deposition_particles
+    !print *, " sum: ", self%number_flow_markers + self%number_moving_deposition_particles
+
     SLL_ASSERT( i >= 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
@@ -719,14 +725,15 @@ contains
 
       SLL_ASSERT( self%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )
 
+      ! fill in the grid of deposition particles (in every dimension we use the end nodes, even with periodic boundaries)
       i_part = 0
-      do i_x = 1, self%deposition_particles_grid%num_cells1
+      do i_x = 1, self%deposition_particles_grid%num_cells1 + 1
         eta_part(1) = self%deposition_particles_grid%eta1_min + (i_x-1) * self%deposition_particles_grid%delta_eta1
-        do i_y = 1, self%deposition_particles_grid%num_cells2
+        do i_y = 1, self%deposition_particles_grid%num_cells2 + 1
           eta_part(2) = self%deposition_particles_grid%eta2_min + (i_y-1) * self%deposition_particles_grid%delta_eta2
-          do i_vx = 1, self%deposition_particles_grid%num_cells3
+          do i_vx = 1, self%deposition_particles_grid%num_cells3 + 1
             eta_part(3) = self%deposition_particles_grid%eta3_min + (i_vx-1) * self%deposition_particles_grid%delta_eta3
-            do i_vy = 1, self%deposition_particles_grid%num_cells4
+            do i_vy = 1, self%deposition_particles_grid%num_cells4 + 1
               eta_part(4) = self%deposition_particles_grid%eta4_min + (i_vy-1) * self%deposition_particles_grid%delta_eta4
               i_part = i_part + 1
               self%deposition_particles_eta(i_part, :) = eta_part
@@ -770,6 +777,9 @@ contains
     ! for pushed deposition particles, the reconstruction is always done at the remapping step, using a direct interpolation
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FIXED )
 
+    ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
+    self%deposition_particles_weight = 0.0d0
+
     call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(void_charge_accumulator,             &
                                                           scenario,                         &
                                                           void_grid_4d,                     &
@@ -789,6 +799,7 @@ contains
 
     sll_real64    :: eta(4)
     sll_int32     :: i_part
+    sll_real64    :: deposition_particle_charge_factor
 
     ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
@@ -796,9 +807,15 @@ contains
     ! for fixed deposition particles, the reconstruction is done at each time step using a bsl_lt_pic reconstruction
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_PUSHED )
 
+    ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
+    self%deposition_particles_weight = 0.0d0
+
+    deposition_particle_charge_factor = self%get_deposition_particle_charge_factor()
+
     do i_part = 1, self%number_deposition_particles
       eta = self%deposition_particles_eta(i_part, :)
-      self%deposition_particles_weight(i_part) = self%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+      self%deposition_particles_weight(i_part) = deposition_particle_charge_factor                                    &
+                                                  * self%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
     end do
 
   end subroutine reset_deposition_particles_weights_with_direct_interpolation
@@ -1008,6 +1025,24 @@ contains
 
     val = p_group%remapping_cart_grid_number_cells_vy + 1
   end function
+
+  function get_deposition_particle_charge_factor(p_group) result(val)
+    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    sll_real64 :: val
+
+    sll_int32  :: nodes_number
+    sll_real64 :: phase_space_volume
+
+    nodes_number = p_group%number_deposition_particles
+
+    phase_space_volume =    (p_group%remapping_grid_eta_max(4) - p_group%remapping_grid_eta_min(4))    &
+                          * (p_group%remapping_grid_eta_max(3) - p_group%remapping_grid_eta_min(3))    &
+                          * (p_group%remapping_grid_eta_max(2) - p_group%remapping_grid_eta_min(2))    &
+                          * (p_group%remapping_grid_eta_max(1) - p_group%remapping_grid_eta_min(1))
+
+    val = phase_space_volume * p_group%species%q / p_group%number_deposition_particles
+
+  end function get_deposition_particle_charge_factor
 
   !----------------------------------------------------------------------------
   ! Constructor
@@ -1344,7 +1379,7 @@ contains
       ! C.2 interpolator for sparse grids
 
       ! C.2.a  sparse remapping grid
-      print*, "sll_bsl_lt_pic_4d_group_new - C.2", remapping_sparse_grid_max_levels
+      print*, "[", this_fun_name, "] - sparse grid levels for the remapping tool:", remapping_sparse_grid_max_levels
       res%sparse_grid_max_levels(1) = remapping_sparse_grid_max_levels(1)
       res%sparse_grid_max_levels(2) = remapping_sparse_grid_max_levels(2)
       res%sparse_grid_max_levels(3) = remapping_sparse_grid_max_levels(3)
@@ -1368,6 +1403,16 @@ contains
     !> D. discretization of the deposited f -- uses deposition particles which can be of several types (see comments on top of file)
 
     res%deposition_particles_type = deposition_particles_type
+
+    if( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )then
+      res%deposition_particles_pos_type = SLL_BSL_LT_PIC_STRUCTURED
+      res%deposition_particles_move_type = SLL_BSL_LT_PIC_FIXED
+      ! Note: results should be the same as with FLEXIBLE particles of type STRUCTURED + FIXED,
+      ! however BASIC particles are created on the fly (during deposition) and not stored
+    else
+      res%deposition_particles_pos_type  = deposition_particles_pos_type
+      res%deposition_particles_move_type = deposition_particles_move_type
+    end if
 
     use_deposition_particles_grid = ( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC   &
                                       .or. res%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )
@@ -1424,7 +1469,7 @@ contains
         effective_nb_deposition_particles_on_grid =   effective_nb_deposition_particles_x  * effective_nb_deposition_particles_y   &
                                                     * effective_nb_deposition_particles_vx * effective_nb_deposition_particles_vy
         print*, "[", this_fun_name, "] will use ", effective_nb_deposition_particles_on_grid, "deposition particles"
-        print*, "[bsl_lt_pic_4d_write_f_on_grid_or_deposit -- DEPOSIT_F] should be at least ", number_deposition_particles
+        print*, "[", this_fun_name, "] should be at least ", number_deposition_particles
         SLL_ASSERT( effective_nb_deposition_particles_on_grid >= number_deposition_particles )
 
       else
@@ -1443,6 +1488,7 @@ contains
         effective_nb_deposition_particles_on_grid =   effective_nb_deposition_particles_x  * effective_nb_deposition_particles_y   &
                                                     * effective_nb_deposition_particles_vx * effective_nb_deposition_particles_vy
 
+        print*, "[", this_fun_name, "] (default build) will use ", effective_nb_deposition_particles_on_grid, "deposition particles"
       end if
 
       ! we create the deposition grid so that every deposition particle is _inside_ a poisson cell
@@ -1491,9 +1537,6 @@ contains
       !     they may be transported with the flow (like sdt particles) and re-initialized on remapping steps
       !     or stay on the grid and have new weights computed at each time step
 
-      res%deposition_particles_pos_type = deposition_particles_pos_type
-      res%deposition_particles_move_type = deposition_particles_move_type
-
       if( res%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )then
         res%number_deposition_particles        = effective_nb_deposition_particles_on_grid
       else
@@ -1513,7 +1556,13 @@ contains
 
     else
        SLL_ASSERT( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )
+
+       res%number_deposition_particles        = number_deposition_particles
+       res%number_moving_deposition_particles = 0
     end if
+
+    SLL_ASSERT( res%number_deposition_particles >= 0 )
+    SLL_ASSERT( res%number_moving_deposition_particles*(res%number_moving_deposition_particles-res%number_deposition_particles)==0 )
 
     ! the variable "number_particles" is used in the interface to push particles
     res%number_particles = res%number_flow_markers + res%number_moving_deposition_particles
@@ -1574,9 +1623,10 @@ contains
     end if
 
     !> C. if deposition particles are pushed, we initialize them now -- this requires that the remapping tool is initialized
-    print *, "bsl_lt_pic_4d_initializer -- step C: initialize the deposition cells"
     if( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE     &
         .and. self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )then
+      print *, "bsl_lt_pic_4d_initializer -- step C: initialize the deposition cells: "
+      print *, "bsl_lt_pic_4d_initializer -- (C) will create ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       if(present(rank))then
         call self%reset_deposition_particles_coordinates(rank)
@@ -3347,9 +3397,10 @@ contains
     end if
 
     !> C. if deposition particles are pushed, we remap them now
-    print *, "bsl_lt_pic_4d_remap -- step C"
     if( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE     &
         .and. self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )then
+      print *, "bsl_lt_pic_4d_remap -- step C"
+      print *, "bsl_lt_pic_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       call self%reset_deposition_particles_coordinates()
       ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
@@ -3808,18 +3859,8 @@ contains
 
       else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
 
-        !        nodes_coordinate_list => p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate
-        nodes_number = p_group%number_deposition_particles
-
-        phase_space_volume =    (p_group%remapping_grid_eta_max(4) - p_group%remapping_grid_eta_min(4))    &
-                              * (p_group%remapping_grid_eta_max(3) - p_group%remapping_grid_eta_min(3))    &
-                              * (p_group%remapping_grid_eta_max(2) - p_group%remapping_grid_eta_min(2))    &
-                              * (p_group%remapping_grid_eta_max(1) - p_group%remapping_grid_eta_min(1))
-
-        deposition_particle_charge_factor = phase_space_volume * p_group%species%q / p_group%number_deposition_particles
-
-        ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
-        p_group%deposition_particles_weight = 0.0d0
+        !  nodes_coordinate_list => p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate
+        deposition_particle_charge_factor = p_group%get_deposition_particle_charge_factor()
 
       end if
 

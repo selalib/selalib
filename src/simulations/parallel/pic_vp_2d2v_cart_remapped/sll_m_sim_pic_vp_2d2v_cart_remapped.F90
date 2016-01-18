@@ -565,6 +565,7 @@ contains
     sll_real64 :: coords(3)
     sll_real64 :: target_total_charge
     logical    :: enforce_total_charge
+    logical    :: this_is_the_last_time_loop
     character(len=1024) :: field_name
 
 
@@ -669,7 +670,7 @@ contains
        it = 0
 
       ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
-      write (field_name, "(A13,I4)") 'rho_init_run=', sim%run_nb
+      write (field_name, "(A13,I4.4)") 'rho_init_run=', sim%run_nb
       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
           sim%mesh_2d%eta2_max, ncy+1,                            &
           sim%rho, trim(field_name), it+1, ierr )
@@ -679,11 +680,7 @@ contains
     !> sign (hence there is no need to multiply it by an additional physical constant). The resulting field \f$E^0_x\f$
     !> is stored in sim\%E1, and \f$E^0_y\f$ in sim\%E2.
 
-    print*,  "aa  ee"
-
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
-
-    print*,  "aa  ff"
 
     ! <<Ex_Ey_output>> using the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably
     ! the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
@@ -693,12 +690,12 @@ contains
        
        ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
       print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
-      write (field_name, "(A12,I4)") 'Ex_init_run=', sim%run_nb
+      write (field_name, "(A12,I4.4)") 'Ex_init_run=', sim%run_nb
       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
           sim%mesh_2d%eta2_max, ncy+1,                            &
           sim%rho, trim(field_name), it+1, ierr )
 
-      write (field_name, "(A12,I4)") 'Ey_init_run=', sim%run_nb
+      write (field_name, "(A12,I4.4)") 'Ey_init_run=', sim%run_nb
       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
            sim%mesh_2d%eta2_max, ncy+1,                            &
            sim%E2, trim(field_name), it+1, ierr )
@@ -770,7 +767,7 @@ contains
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
 
-    write (field_name, "(A9,I4,A4)") 'logE_run=', sim%run_nb, '.dat'
+    write (field_name, "(A9,I4.4,A4)") 'logE_run=', sim%run_nb, '.dat'
     if (sim%my_rank ==0) open(65,file=trim(field_name))
 
     !#ifdef _OPENMP
@@ -798,6 +795,8 @@ contains
     do it = 0, sim%num_iterations-1
 
        print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%num_iterations
+       this_is_the_last_time_loop = (it == sim%num_iterations-1)
+
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
        !AAA-ALH-HERE
        if (sim%my_rank == 0) then
@@ -946,7 +945,7 @@ contains
          ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
 
          ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
-        write (field_name, "(A8,I4)") 'rho_run=', sim%run_nb
+        write (field_name, "(A8,I4.4)") 'rho_run=', sim%run_nb
         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
               sim%mesh_2d%eta2_max, ncy+1,                            &
               sim%rho, trim(field_name), it+1, ierr )
@@ -975,7 +974,7 @@ contains
         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
 
-        write (field_name, "(A12,I4)") 'f_slice_run=', sim%run_nb
+        write (field_name, "(A12,I4.4)") 'f_slice_run=', sim%run_nb
         call sim%particle_group%visualize_f_slice_x_vx(trim(field_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
 
       end if
@@ -983,20 +982,25 @@ contains
       if (sim%use_lt_pic_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
         ! note: condition on rank == 0 needs to be revised for the actual parallel version...
 
-        print *, "remapping f..."
-        call sim%particle_group%remap()
+        if( this_is_the_last_time_loop )then
+          print *, "skip remapping step (last loop)"
+        else
+          print *, "remapping f..."
+          call sim%particle_group%remap()
+        end if
+
       end if
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
         print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
                " # plot = ",it+1
-        write (field_name, "(A7,I4)") 'Ex_run=', sim%run_nb
+        write (field_name, "(A7,I4.4)") 'Ex_run=', sim%run_nb
         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                               sim%mesh_2d%eta2_max, ncy+1,                        &
                               sim%E1, trim(field_name), it+1, ierr )
 
-        write (field_name, "(A7,I4)") 'Ey_run=', sim%run_nb
+        write (field_name, "(A7,I4.4)") 'Ey_run=', sim%run_nb
         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                               sim%mesh_2d%eta2_max, ncy+1,                        &
                               sim%E2, trim(field_name), it+1, ierr )
