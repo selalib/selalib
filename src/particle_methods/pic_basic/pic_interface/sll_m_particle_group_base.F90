@@ -34,7 +34,7 @@ module sll_m_particle_group_base
   !============================================================================
   type, abstract :: sll_c_particle_group_base
 
-    class( sll_t_species ), allocatable :: species
+    class( sll_t_species ), pointer :: species
     sll_int32                     :: id
     sll_int32                     :: n_particles !< number of particles local to the processor
     sll_int32                     :: n_total_particles !< number of particles in total simulation    

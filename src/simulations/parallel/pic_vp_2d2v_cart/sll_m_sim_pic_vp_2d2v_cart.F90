@@ -32,13 +32,13 @@ module sll_m_sim_pic_vp_2d2v_cart
 
   use sll_m_kernel_smoother_spline_2d, only: &
     sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_smoother_spline_2d
+    sll_s_new_kernel_smoother_spline_2d_ptr
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
     sll_t_operator_splitting_pic_vp_2d2v
 
   use sll_m_particle_group_2d2v, only: &
-    sll_s_new_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v_ptr, &
     sll_t_particle_group_2d2v
 
   use sll_m_particle_group_base, only: &
@@ -219,7 +219,7 @@ contains
     end if
 
     ! Initialize the particles   
-    call sll_s_new_particle_group_2d2v&
+    call sll_s_new_particle_group_2d2v_ptr&
          (sim%particle_group, sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64, sim%no_weights)
     
@@ -266,7 +266,7 @@ contains
     ! Initialize the kernel smoother
     domain(:,1) = [sim%mesh%eta1_min, sim%mesh%eta2_min]
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
-    call sll_s_new_smoother_spline_2d(sim%kernel_smoother, &
+    call sll_s_new_kernel_smoother_spline_2d_ptr(sim%kernel_smoother, &
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
          sim%degree_smoother, sll_p_collocation)
 

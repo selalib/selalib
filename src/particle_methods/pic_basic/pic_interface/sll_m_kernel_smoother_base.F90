@@ -25,7 +25,7 @@ module sll_m_kernel_smoother_base
   type, abstract :: sll_c_kernel_smoother
      sll_int32              :: dim
      sll_int32              :: n_dofs  !< Number of degrees of freedom of the smoothing kernels.
-     sll_int32, allocatable :: n_grid(:) !< Number of grid points per dimension for use on tensor product grid based smoothing kernels.
+     sll_int32, pointer :: n_grid(:) !< Number of grid points per dimension for use on tensor product grid based smoothing kernels.
      
    contains
 

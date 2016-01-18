@@ -4,13 +4,19 @@ program test_particle_group_2d2v
 #include "sll_working_precision.h"
 
   use sll_m_particle_group_2d2v, only: &
-    sll_t_particle_group_2d2v
+    sll_t_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v, &
+    sll_s_new_particle_group_2d2v_ptr
+
+  use sll_m_particle_group_base
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   
   type(sll_t_particle_group_2d2v) :: particle_group
+  class(sll_c_particle_group_base), pointer :: pgp
+  class(sll_c_particle_group_base), allocatable :: pga
 
   sll_int32  :: n_particles
   sll_int32  :: n_total_particles
@@ -28,6 +34,9 @@ program test_particle_group_2d2v
   charge = -1.0_f64
   mass = 1.0_f64
   n_weights = 1
+
+  call sll_s_new_particle_group_2d2v_ptr(pgp, n_particles, n_total_particles, charge, mass, n_weights)
+  call sll_s_new_particle_group_2d2v(pga, n_particles, n_total_particles, charge, mass, n_weights)
 
   call particle_group%initialize(n_particles, n_total_particles, charge, mass, n_weights)
 
