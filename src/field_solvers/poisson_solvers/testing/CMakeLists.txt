@@ -31,11 +31,6 @@ SET_TESTS_PROPERTIES( poisson_2d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PA
 ADD_EXECUTABLE( test_poisson_2d_curvilinear test_poisson_2d_curvilinear.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_curvilinear sll_poisson_solvers )
 
-ADD_EXECUTABLE( test_poisson_2d_polar_wrapper test_poisson_2d_polar_wrapper.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_2d_polar_wrapper sll_poisson_solvers )
-ADD_TEST( NAME poisson_2d_polar_wrapper     COMMAND test_poisson_2d_polar_wrapper     )
-SET_TESTS_PROPERTIES( poisson_2d_polar_wrapper PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
 ADD_EXECUTABLE( test_poisson_3d_periodic test_poisson_3d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_3d_periodic sll_poisson_solvers sll_fft )
 ADD_TEST( NAME poisson_3d_periodic  COMMAND test_poisson_3d_periodic     )
