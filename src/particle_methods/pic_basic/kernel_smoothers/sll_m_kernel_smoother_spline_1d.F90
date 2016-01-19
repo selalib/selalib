@@ -72,6 +72,7 @@ module sll_m_kernel_smoother_spline_1d
 contains
 
   !---------------------------------------------------------------------------!
+  !> Add charge of one particle
   subroutine add_charge_single_spline_1d(this, position, weight, rho_dofs)
     class( sll_t_kernel_smoother_spline_1d ), intent(inout) :: this !< kernel smoother object
     sll_real64, intent(in)  :: position(this%dim) !< Position of the particle
@@ -99,6 +100,7 @@ contains
   end subroutine add_charge_single_spline_1d
 
 
+  !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
   subroutine add_current_update_v_spline_1d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_kernel_smoother_spline_1d), intent(inout) :: this !< kernel smoother object
     sll_real64, intent(in) :: position_old(this%dim)
@@ -158,7 +160,7 @@ contains
 
      end subroutine add_current_update_v_spline_1d
 
- ! TODO: This is hard coded for quadratic, cubic splines. Make general.
+ !> Helper function for \a add_current_update_v.
  subroutine update_jv(this, lower, upper, index, weight, qoverm, sign, vi, j_dofs, bfield_dofs)
    class(sll_t_kernel_smoother_spline_1d), intent(inout) :: this !< time splitting object 
    sll_real64, intent(in) :: lower
@@ -178,22 +180,16 @@ contains
 
    n_cells = this%n_grid(1)
 
-   !this%quad_xw = sll_f_gauss_legendre_points_and_weights(this%n_quad_points, lower, upper)
    c1 =  0.5_f64*(upper-lower)
    c2 =  0.5_f64*(upper+lower)
    
    call sll_s_uniform_b_splines_at_x(this%spline_degree, c1*this%quad_xw(1,1)+c2, &
         this%spline_val)
    this%spline_val = this%spline_val * (this%quad_xw(2,1)*c1)
-   !this%spline_val = this%quad_xw(2,1) * &
-   !     sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,1))
    do j=2,this%n_quad_points
       call sll_s_uniform_b_splines_at_x(this%spline_degree, c1*this%quad_xw(1,j)+c2, &
            this%spline_val_more)
       this%spline_val = this%spline_val + this%spline_val_more * (this%quad_xw(2,j)*c1)
-      !this%spline_val = this%spline_val + &
-      !     this%quad_xw(2,j) * &
-      !    sll_f_uniform_b_splines_at_x(this%spline_degree, this%quad_xw(1,j))
    end do
    this%spline_val = this%spline_val * (sign*this%delta_x(1))
 
@@ -233,6 +229,7 @@ contains
 
 
   !---------------------------------------------------------------------------!
+ !> Evaluate field at at position \a position
   subroutine evaluate_field_single_spline_1d(this, position, field_dofs, field_value)
     class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: this !< Kernel smoother object 
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
@@ -264,6 +261,7 @@ contains
 
 
   !---------------------------------------------------------------------------!
+  !> Evaluate several fields at position \a position
   subroutine evaluate_multiple_spline_1d(this, position, components, field_dofs, field_value)
     class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: this !< Kernel smoother object 
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
@@ -378,7 +376,7 @@ contains
 
   end subroutine sll_s_new_kernel_smoother_spline_1d
 
-
+  !> Initializer
   subroutine initialize_spline_1d( this, domain, n_grid, no_particles, spline_degree, smoothing_type )
     class( sll_t_kernel_smoother_spline_1d), intent(out)  :: this !< kernel smoother object
     sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
