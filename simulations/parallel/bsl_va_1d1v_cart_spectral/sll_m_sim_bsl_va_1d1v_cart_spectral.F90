@@ -115,8 +115,8 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
   use sll_m_poisson_1d_periodic_solver, only: &
     sll_f_new_poisson_1d_periodic_solver
 
-  use sll_m_poisson_1d_polar_solver, only: &
-    sll_f_new_poisson_1d_polar_solver
+  use sll_m_poisson_1d_polar, only: &
+    sll_f_new_poisson_1d_polar
 
   use sll_m_primitives, only: &
     sll_s_function_to_primitive, &
@@ -1001,7 +1001,7 @@ contains
           x1_max, &
           num_cells_x1)
       case ("SLL_POLAR")
-        sim%poisson => sll_f_new_poisson_1d_polar_solver( &
+        sim%poisson => sll_f_new_poisson_1d_polar( &
           x1_min, &
           x1_max, &
           num_cells_x1)
