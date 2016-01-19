@@ -32,22 +32,22 @@ module sll_m_poisson_2d_dirichlet_cartesian
   !> Structure to store data from Poisson solver. This
   !> solver is parallel on structured cartesian mesh. 
   type :: sll_t_poisson_2d_dirichlet_cartesian
-     sll_int32                           :: ncx    !< number of cells  
-     sll_int32                           :: ncy    !< number of cells
+     sll_int32                             :: ncx    !< number of cells  
+     sll_int32                             :: ncy    !< number of cells
 
-     sll_real64                          :: Lx     !< domain length 
-     sll_real64                          :: Ly     !< domain length
-     sll_real64, dimension(:), pointer   :: vkgd
-     sll_real64, dimension(:), pointer   :: vkgi
-     sll_real64, dimension(:), pointer   :: vkgs
-     sll_int32,  dimension(:),pointer    :: prof
-     sll_int32,  dimension(:),pointer    :: indi
-     sll_int32,  dimension(:),pointer    :: indj
-     sll_int32,  dimension(:),pointer    :: kld
-     sll_real64, dimension(:),pointer    :: val
-     sll_real64, dimension(:),pointer    :: f
-     sll_real64, dimension(:),pointer    :: vx
-     sll_int32                           :: nsky
+     sll_real64                            :: Lx     !< domain length 
+     sll_real64                            :: Ly     !< domain length
+     sll_real64, dimension(:), allocatable :: vkgd
+     sll_real64, dimension(:), allocatable :: vkgi
+     sll_real64, dimension(:), allocatable :: vkgs
+     sll_int32,  dimension(:), allocatable :: prof
+     sll_int32,  dimension(:), allocatable :: indi
+     sll_int32,  dimension(:), allocatable :: indj
+     sll_int32,  dimension(:), allocatable :: kld
+     sll_real64, dimension(:), allocatable :: val
+     sll_real64, dimension(:), allocatable :: f
+     sll_real64, dimension(:), allocatable :: vx
+     sll_int32                             :: nsky
   end type sll_t_poisson_2d_dirichlet_cartesian
 
   interface sll_o_solve
@@ -69,28 +69,38 @@ contains
     Ly ) result(plan)
 
     type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan
-    sll_int32                        :: ncx          !< number of cells in x
-    sll_int32                        :: ncy          !< number of cells in y
-    sll_real64                       :: Lx           !< length x
-    sll_real64                       :: Ly           !< length y
-    !sll_real64, dimension(:,:)          :: vkgs
-    sll_int32                        :: nn,n,ch
-    sll_int32 :: ii,jj,i,j,p,k,l
-    sll_int32     :: ierr
-    sll_real64    ::v
-    SLL_ALLOCATE(plan, ierr)
 
+    sll_int32   :: ncx !< number of cells in x
+    sll_int32   :: ncy !< number of cells in y
+    sll_real64  :: Lx  !< length x
+    sll_real64  :: Ly  !< length y
+    sll_int32   :: nn
+    sll_int32   :: n
+    sll_int32   :: ch
+    sll_int32   :: ii
+    sll_int32   :: jj
+    sll_int32   :: i
+    sll_int32   :: j
+    sll_int32   :: p
+    sll_int32   :: k
+    sll_int32   :: l
+    sll_int32   :: ierr
+    sll_real64  :: v
+
+    SLL_ALLOCATE(plan, ierr)
 
     plan%ncx = ncx
     plan%ncy = ncy
     plan%Lx  = Lx
     plan%Ly  = Ly
-    nn=ncx
-    n=nn*nn
-    ch=nn*nn+4*nn*(nn-1)
+    nn       = ncx
+    n        = nn*nn
+    ch       = nn*nn+4*nn*(nn-1)
+
     SLL_ALLOCATE( plan%indi(ch), ierr )
     SLL_ALLOCATE( plan%indj(ch), ierr )
     SLL_ALLOCATE( plan%val(ch), ierr )
+
     p=0
     do k=1,n
        p=p+1
@@ -126,7 +136,7 @@ contains
           plan%indj(p)=i
        end do
     end do
-  SLL_ALLOCATE(plan%prof(n),ierr)
+    SLL_ALLOCATE(plan%prof(n),ierr)
     SLL_ALLOCATE(plan%kld(n+1),ierr)
     plan%prof=0
     do k=2,ch
@@ -168,38 +178,58 @@ contains
   end function sll_f_new_poisson_2d_dirichlet_cartesian_plan
 
 
-
-
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   subroutine solve_poisson_2d_dirichlet_cartesian(plan, rho, phi)
+
     type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan !< self object
+
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
     sll_int32                         :: i
-    sll_int32                         :: ii, jj
+    sll_int32                         :: ii
+    sll_int32                         :: jj
     sll_real64                        :: void
-    sll_int32                         :: nn,n,ier
-    sll_int32                         :: ifac,isol,mp,nsym
-    !sll_real64, dimension(:,:)          :: vkgs
-    !sll_int32, dimen                  :: indi,indj
-    ifac=1  ! we compute the LU decomposition
-    isol=1  ! we solve the linear system
-    nsym=1  ! we do not take into account the symetry of M
-    mp=6   ! write the log on screen
-    ncx=size(rho,1)
-    nn=ncx
-    n=nn*nn
-    !rho(1,1)=rho(1,1)+1
+    sll_int32                         :: nn
+    sll_int32                         :: n
+    sll_int32                         :: ier
+    sll_int32                         :: ifac
+    sll_int32                         :: isol
+    sll_int32                         :: mp
+    sll_int32                         :: nsym
+
+    ifac= 1           ! we compute the LU decomposition
+    isol= 1           ! we solve the linear system
+    nsym= 1           ! we do not take into account the symetry of M
+    mp  = 6           ! write the log on screen
+    ncx = size(rho,1)
+    nn  = ncx
+    n   = nn*nn
+    
     do ii=1,nn
-       do jj=1,nn
-          i=ii+(jj-1)*nn
-          plan%f(i)=rho(ii,jj)
-       end do
+      do jj=1,nn
+        i=ii+(jj-1)*nn
+        plan%f(i)=rho(ii,jj)
+      end do
     end do
-    call sol(plan%vkgs,plan%vkgd,plan%vkgi,plan%f,plan%kld,plan%vx,&
-         n,mp,ifac,isol,nsym,void,ier,plan%nsky)
+
+    print*, size(plan%vkgd)
+    call sol(plan%vkgs,   &
+             plan%vkgd,   &
+             plan%vkgi,   &
+             plan%f,      &
+             plan%kld,    &
+             plan%vx,     &
+             n,           &
+             mp,          &
+             ifac,        &
+             isol,        &
+             nsym,        &
+             void,        &
+             ier,         &
+             plan%nsky)
+
     do ii=1,nn
        do jj=1,nn
           i=ii+(jj-1)*nn
@@ -208,8 +238,7 @@ contains
     end do
   end subroutine solve_poisson_2d_dirichlet_cartesian
 
-
-!> Delete the Poisson solver object
+  !> Delete the Poisson solver object
   subroutine delete_poisson_2d_dirichlet_cartesian(plan)
     type (sll_t_poisson_2d_dirichlet_cartesian), pointer :: plan
     sll_int32                                           :: ierr
@@ -222,8 +251,6 @@ contains
 
     SLL_DEALLOCATE(plan, ierr)
   end subroutine delete_poisson_2d_dirichlet_cartesian
-
-
 
 end module sll_m_poisson_2d_dirichlet_cartesian
 #endif  /* DOXYGEN_SHOULD_SKIP_THIS */
