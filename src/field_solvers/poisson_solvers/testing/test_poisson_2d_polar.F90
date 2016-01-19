@@ -4,7 +4,8 @@ program test_poisson_2d_polar
 #include "sll_working_precision.h"
 
 use sll_m_boundary_condition_descriptors, only: &
-  sll_p_dirichlet
+  sll_p_dirichlet, &
+  sll_p_neumann_mode_0
 
 use sll_m_constants, only: &
   sll_p_pi
@@ -12,7 +13,12 @@ use sll_m_constants, only: &
 use sll_m_poisson_2d_polar, only: &
   sll_o_create, &
   sll_t_plan_poisson_polar, &
-  sll_s_solve_poisson_polar
+  sll_s_solve_poisson_polar, &
+  sll_f_new_poisson_2d_polar
+
+use sll_m_poisson_2d_base, only: &
+  sll_c_poisson_2d_base
+
 
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -84,15 +90,10 @@ end do
 
 call sll_s_solve_poisson_polar(poisson_fft, rhs, phi)
 
-!do i =1,nr
-!  do j=1,ntheta
-!    write(13,*) r(i)*cos(theta(j)),r(i)*sin(theta(j)), phi(i,j), phi_sin(i,j)
-!  end do
-!  write(13,*) 
-!end do
-!close(13)
-
 call error_max(phi_sin,phi,1e-4_f64)
+
+! test the wrapper
+call test_class()
 
 contains
 
@@ -152,5 +153,48 @@ sll_real64 function f_sin( r, theta)
         + r*sin(n*theta))*r)/r
 
 end function f_sin
+
+
+subroutine test_class()
+
+  class(sll_c_poisson_2d_base), pointer   :: poisson 
+  sll_real64                              :: err
+  sll_real64                              :: x1_min
+  sll_real64                              :: x1_max
+  sll_int32                               :: Nc_x1
+  sll_int32                               :: Nc_x2
+  sll_real64, dimension(:,:), allocatable :: phi
+  sll_real64, dimension(:,:), allocatable :: rho
+  sll_int32                               :: ierr
+  
+  x1_min = 0._f64
+  x1_max = 1._f64
+  
+  Nc_x1 = 32
+  Nc_x2 = 64
+  
+  SLL_ALLOCATE(phi(Nc_x1+1,Nc_x2+1),ierr)
+  SLL_ALLOCATE(rho(Nc_x1+1,Nc_x2+1),ierr)
+  
+  rho = 1.0_f64
+  
+  err = 0.0_f64
+  
+  poisson =>sll_f_new_poisson_2d_polar( &
+    x1_min, &
+    x1_max, &
+    Nc_x1, &
+    Nc_x2, &
+    (/sll_p_neumann_mode_0, sll_p_dirichlet/))
+  
+  call poisson%compute_phi_from_rho( phi, rho )
+
+  print *,maxval(phi),minval(phi)
+  
+  if(err==0)then    
+    print *, '#PASSED'
+  endif
+
+end subroutine test_class
 
 end program test_poisson_2d_polar
