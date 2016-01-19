@@ -21,16 +21,17 @@
 !> @details
 !> solves 
 !> \f[
-!>      \sum_{i,j=1}^2 A_{i,j}\partial_{i,j} phi
-!>       +\sum_{i=1}^2B_i\partial_i \phi
-!>       +C \phi = \rho
+!>   \sum_{i,j=1}^2 A_{i,j}\partial_{i,j} phi
+!>   +\sum_{i=1}^2B_i\partial_i \phi
+!>   +C \phi = \rho
 !> \f]
 !> in polar coordinates
 !> this leads when \f$ A_{1,2}=A_{2,1}=0 \f$ 
 !> and \f$ B_2 = 0 \f$
 !> \f[
-!>    A_11\partial_{1,e1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} 
-!>    = \hat{\rho}
+!>   A_11\partial_{1,e1}\hat{\phi}
+!>  +B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} 
+!>   = \hat{\rho}
 !> \f]
 !> <b> Example </b>
 !> @snippet poisson_solvers/test_poisson_2d_polar.F90 example

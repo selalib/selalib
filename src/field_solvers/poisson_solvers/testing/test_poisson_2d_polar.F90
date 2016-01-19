@@ -3,18 +3,18 @@ program test_poisson_2d_polar
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_dirichlet
+use sll_m_boundary_condition_descriptors, only: &
+  sll_p_dirichlet
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_constants, only: &
+  sll_p_pi
 
-  use sll_m_poisson_2d_polar, only: &
-    sll_o_create, &
-    sll_t_plan_poisson_polar, &
-    sll_s_solve_poisson_polar
+use sll_m_poisson_2d_polar, only: &
+  sll_o_create, &
+  sll_t_plan_poisson_polar, &
+  sll_s_solve_poisson_polar
 
-  implicit none
+implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type(sll_t_plan_poisson_polar) :: poisson_fft
@@ -55,43 +55,42 @@ SLL_CLEAR_ALLOCATE(r(1:nr),error)
 SLL_CLEAR_ALLOCATE(theta(1:ntheta),error)
 
 do i = 1, nr
-   r(i)=r_min+(i-1)*delta_r
+  r(i)=r_min+(i-1)*delta_r
 end do
 do j = 1, ntheta
-   theta(j)=(j-1)*delta_theta
+  theta(j)=(j-1)*delta_theta
 end do
 
 do j=1,ntheta
-   do i=1,nr
-      phi_cos(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
-      phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*sin(n*theta(j))*r(i)
-   end do
+  do i=1,nr
+    phi_cos(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
+    phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*sin(n*theta(j))*r(i)
+  end do
 end do
 
-call sll_o_create( poisson_fft,   &
-                 r_min,         &
-                 r_max,         &
-                 nr-1,          &
-                 ntheta-1,      &
-                 sll_p_dirichlet, &
-                 sll_p_dirichlet)
+call sll_o_create( poisson_fft,     &
+                   r_min,           &
+                   r_max,           &
+                   nr-1,            &
+                   ntheta-1,        &
+                   sll_p_dirichlet, &
+                   sll_p_dirichlet)
 
 do i =1,nr
-   do j=1,ntheta
-      rhs(i,j) = - f_sin(r(i), theta(j))
-   end do
+  do j=1,ntheta
+    rhs(i,j) = - f_sin(r(i), theta(j))
+  end do
 end do
 
 call sll_s_solve_poisson_polar(poisson_fft, rhs, phi)
 
-
-do i =1,nr
-   do j=1,ntheta
-      write(13,*) r(i)*cos(theta(j)),r(i)*sin(theta(j)), phi(i,j), phi_sin(i,j)
-   end do
-   write(13,*) 
-end do
-close(13)
+!do i =1,nr
+!  do j=1,ntheta
+!    write(13,*) r(i)*cos(theta(j)),r(i)*sin(theta(j)), phi(i,j), phi_sin(i,j)
+!  end do
+!  write(13,*) 
+!end do
+!close(13)
 
 call error_max(phi_sin,phi,1e-4_f64)
 
@@ -119,38 +118,38 @@ end subroutine error_max
 
 sll_real64 function f_cos( r, theta )
 
-   !sage: assume(r>=1)
-   !sage: assume(r<=2)
-   !sage: phi = (r-r_min)*(r-r_max)*r*cos(n*theta)
-   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+  !sage: assume(r>=1)
+  !sage: assume(r<=2)
+  !sage: phi = (r-r_min)*(r-r_max)*r*cos(n*theta)
+  !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
 
-   sll_real64 :: r
-   sll_real64 :: theta
+  sll_real64 :: r
+  sll_real64 :: theta
 
-   f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
-           + ((r-r_max)*(r-r_min)*cos(n*theta)  &
-           + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
-           + 2.0_f64*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
-           + r*cos(n*theta))*r)/r
+  f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
+          + ((r-r_max)*(r-r_min)*cos(n*theta)  &
+          + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
+          + 2.0_f64*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
+          + r*cos(n*theta))*r)/r
 
 
 end function f_cos
 
 sll_real64 function f_sin( r, theta)
 
-   !sage: assume(r>=1)
-   !sage: assume(r<=2)
-   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
-   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+  !sage: assume(r>=1)
+  !sage: assume(r<=2)
+  !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+  !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
 
-   sll_real64 :: r
-   sll_real64 :: theta
-   
-   f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
-         + ((r-r_max)*(r-r_min)*sin(n*theta) &
-         + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
-         + 2.0_f64*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
-         + r*sin(n*theta))*r)/r
+  sll_real64 :: r
+  sll_real64 :: theta
+  
+  f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
+        + ((r-r_max)*(r-r_min)*sin(n*theta) &
+        + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
+        + 2.0_f64*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
+        + r*sin(n*theta))*r)/r
 
 end function f_sin
 
