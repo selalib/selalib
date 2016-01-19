@@ -2,6 +2,10 @@ ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian
   test_poisson_2d_dirichlet_cartesian.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian
   sll_poisson_solvers sll_utilities )
+ADD_TEST( NAME poisson_2d_dirichlet_cartesian 
+  COMMAND test_poisson_2d_dirichlet_cartesian     )
+SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian 
+  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_2d_fft test_poisson_2d_fft.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers )
@@ -66,8 +70,6 @@ SET_TESTS_PROPERTIES( poisson_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PA
 #ADD_TEST( NAME poisson_1d_polar_solver     COMMAND test_poisson_1d_polar_solver     )
 #SET_TESTS_PROPERTIES( poisson_1d_polar_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 # Fails
-#ADD_TEST( NAME poisson_2d_dirichlet_cartesian     COMMAND test_poisson_2d_dirichlet_cartesian     )
-#SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
 SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
