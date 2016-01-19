@@ -65,6 +65,7 @@ module sll_m_kernel_smoother_spline_2d
   
 contains
   !---------------------------------------------------------------------------!
+  !> Helper function computing shape factor
   subroutine compute_shape_factor_spline_2d(this, position, indices)
     class( sll_t_kernel_smoother_spline_2d), intent(inout) :: this !< kernel smoother object
     sll_real64, intent( in ) :: position(2)
@@ -79,13 +80,13 @@ contains
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - this%spline_degree
-    this%spline_val(1:this%n_span,1) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
+    this%spline_val(1:this%n_span,1) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
     this%spline_val(1:this%n_span,2) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
 
   !---------------------------------------------------------------------------!
-
+  !> Add charge of single particle
   subroutine add_charge_single_spline_2d(this, position, weight, rho_dofs)
     class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object
     sll_real64, intent( in ) :: position(this%dim)
@@ -113,7 +114,8 @@ contains
   end subroutine add_charge_single_spline_2d
 
 
-
+ !---------------------------------------------------------------------------!
+  !> Add current and update v for single particle
   subroutine add_current_update_v_spline_2d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_kernel_smoother_spline_2d), intent(inout) :: this !< kernel smoother object
     sll_real64, intent(in) :: position_old(this%dim)
@@ -172,6 +174,7 @@ contains
   
 
   !---------------------------------------------------------------------------!
+  !> Evaluate field with given dofs at position \a position
   subroutine evaluate_field_single_spline_2d(this, position, field_dofs, field_value)
     class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object    
     sll_real64, intent( in ) :: position(this%dim)
@@ -203,6 +206,7 @@ contains
   end subroutine evaluate_field_single_spline_2d
 
   !---------------------------------------------------------------------------!
+  !> Evaluate multiple fields at position \a position
   subroutine evaluate_multiple_spline_2d(this, position, components, field_dofs, field_value)
     class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object    
     sll_real64, intent( in ) :: position(this%dim)

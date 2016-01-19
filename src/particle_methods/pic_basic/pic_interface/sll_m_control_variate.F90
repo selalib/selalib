@@ -24,7 +24,7 @@ module sll_m_control_variate
 
      procedure :: update_df_weight !< function defining the control variate
      procedure :: initialize => initialize_control_variate !< initialize the type
-     procedure :: delete => delete_control_variate
+     procedure :: delete => delete_control_variate !< finalize
 
   end type sll_t_control_variate
 
@@ -46,7 +46,7 @@ module sll_m_control_variate
 
   contains
     
-    !< 
+    !> Update the delta f weights
     function update_df_weight(this, xi, vi, time, weight_ff, g0) result(weight_df)
       class(sll_t_control_variate) :: this !< Control variate object
       sll_real64, intent( in ) :: xi(:) !< particle position
@@ -60,7 +60,7 @@ module sll_m_control_variate
 
     end function update_df_weight
 
-    !> Constructor
+    !> Initialization
     subroutine initialize_control_variate( this, control_function, parameters ) 
       class(sll_t_control_variate), intent(out) :: this !< Control variate object
       procedure(sll_f_control_variate) :: control_function !< Function defining the control variate
