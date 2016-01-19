@@ -48,5 +48,5 @@ ADD_EXECUTABLE( test_hex_center_guide
 TARGET_LINK_LIBRARIES( test_hex_center_guide
   sll_hermite_interpolation
   sll_meshes
-  hex_poisson
+  sll_poisson_solvers
   sll_utilities )
