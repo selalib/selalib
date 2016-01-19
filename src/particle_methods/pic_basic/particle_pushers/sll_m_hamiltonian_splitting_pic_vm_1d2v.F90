@@ -41,7 +41,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Operator splitting type for Vlasov-Maxwell 1d2v
+  !> Hamiltonian splitting type for Vlasov-Maxwell 1d2v
   type, extends(sll_c_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
      class(sll_c_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
      class(sll_c_kernel_smoother), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
@@ -69,15 +69,16 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: operatorHB => operatorHB_pic_vm_1d2v  !> Operator for H_B part
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
-     procedure :: operatorHp1_pic_vm_1d2v_prim
+     procedure :: operatorHp1_pic_vm_1d2v_prim !> Alternative implementation of operator Hp1 using primitive function (only for degree 3)
 
-     procedure :: initialize => initialize_pic_vm_1d2v
-     procedure :: delete => delete_pic_vm_1d2v
+     procedure :: initialize => initialize_pic_vm_1d2v !> Initialize the type
+     procedure :: delete => delete_pic_vm_1d2v !> Finalization
 
   end type sll_t_hamiltonian_splitting_pic_vm_1d2v
 
 contains
 
+  !> Strang splitting
   subroutine strang_splitting_pic_vm_1d2v(this,dt, number_steps)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
@@ -97,6 +98,7 @@ contains
 
   end subroutine strang_splitting_pic_vm_1d2v
 
+  !> Lie splitting
   subroutine lie_splitting_pic_vm_1d2v(this,dt, number_steps)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step

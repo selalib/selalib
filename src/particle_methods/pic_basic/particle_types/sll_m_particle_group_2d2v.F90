@@ -54,6 +54,7 @@ end type sll_t_particle_group_2d2v
 contains
 
   !----------------------------------------------------------------------!
+  !> Destructor
   subroutine delete_particle_group_2d2v(self)
     class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
 
@@ -62,6 +63,7 @@ contains
   end subroutine delete_particle_group_2d2v
 
   !----------------------------------------------------------------------!
+  !> Initialize particle group
   subroutine initialize_particle_group_2d2v (self, n_particles, n_total_particles, charge, mass, n_weights)
     class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
@@ -125,7 +127,7 @@ contains
   end subroutine sll_s_new_particle_group_2d2v_ptr
 
 
-    !----------------------------------------------------------------------!
+  !----------------------------------------------------------------------!
   !> Constructor for abstract type
   subroutine sll_s_new_particle_group_2d2v(particle_group, n_particles, n_total_particles, charge, mass, n_weights)
     class( sll_c_particle_group_base ),  allocatable, intent( out )  :: particle_group
@@ -147,6 +149,7 @@ contains
   end subroutine sll_s_new_particle_group_2d2v
   
   !----------------------------------------------------------------------!
+  !> Get positions of particle \a i
   pure function get_x_2d2v( self, i ) result( r )
     class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
@@ -158,6 +161,7 @@ contains
   end function get_x_2d2v
 
   !----------------------------------------------------------------------!
+  !> Get velocities of particle \a i
   pure function get_v_2d2v( self, i ) result( r )
     class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
@@ -190,10 +194,11 @@ contains
 !!$  end function get_mass_2d2v
 
   !----------------------------------------------------------------------!
+  !> Get charge of particle \a i ( q * particle_weight)
   pure function get_charge_2d2v( self, i , i_weight) result (r)
         class( sll_t_particle_group_2d2v ), intent( in ) :: self !< particle group
     sll_int32                           , intent( in ) :: i !< no. of the particle
-    sll_int32, optional                 , intent( in ) :: i_weight
+    sll_int32, optional                 , intent( in ) :: i_weight !< index of weight to be used (default: 1)
     sll_real64 :: r !< charges(s) of particle i
 
     sll_int32 :: i_wi
@@ -206,10 +211,11 @@ contains
 
 
   !----------------------------------------------------------------------!
+  !> Get mass of particle \a i ( m * particle_weight)
   pure function get_mass_2d2v( self, i, i_weight) result (r)
         class( sll_t_particle_group_2d2v ), intent( in ) :: self !< particle group
     sll_int32                           , intent( in ) :: i !< no. of the particle
-    sll_int32, optional                 , intent( in ) :: i_weight 
+    sll_int32, optional                 , intent( in ) :: i_weight !< index of weight to be used (default: 1)
     sll_real64 :: r !< masses(s) of particle i
 
     sll_int32 :: i_wi
@@ -222,6 +228,7 @@ contains
 
  
   !----------------------------------------------------------------------!
+  !> Get weights of particle \a i 
   pure function get_weights_2d2v( self, i) result (r)
         class( sll_t_particle_group_2d2v ), intent( in ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
@@ -232,6 +239,7 @@ contains
   end function get_weights_2d2v
 
   !----------------------------------------------------------------------!
+  !> Set positions of particle \a i 
   subroutine set_x_2d2v( self, i, x )
     class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
@@ -242,6 +250,7 @@ contains
   end subroutine set_x_2d2v
 
   !----------------------------------------------------------------------!
+  !> Set velocities of particle \a i 
   subroutine set_v_2d2v( self, i, x )
     class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
@@ -252,6 +261,7 @@ contains
   end subroutine set_v_2d2v
   
   !----------------------------------------------------------------------!
+  !> Set weights of particle \a i 
   subroutine set_weights_2d2v( self, i, x )
     class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_int32                       , intent( in ) :: i !< no. of the particle
@@ -262,6 +272,7 @@ contains
   end subroutine set_weights_2d2v
 
   !----------------------------------------------------------------------!
+  !> Set the common weight
   subroutine set_common_weight_2d2v( self, x )
     class( sll_t_particle_group_2d2v ), intent( inout ) :: self  !< particle group
     sll_real64                      , intent( in):: x !< common weight

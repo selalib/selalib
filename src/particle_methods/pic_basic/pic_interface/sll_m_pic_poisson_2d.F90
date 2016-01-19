@@ -59,14 +59,15 @@ module sll_m_pic_poisson_2d
        procedure :: add_analytic_charge => add_analytic_charge_2d !< !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
        procedure :: set_analytic_charge => set_analytic_charge_2d  !< Set the value of the analytic charge contribution from a given function.
        procedure :: compute_field_energy => compute_field_energy_2d !< Compute the field energy.
-       procedure :: initialize => initialize_pic_poisson_2d
-       procedure :: delete => delete_pic_poisson_2d
+       procedure :: initialize => initialize_pic_poisson_2d !< Initialize the type
+       procedure :: delete => delete_pic_poisson_2d !< finalization
 
 
     end type sll_t_pic_poisson_2d
 
 contains
 
+  !> Add charge from one particle
   subroutine add_charge_single_2d(this, position, weight)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
@@ -77,7 +78,7 @@ contains
 
   end subroutine add_charge_single_2d
   
-
+  !> Evaluate charge density \a rho at one position
   subroutine evaluate_rho_single_2d(this, position, func_value)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
@@ -94,7 +95,7 @@ contains
 
   end subroutine evaluate_rho_single_2d
 
-
+  !> Evaluate potential \a phi at one position
   subroutine evaluate_phi_single_2d(this, position, func_value)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
     sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
@@ -104,6 +105,7 @@ contains
 
   end subroutine evaluate_phi_single_2d
 
+  !> Evaluate components \a components of the electric field as one position
   subroutine evaluate_field_single_2d(this, position, components, func_value)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
     sll_int32, intent(in ) :: components(:)
@@ -116,6 +118,7 @@ contains
   end subroutine evaluate_field_single_2d
 
 
+  !> Solve for phi and fields
   subroutine solve_2d(this)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
 
@@ -124,6 +127,7 @@ contains
     
   end subroutine solve_2d
 
+  !> Solve for potential
   subroutine solve_phi_2d(this)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
 
@@ -139,6 +143,7 @@ contains
 
   end subroutine solve_phi_2d
 
+  !> Solve efields from rho
   subroutine solve_fields_2d(this)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
 
@@ -155,6 +160,7 @@ contains
 
   end subroutine solve_fields_2d
 
+  !> Reset charge to zero
   subroutine reset_2d(this)
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
 
@@ -164,6 +170,7 @@ contains
 
   end subroutine reset_2d
 
+  !> Add analytic charge (set by \a set_analytic_charge ) to the accumulated charge
   subroutine add_analytic_charge_2d(this, factor_present, factor_analytic)   
     class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
     sll_real64, intent( in ) :: factor_present !< Factor to multiply accumulated charge with
@@ -174,6 +181,7 @@ contains
 
   end subroutine add_analytic_charge_2d
 
+  !> Set analytic charge defined by a function \a func obeying the interface \a sll_f_function_of_position
   subroutine set_analytic_charge_2d(this, func)
     class( sll_t_pic_poisson_2d ), intent( inout )    :: this !< PIC Poisson solver object.
     procedure(sll_f_function_of_position)                :: func !< Function to be projected.
@@ -182,6 +190,7 @@ contains
 
   end subroutine set_analytic_charge_2d
 
+  !> Compute the squared l2 norm of component \a component of the field
   function compute_field_energy_2d(this, component) result(energy)
     class (sll_t_pic_poisson_2d), intent( in ) :: this
     sll_int32, intent( in ) :: component !< Component of the electric field for which the energy should be computed
@@ -236,7 +245,7 @@ contains
 
   end subroutine initialize_pic_poisson_2d
 
-  
+  !> Destructor
   subroutine delete_pic_poisson_2d(this)
     class( sll_t_pic_poisson_2d), intent(inout) :: this
 
@@ -255,7 +264,7 @@ contains
   end subroutine delete_pic_poisson_2d
 
 
-  !< Constructor (legacy version)
+  !> Constructor (legacy version)
   function sll_f_new_pic_poisson_2d(no_gridpts, solver, kernel) result (poisson_solver)
     sll_int32, intent(in) :: no_gridpts(2)
     class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
@@ -272,7 +281,7 @@ contains
   end function sll_f_new_pic_poisson_2d
 
 
-  !< Constructor for abstract type
+  !> Constructor for abstract type
   subroutine sll_s_new_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)    
     class( sll_c_pic_poisson), pointer, intent(out) :: poisson_solver
     sll_int32, intent(in) :: no_gridpts(2)
