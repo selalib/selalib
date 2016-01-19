@@ -33,6 +33,17 @@ list( REVERSE SLL_DEPS )
 list( REMOVE_DUPLICATES SLL_DEPS )
 list( REVERSE SLL_DEPS )
 
+# Determine compiler command that is necessary for building an external project
+# to be linked against SeLaLib (MPI and OPENMP effect this!)
+if( MPI_ENABLED )
+  set( FC ${MPI_Fortran_COMPILER} )
+else()
+  set( FC ${CMAKE_Fortran_COMPILER} )
+endif()
+if( OPENMP_ENABLED )
+  set( FC "${FC} ${OpenMP_Fortran_FLAGS}" )
+endif()
+
 #===============================================================================
 
 # Print names of all sub-libraries in Selalib
@@ -53,16 +64,10 @@ foreach( lib ${SLL_DEPS} )
   message( STATUS "  ${lib}" )
 endforeach()
 
-#===============================================================================
+# Print compiler info
+message( STATUS "COMPILER: \"${FC}\"" )
 
-# # Repackage SeLaLib into a single library (every time 'make' is invoked)
-# # TODO: this can be handled entirely by CMake
-# add_custom_target( selalib
-#   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/make_package.py
-#   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-#   COMMENT "Repackage all static libraries into a single archive: 'libselalib.a'"
-#   VERBATIM )
-# add_dependencies( selalib ${SLL_LIBS} )
+#===============================================================================
 
 # CMake custom command: repackage SeLaLib into single archive "libselalib.a"
 # NOTE: Command does not run if file is newer than its dependencies
