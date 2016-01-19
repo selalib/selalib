@@ -70,8 +70,8 @@ module sll_m_sim_bsl_vp_1d1v_cart_multi_species
   use sll_m_poisson_1d_base, only: &
     sll_c_poisson_1d_base
 
-  use sll_m_poisson_1d_periodic_solver, only: &
-    sll_f_new_poisson_1d_periodic_solver
+  use sll_m_poisson_1d_periodic_wrapper, only: &
+    sll_f_new_poisson_1d_periodic_wrapper
 
   use sll_m_poisson_1d_polar, only: &
     sll_f_new_poisson_1d_polar
@@ -594,7 +594,7 @@ nc_x1 = sim%sp(1)%mesh2d%num_cells1
 np_x1 = sim%sp(1)%mesh2d%num_cells1+1
 select case (poisson_solver)
 case ("SLL_FFT")
-  sim%poisson => sll_f_new_poisson_1d_periodic_solver(x1_min,x1_max,nc_x1)
+  sim%poisson => sll_f_new_poisson_1d_periodic_wrapper(x1_min,x1_max,nc_x1)
 case ("SLL_POLAR")
   sim%poisson => sll_f_new_poisson_1d_polar(x1_min,x1_max,nc_x1)
 case default

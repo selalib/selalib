@@ -92,8 +92,8 @@ module sll_m_sim_bsl_va_1d1v_cart_berk_breizman
   use sll_m_poisson_1d_base, only: &
     sll_c_poisson_1d_base
 
-  use sll_m_poisson_1d_periodic_solver, only: &
-    sll_f_new_poisson_1d_periodic_solver
+  use sll_m_poisson_1d_periodic_wrapper, only: &
+    sll_f_new_poisson_1d_periodic_wrapper
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_2d, &
@@ -768,7 +768,7 @@ end select
 
 select case (poisson_solver)
   case ("SLL_FFT")
-    sim%poisson => sll_f_new_poisson_1d_periodic_solver( x1_min, x1_max, num_cells_x1)
+    sim%poisson => sll_f_new_poisson_1d_periodic_wrapper( x1_min, x1_max, num_cells_x1)
   case default
     err_msg = '#poisson_solver '//poisson_solver//' not implemented'
     SLL_ERROR( this_sub_name, err_msg )
