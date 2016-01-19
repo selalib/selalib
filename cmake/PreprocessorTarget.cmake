@@ -28,6 +28,7 @@
 #   - 26 Nov 2015: add OpenMP flag (YG).
 #   - 02 Dec 2015: fix dependency bug (YG).
 #   - 15 Jan 2016: store names of all libraries (YG).
+#   - 19 Jan 2016: 'collect_source_info' handles libraries with no sources (YG)
 
 if(__add_all_preproc)
    return()
