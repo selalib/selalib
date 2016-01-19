@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program test_poisson_1d_polar_solver
+program test_poisson_1d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -23,8 +23,8 @@ program test_poisson_1d_polar_solver
   use sll_m_poisson_1d_base, only: &
     sll_c_poisson_1d_base
 
-  use sll_m_poisson_1d_polar_solver, only: &
-    sll_f_new_poisson_1d_polar_solver
+  use sll_m_poisson_1d_polar, only: &
+    sll_f_new_poisson_1d_polar
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,7 +60,7 @@ program test_poisson_1d_polar_solver
   rho = 1._f64
   
   
-  poisson =>sll_f_new_poisson_1d_polar_solver( &
+  poisson =>sll_f_new_poisson_1d_polar( &
     x1_min, &
     x1_max, &
     Nc_x1)  
