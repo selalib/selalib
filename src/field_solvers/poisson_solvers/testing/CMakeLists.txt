@@ -6,11 +6,15 @@ SET_TESTS_PROPERTIES( poisson_2d_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
 ADD_EXECUTABLE( test_poisson_1d_fd test_poisson_1d_fd.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_fd sll_poisson_solvers )
 
-ADD_EXECUTABLE( test_poisson_1d_polar_solver test_poisson_1d_polar_solver.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_1d_polar_solver sll_poisson_solvers )
+ADD_EXECUTABLE( test_poisson_1d_polar test_poisson_1d_polar.F90 )
+TARGET_LINK_LIBRARIES( test_poisson_1d_polar sll_poisson_solvers )
+ADD_TEST( NAME poisson_1d_polar COMMAND test_poisson_1d_polar_solver     )
+SET_TESTS_PROPERTIES( poisson_1d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_2d_polar test_poisson_2d_polar.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_polar sll_poisson_solvers )
+ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
+SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_1d_periodic test_poisson_1d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_periodic sll_poisson_solvers )
@@ -57,12 +61,8 @@ ADD_MUDPACK_PROGRAM( cartesian )
 ADD_MUDPACK_PROGRAM( polar )
 ADD_TEST( NAME poisson_1d_periodic     COMMAND test_poisson_1d_periodic     )
 SET_TESTS_PROPERTIES( poisson_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-# Fails
-#ADD_TEST( NAME poisson_1d_polar_solver     COMMAND test_poisson_1d_polar_solver     )
-#SET_TESTS_PROPERTIES( poisson_1d_polar_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-# Fails
-ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
-SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+
 
 ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
 TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
