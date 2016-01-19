@@ -108,8 +108,8 @@ module sll_m_sim_bsl_vp_1d1v_cart
   use sll_m_poisson_1d_base, only: &
     sll_c_poisson_1d_base
 
-  use sll_m_poisson_1d_periodic_solver, only: &
-    sll_f_new_poisson_1d_periodic_solver
+  use sll_m_poisson_1d_periodic_wrapper, only: &
+    sll_f_new_poisson_1d_periodic_wrapper
 
   use sll_m_poisson_1d_polar, only: &
     sll_f_new_poisson_1d_polar
@@ -967,7 +967,7 @@ contains
     
     select case (poisson_solver)
       case ("SLL_FFT")
-        sim%poisson => sll_f_new_poisson_1d_periodic_solver( &
+        sim%poisson => sll_f_new_poisson_1d_periodic_wrapper( &
           x1_min, &
           x1_max, &
           num_cells_x1)
