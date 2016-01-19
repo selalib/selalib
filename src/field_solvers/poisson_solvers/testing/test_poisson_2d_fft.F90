@@ -67,9 +67,11 @@ program test_poisson_2d_fft
 
   call poisson%compute_E_from_rho( E1, E2, rho )
   
-  print*, maxval(phi), minval(phi)
-
-  print *, '#PASSED'
+  if( maxval(phi) == minval(phi)) then
+   print *, '#PASSED'
+  else
+   stop '#FAILED'
+  end if
 
 end program test_poisson_2d_fft
 !> @internal [example]
