@@ -5,8 +5,6 @@ program test_io
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use hdf5, only: &
-    hid_t
 
   use sll_m_ascii_io, only: &
     sll_o_ascii_write_array
@@ -34,6 +32,9 @@ program test_io
     sll_s_xml_file_create
 
 #ifndef NOHDF5
+  use hdf5, only: &
+    hid_t
+
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
