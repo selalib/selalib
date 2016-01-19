@@ -5,6 +5,8 @@ TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian
 
 ADD_EXECUTABLE( test_poisson_2d_fft test_poisson_2d_fft.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers )
+ADD_TEST( NAME poisson_2d_fft  COMMAND test_poisson_2d_fft     )
+SET_TESTS_PROPERTIES( poisson_2d_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_1d_fd test_poisson_1d_fd.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_fd sll_poisson_solvers )
