@@ -13,10 +13,10 @@
 * Configuring
 ** [[elisp:(compile "sudo apt-get install -y libopenmpi-dev libfftw3-dev liblapack-dev libhdf5-mpi-dev binutils linux-tools")][Extra packages]] (binutils required for [[gprof]], linux-tools for [[perf]])
 ** Configuration
-   Mode [[elisp:(compile "cd ${SELALIB}/build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=FALSE -DOPENMP_ENABLED=OFF ../../selalib" t)][quiet]], [[elisp:(compile "cd ${SELALIB}/build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF ../../selalib" t)][verbose]], [[elisp:(compile "cd ${SELALIB}/build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=FALSE -DOPENMP_ENABLED=OFF ../../selalib" t)][optimized]].  The current configuration is cached in [[selalib:build/CMakeCache.txt]].  Some configuration options are
-   required for [[file:../CMakeLists.txt]] to build parallel tests. [[file:~/selalib/CMakeLists.txt::OPENMP_ENABLED][OPENMP_ENABLED]] is forced to OFF until further speed tests.  Cleaning and
-   recreating the build directory is done with [[shell:rm -rf ~/selalib/build]] and [[shell:mkdir -p ~/selalib/build]].  Reinitialising cmake
-   configuration choices is done with [[elisp:(compile "cd ${SELALIB}/build && make clear")][clear]], [[elisp:(compile "cd ${SELALIB}/build && make clean")][clean]] or [[shell:rm ${SELALIB}/build/CMakeCache.txt][deleting]] [[selalib:build/CMakeCache.txt][CMakeCache.txt]].
+   Mode [[elisp:(compile "cd ${SELALIB}/build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=FALSE -DOPENMP_ENABLED=OFF ../../selalib" t)][quiet]], [[elisp:(compile "cd ${SELALIB}/build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF ../../selalib" t)][verbose]], [[elisp:(compile "cd ${SELALIB}/build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF -DCMAKE_Fortran_FLAGS='-g' ..")][optimized]] (with '-g' for callgrind profiling).  The current configuration is cached in [[selalib:build/CMakeCache.txt]].
+   Some configuration options are required for [[file:../CMakeLists.txt]] to build parallel tests. [[file:~/selalib/CMakeLists.txt::OPENMP_ENABLED][OPENMP_ENABLED]] is forced to OFF until further
+   speed tests.  Cleaning and recreating the build directory is done with [[shell:rm -rf ~/selalib/build]] and [[shell:mkdir -p ~/selalib/build]].
+   Reinitialising cmake configuration choices is done with [[elisp:(compile "cd ${SELALIB}/build && make clear")][clear]], [[elisp:(compile "cd ${SELALIB}/build && make clean")][clean]] or [[shell:rm ${SELALIB}/build/CMakeCache.txt][deleting]] [[selalib:build/CMakeCache.txt][CMakeCache.txt]].
 * Compiling: [[elisp:(compile "cd ${SELALIB}/build && make")][sequential]], [[elisp:(compile "cd ${SELALIB}/build && make -j $NCPU")][parallel]]
 * Running
 ** Parameters file file:params_lt_pic_4d.nml or file:params_simple_pic_4d.nml
@@ -56,8 +56,6 @@ splot 'target_values_test_init4D.dat' u 1:2:(abs(($3)-vx)<0.01 && abs(($4)-vy)<0
 *** [[elisp:(compile "cd ${SELALIB}/build && make -j $NCPU")][compile]]
 *** run
 **** basic
-
-     - input data file for profiling: file:params_perf.nml
 
      - plain run for timing reference (instrumented runs should not be more than 5% slower than this)
 
