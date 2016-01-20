@@ -50,8 +50,7 @@ program test_bsl_lt_pic_4d
 #define NUM_MARKERS_VX 10_i32
 #define NUM_MARKERS_VY 10_i32
 
-#define INIT_NB_UNSTRUCT_MARKERS_PER_CELL 7
-#define MAX_NB_UNSTRUCT_MARKERS_PER_CELL  7
+#define NB_UNSTRUCT_MARKERS_PER_CELL 7
 
 #define REMAP_NC_X   20_i32
 #define REMAP_NC_Y   20_i32
@@ -63,7 +62,7 @@ program test_bsl_lt_pic_4d
 #define REMAP_SPARSE_GRID_LEVEL_Y  6_i32
 #define REMAP_SPARSE_GRID_LEVEL_VX 6_i32
 #define REMAP_SPARSE_GRID_LEVEL_VY 6_i32
-#define NUM_DEPOSITION_PARTS    1000_i32
+!#define NUM_DEPOSITION_PARTS    1000_i32
 
 #define DOMAIN_IS_X_PERIODIC .true.
 #define DOMAIN_IS_Y_PERIODIC .true. 
@@ -151,6 +150,17 @@ program test_bsl_lt_pic_4d
   sll_int32 :: plot_np_vx
   sll_int32 :: plot_np_vy
 
+  sll_int32 :: deposition_particles_type
+  sll_int32 :: deposition_particles_pos_type
+  sll_int32 :: deposition_particles_move_type
+  sll_int32 :: number_deposition_particles
+  sll_int32 :: nb_deposition_particles_per_cell_x
+  sll_int32 :: nb_deposition_particles_per_cell_y
+  sll_int32 :: nb_deposition_particles_vx
+  sll_int32 :: nb_deposition_particles_vy
+
+  sll_int32 :: flow_markers_type
+
   ! Benchmarking remap performance
   type(sll_time_mark) :: remapstart
   sll_real64 :: remaptime
@@ -194,6 +204,17 @@ program test_bsl_lt_pic_4d
   remapping_sparse_grid_max_levels(3) = REMAP_SPARSE_GRID_LEVEL_VX
   remapping_sparse_grid_max_levels(4) = REMAP_SPARSE_GRID_LEVEL_VY
 
+  deposition_particles_type = SLL_BSL_LT_PIC_BASIC
+  deposition_particles_pos_type = -1      ! not used with BASIC deposition particles
+  deposition_particles_move_type = -1     ! not used with BASIC deposition particles
+  number_deposition_particles = -1     ! not used with BASIC deposition particles
+  nb_deposition_particles_per_cell_x = 2
+  nb_deposition_particles_per_cell_y = 2
+  nb_deposition_particles_vx = 50
+  nb_deposition_particles_vy = 50
+
+  flow_markers_type = SLL_BSL_LT_PIC_STRUCTURED
+
   p_group => sll_bsl_lt_pic_4d_group_new(             &
         SPECIES_CHARGE,                               &
         SPECIES_MASS,                                 &
@@ -211,15 +232,20 @@ program test_bsl_lt_pic_4d
         REMAP_NC_VX,                                  &
         REMAP_NC_VY,                                  &
         remapping_sparse_grid_max_levels,             &
-        SLL_BSL_LT_PIC_FIXED_GRID,                    &
-        NUM_DEPOSITION_PARTS,                         &
-        SLL_BSL_LT_PIC_STRUCTURED,                    &
+        deposition_particles_type,                    &
+        deposition_particles_pos_type,                &
+        deposition_particles_move_type,               &
+        number_deposition_particles,                  &
+        nb_deposition_particles_per_cell_x,           &
+        nb_deposition_particles_per_cell_y,           &
+        nb_deposition_particles_vx,                   &
+        nb_deposition_particles_vy,                   &
+        flow_markers_type,                            &
         NUM_MARKERS_X,                                &
         NUM_MARKERS_Y,                                &
         NUM_MARKERS_VX,                               &
         NUM_MARKERS_VY,                               &
-        INIT_NB_UNSTRUCT_MARKERS_PER_CELL,            &
-        MAX_NB_UNSTRUCT_MARKERS_PER_CELL,             &
+        NB_UNSTRUCT_MARKERS_PER_CELL,                 &
         int(NUM_MARKERS_X/2),                         &
         int(NUM_MARKERS_Y/2),                         &
         int(NUM_MARKERS_VX/2),                        &

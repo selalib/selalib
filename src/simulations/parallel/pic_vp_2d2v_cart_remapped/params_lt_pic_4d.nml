@@ -41,27 +41,32 @@
     remapping_cart_grid_number_cells_y  = 10            ! for splines
     remapping_cart_grid_number_cells_vx = 20            ! for splines
     remapping_cart_grid_number_cells_vy = 6             ! for splines
-    remapping_sparse_grid_max_level_x = 9                 ! for the sparse grid
+    remapping_sparse_grid_max_level_x = 11                 ! for the sparse grid
     remapping_sparse_grid_max_level_y = 7                 ! for the sparse grid
-    remapping_sparse_grid_max_level_vx = 9                 ! for the sparse grid
+    remapping_sparse_grid_max_level_vx = 11                 ! for the sparse grid
     remapping_sparse_grid_max_level_vy = 7                 ! for the sparse grid
 /
 
 &lt_pic_deposition_params
-    deposition_particles_type = 1               ! 0 = on a fixed grid,   1 = random and transported with the flow
-    number_deposition_particles = 50000         ! lower bound for the number of deposition particles
+    deposition_particles_type = 1           ! 0 = basic (first implementation), 1 = flexible (new, able to change type)
+    deposition_particles_pos_type = 0       ! 0 = on a structured grid,   1 = unstructured (random)
+    deposition_particles_move_type = 1      ! 0 = new particles are created at each step,  1 = they move until next remap step
+    number_deposition_particles = 50000     ! used for unstructured deposition particles
+    nb_deposition_particles_per_cell_x = 4  ! used for structured deposition particles
+    nb_deposition_particles_per_cell_y = 2  ! used for structured deposition particles
+    nb_deposition_particles_vx = 20         ! used for structured deposition particles
+    nb_deposition_particles_vy = 10          ! used for structured deposition particles
 /
 
 &lt_pic_markers_params
-    flow_markers_type = 1         ! 0 = structured (markers remapped on a cartesian grid),     1 = unstructured
+    flow_markers_type = 0         ! 0 = structured (markers remapped on a cartesian grid),     1 = unstructured
     number_markers_x  = 100       ! for structured markers (defines the cartesian grid where they are remapped)
     number_markers_y  = 20
     number_markers_vx = 60
     number_markers_vy = 10
-    init_nb_unstruct_markers_per_cell = 7   ! for unstructured flow markers
-    max_nb_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
-    flow_grid_number_cells_x = 30   ! the cartesian flow grid defines the cells where the flow is linearized
-    flow_grid_number_cells_y = 10   ! (also used with the unstructured flow markers)
-    flow_grid_number_cells_vx = 20
+    nb_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
+    flow_grid_number_cells_x = 50   ! the cartesian flow grid defines the cells where the flow is linearized
+    flow_grid_number_cells_y = 10   ! (it is also used with the unstructured flow markers)
+    flow_grid_number_cells_vx = 30
     flow_grid_number_cells_vy = 8
 /
