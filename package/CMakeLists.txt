@@ -106,3 +106,32 @@ install( FILES ${SLL_LIB}    DESTINATION lib )
 install( FILES ${SLL_MACROS} DESTINATION "include/selalib" )
 install( DIRECTORY "${CMAKE_Fortran_MODULE_DIRECTORY}/"
   DESTINATION "include/selalib" FILES_MATCHING PATTERN "sll_m_*.mod" )
+
+#===============================================================================
+# Information for external users: selalib.inc to be included by makefiles
+
+set( filepath "${CMAKE_CURRENT_BINARY_DIR}/selalib.inc" )
+file( WRITE  ${filepath} "SLL_ROOT = ${CMAKE_INSTALL_PREFIX}\n" )
+file( APPEND ${filepath} "\nSLL_LIB = \$\(SLL_ROOT\)/lib/libselalib.a\n" )
+
+file( APPEND ${filepath} "\nSLL_EXT =" )
+foreach( lib ${SLL_EXT} )
+  file( APPEND ${filepath} "\ \\\n" )
+  file( APPEND ${filepath} "	\$\(SLL_ROOT\)/lib/lib${lib}.a" )
+endforeach()
+file( APPEND ${filepath} "\n" )
+
+file( APPEND ${filepath} "\nSLL_DEPS =" )
+  foreach( lib ${SLL_DEPS} )
+  file( APPEND ${filepath} "\ \\\n" )
+  file( APPEND ${filepath} "	${lib}" )
+endforeach()
+file( APPEND ${filepath} "\n" )
+
+file( APPEND ${filepath} "\nSLL_INCLUDE_PATH = \$\(SLL_ROOT\)/include/selalib\n" )
+file( APPEND ${filepath} "\nFC = ${FC}\n" )
+
+# Installation
+install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/pkg_info/selalib)" )
+install( FILES makefile_template DESTINATION pkg_info/selalib )
+install( FILES ${filepath}       DESTINATION pkg_info/selalib )
