@@ -1,3 +1,17 @@
+# AUTHOR: Yaman Güçlü - IPP Garching
+#
+# NOTE:
+# . This file is in "selalib/package"
+# . At build time, "selalib.inc" is generated inside "<BUILD_DIR>/package"
+# . Upon installation, both files are copied to "<INSTALL_DIR>/pkg_info/selalib"
+#
+# USAGE:
+# . Build and install SeLaLib (see manual)
+# . Copy "makefile_template" and "selalib.inc" to your project directory
+# . Rename "makefile_template" as "makefile" (or "Makefile")
+# . Update the variables SOURCES and EXECUTABLE, and possibly other flags
+# . Upon "make", your project will be correctly built and linked against SeLaLib
+
 #===============================================================================
 # PROJECT information provided by user
 #===============================================================================
