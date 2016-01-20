@@ -146,11 +146,11 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
-  use sll_m_poisson_2d_mudpack, only: &
-    sll_f_new_poisson_2d_mudpack
+  use sll_m_poisson_2d_mudpack_curvilinear, only: &
+    sll_f_new_poisson_2d_mudpack_curvilinear
 
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
-    sll_f_new_poisson_2d_mudpack_curvilinear_solver
+  use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
+    sll_f_new_poisson_2d_mudpack_curvilinear_old
 
 #endif
   implicit none
@@ -861,7 +861,7 @@ contains
         
         select case(mudpack_method)
           case ("sll_p_separable")
-            sim%poisson => sll_f_new_poisson_2d_mudpack( &
+            sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -888,7 +888,7 @@ contains
             cy_2d = 0._f64
             ce_2d = 0._f64
              
-            sim%poisson => sll_f_new_poisson_2d_mudpack( &
+            sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -921,7 +921,7 @@ contains
             cy_2d = 0._f64
             ce_2d = 0._f64
              
-            sim%poisson => sll_f_new_poisson_2d_mudpack( &
+            sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -982,7 +982,7 @@ contains
         b12 = 0._f64
         b21 = 0._f64
         c = 0._f64
-        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_solver( &
+        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_old( &
          transformation, &
          x1_min,&
          x1_max,&
