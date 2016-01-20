@@ -117,7 +117,7 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
-  use sll_m_poisson_2d_mudpack
+  use sll_m_poisson_2d_mudpack_curvilinear
   use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
     sll_f_new_poisson_2d_mudpack_curvilinear_old
 
