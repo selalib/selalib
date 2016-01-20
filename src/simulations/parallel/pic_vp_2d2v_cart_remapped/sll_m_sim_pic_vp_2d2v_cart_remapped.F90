@@ -216,14 +216,19 @@ contains
     sll_int32   :: remapping_sparse_grid_max_level_vx
     sll_int32   :: remapping_sparse_grid_max_level_vy
     sll_int32   :: deposition_particles_type
+    sll_int32   :: deposition_particles_pos_type
+    sll_int32   :: deposition_particles_move_type
     sll_int32   :: number_deposition_particles
+    sll_int32   :: nb_deposition_particles_per_cell_x
+    sll_int32   :: nb_deposition_particles_per_cell_y
+    sll_int32   :: nb_deposition_particles_vx
+    sll_int32   :: nb_deposition_particles_vy
     sll_int32   :: flow_markers_type
     sll_int32   :: number_markers_x
     sll_int32   :: number_markers_y
     sll_int32   :: number_markers_vx
     sll_int32   :: number_markers_vy
-    sll_int32   :: init_nb_unstruct_markers_per_cell
-    sll_int32   :: max_nb_unstruct_markers_per_cell
+    sll_int32   :: nb_unstruct_markers_per_cell
     sll_int32   :: flow_grid_number_cells_x
     sll_int32   :: flow_grid_number_cells_y
     sll_int32   :: flow_grid_number_cells_vx
@@ -294,8 +299,15 @@ contains
 
     ! discretization of the deposited f
     !   -> number of deposition particles
-    namelist /lt_pic_deposition_params/deposition_particles_type, &
-                                    number_deposition_particles
+    namelist /lt_pic_deposition_params/deposition_particles_type,               &
+                                    deposition_particles_pos_type,              &
+                                    deposition_particles_move_type,             &
+                                    number_deposition_particles,                &
+                                    nb_deposition_particles_per_cell_x,         &
+                                    nb_deposition_particles_per_cell_y,         &
+                                    nb_deposition_particles_vx,                 &
+                                    nb_deposition_particles_vy
+
 
     ! discretization of the flow:
     !   -> number of markers to be pushed forward
@@ -306,8 +318,7 @@ contains
                                     number_markers_y,                   &
                                     number_markers_vx,                  &
                                     number_markers_vy,                  &
-                                    init_nb_unstruct_markers_per_cell,  &
-                                    max_nb_unstruct_markers_per_cell,   &
+                                    nb_unstruct_markers_per_cell,       &
                                     flow_grid_number_cells_x,           &
                                     flow_grid_number_cells_y,           &
                                     flow_grid_number_cells_vx,          &
@@ -395,14 +406,19 @@ contains
         remapping_cart_grid_number_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         deposition_particles_type,                  &
-        number_deposition_particles,                &
+        deposition_particles_pos_type,              &
+        deposition_particles_move_type,             &
+        number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
+        nb_deposition_particles_per_cell_x,         &
+        nb_deposition_particles_per_cell_y,         &
+        nb_deposition_particles_vx,                 &
+        nb_deposition_particles_vy,                 &
         flow_markers_type,                          &
         number_markers_x,                           &
         number_markers_y,                           &
         number_markers_vx,                          &
         number_markers_vy,                          &
-        init_nb_unstruct_markers_per_cell,          &
-        max_nb_unstruct_markers_per_cell,           &
+        nb_unstruct_markers_per_cell,               &
         flow_grid_number_cells_x,                   &
         flow_grid_number_cells_y,                   &
         flow_grid_number_cells_vx,                  &
@@ -549,6 +565,7 @@ contains
     sll_real64 :: coords(3)
     sll_real64 :: target_total_charge
     logical    :: enforce_total_charge
+    logical    :: this_is_the_last_time_loop
     character(len=1024) :: field_name
 
 
@@ -653,7 +670,7 @@ contains
        it = 0
 
       ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
-      write (field_name, "(A13,I4)") 'rho_init_run=', sim%run_nb
+      write (field_name, "(A13,I4.4)") 'rho_init_run=', sim%run_nb
       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
           sim%mesh_2d%eta2_max, ncy+1,                            &
           sim%rho, trim(field_name), it+1, ierr )
@@ -663,11 +680,7 @@ contains
     !> sign (hence there is no need to multiply it by an additional physical constant). The resulting field \f$E^0_x\f$
     !> is stored in sim\%E1, and \f$E^0_y\f$ in sim\%E2.
 
-    print*,  "aa  ee"
-
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
-
-    print*,  "aa  ff"
 
     ! <<Ex_Ey_output>> using the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_2d]] interface and most probably
     ! the [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
@@ -677,12 +690,12 @@ contains
        
        ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
       print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it," # plot = ", it+1
-      write (field_name, "(A12,I4)") 'Ex_init_run=', sim%run_nb
+      write (field_name, "(A12,I4.4)") 'Ex_init_run=', sim%run_nb
       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
           sim%mesh_2d%eta2_max, ncy+1,                            &
           sim%rho, trim(field_name), it+1, ierr )
 
-      write (field_name, "(A12,I4)") 'Ey_init_run=', sim%run_nb
+      write (field_name, "(A12,I4.4)") 'Ey_init_run=', sim%run_nb
       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
            sim%mesh_2d%eta2_max, ncy+1,                            &
            sim%E2, trim(field_name), it+1, ierr )
@@ -755,7 +768,7 @@ contains
     psi = sim%elec_params(4)
 
     ! [[logE_run]]
-    write (field_name, "(A9,I4,A4)") 'logE_run=', sim%run_nb, '.dat'
+    write (field_name, "(A9,I4.4,A4)") 'logE_run=', sim%run_nb, '.dat'
     if (sim%my_rank ==0) open(65,file=trim(field_name))
 
     !#ifdef _OPENMP
@@ -782,6 +795,8 @@ contains
     do it = 0, sim%num_iterations-1
 
        print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%num_iterations
+       this_is_the_last_time_loop = (it == sim%num_iterations-1)
+
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
 
        ! <<logE_run>>
@@ -934,7 +949,7 @@ contains
          ! [[selalib:src/io/file_io/sll_m_gnuplot.F90::sll_gnuplot_corect_2d]] uses a plot number starting from 1
 
          ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
-        write (field_name, "(A8,I4)") 'rho_run=', sim%run_nb
+        write (field_name, "(A8,I4.4)") 'rho_run=', sim%run_nb
         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
               sim%mesh_2d%eta2_max, ncy+1,                            &
               sim%rho, trim(field_name), it+1, ierr )
@@ -963,7 +978,7 @@ contains
         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
 
-        write (field_name, "(A12,I4)") 'f_slice_run=', sim%run_nb
+        write (field_name, "(A12,I4.4)") 'f_slice_run=', sim%run_nb
         call sim%particle_group%visualize_f_slice_x_vx(trim(field_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
 
       end if
@@ -971,20 +986,25 @@ contains
       if (sim%use_lt_pic_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
         ! note: condition on rank == 0 needs to be revised for the actual parallel version...
 
-        print *, "remapping f..."
-        call sim%particle_group%remap()
+        if( this_is_the_last_time_loop )then
+          print *, "skip remapping step (last loop)"
+        else
+          print *, "remapping f..."
+          call sim%particle_group%remap()
+        end if
+
       end if
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
         print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
                " # plot = ",it+1
-        write (field_name, "(A7,I4)") 'Ex_run=', sim%run_nb
+        write (field_name, "(A7,I4.4)") 'Ex_run=', sim%run_nb
         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                               sim%mesh_2d%eta2_max, ncy+1,                        &
                               sim%E1, trim(field_name), it+1, ierr )
 
-        write (field_name, "(A7,I4)") 'Ey_run=', sim%run_nb
+        write (field_name, "(A7,I4.4)") 'Ey_run=', sim%run_nb
         call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                               sim%mesh_2d%eta2_max, ncy+1,                        &
                               sim%E2, trim(field_name), it+1, ierr )
