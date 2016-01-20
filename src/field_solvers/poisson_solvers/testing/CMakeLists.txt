@@ -36,10 +36,10 @@ TARGET_LINK_LIBRARIES( test_poisson_3d_periodic sll_poisson_solvers sll_fft )
 ADD_TEST( NAME poisson_3d_periodic  COMMAND test_poisson_3d_periodic     )
 SET_TESTS_PROPERTIES( poisson_3d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_tri_poisson test_tri_poisson.F90 )
-TARGET_LINK_LIBRARIES( test_tri_poisson sll_poisson_solvers sll_mesh_calculus sll_file_io )
-ADD_TEST( NAME tri_poisson  COMMAND test_tri_poisson     )
-SET_TESTS_PROPERTIES( tri_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ADD_EXECUTABLE( test_poisson_2d_tri test_poisson_2d_tri.F90 )
+TARGET_LINK_LIBRARIES( test_poisson_2d_tri sll_poisson_solvers sll_mesh_calculus sll_file_io )
+ADD_TEST( NAME poisson_2d_tri  COMMAND test_poisson_2d_tri     )
+SET_TESTS_PROPERTIES( poisson_2d_tri PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ### BEGIN MACRO ###
 MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)

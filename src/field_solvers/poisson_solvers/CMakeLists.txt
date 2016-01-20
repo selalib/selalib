@@ -22,7 +22,7 @@ SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_mudpack.F90
                  sll_m_mudpack_curvilinear.F90
                  sll_m_hex_poisson.F90
-                 sll_m_tri_poisson.F90 )
+                 sll_m_poisson_2d_tri.F90 )
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
    SET(POISSON_SRCS ${POISSON_SRCS} sll_m_poisson_2d_periodic_fftw.F90)
