@@ -248,7 +248,7 @@ contains
     sll_int32   :: j
     sll_real64  :: dt
     sll_int32   :: number_iterations, plot_period, remap_period
-    sll_int32   :: NUM_PARTICLES, GUARD_SIZE, PARTICLE_ARRAY_SIZE
+    sll_int32   :: NUM_PARTICLES!, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
     sll_real64  :: SPECIES_CHARGE, SPECIES_MASS, ALPHA
     logical     :: UseLtPicScheme
@@ -483,21 +483,21 @@ contains
     class(sll_t_simulation_4d_vp_generic_pic_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j, k
-    sll_real64 :: tmp1, tmp2, tmp3, tmp4
-    sll_real32 :: tmp5, tmp6, temp
-    sll_real32 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
-    sll_real64 :: valeur, val2
+    !sll_real64 :: tmp1, tmp2, tmp3, tmp4
+    sll_real32 :: tmp5, tmp6!, temp
+    !sll_real32 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
+    !sll_real64 :: val2
     sll_real64, dimension(:,:), pointer :: phi
-    sll_int32  :: ncx, ncy, ic_x,ic_y
-    sll_int32  :: ic_x1,ic_y1
-    sll_real32 :: off_x, off_y,off_x1,off_y1
+    sll_int32  :: ncx, ncy!, ic_x,ic_y
+    !sll_int32  :: ic_x1,ic_y1
+    !sll_real32 :: off_y1
     sll_real64 :: xmin, ymin
     sll_real64 :: rdx, rdy
     ! sll_int32  :: gi ! counter index for guard list
-    sll_real64 :: Ex, Ey, Ex1, Ey1, Ex_CS, Ey_CS
+    sll_real64 :: Ex, Ey!, Ey_CS
     sll_real64 :: dt_q_over_m ! dt * qoverm
-    sll_real64 :: x, x1  ! for global position
-    sll_real64 :: y, y1  ! for global position
+    !sll_real64 :: x, x1  ! for global position
+    !sll_real64 :: y, y1  ! for global position
     sll_real64 :: dt
     sll_real64 :: pp_x,pp_y,pp_vx, pp_vy
     sll_real32 :: pp_dx, pp_dy
@@ -508,10 +508,10 @@ contains
     sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
     sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-    sll_real64 :: t2, t3
+    !sll_real64 :: t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    sll_real64   :: t_init, t_fin, time
+    !sll_real64   :: t_fin
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
@@ -693,7 +693,7 @@ contains
       ! Set particle speed [[dt_q_over_m]]
       coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
       coords(2) = pp_vy - 0.5_f64 * dt_q_over_m * Ey
-      coords(3) = 0
+      coords(3) = 0.0_f64
       call sim%particle_group%set_v(k, coords)
     enddo
 
@@ -723,7 +723,7 @@ contains
 
     ! Time statistics
     call sll_s_set_time_mark(loop_time_mark)
-    deposit_time=0
+    deposit_time=0.0_f64
 
     ! First snapshot at time 0 [[particles_snapshot]]
     ! AAA_ALH_TODO call particles_snapshot(0.0_8,sim)
@@ -800,7 +800,7 @@ contains
          ! Set particle speed [[dt_q_over_m]]
          coords(1) = pp_vx + dt_q_over_m * Ex
          coords(2) = pp_vy + dt_q_over_m * Ey
-         coords(3) = 0
+         coords(3) = 0.0_f64
          call sim%particle_group%set_v(k, coords)
 
          !> remember new speed for x-push
@@ -815,7 +815,7 @@ contains
 
          coords(1) = pp_x + dt * pp_vx
          coords(2) = pp_y + dt * pp_vy
-         coords(3) = 0
+         coords(3) = 0.0_f64
 
          !! -- --  x-push [end]  -- --
 
