@@ -302,7 +302,7 @@ contains
     !sll_real64  ::  t2, t3!  type(sll_time_mark)  :: t2, t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    !sll_real64   :: t_init, t_fin, time
+!$    sll_real64   :: t2, t3, time
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
