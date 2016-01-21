@@ -30,7 +30,7 @@
 
 
 !> @ingroup poisson_solvers
-module sll_m_poisson_2d_mudpack_curvilinear_solver_old
+module sll_m_poisson_2d_mudpack_curvilinear_old
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -66,15 +66,13 @@ module sll_m_poisson_2d_mudpack_curvilinear_solver_old
   implicit none
 
   public :: &
-    sll_f_new_poisson_2d_mudpack_curvilinear_solver
+    sll_f_new_poisson_2d_mudpack_curvilinear_old
 
   private
+
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-
-  
-
-  type,extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack_curvilinear_solver     
+  type,extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack_curvilinear_old     
   
   !type(sll_plan_poisson_polar), pointer                   :: poiss
   sll_real64, dimension(:,:), pointer :: cxx_2d
@@ -106,7 +104,7 @@ module sll_m_poisson_2d_mudpack_curvilinear_solver_old
   
   contains
     procedure, pass(poisson) :: initialize => &
-      initialize_poisson_2d_mudpack_curvilinear_solver
+      initialize_poisson_2d_mudpack_curvilinear_old
     procedure, pass(poisson) :: compute_phi_from_rho => &
       compute_phi_from_rho_2d_mudpack_curvilinear
     procedure, pass(poisson) :: compute_E_from_rho => &
@@ -114,13 +112,13 @@ module sll_m_poisson_2d_mudpack_curvilinear_solver_old
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
       
-  end type poisson_2d_mudpack_curvilinear_solver
+  end type poisson_2d_mudpack_curvilinear_old
 
-  class(poisson_2d_mudpack_curvilinear_solver), pointer   :: mudpack_curvilinear_wrapper => null()
+  class(poisson_2d_mudpack_curvilinear_old), pointer   :: mudpack_curvilinear_wrapper => null()
 
 
 contains
-  function sll_f_new_poisson_2d_mudpack_curvilinear_solver( &
+  function sll_f_new_poisson_2d_mudpack_curvilinear_old( &
     transf, &
     eta1_min, &
     eta1_max, &
@@ -142,7 +140,7 @@ contains
     mudpack_curvilinear_case) &
     result(poisson)
       
-    type(poisson_2d_mudpack_curvilinear_solver),pointer :: poisson
+    type(poisson_2d_mudpack_curvilinear_old),pointer :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -168,7 +166,7 @@ contains
     SLL_ALLOCATE(poisson,ierr)
       
                     
-    call initialize_poisson_2d_mudpack_curvilinear_solver( &
+    call initialize_poisson_2d_mudpack_curvilinear_old( &
       poisson, &
       transf, &
       eta1_min, &
@@ -190,10 +188,10 @@ contains
       c, &
       mudpack_curvilinear_case)
     
-  end function sll_f_new_poisson_2d_mudpack_curvilinear_solver
+  end function sll_f_new_poisson_2d_mudpack_curvilinear_old
   
   
-  subroutine initialize_poisson_2d_mudpack_curvilinear_solver( &
+  subroutine initialize_poisson_2d_mudpack_curvilinear_old( &
     poisson, &
     transf, &
     eta1_min, &
@@ -214,7 +212,7 @@ contains
     b22, &
     c, &
     mudpack_curvilinear_case)
-    class(poisson_2d_mudpack_curvilinear_solver), target :: poisson
+    class(poisson_2d_mudpack_curvilinear_old), target :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -490,15 +488,15 @@ contains
         mudpack_curvilinear_wrapper => null() 
       case default
         print *,'#bad mudpack_curvilinear_case',poisson%mudpack_curvilinear_case
-        print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear_solver'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear_old'
         stop 
      end select
         
-  end subroutine initialize_poisson_2d_mudpack_curvilinear_solver
+  end subroutine initialize_poisson_2d_mudpack_curvilinear_old
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack_curvilinear( poisson, phi, rho )
-    class(poisson_2d_mudpack_curvilinear_solver), target :: poisson
+    class(poisson_2d_mudpack_curvilinear_old), target :: poisson
     sll_real64,dimension(:,:), intent(in) :: rho
     sll_real64,dimension(:,:), intent(out) :: phi
     sll_int32 :: Nc_eta1
@@ -634,24 +632,16 @@ contains
          
       case default
         print *,'#bad mudpack_curvilinear_case',poisson%mudpack_curvilinear_case
-        print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear_solver'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear_old'
         stop 
     end select
 
     
   end subroutine compute_phi_from_rho_2d_mudpack_curvilinear
 
-    ! solves E = -\nabla Phi in 2d
-!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
-!      sll_real64,dimension(:,:),intent(in) :: phi
-!      sll_real64,dimension(:,:),intent(out) :: E1
-!      sll_real64,dimension(:,:),intent(out) :: E2
-!    end subroutine compute_E_from_phi_2d_fft
-
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
     subroutine compute_E_from_rho_2d_mudpack_curvilinear( poisson, E1, E2, rho )
-      class(poisson_2d_mudpack_curvilinear_solver) :: poisson
+      class(poisson_2d_mudpack_curvilinear_old) :: poisson
       sll_real64,dimension(:,:),intent(in) :: rho
       sll_real64,dimension(:,:),intent(out) :: E1
       sll_real64,dimension(:,:),intent(out) :: E2
@@ -853,7 +843,7 @@ if (kbdy == 4) then  ! y=yd boundary
 end if
 end subroutine
 
-end module sll_m_poisson_2d_mudpack_curvilinear_solver_old
+end module sll_m_poisson_2d_mudpack_curvilinear_old
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
