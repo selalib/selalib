@@ -6,7 +6,6 @@ $donnees
   ny       = 10   	!nombre de pts suivant y
   cfl      = 0.9 		!nombre de Courant-Friedrich-Levy
   tfinal   = 10.0   	!temps final
-  icrea    = 1		!frequence d'emission des particules
   idiag    = 10    	!frequence des sorties graphiques
   bcname   = "period"	!type de conditions limites
   exext    = 0.		!champ electrique exterieur suivant x
