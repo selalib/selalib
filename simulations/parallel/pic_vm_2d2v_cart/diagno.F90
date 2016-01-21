@@ -13,49 +13,6 @@ sll_int32, private :: i, j, k
 
 contains
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine plot_part( ele, time, iplot )
-
-type (particle) :: ele
-sll_int32 :: iplot
-sll_real64 :: time, umod
-
-open(40, file="viry.dat", position="append")
-if( iplot == 1 ) rewind(40)
-   
-umod = sqrt(ele%vit(1,1)**2+ele%vit(1,2)**2)
-   
-write(40,"(G15.3,1X,5F12.7)") sngl(time)         &
-      ,sngl(ele%pos(1,1)), sngl(ele%pos(1,2))    &
-      ,sngl(ele%vit(1,1)), sngl(ele%vit(1,2))    &
-      ,umod
-close(40)
-
-end subroutine plot_part
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine diag_champ_part( ele, time, iplot )
-
-type(particle) :: ele
-sll_real64 :: time
-sll_int32 :: iplot
-
-if ( nbpart > 0 ) then
-
-   open(17, file="chpart", position="append"  )
-   if( iplot == 1 ) rewind(17)
-   
-   write(17,*) sngl(time), sngl(ele%epx(1)), &
-        sngl(ele%epy(1)), sngl(ele%bpz(1))
-
-   close(17)
-
-endif
-
-end subroutine diag_champ_part
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine plot_phases( ele, iplot, time )
@@ -97,10 +54,10 @@ close(13)
 
 open( 14, file = 'part_'//fin )
 do ipart=1,nbpart
-   speed = sqrt( ele%vit(ipart,1)*ele%vit(ipart,1) + &
-        &        ele%vit(ipart,2)*ele%vit(ipart,2) )
-   write(14,*) sngl(ele%pos(ipart,1)),sngl(ele%pos(ipart,2))    &
-              ,sngl(ele%vit(ipart,1)),sngl(ele%vit(ipart,2)), sngl(speed)
+   speed = sqrt( ele%vpx(ipart)*ele%vpx(ipart) + &
+        &        ele%vpy(ipart)*ele%vpy(ipart) )
+   write(14,*) sngl(ele%dpx(ipart)),sngl(ele%dpy(ipart))    &
+              ,sngl(ele%vpx(ipart)),sngl(ele%vpy(ipart)), sngl(speed)
 end do
 close(14)
 
@@ -133,10 +90,10 @@ df = 0.d0
 do ipart=1,nbpart
    do i=1,nv
       do j=1,nv
-         if (vmin+(i-1)*delta_v <= ele%vit(ipart,1) .and. &
-              & ele%vit(ipart,1) < vmin+i*delta_v  .and. & 
-              & vmin+(j-1)*delta_v <= ele%vit(ipart,2) .and. &
-              & ele%vit(ipart,2) < vmin+j*delta_v) then
+         if (vmin+(i-1)*delta_v <= ele%vpx(ipart) .and. &
+              & ele%vpx(ipart) < vmin+i*delta_v  .and. & 
+              & vmin+(j-1)*delta_v <= ele%vpy(ipart) .and. &
+              & ele%vpy(ipart) < vmin+j*delta_v) then
             df(i,j) = df(i,j) + ele%p(ipart)
          endif
       enddo
@@ -202,6 +159,8 @@ sll_real64, dimension(100,100) :: df
 type(particle) :: ele
 sll_real64 :: time, x, y, delta_x, delta_y
 character(len=4) :: fin
+ssl_real64 :: ppx
+ssl_real64 :: ppy
 
 call sll_s_int2string(iplot, fin)
 
@@ -209,12 +168,12 @@ df = 0.d0
 delta_x = dimx/100
 delta_y = dimy/100
 do ipart=1,nbpart
+  ppx =  ele%idx(ipart)*dx+ele%dpx(ipart)
+  ppy =  ele%idy(ipart)*dy+ele%dpy(ipart)
   do i=1,100
     do j=1,100
-      if ((i-1)*delta_x <= ele%pos(ipart,1) .and. &
-        & ele%pos(ipart,1) < i*delta_x  .and. & 
-        & (j-1)*delta_y <= ele%pos(ipart,2) .and. &
-        & ele%pos(ipart,2) < j*delta_y) then
+      if ((i-1)*delta_x <= ppx .and. ppx < i*delta_x  .and. & 
+        & (j-1)*delta_y <= ppy .and. ppy < j*delta_y) then
         df(i,j) = df(i,j) + ele%p(ipart)
       endif
     enddo
@@ -255,9 +214,9 @@ sll_int32 :: iplot
 
 aux =0.d0
 do i=0,nx-1
-   do j=0,ny-1
-      aux = aux + tm%ex(i,j)*tm%ex(i,j)*dx*dy
-   end do
+  do j=0,ny-1
+    aux = aux + tm%ex(i,j)*tm%ex(i,j)*dx*dy
+  end do
 end do
 aux = 0.5*log(aux)
 
@@ -282,7 +241,7 @@ call sll_s_ascii_file_create("particles_"//fin//".3D", file_id, error)
 
 write(file_id,"(a)") 'x y vx vy'
 do k = 1, nbpart
-  write(file_id,"(4e15.3)")p%pos(k,:),p%vit(k,:)
+  write(file_id,"(4e15.3)")p%dpx(k),p%dpy(k),p%vpx(k), p%vpy(k)
 end do
 close(file_id)
 
@@ -305,12 +264,12 @@ call sll_s_int2string(iplot, fin)
 
 call sll_s_ascii_file_create("particles_"//fin//".okc", file_id, error)
 
-vxmin = minval(p%vit(:,1))
-vxmax = maxval(p%vit(:,1))
-vymin = minval(p%vit(:,2))
-vymax = maxval(p%vit(:,2))
-pmin  = minval(p%p(:))
-pmax  = maxval(p%p(:))
+vxmin = minval(p%vpx)
+vxmax = maxval(p%vpx)
+vymin = minval(p%vpy)
+vymax = maxval(p%vpy)
+pmin  = minval(p%p)
+pmax  = maxval(p%p)
 
 write(file_id,"(2i7)") 5, nbpart, 1
 write(file_id,"(a)") 'x'
@@ -324,7 +283,7 @@ write(file_id,"(2f8.3,1x,i7)") vxmin, vxmax, 4
 write(file_id,"(2f8.3,1x,i7)") vymin, vymax, 4
 write(file_id,"(2f8.3,1x,i7)") pmin, pmax, 4
 do k = 1, nbpart
-  write(file_id,"(6e15.3)")p%pos(k,:),0.,p%vit(k,:),p%p(k)
+  write(file_id,"(6e15.3)")p%dpx(k),p%dpy(:),0.,p%vpx(k),p%vpy(k),p%p(k)
 end do
 close(file_id)
 
@@ -352,9 +311,9 @@ delta_x = dimx/(nx-1)
 delta_y = dimy/(ny-1)
 do ipart=1,nbpart
  do i=1,ny
-  if ((i-1)*delta_x <= ele%pos(ipart,1) .and. ele%pos(ipart,1) < i*delta_x) then
+  if ((i-1)*delta_x <= ele%dpx(ipart) .and. ele%dpx(ipart) < i*delta_x) then
    do j=1,ny
-    if((j-1)*delta_y <= ele%pos(ipart,2) .and. ele%pos(ipart,2) < j*delta_y) then
+    if((j-1)*delta_y <= ele%dpy(ipart) .and. ele%dpy(ipart) < j*delta_y) then
      df(i,j) = df(i,j) + ele%p(ipart)
     end if
    enddo
