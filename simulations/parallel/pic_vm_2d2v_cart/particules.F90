@@ -8,10 +8,12 @@ implicit none
 
 
 type particle
-  sll_real64, pointer :: pos(:,:)
+  sll_real64, pointer :: dpx(:)
+  sll_real64, pointer :: dpy(:)
   sll_int32 , pointer :: idx(:)
   sll_int32 , pointer :: idy(:)
-  sll_real64, pointer :: vit(:,:)
+  sll_real64, pointer :: vpx(:)
+  sll_real64, pointer :: vpy(:)
   sll_real64, pointer :: epx(:)
   sll_real64, pointer :: epy(:)
   sll_real64, pointer :: bpz(:)
@@ -44,20 +46,20 @@ dum = 1./(dx*dy)
 do k=1,nbpart
    i = ele%idx(k)
    j = ele%idy(k)
-   xp = ele%pos(k,1)
-   yp = ele%pos(k,2)
+   xp = i*dx+ele%dpx(k)
+   yp = j*dy+ele%dpy(k)
 
    a1 = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
    a2 = (xp-(i)*dx) * ((j+1)*dy-yp) * dum
    a3 = (xp-(i)*dx) * (yp-(j)*dy) * dum
    a4 = ((i+1)*dx-xp) * (yp-(j)*dy) * dum
 
-   ele%epx(k) = a1 * tm1%ex(i,j) + a2 * tm1%ex(i+1,j) &
-        & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i,j+1) 
-   ele%epy(k) = a1 * tm1%ey(i,j) + a2 * tm1%ey(i+1,j) &
-        & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i,j+1) 
-   ele%bpz(k) =  a1 * tm1%bz(i,j) + a2 * tm1%bz(i+1,j) &
-        & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i,j+1) 
+   ele%epx(k) = a1 * tm1%ex(i  ,j  ) + a2 * tm1%ex(i+1,j  ) &
+            & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i  ,j+1) 
+   ele%epy(k) = a1 * tm1%ey(i  ,j  ) + a2 * tm1%ey(i+1,j  ) &
+            & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i  ,j+1) 
+   ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
+            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
 end do
 
 end subroutine interpol_eb
@@ -78,18 +80,18 @@ do k = 1, nbpart
 
    if( relativ ) then
 
-      u2  = ele%vit(k,1)*ele%vit(k,1) &
-          + ele%vit(k,2)*ele%vit(k,2)
+      u2  = ele%vpx(k)*ele%vpx(k) &
+          + ele%vpy(k)*ele%vpy(k)
       if ( u2 >= csq ) then 
          print*,'Erreur : u2 >= c2 dans le calcul de la vitesse'
-         print*,'k = ',k,' vx = ',ele%vit(k,1),' vy = ',ele%vit(k,2)
+         print*,'k = ',k,' vx = ',ele%vpx(k),' vy = ',ele%vpy(k)
          stop
       else
          gamma = 1./sqrt( 1. - u2/csq )
       endif
 
-      ele%vit(k,1) = gamma*ele%vit(k,1)
-      ele%vit(k,2) = gamma*ele%vit(k,2)
+      ele%vpx(k) = gamma*ele%vpx(k)
+      ele%vpy(k) = gamma*ele%vpy(k)
 
    else
 
@@ -103,34 +105,34 @@ do k = 1, nbpart
    !*** On ajoute la moitie de l'effet champ electrique E
 
    dum = 0.5 * dt * q_sur_m
-   ele%vit(k,1) = ele%vit(k,1) + dum*(ele%epx(k)+exext)
-   ele%vit(k,2) = ele%vit(k,2) + dum*(ele%epy(k)+eyext)
+   ele%vpx(k) = ele%vpx(k) + dum*(ele%epx(k)+exext)
+   ele%vpy(k) = ele%vpy(k) + dum*(ele%epy(k)+eyext)
 
    !*** Algorithme de Buneman pour les effets magnetiques
  
    tantheta = dum * (ele%bpz(k)+bzext) / gamma 
    sintheta = 2.0 * tantheta / ( 1. + tantheta*tantheta)
 
-   ele%vit(k,1) = ele%vit(k,1) + ele%vit(k,2)*tantheta
-   ele%vit(k,2) = ele%vit(k,2) - ele%vit(k,1)*sintheta
-   ele%vit(k,1) = ele%vit(k,1) + ele%vit(k,2)*tantheta
+   ele%vpx(k) = ele%vpx(k) + ele%vpy(k)*tantheta
+   ele%vpy(k) = ele%vpy(k) - ele%vpx(k)*sintheta
+   ele%vpx(k) = ele%vpx(k) + ele%vpy(k)*tantheta
 
    !*** Autre moitie de l'effet du champ electrique E
 
-   ele%vit(k,1) = ele%vit(k,1) + dum*(ele%epx(k)+exext)
-   ele%vit(k,2) = ele%vit(k,2) + dum*(ele%epy(k)+eyext)
+   ele%vpx(k) = ele%vpx(k) + dum*(ele%epx(k)+exext)
+   ele%vpy(k) = ele%vpy(k) + dum*(ele%epy(k)+eyext)
 
    !*** On repasse a la vitesse (changement de variable inverse)
 
    if( relativ ) then
 
-      u2 =   ele%vit(k,1)*ele%vit(k,1) &
-           + ele%vit(k,2)*ele%vit(k,2)
+      u2 =   ele%vpx(k)*ele%vpx(k) &
+           + ele%vpy(k)*ele%vpy(k)
 
       gamma = sqrt( 1. + u2/csq )
  
-      ele%vit(k,1) = ele%vit(k,1) / gamma
-      ele%vit(k,2) = ele%vit(k,2) / gamma
+      ele%vpx(k) = ele%vpx(k) / gamma
+      ele%vpy(k) = ele%vpy(k) / gamma
 
    end if
 
@@ -145,63 +147,56 @@ subroutine avancee_part( ele, coef )  !Avancee de coef * dt
 type(particle) :: ele
 sll_real64 :: coef
 sll_int32  :: k 
+sll_real64 :: ppx
+sll_real64 :: ppy
 
 do k=1,nbpart     
-   ele%pos(k,1) = ele%pos(k,1) + ele%vit(k,1)*dt*coef
-   ele%pos(k,2) = ele%pos(k,2) + ele%vit(k,2)*dt*coef
-enddo
 
-!*** Mise a jour des "ids"
+  ppx = ele%idx(k)*dx + ele%dpx(k) + ele%vpx(k)*dt*coef
+  ppy = ele%idy(k)*dy + ele%dpy(k) + ele%vpy(k)*dt*coef
 
-do k=1,nbpart
-   ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
-   ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
+  if (bcname == 'period') then
+
+    if( ppx >= dimx ) then
+      ppx = ppx - dimx
+    else if( ppx < 0.d0 ) then
+      ppx = ppx + dimx
+    end if
+
+    if( ppy >= dimy ) then
+      ppy = ppy - dimy
+    else if( ppy < 0.d0 ) then
+      ppy = ppy + dimy
+    end if
+
+  end if
+
+  ele%idx(k) = floor(ppx/dimx*nx)
+  ele%idy(k) = floor(ppy/dimy*ny)
+  ele%dpx(k) = ppx - ele%idx(k)*dx
+  ele%dpy(k) = ppy - ele%idy(k)*dy
+
 end do
 
-!*** Traitement de la sortie des particules
-
-if (bcname == 'period') then
-
-  do k=1,nbpart
-    if( ele%pos(k,1) >= dimx ) then
-      ele%pos(k,1) = ele%pos(k,1) - dimx
-      ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
+if (bcname /= 'period') then
+  k = 1
+  do while ( k <= nbpart )  
+    if (      ele%idx(k) < 0 .or. ele%idx(k) >= nx      &	
+         .or. ele%idy(k) < 0 .or. ele%idy(k) >= ny ) then
+        
+        ele%dpx(k) = ele%dpx(nbpart)
+        ele%dpy(k) = ele%dpy(nbpart)
+        ele%vpx(k) = ele%vpx(nbpart)
+        ele%vpy(k) = ele%vpy(nbpart)
+        ele%p(k)   = ele%p(nbpart)
+        ele%idx(k) = ele%idx(nbpart)
+        ele%idy(k) = ele%idy(nbpart)
+        nbpart = nbpart - 1
+    if (nbpart == 0) stop 'no more particle'
+    else
+      k = k + 1
     end if
-    if( ele%pos(k,2) >= dimy ) then
-      ele%pos(k,2) = ele%pos(k,2) - dimy
-      ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
-    end if
-    if( ele%pos(k,1) < 0.d0 ) then
-      ele%pos(k,1) = ele%pos(k,1) + dimx
-      ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
-    end if
-    if( ele%pos(k,2) < 0.d0 ) then
-      ele%pos(k,2) = ele%pos(k,2) + dimy
-      ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
-    end if
-  end do   
-
-else
-   k = 1
-   do while ( k <= nbpart )  
-      if (      ele%pos(k,1) < 0.0        &
-           .or. ele%pos(k,1) >= dimx      &	
-           .or. ele%pos(k,2) < 0.         &
-           .or. ele%pos(k,2) >= dimy ) then
-         !*** Recuperation du trou laisse par la particule sortie
-         ele%pos(k,1) = ele%pos(nbpart,1)
-         ele%pos(k,2) = ele%pos(nbpart,2)
-         ele%vit(k,1) = ele%vit(nbpart,1)
-         ele%vit(k,2) = ele%vit(nbpart,2)
-         ele%p(k)     = ele%p(nbpart)
-         ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
-         ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
-         nbpart = nbpart - 1
-         if (nbpart == 0) stop 'plus de particule'
-      else
-         k = k + 1
-      end if
-   end do
+  end do
 
 end if
 
@@ -233,8 +228,8 @@ do k=1,nbpart
 
   i   = ele%idx(k)
   j   = ele%idy(k)
-  xp  = ele%pos(k,1)
-  yp  = ele%pos(k,2)
+  xp  = i*dx+ele%dpx(k)
+  yp  = j*dy+ele%dpy(k)
   dum = ele%p(k) 
   a1  = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
   a2  = (xp-(i)*dx)   * ((j+1)*dy-yp) * dum
@@ -272,7 +267,8 @@ subroutine plasma( ele )
 type (particle) :: ele
 sll_real64 :: speed, theta, vth, n
 sll_real64 :: a, b, eps, R
-sll_int32  :: i, j, k, error
+sll_real64 :: ppx, ppy
+sll_int32  :: k, error
 
 eps = 1.d-12
 
@@ -280,10 +276,12 @@ vth =  1.0_f64
 nbpart = 100*(nx)*(ny)
 n = 1.d0/nbpart
 
-SLL_ALLOCATE(ele%pos(nbpart,2),error)
+SLL_ALLOCATE(ele%dpx(nbpart),error)
+SLL_ALLOCATE(ele%dpy(nbpart),error)
 SLL_ALLOCATE(ele%idx(nbpart),error)
 SLL_ALLOCATE(ele%idy(nbpart),error)
-SLL_ALLOCATE(ele%vit(nbpart,2),error)
+SLL_ALLOCATE(ele%vpx(nbpart),error)
+SLL_ALLOCATE(ele%vpy(nbpart),error)
 SLL_ALLOCATE(ele%epx(nbpart),error)
 SLL_ALLOCATE(ele%epy(nbpart),error)
 SLL_ALLOCATE(ele%bpz(nbpart),error)
@@ -298,23 +296,14 @@ do k=0,nbpart-1
   a = 0.0_f64; b = dimx ! 2*pi/kx 
   R = bit_reversing( k )
   call dichotomie_x(a,b,R,eps) 
-  ele%pos(k+1,1) = a
-  ele%pos(k+1,2) = dimy * penta_reversing( k ) 
+  ppx = a
+  ppy = dimy * penta_reversing( k ) 
 
-  i = 0
-  do while (ele%pos(k+1,1) >= i*dx) 
-     i=i+1
-  enddo
-  ele%idx(k+1) = i-1
+  ele%idx(k+1) = floor(ppx/dimx*nx)
+  ele%idy(k+1) = floor(ppy/dimy*ny)
   
-  j = 0
-  do while (ele%pos(k+1,2) >= j*dy) 
-     j=j+1 
-  enddo
-  ele%idy(k+1) = j-1
-  
-  ele%vit(k+1,1) = speed * cos(theta)  !
-  ele%vit(k+1,2) = speed * sin(theta)  !
+  ele%vpx(k+1) = speed * cos(theta)
+  ele%vpy(k+1) = speed * sin(theta)
 
   ele%p(k+1) = poids * n
 
