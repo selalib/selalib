@@ -775,7 +775,7 @@ contains
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
 
     ! for pushed deposition particles, the reconstruction is always done at the remapping step, using a direct interpolation
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FIXED )
+    SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )
 
     ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
     self%deposition_particles_weight = 0.0d0
@@ -805,7 +805,7 @@ contains
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
 
     ! for fixed deposition particles, the reconstruction is done at each time step using a bsl_lt_pic reconstruction
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_PUSHED )
+    SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
 
     ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
     self%deposition_particles_weight = 0.0d0
@@ -1263,7 +1263,7 @@ contains
 
     else
 
-      SLL_ASSERT( res% flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+      SLL_ASSERT( res%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
 
       !>      A.3.a initialize parameters of unstructured flow markers
 
@@ -3849,17 +3849,18 @@ contains
 
       if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
         SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
-        !        nodes_coordinate_list => p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate
         nodes_number = p_group%sparse_grid_interpolator%size_basis
 
-        ! allocate temp array to store the nodal values of the remapped f
-        !        print*, "7646547 --- will allocate with ...%size_basis = ", p_group%sparse_grid_interpolator%size_basis
+        ! allocate temp array to store the nodal values of the remapped f, since sparse grids coefficients are needed in the process
         SLL_ALLOCATE(tmp_f_values_on_remapping_sparse_grid(p_group%sparse_grid_interpolator%size_basis), ierr)
         tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
       else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
 
-        !  nodes_coordinate_list => p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate
+        SLL_ASSERT( p_group%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+        SLL_ASSERT( p_group%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )
+
+        nodes_number = p_group%number_deposition_particles
         deposition_particle_charge_factor = p_group%get_deposition_particle_charge_factor()
 
       end if
