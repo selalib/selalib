@@ -16,22 +16,35 @@ sll_real64 :: pi
 
 character(len=6) :: bcname = 'period' 
 
-sll_int32 :: nx, ny
-sll_int32 :: nstep, nstepmax
-sll_int32 :: icrea, idiag
-sll_int32 :: nbpart
+sll_int32  :: nx         ! Number of cells along x
+sll_int32  :: ny         ! Number of cells along y
+sll_real64 :: dimx       ! Domain length along x
+sll_real64 :: dimy       ! Domain length along y
+sll_real64 :: dx         ! dimx / nx
+sll_real64 :: dy         ! dimy / ny
 
-sll_int32, private :: i, j
+sll_int32  :: nstep	 ! Time step number
+sll_int32  :: nstepmax   ! Time step number (max)
+sll_int32  :: idiag      ! Diagnostic interval
+sll_int32  :: nbpart     ! Number of particles
 
-sll_real64 :: dt, alpha, kx, ky, c, csq, e0
-sll_real64 :: dx, dy
+sll_real64 :: dt         ! Time step
+sll_real64 :: alpha      ! Perturbation amplitude
+sll_real64 :: kx         ! Perturbation wave number along x
+sll_real64 :: ky         ! Perturbation wave number along y
+sll_real64 :: c          ! Speed of light
+sll_real64 :: csq        ! c * c
+sll_real64 :: e0         ! Electric conductivity
 
-sll_real64 :: dimx, dimy
-sll_real64 :: cfl
-sll_real64 :: tfinal
-sll_real64 :: exext, eyext, bzext
-sll_real64 :: charge, masse, poids
-sll_real64 :: q_sur_m 
+sll_real64 :: cfl        ! Courant-Friedrich-Levy coefficient
+sll_real64 :: tfinal     ! time (max)
+sll_real64 :: exext      ! External electric field (x)
+sll_real64 :: eyext      ! External electric field (y)      
+sll_real64 :: bzext      ! External magnetic field
+sll_real64 :: charge     ! Particle charge
+sll_real64 :: masse      ! Particle mass
+sll_real64 :: poids      ! Size of particle
+sll_real64 :: q_sur_m    ! charge / mass
 
 contains
 
@@ -50,7 +63,6 @@ namelist/donnees/ dimx,  & !dimensions du domaine
                    cfl,  & !nbre de Courant
                 tfinal,  & !duree maxi
               nstepmax,  & !nbre d'iterations maxi
-                 icrea,  & !frequence d'emission des particules
                  idiag,  & !frequence des diagnostics
                 bcname,  & !type de conditions limites
                  exext,  & !champ electrique exterieur

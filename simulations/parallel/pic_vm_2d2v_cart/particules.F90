@@ -6,12 +6,11 @@ use quietstart
 
 implicit none
 
-sll_int32,  private :: ipart 
-sll_int32,  private :: i, j
 
 type particle
   sll_real64, pointer :: pos(:,:)
-  sll_int32 , pointer :: case(:,:)
+  sll_int32 , pointer :: idx(:)
+  sll_int32 , pointer :: idy(:)
   sll_real64, pointer :: vit(:,:)
   sll_real64, pointer :: epx(:)
   sll_real64, pointer :: epy(:)
@@ -29,6 +28,8 @@ type  (particle) :: ele
 type(tm_mesh_fields) :: tm1
 sll_real64 :: a1, a2, a3, a4
 sll_real64 :: xp, yp, dum
+sll_int32  :: k 
+sll_int32  :: i, j
 !   ______________
 !  |     |        |
 !  | a2  |  a1    |
@@ -40,22 +41,22 @@ sll_real64 :: xp, yp, dum
 
 dum = 1./(dx*dy)
 
-do ipart=1,nbpart
-   i = ele%case(ipart,1)
-   j = ele%case(ipart,2)
-   xp = ele%pos(ipart,1)
-   yp = ele%pos(ipart,2)
+do k=1,nbpart
+   i = ele%idx(k)
+   j = ele%idy(k)
+   xp = ele%pos(k,1)
+   yp = ele%pos(k,2)
 
    a1 = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
    a2 = (xp-(i)*dx) * ((j+1)*dy-yp) * dum
    a3 = (xp-(i)*dx) * (yp-(j)*dy) * dum
    a4 = ((i+1)*dx-xp) * (yp-(j)*dy) * dum
 
-   ele%epx(ipart) = a1 * tm1%ex(i,j) + a2 * tm1%ex(i+1,j) &
+   ele%epx(k) = a1 * tm1%ex(i,j) + a2 * tm1%ex(i+1,j) &
         & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i,j+1) 
-   ele%epy(ipart) = a1 * tm1%ey(i,j) + a2 * tm1%ey(i+1,j) &
+   ele%epy(k) = a1 * tm1%ey(i,j) + a2 * tm1%ey(i+1,j) &
         & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i,j+1) 
-   ele%bpz(ipart) =  a1 * tm1%bz(i,j) + a2 * tm1%bz(i+1,j) &
+   ele%bpz(k) =  a1 * tm1%bz(i,j) + a2 * tm1%bz(i+1,j) &
         & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i,j+1) 
 end do
 
@@ -69,25 +70,26 @@ type (particle) :: ele
 sll_real64 :: dum, u2
 sll_real64 :: tantheta, sintheta
 sll_real64 :: gamma
+sll_int32  :: k 
 
-do ipart = 1, nbpart
+do k = 1, nbpart
 
    !*** Changement de variable u = gamma*vit
 
    if( relativ ) then
 
-      u2  = ele%vit(ipart,1)*ele%vit(ipart,1) &
-          + ele%vit(ipart,2)*ele%vit(ipart,2)
+      u2  = ele%vit(k,1)*ele%vit(k,1) &
+          + ele%vit(k,2)*ele%vit(k,2)
       if ( u2 >= csq ) then 
          print*,'Erreur : u2 >= c2 dans le calcul de la vitesse'
-         print*,'ipart = ',ipart,' vx = ',ele%vit(ipart,1),' vy = ',ele%vit(ipart,2)
+         print*,'k = ',k,' vx = ',ele%vit(k,1),' vy = ',ele%vit(k,2)
          stop
       else
          gamma = 1./sqrt( 1. - u2/csq )
       endif
 
-      ele%vit(ipart,1) = gamma*ele%vit(ipart,1)
-      ele%vit(ipart,2) = gamma*ele%vit(ipart,2)
+      ele%vit(k,1) = gamma*ele%vit(k,1)
+      ele%vit(k,2) = gamma*ele%vit(k,2)
 
    else
 
@@ -101,34 +103,34 @@ do ipart = 1, nbpart
    !*** On ajoute la moitie de l'effet champ electrique E
 
    dum = 0.5 * dt * q_sur_m
-   ele%vit(ipart,1) = ele%vit(ipart,1) + dum*(ele%epx(ipart)+exext)
-   ele%vit(ipart,2) = ele%vit(ipart,2) + dum*(ele%epy(ipart)+eyext)
+   ele%vit(k,1) = ele%vit(k,1) + dum*(ele%epx(k)+exext)
+   ele%vit(k,2) = ele%vit(k,2) + dum*(ele%epy(k)+eyext)
 
    !*** Algorithme de Buneman pour les effets magnetiques
  
-   tantheta = dum * (ele%bpz(ipart)+bzext) / gamma 
+   tantheta = dum * (ele%bpz(k)+bzext) / gamma 
    sintheta = 2.0 * tantheta / ( 1. + tantheta*tantheta)
 
-   ele%vit(ipart,1) = ele%vit(ipart,1) + ele%vit(ipart,2)*tantheta
-   ele%vit(ipart,2) = ele%vit(ipart,2) - ele%vit(ipart,1)*sintheta
-   ele%vit(ipart,1) = ele%vit(ipart,1) + ele%vit(ipart,2)*tantheta
+   ele%vit(k,1) = ele%vit(k,1) + ele%vit(k,2)*tantheta
+   ele%vit(k,2) = ele%vit(k,2) - ele%vit(k,1)*sintheta
+   ele%vit(k,1) = ele%vit(k,1) + ele%vit(k,2)*tantheta
 
    !*** Autre moitie de l'effet du champ electrique E
 
-   ele%vit(ipart,1) = ele%vit(ipart,1) + dum*(ele%epx(ipart)+exext)
-   ele%vit(ipart,2) = ele%vit(ipart,2) + dum*(ele%epy(ipart)+eyext)
+   ele%vit(k,1) = ele%vit(k,1) + dum*(ele%epx(k)+exext)
+   ele%vit(k,2) = ele%vit(k,2) + dum*(ele%epy(k)+eyext)
 
    !*** On repasse a la vitesse (changement de variable inverse)
 
    if( relativ ) then
 
-      u2 =   ele%vit(ipart,1)*ele%vit(ipart,1) &
-           + ele%vit(ipart,2)*ele%vit(ipart,2)
+      u2 =   ele%vit(k,1)*ele%vit(k,1) &
+           + ele%vit(k,2)*ele%vit(k,2)
 
       gamma = sqrt( 1. + u2/csq )
  
-      ele%vit(ipart,1) = ele%vit(ipart,1) / gamma
-      ele%vit(ipart,2) = ele%vit(ipart,2) / gamma
+      ele%vit(k,1) = ele%vit(k,1) / gamma
+      ele%vit(k,2) = ele%vit(k,2) / gamma
 
    end if
 
@@ -142,61 +144,62 @@ subroutine avancee_part( ele, coef )  !Avancee de coef * dt
 
 type(particle) :: ele
 sll_real64 :: coef
+sll_int32  :: k 
 
-do ipart=1,nbpart     
-   ele%pos(ipart,1) = ele%pos(ipart,1) + ele%vit(ipart,1)*dt*coef
-   ele%pos(ipart,2) = ele%pos(ipart,2) + ele%vit(ipart,2)*dt*coef
+do k=1,nbpart     
+   ele%pos(k,1) = ele%pos(k,1) + ele%vit(k,1)*dt*coef
+   ele%pos(k,2) = ele%pos(k,2) + ele%vit(k,2)*dt*coef
 enddo
 
-!*** Mise a jour des "cases"
+!*** Mise a jour des "ids"
 
-do ipart=1,nbpart
-   ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
-   ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
+do k=1,nbpart
+   ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
+   ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
 end do
 
 !*** Traitement de la sortie des particules
 
 if (bcname == 'period') then
 
-  do ipart=1,nbpart
-    if( ele%pos(ipart,1) >= dimx ) then
-      ele%pos(ipart,1) = ele%pos(ipart,1) - dimx
-      ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
+  do k=1,nbpart
+    if( ele%pos(k,1) >= dimx ) then
+      ele%pos(k,1) = ele%pos(k,1) - dimx
+      ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
     end if
-    if( ele%pos(ipart,2) >= dimy ) then
-      ele%pos(ipart,2) = ele%pos(ipart,2) - dimy
-      ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
+    if( ele%pos(k,2) >= dimy ) then
+      ele%pos(k,2) = ele%pos(k,2) - dimy
+      ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
     end if
-    if( ele%pos(ipart,1) < 0.d0 ) then
-      ele%pos(ipart,1) = ele%pos(ipart,1) + dimx
-      ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
+    if( ele%pos(k,1) < 0.d0 ) then
+      ele%pos(k,1) = ele%pos(k,1) + dimx
+      ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
     end if
-    if( ele%pos(ipart,2) < 0.d0 ) then
-      ele%pos(ipart,2) = ele%pos(ipart,2) + dimy
-      ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
+    if( ele%pos(k,2) < 0.d0 ) then
+      ele%pos(k,2) = ele%pos(k,2) + dimy
+      ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
     end if
   end do   
 
 else
-   ipart = 1
-   do while ( ipart <= nbpart )  
-      if (      ele%pos(ipart,1) < 0.0        &
-           .or. ele%pos(ipart,1) >= dimx      &	
-           .or. ele%pos(ipart,2) < 0.         &
-           .or. ele%pos(ipart,2) >= dimy ) then
+   k = 1
+   do while ( k <= nbpart )  
+      if (      ele%pos(k,1) < 0.0        &
+           .or. ele%pos(k,1) >= dimx      &	
+           .or. ele%pos(k,2) < 0.         &
+           .or. ele%pos(k,2) >= dimy ) then
          !*** Recuperation du trou laisse par la particule sortie
-         ele%pos(ipart,1) = ele%pos(nbpart,1)
-         ele%pos(ipart,2) = ele%pos(nbpart,2)
-         ele%vit(ipart,1) = ele%vit(nbpart,1)
-         ele%vit(ipart,2) = ele%vit(nbpart,2)
-         ele%p(ipart)     = ele%p(nbpart)
-         ele%case(ipart,1) = floor(ele%pos(ipart,1)/dimx*nx)
-         ele%case(ipart,2) = floor(ele%pos(ipart,2)/dimy*ny)
+         ele%pos(k,1) = ele%pos(nbpart,1)
+         ele%pos(k,2) = ele%pos(nbpart,2)
+         ele%vit(k,1) = ele%vit(nbpart,1)
+         ele%vit(k,2) = ele%vit(nbpart,2)
+         ele%p(k)     = ele%p(nbpart)
+         ele%idx(k) = floor(ele%pos(k,1)/dimx*nx)
+         ele%idy(k) = floor(ele%pos(k,2)/dimy*ny)
          nbpart = nbpart - 1
          if (nbpart == 0) stop 'plus de particule'
       else
-         ipart = ipart + 1
+         k = k + 1
       end if
    end do
 
@@ -212,6 +215,8 @@ type(particle) :: ele
 type(tm_mesh_fields) :: tm
 sll_real64 :: a1, a2, a3, a4, dum, xp, yp
 sll_real64 :: rho_total
+sll_int32  :: k 
+sll_int32  :: i, j 
 
 tm%r0 = 0.d0    
                 
@@ -224,13 +229,13 @@ tm%r0 = 0.d0
 !  |     |        |
 !  |_____|________|
 
-do ipart=1,nbpart
+do k=1,nbpart
 
-  i   = ele%case(ipart,1)
-  j   = ele%case(ipart,2)
-  xp  = ele%pos(ipart,1)
-  yp  = ele%pos(ipart,2)
-  dum = ele%p(ipart) 
+  i   = ele%idx(k)
+  j   = ele%idy(k)
+  xp  = ele%pos(k,1)
+  yp  = ele%pos(k,2)
+  dum = ele%p(k) 
   a1  = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
   a2  = (xp-(i)*dx)   * ((j+1)*dy-yp) * dum
   a3  = (xp-(i)*dx)   * (yp-(j)*dy)   * dum
@@ -267,7 +272,7 @@ subroutine plasma( ele )
 type (particle) :: ele
 sll_real64 :: speed, theta, vth, n
 sll_real64 :: a, b, eps, R
-sll_int32 :: k, error
+sll_int32  :: i, j, k, error
 
 eps = 1.d-12
 
@@ -276,7 +281,8 @@ nbpart = 100*(nx)*(ny)
 n = 1.d0/nbpart
 
 SLL_ALLOCATE(ele%pos(nbpart,2),error)
-SLL_ALLOCATE(ele%case(nbpart,2),error)
+SLL_ALLOCATE(ele%idx(nbpart),error)
+SLL_ALLOCATE(ele%idy(nbpart),error)
 SLL_ALLOCATE(ele%vit(nbpart,2),error)
 SLL_ALLOCATE(ele%epx(nbpart),error)
 SLL_ALLOCATE(ele%epy(nbpart),error)
@@ -299,13 +305,13 @@ do k=0,nbpart-1
   do while (ele%pos(k+1,1) >= i*dx) 
      i=i+1
   enddo
-  ele%case(k+1,1) = i-1
+  ele%idx(k+1) = i-1
   
   j = 0
   do while (ele%pos(k+1,2) >= j*dy) 
      j=j+1 
   enddo
-  ele%case(k+1,2) = j-1
+  ele%idy(k+1) = j-1
   
   ele%vit(k+1,1) = speed * cos(theta)  !
   ele%vit(k+1,2) = speed * sin(theta)  !
