@@ -3,7 +3,7 @@
 !
 ! Traduit en Fortran 90 a partir de M2V ou DEGAS2D
 !
-module sll_m_tri_poisson
+module sll_m_poisson_2d_tri
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
 #include "sll_memory.h"
@@ -36,7 +36,7 @@ interface sll_o_create
 end interface sll_o_create
 
 interface sll_o_delete
-  module procedure delete_tri_poisson
+  module procedure delete_poisson_2d_tri
 end interface sll_o_delete
 
 
@@ -146,7 +146,7 @@ call initialize_poisson_solver(solver, mesh, ntypfr, potfr)
 end function sll_f_new_triangular_poisson_2d
 
 !> sll_o_delete the solver derived type
-subroutine delete_tri_poisson( this )
+subroutine delete_poisson_2d_tri( this )
 type(sll_t_triangular_poisson_2d), pointer :: this
 
 #ifdef DEBUG
@@ -154,7 +154,7 @@ print*, 'sll_o_delete poisson solver'
 #endif
 nullify(this)
 
-end subroutine delete_tri_poisson
+end subroutine delete_poisson_2d_tri
 
 !> Compute electric field from charge density
 !> @param[in]  this solver derived type
@@ -1664,4 +1664,4 @@ end do
 
 end subroutine poliss
 
-end module sll_m_tri_poisson
+end module sll_m_poisson_2d_tri

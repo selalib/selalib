@@ -3,12 +3,16 @@ program test_poisson_1d_periodic
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_poisson_1d_base, only: &
+    sll_c_poisson_1d_base
+
   use sll_m_constants, only: &
     sll_p_pi
 
   use sll_m_poisson_1d_periodic, only: &
     sll_o_initialize, &
     sll_t_poisson_1d_periodic, &
+    sll_f_new_poisson_1d_periodic, &
     sll_o_solve
 
   implicit none
@@ -18,7 +22,8 @@ program test_poisson_1d_periodic
   sll_real64, dimension(:), allocatable :: ex_exact
   sll_real64, dimension(:), allocatable :: rho
 
-  type (sll_t_poisson_1d_periodic)            :: poisson
+  type(sll_t_poisson_1d_periodic)       :: poisson
+  class(sll_c_poisson_1d_base), pointer :: poisson_class
 
   sll_int32   :: nc_eta1
   sll_real64  :: eta1_min
@@ -40,9 +45,9 @@ program test_poisson_1d_periodic
   delta_eta1 = (eta1_max-eta1_min) / nc_eta1
   mode = 4
   do i=1,nc_eta1+1
-     x = (i-1)*delta_eta1
-     rho(i)      =  real(mode*mode,f64)*sin(mode*x)
-   ex_exact(i) = -real(mode,f64)*cos(mode*x)
+    x = (i-1)*delta_eta1
+    rho(i)      =  real(mode*mode,f64)*sin(mode*x)
+    ex_exact(i) = -real(mode,f64)*cos(mode*x)
   end do
 
   call sll_o_initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
@@ -51,12 +56,22 @@ program test_poisson_1d_periodic
 
   print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
 
-  if (error < 1.e-14) then
-     print*, 'PASSED'
-  else 
-     print*, 'FAILED'
-     stop
-  end if
+  if (error > 1.e-14) stop 'FAILED'
+ 
+  poisson_class => sll_f_new_poisson_1d_periodic( eta1_min, &
+                                                  eta1_max, &
+                                                  nc_eta1   )
+  do i=1,nc_eta1+1
+    x = (i-1)*delta_eta1
+    rho(i)      =  real(mode*mode,f64)*sin(mode*x)
+  end do
 
+  call poisson_class%compute_e_from_rho( ex, rho )
+
+  print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
+
+  if (error > 1.e-14) stop 'FAILED'
+
+  print*, '#PASSED'
 
 end program test_poisson_1d_periodic
