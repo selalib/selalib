@@ -17,7 +17,7 @@ module sll_m_poisson_3d_periodic
     sll_p_fft_backward, &
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
+    sll_s_fft_init_plan_c2c_1d, &
     sll_t_fft_plan
 
   implicit none
@@ -40,12 +40,12 @@ module sll_m_poisson_3d_periodic
      sll_real64                  :: Lx     !< x length of domain
      sll_real64                  :: Ly     !< y length of domain
      sll_real64                  :: Lz     !< z length of domain
-     type(sll_t_fft_plan), pointer :: px     !< forward fft plan along x
-     type(sll_t_fft_plan), pointer :: py     !< forward fft plan along y
-     type(sll_t_fft_plan), pointer :: pz     !< forward fft plan along z
-     type(sll_t_fft_plan), pointer :: px_inv !< backward fft plan along x
-     type(sll_t_fft_plan), pointer :: py_inv !< backward fft plan along y
-     type(sll_t_fft_plan), pointer :: pz_inv !< backward fft plan along z
+     type(sll_t_fft_plan)        :: px     !< forward fft plan along x
+     type(sll_t_fft_plan)        :: py     !< forward fft plan along y
+     type(sll_t_fft_plan)        :: pz     !< forward fft plan along z
+     type(sll_t_fft_plan)        :: px_inv !< backward fft plan along x
+     type(sll_t_fft_plan)        :: py_inv !< backward fft plan along y
+     type(sll_t_fft_plan)        :: pz_inv !< backward fft plan along z
      sll_comp64, dimension(:,:,:), pointer :: hat_rho !< fft of RHS
      sll_comp64, dimension(:,:,:), pointer :: hat_phi !< fft of potential
   end type sll_t_poisson_3d_periodic
@@ -84,14 +84,14 @@ contains
     plan%Lz = Lz
 
     ! For FFTs (in each direction)
-    plan%px => sll_f_fft_new_plan_c2c_1d( nx, x, x, sll_p_fft_forward )
-    plan%py => sll_f_fft_new_plan_c2c_1d( ny, y, y, sll_p_fft_forward )
-    plan%pz => sll_f_fft_new_plan_c2c_1d( nz, z, z, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%px, nx, x, x, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%py, ny, y, y, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%pz, nz, z, z, sll_p_fft_forward )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => sll_f_fft_new_plan_c2c_1d( nx, x, x, sll_p_fft_backward )
-    plan%py_inv => sll_f_fft_new_plan_c2c_1d( ny, y, y, sll_p_fft_backward )
-    plan%pz_inv => sll_f_fft_new_plan_c2c_1d( nz, z, z, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%px_inv, nx, x, x, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%py_inv, ny, y, y, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%pz_inv, nz, z, z, sll_p_fft_backward )
 
   end function sll_f_new_poisson_3d_periodic
 
@@ -211,18 +211,12 @@ contains
     SLL_ASSERT( associated(plan) )
 
     call sll_s_fft_delete_plan(plan%px)
-    deallocate(plan%px)
     call sll_s_fft_delete_plan(plan%py)
-    deallocate(plan%py)
     call sll_s_fft_delete_plan(plan%pz)
-    deallocate(plan%pz)
 
     call sll_s_fft_delete_plan(plan%px_inv)
-    deallocate(plan%px_inv)
     call sll_s_fft_delete_plan(plan%py_inv)
-    deallocate(plan%py_inv)
     call sll_s_fft_delete_plan(plan%pz_inv)
-    deallocate(plan%pz_inv)
 
     SLL_DEALLOCATE_ARRAY(plan%hat_rho, ierr)
     SLL_DEALLOCATE_ARRAY(plan%hat_phi, ierr)

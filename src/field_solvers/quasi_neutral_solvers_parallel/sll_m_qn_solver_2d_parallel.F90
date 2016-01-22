@@ -20,7 +20,7 @@ module sll_m_qn_solver_2d_parallel
     sll_p_fft_backward, &
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
+    sll_s_fft_init_plan_c2c_1d, &
     sll_t_fft_plan
 
   use sll_m_qn_solver_2d, only: &
@@ -127,9 +127,9 @@ contains
     plan%rmin     = rmin
     plan%rmax     = rmax
     
-    plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%fft_plan, NP_theta, x, x, sll_p_fft_forward )
 
-    plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%inv_fft_plan, NP_theta, x, x, sll_p_fft_backward )
 
     plan%layout_fft => sll_f_new_layout_3d( sll_v_world_collective )
     call sll_o_initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
@@ -274,9 +274,7 @@ contains
        SLL_ASSERT( associated(plan) )
 
        call sll_s_fft_delete_plan(plan%fft_plan)
-       deallocate(plan%fft_plan)
        call sll_s_fft_delete_plan(plan%inv_fft_plan)
-       deallocate(plan%inv_fft_plan)
        call sll_o_delete( plan%layout_fft )
        call sll_o_delete( plan%layout_lin_sys )
 
