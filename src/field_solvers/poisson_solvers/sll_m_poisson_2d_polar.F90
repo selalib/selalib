@@ -144,8 +144,8 @@ type :: sll_t_plan_poisson_polar
   sll_int32                           :: nr     !< number of points in r
   sll_int32                           :: ntheta !< number of points in theta
   sll_int32                           :: bc(2)  !< boundary conditon type
-  type(sll_t_fft_plan), pointer       :: pfwd   !< fft plan in theta
-  type(sll_t_fft_plan), pointer       :: pinv   !< inverse fft plan in theta
+  type(sll_t_fft_plan)                :: pfwd   !< fft plan in theta
+  type(sll_t_fft_plan)                :: pinv   !< inverse fft plan in theta
   sll_real64, dimension(:,:), pointer :: f_fft  !< potential fft in theta
   sll_comp64, dimension(:),   pointer :: fk     !< \f$ f_k \f$
   sll_comp64, dimension(:),   pointer :: phik   !< \f$ phi_k \f$
