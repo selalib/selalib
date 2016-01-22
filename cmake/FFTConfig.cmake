@@ -1,4 +1,3 @@
-
 SET(FFT_LIB SLLFFT CACHE STRING "fft library, options are : FFTPACK, FFTW or SLLFFT")
 
 IF( DEFINED ENV{FFTW_ROOT} )

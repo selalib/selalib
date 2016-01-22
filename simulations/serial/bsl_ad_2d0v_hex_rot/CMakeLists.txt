@@ -1,0 +1,24 @@
+if (HDF5_ENABLED)
+
+set(    SIM_NAME bsl_ad_2d0v_hex_rot          )
+set(   TEST_NAME "sim_${SIM_NAME}"            )
+set(  EXECUTABLE "${TEST_NAME}"               )
+set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
+
+file( GLOB INPUT_FILES "*.nml"         )
+file( GLOB   POST_PROC "*.dat" "*.gnu" )
+
+add_executable( ${EXECUTABLE} ${TEST_NAME}.F90 )
+target_link_libraries( ${EXECUTABLE} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} )
+
+install( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
+install( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+
+# Ctest
+# IF(BUILD_TESTING)
+#   FILE( COPY ${INPUT_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+#   ADD_TEST( NAME ${TEST_NAME1} COMMAND ${EXECUTABLE1} )
+#   SET_TESTS_PROPERTIES(${TEST_NAME1} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+# ENDIF(BUILD_TESTING)
+
+endif (HDF5_ENABLED)

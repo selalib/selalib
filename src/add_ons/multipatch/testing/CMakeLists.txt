@@ -8,7 +8,7 @@ ADD_EXECUTABLE( test_distribution_function_4d_multipatch
                 test_distribution_function_4d_multipatch.F90 )
 
 TARGET_LINK_LIBRARIES( test_distribution_function_4d_multipatch sll_multipatch
-  sll_common_array_initializers
+  sll_initial_profiles
   sll_timer
   sll_file_io)
 

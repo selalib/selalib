@@ -15,7 +15,7 @@ TARGET_LINK_LIBRARIES( sll_splitting_methods
   sll_advection
   sll_poisson_solvers
   sll_memory
-  ode_solvers )
+  sll_ode_solvers )
 
 
 # Tests

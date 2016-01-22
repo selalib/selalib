@@ -5,17 +5,17 @@
 Install dependencies on UBUNTU or DEBIAN
 ========================================
 
-The prerequisites can be installed with a couple of commands on Ubuntu. The only choice to make is between openmpi and mpich2. Most of our testing is done with openmpi but mpich2 should also work.
+The prerequisites can be installed with a couple of commands on Ubuntu. The only choice to make is between openmpi and mpich2. Most of our testing is done with openmpi but mpich should also work.
 
 For openmpi do:
 
  $ sudo apt-get install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
 
-For mpich2 do:
+For mpich do:
 
- $ sudo apt-get install mpich2 libmpich2-dev libhdf5-mpich2-dev
+ $ sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev
 
-Please make sure not to install mpich2 and openmpi together. When both openmpi and mpich2 are installed strange errors will occur and selalib will not work. If you see both installed please remove both and install one.
+Please make sure not to install mpich and openmpi together. When both openmpi and mpich are installed strange errors will occur and selalib will not work. If you see both installed please remove both and install one.
 
 Install source code manager :
 
@@ -31,8 +31,7 @@ Install compilers :
 
 Install libraries (MPI, HDF5, FFTW3, LAPACK) :
 
- $ sudo apt-get install  libopenmpi-dev libfftw3-dev \
-    liblapack-dev 
+ $ sudo apt-get install  libfftw3-dev liblapack-dev 
 
 Install software for documentation:
 
