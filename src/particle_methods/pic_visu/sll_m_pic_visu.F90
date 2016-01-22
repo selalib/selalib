@@ -128,15 +128,9 @@ weight = 1._f64!/(delta_x*delta_v)   ! needs improvement
 
 df = 0.0_f64
 do k=1,size(x)
-   do i=1,nx
-      if (xmin+(i-1)*delta_x <= x(k) .and. x(k) < xmin+i*delta_x) then
-         do j=1,nv
-            if (vmin+(j-1)*delta_v <= v(k) .and. v(k) < vmin+j*delta_v) then
-               df(i,j) = df(i,j) + weight
-            endif
-         enddo
-      end if
-   enddo
+  i = floor((x(k)+xmin)/delta_x)
+  j = floor((v(k)+vmin)/delta_v)
+  df(i,j) = df(i,j) + weight
 enddo
 
 end subroutine compute_df
