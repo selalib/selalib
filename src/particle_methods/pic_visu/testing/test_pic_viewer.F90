@@ -78,39 +78,77 @@ SLL_ALLOCATE(omg(nx,ny),error)
                                                                               
 poisson => sll_f_new_poisson_2d_fft_solver(xmin,xmax,nx,ymin,ymax,ny)
                                                                               
-call poisson%compute_e_from_rho( vgx, vgy, omg )                            
-call sll_o_gnuplot_2d(xmin, xmax, nx, ymin, ymax, ny, omg, 'omega', 1, error)
 
-
-nbpart = 100
+nbpart = 1000
 
 call cpu_time(tcpu)
 t0 = getRealTimer()
 call initialize( nstep, imov, xp, yp, op, delta, dt, nbpart )
 SLL_ALLOCATE(up(nbpart), error)
 SLL_ALLOCATE(vp(nbpart), error)
-iplot   = 0
-time = 0.0_f64
+iplot = 1
+time  = 0.0_f64
 
-
-do istep = 1, nstep       !loop over time
+do istep = 1, nstep !loop over time
    
    call vitesse(nbpart, xp, yp, op, up, vp, delta, time)
    call deplace(nbpart, xp, yp, up, vp, dt)
 
+   call compute_grid_vorticity( )
+   call sll_o_gnuplot_2d(xmin, xmax, nx, &
+                         ymin, ymax, ny, &
+                         omg, 'omg', istep, error)
+
+   call sll_o_particles_center_gnuplot( 'part', &
+           xp, yp, xmin, xmax, ymin, ymax, istep, time )
+
    time = time + dt
-   if ( mod(istep, 10) == 0) then
-      iplot = iplot + 1
-      call sll_o_particles_center_gnuplot( "pic_xy", xp, yp, &
-           xmin, xmax, ymin, ymax, iplot, time )
-      call sll_o_plot_format_points3d( "pic_xy", xp, yp, op, iplot)
-      call sll_s_plot_format_xmdv( "pic_xy", xp, yp, iplot, xmin, xmax, ymin, ymax)
-   end if
 
 end do      !next time step
 
 call cpu_time(tcpu)
 t1 = getRealTimer()
 write(*,"(5x,' CPU time = ', G15.3)") tcpu
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+contains
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine compute_grid_vorticity( )
+
+sll_real64 :: a1, a2, a3, a4
+sll_int32  :: k 
+sll_int32  :: i, j 
+sll_real64 :: dpx
+sll_real64 :: dpy
+
+omg = 0.0_f64    
+                
+do k=1,nbpart
+
+  i = floor((xp(k)-xmin)/(xmax-xmin)*nx)+1
+  j = floor((yp(k)-ymin)/(ymax-ymin)*ny)+1
+  dpx = xp(k) - ((i-1)*dx+xmin)
+  dpy = yp(k) - ((j-1)*dy+ymin)
+
+  a1  = (dx-dpx) * (dy-dpy) * op(k)
+  a2  = (dpx)    * (dy-dpy) * op(k)
+  a3  = (dpx)    * (dpy)    * op(k)
+  a4  = (dx-dpx) * (dpy)    * op(k)
+
+  omg(i,j)     = omg(i,j)     + a1 
+  omg(i+1,j)   = omg(i+1,j)   + a2 
+  omg(i+1,j+1) = omg(i+1,j+1) + a3 
+  omg(i,j+1)   = omg(i,j+1)   + a4
+
+end do
+
+omg = omg / (dx*dy) / (dx*dy)
+
+print*,'total',sum(omg), sum(op) 
+
+end subroutine compute_grid_vorticity
+
 
 end program test_pic_viewer

@@ -128,8 +128,8 @@ weight = 1._f64!/(delta_x*delta_v)   ! needs improvement
 
 df = 0.0_f64
 do k=1,size(x)
-  i = floor((x(k)+xmin)/delta_x)
-  j = floor((v(k)+vmin)/delta_v)
+  i = floor((x(k)-xmin)/delta_x)+1
+  j = floor((v(k)-vmin)/delta_v)+1
   df(i,j) = df(i,j) + weight
 enddo
 
