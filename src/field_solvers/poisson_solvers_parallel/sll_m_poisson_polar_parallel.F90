@@ -37,7 +37,7 @@ module sll_m_poisson_polar_parallel
     sll_p_fft_backward, &
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
+    sll_s_fft_init_plan_c2c_1d, &
     sll_t_fft_plan
 
   use sll_m_remapper, only: &
@@ -71,8 +71,8 @@ module sll_m_poisson_polar_parallel
    sll_int32                           :: nr       !< number of nodes along r
    sll_int32                           :: nt       !< number of nodes along theta
    sll_int32                           :: bc(2)    !< boundary conditions options
-   type(sll_t_fft_plan), pointer         :: fw       !< Forward FFT plan
-   type(sll_t_fft_plan), pointer         :: bw       !< Inverse FFT plan
+   type(sll_t_fft_plan)        :: fw       !< Forward FFT plan
+   type(sll_t_fft_plan)         :: bw       !< Inverse FFT plan
    sll_comp64, dimension(:),   pointer :: fk       !< RHSf fft
    sll_comp64, dimension(:),   pointer :: phik     !< Potential fft
    sll_real64, dimension(:),   pointer :: mat      !< Matrix
@@ -209,8 +209,8 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%fw => sll_f_fft_new_plan_c2c_1d(ntheta,buf,buf,sll_p_fft_forward,normalized=.true.)
-    this%bw => sll_f_fft_new_plan_c2c_1d(ntheta,buf,buf,sll_p_fft_backward)
+    call sll_s_fft_init_plan_c2c_1d(this%fw,ntheta,buf,buf,sll_p_fft_forward,normalized=.true.)
+    call sll_s_fft_init_plan_c2c_1d(this%bw,ntheta,buf,buf,sll_p_fft_backward)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
     psize = sll_f_get_collective_size(sll_v_world_collective)
@@ -242,9 +242,7 @@ contains
     sll_int32 :: err
     if (associated(this)) then
        call sll_s_fft_delete_plan(this%fw)
-       deallocate(this%fw)
        call sll_s_fft_delete_plan(this%bw)
-       deallocate(this%bw)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
        SLL_DEALLOCATE_ARRAY(this%mat,err)

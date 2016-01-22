@@ -32,7 +32,7 @@ module sll_m_qn_solver_2d
     sll_p_fft_backward, &
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
+    sll_s_fft_init_plan_c2c_1d, &
     sll_t_fft_plan
 
   use sll_m_tridiagonal, only: &
@@ -58,8 +58,8 @@ module sll_m_qn_solver_2d
      sll_int32                   :: NP_theta!Number of points in theta-direction
      sll_real64                  :: rmin
      sll_real64                  :: rmax
-     type(sll_t_fft_plan), pointer :: fft_plan
-     type(sll_t_fft_plan), pointer :: inv_fft_plan
+     type(sll_t_fft_plan)        :: fft_plan
+     type(sll_t_fft_plan)        :: inv_fft_plan
   end type sll_t_qn_solver_2d
 
 
@@ -84,7 +84,7 @@ contains
     sll_real64                                    :: rmax
     sll_comp64, dimension(:),   allocatable       :: x
     sll_int32                                     :: NP_r, NP_theta, ierr
-    type(sll_t_qn_solver_2d), pointer :: plan
+    type(sll_t_qn_solver_2d), pointer             :: plan
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE( x(NP_theta), ierr )
@@ -97,11 +97,11 @@ contains
 
     ! For FFTs in theta-direction
     !plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
-    plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%fft_plan, NP_theta, x, x, sll_p_fft_forward )
 
     ! For inverse FFTs in theta-direction
     !plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
-    plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%inv_fft_plan, NP_theta, x, x, sll_p_fft_backward )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
@@ -199,9 +199,7 @@ contains
     SLL_ASSERT( associated(plan) )
 
     call sll_s_fft_delete_plan(plan%fft_plan)
-    deallocate(plan%fft_plan)
     call sll_s_fft_delete_plan(plan%inv_fft_plan)
-    deallocate(plan%inv_fft_plan)
 
     SLL_DEALLOCATE(plan, ierr)
 

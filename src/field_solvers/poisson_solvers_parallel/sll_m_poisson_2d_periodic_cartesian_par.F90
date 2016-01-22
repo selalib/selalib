@@ -33,7 +33,7 @@ module sll_m_poisson_2d_periodic_cartesian_par
     sll_p_fft_backward, &
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
+    sll_s_fft_init_plan_c2c_1d, &
     sll_t_fft_plan
 
   use sll_m_remapper, only: &
@@ -72,12 +72,12 @@ module sll_m_poisson_2d_periodic_cartesian_par
      sll_int32                           :: ncy    !< number of cells
      sll_real64                          :: Lx     !< domain length 
      sll_real64                          :: Ly     !< domain length
-     type(sll_t_fft_plan), pointer         :: px     !< fft plan in x
-     type(sll_t_fft_plan), pointer         :: py     !< fft plan in y
-     type(sll_t_fft_plan), pointer         :: px_inv !< inverse fft plan in x
-     type(sll_t_fft_plan), pointer         :: py_inv !< inverse fft plan in y
-     type(sll_t_layout_2d),  pointer           :: layout_seq_x1 !< layout sequential in x
-     type(sll_t_layout_2d),  pointer           :: layout_seq_x2 !< layout sequential in y
+     type(sll_t_fft_plan)        :: px     !< fft plan in x
+     type(sll_t_fft_plan)         :: py     !< fft plan in y
+     type(sll_t_fft_plan)         :: px_inv !< inverse fft plan in x
+     type(sll_t_fft_plan)         :: py_inv !< inverse fft plan in y
+     type(sll_t_layout_2d), pointer           :: layout_seq_x1 !< layout sequential in x
+     type(sll_t_layout_2d), pointer           :: layout_seq_x2 !< layout sequential in y
      sll_int32                           :: seq_x1_local_sz_x1 !< local size 
      sll_int32                           :: seq_x1_local_sz_x2 !< local size 
      sll_int32                           :: seq_x2_local_sz_x1 !< local size 
@@ -157,13 +157,15 @@ contains
     SLL_ALLOCATE( plan%fft_x_1d_array(loc_sz_x1),ierr)
 
     ! For FFTs (in x-direction)
-    plan%px => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%px, &
          ncx, &
          plan%fft_x_1d_array, &
          plan%fft_x_1d_array, &
          sll_p_fft_forward)!+FFT_NORMALIZE )
 
-    plan%px_inv => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%px_inv, &
          ncx, &
          plan%fft_x_1d_array, &
          plan%fft_x_1d_array, &
@@ -193,13 +195,15 @@ contains
 
     ! For FFTs (in y-direction)
 
-    plan%py => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%px_inv, &
          ncy, &
          plan%fft_y_1d_array, &
          plan%fft_y_1d_array, &
          sll_p_fft_forward)! + FFT_NORMALIZE )
 
-    plan%py_inv => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%py_inv, &
          ncy, &
          plan%fft_y_1d_array, &
          plan%fft_y_1d_array, &
@@ -278,13 +282,15 @@ contains
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
 
     ! For FFTs (in x-direction)
-    plan%px => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%px, &
          ncx, &
          plan%fft_x_1d_array, &
          plan%fft_x_1d_array, &
          sll_p_fft_forward)!+FFT_NORMALIZE )
 
-    plan%px_inv => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%px_inv, &
          ncx, &
          plan%fft_x_1d_array, &
          plan%fft_x_1d_array, &
@@ -313,13 +319,15 @@ contains
 
     ! For FFTs (in y-direction)
 
-    plan%py => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%py, &
          ncy, &
          plan%fft_y_1d_array, &
          plan%fft_y_1d_array, &
          sll_p_fft_forward)! + FFT_NORMALIZE )
 
-    plan%py_inv => sll_f_fft_new_plan_c2c_1d( &
+    call sll_s_fft_init_plan_c2c_1d( &
+         plan%py_inv, &
          ncy, &
          plan%fft_y_1d_array, &
          plan%fft_y_1d_array, &
@@ -580,13 +588,9 @@ contains
     end if
 
     call sll_s_fft_delete_plan(plan%px)
-    deallocate(plan%px)
     call sll_s_fft_delete_plan(plan%py)
-    deallocate(plan%py)
     call sll_s_fft_delete_plan(plan%px_inv)
-    deallocate(plan%px_inv)
     call sll_s_fft_delete_plan(plan%py_inv)
-    deallocate(plan%py_inv)
 
 !    call delete( plan%layout_x ) ! can't delete this, the plan does not own it
     call sll_o_delete( plan%layout_seq_x1 )

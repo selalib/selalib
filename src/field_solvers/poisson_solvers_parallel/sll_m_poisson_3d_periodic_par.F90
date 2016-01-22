@@ -22,7 +22,7 @@ module sll_m_poisson_3d_periodic_par
     sll_p_fft_backward, &
     sll_s_fft_delete_plan, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
+    sll_s_fft_init_plan_c2c_1d, &
     sll_t_fft_plan
 
   use sll_m_remapper, only: &
@@ -63,12 +63,12 @@ module sll_m_poisson_3d_periodic_par
      sll_real64                            :: Lx        !< x domain length
      sll_real64                            :: Ly        !< y domain length
      sll_real64                            :: Lz        !< z domain length
-     type(sll_t_fft_plan), pointer           :: px        !< fft plan in x
-     type(sll_t_fft_plan), pointer           :: py        !< fft plan in y
-     type(sll_t_fft_plan), pointer           :: pz        !< fft plan in z
-     type(sll_t_fft_plan), pointer           :: px_inv    !< inverse fft in x
-     type(sll_t_fft_plan), pointer           :: py_inv    !< inverse fft in y
-     type(sll_t_fft_plan), pointer           :: pz_inv    !< inverse fft in z
+     type(sll_t_fft_plan)           :: px        !< fft plan in x
+     type(sll_t_fft_plan)           :: py        !< fft plan in y
+     type(sll_t_fft_plan)           :: pz        !< fft plan in z
+     type(sll_t_fft_plan)           :: px_inv    !< inverse fft in x
+     type(sll_t_fft_plan)           :: py_inv    !< inverse fft in y
+     type(sll_t_fft_plan)           :: pz_inv    !< inverse fft in z
      type(sll_t_layout_3d),  pointer             :: layout_x  !< x layout for remap
      type(sll_t_layout_3d),  pointer             :: layout_y  !< y layout for remap
      type(sll_t_layout_3d),  pointer             :: layout_z  !< z layout for remap
@@ -143,14 +143,14 @@ contains
     plan%Lz  = Lz
 
     ! For FFTs (in each direction)
-    plan%px => sll_f_fft_new_plan_c2c_1d( ncx, x, x, sll_p_fft_forward )
-    plan%py => sll_f_fft_new_plan_c2c_1d( ncy, y, y, sll_p_fft_forward )
-    plan%pz => sll_f_fft_new_plan_c2c_1d( ncz, z, z, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%px, ncx, x, x, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%py, ncy, y, y, sll_p_fft_forward )
+    call sll_s_fft_init_plan_c2c_1d( plan%pz, ncz, z, z, sll_p_fft_forward )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => sll_f_fft_new_plan_c2c_1d( ncx, x, x, sll_p_fft_backward )
-    plan%py_inv => sll_f_fft_new_plan_c2c_1d( ncy, y, y, sll_p_fft_backward )
-    plan%pz_inv => sll_f_fft_new_plan_c2c_1d( ncz, z, z, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%px_inv, ncx, x, x, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%py_inv, ncy, y, y, sll_p_fft_backward )
+    call sll_s_fft_init_plan_c2c_1d( plan%pz_inv, ncz, z, z, sll_p_fft_backward )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
@@ -374,18 +374,12 @@ contains
 
 
     call sll_s_fft_delete_plan(plan%px)
-    deallocate(plan%px)
     call sll_s_fft_delete_plan(plan%py)
-    deallocate(plan%py)
     call sll_s_fft_delete_plan(plan%pz)
-    deallocate(plan%pz)
 
     call sll_s_fft_delete_plan(plan%px_inv)
-    deallocate(plan%px_inv)
     call sll_s_fft_delete_plan(plan%py_inv)
-    deallocate(plan%py_inv)
     call sll_s_fft_delete_plan(plan%pz_inv)
-    deallocate(plan%pz_inv)
 
     call sll_o_delete( plan%layout_x )
     call sll_o_delete( plan%layout_y )
