@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup lagrange_interpolation sll_lagrange_interpolation 
+!> @defgroup sll_m_lagrange_interpolation sll_lagrange_interpolation 
 !> @brief 
 !> Description of sll_m_lagrange_interpolation library (72 characters)
 !> @author Selalib team 
