@@ -18,7 +18,7 @@ contains
 subroutine plot_phases( ele, iplot, time )
 
 type(particle) :: ele
-sll_int32 :: iplot, ipart
+sll_int32 :: iplot, k
 sll_real64 :: time
 !sll_real64 :: gama, aux
 sll_real64 :: speed
@@ -53,11 +53,14 @@ write(13,*)"plot 'part_"//fin//"' u 2:4 w d "
 close(13)
 
 open( 14, file = 'part_'//fin )
-do ipart=1,nbpart
-   speed = sqrt( ele%vpx(ipart)*ele%vpx(ipart) + &
-        &        ele%vpy(ipart)*ele%vpy(ipart) )
-   write(14,*) sngl(ele%dpx(ipart)),sngl(ele%dpy(ipart))    &
-              ,sngl(ele%vpx(ipart)),sngl(ele%vpy(ipart)), sngl(speed)
+do k=1,nbpart
+   speed = sqrt( ele%vpx(k)*ele%vpx(k) + &
+        &        ele%vpy(k)*ele%vpy(k) )
+   write(14,*)  sngl(ele%idx(k)*dx+ele%dpx(k))  &
+              , sngl(ele%idy(k)*dy+ele%dpy(k))  &
+              , sngl(ele%vpx(k))                &
+              , sngl(ele%vpy(k))                &
+              , sngl(speed)
 end do
 close(14)
 
@@ -69,7 +72,7 @@ end subroutine plot_phases
 
 subroutine distribution_v(ele, iplot, time)  
 
-sll_int32 :: i, ipart, iplot
+sll_int32 :: i, k, iplot
 sll_real64, dimension(:,:), allocatable :: df
 type(particle) :: ele
 sll_real64 :: time, vx, vy, aux, vth=1.0_f64
@@ -86,10 +89,10 @@ vmax = +6.d0
 delta_v = (vmax-vmin)/nv
 
 df = 0.d0
-do ipart=1,nbpart
-  i = floor(ele%vpx(ipart)/(vmax-vmin)*nv)
-  j = floor(ele%vpy(ipart)/(vmax-vmin)*nv)
-  df(i,j) = df(i,j) + ele%p(ipart)
+do k=1,nbpart
+  i = floor(ele%vpx(k)/(vmax-vmin)*nv)
+  j = floor(ele%vpy(k)/(vmax-vmin)*nv)
+  df(i,j) = df(i,j) + ele%p(k)
 enddo
 
 open( 27, file = 'df_v.gnu', position="append" )
@@ -143,7 +146,7 @@ end subroutine distribution_v
 
 subroutine distribution_x(ele, iplot, time)  
 
-sll_int32 :: i, ipart, iplot
+sll_int32 :: i, k, iplot
 sll_real64, dimension(100,100) :: df
 type(particle) :: ele
 sll_real64 :: time, x, y, delta_x, delta_y
@@ -156,12 +159,12 @@ call sll_s_int2string(iplot, fin)
 df = 0.d0
 delta_x = dimx/100
 delta_y = dimy/100
-do ipart=1,nbpart
-  ppx =  ele%idx(ipart)*dx+ele%dpx(ipart)
-  ppy =  ele%idy(ipart)*dy+ele%dpy(ipart)
+do k=1,nbpart
+  ppx =  ele%idx(k)*dx+ele%dpx(k)
+  ppy =  ele%idy(k)*dy+ele%dpy(k)
   i   = floor(ppx/dimx*100)
   j   = floor(ppy/dimx*100)
-  df(i,j) = df(i,j) + ele%p(ipart)
+  df(i,j) = df(i,j) + ele%p(k)
 enddo
 
 
@@ -228,7 +231,9 @@ call sll_s_ascii_file_create("particles_"//fin//".3D", file_id, error)
 
 write(file_id,"(a)") 'x y vx vy'
 do k = 1, nbpart
-  write(file_id,"(4e15.3)")p%dpx(k),p%dpy(k),p%vpx(k), p%vpy(k)
+  write(file_id,"(4e15.3)")p%idx(k)*dx+p%dpx(k), &
+                           p%idy(k)*dy+p%dpy(k), &
+                           p%vpx(k), p%vpy(k)
 end do
 close(file_id)
 

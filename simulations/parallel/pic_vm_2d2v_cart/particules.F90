@@ -8,8 +8,8 @@ implicit none
 
 
 type particle
-  sll_real64, pointer :: dpx(:)
-  sll_real64, pointer :: dpy(:)
+  sll_real32, pointer :: dpx(:)
+  sll_real32, pointer :: dpy(:)
   sll_int32 , pointer :: idx(:)
   sll_int32 , pointer :: idy(:)
   sll_real64, pointer :: vpx(:)
@@ -32,6 +32,8 @@ sll_real64 :: a1, a2, a3, a4
 sll_real64 :: xp, yp, dum
 sll_int32  :: k 
 sll_int32  :: i, j
+sll_real64 :: dpx
+sll_real64 :: dpy
 !   ______________
 !  |     |        |
 !  | a2  |  a1    |
@@ -44,15 +46,16 @@ sll_int32  :: i, j
 dum = 1./(dx*dy)
 
 do k=1,nbpart
+
    i = ele%idx(k)
    j = ele%idy(k)
-   xp = i*dx+ele%dpx(k)
-   yp = j*dy+ele%dpy(k)
+   dpx = ele%dpx(k)
+   dpy = ele%dpy(k)
 
-   a1 = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
-   a2 = (xp-(i)*dx) * ((j+1)*dy-yp) * dum
-   a3 = (xp-(i)*dx) * (yp-(j)*dy) * dum
-   a4 = ((i+1)*dx-xp) * (yp-(j)*dy) * dum
+   a1 = (dx-dpx) * (dy-dpy) * dum
+   a2 = (   dpx) * (dy-dpy) * dum
+   a3 = (   dpx) * (   dpy) * dum
+   a4 = (dx-dpx) * (   dpy) * dum
 
    ele%epx(k) = a1 * tm1%ex(i  ,j  ) + a2 * tm1%ex(i+1,j  ) &
             & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i  ,j+1) 
@@ -60,6 +63,7 @@ do k=1,nbpart
             & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i  ,j+1) 
    ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
             & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
+
 end do
 
 end subroutine interpol_eb
@@ -212,6 +216,8 @@ sll_real64 :: a1, a2, a3, a4, dum, xp, yp
 sll_real64 :: rho_total
 sll_int32  :: k 
 sll_int32  :: i, j 
+sll_real64 :: dpx
+sll_real64 :: dpy
 
 tm%r0 = 0.d0    
                 
@@ -228,13 +234,13 @@ do k=1,nbpart
 
   i   = ele%idx(k)
   j   = ele%idy(k)
-  xp  = i*dx+ele%dpx(k)
-  yp  = j*dy+ele%dpy(k)
+  dpx = ele%dpx(k)
+  dpy = ele%dpy(k)
   dum = ele%p(k) 
-  a1  = ((i+1)*dx-xp) * ((j+1)*dy-yp) * dum
-  a2  = (xp-(i)*dx)   * ((j+1)*dy-yp) * dum
-  a3  = (xp-(i)*dx)   * (yp-(j)*dy)   * dum
-  a4  = ((i+1)*dx-xp) * (yp-(j)*dy)   * dum
+  a1  = (dx-dpx) * (dy-dpy) * dum
+  a2  = (dpx)    * (dy-dpy) * dum
+  a3  = (dpx)    * (dpy)    * dum
+  a4  = (dx-dpx) * (dpy)    * dum
   tm%r0(i,j)     = tm%r0(i,j)     + a1 
   tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2 
   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3
