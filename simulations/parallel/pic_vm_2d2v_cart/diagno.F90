@@ -61,7 +61,6 @@ do ipart=1,nbpart
 end do
 close(14)
 
-
 end subroutine plot_phases
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -83,21 +82,14 @@ call sll_s_int2string(iplot,fin)
 allocate(df(nv,nv))
 
 vmin = -6.d0
-vmax = 6.d0
+vmax = +6.d0
 delta_v = (vmax-vmin)/nv
 
 df = 0.d0
 do ipart=1,nbpart
-   do i=1,nv
-      do j=1,nv
-         if (vmin+(i-1)*delta_v <= ele%vpx(ipart) .and. &
-              & ele%vpx(ipart) < vmin+i*delta_v  .and. & 
-              & vmin+(j-1)*delta_v <= ele%vpy(ipart) .and. &
-              & ele%vpy(ipart) < vmin+j*delta_v) then
-            df(i,j) = df(i,j) + ele%p(ipart)
-         endif
-      enddo
-   enddo
+  i = floor(ele%vpx(ipart)/(vmax-vmin)*nv)
+  j = floor(ele%vpy(ipart)/(vmax-vmin)*nv)
+  df(i,j) = df(i,j) + ele%p(ipart)
 enddo
 
 open( 27, file = 'df_v.gnu', position="append" )
@@ -121,28 +113,25 @@ enddo
 close(27)
 close(28)
 
-if ( iplot .eq. 1 ) then
-   open( 37, file = 'df_theo.gnu' )
-   rewind(37)
-   write(37,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+if ( iplot == 1 ) then
 
-   open( 38, file = 'df_theo')
+  open( 37, file = 'df_theo.gnu' )
+  rewind(37)
+  write(37,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+  write(37,"(A)")"splot  'df_theo' w l"
+  close(37)
 
-   write(37,*)"splot  'df_theo' w l"
-   write(37,*)"pause 1"
-
-   do i=1,nv
-      do j=1,nv
-         vx = vmin+(i-0.5)*delta_v
-         vy = vmin+(j-0.5)*delta_v
-         aux = exp(-(vx*vx+vy*vy)/(2*vth*vth))/(2*pi*vth*vth)
-         write(38,*) vx, vy, aux*dimx*dimy 
-      end do
-      write(38,*)
-   enddo
-   
-   close(37)
-   close(38)
+  open( 38, file = 'df_theo')
+  do i=1,nv
+    do j=1,nv
+      vx = vmin+(i-0.5)*delta_v
+      vy = vmin+(j-0.5)*delta_v
+      aux = exp(-(vx*vx+vy*vy)/(2*vth*vth))/(2*pi*vth*vth)
+      write(38,*) vx, vy, aux*dimx*dimy 
+    end do
+    write(38,*)
+  enddo
+  close(38)
 
 endif
 
@@ -159,8 +148,8 @@ sll_real64, dimension(100,100) :: df
 type(particle) :: ele
 sll_real64 :: time, x, y, delta_x, delta_y
 character(len=4) :: fin
-ssl_real64 :: ppx
-ssl_real64 :: ppy
+sll_real64 :: ppx
+sll_real64 :: ppy
 
 call sll_s_int2string(iplot, fin)
 
@@ -170,14 +159,9 @@ delta_y = dimy/100
 do ipart=1,nbpart
   ppx =  ele%idx(ipart)*dx+ele%dpx(ipart)
   ppy =  ele%idy(ipart)*dy+ele%dpy(ipart)
-  do i=1,100
-    do j=1,100
-      if ((i-1)*delta_x <= ppx .and. ppx < i*delta_x  .and. & 
-        & (j-1)*delta_y <= ppy .and. ppy < j*delta_y) then
-        df(i,j) = df(i,j) + ele%p(ipart)
-      endif
-    enddo
-  enddo
+  i   = floor(ppx/dimx*100)
+  j   = floor(ppy/dimx*100)
+  df(i,j) = df(i,j) + ele%p(ipart)
 enddo
 
 
@@ -201,6 +185,9 @@ enddo
 
 close(27)
 close(28)
+
+!call sll_o_gnuplot_2d(0._f64, dimx, 40, 0._f64, dimy, 40, df, 'density', iplot, error)  
+!call sll_s_xdmf_corect2d_nodes('df_'//fin,df,"density",x_min,delta_x,y_min,delta_y) 
 
 end subroutine distribution_x
 
@@ -289,41 +276,5 @@ close(file_id)
 
 end subroutine plot_particles_xmdv
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine plot_particle_density( ele, iplot)  
-sll_int32 :: i, ipart, iplot
-sll_int32, parameter :: nx = 50, ny = 50
-sll_real64, dimension(nx,ny) :: df
-type(particle) :: ele
-sll_real64 :: delta_x, delta_y, x_min, x_max, y_min, y_max
-character(len=4) :: fin
-sll_int32 :: error
-
-call sll_s_int2string(iplot, fin)
-
-x_min = 0.0_f64; x_max = dimx
-y_min = 0.0_f64; y_max = dimy
-df = 0.d0
-delta_x = dimx/(nx-1)
-delta_y = dimy/(ny-1)
-do ipart=1,nbpart
- do i=1,ny
-  if ((i-1)*delta_x <= ele%dpx(ipart) .and. ele%dpx(ipart) < i*delta_x) then
-   do j=1,ny
-    if((j-1)*delta_y <= ele%dpy(ipart) .and. ele%dpy(ipart) < j*delta_y) then
-     df(i,j) = df(i,j) + ele%p(ipart)
-    end if
-   enddo
-  endif
- enddo
-enddo
-
-call sll_o_gnuplot_2d(0._f64, dimx, 40, 0._f64, dimy, 40, df, 'density', iplot, error)  
-call sll_s_xdmf_corect2d_nodes('df_'//fin,df,"density",x_min,delta_x,y_min,delta_y) 
-
-end subroutine plot_particle_density
 
 end module diagno
