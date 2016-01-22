@@ -1,4 +1,3 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -26,13 +25,10 @@ module sll_m_poisson_1d_periodic
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_fftpack, only: &
-!   dfftb, &
-!   dfftf, &
-!   dffti
-
   use sll_m_constants, only: &
     sll_p_pi
+  use sll_m_poisson_1d_base, only: &
+    sll_c_poisson_1d_base
 
   implicit none
 
@@ -40,10 +36,10 @@ module sll_m_poisson_1d_periodic
     sll_o_initialize, &
     sll_o_new, &
     sll_t_poisson_1d_periodic, &
-    sll_o_solve
+    sll_o_solve,               &
+    sll_f_new_poisson_1d_periodic
 
   private
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Solver data structure
   type :: sll_t_poisson_1d_periodic
@@ -53,6 +49,20 @@ module sll_m_poisson_1d_periodic
      sll_real64, dimension(:), pointer :: wsave !< array used by fftpack
      sll_real64, dimension(:), pointer :: work  !< array used by fftpack
   end type sll_t_poisson_1d_periodic
+
+  type,extends(sll_c_poisson_1d_base) :: sll_c_poisson_1d_periodic  
+  
+    type(sll_t_poisson_1d_periodic), pointer :: poiss
+  
+  contains
+    procedure, pass(poisson) :: sll_o_initialize => &
+      initialize_poisson_1d_periodic_wrapper
+    procedure, pass(poisson) :: compute_phi_from_rho => &
+      compute_phi_from_rho_1d_periodic
+    procedure, pass(poisson) :: compute_E_from_rho => &
+      compute_E_from_rho_1d_periodic
+      
+  end type sll_c_poisson_1d_periodic 
 
   !> Create a sll_o_new poisson solver on 1d mesh
   interface sll_o_new
@@ -160,33 +170,71 @@ contains
 
   end subroutine solve_poisson_1d_periodic
 
-!!$  subroutine solve_poisson1dp_axisymetrique(e_field,rhs,geomx)
-!!$    sll_real64, dimension(:)                   :: e_field, rhs
-!!$    type(geometry1d),intent(in)              :: geomx
-!!$    sll_int32                                  :: i, j         ! indices de boucle
-!!$    ! Variables de travail
-!!$    sll_real64                                 :: pas, integrale, xi, xim1
-!!$
-!!$    if(mod(geomx%nx,2)==0) then
-!!$       write(0,*) 'nx must be odd in axisymmetric mode.'
-!!$       stop
-!!$    endif
-!!$
-!!$    integrale=0
-!!$    e_field=0        
-!!$
-!!$    pas=geomx%dx
-!!$    do i=2+(geomx%nx-1)/2,geomx%nx
-!!$       xi=geomx%x0+(i-1)*pas
-!!$       xim1=geomx%x0+(i-2)*pas
-!!$       integrale=integrale+geomx%dx*(xim1*rhs(i-1)+xi*rhs(i))/2.
-!!$       e_field(i) = integrale/xi
-!!$       e_field(geomx%nx-i+1) = -e_field(i)
-!!$    end do
-!!$
-!!$  end subroutine solve_poisson1dp_axisymetrique
+  function sll_f_new_poisson_1d_periodic( &
+    eta1_min, &
+    eta1_max, &
+    nc_eta1) &
+    result(poisson)
+      
+    type(sll_c_poisson_1d_periodic),pointer :: poisson
+    sll_real64, intent(in) :: eta1_min
+    sll_real64, intent(in) :: eta1_max
+    sll_int32, intent(in) :: nc_eta1
+    sll_int32 :: ierr
+      
+    SLL_ALLOCATE(poisson,ierr)
+    call initialize_poisson_1d_periodic_wrapper( &
+      poisson, &
+      eta1_min, &
+      eta1_max, &
+      nc_eta1)    
+  end function sll_f_new_poisson_1d_periodic
+  
+  subroutine initialize_poisson_1d_periodic_wrapper( &
+    poisson, &
+    eta1_min, &
+    eta1_max, &
+    nc_eta1)
+    class(sll_c_poisson_1d_periodic) :: poisson
+    sll_real64, intent(in) :: eta1_min
+    sll_real64, intent(in) :: eta1_max
+    sll_int32, intent(in) :: nc_eta1
+    sll_int32 :: ierr
 
+    
+    poisson%poiss => sll_o_new( &
+      eta1_min, &
+      eta1_max, &
+      nc_eta1, &
+      ierr)
+    
+  end subroutine initialize_poisson_1d_periodic_wrapper
+  
+  ! solves -\Delta phi = rho in 2d
+  subroutine compute_phi_from_rho_1d_periodic( poisson, phi, rho )
+    class(sll_c_poisson_1d_periodic), target :: poisson
+    sll_real64,dimension(:),intent(in) :: rho
+    sll_real64,dimension(:),intent(out) :: phi
+    
+    print *,'#compute_phi_from_rho_1d_periodic'
+    print *,'#not implemented yet'
+    phi = 0._f64
+    if(.not.(associated(poisson%poiss)))then
+      print *,'#poisson%poiss not associated'
+    endif
+    print *,maxval(rho)  
+    stop
+    
+  end subroutine compute_phi_from_rho_1d_periodic
 
-
+  ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
+  subroutine compute_E_from_rho_1d_periodic( poisson, E, rho )
+    class(sll_c_poisson_1d_periodic) :: poisson
+    sll_real64,dimension(:),intent(in) :: rho
+    sll_real64,dimension(:),intent(out) :: E
+      
+    call sll_o_solve(poisson%poiss, E, rho)
+           
+  end subroutine compute_E_from_rho_1d_periodic
+  
 end module sll_m_poisson_1d_periodic
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
