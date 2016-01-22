@@ -196,7 +196,7 @@ contains
     ! For FFTs (in y-direction)
 
     call sll_s_fft_init_plan_c2c_1d( &
-         plan%px_inv, &
+         plan%py, &
          ncy, &
          plan%fft_y_1d_array, &
          plan%fft_y_1d_array, &
