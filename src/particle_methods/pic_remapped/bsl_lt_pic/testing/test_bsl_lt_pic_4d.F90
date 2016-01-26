@@ -177,6 +177,9 @@ program test_bsl_lt_pic_4d
   logical :: evaluate_error_on_sparse_grid
   logical :: testing
 
+  sll_real64    :: target_total_charge
+  logical       :: enforce_total_charge
+
   logical :: DEBUG_MODE
 
   ! --- end of declarations
@@ -267,6 +270,9 @@ program test_bsl_lt_pic_4d
   shift = 1._f64
   basis_height = 0._f64
 
+  target_total_charge = 0._f64
+  enforce_total_charge = .false.
+
   if( DEBUG_MODE )then
     print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA B"
   end if
@@ -280,7 +286,7 @@ program test_bsl_lt_pic_4d
     print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA C"
   end if
 
-  call p_group%initializer( SLL_BSL_LT_PIC_HAT_F0 )
+  call p_group%initializer( SLL_BSL_LT_PIC_HAT_F0, target_total_charge, enforce_total_charge )
 !  call p_group%bsl_lt_pic_4d_initializer( SLL_BSL_LT_PIC_HAT_F0 )
 
   print *, "plotting initial f slice in gnuplot format "
@@ -506,7 +512,7 @@ program test_bsl_lt_pic_4d
 
   else if (remap_type == 'bsl_ltp') then
     ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
-    call p_group%remap()
+    call p_group%remap(target_total_charge, enforce_total_charge)
   else
     print*, 'ERROR (code=656536756757657): option is ltp (WARNING: not implemented yet) or bsl_ltp'
     stop
