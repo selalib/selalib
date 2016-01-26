@@ -1,8 +1,6 @@
-program unit_test
+program test_fft
 #include "sll_working_precision.h"
   use sll_m_fft
-
-  use sll_m_timer
 
   implicit none
 
@@ -35,8 +33,6 @@ program unit_test
   ! Aligned data
   sll_comp64, dimension(:), pointer :: in
   sll_real64, dimension(:), pointer :: ar_data
-
-  type(sll_t_time_mark) :: t0
  
   call sll_s_print_defaultfftlib()
   
@@ -387,4 +383,4 @@ contains
     c = CMPLX(realpart,imagpart,kind=f64)
   END SUBROUTINE
 
-end program unit_test
+end program test_fft
