@@ -24,6 +24,7 @@ module sll_m_pic_viewer
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
 use sll_m_ascii_io, only: &
@@ -39,12 +40,41 @@ use sll_m_utilities, only: &
 use sll_m_xdmf, only: &
     sll_s_xdmf_corect2d_nodes
 
+use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
 implicit none
 
-private
+type :: sll_t_pic_viewer_2d
+  type(sll_t_cartesian_mesh_2d), pointer :: mesh
+contains
+
+end type
 
 contains
 
+  function sll_f_new_pic_viewer_2d( mesh ) result(viewer)
 
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
+    type(sll_t_pic_viewer_2d),     pointer :: viewer
+
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(viewer, ierr)
+
+    call initialize_pic_viewer_2d( &
+         viewer,                   &
+         mesh )
+
+  end function sll_f_new_pic_viewer_2d
+
+  subroutine initialize_pic_viewer_2d( &
+    viewer,                                &
+    mesh ) 
+
+    type(sll_t_pic_viewer_2d),     pointer :: viewer
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
+
+  end subroutine initialize_pic_viewer_2d
 
 end module sll_m_pic_viewer

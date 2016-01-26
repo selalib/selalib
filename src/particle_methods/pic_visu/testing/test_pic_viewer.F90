@@ -5,6 +5,7 @@ program test_pic_viewer
 
 use biot_savart
 use sll_m_pic_visu
+use sll_m_pic_viewer
 use sll_m_constants
 use sll_m_cartesian_meshes
 use sll_m_common_coordinate_transformations
@@ -42,18 +43,19 @@ sll_real64                        :: dy
 sll_real64                        :: delta
 sll_int32                         :: error
 
-class(sll_c_poisson_2d_base),   pointer :: poisson                              
-sll_real64, dimension(:,:), allocatable :: vgx                                 
-sll_real64, dimension(:,:), allocatable :: vgy                                 
-sll_real64, dimension(:,:), allocatable :: omg                                
+class(sll_c_poisson_2d_base),   pointer     :: poisson                              
+sll_real64, dimension(:,:),     allocatable :: vgx                                 
+sll_real64, dimension(:,:),     allocatable :: vgy                                 
+sll_real64, dimension(:,:),     allocatable :: omg                                
                                                                                  
-type(sll_t_cartesian_mesh_2d), pointer                  :: mesh
+type(sll_t_cartesian_mesh_2d),                  pointer :: mesh
 class(sll_c_coordinate_transformation_2d_base), pointer :: tau
+type(sll_t_pic_viewer_2d),                      pointer :: viewer
 
 mesh => sll_f_new_cartesian_mesh_2d(nx, ny, xmin, xmax, ymin, ymax)
 
-write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
-write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
+write(*,"(2f8.3,i4)") mesh%eta1_min, mesh%eta1_max, mesh%num_cells1
+write(*,"(2f8.3,i4)") mesh%eta2_min, mesh%eta2_max, mesh%num_cells2
 
 dx = mesh%delta_eta1
 dy = mesh%delta_eta2
@@ -78,7 +80,6 @@ SLL_ALLOCATE(omg(nx,ny),error)
                                                                               
 poisson => sll_f_new_poisson_2d_fft_solver(xmin,xmax,nx,ymin,ymax,ny)
                                                                               
-
 nbpart = 1000
 
 call cpu_time(tcpu)
@@ -88,6 +89,8 @@ SLL_ALLOCATE(up(nbpart), error)
 SLL_ALLOCATE(vp(nbpart), error)
 iplot = 1
 time  = 0.0_f64
+
+viewer => sll_f_new_pic_viewer_2d( mesh )
 
 do istep = 1, nstep !loop over time
    
