@@ -85,7 +85,8 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      ! [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_set_landau_parameters]]
 
      sll_real64 :: thermal_speed_ions
-     
+     sll_real64 :: target_total_charge
+
      sll_int32  :: number_particles
      sll_int32  :: number_deposition_particles
      logical :: domain_is_x_periodic
@@ -198,7 +199,6 @@ contains
     logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, KX_LANDAU, XMAX, YMIN, YMAX
-    sll_real64  :: target_total_charge
     logical     :: enforce_total_charge
     sll_int32   :: particle_group_id
     sll_int32   :: remap_f_type
@@ -468,7 +468,12 @@ contains
     end do
 
     initial_density_identifier = 0     ! for the moment we only use one density (landau)
-    call sim%particle_group%initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
+
+    sim%target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+    enforce_total_charge = .true.       ! todo : make it a simulation parameter
+
+    call sim%particle_group%initializer( initial_density_identifier, sim%target_total_charge, enforce_total_charge, &
+                                         rand_seed, sim%my_rank, sim%world_size )
     SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
 
     sim%n_threads = 1
@@ -484,17 +489,7 @@ contains
 
     charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-    target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-    enforce_total_charge = .false.
-    call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
-
-    !print *, "[DEBUG 98786758] target_total_charge = ", SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-    !print *, "[DEBUG 98786758] size of domain = ", (XMAX - XMIN) * (YMAX - YMIN)
-    !print *, "[DEBUG 98786758] ", XMAX
-    !print *, "[DEBUG 98786758] ", XMIN
-    !print *, "[DEBUG 98786758] ", YMAX
-    !print *, "[DEBUG 98786758] ", YMIN
-    !print *, "[DEBUG 98786758] )------------------------------------------------------------------------------------------------"
+    call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
 
     !! -- --  First charge deposition [end]  -- --
 
@@ -563,7 +558,6 @@ contains
     sll_real64 :: omega_i, omega_r, psi
     sll_real64 :: bors
     sll_real64 :: coords(3)
-    sll_real64 :: target_total_charge
     logical    :: enforce_total_charge
     logical    :: this_is_the_last_time_loop
     character(len=1024) :: field_name
@@ -908,10 +902,9 @@ contains
       call sll_set_time_mark(deposit_time_mark)
 
       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::deposit_charge_2d]]
-      target_total_charge = 0._f64
-      enforce_total_charge = .false.   ! todo: try with true
+      enforce_total_charge = .true.
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
-      call sim%particle_group%deposit_charge_2d( charge_accumulator, target_total_charge, enforce_total_charge )
+      call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
 
       deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
 
@@ -990,7 +983,7 @@ contains
           print *, "skip remapping step (last loop)"
         else
           print *, "remapping f..."
-          call sim%particle_group%remap()
+          call sim%particle_group%remap(sim%target_total_charge, enforce_total_charge)
         end if
 
       end if

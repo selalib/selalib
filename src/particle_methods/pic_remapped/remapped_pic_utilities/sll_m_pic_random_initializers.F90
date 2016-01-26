@@ -48,6 +48,8 @@ contains
       particle_group,                                               &
       space_mesh_2d,                                                &
       number_particles,                                             &
+      target_total_charge,                                          &
+      enforce_total_charge,                                         &
       rand_seed, rank, world_size                                   &
     )
 
@@ -56,6 +58,8 @@ contains
     class(sll_c_remapped_particle_group),  intent(inout)        :: particle_group
     type(sll_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
 
+    sll_real64,                         intent( in )            :: target_total_charge
+    logical,                            intent( in )            :: enforce_total_charge
     sll_int32, dimension(:),            intent(in), optional    :: rand_seed
     sll_int32,                          intent(in), optional    :: rank, world_size
 
@@ -63,6 +67,7 @@ contains
     sll_int32  :: ncx!, ic_x, ic_y
     sll_int32  :: effective_world_size
     sll_real64 :: x_min, y_min, x_max, y_max, rdx, rdy
+    sll_real64 :: total_charge
     sll_real64 :: weight
     sll_real64 :: aux_random
     sll_real64 :: x(3)
@@ -90,7 +95,12 @@ contains
     else
       effective_world_size = 1
     end if
-    weight = (x_max - x_min) * (y_max - y_min) / real(effective_world_size * number_particles,f64)
+    if( enforce_total_charge )then
+      total_charge = target_total_charge
+    else
+      total_charge = 1.0_f64 * (x_max - x_min) * (y_max - y_min)    !!! todo: use the species%q here
+    end if
+    weight = total_charge / real(effective_world_size * number_particles,f64)
     call particle_group%set_common_weight( weight )     ! if the particle group has no common weight, this will raise an error
 
     x = 0.0_f64

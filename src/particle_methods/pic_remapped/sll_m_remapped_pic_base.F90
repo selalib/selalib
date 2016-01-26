@@ -67,7 +67,7 @@ module sll_m_remapped_pic_base
     procedure( init              ),  deferred :: initializer
 
     ! Remapping
-    procedure( no_arg ), deferred :: remap
+    procedure( rem ), deferred :: remap
 
     ! Visualize
     procedure( vis ),  deferred :: visualize_f_slice_x_vx
@@ -142,14 +142,29 @@ module sll_m_remapped_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine init( self, initial_density_identifier, rand_seed, rank, world_size)
+   subroutine init( self, initial_density_identifier, target_total_charge, enforce_total_charge, rand_seed, rank, world_size)
     use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
+
    end subroutine init
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine rem( self, target_total_charge, enforce_total_charge )
+    use sll_m_working_precision
+    import sll_c_remapped_particle_group
+    class( sll_c_remapped_particle_group ), intent( inout ) :: self
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
+
+   end subroutine rem
   end interface
 
   !----------------------------------------------------------------------------
