@@ -79,14 +79,22 @@ contains
 !> To plot particles run : gnuplot -persitant plot_name.gnu
 subroutine xv_particles_center_gnuplot( plot_name, &
            x, v, xmin, xmax, vmin, vmax, iplot, time )
-character(len=*), intent(in) :: plot_name
-sll_real64, dimension(:), intent(in) :: x, v
-sll_int32 :: iplot, error
-sll_real64 :: time, xmin, xmax, vmin, vmax
+
+character(len=*),         intent(in) :: plot_name
+sll_real64, dimension(:), intent(in) :: x
+sll_real64, dimension(:), intent(in) :: v
+sll_real64              , intent(in) :: xmin
+sll_real64              , intent(in) :: xmax
+sll_real64              , intent(in) :: vmin
+sll_real64              , intent(in) :: vmax
+sll_int32,                intent(in) :: iplot
+sll_real64              , optional   :: time
+
+sll_int32        :: error
 character(len=4) :: fin
-sll_int32 :: file_id
-sll_int32 :: nbpart
-sll_int32 :: k
+sll_int32        :: file_id
+sll_int32        :: nbpart
+sll_int32        :: k
 
 call sll_s_int2string(iplot, fin)
 
@@ -97,7 +105,9 @@ if ( iplot <= 1 ) then
    write(file_id,"('set xr[',g15.3,':',g15.3,']')") xmin, xmax
    write(file_id,"('set yr[',g15.3,':',g15.3,']')") vmin, vmax
 end if
-write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+if ( present(time)) then
+  write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+end if
 write(file_id,"(a)")"plot '"//plot_name//"_"//fin//".dat' w d "
 close(file_id)
 

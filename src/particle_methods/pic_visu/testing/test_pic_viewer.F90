@@ -90,7 +90,9 @@ SLL_ALLOCATE(vp(nbpart), error)
 iplot = 1
 time  = 0.0_f64
 
-viewer => sll_f_new_pic_viewer_2d( mesh )
+viewer => sll_f_new_pic_viewer_2d( mesh, 'pic_viewer' )
+
+call viewer%set_format(SLL_P_IO_GNUPLOT)
 
 do istep = 1, nstep !loop over time
    
@@ -98,12 +100,8 @@ do istep = 1, nstep !loop over time
    call deplace(nbpart, xp, yp, up, vp, dt)
 
    call compute_grid_vorticity( )
-   call sll_o_gnuplot_2d(xmin, xmax, nx, &
-                         ymin, ymax, ny, &
-                         omg, 'omg', istep, error)
+   call viewer%write_field(omg,istep)
 
-   call sll_o_particles_center_gnuplot( 'part', &
-           xp, yp, xmin, xmax, ymin, ymax, istep, time )
 
    time = time + dt
 
@@ -112,6 +110,7 @@ end do      !next time step
 call cpu_time(tcpu)
 t1 = getRealTimer()
 write(*,"(5x,' CPU time = ', G15.3)") tcpu
+print*, 'PASSED'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -148,8 +147,6 @@ do k=1,nbpart
 end do
 
 omg = omg / (dx*dy) / (dx*dy)
-
-print*,'total',sum(omg), sum(op) 
 
 end subroutine compute_grid_vorticity
 
