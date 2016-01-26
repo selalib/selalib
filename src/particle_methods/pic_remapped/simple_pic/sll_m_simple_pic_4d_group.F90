@@ -296,9 +296,15 @@ contains
 
 
   !----------------------------------------------------------------------------
-   subroutine simple_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
+   subroutine simple_pic_4d_initializer( self,    &
+      initial_density_identifier,                 &
+      target_total_charge, enforce_total_charge,  &
+      rand_seed, rank, world_size                 &
+    )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
     !sll_int32                       :: ierr
@@ -311,6 +317,8 @@ contains
       self,                                                     &
       self%space_mesh_2d,                                       &
       self%number_particles,                                    &
+      target_total_charge,                                      &
+      enforce_total_charge,                                     &
       rand_seed, rank, world_size                               &
     )
    return
@@ -379,9 +387,11 @@ contains
   end subroutine simple_pic_4d_deposit_charge_2d
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_remap(self)
+  subroutine simple_pic_4d_remap(self, target_total_charge, enforce_total_charge)
 
     class( sll_simple_pic_4d_group ),   intent( inout ) :: self
+    sll_real64,                         intent( in )    :: target_total_charge
+    logical,                            intent( in )    :: enforce_total_charge
 
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
     print*, " WARNING (765764768675) -- remap routine called for a group of simple_pic_4d particles has no effect...              "

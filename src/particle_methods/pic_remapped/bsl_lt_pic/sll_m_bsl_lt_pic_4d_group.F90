@@ -753,14 +753,18 @@ contains
   ! do not change the position of the deposition particles, but compute (and set)
   ! their weights using the BSL_LT_PIC reconstruction
 
-  subroutine reset_deposition_particles_weights_with_bsl_reconstruction(self)
+  subroutine reset_deposition_particles_weights_with_bsl_reconstruction(    &
+      self,                             &
+      target_total_charge,              &
+      enforce_total_charge              &
+  )
     class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+    sll_real64,                                 intent( in )    :: target_total_charge
+    logical,                                    intent( in )    :: enforce_total_charge
     type(sll_charge_accumulator_2d),  pointer :: void_charge_accumulator
     type(sll_cartesian_mesh_4d),      pointer :: void_grid_4d
     sll_real64, dimension(:,:),       pointer :: void_array_2d
 
-    sll_real64    :: dummy_total_charge
-    logical       :: enforce_total_charge
     sll_int32     :: scenario
 
     nullify(void_charge_accumulator)
@@ -768,8 +772,6 @@ contains
     nullify(void_array_2d)
 
     scenario = SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES
-    dummy_total_charge = 0.0_f64
-    enforce_total_charge = .false.
 
     ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
@@ -784,7 +786,7 @@ contains
                                                           scenario,                         &
                                                           void_grid_4d,                     &
                                                           void_array_2d,                    &
-                                                          dummy_total_charge,               &
+                                                          target_total_charge,              &
                                                           enforce_total_charge              &
                                                           )
 
@@ -794,12 +796,19 @@ contains
   ! do not change the position of the deposition particles, but compute (and set)
   ! their weights using a direct interpolation with the remapping tool (ie with flow = Id)
 
-  subroutine reset_deposition_particles_weights_with_direct_interpolation(self)
+  subroutine reset_deposition_particles_weights_with_direct_interpolation(  &
+      self,                             &
+      target_total_charge,              &
+      enforce_total_charge              &
+  )
     class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
-
+    sll_real64,                                 intent( in )    :: target_total_charge
+    logical,                                    intent( in )    :: enforce_total_charge
     sll_real64    :: eta(4)
     sll_int32     :: i_part
     sll_real64    :: deposition_particle_charge_factor
+    sll_real64    :: point_charge, total_computed_charge
+    sll_real64    :: charge_correction_factor
 
     ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
     SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
@@ -811,12 +820,31 @@ contains
     self%deposition_particles_weight = 0.0d0
 
     deposition_particle_charge_factor = self%get_deposition_particle_charge_factor()
-
+    total_computed_charge = 0.0d0
     do i_part = 1, self%number_deposition_particles
       eta = self%deposition_particles_eta(i_part, :)
-      self%deposition_particles_weight(i_part) = deposition_particle_charge_factor                                    &
-                                                  * self%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+      point_charge = deposition_particle_charge_factor * self%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+      self%deposition_particles_weight(i_part) = point_charge
+      total_computed_charge = total_computed_charge + point_charge
     end do
+
+
+    if( enforce_total_charge )then
+      if( total_computed_charge == 0 )then
+        print *, "WARNING (876786587689) -- total computed_charge is zero, which is strange..."
+        print *, "                       -- (no charge correction in this case) "
+      else
+        charge_correction_factor = target_total_charge / total_computed_charge
+
+        print *, "[Enforcing charge in reset_deposition_particles_weights_with_direct_interpolation] ... "
+        print *, "   ...   target_total_charge, total_computed_charge, charge_correction_factor = ", &
+            target_total_charge, total_computed_charge, charge_correction_factor
+
+        do i_part = 1, self%number_deposition_particles
+          self%deposition_particles_weight(i_part) = self%deposition_particles_weight(i_part) * charge_correction_factor
+        end do
+      end if
+    end if
 
   end subroutine reset_deposition_particles_weights_with_direct_interpolation
 
@@ -870,7 +898,7 @@ contains
       ! but first: for flexible deposition particles of "fixed" type, we re-initialize their positions and weights
       if( self%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )then
         call self%reset_deposition_particles_coordinates()
-        call self%reset_deposition_particles_weights_with_bsl_reconstruction()
+        call self%reset_deposition_particles_weights_with_bsl_reconstruction(target_total_charge,enforce_total_charge)
       end if
 
       do i_part = 1, self%number_deposition_particles
@@ -1578,10 +1606,16 @@ contains
   !> initializes the interpolation coefficients for f0 on the remapping grid, and the flow markers
   !> Note: since no interpolations are needed in the evaluation of f0, the arrays of interpolation coefficients can be used
   !> to store the nodal values of f0 (in the remapping routines this is not possible)
-  subroutine bsl_lt_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
+  subroutine bsl_lt_pic_4d_initializer( self, &
+        initial_density_identifier,           &
+        target_total_charge,                  &
+        enforce_total_charge, &
+        rand_seed, rank, world_size )
 
     class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
 
@@ -1634,7 +1668,8 @@ contains
         call self%reset_deposition_particles_coordinates()
       end if
       ! since the remapping tool has been set, computing the weights can be done with straightforward interpolation (flow = Id)
-      call self%reset_deposition_particles_weights_with_direct_interpolation()
+      call self%reset_deposition_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
+
     end if
 
     return
@@ -3380,8 +3415,10 @@ contains
   !> compute new interpolation coefficients so that the remapped_f is an approximation of the current f
   !> and
   !> reset the markers on the initial grid
-  subroutine bsl_lt_pic_4d_remap( self )
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: self
+  subroutine bsl_lt_pic_4d_remap( self, target_total_charge, enforce_total_charge )
+    class(sll_bsl_lt_pic_4d_group),   intent( inout ) :: self
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
 
     !> A. write the nodal values of the remapped_f (evaluated with the bsl_lt_pic method) and compute the new interpolation coefs
     print *, "bsl_lt_pic_4d_remap -- step A"
@@ -3404,7 +3441,7 @@ contains
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       call self%reset_deposition_particles_coordinates()
       ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
-      call self%reset_deposition_particles_weights_with_direct_interpolation()
+      call self%reset_deposition_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
     end if
 
   end subroutine bsl_lt_pic_4d_remap
@@ -3544,7 +3581,7 @@ contains
   !        the number of grid points (not cells) in every dimension
   !        and the max and min coordinates of these points, in every dimension
   !
-  !  - target_total_charge is an optional argument that is given to make the deposition method conservative
+  !  - target_total_charge is an argument that is given to make the deposition method conservative
   !    (note: it may be used also in the 'write_f' scenario, but one has to define what conservative means in this case)
   !
   !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
@@ -4249,7 +4286,9 @@ contains
                   tmp_f_values_on_remapping_sparse_grid(node_index) = reconstructed_f_value
                 else
                   SLL_ASSERT( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )
-                  p_group%deposition_particles_weight(node_index) = reconstructed_f_value * deposition_particle_charge_factor
+                  reconstructed_charge = reconstructed_f_value * deposition_particle_charge_factor
+                  p_group%deposition_particles_weight(node_index) = reconstructed_charge
+                  deposited_charge = deposited_charge + reconstructed_charge
                 end if
 
                 ! [DEBUG]
@@ -4543,42 +4582,46 @@ contains
       end if
     end if
 
-
-    !print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- debug_count  = ", debug_count
-    !print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- g_num_points:  ", &
-    !        g_num_points_x * g_num_points_y * g_num_points_vx * g_num_points_vy
-    !print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- g_num_points modified :  ", &
-    !        g_num_points_x* g_num_points_y * (g_num_points_vx -1) * (g_num_points_vy - 1)
-    !
-    !print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- debug_charge = ", debug_charge
-    !print *,  " [DEPOSIT_CHARGE] DEBUG  -- --- (scenario == SLL_BSL_LT_PIC_DEPOSIT_F) = ", (scenario == SLL_BSL_LT_PIC_DEPOSIT_F)
-    !print *,  " [DEPOSIT_CHARGE] DEBUG  -- 9878768786877 --- deposited_charge = ", deposited_charge
-
-    if( (scenario == SLL_BSL_LT_PIC_DEPOSIT_F) .and. enforce_total_charge )then
-
+    if( enforce_total_charge )then
 
       if( deposited_charge == 0 )then
+
         print *, "WARNING (76576537475) -- total deposited charge is zero, which is strange..."
         print *, "                      -- (no charge correction in this case) "
+
       else
         charge_correction_factor = target_total_charge / deposited_charge
 
         print *, "[Enforcing charge]: target_total_charge, deposited_charge, charge_correction_factor = ", &
           target_total_charge, deposited_charge, charge_correction_factor
 
-        do i_cell_x = 1, p_group%space_mesh_2d%num_cells1
-          do i_cell_y = 1, p_group%space_mesh_2d%num_cells2
+        if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
 
-            ! index of the Poisson cell
-            i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1
-            charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-            charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
-            charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
-            charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
-            charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
+          ! correcting the charge deposited on the Poisson cells
+          do i_cell_x = 1, p_group%space_mesh_2d%num_cells1
+            do i_cell_y = 1, p_group%space_mesh_2d%num_cells2
 
+              ! index of the Poisson cell
+              i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1
+              charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
+              charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
+              charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
+              charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
+              charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
+
+            end do
           end do
-        end do
+
+        else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+
+          ! correcting the charge carried by the deposition particles
+          do node_index = 1, p_group%number_deposition_particles
+            p_group%deposition_particles_weight(node_index) = p_group%deposition_particles_weight(node_index) &
+                                                              * charge_correction_factor
+          end do
+
+        end if
+
       end if
     end if
 
