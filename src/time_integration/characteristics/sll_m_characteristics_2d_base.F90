@@ -90,7 +90,7 @@ module sll_m_characteristics_2d_base
 contains
 
   ! periodic case
-  ! called when bc_type = SLL_PERIODIC
+  ! called when bc_type = sll_p_periodic
   function sll_f_process_outside_point_periodic( eta, eta_min, eta_max ) result(eta_out)
       use sll_m_working_precision
       sll_real64, intent(in)  :: eta
