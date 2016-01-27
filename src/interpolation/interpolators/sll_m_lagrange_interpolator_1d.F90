@@ -80,7 +80,7 @@ module sll_m_lagrange_interpolator_1d
 
   ! Flags for way how to choose the Lagrange points
   sll_int32, parameter :: sll_p_lagrange_centered = 0 !< Flag to specify Lagrange interpolation centered around the interpolation point
-  sll_int32, parameter :: sll_p_lagrange_fixed    = 1 !< Flag to specify Lagrange interpolation on a fixed interval centered around the point that is displace (for interpolate_array_disp)
+  sll_int32, parameter :: sll_p_lagrange_fixed    = 1 !< Flag to specify Lagrange interpolation on a fixed interval centered around the point that is displaced (for interpolate_array_disp)
  
 
 contains  !**********************************************************
