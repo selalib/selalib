@@ -151,7 +151,6 @@ contains
     sll_real64                            :: ymin
     sll_real64                            :: xmax
     sll_real64                            :: ymax
-    sll_int32                             :: error
 
     xmin = viewer%mesh%eta1_min
     xmax = viewer%mesh%eta1_max
@@ -166,6 +165,89 @@ contains
     end if
 
   end subroutine write_particles
+
+  subroutine write_particles_and_field( viewer, xp, yp, op, fp, iplot, time )
+
+    class(sll_t_pic_viewer_2d)            :: viewer
+    sll_real64,                intent(in) :: xp(:)
+    sll_real64,                intent(in) :: yp(:)
+    sll_real64,                intent(in) :: op(:)
+    sll_real64,                intent(in) :: fp(:,:)
+    sll_int32,                 intent(in) :: iplot
+    sll_real64,                optional   :: time
+
+    sll_real64                            :: xmin
+    sll_real64                            :: ymin
+    sll_real64                            :: xmax
+    sll_real64                            :: ymax
+    sll_real64                            :: x, dx
+    sll_real64                            :: y, dy
+    sll_int32                             :: i, j, k, nx, ny
+    sll_int32                             :: error
+    sll_int32                             :: file_id
+    character(len=4)                      :: cplot
+
+    xmin = viewer%mesh%eta1_min
+    xmax = viewer%mesh%eta1_max
+    ymin = viewer%mesh%eta2_min
+    ymax = viewer%mesh%eta2_max
+    dx   = viewer%mesh%delta_eta1
+    dy   = viewer%mesh%delta_eta2
+
+    nx = viewer%mesh%num_cells1
+    ny = viewer%mesh%num_cells2
+
+    call sll_s_int2string( iplot, cplot )
+
+    if (viewer%output_format == SLL_P_IO_GNUPLOT) then
+ 
+      SLL_ASSERT(size(xp) == size(yp))
+      SLL_ASSERT(size(op) == size(yp))
+
+      open(newunit = file_id, &
+           file    = viewer%label//"_particles_"//cplot//'.dat' )
+      do k=1, size(xp)
+         write(file_id,*) sngl(xp(k)),sngl(yp(k)),sngl(op(k))
+      end do
+      close(file_id)
+
+      open( file    = viewer%label//'_field_'//cplot//'.dat', &
+            status  = 'replace',   &
+            form    = 'formatted', &
+            newunit = file_id,     &
+            iostat  = error )
+
+      x = xmin
+      do i=1,nx
+         y = ymin
+         do j=1,ny
+            write(file_id,*) sngl(x),sngl(y),sngl(fp(i,j))
+            y = y + dy
+         end do
+         x = x + dx
+         write(file_id,*)
+      enddo
+      close(file_id)
+
+      open( file     = viewer%label//'.gnu', &
+            position = 'append',    &
+            newunit  = file_id,     &
+            iostat   = error )
+      if (iplot == 1) then
+       rewind(file_id)
+      end if
+
+      if ( present(time)) then
+        write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+      end if
+      write(file_id,"(a)") &
+      & "splot '"//viewer%label//"_field_"//cplot//".dat' w l &
+      &  , '"//viewer%label//"_particles_"//cplot//".dat' w p "
+      close(file_id)
+
+    end if
+
+  end subroutine write_particles_and_field
 
 end module sll_m_pic_viewer
 
