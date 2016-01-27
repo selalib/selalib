@@ -120,7 +120,7 @@ module sll_m_sim_bsl_dk_3d1v_polar
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
 
-  use sll_m_poisson_2d_polar_wrapper, only: &
+  use sll_m_poisson_2d_polar, only: &
     sll_f_new_poisson_2d_polar, &
     sll_p_poisson_drift_kinetic
 

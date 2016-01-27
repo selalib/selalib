@@ -1,4 +1,4 @@
-IF (FFTW_FOUND AND FFTW_ENABLED)
+if (FFTW_FOUND AND FFTW_ENABLED)
 
   set(    SIM_NAME bsl_vp_2d2v_cart_sparsegrid  )
   set(   TEST_NAME "sim_${SIM_NAME}"            )
@@ -8,11 +8,11 @@ IF (FFTW_FOUND AND FFTW_ENABLED)
   file( GLOB INPUT_FILES "*.nml"         )
   #file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
-  ADD_EXECUTABLE( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
-  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_sim_parallel sll_sparse_grid )
+  add_executable( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+  target_link_libraries( ${EXECUTABLE} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} )
 
-  INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
-  #INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
-  INSTALL( FILES                                     DESTINATION ${INSTALL_DIR} )
+  install( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
+  #install( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
+  install( FILES                                     DESTINATION ${INSTALL_DIR} )
 
-ENDIF()
+endif()

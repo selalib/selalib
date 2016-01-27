@@ -185,8 +185,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
-    sll_f_new_poisson_2d_mudpack_curvilinear_solver
+  use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
+    sll_f_new_poisson_2d_mudpack_curvilinear_old
 
 #endif
   implicit none
@@ -1460,7 +1460,7 @@ contains
         sim%b21 = 0._f64
         sim%c   = 0._f64 
          
-        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_solver( &
+        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_old( &
          sim%transformation, &
          eta1_min,&
          eta1_max,&
