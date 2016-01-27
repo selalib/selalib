@@ -96,14 +96,14 @@ call viewer%set_format(SLL_P_IO_GNUPLOT)
 
 do istep = 1, nstep !loop over time
    
-   call vitesse(nbpart, xp, yp, op, up, vp, delta, time)
-   call deplace(nbpart, xp, yp, up, vp, dt)
+  call vitesse(nbpart, xp, yp, op, up, vp, delta, time)
+  call deplace(nbpart, xp, yp, up, vp, dt)
 
-   call compute_grid_vorticity( )
-   call viewer%write_field(omg,istep)
+  call compute_grid_vorticity( )
 
+  call write_particles_and_field( viewer, xp, yp, op, omg, istep, time )
 
-   time = time + dt
+  time = time + dt
 
 end do      !next time step
 

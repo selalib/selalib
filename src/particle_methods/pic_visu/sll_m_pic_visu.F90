@@ -98,8 +98,7 @@ sll_int32        :: k
 
 call sll_s_int2string(iplot, fin)
 
-call sll_s_new_file_id(file_id, error)
-open( file_id, file = plot_name//'.gnu', position="append" )
+open( newunit=file_id, file = plot_name//'.gnu', position="append" )
 if ( iplot <= 1 ) then
    rewind(file_id)
    write(file_id,"('set xr[',g15.3,':',g15.3,']')") xmin, xmax
