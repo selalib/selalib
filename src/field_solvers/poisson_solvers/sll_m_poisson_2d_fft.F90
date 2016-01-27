@@ -61,11 +61,14 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
   contains
 
     !> Create the Poisson solver
-    procedure, public, pass(poisson) :: initialize => initialize_poisson_2d_fft_solver
+    procedure, public, pass(poisson) :: initialize => &
+      initialize_poisson_2d_fft_solver
     !> Compute potential solving the Poisson equation
-    procedure, public, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_fft
+    procedure, public, pass(poisson) :: compute_phi_from_rho => &
+      compute_phi_from_rho_2d_fft
     !> Compute electric fields solving the Poisson equation
-    procedure, public, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_fft
+    procedure, public, pass(poisson) :: compute_E_from_rho => &
+      compute_E_from_rho_2d_fft
       
   end type sll_t_poisson_2d_fft_solver
 

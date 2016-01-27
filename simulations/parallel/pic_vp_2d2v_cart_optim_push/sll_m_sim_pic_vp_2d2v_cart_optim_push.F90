@@ -144,12 +144,12 @@ contains
     logical     :: UseCubicSplines
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, XMAX, YMIN, YMAX
-    sll_real64  :: KX, KY
+    sll_real64  :: KX!, KY
     sll_real64  :: er, psi, omega_i, omega_r
     sll_int32, parameter  :: input_file = 99
     sll_int32, dimension(:), allocatable  :: rand_seed
     sll_int32   :: rand_seed_size
-    sll_int32  :: thread_id, it
+    sll_int32  :: thread_id!, it
     type(sll_t_particle_group_4d), pointer  :: pa_gr
 
     namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
@@ -281,40 +281,40 @@ contains
     sll_real64 :: ttmp(1:4,1:2)
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
-    sll_int32  :: ic_x1,ic_y1
+    !sll_int32  :: ic_x1,ic_y1
     sll_real64 :: xmin, ymin
     sll_real64 :: dtrdx, dtrdy
     sll_int32  :: gi ! counter index for guard list
-    sll_real64 :: Ex, Ey, Ex1, Ey1
+    sll_real64 :: Ex, Ey!, Ex1, Ey1
     sll_real64 :: dtqom! dt * qoverm
     sll_real64 :: x, x1 ! for global position
     sll_real64 :: y, y1 ! for global position
-    sll_real64 :: dt, ttime
+    sll_real64 :: dt!, ttime
     sll_real64 :: pp_vx, pp_vy
     type(sll_t_particle_4d), dimension(:), pointer :: p
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
     type(sll_t_field_accumulator_cs), dimension(:), pointer :: accumE_CS
     type(sll_t_particle_4d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy!, diag_energyL2D
-    sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
-    sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
-    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-    sll_real64  ::  t2, t3!  type(sll_time_mark)  :: t2, t3
+    !sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
+    !sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
+    !sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
+    !sll_real64  ::  t2, t3!  type(sll_time_mark)  :: t2, t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    sll_real64   :: t_init, t_fin, time
+!$    sll_real64   :: t2, t3, time
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
     type(sll_t_charge_accumulator_2d),    pointer :: q_accum
     type(sll_t_charge_accumulator_2d_cs), pointer :: q_accum_CS
     sll_int32  :: sort_nb
-    sll_real64 :: some_val, une_cst
+    sll_real64 :: une_cst
     sll_real64 :: val_lee, exval_ee
-    sll_real64 :: tot_ee, val_ee
+    sll_real64 :: val_ee
     sll_real64 :: omega_i, omega_r, psi
     character(len=2) :: nom_thnb
-    sll_real64 :: bors
+    !sll_real64 :: bors
     
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
