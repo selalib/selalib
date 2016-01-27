@@ -99,7 +99,7 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
 
-  use sll_m_poisson_2d_polar_wrapper, only: &
+  use sll_m_poisson_2d_polar, only: &
     sll_f_new_poisson_2d_polar
 
   use sll_m_reduction, only: &
@@ -117,9 +117,9 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
-  use sll_m_poisson_2d_mudpack
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
-    sll_f_new_poisson_2d_mudpack_curvilinear_solver
+  use sll_m_poisson_2d_mudpack_curvilinear
+  use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
+    sll_f_new_poisson_2d_mudpack_curvilinear_old
 
 #endif
   implicit none
@@ -697,7 +697,7 @@ contains
         c = 0._f64
 
 
-        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_solver( &
+        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_old( &
          transformation, &
          x1_min,&
          x1_max,&
