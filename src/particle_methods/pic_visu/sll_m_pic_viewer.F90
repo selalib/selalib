@@ -34,7 +34,8 @@ use sll_m_gnuplot, only: &
     sll_o_gnuplot_2d
 
 use sll_m_coordinate_transformation_2d_base, only: &
-    sll_p_io_gnuplot
+    sll_p_io_gnuplot, &
+    sll_p_io_xdmf
 
 use sll_m_utilities, only: &
     sll_s_int2string, &
@@ -48,6 +49,18 @@ use sll_m_cartesian_meshes, only: &
 
 use sll_m_pic_visu, only: &
     sll_o_particles_center_gnuplot
+
+#ifndef NOHDF5
+  use hdf5, only: &
+    hid_t
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
+
+#endif
+
 
 implicit none
 
@@ -187,6 +200,11 @@ contains
     sll_int32                             :: file_id
     character(len=4)                      :: cplot
 
+#ifndef NOHDF5
+    integer(hid_t) :: hfile_id  
+#endif
+
+
     xmin = viewer%mesh%eta1_min
     xmax = viewer%mesh%eta1_max
     ymin = viewer%mesh%eta2_min
@@ -199,7 +217,9 @@ contains
 
     call sll_s_int2string( iplot, cplot )
 
-    if (viewer%output_format == SLL_P_IO_GNUPLOT) then
+    select case (viewer%output_format)
+
+    case(SLL_P_IO_GNUPLOT)
  
       SLL_ASSERT(size(xp) == size(yp))
       SLL_ASSERT(size(op) == size(yp))
@@ -245,7 +265,40 @@ contains
       &  , '"//viewer%label//"_particles_"//cplot//".dat' w p "
       close(file_id)
 
-    end if
+    case(SLL_P_IO_XDMF)
+
+      open(newunit = file_id, &
+           file    = viewer%label//".xmf" )
+      write(file_id,"(a)")"<?xml version=""1.0"" ?> <!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
+      write(file_id,"(a)")"<Xdmf xmlns:xi=""http://www.w3.org/2003/XInclude"" Version=""2.2"">"
+      write(file_id,"(a)")"<Domain>"
+      write(file_id,"(a)")"<Grid Name=""Points"" Type=""Uniform"">"
+      write(file_id,"(a,i6,a)")"<Topology TopologyType=""Polyvertex"" NumberOfElements=""",size(xp),"""/>"
+      write(file_id,"(a)")"<Geometry Type=""X_Y_Z"">"
+      write(file_id,"(a,i6,a)")"<DataItem Format=""HDF"" Dimensions=""",size(xp),""">"
+      write(file_id,"(a)")viewer%label//".h5:/xp"
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a,i6,a)")"<DataItem Format=""HDF"" Dimensions=""",size(xp),""">"
+      write(file_id,"(a)")viewer%label//".h5:/yp"
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a,i6,a)")"<DataItem Format=""HDF"" Dimensions=""",size(xp),""">"
+      write(file_id,"(a)")viewer%label//".h5:/op"
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"</Geometry>"
+      write(file_id,"(a)")"</Grid>"
+      write(file_id,"(a)")"</Domain>"
+      write(file_id,"(a)")"</Xdmf>"
+      close(file_id)
+
+      call sll_o_hdf5_file_create(viewer%label//".h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,xp,"/xp",error)
+      call sll_o_hdf5_write_array(hfile_id,yp,"/yp",error)
+      call sll_o_hdf5_write_array(hfile_id,op,"/op",error)
+      call sll_o_hdf5_write_array(hfile_id,fp,"/fp",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+      stop
+
+    end select
 
   end subroutine write_particles_and_field
 
