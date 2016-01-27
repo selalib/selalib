@@ -92,7 +92,7 @@ time  = 0.0_f64
 
 viewer => sll_f_new_pic_viewer_2d( mesh, 'pic_viewer' )
 
-call viewer%set_format(SLL_P_IO_GNUPLOT)
+call viewer%set_format(SLL_P_IO_XDMF)
 
 do istep = 1, nstep !loop over time
    
