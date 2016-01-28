@@ -26,6 +26,8 @@ module sll_m_boundary_condition_descriptors
   public :: &
     sll_p_conductor, &
     sll_p_dirichlet, &
+    sll_p_halo, &
+    sll_p_one_sided, &
     sll_p_hermite, &
     sll_p_interior, &
     sll_p_neumann, &
@@ -61,9 +63,9 @@ module sll_m_boundary_condition_descriptors
   !> Absorbing boundary condition fro Maxwell
   sll_int32, parameter :: sll_p_silver_muller  = 9
   !> Use a one-sided stencil at the boundary
-  sll_int32, parameter :: SLL_D_ONE_SIDED    = 10
+  sll_int32, parameter :: sll_p_one_sided    = 10
   !> Values outside the domain are provided as halo cells (for domain decomposition)
-  sll_int32, parameter :: SLL_D_HALO         = 11
+  sll_int32, parameter :: sll_p_halo         = 11
 
 
 end module sll_m_boundary_condition_descriptors
