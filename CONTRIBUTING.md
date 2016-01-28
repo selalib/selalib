@@ -14,15 +14,19 @@ In order to move your repositories to gitlab, set gitlab as your primary reposit
 git remote set-url origin git@gitlab.mpcdf.mpg.de:clapp/selalib.git
 ```
 Please make sure you have added your ssh key on GitLab (SSH Keys section in your profile settings).
+This command is covered in detail in [Working with Remotes](https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes),
+including listing, adding, removing and renaming them.
+
 You can also keep the INRIA gforge as a remote repository using:
 ```
 git remote add inria <YOUR_LOGIN>@scm.gforge.inria.fr//gitroot//selalib/selalib.git
 ```
 
+
 If you want to keep INRIA gforge as primary repository, add the gitlab 
 repository with:
 ```
-git remote add gitlab git@gitlab.mpcdf.mpg.de:clapp/selalib.git
+git remote add upstream git@gitlab.mpcdf.mpg.de:clapp/selalib.git
 ```
 
 To check your configuration of remote repositories, use:
@@ -34,9 +38,9 @@ git remote -v
 In order to checkout the new development branch for the first time, use:
 ```
 git fetch origin
-git checkout -b develop origin/develop
+git checkout -t origin/develop
 ```
-Of course, you need to replace origin by gitlab if you choose to keep inria as your origin.
+Of course, you need to replace origin by upstream if you choose to keep inria as your origin.
 
 
 After this, you can push your local branch on gitlab with
@@ -52,15 +56,10 @@ git checkout your_branch
 git merge origin/your_branch
 ```
 
-To push to the INRIA gforge use:
-```
-git push inria your_branch
-```
-
 If you merge your branch with the develop branch on gitlab, don’t forget to 
 remove your_branch on gitlab.
 ```
-git push gitlab —delete your_branch
+git push upstream —delete your_branch
 ```
 
 It deletes the remote branch not the local one and you still have a copy 
@@ -102,10 +101,10 @@ git checkout -b some-feature develop
 ```
 After some commits, file a merge request and delete the branch:
 ```
-git pull gitlab develop
+git pull upstream develop
 git checkout develop
 git merge some-feature
-git push gitlab develop
+git push upstream develop
 git branch -d some-feature
 ```
 
