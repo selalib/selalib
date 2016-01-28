@@ -88,6 +88,7 @@ module sll_m_fft
      sll_int32                        :: problem_rank
      sll_int32, dimension(:), pointer :: problem_shape => null()
      sll_int32, dimension(:), pointer :: scramble_index => null()
+    sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
   end type sll_t_fft
 
 
@@ -113,6 +114,15 @@ module sll_m_fft
   !  integer, parameter :: FFTW_MOD = 1000000000
   ! tranform in char* !!!
 
+  ! Flags for the various types of transform (to make sure same type of init and execute functions are used)
+  integer, parameter :: p_fftw_c2c_1d = 0
+  integer, parameter :: p_fftw_r2r_1d = 1
+  integer, parameter :: p_fftw_r2c_1d = 2
+  integer, parameter :: p_fftw_c2r_1d = 3
+  integer, parameter :: p_fftw_c2c_2d = 4
+  integer, parameter :: p_fftw_r2r_2d = 5
+  integer, parameter :: p_fftw_r2c_2d = 6
+  integer, parameter :: p_fftw_c2r_2d = 7
 
 contains
 
@@ -264,6 +274,7 @@ contains
     SLL_ASSERT(size(array_in).ge.nx)
     SLL_ASSERT(size(array_out).ge.nx)
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_c2c_1d
     plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -296,6 +307,8 @@ contains
     sll_comp64, dimension(:), intent(inout)         :: array_out !< Fourier coefficients on output
 
     sll_real64 :: factor
+
+    SLL_ASSERT( plan%transform_type == p_fftw_c2c_1d )
 
     if( loc(array_in(1)) .ne. loc(array_out(1))) then ! out-place transform
        array_out = array_in
@@ -338,6 +351,7 @@ contains
     SLL_ASSERT(size(array_out,dim=2).ge.ny)
 
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_c2c_2d
     plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -377,6 +391,8 @@ contains
     sll_int32                                       :: i, nx, ny
     sll_int32, dimension(2)                         :: fft_shape
     sll_real64 :: factor
+
+    SLL_ASSERT( plan%transform_type == p_fftw_c2c_2d )
 
     if( loc(array_in(1,1)) .ne. loc(array_out(1,1))) then ! out-place transform
        array_out = array_in  ! copy source
@@ -425,6 +441,7 @@ contains
     SLL_ASSERT(size(array_in).eq.nx)
     SLL_ASSERT(size(array_out).eq.nx)
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_r2r_1d
     plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -465,6 +482,8 @@ contains
     sll_int32 :: nx, k
     sll_real64 :: factor
     sll_real64 :: tmp(plan%problem_shape(1))
+
+    SLL_ASSERT( plan%transform_type == p_fftw_r2r_1d )
 
     nx = plan%problem_shape(1)
 
@@ -521,6 +540,7 @@ contains
     SLL_ASSERT(size(array_in).eq.nx)
     SLL_ASSERT(size(array_out).eq.nx/2+1)
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_r2c_1d
     plan%direction = sll_p_fft_forward
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -549,6 +569,8 @@ contains
 
     sll_real64 :: factor
     sll_int32 :: i, nx
+
+    SLL_ASSERT( plan%transform_type == p_fftw_r2c_1d )
 
     nx = plan%problem_shape(1)
 
@@ -586,6 +608,7 @@ contains
     SLL_ASSERT(size(array_in).eq.nx/2+1)
     SLL_ASSERT(size(array_out).eq.nx)
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_c2r_1d
     plan%direction = sll_p_fft_backward
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -612,6 +635,8 @@ contains
 
     sll_int32                                     :: nx, i
     sll_real64 :: factor
+
+    SLL_ASSERT( plan%transform_type == p_fftw_c2r_1d )
 
     nx = plan%problem_shape(1)
 
@@ -655,6 +680,7 @@ contains
     SLL_ASSERT(size(array_out,dim=1).eq.nx/2+1)
     SLL_ASSERT(size(array_out,dim=2).eq.ny)
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_r2c_2d
     plan%direction = sll_p_fft_forward
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -686,6 +712,8 @@ contains
 
     sll_int32                                       :: nx, i, ny, k
     sll_real64 :: factor
+
+    SLL_ASSERT( plan%transform_type == p_fftw_r2c_2d )
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
@@ -731,6 +759,7 @@ contains
     SLL_ASSERT(size(array_out,dim=2).eq.ny)
 
     plan%library = SLLFFT_MOD
+    plan%transform_type = p_fftw_c2r_2d
     plan%direction = sll_p_fft_backward
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -761,6 +790,8 @@ contains
 
     sll_int32                                       :: nx, i, ny, k, j
     sll_real64 :: factor
+
+    SLL_ASSERT( plan%transform_type == p_fftw_c2r_2d )
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
