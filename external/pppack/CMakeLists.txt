@@ -1,4 +1,4 @@
-ADD_LIBRARY( pppack STATIC 
+add_library( pppack STATIC
   banfac.f90 
   banslv.f90  
   bsplvb.f90
@@ -6,4 +6,9 @@ ADD_LIBRARY( pppack STATIC
   schur_complement.F90
 )
 
-ADD_SUBDIRECTORY(testing)
+install( TARGETS pppack ARCHIVE DESTINATION lib )
+
+# Tests
+if( BUILD_TESTING )
+  add_subdirectory( testing )
+endif()

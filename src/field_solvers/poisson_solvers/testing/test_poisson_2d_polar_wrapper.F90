@@ -34,7 +34,7 @@ program test_poisson_2d_polar_wrapper
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_poisson_2d_base), pointer     :: poisson 
+  class(sll_c_poisson_2d_base), pointer   :: poisson 
   sll_real64                              :: err
   sll_real64                              :: x1_min
   sll_real64                              :: x1_max
@@ -53,9 +53,9 @@ program test_poisson_2d_polar_wrapper
   SLL_ALLOCATE(phi(Nc_x1+1,Nc_x2+1),ierr)
   SLL_ALLOCATE(rho(Nc_x1+1,Nc_x2+1),ierr)
   
-  rho = 1._f64
+  rho = 1.0_f64
   
-  err = 0._f64
+  err = 0.0_f64
   
   poisson =>sll_f_new_poisson_2d_polar( &
     x1_min, &
