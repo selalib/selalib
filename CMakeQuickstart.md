@@ -77,7 +77,6 @@ C) Configuring (Makefile Generator)
 
       where <PACKAGE> FFTW, etc. and SLL_HOME is set to the
       selalib source base directory (or your can just give it explicitly).
-      (ex: selalib/src)
 
   b) [Recommended] Create a CMake file fragment and point to it.
 
