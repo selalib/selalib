@@ -7,8 +7,8 @@ and follow instructions...
 
 After a couple of hours, install git and configure it
 ~~~
- git config --global user.name "Morgane Name"
- git config --global user.email "morgane@somewhere.fr"
+ git config --global user.name "Your Name"
+ git config --global user.email "your.name@somewhere.fr"
  git config --global core.editor emacs (or other)
  git config --global merge.tool opendiff (or other)
 ~~~
@@ -41,7 +41,7 @@ To build the library, read the [CMake Quickstart Guide](CMakeQuickstart.md)
  git branch your-branch
 ~~~
 
-* To switch to her new branch
+* Switch to the new branch
 ~~~
  git checkout your-branch
 ~~~
