@@ -61,8 +61,8 @@ PlnBwd = fftw_plan_dft_1d(ntau,Ftilde1,Ftilde2,FFTW_BACKWARD,FFTW_MEASURE+FFTW_U
 T =0.4_f64
 
 ! ---- * Construction of the mesh * ----
-bc1_type = SLL_PERIODIC
-bc2_type = SLL_PERIODIC
+bc1_type = sll_p_periodic
+bc2_type = sll_p_periodic
 
 ! ---- * Time and space steps * ----
 

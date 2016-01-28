@@ -1,7 +1,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 !> @ingroup poisson_solvers
-module sll_m_poisson_2d_periodic_solver
+module sll_m_poisson_2d_periodic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -27,7 +27,7 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
   implicit none
 
   public :: &
-    sll_f_new_poisson_2d_periodic_solver
+    sll_f_new_poisson_2d_periodic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,7 +51,7 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
 
 contains
 
-  function sll_f_new_poisson_2d_periodic_solver( &
+  function sll_f_new_poisson_2d_periodic( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -79,7 +79,7 @@ contains
       eta2_max, &
       nc_eta2)     
     
-  end function sll_f_new_poisson_2d_periodic_solver
+  end function sll_f_new_poisson_2d_periodic
   
   
   subroutine initialize_poisson_2d_periodic_solver( &
@@ -133,5 +133,5 @@ contains
            
   end subroutine compute_E_from_rho_2d_periodic
   
-end module sll_m_poisson_2d_periodic_solver
+end module sll_m_poisson_2d_periodic
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

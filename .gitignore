@@ -7,6 +7,7 @@
 *.swp
 *~
 *.kate-swp
+.unison
 
 # Local port index file for MacPorts
 Portindex*

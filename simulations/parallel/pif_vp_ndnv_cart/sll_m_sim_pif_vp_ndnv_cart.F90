@@ -722,7 +722,7 @@ subroutine init_particle_generalvp_pif(sim)
   SLL_ALLOCATE( sim%particle(2*sim%dimx+1,sim%npart_loc), ierr )
 
   !Generate random numbers
-  seed = 10 + sim%RND_OFFSET + sim%coll_rank*sim%npart_loc
+  seed = 10_i64 + sim%RND_OFFSET + sim%coll_rank*sim%npart_loc
   do idx=1,sim%npart_loc
     !call sll_s_i8_sobol_generate ( int(dimx,8) , npart, RND_OFFSET , particle(1:2*dimx,:))
     call sll_s_i8_sobol( int(2*sim%dimx,8), seed, sim%particle(1:2*sim%dimx,idx) )
@@ -901,7 +901,7 @@ subroutine YSun_g2h_generalvp_pif(sim)
             (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
       B=sim%B(sim%particle(sim%maskx,:), t) !External magnetic field
       
-     sim%ExB=0 
+     sim%ExB=0.0_f64 
       
      sim%particle(sim%maskv,:)=exp_skew_product2( normalize(B), &
                       sim%particle(sim%maskv,:) + h*sim%qm/2.0*E, h*(-sim%qm)*l2norm(B) ) + h*sim%qm/2.0*E    

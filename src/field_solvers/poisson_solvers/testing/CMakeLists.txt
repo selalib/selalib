@@ -1,19 +1,20 @@
-ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian
-  test_poisson_2d_dirichlet_cartesian.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian
-  sll_poisson_solvers sll_utilities )
-
 ADD_EXECUTABLE( test_poisson_2d_fft test_poisson_2d_fft.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers )
+ADD_TEST( NAME poisson_2d_fft  COMMAND test_poisson_2d_fft     )
+SET_TESTS_PROPERTIES( poisson_2d_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_1d_fd test_poisson_1d_fd.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_fd sll_poisson_solvers )
 
-ADD_EXECUTABLE( test_poisson_1d_polar_solver test_poisson_1d_polar_solver.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_1d_polar_solver sll_poisson_solvers )
+ADD_EXECUTABLE( test_poisson_1d_polar test_poisson_1d_polar.F90 )
+TARGET_LINK_LIBRARIES( test_poisson_1d_polar sll_poisson_solvers )
+ADD_TEST( NAME poisson_1d_polar COMMAND test_poisson_1d_polar     )
+SET_TESTS_PROPERTIES( poisson_1d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_2d_polar test_poisson_2d_polar.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_polar sll_poisson_solvers )
+ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
+SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_poisson_1d_periodic test_poisson_1d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_periodic sll_poisson_solvers )
@@ -27,21 +28,15 @@ TARGET_LINK_LIBRARIES( test_poisson_2d_periodic sll_poisson_solvers )
 ADD_TEST( NAME poisson_2d_periodic  COMMAND test_poisson_2d_periodic     )
 SET_TESTS_PROPERTIES( poisson_2d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_poisson_2d_curvilinear test_poisson_2d_curvilinear.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_2d_curvilinear sll_poisson_solvers )
-
-ADD_EXECUTABLE( test_poisson_2d_polar_wrapper test_poisson_2d_polar_wrapper.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_2d_polar_wrapper sll_poisson_solvers )
-
 ADD_EXECUTABLE( test_poisson_3d_periodic test_poisson_3d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_3d_periodic sll_poisson_solvers sll_fft )
 ADD_TEST( NAME poisson_3d_periodic  COMMAND test_poisson_3d_periodic     )
 SET_TESTS_PROPERTIES( poisson_3d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_tri_poisson test_tri_poisson.F90 )
-TARGET_LINK_LIBRARIES( test_tri_poisson tri_poisson sll_mesh_calculus sll_file_io )
-ADD_TEST( NAME tri_poisson  COMMAND test_tri_poisson     )
-SET_TESTS_PROPERTIES( tri_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ADD_EXECUTABLE( test_poisson_2d_tri test_poisson_2d_tri.F90 )
+TARGET_LINK_LIBRARIES( test_poisson_2d_tri sll_poisson_solvers sll_mesh_calculus sll_file_io )
+ADD_TEST( NAME poisson_2d_tri  COMMAND test_poisson_2d_tri     )
+SET_TESTS_PROPERTIES( poisson_2d_tri PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ### BEGIN MACRO ###
 MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
@@ -58,14 +53,6 @@ ADD_MUDPACK_PROGRAM( cartesian )
 ADD_MUDPACK_PROGRAM( polar )
 ADD_TEST( NAME poisson_1d_periodic     COMMAND test_poisson_1d_periodic     )
 SET_TESTS_PROPERTIES( poisson_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-# Fails
-#ADD_TEST( NAME poisson_1d_polar_solver     COMMAND test_poisson_1d_polar_solver     )
-#SET_TESTS_PROPERTIES( poisson_1d_polar_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-# Fails
-#ADD_TEST( NAME poisson_2d_dirichlet_cartesian     COMMAND test_poisson_2d_dirichlet_cartesian     )
-#SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
-SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
 TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
@@ -82,6 +69,6 @@ ADD_TEST( NAME poisson_2d_fem COMMAND test_poisson_2d_fem )
 SET_TESTS_PROPERTIES( poisson_2d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ADD_EXECUTABLE( test_hex_poisson test_hex_poisson.F90 )
-TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_utilities )
+TARGET_LINK_LIBRARIES( test_hex_poisson sll_poisson_solvers )
 ADD_TEST( NAME hex_poisson COMMAND test_hex_poisson )
 SET_TESTS_PROPERTIES( hex_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

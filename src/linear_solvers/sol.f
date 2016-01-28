@@ -33,6 +33,7 @@ c=========================== debut du code executable ==================
 c
 c-------  traitement
 c
+      print*, size(vkgd)
       ik=1
       if(vkgd(1).eq.vzero) goto 800
       energ=vzero
