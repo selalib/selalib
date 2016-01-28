@@ -38,9 +38,9 @@ module sll_m_species
     sll_f_two_stream_instability_initializer_2d
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_exec_r2r_1d, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_t_fft_plan
+    sll_t_fft
 
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
@@ -415,7 +415,7 @@ end subroutine sll_s_compute_rho
 subroutine sll_s_diagnostics(sp, pfwd, buf_fft, nb_mode)
 type(sll_t_species), intent(inout) :: sp
 sll_int32,     intent(in)    :: nb_mode
-type(sll_t_fft_plan), pointer  :: pfwd
+type(sll_t_fft), pointer  :: pfwd
 sll_real64                   :: buf_fft(:)
 
 sll_real64  :: tmp(5), tmp_loc(5)
@@ -461,7 +461,7 @@ sp%kinetic_energy = 0.5_f64 * tmp(5) * sp%mesh2d%delta_eta1
 sp%f_hat_x2_loc(1:nb_mode+1) = 0._f64
 do i=1,local_size_x2
   buf_fft = sp%f_x1(1:sp%mesh2d%num_cells1,i)
-  call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+  call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
   do k=0,nb_mode
      sp%f_hat_x2_loc(k+1) = sp%f_hat_x2_loc(k+1)   &
        +abs(sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &

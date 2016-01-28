@@ -82,11 +82,11 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_exec_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_s_fft_init_plan_r2r_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_r2r_1d, &
+    sll_t_fft
 
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
@@ -1334,7 +1334,7 @@ contains
     !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
-    type(sll_t_fft_plan), pointer         :: pfwd
+    type(sll_t_fft), pointer         :: pfwd
     sll_real64, dimension(:), allocatable :: buf_fft
     sll_comp64,dimension(:),allocatable :: rho_mode
     
@@ -1421,7 +1421,7 @@ contains
     !if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
       allocate(pfwd)
-      call sll_s_fft_init_plan_r2r_1d(pfwd, np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
+      call sll_s_fft_init_r2r_1d(pfwd, np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
     !endif
     ! allocate and initialize the layouts...
@@ -2074,7 +2074,7 @@ contains
         f_hat_x2_sp1_loc(1:nb_mode+1) = 0._f64
         do i=1,local_size_x2_sp1
           buf_fft = f_x1_sp1(1:np_x1-1,i)
-          call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+          call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             f_hat_x2_sp1_loc(k+1) = f_hat_x2_sp1_loc(k+1) &
               +abs(sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
@@ -2091,7 +2091,7 @@ contains
         f_hat_x2_sp2_loc(1:nb_mode+1) = 0._f64
         do i=1,local_size_x2_sp2
           buf_fft = f_x1_sp2(1:np_x1-1,i)
-          call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+          call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             f_hat_x2_sp2_loc(k+1) = f_hat_x2_sp2_loc(k+1) &
               +abs(sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
@@ -2118,7 +2118,7 @@ contains
 
         if(sll_f_get_collective_rank(sll_v_world_collective)==0)then                  
           buf_fft = rho_sp1(1:np_x1-1)-rho_sp2(1:np_x1-1)
-          call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+          call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             rho_mode(k)=sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k)
           enddo  

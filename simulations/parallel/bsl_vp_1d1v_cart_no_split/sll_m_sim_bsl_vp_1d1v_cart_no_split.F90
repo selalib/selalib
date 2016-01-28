@@ -103,11 +103,11 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
     sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_exec_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_s_fft_init_plan_r2r_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_r2r_1d, &
+    sll_t_fft
 
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
@@ -1054,7 +1054,7 @@ contains
     !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
-    type(sll_t_fft_plan), pointer         :: pfwd
+    type(sll_t_fft), pointer         :: pfwd
     sll_real64, dimension(:), allocatable :: buf_fft
     sll_comp64,dimension(:),allocatable :: rho_mode
 
@@ -1094,7 +1094,7 @@ contains
         
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
       allocate(pfwd)
-      call sll_s_fft_init_plan_r2r_1d(pfwd,np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
+      call sll_s_fft_init_r2r_1d(pfwd,np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
 
@@ -1373,7 +1373,7 @@ contains
         enddo
         potential_energy = 0.5_f64*potential_energy* sim%mesh_2d%delta_eta1
           buf_fft = rho(1:np_x1-1)
-          call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+          call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             rho_mode(k)=sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k)
           enddo  

@@ -57,11 +57,11 @@ module sll_m_sim_bsl_vp_1d1v_cart_multi_species
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_exec_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_s_fft_init_plan_r2r_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_r2r_1d, &
+    sll_t_fft
 
   use sll_m_periodic_interp, only: &
     sll_p_lagrange, &
@@ -177,7 +177,7 @@ type, extends(sll_c_simulation_base_class) :: &
   sll_real64                              :: mass_ratio
   sll_real64, dimension(:),   pointer     :: efield
   sll_real64, dimension(:),   pointer     :: e_app
-  type(sll_t_fft_plan),         pointer     :: pfwd
+  type(sll_t_fft),         pointer     :: pfwd
   sll_real64, dimension(:),   allocatable :: buf_fft
   sll_comp64, dimension(:),   allocatable :: rho_mode
   sll_int32                               :: rhotote_id
@@ -882,7 +882,7 @@ endif
 
 SLL_ALLOCATE(sim%buf_fft(nc_x1),ierr)
 allocate(sim%pfwd)
-call sll_s_fft_init_plan_r2r_1d(sim%pfwd,nc_x1,sim%buf_fft,sim%buf_fft,sll_p_fft_forward,normalized = .TRUE.)
+call sll_s_fft_init_r2r_1d(sim%pfwd,nc_x1,sim%buf_fft,sim%buf_fft,sll_p_fft_forward,normalized = .TRUE.)
 SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)      
 SLL_ALLOCATE(sim%efield(np_x1),ierr)
 SLL_ALLOCATE(sim%e_app(np_x1),ierr)
@@ -1122,7 +1122,7 @@ enddo
 potential_energy = 0.5_f64*potential_energy* sim%sp(1)%mesh2d%delta_eta1
 
 sim%buf_fft = sim%sp(1)%rho(1:nc_x1)-sim%sp(2)%rho(1:nc_x1)
-call sll_s_fft_apply_plan_r2r_1d(sim%pfwd,sim%buf_fft,sim%buf_fft)
+call sll_s_fft_exec_r2r_1d(sim%pfwd,sim%buf_fft,sim%buf_fft)
 do k=0,nb_mode
   sim%rho_mode(k)=sll_f_fft_get_mode_r2c_1d(sim%pfwd,sim%buf_fft,k)
 enddo  
