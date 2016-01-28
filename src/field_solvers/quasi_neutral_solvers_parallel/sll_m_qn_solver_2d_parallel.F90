@@ -62,8 +62,8 @@ module sll_m_qn_solver_2d_parallel
      sll_int32                             :: NP_theta 
      sll_real64                            :: rmin
      sll_real64                            :: rmax
-     type(sll_t_fft), pointer           :: fft_plan
-     type(sll_t_fft), pointer           :: inv_fft_plan
+     type(sll_t_fft)                       :: fft_plan
+     type(sll_t_fft)                       :: inv_fft_plan
      type(sll_t_layout_3d),  pointer             :: layout_fft
      type(sll_t_layout_3d),  pointer             :: layout_lin_sys
      sll_comp64, dimension(:,:,:), pointer :: array_fft
