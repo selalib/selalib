@@ -13,16 +13,16 @@
 !> \section how How to use sll_m_fft module?
 !>
 !> The first thing is to add the line \code use sll_m_fft \endcode
-!> The sll_m_fft module can use internal or external librarie 
+!> The sll_m_fft module can use internal or external librarie s
 !> 
 !> 1. Declare a fft plan
-!> \code type(sll_fft_plan), pointer :: p \endcode
+!> \code type(sll_t_fft) :: p \endcode
 !> 2. Initialize the plan
-!> \code p => fft_new_plan_c2c_1d(size,in,out,direction, normalized, aligned, optimization) \endcode
+!> \code call sll_s_fft_init_c2c_1d( p, size, in, out, direction, normalized, aligned, optimization ) \endcode
 !>
 !> The arrays in and out can be real and/or complex, 1d or 2d. Change c2c_1d accordingly.
 !> \warning For complex to real and real to complex transform, there is no direction flag.
-!>          \code p => fft_new_plan_r2c_1d(size,in,out, normalized, aligned, optimization) \endcode
+!>          \code call sll_s_fft_init_r2c_1d( p, size, in, out, normalized, aligned, optimization ) \endcode
 !>
 !> \a direction can take two values : FFT_FORWARD and FFT_BACKWARD
 !>
@@ -31,9 +31,9 @@
 !> \a optimization is an optional argument (only used by FFTW): With this argument, you can set how rigorous the initialization of the planner will be. It can take the values FFT_ESTIMATE, FFT_WISDOM_ONLY, FFT_MEASURE, FFT_PATIENT, FFT_EXHAUSTIVE. Note that \a in and \a out are overwritten for the last three options. FFT_WISDOM_ONLY only works if wisdom is available. [default: FFT_ESTIMATE]                      
 !>
 !> 3. Execute the plan
-!> \code call fft_apply_plan_c2c_1d(p,in,out) \endcode
+!> \code call sll_s_fft_exec_c2c_1d( p, in, out ) \endcode
 !> 4. Delete the plan
-!> \code call fft_delete_plan(p) \endcode
+!> \code call sll_s_fft_free( p ) \endcode
 !>
 !>
 !> \section sum Summary:
@@ -163,13 +163,13 @@
 !> \code
 !> sll_int32, parameter :: n = 2**5
 !> sll_comp64, dimension(0,n-1) :: in
-!> type(sll_fft_plan), pointer  :: p
+!> type(sll_t_fft)  :: p
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan_c2c_1d(n,in,in,FFT_FORWARD,normalized = .TRUE.)
-!> call fft_apply_plan_c2c_1d(p,in,in)
-!> call fft_delete_plan(p)
+!> call sll_s_fft_init_c2c_1d( p, n, in, in, FFT_FORWARD, normalized = .TRUE. )
+!> call sll_s_fft_exec_c2c_1d( p, in, in )
+!> call sll_s_fft_free( p )
 !> \endcode
 !>
 !> Two-dimensional transform  
@@ -178,13 +178,13 @@
 !> sll_int32, parameter :: m = 2**3
 !> sll_comp64, dimension(n/2,m) :: in
 !> sll_real64, dimension(n,m) :: out
-!> type(sll_fft_plan), pointer  :: p
+!> type(sll_t_fft)  :: p
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan_c2r_2d(n,in,out)
-!> call fft_apply_plan_c2r_2d(p,in,out)
-!> call fft_delete_plan(p)
+!> call sll_s_fft_init_c2r_2d( n, in, out )
+!> call sll_s_fft_exec_c2r_2d( p, in, out )
+!> call sll_s_fft_free( p )
 !> \endcode
 !>
 !>
