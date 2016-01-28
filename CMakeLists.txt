@@ -119,7 +119,7 @@ ADD_SUBDIRECTORY(src)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  SET(PARALUTION_VERSION 1.1.0 CACHE STRING "Paralution version number")
   EXTERNALPROJECT_ADD( paralution
      URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
      CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF

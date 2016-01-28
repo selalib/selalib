@@ -237,7 +237,7 @@ contains
                     mesh_cells, poisson_solver, sll_v_world_collective, sll_p_dirichlet)
             case default
                 fsolver=>new_pic_1d_field_solver(interval_a, interval_b, spline_degree, &
-                    mesh_cells, poisson_solver, sll_v_world_collective,SLL_PERIODIC)
+                    mesh_cells, poisson_solver, sll_v_world_collective,sll_p_periodic)
         endselect
 
         !Set pointer to external electric field

@@ -146,7 +146,7 @@ contains
       stop
     else
       select case (bc_type_1)
-        case (SLL_PERIODIC)
+        case (sll_p_periodic)
           charac%process_outside_point1 => process_outside_point_periodic          
         case (SLL_SET_TO_LIMIT)
           charac%process_outside_point1 => process_outside_point_set_to_limit        
@@ -174,7 +174,7 @@ contains
       stop
     else
       select case (bc_type_2)
-        case (SLL_PERIODIC)
+        case (sll_p_periodic)
           charac%process_outside_point2 => process_outside_point_periodic          
         case (SLL_SET_TO_LIMIT)
           charac%process_outside_point2 => process_outside_point_set_to_limit        

@@ -1,4 +1,4 @@
-program test_tri_poisson
+program test_poisson_2d_tri
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -18,7 +18,7 @@ use sll_m_timer, only: &
   sll_f_time_elapsed_between, &
   sll_t_time_mark
 
-use sll_m_tri_poisson, only: &
+use sll_m_poisson_2d_tri, only: &
   sll_f_new_triangular_poisson_2d, &
   sll_s_compute_e_from_phi, &
   sll_s_compute_e_from_rho, &
@@ -215,4 +215,4 @@ function u(r)
 
 end function u
 
-end program test_tri_poisson
+end program test_poisson_2d_tri
