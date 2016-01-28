@@ -35,9 +35,9 @@ Display all branches with:
  git branch -a
 ~~~
 
-Create the local branch and merge the remote selalib-devel branch:
+Switch to the local default branch named develop:
 ~~~
- git checkout -b develop origin/develop
+ git checkout develop
 ~~~
 
 To build the library, she reads the [CMake Quickstart Guide](CMakeQuickstart.md)
@@ -53,13 +53,10 @@ in this directory...
  git checkout morgane-branch
 ~~~
 
-* She wants to get all new updates of selalib-devel (the main branch)
+* She wants to get all new updates of develop (the default branch)
 ~~~
- git checkout develop    (change to selalib-devel)
- git fetch origin              (download changes from repository)
- git merge origin/develop (update local branch selalib-devel)
- git checkout morgane-branch   (back to her branch)
- git merge selalib-devel (update her branch with modifications on selalib-devel)
+ git fetch origin              
+ git merge origin/develop
 ~~~
 
 * She has conflict, no problem just do :
@@ -72,7 +69,7 @@ editor and commit.
  git commit -m 'Merge with selalib-devel and fixed conflicts'
 ~~~
 
-*She implemented a new algorithm. To save it :
+* She implemented a new algorithm. To save it :
 ~~~
  git add new_algo_functions.F90
 ~~~
@@ -109,5 +106,5 @@ put her work on the server:
 ~~~
  git clone git@gitlab.mpcdf.mpg.de:selalib/selalib.git
  cd selalib/
- git checkout -b morgane-branch origin/morgane-banch
+ git checkout -t origin/morgane-banch
 ~~~
