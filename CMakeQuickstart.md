@@ -399,23 +399,8 @@ F) Installing
 
     $ make uninstall
 
-G) Packaging
-------------
 
-(*) Creating a tarball of the source tree:
-
-   $ make package_source
-
-   NOTE: The above command will tar up *everything* in the source tree (except
-   for files explicitly excluded in the CMakeLists.txt files) so make sure
-   that you start with a totally clean source tree before you do this.  Or,
-   you could build Doxygen documentation first and then tar up SeLaLib and
-   that would give you the source with Doxygen documentation.
-
-   NOTE: You can control what gets put into the tarball by setting the cache
-   variable CPACK_SOURCE_IGNORE_FILES when configuring with CMake.
-
-H) Dashboard submissions
+G) Dashboard submissions
 ------------------------
 
 You can use the extended CTest scripting system in SeLaLib to submit
