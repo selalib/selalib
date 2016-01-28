@@ -41,7 +41,7 @@ program test_lagrange_fast_parallel
 
   sll_int32, parameter :: nd = 6
   sll_int32 :: procs_per_dimension(nd)
-  logical :: periodic(nd), check(2*nd+1)
+  logical :: periodic(nd)
   type(sll_t_cartesian_topology_6d), pointer :: topology
   type(sll_t_decomposition_6d), pointer :: decomposition
   sll_int32 :: ierr
@@ -49,7 +49,6 @@ program test_lagrange_fast_parallel
   sll_int32 :: global_grid_points_per_dimension(nd)
   sll_int32 :: halo_width_per_dimension(nd)
   sll_real64, dimension(:,:,:,:,:,:), pointer :: xi, fi, xp, fp
-  sll_real64 :: val
   sll_int32 :: i, stencil
   sll_real64 :: diff, alpha, diff_new
   character(len=128) :: filename
@@ -175,7 +174,7 @@ program test_lagrange_fast_parallel
     print *, "MPI rank=", my_rank, ", error =", diff
   end if
 
-101 call sll_s_halt_collective()
+  call sll_s_halt_collective()
   stop
 
 contains
