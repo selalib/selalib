@@ -60,9 +60,9 @@ In .tcshrc, this would be something like:
   setenv HDF5_ROOT /usr/local
 
 To develop in Selalib please read :
-   - GitQuickstart.md
-   - CMakeQuickstart.md
-   - CONTRIBUTING.md
+   - [Git small guide](GitQuickstart.md)
+   - [CMake instructions](CMakeQuickstart.md)
+   - [Contributing guidelines](CONTRIBUTING.md)
 
 Selalib compilation, testing 
 ----------------------------
