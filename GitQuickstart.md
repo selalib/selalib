@@ -56,7 +56,7 @@ in this directory...
 * She wants to get all new updates of develop (the default branch)
 ~~~
  git fetch origin              
- git merge origin/develop
+ git rebase origin/develop
 ~~~
 
 * She has conflict, no problem just do :
