@@ -96,11 +96,9 @@ contains
     plan%rmax   = rmax
 
     ! For FFTs in theta-direction
-    !plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
     call sll_s_fft_init_c2c_1d( plan%fft_plan, NP_theta, x, x, sll_p_fft_forward )
 
     ! For inverse FFTs in theta-direction
-    !plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
     call sll_s_fft_init_c2c_1d( plan%inv_fft_plan, NP_theta, x, x, sll_p_fft_backward )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
