@@ -15,6 +15,8 @@
 
 ! Timing with 10000000 instead of 100000 calls:
 ! 2.5% overhead on minimum and 3.3 on average
+! Using select type within subroutine brings overhead down to 
+! 1.1% overhead on minimum and 1.5 on average
 ! Same on hydra (with intel 14): 9.9 % overhead on minimum and 10.2 % on average
 ! Type:  0.8065 / 0.8254 / 0.8456
 ! Class: 0.8863 / 0.9098 / 0.9353
