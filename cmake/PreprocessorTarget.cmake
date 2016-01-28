@@ -28,6 +28,7 @@
 #   - 26 Nov 2015: add OpenMP flag (YG).
 #   - 02 Dec 2015: fix dependency bug (YG).
 #   - 15 Jan 2016: store names of all libraries (YG).
+#   - 19 Jan 2016: 'collect_source_info' handles libraries with no sources (YG)
 
 if(__add_all_preproc)
    return()
@@ -74,26 +75,28 @@ function( collect_source_info _name )
   get_property(_cpp_preproc_sources  GLOBAL PROPERTY CPP_PREPROC_SOURCES)
 
   get_target_property(_forcheck_sources ${_name} SOURCES)
-  foreach(_source ${_forcheck_sources})
-    get_source_file_property(_forcheck_lang "${_source}" LANGUAGE)
-    get_source_file_property(_forcheck_loc "${_source}" LOCATION)
+  if(_forcheck_sources)
+    foreach(_source ${_forcheck_sources})
+      get_source_file_property(_forcheck_lang "${_source}" LANGUAGE)
+      get_source_file_property(_forcheck_loc "${_source}" LOCATION)
 
-    if("${_forcheck_lang}" MATCHES "Fortran")
-      # first we check if the source file is already in the source list
-      list(FIND _cpp_sources ${_forcheck_loc} _list_idx)
-      if( ${_list_idx} EQUAL -1)
-        # Not yet in the source list
-        list(APPEND _cpp_sources "${_forcheck_loc}")      
+      if("${_forcheck_lang}" MATCHES "Fortran")
+        # first we check if the source file is already in the source list
+        list(FIND _cpp_sources ${_forcheck_loc} _list_idx)
+        if( ${_list_idx} EQUAL -1)
+          # Not yet in the source list
+          list(APPEND _cpp_sources "${_forcheck_loc}")      
 
-        # Here we generate the name of the preprocessed source file
-        get_filename_component(e "${_source}" EXT)
-        get_filename_component(n "${_source}" NAME_WE)
-        string(REGEX REPLACE "F" "f" e "${e}")
-        set(of "${CMAKE_CURRENT_BINARY_DIR}/${n}${e}")
-        list(APPEND _cpp_preproc_sources ${of})
+          # Here we generate the name of the preprocessed source file
+          get_filename_component(e "${_source}" EXT)
+          get_filename_component(n "${_source}" NAME_WE)
+          string(REGEX REPLACE "F" "f" e "${e}")
+          set(of "${CMAKE_CURRENT_BINARY_DIR}/${n}${e}")
+          list(APPEND _cpp_preproc_sources ${of})
+        endif()
       endif()
-    endif()
-  endforeach()
+    endforeach()
+  endif()
 
   # save the updated source list
   set_property(GLOBAL PROPERTY CPP_SOURCES  ${_cpp_sources})

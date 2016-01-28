@@ -119,7 +119,7 @@ contains
         sll_int32, intent(in)                :: num_modes !<Degree of the bsplines
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
         ierr=0
-        !this%boundarycondition=bc_type !SLL_PERIODIC
+        !this%boundarycondition=bc_type !sll_p_periodic
 
         this%cartesian_mesh=>cartesian_mesh_1d
         this%Ilength=this%cartesian_mesh%eta_max-this%cartesian_mesh%eta_min
@@ -128,7 +128,7 @@ contains
         this%num_modes=num_modes
 
         !        selectcase(this%boundarycondition)
-        !            case(SLL_PERIODIC)
+        !            case(sll_p_periodic)
         !
         !
         !            case(sll_p_dirichlet)
@@ -137,7 +137,7 @@ contains
         SLL_ALLOCATE(this%fourier_fmode(this%num_modes),ierr)
         return
 
-        print*,bc_type !SLL_PERIODIC
+        print*,bc_type !sll_p_periodic
 
     endsubroutine
 
@@ -164,7 +164,7 @@ contains
     !
     !        rhs=evalpoints(1:this%num_cells)
     !        selectcase(this%boundarycondition)
-    !            case(SLL_PERIODIC)
+    !            case(sll_p_periodic)
     !            case(sll_p_dirichlet)
     !                rhs(1)=0
     !        endselect

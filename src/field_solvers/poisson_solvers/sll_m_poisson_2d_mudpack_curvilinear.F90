@@ -42,7 +42,7 @@
 !> \f[ 
 !>      A_{1,1}\partial_{1,1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} = \hat{\rho}
 !> \f]
-module sll_m_poisson_2d_mudpack
+module sll_m_poisson_2d_mudpack_curvilinear
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -82,13 +82,13 @@ module sll_m_poisson_2d_mudpack
   implicit none
 
   public :: &
-    sll_f_new_poisson_2d_mudpack
+    sll_f_new_poisson_2d_mudpack_curvilinear
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Derived type to solve Poisson equation on 2d curvilinear mesh
-  type, extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack
+  type, extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack_curvilinear
   
     !> PLEASE ADD DOCUMENTATION
     sll_real64, dimension(:,:), pointer :: cxx_2d
@@ -160,22 +160,22 @@ module sll_m_poisson_2d_mudpack
   contains
 
     !> PLEASE ADD DOCUMENTATION
-    procedure, pass(poisson) :: initialize => initialize_poisson_2d_mudpack
+    procedure, pass(poisson) :: initialize => initialize_poisson_2d_mudpack_curvilinear
     !> PLEASE ADD DOCUMENTATION
     procedure, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_mudpack
     !> PLEASE ADD DOCUMENTATION
     procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_mudpack
       
-  end type poisson_2d_mudpack
+  end type poisson_2d_mudpack_curvilinear
 
   !> PLEASE ADD DOCUMENTATION
-  class(poisson_2d_mudpack), pointer :: mudpack_wrapper => null()
+  class(poisson_2d_mudpack_curvilinear), pointer :: mudpack_wrapper => null()
 
 
 contains
 
   !> PLEASE ADD DOCUMENTATION
-  function sll_f_new_poisson_2d_mudpack( &
+  function sll_f_new_poisson_2d_mudpack_curvilinear( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -207,7 +207,7 @@ contains
     ce) &
     result(poisson)
       
-    type(poisson_2d_mudpack),pointer :: poisson
+    type(poisson_2d_mudpack_curvilinear),pointer :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -241,7 +241,7 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
-    call initialize_poisson_2d_mudpack( &
+    call initialize_poisson_2d_mudpack_curvilinear( &
       poisson, &
       eta1_min, &
       eta1_max, &
@@ -273,10 +273,10 @@ contains
       cy, &
       ce)
     
-  end function sll_f_new_poisson_2d_mudpack
+  end function sll_f_new_poisson_2d_mudpack_curvilinear
   
   
-  subroutine initialize_poisson_2d_mudpack( &
+  subroutine initialize_poisson_2d_mudpack_curvilinear( &
     poisson, &
     eta1_min, &
     eta1_max, &
@@ -307,7 +307,7 @@ contains
     cx, &
     cy, &
     ce)
-    class(poisson_2d_mudpack), target :: poisson
+    class(poisson_2d_mudpack_curvilinear), target :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -452,18 +452,18 @@ contains
         if(present(cxx_2d).or.present(cxy_2d).or.present(cyy_2d)&
           .or.present(cx_2d).or.present(cy_2d).or.present(ce_2d)) then
           print *,'#2d arrays should not be here'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop
         endif
         
         if((.not.(present(cxx_1d))).and.(.not.(present(cxx)))) then
           print *,'#1d/0d array should be here for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxx_1d).and.present(cxx))then
           print *,'#please choose between 1d or 0d array for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxx_1d))then
@@ -481,12 +481,12 @@ contains
 
         if((.not.(present(cyy_1d))).and.(.not.(present(cyy)))) then
           print *,'#1d/0d array should be here for cyy !'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cyy_1d).and.present(cyy))then
           print *,'#please choose between 1d or 0d array for cyy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cyy_1d))then
@@ -508,7 +508,7 @@ contains
         endif
         if(present(cx_1d).and.present(cx))then
           print *,'#please choose between 1d or 0d array for cx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cx_1d))then
@@ -531,7 +531,7 @@ contains
         endif
         if(present(cy_1d).and.present(cy))then
           print *,'#please choose between 1d or 0d array for cy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cy_1d))then
@@ -553,7 +553,7 @@ contains
         endif
         if(present(cex_1d).and.present(ce))then
           print *,'#please choose between 1d or 0d array for cex'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cex_1d))then
@@ -575,7 +575,7 @@ contains
         endif
         if(present(cey_1d).and.present(ce))then
           print *,'#please choose between 1d or 0d array for cey'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cey_1d))then
@@ -658,18 +658,18 @@ contains
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
           print *,'#1d arrays should not be here'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop
         endif
         
         if((.not.(present(cxx_2d))).and.(.not.(present(cxx)))) then
           print *,'#2d/0d array should be here for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxx_2d).and.present(cxx))then
           print *,'#please choose between 2d or 0d array for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxx_2d))then
@@ -687,12 +687,12 @@ contains
 
         if((.not.(present(cyy_2d))).and.(.not.(present(cyy)))) then
           print *,'#2d/0d array should be here for cyy !'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cyy_2d).and.present(cyy))then
           print *,'#please choose between 2d or 0d array for cyy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cyy_2d))then
@@ -714,7 +714,7 @@ contains
         endif
         if(present(cx_2d).and.present(cx))then
           print *,'#please choose between 2d or 0d array for cx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cx_2d))then
@@ -736,7 +736,7 @@ contains
         endif
         if(present(cy_2d).and.present(cy))then
           print *,'#please choose between 2d or 0d array for cy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cy_2d))then
@@ -758,7 +758,7 @@ contains
         endif
         if(present(ce_2d).and.present(ce))then
           print *,'#please choose between 2d or 0d array for ce'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(ce_2d))then
@@ -850,18 +850,18 @@ contains
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
           print *,'#1d arrays should not be here'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop
         endif
         
         if((.not.(present(cxx_2d))).and.(.not.(present(cxx)))) then
           print *,'#2d/0d array should be here for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxx_2d).and.present(cxx))then
           print *,'#please choose between 2d or 0d array for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxx_2d))then
@@ -880,12 +880,12 @@ contains
         if((.not.(present(cxy_2d))).and.(.not.(present(cxy)))) then
           print *,'#2d array should be here for cxy'
           print *,'# cxy=0. use another method'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cxy_2d).and.present(cxy))then
           print *,'#please choose between 2d or 0d array for cxy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif        
         if(present(cxy_2d))then
@@ -902,12 +902,12 @@ contains
         endif
         if((.not.(present(cyy_2d))).and.(.not.(present(cyy)))) then
           print *,'#2d/0d array should be here for cyy !'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cyy_2d).and.present(cyy))then
           print *,'#please choose between 2d or 0d array for cyy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cyy_2d))then
@@ -929,7 +929,7 @@ contains
         endif
         if(present(cx_2d).and.present(cx))then
           print *,'#please choose between 2d or 0d array for cx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cx_2d))then
@@ -951,7 +951,7 @@ contains
         endif
         if(present(cy_2d).and.present(cy))then
           print *,'#please choose between 2d or 0d array for cy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(cy_2d))then
@@ -973,7 +973,7 @@ contains
         endif
         if(present(ce_2d).and.present(ce))then
           print *,'#please choose between 2d or 0d array for ce'
-          print *,'#in subroutine initialize_poisson_2d_mudpack'
+          print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
           stop        
         endif
         if(present(ce_2d))then
@@ -1073,15 +1073,15 @@ contains
 
       case default
         print *,'#bad mudpack_case',mudpack_case
-        print *,'#in subroutine initialize_poisson_2d_mudpack'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
         stop 
     end select
 
-  end subroutine initialize_poisson_2d_mudpack
+  end subroutine initialize_poisson_2d_mudpack_curvilinear
   
   ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack( poisson, phi, rho )
-    class(poisson_2d_mudpack), target :: poisson
+    class(poisson_2d_mudpack_curvilinear), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     !sll_real64        :: phi(:,:)  !< Electric potential
@@ -1215,7 +1215,7 @@ contains
          
       case default
         print *,'#bad mudpack_case',poisson%mudpack_case
-        print *,'#in subroutine initialize_poisson_2d_mudpack'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_curvilinear'
         stop 
     end select
 
@@ -1223,7 +1223,7 @@ contains
 
   ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
   subroutine compute_E_from_rho_2d_mudpack( poisson, E1, E2, rho )
-    class(poisson_2d_mudpack) :: poisson
+    class(poisson_2d_mudpack_curvilinear) :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: E1
     sll_real64,dimension(:,:),intent(out) :: E2
@@ -1308,4 +1308,4 @@ contains
     end if
   end subroutine mudpack_bndsp
 
-end module sll_m_poisson_2d_mudpack
+end module sll_m_poisson_2d_mudpack_curvilinear

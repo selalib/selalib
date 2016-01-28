@@ -185,8 +185,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
-  use sll_m_poisson_2d_mudpack_curvilinear_solver_old, only: &
-    sll_f_new_poisson_2d_mudpack_curvilinear_solver
+  use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
+    sll_f_new_poisson_2d_mudpack_curvilinear_old
 
 #endif
   implicit none
@@ -677,7 +677,7 @@ contains
 
     
     select case(bc_eta1_left)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_eta1_left = sll_p_periodic" 
         sim%bc_eta1_left = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -694,7 +694,7 @@ contains
     end select
     
     select case(bc_eta1_right)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_eta1_right = sll_p_periodic" 
         sim%bc_eta1_right = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -711,7 +711,7 @@ contains
     end select
     
        select case(bc_eta2_left)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_eta2_left = sll_p_periodic" 
         sim%bc_eta2_left = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -728,7 +728,7 @@ contains
     end select
     
     select case(bc_eta2_right)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_eta2_right = sll_p_periodic" 
         sim%bc_eta2_right = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -745,7 +745,7 @@ contains
     end select
     
     select case(bc_interp2d_eta1)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_interp2d_eta1= sll_p_periodic" 
         sim%bc_interp2d_eta1 = sll_p_periodic
 !      case ("SLL_DIRICHLET")
@@ -762,7 +762,7 @@ contains
     end select
 
     select case(bc_interp2d_eta2)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_interp2d_eta2= sll_p_periodic" 
         sim%bc_interp2d_eta2 = sll_p_periodic
 !      case ("SLL_DIRICHLET")
@@ -779,7 +779,7 @@ contains
     end select
     
     select case(bc_charac2d_eta1)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_charac2d_eta1= sll_p_periodic" 
         sim%bc_charac2d_eta1= sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -799,7 +799,7 @@ contains
     end select
 
     select case(bc_charac2d_eta2)
-      case ("SLL_PERIODIC")
+      case ("sll_p_periodic")
         print*,"#bc_charac2d_eta2= sll_p_periodic" 
         sim%bc_charac2d_eta2= sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -1460,7 +1460,7 @@ contains
         sim%b21 = 0._f64
         sim%c   = 0._f64 
          
-        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_solver( &
+        sim%poisson => sll_f_new_poisson_2d_mudpack_curvilinear_old( &
          sim%transformation, &
          eta1_min,&
          eta1_max,&
