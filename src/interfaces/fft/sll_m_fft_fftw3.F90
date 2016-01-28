@@ -274,7 +274,6 @@ contains
 
 ! COMPLEX 2D
   !> Create new 2d complex to complex plan
-  !function sll_f_fft_new_plan_c2c_2d(nx,ny,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
   subroutine sll_s_fft_init_c2c_2d(plan, nx, ny, array_in, array_out, direction, normalized, aligned, optimization)
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
@@ -451,7 +450,6 @@ contains
 
 ! R2C
   !> Create new 1d real to complex plan for forward FFT
-  !function sll_s_fft_init_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
   subroutine sll_s_fft_init_r2c_1d(plan, nx,array_in,array_out, normalized, aligned, optimization)
     type(sll_t_fft), intent(out)            :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of points
@@ -515,7 +513,6 @@ contains
   end subroutine
 
   !> Create new 2d complex to real plan for forward FFT
-  !function sll_f_fft_new_plan_r2c_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
   subroutine sll_s_fft_init_r2c_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
     type(sll_t_fft), intent(out)             :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
