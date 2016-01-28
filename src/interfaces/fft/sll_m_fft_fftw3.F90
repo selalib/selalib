@@ -74,6 +74,7 @@ module sll_m_fft
     sll_int32, dimension(:), pointer :: problem_shape !< Array of size \a problem_rank specifying the number of points along each dimension
 
     sll_comp64, allocatable, private :: scratch(:) !< Scratch data to simulate r2r for not FFTW_F2003
+    sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
 
   end type sll_t_fft_plan
 
@@ -95,6 +96,17 @@ module sll_m_fft
 ! See section "How-to manipulate flags ?" for more information.
 
   integer, parameter :: FFTW_MOD = 1000000000 !< Flag for FFTW
+
+  ! Flags for the various types of transform (to make sure same type of init and execute functions are used)
+  integer, parameter :: p_fftw_c2c_1d = 0
+  integer, parameter :: p_fftw_r2r_1d = 1
+  integer, parameter :: p_fftw_r2c_1d = 2
+  integer, parameter :: p_fftw_c2r_1d = 3
+  integer, parameter :: p_fftw_c2c_2d = 4
+  integer, parameter :: p_fftw_r2r_2d = 5
+  integer, parameter :: p_fftw_r2c_2d = 6
+  integer, parameter :: p_fftw_c2r_2d = 7
+  
 
 contains
 
@@ -208,7 +220,8 @@ contains
     sll_int32                                    :: ierr
     sll_int32                                    :: flag_fftw
 
-    plan%library = FFTW_MOD 
+    plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_c2c_1d
     plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -248,6 +261,8 @@ contains
 
     sll_real64 :: factor
 
+    SLL_ASSERT( plan%transform_type == p_fftw_c2c_1d )
+
     call fftw_execute_dft(plan%fftw, array_in, array_out)
 
     if ( plan%normalized .EQV. .true.) then
@@ -275,6 +290,7 @@ contains
     sll_int32                                     :: flag_fftw
 
     plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_c2c_2d
     plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -343,6 +359,7 @@ contains
     sll_int32 :: flag_fftw
 
     plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_r2r_1d
     plan%direction = direction
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -401,6 +418,9 @@ contains
     sll_real64                              :: factor
     sll_int32                               :: j
 
+    
+    SLL_ASSERT( plan%transform_type == p_fftw_r2r_1d )
+
 #ifdef FFTW_F2003
     call fftw_execute_r2r(plan%fftw, array_in, array_out)
     
@@ -446,6 +466,7 @@ contains
     sll_int32 :: flag_fftw
 
     plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_r2c_1d
     plan%direction = 0
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -484,6 +505,8 @@ contains
 
     sll_real64                                      :: factor 
 
+    SLL_ASSERT( plan%transform_type == p_fftw_r2c_1d )
+
     call fftw_execute_dft_r2c(plan%fftw, array_in, array_out)
 
     if( plan%normalized .EQV. .TRUE. ) then
@@ -508,6 +531,7 @@ contains
     sll_int32 :: flag_fftw
 
     plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_r2c_2d
     plan%direction = 0
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -549,6 +573,8 @@ contains
     sll_real64    :: factor
 
 
+    SLL_ASSERT( plan%transform_type == p_fftw_r2c_2d )
+
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
 
@@ -563,6 +589,7 @@ contains
       print * ,'      array_out size problem'
       stop ''
     endif
+
 
     call fftw_execute_dft_r2c(plan%fftw, array_in, array_out)
 
@@ -589,6 +616,7 @@ contains
     sll_int32 :: flag_fftw
 
     plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_c2r_1d
     plan%direction = 0
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -629,6 +657,8 @@ contains
 
     sll_real64                  :: factor
 
+    SLL_ASSERT( plan%transform_type == p_fftw_c2r_1d )
+
     call fftw_execute_dft_c2r(plan%fftw, array_in, array_out)
 
     if( plan%normalized .EQV. .TRUE. ) then
@@ -654,6 +684,7 @@ contains
     sll_int32 :: flag_fftw
 
     plan%library = FFTW_MOD
+    plan%transform_type = p_fftw_c2r_2d
     plan%direction = 0
     if( present(normalized) ) then
        plan%normalized = normalized
@@ -692,6 +723,8 @@ contains
 
     sll_int32                                         :: nx, ny
     sll_real64                                        :: factor
+
+    SLL_ASSERT( plan%transform_type == p_fftw_c2r_2d )
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
