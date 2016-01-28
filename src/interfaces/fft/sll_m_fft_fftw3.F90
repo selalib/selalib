@@ -31,7 +31,7 @@ module sll_m_fft
   implicit none 
 
   public :: &
-    sll_t_fft_plan, &
+    sll_t_fft, &
     sll_p_fft_forward, &
     sll_p_fft_backward, &
     sll_p_fft_measure, &
@@ -39,33 +39,33 @@ module sll_m_fft
     sll_p_fft_estimate, &
     sll_p_fft_exhaustive, &
     sll_p_fft_wisdom_only, &
-    sll_s_print_defaultfftlib, &
+    sll_s_fft_print_defaultlib, &
     sll_f_fft_allocate_aligned_complex, &
     sll_f_fft_allocate_aligned_real, &
-    sll_s_fft_init_plan_r2r_1d, &
-    sll_s_fft_init_plan_c2r_1d, &
-    sll_s_fft_init_plan_r2c_1d, &
-    sll_s_fft_init_plan_c2c_1d, &
-    sll_s_fft_init_plan_r2c_2d, &
-    sll_s_fft_init_plan_c2r_2d, &
-    sll_s_fft_init_plan_c2c_2d, &
-    sll_s_fft_apply_plan_r2r_1d, &
-    sll_s_fft_apply_plan_c2r_1d, &
-    sll_s_fft_apply_plan_r2c_1d, &
-    sll_s_fft_apply_plan_c2c_1d, &
-    sll_s_fft_apply_plan_r2c_2d, &
-    sll_s_fft_apply_plan_c2r_2d, &
-    sll_s_fft_apply_plan_c2c_2d, &
+    sll_s_fft_init_r2r_1d, &
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_init_r2c_1d, &
+    sll_s_fft_init_c2c_1d, &
+    sll_s_fft_init_r2c_2d, &
+    sll_s_fft_init_c2r_2d, &
+    sll_s_fft_init_c2c_2d, &
+    sll_s_fft_exec_r2r_1d, &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_exec_c2c_1d, &
+    sll_s_fft_exec_r2c_2d, &
+    sll_s_fft_exec_c2r_2d, &
+    sll_s_fft_exec_c2c_2d, &
     sll_s_fft_set_mode_c2r_1d, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_s_fft_delete_plan
+    sll_s_fft_free
 
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++    
   
   !> Type for FFT plan in SeLaLib
-  type sll_t_fft_plan
+  type sll_t_fft
     fftw_plan, private               :: fftw       !< FFTW plan (specific for FFTW version)
     logical                          :: normalized !< Boolean telling whether or not values of the FFT should be normalized by \a problem_shape
     sll_int32                        :: library    !< Specifies the FFT library that is behind the interface
@@ -76,7 +76,7 @@ module sll_m_fft
     sll_comp64, allocatable, private :: scratch(:) !< Scratch data to simulate r2r for not FFTW_F2003
     sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
 
-  end type sll_t_fft_plan
+  end type sll_t_fft
 
   
   ! Flags for direction (values as in fftw3.f03)
@@ -111,7 +111,7 @@ module sll_m_fft
 contains
 
   !> Function to print the FFT library behind the interface.
-  subroutine sll_s_print_defaultfftlib()
+  subroutine sll_s_fft_print_defaultlib()
     print *, 'The library used is FFTW'
   end subroutine
 
@@ -155,7 +155,7 @@ contains
 
   !> Function to reconstruct the complex FFT mode from the data of a r2r transform
   function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
-    type(sll_t_fft_plan),      intent(in)   :: plan !< FFT plan
+    type(sll_t_fft),      intent(in)   :: plan !< FFT plan
     sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
     sll_int32, intent(in)                   :: k    !< mode to be extracted
     sll_comp64                              :: mode !< Complex value of kth mode
@@ -181,7 +181,7 @@ contains
 
   !> Function to set a complex mode to the real representation of r2r.
   subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
-    type(sll_t_fft_plan),      intent(in)    :: plan !< FFT planner object
+    type(sll_t_fft),      intent(in)    :: plan !< FFT planner object
     sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
     sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
     sll_int32, intent(in)                    :: k !< mode to be set
@@ -206,8 +206,8 @@ contains
 
 ! COMPLEX
   !> Create new 1d complex to complex plan
-  subroutine sll_s_fft_init_plan_c2c_1d(plan, nx,array_in,array_out,direction,normalized, aligned, optimization)
-    type(sll_t_fft_plan)                         :: plan !< FFT planner object 
+  subroutine sll_s_fft_init_c2c_1d(plan, nx,array_in,array_out,direction,normalized, aligned, optimization)
+    type(sll_t_fft)                         :: plan !< FFT planner object 
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_comp64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_comp64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
@@ -251,11 +251,11 @@ contains
     call dfftw_plan_dft_1d(plan%fftw,nx,array_in,array_out,direction,flag_fftw)
 #endif
 
-  end subroutine sll_s_fft_init_plan_c2c_1d
+  end subroutine sll_s_fft_init_c2c_1d
 
   !> Compute fast Fourier transform in complex to complex mode.
-  subroutine sll_s_fft_apply_plan_c2c_1d(plan,array_in,array_out)
-    type(sll_t_fft_plan),     intent(in)            :: plan !< FFT planner object
+  subroutine sll_s_fft_exec_c2c_1d(plan,array_in,array_out)
+    type(sll_t_fft),     intent(in)            :: plan !< FFT planner object
     sll_comp64, dimension(:), intent(inout)         :: array_in !< Complex data to be Fourier transformed
     sll_comp64, dimension(:), intent(inout)         :: array_out !< Fourier coefficients on output
 
@@ -275,7 +275,7 @@ contains
 ! COMPLEX 2D
   !> Create new 2d complex to complex plan
   !function sll_f_fft_new_plan_c2c_2d(nx,ny,array_in,array_out,direction,normalized, aligned, optimization) result(plan)
-  subroutine sll_s_fft_init_plan_c2c_2d(plan, nx, ny, array_in, array_out, direction, normalized, aligned, optimization)
+  subroutine sll_s_fft_init_c2c_2d(plan, nx, ny, array_in, array_out, direction, normalized, aligned, optimization)
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< (Typical) input array (gets overwritten for certain options)
@@ -284,7 +284,7 @@ contains
     logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
     sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
-    type(sll_t_fft_plan), intent(out)             :: plan !< initialized planner object
+    type(sll_t_fft), intent(out)             :: plan !< initialized planner object
  
     sll_int32                                     :: ierr
     sll_int32                                     :: flag_fftw
@@ -322,12 +322,12 @@ contains
     call dfftw_plan_dft_2d(plan%fftw,ny,nx,array_in,array_out,direction,flag_fftw)!FFTW_ESTIMATE + FFTW_UNALIGNED)
 #endif
 
-  end subroutine sll_s_fft_init_plan_c2c_2d
+  end subroutine sll_s_fft_init_c2c_2d
 
 
   !> Compute fast Fourier transform in complex to complex mode.
-  subroutine sll_s_fft_apply_plan_c2c_2d(plan,array_in,array_out)
-    type(sll_t_fft_plan),  intent(in)            :: plan !< FFT planner object
+  subroutine sll_s_fft_exec_c2c_2d(plan,array_in,array_out)
+    type(sll_t_fft),  intent(in)            :: plan !< FFT planner object
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< Complex data to be Fourier transformed 
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_out !< Fourier coefficients on output
 
@@ -345,8 +345,8 @@ contains
 
 ! REAL
   !> Create new 1d real to real plan
-  subroutine sll_s_fft_init_plan_r2r_1d(plan,nx,array_in,array_out,direction,normalized, aligned, optimization)
-    type(sll_t_fft_plan)                         :: plan !< FFT planner object
+  subroutine sll_s_fft_init_r2r_1d(plan,nx,array_in,array_out,direction,normalized, aligned, optimization)
+    type(sll_t_fft)                         :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
@@ -392,7 +392,7 @@ contains
 
       allocate(plan%scratch(nx/2+1))
       call dfftw_plan_dft_r2c_1d(plan%fftw,nx,array_in,plan%scratch,flag_fftw)
-      SLL_WARNING('sll_s_fft_init_plan_r2r_1d','R2HC not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
+      SLL_WARNING('sll_s_fft_init_r2r_1d','R2HC not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
 #endif
     else if(direction .eq. sll_p_fft_backward) then
 #ifdef FFTW_F2003
@@ -403,20 +403,19 @@ contains
 
       allocate(plan%scratch(nx/2+1))
       call dfftw_plan_dft_c2r_1d(plan%fftw,nx,plan%scratch,array_out,flag_fftw)
-      SLL_WARNING('sll_s_fft_init_plan_r2r_1d','HC2R not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
+      SLL_WARNING('sll_s_fft_init_r2r_1d','HC2R not supported without FFTW_F2003. Use implementation based on r2c/c2r transform.')
 #endif
     endif
-  end subroutine sll_s_fft_init_plan_r2r_1d
+  end subroutine sll_s_fft_init_r2r_1d
 
   !> Compute fast Fourier transform in real to real mode.
-  subroutine sll_s_fft_apply_plan_r2r_1d(plan,array_in,array_out)
+  subroutine sll_s_fft_exec_r2r_1d(plan,array_in,array_out)
 
-    type(sll_t_fft_plan),     intent(inout) :: plan !< FFT planner object
+    type(sll_t_fft),     intent(inout) :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
     sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
 
     sll_real64                              :: factor
-    sll_int32                               :: j
 
     
     SLL_ASSERT( plan%transform_type == p_fftw_r2r_1d )
@@ -432,7 +431,7 @@ contains
 #else
 
     if (plan%direction == sll_p_fft_forward) then
-       call sll_s_fft_apply_plan_r2c_1d(plan, array_in, plan%scratch)
+       call sll_s_fft_exec_r2c_1d(plan, array_in, plan%scratch)
        array_out(1) = real(plan%scratch(1), f64)
        array_out(plan%problem_shape(1)/2+1) =  real(plan%scratch((plan%problem_shape(1)/2+1)),f64)
        do j=1, plan%problem_shape(1)/2-1
@@ -442,7 +441,7 @@ contains
        do j=0, plan%problem_shape(1)/2
           plan%scratch(j+1) = sll_f_fft_get_mode_r2c_1d(plan, array_out, j)
        end do
-       call sll_s_fft_apply_plan_c2r_1d(plan, plan%scratch ,array_out)
+       call sll_s_fft_exec_c2r_1d(plan, plan%scratch ,array_out)
     end if
 
 #endif
@@ -452,9 +451,9 @@ contains
 
 ! R2C
   !> Create new 1d real to complex plan for forward FFT
-  !function sll_s_fft_init_plan_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
-  subroutine sll_s_fft_init_plan_r2c_1d(plan, nx,array_in,array_out, normalized, aligned, optimization)
-    type(sll_t_fft_plan), intent(out)            :: plan !< FFT planner object
+  !function sll_s_fft_init_r2c_1d(nx,array_in,array_out, normalized, aligned, optimization) result(plan)
+  subroutine sll_s_fft_init_r2c_1d(plan, nx,array_in,array_out, normalized, aligned, optimization)
+    type(sll_t_fft), intent(out)            :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
     sll_comp64, dimension(:), intent(out)        :: array_out !< (Typical) output array (gets overwritten for certain options)
@@ -495,11 +494,11 @@ contains
 #else
     call dfftw_plan_dft_r2c_1d(plan%fftw,nx,array_in,array_out,flag_fftw)
 #endif
-  end subroutine sll_s_fft_init_plan_r2c_1d
+  end subroutine sll_s_fft_init_r2c_1d
   
   !> Compute fast Fourier transform in real to complex mode.
-  subroutine sll_s_fft_apply_plan_r2c_1d(plan,array_in,array_out)
-    type(sll_t_fft_plan),     intent(in)            :: plan !< FFT planner object
+  subroutine sll_s_fft_exec_r2c_1d(plan,array_in,array_out)
+    type(sll_t_fft),     intent(in)            :: plan !< FFT planner object
     sll_real64, dimension(:), intent(inout)         :: array_in !< Real input data to be Fourier transformed
     sll_comp64, dimension(:), intent(out)           :: array_out !< Complex Fourier mode (only first half due to symmetry)
 
@@ -517,8 +516,8 @@ contains
 
   !> Create new 2d complex to real plan for forward FFT
   !function sll_f_fft_new_plan_r2c_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
-  subroutine sll_s_fft_init_plan_r2c_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
-    type(sll_t_fft_plan), intent(out)             :: plan !< FFT planner object
+  subroutine sll_s_fft_init_r2c_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
+    type(sll_t_fft), intent(out)             :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of points along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
     sll_real64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
@@ -562,11 +561,11 @@ contains
     call dfftw_plan_dft_r2c_2d(plan%fftw,nx,ny,array_in,array_out,FFTW_ESTIMATE)
 #endif
 
-  end subroutine sll_s_fft_init_plan_r2c_2d
+  end subroutine sll_s_fft_init_r2c_2d
 
   !> Compute fast Fourier transform in real to complex mode.
-  subroutine sll_s_fft_apply_plan_r2c_2d(plan,array_in,array_out)
-    type(sll_t_fft_plan),       intent(in)           :: plan      !< FFT planner object
+  subroutine sll_s_fft_exec_r2c_2d(plan,array_in,array_out)
+    type(sll_t_fft),       intent(in)           :: plan      !< FFT planner object
     sll_real64, dimension(:,:), intent(inout)         :: array_in  !< Real input data to be Fourier transformed
     sll_comp64, dimension(:,:), intent(out)           :: array_out !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
     sll_int32     :: nx, ny
@@ -603,8 +602,8 @@ contains
 
 ! C2R
   !> Create new 1d complex to real plan for backward FFT
-  subroutine sll_s_fft_init_plan_c2r_1d(plan,nx,array_in,array_out, normalized, aligned, optimization)
-    type(sll_t_fft_plan)                         :: plan !< FFT planner object
+  subroutine sll_s_fft_init_c2r_1d(plan,nx,array_in,array_out, normalized, aligned, optimization)
+    type(sll_t_fft)                         :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of points
     sll_comp64, dimension(:)                     :: array_in  !< (Typical) input array (gets overwritten for certain options)
     sll_real64, dimension(:)                     :: array_out !< (Typical) output array (gets overwritten for certain options)
@@ -646,12 +645,12 @@ contains
     call dfftw_plan_dft_c2r_1d(plan%fftw,nx,array_in,array_out,flag_fftw)
 #endif
 
-  end subroutine sll_s_fft_init_plan_c2r_1d
+  end subroutine sll_s_fft_init_c2r_1d
 
 
   !> Compute fast Fourier transform in complex to real mode.
-  subroutine sll_s_fft_apply_plan_c2r_1d(plan,array_in,array_out)
-    type(sll_t_fft_plan),         intent(in)    :: plan !< FFT planner objece
+  subroutine sll_s_fft_exec_c2r_1d(plan,array_in,array_out)
+    type(sll_t_fft),         intent(in)    :: plan !< FFT planner objece
     sll_comp64, dimension(:),    intent(inout) :: array_in !< Complex Fourier coefficient to be transformed back
     sll_real64, dimension(:),    intent(inout) :: array_out !< Real result of Fourier transform
 
@@ -670,8 +669,8 @@ contains
 
   !> Create new 2d real to complex plan for backward FFT
   !function sll_f_fft_new_plan_c2r_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
-  subroutine sll_s_fft_init_plan_c2r_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
-    type(sll_t_fft_plan), intent(out)            :: plan !< FFT planner object
+  subroutine sll_s_fft_init_c2r_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
+    type(sll_t_fft), intent(out)            :: plan !< FFT planner object
     sll_int32, intent(in)                        :: nx !< Number of point along first dimension
     sll_int32, intent(in)                        :: ny !< Number of points along second dimension
     sll_comp64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
@@ -713,11 +712,11 @@ contains
 #else
     call dfftw_plan_dft_c2r_2d(plan%fftw,nx,ny,array_in,array_out,FFTW_ESTIMATE)
 #endif
-  end subroutine sll_s_fft_init_plan_c2r_2d
+  end subroutine sll_s_fft_init_c2r_2d
   
   !> Compute fast Fourier transform in complex to real mode.
-  subroutine sll_s_fft_apply_plan_c2r_2d(plan,array_in,array_out)
-    type(sll_t_fft_plan),         intent(in)          :: plan      !< FFT planner object
+  subroutine sll_s_fft_exec_c2r_2d(plan,array_in,array_out)
+    type(sll_t_fft),         intent(in)          :: plan      !< FFT planner object
     sll_comp64, dimension(1:,1:), intent(inout)       :: array_in  !< Complex Fourier coefficient to be transformed back
     sll_real64, dimension(1:,1:), intent(out)         :: array_out !< Real output of Fourier transform
 
@@ -741,8 +740,8 @@ contains
 ! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
 
   !> Delete a plan
-  subroutine sll_s_fft_delete_plan(plan)
-   type(sll_t_fft_plan) :: plan !< FFT planner object
+  subroutine sll_s_fft_free(plan)
+   type(sll_t_fft) :: plan !< FFT planner object
 
    sll_int32 :: ierr
 

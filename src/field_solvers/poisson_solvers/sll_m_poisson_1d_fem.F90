@@ -30,12 +30,12 @@ module sll_m_poisson_1d_fem
     sll_o_mesh_area
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_c2r_1d, &
-    sll_s_fft_apply_plan_r2c_1d, &
-    sll_s_fft_delete_plan, &
-    sll_s_fft_init_plan_c2r_1d, &
-    sll_s_fft_init_plan_r2c_1d, &
-    sll_t_fft_plan
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_free, &
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_init_r2c_1d, &
+    sll_t_fft
 
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points_and_weights
@@ -85,8 +85,8 @@ module sll_m_poisson_1d_fem
         sll_real64, private :: seminorm
 
         !FFT Plans
-        type(sll_t_fft_plan), pointer, private :: forward_fftplan => null()
-        type(sll_t_fft_plan), pointer, private :: backward_fftplan => null()
+        type(sll_t_fft), pointer, private :: forward_fftplan => null()
+        type(sll_t_fft), pointer, private :: backward_fftplan => null()
         sll_int32,private ::num_cells
 
         sll_int32,private :: boundarycondition
@@ -164,9 +164,9 @@ contains
         SLL_DEALLOCATE_ARRAY(this%fem_solution,ierr)
         SLL_DEALLOCATE_ARRAY(this%mass_matrix_first_line_fourier,ierr)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier,ierr)
-        call sll_s_fft_delete_plan(this%backward_fftplan)
+        call sll_s_fft_free(this%backward_fftplan)
         deallocate(this%backward_fftplan)
-        call sll_s_fft_delete_plan(this%forward_fftplan)
+        call sll_s_fft_free(this%forward_fftplan)
         deallocate(this%forward_fftplan)
     endsubroutine
 
@@ -219,10 +219,10 @@ contains
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
         allocate(this%forward_fftplan)
-        call sll_s_fft_init_plan_r2c_1d(this%forward_fftplan, this%num_cells, &
+        call sll_s_fft_init_r2c_1d(this%forward_fftplan, this%num_cells, &
              this%fem_solution,this%stiffn_matrix_first_line_fourier)
         allocate(this%backward_fftplan)
-        call sll_s_fft_init_plan_c2r_1d(this%backward_fftplan, &
+        call sll_s_fft_init_c2r_1d(this%backward_fftplan, &
              this%num_cells, &
              this%stiffn_matrix_first_line_fourier,this%fem_solution)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier, ierr)
@@ -373,7 +373,7 @@ contains
         !        SLL_CLEAR_ALLOCATE(circulant_matrix_first_line_fourier(1:N/2+1), ierr)
 
         !Fourier transform the circulant seed
-        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
+        call sll_s_fft_exec_r2c_1d(this%forward_fftplan,circulantvector,circulant_matrix_first_line_fourier)
 
         !circulant_matrix_first_line_fourier(1)=1.0_f64
         !        sll_real64:: matrix_condition
@@ -641,13 +641,13 @@ contains
         constant_factor=0._f64
         constant_factor=rightside
 
-        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,constant_factor,constant_factor_fourier)
+        call sll_s_fft_exec_r2c_1d(this%forward_fftplan,constant_factor,constant_factor_fourier)
         !constant_factor_fourier(1)=0
         data_complex=constant_factor_fourier/(matrix_fl_fourier)
         data_complex(1)=(0._f64,0._f64)
         SLL_DEALLOCATE_ARRAY(constant_factor_fourier,ierr)
 
-        call sll_s_fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
+        call sll_s_fft_exec_c2r_1d(this%backward_fftplan,data_complex,solution)
         SLL_DEALLOCATE_ARRAY(data_complex,ierr)
         !Somehow the normalization does not do what it should do:
         solution=solution/N
@@ -775,8 +775,8 @@ contains
         !so for the complex data there will be only allocated space for N/2 +1 values
         sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
 
-        !!type(sll_t_fft_plan), pointer :: forward_fftplan => null()
-        !!type(sll_t_fft_plan), pointer :: backward_fftplan => null()
+        !!type(sll_t_fft), pointer :: forward_fftplan => null()
+        !!type(sll_t_fft), pointer :: backward_fftplan => null()
         rhs=this%fem_solution
 
         !Determine dimension of problem
@@ -784,10 +784,10 @@ contains
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 
-        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,rhs,data_complex)
+        call sll_s_fft_exec_r2c_1d(this%forward_fftplan,rhs,data_complex)
         data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
         data_complex(1)=(0._f64,0._f64)
-        call sll_s_fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,rhs)
+        call sll_s_fft_exec_c2r_1d(this%backward_fftplan,data_complex,rhs)
 
         !!!
         !Somehow the normalization does not do what it should do:
@@ -910,10 +910,10 @@ contains
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(sll_f_is_power_of_two(int(N,i64)))
 
-        call sll_s_fft_apply_plan_r2c_1d(this%forward_fftplan,solution,data_complex)
+        call sll_s_fft_exec_r2c_1d(this%forward_fftplan,solution,data_complex)
         data_complex=data_complex*(this%mass_matrix_first_line_fourier)
         data_complex(1)=(0._f64,0._f64)
-        call sll_s_fft_apply_plan_c2r_1d(this%backward_fftplan,data_complex,solution)
+        call sll_s_fft_exec_c2r_1d(this%backward_fftplan,data_complex,solution)
         solution=solution/(N)
         l2norm=dot_product(this%fem_solution, solution )
     endfunction

@@ -38,12 +38,12 @@ module sll_m_advection_1d_spectral
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_s_fft_init_plan_c2r_1d, &
-    sll_s_fft_init_plan_r2c_1d, &
-    sll_s_fft_apply_plan_c2r_1d, &
-    sll_s_fft_apply_plan_r2c_1d, &
-    sll_s_fft_delete_plan, &
-    sll_t_fft_plan
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_init_r2c_1d, &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_free, &
+    sll_t_fft
 
   implicit none
 
@@ -63,8 +63,8 @@ type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
   sll_real64, dimension(:), pointer :: d_dx
   sll_real64, dimension(:), pointer :: kx
 
-  type(sll_t_fft_plan),     pointer :: fwx
-  type(sll_t_fft_plan),     pointer :: bwx
+  type(sll_t_fft),     pointer :: fwx
+  type(sll_t_fft),     pointer :: bwx
   sll_comp64, dimension(:), pointer :: fk
 
 contains
@@ -119,9 +119,9 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
   adv%fk(1:num_cells/2+1) = cmplx(0.0,0.0,kind=f64)
   !$OMP CRITICAL
   allocate(adv%fwx) 
-  call sll_s_fft_init_plan_r2c_1d(adv%fwx, num_cells, adv%d_dx,  adv%fk)
+  call sll_s_fft_init_r2c_1d(adv%fwx, num_cells, adv%d_dx,  adv%fk)
   allocate(adv%bwx)
-  call sll_s_fft_init_plan_c2r_1d(adv%bwx, num_cells, adv%fk, adv%d_dx)
+  call sll_s_fft_init_c2r_1d(adv%bwx, num_cells, adv%fk, adv%d_dx)
   !$OMP END CRITICAL
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:num_cells/2+1), error)
@@ -167,7 +167,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   num_cells = adv%num_cells
 
   adv%d_dx = input(1:num_cells)
-  call sll_s_fft_apply_plan_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
+  call sll_s_fft_exec_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
 
   !f = f^n exp(-i kx vx dt)
   do i = 2, num_cells/2+1
@@ -175,7 +175,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
                                -sin(adv%kx(i)*a*dt),kind=f64)
   end do
 
-  call sll_s_fft_apply_plan_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
+  call sll_s_fft_exec_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 
   output(1:num_cells)= adv%d_dx / num_cells
 
@@ -187,9 +187,9 @@ subroutine delete(adv)
 
   class(spectral_1d_advector), intent(inout) :: adv
 
-  call sll_s_fft_delete_plan(adv%fwx)
+  call sll_s_fft_free(adv%fwx)
   deallocate(adv%fwx)
-  call sll_s_fft_delete_plan(adv%bwx)
+  call sll_s_fft_free(adv%bwx)
   deallocate(adv%bwx)
 
 end subroutine delete

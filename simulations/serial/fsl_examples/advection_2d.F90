@@ -23,12 +23,12 @@ program test_deposit_cubic_splines
     sll_t_cubic_spline_2d
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_c2r_1d, &
-    sll_s_fft_apply_plan_r2c_1d, &
-    sll_s_fft_delete_plan, &
-    sll_s_fft_init_plan_c2r_1d, &
-    sll_s_fft_init_plan_r2c_1d, &
-    sll_t_fft_plan
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_free, &
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_init_r2c_1d, &
+    sll_t_fft
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -57,8 +57,8 @@ character(len=3)  :: mesh_name, field_name, time_name
 sll_int32                         :: nc_eta1, nc_eta2
 sll_real64, dimension(:), pointer :: d_dx1, d_dx2
 sll_real64, dimension(:), pointer :: kx1, kx2
-type(sll_t_fft_plan),       pointer :: fwx1, fwx2
-type(sll_t_fft_plan),       pointer :: bwx1, bwx2
+type(sll_t_fft),       pointer :: fwx1, fwx2
+type(sll_t_fft),       pointer :: bwx1, bwx2
 sll_comp64, dimension(:), pointer :: fk1, fk2
 
 sll_int32     :: error
@@ -89,13 +89,13 @@ SLL_ALLOCATE(fk2(1:nc_eta2/2+1), error)
 fk2 = cmplx(0.0,0.0, kind=f64)
 
 allocate(fwx1)
-call sll_s_fft_init_plan_r2c_1d(fwx1, nc_eta1, d_dx1, fk1)
+call sll_s_fft_init_r2c_1d(fwx1, nc_eta1, d_dx1, fk1)
 allocate(bwx1)
-call sll_s_fft_init_plan_c2r_1d(bwx1, nc_eta1,   fk1, d_dx1)
+call sll_s_fft_init_c2r_1d(bwx1, nc_eta1,   fk1, d_dx1)
 allocate(fwx2)
-call sll_s_fft_init_plan_r2c_1d(fwx2, nc_eta2, d_dx2, fk2)
+call sll_s_fft_init_r2c_1d(fwx2, nc_eta2, d_dx2, fk2)
 allocate(bwx2)
-call sll_s_fft_init_plan_c2r_1d(bwx2, nc_eta2,   fk2, d_dx2)
+call sll_s_fft_init_c2r_1d(bwx2, nc_eta2,   fk2, d_dx2)
 
 SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
 SLL_CLEAR_ALLOCATE(kx2(1:nc_eta2/2+1), error)
@@ -324,11 +324,11 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   do j = 1, nc_eta2+1
 
     d_dx1 = fh_spe(1:nc_eta1,j)
-    call sll_s_fft_apply_plan_r2c_1d(fwx1, d_dx1, fk1)
+    call sll_s_fft_exec_r2c_1d(fwx1, d_dx1, fk1)
     do i = 2, nc_eta1/2+1
       fk1(i) = fk1(i)*cmplx(cos(kx1(i)*0.01*a1*dt),sin(kx1(i)*0.01*a1*dt),kind=f64)
     end do
-    call sll_s_fft_apply_plan_c2r_1d(bwx1, fk1, d_dx1)
+    call sll_s_fft_exec_c2r_1d(bwx1, fk1, d_dx1)
   
     fh_spe(1:nc_eta1,j) = d_dx1 / nc_eta1
 
@@ -339,11 +339,11 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   do i = 1, nc_eta1+1
 
     d_dx2 = fh_spe(i,1:nc_eta2)
-    call sll_s_fft_apply_plan_r2c_1d(fwx2, d_dx2, fk2)
+    call sll_s_fft_exec_r2c_1d(fwx2, d_dx2, fk2)
     do j = 2, nc_eta2/2+1
       fk2(j) = fk2(j)*cmplx(cos(kx2(j)*0.01*a2*dt),sin(kx2(j)*0.01*a2*dt),kind=f64)
     end do
-    call sll_s_fft_apply_plan_c2r_1d(bwx2, fk2, d_dx2)
+    call sll_s_fft_exec_c2r_1d(bwx2, fk2, d_dx2)
   
     fh_spe(i,1:nc_eta2) = d_dx2 / nc_eta2
 
@@ -401,13 +401,13 @@ do i=1,Neta1+1
 enddo
 close(850)
 
-call sll_s_fft_delete_plan(fwx1)
+call sll_s_fft_free(fwx1)
 deallocate(fwx1)
-call sll_s_fft_delete_plan(bwx1)
+call sll_s_fft_free(bwx1)
 deallocate(bwx1)
-call sll_s_fft_delete_plan(fwx2)
+call sll_s_fft_free(fwx2)
 deallocate(fwx2)
-call sll_s_fft_delete_plan(bwx2)
+call sll_s_fft_free(bwx2)
 deallocate(bwx2)  
 
 contains

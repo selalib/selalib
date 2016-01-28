@@ -30,7 +30,7 @@ program test_fft_timing
 
   implicit none
 
-  type(sll_t_fft_plan) :: p
+  type(sll_t_fft) :: p
 
   sll_int32, parameter :: n = 16
 
@@ -58,18 +58,18 @@ program test_fft_timing
   end do
   
 
-  call sll_s_fft_init_plan_c2c_1d(p, n, data_in, data_out, &
+  call sll_s_fft_init_c2c_1d(p, n, data_in, data_out, &
        sll_p_fft_forward)
-  call sll_s_fft_apply_plan_c2c_1d(p, data_in, data_out)
+  call sll_s_fft_exec_c2c_1d(p, data_in, data_out)
   call sll_s_set_time_mark(t0)
   do j=1,10000000
-     call sll_s_fft_apply_plan_c2c_1d(p, data_in, data_out)
+     call sll_s_fft_exec_c2c_1d(p, data_in, data_out)
      
      !print*, 'a'
   end do
   
   time = sll_f_time_elapsed_since(t0)
-  call sll_s_fft_delete_plan(p)
+  call sll_s_fft_free(p)
  ! print*, 'Computing time for fft c2c functions', time
   print*, time
   
