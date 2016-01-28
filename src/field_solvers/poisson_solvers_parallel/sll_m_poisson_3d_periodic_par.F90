@@ -18,12 +18,12 @@ module sll_m_poisson_3d_periodic_par
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_c2c_1d, &
+    sll_s_fft_exec_c2c_1d, &
     sll_p_fft_backward, &
-    sll_s_fft_delete_plan, &
+    sll_s_fft_free, &
     sll_p_fft_forward, &
-    sll_s_fft_init_plan_c2c_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_c2c_1d, &
+    sll_t_fft
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_3d, &
@@ -63,12 +63,12 @@ module sll_m_poisson_3d_periodic_par
      sll_real64                            :: Lx        !< x domain length
      sll_real64                            :: Ly        !< y domain length
      sll_real64                            :: Lz        !< z domain length
-     type(sll_t_fft_plan)           :: px        !< fft plan in x
-     type(sll_t_fft_plan)           :: py        !< fft plan in y
-     type(sll_t_fft_plan)           :: pz        !< fft plan in z
-     type(sll_t_fft_plan)           :: px_inv    !< inverse fft in x
-     type(sll_t_fft_plan)           :: py_inv    !< inverse fft in y
-     type(sll_t_fft_plan)           :: pz_inv    !< inverse fft in z
+     type(sll_t_fft)           :: px        !< fft plan in x
+     type(sll_t_fft)           :: py        !< fft plan in y
+     type(sll_t_fft)           :: pz        !< fft plan in z
+     type(sll_t_fft)           :: px_inv    !< inverse fft in x
+     type(sll_t_fft)           :: py_inv    !< inverse fft in y
+     type(sll_t_fft)           :: pz_inv    !< inverse fft in z
      type(sll_t_layout_3d),  pointer             :: layout_x  !< x layout for remap
      type(sll_t_layout_3d),  pointer             :: layout_y  !< y layout for remap
      type(sll_t_layout_3d),  pointer             :: layout_z  !< z layout for remap
@@ -143,14 +143,14 @@ contains
     plan%Lz  = Lz
 
     ! For FFTs (in each direction)
-    call sll_s_fft_init_plan_c2c_1d( plan%px, ncx, x, x, sll_p_fft_forward )
-    call sll_s_fft_init_plan_c2c_1d( plan%py, ncy, y, y, sll_p_fft_forward )
-    call sll_s_fft_init_plan_c2c_1d( plan%pz, ncz, z, z, sll_p_fft_forward )
+    call sll_s_fft_init_c2c_1d( plan%px, ncx, x, x, sll_p_fft_forward )
+    call sll_s_fft_init_c2c_1d( plan%py, ncy, y, y, sll_p_fft_forward )
+    call sll_s_fft_init_c2c_1d( plan%pz, ncz, z, z, sll_p_fft_forward )
 
     ! For inverse FFTs (in each direction)
-    call sll_s_fft_init_plan_c2c_1d( plan%px_inv, ncx, x, x, sll_p_fft_backward )
-    call sll_s_fft_init_plan_c2c_1d( plan%py_inv, ncy, y, y, sll_p_fft_backward )
-    call sll_s_fft_init_plan_c2c_1d( plan%pz_inv, ncz, z, z, sll_p_fft_backward )
+    call sll_s_fft_init_c2c_1d( plan%px_inv, ncx, x, x, sll_p_fft_backward )
+    call sll_s_fft_init_c2c_1d( plan%py_inv, ncy, y, y, sll_p_fft_backward )
+    call sll_s_fft_init_c2c_1d( plan%pz_inv, ncz, z, z, sll_p_fft_backward )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
@@ -253,7 +253,7 @@ contains
     plan%array_x = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
-          call sll_s_fft_apply_plan_c2c_1d(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
+          call sll_s_fft_exec_c2c_1d(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
        enddo
     enddo
 
@@ -264,7 +264,7 @@ contains
     call sll_o_apply_remap_3d( plan%rmp3_xy, plan%array_x, plan%array_y ) 
     do k=1,nz_loc
        do i=1,nx_loc
-          call sll_s_fft_apply_plan_c2c_1d(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
+          call sll_s_fft_exec_c2c_1d(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
        enddo
     enddo
 
@@ -275,7 +275,7 @@ contains
     call sll_o_apply_remap_3d( plan%rmp3_yz, plan%array_y, plan%array_z ) 
     do j=1,ny_loc
        do i=1,nx_loc
-          call sll_s_fft_apply_plan_c2c_1d(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
+          call sll_s_fft_exec_c2c_1d(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
        enddo
     enddo
 
@@ -327,7 +327,7 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny_loc
        do i=1,nx_loc
-          call sll_s_fft_apply_plan_c2c_1d( &
+          call sll_s_fft_exec_c2c_1d( &
                plan%pz_inv, &
                plan%array_z(i,j,:), &
                plan%array_z(i,j,:))
@@ -341,7 +341,7 @@ contains
     call sll_o_apply_remap_3d( plan%rmp3_zy, plan%array_z, plan%array_y )
     do k=1,nz_loc
        do i=1,nx_loc
-          call sll_s_fft_apply_plan_c2c_1d( &
+          call sll_s_fft_exec_c2c_1d( &
                plan%py_inv, &
                plan%array_y(i,:,k), &
                plan%array_y(i,:,k) )
@@ -355,7 +355,7 @@ contains
     call sll_o_apply_remap_3d( plan%rmp3_yx, plan%array_y, plan%array_x ) 
     do k=1,nz_loc
        do j=1,ny_loc
-          call sll_s_fft_apply_plan_c2c_1d( &
+          call sll_s_fft_exec_c2c_1d( &
                plan%px_inv, &
                plan%array_x(:,j,k), &
                plan%array_x(:,j,k) )
@@ -373,13 +373,13 @@ contains
     sll_int32                                    :: ierr
 
 
-    call sll_s_fft_delete_plan(plan%px)
-    call sll_s_fft_delete_plan(plan%py)
-    call sll_s_fft_delete_plan(plan%pz)
+    call sll_s_fft_free(plan%px)
+    call sll_s_fft_free(plan%py)
+    call sll_s_fft_free(plan%pz)
 
-    call sll_s_fft_delete_plan(plan%px_inv)
-    call sll_s_fft_delete_plan(plan%py_inv)
-    call sll_s_fft_delete_plan(plan%pz_inv)
+    call sll_s_fft_free(plan%px_inv)
+    call sll_s_fft_free(plan%py_inv)
+    call sll_s_fft_free(plan%pz_inv)
 
     call sll_o_delete( plan%layout_x )
     call sll_o_delete( plan%layout_y )

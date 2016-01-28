@@ -103,14 +103,14 @@ use sll_m_boundary_condition_descriptors, only: &
   sll_p_neumann_mode_0
 
 use sll_m_fft, only: &
-  sll_s_fft_apply_plan_r2r_1d, &
+  sll_s_fft_exec_r2r_1d, &
   sll_p_fft_backward, &
-  sll_s_fft_delete_plan, &
+  sll_s_fft_free, &
   sll_p_fft_forward, &
   sll_f_fft_get_mode_r2c_1d, &
-  sll_s_fft_init_plan_r2r_1d, &
+  sll_s_fft_init_r2r_1d, &
   sll_s_fft_set_mode_c2r_1d, &
-  sll_t_fft_plan
+  sll_t_fft
 
 use sll_m_tridiagonal, only: &
   sll_s_setup_cyclic_tridiag, &
@@ -144,8 +144,8 @@ type :: sll_t_plan_poisson_polar
   sll_int32                           :: nr     !< number of points in r
   sll_int32                           :: ntheta !< number of points in theta
   sll_int32                           :: bc(2)  !< boundary conditon type
-  type(sll_t_fft_plan)                :: pfwd   !< fft plan in theta
-  type(sll_t_fft_plan)                :: pinv   !< inverse fft plan in theta
+  type(sll_t_fft)                :: pfwd   !< fft plan in theta
+  type(sll_t_fft)                :: pinv   !< inverse fft plan in theta
   sll_real64, dimension(:,:), pointer :: f_fft  !< potential fft in theta
   sll_comp64, dimension(:),   pointer :: fk     !< \f$ f_k \f$
   sll_comp64, dimension(:),   pointer :: phik   !< \f$ phi_k \f$
@@ -260,9 +260,9 @@ function sll_f_new_plan_poisson_polar(dr,rmin,nr,ntheta,bc, &
     this%bc(2)=-1
   end if
 
-  call sll_s_fft_init_plan_r2r_1d(&
+  call sll_s_fft_init_r2r_1d(&
        this%pfwd, ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
-  call sll_s_fft_init_plan_r2r_1d( &
+  call sll_s_fft_init_r2r_1d( &
        this%pinv, ntheta,buf,buf,sll_p_fft_backward)
   
   SLL_DEALLOCATE_ARRAY(buf,err)
@@ -329,9 +329,9 @@ subroutine initialize_poisson_polar(this,         &
   end if
 
   SLL_ALLOCATE(buf(ntheta),error)
-  call  sll_s_fft_init_plan_r2r_1d(this%pfwd, ntheta, &
+  call  sll_s_fft_init_r2r_1d(this%pfwd, ntheta, &
    buf,buf,sll_p_fft_forward,normalized = .TRUE.)
-  call sll_s_fft_init_plan_r2r_1d(this%pinv, ntheta,buf,buf,sll_p_fft_backward)
+  call sll_s_fft_init_r2r_1d(this%pinv, ntheta,buf,buf,sll_p_fft_backward)
   SLL_DEALLOCATE_ARRAY(buf,error)
 
 end subroutine initialize_poisson_polar
@@ -347,8 +347,8 @@ subroutine delete_plan_poisson_polar(this)
   sll_int32 :: err
 
   if (associated(this)) then
-     call sll_s_fft_delete_plan(this%pfwd)
-     call sll_s_fft_delete_plan(this%pinv)
+     call sll_s_fft_free(this%pfwd)
+     call sll_s_fft_free(this%pinv)
      SLL_DEALLOCATE_ARRAY(this%f_fft,err)
      SLL_DEALLOCATE_ARRAY(this%fk,err)
      SLL_DEALLOCATE_ARRAY(this%phik,err)
@@ -395,7 +395,7 @@ subroutine sll_s_solve_poisson_polar(plan,f,phi)
   plan%f_fft = f
 
   do i=1,nr+1
-    call sll_s_fft_apply_plan_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta), &
+    call sll_s_fft_exec_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta), &
       plan%f_fft(i,1:ntheta))
   end do
 
@@ -511,7 +511,7 @@ subroutine sll_s_solve_poisson_polar(plan,f,phi)
   endif
   ! FFT INVERSE
   do i=1,nr+1
-    call sll_s_fft_apply_plan_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+    call sll_s_fft_exec_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
   end do
 
   phi(:,ntheta+1)=phi(:,1)
@@ -551,7 +551,7 @@ subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
   plan%f_fft = f
 
   do i=1,nr+1
-    call sll_s_fft_apply_plan_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta), &
+    call sll_s_fft_exec_r2r_1d(plan%pfwd,plan%f_fft(i,1:ntheta), &
      plan%f_fft(i,1:ntheta))
   end do
 
@@ -674,7 +674,7 @@ subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
 
   ! FFT INVERSE
   do i=1,nr+1
-    call sll_s_fft_apply_plan_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+    call sll_s_fft_exec_r2r_1d(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
   end do
 
   phi(:,ntheta+1)=phi(:,1)
