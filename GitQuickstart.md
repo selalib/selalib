@@ -83,7 +83,7 @@ To offer the new algorithm to the group. Push your branch on the server:
 ~~~
  git push origin your-branch
 ~~~
-And (file a merge request)[https://gitlab.mpcdf.mpg.de/clapp/selalib/merge_requests].
+And [file a merge request](https://gitlab.mpcdf.mpg.de/clapp/selalib/merge_requests).
 
 If you want to change of computer, you can get your branch with:
 ~~~
@@ -99,6 +99,6 @@ git push origin --delete your-branch
 
 You can also remove the local branch by switching to another branch and delete it:
 ~~~
-git checkout master
+git checkout develop
 git branch -D your-branch
 ~~~
