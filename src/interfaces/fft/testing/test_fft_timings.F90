@@ -21,6 +21,10 @@
 ! Type:  0.8065 / 0.8254 / 0.8456
 ! Class: 0.8863 / 0.9098 / 0.9353
 
+! Finally the comparison of FFTW and SLLFFT (gfortran on notebook):
+! FFTW: 0.68 s
+! SLLFFT: 2.41 s
+
 program test_fft_timing
 #include "sll_working_precision.h"
 
