@@ -1251,7 +1251,7 @@ contains
       !------------------------------------------------------------------------
 
       ! TODO: time should be incremented, but roundoff could be an issue
-      sim%time = iter*dt
+      sim%time = real(iter,f64)*dt
 
       !------------------------------------------------------------------------
       ! Write "heavy" diagnostics
@@ -1643,7 +1643,7 @@ contains
       delta2)
 
     if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
-      write(file_id,'(f12.5,2g20.12)') real(step,f64)*sim%dt, nrj
+      write(file_id,'(2g20.12)') real(step,f64)*sim%dt, nrj
       if (step==0) then
         ierr = 1
         call sll_o_gnuplot_1d(sim%phi3d_parx3(:,1,1),'phi_0',ierr)
