@@ -79,25 +79,34 @@ contains
 !> To plot particles run : gnuplot -persitant plot_name.gnu
 subroutine xv_particles_center_gnuplot( plot_name, &
            x, v, xmin, xmax, vmin, vmax, iplot, time )
-character(len=*), intent(in) :: plot_name
-sll_real64, dimension(:), intent(in) :: x, v
-sll_int32 :: iplot, error
-sll_real64 :: time, xmin, xmax, vmin, vmax
+
+character(len=*),         intent(in) :: plot_name
+sll_real64, dimension(:), intent(in) :: x
+sll_real64, dimension(:), intent(in) :: v
+sll_real64              , intent(in) :: xmin
+sll_real64              , intent(in) :: xmax
+sll_real64              , intent(in) :: vmin
+sll_real64              , intent(in) :: vmax
+sll_int32,                intent(in) :: iplot
+sll_real64              , optional   :: time
+
+sll_int32        :: error
 character(len=4) :: fin
-sll_int32 :: file_id
-sll_int32 :: nbpart
-sll_int32 :: k
+sll_int32        :: file_id
+sll_int32        :: nbpart
+sll_int32        :: k
 
 call sll_s_int2string(iplot, fin)
 
-call sll_s_new_file_id(file_id, error)
-open( file_id, file = plot_name//'.gnu', position="append" )
+open( newunit=file_id, file = plot_name//'.gnu', position="append" )
 if ( iplot <= 1 ) then
    rewind(file_id)
    write(file_id,"('set xr[',g15.3,':',g15.3,']')") xmin, xmax
    write(file_id,"('set yr[',g15.3,':',g15.3,']')") vmin, vmax
 end if
-write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+if ( present(time)) then
+  write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+end if
 write(file_id,"(a)")"plot '"//plot_name//"_"//fin//".dat' w d "
 close(file_id)
 
@@ -128,15 +137,9 @@ weight = 1._f64!/(delta_x*delta_v)   ! needs improvement
 
 df = 0.0_f64
 do k=1,size(x)
-   do i=1,nx
-      if (xmin+(i-1)*delta_x <= x(k) .and. x(k) < xmin+i*delta_x) then
-         do j=1,nv
-            if (vmin+(j-1)*delta_v <= v(k) .and. v(k) < vmin+j*delta_v) then
-               df(i,j) = df(i,j) + weight
-            endif
-         enddo
-      end if
-   enddo
+  i = floor((x(k)-xmin)/delta_x)+1
+  j = floor((v(k)-vmin)/delta_v)+1
+  df(i,j) = df(i,j) + weight
 enddo
 
 end subroutine compute_df
