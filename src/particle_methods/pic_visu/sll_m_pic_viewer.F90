@@ -64,20 +64,29 @@ use sll_m_pic_visu, only: &
 
 implicit none
 
-type :: sll_t_pic_viewer_2d
+public sll_f_new_pic_viewer_2d, &
+       sll_s_pic_viewer_set_format, &
+       sll_o_pic_viewer_write
+
+private
+
+type, public :: sll_t_pic_viewer_2d
 
   type(sll_t_cartesian_mesh_2d), pointer :: mesh
   sll_int32                              :: output_format
   character(len=:), allocatable          :: label
 
-  contains
-  
-  procedure :: set_format
-  procedure :: write_field
-  procedure :: write_particles
-  !procedure :: write_field_and_particles
-
 end type
+
+interface sll_o_pic_viewer_write
+
+  module procedure write_2d_field
+  module procedure write_2d_particles
+  module procedure write_2d_field_and_particles
+
+end interface sll_o_pic_viewer_write
+
+
 
 contains
 
@@ -111,18 +120,18 @@ contains
 
   end subroutine initialize_pic_viewer_2d
 
-  subroutine set_format( viewer, output_format )
+  subroutine sll_s_pic_viewer_set_format( viewer, output_format )
 
-    class(sll_t_pic_viewer_2d) :: viewer
+    type(sll_t_pic_viewer_2d) :: viewer
     sll_int32                  :: output_format
 
     viewer%output_format = output_format
 
-  end subroutine set_format
+  end subroutine sll_s_pic_viewer_set_format
 
-  subroutine write_field( viewer, field, iplot )
+  subroutine write_2d_field( viewer, field, iplot )
 
-    class(sll_t_pic_viewer_2d)            :: viewer
+    type(sll_t_pic_viewer_2d)            :: viewer
     sll_real64,                intent(in) :: field(:,:)
     sll_int32,                 intent(in) :: iplot
 
@@ -130,31 +139,74 @@ contains
     sll_real64                            :: ymin
     sll_real64                            :: xmax
     sll_real64                            :: ymax
+    sll_real64                            :: dx
+    sll_real64                            :: dy
     sll_int32                             :: nx
     sll_int32                             :: ny
     sll_int32                             :: error
+    sll_int32                             :: file_id
+
+#ifndef NOHDF5
+    integer(hid_t) :: hfile_id  
+#endif
 
     xmin = viewer%mesh%eta1_min
     xmax = viewer%mesh%eta1_max
     ymin = viewer%mesh%eta2_min
     ymax = viewer%mesh%eta2_max
+    dx   = viewer%mesh%delta_eta1
+    dy   = viewer%mesh%delta_eta2
 
     nx = viewer%mesh%num_cells1
     ny = viewer%mesh%num_cells2
 
-    if (viewer%output_format == SLL_P_IO_GNUPLOT) then
+    select case (viewer%output_format)
+
+    case(SLL_P_IO_GNUPLOT)
  
       call sll_o_gnuplot_2d(xmin, xmax, nx,  &
                             ymin, ymax, ny,  &
                             field, viewer%label, &
                             iplot, error)
-    end if
 
-  end subroutine write_field
+    case(SLL_P_IO_XDMF)
 
-  subroutine write_particles( viewer, xp, yp, iplot, time )
+      open(newunit = file_id, &
+           file    = viewer%label//".xmf" )
+      write(file_id,"(a)")"<?xml version=""1.0"" ?> <!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
+      write(file_id,"(a)")"<Xdmf xmlns:xi=""http://www.w3.org/2003/XInclude"" Version=""2.2"">"
+      write(file_id,"(a)")"<Domain>"
+      write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+      write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='",ny,nx,"'/>"
+      write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"
+      write(file_id,"(a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+      write(file_id,"(2f10.5)") xmin, ymin
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+      write(file_id,"(2f10.5)") dx, dy
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"</Geometry>"
+      write(file_id,"(a)")"<Attribute Name='field' AttributeType='Scalar' Center='Node'>"
+      write(file_id,"(a,2i6,a)")"<DataItem Dimensions='", ny, nx,"' Format='HDF'>"
+      write(file_id,"(a)")viewer%label//".h5:/field"
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"</Attribute>"
+      write(file_id,"(a)")"</Grid>"
+      write(file_id,"(a)")"</Domain>"
+      write(file_id,"(a)")"</Xdmf>"
+      close(file_id)
 
-    class(sll_t_pic_viewer_2d)            :: viewer
+      call sll_o_hdf5_file_create(viewer%label//".h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,field,"/field",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+
+    end select
+
+  end subroutine write_2d_field
+
+  subroutine write_2d_particles( viewer, xp, yp, iplot, time )
+
+    type(sll_t_pic_viewer_2d)            :: viewer
     sll_real64,                intent(in) :: xp(:)
     sll_real64,                intent(in) :: yp(:)
     sll_int32,                 intent(in) :: iplot
@@ -164,24 +216,59 @@ contains
     sll_real64                            :: ymin
     sll_real64                            :: xmax
     sll_real64                            :: ymax
+    sll_int32                             :: error
+    sll_int32                             :: file_id
+
+#ifndef NOHDF5
+    integer(hid_t) :: hfile_id  
+#endif
 
     xmin = viewer%mesh%eta1_min
     xmax = viewer%mesh%eta1_max
     ymin = viewer%mesh%eta2_min
     ymax = viewer%mesh%eta2_max
 
-    if (viewer%output_format == SLL_P_IO_GNUPLOT) then
+    select case (viewer%output_format)
+
+    case(SLL_P_IO_GNUPLOT)
  
       call sll_o_particles_center_gnuplot( viewer%label, &
            xp, yp, xmin, xmax, ymin, ymax, iplot, time )
 
-    end if
+    case(SLL_P_IO_XDMF)
 
-  end subroutine write_particles
+      open(newunit = file_id, &
+           file    = viewer%label//".xmf" )
+      write(file_id,"(a)")"<?xml version=""1.0"" ?> <!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
+      write(file_id,"(a)")"<Xdmf xmlns:xi=""http://www.w3.org/2003/XInclude"" Version=""2.2"">"
+      write(file_id,"(a)")"<Domain>"
+      write(file_id,"(a)")"<Grid Name=""Particles"" Type=""Uniform"">"
+      write(file_id,"(a,i6,a)")"<Topology TopologyType=""Polyvertex"" NumberOfElements=""",size(xp),"""/>"
+      write(file_id,"(a)")"<Geometry Type=""X_Y"">"
+      write(file_id,"(a,i6,a)")"<DataItem Format=""HDF"" Dimensions=""",size(xp),""">"
+      write(file_id,"(a)")viewer%label//".h5:/xp"
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a,i6,a)")"<DataItem Format=""HDF"" Dimensions=""",size(yp),""">"
+      write(file_id,"(a)")viewer%label//".h5:/yp"
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"</Geometry>"
+      write(file_id,"(a)")"</Grid>"
+      write(file_id,"(a)")"</Domain>"
+      write(file_id,"(a)")"</Xdmf>"
+      close(file_id)
 
-  subroutine write_particles_and_field( viewer, xp, yp, op, fp, iplot, time )
+      call sll_o_hdf5_file_create(viewer%label//".h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,xp,"/xp",error)
+      call sll_o_hdf5_write_array(hfile_id,yp,"/yp",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
 
-    class(sll_t_pic_viewer_2d)            :: viewer
+    end select
+
+  end subroutine write_2d_particles
+
+  subroutine write_2d_field_and_particles( viewer, xp, yp, op, fp, iplot, time )
+
+    type(sll_t_pic_viewer_2d)            :: viewer
     sll_real64,                intent(in) :: xp(:)
     sll_real64,                intent(in) :: yp(:)
     sll_real64,                intent(in) :: op(:)
@@ -203,7 +290,6 @@ contains
 #ifndef NOHDF5
     integer(hid_t) :: hfile_id  
 #endif
-
 
     xmin = viewer%mesh%eta1_min
     xmax = viewer%mesh%eta1_max
@@ -314,11 +400,10 @@ contains
       call sll_o_hdf5_write_array(hfile_id,op,"/op",error)
       call sll_o_hdf5_write_array(hfile_id,fp,"/fp",error)
       call sll_o_hdf5_file_close(hfile_id, error)
-      stop
 
     end select
 
-  end subroutine write_particles_and_field
+  end subroutine write_2d_field_and_particles
 
 end module sll_m_pic_viewer
 
