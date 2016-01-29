@@ -92,7 +92,7 @@ time  = 0.0_f64
 
 viewer => sll_f_new_pic_viewer_2d( mesh, 'pic_viewer' )
 
-call viewer%set_format(SLL_P_IO_XDMF)
+call sll_s_pic_viewer_set_format(viewer, SLL_P_IO_XDMF)
 
 do istep = 1, nstep !loop over time
    
@@ -101,7 +101,7 @@ do istep = 1, nstep !loop over time
 
   call compute_grid_vorticity( )
 
-  call write_particles_and_field( viewer, xp, yp, op, omg, istep, time )
+  call sll_o_pic_viewer_write( viewer, xp, yp, op, omg, istep, time )
 
   time = time + dt
 
