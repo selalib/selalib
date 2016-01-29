@@ -90,7 +90,6 @@ sll_real64              , intent(in) :: vmax
 sll_int32,                intent(in) :: iplot
 sll_real64              , optional   :: time
 
-sll_int32        :: error
 character(len=4) :: fin
 sll_int32        :: file_id
 sll_int32        :: nbpart
