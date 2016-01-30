@@ -399,8 +399,8 @@ contains
           iter=iter+1
         end do
         if (iter==charac%x1_maxiter .and. abs(x1_old-x1)>charac%x1_tol) then
-          print*,'#not enough iterations for compute_characteristics2D_verlet x1',&
-            iter,abs(x1_old-x1)
+          !print*,'#not enough iterations for compute_characteristics2D_verlet x1',&
+          !  iter,abs(x1_old-x1)
        !   stop
         end if
         if((x1<=charac%eta1_min).or.(x1>=charac%eta1_max))then
@@ -424,8 +424,8 @@ contains
           iter=iter+1
         end do
         if (iter==charac%x2_maxiter .and. abs(x2_old-x2)>charac%x2_tol) then
-          print*,'#not enough iterations for compute_characteristics2D_verlet x2',&
-            iter,abs(x2_old-x2)
+          !print*,'#not enough iterations for compute_characteristics2D_verlet x2',&
+          !  iter,abs(x2_old-x2)
         !  stop
         end if
         if((x2<=charac%eta2_min).or.(x2>=charac%eta2_max))then
