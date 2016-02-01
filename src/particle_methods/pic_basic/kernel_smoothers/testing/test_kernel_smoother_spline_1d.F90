@@ -18,7 +18,7 @@ program test_kernel_smoother_spline_1d
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  class(sll_c_kernel_smoother), allocatable :: ksa
+  !class(sll_c_kernel_smoother), allocatable :: ksa
   class(sll_c_kernel_smoother), pointer     :: ksp
   type(sll_t_kernel_smoother_spline_1d) :: kernel
   ! Abstract particle group
@@ -95,7 +95,7 @@ program test_kernel_smoother_spline_1d
        (domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
   
   ! Check that the constructors for the abstract type are working.
-  call sll_s_new_kernel_smoother_spline_1d(ksa, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
+  !call sll_s_new_kernel_smoother_spline_1d(ksa, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
   call sll_s_new_kernel_smoother_spline_1d_ptr(ksp, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
 
   ! Accumulate rho
