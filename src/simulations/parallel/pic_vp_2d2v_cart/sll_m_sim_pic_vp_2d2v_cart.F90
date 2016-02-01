@@ -119,6 +119,9 @@ module sll_m_sim_pic_vp_2d2v_cart
      ! Parameters for MPI
      sll_int32  :: rank
      sll_int32  :: world_size
+
+     ! 
+     logical    :: ctest_passed
      
      
    contains

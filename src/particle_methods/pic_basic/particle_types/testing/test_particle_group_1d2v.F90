@@ -15,7 +15,7 @@ program test_particle_group_1d2v
   
   
   type(sll_t_particle_group_1d2v) :: particle_group
-  class(sll_c_particle_group_base), allocatable :: pga
+  !class(sll_c_particle_group_base), allocatable :: pga
   class(sll_c_particle_group_base), pointer :: pgp
 
   sll_int32  :: n_particles
@@ -36,7 +36,7 @@ program test_particle_group_1d2v
   n_weights = 1
 
   call sll_s_new_particle_group_1d2v_ptr(pgp, n_particles, n_total_particles, charge, mass, n_weights)
-  call sll_s_new_particle_group_1d2v(pga, n_particles, n_total_particles, charge, mass, n_weights)
+ ! call sll_s_new_particle_group_1d2v(pga, n_particles, n_total_particles, charge, mass, n_weights)
 
   call  particle_group%initialize(n_particles, n_total_particles, charge, mass, n_weights)
 
