@@ -68,7 +68,6 @@ module sll_m_fft
   type sll_t_fft
     fftw_plan, private               :: fftw       !< FFTW plan (specific for FFTW version)
     logical                          :: normalized !< Boolean telling whether or not values of the FFT should be normalized by \a problem_shape
-    sll_int32                        :: library    !< Specifies the FFT library that is behind the interface
     sll_int32                        :: direction  !< Direction of the FFT, either \a sll_p_fft_forward (negative sign in exponential) or \a sll_p_fft_backward (positive sign in exponential) 
     sll_int32                        :: problem_rank !< Dimension of FFT
     sll_int32, allocatable           :: problem_shape(:) !< Array of size \a problem_rank specifying the number of points along each dimension
@@ -94,8 +93,6 @@ module sll_m_fft
 ! We can define 31 different flags.
 ! The value assigned to the flag can only be a power of two.
 ! See section "How-to manipulate flags ?" for more information.
-
-  integer, parameter :: FFTW_MOD = 1000000000 !< Flag for FFTW
 
   ! Flags for the various types of transform (to make sure same type of init and execute functions are used)
   integer, parameter :: p_fftw_c2c_1d = 0
@@ -220,7 +217,6 @@ contains
     sll_int32                                :: ierr
     sll_int32                                :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_c2c_1d
     plan%direction = direction
     if( present(normalized) ) then
@@ -288,7 +284,6 @@ contains
     sll_int32                                     :: ierr
     sll_int32                                     :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_c2c_2d
     plan%direction = direction
     if( present(normalized) ) then
@@ -357,7 +352,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_r2r_1d
     plan%direction = direction
     if( present(normalized) ) then
@@ -461,7 +455,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_r2c_1d
     plan%direction = 0
     if( present(normalized) ) then
@@ -525,7 +518,6 @@ contains
     sll_int32 :: ierr    
     sll_int32 :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_r2c_2d
     plan%direction = 0
     if( present(normalized) ) then
@@ -611,7 +603,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_c2r_1d
     plan%direction = 0
     if( present(normalized) ) then
@@ -679,7 +670,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
 
-    plan%library = FFTW_MOD
     plan%transform_type = p_fftw_c2r_2d
     plan%direction = 0
     if( present(normalized) ) then
