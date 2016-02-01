@@ -415,7 +415,7 @@ end subroutine sll_s_compute_rho
 subroutine sll_s_diagnostics(sp, pfwd, buf_fft, nb_mode)
 type(sll_t_species), intent(inout) :: sp
 sll_int32,     intent(in)    :: nb_mode
-type(sll_t_fft), pointer  :: pfwd
+type(sll_t_fft)              :: pfwd
 sll_real64                   :: buf_fft(:)
 
 sll_real64  :: tmp(5), tmp_loc(5)

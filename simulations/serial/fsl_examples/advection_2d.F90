@@ -57,8 +57,8 @@ character(len=3)  :: mesh_name, field_name, time_name
 sll_int32                         :: nc_eta1, nc_eta2
 sll_real64, dimension(:), pointer :: d_dx1, d_dx2
 sll_real64, dimension(:), pointer :: kx1, kx2
-type(sll_t_fft),       pointer :: fwx1, fwx2
-type(sll_t_fft),       pointer :: bwx1, bwx2
+type(sll_t_fft)                   :: fwx1, fwx2
+type(sll_t_fft)                   :: bwx1, bwx2
 sll_comp64, dimension(:), pointer :: fk1, fk2
 
 sll_int32     :: error
@@ -88,13 +88,9 @@ fk1 = cmplx(0.0,0.0, kind=f64)
 SLL_ALLOCATE(fk2(1:nc_eta2/2+1), error)
 fk2 = cmplx(0.0,0.0, kind=f64)
 
-allocate(fwx1)
 call sll_s_fft_init_r2c_1d(fwx1, nc_eta1, d_dx1, fk1)
-allocate(bwx1)
 call sll_s_fft_init_c2r_1d(bwx1, nc_eta1,   fk1, d_dx1)
-allocate(fwx2)
 call sll_s_fft_init_r2c_1d(fwx2, nc_eta2, d_dx2, fk2)
-allocate(bwx2)
 call sll_s_fft_init_c2r_1d(bwx2, nc_eta2,   fk2, d_dx2)
 
 SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
@@ -402,13 +398,9 @@ enddo
 close(850)
 
 call sll_s_fft_free(fwx1)
-deallocate(fwx1)
 call sll_s_fft_free(bwx1)
-deallocate(bwx1)
 call sll_s_fft_free(fwx2)
-deallocate(fwx2)
 call sll_s_fft_free(bwx2)
-deallocate(bwx2)  
 
 contains
 
