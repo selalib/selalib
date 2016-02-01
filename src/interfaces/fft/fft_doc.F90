@@ -24,11 +24,11 @@
 !> \warning For complex to real and real to complex transform, there is no direction flag.
 !>          \code call sll_s_fft_init_r2c_1d( p, size, in, out, normalized, aligned, optimization ) \endcode
 !>
-!> \a direction can take two values : FFT_FORWARD and FFT_BACKWARD
+!> \a direction can take two values : sll_p_fft_forward and sll_p_fft_backward
 !>
 !> \a normalized is a boolean optional argument: If true, the transformed data is normalized by the (product) of the element length.  [default: false]
 !> \a aligned is a boolean optional argument (only used by FFTW): If true, FFTW assumes the the data is aligned (use \a fft_alloc for in/out data allocation in this case).  [default: false]         
-!> \a optimization is an optional argument (only used by FFTW): With this argument, you can set how rigorous the initialization of the planner will be. It can take the values FFT_ESTIMATE, FFT_WISDOM_ONLY, FFT_MEASURE, FFT_PATIENT, FFT_EXHAUSTIVE. Note that \a in and \a out are overwritten for the last three options. FFT_WISDOM_ONLY only works if wisdom is available. [default: FFT_ESTIMATE]                      
+!> \a optimization is an optional argument (only used by FFTW): With this argument, you can set how rigorous the initialization of the planner will be. It can take the values  sll_p_fft_patient, sll_p_fft_estimate, sll_p_fft_exhaustive, sll_p_fft_wisdom_only. Note that \a in and \a out are overwritten for the last three options. sll_p_fft_wisdom_only only works if wisdom is available. [default: sll_p_fft_estimate]                      
 !>
 !> 3. Execute the plan
 !> \code call sll_s_fft_exec_c2c_1d( p, in, out ) \endcode
@@ -57,10 +57,10 @@
 !> <td> real </td>
 !> <td> n </td>
 !> <td> n </td>
-!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -68,10 +68,10 @@
 !> <td> complex </td>
 !> <td> n </td>
 !> <td> n </td>
-!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -82,7 +82,7 @@
 !> <td> ----- </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -93,7 +93,7 @@
 !> <td> ----- </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> </table>
 !>
@@ -117,10 +117,10 @@
 !> <td> real </td>
 !> <td> n,m </td>
 !> <td> n,m </td>
-!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -128,10 +128,10 @@
 !> <td> complex </td>
 !> <td> n,m </td>
 !> <td> n,m </td>
-!> <td> FFT_FORWARD <br /> FFT_BACKWARD </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -142,7 +142,7 @@
 !> <td> ----- </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -153,7 +153,7 @@
 !> <td> ----- </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
 !> <td> .TRUE. <br /> .FALSE. </td>
-!> <td> FFT_ESTIMATE <br /> FFT_WISDOM_ONLY <br />  FFT_MEASURE <br /> FFT_PATIENT <br /> FFT_EXHAUSTIVE  </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> </table>
 !>
@@ -167,7 +167,7 @@
 !>
 !> !** INIT DATA **
 !>
-!> call sll_s_fft_init_c2c_1d( p, n, in, in, FFT_FORWARD, normalized = .TRUE. )
+!> call sll_s_fft_init_c2c_1d( p, n, in, in, sll_p_fft_forward, normalized = .TRUE. )
 !> call sll_s_fft_exec_c2c_1d( p, in, in )
 !> call sll_s_fft_free( p )
 !> \endcode
@@ -190,11 +190,11 @@
 !>
 !> \section what What sll_m_fft really computes
 !>
-!> The forward (FFT_FORWARD) DFT of a 1d complex array x of size n computes an array X, where:
+!> The forward (sll_p_fft_forward) DFT of a 1d complex array x of size n computes an array X, where:
 !>
 !> \f[ X_k = \sum_{i=0}^{n-1} x_i e^{-2\pi i j k/n}. \f]
 !>
-!> The backward (FFT_BACKWARD) DFT computes:
+!> The backward (sll_p_fft_backward) DFT computes:
 !>
 !> \f[ x_i = \sum_{k=0}^{n-1} X_k e^{2\pi k j i/n}. \f]
 !>
