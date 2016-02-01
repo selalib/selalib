@@ -55,8 +55,8 @@ type,extends(sll_c_advection_1d_base) :: ampere_1d_advector
   sll_real64                        :: delta_eta1
   sll_real64, dimension(:), pointer :: d_dx
   sll_real64, dimension(:), pointer :: kx
-  type(sll_t_fft),       pointer :: fwx
-  type(sll_t_fft),       pointer :: bwx
+  type(sll_t_fft)                   :: fwx
+  type(sll_t_fft)                   :: bwx
   sll_comp64, dimension(:), pointer :: fk
   sll_comp64, dimension(:), pointer :: r0
   sll_comp64, dimension(:), pointer :: r1
@@ -124,9 +124,7 @@ subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
   adv%r0 = (0.0_f64, 0.0_f64)
   adv%r1 = (0.0_f64, 0.0_f64)
 
-  allocate(adv%fwx)
   call sll_s_fft_init_r2c_1d(adv%fwx, nc_eta1, adv%d_dx,  adv%fk)
-  allocate(adv%bwx)
   call sll_s_fft_init_c2r_1d(adv%bwx, nc_eta1, adv%fk, adv%d_dx)
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:nc_eta1/2+1), error)
@@ -162,9 +160,7 @@ subroutine delete(adv)
   class(ampere_1d_advector), intent(inout) :: adv
 
   call sll_s_fft_free(adv%fwx)
-  deallocate(adv%fwx)
   call sll_s_fft_free(adv%bwx)
-  deallocate(adv%bwx)
 
 end subroutine delete
 
