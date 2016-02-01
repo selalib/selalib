@@ -2327,7 +2327,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64 :: delta_eta2
     sll_real64 :: eta1
     sll_int32 :: ierr 
-    type(sll_t_fft), pointer         :: pfwd
+    type(sll_t_fft)         :: pfwd
     
     Nc_eta1 = mesh_2d%num_cells1
     Nc_eta2 = mesh_2d%num_cells2
@@ -2341,7 +2341,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    allocate(pfwd)
+    !allocate(pfwd)
     call sll_s_fft_init_r2r_1d(pfwd,Nc_eta2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
  
     w     = 0.0_f64
@@ -2405,7 +2405,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       time_mode(1:8)!,mode_slope
 
     call sll_s_fft_free(pfwd)
-    deallocate(pfwd)
+    !deallocate(pfwd)
     
   end subroutine time_history_diagnostic_polar
   
