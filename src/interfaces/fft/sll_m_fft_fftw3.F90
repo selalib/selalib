@@ -156,9 +156,9 @@ contains
   !> Function to reconstruct the complex FFT mode from the data of a r2r transform
   function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
     type(sll_t_fft),      intent(in)   :: plan !< FFT plan
-    sll_real64, dimension(0:), intent(in)   :: data !< real data produced by r2r transform
-    sll_int32, intent(in)                   :: k    !< mode to be extracted
-    sll_comp64                              :: mode !< Complex value of kth mode
+    sll_real64,           intent(in)   :: data(0:) !< real data produced by r2r transform
+    sll_int32,            intent(in)   :: k    !< mode to be extracted
+    sll_comp64                         :: mode !< Complex value of kth mode
 
     sll_int32                   :: n_2, n
 
@@ -181,10 +181,10 @@ contains
 
   !> Function to set a complex mode to the real representation of r2r.
   subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
-    type(sll_t_fft),      intent(in)    :: plan !< FFT planner object
-    sll_real64, dimension(0:), intent(out)   :: data !< Real array to be set
-    sll_comp64, intent(in)                   :: new_value !< Complex value of the kth mode
-    sll_int32, intent(in)                    :: k !< mode to be set
+    type(sll_t_fft), intent(in)    :: plan !< FFT planner object
+    sll_real64,      intent(out)   :: data(0:) !< Real array to be set
+    sll_comp64,      intent(in)    :: new_value !< Complex value of the kth mode
+    sll_int32,       intent(in)    :: k !< mode to be set
 
     sll_int32 :: n_2, n!, index_mode
 
@@ -208,17 +208,17 @@ contains
   !> Create new 1d complex to complex plan
   subroutine sll_s_fft_init_c2c_1d(plan, nx,array_in,array_out,direction,normalized, aligned, optimization)
     type(sll_t_fft)                         :: plan !< FFT planner object 
-    sll_int32, intent(in)                        :: nx !< Number of points
-    sll_comp64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
-    sll_comp64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
-    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Note that you need to call an aligned initialization if you want to set this option to \a TRUE. 
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate).
+    sll_int32,           intent(in)         :: nx !< Number of points
+    sll_comp64,          intent(inout)      :: array_in(:) !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64,          intent(inout)      :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
+    sll_int32,           intent(in)         :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
+    logical, optional,   intent(in)         :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical, optional,   intent(in)         :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Note that you need to call an aligned initialization if you want to set this option to \a TRUE. 
+    sll_int32, optional, intent(in)         :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate).
 
     ! local variables
-    sll_int32                                    :: ierr
-    sll_int32                                    :: flag_fftw
+    sll_int32                                :: ierr
+    sll_int32                                :: flag_fftw
 
     plan%library = FFTW_MOD
     plan%transform_type = p_fftw_c2c_1d
@@ -255,9 +255,9 @@ contains
 
   !> Compute fast Fourier transform in complex to complex mode.
   subroutine sll_s_fft_exec_c2c_1d(plan,array_in,array_out)
-    type(sll_t_fft),     intent(in)            :: plan !< FFT planner object
-    sll_comp64, dimension(:), intent(inout)         :: array_in !< Complex data to be Fourier transformed
-    sll_comp64, dimension(:), intent(inout)         :: array_out !< Fourier coefficients on output
+    type(sll_t_fft), intent(in)            :: plan !< FFT planner object
+    sll_comp64,      intent(inout)         :: array_in(:) !< Complex data to be Fourier transformed
+    sll_comp64,      intent(inout)         :: array_out(:) !< Fourier coefficients on output
 
     sll_real64 :: factor
 
@@ -275,15 +275,15 @@ contains
 ! COMPLEX 2D
   !> Create new 2d complex to complex plan
   subroutine sll_s_fft_init_c2c_2d(plan, nx, ny, array_in, array_out, direction, normalized, aligned, optimization)
-    sll_int32, intent(in)                        :: nx !< Number of points along first dimension
-    sll_int32, intent(in)                        :: ny !< Number of points along second dimension
-    sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< (Typical) input array (gets overwritten for certain options)
-    sll_comp64, dimension(0:,0:), intent(inout)  :: array_out !<(Typical) output array (gets overwritten for certain options)
-    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
-    type(sll_t_fft), intent(out)             :: plan !< initialized planner object
+    type(sll_t_fft),       intent(out)    :: plan !< initialized planner object
+    sll_int32,             intent(in)     :: nx !< Number of points along first dimension
+    sll_int32,             intent(in)     :: ny !< Number of points along second dimension
+    sll_comp64,            intent(inout)  :: array_in(0:,0:) !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64,            intent(inout)  :: array_out(0:,0:) !<(Typical) output array (gets overwritten for certain options)
+    sll_int32,             intent(in)     :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
+    logical,   optional,   intent(in)     :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional,   intent(in)     :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional,  intent(in)      :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
  
     sll_int32                                     :: ierr
     sll_int32                                     :: flag_fftw
@@ -326,9 +326,9 @@ contains
 
   !> Compute fast Fourier transform in complex to complex mode.
   subroutine sll_s_fft_exec_c2c_2d(plan,array_in,array_out)
-    type(sll_t_fft),  intent(in)            :: plan !< FFT planner object
-    sll_comp64, dimension(0:,0:), intent(inout)  :: array_in !< Complex data to be Fourier transformed 
-    sll_comp64, dimension(0:,0:), intent(inout)  :: array_out !< Fourier coefficients on output
+    type(sll_t_fft),  intent(in)     :: plan !< FFT planner object
+    sll_comp64,       intent(inout)  :: array_in(0:,0:) !< Complex data to be Fourier transformed 
+    sll_comp64,       intent(inout)  :: array_out(0:,0:) !< Fourier coefficients on output
 
     sll_real64                                   :: factor
 
@@ -345,14 +345,14 @@ contains
 ! REAL
   !> Create new 1d real to real plan
   subroutine sll_s_fft_init_r2r_1d(plan,nx,array_in,array_out,direction,normalized, aligned, optimization)
-    type(sll_t_fft)                         :: plan !< FFT planner object
-    sll_int32, intent(in)                        :: nx !< Number of points
-    sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
-    sll_real64, dimension(:), intent(inout)      :: array_out !< (Typical) output array (gets overwritten for certain options)
-    sll_int32, intent(in)                        :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    type(sll_t_fft),     intent(out)   :: plan !< FFT planner object
+    sll_int32,           intent(in)    :: nx !< Number of points
+    sll_real64,          intent(inout) :: array_in(:) !< (Typical) input array (gets overwritten for certain options)
+    sll_real64,          intent(inout) :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
+    sll_int32,           intent(in)    :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
+    logical,   optional, intent(in)    :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional, intent(in)    :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)    :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
     
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -409,10 +409,9 @@ contains
 
   !> Compute fast Fourier transform in real to real mode.
   subroutine sll_s_fft_exec_r2r_1d(plan,array_in,array_out)
-
     type(sll_t_fft),     intent(inout) :: plan !< FFT planner object
-    sll_real64, dimension(:), intent(inout) :: array_in !< Real data to be Fourier transformed
-    sll_real64, dimension(:), intent(inout) :: array_out !< Fourier coefficients in real form (sin/cos coefficients)
+    sll_real64,          intent(inout) :: array_in(:) !< Real data to be Fourier transformed
+    sll_real64,          intent(inout) :: array_out(:) !< Fourier coefficients in real form (sin/cos coefficients)
 
     sll_real64                              :: factor
 
@@ -451,13 +450,13 @@ contains
 ! R2C
   !> Create new 1d real to complex plan for forward FFT
   subroutine sll_s_fft_init_r2c_1d(plan, nx,array_in,array_out, normalized, aligned, optimization)
-    type(sll_t_fft), intent(out)            :: plan !< FFT planner object
-    sll_int32, intent(in)                        :: nx !< Number of points
-    sll_real64, dimension(:), intent(inout)      :: array_in !< (Typical) input array (gets overwritten for certain options)
-    sll_comp64, dimension(:), intent(out)        :: array_out !< (Typical) output array (gets overwritten for certain options)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    type(sll_t_fft),     intent(out)   :: plan !< FFT planner object
+    sll_int32,           intent(in)    :: nx !< Number of points
+    sll_real64,          intent(inout) :: array_in(:) !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64,          intent(out)   :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
+    logical,   optional, intent(in)    :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional, intent(in)    :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)    :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
 
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -496,9 +495,9 @@ contains
   
   !> Compute fast Fourier transform in real to complex mode.
   subroutine sll_s_fft_exec_r2c_1d(plan,array_in,array_out)
-    type(sll_t_fft),     intent(in)            :: plan !< FFT planner object
-    sll_real64, dimension(:), intent(inout)         :: array_in !< Real input data to be Fourier transformed
-    sll_comp64, dimension(:), intent(out)           :: array_out !< Complex Fourier mode (only first half due to symmetry)
+    type(sll_t_fft), intent(in)            :: plan !< FFT planner object
+    sll_real64,      intent(inout)         :: array_in(:) !< Real input data to be Fourier transformed
+    sll_comp64,      intent(out)           :: array_out(:) !< Complex Fourier mode (only first half due to symmetry)
 
     sll_real64                                      :: factor 
 
@@ -514,14 +513,14 @@ contains
 
   !> Create new 2d complex to real plan for forward FFT
   subroutine sll_s_fft_init_r2c_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
-    type(sll_t_fft), intent(out)             :: plan !< FFT planner object
-    sll_int32, intent(in)                        :: nx !< Number of points along first dimension
-    sll_int32, intent(in)                        :: ny !< Number of points along second dimension
-    sll_real64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
-    sll_comp64, dimension(:,:), intent(out)      :: array_out !< (Typical) output array (gets overwritten for certain options)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)               :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    type(sll_t_fft),     intent(out)   :: plan !< FFT planner object
+    sll_int32,           intent(in)    :: nx !< Number of points along first dimension
+    sll_int32,           intent(in)    :: ny !< Number of points along second dimension
+    sll_real64,          intent(inout) :: array_in(:,:) !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64,          intent(out)   :: array_out(:,:) !< (Typical) output array (gets overwritten for certain options)
+    logical,   optional, intent(in)    :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional, intent(in)    :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)    :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
 
     sll_int32 :: ierr    
     sll_int32 :: flag_fftw
@@ -562,9 +561,9 @@ contains
 
   !> Compute fast Fourier transform in real to complex mode.
   subroutine sll_s_fft_exec_r2c_2d(plan,array_in,array_out)
-    type(sll_t_fft),       intent(in)           :: plan      !< FFT planner object
-    sll_real64, dimension(:,:), intent(inout)         :: array_in  !< Real input data to be Fourier transformed
-    sll_comp64, dimension(:,:), intent(out)           :: array_out !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
+    type(sll_t_fft), intent(in)           :: plan      !< FFT planner object
+    sll_real64,      intent(inout)        :: array_in(:,:)  !< Real input data to be Fourier transformed
+    sll_comp64,      intent(out)          :: array_out(:,:) !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
     sll_int32     :: nx, ny
     sll_real64    :: factor
 
@@ -600,13 +599,13 @@ contains
 ! C2R
   !> Create new 1d complex to real plan for backward FFT
   subroutine sll_s_fft_init_c2r_1d(plan,nx,array_in,array_out, normalized, aligned, optimization)
-    type(sll_t_fft)                         :: plan !< FFT planner object
-    sll_int32, intent(in)                        :: nx !< Number of points
-    sll_comp64, dimension(:)                     :: array_in  !< (Typical) input array (gets overwritten for certain options)
-    sll_real64, dimension(:)                     :: array_out !< (Typical) output array (gets overwritten for certain options)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    type(sll_t_fft),     intent(out)      :: plan !< FFT planner object
+    sll_int32,           intent(in)       :: nx !< Number of points
+    sll_comp64,          intent(in)       :: array_in(:)  !< (Typical) input array (gets overwritten for certain options)
+    sll_real64,          intent(out)      :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
+    logical,   optional, intent(in)       :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional, intent(in)       :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)       :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
     
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -647,9 +646,9 @@ contains
 
   !> Compute fast Fourier transform in complex to real mode.
   subroutine sll_s_fft_exec_c2r_1d(plan,array_in,array_out)
-    type(sll_t_fft),         intent(in)    :: plan !< FFT planner objece
-    sll_comp64, dimension(:),    intent(inout) :: array_in !< Complex Fourier coefficient to be transformed back
-    sll_real64, dimension(:),    intent(inout) :: array_out !< Real result of Fourier transform
+    type(sll_t_fft), intent(in)    :: plan !< FFT planner objece
+    sll_comp64,      intent(inout) :: array_in(:) !< Complex Fourier coefficient to be transformed back
+    sll_real64,      intent(inout) :: array_out(:) !< Real result of Fourier transform
 
     sll_real64                  :: factor
 
@@ -667,14 +666,14 @@ contains
   !> Create new 2d real to complex plan for backward FFT
   !function sll_f_fft_new_plan_c2r_2d(nx,ny,array_in,array_out,normalized, aligned, optimization) result(plan)
   subroutine sll_s_fft_init_c2r_2d(plan,nx,ny,array_in,array_out,normalized, aligned, optimization)
-    type(sll_t_fft), intent(out)            :: plan !< FFT planner object
-    sll_int32, intent(in)                        :: nx !< Number of point along first dimension
-    sll_int32, intent(in)                        :: ny !< Number of points along second dimension
-    sll_comp64, dimension(:,:), intent(inout)    :: array_in !< (Typical) input array (gets overwritten for certain options)
-    sll_real64, dimension(:,:), intent(out)      :: array_out !< (Typical) output array (gets overwritten for certain options)
-    logical, optional,   intent(in)              :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
-    logical, optional,   intent(in)              :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)              :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    type(sll_t_fft),     intent(out)     :: plan !< FFT planner object
+    sll_int32,           intent(in)      :: nx !< Number of point along first dimension
+    sll_int32,           intent(in)      :: ny !< Number of points along second dimension
+    sll_comp64,          intent(inout)   :: array_in(:,:) !< (Typical) input array (gets overwritten for certain options)
+    sll_real64,          intent(out)     :: array_out(:,:) !< (Typical) output array (gets overwritten for certain options)
+    logical,   optional, intent(in)      :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional, intent(in)      :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional, intent(in)      :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
 
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -713,9 +712,9 @@ contains
   
   !> Compute fast Fourier transform in complex to real mode.
   subroutine sll_s_fft_exec_c2r_2d(plan,array_in,array_out)
-    type(sll_t_fft),         intent(in)          :: plan      !< FFT planner object
-    sll_comp64, dimension(1:,1:), intent(inout)       :: array_in  !< Complex Fourier coefficient to be transformed back
-    sll_real64, dimension(1:,1:), intent(out)         :: array_out !< Real output of Fourier transform
+    type(sll_t_fft), intent(in)          :: plan      !< FFT planner object
+    sll_comp64,      intent(inout)       :: array_in(1:,1:)  !< Complex Fourier coefficient to be transformed back
+    sll_real64,      intent(out)         :: array_out(1:,1:) !< Real output of Fourier transform
 
     sll_int32                                         :: nx, ny
     sll_real64                                        :: factor
@@ -738,7 +737,7 @@ contains
 
   !> Delete a plan
   subroutine sll_s_fft_free(plan)
-   type(sll_t_fft) :: plan !< FFT planner object
+   type(sll_t_fft), intent( inout ) :: plan !< FFT planner object
 
    sll_int32 :: ierr
 
