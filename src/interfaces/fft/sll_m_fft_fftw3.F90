@@ -602,7 +602,7 @@ contains
   subroutine sll_s_fft_init_c2r_1d(plan,nx,array_in,array_out, normalized, aligned, optimization)
     type(sll_t_fft),     intent(out)      :: plan !< FFT planner object
     sll_int32,           intent(in)       :: nx !< Number of points
-    sll_comp64,          intent(in)       :: array_in(:)  !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64,          intent(inout)    :: array_in(:)  !< (Typical) input array (gets overwritten for certain options)
     sll_real64,          intent(out)      :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
     logical,   optional, intent(in)       :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional, intent(in)       :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
