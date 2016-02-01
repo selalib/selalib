@@ -1054,7 +1054,7 @@ contains
     !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
-    type(sll_t_fft), pointer         :: pfwd
+    type(sll_t_fft)         :: pfwd
     sll_real64, dimension(:), allocatable :: buf_fft
     sll_comp64,dimension(:),allocatable :: rho_mode
 
@@ -1093,7 +1093,6 @@ contains
 
         
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-      allocate(pfwd)
       call sll_s_fft_init_r2r_1d(pfwd,np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
