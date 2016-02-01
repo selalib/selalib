@@ -86,9 +86,9 @@ module sll_m_fft
      logical                          :: normalized !< Boolean telling whether or not values of the FFT should be normalized by \a problem_shape
      sll_int32                        :: direction
      sll_int32                        :: problem_rank
-     sll_int32, dimension(:), pointer :: problem_shape => null()
-     sll_int32, dimension(:), pointer :: scramble_index => null()
-    sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
+     sll_int32, allocatable           :: problem_shape(:)
+     sll_int32,               pointer :: scramble_index(:) => null()
+    sll_int32, private                :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
   end type sll_t_fft
 
 
@@ -841,8 +841,8 @@ contains
         deallocate(plan%twiddles_n)
         plan%twiddles_n => null()
       endif
-      if(associated(plan%problem_shape)) then
-        SLL_DEALLOCATE(plan%problem_shape,ierr)
+      if(allocated(plan%problem_shape)) then
+        deallocate(plan%problem_shape, stat=ierr)
       endif
   end subroutine
 
