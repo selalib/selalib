@@ -177,7 +177,7 @@ type, extends(sll_c_simulation_base_class) :: &
   sll_real64                              :: mass_ratio
   sll_real64, dimension(:),   pointer     :: efield
   sll_real64, dimension(:),   pointer     :: e_app
-  type(sll_t_fft),         pointer     :: pfwd
+  type(sll_t_fft)                         :: pfwd
   sll_real64, dimension(:),   allocatable :: buf_fft
   sll_comp64, dimension(:),   allocatable :: rho_mode
   sll_int32                               :: rhotote_id
@@ -881,7 +881,6 @@ endif
 
 
 SLL_ALLOCATE(sim%buf_fft(nc_x1),ierr)
-allocate(sim%pfwd)
 call sll_s_fft_init_r2r_1d(sim%pfwd,nc_x1,sim%buf_fft,sim%buf_fft,sll_p_fft_forward,normalized = .TRUE.)
 SLL_ALLOCATE(sim%rho_mode(0:nb_mode),ierr)      
 SLL_ALLOCATE(sim%efield(np_x1),ierr)

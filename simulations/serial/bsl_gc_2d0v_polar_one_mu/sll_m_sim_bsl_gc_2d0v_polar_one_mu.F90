@@ -1092,7 +1092,7 @@ contains
     sll_real64 :: delta_x2
     sll_real64 :: x1
     sll_int32 :: ierr 
-    type(sll_t_fft), pointer         :: pfwd
+    type(sll_t_fft)        :: pfwd
     
     Nc_x1 = mesh_2d%num_cells1
     Nc_x2 = mesh_2d%num_cells2
@@ -1107,7 +1107,6 @@ contains
     
     SLL_ALLOCATE(int_r(Nc_x2),ierr)
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
-    allocate(pfwd)
     call sll_s_fft_init_r2r_1d(pfwd, Nc_x2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
  
     w     = 0.0_f64
@@ -1173,7 +1172,6 @@ contains
 
 
     call sll_s_fft_free(pfwd)
-    deallocate(pfwd)
     
 !    call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
 !
