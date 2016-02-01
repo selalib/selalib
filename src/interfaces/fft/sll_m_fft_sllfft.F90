@@ -82,7 +82,6 @@ module sll_m_fft
      sll_real64, dimension(:), pointer :: twiddles_n => null()
 
      sll_int32                        :: style
-     sll_int32                        :: library
      logical                          :: normalized !< Boolean telling whether or not values of the FFT should be normalized by \a problem_shape
      sll_int32                        :: direction
      sll_int32                        :: problem_rank
@@ -105,14 +104,6 @@ module sll_m_fft
   integer, parameter :: sll_p_fft_exhaustive = -1 !< FFTW planning-rigor flag FFTW_EXHAUSTIVE (more optimization than PATIENT) NOTE: planner overwrites the input array during planning  [value 8]
   integer, parameter :: sll_p_fft_wisdom_only = -1 ! 2097152 !< FFTW planning-rigor flag FFTW_WISDOM_ONLY (planner only initialized if wisdom is available)  [value 2097152]
 
-
-  ! Assign a value to the different library.
-  ! these values are completly arbitrary.
-  !> Flag to specify SLLFFT library
-  integer, parameter :: SLLFFT_MOD = 0
-  !  integer, parameter :: FFTPACK_MOD = 100
-  !  integer, parameter :: FFTW_MOD = 1000000000
-  ! tranform in char* !!!
 
   ! Flags for the various types of transform (to make sure same type of init and execute functions are used)
   integer, parameter :: p_fftw_c2c_1d = 0
@@ -273,7 +264,6 @@ contains
 
     SLL_ASSERT(size(array_in).ge.nx)
     SLL_ASSERT(size(array_out).ge.nx)
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_c2c_1d
     plan%direction = direction
     if( present(normalized) ) then
@@ -349,7 +339,6 @@ contains
     SLL_ASSERT(size(array_out,dim=1).ge.nx)
     SLL_ASSERT(size(array_out,dim=2).ge.ny)
 
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_c2c_2d
     plan%direction = direction
     if( present(normalized) ) then
@@ -439,7 +428,6 @@ contains
 
     SLL_ASSERT(size(array_in).eq.nx)
     SLL_ASSERT(size(array_out).eq.nx)
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_r2r_1d
     plan%direction = direction
     if( present(normalized) ) then
@@ -538,7 +526,6 @@ contains
 
     SLL_ASSERT(size(array_in).eq.nx)
     SLL_ASSERT(size(array_out).eq.nx/2+1)
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_r2c_1d
     plan%direction = sll_p_fft_forward
     if( present(normalized) ) then
@@ -606,7 +593,6 @@ contains
 
     SLL_ASSERT(size(array_in).eq.nx/2+1)
     SLL_ASSERT(size(array_out).eq.nx)
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_c2r_1d
     plan%direction = sll_p_fft_backward
     if( present(normalized) ) then
@@ -678,7 +664,6 @@ contains
     SLL_ASSERT(size(array_in,dim=2).eq.ny)
     SLL_ASSERT(size(array_out,dim=1).eq.nx/2+1)
     SLL_ASSERT(size(array_out,dim=2).eq.ny)
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_r2c_2d
     plan%direction = sll_p_fft_forward
     if( present(normalized) ) then
@@ -756,7 +741,6 @@ contains
     SLL_ASSERT(size(array_out,dim=1).eq.nx)
     SLL_ASSERT(size(array_out,dim=2).eq.ny)
 
-    plan%library = SLLFFT_MOD
     plan%transform_type = p_fftw_c2r_2d
     plan%direction = sll_p_fft_backward
     if( present(normalized) ) then
