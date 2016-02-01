@@ -71,7 +71,7 @@ module sll_m_fft
     sll_int32                        :: library    !< Specifies the FFT library that is behind the interface
     sll_int32                        :: direction  !< Direction of the FFT, either \a sll_p_fft_forward (negative sign in exponential) or \a sll_p_fft_backward (positive sign in exponential) 
     sll_int32                        :: problem_rank !< Dimension of FFT
-    sll_int32, dimension(:), pointer :: problem_shape !< Array of size \a problem_rank specifying the number of points along each dimension
+    sll_int32, allocatable           :: problem_shape(:) !< Array of size \a problem_rank specifying the number of points along each dimension
 
     sll_comp64, allocatable, private :: scratch(:) !< Scratch data to simulate r2r for not FFTW_F2003
     sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
@@ -564,6 +564,7 @@ contains
     type(sll_t_fft), intent(in)           :: plan      !< FFT planner object
     sll_real64,      intent(inout)        :: array_in(:,:)  !< Real input data to be Fourier transformed
     sll_comp64,      intent(out)          :: array_out(:,:) !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
+
     sll_int32     :: nx, ny
     sll_real64    :: factor
 
@@ -742,8 +743,8 @@ contains
    sll_int32 :: ierr
 
     call fftw_destroy_plan(plan%fftw)
-    if(associated(plan%problem_shape)) then
-      SLL_DEALLOCATE(plan%problem_shape,ierr)
+    if(allocated(plan%problem_shape)) then
+      deallocate(plan%problem_shape,stat=ierr)
     endif
     
   end subroutine
