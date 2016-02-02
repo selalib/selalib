@@ -730,11 +730,9 @@ contains
   subroutine sll_s_fft_free(plan)
    type(sll_t_fft), intent( inout ) :: plan !< FFT planner object
 
-   sll_int32 :: ierr
-
     call fftw_destroy_plan(plan%fftw)
     if(allocated(plan%problem_shape)) then
-      deallocate(plan%problem_shape,stat=ierr)
+      deallocate(plan%problem_shape)
     endif
     
   end subroutine

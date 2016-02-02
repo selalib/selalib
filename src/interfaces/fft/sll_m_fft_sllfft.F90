@@ -826,7 +826,7 @@ contains
         plan%twiddles_n => null()
       endif
       if(allocated(plan%problem_shape)) then
-        deallocate(plan%problem_shape, stat=ierr)
+        deallocate(plan%problem_shape)
       endif
   end subroutine
 
