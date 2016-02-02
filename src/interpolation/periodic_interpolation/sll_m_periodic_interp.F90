@@ -56,7 +56,7 @@ module sll_m_periodic_interp
      sll_comp64, pointer :: ufft (:) ! Fourier transform of function
      sll_real64, pointer :: buf  (:) ! workspace for sll_p_lagrange interpolation
      sll_int32           :: sizebuf ! size of workspace for sll_p_lagrange interpolation
-     type(sll_t_fft), pointer :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
+     type(sll_t_fft)     :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
    end type sll_t_periodic_interp_work
 
   interface sll_o_delete
@@ -139,10 +139,8 @@ contains
        this%sizebuf=N
        SLL_ALLOCATE(this%buf(this%sizebuf),ierr)          
        !SLL_ALLOCATE(buf(N),ierr)
-       allocate(this%pfwd)
        call sll_s_fft_init_r2r_1d(this%pfwd,N,this%buf,this%buf,sll_p_fft_forward,normalized = .TRUE.)
        
-       allocate(this%pinv)
        call sll_s_fft_init_r2r_1d(this%pinv,N,this%buf,this%buf,sll_p_fft_backward)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
