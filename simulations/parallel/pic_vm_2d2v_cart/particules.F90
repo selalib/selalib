@@ -29,11 +29,11 @@ subroutine interpol_eb( tm1, ele )
 type  (particle) :: ele
 type(tm_mesh_fields) :: tm1
 sll_real64 :: a1, a2, a3, a4
-sll_real64 :: xp, yp, dum
+sll_real64 :: dum
 sll_int32  :: k 
 sll_int32  :: i, j
-sll_real64 :: dpx
-sll_real64 :: dpy
+sll_real32 :: dpx
+sll_real32 :: dpy
 !   ______________
 !  |     |        |
 !  | a2  |  a1    |
@@ -177,8 +177,8 @@ do k=1,nbpart
 
   ele%idx(k) = floor(ppx/dimx*nx)
   ele%idy(k) = floor(ppy/dimy*ny)
-  ele%dpx(k) = ppx - ele%idx(k)*dx
-  ele%dpy(k) = ppy - ele%idy(k)*dy
+  ele%dpx(k) = real(ppx - ele%idx(k)*dx, f32)
+  ele%dpy(k) = real(ppy - ele%idy(k)*dy, f32)
 
 end do
 
@@ -212,12 +212,12 @@ subroutine calcul_rho( ele, tm )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-sll_real64 :: a1, a2, a3, a4, dum, xp, yp
+sll_real64 :: a1, a2, a3, a4, dum
 sll_real64 :: rho_total
 sll_int32  :: k 
 sll_int32  :: i, j 
-sll_real64 :: dpx
-sll_real64 :: dpy
+sll_real32 :: dpx
+sll_real32 :: dpy
 
 tm%r0 = 0.d0    
                 
