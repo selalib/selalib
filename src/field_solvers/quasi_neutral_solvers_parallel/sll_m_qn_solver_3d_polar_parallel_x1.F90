@@ -34,12 +34,12 @@ module sll_m_qn_solver_3d_polar_parallel_x1
     sll_v_world_collective
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_c2c_1d, &
+    sll_s_fft_exec_c2c_1d, &
     sll_p_fft_backward, &
-    sll_s_fft_delete_plan, &
+    sll_s_fft_free, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_c2c_1d, &
+    sll_t_fft
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_2d, &
@@ -72,8 +72,8 @@ module sll_m_qn_solver_3d_polar_parallel_x1
     sll_int32 :: nt       !< number of cells along theta
     sll_int32 :: num_cells_x3 !< number of cells along z
     sll_int32 :: bc(2)    !< boundary conditions options
-    type(sll_t_fft_plan), pointer :: fw       !< Forward FFT plan
-    type(sll_t_fft_plan), pointer :: bw       !< Inverse FFT plan
+    type(sll_t_fft) :: fw       !< Forward FFT plan
+    type(sll_t_fft) :: bw       !< Inverse FFT plan
     sll_comp64, dimension(:), pointer :: fk       !< RHSf fft
     sll_comp64, dimension(:), pointer :: phik     !< Potential fft
     sll_real64, dimension(:), pointer :: mat      !< Matrix (sparse format)
@@ -231,8 +231,8 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%fw => sll_f_fft_new_plan_c2c_1d(ntheta,buf,buf,sll_p_fft_forward, normalized = .true.)!FFT_NORMALIZE)
-    this%bw => sll_f_fft_new_plan_c2c_1d(ntheta,buf,buf,sll_p_fft_backward)
+    call sll_s_fft_init_c2c_1d(this%fw, ntheta,buf,buf,sll_p_fft_forward, normalized = .true.)!FFT_NORMALIZE)
+    call sll_s_fft_init_c2c_1d(this%bw, ntheta,buf,buf,sll_p_fft_backward)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
     psize = sll_f_get_collective_size(sll_v_world_collective)
@@ -261,8 +261,8 @@ contains
     type(sll_t_qn_solver_3d_polar_parallel_x1), pointer :: this !< Poisson solver object
     sll_int32 :: err
     if (associated(this)) then
-       call sll_s_fft_delete_plan(this%fw)
-       call sll_s_fft_delete_plan(this%bw)
+       call sll_s_fft_free(this%fw)
+       call sll_s_fft_free(this%bw)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
        SLL_DEALLOCATE_ARRAY(this%mat,err)
@@ -310,7 +310,7 @@ contains
 
       ! Compute one FFT along theta at each r location
       do i=1,nr_loc
-        call sll_s_fft_apply_plan_c2c_1d(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+        call sll_s_fft_exec_c2c_1d(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
       end do
 
       !REMAP
@@ -440,7 +440,7 @@ contains
     
       do i=1,nr_loc
         !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta,i_x3))
-        call sll_s_fft_apply_plan_c2c_1d(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+        call sll_s_fft_exec_c2c_1d(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
         phi(i,1:ntheta,i_x3) = real( this%f_a(i,1:ntheta), f64 )
       end do
     enddo
