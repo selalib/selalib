@@ -28,12 +28,12 @@ module sll_m_qn_solver_2d
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_c2c_1d, &
+    sll_s_fft_exec_c2c_1d, &
     sll_p_fft_backward, &
-    sll_s_fft_delete_plan, &
+    sll_s_fft_free, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_c2c_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_c2c_1d, &
+    sll_t_fft
 
   use sll_m_tridiagonal, only: &
     sll_s_setup_cyclic_tridiag, &
@@ -58,8 +58,8 @@ module sll_m_qn_solver_2d
      sll_int32                   :: NP_theta!Number of points in theta-direction
      sll_real64                  :: rmin
      sll_real64                  :: rmax
-     type(sll_t_fft_plan), pointer :: fft_plan
-     type(sll_t_fft_plan), pointer :: inv_fft_plan
+     type(sll_t_fft)        :: fft_plan
+     type(sll_t_fft)        :: inv_fft_plan
   end type sll_t_qn_solver_2d
 
 
@@ -84,7 +84,7 @@ contains
     sll_real64                                    :: rmax
     sll_comp64, dimension(:),   allocatable       :: x
     sll_int32                                     :: NP_r, NP_theta, ierr
-    type(sll_t_qn_solver_2d), pointer :: plan
+    type(sll_t_qn_solver_2d), pointer             :: plan
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE( x(NP_theta), ierr )
@@ -96,12 +96,10 @@ contains
     plan%rmax   = rmax
 
     ! For FFTs in theta-direction
-    !plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
-    plan%fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_forward )
+    call sll_s_fft_init_c2c_1d( plan%fft_plan, NP_theta, x, x, sll_p_fft_forward )
 
     ! For inverse FFTs in theta-direction
-    !plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
-    plan%inv_fft_plan => sll_f_fft_new_plan_c2c_1d( NP_theta, x, x, sll_p_fft_backward )
+    call sll_s_fft_init_c2c_1d( plan%inv_fft_plan, NP_theta, x, x, sll_p_fft_backward )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
@@ -134,16 +132,11 @@ contains
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
-    !
-    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
-    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
+    call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_g, hat_g )
     
-    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
+    call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
+    call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
 
     if (plan%BC==sll_p_neumann) then
        hat_rho(1,:)  = hat_rho(1,:) + (c(1)-2/dr)*hat_f 
@@ -154,8 +147,7 @@ contains
     endif
 
     do i=2,NP_r-1
-       !call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
-       call sll_s_fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
+       call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
     enddo
 
     do j=1,NP_theta
@@ -180,8 +172,7 @@ contains
     ! Solution phi of the Quasi-neutral equation is given by taking the inverse
     ! FFT in the k-direction of Tild_phi (storaged in phi)  
     do i=1,NP_r
-       !call sll_s_fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
-       call sll_s_fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
+       call sll_s_fft_exec_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
     phi = real(hat_phi, f64)/real(NP_theta,f64)
@@ -198,8 +189,8 @@ contains
     ! for instance
     SLL_ASSERT( associated(plan) )
 
-    call sll_s_fft_delete_plan(plan%fft_plan)
-    call sll_s_fft_delete_plan(plan%inv_fft_plan)
+    call sll_s_fft_free(plan%fft_plan)
+    call sll_s_fft_free(plan%inv_fft_plan)
 
     SLL_DEALLOCATE(plan, ierr)
 
