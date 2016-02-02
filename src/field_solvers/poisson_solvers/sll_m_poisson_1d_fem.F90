@@ -85,8 +85,8 @@ module sll_m_poisson_1d_fem
         sll_real64, private :: seminorm
 
         !FFT Plans
-        type(sll_t_fft), pointer, private :: forward_fftplan => null()
-        type(sll_t_fft), pointer, private :: backward_fftplan => null()
+        type(sll_t_fft), private :: forward_fftplan 
+        type(sll_t_fft), private :: backward_fftplan
         sll_int32,private ::num_cells
 
         sll_int32,private :: boundarycondition
@@ -165,9 +165,7 @@ contains
         SLL_DEALLOCATE_ARRAY(this%mass_matrix_first_line_fourier,ierr)
         SLL_DEALLOCATE_ARRAY(this%stiffn_matrix_first_line_fourier,ierr)
         call sll_s_fft_free(this%backward_fftplan)
-        deallocate(this%backward_fftplan)
         call sll_s_fft_free(this%forward_fftplan)
-        deallocate(this%forward_fftplan)
     endsubroutine
 
 
@@ -218,10 +216,8 @@ contains
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%stiffn_matrix_first_line_fourier = (0._f64,0._f64)
-        allocate(this%forward_fftplan)
         call sll_s_fft_init_r2c_1d(this%forward_fftplan, this%num_cells, &
              this%fem_solution,this%stiffn_matrix_first_line_fourier)
-        allocate(this%backward_fftplan)
         call sll_s_fft_init_c2r_1d(this%backward_fftplan, &
              this%num_cells, &
              this%stiffn_matrix_first_line_fourier,this%fem_solution)
@@ -775,8 +771,6 @@ contains
         !so for the complex data there will be only allocated space for N/2 +1 values
         sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
 
-        !!type(sll_t_fft), pointer :: forward_fftplan => null()
-        !!type(sll_t_fft), pointer :: backward_fftplan => null()
         rhs=this%fem_solution
 
         !Determine dimension of problem
