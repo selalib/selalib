@@ -132,11 +132,6 @@ contains
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    !call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    !call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_g, hat_g )
-    !
-    !call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    !call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
     call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_f, hat_f )
     call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_g, hat_g )
     
@@ -152,7 +147,6 @@ contains
     endif
 
     do i=2,NP_r-1
-       !call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
        call sll_s_fft_exec_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
     enddo
 
@@ -178,7 +172,6 @@ contains
     ! Solution phi of the Quasi-neutral equation is given by taking the inverse
     ! FFT in the k-direction of Tild_phi (storaged in phi)  
     do i=1,NP_r
-       !call sll_s_fft_exec_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
        call sll_s_fft_exec_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
