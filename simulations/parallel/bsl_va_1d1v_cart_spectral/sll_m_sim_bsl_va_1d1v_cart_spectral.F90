@@ -287,7 +287,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
   sll_real64, dimension(:,:), allocatable :: f1d_omp_in
   sll_real64, dimension(:,:), allocatable :: f1d_omp_out
 
-  type(sll_t_fft), pointer :: pfwd
+  type(sll_t_fft)             :: pfwd
   logical                     :: MPI_MASTER
 
 contains
@@ -1193,7 +1193,6 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
     
     SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    allocate(pfwd)
     call sll_s_fft_init_r2r_1d(pfwd,np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
     
     layout_x1       => sll_f_new_layout_2d( sll_v_world_collective )

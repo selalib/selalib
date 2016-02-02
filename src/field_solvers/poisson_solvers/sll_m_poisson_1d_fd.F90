@@ -81,8 +81,8 @@ module sll_m_poisson_1d_fd
         
         
         !FFT Plans
-        type(sll_t_fft), pointer, private :: forward_fftplan => null()
-        type(sll_t_fft), pointer, private :: backward_fftplan => null()
+        type(sll_t_fft), private :: forward_fftplan
+        type(sll_t_fft), private :: backward_fftplan
         sll_int32,private ::num_cells
         sll_int32,private ::problem_size !Problemsize
 
@@ -147,9 +147,7 @@ contains
         SLL_DEALLOCATE_ARRAY(this%fd_solution,ierr)
         SLL_DEALLOCATE_ARRAY(this%fd_matrix_first_line_fourier,ierr)
         call sll_s_fft_free(this%backward_fftplan)
-        deallocate(this%backward_fftplan)
         call sll_s_fft_free(this%forward_fftplan)
-        deallocate(this%forward_fftplan)
     endsubroutine
 
 
@@ -215,10 +213,8 @@ contains
         !To get the same output as in the MATLAB example use
         SLL_ALLOCATE(this%fd_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         this%fd_matrix_first_line_fourier = (0._f64,0._f64)
-        allocate(this%forward_fftplan) 
         call sll_s_fft_init_r2c_1d(this%forward_fftplan,this%num_cells, &
              this%fd_solution,this%fd_matrix_first_line_fourier)
-        allocate(this%backward_fftplan)
         call sll_s_fft_init_c2r_1d(this%backward_fftplan, this%num_cells, &
              this%fd_matrix_first_line_fourier,this%fd_solution)
         SLL_DEALLOCATE_ARRAY(this%fd_matrix_first_line_fourier, ierr)
