@@ -111,7 +111,7 @@ close(file_id)
 
 nbpart = size(x)
 SLL_ASSERT(nbpart == size(v))
-open(file_id, file = plot_name//"_"//fin//'.dat' )
+open(newunit=file_id, file = plot_name//"_"//fin//'.dat' )
 do k=1,nbpart
    write(file_id,*) sngl(x(k)),sngl(v(k))
 end do
