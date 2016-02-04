@@ -102,14 +102,17 @@ sll_int32  :: error
 
 call cpu_time(tcpu)
 t0 = getRealTimer()
-call initialize( nstep, imov, xp, yp, op, delta, dt, nbpart )
+call initialize( imov, xp, yp, op, delta, nbpart )
 SLL_ALLOCATE(up(nbpart), error)
 SLL_ALLOCATE(vp(nbpart), error)
-iplot   = 0
-time = 0.0_f64
 
-xmin = -3.0_f64; xmax = 3.0_f64
-ymin = -2.0_f64; ymax = 2.0_f64
+iplot = 0
+time  = 0.0_f64
+
+xmin  = -3.0_f64; xmax = 3.0_f64
+ymin  = -2.0_f64; ymax = 2.0_f64
+
+dt = 0.02_f64
 
 do istep = 1, nstep       !loop over time
    
