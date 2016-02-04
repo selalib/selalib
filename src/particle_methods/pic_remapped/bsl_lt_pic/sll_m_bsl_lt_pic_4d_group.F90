@@ -3497,6 +3497,7 @@ contains
 
     else if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
 
+       ! <<sparse_grid_interpolate_value>>
       val = p_group%sparse_grid_interpolator%interpolate_value(p_group%remapped_f_sparse_grid_coefficients, eta)
 
     else
