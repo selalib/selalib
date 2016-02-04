@@ -23,7 +23,7 @@ use sll_m_poisson_2d_base, only: &
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_plan_poisson_polar) :: poisson_fft
+type(sll_t_plan_poisson_polar)          :: poisson_fft
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
