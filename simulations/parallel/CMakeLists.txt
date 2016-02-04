@@ -30,10 +30,8 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     add_subdirectory( bsl_vp_3d3v_cart                         )
     add_subdirectory( bsl_vp_3d3v_cart_sparsegrid              )
 
-  IF(BUILD_MUDPACK)  
     ## Guiding-Center 2D
     add_subdirectory( bsl_gc_2d0v_curv )
-  ENDIF(BUILD_MUDPACK)  
 
     ## Drift/gyro-kinetic 3Dx1D
     add_subdirectory( bsl_dk_3d1v_polar                        )
