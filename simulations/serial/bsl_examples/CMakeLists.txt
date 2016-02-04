@@ -25,10 +25,12 @@ TARGET_LINK_LIBRARIES(bsl_landau_2d sll_interpolators
                                     sll_poisson_solvers
                                     sll_maxwell_solvers )
 
-ADD_EXECUTABLE(bsl_2d_multigrid landau_2d_multigrid.F90)
-TARGET_LINK_LIBRARIES(bsl_2d_multigrid sll_interpolators
-                                       sll_poisson_solvers
-                                       mudpack  )
+IF (BUILD_MUDPACK)
+  ADD_EXECUTABLE(bsl_2d_multigrid landau_2d_multigrid.F90)
+  TARGET_LINK_LIBRARIES(bsl_2d_multigrid sll_interpolators
+                                         sll_poisson_solvers
+                                         mudpack  )
+ENDIF (BUILD_MUDPACK)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
 
