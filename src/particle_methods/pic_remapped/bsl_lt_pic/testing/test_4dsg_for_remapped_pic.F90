@@ -109,7 +109,7 @@ program test_4dsg_for_remapped_pic
      dx(3) = randompoint(eta_min(3),eta_max(3));
      dx(4) = randompoint(eta_min(4),eta_max(4));
 
-     ! [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::function%20interpolate_value]]
+     ! <<interpolate_value>> [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::function%20interpolate_value]]
 
      finterp = interp%interpolate_value(f,dx);
      fref = testfunction(dx(1),dx(2),dx(3),dx(4));
