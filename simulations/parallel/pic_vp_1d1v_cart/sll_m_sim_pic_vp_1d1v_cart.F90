@@ -102,7 +102,7 @@ module sll_m_sim_pic_vp_1d1v_cart
   sll_int32 :: n_x,n_v
   !For parallelization MPI Rank and collective size
   sll_int32 :: coll_rank,coll_size
-  sll_int32 :: ierr,i,j
+  sll_int32 :: ierr,i
    
   type, extends( sll_c_simulation_base_class ) :: &
       sll_t_simulation_pic1d1v_vp_periodic
