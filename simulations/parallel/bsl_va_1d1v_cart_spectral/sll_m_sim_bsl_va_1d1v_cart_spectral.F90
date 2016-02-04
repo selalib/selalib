@@ -90,13 +90,13 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
     sll_p_pi
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_c2r_1d, &
-    sll_s_fft_apply_plan_r2c_1d, &
-    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_exec_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_f_fft_new_plan_r2r_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_r2r_1d, &
+    sll_t_fft
 
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
@@ -287,7 +287,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
   sll_real64, dimension(:,:), allocatable :: f1d_omp_in
   sll_real64, dimension(:,:), allocatable :: f1d_omp_out
 
-  type(sll_t_fft_plan), pointer :: pfwd
+  type(sll_t_fft)             :: pfwd
   logical                     :: MPI_MASTER
 
 contains
@@ -1193,7 +1193,7 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
     
     SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    pfwd => sll_f_fft_new_plan_r2r_1d(np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
+    call sll_s_fft_init_r2r_1d(pfwd,np_x1-1,buf_fft,buf_fft,sll_p_fft_forward,normalized = .TRUE.)
     
     layout_x1       => sll_f_new_layout_2d( sll_v_world_collective )
     layout_x2       => sll_f_new_layout_2d( sll_v_world_collective )    
@@ -1500,7 +1500,7 @@ contains
       
       sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
     
-      call sll_s_fft_apply_plan_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
+      call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
            sim%advect_ampere_x1(tid)%ptr%d_dx, &
            sim%advect_ampere_x1(tid)%ptr%fk)
       do i = 2, nc_x1/2+1
@@ -1514,7 +1514,7 @@ contains
            sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
          + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
     
-      call sll_s_fft_apply_plan_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
+      call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
            sim%advect_ampere_x1(tid)%ptr%fk,  &
            sim%advect_ampere_x1(tid)%ptr%d_dx)
     
@@ -1530,7 +1530,7 @@ contains
     
     
     sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
-    call sll_s_fft_apply_plan_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
+    call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
          sim%advect_ampere_x1(1)%ptr%d_dx, &
          sim%advect_ampere_x1(1)%ptr%ek)
     
@@ -1547,7 +1547,7 @@ contains
          - sim%advect_ampere_x1(1)%ptr%r1(i) * sim%L / cmplx(0.,2.*sll_p_pi*(i-1),kind=f64)
     end do
     
-    call sll_s_fft_apply_plan_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
+    call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
          sim%advect_ampere_x1(1)%ptr%ek,  &
          efield)
     
@@ -1832,7 +1832,7 @@ contains
     f_hat_x2_loc(1:sim%nb_mode+1) = 0._f64
     do i=1,local_size_x2
       buf_fft = f_x1(1:np_x1-1,i)
-      call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+      call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
       do k=0,sim%nb_mode
         f_hat_x2_loc(k+1) = f_hat_x2_loc(k+1) &
           +abs(sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k))**2 &
@@ -1849,7 +1849,7 @@ contains
     if (MPI_MASTER) then                  
     
       buf_fft = rho(1:np_x1-1)
-      call sll_s_fft_apply_plan_r2r_1d(pfwd,buf_fft,buf_fft)
+      call sll_s_fft_exec_r2r_1d(pfwd,buf_fft,buf_fft)
     
       do k=0,sim%nb_mode
         rho_mode(k)=sll_f_fft_get_mode_r2c_1d(pfwd,buf_fft,k)

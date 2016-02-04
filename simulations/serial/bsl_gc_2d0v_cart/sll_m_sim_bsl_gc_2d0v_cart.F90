@@ -117,10 +117,12 @@ module sll_m_sim_bsl_gc_2d0v_cart
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
 
+#ifdef MUDPACK
   use sll_m_mudpack_curvilinear, only: &
     sll_p_non_separable_with_cross_terms, &
     sll_p_non_separable_without_cross_terms, &
     sll_p_separable
+#endif /* MUDPACK */
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
@@ -304,12 +306,14 @@ contains
     sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_c_coordinate_transformation_2d_base), pointer :: transformation
+#ifdef MUDPACK
     sll_real64, dimension(:,:), allocatable :: cxx_2d
     sll_real64, dimension(:,:), allocatable :: cxy_2d
     sll_real64, dimension(:,:), allocatable :: cyy_2d
     sll_real64, dimension(:,:), allocatable :: cx_2d
     sll_real64, dimension(:,:), allocatable :: cy_2d
     sll_real64, dimension(:,:), allocatable :: ce_2d
+#endif /* MUDPACK */
     sll_int32 :: ierr
 
     namelist /geometry/ &
