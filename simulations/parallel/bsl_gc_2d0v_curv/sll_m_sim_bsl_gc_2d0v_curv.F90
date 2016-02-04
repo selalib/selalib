@@ -159,9 +159,6 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
 
-  use sll_m_mudpack_curvilinear, only: &
-    sll_t_mudpack_2d, &
-    sll_p_non_separable_without_cross_terms
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
@@ -185,6 +182,11 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_t_mudpack_2d, &
+    sll_p_non_separable_without_cross_terms
+
   use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
     sll_f_new_poisson_2d_mudpack_curvilinear_old
 

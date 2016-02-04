@@ -278,6 +278,7 @@ contains
     class(sll_c_interpolator_2d), pointer   :: A2_interp2d
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
+#ifdef MUDPACK
     sll_real64, dimension(:,:), pointer :: b11
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
@@ -286,6 +287,7 @@ contains
     !sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_c_coordinate_transformation_2d_base), pointer :: transformation
+#endif /* MUDPACK */
 !    sll_real64, dimension(:,:), allocatable :: cxx_2d
 !    sll_real64, dimension(:,:), allocatable :: cxy_2d
 !    sll_real64, dimension(:,:), allocatable :: cyy_2d
