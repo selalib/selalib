@@ -1,4 +1,3 @@
-ADD_DEFINITIONS(-DMUDPACK)
 
 SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_1d_periodic.F90
@@ -19,6 +18,7 @@ SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_2d_tri.F90 )
 
 IF(BUILD_MUDPACK)
+  ADD_DEFINITIONS(-DMUDPACK)
   SET(POISSON_SRCS ${POISSON_SRCS}
                  sll_m_poisson_2d_mudpack_curvilinear.F90
                  sll_m_poisson_2d_mudpack_curvilinear_old.F90
