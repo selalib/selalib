@@ -68,7 +68,7 @@ private
 type, public :: sll_t_pic_viewer_2d
 
   type(sll_t_cartesian_mesh_2d), pointer :: mesh
-  character(len=:), allocatable          :: label
+  character(len=72)                      :: label
 
 end type
 
@@ -135,14 +135,14 @@ contains
     ny = viewer%mesh%num_cells2
 
     !Write the light data
-    call sll_s_xml_file_create( viewer%label//cplot//".xmf", file_id, error)
-    call sll_o_xml_field( file_id, 'omega', viewer%label//cplot//".h5:/fp", &
+    call sll_s_xml_file_create( trim(viewer%label)//cplot//".xmf", file_id, error)
+    call sll_o_xml_field( file_id, 'omega', trim(viewer%label)//cplot//".h5:/fp", &
                           nx, ny, "HDF", "Node")
     call sll_s_xml_file_close( file_id, error)
 
     !Write the heavy data
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(viewer%label//cplot//".h5",hfile_id,error)
+    call sll_o_hdf5_file_create(trim(viewer%label)//cplot//".h5",hfile_id,error)
     call sll_o_hdf5_write_array(hfile_id,field,"/fp",error)
     call sll_o_hdf5_file_close(hfile_id, error)
 #endif
@@ -177,14 +177,14 @@ contains
     ymin = viewer%mesh%eta2_min
     ymax = viewer%mesh%eta2_max
 
-    call sll_s_xml_file_create( viewer%label//cplot//".xmf", file_id, error)
-    call write_particles_2d_xml( file_id, viewer%label//cplot, xp, yp )
-    call sll_o_xml_field( file_id, 'omega', viewer%label//cplot//".h5:/op", &
+    call sll_s_xml_file_create( trim(viewer%label)//cplot//".xmf", file_id, error)
+    call write_particles_2d_xml( file_id, trim(viewer%label)//cplot, xp, yp )
+    call sll_o_xml_field( file_id, 'omega', trim(viewer%label)//cplot//".h5:/op", &
                           size(op), "HDF", "Node")
     call sll_s_xml_file_close( file_id, error)
 
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(viewer%label//cplot//".h5",hfile_id,error)
+    call sll_o_hdf5_file_create(trim(viewer%label)//cplot//".h5",hfile_id,error)
     call sll_o_hdf5_write_array(hfile_id,xp,"/xp",error)
     call sll_o_hdf5_write_array(hfile_id,yp,"/yp",error)
     call sll_o_hdf5_write_array(hfile_id,op,"/op",error)
@@ -218,18 +218,18 @@ contains
 
     call sll_s_int2string( iplot, cplot )
 
-    call sll_s_xml_file_create( viewer%label//cplot//".xmf", file_id, error)
-    call write_particles_2d_xml( file_id, viewer%label//cplot, xp, yp )
-    call sll_o_xml_field( file_id, 'omega', viewer%label//cplot//".h5:/op", &
+    call sll_s_xml_file_create( trim(viewer%label)//cplot//".xmf", file_id, error)
+    call write_particles_2d_xml( file_id, trim(viewer%label)//cplot, xp, yp )
+    call sll_o_xml_field( file_id, 'omega', trim(viewer%label)//cplot//".h5:/op", &
                           size(op), "HDF", "Node")
     write(file_id,"(a)")"</Grid>"
     call write_grid_2d_xml( file_id, viewer )
-    call sll_o_xml_field( file_id, 'omega', viewer%label//cplot//".h5:/fp", &
+    call sll_o_xml_field( file_id, 'omega', trim(viewer%label)//cplot//".h5:/fp", &
                           nx, ny, "HDF", "Node")
     call sll_s_xml_file_close( file_id, error)
 
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(viewer%label//cplot//".h5",hfile_id,error)
+    call sll_o_hdf5_file_create(trim(viewer%label)//cplot//".h5",hfile_id,error)
     call sll_o_hdf5_write_array(hfile_id,xp,"/xp",error)
     call sll_o_hdf5_write_array(hfile_id,yp,"/yp",error)
     call sll_o_hdf5_write_array(hfile_id,op,"/op",error)
