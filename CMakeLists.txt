@@ -29,6 +29,8 @@ SET(BUILD_AGMG            OFF CACHE BOOL   "Build AGMG libraries")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 SET(USE_MKL               OFF CACHE BOOL   "Using Intel Math Kernel Library")
+SET(BUILD_FISHPACK        OFF CACHE BOOL   "Build fishpack library")
+SET(BUILD_MUDPACK         OFF CACHE BOOL   "Build mudpack library")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE)
