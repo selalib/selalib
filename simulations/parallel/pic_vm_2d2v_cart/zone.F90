@@ -23,7 +23,7 @@ sll_real64 :: dimy       ! Domain length along y
 sll_real64 :: dx         ! dimx / nx
 sll_real64 :: dy         ! dimy / ny
 
-sll_int32  :: nstep	 ! Time step number
+sll_int32  :: nstep      ! Time step number
 sll_int32  :: nstepmax   ! Time step number (max)
 sll_int32  :: idiag      ! Diagnostic interval
 sll_int32  :: nbpart     ! Number of particles
