@@ -9,6 +9,7 @@
 
 # <<<<BSL-LT-PIC_Simulation>>>> [[file:.]] uses [[[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::BSL-LT-PIC_Library]]]
 
+* [[file:.][Files]]
 * Doxygen [[elisp:(compile "cd ${SELALIB}/build && make doc")][build]], [[selalib:doc/build/html/doxygen/html/index.html][index]]
 * Configuring
 ** [[elisp:(compile "sudo apt-get install -y libopenmpi-dev libfftw3-dev liblapack-dev libhdf5-mpi-dev binutils linux-tools")][Extra packages]] (binutils required for [[gprof]], linux-tools for [[perf]])
