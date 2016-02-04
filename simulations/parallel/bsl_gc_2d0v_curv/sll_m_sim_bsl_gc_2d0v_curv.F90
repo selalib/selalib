@@ -124,12 +124,12 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_t_cubic_spline_interpolator_2d
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_r2r_1d, &
-    sll_s_fft_delete_plan, &
+    sll_s_fft_exec_r2r_1d, &
+    sll_s_fft_free, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_f_fft_new_plan_r2r_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_r2r_1d, &
+    sll_t_fft
 
   use sll_m_general_coordinate_elliptic_solver, only: &
     sll_p_es_gauss_legendre
@@ -159,9 +159,6 @@ module sll_m_sim_bsl_gc_2d0v_curv
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
 
-  use sll_m_mudpack_curvilinear, only: &
-    sll_t_mudpack_2d, &
-    sll_p_non_separable_without_cross_terms
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
@@ -185,6 +182,11 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_o_xdmf_write_array
 
 #ifdef MUDPACK
+
+  use sll_m_mudpack_curvilinear, only: &
+    sll_t_mudpack_2d, &
+    sll_p_non_separable_without_cross_terms
+
   use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
     sll_f_new_poisson_2d_mudpack_curvilinear_old
 
@@ -2327,7 +2329,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64 :: delta_eta2
     sll_real64 :: eta1
     sll_int32 :: ierr 
-    type(sll_t_fft_plan), pointer         :: pfwd
+    type(sll_t_fft)         :: pfwd
     
     Nc_eta1 = mesh_2d%num_cells1
     Nc_eta2 = mesh_2d%num_cells2
@@ -2341,7 +2343,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    pfwd => sll_f_fft_new_plan_r2r_1d(Nc_eta2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
+    call sll_s_fft_init_r2r_1d(pfwd,Nc_eta2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -2386,7 +2388,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l1 = l1*delta_eta2
     l2 = sqrt(l2*delta_eta2)
     e  = 0.5_f64*e*delta_eta2
-    call sll_s_fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
+    call sll_s_fft_exec_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(sll_f_fft_get_mode_r2c_1d(pfwd,int_r,i1-1))**2
@@ -2403,8 +2405,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
       time_mode(1:8)!,mode_slope
 
-    call sll_s_fft_delete_plan(pfwd)
-
+    call sll_s_fft_free(pfwd)
     
   end subroutine time_history_diagnostic_polar
   
@@ -2444,7 +2445,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64 :: delta_eta2
     sll_real64 :: eta1
     sll_int32 :: ierr 
-    type(sll_t_fft_plan), pointer         :: pfwd
+    type(sll_t_fft)        :: pfwd
     sll_real64 :: alpha1,alpha2,alpha3,alpha4,alpha5
     Nc_eta1 = mesh_2d%num_cells1
     Nc_eta2 = mesh_2d%num_cells2
@@ -2458,7 +2459,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(int_r(Nc_eta2),ierr)
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
-    pfwd => sll_f_fft_new_plan_r2r_1d(Nc_eta2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
+    call sll_s_fft_init_r2r_1d(pfwd,Nc_eta2,int_r,int_r,sll_p_fft_forward,normalized = .TRUE.)
  
     w     = 0.0_f64
     l1    = 0.0_f64
@@ -2507,7 +2508,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l1 = l1*delta_eta2
     l2 = sqrt(l2*delta_eta2)
     e  = 0.5_f64*e*delta_eta2
-    call sll_s_fft_apply_plan_r2r_1d(pfwd,int_r,int_r)
+    call sll_s_fft_exec_r2r_1d(pfwd,int_r,int_r)
     do i1=1,8
       !mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(sll_f_fft_get_mode_r2c_1d(pfwd,int_r,i1-1))**2
@@ -2524,7 +2525,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
       time_mode(1:8)!,mode_slope
 
-    call sll_s_fft_delete_plan(pfwd)
+    call sll_s_fft_free(pfwd)
 
     
   end subroutine time_history_diagnostic_gc3

@@ -38,26 +38,33 @@ TARGET_LINK_LIBRARIES( test_poisson_2d_tri sll_poisson_solvers sll_mesh_calculus
 ADD_TEST( NAME poisson_2d_tri  COMMAND test_poisson_2d_tri     )
 SET_TESTS_PROPERTIES( poisson_2d_tri PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-### BEGIN MACRO ###
-MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
-  ADD_EXECUTABLE( test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90 )
-  TARGET_LINK_LIBRARIES( test_mudpack_${TEST_NAME} mudpack
-    sll_poisson_solvers sll_file_io )
-  ADD_TEST( NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
-  SET_TESTS_PROPERTIES( sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ENDMACRO(ADD_MUDPACK_PROGRAM)
-#### END MACRO ####
+IF(BUILD_MUDPACK)
+  ### BEGIN MACRO ###
+  MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
+    ADD_EXECUTABLE( test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90 )
+    TARGET_LINK_LIBRARIES( test_mudpack_${TEST_NAME} mudpack
+      sll_poisson_solvers sll_file_io )
+    ADD_TEST( NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
+    SET_TESTS_PROPERTIES( sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  ENDMACRO(ADD_MUDPACK_PROGRAM)
+  #### END MACRO ####
+  
+  # Ctests
+  ADD_MUDPACK_PROGRAM( cartesian )
+  ADD_MUDPACK_PROGRAM( polar )
+ENDIF(BUILD_MUDPACK)
 
-# Ctests
-ADD_MUDPACK_PROGRAM( cartesian )
-ADD_MUDPACK_PROGRAM( polar )
+
+
 ADD_TEST( NAME poisson_1d_periodic     COMMAND test_poisson_1d_periodic     )
 SET_TESTS_PROPERTIES( poisson_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
-TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
-ADD_TEST( NAME fishpack_interface COMMAND test_fishpack )
-SET_TESTS_PROPERTIES( fishpack_interface PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+IF(BUILD_FISHPACK)
+  ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
+  TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
+  ADD_TEST( NAME fishpack_interface COMMAND test_fishpack )
+  SET_TESTS_PROPERTIES( fishpack_interface PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(BUILD_FISHPACK)
 
 ADD_EXECUTABLE( test_poisson_2d_fem test_poisson_2d_fem.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_poisson_solvers
