@@ -18,5 +18,5 @@ if(BUILD_TESTING)
   set( ARGS ${CMAKE_CURRENT_BINARY_DIR}/params_pic_4d.nml )
   add_mpi_test( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
   set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
-    TIMEOUT 200 )
+    TIMEOUT 500 )
 endif(BUILD_TESTING)
