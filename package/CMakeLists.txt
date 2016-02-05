@@ -43,6 +43,9 @@ endif()
 if( OPENMP_ENABLED )
   set( FC "${FC} ${OpenMP_Fortran_FLAGS}" )
 endif()
+if( ${CMAKE_Fortran_COMPILER} MATCHES gfortran )
+  set( FC "${FC} -ffree-line-length-none" )
+endif()
 
 #===============================================================================
 
@@ -105,7 +108,7 @@ file( GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/sll_*.h )
 install( FILES ${SLL_LIB}    DESTINATION lib )
 install( FILES ${SLL_MACROS} DESTINATION "include/selalib" )
 install( DIRECTORY "${CMAKE_Fortran_MODULE_DIRECTORY}/"
-  DESTINATION "include/selalib" FILES_MATCHING PATTERN "sll_m_*.mod" )
+  DESTINATION "include/selalib" FILES_MATCHING PATTERN "sll_*.mod" )
 
 #===============================================================================
 # Information for external users: selalib.inc to be included by makefiles
@@ -135,3 +138,39 @@ file( APPEND ${filepath} "\nFC = ${FC}\n" )
 install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/pkg_info/selalib)" )
 install( FILES makefile_template DESTINATION pkg_info/selalib )
 install( FILES ${filepath}       DESTINATION pkg_info/selalib )
+
+#===============================================================================
+# Print SELALIBConfig.cmake for external use with cmake
+# How to use in your project:
+# (i)   Include the following lines in your cmake-file: 
+#       SET(SELALIB_DIR   "SELALIB_DIR-NOTFOUND" CACHE STRING "Selalib installation directory." )
+#       FIND_PACAKGE( SELALIB REQUIRED HINT ${SELALIB_DIR} $ENV{SELALIB_DIR}))
+# (ii)  Use ADD_DEPENDENCY( your_project ${SELALIB_LIBRARIES} )
+# (iii) Either set $ENV{SELALIB_DIR} using export SELALIB_DIR=<install_path> or
+#       cmake -DSELALIB_DIR=<install_path>
+# (iv)  If you use the gfortran compiler, you need to add the flag -ffree-line-length-none for your project.
+
+set( filepath "${CMAKE_CURRENT_BINARY_DIR}/SELALIBConfig.cmake" )
+file( WRITE  ${filepath} "set( SELALIB_DIR  ${CMAKE_INSTALL_PREFIX})\n" )
+file( APPEND ${filepath} "\nset( SELALIB_LIB  \${SELALIB_DIR}/lib/libselalib.a)\n" )
+
+file( APPEND ${filepath} "\nset( SELALIB_LIBRARIES \${SELALIB_DIR}/lib/libselalib.a" )
+foreach( lib ${SLL_EXT} )
+  file( APPEND ${filepath} "\n" )
+  file( APPEND ${filepath} "	\${SELALIB_DIR}/lib/lib${lib}.a" )
+endforeach()
+foreach( lib ${SLL_DEPS} )
+  file( APPEND ${filepath} "\n" )
+  file( APPEND ${filepath} "	${lib}" )
+endforeach()
+file( APPEND ${filepath} ")\n" )
+
+# Set include path
+file( APPEND ${filepath} "\nset( SELALIB_INCLUDE_PATH  \${SELALIB_DIR}/include/selalib)\n" )
+
+# Add include path
+file( APPEND ${filepath} "\ninclude_directories( \${SELALIB_INCLUDE_PATH} )\n" )
+
+# Installation
+install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX})" )
+install( FILES ${filepath} DESTINATION ${CMAKE_INSTALL_PREFIX} )

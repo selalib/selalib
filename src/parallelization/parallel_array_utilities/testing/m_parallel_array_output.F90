@@ -1,5 +1,5 @@
 !> @ingroup fields
-module sll_parallel_array_output_module
+module m_parallel_array_output
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -357,4 +357,4 @@ subroutine write_fx3x4(f, layout, cplot)
 
 end subroutine write_fx3x4
 
-end module sll_parallel_array_output_module
+end module m_parallel_array_output
