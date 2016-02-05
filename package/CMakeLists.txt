@@ -173,4 +173,4 @@ file( APPEND ${filepath} "\ninclude_directories( \${SELALIB_INCLUDE_PATH} )\n" )
 
 # Installation
 install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX})" )
-install( FILES ${filepath}       DESTINATION ${CMAKE_INSTALL_PREFIX}  )
+install( FILES ${filepath} DESTINATION ${CMAKE_INSTALL_PREFIX} )
