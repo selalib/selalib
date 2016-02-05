@@ -25,7 +25,7 @@
 !       +\sum_{i=1}^2B_i\partial_i phi
 !       +C \phi = rho
 !in polar coordinates
-!this leads when A_{1,2}=A_{2,1}=0 and B_2 = 0
+!self leads when A_{1,2}=A_{2,1}=0 and B_2 = 0
 ! A_11\partial_{1,1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
 
 
@@ -330,7 +330,7 @@ contains
 !    write(*,103) xa,xb,yc,yd,tolmax
 !    write(*,104) intl
 
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error) 
+!call mud2sp(iprm,fprm,self%work,cofx,cofy,bndsp,rhs,phi,self%mgopt,error) 
     if(present(mudpack_curvilinear_case)) then
       poisson%mudpack_curvilinear_case =  mudpack_curvilinear_case
     else
