@@ -54,9 +54,9 @@ end interface sll_o_solve
 contains
 
 !> Initialize Poisson solver object using finite elements method.
-subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
+subroutine initialize_poisson_2d_fem( self, x, y ,nn_x, nn_y)
 
-type(sll_t_poisson_2d_fem)  :: this !< solver data structure
+type(sll_t_poisson_2d_fem)  :: self !< solver data structure
 sll_int32,  intent(in)      :: nn_x   !< number of cells along x
 sll_int32,  intent(in)      :: nn_y   !< number of cells along y
 sll_real64, dimension(nn_x) :: x      !< x nodes coordinates
@@ -80,23 +80,23 @@ sll_int32                   :: kd
 sll_int32                   :: nd
 sll_int32                   :: n
 
-this%nx = nn_x-1
-this%ny = nn_y-1
+self%nx = nn_x-1
+self%ny = nn_y-1
 
-nx = this%nx
-ny = this%ny
+nx = self%nx
+ny = self%ny
 
-SLL_ALLOCATE(this%hx(1:nx),error)
-SLL_ALLOCATE(this%hy(1:ny),error)
-SLL_ALLOCATE(this%A((nx+1)*(ny+1),(nx+1)*(ny+1)), error)
-SLL_ALLOCATE(this%M((nx+1)*(ny+1),(nx+1)*(ny+1)), error)
+SLL_ALLOCATE(self%hx(1:nx),error)
+SLL_ALLOCATE(self%hy(1:ny),error)
+SLL_ALLOCATE(self%A((nx+1)*(ny+1),(nx+1)*(ny+1)), error)
+SLL_ALLOCATE(self%M((nx+1)*(ny+1),(nx+1)*(ny+1)), error)
 
 do i=1,nx
-  this%hx(i) = x(i+1)-x(i)
+  self%hx(i) = x(i+1)-x(i)
 end do
 
 do j=1,ny
-  this%hy(j) = y(j+1)-y(j)
+  self%hy(j) = y(j+1)-y(j)
 end do
 
 !** Construction des matrices elementaires
@@ -126,75 +126,75 @@ Mfelem(2,:) = [ 1.0_f64, 2.0_f64]
 
 Mfelem = Mfelem / 6.0_f64
 
-this%A = 0.0_f64
-this%M = 0.0_f64
+self%A = 0.0_f64
+self%M = 0.0_f64
 
 !***  Interior mesh ***
 do i=1,nx
   do j=1,ny
-    isom(1) = som(this%nx,i,j,1)
-    isom(2) = som(this%nx,i,j,2)
-    isom(3) = som(this%nx,i,j,3)
-    isom(4) = som(this%nx,i,j,4)
+    isom(1) = som(self%nx,i,j,1)
+    isom(2) = som(self%nx,i,j,2)
+    isom(3) = som(self%nx,i,j,3)
+    isom(4) = som(self%nx,i,j,4)
     do ii=1,4
       do jj=1,4
-        this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-        & + Axelem(ii,jj) * this%hy(j) / this%hx(i)           &
-        & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-        this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-        & + Mmelem(ii,jj) * this%hy(j) * this%hx(i)
+        self%A(isom(ii),isom(jj)) = self%A(isom(ii),isom(jj)) &
+        & + Axelem(ii,jj) * self%hy(j) / self%hx(i)           &
+        & + Ayelem(ii,jj) * self%hx(i) / self%hy(j)
+        self%M(isom(ii),isom(jj)) = self%M(isom(ii),isom(jj)) &
+        & + Mmelem(ii,jj) * self%hy(j) * self%hx(i)
       end do
     end do
   end do
 end do
 
 !Set nodes dirichlet boundary conditions
-this%nd = 2*(nx+ny)
-allocate(this%id(this%nd))
+self%nd = 2*(nx+ny)
+allocate(self%id(self%nd))
 nd = 0
 do i = 1, nx
   k = i
   nd = nd+1
-  this%id(nd) = k
+  self%id(nd) = k
   k = (nx+1)*(ny+1)-i+1
   nd = nd+1
-  this%id(nd) = k
+  self%id(nd) = k
 end do
 do i = nx+1, nx*(ny+1), nx+1
   k = i
   nd = nd+1
-  this%id(nd) = k
+  self%id(nd) = k
   k = i+1
   nd = nd+1
-  this%id(nd) = k
+  self%id(nd) = k
 end do
 
-do i = 1, this%nd
-  k = this%id(i)
-  this%A(k,k) = 1d20
+do i = 1, self%nd
+  k = self%id(i)
+  self%A(k,k) = 1d20
 end do
 
 kd = nx+2
-SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
-this%mat = 0.0_f64
+SLL_ALLOCATE(self%mat(kd+1,(nx+1)*(ny+1)), error)
+self%mat = 0.0_f64
 n = (nx+1)*(ny+1)
 do i = 1, n
   do j=i,min(n,i+kd)
-   this%mat(kd+1+i-j,j) = this%a(i,j)
+   self%mat(kd+1+i-j,j) = self%a(i,j)
   end do
 end do
 
-call dpbtrf('U',(nx+1)*(ny+1),kd,this%mat,kd+1,error)
+call dpbtrf('U',(nx+1)*(ny+1),kd,self%mat,kd+1,error)
 
-allocate(this%xd((nx+1)*(ny+1)))
-allocate(this%yd((nx+1)*(ny+1)))
+allocate(self%xd((nx+1)*(ny+1)))
+allocate(self%yd((nx+1)*(ny+1)))
 
 k = 0
 do j = 1, ny+1
 do i = 1, nx+1
   k = k+1
-  this%xd(k) = x(i)
-  this%yd(k) = y(j)
+  self%xd(k) = x(i)
+  self%yd(k) = y(j)
 end do
 end do
 
@@ -219,20 +219,20 @@ end if
 end function som
 
 !> Solve the poisson equation
-subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( sll_t_poisson_2d_fem ) :: this !< Poisson solver object
+subroutine solve_poisson_2d_fem( self, ex, ey, rho )
+type( sll_t_poisson_2d_fem ) :: self !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
-sll_real64, dimension((this%nx+1)*(this%ny+1)) :: b
+sll_real64, dimension((self%nx+1)*(self%ny+1)) :: b
 
 sll_int32 :: nx
 sll_int32 :: ny
 sll_int32 :: i, j, k
 sll_int32 :: error
 
-nx = this%nx
-ny = this%ny
+nx = self%nx
+ny = self%ny
 
 k = 0
 do j=1,ny+1
@@ -242,14 +242,14 @@ do i=1,nx+1
 end do
 end do
 
-b = matmul(this%M,b)
+b = matmul(self%M,b)
 
-do i = 1, this%nd
-  k = this%id(i)
-  b(k) = 1.0e20 * (this%xd(k)*this%xd(k)+this%yd(k)*this%yd(k))
+do i = 1, self%nd
+  k = self%id(i)
+  b(k) = 1.0e20 * (self%xd(k)*self%xd(k)+self%yd(k)*self%yd(k))
 end do
 
-call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
+call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,self%mat,nx+3,b,(nx+1)*(ny+1),error) 
 
 rho = 0.0_8
 k = 0
@@ -262,13 +262,13 @@ end do
 
 do j=1,ny+1
 do i=1,nx
-  ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
+  ex(i,j) = - (rho(i+1,j)-rho(i,j)) / self%hx(i)
 end do
 end do
 
 do j=1,ny
 do i=1,nx+1
-  ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
+  ey(i,j) = - (rho(i,j+1)-rho(i,j)) / self%hy(j)
 end do
 end do
 
