@@ -1,4 +1,4 @@
-module sll_generate_tri_mesh
+module m_generate_tri_mesh
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   implicit none
@@ -363,4 +363,4 @@ close(10)
    
 end subroutine write_mesh
 
-end module sll_generate_tri_mesh
+end module m_generate_tri_mesh

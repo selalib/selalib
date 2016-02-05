@@ -13,5 +13,5 @@ TARGET_LINK_LIBRARIES( test_gnuplot sll_file_io  )
 ADD_TEST( NAME gnuplot_file_io COMMAND test_gnuplot )
 SET_TESTS_PROPERTIES( gnuplot_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_io_tri_mesh test_io_tri_mesh.F90 sll_generate_tri_mesh.F90 )
+ADD_EXECUTABLE( test_io_tri_mesh test_io_tri_mesh.F90 m_generate_tri_mesh.F90 )
 TARGET_LINK_LIBRARIES( test_io_tri_mesh sll_file_io )
