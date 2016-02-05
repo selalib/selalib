@@ -32,12 +32,11 @@ LIBS := $(LIBS) $(SLL_LIB) $(SLL_EXT) $(SLL_DEPS)
 #==============================================================================
 # Standard targets: make, make all, make clean
 #==============================================================================
-OBJECTS = $(SOURCES:.F90=.o)
 
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(SOURCES)
-	$(FC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
+	$(FC) $(FCFLAGS) $(LDFLAGS) $(LIBS) -o $@exe $^ $(LIBS)
 
 .F90.o:
 	$(FC) $(FCFLAGS) $< -o $@
