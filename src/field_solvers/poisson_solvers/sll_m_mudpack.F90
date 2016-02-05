@@ -66,7 +66,7 @@ end interface sll_o_delete
 contains
 
 !> Initialize the Poisson solver using mudpack library
-subroutine sll_s_initialize_mudpack_cartesian( this,                        &
+subroutine sll_s_initialize_mudpack_cartesian( self,                        &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
                                         bc_eta1_left, bc_eta1_right, &
@@ -74,7 +74,7 @@ subroutine sll_s_initialize_mudpack_cartesian( this,                        &
 implicit none
 
 ! set grid size params
-type(sll_t_mudpack_solver):: this          !< Data structure for solver
+type(sll_t_mudpack_solver):: self          !< Data structure for solver
 sll_real64, intent(in)  :: eta1_min      !< left corner x direction
 sll_real64, intent(in)  :: eta1_max      !< right corner x direction
 sll_real64, intent(in)  :: eta2_min      !< left corner x direction
@@ -117,7 +117,7 @@ ny = nc_eta2+1
 ! set minimum required work space
 llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
 
-allocate(this%work(llwork))
+allocate(self%work(llwork))
 iiex = ceiling(log((nx-1.)/iixp)/log(2.))+1
 jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
 
@@ -147,17 +147,17 @@ end if
 
 !set multigrid arguments (w(2,1) cycling with fully weighted
 !residual restriction and cubic prolongation)
-this%mgopt(1) = 2
-this%mgopt(2) = 2
-this%mgopt(3) = 1
-this%mgopt(4) = 3
+self%mgopt(1) = 2
+self%mgopt(2) = 2
+self%mgopt(3) = 1
+self%mgopt(4) = 3
 
 !set for three cycles to ensure second-order approximation is computed
 maxcy = 5
 
 !set no initial guess forcing full multigrid cycling
-this%iguess = 0
-iguess = this%iguess
+self%iguess = 0
+iguess = self%iguess
 
 !set work space length approximation from parameter statement
 nwork = llwork
@@ -176,12 +176,12 @@ tolmax = 0.0_f64
 
 #ifdef DEBUG
 write(*,101) (iprm(i),i=1,15)
-write(*,102) (this%mgopt(i),i=1,4)
+write(*,102) (self%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 #endif
 
-call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+call mud2sp(iprm,fprm,self%work,cofx,cofy,bndsp,rhs,phi,self%mgopt,error)
 
 #ifdef DEBUG
 !print error parameter and minimum work space requirement
@@ -209,9 +209,9 @@ end subroutine sll_s_initialize_mudpack_cartesian
 
 
 !> Compute the potential using mudpack library on cartesian mesh
-subroutine sll_s_solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
+subroutine sll_s_solve_mudpack_cartesian(self, phi, rhs, ex, ey, nrj)
 
-type(sll_t_mudpack_solver)     :: this      !< Data structure for Poisson solver
+type(sll_t_mudpack_solver)     :: self      !< Data structure for Poisson solver
 sll_real64           :: phi(:,:)  !< Electric potential
 sll_real64           :: rhs(:,:)  !< Charge density
 sll_real64, optional :: ex(:,:)   !< Electric field
@@ -238,10 +238,10 @@ equivalence(xa,fprm)
 
 !set initial guess because solve should be called every time step in a
 !time dependent problem and the elliptic operator does not depend on time.
-if (this%iguess == 0) then
+if (self%iguess == 0) then
    iguess = 0
 else
-   this%iguess = 1
+   self%iguess = 1
     iguess = 1
 endif
 
@@ -254,7 +254,7 @@ write(*,106) intl,method,iguess
 if ( nxa == 0 .and. nyc == 0 ) &
    rhs = rhs - sum(rhs) / real(nx*ny,f64)
 
-call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+call mud2sp(iprm,fprm,self%work,cofx,cofy,bndsp,rhs,phi,self%mgopt,error)
 
 #ifdef DEBUG
 write(*,107) error
@@ -266,7 +266,7 @@ if ( nxa == 0 .and. nyc == 0 ) &
 
 iguess = 1
 ! attempt to improve approximation to fourth order
-call mud24sp(this%work,phi,error)
+call mud24sp(self%work,phi,error)
 
 #ifdef DEBUG
 write (*,108) error
@@ -307,23 +307,23 @@ end if
 end subroutine sll_s_solve_mudpack_cartesian
 
 !> deallocate the mudpack solver
-subroutine sll_s_delete_mudpack_cartesian(this)
-type(sll_t_mudpack_solver)        :: this          !< Data structure for solver
+subroutine sll_s_delete_mudpack_cartesian(self)
+type(sll_t_mudpack_solver)        :: self          !< Data structure for solver
 
-   deallocate(this%work)
+   deallocate(self%work)
 
 end subroutine sll_s_delete_mudpack_cartesian
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine sll_s_initialize_mudpack_polar(this,                      &
+subroutine sll_s_initialize_mudpack_polar(self,                      &
                                     r_min, r_max, nr,          &
                                     theta_min, theta_max, nth, &
                                     bc_r_min, bc_r_max,        &
                                     bc_theta_min, bc_theta_max )
 implicit none
 
-type(sll_t_mudpack_solver)       :: this      !< Solver object
+type(sll_t_mudpack_solver)       :: self      !< Solver object
 sll_real64, intent(in) :: r_min     !< radius min
 sll_real64, intent(in) :: r_max     !< radius min
 sll_real64, intent(in) :: theta_min !< theta min
@@ -365,7 +365,7 @@ ny = nth
 ! set minimum required work space
 llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
       
-allocate(this%work(llwork))
+allocate(self%work(llwork))
 icall = 0
 
 ! set input sll_int32 arguments
@@ -397,10 +397,10 @@ end if
 
 ! set multigrid arguments (w(2,1) cycling with fully weighted
 ! residual restriction and cubic prolongation)
-this%mgopt(1) = 2
-this%mgopt(2) = 2
-this%mgopt(3) = 1
-this%mgopt(4) = 3
+self%mgopt(1) = 2
+self%mgopt(2) = 2
+self%mgopt(3) = 1
+self%mgopt(4) = 3
 
 ! set three cycles to ensure second-order approx
 maxcy = 3
@@ -425,11 +425,11 @@ tolmax = 0.0_f64
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
-write(*,102) (this%mgopt(i),i=1,4)
+write(*,102) (self%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
-call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
+call mud2cr(iprm,fprm,self%work,coef_polar,bndcr,rhs,phi,self%mgopt,ierror)
 
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
@@ -456,11 +456,11 @@ end subroutine sll_s_initialize_mudpack_polar
 
 
 !> Solve the Poisson equation and get the potential
-subroutine sll_s_solve_mudpack_polar(this, phi, rhs)
+subroutine sll_s_solve_mudpack_polar(self, phi, rhs)
 implicit none
 
 ! set grid size params
-type(sll_t_mudpack_solver) :: this  !< solver data object
+type(sll_t_mudpack_solver) :: self  !< solver data object
 sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
@@ -488,10 +488,10 @@ icall = 1
 intl  = 1
 write(*,106) intl,method,iguess
 ! attempt solution
-call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
+call mud2cr(iprm,fprm,self%work,coef_polar,bndcr,rhs,phi,self%mgopt,ierror)
 SLL_ASSERT(ierror == 0)
 ! attempt fourth order approximation
-call mud24cr(this%work,coef_polar,bndcr,phi,ierror)
+call mud24cr(self%work,coef_polar,bndcr,phi,ierror)
 SLL_ASSERT(ierror == 0)
 
 106 format(/' approximation call to mud2cr', &
