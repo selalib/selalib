@@ -39,8 +39,8 @@ sll_real64                            :: x1_max
 sll_real64                            :: tmp
 sll_real64                            :: tmp2
 sll_real64                            :: val
-sll_real64                            :: r
 sll_real64                            :: dr
+sll_real64, dimension(:), allocatable :: r
 sll_real64, dimension(:), allocatable :: E
 sll_real64, dimension(:), allocatable :: rho
 sll_real64, dimension(:), allocatable :: check
@@ -52,6 +52,7 @@ Nc_x1  = 32
 
 dr = (x1_max-x1_min)/real(Nc_x1,f64)
 
+SLL_ALLOCATE(r(Nc_x1+1),ierr)
 SLL_ALLOCATE(E(Nc_x1+1),ierr)
 SLL_ALLOCATE(rho(Nc_x1+1),ierr)
 SLL_ALLOCATE(check(Nc_x1+1),ierr)
@@ -66,23 +67,15 @@ call poisson%compute_E_from_rho( E, rho )
 
 !we check that the result is correct
 !-rE(r) = \int_0^rsrho(s)ds
-
-err = 0._f64
-
-val = abs(x1_min*E(1))
-if(val>err)then
-  err = val
-endif
-
 !check(i) = int_{r(1)}^{r(i+1)}srho(s)ds
 
 check(1) = 0._f64
 tmp = 0._f64
 do i=1,Nc_x1
-  r = x1_min+real(i-1,f64)*dr
-  tmp = tmp+0.5_f64*(r*rho(i)+(r+dr)*rho(i+1))*dr
+  r(i) = x1_min+real(i-1,f64)*dr
+  tmp = tmp+0.5_f64*(r(i)*rho(i)+(r(i)+dr)*rho(i+1))*dr
   check(i+1) = -tmp 
-  if(abs(r+dr)<1e-12)then
+  if(abs(r(i)+dr)<1e-12)then
     print *,'#val=',tmp
     tmp2 = -tmp
   endif   
@@ -90,15 +83,13 @@ enddo
 
 check = check - tmp2
 
-print *,'#err=',err
+err = maxval(abs(r(1:Nc_x1)*E(1:Nc_x1)-check(1:Nc_x1)))
   
-if(err>-1e-12)then
-  do i=1,Nc_x1+1
-    r = x1_min+real(i-1,f64)*dr
-    print *,r,r*E(i),check(i)
-  enddo
+print*, 'error = ', err
+if (err>1e-12) then
+  print *, '#FAILED'
+else  
+  print *, '#PASSED'
 endif
-  
-print *, '#PASSED'
 
 end program
