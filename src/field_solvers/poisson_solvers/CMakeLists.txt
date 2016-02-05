@@ -26,10 +26,6 @@ IF(BUILD_MUDPACK)
                  sll_m_mudpack_curvilinear.F90)
 ENDIF(BUILD_MUDPACK)
 
-IF(BUILD_FISHPACK)
-  SET(POISSON_SRCS ${POISSON_SRCS} sll_m_fishpack.F90)
-ENDIF(BUILD_FISHPACK)
-
 IF(FFTW_ENABLED AND FFTW_FOUND)
    SET(POISSON_SRCS ${POISSON_SRCS} sll_m_poisson_2d_periodic_fftw.F90)
 ENDIF()
@@ -42,10 +38,6 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_assert 
   dfftpack 
   ${LAPACK_LIBRARIES})
-
-IF(BUILD_FISHPACK)
-  TARGET_LINK_LIBRARIES( sll_poisson_solvers fishpack)
-ENDIF(BUILD_FISHPACK)
 
 IF(BUILD_MUDPACK)
   TARGET_LINK_LIBRARIES( sll_poisson_solvers mudpack)
