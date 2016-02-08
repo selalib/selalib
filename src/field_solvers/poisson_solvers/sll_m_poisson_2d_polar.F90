@@ -209,7 +209,7 @@ function sll_f_new_plan_poisson_polar(dr,           &
                                       ntheta,       &
                                       bc,           &
                                       dlog_density, &
-                                      inv_Te) result(this)
+                                      inv_Te) result(self)
 
   sll_real64 :: dr             !< size of space in direction r
   sll_real64 :: rmin           !< interior radius
@@ -218,54 +218,54 @@ function sll_f_new_plan_poisson_polar(dr,           &
   sll_int32, optional :: bc(2) !< Boundary conditions, can be combined with +
                                !< optional and default is Dirichlet in rmin and rmax
 
-  type(sll_t_plan_poisson_polar), pointer  :: this         !< Poisson solver structure
+  type(sll_t_plan_poisson_polar), pointer  :: self         !< Poisson solver structure
   sll_real64,dimension(:),        optional :: dlog_density !< for quasi neutral solver
   sll_real64,dimension(:),        optional :: inv_Te       !< for quasi neutral solver
 
   sll_int32 :: err
   sll_real64, dimension(:), allocatable :: buf
 
-  SLL_ALLOCATE(this,err)
+  SLL_ALLOCATE(self,err)
   SLL_ALLOCATE(buf(ntheta),err)
-  SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),err)
-  SLL_ALLOCATE(this%fk(nr+1),err)
-  SLL_ALLOCATE(this%phik(nr+1),err)
-  SLL_ALLOCATE(this%a(3*(nr-1)),err)
-  SLL_ALLOCATE(this%cts(7*(nr-1)),err)
-  SLL_ALLOCATE(this%ipiv(nr-1),err)
+  SLL_ALLOCATE(self%f_fft(nr+1,ntheta+1),err)
+  SLL_ALLOCATE(self%fk(nr+1),err)
+  SLL_ALLOCATE(self%phik(nr+1),err)
+  SLL_ALLOCATE(self%a(3*(nr-1)),err)
+  SLL_ALLOCATE(self%cts(7*(nr-1)),err)
+  SLL_ALLOCATE(self%ipiv(nr-1),err)
   
-  SLL_ALLOCATE(this%dlog_density(nr+1),err)
-  SLL_ALLOCATE(this%inv_Te(nr+1),err)
+  SLL_ALLOCATE(self%dlog_density(nr+1),err)
+  SLL_ALLOCATE(self%inv_Te(nr+1),err)
   
-  this%dlog_density = 0._f64
-  this%inv_Te       = 0._f64
+  self%dlog_density = 0._f64
+  self%inv_Te       = 0._f64
   
-  if (present(dlog_density)) this%dlog_density = dlog_density
-  if (present(inv_Te))       this%inv_Te = inv_Te
+  if (present(dlog_density)) self%dlog_density = dlog_density
+  if (present(inv_Te))       self%inv_Te = inv_Te
   
-  this%dr     = dr
-  this%rmin   = rmin
-  this%nr     = nr
-  this%ntheta = ntheta
+  self%dr     = dr
+  self%rmin   = rmin
+  self%nr     = nr
+  self%ntheta = ntheta
 
   if (present(bc)) then
-    this%bc=bc
+    self%bc=bc
   else
-    this%bc(1)=-1
-    this%bc(2)=-1
+    self%bc(1)=-1
+    self%bc(2)=-1
   end if
 
   call sll_s_fft_init_r2r_1d(&
-       this%pfwd, ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
+       self%pfwd, ntheta,buf,buf,sll_p_fft_forward,normalized = .TRUE.)
   call sll_s_fft_init_r2r_1d( &
-       this%pinv, ntheta,buf,buf,sll_p_fft_backward)
+       self%pinv, ntheta,buf,buf,sll_p_fft_backward)
   
   SLL_DEALLOCATE_ARRAY(buf,err)
 
 end function sll_f_new_plan_poisson_polar
 
 !> Initialize the Poisson solver in polar coordinates
-subroutine initialize_poisson_polar(this,         &
+subroutine initialize_poisson_polar(self,         &
                                     rmin,         &
                                     rmax,         &
                                     nr,           &
@@ -275,7 +275,7 @@ subroutine initialize_poisson_polar(this,         &
                                     dlog_density, &
                                     inv_Te)
 
-  type(sll_t_plan_poisson_polar) :: this !< Poisson solver object
+  type(sll_t_plan_poisson_polar) :: self !< Poisson solver object
 
   sll_real64, intent(in) :: rmin            !< r min
   sll_real64, intent(in) :: rmax            !< r max
@@ -289,40 +289,40 @@ subroutine initialize_poisson_polar(this,         &
   sll_int32               :: error
   sll_real64, allocatable :: buf(:)
 
-  SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),error)
-  SLL_ALLOCATE(this%fk(nr+1),            error)
-  SLL_ALLOCATE(this%phik(nr+1),          error)
-  SLL_ALLOCATE(this%a(3*(nr-1)),         error)
-  SLL_ALLOCATE(this%cts(7*(nr-1)),       error)
-  SLL_ALLOCATE(this%ipiv(nr-1),          error)
+  SLL_ALLOCATE(self%f_fft(nr+1,ntheta+1),error)
+  SLL_ALLOCATE(self%fk(nr+1),            error)
+  SLL_ALLOCATE(self%phik(nr+1),          error)
+  SLL_ALLOCATE(self%a(3*(nr-1)),         error)
+  SLL_ALLOCATE(self%cts(7*(nr-1)),       error)
+  SLL_ALLOCATE(self%ipiv(nr-1),          error)
 
-  this%rmin   = rmin
-  this%rmax   = rmax
-  this%dr     = (rmax-rmin)/nr
-  this%nr     = nr
-  this%ntheta = ntheta
+  self%rmin   = rmin
+  self%rmax   = rmax
+  self%dr     = (rmax-rmin)/nr
+  self%nr     = nr
+  self%ntheta = ntheta
 
-  SLL_ALLOCATE(this%dlog_density(nr+1),error)
-  SLL_ALLOCATE(this%inv_Te(nr+1),error)
+  SLL_ALLOCATE(self%dlog_density(nr+1),error)
+  SLL_ALLOCATE(self%inv_Te(nr+1),error)
   
-  this%dlog_density = 0._f64
-  this%inv_Te = 0._f64
+  self%dlog_density = 0._f64
+  self%inv_Te = 0._f64
   
-  if(present(dlog_density)) this%dlog_density = dlog_density
-  if(present(inv_Te))       this%inv_Te       = inv_Te
+  if(present(dlog_density)) self%dlog_density = dlog_density
+  if(present(inv_Te))       self%inv_Te       = inv_Te
 
   if (present(bc_rmin) .and. present(bc_rmax)) then
-    this%bc(1) = bc_rmin
-    this%bc(2) = bc_rmax
+    self%bc(1) = bc_rmin
+    self%bc(2) = bc_rmax
   else
-    this%bc(1) = -1
-    this%bc(2) = -1
+    self%bc(1) = -1
+    self%bc(2) = -1
   end if
 
   SLL_ALLOCATE(buf(ntheta),error)
-  call sll_s_fft_init_r2r_1d(this%pfwd, ntheta, &
+  call sll_s_fft_init_r2r_1d(self%pfwd, ntheta, &
    buf,buf,sll_p_fft_forward,normalized = .TRUE.)
-  call sll_s_fft_init_r2r_1d(this%pinv, ntheta,buf,buf,sll_p_fft_backward)
+  call sll_s_fft_init_r2r_1d(self%pinv, ntheta,buf,buf,sll_p_fft_backward)
   SLL_DEALLOCATE_ARRAY(buf,error)
 
 end subroutine initialize_poisson_polar
@@ -332,21 +332,21 @@ end subroutine initialize_poisson_polar
 !=====================================
 
 !>delete a sll_t_plan_poisson_polar object
-subroutine delete_plan_poisson_polar(this)
+subroutine delete_plan_poisson_polar(self)
 
-  type(sll_t_plan_poisson_polar), pointer :: this
+  type(sll_t_plan_poisson_polar), pointer :: self
   sll_int32 :: err
 
-  if (associated(this)) then
-    call sll_s_fft_free(this%pfwd)
-    call sll_s_fft_free(this%pinv)
-    SLL_DEALLOCATE_ARRAY(this%f_fft,err)
-    SLL_DEALLOCATE_ARRAY(this%fk,err)
-    SLL_DEALLOCATE_ARRAY(this%phik,err)
-    SLL_DEALLOCATE_ARRAY(this%a,err)
-    SLL_DEALLOCATE_ARRAY(this%cts,err)
-    SLL_DEALLOCATE_ARRAY(this%ipiv,err)
-    SLL_DEALLOCATE(this,err)
+  if (associated(self)) then
+    call sll_s_fft_free(self%pfwd)
+    call sll_s_fft_free(self%pinv)
+    SLL_DEALLOCATE_ARRAY(self%f_fft,err)
+    SLL_DEALLOCATE_ARRAY(self%fk,err)
+    SLL_DEALLOCATE_ARRAY(self%phik,err)
+    SLL_DEALLOCATE_ARRAY(self%a,err)
+    SLL_DEALLOCATE_ARRAY(self%cts,err)
+    SLL_DEALLOCATE_ARRAY(self%ipiv,err)
+    SLL_DEALLOCATE(self,err)
   end if
 
 end subroutine delete_plan_poisson_polar

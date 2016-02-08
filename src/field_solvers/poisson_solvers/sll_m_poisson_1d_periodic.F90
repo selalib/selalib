@@ -84,22 +84,22 @@ contains
   !> Create a sll_o_new solver
   !> @return
   function new_poisson_1d_periodic(eta1_min,eta1_max,nc_eta1,error) &
-     result(this)
-     type(sll_t_poisson_1d_periodic),pointer :: this     !< Solver data structure
+     result(self)
+     type(sll_t_poisson_1d_periodic),pointer :: self     !< Solver data structure
      sll_int32,intent(in)              :: nc_eta1  !< number of cells
      sll_int32, intent(out)            :: error    !< error code
      sll_real64, intent(in)            :: eta1_min !< left corner
      sll_real64, intent(in)            :: eta1_max !< right corner
 
-     SLL_ALLOCATE(this, error)
-     call initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+     SLL_ALLOCATE(self, error)
+     call initialize_poisson_1d_periodic(self,eta1_min,eta1_max,nc_eta1,error)
 
   end function new_poisson_1d_periodic 
   
   !> sll_o_initialize the solver
-  subroutine initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+  subroutine initialize_poisson_1d_periodic(self,eta1_min,eta1_max,nc_eta1,error)
 
-    type(sll_t_poisson_1d_periodic),intent(out) :: this     !< Solver data structure
+    type(sll_t_poisson_1d_periodic),intent(out) :: self     !< Solver data structure
     sll_int32,intent(in)                  :: nc_eta1  !< number of cells
     sll_int32, intent(out)                :: error    !< error code
     sll_real64, intent(in)                :: eta1_min !< left corner
@@ -107,22 +107,22 @@ contains
 
     error = 0
     ! geometry
-    this%nc_eta1  = nc_eta1
-    this%eta1_min = eta1_min
-    this%eta1_max = eta1_max
+    self%nc_eta1  = nc_eta1
+    self%eta1_min = eta1_min
+    self%eta1_max = eta1_max
 
-    SLL_ALLOCATE(this%wsave(2*this%nc_eta1+15),error)
+    SLL_ALLOCATE(self%wsave(2*self%nc_eta1+15),error)
 
-    call dffti(this%nc_eta1,this%wsave)
+    call dffti(self%nc_eta1,self%wsave)
 
     ! Allocate auxiliary arrays for fft in order to keep rhs unchanged
-    SLL_ALLOCATE(this%work(nc_eta1+1),error)
+    SLL_ALLOCATE(self%work(nc_eta1+1),error)
 
   end subroutine initialize_poisson_1d_periodic
 
-  subroutine solve_poisson_1d_periodic(this, field, rhs)
+  subroutine solve_poisson_1d_periodic(self, field, rhs)
 
-    type(sll_t_poisson_1d_periodic),intent(inout) :: this
+    type(sll_t_poisson_1d_periodic),intent(inout) :: self
     sll_real64, dimension(:), intent(out)   :: field
     sll_real64, dimension(:), intent(in)    :: rhs
     sll_int32                               :: ik
@@ -131,42 +131,42 @@ contains
     ! Check that field and rhs are both associated to the 
     ! same mesh with the right number of cells 
     ! that has been initialized in new_poisson_1d_periodic
-    SLL_ASSERT(size(field)==this%nc_eta1+1)
-    SLL_ASSERT(size(rhs)==this%nc_eta1+1)
+    SLL_ASSERT(size(field)==self%nc_eta1+1)
+    SLL_ASSERT(size(rhs)==self%nc_eta1+1)
 
     ! copy rhs into auxiliary array for fftpack
     ! in order to keep rhs unchanged
-    this%work = rhs 
+    self%work = rhs 
 
     ! Forward FFT 
-    call dfftf( this%nc_eta1, this%work, this%wsave)
+    call dfftf( self%nc_eta1, self%work, self%wsave)
 
-    this%work = this%work /this%nc_eta1      ! normalize FFT
+    self%work = self%work /self%nc_eta1      ! normalize FFT
 
-    kx0  = 2_f64*sll_p_pi/(this%eta1_max-this%eta1_min)
+    kx0  = 2_f64*sll_p_pi/(self%eta1_max-self%eta1_min)
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
     ! correspondant a k=0 sont nulles
     field(1) = 0.0_f64
 
     ! Calcul des autres composantes de Fourier
-    do ik=1,(this%nc_eta1-2)/2 
+    do ik=1,(self%nc_eta1-2)/2 
        kx= ik*kx0
        k2 = kx*kx
-       field(2*ik)       = kx/k2*this%work(2*ik+1)
-       field(2*ik+1)     = -kx/k2*this%work(2*ik)
-       this%work(2*ik)   = 1/k2*this%work(2*ik)
-       this%work(2*ik+1) = 1/k2*this%work(2*ik+1)
+       field(2*ik)       = kx/k2*self%work(2*ik+1)
+       field(2*ik+1)     = -kx/k2*self%work(2*ik)
+       self%work(2*ik)   = 1/k2*self%work(2*ik)
+       self%work(2*ik+1) = 1/k2*self%work(2*ik+1)
     end do
 
-    field(this%nc_eta1)= 0.0_f64          ! because Im(rhs/2)=0
+    field(self%nc_eta1)= 0.0_f64          ! because Im(rhs/2)=0
  
     ! Backward FFT 
 
-    call dfftb( this%nc_eta1, field,  this%wsave )
+    call dfftb( self%nc_eta1, field,  self%wsave )
 
     ! complete last term by periodicity
-    field(this%nc_eta1+1) = field(1)
+    field(self%nc_eta1+1) = field(1)
 
   end subroutine solve_poisson_1d_periodic
 
