@@ -39,7 +39,7 @@ implicit none
     sll_f_splines_at_x, &
     sll_s_compute_b_spline_and_deriv_at_x_mm, &
     sll_s_compute_b_spline_at_x_mm, &
-    sll_f_eval_uniform_periodic_spline_curve, &
+    sll_s_eval_uniform_periodic_spline_curve, &
     sll_f_find_cell, &
     sll_f_new_arbitrary_degree_spline_1d, &
     sll_p_open_arbitrary_deg_spline, &
@@ -782,11 +782,11 @@ contains
   !> @brief
   !> Evaluate uniform periodic spline curve defined by coefficients scoef at 
   !> knots (which are the grid points) 
-  function sll_f_eval_uniform_periodic_spline_curve(degree, scoef) result(sval)
+  subroutine sll_s_eval_uniform_periodic_spline_curve(degree, scoef, sval)
     sll_int32  :: degree   ! spline degree
     !sll_int32  :: npoints  ! number of points where spline is evaluated
     sll_real64 :: scoef(:) 
-    sll_real64, allocatable :: sval(:) 
+    sll_real64 :: sval(:) 
     ! local variables
     sll_real64 :: bspl(degree+1)
     sll_real64 :: val 
@@ -795,7 +795,7 @@ contains
     ! get bspline values at knots
     call sll_s_uniform_b_splines_at_x(degree, 0.0_f64, bspl)
     n = size(scoef)
-    SLL_ALLOCATE(sval(n), ierr)
+    !PN SLL_ALLOCATE(sval(n), ierr)
     do i= 1, n
        val = 0.0_f64
        do j=1, degree
@@ -805,6 +805,6 @@ contains
        enddo
        sval(i) = val 
     end do
-  end function sll_f_eval_uniform_periodic_spline_curve
+  end subroutine sll_s_eval_uniform_periodic_spline_curve
 
 end module sll_m_arbitrary_degree_splines
