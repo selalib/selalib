@@ -196,7 +196,7 @@ contains
     call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
     else
-      this%j_dofs = this%j_dofs_local
+      this%j_dofs(:,1) = this%j_dofs_local(:,1)
     end if
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
@@ -453,7 +453,7 @@ contains
       call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,2), &
          n_cells, MPI_SUM, this%j_dofs(:,2))
     else
-      this%j_dofs = this%j_dofs_local
+      this%j_dofs(:,2) = this%j_dofs_local(:,2)
     end if
 
     ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
