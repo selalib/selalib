@@ -8,7 +8,7 @@ module sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_collective, only: &
     sll_o_collective_allreduce, &
@@ -184,10 +184,14 @@ contains
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
+    if (associated(sll_v_world_collective)) then
     call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
     call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,2), &
          n_cells, MPI_SUM, this%j_dofs(:,2))
+    else
+      this%j_dofs = this%j_dofs_local
+    end if
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
     !this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
@@ -212,7 +216,10 @@ contains
 
    !Local variables
    sll_real64 :: m, c, y1, y2, fy(this%spline_degree+1)
+   sll_real64, allocatable :: fy1(:)
+   sll_real64, allocatable :: fy2(:)
    sll_int32  :: ind, i_grid, i_mod, n_cells
+   sll_int32  :: ierr
 
 
    n_cells = this%kernel_smoother_0%n_dofs
@@ -222,9 +229,12 @@ contains
    c = 0.5_f64*(upper+lower)
    y1 = -m/sqrt(3.0_f64)+c
    y2 = m/sqrt(3.0_f64) +c
-   fy = sign*m*this%delta_x*&
-        (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
-        sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
+
+   SLL_CLEAR_ALLOCATE(fy1(1:this%spline_degree+1), ierr)
+   SLL_CLEAR_ALLOCATE(fy2(1:this%spline_degree+1), ierr)
+   call sll_s_uniform_b_splines_at_x(this%spline_degree-1, y1, fy1)
+   call sll_s_uniform_b_splines_at_x(this%spline_degree-1, y2, fy2)
+   fy = sign*m*this%delta_x* (fy1+fy2)
 
    ind = 1
    do i_grid = index - this%spline_degree + 1, index
@@ -234,9 +244,15 @@ contains
       ind = ind + 1
    end do
 
-   fy = sign*m*this%delta_x*&
-        (sll_f_uniform_b_splines_at_x(this%spline_degree, y1) +&
-        sll_f_uniform_b_splines_at_x(this%spline_degree, y2))
+   !PN the value of fy is already computed
+   !PN Why do it again ?
+   !PN fy = sign*m*this%delta_x*&
+   !PN      (sll_f_uniform_b_splines_at_x(this%spline_degree, y1) +&
+   !PN      sll_f_uniform_b_splines_at_x(this%spline_degree, y2))
+
+   call sll_s_uniform_b_splines_at_x(this%spline_degree-1, y1, fy1)
+   call sll_s_uniform_b_splines_at_x(this%spline_degree-1, y2, fy2)
+   fy = sign*m*this%delta_x* (fy1+fy2)
 
    ind = 1
    do i_grid = index - this%spline_degree, index

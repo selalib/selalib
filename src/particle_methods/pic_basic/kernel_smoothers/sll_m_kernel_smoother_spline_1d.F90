@@ -9,7 +9,7 @@ module sll_m_kernel_smoother_spline_1d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_kernel_smoother_base, only: &
     sll_p_collocation, &
@@ -74,7 +74,7 @@ contains
        xi(1) = xi(1) - real(this%index_grid(1,i_part) -1,f64)
        ! Now we subtract the degree of the spline to get the index of the first spline.
        this%index_grid(:,i_part) =  this%index_grid(:,i_part) - this%spline_degree
-       spline_val = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+       call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(1), spline_val)
        this%values_grid(:,1,i_part) = spline_val
     end do
 
