@@ -200,9 +200,9 @@ subroutine rkstep()
 
 end subroutine rkstep
 
-subroutine plot_simple( this, mesh )
+subroutine plot_simple( self, mesh )
 
-   type(maxwell_dg_hex_mesh), intent(in) :: this
+   type(maxwell_dg_hex_mesh), intent(in) :: self
    type(sll_hex_mesh_2d),     intent(in) :: mesh
    sll_int32, save                       :: iplot = 0
    sll_int32                             :: idl
@@ -240,20 +240,20 @@ subroutine plot_simple( this, mesh )
 
    do iel = 1, mesh%num_triangles
 
-      do idl = 1, this%n_ddl
-         write(94,*) sngl(this%x_ddl(idl,iel)), &
-                     sngl(this%y_ddl(idl,iel)), &
-                     sngl(this%Ex(idl,iel)),    &
-                     sngl(this%Ey(idl,iel)),    &
-                     sngl(this%Bz(idl,iel))
+      do idl = 1, self%n_ddl
+         write(94,*) sngl(self%x_ddl(idl,iel)), &
+                     sngl(self%y_ddl(idl,iel)), &
+                     sngl(self%Ex(idl,iel)),    &
+                     sngl(self%Ey(idl,iel)),    &
+                     sngl(self%Bz(idl,iel))
       end do
 
       idl = 1
-      write(94,*) sngl(this%x_ddl(idl,iel)), &
-                  sngl(this%y_ddl(idl,iel)), &
-                  sngl(this%Ex(idl,iel)),    &
-                  sngl(this%Ey(idl,iel)),    &
-                  sngl(this%Bz(idl,iel))
+      write(94,*) sngl(self%x_ddl(idl,iel)), &
+                  sngl(self%y_ddl(idl,iel)), &
+                  sngl(self%Ex(idl,iel)),    &
+                  sngl(self%Ey(idl,iel)),    &
+                  sngl(self%Bz(idl,iel))
       write(94,*)
       write(94,*)
    
@@ -263,9 +263,9 @@ subroutine plot_simple( this, mesh )
 
 end subroutine plot_simple
 
-subroutine plot_double( this, mesh )
+subroutine plot_double( self, mesh )
 
-   type(maxwell_dg_hex_mesh), intent(in) :: this
+   type(maxwell_dg_hex_mesh), intent(in) :: self
    type(sll_hex_mesh_2d),         intent(in) :: mesh
    sll_int32, save :: iplot = 0
    sll_int32       :: idl, iel
@@ -291,18 +291,18 @@ subroutine plot_double( this, mesh )
 
    do iel = 1, mesh%num_triangles
 
-      do idl = 1, this%n_ddl
-         write(94,*) sngl(this%x_ddl(idl,iel)), &
-                     sngl(this%y_ddl(idl,iel)), &
-                     sngl(this%Ex(idl,iel)),    &
-                     sngl(-sin(time)*this%x_ddl(idl,iel)*sin(sll_p_pi*this%y_ddl(idl,iel)))
+      do idl = 1, self%n_ddl
+         write(94,*) sngl(self%x_ddl(idl,iel)), &
+                     sngl(self%y_ddl(idl,iel)), &
+                     sngl(self%Ex(idl,iel)),    &
+                     sngl(-sin(time)*self%x_ddl(idl,iel)*sin(sll_p_pi*self%y_ddl(idl,iel)))
       end do
 
       idl = 1
-      write(94,*) sngl(this%x_ddl(idl,iel)), &
-                  sngl(this%y_ddl(idl,iel)), &
-                  sngl(this%Ex(idl,iel)),    &
-                  sngl(-sin(time)*this%x_ddl(idl,iel)*sin(sll_p_pi*this%y_ddl(idl,iel)))
+      write(94,*) sngl(self%x_ddl(idl,iel)), &
+                  sngl(self%y_ddl(idl,iel)), &
+                  sngl(self%Ex(idl,iel)),    &
+                  sngl(-sin(time)*self%x_ddl(idl,iel)*sin(sll_p_pi*self%y_ddl(idl,iel)))
       write(94,*)
       write(94,*)
    

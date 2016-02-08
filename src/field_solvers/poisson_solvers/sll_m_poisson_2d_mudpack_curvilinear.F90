@@ -428,7 +428,7 @@ contains
 !    write(*,103) xa,xb,yc,yd,tolmax
 !    write(*,104) intl
 
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+!call mud2sp(iprm,fprm,self%work,cofx,cofy,bndsp,rhs,phi,self%mgopt,error)
 
     poisson%mudpack_case = mudpack_case 
 

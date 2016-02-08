@@ -39,8 +39,10 @@ all: $(SOURCES) $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(FC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 
-.F90.o:
-	$(FC) $(FCFLAGS) $< -o $@
+%.o: %.F90
+	$(FC) $(FCFLAGS) -c $<
+%.o: %.f90
+	$(FC) $(FCFLAGS) -c $<
 
 .PHONY: clean
 clean:

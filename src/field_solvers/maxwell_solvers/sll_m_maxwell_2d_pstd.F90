@@ -226,7 +226,7 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
 end subroutine new_maxwell_2d_pstd
 
-!> this routine exists only for testing purpose. Use ampere and faraday
+!> self routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.
 subroutine solve_maxwell_2d_pstd(self, fx, fy, fz, dt)
 

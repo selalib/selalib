@@ -1,7 +1,7 @@
 program test_tri_mesh
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  use sll_generate_tri_mesh, only: &
+  use m_generate_tri_mesh, only: &
     plaqx, &
     plaqy
 
