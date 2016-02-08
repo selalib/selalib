@@ -20,7 +20,7 @@ program test_maxwell_1d_fem
 #include "sll_maxwell_solvers_macros.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_eval_uniform_periodic_spline_curve
+    sll_s_eval_uniform_periodic_spline_curve
 
   use sll_m_constants, only: &
     sll_p_pi
@@ -115,7 +115,7 @@ program test_maxwell_1d_fem
 
   ! Evaluate spline curve at grid points and compute error
   ! Ex is a 1-form, i.e. one spline degree lower
-  sval = sll_f_eval_uniform_periodic_spline_curve(deg-1, ex)
+  call sll_s_eval_uniform_periodic_spline_curve(deg-1, ex, sval)
   err_ex = maxval(sval-ex_exact)
   print*, 'error Poisson',  err_ex
   call sll_s_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
@@ -145,9 +145,9 @@ program test_maxwell_1d_fem
         bz_exact(i) =   cos(mode*2*sll_p_pi*xi/Lx) * cos(mode*2*sll_p_pi*time/Lx)
      end do
 
-     sval = sll_f_eval_uniform_periodic_spline_curve(deg, ey)
+     call sll_s_eval_uniform_periodic_spline_curve(deg, ey, sval)
      err_ey = maxval(sval-ey_exact)
-     sval = sll_f_eval_uniform_periodic_spline_curve(deg-1, bz)
+     call sll_s_eval_uniform_periodic_spline_curve(deg-1, bz, sval)
      err_bz = maxval(sval-bz_exact)
 
      write(*,"(10x,' istep = ',I6)",advance="no") istep
