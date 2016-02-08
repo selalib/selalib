@@ -30,7 +30,7 @@ module sll_m_arbitrary_degree_splines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  implicit none
+implicit none
 
   public :: &
     sll_t_arbitrary_degree_spline_1d, &
@@ -45,9 +45,9 @@ module sll_m_arbitrary_degree_splines
     sll_p_open_arbitrary_deg_spline, &
     sll_p_periodic_arbitrary_deg_spline, &
     sll_o_delete, &
-    sll_f_uniform_b_spline_derivatives_at_x, &
-    sll_f_uniform_b_splines_and_derivs_at_x, &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_spline_derivatives_at_x, &
+    sll_s_uniform_b_splines_and_derivs_at_x, &
+    sll_s_uniform_b_splines_at_x
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -622,8 +622,9 @@ contains
   !> We also have the property (from the symmetry of the B-spline)
   !> out(1:d+1)= B_d(-(d+1)/2+xx),...,B_d(-(d+1)/2+d+xx),..., 
   !> where xx=1-normalized_offset
-  function sll_f_uniform_b_splines_at_x( spline_degree, normalized_offset ) &
-       result(bspl)
+  subroutine sll_s_uniform_b_splines_at_x( spline_degree,     &
+                                           normalized_offset, &
+                                           bspl               )
 
     implicit none
     sll_int32, intent(in)                      :: spline_degree
@@ -656,7 +657,7 @@ contains
        end do
        bspl(j) = saved
     end do
-  end function sll_f_uniform_b_splines_at_x
+  end subroutine sll_s_uniform_b_splines_at_x
 
   !> @brief Evaluate all derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
@@ -666,8 +667,10 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
-  function sll_f_uniform_b_spline_derivatives_at_x( spline_degree, normalized_offset ) &
-       result(bspl)
+  subroutine sll_s_uniform_b_spline_derivatives_at_x( spline_degree,     &
+                                                      normalized_offset, & 
+                                                      bspl               )
+
     sll_int32, intent(in)                      :: spline_degree
     sll_real64, dimension(0:spline_degree)     :: bspl
     sll_real64, intent(in)                     :: normalized_offset
@@ -710,7 +713,7 @@ contains
        bjm1 = bj
     end do
     bspl(spline_degree) = bj
-  end function sll_f_uniform_b_spline_derivatives_at_x
+  end subroutine sll_s_uniform_b_spline_derivatives_at_x
 
   !> @brief Evaluate all values and derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
@@ -720,8 +723,10 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
-  function sll_f_uniform_b_splines_and_derivs_at_x( degree, normalized_offset ) &
-       result(bspl)
+  subroutine sll_s_uniform_b_splines_and_derivs_at_x( degree,            &
+                                                      normalized_offset, &
+                                                      bspl               )
+
     sll_int32, intent(in)                 :: degree
     sll_real64, dimension(2,0:degree)     :: bspl
     sll_real64, intent(in)                :: normalized_offset
@@ -772,7 +777,7 @@ contains
     end do
     bspl(1,j) = saved
 
-  end function sll_f_uniform_b_splines_and_derivs_at_x
+  end subroutine sll_s_uniform_b_splines_and_derivs_at_x
 
   !> @brief
   !> Evaluate uniform periodic spline curve defined by coefficients scoef at 
@@ -788,7 +793,7 @@ contains
     sll_int32 :: i,j, imj, ierr, n
 
     ! get bspline values at knots
-    bspl = sll_f_uniform_b_splines_at_x(degree, 0.0_f64)
+    call sll_s_uniform_b_splines_at_x(degree, 0.0_f64, bspl)
     n = size(scoef)
     SLL_ALLOCATE(sval(n), ierr)
     do i= 1, n
@@ -801,4 +806,5 @@ contains
        sval(i) = val 
     end do
   end function sll_f_eval_uniform_periodic_spline_curve
+
 end module sll_m_arbitrary_degree_splines
