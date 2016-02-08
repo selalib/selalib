@@ -35,7 +35,7 @@ implicit none
   public :: &
     sll_t_arbitrary_degree_spline_1d, &
     sll_f_spline_derivatives_at_x, &
-    sll_f_splines_and_derivs_at_x, &
+    sll_s_splines_and_derivs_at_x, &
     sll_f_splines_at_x, &
     sll_s_compute_b_spline_and_deriv_at_x_mm, &
     sll_s_compute_b_spline_at_x_mm, &
@@ -351,18 +351,18 @@ contains
   !> where 'deg' is the degree of the spline.
   !> @return sll_f_spline_derivatives_at_x B-spline derivatives
   function sll_f_spline_derivatives_at_x( spline_obj, icell, x ) result(bsdx)
-    type(sll_t_arbitrary_degree_spline_1d), pointer      :: spline_obj
-    sll_int32, intent(in)                          :: icell
-    sll_real64, intent(in)                         :: x
-    sll_real64, dimension(0:spline_obj%degree)     :: bsdx !sll_f_spline_derivatives_at_x
+    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline_obj
+    sll_int32, intent(in)                           :: icell
+    sll_real64, intent(in)                          :: x
+    sll_real64, dimension(0:spline_obj%degree)      :: bsdx !sll_f_spline_derivatives_at_x
     ! local variables
-    sll_int32                                      :: deg
-    sll_int32                                      :: num_pts
-    sll_int32                                      :: r
-    sll_int32                                      :: j
-    sll_real64                                     :: saved
-    sll_real64                                     :: temp
-    sll_real64                                     :: rdeg
+    sll_int32                                       :: deg
+    sll_int32                                       :: num_pts
+    sll_int32                                       :: r
+    sll_int32                                       :: j
+    sll_real64                                      :: saved
+    sll_real64                                      :: temp
+    sll_real64                                      :: rdeg
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -420,21 +420,21 @@ contains
   !> @brief 
   !> returns splines and first derivatives
   !> @details
-  !> See sll_f_spline_derivatives_at_x and  sll_f_splines_at_x
+  !> See sll_s_spline_derivatives_at_x and  sll_f_splines_at_x
   !> @return b_spline_and_derivs_at_x B-spline values and derivatives
-  function sll_f_splines_and_derivs_at_x( spline_obj, icell, x ) result(bsdx)
-    type(sll_t_arbitrary_degree_spline_1d), pointer      :: spline_obj
-    sll_int32, intent(in)                          :: icell
-    sll_real64, intent(in)                         :: x
-    sll_real64, dimension(2,0:spline_obj%degree)   :: bsdx
+  subroutine sll_s_splines_and_derivs_at_x( spline_obj, icell, x , bsdx)
+    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline_obj
+    sll_int32, intent(in)                           :: icell
+    sll_real64, intent(in)                          :: x
+    sll_real64, dimension(2,0:spline_obj%degree)    :: bsdx
     ! local variables
-    sll_int32                                      :: deg
-    sll_int32                                      :: num_pts
-    sll_int32                                      :: r
-    sll_int32                                      :: j
-    sll_real64                                     :: saved
-    sll_real64                                     :: temp
-    sll_real64                                     :: rdeg
+    sll_int32                                       :: deg
+    sll_int32                                       :: num_pts
+    sll_int32                                       :: r
+    sll_int32                                       :: j
+    sll_real64                                      :: saved
+    sll_real64                                      :: temp
+    sll_real64                                      :: rdeg
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -499,7 +499,7 @@ contains
        saved = spline_obj%left(j-r) * temp
     end do
     bsdx(1,j) = saved 
-  end function sll_f_splines_and_derivs_at_x
+  end subroutine sll_s_splines_and_derivs_at_x
 
   !> @brief Alternative direct implentation of recursion formula. 
   !>
