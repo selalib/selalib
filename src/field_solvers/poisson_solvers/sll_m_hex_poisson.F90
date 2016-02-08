@@ -18,7 +18,7 @@ module sll_m_hex_poisson
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !***********************************************************
-  ! this module is used to solve the Poison equation on a hexagonal mesh
+  ! self module is used to solve the Poison equation on a hexagonal mesh
   ! by creating the poisson matrix for the hex mesh : matrix_poisson
   ! and the second term of the linear equation      : second_term
   ! therefore we solve with a linear solver : matrix_poisson * X = second_term

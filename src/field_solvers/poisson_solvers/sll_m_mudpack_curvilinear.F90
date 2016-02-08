@@ -86,7 +86,7 @@ contains
 !> Initialize the Poisson solver in curvilinear coordinates using MUDPACK
 !> library
 subroutine initialize_poisson_curvilinear_mudpack( &
-   this,          &
+   self,          &
    transf,        &
    b11,           &
    b12,           &
@@ -104,7 +104,7 @@ subroutine initialize_poisson_curvilinear_mudpack( &
    bc_eta2_left,  &
    bc_eta2_right)
 
-type(sll_t_mudpack_2d) :: this              !< Solver object
+type(sll_t_mudpack_2d) :: self              !< Solver object
 sll_real64, intent(in) :: eta1_min    !< eta1 min
 sll_real64, intent(in) :: eta1_max    !< eta1 min
 sll_real64, intent(in) :: eta2_min    !< eta2 min
@@ -269,7 +269,7 @@ call cy_interp%compute_interpolants( cy_array )
 ce_array = -c
 call ce_interp%compute_interpolants( ce_array ) 
      
-allocate(this%work(llwork))
+allocate(self%work(llwork))
 icall = 0
 
 ! set input sll_int32 arguments
@@ -289,7 +289,7 @@ jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
 
 nx = ixp*(2**(iex-1))+1
 ny = jyq*(2**(jey-1))+1
-allocate(this%iwork(ixp+1,jyq+1))
+allocate(self%iwork(ixp+1,jyq+1))
 if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
    print*, "nx,nc_eta1+1=", nx, nc_eta1+1
    print*, "ny,nc_eta2+1=", ny, nc_eta2+1
@@ -298,10 +298,10 @@ end if
 
 ! set multigrid arguments (w(2,1) cycling with fully weighted
 ! residual restriction and cubic prolongation)
-this%mgopt(1) = 2
-this%mgopt(2) = 2
-this%mgopt(3) = 1
-this%mgopt(4) = 3
+self%mgopt(1) = 2
+self%mgopt(2) = 2
+self%mgopt(3) = 1
+self%mgopt(4) = 3
 
 ! set three cycles to ensure second-order approx
 maxcy = 3
@@ -326,13 +326,13 @@ tolmax = 0.0_8
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
-write(*,102) (this%mgopt(i),i=1,4)
+write(*,102) (self%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
-!call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
- call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2cr(iprm,fprm,self%work,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+ call muh2cr(iprm,fprm,self%work,self%iwork,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+!call mud2sp(iprm,fprm,self%work,cofx,cofy,bndcr,rhs,phi,self%mgopt,ierror)
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
 
@@ -357,9 +357,9 @@ end subroutine initialize_poisson_curvilinear_mudpack
 
 
 !> Solve the Poisson equation and get the potential
-subroutine solve_poisson_curvilinear_mudpack(this, phi, rho)
+subroutine solve_poisson_curvilinear_mudpack(self, phi, rho)
 ! set grid size params
-type(sll_t_mudpack_2d) :: this  !< solver data object
+type(sll_t_mudpack_2d) :: self  !< solver data object
 sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
@@ -420,17 +420,17 @@ intl  = 1
 !YG write(*,106) intl,method,iguess
 
 ! attempt solution
-!call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2cr(iprm,fprm,self%work,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+call muh2cr(iprm,fprm,self%work,self%iwork,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+!call mud2sp(iprm,fprm,self%work,cofx,cofy,bndcr,rhs,phi,self%mgopt,ierror)
 !SLL_ASSERT(ierror == 0)
 !YG write(*,107) ierror
 if (ierror > 0) call exit(0)
 
 ! attempt fourth order approximation
-!call mud24cr(this%work,coefcr,bndcr,phi,ierror)
-call muh24cr(this%work,this%iwork,coefcr,bndcr,phi,ierror)
-!call mud24sp(this%work,phi,ierror)
+!call mud24cr(self%work,coefcr,bndcr,phi,ierror)
+call muh24cr(self%work,self%iwork,coefcr,bndcr,phi,ierror)
+!call mud24sp(self%work,phi,ierror)
 !SLL_ASSERT(ierror == 0)
 !YG write (*,108) ierror
 if (ierror > 0) call exit(0)
