@@ -15,7 +15,7 @@ module sll_m_maxwell_1d_fem
 !   dffti
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_constants, only: &
     sll_p_pi
@@ -197,7 +197,7 @@ contains
      xw_gauss = sll_f_gauss_legendre_points_and_weights(degree+1, 0.0_f64, 1.0_f64)
      ! Compute bsplines at gauss_points
      do k=1,degree+1
-        bspl(k,:) = sll_f_uniform_b_splines_at_x(degree,xw_gauss(1,k))
+        call sll_s_uniform_b_splines_at_x(degree,xw_gauss(1,k), bspl(k,:))
         !print*, 'bs', bspl(k,:)
      end do
 
