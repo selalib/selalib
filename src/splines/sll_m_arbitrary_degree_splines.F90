@@ -30,24 +30,25 @@ module sll_m_arbitrary_degree_splines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  implicit none
+implicit none
 
   public :: &
     sll_t_arbitrary_degree_spline_1d, &
     sll_f_spline_derivatives_at_x, &
-    sll_f_splines_and_derivs_at_x, &
+    sll_s_spline_derivatives_at_x, &
+    sll_s_splines_and_derivs_at_x, &
     sll_f_splines_at_x, &
     sll_s_compute_b_spline_and_deriv_at_x_mm, &
     sll_s_compute_b_spline_at_x_mm, &
-    sll_f_eval_uniform_periodic_spline_curve, &
+    sll_s_eval_uniform_periodic_spline_curve, &
     sll_f_find_cell, &
     sll_f_new_arbitrary_degree_spline_1d, &
     sll_p_open_arbitrary_deg_spline, &
     sll_p_periodic_arbitrary_deg_spline, &
     sll_o_delete, &
-    sll_f_uniform_b_spline_derivatives_at_x, &
-    sll_f_uniform_b_splines_and_derivs_at_x, &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_spline_derivatives_at_x, &
+    sll_s_uniform_b_splines_and_derivs_at_x, &
+    sll_s_uniform_b_splines_at_x
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -64,15 +65,15 @@ module sll_m_arbitrary_degree_splines
   sll_int32, parameter :: sll_p_open_arbitrary_deg_spline     = 1 
 
   type :: sll_t_arbitrary_degree_spline_1d
-     sll_int32  :: num_pts
-     sll_int32  :: bc_type
-     sll_int32  :: degree
-     sll_real64 :: xmin
-     sll_real64 :: xmax
-     sll_real64, dimension(:), pointer :: knots   ! knots array
-     sll_real64, dimension(:), pointer :: left    ! needed for evaluation
-     sll_real64, dimension(:), pointer :: right   ! needed for evaluation
-     sll_real64, dimension(:,:), pointer :: ndu   ! needed for derivative
+     sll_int32                           :: num_pts
+     sll_int32                           :: bc_type
+     sll_int32                           :: degree
+     sll_real64                          :: xmin
+     sll_real64                          :: xmax
+     sll_real64, dimension(:),   pointer :: knots   ! knots array
+     sll_real64, dimension(:),   pointer :: left    ! needed for evaluation
+     sll_real64, dimension(:),   pointer :: right   ! needed for evaluation
+     sll_real64, dimension(:,:), pointer :: ndu     ! needed for derivative
   end type sll_t_arbitrary_degree_spline_1d
 
   interface sll_o_delete
@@ -226,7 +227,7 @@ contains
   !> If x is not between spline_obj%knots(1) and 
   !> spline_obj%knots(spline_obj%num_pts),  then the value -1 is returned.
   function sll_f_find_cell( spline_obj, x)
-    type(sll_t_arbitrary_degree_spline_1d), pointer      :: spline_obj
+    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline_obj
     sll_real64, intent(in) :: x
     sll_int32 :: sll_f_find_cell
     sll_int32 :: low
@@ -293,16 +294,16 @@ contains
   !> de Casteljau algorithm for Bezier curves.
   !> @return b_spline_at_x B-spline values
   function sll_f_splines_at_x( spline_obj, icell, x )
-    type(sll_t_arbitrary_degree_spline_1d), pointer      :: spline_obj
-    sll_int32, intent(in)                          :: icell
-    sll_real64, intent(in)                         :: x
-    sll_real64, dimension(0:spline_obj%degree)     :: sll_f_splines_at_x
+    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline_obj
+    sll_int32, intent(in)                           :: icell
+    sll_real64, intent(in)                          :: x
+    sll_real64, dimension(0:spline_obj%degree)      :: sll_f_splines_at_x
     ! local variables
-    sll_int32                                      :: deg
-    sll_real64                                     :: saved
-    sll_real64                                     :: temp
-    sll_int32                                      :: j
-    sll_int32                                      :: r
+    sll_int32                                       :: deg
+    sll_real64                                      :: saved
+    sll_real64                                      :: temp
+    sll_int32                                       :: j
+    sll_int32                                       :: r
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -351,21 +352,46 @@ contains
   !> where 'deg' is the degree of the spline.
   !> @return sll_f_spline_derivatives_at_x B-spline derivatives
   function sll_f_spline_derivatives_at_x( spline_obj, icell, x ) result(bsdx)
-    type(sll_t_arbitrary_degree_spline_1d), pointer      :: spline_obj
-    sll_int32, intent(in)                          :: icell
-    sll_real64, intent(in)                         :: x
-    sll_real64, dimension(0:spline_obj%degree)     :: bsdx !sll_f_spline_derivatives_at_x
-    ! local variables
-    sll_int32                                      :: deg
-    sll_int32                                      :: num_pts
-    sll_int32                                      :: r
-    sll_int32                                      :: j
-    sll_real64                                     :: saved
-    sll_real64                                     :: temp
-    sll_real64                                     :: rdeg
+    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline_obj
+    sll_int32, intent(in)                           :: icell
+    sll_real64, intent(in)                          :: x
+    sll_real64, dimension(0:spline_obj%degree)      :: bsdx !sll_f_spline_derivatives_at_x
+
+    SLL_ASSERT(associated(spline_obj))
+    call sll_s_spline_derivatives_at_x( spline_obj, icell, x, bsdx)
+
+  end function sll_f_spline_derivatives_at_x
+
+  !> @brief
+  !> returns first derivative values at x of all b-splines with support in cell
+  !> @details
+  !> sll_s_spline_derivatives_at_x() returns an array with the derivative values of 
+  !> the B-splines of a requested order that are supported in 'cell' and 
+  !> evaluated at 'x'. 
+  !> Algorithm derived from algorithm A3.2 of NURBS book 
+  !> The return value has the format:
+  !> \f[
+  !> B'[deg,i-deg](x), B'[deg,i-deg+1](x), ..., B'[deg,i](x)
+  !> \f]
+  !> where 'deg' is the degree of the spline.
+  !> @return sll_f_spline_derivatives_at_x B-spline derivatives
+  subroutine sll_s_spline_derivatives_at_x( spline_obj, icell, x, bsdx)
+
+    type(sll_t_arbitrary_degree_spline_1d)     :: spline_obj
+    sll_int32, intent(in)                      :: icell
+    sll_real64, intent(in)                     :: x
+    sll_real64, dimension(0:spline_obj%degree) :: bsdx !spline_derivatives_at_x
+
+    sll_int32                                  :: deg
+    sll_int32                                  :: num_pts
+    sll_int32                                  :: r
+    sll_int32                                  :: j
+    sll_real64                                 :: saved
+    sll_real64                                 :: temp
+    sll_real64                                 :: rdeg
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(spline_obj))
+    SLL_ASSERT(associated(spline_obj%knots))
     SLL_ASSERT(x >= spline_obj%xmin)
     SLL_ASSERT(x <= spline_obj%xmax)
     SLL_ASSERT(icell >= 1)
@@ -377,8 +403,8 @@ contains
             'inside the specified cell.'
        STOP
     end if
-    deg = spline_obj%degree
-    rdeg = real(deg,f64)
+    deg     = spline_obj%degree
+    rdeg    = real(deg,f64)
     num_pts = spline_obj%num_pts
 
     ! compute nonzero basis functions and knot differences
@@ -414,30 +440,31 @@ contains
     ! j = deg
     bsdx(deg) =  saved
 
-  end function sll_f_spline_derivatives_at_x
+  end subroutine sll_s_spline_derivatives_at_x
+
 
 
   !> @brief 
   !> returns splines and first derivatives
   !> @details
-  !> See sll_f_spline_derivatives_at_x and  sll_f_splines_at_x
+  !> See sll_s_spline_derivatives_at_x and  sll_f_splines_at_x
   !> @return b_spline_and_derivs_at_x B-spline values and derivatives
-  function sll_f_splines_and_derivs_at_x( spline_obj, icell, x ) result(bsdx)
-    type(sll_t_arbitrary_degree_spline_1d), pointer      :: spline_obj
-    sll_int32, intent(in)                          :: icell
-    sll_real64, intent(in)                         :: x
-    sll_real64, dimension(2,0:spline_obj%degree)   :: bsdx
+  subroutine sll_s_splines_and_derivs_at_x( spline_obj, icell, x , bsdx)
+    type(sll_t_arbitrary_degree_spline_1d)       :: spline_obj
+    sll_int32, intent(in)                        :: icell
+    sll_real64, intent(in)                       :: x
+    sll_real64, dimension(2,0:spline_obj%degree) :: bsdx
     ! local variables
-    sll_int32                                      :: deg
-    sll_int32                                      :: num_pts
-    sll_int32                                      :: r
-    sll_int32                                      :: j
-    sll_real64                                     :: saved
-    sll_real64                                     :: temp
-    sll_real64                                     :: rdeg
+    sll_int32                                    :: deg
+    sll_int32                                    :: num_pts
+    sll_int32                                    :: r
+    sll_int32                                    :: j
+    sll_real64                                   :: saved
+    sll_real64                                   :: temp
+    sll_real64                                   :: rdeg
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(spline_obj))
+    SLL_ASSERT(associated(spline_obj%knots))
     SLL_ASSERT(x >= spline_obj%xmin)
     SLL_ASSERT(x <= spline_obj%xmax)
     SLL_ASSERT(icell >= 1)
@@ -499,7 +526,7 @@ contains
        saved = spline_obj%left(j-r) * temp
     end do
     bsdx(1,j) = saved 
-  end function sll_f_splines_and_derivs_at_x
+  end subroutine sll_s_splines_and_derivs_at_x
 
   !> @brief Alternative direct implentation of recursion formula. 
   !>
@@ -622,20 +649,21 @@ contains
   !> We also have the property (from the symmetry of the B-spline)
   !> out(1:d+1)= B_d(-(d+1)/2+xx),...,B_d(-(d+1)/2+d+xx),..., 
   !> where xx=1-normalized_offset
-  function sll_f_uniform_b_splines_at_x( spline_degree, normalized_offset ) &
-       result(bspl)
+  subroutine sll_s_uniform_b_splines_at_x( spline_degree,     &
+                                           normalized_offset, &
+                                           bspl               )
 
     implicit none
-    sll_int32, intent(in)                      :: spline_degree
-    sll_real64, intent(in)                     :: normalized_offset
-    sll_real64, dimension(0:spline_degree)     :: bspl
+    sll_int32, intent(in)                  :: spline_degree
+    sll_real64, intent(in)                 :: normalized_offset
+    sll_real64, dimension(0:spline_degree) :: bspl
     ! local variables
-    sll_real64                                 :: inv_j
-    sll_real64                                 :: x,xx
-    sll_real64                                 :: j_real
-    sll_int32                                  :: j, r
-    sll_real64                                 :: temp
-    sll_real64                                 :: saved
+    sll_real64                             :: inv_j
+    sll_real64                             :: x,xx
+    sll_real64                             :: j_real
+    sll_int32                              :: j, r
+    sll_real64                             :: temp
+    sll_real64                             :: saved
 
     SLL_ASSERT( spline_degree >= 0 )
     SLL_ASSERT( normalized_offset >= 0.0_f64 )
@@ -656,7 +684,7 @@ contains
        end do
        bspl(j) = saved
     end do
-  end function sll_f_uniform_b_splines_at_x
+  end subroutine sll_s_uniform_b_splines_at_x
 
   !> @brief Evaluate all derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
@@ -666,19 +694,21 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
-  function sll_f_uniform_b_spline_derivatives_at_x( spline_degree, normalized_offset ) &
-       result(bspl)
-    sll_int32, intent(in)                      :: spline_degree
-    sll_real64, dimension(0:spline_degree)     :: bspl
-    sll_real64, intent(in)                     :: normalized_offset
+  subroutine sll_s_uniform_b_spline_derivatives_at_x( spline_degree,     &
+                                                      normalized_offset, & 
+                                                      bspl               )
+
+    sll_int32, intent(in)                  :: spline_degree
+    sll_real64, dimension(0:spline_degree) :: bspl
+    sll_real64, intent(in)                 :: normalized_offset
     ! local variables   
-    sll_real64                                 :: inv_j
-    sll_real64                                 :: x,xx
-    sll_real64                                 :: j_real
-    sll_int32                                  :: j, r
-    sll_real64                                 :: temp
-    sll_real64                                 :: saved
-    sll_real64                                 :: bj,bjm1 
+    sll_real64                             :: inv_j
+    sll_real64                             :: x,xx
+    sll_real64                             :: j_real
+    sll_int32                              :: j, r
+    sll_real64                             :: temp
+    sll_real64                             :: saved
+    sll_real64                             :: bj,bjm1 
 
     SLL_ASSERT( spline_degree >= 0 )
     SLL_ASSERT( normalized_offset >= 0.0_f64 )
@@ -710,7 +740,7 @@ contains
        bjm1 = bj
     end do
     bspl(spline_degree) = bj
-  end function sll_f_uniform_b_spline_derivatives_at_x
+  end subroutine sll_s_uniform_b_spline_derivatives_at_x
 
   !> @brief Evaluate all values and derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
@@ -720,18 +750,20 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
-  function sll_f_uniform_b_splines_and_derivs_at_x( degree, normalized_offset ) &
-       result(bspl)
-    sll_int32, intent(in)                 :: degree
-    sll_real64, dimension(2,0:degree)     :: bspl
-    sll_real64, intent(in)                :: normalized_offset
+  subroutine sll_s_uniform_b_splines_and_derivs_at_x( degree,            &
+                                                      normalized_offset, &
+                                                      bspl               )
+
+    sll_int32, intent(in)             :: degree
+    sll_real64, dimension(2,0:degree) :: bspl
+    sll_real64, intent(in)            :: normalized_offset
     ! local variables
-    sll_real64                            :: inv_j
-    sll_real64                            :: xx
-    sll_real64                            :: j_real
-    sll_int32                             :: j, r
-    sll_real64                            :: temp
-    sll_real64                            :: saved
+    sll_real64                        :: inv_j
+    sll_real64                        :: xx
+    sll_real64                        :: j_real
+    sll_int32                         :: j, r
+    sll_real64                        :: temp
+    sll_real64                        :: saved
 
     SLL_ASSERT( degree >= 0 )
     SLL_ASSERT( normalized_offset >= 0.0_f64 )
@@ -772,25 +804,23 @@ contains
     end do
     bspl(1,j) = saved
 
-  end function sll_f_uniform_b_splines_and_derivs_at_x
+  end subroutine sll_s_uniform_b_splines_and_derivs_at_x
 
   !> @brief
   !> Evaluate uniform periodic spline curve defined by coefficients scoef at 
   !> knots (which are the grid points) 
-  function sll_f_eval_uniform_periodic_spline_curve(degree, scoef) result(sval)
+  subroutine sll_s_eval_uniform_periodic_spline_curve(degree, scoef, sval)
     sll_int32  :: degree   ! spline degree
-    !sll_int32  :: npoints  ! number of points where spline is evaluated
     sll_real64 :: scoef(:) 
-    sll_real64, allocatable :: sval(:) 
-    ! local variables
+    sll_real64 :: sval(:) 
+    
     sll_real64 :: bspl(degree+1)
     sll_real64 :: val 
-    sll_int32 :: i,j, imj, ierr, n
+    sll_int32 :: i,j, imj, n
 
     ! get bspline values at knots
-    bspl = sll_f_uniform_b_splines_at_x(degree, 0.0_f64)
+    call sll_s_uniform_b_splines_at_x(degree, 0.0_f64, bspl)
     n = size(scoef)
-    SLL_ALLOCATE(sval(n), ierr)
     do i= 1, n
        val = 0.0_f64
        do j=1, degree
@@ -800,5 +830,6 @@ contains
        enddo
        sval(i) = val 
     end do
-  end function sll_f_eval_uniform_periodic_spline_curve
+  end subroutine sll_s_eval_uniform_periodic_spline_curve
+
 end module sll_m_arbitrary_degree_splines
