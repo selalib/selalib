@@ -27,12 +27,6 @@ use sll_m_common_coordinate_transformations, only: &
 use sll_m_constants, only: &
   sll_p_pi
 
-use sll_m_cubic_spline_interpolator_2d, only: &
-  sll_f_new_cubic_spline_interpolator_2d
-
-use sll_m_interpolators_2d_base, only: &
-  sll_c_interpolator_2d
-
 use sll_m_mudpack_curvilinear, only: &
   sll_p_non_separable_with_cross_terms, &
   sll_p_non_separable_without_cross_terms, &
@@ -47,7 +41,6 @@ use sll_m_poisson_2d_mudpack_curvilinear, only: &
 implicit none
 
 type(sll_t_cartesian_mesh_2d), pointer  :: mesh
-class(sll_c_interpolator_2d),  pointer  :: phi_interp2d
 class(sll_c_poisson_2d_base),  pointer  :: poisson
 sll_real64                              :: x1_min
 sll_real64                              :: x2_min
@@ -101,16 +94,6 @@ mesh => sll_f_new_cartesian_mesh_2d( &
 delta_x1 = mesh%delta_eta1
 delta_x2 = mesh%delta_eta2
       
-phi_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
-  nc_x1+1,                                              &
-  nc_x2+1,                                              &
-  x1_min,                                               &
-  x1_max,                                               &
-  x2_min,                                               &
-  x2_max,                                               &
-  sll_p_periodic,                                       &
-  sll_p_periodic)         
-
 SLL_ALLOCATE(cxx(nc_x1+1,nc_x2+1),ierr)
 SLL_ALLOCATE(cxy(nc_x1+1,nc_x2+1),ierr)
 SLL_ALLOCATE(cyy(nc_x1+1,nc_x2+1),ierr)
