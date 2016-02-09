@@ -13,7 +13,7 @@ module sll_m_periodic_interp
 !   zffti
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_constants, only: &
     sll_p_pi, &
@@ -117,7 +117,7 @@ contains
 
     case (sll_p_spline)
        this%buf=>NULL()
-       biatx = sll_f_uniform_b_splines_at_x(p, 0.0_f64 )
+       call sll_s_uniform_b_splines_at_x(p, 0.0_f64, biatx )
        do i=1, N
           this%modes(i-1) = exp(ii_64*sll_p_twopi*(i-1)/N)
           this%eigenvalues_Minv(i) = biatx((p+1)/2)
@@ -226,7 +226,7 @@ contains
        p =  this%order - 1
        ishift = floor (-alpha)
        beta = -ishift - alpha
-       biatx = sll_f_uniform_b_splines_at_x(p, beta )
+       call sll_s_uniform_b_splines_at_x(p, beta, biatx )
 
        this%eigenvalues_S = (0.0_f64, 0.0_f64)
        do i=1, this%N
