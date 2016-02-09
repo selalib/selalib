@@ -262,6 +262,9 @@ contains
     nx = nc_eta1+1
     ny = nc_eta2+1
 
+    allocate(phi(nx*ny))
+    allocate(rhs(nx*ny))
+
     delta1   = (eta1_max - eta1_min)/real(nc_eta1,f64)
     delta2   = (eta2_max - eta2_min)/real(nc_eta2,f64)
     ! set minimum required work space
