@@ -8,7 +8,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_collective, only: &
     sll_o_collective_allreduce, &
@@ -191,8 +191,13 @@ contains
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
+
+    if (associated(sll_v_world_collective)) then
     call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
+    else
+      this%j_dofs(:,1) = this%j_dofs_local(:,1)
+    end if
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
     !this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
@@ -215,22 +220,32 @@ contains
    sll_real64, intent(inout) :: vi
 
    !Local variables
-   sll_real64 :: m, c, y1, y2, fy(this%spline_degree+1)
+   sll_real64 :: m, c, y1, y2
+   sll_real64 :: fy(this%spline_degree+1)
+   sll_real64, allocatable :: fy1(:)
+   sll_real64, allocatable :: fy2(:)
    sll_int32  :: ind, i_grid, i_mod, n_cells
    sll_real64 :: qm
-
+   sll_int32  :: ierr
 
    qm = this%particle_group%species%q_over_m();
    n_cells = this%kernel_smoother_0%n_dofs
 
-
    m = 0.5_f64*(upper-lower)
    c = 0.5_f64*(upper+lower)
    y1 = -m/sqrt(3.0_f64)+c
-   y2 = m/sqrt(3.0_f64) +c
-   fy = sign*m*this%delta_x*&
-        (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
-        sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
+   y2 = +m/sqrt(3.0_f64)+c
+
+   SLL_CLEAR_ALLOCATE(fy1(1:this%spline_degree+1), ierr)
+   SLL_CLEAR_ALLOCATE(fy2(1:this%spline_degree+1), ierr)
+   call sll_s_uniform_b_splines_at_x(this%spline_degree-1, y1, fy1)
+   call sll_s_uniform_b_splines_at_x(this%spline_degree-1, y2, fy2)
+
+   fy = sign*m*this%delta_x*(fy1+fy2)
+   
+   !fy = sign*m*this%delta_x*&
+   !     (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
+   !      sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
 
    ind = 1
    do i_grid = index - this%spline_degree + 1, index
@@ -421,7 +436,7 @@ contains
        vi = vi*wi(1)
 
        ! Now, we loop through the DoFs and add the contributions.
-       values_0 = sll_f_uniform_b_splines_at_x(this%spline_degree, r_box)
+       call sll_s_uniform_b_splines_at_x(this%spline_degree, r_box, values_0)
        ind = 1
        do i_grid = index_box - this%spline_degree, index_box
           i_mod = modulo(i_grid, n_cells ) + 1
@@ -434,8 +449,12 @@ contains
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,2), &
+    if (associated(sll_v_world_collective)) then
+      call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,2), &
          n_cells, MPI_SUM, this%j_dofs(:,2))
+    else
+      this%j_dofs(:,2) = this%j_dofs_local(:,2)
+    end if
 
     ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
     this%j_dofs(:,2) = this%j_dofs(:,2)*dt!/this%Lx
