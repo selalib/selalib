@@ -52,6 +52,12 @@ IF(BUILD_MUDPACK)
   # Ctests
   ADD_MUDPACK_PROGRAM( cartesian )
   ADD_MUDPACK_PROGRAM( polar )
+
+  ADD_EXECUTABLE( test_poisson_2d_mudpack_curvilinear test_poisson_2d_mudpack_curvilinear.F90 )
+  TARGET_LINK_LIBRARIES( test_poisson_2d_mudpack_curvilinear sll_poisson_solvers )
+  ADD_TEST( NAME poisson_2d_mudpack_curvilinear COMMAND test_poisson_2d_mudpack_curvilinear )
+  SET_TESTS_PROPERTIES( poisson_2d_mudpack_curvilinear PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
 ENDIF(BUILD_MUDPACK)
 
 
