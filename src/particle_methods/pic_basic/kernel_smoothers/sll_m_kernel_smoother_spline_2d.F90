@@ -10,7 +10,7 @@ module sll_m_kernel_smoother_spline_2d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_kernel_smoother_base, only: &
     sll_p_collocation, &
@@ -80,8 +80,10 @@ contains
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - this%spline_degree
-    this%spline_val(1:this%n_span,1) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
-    this%spline_val(1:this%n_span,2) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(2))
+    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(1), this%spline_val(1:this%n_span,1))
+    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(2), this%spline_val(1:this%n_span,2))
+    !this%spline_val(1:this%n_span,1) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
+    !this%spline_val(1:this%n_span,2) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
 

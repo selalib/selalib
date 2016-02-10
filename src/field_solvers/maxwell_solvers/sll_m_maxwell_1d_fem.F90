@@ -122,7 +122,7 @@ contains
      sll_real64,dimension(:),intent(inout) :: E !< Updated electric field
      ! local variables
      sll_int32 :: i 
-     sll_real64, dimension(this%n_dofs) :: eigvals
+     sll_real64, dimension(self%n_dofs) :: eigvals
 
      ! Multiply by inverse mass matrix  using the eigenvalues of the circulant inverse matrix
      eigvals=0.0_f64

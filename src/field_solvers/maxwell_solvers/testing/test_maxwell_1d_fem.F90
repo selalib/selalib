@@ -140,7 +140,7 @@ program test_maxwell_1d_fem
 
   ! Evaluate spline curve at grid points and compute error
   ! Ex is a 1-form, i.e. one spline degree lower
-  sval = sll_f_eval_uniform_periodic_spline_curve(deg-1, ex)
+  call sll_s_eval_uniform_periodic_spline_curve(deg-1, ex, sval)
   err_ex2 = maxval(sval-ex_exact)
   print*, 'error Ampere',  err_ex2
   !call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)

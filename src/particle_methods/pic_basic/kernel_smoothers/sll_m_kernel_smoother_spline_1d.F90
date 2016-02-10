@@ -10,8 +10,7 @@ module sll_m_kernel_smoother_spline_1d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_s_uniform_b_splines_at_x, &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_gauss_legendre_integration, only : &
     sll_f_gauss_legendre_points_and_weights
