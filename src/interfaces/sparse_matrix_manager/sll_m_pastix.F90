@@ -5,7 +5,8 @@ module sll_m_pastix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-  use sll_m_collective, only: &
+  use sll_m_collective, only:  &
+    sll_s_boot_collective,     &
     sll_f_get_collective_rank, &
     sll_f_get_collective_size, &
     sll_v_world_collective
