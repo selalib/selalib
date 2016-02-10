@@ -14,7 +14,7 @@ ENDIF()
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.10)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
@@ -25,10 +25,10 @@ SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
-SET(BUILD_AGMG            OFF CACHE BOOL   "Build AGMG libraries")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 SET(USE_MKL               OFF CACHE BOOL   "Using Intel Math Kernel Library")
+SET(BUILD_MUDPACK         OFF CACHE BOOL   "Build mudpack library")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE)
@@ -119,7 +119,7 @@ ADD_SUBDIRECTORY(src)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  SET(PARALUTION_VERSION 1.1.0 CACHE STRING "Paralution version number")
   EXTERNALPROJECT_ADD( paralution
      URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
      CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
@@ -179,4 +179,16 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
+# Create single library 'libselalib.a' from smaller libraries in src
+ADD_SUBDIRECTORY( package )
+
+# Simulations
+IF( BUILD_SIMULATIONS )
+  GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE )
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH 
+    "simulations install dir")
+  ADD_SUBDIRECTORY( simulations )
+ENDIF( BUILD_SIMULATIONS )
+
+# CMake target for running C preprocessor on all source files used in build
 ADD_PREPROCESSOR_TARGET()

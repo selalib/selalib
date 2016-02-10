@@ -118,7 +118,7 @@ contains
         mesh_eval=>new_logical_mesh_1d( size(knots_eval)-1, interval_a, interval_b )
         knots_eval=sll_mesh_nodes(mesh_eval)
 
-        solver=>new_poisson_1d_fem(mesh, spline_degree, SLL_PERIODIC, ierr)
+        solver=>new_poisson_1d_fem(mesh, spline_degree, sll_p_periodic, ierr)
 
 
         SLL_CLEAR_ALLOCATE(solution(1:size(knots_eval)),ierr)
@@ -237,8 +237,8 @@ contains
 !        call arbitrarydegree1D_interpolator%initialize( size(knots), &
 !            interval_a, &
 !            interval_b, &
-!            SLL_PERIODIC, &
-!            SLL_PERIODIC, &
+!            sll_p_periodic, &
+!            sll_p_periodic, &
 !            4)
 !
 !

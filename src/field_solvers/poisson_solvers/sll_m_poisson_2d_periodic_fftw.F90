@@ -124,9 +124,9 @@ function new_poisson_2d_periodic_fftw( &
    y_max,                              &
    nc_y,                               &
    error)                              &
-   result(this)
+   result(self)
 
-  type(sll_t_poisson_2d_periodic_fftw),pointer :: this   !< self object
+  type(sll_t_poisson_2d_periodic_fftw),pointer :: self   !< self object
   sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
   sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
   sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -135,9 +135,9 @@ function new_poisson_2d_periodic_fftw( &
   sll_real64, intent(in)    :: y_max  !< right corner direction y
   sll_int32,  intent(out)   :: error  !< error code
 
-  SLL_ALLOCATE(this, error)
+  SLL_ALLOCATE(self, error)
   call initialize_poisson_2d_periodic_fftw( &
-          this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
+          self, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
 
 end function new_poisson_2d_periodic_fftw 
 

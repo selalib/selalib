@@ -35,7 +35,7 @@ module sll_m_maxwell_1d_base
      !procedure(signature_solve), deferred :: &
      !     solve !< Solve Amperes law and Faraday equation
      procedure(update_dofs_function), deferred :: &
-          compute_rhs_from_function !< Compute the right-hand-side for a given function f. For Galerkin this is the inner product with the basis functions. For Collocation this is simply a function evaluation at the grid points.
+          compute_rhs_from_function !< Compute the right-hand-side for a given function f. For Galerkin it is the inner product with the basis functions. For Collocation it is simply a function evaluation at the grid points.
      procedure(norm_squared), deferred :: &
           L2norm_squared !< Square of the L2norm
      procedure(update_dofs_function), deferred :: &
@@ -47,19 +47,19 @@ module sll_m_maxwell_1d_base
 
 !---------------------------------------------------------------------------!
   abstract interface
-     subroutine empty(this) 
+     subroutine empty(self) 
        import sll_c_maxwell_1d_base
-       class( sll_c_maxwell_1d_base)                    :: this !< Maxwell solver object.
+       class( sll_c_maxwell_1d_base)                    :: self !< Maxwell solver object.
        
      end subroutine empty
   end interface
 
 !---------------------------------------------------------------------------!
   abstract interface
-     function norm_squared(this, coefs_dofs, degree) result( r )
+     function norm_squared(self, coefs_dofs, degree) result( r )
        use sll_m_working_precision
        import sll_c_maxwell_1d_base
-       class( sll_c_maxwell_1d_base)                    :: this !< Maxwell solver object.
+       class( sll_c_maxwell_1d_base)                    :: self !< Maxwell solver object.
        sll_real64                                     :: coefs_dofs(:) !< Values of the coefficient vectors for each DoF
        sll_int32                                      :: degree !< Degree of the basis function used for whcih the DoF-coefficients are given.
        sll_real64                                     :: r
@@ -72,18 +72,18 @@ module sll_m_maxwell_1d_base
      function sll_i_function_1d_real64(x)
        use sll_m_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
-                                 ! This is very rare.
+                                 ! It is very rare.
        sll_real64             :: sll_i_function_1d_real64
        sll_real64, intent(in) :: x
      end function sll_i_function_1d_real64
   end interface
 !---------------------------------------------------------------------------!
   abstract interface
-     subroutine update_dofs_function(this, func, degree, coefs_dofs)
+     subroutine update_dofs_function(self, func, degree, coefs_dofs)
        use sll_m_working_precision
        import sll_c_maxwell_1d_base
        import sll_i_function_1d_real64
-       class( sll_c_maxwell_1d_base)    :: this !< Maxwell solver object.
+       class( sll_c_maxwell_1d_base)    :: self !< Maxwell solver object.
        procedure(sll_i_function_1d_real64)  :: func !< Function to be projected.
        sll_int32, intent(in)          :: degree !< Degree of the basis function that should be used for projection.
        sll_real64, intent(out)        :: coefs_dofs(:) !< Coefficients of the projection.
@@ -92,10 +92,10 @@ module sll_m_maxwell_1d_base
   
 !---------------------------------------------------------------------------!
   abstract interface 
-     subroutine compute_field1_from_field2(this, delta_t, field_in, field_out)
+     subroutine compute_field1_from_field2(self, delta_t, field_in, field_out)
      use sll_m_working_precision
      import sll_c_maxwell_1d_base     
-     class(sll_c_maxwell_1d_base) :: this
+     class(sll_c_maxwell_1d_base) :: self
      sll_real64, intent(in)     :: delta_t
      sll_real64, intent(in)     :: field_in(:)
      sll_real64, intent(inout)  :: field_out(:)
@@ -103,20 +103,20 @@ module sll_m_maxwell_1d_base
   end interface
 
   abstract interface    
-    subroutine signature_compute_E_from_rho_1d(this, E, rho )
+    subroutine signature_compute_E_from_rho_1d(self, E, rho )
       use sll_m_working_precision
       import sll_c_maxwell_1d_base       
-      class(sll_c_maxwell_1d_base) :: this
+      class(sll_c_maxwell_1d_base) :: self
       sll_real64,dimension(:),intent(in) :: rho
       sll_real64,dimension(:),intent(out) :: E
     end subroutine signature_compute_E_from_rho_1d
   end interface
 
   abstract interface
-     subroutine signature_compute_E_from_j_1d(this, current, component, E)
+     subroutine signature_compute_E_from_j_1d(self, current, component, E)
       use sll_m_working_precision
       import sll_c_maxwell_1d_base
-       class(sll_c_maxwell_1d_base)             :: this
+       class(sll_c_maxwell_1d_base)             :: self
        sll_real64,dimension(:),intent(in)    :: current
        sll_int32, intent(in)                 :: component
        sll_real64,dimension(:),intent(inout) :: E
