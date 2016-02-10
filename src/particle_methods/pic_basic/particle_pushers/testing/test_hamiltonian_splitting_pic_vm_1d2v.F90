@@ -32,8 +32,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
     sll_c_maxwell_1d_base
 
   use sll_m_maxwell_1d_fem, only: &
-    sll_t_maxwell_1d_fem, &
-    sll_f_new_maxwell_1d_fem
+    sll_t_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
     sll_t_particle_group_1d2v
@@ -151,8 +150,12 @@ program test_hamiltonian_splitting_pic_1d2v_vm
        n_particles, degree_smoother, sll_p_galerkin) 
   
   ! Initialize Maxwell solver
-  maxwell_solver => sll_f_new_maxwell_1d_fem([eta_min, eta_max], num_cells, &
-       degree_smoother)
+  allocate( sll_t_maxwell_1d_fem :: maxwell_solver )
+  select type ( maxwell_solver )
+  type is ( sll_t_maxwell_1d_fem )
+     call maxwell_solver%init( [eta_min, eta_max], num_cells, &
+          degree_smoother)
+  end select
   
   SLL_ALLOCATE(efield(kernel_smoother_0%n_dofs,2),ierr)
   SLL_ALLOCATE(bfield(kernel_smoother_0%n_dofs),ierr)
@@ -364,7 +367,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   deallocate(kernel_smoother_0)
   call kernel_smoother_1%delete()
   deallocate(kernel_smoother_1)
-  call maxwell_solver%delete()
+  call maxwell_solver%free()
   deallocate(maxwell_solver)
   
   call sll_s_halt_collective()
