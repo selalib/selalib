@@ -8,9 +8,6 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
-
   use sll_m_collective, only: &
     sll_o_collective_allreduce, &
     sll_v_world_collective
