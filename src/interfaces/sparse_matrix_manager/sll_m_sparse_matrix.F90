@@ -143,7 +143,7 @@ subroutine sll_s_initialize_csr_matrix( mat,                            &
                                   local_to_global_col,            & 
                                   num_local_dof_col)
 
-type(sll_t_csr_matrix),      intent(inout) :: mat
+type(sll_t_csr_matrix),    intent(inout) :: mat
 sll_int32,                 intent(in)    :: num_rows
 sll_int32,                 intent(in)    :: num_cols
 sll_int32,                 intent(in)    :: num_elements
@@ -286,14 +286,14 @@ SLL_ASSERT(associated(mat%val))
 end subroutine sll_s_factorize_csr_matrix
 
 subroutine sll_s_csr_add_one_constraint( ia_in,          &
-                                   ja_in,          &
-                                   a_in,           &
-                                   num_rows_in,    &
-                                   num_nz_in,      &
-                                   constraint_vec, &
-                                   ia_out,         &
-                                   ja_out,         &
-                                   a_out)
+                                         ja_in,          &
+                                         a_in,           &
+                                         num_rows_in,    &
+                                         num_nz_in,      &
+                                         constraint_vec, &
+                                         ia_out,         &
+                                         ja_out,         &
+                                         a_out)
 
 integer, dimension(:), intent(in)  :: ia_in  
 integer, dimension(:), intent(in)  :: ja_in  
@@ -370,9 +370,9 @@ end subroutine sll_s_mult_csr_matrix_vector
 subroutine sll_s_add_to_csr_matrix(mat, val, row, col)
 
 type(sll_t_csr_matrix), intent(inout) :: mat
-sll_real64,           intent(in)    :: val
-sll_int32,            intent(in)    :: row
-sll_int32,            intent(in)    :: col
+sll_real64,             intent(in)    :: val
+sll_int32,              intent(in)    :: row
+sll_int32,              intent(in)    :: col
 
 sll_int32 :: k
 
@@ -387,7 +387,7 @@ end subroutine sll_s_add_to_csr_matrix
   
 subroutine sll_s_solve_csr_matrix(mat, B, U)
 
-type(sll_t_csr_matrix),     intent(in)    :: mat
+type(sll_t_csr_matrix),   intent(in)    :: mat
 sll_real64, dimension(:), intent(inout) :: B
 sll_real64, dimension(:), intent(out)   :: U
 
@@ -397,7 +397,6 @@ sll_real64 :: eps
 sll_real64, dimension(:), allocatable :: Ad
 sll_real64, dimension(:), allocatable :: d
 
-!logical    :: ll_continue
 sll_real64 :: Norm2r1
 sll_real64 :: Norm2r0
 sll_real64 :: NormInfb
@@ -407,7 +406,6 @@ sll_real64 :: beta
 sll_real64 :: alpha
 sll_int32  :: iter
 sll_int32  :: err
-!sll_int32  :: flag
 
 eps = 1.d-13
 maxIter = 10000
