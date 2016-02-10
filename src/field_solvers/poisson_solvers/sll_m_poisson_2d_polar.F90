@@ -94,6 +94,7 @@
 
 module sll_m_poisson_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -117,7 +118,8 @@ use sll_m_tridiagonal, only:  &
   sll_o_solve_cyclic_tridiag
 
 use sll_m_poisson_2d_base, only: &
-  sll_c_poisson_2d_base
+  sll_c_poisson_2d_base, &
+  sll_f_function_of_position
 
 implicit none
 
@@ -180,6 +182,16 @@ contains
   procedure, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_polar
   !> Solves \f$ -\Delta phi(x,y) = rho(x,y) \f$ and \f$ E = \nabla  \phi \f$
   procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_polar
+  
+  !> Compute the squared L_2 for given coefficients
+  procedure :: &
+       l2norm_squared => l2norm_squared_2d_polar
+  !> Compute the right hand side from a given function
+  procedure :: &
+       compute_rhs_from_function => compute_rhs_from_function_2d_polar
+  !> Destructor
+  procedure :: &
+       delete => delete_2d_polar
 
 end type poisson_2d_polar_solver
 
@@ -843,5 +855,30 @@ subroutine compute_E_from_rho_2d_polar( poisson, E1, E2, rho )
   stop
       
 end subroutine compute_E_from_rho_2d_polar
+
+subroutine compute_rhs_from_function_2d_polar(poisson, func, coefs_dofs)
+  class( poisson_2d_polar_solver)                    :: poisson !< Maxwell solver object.
+  procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+  sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+
+  SLL_ERROR('compute_rhs_from_function_2d_polar', 'Procedure not implemented.')
   
+end subroutine compute_rhs_from_function_2d_polar
+
+function l2norm_squared_2d_polar( poisson, coefs_dofs) result(r)
+  class( poisson_2d_polar_solver), intent(in) :: poisson !< Poisson solver object.
+       sll_real64 , intent(in)                :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+       sll_real64                             :: r
+  
+  SLL_ERROR('l2norm_squared_2d_polar', 'Procedure not implemented.')
+  r = 0.0_f64
+
+end function l2norm_squared_2d_polar
+  
+subroutine delete_2d_polar( poisson )
+  class( poisson_2d_polar_solver) :: poisson !< Poisson solver object.
+
+end subroutine delete_2d_polar
+  
+
 end module sll_m_poisson_2d_polar

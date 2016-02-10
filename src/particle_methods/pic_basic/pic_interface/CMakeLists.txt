@@ -9,8 +9,8 @@ TARGET_LINK_LIBRARIES( sll_pic_interface
   sll_collective
   sll_poisson_solvers
   sll_maxwell_solvers
-  sll_sobol
-  sll_prob)
+  sobol
+  prob)
 
 
 # Tests

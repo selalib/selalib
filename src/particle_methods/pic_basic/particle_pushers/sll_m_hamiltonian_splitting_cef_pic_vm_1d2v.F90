@@ -9,7 +9,7 @@ module sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_collective, only: &
     sll_o_collective_allreduce, &
@@ -226,9 +226,9 @@ contains
    c = 0.5_f64*(upper+lower)
    y1 = -m/sqrt(3.0_f64)+c
    y2 = m/sqrt(3.0_f64) +c
-   fy = sign*m*this%delta_x*&
-        (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
-        sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
+   !fy = sign*m*this%delta_x*&
+   !     (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
+   !     sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
 
    ind = 1
    do i_grid = index - this%spline_degree + 1, index
@@ -239,9 +239,9 @@ contains
    end do
 
    if (abs(vi(1)) > 1D-14) then
-      fy = sign*m*this%delta_x*&
-           (sll_f_uniform_b_splines_at_x(this%spline_degree, y1) +&
-           sll_f_uniform_b_splines_at_x(this%spline_degree, y2))
+      !fy = sign*m*this%delta_x*&
+      !     (sll_f_uniform_b_splines_at_x(this%spline_degree, y1) +&
+      !     sll_f_uniform_b_splines_at_x(this%spline_degree, y2))
 
       ind = 1
       do i_grid = index - this%spline_degree, index
