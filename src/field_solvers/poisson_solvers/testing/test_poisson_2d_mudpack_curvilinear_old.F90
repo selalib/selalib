@@ -71,11 +71,11 @@ sll_int32  :: ierr
 sll_int32  :: i1, i2
 sll_real64 :: x1, x2
 sll_real64 :: delta_x1, delta_x2
-sll_real64 :: e
+sll_real64 :: e, r
 
 nc_x1 = 32
-r_min = 1.0_f64
-r_max = 10._f64
+r_min = 0.01_f64
+r_max = 2.00_f64
 nc_x2 = 32
 
 x1_min = r_min
@@ -154,7 +154,8 @@ do i2=1,nc_x2+1
   x2=x2_min+real(i2-1,f64)*delta_x2
   do i1=1,nc_x1+1
     x1=x1_min+real(i1-1,f64)*delta_x1
-    rho(i1,i2) =  2.0_f64 * sin(x1) * sin(x2)
+    r = sqrt(tau%x1(x1,x2)**2+tau%x2(x1,x2)**2)
+    rho(i1,i2) = 4._f64 * sll_p_pi * f(r)
   end do
 end do
 
@@ -165,13 +166,65 @@ do i2=1,nc_x2+1
   x2=x2_min+real(i2-1,f64)*delta_x2
   do i1=1,nc_x1+1
     x1=x1_min+real(i1-1,f64)*delta_x1
-    e=e+abs(sin(x1)*sin(x2)-phi(i1,i2))
-    write(10,*) tau%x1(x1,x2), tau%x2(x1,x2), phi(i1,i2), rho(i1,i2)
+    r = sqrt(tau%x1(x1,x2)**2+tau%x2(x1,x2)**2)
+    e=e+abs(u(r)-phi(i1,i2))
+    write(10,*) tau%x1(x1,x2), tau%x2(x1,x2), phi(i1,i2), u(r)
   end do
   write(10,*)
 end do
 
 write(*,"(' error on phi : ', g15.5)") e / (nc_x1*nc_x2)
 
+
+contains
+
+!Charge density is a solid cylinder of radius 0.2
+function f(r)
+
+  sll_real64 :: f
+  sll_real64 :: r
+
+  if ( 0._f64 <= r .and. r <= 0.2_f64 ) then
+    f = 1.0_f64
+  else 
+    f = 0.0_f64
+  end if
+
+end function f
+
+!We have the equation :
+! -4 pi f(r) = Laplacian(u(r))
+!If
+!  f(r) = rho                    for 0   <= r <= 0.2
+!  f(r) = 0.0                    for 0.2 <  r <= 1
+!Then
+!  u(r) = -pi * f(r) * r^2 + a_1  for 0   <= r <= 0.2
+!  u(r) = a_2 * ln(r)            for 0.2 <  r <= 1
+!
+!  a_1 =  0.04 * pi * f(r) * (-2*ln(0.2)+1)
+!  a_2 = -0.08 * pi * f(r)
+
+function u(r)
+
+  sll_real64 :: u
+  sll_real64 :: r
+  sll_real64 :: pi
+  sll_real64 :: a_0, a_1, a_2, a_3
+
+  pi  =  4.0_f64 * atan(1._f64)
+  a_0 =  0.0_f64
+  a_1 =  0.04_f64 * pi * f(r) * (-2.0_f64*log(0.2_f64)+1.0_f64)
+  a_2 = -0.08_f64 * pi !* f(r)
+  a_3 =  0.0_f64
+
+  if (0._f64 < r .and. r <= 0.2_f64) then
+    u = -pi * f(r) * r*r + a_0*log(r) + a_1 
+  else if ( 0.2_f64 < r .and. r <= 1._f64) then
+    u = a_2 * log(r) + a_3
+  else 
+    u = 0._f64
+  end if
+
+end function u
 
 end program test_poisson_2d_mudpack_curvilinear_old
