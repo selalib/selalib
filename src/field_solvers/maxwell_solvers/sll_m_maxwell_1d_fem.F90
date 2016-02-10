@@ -34,8 +34,7 @@ module sll_m_maxwell_1d_fem
     sll_s_compute_e_from_b_1d_fem, &
     sll_s_compute_e_from_rho_1d_fem, &
     sll_s_compute_fem_rhs, &
-    sll_t_maxwell_1d_fem, &
-    sll_f_new_maxwell_1d_fem
+    sll_t_maxwell_1d_fem
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -72,7 +71,9 @@ module sll_m_maxwell_1d_fem
      procedure :: &
           L2projection => L2projection_1d_fem
      procedure :: &
-          delete => delete_1d_fem
+          free => free_1d_fem
+     procedure :: &
+          init => init_1d_fem
 
   end type sll_t_maxwell_1d_fem
 
@@ -317,20 +318,17 @@ contains
 
    end function L2norm_squared_1d_fem
 
-
-   function sll_f_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(self)
-     sll_real64 :: domain(2)     ! xmin, xmax
-     sll_int32 :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
+   subroutine init_1d_fem( self, domain, n_dofs, s_deg_0 )
+     class(sll_t_maxwell_1d_fem), intent(out) :: self !< solver object
+     sll_real64, intent(in) :: domain(2)     ! xmin, xmax
+     sll_int32, intent(in) :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
      !sll_real64 :: delta_x ! cell size
-     sll_int32 :: s_deg_0 ! highest spline degree
-     type(sll_t_maxwell_1d_fem), pointer :: self
+     sll_int32, intent(in) :: s_deg_0 ! highest spline degree
 
-     ! local variables
+    ! local variables
      sll_int32 :: ierr
      sll_int32 :: j, k ! loop variables
      sll_real64 :: coef0, coef1, sin_mode, cos_mode 
-
-     SLL_ALLOCATE(self, ierr)
 
      self%n_dofs = n_dofs
      self%Lx = domain(2) - domain(1)
@@ -368,7 +366,7 @@ contains
         self%mass_1(3) = 1.0_f64/120.0_f64
 
      case default
-        print*, 'sll_f_new_maxwell_1d_fem: spline degree ', s_deg_0, ' not implemented'
+        print*, 'sll_t_maxwell_1d_fem init: spline degree ', s_deg_0, ' not implemented'
      end select
 
      SLL_ALLOCATE(self%eig_mass0(n_dofs), ierr)
@@ -428,9 +426,22 @@ contains
      self%eig_mass1(n_dofs) = coef1
      self%eig_weak_ampere(n_dofs) = 2.0_f64 * (coef1 / coef0)
      self%eig_weak_poisson(n_dofs) = 1.0_f64 / (coef1 *4.0_f64) 
+
+   end subroutine init_1d_fem
+
+   function sll_f_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(self)
+     sll_real64 :: domain(2)     ! xmin, xmax
+     sll_int32 :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
+     !sll_real64 :: delta_x ! cell size
+     sll_int32 :: s_deg_0 ! highest spline degree
+     type(sll_t_maxwell_1d_fem), pointer :: self
+
+     allocate(self)
+     call self%init(domain, n_dofs, s_deg_0)
+ 
    end function sll_f_new_maxwell_1d_fem
 
-   subroutine delete_1d_fem(self)
+   subroutine free_1d_fem(self)
      class(sll_t_maxwell_1d_fem) :: self
 
      deallocate(self%mass_0)
@@ -442,7 +453,7 @@ contains
      deallocate(self%wsave)
      deallocate(self%work)
 
-   end subroutine delete_1d_fem
+   end subroutine free_1d_fem
 
 
 end module sll_m_maxwell_1d_fem

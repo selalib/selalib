@@ -33,8 +33,7 @@ program test_maxwell_1d_fem
     sll_s_compute_e_from_b_1d_fem, &
     sll_s_compute_e_from_rho_1d_fem, &
     sll_s_compute_fem_rhs, &
-    sll_t_maxwell_1d_fem, &
-    sll_f_new_maxwell_1d_fem
+    sll_t_maxwell_1d_fem
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -49,8 +48,7 @@ program test_maxwell_1d_fem
   sll_int32  :: error
   sll_real64 :: tol
 
-  type(sll_t_maxwell_1d_fem), pointer  :: maxwell_1d_fem
-  class(sll_t_maxwell_1d_fem), pointer  :: maxwell_1d
+  type(sll_t_maxwell_1d_fem)  :: maxwell_1d
 
   sll_real64, dimension(:), allocatable :: ex
   sll_real64, dimension(:), allocatable :: ey
@@ -88,8 +86,7 @@ program test_maxwell_1d_fem
   deg = 3
 
   ! Initialise maxwell FEM object
-  maxwell_1d_fem => sll_f_new_maxwell_1d_fem(domain, nc_eta1, deg)
-  maxwell_1d => maxwell_1d_fem
+  call maxwell_1d%init(domain, nc_eta1, deg)
 
   ! Allocate arrays
   SLL_CLEAR_ALLOCATE(ex(1:nc_eta1),error)

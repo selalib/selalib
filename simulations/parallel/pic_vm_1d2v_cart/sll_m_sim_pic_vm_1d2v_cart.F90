@@ -52,8 +52,7 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_c_maxwell_1d_base
 
   use sll_m_maxwell_1d_fem, only: &
-    sll_t_maxwell_1d_fem, &
-    sll_f_new_maxwell_1d_fem
+    sll_t_maxwell_1d_fem
 
   use sll_m_particle_group_1d2v, only: &
     sll_s_new_particle_group_1d2v_ptr, &
@@ -254,8 +253,12 @@ contains
          sim%n_total_particles, 1.0_f64, 1.0_f64, 1)
 
     ! Initialize the field solver
-    sim%maxwell_solver => sll_f_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
-         sim%degree_smoother)
+     allocate( sll_t_maxwell_1d_fem :: sim%maxwell_solver )
+     select type ( q=>sim%maxwell_solver )
+     type is ( sll_t_maxwell_1d_fem )
+        call q%init( sim%domain(1:2), sim%n_gcells, &
+             sim%degree_smoother)
+     end select
 
     ! Initialize kernel smoother    
     call sll_s_new_kernel_smoother_spline_1d_ptr(sim%kernel_smoother_1, &
@@ -431,7 +434,7 @@ contains
     deallocate (sim%particle_group)
     call sim%mesh%delete()
     deallocate(sim%mesh)
-    call sim%maxwell_solver%delete()
+    call sim%maxwell_solver%free()
     deallocate(sim%maxwell_solver)
     call sim%kernel_smoother_0%delete()
     deallocate(sim%kernel_smoother_0)

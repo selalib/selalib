@@ -41,7 +41,7 @@ module sll_m_maxwell_1d_base
      procedure(update_dofs_function), deferred :: &
             L2projection !< L2 projection
      procedure(empty), deferred :: &
-          delete !< destructor
+          free !< destructor
 
   end type sll_c_maxwell_1d_base
 
