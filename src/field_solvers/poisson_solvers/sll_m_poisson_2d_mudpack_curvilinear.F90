@@ -362,6 +362,8 @@ contains
 
     nx = nc_eta1+1
     ny = nc_eta2+1
+    allocate(phi(nx*ny))
+    allocate(rhs(nx*ny))
     ! set minimum required work space
     llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
 
