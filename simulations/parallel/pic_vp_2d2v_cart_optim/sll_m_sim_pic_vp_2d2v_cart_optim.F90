@@ -739,7 +739,7 @@ contains
     if (sim%my_rank ==0) then
        open(93,file='time_parts_sec_omp.dat',position='append')
        write(93,*) '# Nb of threads  ||  time (sec)  ||  average pushes/sec'
-       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%parts_number,i64)/(time-t2)
+       write(93,*) sim%n_threads, time-t2, real(sim%num_iterations*sim%parts_number/(time-t2),f64)
        close(93)
     endif
 #endif

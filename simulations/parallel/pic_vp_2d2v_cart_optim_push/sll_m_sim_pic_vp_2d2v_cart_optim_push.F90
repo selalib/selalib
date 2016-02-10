@@ -277,11 +277,12 @@ contains
     class(sll_t_pic_simulation_4d_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp5, tmp6, temp
-    sll_real64 :: ttmp(1:4,1:2)
+    sll_real32 :: temp
+    sll_real32 :: tmp5, tmp6
+    sll_real32 :: ttmp(1:4,1:2)
     sll_real64, dimension(:,:), pointer :: phi
-    sll_int32  :: ncx, ncy, ic_x,ic_y
-    !sll_int32  :: ic_x1,ic_y1
+    sll_int32  :: ncx, ncy
+    sll_int32  :: ic_x,ic_y
     sll_real64 :: xmin, ymin
     sll_real64 :: dtrdx, dtrdy
     sll_int32  :: gi ! counter index for guard list
@@ -504,19 +505,19 @@ contains
              !              + p(i+1)%vx*p(i+1)%vx + p(i+1)%vy*p(i+1)%vy
              ic_x  = mod( p(i)%ic-1, ncx  )
              ic_y  = int( (p(i)%ic-1)/ncx )
-             x = real(ic_x, f64) + p(i)%dx + dtrdx * p(i)%vx! the PUSH
-             y = real(ic_y, f64) + p(i)%dy + dtrdy * p(i)%vy
+             x = real(ic_x+p(i)%dx,f64) + dtrdx * p(i)%vx! the PUSH
+             y = real(ic_y+p(i)%dy,f64) + dtrdy * p(i)%vy
              !
              ic_x  = mod( p(i+1)%ic-1, ncx)
              ic_y  = int( (p(i+1)%ic-1)/ncx)
-             x1 = real(ic_x, f64) + p(i+1)%dx + dtrdx * p(i+1)%vx! the PUSH
-             y1 = real(ic_y, f64) + p(i+1)%dy + dtrdy * p(i+1)%vy
+             x1 = real(ic_x+p(i+1)%dx,f64) + dtrdx * p(i+1)%vx! the PUSH
+             y1 = real(ic_y+p(i+1)%dy,f64) + dtrdy * p(i+1)%vy
 !
              if (in_bounds(x, y, ncx, ncy)) then ! finish push
                 ic_x = int(x)
                 ic_y = int(y)
-                p(i)%dx = x - real(ic_x, f64)
-                p(i)%dy = y - real(ic_y, f64)
+                p(i)%dx = real(x - ic_x, f32)
+                p(i)%dy = real(y - ic_y, f32)
                 p(i)%ic = ic_x + 1 + ic_y*ncx
                 SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum_CS,p(i),ttmp,temp)
              else ! store reference for later processing
@@ -526,8 +527,8 @@ contains
              if (in_bounds( x1, y1, ncx, ncy )) then ! finish push
                 ic_x = int(x1)
                 ic_y = int(y1)
-                p(i+1)%dx = x1 - real(ic_x, f64)
-                p(i+1)%dy = y1 - real(ic_y, f64)
+                p(i+1)%dx = real(x1 - ic_x, f32)
+                p(i+1)%dy = real(y1 - ic_y, f32)
                 p(i+1)%ic = ic_x + 1 + ic_y * ncx
                 SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum_CS,p(i+1),ttmp,temp)
              else ! store reference for later processing
@@ -560,13 +561,13 @@ contains
           do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
              ic_x  = mod( p_guard(i)%p%ic-1, ncx )
              ic_y  = int( (p_guard(i)%p%ic-1)/ncx)
-             x = real(ic_x, f64) + p_guard(i)%p%dx + dtrdx * p_guard(i)%p%vx! the push
-             y = real(ic_y, f64) + p_guard(i)%p%dy + dtrdy * p_guard(i)%p%vy    
+             x = real(ic_x + p_guard(i)%p%dx, f64) + dtrdx * p_guard(i)%p%vx! the push
+             y = real(ic_y + p_guard(i)%p%dy, f64) + dtrdy * p_guard(i)%p%vy    
              call apply_periodic_bc( x, y, ncx, ncy)
              ic_x = int(x)
              ic_y = int(y)
-             p_guard(i)%p%dx = x - real(ic_x, f64)
-             p_guard(i)%p%dy = y - real(ic_y, f64)
+             p_guard(i)%p%dx = real(x - ic_x, f32)
+             p_guard(i)%p%dy = real(y - ic_y, f32)
              p_guard(i)%p%ic = ic_x + 1 + ic_y*ncx
              SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum_CS,p_guard(i)%p,ttmp,temp)
           end do
@@ -595,8 +596,8 @@ contains
 !!$             p(i+1)%vy = p(i+1)%vy + dtqom * Ey
              ic_x  = mod( p(i)%ic-1, ncx  )
              ic_y  = int( (p(i)%ic-1)/ncx )
-             x = real(ic_x, f64) + p(i)%dx + dtrdx * p(i)%vx! the PUSH
-             y = real(ic_y, f64) + p(i)%dy + dtrdy * p(i)%vy
+             x = real(ic_x+p(i)%dx,f64) + dtrdx * p(i)%vx! the PUSH
+             y = real(ic_y+p(i)%dy,f64) + dtrdy * p(i)%vy
              !
 !!$             ic_x  = mod( p(i+1)%ic-1, ncx)
 !!$             ic_y  = int( (p(i+1)%ic-1)/ncx)
@@ -606,8 +607,8 @@ contains
              if (in_bounds(x, y, ncx, ncy)) then ! finish push
                 ic_x = int(x)
                 ic_y = int(y)
-                p(i)%dx = x - real(ic_x, f64)
-                p(i)%dy = y - real(ic_y, f64)
+                p(i)%dx = real(x - ic_x, f32)
+                p(i)%dy = real(y - ic_y, f32)
                 p(i)%ic = ic_x + 1 + ic_y*ncx
                 SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp5,tmp6)
              else ! store reference for later processing
@@ -642,13 +643,13 @@ contains
           do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
              ic_x  = mod( p_guard(i)%p%ic-1, ncx )
              ic_y  = int( (p_guard(i)%p%ic-1)/ncx)
-             x = real(ic_x, f64) + p_guard(i)%p%dx + dtrdx * p_guard(i)%p%vx! the push
-             y = real(ic_y, f64) + p_guard(i)%p%dy + dtrdy * p_guard(i)%p%vy    
+             x = real(ic_x+p_guard(i)%p%dx,f64) + dtrdx * p_guard(i)%p%vx! the push
+             y = real(ic_y+p_guard(i)%p%dy,f64) + dtrdy * p_guard(i)%p%vy    
              call apply_periodic_bc( x, y, ncx, ncy)
              ic_x = int(x)
              ic_y = int(y)
-             p_guard(i)%p%dx = x - real(ic_x, f64)
-             p_guard(i)%p%dy = y - real(ic_y, f64)
+             p_guard(i)%p%dx = real(x - ic_x, f32)
+             p_guard(i)%p%dy = real(y - ic_y, f32)
              p_guard(i)%p%ic = ic_x + 1 + ic_y*ncx
              SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp5,tmp6)
           end do
@@ -724,7 +725,7 @@ contains
     if (sim%my_rank ==0) then 
        open(93,file='time_OptPush_omp_WITH_SCHEDULE.dat',position='append')
        write(93,*) '# Nb of threads   ||   time (sec)   ||   average pushes/sec'
-       write(93,*) n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%parts_number,i64)/(time-t2)
+       write(93,*) n_threads, time-t2, real(sim%num_iterations*sim%parts_number,f64)/(time-t2)
        close(93)
     endif
 #endif
