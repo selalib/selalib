@@ -188,7 +188,7 @@ program VP1d_BSL_time_split
        (/0.0_f64/) ) 
 
   ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
   call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
   interp_x => interp_spline_x
   interp_v => interp_spline_v

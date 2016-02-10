@@ -14,7 +14,7 @@
 !>        for 2d and 4d PIC simulations
 !> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
-!> @details  The particle_representation.h file contains Macros
+!> @details  The sll_particle_representation.h file contains Macros
 !>           for conversion between standard (position,velocity) 
 !>           particle type and the type defined in the module
 !>           sll_m_particle_representations.

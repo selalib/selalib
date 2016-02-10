@@ -1,7 +1,7 @@
 IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED)
   ADD_EXECUTABLE( test_parallel_array_initializer 
     test_parallel_array_initializer.F90 
-    sll_parallel_array_output_module.F90 )
+    m_parallel_array_output.F90 )
 
   TARGET_LINK_LIBRARIES( test_parallel_array_initializer 
                          sll_parallel_array_utilities )

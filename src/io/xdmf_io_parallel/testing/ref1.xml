@@ -3,7 +3,7 @@
 <Xdmf Version='2.0'>
   <Domain>
     <Grid Name='mesh_x2x3_cart' GridType='Uniform'>
-      <Time Value='8.0'/>
+      <Time Value='8.00000000000'/>
       <Topology TopologyType='2DSMesh' NumberOfElements='33 33'/>
       <Geometry GeometryType='X_Y'>
         <DataItem Dimensions='33 33' NumberType='Float' Precision='8' Format='HDF'>
@@ -20,7 +20,7 @@
       </Attribute>
     </Grid>
     <Grid Name='mesh_x1x2_polar' GridType='Uniform'>
-      <Time Value='8.0'/>
+      <Time Value='8.00000000000'/>
       <Topology TopologyType='2DSMesh' NumberOfElements='33 33'/>
       <Geometry GeometryType='X_Y'>
         <DataItem Dimensions='33 33' NumberType='Float' Precision='8' Format='HDF'>

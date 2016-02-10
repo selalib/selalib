@@ -13,18 +13,18 @@ module sll_m_periodic_interp
 !   zffti
 
   use sll_m_arbitrary_degree_splines, only: &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_constants, only: &
     sll_p_pi, &
     sll_p_twopi
 
   use sll_m_fft, only: &
-    sll_s_fft_apply_plan_r2r_1d, &
+    sll_s_fft_exec_r2r_1d, &
     sll_p_fft_backward, &
     sll_p_fft_forward, &
-    sll_f_fft_new_plan_r2r_1d, &
-    sll_t_fft_plan
+    sll_s_fft_init_r2r_1d, &
+    sll_t_fft
 
   implicit none
 
@@ -56,7 +56,7 @@ module sll_m_periodic_interp
      sll_comp64, pointer :: ufft (:) ! Fourier transform of function
      sll_real64, pointer :: buf  (:) ! workspace for sll_p_lagrange interpolation
      sll_int32           :: sizebuf ! size of workspace for sll_p_lagrange interpolation
-     type(sll_t_fft_plan), pointer :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
+     type(sll_t_fft)     :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
    end type sll_t_periodic_interp_work
 
   interface sll_o_delete
@@ -117,7 +117,7 @@ contains
 
     case (sll_p_spline)
        this%buf=>NULL()
-       biatx = sll_f_uniform_b_splines_at_x(p, 0.0_f64 )
+       call sll_s_uniform_b_splines_at_x(p, 0.0_f64, biatx )
        do i=1, N
           this%modes(i-1) = exp(ii_64*sll_p_twopi*(i-1)/N)
           this%eigenvalues_Minv(i) = biatx((p+1)/2)
@@ -139,8 +139,9 @@ contains
        this%sizebuf=N
        SLL_ALLOCATE(this%buf(this%sizebuf),ierr)          
        !SLL_ALLOCATE(buf(N),ierr)
-       this%pfwd => sll_f_fft_new_plan_r2r_1d(N,this%buf,this%buf,sll_p_fft_forward,normalized = .TRUE.)
-       this%pinv => sll_f_fft_new_plan_r2r_1d(N,this%buf,this%buf,sll_p_fft_backward)
+       call sll_s_fft_init_r2r_1d(this%pfwd,N,this%buf,this%buf,sll_p_fft_forward,normalized = .TRUE.)
+       
+       call sll_s_fft_init_r2r_1d(this%pinv,N,this%buf,this%buf,sll_p_fft_backward)
        SLL_DEALLOCATE_ARRAY(this%buf,ierr)       
     case default
        print*, 'sll_m_periodic_interp:interpolator ',interpolator, ' not implemented'
@@ -225,7 +226,7 @@ contains
        p =  this%order - 1
        ishift = floor (-alpha)
        beta = -ishift - alpha
-       biatx = sll_f_uniform_b_splines_at_x(p, beta )
+       call sll_s_uniform_b_splines_at_x(p, beta, biatx )
 
        this%eigenvalues_S = (0.0_f64, 0.0_f64)
        do i=1, this%N
@@ -255,7 +256,7 @@ contains
             
     case (sll_p_trigo_fft_selalib)
        u_out = u
-       call sll_s_fft_apply_plan_r2r_1d(this%pfwd,u_out,u_out)
+       call sll_s_fft_exec_r2r_1d(this%pfwd,u_out,u_out)
        n=this%N
        tmp2=-ii_64*2._f64*sll_p_pi/n*alpha
 
@@ -282,7 +283,7 @@ contains
       !   !print *,i,tmp
       ! enddo
 
-       call sll_s_fft_apply_plan_r2r_1d(this%pinv,u_out,u_out)        
+       call sll_s_fft_exec_r2r_1d(this%pinv,u_out,u_out)        
     case default
        print*, 'sll_m_periodic_interp:interpolator ',this%interpolator, ' not implemented'
        stop

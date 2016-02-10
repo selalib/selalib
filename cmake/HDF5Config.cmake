@@ -14,6 +14,7 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
                   $ENV{HDF5_BASE}
                   /usr 
                   /usr/include/hdf5/openmpi
+                  /usr/include/hdf5/mpich
                   /usr/include/openmpi-x86_64 
                   /usr/include/mpich2-x86_64 
                   /usr/lib64/mpich2 
@@ -31,13 +32,13 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
    PATH_SUFFIXES / include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
-   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5_openmpi hdf5
+   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5_openmpi hdf5_mpich hdf5
    HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_FORTRAN_LIBRARY 
-   NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_fortran
+   NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_mpich_fortran hdf5_fortran
    HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5_fortran")

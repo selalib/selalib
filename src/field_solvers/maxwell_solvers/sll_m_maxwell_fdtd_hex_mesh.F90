@@ -60,26 +60,26 @@ end type maxwell_hex_mesh_fdtd
 contains
 
 !>Initilialize the maxwell solver
-subroutine initialize_maxwell_hex_mesh_fdtd(this, mesh, polarization )
+subroutine initialize_maxwell_hex_mesh_fdtd(self, mesh, polarization )
 
-   type(maxwell_hex_mesh_fdtd) :: this         !< maxwell solver object
+   type(maxwell_hex_mesh_fdtd) :: self         !< maxwell solver object
    type(sll_hex_mesh_2d)       :: mesh         !< hexagonal mesh
    sll_int32                   :: polarization !< TE or TM
 
-   this%mesh = mesh
-   this%c    = 1.0_f64
-   this%e_0  = 1.0_f64
+   self%mesh = mesh
+   self%c    = 1.0_f64
+   self%e_0  = 1.0_f64
    
-   this%polarization = polarization
+   self%polarization = polarization
 
 end subroutine initialize_maxwell_hex_mesh_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Solve Faraday equation
-subroutine faraday_hex_mesh_fdtd( this, fx, fy, fz, dt )
+subroutine faraday_hex_mesh_fdtd( self, fx, fy, fz, dt )
 
-type(maxwell_hex_mesh_fdtd)                 :: this !< Maxwell object
+type(maxwell_hex_mesh_fdtd)                 :: self !< Maxwell object
 sll_real64, dimension(:,:), target :: fx   !< Ex or Bx
 sll_real64, dimension(:,:), target :: fy   !< Ey or By
 sll_real64, dimension(:,:), target :: fz   !< Bz or Ez
@@ -94,18 +94,18 @@ sll_real64, dimension(:,:), pointer :: bx
 sll_real64, dimension(:,:), pointer :: by
 sll_real64, dimension(:,:), pointer :: bz
 
-delta = this%mesh%delta
+delta = self%mesh%delta
 
 !*** On utilise l'equation de Faraday sur un demi pas
 !*** de temps pour le calcul du champ magnetique  Bz 
 !*** a l'instant n puis n+1/2 
 
-!i1 = this%i1
-!j1 = this%j1
-!i2 = this%i2
-!j2 = this%j2
+!i1 = self%i1
+!j1 = self%j1
+!i2 = self%i2
+!j2 = self%j2
 !
-!if (this%polarization == TE_POLARIZATION) then
+!if (self%polarization == TE_POLARIZATION) then
 !
 !   ex => fx; ey => fy; bz => fz
 !   do i=i1,j1-1
@@ -118,7 +118,7 @@ delta = this%mesh%delta
 !
 !end if
 !
-!if (this%polarization == TM_POLARIZATION) then
+!if (self%polarization == TM_POLARIZATION) then
 !
 !   bx => fx; by => fy; ez => fz
 !   do i=i1,j1
@@ -142,9 +142,9 @@ end subroutine faraday_hex_mesh_fdtd
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Solve ampere-maxwell equation with FDTD scheme
-subroutine ampere_hex_mesh_fdtd( this, fx, fy, fz, dt, jx, jy )
+subroutine ampere_hex_mesh_fdtd( self, fx, fy, fz, dt, jx, jy )
 
-type(maxwell_hex_mesh_fdtd) :: this !< Maxwell object
+type(maxwell_hex_mesh_fdtd) :: self !< Maxwell object
 sll_int32 :: i1, j1, i2, j2
 sll_real64, dimension(:,:), intent(inout), target :: fx !< Ex or Bx
 sll_real64, dimension(:,:), intent(inout), target :: fy !< Ey or By
@@ -163,21 +163,21 @@ sll_real64, dimension(:,:), pointer :: bx
 sll_real64, dimension(:,:), pointer :: by
 sll_real64, dimension(:,:), pointer :: bz
 
-!i1 = this%i1
-!j1 = this%j1
-!i2 = this%i2
-!j2 = this%j2
+!i1 = self%i1
+!j1 = self%j1
+!i2 = self%i2
+!j2 = self%j2
 !
-!csq = this%c * this%c
-!dx  = this%dx
-!dy  = this%dy
+!csq = self%c * self%c
+!dx  = self%dx
+!dy  = self%dy
 !
 !!*** Calcul du champ electrique E au temps n+1
 !!*** sur les points internes du maillage
 !!*** Ex aux points (i+1/2,j)
 !!*** Ey aux points (i,j+1/2)
 !
-!if (this%polarization == TE_POLARIZATION) then
+!if (self%polarization == TE_POLARIZATION) then
 !
 !   ex => fx; ey => fy; bz => fz
 !
@@ -197,14 +197,14 @@ sll_real64, dimension(:,:), pointer :: bz
 !
 !   if (present(jx) .and. present(jy)) then
 !
-!      ex(i1:j1,i2+1:j2) = ex(i1:j1,i2+1:j2) - dt * jx(i1:j1,i2+1:j2) / this%e_0
-!      ey(i1+1:j1,i2:j2) = ey(i1+1:j1,i2:j2) - dt * jy(i1+1:j1,i2:j2) / this%e_0
+!      ex(i1:j1,i2+1:j2) = ex(i1:j1,i2+1:j2) - dt * jx(i1:j1,i2+1:j2) / self%e_0
+!      ey(i1+1:j1,i2:j2) = ey(i1+1:j1,i2:j2) - dt * jy(i1+1:j1,i2:j2) / self%e_0
 !
 !   endif
 !
 !end if
 !
-!if (this%polarization == TM_POLARIZATION) then
+!if (self%polarization == TM_POLARIZATION) then
 !
 !   bx => fx; by => fy; ez => fz
 !
@@ -218,7 +218,7 @@ sll_real64, dimension(:,:), pointer :: bz
 !
 !   if (present(jx) .and. .not. present(jy)) then
 !
-!      ez(i1:j1-1,i2:j2-1) = ez(i1:j1-1,i2:j2-1) - dt * jx(i1:j1-1,i2:j2-1) / this%e_0
+!      ez(i1:j1-1,i2:j2-1) = ez(i1:j1-1,i2:j2-1) - dt * jx(i1:j1-1,i2:j2-1) / self%e_0
 !
 !   endif
 !
