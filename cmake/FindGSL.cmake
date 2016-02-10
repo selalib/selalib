@@ -30,3 +30,19 @@ include (FindPackageHandleStandardArgs)
 find_package_handle_standard_args (GSL DEFAULT_MSG GSL_LIBRARIES GSL_INCLUDES)
 
 mark_as_advanced (GSL_LIB GSL_CBLAS_LIB GSL_INCLUDES)
+
+if (GSL_FOUND)
+
+  find_path (FGSL_INCLUDES fgsl.mod PATH_SUFFIXES fgsl )
+  SET (FGSL_INCLUDES "${FGSL_INCLUDES}/fgsl")
+  
+  find_library (FGSL_LIB NAMES fgsl)
+  
+  set (FGSL_LIBRARIES "${FGSL_LIB}" "${GSL_LIBRARIES}")
+  
+  include (FindPackageHandleStandardArgs)
+  find_package_handle_standard_args (FGSL DEFAULT_MSG FGSL_LIBRARIES FGSL_INCLUDES)
+  
+  mark_as_advanced (FGSL_LIB FGSL_INCLUDES)
+
+endif (GSL_FOUND)
