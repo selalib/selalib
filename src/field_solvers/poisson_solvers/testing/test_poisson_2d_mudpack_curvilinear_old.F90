@@ -168,12 +168,18 @@ do i2=1,nc_x2+1
     x1=x1_min+real(i1-1,f64)*delta_x1
     r = sqrt(tau%x1(x1,x2)**2+tau%x2(x1,x2)**2)
     e=e+abs(u(r)-phi(i1,i2))
-    write(10,*) tau%x1(x1,x2), tau%x2(x1,x2), phi(i1,i2), u(r)
+    !write(10,*) tau%x1(x1,x2), tau%x2(x1,x2), phi(i1,i2), u(r)
   end do
-  write(10,*)
+  !write(10,*)
 end do
 
 write(*,"(' error on phi : ', g15.5)") e / (nc_x1*nc_x2)
+
+if ( e / (nc_x1*nc_x2) < 0.1 ) then
+  print*, 'PASSED'
+else
+  print*, 'FAILED'
+end if
 
 
 contains
