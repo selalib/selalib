@@ -153,5 +153,11 @@ end do
 
 write(*,"(' error on phi : ', g15.5)") e / (nc_x1*nc_x2)
 
+if ( e / (nc_x1*nc_X2) < 0.0001) then
+  print*, 'PASSED'
+else
+  print*, 'FAILED'
+end if
+
 
 end program test_poisson_2d_mudpack_curvilinear
