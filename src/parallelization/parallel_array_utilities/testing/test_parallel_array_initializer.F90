@@ -44,7 +44,7 @@ program unit_test_initializers_4d
     sll_f_new_layout_4d, &
     sll_o_view_lims
 
-  use sll_parallel_array_output_module, only: &
+  use m_parallel_array_output, only: &
     write_mesh_4d, &
     write_xmf_file
 

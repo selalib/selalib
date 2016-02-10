@@ -177,48 +177,48 @@ contains
       ! Allocate receive buffer for 'to_file' logicals, then gather all of them
       allocate( recbuf(0:nprocs-1) )
       call sll_o_collective_gather( self%comm, buf, 0, recbuf )
-      print *, "PROC #0: gather"
+      !print *, "PROC #0: gather"
 
       ! Write array info on XDMF file
       if (to_file) then
         call self%xdmf_file%add_field( grid_id, field_name, field_path )
-        print *, "PROC #0: write array info to xmf"
+        !print *, "PROC #0: write array info to xmf"
       end if
-      print *, "PROC #0: recbuf = ", recbuf
+      !print *, "PROC #0: recbuf = ", recbuf
+      if ( nprocs>1 )then
+        ! Receive data from other processes, and write array info to XDMF file
+        do i = 1, count( recbuf(1:) )
 
-      ! Receive data from other processes, and write array info to XDMF file
-      do i = 1, count( recbuf(1:) )
+          ! Receive grid ID from any process, then field name/path from same proc
 
-        ! Receive grid ID from any process, then field name/path from same proc
+          !    MPI_RECV( BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, STATUS, IERROR )
+          call mpi_recv( buf_gid, 1, mpi_integer, mpi_any_source, &
+            mpi_any_tag, comm, stat, ierr )
 
-        !    MPI_RECV( BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, STATUS, IERROR )
-        call mpi_recv( buf_gid, 1, mpi_integer, mpi_any_source, &
-          mpi_any_tag, comm, stat, ierr )
+          sender_rank = stat( mpi_source )
 
-        sender_rank = stat( mpi_source )
+          call mpi_recv( buf_fn, maxlen, mpi_character, sender_rank, &
+            mpi_any_tag, comm, stat, ierr )
 
-        call mpi_recv( buf_fn, maxlen, mpi_character, sender_rank, &
-          mpi_any_tag, comm, stat, ierr )
+          call mpi_recv( buf_fp, maxlen, mpi_character, sender_rank, &
+            mpi_any_tag, comm, stat, ierr )
 
-        call mpi_recv( buf_fp, maxlen, mpi_character, sender_rank, &
-          mpi_any_tag, comm, stat, ierr )
+          write( rank_str, '(i8)' ) sender_rank
+          !print *, "PROC #0: data received from processor "// &
+          !  trim( adjustl( rank_str ) )
 
-        write( rank_str, '(i8)' ) sender_rank
-        print *, "PROC #0: data received from processor "// &
-          trim( adjustl( rank_str ) )
+          ! Add field to sequential XDMF file
+          call self%xdmf_file%add_field( buf_gid,trim( buf_fn ),trim( buf_fp ) )
+          !print *, "PROC #0: field added to XDMF file"
 
-        ! Add field to sequential XDMF file
-        call self%xdmf_file%add_field( buf_gid,trim( buf_fn ),trim( buf_fp ) )
-        print *, "PROC #0: field added to XDMF file"
-
-      end do
-
+        end do
+      endif
     ! NOT MASTER ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     else
       allocate( recbuf(0) ) ! allocate empty buffer (ifort complains otherwise)
       call sll_o_collective_gather( self%comm, buf, 0, recbuf )
       write( rank_str, '(i8)' ) self%rank
-      print *, "PROC #"//trim( adjustl( rank_str ) )//": gather"
+      !print *, "PROC #"//trim( adjustl( rank_str ) )//": gather"
 
       if (to_file) then
         ! Fill in send buffers
@@ -231,7 +231,7 @@ contains
         call mpi_send( buf_gid, 1     , mpi_integer  , 0, 9, comm, ierr )
         call mpi_send( buf_fn , maxlen, mpi_character, 0, 9, comm, ierr )
         call mpi_send( buf_fp , maxlen, mpi_character, 0, 9, comm, ierr )
-        print *, "PROC #"//trim( adjustl( rank_str ) )//": send"
+        !print *, "PROC #"//trim( adjustl( rank_str ) )//": send"
       end if
 
     end if

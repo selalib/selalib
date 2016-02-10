@@ -108,9 +108,9 @@ contains
     y_max, &
     nc_y, &
     error) &
-    result(this)
+    result(self)
 
-   type(sll_t_poisson_2d_periodic_fftpack),pointer :: this   !< self object
+   type(sll_t_poisson_2d_periodic_fftpack),pointer :: self   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -119,38 +119,38 @@ contains
    sll_real64, intent(in)    :: y_max  !< right corner direction y
    sll_int32,  intent(out)   :: error  !< error code
 
-   SLL_ALLOCATE(this, error)
+   SLL_ALLOCATE(self, error)
    call initialize_poisson_2d_periodic_fftpack( &
-           this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
+           self, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
 
   end function new_poisson_2d_periodic_fftpack 
 
 
 !> delete sll_t_poisson_2d_periodic_fftpack
-subroutine free_poisson_2d_periodic_fftpack( this, error )
-   type(sll_t_poisson_2d_periodic_fftpack) :: this   !< self object
+subroutine free_poisson_2d_periodic_fftpack( self, error )
+   type(sll_t_poisson_2d_periodic_fftpack) :: self   !< self object
    sll_int32,  intent(out)   :: error  !< error code
 
-   SLL_DEALLOCATE(this%rhst, error)
-   SLL_DEALLOCATE(this%ext, error)
-   SLL_DEALLOCATE(this%eyt, error)
-   SLL_DEALLOCATE(this%kx, error)
-   SLL_DEALLOCATE(this%ky, error)
-   SLL_DEALLOCATE(this%k2, error)
+   SLL_DEALLOCATE(self%rhst, error)
+   SLL_DEALLOCATE(self%ext, error)
+   SLL_DEALLOCATE(self%eyt, error)
+   SLL_DEALLOCATE(self%kx, error)
+   SLL_DEALLOCATE(self%ky, error)
+   SLL_DEALLOCATE(self%k2, error)
    
-   SLL_DEALLOCATE(this%fftx%coefc, error)
-   SLL_DEALLOCATE(this%fftx%work, error)
-   SLL_DEALLOCATE(this%fftx%workc, error)
-   SLL_DEALLOCATE(this%fftx%coefd, error)
-   SLL_DEALLOCATE(this%fftx%workd, error)
-   SLL_DEALLOCATE(this%fftx%coefcd, error)
+   SLL_DEALLOCATE(self%fftx%coefc, error)
+   SLL_DEALLOCATE(self%fftx%work, error)
+   SLL_DEALLOCATE(self%fftx%workc, error)
+   SLL_DEALLOCATE(self%fftx%coefd, error)
+   SLL_DEALLOCATE(self%fftx%workd, error)
+   SLL_DEALLOCATE(self%fftx%coefcd, error)
 
-   SLL_DEALLOCATE(this%ffty%coefc, error)
-   SLL_DEALLOCATE(this%ffty%work, error)
-   SLL_DEALLOCATE(this%ffty%workc, error)
-   SLL_DEALLOCATE(this%ffty%coefd, error)
-   SLL_DEALLOCATE(this%ffty%workd, error)
-   SLL_DEALLOCATE(this%ffty%coefcd, error)
+   SLL_DEALLOCATE(self%ffty%coefc, error)
+   SLL_DEALLOCATE(self%ffty%work, error)
+   SLL_DEALLOCATE(self%ffty%workc, error)
+   SLL_DEALLOCATE(self%ffty%coefd, error)
+   SLL_DEALLOCATE(self%ffty%workd, error)
+   SLL_DEALLOCATE(self%ffty%coefcd, error)
 
       
 end subroutine free_poisson_2d_periodic_fftpack
@@ -158,9 +158,9 @@ end subroutine free_poisson_2d_periodic_fftpack
 !> Create an object to sll_o_solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:
 subroutine initialize_poisson_2d_periodic_fftpack( &
-           this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
+           self, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
 
-   type(sll_t_poisson_2d_periodic_fftpack) :: this   !< self object
+   type(sll_t_poisson_2d_periodic_fftpack) :: self   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -169,69 +169,69 @@ subroutine initialize_poisson_2d_periodic_fftpack( &
    sll_real64, intent(in)    :: y_max  !< right corner direction y
    sll_int32,  intent(out)   :: error  !< error code
    
-   this%nc_x = nc_x
-   this%nc_y = nc_y
+   self%nc_x = nc_x
+   self%nc_y = nc_y
 
-   this%x_min = x_min
-   this%x_max = x_max
-   this%y_min = y_min
-   this%y_max = y_max
-   this%dx   = (x_max-x_min) / real(nc_x, f64)
-   this%dy   = (y_max-y_min) / real(nc_y, f64)
+   self%x_min = x_min
+   self%x_max = x_max
+   self%y_min = y_min
+   self%y_max = y_max
+   self%dx   = (x_max-x_min) / real(nc_x, f64)
+   self%dy   = (y_max-y_min) / real(nc_y, f64)
 
-   SLL_ALLOCATE(this%rhst(nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%ext (nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%eyt (nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%kx  (nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%ky  (nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%k2  (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(self%rhst(nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(self%ext (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(self%eyt (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(self%kx  (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(self%ky  (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(self%k2  (nc_y,nc_x/2+1), error)
 
 #ifdef DEBUG
    print*, " FFTPACK version of poisson 2d periodic solver "
 #endif
 
-   call initdfft(this%fftx, nc_x)
-   call initcfft(this%ffty, nc_y)
+   call initdfft(self%fftx, nc_x)
+   call initcfft(self%ffty, nc_y)
 
-   call wave_number_vectors(this)
+   call wave_number_vectors(self)
 
 end subroutine initialize_poisson_2d_periodic_fftpack
 
 !> sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.
-subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
+subroutine solve_potential_poisson_2d_periodic_fftpack(self,sol,rhs)
 
-   type(sll_t_poisson_2d_periodic_fftpack)       :: this !< self object
+   type(sll_t_poisson_2d_periodic_fftpack)       :: self !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs  !< charge density
    sll_real64, dimension(:,:), intent(out) :: sol  !< electric potential
    sll_int32                               :: nc_x !< number of cells direction x
    sll_int32                               :: nc_y !< number of cells direction y
    sll_int32                               :: i, j
 
-   nc_x = this%nc_x
-   nc_y = this%nc_y
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
    sol(1:nc_x,1:nc_y) = rhs(1:nc_x,1:nc_y)
    do j=1,nc_y
-      call dfftf(nc_x, sol(1:nc_x,j), this%fftx%coefd)
+      call dfftf(nc_x, sol(1:nc_x,j), self%fftx%coefd)
    end do
 
-   call transpose_r2c(sol(1:nc_x,1:nc_y), this%rhst)
+   call transpose_r2c(sol(1:nc_x,1:nc_y), self%rhst)
 
    do i=1,nc_x/2+1
-      call zfftf( nc_y, this%rhst(:,i), this%ffty%coefcd)
+      call zfftf( nc_y, self%rhst(:,i), self%ffty%coefcd)
    end do
 
-   this%rhst = this%rhst / this%k2
+   self%rhst = self%rhst / self%k2
 
    do i=1,nc_x/2+1
-      call zfftb( nc_y, this%rhst(:,i), this%ffty%coefcd )
+      call zfftb( nc_y, self%rhst(:,i), self%ffty%coefcd )
    end do
 
-   call transpose_c2r(this%rhst, sol(1:nc_x,1:nc_y))
+   call transpose_c2r(self%rhst, sol(1:nc_x,1:nc_y))
 
    do j=1,nc_y
-      call dfftb( nc_x, sol(1:nc_x,j),  this%fftx%coefd )
+      call dfftb( nc_x, sol(1:nc_x,j),  self%fftx%coefd )
    end do
 
    sol(1:nc_x,1:nc_y) = sol(1:nc_x,1:nc_y) / real(nc_x*nc_y, f64)     ! normalize FFTs
@@ -243,10 +243,10 @@ end subroutine solve_potential_poisson_2d_periodic_fftpack
 
 !> sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
-subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,nrj)
+subroutine solve_e_fields_poisson_2d_periodic_fftpack(self,field_x,field_y,rhs,nrj)
 ! THIS routine changes the RHS despite its declaration as intent(in)
-! this should be fixed !!!
-   type(sll_t_poisson_2d_periodic_fftpack)       :: this    !< self object
+! It should be fixed !!!
+   type(sll_t_poisson_2d_periodic_fftpack) :: self    !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs     !< charge density
    sll_real64, dimension(:,:), intent(out) :: field_x !< electric field direction x
    sll_real64, dimension(:,:), intent(out) :: field_y !< electric field direction y
@@ -255,41 +255,41 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
    sll_int32                               :: i, j
    sll_real64, optional                    :: nrj     !< \f$ \sqrt{e_x^2+e_y^2} \f$
 
-   nc_x = this%nc_x
-   nc_y = this%nc_y
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
-   this%rhst = cmplx(0.0_f64,0.0,kind=f64)
-   this%ext  = cmplx(0.0_f64,0.0,kind=f64)
-   this%eyt  = cmplx(0.0_f64,0.0,kind=f64)
+   self%rhst = cmplx(0.0_f64,0.0,kind=f64)
+   self%ext  = cmplx(0.0_f64,0.0,kind=f64)
+   self%eyt  = cmplx(0.0_f64,0.0,kind=f64)
    field_x   = 0.0_f64
    field_y   = 0.0_f64
 
    do j=1,nc_y
-      call dfftf(nc_x, rhs(1:nc_x,j), this%fftx%coefd)
+      call dfftf(nc_x, rhs(1:nc_x,j), self%fftx%coefd)
    end do
 
-   call transpose_r2c(rhs(1:nc_x,1:nc_y), this%rhst)
+   call transpose_r2c(rhs(1:nc_x,1:nc_y), self%rhst)
 
    do i=1,nc_x/2+1
-      call zfftf( nc_y, this%rhst(:,i), this%ffty%coefcd)
+      call zfftf( nc_y, self%rhst(:,i), self%ffty%coefcd)
    end do
 
-   this%ext(1,1) = (0.0_f64,0.0_f64)
-   this%eyt(1,1) = (0.0_f64,0.0_f64)
-   this%ext = -cmplx(0.0_f64,this%kx/this%k2,kind=f64)*this%rhst
-   this%eyt = -cmplx(0.0_f64,this%ky/this%k2,kind=f64)*this%rhst
+   self%ext(1,1) = (0.0_f64,0.0_f64)
+   self%eyt(1,1) = (0.0_f64,0.0_f64)
+   self%ext = -cmplx(0.0_f64,self%kx/self%k2,kind=f64)*self%rhst
+   self%eyt = -cmplx(0.0_f64,self%ky/self%k2,kind=f64)*self%rhst
 
    do i=1,nc_x/2+1
-      call zfftb( nc_y, this%ext(:,i), this%ffty%coefcd )
-      call zfftb( nc_y, this%eyt(:,i), this%ffty%coefcd )
+      call zfftb( nc_y, self%ext(:,i), self%ffty%coefcd )
+      call zfftb( nc_y, self%eyt(:,i), self%ffty%coefcd )
    end do
 
-   call transpose_c2r(this%ext, field_x(1:nc_x,1:nc_y))
-   call transpose_c2r(this%eyt, field_y(1:nc_x,1:nc_y))
+   call transpose_c2r(self%ext, field_x(1:nc_x,1:nc_y))
+   call transpose_c2r(self%eyt, field_y(1:nc_x,1:nc_y))
 
    do j=1,nc_y
-      call dfftb( nc_x, field_x(1:nc_x,j), this%fftx%coefd )
-      call dfftb( nc_x, field_y(1:nc_x,j), this%fftx%coefd )
+      call dfftb( nc_x, field_x(1:nc_x,j), self%fftx%coefd )
+      call dfftb( nc_x, field_y(1:nc_x,j), self%fftx%coefd )
    end do
 
    field_x(1:nc_x,1:nc_y) = field_x(1:nc_x,1:nc_y) / (nc_x*nc_y)
@@ -302,40 +302,40 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
 
    if (present(nrj)) then 
       nrj=sum(field_x(1:nc_x,1:nc_y)*field_x(1:nc_x,1:nc_y) &
-        +field_y(1:nc_x,1:nc_y)*field_y(1:nc_x,1:nc_y))*this%dx*this%dy
+        +field_y(1:nc_x,1:nc_y)*field_y(1:nc_x,1:nc_y))*self%dx*self%dy
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftpack
 
-subroutine wave_number_vectors(this)
+subroutine wave_number_vectors(self)
 
-   type(sll_t_poisson_2d_periodic_fftpack) :: this
+   type(sll_t_poisson_2d_periodic_fftpack) :: self
    sll_int32  :: ik, jk
    sll_int32  :: nc_x, nc_y
    sll_real64 :: kx, ky, kx0, ky0
    
-   nc_x = this%nc_x
-   nc_y = this%nc_y
+   nc_x = self%nc_x
+   nc_y = self%nc_y
    
-   kx0 = 2._f64*sll_p_pi/(this%x_max-this%x_min)
-   ky0 = 2._f64*sll_p_pi/(this%y_max-this%y_min)
+   kx0 = 2._f64*sll_p_pi/(self%x_max-self%x_min)
+   ky0 = 2._f64*sll_p_pi/(self%y_max-self%y_min)
    
    do ik=1,nc_x/2+1
       kx = (ik-1)*kx0
       do jk = 1, nc_y/2
          ky = (jk-1)*ky0
-         this%kx(jk,ik) = kx
-         this%ky(jk,ik) = ky
+         self%kx(jk,ik) = kx
+         self%ky(jk,ik) = ky
       end do
       do jk = nc_y/2+1 , nc_y     
          ky = (jk-1-nc_y)*ky0
-         this%kx(jk,ik) = kx
-         this%ky(jk,ik) = ky
+         self%kx(jk,ik) = kx
+         self%ky(jk,ik) = ky
       end do
    end do
-   this%kx(1,1) = 1.0_f64
+   self%kx(1,1) = 1.0_f64
    
-   this%k2 = this%kx*this%kx+this%ky*this%ky
+   self%k2 = self%kx*self%kx+self%ky*self%ky
 
 end subroutine wave_number_vectors
 
@@ -386,75 +386,75 @@ subroutine transpose_c2r(comp_array, real_array)
 
 end subroutine transpose_c2r
 
-subroutine initdfft(this,l)
+subroutine initdfft(self,l)
 
-   type(fftclass) :: this
+   type(fftclass) :: self
    sll_int32 :: l 
-   this%n = l 
-   allocate(this%coefd(2*this%n+15))
-   call dffti(this%n,this%coefd)
+   self%n = l 
+   allocate(self%coefd(2*self%n+15))
+   call dffti(self%n,self%coefd)
 
 end subroutine initdfft
 
-subroutine initcfft(this,l)
+subroutine initcfft(self,l)
 
-   type(fftclass) :: this
+   type(fftclass) :: self
    sll_int32 :: l 
-   this%n = l
-   allocate(this%coefcd(4*this%n+15))
-   call zffti(this%n,this%coefcd)
+   self%n = l
+   allocate(self%coefcd(4*self%n+15))
+   call zffti(self%n,self%coefcd)
 
 end subroutine initcfft
 
 !PN DEFINED BUT NOT USED
-!PN subroutine doubfft(this,array)
+!PN subroutine doubfft(self,array)
 !PN 
-!PN    type(fftclass) :: this
+!PN    type(fftclass) :: self
 !PN    sll_real64, dimension(:,:) :: array
 !PN    sll_int32 :: i
 !PN 
 !PN    do i=1, size(array,2)   ! number of 1d transforms
-!PN       call dfftf( this%n, array(:,i), this%coefd)
+!PN       call dfftf( self%n, array(:,i), self%coefd)
 !PN    end do
 !PN 
-!PN    array = array /this%n      ! normalize FFT
+!PN    array = array /self%n      ! normalize FFT
 !PN 
 !PN end subroutine doubfft
 !PN 
-!PN subroutine doubcfft(this,array)
+!PN subroutine doubcfft(self,array)
 !PN 
-!PN    type(fftclass) :: this
+!PN    type(fftclass) :: self
 !PN    sll_comp64, dimension(:,:) :: array
 !PN    sll_int32 :: i
 !PN 
 !PN    do i=1, size(array,2)   ! number of 1d transforms
-!PN       call zfftf( this%n, array(:,i), this%coefcd)
+!PN       call zfftf( self%n, array(:,i), self%coefcd)
 !PN    end do
 !PN 
-!PN    array = array /this%n      ! normalize FFT
+!PN    array = array /self%n      ! normalize FFT
 !PN 
 !PN end subroutine doubcfft
 !PN 
-!PN subroutine doubfftinv(this,array)
+!PN subroutine doubfftinv(self,array)
 !PN 
-!PN    type(fftclass) :: this
+!PN    type(fftclass) :: self
 !PN    sll_real64, dimension(:,:) :: array
 !PN    sll_int32 :: i
 !PN 
 !PN    do i=1, size(array,2)   ! number of 1d transforms
-!PN       call dfftb( this%n, array(:,i),  this%coefd )
+!PN       call dfftb( self%n, array(:,i),  self%coefd )
 !PN    end do
 !PN 
 !PN end subroutine doubfftinv
 !PN 
-!PN subroutine doubcfftinv(this,array)
+!PN subroutine doubcfftinv(self,array)
 !PN 
-!PN    type(fftclass) :: this
+!PN    type(fftclass) :: self
 !PN    sll_comp64, dimension(:,:) :: array
 !PN    sll_int32 :: i
 !PN 
 !PN    do i=1, size(array,2)   ! number of 1d transforms
-!PN       call zfftb( this%n, array(:,i),  this%coefcd )
+!PN       call zfftb( self%n, array(:,i),  self%coefcd )
 !PN    end do
 !PN 
 !PN end subroutine doubcfftinv

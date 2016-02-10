@@ -134,7 +134,7 @@ contains
     type(sll_t_xml_element), pointer :: time, topology, dataitem
 
     ! Prepare strings with data
-    write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
+    write( time_str, '(g20.12)' ) self%time ! TODO: investigate format options
     call sll_s_ints_to_string( (/ dims(2), dims(1) /), dims_str )
 
     ! Add new grid to domain
