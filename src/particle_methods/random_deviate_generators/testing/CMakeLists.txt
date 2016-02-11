@@ -20,6 +20,6 @@ FIND_PACKAGE(GSL)
 
 IF(FGSL_FOUND)
   INCLUDE_DIRECTORIES(${FGSL_INCLUDES})     
-  ADD_EXECUTABLE( test_fgsl_rng mod_unit.f90 rng.F90)
+  ADD_EXECUTABLE( test_fgsl_rng mod_unit.f90 rng.f90)
   TARGET_LINK_LIBRARIES( test_fgsl_rng ${FGSL_LIBRARIES} )
 ENDIF()
