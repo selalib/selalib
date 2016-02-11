@@ -121,11 +121,8 @@ contains
     sll_real64                      , intent( in )    :: mass   !< mass of the particle species
     sll_int32                       , intent( in )    :: n_weights !< number of weights
     
-    sll_int32                                         :: ierr
 
-!    SLL_ALLOCATE( sll_t_particle_group_1d2v :: particle_group, ierr)
     allocate( sll_t_particle_group_1d2v :: particle_group)
-!    print*, ierr
 
     select type (particle_group)
     type is (sll_t_particle_group_1d2v)
