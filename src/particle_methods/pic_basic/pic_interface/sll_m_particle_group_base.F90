@@ -24,7 +24,7 @@ module sll_m_particle_group_base
 
   contains
     procedure         :: q_over_m  !< charge over mass ratio
-    procedure         :: initialize => initialize_species !< Constructor
+    procedure         :: init => initialize_species !< Constructor
 
   end type sll_t_species
 
@@ -54,7 +54,7 @@ module sll_m_particle_group_base
     procedure( i_set_array  ), deferred :: set_weights
     procedure( set_scalar ),   deferred :: set_common_weight
 
-    procedure( empty ),        deferred :: delete
+    procedure( empty ),        deferred :: free
 
 !    ! Getters for the whole group
 !    procedure( get_all_coords), deferred :: get_all_x

@@ -54,7 +54,7 @@ module sll_m_operator_splitting_pic_vp_2d2v
      procedure :: operatorV => advection_v_pic_vp_2d2v  !< Operator for v advection
      procedure :: strang_splitting => strang_splitting_pic_vp_2d2v !< Strang splitting
 
-     procedure :: initialize => initialize_operator_splitting_pic_vp_2d2v !>initializer
+     procedure :: init => initialize_operator_splitting_pic_vp_2d2v !>initializer
   end type sll_t_operator_splitting_pic_vp_2d2v
 
 contains
@@ -207,7 +207,7 @@ contains
 
     select type( splitting )
     type is ( sll_t_operator_splitting_pic_vp_2d2v )
-       call splitting%initialize(solver, particle_group, control_variate, i_weight)
+       call splitting%init(solver, particle_group, control_variate, i_weight)
     end select
 
   end subroutine sll_s_new_operator_splitting_pic_vp_2d2v
@@ -231,7 +231,7 @@ contains
 
     SLL_ALLOCATE(this, ierr)
 
-    call this%initialize(solver, particle_group, control_variate, i_weight)
+    call this%init(solver, particle_group, control_variate, i_weight)
 
   end function sll_f_new_hamiltonian_splitting_pic_vp_2d2v
 

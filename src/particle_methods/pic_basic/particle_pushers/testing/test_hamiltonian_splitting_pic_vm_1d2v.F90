@@ -103,7 +103,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Initialize
   allocate(pg)
-  call pg%initialize(n_particles, &
+  call pg%init(n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   particle_group => pg
 
@@ -182,7 +182,7 @@ program test_hamiltonian_splitting_pic_1d2v_vm
        rho)
   bfield = 1.0_f64
 
-  call propagator%initialize( maxwell_solver, &
+  call propagator%init( maxwell_solver, &
        kernel_smoother_0, kernel_smoother_1, particle_group, &
        efield, bfield, &
        eta_min, eta_max-eta_min)
@@ -354,8 +354,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   particle_group => null()
   deallocate(particle_group)
-  call propagator%delete()
-  call pg%delete()
+  call propagator%free()
+  call pg%free()
   deallocate(pg)
   deallocate(efield)
   deallocate(efield_ref)
@@ -363,9 +363,9 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   deallocate(bfield_ref)
   deallocate(rho)
   deallocate(rho_local)
-  call kernel_smoother_0%delete()
+  call kernel_smoother_0%free()
   deallocate(kernel_smoother_0)
-  call kernel_smoother_1%delete()
+  call kernel_smoother_1%free()
   deallocate(kernel_smoother_1)
   call maxwell_solver%free()
   deallocate(maxwell_solver)

@@ -101,7 +101,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      !class(sll_t_operator_splitting), pointer :: propagator
 
      ! Control variate
-     class(sll_t_control_variate), pointer :: control_variate
+     type(sll_t_control_variate), pointer :: control_variate
      sll_int32  :: no_weights
      
      ! Physical parameters
@@ -231,7 +231,7 @@ contains
     SLL_ALLOCATE(control_variate_parameter(2), ierr)
     control_variate_parameter = sim%thermal_velocity
     allocate(sim%control_variate)
-    call sim%control_variate%initialize(control_variate_equi, &
+    call sim%control_variate%init(control_variate_equi, &
          control_variate_parameter)
 
 
@@ -281,9 +281,9 @@ contains
 
     ! Initialize the time-splitting propagator
     if (sim%no_weights == 1) then
-       call sim%propagator%initialize(sim%solver, sim%particle_group)
+       call sim%propagator%init(sim%solver, sim%particle_group)
     elseif (sim%no_weights == 3) then
-       call sim%propagator%initialize( &
+       call sim%propagator%init( &
             sim%solver, sim%particle_group, sim%control_variate, 3)
     end if
 
@@ -316,17 +316,17 @@ contains
   subroutine delete_pic_2d2v (sim)
     class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
     
-    call sim%solver%delete()
+    call sim%solver%free()
     deallocate(sim%solver)
-    call sim%particle_group%delete()
+    call sim%particle_group%free()
     deallocate (sim%particle_group)
     call sim%mesh%delete()
     deallocate(sim%mesh)
     call sim%poisson_solver%delete()
     deallocate(sim%poisson_solver)
-    call sim%kernel_smoother%delete()
+    call sim%kernel_smoother%free()
     deallocate(sim%kernel_smoother)
-    call sim%control_variate%delete()
+    call sim%control_variate%free()
     deallocate(sim%control_variate)
 
   end subroutine delete_pic_2d2v

@@ -9,7 +9,7 @@ program test_control_variate
   use sll_m_particle_group_2d2v, only : &
        sll_t_particle_group_2d2v
 
-  class(sll_t_control_variate), pointer :: control_variate
+  type(sll_t_control_variate) :: control_variate
   sll_real64, pointer :: control_variate_parameter(:)
   type(sll_t_particle_group_2d2v) :: particle_group
   sll_int32 :: n_particles
@@ -26,8 +26,7 @@ program test_control_variate
   ! Initialize the control variate
   allocate(control_variate_parameter(2))
   control_variate_parameter = [1.0_f64, 1.0_f64]
-  allocate(control_variate)
-  call control_variate%initialize(control_variate_equi, &
+  call control_variate%init(control_variate_equi, &
        control_variate_parameter)
 
   ! Initialize a particle group
@@ -43,7 +42,7 @@ program test_control_variate
        0.15915494309189535D0, 0.15915494309189535D0]/w_vec(:,2)
 
   ! We need to initialize the particle group
-  call particle_group%initialize( n_particles, &
+  call particle_group%init( n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 3)
   
   call particle_group%set_common_weight( 1.0_f64/real(n_particles,f64))
@@ -72,9 +71,8 @@ program test_control_variate
      stop
   end if
 
-  call particle_group%delete()
-  call control_variate%delete()
-  deallocate(control_variate)
+  call particle_group%free()
+  call control_variate%free()
   deallocate(control_variate_parameter)
 
 contains
