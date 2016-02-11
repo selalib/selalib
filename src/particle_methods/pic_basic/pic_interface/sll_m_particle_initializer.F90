@@ -96,7 +96,7 @@ contains
 
   end subroutine sll_s_particle_initialize_sobol_landau_1d2v
 
-!> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
+!> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights. Symmetry around 0 for v and mirrored around center of domain in x.
   subroutine sll_s_particle_initialize_sobol_landau_symmetric_1d2v(&
        particle_group, &
        landau_param, &
@@ -228,7 +228,7 @@ contains
   end subroutine sll_s_particle_initialize_random_landau_1d2v
 
 
-!> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
+!> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.  Symmetry around 0 for v and mirrored around center of domain in x.
   subroutine sll_s_particle_initialize_random_landau_symmetric_1d2v(&
        particle_group, &
        landau_param, &
