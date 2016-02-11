@@ -3,7 +3,7 @@ IF (BUILD_GSL)
   INCLUDE(ExternalProject)
 
   EXTERNALPROJECT_ADD( gsl_project
-     URL  http://mirror0.babylon.network/gnu/gsl/gsl-1.6.tar.gz
+     URL  http://mirror0.babylon.network/gnu/gsl/gsl-1.16.tar.gz
      SOURCE_DIR ${CMAKE_BINARY_DIR}/gsl
      BINARY_DIR ${CMAKE_BINARY_DIR}/gsl
      CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/gsl/configure --prefix=${CMAKE_BINARY_DIR}
@@ -14,14 +14,14 @@ IF (BUILD_GSL)
      URL  http://www.lrz.de/services/software/mathematik/gsl/fortran/download/fgsl-1.0.0.tar.gz
      SOURCE_DIR ${CMAKE_BINARY_DIR}/fgsl
      BINARY_DIR ${CMAKE_BINARY_DIR}/fgsl
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/fgsl/configure --prefix=${CMAKE_BINARY_DIR} 
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/fgsl/configure --prefix=${CMAKE_BINARY_DIR} PKG_CONFIG_PATH=${CMAKE_BINARY_DIR}/lib/pkgconfig
      BUILD_COMMAND ${MAKE}
   )
 
   ADD_DEPENDENCIES(fgsl_project gsl_project)
 
   SET (FGSL_INCLUDES "${CMAKE_BINARY_DIR}/include/fgsl")
-  SET (FGSL_LIBRARIES fgsl gslcblas gsl)
+  SET (FGSL_LIBRARIES fgsl gsl gslcblas)
 
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/lib)
   SET(FGSL_FOUND TRUE)
