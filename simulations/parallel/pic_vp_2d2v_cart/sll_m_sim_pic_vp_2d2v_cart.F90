@@ -121,7 +121,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      sll_int32  :: world_size
 
      ! 
-     logical    :: ctest_passed
+     logical    :: ctest_passed = .false.
      
      
    contains
@@ -301,12 +301,16 @@ contains
        end if
     end do
 
-!!$    if (sim%rank == 0) then
-!!$       select type( q => sim%solver )
-!!$       type is ( sll_t_pic_poisson_2d )
-!!$          print*,  q%rho_dofs
-!!$       end select
-!!$    end if
+
+
+
+!!! Part for ctest
+    if (sim%rank == 0) then
+       if (abs(eenergy - 3.0503207170668825_f64) < 1d-13) then
+          sim%ctest_passed = .true.
+       end if
+    end if
+
     
 
   end subroutine run_pic_2d2v
