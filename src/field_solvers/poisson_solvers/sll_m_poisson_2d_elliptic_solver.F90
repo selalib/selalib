@@ -872,6 +872,7 @@ contains
        sll_real64,intent(in)                      :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
        sll_real64                                   :: r
        
+       r = 0.0_f64
        print*, 'l2norm_squared not implemented for 2d elliptic solver.'
 
      end function l2norm_squarred_2d_elliptic_solver
