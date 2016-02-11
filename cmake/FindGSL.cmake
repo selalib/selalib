@@ -21,7 +21,7 @@ IF (BUILD_GSL)
   ADD_DEPENDENCIES(fgsl_project gsl_project)
 
   SET (FGSL_INCLUDES "${CMAKE_BINARY_DIR}/include/fgsl")
-  SET (FGSL_LIBRARIES fgsl gslcblas gsl)
+  SET (FGSL_LIBRARIES fgsl gsl gslcblas)
 
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/lib)
   SET(FGSL_FOUND TRUE)
