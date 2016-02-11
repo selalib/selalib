@@ -30,7 +30,6 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   implicit none
 
   public :: &
-    sll_f_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_s_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_s_new_hamiltonian_splitting_pic_vm_1d2v_ptr, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
@@ -692,43 +691,6 @@ contains
   end subroutine sll_s_new_hamiltonian_splitting_pic_vm_1d2v_ptr
 
 
-  !---------------------------------------------------------------------------!
-  !> Constructor (legacy version)
-  function sll_f_new_hamiltonian_splitting_pic_vm_1d2v(&
-       maxwell_solver, &
-       kernel_smoother_0, &
-       kernel_smoother_1, &
-       particle_group, &
-       efield_dofs, &
-       bfield_dofs, &
-       x_min, &
-       Lx) result(self)
-    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), allocatable :: self !< time splitting object 
-    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
-    sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
-    sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
-    sll_real64, intent(in) :: x_min !< Lower bound of x domain
-    sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
-
-    !local variables
-    sll_int32 :: ierr
-
-    SLL_ALLOCATE(self, ierr)
-
-    call self%init(&
-       maxwell_solver, &
-       kernel_smoother_0, &
-       kernel_smoother_1, &
-       particle_group, &
-       efield_dofs, &
-       bfield_dofs, &
-       x_min, &
-       Lx)
-
-  end function sll_f_new_hamiltonian_splitting_pic_vm_1d2v
 
   !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
    function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
