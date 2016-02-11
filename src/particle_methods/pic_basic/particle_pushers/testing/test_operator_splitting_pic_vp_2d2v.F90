@@ -202,7 +202,7 @@ program test_operator_splitting_pic_vp_2d2v
   deallocate(particle_group)
   call kernel_smoother%free()
   deallocate(kernel_smoother)
-  call poisson_solver%delete()
+  call poisson_solver%free()
   deallocate(poisson_solver)
   call solver%free()
   deallocate(solver)

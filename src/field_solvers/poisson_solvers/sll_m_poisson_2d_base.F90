@@ -38,7 +38,7 @@ module sll_m_poisson_2d_base
          compute_rhs_from_function
 
     procedure(signature_empty), deferred :: &
-         delete
+         free
 
   end type sll_c_poisson_2d_base
 

@@ -78,7 +78,7 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_fft
     !> Destructor
-    procedure :: delete => delete_poisson_2d_fft_solver
+    procedure :: free => delete_poisson_2d_fft_solver
       
   end type sll_t_poisson_2d_fft_solver
 

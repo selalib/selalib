@@ -191,7 +191,7 @@ contains
        compute_rhs_from_function => compute_rhs_from_function_2d_polar
   !> Destructor
   procedure :: &
-       delete => delete_2d_polar
+       free => delete_2d_polar
 
 end type poisson_2d_polar_solver
 
