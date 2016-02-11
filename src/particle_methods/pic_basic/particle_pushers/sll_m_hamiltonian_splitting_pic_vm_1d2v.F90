@@ -65,7 +65,6 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: operatorHB => operatorHB_pic_vm_1d2v  !> Operator for H_B part
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
-     procedure :: operatorHp1_pic_vm_1d2v_prim !> Alternative implementation of operator Hp1 using primitive function (only for degree 3)
 
      procedure :: init => initialize_pic_vm_1d2v !> Initialize the type
      procedure :: free => delete_pic_vm_1d2v !> Finalization
@@ -127,13 +126,7 @@ contains
     sll_real64 :: x_new(3), vi(3), wi(1), x_old(3)
     sll_int32  :: n_cells
     sll_real64 :: qoverm
-    !sll_real64 :: xi
-    !sll_real64 :: r_new, r_old, qoverm, bfield
-    !sll_int32 :: index_new, index_old, ind
-    !sll_real64 :: primitive_1(3)
-    !sll_real64 :: jnorm
 
-    !sll_real64 :: efield_test(self%kernel_smoother_0%n_dofs), rho0(self%kernel_smoother_0%n_dofs), jk(self%kernel_smoother_0%n_dofs)
 
     n_cells = self%kernel_smoother_0%n_dofs
 
@@ -147,26 +140,6 @@ contains
     ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
 
 
-
-!!$    ! Test if efield_dofs(:,1) is the same when computed from Poisson
-!!$    self%j_dofs_local(:,1) = 0.0_f64
-!!$    do i_part=1,self%particle_group%n_particles
-!!$       x_new = self%particle_group%get_x(i_part)
-!!$       wi = self%particle_group%get_charge(i_part)
-!!$       call self%kernel_smoother_0%add_charge(x_new(1), wi(1), self%j_dofs_local(:,1))
-!!$    end do
-!!$    self%j_dofs(:,1) = 0.0_f64
-!!$    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
-!!$         n_cells, MPI_SUM, self%j_dofs(:,1))
-!!$    call self%maxwell_solver%compute_E_from_rho(efield_test,&
-!!$         self%j_dofs(:,1))
-!!$    !print*, 'Error efield: ',  maxval(abs(efield_test - self%efield_dofs(:,1))), maxval(abs(self%efield_dofs(:,1)))
-!!$    !print*, self%j_dofs(:,1)
-!!$    !print*, 'rho0########'
-!!$    !print*, efield_test
-!!$    !print*, '--------'
-!!$    !print*, self%efield_dofs(:,1)
-
     self%j_dofs_local = 0.0_f64
 
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
@@ -177,32 +150,19 @@ contains
        vi = self%particle_group%get_v(i_part)
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = x_old + dt * vi!modulo(x_old + dt * vi, self%Lx)
-       !call self%particle_group%set_x(i_part, x_new)
+       x_new = x_old + dt * vi
 
        ! Get charge for accumulation of j
        wi = self%particle_group%get_charge(i_part)
        qoverm = self%particle_group%species%q_over_m();
-       !print*, dt, vi(1)
 
        call self%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
             self%bfield_dofs, vi, self%j_dofs_local(:,1))
-       !call self%kernel_smoother_1%add_current_update_v( x_old, x_old, wi(1), qoverm, &
-       !     self%bfield_dofs, vi, self%j_dofs_local(:,1))
-       !call self%kernel_smoother_1%evaluate &
-       !     (x_old(1), self%bfield_dofs, bfield)
-       !vi(2) = vi(2) - dt*qoverm*vi(1)*bfield
-       !wi = wi*vi(1)
-       !call self%kernel_smoother_1%add_charge(x_old(1:1), wi(1), self%j_dofs_local(:,1))
-       !call self%kernel_smoother_1%add_charge(x_new(1:1), wi(1), self%j_dofs_local(:,1))
-
+      
        x_new(1) = modulo(x_new(1), self%Lx)
        call self%particle_group%set_x(i_part, x_new)
        call self%particle_group%set_v(i_part, vi)
 
-       !print*, x_old(1), x_new(1), wi, qoverm
-       !print*, self%j_dofs_local(:,1)
-       !print*, '--------'
 
     end do
 
@@ -211,204 +171,12 @@ contains
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
          n_cells, MPI_SUM, self%j_dofs(:,1))
 
-    !jnorm = sum(self%j_dofs(:,1))/n_cells
-    !print*, 'sum j', jnorm
-    !self%j_dofs(:,1) = self%j_dofs(:,1)-jnorm
-
-    ! Update the electric field. Also, we still need to scale with 1/Lx
-    !self%j_dofs(:,1) = self%j_dofs(:,1)*dt/2!self%delta_x!/self%Lx
+    ! Update the electric field.
     call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,1), 1, self%efield_dofs(:,1))
-!!$    print*, 'ea', self%efield_dofs(:,1)
-!!$    print*, 'j++++++'
-!!$
-!!$    ! Test if efield_dofs(:,1) is the same when computed from Poisson
-!!$    self%j_dofs_local(:,1) = 0.0_f64
-!!$    do i_part=1,self%particle_group%n_particles
-!!$       x_new = self%particle_group%get_x(i_part)
-!!$       wi = self%particle_group%get_charge(i_part)
-!!$       call self%kernel_smoother_0%add_charge(x_new(1), wi(1), self%j_dofs_local(:,1))
-!!$       !print*, 'a', wi, x_new
-!!$       !print*, self%j_dofs_local(:,1)
-!!$    end do
-!!$    self%j_dofs(:,1) = 0.0_f64
-!!$    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
-!!$         n_cells, MPI_SUM, self%j_dofs(:,1))
-!!$    call self%maxwell_solver%compute_E_from_rho(efield_test,&
-!!$         self%j_dofs(:,1))
-!!$    !print*, self%efield_dofs(:,1)
-!!$    print*, 'Error efield: ',  maxval(abs(efield_test - self%efield_dofs(:,1))), maxval(abs(self%efield_dofs(:,1)))
-!!$    print*, self%j_dofs(:,1)
-!!$    print*, 'rho1++++++'
-!!$    print*, 'ep', efield_test
+
 
 
  end subroutine operatorHp1_pic_vm_1d2v
-
-!!$ ! TODO: Self is hard coded for quadratic, cubic splines. Make general.
-!!$ subroutine update_jv(self, lower, upper, index, weight, sign, vi)
-!!$   class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
-!!$   sll_real64, intent(in) :: lower
-!!$   sll_real64, intent(in) :: upper
-!!$   sll_int32,  intent(in) :: index
-!!$   sll_real64, intent(in) :: weight(1)
-!!$   sll_real64, intent(in) :: sign
-!!$   sll_real64, intent(inout) :: vi
-!!$
-!!$   !Local variables
-!!$   sll_real64 :: m, c, y1, y2, fy(self%spline_degree+1)
-!!$   sll_int32  :: ind, i_grid, i_mod, n_cells
-!!$   sll_real64 :: qm
-!!$
-!!$
-!!$   qm = self%particle_group%species%q_over_m();
-!!$   n_cells = self%kernel_smoother_0%n_dofs
-!!$
-!!$
-!!$   m = 0.5_f64*(upper-lower)
-!!$   c = 0.5_f64*(upper+lower)
-!!$   y1 = -m/sqrt(3.0_f64)+c
-!!$   y2 = m/sqrt(3.0_f64) +c
-!!$   fy = sign*m*self%delta_x*&
-!!$        (sll_f_uniform_b_splines_at_x(self%spline_degree-1, y1) +&
-!!$        sll_f_uniform_b_splines_at_x(self%spline_degree-1, y2))
-!!$
-!!$
-!!$   ind = 1
-!!$   do i_grid = index - self%spline_degree + 1, index
-!!$      i_mod = modulo(i_grid, n_cells ) + 1
-!!$      self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
-!!$           weight(1)*fy(ind)
-!!$      vi = vi - qm* fy(ind)*self%bfield_dofs(i_mod)
-!!$      ind = ind + 1
-!!$   end do
-!!$
-!!$
-!!$ end subroutine update_jv
-
- !> Alternative implementation of the Hp1 operator based on the primal function of the spline
- subroutine operatorHp1_pic_vm_1d2v_prim(self, dt)
-    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
-
-    !local variables
-    sll_int32 :: i_part, i_grid, i_mod, ind, j
-    sll_real64 :: xi, x_new(3), vi(3), wi(1)
-    sll_int32  :: n_cells
-    sll_real64 :: r_new, r_old
-    sll_int32 :: index_new, index_old
-    sll_real64 :: primitive_1(3)
-    sll_real64 :: qm
-
-    self%j_dofs_local = 0.0_f64
-    n_cells = self%kernel_smoother_0%n_dofs    
-    qm = self%particle_group%species%q_over_m()
-
-    ! Here we have to accumulate j and integrate over the time interval.
-    ! At each k=1,...,n_grid, we hav for s \in [0,dt]:
-    ! j_k(s) =  \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h) v_k,
-    ! where h is the grid spacing and N the normalized B-spline
-    ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
-    ! j_k(s) = \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i) v_k.
-    ! Now, we want the integral 
-    ! \int_{0..dt} j_k(s) d s = \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i) ds =  \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt}  N(y_k + w v_{1,k}-y_i) dw
-
-
-    ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
-    ! Then update particle position:  X_new = X_old + dt * V
-    do i_part=1,self%particle_group%n_particles  
-       ! Read out particle position and velocity
-       x_new = self%particle_group%get_x(i_part)
-       vi = self%particle_group%get_v(i_part)
-       ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
-       xi = (x_new(1) - self%x_min) /&
-            self%delta_x
-       index_old = floor(xi)
-       r_old = xi - real(index_old,f64)
-
-       ! Then update particle position:  X_new = X_old + dt * V
-       x_new = modulo(self%particle_group%get_x(i_part) + dt * vi, self%Lx)
-       call self%particle_group%set_x(i_part, x_new)
-
-       ! Compute the new box index index_new and normalized position r_old.
-       xi = (x_new(1) - self%x_min) /&
-            self%delta_x
-       index_new = floor(xi)
-       r_new = xi - real(index_new ,f64) 
-
-       ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = self%particle_group%get_charge(i_part)
-
-       ! Compute the primitives at r_old for each interval
-       primitive_1 = -primitive_uniform_quadratic_b_spline_at_x( r_old )
-       ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
-       if (index_old < index_new) then
-          primitive_1 = primitive_1 + self%cell_integrals_1
-       end if
-       ! Now, we loop through the DoFs and add the contributions.
-       ind = 1
-       do i_grid = index_old - self%spline_degree + 1, index_old
-          i_mod = modulo(i_grid, n_cells ) + 1
-          self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
-               primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - qm*primitive_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
-          ind = ind + 1
-       end do      
-       ! Now contribution from r_new in the same way but different sign
-       primitive_1 = primitive_uniform_quadratic_b_spline_at_x( r_new )
-       if (index_old > index_new) then
-          primitive_1 = primitive_1 - self%cell_integrals_1
-       end if 
-
-       ind = 1
-       do i_grid = index_new - self%spline_degree + 1, index_new
-          i_mod = modulo(i_grid, n_cells ) + 1
-          self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
-               primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - qm*primitive_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
-          ind = ind + 1
-       end do
-       ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
-       ! First if index_old<index_new-1: Add the whole integrals.
-       do j = index_old+1, index_new-1
-          ind = 1
-          do i_grid = j - self%spline_degree + 1, j
-             i_mod = modulo(i_grid, n_cells ) + 1
-             self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
-                  self%cell_integrals_1(ind)*wi(1)
-             vi(2) = vi(2) - &
-                  qm*self%cell_integrals_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
-             ind = ind + 1
-          end do
-       end do
-       ! Then if index_old>index_new-1: Subtract the whole integrals.
-       do j = index_new+1, index_old-1
-          ind = 1
-          do i_grid = j - self%spline_degree + 1, j
-             i_mod = modulo(i_grid, n_cells ) + 1
-             self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) - &
-                  self%cell_integrals_1(ind)*wi(1)
-             vi(2) = vi(2) + qm*self%cell_integrals_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
-             ind = ind + 1
-          end do
-       end do 
-
-       call self%particle_group%set_v(i_part, vi)
-
-    end do
-
-    self%j_dofs = 0.0_f64
-    ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
-         n_cells, MPI_SUM, self%j_dofs(:,1))
-
-    ! Update the electric field. Also, we still need to scale with 1/Lx
-    self%j_dofs(:,1) = self%j_dofs(:,1)*self%delta_x
-    call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,1), 1, self%efield_dofs(:,1))
-
-
- end subroutine operatorHp1_pic_vm_1d2v_prim
-
-
 
 
 
@@ -427,11 +195,8 @@ contains
     !local variables
     sll_int32  :: i_part, n_cells
     sll_real64 :: vi(3), xi(3), wi(1)
-    !sll_real64 :: x_box, r_box
-    !sll_real64 :: values_0(4)
     sll_real64 :: bfield
     sll_real64 :: qm
-    !sll_real64 :: jnorm
     
     n_cells = self%kernel_smoother_0%n_dofs
 
@@ -465,12 +230,7 @@ contains
     ! Update the electric field. Also, we still need to scale with 1/Lx ! TODO: Which scaling?
     self%j_dofs(:,2) = self%j_dofs(:,2)*dt!/self%Lx
 
-    !jnorm = sum(self%j_dofs(:,2))/n_cells
-    !print*, 'sum j2', jnorm
-    !self%j_dofs(:,2) = self%j_dofs(:,2)-jnorm
-
     call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,2), 2, self%efield_dofs(:,2))
-    !!self%efield_dofs(:,2) = self%efield_dofs(:,2) - self%j_dofs(:,2)/self%Lx*dt
     
 
   end subroutine operatorHp2_pic_vm_1d2v
@@ -524,11 +284,6 @@ contains
   subroutine operatorHB_pic_vm_1d2v(self, dt)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
-
-    !local variables
-    !sll_int32 :: i_part
-    !sll_real64 :: v_old(3), v_new(3)
-
     
     ! Update efield2
     call self%maxwell_solver%compute_E_from_B(&
@@ -689,42 +444,5 @@ contains
     end select
 
   end subroutine sll_s_new_hamiltonian_splitting_pic_vm_1d2v_ptr
-
-
-
-  !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
-   function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
-     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
-     sll_real64 :: primitive(4) !< value of the primitive for each of the four intervals.
- 
-     sll_real64 :: xx(3)
- 
-     xx(1) = x**2
-     xx(2) = x*xx(1)
-     xx(3) = x*xx(2)
- 
-     primitive(4) = xx(3)/24.0_f64
-     primitive(3) = (x + 1.5_f64*xx(1) + xx(2) - 0.75_f64* xx(3))/6.0_f64
-     primitive(2) = (4.0_f64*x - 2.0_f64* xx(2) + 0.75_f64* xx(3))/6.0_f64
-     primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
- 
-   end function primitive_uniform_cubic_b_spline_at_x
- 
-   !> Compute the primitive of the quadratic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for quadratic.
-   function primitive_uniform_quadratic_b_spline_at_x( x) result(primitive)
-     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
-     sll_real64 :: primitive(3) !< value of the primitive for each of the three intervals.
- 
-     sll_real64 :: xx(2)
-
-     xx(1) = x**2
-     xx(2) = x*xx(1)
-     
-     primitive(3) = xx(2)/6.0_f64
-     primitive(2) = (x + xx(1))*0.5_f64-xx(2)/3.0_f64
-     primitive(1) = (1.0_f64 - (1.0_f64-x)**3)/6.0_f64
- 
-   end function primitive_uniform_quadratic_b_spline_at_x
- 
 
 end module sll_m_hamiltonian_splitting_pic_vm_1d2v
