@@ -38,7 +38,6 @@ sll_real64                            :: x1_min
 sll_real64                            :: x1_max
 sll_real64                            :: tmp
 sll_real64                            :: tmp2
-sll_real64                            :: val
 sll_real64                            :: dr
 sll_real64, dimension(:), allocatable :: r
 sll_real64, dimension(:), allocatable :: E
