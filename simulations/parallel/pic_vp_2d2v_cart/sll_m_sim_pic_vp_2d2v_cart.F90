@@ -322,7 +322,7 @@ contains
     deallocate (sim%particle_group)
     call sim%mesh%delete()
     deallocate(sim%mesh)
-    call sim%poisson_solver%delete()
+    call sim%poisson_solver%free()
     deallocate(sim%poisson_solver)
     call sim%kernel_smoother%free()
     deallocate(sim%kernel_smoother)

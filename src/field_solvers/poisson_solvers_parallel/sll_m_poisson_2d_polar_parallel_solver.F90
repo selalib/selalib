@@ -77,7 +77,7 @@ module sll_m_poisson_2d_polar_parallel_solver
     !> Compute the right hand side from a given function
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_polar
-    procedure :: delete => delete_2d_polar_parallel
+    procedure :: free => delete_2d_polar_parallel
       
   end type poisson_2d_polar_parallel_solver
 

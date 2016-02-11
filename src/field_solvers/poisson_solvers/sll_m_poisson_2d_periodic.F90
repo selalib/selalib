@@ -56,7 +56,7 @@ use sll_m_poisson_2d_periodic_fftpack, only: &
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_periodic
     !> Destructor
-    procedure :: delete => delete_2d_periodic
+    procedure :: free => delete_2d_periodic
       
   end type poisson_2d_periodic_solver
 
@@ -150,6 +150,7 @@ contains
     sll_real64   , intent(in)                                  :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
     sll_real64                                     :: r
     
+    r = 0.0_f64
     print*, 'l2norm_squared not implemented for poisson_2d_periodic_solver.'
     
   end function l2norm_squarred_2d_periodic
