@@ -22,7 +22,6 @@ module sll_m_pic_poisson_2d
   implicit none
 
   public :: sll_t_pic_poisson_2d, &
-       sll_f_new_pic_poisson_2d, &
        sll_s_new_pic_poisson_2d
 
   private
@@ -262,23 +261,6 @@ contains
     self%kernel => null()
 
   end subroutine free_pic_poisson_2d
-
-
-  !> Constructor (legacy version)
-  function sll_f_new_pic_poisson_2d(no_gridpts, solver, kernel) result (poisson_solver)
-    sll_int32, intent(in) :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
-    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
-    class( sll_t_pic_poisson_2d), pointer :: poisson_solver
-
-    !local variables
-    sll_int32 :: ierr
- 
-    allocate( poisson_solver, stat=ierr)
-
-    call poisson_solver%init(no_gridpts, solver, kernel)
-
-  end function sll_f_new_pic_poisson_2d
 
 
   !> Constructor for abstract type
