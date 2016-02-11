@@ -353,7 +353,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   end if
 
   particle_group => null()
-  deallocate(particle_group)
   call propagator%free()
   call pg%free()
   deallocate(pg)

@@ -355,8 +355,8 @@ contains
     self%kernel_smoother_0 => null()
     self%kernel_smoother_1 => null()
     self%particle_group => null()
-    deallocate(self%efield_dofs)
-    deallocate(self%bfield_dofs)
+    self%efield_dofs => null()
+    self%bfield_dofs => null()
 
   end subroutine delete_pic_vm_1d2v
 
