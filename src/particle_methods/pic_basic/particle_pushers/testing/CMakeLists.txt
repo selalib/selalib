@@ -5,5 +5,7 @@ SET_TESTS_PROPERTIES(operator_splitting_pic_vp_2d2v PROPERTIES PASS_REGULAR_EXPR
 
 ADD_EXECUTABLE( test_hamiltonian_splitting_pic_vm_1d2v test_hamiltonian_splitting_pic_vm_1d2v.F90)
 TARGET_LINK_LIBRARIES(test_hamiltonian_splitting_pic_vm_1d2v sll_particle_pushers)
-ADD_TEST( NAME hamiltonian_splitting_pic_vm_1d2v COMMAND test_hamiltonian_splitting_pic_vm_1d2v)
-SET_TESTS_PROPERTIES(hamiltonian_splitting_pic_vm_1d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+if (FFT_LIB STREQUAL "FFTW") 
+  ADD_TEST( NAME hamiltonian_splitting_pic_vm_1d2v COMMAND test_hamiltonian_splitting_pic_vm_1d2v)
+  SET_TESTS_PROPERTIES(hamiltonian_splitting_pic_vm_1d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+endif()
