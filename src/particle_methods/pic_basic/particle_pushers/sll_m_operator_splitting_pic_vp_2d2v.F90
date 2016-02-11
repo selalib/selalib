@@ -33,8 +33,7 @@ module sll_m_operator_splitting_pic_vp_2d2v
 
   public :: &
     sll_s_new_operator_splitting_pic_vp_2d2v, &
-    sll_t_operator_splitting_pic_vp_2d2v, &
-    sll_f_new_hamiltonian_splitting_pic_vp_2d2v
+    sll_t_operator_splitting_pic_vp_2d2v
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -211,30 +210,6 @@ contains
     end select
 
   end subroutine sll_s_new_operator_splitting_pic_vp_2d2v
-
-
-  !---------------------------------------------------------------------------!
-  !> Constructor (legacy version)
-  function sll_f_new_hamiltonian_splitting_pic_vp_2d2v &
-       (solver, &
-       particle_group, &
-       control_variate, &
-       i_weight) result(this)
-    class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: this !< time splitting object 
-    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
-    class(sll_t_control_variate), optional, pointer, intent(in) :: control_variate !< Control variate (if delta f)
-    sll_int32, optional, intent(in) :: i_weight  !< Index of weight to be used by propagator
- 
-    !local variables
-    sll_int32 :: ierr
-
-    SLL_ALLOCATE(this, ierr)
-
-    call this%init(solver, particle_group, control_variate, i_weight)
-
-  end function sll_f_new_hamiltonian_splitting_pic_vp_2d2v
-
 
 
 

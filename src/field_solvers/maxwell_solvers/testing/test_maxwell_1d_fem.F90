@@ -29,10 +29,6 @@ program test_maxwell_1d_fem
     sll_s_plot_two_fields_1d
 
   use sll_m_maxwell_1d_fem, only: &
-    sll_s_compute_b_from_e_1d_fem, &
-    sll_s_compute_e_from_b_1d_fem, &
-    sll_s_compute_e_from_rho_1d_fem, &
-    sll_s_compute_fem_rhs, &
     sll_t_maxwell_1d_fem
 
   implicit none
@@ -109,9 +105,9 @@ program test_maxwell_1d_fem
      ex_exact(i) =   sin_k(xi)/(2*mode*sll_p_pi/Lx)
   end do
 
-  call sll_s_compute_fem_rhs(maxwell_1d, cos_k, deg, rho)
+  call maxwell_1d%compute_rhs_from_function( cos_k, deg, rho)
 
-  call sll_s_compute_e_from_rho_1d_fem(maxwell_1d, ex, rho ) 
+  call maxwell_1d%compute_e_from_rho( ex, rho ) 
 
   ! Evaluate spline curve at grid points and compute error
   ! Ex is a 1-form, i.e. one spline degree lower
@@ -160,9 +156,9 @@ program test_maxwell_1d_fem
 
   ! Time loop. Second order Strang splitting
   do istep = 1, nstep 
-     call sll_s_compute_b_from_e_1d_fem(maxwell_1d, 0.5_f64*dt, ey, bz)
-     call sll_s_compute_e_from_b_1d_fem(maxwell_1d,         dt, bz, ey)
-     call sll_s_compute_b_from_e_1d_fem(maxwell_1d, 0.5_f64*dt, ey, bz)
+     call maxwell_1d%compute_b_from_e( 0.5_f64*dt, ey, bz)
+     call maxwell_1d%compute_e_from_b(         dt, bz, ey)
+     call maxwell_1d%compute_b_from_e( 0.5_f64*dt, ey, bz)
      
      time = time + dt
 
@@ -189,6 +185,8 @@ program test_maxwell_1d_fem
   if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol) .and. (err_ex2 < tol) .and. (err_l2norm < tol)) then
      print*,'PASSED'
   endif
+
+  call maxwell_1d%free()
 
   DEALLOCATE(ex)
   DEALLOCATE(ey)

@@ -16,7 +16,6 @@ module sll_m_particle_group_2d2v
   implicit none
 
   public :: &
-    sll_f_new_particle_group_2d2v, &
     sll_s_new_particle_group_2d2v, &
     sll_s_new_particle_group_2d2v_ptr, &
     sll_t_particle_group_2d2v
@@ -87,23 +86,6 @@ contains
 
   end subroutine initialize_particle_group_2d2v
 
-
-  !----------------------------------------------------------------------!
-  !> Constructor (legacy version)
-  function sll_f_new_particle_group_2d2v(n_particles, n_total_particles, charge, mass, n_weights) result(self)
-    class( sll_t_particle_group_2d2v ),  pointer        :: self
-    sll_int32                       , intent( in )    :: n_particles !< number of particles local to the processor
-    sll_int32                       , intent( in )    :: n_total_particles !< number of particles in total simulation
-    sll_real64                      , intent( in )    :: charge !< charge of the particle species
-    sll_real64                      , intent( in )    :: mass   !< mass of the particle species
-    sll_int32                       , intent(in)      :: n_weights !< number of weights
-    
-    sll_int32                                         :: ierr
-
-    SLL_ALLOCATE(self, ierr)
-    call self%init(n_particles, n_total_particles, charge, mass, n_weights)
-
-  end function sll_f_new_particle_group_2d2v
 
   !----------------------------------------------------------------------!
   !> Constructor for abstract type

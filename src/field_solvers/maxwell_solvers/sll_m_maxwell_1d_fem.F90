@@ -30,10 +30,6 @@ module sll_m_maxwell_1d_fem
   implicit none
 
   public :: &
-    sll_s_compute_b_from_e_1d_fem, &
-    sll_s_compute_e_from_b_1d_fem, &
-    sll_s_compute_e_from_rho_1d_fem, &
-    sll_s_compute_fem_rhs, &
     sll_t_maxwell_1d_fem
 
   private
@@ -428,18 +424,6 @@ contains
      self%eig_weak_poisson(n_dofs) = 1.0_f64 / (coef1 *4.0_f64) 
 
    end subroutine init_1d_fem
-
-   function sll_f_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(self)
-     sll_real64 :: domain(2)     ! xmin, xmax
-     sll_int32 :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
-     !sll_real64 :: delta_x ! cell size
-     sll_int32 :: s_deg_0 ! highest spline degree
-     type(sll_t_maxwell_1d_fem), pointer :: self
-
-     allocate(self)
-     call self%init(domain, n_dofs, s_deg_0)
- 
-   end function sll_f_new_maxwell_1d_fem
 
    subroutine free_1d_fem(self)
      class(sll_t_maxwell_1d_fem) :: self

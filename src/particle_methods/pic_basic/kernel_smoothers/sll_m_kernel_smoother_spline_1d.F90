@@ -29,8 +29,7 @@ module sll_m_kernel_smoother_spline_1d
   public :: &
     sll_t_kernel_smoother_spline_1d, &
     sll_s_new_kernel_smoother_spline_1d_ptr, &
-    sll_s_new_kernel_smoother_spline_1d, &
-    sll_f_new_smoother_spline_1d
+    sll_s_new_kernel_smoother_spline_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -302,28 +301,6 @@ contains
     
 
   end subroutine free_spline_1d
-
-
-  !-------------------------------------------------------------------------------------------
-  !< Constructor (legacy version)
-  function sll_f_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (self)
-    class( sll_t_kernel_smoother_spline_1d), pointer   :: self !< kernel smoother object
-    sll_int32, intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
-    sll_real64, intent(in) :: domain(2) !< x_min and x_max of the domain
-    sll_int32, intent(in) :: no_particles !< number of particles
-    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
-    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
-
-    !local variables
-    sll_int32 :: ierr
-
-
-    SLL_ALLOCATE( self, ierr)
-    SLL_ASSERT( ierr == 0)
-    
-    call self%init( domain, n_grid, no_particles, spline_degree, smoothing_type )
-
-  end function sll_f_new_smoother_spline_1d
 
 
 

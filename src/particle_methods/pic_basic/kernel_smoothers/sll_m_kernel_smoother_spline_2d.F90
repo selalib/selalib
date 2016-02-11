@@ -23,7 +23,6 @@ module sll_m_kernel_smoother_spline_2d
   implicit none
 
   public :: &
-       sll_f_new_smoother_spline_2d, &
        sll_s_new_kernel_smoother_spline_2d_ptr, & 
        sll_s_new_kernel_smoother_spline_2d, &
        sll_t_kernel_smoother_spline_2d
@@ -335,24 +334,6 @@ contains
 
   end subroutine sll_s_new_kernel_smoother_spline_2d
 
-
-
-  !> Constructor (legacy version)
-  function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (self)
-    class( sll_t_kernel_smoother_spline_2d), pointer   :: self
-    sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
-    sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
-    sll_int32, intent(in) :: no_particles !< no. of particles
-    sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
-    sll_int32, intent(in) :: smoothing_type !< Define if Galerkin or collocation smoothing for right scaling in accumulation routines 
-
-    !local variables
-    sll_int32 :: ierr
-
-    SLL_ALLOCATE( self, ierr)
-    call self%init( domain, n_grid, no_particles, spline_degree, smoothing_type)
-
-  end function sll_f_new_smoother_spline_2d
 
   
   !< Self function computes the index of a 1D array that stores 2D data in column major ordering. It also takes periodic boundary conditions into account.
