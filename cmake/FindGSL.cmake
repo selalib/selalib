@@ -46,3 +46,16 @@ if (GSL_FOUND)
   mark_as_advanced (FGSL_LIB FGSL_INCLUDES)
 
 endif (GSL_FOUND)
+
+if (not FGSL_FOUND)
+
+INCLUDE(ExternalProject)
+EXTERNALPROJECT_ADD( fgsl
+   URL  http://www.lrz.de/services/software/mathematik/gsl/fortran/download/fgsl-1.0.0.tar.gz
+   SOURCE_DIR ${CMAKE_BINARY_DIR}/fgsl
+   BINARY_DIR ${CMAKE_BINARY_DIR}/fgsl
+   CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/fgsl/configure --prefix=${CMAKE_BINARY_DIR} 
+   BUILD_COMMAND ${MAKE}
+)
+
+endif (not FGSL_FOUND)
