@@ -133,7 +133,7 @@ program test_operator_splitting_pic_vp_2d2v
 
   call sll_s_new_pic_poisson_2d(solver, num_cells, poisson_solver, kernel_smoother)
 
-  call propagator%initialize(solver, particle_group)
+  call propagator%init(solver, particle_group)
 
   call propagator%operatorT(delta_t)
 
@@ -198,13 +198,13 @@ program test_operator_splitting_pic_vp_2d2v
      stop
   end if
 
-  call particle_group%delete()
+  call particle_group%free()
   deallocate(particle_group)
-  call kernel_smoother%delete()
+  call kernel_smoother%free()
   deallocate(kernel_smoother)
   call poisson_solver%delete()
   deallocate(poisson_solver)
-  call solver%delete()
+  call solver%free()
   deallocate(solver)
   
   call sll_s_halt_collective()

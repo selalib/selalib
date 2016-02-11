@@ -59,8 +59,8 @@ module sll_m_pic_poisson_2d
        procedure :: add_analytic_charge => add_analytic_charge_2d !< !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
        procedure :: set_analytic_charge => set_analytic_charge_2d  !< Set the value of the analytic charge contribution from a given function.
        procedure :: compute_field_energy => compute_field_energy_2d !< Compute the field energy.
-       procedure :: initialize => initialize_pic_poisson_2d !< Initialize the type
-       procedure :: delete => delete_pic_poisson_2d !< finalization
+       procedure :: init => init_pic_poisson_2d !< Initialize the type
+       procedure :: free => free_pic_poisson_2d !< finalization
 
 
     end type sll_t_pic_poisson_2d
@@ -68,147 +68,147 @@ module sll_m_pic_poisson_2d
 contains
 
   !> Add charge from one particle
-  subroutine add_charge_single_2d(this, position, weight)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+  subroutine add_charge_single_2d(self, position, weight)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
+    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
     sll_real64,                intent( in ) :: weight !< Weight of the particle
 
-    call this%kernel%add_charge( position, weight, this%rho_dofs_local )
+    call self%kernel%add_charge( position, weight, self%rho_dofs_local )
        
 
   end subroutine add_charge_single_2d
   
   !> Evaluate charge density \a rho at one position
-  subroutine evaluate_rho_single_2d(this, position, func_value)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+  subroutine evaluate_rho_single_2d(self, position, func_value)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
+    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
     sll_real64, intent(out) :: func_value !< Value of rho at given position
 
-    if (this%rho_collected .EQV. .FALSE.) then
-       this%rho_collected = .TRUE.
-       this%rho_dofs = 0.0_f64
-       call sll_o_collective_allreduce( sll_v_world_collective, this%rho_dofs_local, &
-            this%no_dofs, MPI_SUM, this%rho_dofs)
+    if (self%rho_collected .EQV. .FALSE.) then
+       self%rho_collected = .TRUE.
+       self%rho_dofs = 0.0_f64
+       call sll_o_collective_allreduce( sll_v_world_collective, self%rho_dofs_local, &
+            self%no_dofs, MPI_SUM, self%rho_dofs)
     end if
 
-    call this%kernel%evaluate( position, this%rho_dofs, func_value)
+    call self%kernel%evaluate( position, self%rho_dofs, func_value)
 
   end subroutine evaluate_rho_single_2d
 
   !> Evaluate potential \a phi at one position
-  subroutine evaluate_phi_single_2d(this, position, func_value)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+  subroutine evaluate_phi_single_2d(self, position, func_value)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
+    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
     sll_real64, intent(out) :: func_value !< Value of phi at given position
 
-    call this%kernel%evaluate( position, this%phi_dofs, func_value)
+    call self%kernel%evaluate( position, self%phi_dofs, func_value)
 
   end subroutine evaluate_phi_single_2d
 
   !> Evaluate components \a components of the electric field as one position
-  subroutine evaluate_field_single_2d(this, position, components, func_value)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine evaluate_field_single_2d(self, position, components, func_value)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
     sll_int32, intent(in ) :: components(:)
-    sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
     sll_real64, intent(out) :: func_value(:)
 
-    call this%kernel%evaluate_multiple( position, components, this%efield_dofs, &
+    call self%kernel%evaluate_multiple( position, components, self%efield_dofs, &
          func_value)
 
   end subroutine evaluate_field_single_2d
 
 
   !> Solve for phi and fields
-  subroutine solve_2d(this)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine solve_2d(self)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
 
-    call this%solve_phi()
-    call this%solve_fields()
+    call self%solve_phi()
+    call self%solve_fields()
     
   end subroutine solve_2d
 
   !> Solve for potential
-  subroutine solve_phi_2d(this)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine solve_phi_2d(self)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
 
-    if (this%rho_collected .EQV. .FALSE.) then
-       this%rho_collected = .TRUE.
-       this%rho_dofs = 0.0_f64
-       call sll_o_collective_allreduce( sll_v_world_collective, this%rho_dofs_local, &
-            this%no_dofs, MPI_SUM, this%rho_dofs)
+    if (self%rho_collected .EQV. .FALSE.) then
+       self%rho_collected = .TRUE.
+       self%rho_dofs = 0.0_f64
+       call sll_o_collective_allreduce( sll_v_world_collective, self%rho_dofs_local, &
+            self%no_dofs, MPI_SUM, self%rho_dofs)
     end if
-    this%rho2d = reshape(this%rho_dofs, this%no_gridpts)
-    call this%solver%compute_phi_from_rho(this%phi2d, this%rho2d)
-    this%phi_dofs = reshape(this%phi2d, [this%no_dofs])
+    self%rho2d = reshape(self%rho_dofs, self%no_gridpts)
+    call self%solver%compute_phi_from_rho(self%phi2d, self%rho2d)
+    self%phi_dofs = reshape(self%phi2d, [self%no_dofs])
 
   end subroutine solve_phi_2d
 
   !> Solve efields from rho
-  subroutine solve_fields_2d(this)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine solve_fields_2d(self)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
 
-    if (this%rho_collected .EQV. .FALSE.) then
-       this%rho_collected = .TRUE.
-       this%rho_dofs = 0.0_f64
-       call sll_o_collective_allreduce( sll_v_world_collective, this%rho_dofs_local, &
-            this%no_dofs, MPI_SUM, this%rho_dofs)
+    if (self%rho_collected .EQV. .FALSE.) then
+       self%rho_collected = .TRUE.
+       self%rho_dofs = 0.0_f64
+       call sll_o_collective_allreduce( sll_v_world_collective, self%rho_dofs_local, &
+            self%no_dofs, MPI_SUM, self%rho_dofs)
     end if
-    this%rho2d = reshape(this%rho_dofs, this%no_gridpts)
-    call this%solver%compute_E_from_rho(this%efield1, this%efield2, this%rho2d)
-    this%efield_dofs(:,1) = reshape(this%efield1, [this%no_dofs])
-    this%efield_dofs(:,2) = reshape(this%efield2, [this%no_dofs])
+    self%rho2d = reshape(self%rho_dofs, self%no_gridpts)
+    call self%solver%compute_E_from_rho(self%efield1, self%efield2, self%rho2d)
+    self%efield_dofs(:,1) = reshape(self%efield1, [self%no_dofs])
+    self%efield_dofs(:,2) = reshape(self%efield2, [self%no_dofs])
 
   end subroutine solve_fields_2d
 
   !> Reset charge to zero
-  subroutine reset_2d(this)
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine reset_2d(self)
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
 
-    this%rho_dofs_local = 0.0_f64
-    this%rho_dofs = 0.0_f64
-    this%rho_collected = .FALSE.
+    self%rho_dofs_local = 0.0_f64
+    self%rho_dofs = 0.0_f64
+    self%rho_collected = .FALSE.
 
   end subroutine reset_2d
 
   !> Add analytic charge (set by \a set_analytic_charge ) to the accumulated charge
-  subroutine add_analytic_charge_2d(this, factor_present, factor_analytic)   
-    class(sll_t_pic_poisson_2d), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine add_analytic_charge_2d(self, factor_present, factor_analytic)   
+    class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
     sll_real64, intent( in ) :: factor_present !< Factor to multiply accumulated charge with
     sll_real64, intent( in ) :: factor_analytic !< Factor to multiply added analytic charge with
 
-    this%rho_dofs = factor_present * this%rho_dofs + &
-         factor_analytic * this%rho_analyt_dofs
+    self%rho_dofs = factor_present * self%rho_dofs + &
+         factor_analytic * self%rho_analyt_dofs
 
   end subroutine add_analytic_charge_2d
 
   !> Set analytic charge defined by a function \a func obeying the interface \a sll_f_function_of_position
-  subroutine set_analytic_charge_2d(this, func)
-    class( sll_t_pic_poisson_2d ), intent( inout )    :: this !< PIC Poisson solver object.
+  subroutine set_analytic_charge_2d(self, func)
+    class( sll_t_pic_poisson_2d ), intent( inout )    :: self !< PIC Poisson solver object.
     procedure(sll_f_function_of_position)                :: func !< Function to be projected.
 
-    call this%solver%compute_rhs_from_function(func, this%rho_analyt_dofs)
+    call self%solver%compute_rhs_from_function(func, self%rho_analyt_dofs)
 
   end subroutine set_analytic_charge_2d
 
   !> Compute the squared l2 norm of component \a component of the field
-  function compute_field_energy_2d(this, component) result(energy)
-    class (sll_t_pic_poisson_2d), intent( in ) :: this
+  function compute_field_energy_2d(self, component) result(energy)
+    class (sll_t_pic_poisson_2d), intent( in ) :: self
     sll_int32, intent( in ) :: component !< Component of the electric field for which the energy should be computed
     sll_real64 :: energy !< L2 norm squarred of 
 
 
     if (component == 1) then
-       energy = this%solver%l2norm_squared(this%efield1)
+       energy = self%solver%l2norm_squared(self%efield1)
     elseif (component == 2) then
-       energy = this%solver%l2norm_squared(this%efield2)
+       energy = self%solver%l2norm_squared(self%efield2)
     end if
 
   end function compute_field_energy_2d
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  subroutine initialize_pic_poisson_2d(this, no_gridpts, solver, kernel)
-    class( sll_t_pic_poisson_2d), intent(out) :: this
+  subroutine init_pic_poisson_2d(self, no_gridpts, solver, kernel)
+    class( sll_t_pic_poisson_2d), intent(out) :: self
     sll_int32, intent(in) :: no_gridpts(2)
     class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
     class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
@@ -216,52 +216,52 @@ contains
     !local variables
     sll_int32 :: ierr
 
-    this%dim = 1
-    this%no_gridpts = no_gridpts
-    this%no_dofs = product(no_gridpts)
-    this%rho_collected = .FALSE.
+    self%dim = 1
+    self%no_gridpts = no_gridpts
+    self%no_dofs = product(no_gridpts)
+    self%rho_collected = .FALSE.
     
-    this%solver => solver
-    this%kernel => kernel
+    self%solver => solver
+    self%kernel => kernel
 
-    allocate(this%rho_dofs(this%no_dofs), stat=ierr)
+    allocate(self%rho_dofs(self%no_dofs), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%rho_dofs_local(this%no_dofs), stat=ierr)
+    allocate(self%rho_dofs_local(self%no_dofs), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%rho_analyt_dofs(this%no_dofs), stat=ierr)
+    allocate(self%rho_analyt_dofs(self%no_dofs), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%efield_dofs(this%no_dofs, 2), stat=ierr)
+    allocate(self%efield_dofs(self%no_dofs, 2), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%phi_dofs(this%no_dofs), stat=ierr)
+    allocate(self%phi_dofs(self%no_dofs), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%rho2d(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    allocate(self%rho2d(self%no_gridpts(1), self%no_gridpts(2)), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%efield1(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    allocate(self%efield1(self%no_gridpts(1), self%no_gridpts(2)), stat=ierr)
     SLL_ASSERT( ierr == 0 )
-    allocate(this%efield2(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)  
+    allocate(self%efield2(self%no_gridpts(1), self%no_gridpts(2)), stat=ierr)  
     SLL_ASSERT( ierr == 0 )  
-    allocate(this%phi2d(this%no_gridpts(1), this%no_gridpts(2)), stat=ierr)
+    allocate(self%phi2d(self%no_gridpts(1), self%no_gridpts(2)), stat=ierr)
     SLL_ASSERT( ierr == 0 )
 
-  end subroutine initialize_pic_poisson_2d
+  end subroutine init_pic_poisson_2d
 
   !> Destructor
-  subroutine delete_pic_poisson_2d(this)
-    class( sll_t_pic_poisson_2d), intent(inout) :: this
+  subroutine free_pic_poisson_2d(self)
+    class( sll_t_pic_poisson_2d), intent(inout) :: self
 
-    deallocate(this%rho_dofs)
-    deallocate(this%rho_dofs_local)
-    deallocate(this%rho_analyt_dofs)
-    deallocate(this%efield_dofs)
-    deallocate(this%phi_dofs)
-    deallocate(this%rho2d)
-    deallocate(this%efield1)
-    deallocate(this%efield2)
-    deallocate(this%phi2d)
-    this%solver => null()
-    this%kernel => null()
+    deallocate(self%rho_dofs)
+    deallocate(self%rho_dofs_local)
+    deallocate(self%rho_analyt_dofs)
+    deallocate(self%efield_dofs)
+    deallocate(self%phi_dofs)
+    deallocate(self%rho2d)
+    deallocate(self%efield1)
+    deallocate(self%efield2)
+    deallocate(self%phi2d)
+    self%solver => null()
+    self%kernel => null()
 
-  end subroutine delete_pic_poisson_2d
+  end subroutine free_pic_poisson_2d
 
 
   !> Constructor (legacy version)
@@ -276,7 +276,7 @@ contains
  
     allocate( poisson_solver, stat=ierr)
 
-    call initialize_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)
+    call poisson_solver%init(no_gridpts, solver, kernel)
 
   end function sll_f_new_pic_poisson_2d
 
@@ -294,7 +294,7 @@ contains
     allocate( sll_t_pic_poisson_2d :: poisson_solver, stat=ierr)
     select type( poisson_solver)
     type is ( sll_t_pic_poisson_2d )
-       call initialize_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)
+       call poisson_solver%init( no_gridpts, solver, kernel)
     end select
 
   end subroutine sll_s_new_pic_poisson_2d

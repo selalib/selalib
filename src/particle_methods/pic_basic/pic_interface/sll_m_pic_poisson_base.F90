@@ -42,7 +42,7 @@ module sll_m_pic_poisson_base
      procedure(linear_combination), deferred    :: add_analytic_charge !< Set charge as linear combination of previously accumulated charge and previously set analytic charge.
      procedure(update_dofs_function), deferred  :: set_analytic_charge !< Set the value of the analytic charge contribution from a given function.
 
-     procedure(empty), deferred                  :: delete
+     procedure(empty), deferred                  :: free
 
 
      generic :: add_charge => add_charge_single, add_charge_vector
@@ -55,23 +55,23 @@ module sll_m_pic_poisson_base
   
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine add_single(this, position, weight) 
+     subroutine add_single(self, position, weight) 
        use sll_m_working_precision
        import sll_c_pic_poisson
-       class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
-       sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+       class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
+       sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
        sll_real64,                intent( in ) :: weight !< Weight of the particle
      end subroutine add_single
   end interface
 
 !!$  !---------------------------------------------------------------------------!
 !!$  abstract interface
-!!$     subroutine add_vector(this,n_part, position, weight) 
+!!$     subroutine add_vector(self,n_part, position, weight) 
 !!$       use sll_m_working_precision
 !!$       import sll_c_pic_poisson
-!!$       class (sll_c_pic_poisson), intent( in ) :: this !< Pic Poisson solver object
+!!$       class (sll_c_pic_poisson), intent( in ) :: self !< Pic Poisson solver object
 !!$       sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
-!!$       sll_real64,                intent( in ) :: position(this%dim, n_part) !< Position of the particle
+!!$       sll_real64,                intent( in ) :: position(self%dim, n_part) !< Position of the particle
 !!$       sll_real64,                intent( in ) :: weight(n_part) !< Weight of the particle
 !!$     end subroutine add_vector
 !!$  end interface
@@ -79,22 +79,22 @@ module sll_m_pic_poisson_base
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine eval_single(this, position, func_value)
+     subroutine eval_single(self, position, func_value)
        use sll_m_working_precision
        import sll_c_pic_poisson
-       class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
-       sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+       class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
+       sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
        sll_real64,                intent( out) :: func_value !< Value(s) of the electric fields at given position
      end subroutine eval_single
   end interface
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine eval_component_single(this, position, components, func_value)
+     subroutine eval_component_single(self, position, components, func_value)
        use sll_m_working_precision
        import sll_c_pic_poisson
-       class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
-       sll_real64,                intent( in ) :: position(this%dim) !< Position of the particle
+       class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
+       sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
        sll_int32,                 intent( in ) :: components(:) !< Components of the field to be computed
        sll_real64,                intent( out) :: func_value(:) !< Value(s) of the electric fields at given position
      end subroutine eval_component_single
@@ -103,23 +103,23 @@ module sll_m_pic_poisson_base
 
 !!$  !---------------------------------------------------------------------------!
 !!$  abstract interface
-!!$     subroutine eval_vector(this, position, n_part, func_value)
+!!$     subroutine eval_vector(self, position, n_part, func_value)
 !!$       use sll_m_working_precision
 !!$       import sll_c_pic_poisson
-!!$       class (sll_c_pic_poisson), intent( in ) :: this !< Pic Poisson solver object
-!!$       sll_real64,                intent( in ) :: position(this%dim, n_part) !< Position of the particles
+!!$       class (sll_c_pic_poisson), intent( in ) :: self !< Pic Poisson solver object
+!!$       sll_real64,                intent( in ) :: position(self%dim, n_part) !< Position of the particles
 !!$       sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
-!!$       sll_real64,                intent( out) :: func_value(this%dim, n_part) !< Value(s) of the electric fields at given position
+!!$       sll_real64,                intent( out) :: func_value(self%dim, n_part) !< Value(s) of the electric fields at given position
 !!$     end subroutine eval_vector
 !!$  end interface
 !!$
 !!$  !---------------------------------------------------------------------------!
 !!$  abstract interface
-!!$     subroutine eval_component_vector(this, position, n_part, components,func_value)
+!!$     subroutine eval_component_vector(self, position, n_part, components,func_value)
 !!$       use sll_m_working_precision
 !!$       import sll_c_pic_poisson
-!!$       class (sll_c_pic_poisson), intent( in ) :: this !< Pic Poisson solver object
-!!$       sll_real64,                intent( in ) :: position(this%dim, n_part) !< Position of the particle
+!!$       class (sll_c_pic_poisson), intent( in ) :: self !< Pic Poisson solver object
+!!$       sll_real64,                intent( in ) :: position(self%dim, n_part) !< Position of the particle
 !!$       sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
 !!$       sll_int32,                 intent( in ) :: components(:) !< Components of the field to be computed
 !!$       sll_real64,                intent( out) :: func_value(:,:) !< Value(s) of the electric fields at given positions
@@ -129,19 +129,19 @@ module sll_m_pic_poisson_base
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine empty(this)
+     subroutine empty(self)
        import sll_c_pic_poisson
-       class (sll_c_pic_poisson), intent( inout ) :: this
+       class (sll_c_pic_poisson), intent( inout ) :: self
      end subroutine empty
   end interface
 
 
   !---------------------------------------------------------------------------!
   abstract interface
-     function compute_energy(this, component) result(energy)
+     function compute_energy(self, component) result(energy)
        use sll_m_working_precision
        import sll_c_pic_poisson
-       class (sll_c_pic_poisson), intent( in ) :: this !< PIC Poisson solver object
+       class (sll_c_pic_poisson), intent( in ) :: self !< PIC Poisson solver object
        sll_int32, intent( in ) :: component !< Component of the electric field for which the energy should be computed
        sll_real64 :: energy !< L2 norm squarred of 
      end function compute_energy
@@ -150,21 +150,21 @@ module sll_m_pic_poisson_base
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine update_dofs_function(this, func)
+     subroutine update_dofs_function(self, func)
        use sll_m_working_precision
        import sll_c_pic_poisson
        import sll_f_function_of_position
-       class( sll_c_pic_poisson ), intent( inout )    :: this !< PIC Poisson solver object.
+       class( sll_c_pic_poisson ), intent( inout )    :: self !< PIC Poisson solver object.
        procedure(sll_f_function_of_position)                :: func !< Function to be projected.
      end subroutine update_dofs_function
   end interface
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine linear_combination(this, factor_present, factor_analytic)
+     subroutine linear_combination(self, factor_present, factor_analytic)
        use sll_m_working_precision
        import sll_c_pic_poisson
-       class( sll_c_pic_poisson ), intent( inout ) :: this !< PIC Poisson solver object
+       class( sll_c_pic_poisson ), intent( inout ) :: self !< PIC Poisson solver object
        sll_real64, intent( in ) :: factor_present !< Factor to multiply accumulated charge with
        sll_real64, intent( in ) :: factor_analytic !< Factor to multiply added analytic charge with
 
@@ -175,17 +175,17 @@ contains
 
     !---------------------------------------------------------------------------!
     !< Add the contribution of \a n_part particles to the charge density. Per default it is implemented as a loop over the implementation for a single particle but can be overwritten if necessary.
-  subroutine add_charge_vector(this,n_part, position, weight) 
-    class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
+  subroutine add_charge_vector(self,n_part, position, weight) 
+    class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
     sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
-    sll_real64,                intent( in ) :: position(this%dim, n_part) !< Position of the particle
+    sll_real64,                intent( in ) :: position(self%dim, n_part) !< Position of the particle
     sll_real64,                intent( in ) :: weight(n_part) !< Weight of the particle
 
     !local variables
     sll_int32  :: i_part
 
     do i_part = 1, n_part
-       call this%add_charge_single( position(:,i_part), weight(i_part))
+       call self%add_charge_single( position(:,i_part), weight(i_part))
     end do
 
   end subroutine add_charge_vector
@@ -193,9 +193,9 @@ contains
 
   !---------------------------------------------------------------------------!
   !< Evaluation of charge density for a vector of \a n_part particles. Per default it is implemented as a loop over the implementation for a single particle but can be overwritten if necessary.
-  subroutine evaluate_rho_vector(this, position, n_part, func_value)
-    class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(:, :) !< Position of the particles (size (this%dim, n_part))
+  subroutine evaluate_rho_vector(self, position, n_part, func_value)
+    class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
+    sll_real64,                intent( in ) :: position(:, :) !< Position of the particles (size (self%dim, n_part))
     sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
     sll_real64,                intent( out) :: func_value(n_part) !< Value(s) of the electric fields at given position
 
@@ -203,7 +203,7 @@ contains
     sll_int32 :: i_part
 
     do i_part = 1, n_part
-       call this%evaluate_rho_single&
+       call self%evaluate_rho_single&
             (position(:, i_part), func_value(i_part))
     end do
     
@@ -212,9 +212,9 @@ contains
 
   !---------------------------------------------------------------------------!
   !< Evaluation of potential for a vector of \a n_part particles. Per default it is implemented as a loop over the implementation for a single particle but can be overwritten if necessary.
-  subroutine evaluate_phi_vector(this, position, n_part, func_value)
-    class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(:,:) !< Position of the particles(size (this%dim, n_part))
+  subroutine evaluate_phi_vector(self, position, n_part, func_value)
+    class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
+    sll_real64,                intent( in ) :: position(:,:) !< Position of the particles(size (self%dim, n_part))
     sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
     sll_real64,                intent( out) :: func_value(n_part) !< Value(s) of the electric fields at given position
 
@@ -222,7 +222,7 @@ contains
     sll_int32 :: i_part
 
     do i_part = 1, n_part
-       call this%evaluate_phi_single&
+       call self%evaluate_phi_single&
             (position(:, i_part), func_value(i_part))
     end do
     
@@ -231,9 +231,9 @@ contains
 
   
   !---------------------------------------------------------------------------!
-  subroutine evaluate_field_vector(this, position, n_part, components,func_value)
-    class (sll_c_pic_poisson), intent( inout ) :: this !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(:,:) !< Position of the particle (size (this%dim, n_part))
+  subroutine evaluate_field_vector(self, position, n_part, components,func_value)
+    class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
+    sll_real64,                intent( in ) :: position(:,:) !< Position of the particle (size (self%dim, n_part))
     sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
     sll_int32,                 intent( in ) :: components(:) !< Components of the field to be computed
     sll_real64,                intent( out) :: func_value(:,:) !< Value(s) of the electric fields at given positions
@@ -242,7 +242,7 @@ contains
     sll_int32 :: i_part
 
     do i_part = 1, n_part
-       call this%evaluate_field_single&
+       call self%evaluate_field_single&
             (position(:, i_part), components, func_value(:,i_part))
     end do
     

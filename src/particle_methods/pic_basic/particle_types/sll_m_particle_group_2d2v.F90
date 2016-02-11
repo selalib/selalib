@@ -45,8 +45,8 @@ contains
     procedure :: set_common_weight => set_common_weight_2d2v !> Set the common weight for the particle
 
     ! Initializer
-    procedure :: initialize => initialize_particle_group_2d2v  !> Initialization function
-    procedure :: delete => delete_particle_group_2d2v !> Destructor
+    procedure :: init => initialize_particle_group_2d2v  !> Initialization function
+    procedure :: free => delete_particle_group_2d2v !> Destructor
 
 
 end type sll_t_particle_group_2d2v
@@ -81,7 +81,7 @@ contains
 
     allocate(self%species, stat=ierr)
     SLL_ASSERT( ierr == 0)
-    call self%species%initialize( charge, mass)
+    call self%species%init( charge, mass)
 
     self%n_weights = n_weights
 
@@ -101,7 +101,7 @@ contains
     sll_int32                                         :: ierr
 
     SLL_ALLOCATE(self, ierr)
-    call self%initialize(n_particles, n_total_particles, charge, mass, n_weights)
+    call self%init(n_particles, n_total_particles, charge, mass, n_weights)
 
   end function sll_f_new_particle_group_2d2v
 
@@ -121,7 +121,7 @@ contains
     
     select type( particle_group )
     type is ( sll_t_particle_group_2d2v )
-       call particle_group%initialize(n_particles, n_total_particles, charge, mass, n_weights)
+       call particle_group%init(n_particles, n_total_particles, charge, mass, n_weights)
     end select
 
   end subroutine sll_s_new_particle_group_2d2v_ptr
@@ -143,7 +143,7 @@ contains
     
     select type( particle_group )
     type is ( sll_t_particle_group_2d2v )
-       call particle_group%initialize(n_particles, n_total_particles, charge, mass, n_weights)
+       call particle_group%init(n_particles, n_total_particles, charge, mass, n_weights)
     end select
 
   end subroutine sll_s_new_particle_group_2d2v

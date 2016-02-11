@@ -142,7 +142,7 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
   bfield = 1.0_f64
 
   allocate(propagator)
-  call propagator%initialize(maxwell_solver, &
+  call propagator%init(maxwell_solver, &
             kernel_smoother_0, kernel_smoother_1, particle_group, &
             efield, bfield, &
             eta_min, eta_max-eta_min)
@@ -244,19 +244,19 @@ program test_hamiltonian_splitting_cef_pic_vm_1d2v
      stop
   end if
 
-  call particle_group%delete()
+  call particle_group%free()
   deallocate(particle_group)
   deallocate(efield)
   deallocate(efield_ref)
   deallocate(bfield)
   deallocate(bfield_ref)
-  call kernel_smoother_0%delete()
+  call kernel_smoother_0%free()
   deallocate(kernel_smoother_0)
-  call kernel_smoother_1%delete()
+  call kernel_smoother_1%free()
   deallocate(kernel_smoother_1)
   call maxwell_solver%free()
   deallocate(maxwell_solver)
-  call propagator%delete()
+  call propagator%free()
   
   call sll_s_halt_collective()
 
