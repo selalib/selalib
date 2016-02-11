@@ -57,8 +57,8 @@ module sll_m_kernel_smoother_spline_2d
      procedure :: evaluate => evaluate_field_single_spline_2d !> Evaluate the spline with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_2d
      procedure :: add_current_update_v => add_current_update_v_spline_2d
-     procedure :: initialize => initialize_spline_2d
-     procedure :: delete => delete_spline_2d
+     procedure :: init => init_spline_2d
+     procedure :: free => free_spline_2d
 
 
   end type sll_t_kernel_smoother_spline_2d
@@ -66,8 +66,8 @@ module sll_m_kernel_smoother_spline_2d
 contains
   !---------------------------------------------------------------------------!
   !> Helper function computing shape factor
-  subroutine compute_shape_factor_spline_2d(this, position, indices)
-    class( sll_t_kernel_smoother_spline_2d), intent(inout) :: this !< kernel smoother object
+  subroutine compute_shape_factor_spline_2d(self, position, indices)
+    class( sll_t_kernel_smoother_spline_2d), intent(inout) :: self !< kernel smoother object
     sll_real64, intent( in ) :: position(2)
     sll_int32, intent( out ) :: indices(2)
 
@@ -75,25 +75,25 @@ contains
     sll_real64 :: xi(2)
 
 
-    xi(1:2) = (position(1:2) - this%domain(:,1)) /&
-         this%delta_x
+    xi(1:2) = (position(1:2) - self%domain(:,1)) /&
+         self%delta_x
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
-    indices =  indices - this%spline_degree
-    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(1), this%spline_val(1:this%n_span,1))
-    call sll_s_uniform_b_splines_at_x(this%spline_degree, xi(2), this%spline_val(1:this%n_span,2))
-    !this%spline_val(1:this%n_span,1) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(1))
-    !this%spline_val(1:this%n_span,2) = sll_f_uniform_b_splines_at_x(this%spline_degree, xi(2))
+    indices =  indices - self%spline_degree
+    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(1), self%spline_val(1:self%n_span,1))
+    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(2), self%spline_val(1:self%n_span,2))
+    !self%spline_val(1:self%n_span,1) = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(1))
+    !self%spline_val(1:self%n_span,2) = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
 
   !---------------------------------------------------------------------------!
   !> Add charge of single particle
-  subroutine add_charge_single_spline_2d(this, position, weight, rho_dofs)
-    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object
-    sll_real64, intent( in ) :: position(this%dim)
+  subroutine add_charge_single_spline_2d(self, position, weight, rho_dofs)
+    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: self !< kernel smoother object
+    sll_real64, intent( in ) :: position(self%dim)
     sll_real64, intent( in ) :: weight
-    sll_real64, intent(inout)                       :: rho_dofs(this%n_dofs ) !< spline coefficient of accumulated density
+    sll_real64, intent(inout)                       :: rho_dofs(self%n_dofs ) !< spline coefficient of accumulated density
     
     !local variables
     sll_int32 :: i1, i2, index2d
@@ -101,15 +101,15 @@ contains
     sll_int32  :: indices(2)
     
 
-    call compute_shape_factor_spline_2d(this, position, indices)
-    do i1 = 1, this%n_span
+    call compute_shape_factor_spline_2d(self, position, indices)
+    do i1 = 1, self%n_span
        index1d(1) = indices(1)+i1-2
-       do i2 = 1, this%n_span
+       do i2 = 1, self%n_span
           index1d(2) = indices(2)+i2-2
-          index2d = index_1dto2d_column_major(this,index1d)
+          index2d = index_1dto2d_column_major(self,index1d)
           rho_dofs(index2d) = rho_dofs(index2d) +&
-               ( weight* this%scaling * &
-               this%spline_val(i1,1) * this%spline_val(i2,2))
+               ( weight* self%scaling * &
+               self%spline_val(i1,1) * self%spline_val(i2,2))
        end do
     end do
 
@@ -118,24 +118,24 @@ contains
 
  !---------------------------------------------------------------------------!
   !> Add current and update v for single particle
-  subroutine add_current_update_v_spline_2d (this, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
-    class(sll_t_kernel_smoother_spline_2d), intent(inout) :: this !< kernel smoother object
-    sll_real64, intent(in) :: position_old(this%dim)
-    sll_real64, intent(in) :: position_new(this%dim)
+  subroutine add_current_update_v_spline_2d (self, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+    class(sll_t_kernel_smoother_spline_2d), intent(inout) :: self !< kernel smoother object
+    sll_real64, intent(in) :: position_old(self%dim)
+    sll_real64, intent(in) :: position_new(self%dim)
     sll_real64, intent(in) :: weight
     sll_real64, intent(in) :: qoverm
-    sll_real64, intent(in) :: bfield_dofs(this%n_dofs)
+    sll_real64, intent(in) :: bfield_dofs(self%n_dofs)
     sll_real64, intent(inout) :: vi(:)
-    sll_real64, intent(inout) :: j_dofs(this%n_dofs)
+    sll_real64, intent(inout) :: j_dofs(self%n_dofs)
 
     print*, 'add_current_update_v_spline_2d not implemented.'
 
   end subroutine add_current_update_v_spline_2d
 
 !!$  !---------------------------------------------------------------------------!
-!!$  subroutine accumulate_j_from_klimontovich_spline_2d(this, particle_group,&
+!!$  subroutine accumulate_j_from_klimontovich_spline_2d(self, particle_group,&
 !!$       j_dofs, component, i_weight)
-!!$    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< kernel smoother object
+!!$    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: self !< kernel smoother object
 !!$    class( sll_c_particle_group_base), intent(in)     :: particle_group !< particle group
 !!$    sll_real64, intent(inout)                       :: j_dofs(:) !< spline coefficients ofcomponent \a component accumulated current density
 !!$    sll_int32, intent(in)                           :: component !< component of \a j_dofs to be accumulated.
@@ -153,23 +153,23 @@ contains
 !!$
 !!$    do i_part = 1, particle_group%n_particles
 !!$       wi = particle_group%get_charge(i_part, i_wi)
-!!$       do i1 = 1, this%n_span
-!!$          index1d(1) = this%index_grid(1,i_part)+i1-2
-!!$          do i2 = 1, this%n_span
-!!$             index1d(2) = this%index_grid(2,i_part)+i2-2
-!!$             index2d = index_1dto2d_column_major(this,index1d)
+!!$       do i1 = 1, self%n_span
+!!$          index1d(1) = self%index_grid(1,i_part)+i1-2
+!!$          do i2 = 1, self%n_span
+!!$             index1d(2) = self%index_grid(2,i_part)+i2-2
+!!$             index2d = index_1dto2d_column_major(self,index1d)
 !!$             vpart = particle_group%get_v(i_part)
 !!$             j_dofs(index2d) = j_dofs(index2d) +&
 !!$                  (wi(1) * &
 !!$                  vpart(component) * &
-!!$                  this%values_grid(i1,1,i_part) *&
-!!$                  this%values_grid(i2,2,i_part)) 
+!!$                  self%values_grid(i1,1,i_part) *&
+!!$                  self%values_grid(i2,2,i_part)) 
 !!$          end do
 !!$       end do
 !!$    end do
 !!$   
-!!$    if (this%smoothing_type == sll_p_collocation) then
-!!$       j_dofs = j_dofs /product(this%delta_x)
+!!$    if (self%smoothing_type == sll_p_collocation) then
+!!$       j_dofs = j_dofs /product(self%delta_x)
 !!$    end if
 !!$
 !!$  end subroutine accumulate_j_from_klimontovich_spline_2d
@@ -177,10 +177,10 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Evaluate field with given dofs at position \a position
-  subroutine evaluate_field_single_spline_2d(this, position, field_dofs, field_value)
-    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object    
-    sll_real64, intent( in ) :: position(this%dim)
-    sll_real64, intent(in)                               :: field_dofs(this%n_dofs) !< Degrees of freedom in kernel representation.
+  subroutine evaluate_field_single_spline_2d(self, position, field_dofs, field_value)
+    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: self !< kernel smoother object    
+    sll_real64, intent( in ) :: position(self%dim)
+    sll_real64, intent(in)                               :: field_dofs(self%n_dofs) !< Degrees of freedom in kernel representation.
     sll_real64, intent(out) :: field_value
     
     !local variables
@@ -189,19 +189,19 @@ contains
     sll_int32  :: indices(2)
     
 
-    call compute_shape_factor_spline_2d(this, position, indices)
+    call compute_shape_factor_spline_2d(self, position, indices)
 
 
     field_value = 0.0_f64
-    do i1 = 1, this%n_span
+    do i1 = 1, self%n_span
        index1d(1) = indices(1)+i1-2
-       do i2 = 1, this%n_span
+       do i2 = 1, self%n_span
           index1d(2) = indices(2)+i2-2
-          index2d = index_1dto2d_column_major(this,index1d)
+          index2d = index_1dto2d_column_major(self,index1d)
           field_value = field_value + &
                field_dofs(index2d) *  &
-               this%spline_val(i1,1) *&
-               this%spline_val(i2,2)
+               self%spline_val(i1,1) *&
+               self%spline_val(i2,2)
        end do
     end do
 
@@ -209,9 +209,9 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Evaluate multiple fields at position \a position
-  subroutine evaluate_multiple_spline_2d(this, position, components, field_dofs, field_value)
-    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: this !< kernel smoother object    
-    sll_real64, intent( in ) :: position(this%dim)
+  subroutine evaluate_multiple_spline_2d(self, position, components, field_dofs, field_value)
+    class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: self !< kernel smoother object    
+    sll_real64, intent( in ) :: position(self%dim)
     sll_int32, intent(in) :: components(:)
     sll_real64, intent(in)                               :: field_dofs(:,:) !< Degrees of freedom in kernel representation.
     sll_real64, intent(out) :: field_value(:)
@@ -222,19 +222,19 @@ contains
     sll_int32  :: indices(2)
     
 
-    call compute_shape_factor_spline_2d(this, position, indices)
+    call compute_shape_factor_spline_2d(self, position, indices)
 
 
     field_value = 0.0_f64
-    do i1 = 1, this%n_span
+    do i1 = 1, self%n_span
        index1d(1) = indices(1)+i1-2
-       do i2 = 1, this%n_span
+       do i2 = 1, self%n_span
           index1d(2) = indices(2)+i2-2
-          index2d = index_1dto2d_column_major(this,index1d)
+          index2d = index_1dto2d_column_major(self,index1d)
           field_value = field_value + &
                field_dofs(index2d,components) *  &
-               this%spline_val(i1,1) *&
-               this%spline_val(i2,2)
+               self%spline_val(i1,1) *&
+               self%spline_val(i2,2)
        end do
     end do
 
@@ -242,19 +242,19 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !> Destructor
-    subroutine delete_spline_2d(this)
-    class (sll_t_kernel_smoother_spline_2d), intent( inout ) :: this !< Kernel smoother object 
+    subroutine free_spline_2d(self)
+    class (sll_t_kernel_smoother_spline_2d), intent( inout ) :: self !< Kernel smoother object 
 
-    deallocate(this%spline_val)
+    deallocate(self%spline_val)
     
 
-  end subroutine delete_spline_2d
+  end subroutine free_spline_2d
 
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  subroutine initialize_spline_2d(this, domain, n_grid, no_particles, spline_degree, smoothing_type)
-    class( sll_t_kernel_smoother_spline_2d), intent(out)   :: this
+  subroutine init_spline_2d(self, domain, n_grid, no_particles, spline_degree, smoothing_type)
+    class( sll_t_kernel_smoother_spline_2d), intent(out)   :: self
     sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
     sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
     sll_int32, intent(in) :: no_particles !< no. of particles
@@ -264,35 +264,35 @@ contains
     !local variables
     sll_int32 :: ierr
 
-    this%dim = 2
+    self%dim = 2
 
     ! Store grid information
-    this%domain = domain
-    SLL_ALLOCATE(this%n_grid(2), ierr)
-    this%n_grid = n_grid
-    this%n_dofs = product(n_grid)
-    this%delta_x = (domain(:,2)-domain(:,1))/real(n_grid, f64)
+    self%domain = domain
+    SLL_ALLOCATE(self%n_grid(2), ierr)
+    self%n_grid = n_grid
+    self%n_dofs = product(n_grid)
+    self%delta_x = (domain(:,2)-domain(:,1))/real(n_grid, f64)
 
     ! Store basis function information
-    this%no_particles = no_particles
+    self%no_particles = no_particles
 
     ! Initialize information on the spline
-    this%spline_degree = spline_degree
-    this%n_span = spline_degree + 1
+    self%spline_degree = spline_degree
+    self%n_span = spline_degree + 1
 
     ! Initialize information on smoothing type
     if (smoothing_type == sll_p_collocation) then
-       this%scaling = 1.0_f64/product(this%delta_x)
+       self%scaling = 1.0_f64/product(self%delta_x)
     elseif (smoothing_type == sll_p_galerkin) then
-       this%scaling = 1.0_f64
+       self%scaling = 1.0_f64
     else
        print*, 'Smoothing Type ', smoothing_type, ' not implemented for kernel_smoother_spline_2d.'
     end if
 
-    allocate( this%spline_val(this%n_span, 2), stat = ierr)
+    allocate( self%spline_val(self%n_span, 2), stat = ierr)
     SLL_ASSERT( ierr == 0)
 
-  end subroutine initialize_spline_2d
+  end subroutine init_spline_2d
 
   !> Constructor for abstract type (pointer)
   subroutine sll_s_new_kernel_smoother_spline_2d_ptr(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type) 
@@ -309,7 +309,7 @@ contains
     SLL_ALLOCATE( sll_t_kernel_smoother_spline_2d :: smoother, ierr)
     select type (smoother)
     type is (sll_t_kernel_smoother_spline_2d)
-       call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type)
+       call smoother%init( domain, n_grid, no_particles, spline_degree, smoothing_type)
     end select
 
   end subroutine sll_s_new_kernel_smoother_spline_2d_ptr
@@ -330,7 +330,7 @@ contains
     SLL_ALLOCATE( sll_t_kernel_smoother_spline_2d :: smoother, ierr)
     select type (smoother)
     type is (sll_t_kernel_smoother_spline_2d)
-       call smoother%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type)
+       call smoother%init( domain, n_grid, no_particles, spline_degree, smoothing_type)
     end select
 
   end subroutine sll_s_new_kernel_smoother_spline_2d
@@ -338,8 +338,8 @@ contains
 
 
   !> Constructor (legacy version)
-  function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (this)
-    class( sll_t_kernel_smoother_spline_2d), pointer   :: this
+  function sll_f_new_smoother_spline_2d(domain, n_grid, no_particles, spline_degree, smoothing_type) result (self)
+    class( sll_t_kernel_smoother_spline_2d), pointer   :: self
     sll_int32, intent(in) :: n_grid(2) !< no. of spline coefficients
     sll_real64, intent(in) :: domain(2,2) !< lower and upper bounds of the domain
     sll_int32, intent(in) :: no_particles !< no. of particles
@@ -349,21 +349,21 @@ contains
     !local variables
     sll_int32 :: ierr
 
-    SLL_ALLOCATE( this, ierr)
-    call this%initialize( domain, n_grid, no_particles, spline_degree, smoothing_type)
+    SLL_ALLOCATE( self, ierr)
+    call self%init( domain, n_grid, no_particles, spline_degree, smoothing_type)
 
   end function sll_f_new_smoother_spline_2d
 
   
-  !< This function computes the index of a 1D array that stores 2D data in column major ordering. It also takes periodic boundary conditions into account.
-  function index_1dto2d_column_major(this, index1d) result(index2d)
-    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: this !< Kernel smoother object.
+  !< Self function computes the index of a 1D array that stores 2D data in column major ordering. It also takes periodic boundary conditions into account.
+  function index_1dto2d_column_major(self, index1d) result(index2d)
+    class( sll_t_kernel_smoother_spline_2d), intent(in)    :: self !< Kernel smoother object.
     sll_int32 :: index1d(2) !< 2d array with indices along each of the two directions (start counting with zero).
     sll_int32 :: index2d    !< Corresponding index in 1d array representing 2d data (start counting with one).
 
-    index1d(1) = modulo(index1d(1), this%n_grid(1))
-    index1d(2) = modulo(index1d(2), this%n_grid(2))
-    index2d = index1d(1) + index1d(2)*this%n_grid(1) + 1
+    index1d(1) = modulo(index1d(1), self%n_grid(1))
+    index1d(2) = modulo(index1d(2), self%n_grid(2))
+    index2d = index1d(1) + index1d(2)*self%n_grid(1) + 1
 
   end function index_1dto2d_column_major
 

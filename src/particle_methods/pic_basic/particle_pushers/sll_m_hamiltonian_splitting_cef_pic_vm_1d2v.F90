@@ -69,42 +69,42 @@ module sll_m_hamiltonian_splitting_cef_pic_vm_1d2v
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !< Lie splitting propagator
      procedure :: update_jv !< helper function for Gauss integration of j over time
      procedure :: operatorHp1_pic_vm_1d2v_prim
-     procedure :: initialize => initialize_pic_vm_1d2v !< Constructor
-     procedure :: delete => delete_pic_vm_1d2v !< Destructor
+     procedure :: init => initialize_pic_vm_1d2v !< Constructor
+     procedure :: free => delete_pic_vm_1d2v !< Destructor
 
   end type sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
 
 contains
 
-  subroutine strang_splitting_pic_vm_1d2v(this,dt, number_steps)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v) :: this !< time splitting object 
+  subroutine strang_splitting_pic_vm_1d2v(self,dt, number_steps)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
     sll_int32, intent(in)  :: number_steps !< number of time steps
 
     sll_int32 :: i
 
     do i=1,number_steps
-       call this%operatorHp1(0.5_f64*dt)
-       call this%operatorHE(0.5_f64*dt)
-       call this%operatorHB(dt)
-       call this%operatorHE(0.5_f64*dt)
-       call this%operatorHp1(0.5_f64*dt)
+       call self%operatorHp1(0.5_f64*dt)
+       call self%operatorHE(0.5_f64*dt)
+       call self%operatorHB(dt)
+       call self%operatorHE(0.5_f64*dt)
+       call self%operatorHp1(0.5_f64*dt)
     end do
 
   end subroutine strang_splitting_pic_vm_1d2v
 
   !---------------------------------------------------------------------------!  
- subroutine lie_splitting_pic_vm_1d2v(this,dt, number_steps)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v) :: this !< time splitting object 
+ subroutine lie_splitting_pic_vm_1d2v(self,dt, number_steps)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
     sll_int32, intent(in)  :: number_steps !< number of time steps
 
     sll_int32 :: i
 
     do i=1,number_steps
-       call this%operatorHp1(dt)
-       call this%operatorHE(dt)
-       call this%operatorHB(dt)
+       call self%operatorHp1(dt)
+       call self%operatorHE(dt)
+       call self%operatorHB(dt)
     end do
 
   end subroutine lie_splitting_pic_vm_1d2v
@@ -115,8 +115,8 @@ contains
   !> \partial_t E_1 = - \int v_1 f(t,x_1, v) dv -> E_{1,new} = E_{1,old} - \int \int v_1 f(t,x_1+s v_1,v) dv ds
   !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
   !> \partial_t B = 0 => B_new = B_old 
-  subroutine operatorHp1_pic_vm_1d2v(this, dt)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+  subroutine operatorHp1_pic_vm_1d2v(self, dt)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -127,8 +127,8 @@ contains
     sll_int32 :: index_new, index_old
     !sll_real64 :: primitive_1(3)
 
-    this%j_dofs_local = 0.0_f64
-    n_cells = this%kernel_smoother_0%n_dofs
+    self%j_dofs_local = 0.0_f64
+    n_cells = self%kernel_smoother_0%n_dofs
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
@@ -141,72 +141,72 @@ contains
 
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
     ! Then update particle position:  X_new = X_old + dt * V
-    do i_part=1,this%particle_group%n_particles  
+    do i_part=1,self%particle_group%n_particles  
        ! Read out particle position and velocity
-       x_new = this%particle_group%get_x(i_part)
-       vi = this%particle_group%get_v(i_part)
+       x_new = self%particle_group%get_x(i_part)
+       vi = self%particle_group%get_v(i_part)
        ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
+       xi = (x_new(1) - self%x_min) /&
+            self%delta_x
        index_old = floor(xi)
        r_old = xi - real(index_old,f64)
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new =x_new + dt*vi! modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
+       x_new =x_new + dt*vi! modulo(self%particle_group%get_x(i_part) + dt * vi, self%Lx)
 
 
        ! Compute the new box index index_new and normalized position r_old.
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
+       xi = (x_new(1) - self%x_min) /&
+            self%delta_x
        index_new = floor(xi)
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_charge(i_part)
+       wi = self%particle_group%get_charge(i_part)
 
        if (index_old == index_new) then
           if (r_old < r_new) then
-             call this%update_jv(r_old, r_new, index_old, wi, 1.0_f64, vi)
+             call self%update_jv(r_old, r_new, index_old, wi, 1.0_f64, vi)
           else
-             call this%update_jv(r_new, r_old, index_old, wi, -1.0_f64, vi)
+             call self%update_jv(r_new, r_old, index_old, wi, -1.0_f64, vi)
           end if
        elseif (index_old < index_new) then
-          call this%update_jv (r_old, 1.0_f64, index_old, wi, 1.0_f64, vi)
-          call this%update_jv (0.0_f64, r_new, index_new, wi, 1.0_f64, vi)
+          call self%update_jv (r_old, 1.0_f64, index_old, wi, 1.0_f64, vi)
+          call self%update_jv (0.0_f64, r_new, index_new, wi, 1.0_f64, vi)
           do ind = index_old+1, index_new-1
-             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, 1.0_f64, vi)
+             call self%update_jv (0.0_f64, 1.0_f64, ind, wi, 1.0_f64, vi)
           end do
        else
-          call this%update_jv (r_new, 1.0_f64, index_new, wi, -1.0_f64, vi)
-          call this%update_jv (0.0_f64, r_old, index_old, wi, -1.0_f64, vi)
+          call self%update_jv (r_new, 1.0_f64, index_new, wi, -1.0_f64, vi)
+          call self%update_jv (0.0_f64, r_old, index_old, wi, -1.0_f64, vi)
           do ind = index_new+1, index_old-1
-             call this%update_jv (0.0_f64, 1.0_f64, ind, wi, -1.0_f64, vi)
+             call self%update_jv (0.0_f64, 1.0_f64, ind, wi, -1.0_f64, vi)
           end do
        end if
 
-       x_new(1) = modulo(x_new(1),this%Lx)
-       call this%particle_group%set_x(i_part, x_new)
+       x_new(1) = modulo(x_new(1),self%Lx)
+       call self%particle_group%set_x(i_part, x_new)
 
     end do
 
-    this%j_dofs = 0.0_f64
+    self%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
-         n_cells, MPI_SUM, this%j_dofs(:,1))
-    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,2), &
-         n_cells, MPI_SUM, this%j_dofs(:,2))
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+         n_cells, MPI_SUM, self%j_dofs(:,1))
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
+         n_cells, MPI_SUM, self%j_dofs(:,2))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
-    !this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
-    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
-    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,2), 2, this%efield_dofs(:,2))
+    !self%j_dofs(:,1) = self%j_dofs(:,1)*self%delta_x!/self%Lx
+    call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,1), 1, self%efield_dofs(:,1))
+    call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,2), 2, self%efield_dofs(:,2))
 
 
  end subroutine operatorHp1_pic_vm_1d2v
 
- ! TODO: This is hard coded for quadratic, cubic splines. Make general.
- subroutine update_jv(this, lower, upper, index, weight, sign, vi)
-   class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+ ! TODO: Self is hard coded for quadratic, cubic splines. Make general.
+ subroutine update_jv(self, lower, upper, index, weight, sign, vi)
+   class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
    sll_real64, intent(in) :: lower
    sll_real64, intent(in) :: upper
    sll_int32,  intent(in) :: index
@@ -215,38 +215,38 @@ contains
    sll_real64, intent(in) :: vi(3)
 
    !Local variables
-   sll_real64 :: m, c, y1, y2, fy(this%spline_degree+1)
+   sll_real64 :: m, c, y1, y2, fy(self%spline_degree+1)
    sll_int32  :: ind, i_grid, i_mod, n_cells
 
 
-   n_cells = this%kernel_smoother_0%n_dofs
+   n_cells = self%kernel_smoother_0%n_dofs
 
 
    m = 0.5_f64*(upper-lower)
    c = 0.5_f64*(upper+lower)
    y1 = -m/sqrt(3.0_f64)+c
    y2 = m/sqrt(3.0_f64) +c
-   !fy = sign*m*this%delta_x*&
-   !     (sll_f_uniform_b_splines_at_x(this%spline_degree-1, y1) +&
-   !     sll_f_uniform_b_splines_at_x(this%spline_degree-1, y2))
+   !fy = sign*m*self%delta_x*&
+   !     (sll_f_uniform_b_splines_at_x(self%spline_degree-1, y1) +&
+   !     sll_f_uniform_b_splines_at_x(self%spline_degree-1, y2))
 
    ind = 1
-   do i_grid = index - this%spline_degree + 1, index
+   do i_grid = index - self%spline_degree + 1, index
       i_mod = modulo(i_grid, n_cells ) + 1
-      this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+      self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
            weight(1)*fy(ind)
       ind = ind + 1
    end do
 
    if (abs(vi(1)) > 1D-14) then
-      !fy = sign*m*this%delta_x*&
-      !     (sll_f_uniform_b_splines_at_x(this%spline_degree, y1) +&
-      !     sll_f_uniform_b_splines_at_x(this%spline_degree, y2))
+      !fy = sign*m*self%delta_x*&
+      !     (sll_f_uniform_b_splines_at_x(self%spline_degree, y1) +&
+      !     sll_f_uniform_b_splines_at_x(self%spline_degree, y2))
 
       ind = 1
-      do i_grid = index - this%spline_degree, index
+      do i_grid = index - self%spline_degree, index
          i_mod = modulo(i_grid, n_cells ) + 1
-         this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+         self%j_dofs_local(i_mod,2) = self%j_dofs_local(i_mod,2) + &
               weight(1)*fy(ind)*vi(2)/vi(1)
          ind = ind + 1
       end do
@@ -254,9 +254,9 @@ contains
 
  end subroutine update_jv
 
- ! TODO: Update this is from correct splitting
- subroutine operatorHp1_pic_vm_1d2v_prim(this, dt)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+ ! TODO: Update self is from correct splitting
+ subroutine operatorHp1_pic_vm_1d2v_prim(self, dt)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -268,9 +268,9 @@ contains
     sll_real64 :: primitive_1(3)
     sll_real64 :: qm
 
-    this%j_dofs_local = 0.0_f64
-    n_cells = this%kernel_smoother_0%n_dofs    
-    qm = this%particle_group%species%q_over_m()
+    self%j_dofs_local = 0.0_f64
+    n_cells = self%kernel_smoother_0%n_dofs    
+    qm = self%particle_group%species%q_over_m()
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
@@ -284,95 +284,95 @@ contains
 
     ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
     ! Then update particle position:  X_new = X_old + dt * V
-    do i_part=1,this%particle_group%n_particles  
+    do i_part=1,self%particle_group%n_particles  
        ! Read out particle position and velocity
-       x_new = this%particle_group%get_x(i_part)
-       vi = this%particle_group%get_v(i_part)
+       x_new = self%particle_group%get_x(i_part)
+       vi = self%particle_group%get_v(i_part)
        ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
+       xi = (x_new(1) - self%x_min) /&
+            self%delta_x
        index_old = floor(xi)
        r_old = xi - real(index_old,f64)
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
-       call this%particle_group%set_x(i_part, x_new)
+       x_new = modulo(self%particle_group%get_x(i_part) + dt * vi, self%Lx)
+       call self%particle_group%set_x(i_part, x_new)
 
        ! Compute the new box index index_new and normalized position r_old.
-       xi = (x_new(1) - this%x_min) /&
-            this%delta_x
+       xi = (x_new(1) - self%x_min) /&
+            self%delta_x
        index_new = floor(xi)
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       wi = this%particle_group%get_charge(i_part)
+       wi = self%particle_group%get_charge(i_part)
 
        ! Compute the primitives at r_old for each interval
        primitive_1 = -primitive_uniform_quadratic_b_spline_at_x( r_old )
        ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
        if (index_old < index_new) then
-          primitive_1 = primitive_1 + this%cell_integrals_1
+          primitive_1 = primitive_1 + self%cell_integrals_1
        end if
        ! Now, we loop through the DoFs and add the contributions.
        ind = 1
-       do i_grid = index_old - this%spline_degree + 1, index_old
+       do i_grid = index_old - self%spline_degree + 1, index_old
           i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+          self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
                primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+          vi(2) = vi(2) - qm*primitive_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
           ind = ind + 1
        end do      
        ! Now contribution from r_new in the same way but different sign
        primitive_1 = primitive_uniform_quadratic_b_spline_at_x( r_new )
        if (index_old > index_new) then
-          primitive_1 = primitive_1 - this%cell_integrals_1
+          primitive_1 = primitive_1 - self%cell_integrals_1
        end if 
 
        ind = 1
-       do i_grid = index_new - this%spline_degree + 1, index_new
+       do i_grid = index_new - self%spline_degree + 1, index_new
           i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+          self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
                primitive_1(ind)*wi(1)
-          vi(2) = vi(2) - qm*primitive_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+          vi(2) = vi(2) - qm*primitive_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
           ind = ind + 1
        end do
        ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
        ! First if index_old<index_new-1: Add the whole integrals.
        do j = index_old+1, index_new-1
           ind = 1
-          do i_grid = j - this%spline_degree + 1, j
+          do i_grid = j - self%spline_degree + 1, j
              i_mod = modulo(i_grid, n_cells ) + 1
-             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
-                  this%cell_integrals_1(ind)*wi(1)
+             self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) + &
+                  self%cell_integrals_1(ind)*wi(1)
              vi(2) = vi(2) - &
-                  qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+                  qm*self%cell_integrals_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
              ind = ind + 1
           end do
        end do
        ! Then if index_old>index_new-1: Subtract the whole integrals.
        do j = index_new+1, index_old-1
           ind = 1
-          do i_grid = j - this%spline_degree + 1, j
+          do i_grid = j - self%spline_degree + 1, j
              i_mod = modulo(i_grid, n_cells ) + 1
-             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
-                  this%cell_integrals_1(ind)*wi(1)
-             vi(2) = vi(2) + qm*this%cell_integrals_1(ind)*this%bfield_dofs(i_mod)*this%delta_x
+             self%j_dofs_local(i_mod,1) = self%j_dofs_local(i_mod,1) - &
+                  self%cell_integrals_1(ind)*wi(1)
+             vi(2) = vi(2) + qm*self%cell_integrals_1(ind)*self%bfield_dofs(i_mod)*self%delta_x
              ind = ind + 1
           end do
        end do 
 
-       call this%particle_group%set_v(i_part, vi)
+       call self%particle_group%set_v(i_part, vi)
 
     end do
 
-    this%j_dofs = 0.0_f64
+    self%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, this%j_dofs_local(:,1), &
-         n_cells, MPI_SUM, this%j_dofs(:,1))
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+         n_cells, MPI_SUM, self%j_dofs(:,1))
 
     ! Update the electric field. Also, we still need to scale with 1/Lx
-    this%j_dofs(:,1) = this%j_dofs(:,1)*this%delta_x!/this%Lx
-    call this%maxwell_solver%compute_E_from_j(this%j_dofs(:,1), 1, this%efield_dofs(:,1))
+    self%j_dofs(:,1) = self%j_dofs(:,1)*self%delta_x!/self%Lx
+    call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,1), 1, self%efield_dofs(:,1))
 
 
  end subroutine operatorHp1_pic_vm_1d2v_prim
@@ -384,8 +384,8 @@ contains
   !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old} 
   !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
   !> \partial_t B + \partial_{x_1} E_2 = 0 => B_new = B_old - dt \partial_{x_1} E_2
-  subroutine operatorHE_pic_vm_1d2v(this, dt)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+  subroutine operatorHE_pic_vm_1d2v(self, dt)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -396,23 +396,23 @@ contains
 
 
     
-    qm = this%particle_group%species%q_over_m();
+    qm = self%particle_group%species%q_over_m();
     ! V_new = V_old + dt * E
-    do i_part=1,this%particle_group%n_particles
+    do i_part=1,self%particle_group%n_particles
        ! Evaluate efields at particle position
-       v_new = this%particle_group%get_x(i_part)
-       call this%kernel_smoother_1%evaluate &
-            (v_new(1), this%efield_dofs(:,1), efield(1))
-       call this%kernel_smoother_0%evaluate &
-            (v_new(1), this%efield_dofs(:,2), efield(2))
-       v_new = this%particle_group%get_v(i_part)
+       v_new = self%particle_group%get_x(i_part)
+       call self%kernel_smoother_1%evaluate &
+            (v_new(1), self%efield_dofs(:,1), efield(1))
+       call self%kernel_smoother_0%evaluate &
+            (v_new(1), self%efield_dofs(:,2), efield(2))
+       v_new = self%particle_group%get_v(i_part)
        v_new(1:2) = v_new(1:2) + dt* qm* efield 
-       call this%particle_group%set_v(i_part, v_new)
+       call self%particle_group%set_v(i_part, v_new)
     end do
     
     ! Update bfield
-    call this%maxwell_solver%compute_B_from_E( &
-         dt, this%efield_dofs(:,2), this%bfield_dofs)
+    call self%maxwell_solver%compute_B_from_E( &
+         dt, self%efield_dofs(:,2), self%bfield_dofs)
     
 
   end subroutine operatorHE_pic_vm_1d2v
@@ -424,8 +424,8 @@ contains
   !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old}
   !> \partial_t E_2 = - \partial_{x_1} B -> E_{2,new} = E_{2,old}-dt*\partial_{x_1} B
   !> \partial_t B = 0 -> B_new = B_old
-  subroutine operatorHB_pic_vm_1d2v(this, dt)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+  subroutine operatorHB_pic_vm_1d2v(self, dt)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
 
     !local variables
@@ -435,22 +435,22 @@ contains
 
 
     ! V_new = V_old + dt * (cos(B dt)  sin(B dt) \\ -sin(B dt) cos(B dt)) * V_old
-    do i_part=1,this%particle_group%n_particles       
+    do i_part=1,self%particle_group%n_particles       
        ! Evaluate bfield at particle position (splines of order p)
-       v_old = this%particle_group%get_x(i_part)
-       call this%kernel_smoother_1%evaluate &
-            (v_old(1), this%bfield_dofs, bfield)
-       v_old = this%particle_group%get_v(i_part)
+       v_old = self%particle_group%get_x(i_part)
+       call self%kernel_smoother_1%evaluate &
+            (v_old(1), self%bfield_dofs, bfield)
+       v_old = self%particle_group%get_v(i_part)
        v_new(1) = v_old(1) * cos(bfield*dt) + &
             v_old(2) * sin(bfield*dt)
        v_new(2) = v_old(2) * cos(bfield*dt) - &
             v_old(1) * sin(bfield*dt) 
-       call this%particle_group%set_v(i_part, v_new)
+       call self%particle_group%set_v(i_part, v_new)
     end do
     
     ! Update efield2
-    call this%maxwell_solver%compute_E_from_B(&
-         dt, this%bfield_dofs, this%efield_dofs(:,2))
+    call self%maxwell_solver%compute_E_from_B(&
+         dt, self%bfield_dofs, self%efield_dofs(:,2))
     
 
   end subroutine operatorHB_pic_vm_1d2v
@@ -484,7 +484,7 @@ contains
 
     select type ( splitting )
     type is ( sll_t_hamiltonian_splitting_cef_pic_vm_1d2v )
-       call splitting%initialize(&
+       call splitting%init(&
             maxwell_solver, &
             kernel_smoother_0, &
             kernel_smoother_1, &
@@ -508,8 +508,8 @@ contains
        efield_dofs, &
        bfield_dofs, &
        x_min, &
-       Lx) result(this)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), pointer :: this !< time splitting object 
+       Lx) result(self)
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), pointer :: self !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
@@ -521,9 +521,9 @@ contains
     !local variables
     sll_int32 :: ierr
 
-    SLL_ALLOCATE(this, ierr)
+    SLL_ALLOCATE(self, ierr)
 
-    call this%initialize(&
+    call self%init(&
        maxwell_solver, &
        kernel_smoother_0, &
        kernel_smoother_1, &
@@ -538,7 +538,7 @@ contains
   !---------------------------------------------------------------------------!
   !> Constructor.
   subroutine initialize_pic_vm_1d2v(&
-       this, &
+       self, &
        maxwell_solver, &
        kernel_smoother_0, &
        kernel_smoother_1, &
@@ -547,7 +547,7 @@ contains
        bfield_dofs, &
        x_min, &
        Lx)
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(out) :: this !< time splitting object 
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(out) :: self !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
@@ -560,45 +560,45 @@ contains
     !local variables
     sll_int32 :: ierr
 
-    this%maxwell_solver => maxwell_solver
-    this%kernel_smoother_0 => kernel_smoother_0
-    this%kernel_smoother_1 => kernel_smoother_1
-    this%particle_group => particle_group
-    this%efield_dofs => efield_dofs
-    this%bfield_dofs => bfield_dofs
+    self%maxwell_solver => maxwell_solver
+    self%kernel_smoother_0 => kernel_smoother_0
+    self%kernel_smoother_1 => kernel_smoother_1
+    self%particle_group => particle_group
+    self%efield_dofs => efield_dofs
+    self%bfield_dofs => bfield_dofs
 
     ! Check that n_dofs is the same for both kernel smoothers.
-    SLL_ASSERT( this%kernel_smoother_0%n_dofs == this%kernel_smoother_1%n_dofs )
+    SLL_ASSERT( self%kernel_smoother_0%n_dofs == self%kernel_smoother_1%n_dofs )
 
-    SLL_ALLOCATE(this%j_dofs(this%kernel_smoother_0%n_dofs,2), ierr)
-    SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother_0%n_dofs,2), ierr)
+    SLL_ALLOCATE(self%j_dofs(self%kernel_smoother_0%n_dofs,2), ierr)
+    SLL_ALLOCATE(self%j_dofs_local(self%kernel_smoother_0%n_dofs,2), ierr)
 
-    this%spline_degree = 3
-    this%x_min = x_min
-    this%Lx = Lx
-    this%delta_x = this%Lx/this%kernel_smoother_1%n_dofs
+    self%spline_degree = 3
+    self%x_min = x_min
+    self%Lx = Lx
+    self%delta_x = self%Lx/self%kernel_smoother_1%n_dofs
     
-    this%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
-    this%cell_integrals_1 = this%cell_integrals_1 / 3.0_f64
+    self%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
+    self%cell_integrals_1 = self%cell_integrals_1 / 3.0_f64
 
-    this%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
-    this%cell_integrals_0 = this%cell_integrals_0 / 24.0_f64
+    self%cell_integrals_0 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
+    self%cell_integrals_0 = self%cell_integrals_0 / 24.0_f64
 
   end subroutine initialize_pic_vm_1d2v
 
   !---------------------------------------------------------------------------!
   !> Destructor.
-  subroutine delete_pic_vm_1d2v( this )
-    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: this !< time splitting object 
+  subroutine delete_pic_vm_1d2v( self )
+    class(sll_t_hamiltonian_splitting_cef_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
 
-    deallocate(this%j_dofs)
-    deallocate(this%j_dofs_local)
-    this%maxwell_solver => null()
-    this%kernel_smoother_0 => null()
-    this%kernel_smoother_1 => null()
-    this%particle_group => null()
-    deallocate(this%efield_dofs)
-    deallocate(this%bfield_dofs)
+    deallocate(self%j_dofs)
+    deallocate(self%j_dofs_local)
+    self%maxwell_solver => null()
+    self%kernel_smoother_0 => null()
+    self%kernel_smoother_1 => null()
+    self%particle_group => null()
+    deallocate(self%efield_dofs)
+    deallocate(self%bfield_dofs)
 
   end subroutine delete_pic_vm_1d2v
 

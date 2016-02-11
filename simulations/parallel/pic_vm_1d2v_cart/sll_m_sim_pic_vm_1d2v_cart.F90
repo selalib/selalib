@@ -428,17 +428,17 @@ contains
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
     SLL_ASSERT(storage_size(sim)>0)
 
-    call sim%propagator%delete()
+    call sim%propagator%free()
     deallocate(sim%propagator)
-    call sim%particle_group%delete()
+    call sim%particle_group%free()
     deallocate (sim%particle_group)
     call sim%mesh%delete()
     deallocate(sim%mesh)
     call sim%maxwell_solver%free()
     deallocate(sim%maxwell_solver)
-    call sim%kernel_smoother_0%delete()
+    call sim%kernel_smoother_0%free()
     deallocate(sim%kernel_smoother_0)
-    call sim%kernel_smoother_1%delete()
+    call sim%kernel_smoother_1%free()
     deallocate(sim%kernel_smoother_1)
 
     deallocate(sim%fields_grid)

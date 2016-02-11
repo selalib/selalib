@@ -69,7 +69,7 @@ program test_kernel_smoother_spline_2d
   v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
-  call particle_group%initialize( n_particles, &
+  call particle_group%init( n_particles, &
        n_particles ,1.0_f64, 1.0_f64, 1)
   
   call particle_group%set_common_weight(1.0_f64/real(n_particles,f64))
@@ -85,7 +85,7 @@ program test_kernel_smoother_spline_2d
 
 
   ! Initialize the kernel
-  call kernel%initialize &
+  call kernel%init &
        (domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
   ! Check that the constructors for the abstract type are working.
   !call sll_s_new_kernel_smoother_spline_2d(ksa, domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
@@ -195,8 +195,8 @@ program test_kernel_smoother_spline_2d
      stop
   end if
 
-  call kernel%delete()
-  call particle_group%delete()
+  call kernel%free()
+  call particle_group%free()
 
 
 end program test_kernel_smoother_spline_2d
