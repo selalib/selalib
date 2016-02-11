@@ -16,7 +16,7 @@
 
 &pic_params
         n_particles = 100000
-        init_case = "SLL_INIT_SOBOL"
+        init_case = "SLL_INIT_SOBOL_SYM"
         splitting_case = "SLL_SPLITTING_SYMPLECTIC"     
         spline_degree = 3
 /

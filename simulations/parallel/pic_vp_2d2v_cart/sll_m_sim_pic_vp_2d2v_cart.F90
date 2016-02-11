@@ -1,7 +1,5 @@
 ! Simulation of 2d2v Vlasov-Poisson with simple PIC method, periodic boundary conditions and Landau initial values along x1 only.
 
-! TODO: Can be made more general
-
 module sll_m_sim_pic_vp_2d2v_cart
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

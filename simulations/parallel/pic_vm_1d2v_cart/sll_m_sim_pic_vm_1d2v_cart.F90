@@ -77,10 +77,12 @@ module sll_m_sim_pic_vm_1d2v_cart
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  sll_int32, parameter :: SLL_INIT_RANDOM=0
-  sll_int32, parameter :: SLL_INIT_SOBOL=1
+  sll_int32, parameter :: sll_p_init_random=0
+  sll_int32, parameter :: sll_p_init_sobol=1
+  sll_int32, parameter :: sll_p_init_random_sym=2
+  sll_int32, parameter :: sll_p_init_sobol_sym=3
 
-  sll_int32, parameter :: SLL_SPLITTING_SYMPLECTIC=0
+  sll_int32, parameter :: sll_p_splitting_symplectic=0
 
     type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart
 
@@ -203,16 +205,20 @@ contains
     
     select case(init_case)
     case("SLL_INIT_RANDOM")
-       sim%init_case = SLL_INIT_RANDOM
+       sim%init_case = sll_p_init_random
     case("SLL_INIT_SOBOL")
-       sim%init_case = SLL_INIT_SOBOL
+       sim%init_case = sll_p_init_sobol
+    case("SLL_INIT_RANDOM_SYM")
+       sim%init_case = sll_p_init_random_sym
+    case("SLL_INIT_SOBOL_SYM")
+       sim%init_case = sll_p_init_sobol_sym
     case default
        print*, '#init case ', init_case, ' not implemented.'
     end select
 
     select case(splitting_case)
     case("SLL_SPLITTING_SYMPLECTIC")
-       sim%splitting_case = SLL_SPLITTING_SYMPLECTIC
+       sim%splitting_case = sll_p_splitting_symplectic
     case default
        print*, '#splitting case ', splitting_case, ' not implemented.'
     end select
@@ -262,7 +268,22 @@ contains
          sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
     
 
-    if (sim%init_case == SLL_INIT_RANDOM) then
+    if (sim%init_case == sll_p_init_random) then
+       ! Set the seed for the random initialization
+       call random_seed(size=rnd_seed_size)
+       SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
+       do j=1, rnd_seed_size
+          rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
+       end do
+
+       ! Initialize position and velocity of the particles.
+       ! Random initialization
+       call sll_s_particle_initialize_random_landau_1d2v &
+            (sim%particle_group, sim%landau_param, &
+            sim%domain(1) , &
+            sim%domain(3), &
+            sim%thermal_velocity, rnd_seed)
+    elseif (sim%init_case == sll_p_init_random_sym) then
        ! Set the seed for the random initialization
        call random_seed(size=rnd_seed_size)
        SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
@@ -278,10 +299,15 @@ contains
             sim%domain(1) , &
             sim%domain(3), &
             sim%thermal_velocity, rnd_seed)
-    elseif (sim%init_case == SLL_INIT_SOBOL) then
+    elseif (sim%init_case == sll_p_init_sobol) then
        sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles/8, 8)
        ! Pseudorandom initialization with sobol numbers
-       !sim%thermal_velocity = 0.1_f64
+       call sll_s_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
+            sim%landau_param, sim%domain(1),sim%domain(3), &
+            sim%thermal_velocity, sobol_seed)
+    elseif (sim%init_case == sll_p_init_sobol_sym) then
+       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles/8, 8)
+       ! Pseudorandom initialization with sobol numbers
        !call sll_s_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
        call sll_s_particle_initialize_sobol_landau_symmetric_1d2v(sim%particle_group, &
             sim%landau_param, sim%domain(1),sim%domain(3), &
@@ -293,7 +319,7 @@ contains
     SLL_ALLOCATE(sim%bfield_dofs(sim%n_gcells), ierr)
 
     ! Initialize the time-splitting propagator
-    if (sim%splitting_case == SLL_SPLITTING_SYMPLECTIC) then
+    if (sim%splitting_case == sll_p_splitting_symplectic) then
        call sll_s_new_hamiltonian_splitting_pic_vm_1d2v(&
             sim%propagator, sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
@@ -325,7 +351,6 @@ contains
     ! Bfield = beta*cos(kx): Use b = M{-1}(N_i,beta*cos(kx))
     call sim%maxwell_solver%L2projection( beta_cos_k, sim%degree_smoother-1, &
          sim%bfield_dofs) 
-    !print*, sim%propagator%bfield_dofs
 
     ! End field initialization
 
