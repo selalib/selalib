@@ -266,8 +266,9 @@ contains
     class(sll_t_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it!, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8
+    sll_real32 :: tmp3, tmp4
+    sll_real64 :: tmp5, tmp6
+    sll_real32 :: tmp7, tmp8
     sll_real64 :: ee_val, enst
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
@@ -283,8 +284,9 @@ contains
     !sll_real64 :: pp_vx,  pp_vy
     sll_real64 :: dt!, tfin
     !type(sll_t_time_mark) :: tinit
-    sll_real64 :: temp
-    sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
+    sll_real32 :: temp
+    sll_real32 :: temp1(1:4,1:2)
+    sll_real32 :: temp2(1:4,1:2)
     type(sll_t_particle_2d), dimension(:), pointer :: p
     type(sll_t_particle_2d), dimension(:), allocatable :: ploc
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
@@ -639,8 +641,9 @@ contains
     class(sll_t_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it!, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8
+    sll_real32 :: tmp3, tmp4
+    sll_real64 :: tmp5, tmp6
+    sll_real32 :: tmp7, tmp8
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     !sll_int32  :: ic_x1,ic_y1
@@ -655,8 +658,9 @@ contains
     !sll_real64 :: pp_vx,  pp_vy
     sll_real64 :: dt!, tfin
     type(sll_t_time_mark) :: tinit
-    sll_real64 :: temp
-    sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
+    sll_real32 :: temp
+    sll_real32 :: temp1(1:4,1:2)
+    sll_real32 :: temp2(1:4,1:2)
     type(sll_t_particle_2d), dimension(:), pointer :: p
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
     type(sll_t_field_accumulator_cs), dimension(:), pointer :: accumE_CS
