@@ -25,18 +25,18 @@ sll_real64, dimension(:), allocatable :: avals,rhs
 
 call sll_s_boot_collective()
 
-A = 0
-A(1,1) = 2; A(1,2) = -1.0
+A = 0.0_f64
+A(1,1) = 2.0_f64; A(1,2) = -1.0_f64
 do i = 2, NPTS-1
-   A(i,i) =  2
-   A(i,i-1) = -1
-   A(i,i+1) = -1
+   A(i,i  ) =  2.0_f64
+   A(i,i-1) = -1.0_f64
+   A(i,i+1) = -1.0_f64
 end do
-A(NPTS,NPTS) = 2
-A(NPTS,NPTS-1) = -1
+A(NPTS,NPTS) = 2.0_f64
+A(NPTS,NPTS-1) = -1.0_f64
 
 do i = 1, NPTS
-   B(i) = i-1
+   B(i) = i-1.0_f64
 end do
 
 do i = 1, NPTS
@@ -60,7 +60,7 @@ KL = 1
 KU = 1
 LDAB=2*KL+KU+1
 allocate(AB(ldab,NPTS))
-AB = 0.0
+AB = 0.0_f64
 do j = 1, NPTS
 do i = max(1,j-KU), min(NPTS,j+KL)
    AB(KL+KU+1+i-j,j) = A(i,j) 
@@ -80,7 +80,7 @@ KD = 1
 LDAB=KD+1
 deallocate(AB)
 allocate(AB(ldab,NPTS))
-AB = 0.0
+AB = 0.0_f64
 do j = 1, NPTS
 do i = max(1,j-KD), j
    AB(KD+1+i-j,j) = A(i,j) 
@@ -118,19 +118,19 @@ do i = 1, n
    ! /*       j++; */
    ! /*     } */
    ja(j)    = i
-   avals(j) = 2
+   avals(j) = 2.0_f64
    j=j+1
    if (i /= n) then
       ja(j)    = i+1
-      avals(j) = -1.
+      avals(j) = -1.0_f64
       j=j + 1
    end if
 
-   rhs(i) = 0
+   rhs(i) = 0.0_f64
 end do
 ia(n+1) = j
-rhs(1)  = 1
-rhs(n)  = 1
+rhs(1)  = 1.0_f64
+rhs(n)  = 1.0_f64
 
 call initialize(linear_solver,n,nnzeros)
 

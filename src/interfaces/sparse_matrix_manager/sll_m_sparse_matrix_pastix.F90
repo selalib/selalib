@@ -31,7 +31,6 @@ module sll_m_sparse_matrix
     sll_f_new_csr_matrix, &
     sll_f_new_csr_matrix_with_constraint, &
     sll_s_csr_add_one_constraint, &
-    sll_s_csr_todense, &
     sll_s_delete_csr_matrix, &
     sll_s_initialize_csr_matrix, &
     sll_s_initialize_csr_matrix_with_constraint, &
@@ -72,8 +71,6 @@ contains
 subroutine sll_s_delete_csr_matrix(csr_mat)
 
   type(sll_t_csr_matrix), pointer :: csr_mat
-
-  sll_int32                     :: ierr
 
   nullify(csr_mat)
     
@@ -156,7 +153,6 @@ subroutine sll_s_initialize_csr_matrix(  mat,                 &
   sll_int32,                 intent(in)    :: num_local_dof_col
 
   !local variables
-  sll_int32 :: err, flag
   sll_int32 :: num_nz
   sll_int32, dimension(:,:), pointer :: lpi_columns
   sll_int32, dimension(:), pointer :: lpi_occ
@@ -216,7 +212,6 @@ subroutine sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
   type(sll_t_csr_matrix), intent(inout) :: mat
   type(sll_t_csr_matrix), intent(in) :: mat_a
-  sll_int32 :: ierr
 
   !print*,' COUNTING NON ZERO ELEMENTS'
   mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
@@ -333,7 +328,6 @@ end subroutine sll_s_csr_add_one_constraint
 
 subroutine sll_s_factorize_csr_matrix(mat)
   type(sll_t_csr_matrix), intent(inout) :: mat
-  sll_int32 :: ierr
   
   call factorize(mat%linear_solver)
   
@@ -391,7 +385,6 @@ subroutine set_values_csr_matrix(mat, val)
   type(sll_t_csr_matrix) :: mat
   sll_real64, dimension(:), intent(in) :: val
   !local variables
-  sll_int32 :: i
   
   if(size(val)<mat%num_nz)then
     print *,'#Problem of size of val',size(val),mat%num_nz
@@ -433,8 +426,6 @@ end subroutine sll_s_solve_csr_matrix
         integer, dimension(:), pointer :: api_occ
         !local var
         integer :: e, b_1, A_1, b_2, A_2, i
-        integer :: err, flag
-        real(f64), dimension(:), pointer :: lpr_tmp
         integer :: result
         integer, dimension(2) :: lpi_size
         logical :: ll_done
@@ -518,7 +509,6 @@ end subroutine sll_s_solve_csr_matrix
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
-        type(sll_t_csr_matrix) :: self
         integer, dimension(:,:), intent(in) :: api_LM_1
         integer, dimension(:,:), intent(in) :: api_LM_2
         integer :: ai_nel, ai_nen_1, ai_nen_2
@@ -528,7 +518,7 @@ end subroutine sll_s_solve_csr_matrix
         integer, dimension(:), intent(out) :: col_ind
         integer, intent(in) :: num_rows
         !local var
-        integer :: e, b_1, A_1, b_2, A_2, index, i, size
+        integer :: e, b_1, A_1, i, size
         integer :: err, flag
         integer, dimension(:), pointer :: lpr_tmp
 
@@ -561,9 +551,9 @@ end subroutine sll_s_solve_csr_matrix
                 allocate ( lpr_tmp(size), stat = err)
                 if (err .ne. 0) flag = 10
 
-                lpr_tmp(1: size) = real( api_columns(A_1, 1: size))
+                lpr_tmp(1: size) = api_columns(A_1, 1: size)
 
-                call QsortC(lpr_tmp)
+                call sll_s_qsortc(lpr_tmp)
 
                 do i = 1, size
 
