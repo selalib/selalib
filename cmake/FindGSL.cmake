@@ -30,3 +30,32 @@ include (FindPackageHandleStandardArgs)
 find_package_handle_standard_args (GSL DEFAULT_MSG GSL_LIBRARIES GSL_INCLUDES)
 
 mark_as_advanced (GSL_LIB GSL_CBLAS_LIB GSL_INCLUDES)
+
+if (GSL_FOUND)
+
+  find_path (FGSL_INCLUDES fgsl.mod PATH_SUFFIXES fgsl )
+  SET (FGSL_INCLUDES "${FGSL_INCLUDES}/fgsl")
+  
+  find_library (FGSL_LIB NAMES fgsl)
+  
+  set (FGSL_LIBRARIES "${FGSL_LIB}" "${GSL_LIBRARIES}")
+  
+  include (FindPackageHandleStandardArgs)
+  find_package_handle_standard_args (FGSL DEFAULT_MSG FGSL_LIBRARIES FGSL_INCLUDES)
+  
+  mark_as_advanced (FGSL_LIB FGSL_INCLUDES)
+
+endif (GSL_FOUND)
+
+if (not FGSL_FOUND)
+
+INCLUDE(ExternalProject)
+EXTERNALPROJECT_ADD( fgsl
+   URL  http://www.lrz.de/services/software/mathematik/gsl/fortran/download/fgsl-1.0.0.tar.gz
+   SOURCE_DIR ${CMAKE_BINARY_DIR}/fgsl
+   BINARY_DIR ${CMAKE_BINARY_DIR}/fgsl
+   CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/fgsl/configure --prefix=${CMAKE_BINARY_DIR} 
+   BUILD_COMMAND ${MAKE}
+)
+
+endif (not FGSL_FOUND)
