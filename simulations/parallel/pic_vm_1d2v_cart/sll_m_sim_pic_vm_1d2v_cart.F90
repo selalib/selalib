@@ -28,10 +28,6 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_hamiltonian_splitting_base, only: &
     sll_c_hamiltonian_splitting_base
 
-  use sll_m_hamiltonian_splitting_cef_pic_vm_1d2v, only: &
-    sll_s_new_hamiltonian_splitting_cef_pic_vm_1d2v, &
-    sll_t_hamiltonian_splitting_cef_pic_vm_1d2v
-
   use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
     sll_s_new_hamiltonian_splitting_pic_vm_1d2v, &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
@@ -85,7 +81,6 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: SLL_INIT_SOBOL=1
 
   sll_int32, parameter :: SLL_SPLITTING_SYMPLECTIC=0
-  sll_int32, parameter :: SLL_SPLITTING_CEF=1
 
     type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart
 
@@ -216,8 +211,6 @@ contains
     end select
 
     select case(splitting_case)
-    case("SLL_SPLITTING_CEF")
-       sim%splitting_case = SLL_SPLITTING_CEF
     case("SLL_SPLITTING_SYMPLECTIC")
        sim%splitting_case = SLL_SPLITTING_SYMPLECTIC
     case default
@@ -302,12 +295,6 @@ contains
     ! Initialize the time-splitting propagator
     if (sim%splitting_case == SLL_SPLITTING_SYMPLECTIC) then
        call sll_s_new_hamiltonian_splitting_pic_vm_1d2v(&
-            sim%propagator, sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3))
-    elseif (sim%splitting_case == SLL_SPLITTING_CEF) then
-       call sll_s_new_hamiltonian_splitting_cef_pic_vm_1d2v(&
             sim%propagator, sim%maxwell_solver, &
             sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
             sim%efield_dofs, sim%bfield_dofs, &
