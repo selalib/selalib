@@ -120,7 +120,7 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
     procedure :: &
          compute_rhs_from_function => compute_rhs_from_function_2d_mudpack_curvilinear
     !> Destructor
-    procedure :: delete => delete_2d_mudpack_curvilinear_solver
+    procedure :: free => delete_2d_mudpack_curvilinear_solver
 
   end type poisson_2d_mudpack_curvilinear_old
 
