@@ -69,7 +69,6 @@ type :: sll_t_csr_matrix
 #ifdef UMFPACK
   sll_int32,  dimension(:), pointer :: Ai
   sll_int32,  dimension(:), pointer :: Ap
-
   integer(umf_void)                 :: umf_symbolic
   integer(umf_void)                 :: umf_numeric
   sll_real64, dimension(:), pointer :: umf_control
@@ -131,10 +130,11 @@ sll_int32 :: ierr
 
 SLL_ALLOCATE(mat, ierr)
 
+mat%solver = 0
 if (present(solver)) then
+#ifdef UMFPACK
   mat%solver = solver
-else
-  mat%solver = 0
+#endif /* UMFPACK */
 endif
 
 call sll_s_initialize_csr_matrix( &
@@ -147,9 +147,7 @@ call sll_s_initialize_csr_matrix( &
   local_to_global_col,            &
   num_local_dof_col)
 
-    
 end function sll_f_new_csr_matrix
-
 
 !> @brief initialization of CSR matrix type
 !> thanks to the global index of each local dof of each element
@@ -186,7 +184,7 @@ sll_int32                                :: num_nz
 sll_int32                                :: ierr
 sll_int32,  dimension(:,:), allocatable  :: lpi_col
 sll_int32,  dimension(:),   allocatable  :: lpi_occ
-sll_int32                                :: COEF
+sll_int32                                :: coef
 sll_int32                                :: elt
 sll_int32                                :: ii
 sll_int32                                :: jj
@@ -200,9 +198,9 @@ logical                                  :: ll_done
 print *,'#sll_s_initialize_csr_matrix'
 #endif
 
-COEF = 6
+coef = 6
 
-SLL_ALLOCATE(lpi_col(num_rows, 0:COEF*num_local_dof_col),ierr)
+SLL_ALLOCATE(lpi_col(num_rows, 0:coef*num_local_dof_col),ierr)
 SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 
 lpi_col(:,:) = 0
@@ -289,7 +287,6 @@ SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
 end subroutine sll_s_initialize_csr_matrix
 
-  
 subroutine sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
 type(sll_t_csr_matrix), intent(inout) :: mat
@@ -306,6 +303,8 @@ print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols
 SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
 SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
 SLL_CLEAR_ALLOCATE(mat%val(1:mat%num_nz),ierr)
+
+mat%solver = mat_a%solver
 
 #ifdef UMFPACK
 if (mat%solver == sll_p_umfpack) then
@@ -432,7 +431,6 @@ if (mat%solver == sll_p_umfpack) then
     stop
   endif
 
-
 end if
 
 #else /* UMFPACK */
@@ -441,13 +439,11 @@ SLL_ASSERT(associated(mat%val))
  
 #endif /* UMFPACK */
 
-
 end subroutine sll_s_factorize_csr_matrix
-
   
 subroutine sll_s_mult_csr_matrix_vector(mat, input, output)
     
-type(sll_t_csr_matrix),     intent(in)  :: mat
+type(sll_t_csr_matrix),   intent(in)  :: mat
 sll_real64, dimension(:), intent(in)  :: input
 sll_real64, dimension(:), intent(out) :: output
 
@@ -484,11 +480,11 @@ end do
 
 end subroutine sll_s_add_to_csr_matrix
   
-subroutine sll_s_solve_csr_matrix(mat, B, U)
+subroutine sll_s_solve_csr_matrix(mat, b, u)
 
 type(sll_t_csr_matrix),   intent(in)    :: mat
-sll_real64, dimension(:), intent(inout) :: B
-sll_real64, dimension(:), intent(out)   :: U
+sll_real64, dimension(:), intent(inout) :: b
+sll_real64, dimension(:), intent(out)   :: u
 
 #ifdef UMFPACK
 
@@ -515,9 +511,12 @@ sll_int32  :: err
 
 if (mat%solver == sll_p_umfpack) then
 
+#ifdef DEBUG
+print*, '#solve with umfpack'
+#endif /* DEBUG */
 #ifdef UMFPACK
-sys = 0
-call umf4sol(sys,U,B,mat%umf_numeric,mat%umf_control,info)
+  sys = 0
+  call umf4sol(sys,U,B,mat%umf_numeric,mat%umf_control,info)
 #endif /* UMFPACK */
 
 else
@@ -526,7 +525,7 @@ else
   maxIter = 10000
   
   if ( mat%num_rows /= mat%num_cols ) then
-    PRINT*,'#ERROR Gradient_conj: The matrix must be square'
+    print*,'#ERROR Gradient_conj: The matrix must be square'
     stop
   end if
   

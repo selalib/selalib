@@ -82,7 +82,8 @@ module sll_m_general_coordinate_elliptic_solver
     sll_o_delete, &
     sll_s_factorize_csr_matrix, &
     sll_s_mult_csr_matrix_vector, &
-    sll_s_solve_csr_matrix
+    sll_s_solve_csr_matrix, &
+    sll_p_umfpack
 
 #ifdef _OPENMP
 use omp_lib
@@ -505,13 +506,14 @@ call initialize_knots( spline_degree2, &
 &                      es%knots2 )
 
   
-es%csr_mat => sll_f_new_csr_matrix( solution_size,              &
+es%csr_mat => sll_f_new_csr_matrix( solution_size,        &
 &                             solution_size,              &
 &                             num_cells1*num_cells2,      &
 &                             es%local_to_global_indices, &
 &                             es%total_num_splines_loc,   &
 &                             es%local_to_global_indices, &
-&                             es%total_num_splines_loc)
+&                             es%total_num_splines_loc,   &
+&                             sll_p_umfpack)
 
 es%knots1_rho(1:spline_degree1+1) = eta1_min
 es%knots1_rho(num_cells1+2:num_cells1+1+spline_degree1+1) = eta1_max
@@ -1394,9 +1396,10 @@ print *,'#begin of sll_s_factorize_csr_matrix'
 
 if (es%perper) then
 
- es%csr_mat_with_constraint => sll_f_new_csr_matrix_with_constraint(es%csr_mat)  
+ es%csr_mat_with_constraint => &
+   sll_f_new_csr_matrix_with_constraint(es%csr_mat)  
 
- call sll_s_csr_add_one_constraint( es%csr_mat%row_ptr,                 &  
+ call sll_s_csr_add_one_constraint( es%csr_mat%row_ptr,           &  
                               es%csr_mat%col_ind,                 &
                               es%csr_mat%val,                     &
                               es%csr_mat%num_rows,                &
@@ -3062,16 +3065,14 @@ es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 
-
-
-  
-es%csr_mat => sll_f_new_csr_matrix( solution_size,              &
+es%csr_mat => sll_f_new_csr_matrix( solution_size,        &
 &                             solution_size,              &
 &                             num_cells1*num_cells2,      &
 &                             es%local_to_global_indices, &
 &                             es%total_num_splines_loc,   &
 &                             es%local_to_global_indices, &
-&                             es%total_num_splines_loc)
+&                             es%total_num_splines_loc,   &
+&                             sll_p_umfpack)
 
 if(es%precompute_rhs)then
 es%csr_mat_source => sll_f_new_csr_matrix( &
@@ -3086,8 +3087,6 @@ endif
  
 print *,'#sll_f_new_csr_matrix done'
 flush( output_unit )
-
-    
 
 ! allocation of the table containing 
 ! all values of splines and its
