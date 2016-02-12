@@ -19,35 +19,42 @@
 !> @brief Sparse matrix linear solver utilities
 !> @details This part of selalib is derived from SPM library
 !> developed by Ahmed Ratnani (http://ratnani.org/spm_doc/html/)
+!>
+!> Michel Mehrenberger did the implementation of UMFPACK option 
+!>
 module sll_m_sparse_matrix
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_m_qsort_partition, only : &
-    sll_s_qsortc
+use sll_m_qsort_partition, only : sll_s_qsortc
 
+#ifdef UMFPACK
+  use sll_m_umfpack
+  use iso_fortran_env, only: output_unit
+#endif /* UMFPACK */
 
-  implicit none
+implicit none
 
-  public :: &
-    sll_f_new_csr_matrix, &
-    sll_f_new_csr_matrix_with_constraint, &
-    sll_s_csr_add_one_constraint, &
-    sll_s_csr_todense, &
-    sll_s_delete_csr_matrix, &
-    sll_s_initialize_csr_matrix, &
-    sll_s_initialize_csr_matrix_with_constraint, &
-    sll_s_add_to_csr_matrix, &
-    sll_t_csr_matrix, &
-    sll_s_factorize_csr_matrix, &
-    sll_s_mult_csr_matrix_vector, &
-    sll_s_solve_csr_matrix, &
-    sll_s_solve_csr_matrix_perper, &
-    sll_o_delete
+public :: &
+  sll_f_new_csr_matrix, &
+  sll_f_new_csr_matrix_with_constraint, &
+  sll_s_csr_add_one_constraint, &
+  sll_s_csr_todense, &
+  sll_s_delete_csr_matrix, &
+  !sll_s_initialize_csr_matrix, &
+  sll_s_initialize_csr_matrix_with_constraint, &
+  sll_s_add_to_csr_matrix, &
+  sll_t_csr_matrix, &
+  sll_s_factorize_csr_matrix, &
+  sll_s_mult_csr_matrix_vector, &
+  sll_s_solve_csr_matrix, &
+  sll_s_solve_csr_matrix_perper, &
+  sll_p_umfpack,                 &
+  sll_o_delete
 
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !> @brief type for CSR format
 type :: sll_t_csr_matrix
@@ -57,7 +64,21 @@ type :: sll_t_csr_matrix
   sll_int32,  pointer :: row_ptr(:)
   sll_int32,  pointer :: col_ind(:)
   sll_real64, pointer :: val(:)
+  sll_int32           :: solver = 0
+
+#ifdef UMFPACK
+  sll_int32,  dimension(:), pointer :: Ai
+  sll_int32,  dimension(:), pointer :: Ap
+
+  integer(umf_void)                 :: umf_symbolic
+  integer(umf_void)                 :: umf_numeric
+  sll_real64, dimension(:), pointer :: umf_control
+#endif /* UMFPACK */
+
 end type sll_t_csr_matrix
+
+sll_int32, parameter :: sll_p_umfpack = 1
+
 
 interface sll_o_delete
   module procedure sll_s_delete_csr_matrix
@@ -87,16 +108,16 @@ end subroutine sll_s_delete_csr_matrix
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
 !> @returns a pointer to the newly allocated object.
 function sll_f_new_csr_matrix( &
-  num_rows,              &
-  num_cols,              &
-  num_elements,          &
-  local_to_global_row,   &
-  num_local_dof_row,     &
-  local_to_global_col,   &
-  num_local_dof_col)     &
-  result(mat)
+        num_rows,              &
+        num_cols,              &
+        num_elements,          &
+        local_to_global_row,   &
+        num_local_dof_row,     &
+        local_to_global_col,   &
+        num_local_dof_col,     &
+        solver                 ) result(mat)
 
-type(sll_t_csr_matrix), pointer            :: mat
+type(sll_t_csr_matrix), pointer          :: mat
 sll_int32,                    intent(in) :: num_rows
 sll_int32,                    intent(in) :: num_cols
 sll_int32,                    intent(in) :: num_elements
@@ -104,22 +125,31 @@ sll_int32, dimension(:,:),    intent(in) :: local_to_global_row
 sll_int32, dimension(:,:),    intent(in) :: local_to_global_col
 sll_int32,                    intent(in) :: num_local_dof_row
 sll_int32,                    intent(in) :: num_local_dof_col
+sll_int32,                    optional   :: solver
 
 sll_int32 :: ierr
 
 SLL_ALLOCATE(mat, ierr)
 
+if (present(solver)) then
+  mat%solver = solver
+else
+  mat%solver = 0
+endif
+
 call sll_s_initialize_csr_matrix( &
-  mat,                      &
-  num_rows,                 &
-  num_cols,                 &
-  num_elements,             &
-  local_to_global_row,      &
-  num_local_dof_row,        &
-  local_to_global_col,      &
+  mat,                            &
+  num_rows,                       &
+  num_cols,                       &
+  num_elements,                   &
+  local_to_global_row,            &
+  num_local_dof_row,              &
+  local_to_global_col,            &
   num_local_dof_col)
+
     
 end function sll_f_new_csr_matrix
+
 
 !> @brief initialization of CSR matrix type
 !> thanks to the global index of each local dof of each element
@@ -134,14 +164,14 @@ end function sll_f_new_csr_matrix
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
 
-subroutine sll_s_initialize_csr_matrix( mat,                            &
-                                  num_rows,                       &
-                                  num_cols,                       &
-                                  num_elements,                   &
-                                  local_to_global_row,            &
-                                  num_local_dof_row,              &
-                                  local_to_global_col,            & 
-                                  num_local_dof_col)
+subroutine sll_s_initialize_csr_matrix( mat,                 &
+                                        num_rows,            &
+                                        num_cols,            &
+                                        num_elements,        &
+                                        local_to_global_row, &
+                                        num_local_dof_row,   &
+                                        local_to_global_col, & 
+                                        num_local_dof_col)
 
 type(sll_t_csr_matrix),    intent(inout) :: mat
 sll_int32,                 intent(in)    :: num_rows
@@ -163,13 +193,13 @@ sll_int32                                :: jj
 sll_int32                                :: row
 sll_int32                                :: col
 sll_int32                                :: i
-!sll_int32                                :: flag
 sll_int32                                :: sz
-!sll_int32                                :: result
-!sll_int32                                :: lpi_size(2)
 logical                                  :: ll_done
 
+#ifdef DEBUG
 print *,'#sll_s_initialize_csr_matrix'
+#endif
+
 COEF = 6
 
 SLL_ALLOCATE(lpi_col(num_rows, 0:COEF*num_local_dof_col),ierr)
@@ -205,14 +235,17 @@ do elt = 1, num_elements  !Loop over cells
 end do
 
 ! COUNT NON ZERO ELEMENTS
-num_nz = SUM(lpi_occ(1:num_rows))
+num_nz = sum(lpi_occ(1:num_rows))
 
 mat%num_rows = num_rows
 mat%num_cols = num_cols
 mat%num_nz   = num_nz   
 
+#ifdef DEBUG
 print *,'#num_rows=',num_rows
+print *,'#num_cols=',num_cols
 print *,'#num_nz=',num_nz
+#endif
 
 SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
 SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
@@ -240,12 +273,23 @@ do elt = 1, num_elements
   end do
 end do
 
+#ifdef UMFPACK
+if (mat%solver == sll_p_umfpack) then
+  SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+  SLL_ALLOCATE(mat%Ai(num_nz),ierr)
+  SLL_ALLOCATE(mat%Ap(num_rows+1),ierr)
+  
+  call umf4def(mat%umf_control)  ! get the default configuration
+end if
+#endif /* UMFPACK */
+
 mat%val(:) = 0.0_f64
 SLL_DEALLOCATE_ARRAY(lpi_col,ierr)
 SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
 end subroutine sll_s_initialize_csr_matrix
 
+  
 subroutine sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
 type(sll_t_csr_matrix), intent(inout) :: mat
@@ -263,6 +307,15 @@ SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
 SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
 SLL_CLEAR_ALLOCATE(mat%val(1:mat%num_nz),ierr)
 
+#ifdef UMFPACK
+if (mat%solver == sll_p_umfpack) then
+  SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+  SLL_ALLOCATE(mat%Ai(mat%num_nz),ierr)
+  SLL_ALLOCATE(mat%Ap(mat%num_rows+1),ierr)
+  call umf4def(mat%umf_control)  
+end if
+#endif /* UMFPACK */
+
 end subroutine sll_s_initialize_csr_matrix_with_constraint
 
 function sll_f_new_csr_matrix_with_constraint(mat_a) result(mat)
@@ -275,15 +328,6 @@ SLL_ALLOCATE(mat, ierr)
 call sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
 end function sll_f_new_csr_matrix_with_constraint
-
-subroutine sll_s_factorize_csr_matrix(mat)
-
-type(sll_t_csr_matrix), intent(inout) :: mat
-
-print *,'#sll_s_factorize_csr_matrix does nothing here'
-SLL_ASSERT(associated(mat%val))
-
-end subroutine sll_s_factorize_csr_matrix
 
 subroutine sll_s_csr_add_one_constraint( ia_in,          &
                                          ja_in,          &
@@ -345,6 +389,61 @@ ia_out(num_rows_in+2) = s
 SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out+1)
   
 end subroutine sll_s_csr_add_one_constraint
+
+subroutine sll_s_factorize_csr_matrix(mat)
+
+type(sll_t_csr_matrix), intent(inout) :: mat
+
+#ifdef UMFPACK
+
+sll_real64, dimension(umfpack_info) :: info
+  
+if (mat%solver == sll_p_umfpack) then
+
+  mat%Ap = mat%row_ptr(:) - 1
+  mat%Ai = mat%col_ind(:) - 1
+  
+  ! pre-order and symbolic analysis
+  call umf4sym( mat%num_rows,     &
+                mat%num_cols,     &
+                mat%Ap,           &
+                mat%Ai,           &
+                mat%val,          &
+                mat%umf_symbolic, &
+                mat%umf_control,  &
+                info)
+  
+  if (info(1) .lt. 0) then
+    print *, '#Error occurred in umf4sym: ', info(1)
+    stop
+  endif
+  
+  ! numeric factorization
+  call umf4num( mat%Ap,           &
+                mat%Ai,           &
+                mat%val,          &
+                mat%umf_symbolic, &
+                mat%umf_numeric,  &
+                mat%umf_control,  &
+                info)
+      
+  if (info(1) .lt. 0) then
+    print *, '#Error occurred in umf4num: ', info(1)
+    stop
+  endif
+
+
+end if
+
+#else /* UMFPACK */
+
+SLL_ASSERT(associated(mat%val))
+ 
+#endif /* UMFPACK */
+
+
+end subroutine sll_s_factorize_csr_matrix
+
   
 subroutine sll_s_mult_csr_matrix_vector(mat, input, output)
     
@@ -391,6 +490,13 @@ type(sll_t_csr_matrix),   intent(in)    :: mat
 sll_real64, dimension(:), intent(inout) :: B
 sll_real64, dimension(:), intent(out)   :: U
 
+#ifdef UMFPACK
+
+sll_int32  :: sys
+sll_real64, dimension(umfpack_info) :: info
+
+#endif
+
 sll_int32  :: maxIter
 sll_real64 :: eps
 
@@ -407,97 +513,113 @@ sll_real64 :: alpha
 sll_int32  :: iter
 sll_int32  :: err
 
-eps = 1.d-13
-maxIter = 10000
+if (mat%solver == sll_p_umfpack) then
 
-if ( mat%num_rows /= mat%num_cols ) then
-  PRINT*,'#ERROR Gradient_conj: The matrix must be square'
-  stop
-end if
+#ifdef UMFPACK
+sys = 0
+call umf4sol(sys,U,B,mat%umf_numeric,mat%umf_control,info)
+#endif /* UMFPACK */
 
-if ((abs(maxval(B)) < eps) .AND. (abs(minval(B)) < eps)) then
-  U = 0.0_8
-  return
-end if
+else
 
-SLL_ALLOCATE(Ad(mat%num_rows),err)
-SLL_ALLOCATE(d(mat%num_rows),err)
-
-U   = 0.0_8
-iter = 0
-
-NormInfb = maxval(abs(B))
-Norm2r0  = dot_product(B,B)
-
-d = B
-
-do iter = 1, maxiter
-  !--------------------------------------!
-  ! calcul du ak parametre optimal local !
-  !--------------------------------------!
-
-  call sll_s_mult_csr_matrix_vector( mat , d , Ad )
-
-  ps = dot_product( Ad , d )
-  alpha = Norm2r0 / ps
-          
-  !==================================================!
-  ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-  !==================================================!
-  ! calcul des composantes residuelles
-  !-----------------------------------
-  B = B - alpha * Ad
-         
-  !----------------------------------------!
-  ! approximations ponctuelles au rang k+1 !
-  !----------------------------------------!
-  U = U + alpha * d
-          
-  !-------------------------------------------------------!
-  ! (a) extraction de la norme infinie du residu          !
-  !     pour le test d'arret                              !
-  ! (b) extraction de la norme euclidienne du residu rk+1 !
-  !-------------------------------------------------------!
-  NormInfr = maxval(abs(B))
-  Norm2r1  = dot_product(B,B)
-
-  !==================================================!
-  ! calcul de la nouvelle direction de descente dk+1 !
-  !==================================================!
-  beta    = Norm2r1 / Norm2r0
-  Norm2r0 = Norm2r1
-  d      = B + beta * d
-         
-  !-------------------!
-  ! boucle suivante ? !
-  !-------------------!
-  if ( NormInfr / NormInfb < eps ) exit
-          
-end do
-
-if ( iter == maxIter ) then
-  print*,'Warning Gradient_conj : iter == maxIter'
-  print*,'Error after CG =',( NormInfr / NormInfb )
-end if
+  eps = 1.d-13
+  maxIter = 10000
   
-deallocate(Ad)
-deallocate(d)
+  if ( mat%num_rows /= mat%num_cols ) then
+    PRINT*,'#ERROR Gradient_conj: The matrix must be square'
+    stop
+  end if
+  
+  if ((abs(maxval(B)) < eps) .AND. (abs(minval(B)) < eps)) then
+    U = 0.0_8
+    return
+  end if
+  
+  SLL_ALLOCATE(Ad(mat%num_rows),err)
+  SLL_ALLOCATE(d(mat%num_rows),err)
+  
+  U   = 0.0_8
+  iter = 0
+  
+  NormInfb = maxval(abs(B))
+  Norm2r0  = dot_product(B,B)
+  
+  d = B
+  
+  do iter = 1, maxiter
+    !--------------------------------------!
+    ! calcul du ak parametre optimal local !
+    !--------------------------------------!
+  
+    call sll_s_mult_csr_matrix_vector( mat , d , Ad )
+  
+    ps = dot_product( Ad , d )
+    alpha = Norm2r0 / ps
+            
+    !==================================================!
+    ! calcul de l'approximation Xk+1 et du residu Rk+1 !
+    !==================================================!
+    ! calcul des composantes residuelles
+    !-----------------------------------
+    B = B - alpha * Ad
+           
+    !----------------------------------------!
+    ! approximations ponctuelles au rang k+1 !
+    !----------------------------------------!
+    U = U + alpha * d
+            
+    !-------------------------------------------------------!
+    ! (a) extraction de la norme infinie du residu          !
+    !     pour le test d'arret                              !
+    ! (b) extraction de la norme euclidienne du residu rk+1 !
+    !-------------------------------------------------------!
+    NormInfr = maxval(abs(B))
+    Norm2r1  = dot_product(B,B)
+  
+    !==================================================!
+    ! calcul de la nouvelle direction de descente dk+1 !
+    !==================================================!
+    beta    = Norm2r1 / Norm2r0
+    Norm2r0 = Norm2r1
+    d      = B + beta * d
+           
+    !-------------------!
+    ! boucle suivante ? !
+    !-------------------!
+    if ( NormInfr / NormInfb < eps ) exit
+            
+  end do
+  
+  if ( iter == maxIter ) then
+    print*,'Warning Gradient_conj : iter == maxIter'
+    print*,'Error after CG =',( NormInfr / NormInfb )
+  end if
+    
+  deallocate(Ad)
+  deallocate(d)
+
+endif 
 
 end subroutine sll_s_solve_csr_matrix
 
-subroutine sll_s_solve_csr_matrix_perper ( this, B,U,Masse_tot )
+subroutine sll_s_solve_csr_matrix_perper ( mat, B,U,Masse_tot )
 
-type(sll_t_csr_matrix) :: this
-sll_real64, dimension(:) :: U
-sll_real64, dimension(:) :: B
-sll_int32  :: maxIter
-sll_real64 :: eps
+type(sll_t_csr_matrix)            :: mat
+sll_real64, dimension(:)          :: U
+sll_real64, dimension(:)          :: B
+sll_real64, dimension(:), pointer :: Masse_tot
+
+#ifdef UMFPACK
+
+sll_real64, dimension(umfpack_info) :: info
+sll_int32  :: sys
+
+#endif /* UMFPACK */
 
 sll_real64, dimension(:), pointer :: Ad
 sll_real64, dimension(:), pointer :: r
 sll_real64, dimension(:), pointer :: d
 sll_real64, dimension(:), pointer :: Ux,one
-sll_real64, dimension(:), pointer :: Masse_tot
 sll_real64 :: Norm2r1
 sll_real64 :: Norm2r0
 sll_real64 :: NormInfb
@@ -507,113 +629,125 @@ sll_real64 :: beta
 sll_real64 :: alpha
 sll_int32  :: iter
 sll_int32  :: err
-!sll_int32  :: flag
 logical    :: ll_continue
+sll_int32  :: maxIter
+sll_real64 :: eps
 
-maxIter = 100000
-eps = 1.d-13
+if (mat%solver == sll_p_umfpack) then
 
-if ( this%num_rows /= this%num_cols ) then
-  PRINT*,'ERROR Gradient_conj: The matrix must be square'
-  stop
-end if
+#ifdef UMFPACK
+  sys = 0
+  call umf4sol(sys,U,B,mat%umf_numeric,mat%umf_control,info)
+#endif /* UMFPACK */
 
-if ((abs(maxval(B)) < eps ) .AND. (abs(MINVAL(B)) < eps )) then
-  U = 0.0_8
-  return
-end if
+else
 
-SLL_ALLOCATE(Ad(this%num_rows),err)
-SLL_ALLOCATE(r(this%num_rows),err)
-SLL_ALLOCATE(d(this%num_rows),err)
-SLL_ALLOCATE(Ux(this%num_rows),err)
-SLL_ALLOCATE(one(this%num_rows),err)
-
-U(:)  = 0.0_8
-one(:) = 1.0_f64
-Ux(:) = U(:)
-iter = 0
-call sll_s_mult_csr_matrix_vector( this , Ux , Ad )
-Ad = Ad - dot_product(Masse_tot, Ux)
-r       = B - Ad
-Norm2r0  = DOT_PRODUCT( r , r )
-NormInfb = maxval( abs( B ) )
-
-d = r
-
-ll_continue=.true.
-do while(ll_continue)
-  iter = iter + 1
-  !--------------------------------------!
-  ! calcul du ak parametre optimal local !
-  !--------------------------------------!
-
-  call sll_s_mult_csr_matrix_vector( this , d , Ad )
-        
-  Ad = Ad - dot_product(Masse_tot, d)
-  ps = dot_product( Ad , d )
-  alpha = Norm2r0 / ps
-         
-  !==================================================!
-  ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-  !==================================================!
-  ! calcul des composantes residuelles
-  !-----------------------------------
-  r = r - alpha * Ad
-         
-  !----------------------------------------!
-  ! approximations ponctuelles au rang k+1 !
-  !----------------------------------------!
-  Ux = Ux + alpha * d
-         
-  !-------------------------------------------------------!
-  ! (a) extraction de la norme infinie du residu          !
-  !     pour le test d'arret                              !
-  ! (b) extraction de la norme euclidienne du residu rk+1 !
-  !-------------------------------------------------------!
-  NormInfr = maxval(abs( r ))
-  Norm2r1 = DOT_PRODUCT( r , r )
-         
-  !==================================================!
-  ! calcul de la nouvelle direction de descente dk+1 !
-  !==================================================!
-  beta = Norm2r1 / Norm2r0
-  Norm2r0 = Norm2r1
-  d = r + beta * d
-  !d(1) =  B(1)
-  !-------------------!
-  ! boucle suivante ? !
-  !-------------------!
-  ll_continue=((NormInfr/NormInfb) >= eps) .AND. (iter < maxIter)
-          
-end do
-U = Ux
- 
-if ( iter == maxIter ) then
-  print*,'Warning Gradient_conj : iter == maxIter'
-  print*,'Error after CG =',( NormInfr / NormInfb )
-end if
+  maxIter = 100000
+  eps = 1.d-13
   
-deallocate(Ad)
-deallocate(d)
-deallocate(r)
-deallocate(Ux)
-deallocate(one)
+  if ( mat%num_rows /= mat%num_cols ) then
+    PRINT*,'ERROR Gradient_conj: The matrix must be square'
+    stop
+  end if
+  
+  if ((abs(maxval(B)) < eps ) .AND. (abs(MINVAL(B)) < eps )) then
+    U = 0.0_8
+    return
+  end if
+  
+  SLL_ALLOCATE(Ad(mat%num_rows),err)
+  SLL_ALLOCATE(r(mat%num_rows),err)
+  SLL_ALLOCATE(d(mat%num_rows),err)
+  SLL_ALLOCATE(Ux(mat%num_rows),err)
+  SLL_ALLOCATE(one(mat%num_rows),err)
+  
+  U(:)  = 0.0_8
+  one(:) = 1.0_f64
+  Ux(:) = U(:)
+  iter = 0
+  call sll_s_mult_csr_matrix_vector( mat , Ux , Ad )
+  Ad = Ad - dot_product(Masse_tot, Ux)
+  r       = B - Ad
+  Norm2r0  = DOT_PRODUCT( r , r )
+  NormInfb = maxval( abs( B ) )
+  
+  d = r
+  
+  ll_continue=.true.
+  do while(ll_continue)
+    iter = iter + 1
+    !--------------------------------------!
+    ! calcul du ak parametre optimal local !
+    !--------------------------------------!
+  
+    call sll_s_mult_csr_matrix_vector( mat , d , Ad )
+          
+    Ad = Ad - dot_product(Masse_tot, d)
+    ps = dot_product( Ad , d )
+    alpha = Norm2r0 / ps
+           
+    !==================================================!
+    ! calcul de l'approximation Xk+1 et du residu Rk+1 !
+    !==================================================!
+    ! calcul des composantes residuelles
+    !-----------------------------------
+    r = r - alpha * Ad
+           
+    !----------------------------------------!
+    ! approximations ponctuelles au rang k+1 !
+    !----------------------------------------!
+    Ux = Ux + alpha * d
+           
+    !-------------------------------------------------------!
+    ! (a) extraction de la norme infinie du residu          !
+    !     pour le test d'arret                              !
+    ! (b) extraction de la norme euclidienne du residu rk+1 !
+    !-------------------------------------------------------!
+    NormInfr = maxval(abs( r ))
+    Norm2r1 = dot_product( r , r )
+           
+    !==================================================!
+    ! calcul de la nouvelle direction de descente dk+1 !
+    !==================================================!
+    beta = Norm2r1 / Norm2r0
+    Norm2r0 = Norm2r1
+    d = r + beta * d
+    !d(1) =  B(1)
+    !-------------------!
+    ! boucle suivante ? !
+    !-------------------!
+    ll_continue=((NormInfr/NormInfb) >= eps) .AND. (iter < maxIter)
+            
+  end do
+  U = Ux
+   
+  if ( iter == maxIter ) then
+    print*,'Warning Gradient_conj : iter == maxIter'
+    print*,'Error after CG =',( NormInfr / NormInfb )
+  end if
+    
+  deallocate(Ad)
+  deallocate(d)
+  deallocate(r)
+  deallocate(Ux)
+  deallocate(one)
+
+endif
 
 end subroutine sll_s_solve_csr_matrix_perper
 
-subroutine sll_s_csr_todense( this, dense_matrix)
+subroutine sll_s_csr_todense( mat, dense_matrix)
 
-  type(sll_t_csr_matrix)       :: this
+  type(sll_t_csr_matrix)       :: mat
   sll_real64, dimension(:,:) :: dense_matrix
   sll_int32                  :: i, j, k, l
 
   l = 0
-  do i = 1, this%num_rows 
-     do k = this%row_ptr(i),this%row_ptr(i+1)-1 
+  do i = 1, mat%num_rows 
+     do k = mat%row_ptr(i),mat%row_ptr(i+1)-1 
         l = l + 1
-        j = this%col_ind(l)
-        dense_matrix(i,j) = this%val(l)
+        j = mat%col_ind(l)
+        dense_matrix(i,j) = mat%val(l)
      end do
   end do
 
@@ -625,9 +759,9 @@ end subroutine sll_s_csr_todense
 !> Fill a matrix in CSR format corresponding to a constant coefficient
 !> five-point stencil on a square grid. This function comes from AGMG
 !> test program.
-subroutine uni2d(this,f)
+subroutine uni2d(mat,f)
 
-type(sll_t_csr_matrix) :: this
+type(sll_t_csr_matrix) :: mat
 sll_real64           :: f(:)
 sll_real64, pointer  :: a(:)
 sll_int32            :: m
@@ -637,11 +771,11 @@ integer              :: k,l,i,j
 
 real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
 
-a  => this%val
-ia => this%row_ptr
-ja => this%col_ind
+a  => mat%val
+ia => mat%row_ptr
+ja => mat%col_ind
 
-m = this%num_rows
+m = mat%num_rows
 
 k=0
 l=0
@@ -685,9 +819,10 @@ do i=1,m
   end do
 end do
 
-this%num_nz = l
+mat%num_nz = l
 
 return
 end subroutine uni2D
+
 
 end module sll_m_sparse_matrix
