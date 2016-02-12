@@ -1,12 +1,13 @@
-#PN Do not know why sll_collective is necessary here...
+#PN sll_collective is necessary when PasTiX is used
 
-IF(MPI_ENABLED)
+IF(PASTIX_FOUND)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-  ADD_EXECUTABLE( test_sparse_matrix test_sparse_matrix.F90 )
-  TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
-  ADD_MPI_TEST( sparse_matrix test_sparse_matrix 1 " " )
-  SET_TESTS_PROPERTIES( sparse_matrix PROPERTIES TIMEOUT 20 )
-ENDIF(MPI_ENABLED)
+ENDIF(PASTIX_FOUND)
+
+ADD_EXECUTABLE( test_sparse_matrix test_sparse_matrix.F90 )
+TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix )
+ADD_TEST(NAME sparse_matrix COMMAND test_sparse_matrix )
+SET_TESTS_PROPERTIES( sparse_matrix PROPERTIES TIMEOUT 20 )
 
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
 TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
