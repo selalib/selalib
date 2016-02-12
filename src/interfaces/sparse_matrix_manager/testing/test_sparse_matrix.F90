@@ -69,6 +69,7 @@ do i=1,num_rows
 enddo
 print *,'#end add_to_csr_matrix'
 
+x = 0.0_f64
 print *,'#begin sll_s_solve_csr_matrix'
 call sll_s_solve_csr_matrix(mat, b, x)
 print *,'#end sll_s_solve_csr_matrix'
@@ -108,6 +109,9 @@ do i=1,num_rows
 enddo
 print *,'#end add_to_csr_matrix with umfpack'
 
+call sll_s_factorize_csr_matrix(mat2)
+b = 1._f64
+x = 0.0_f64
 print *,'#begin sll_s_solve_csr_matrix with umfpack'
 call sll_s_solve_csr_matrix(mat2, b, x)
 print *,'#end sll_s_solve_csr_matrix with umfpack'
