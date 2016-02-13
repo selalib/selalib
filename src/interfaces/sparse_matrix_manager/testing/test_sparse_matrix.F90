@@ -4,7 +4,9 @@ program unit_test_sparse_matrix
 #include "sll_memory.h"
 
 use sll_m_sparse_matrix
+#ifdef PASTIX
 use sll_m_collective
+#endif /* PASTIX */
 
 implicit none
 
