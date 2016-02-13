@@ -21,23 +21,37 @@
 !> @details
 !> With XDMF file you can describe data to plot them with VisIt
 module sll_m_xml_io
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_o_xml_field, &
+    sll_s_xml_file_close, &
+    sll_s_xml_file_create, &
+    sll_o_xml_grid_geometry
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
  !> write a data item in the xml file
  interface sll_xml_dataitem
+    module procedure sll_xml_dataitem_1d
     module procedure sll_xml_dataitem_2d
     module procedure sll_xml_dataitem_3d
  end interface
  
  !> write a data attribute in the xml file
- interface sll_xml_field
+ interface sll_o_xml_field
+    module procedure sll_xml_field_1d
     module procedure sll_xml_field_2d
     module procedure sll_xml_field_3d
  end interface
   
  !> write grid description in the xml file
- interface sll_xml_grid_geometry
+ interface sll_o_xml_grid_geometry
     module procedure sll_xml_grid_geometry_2d_high_level
     module procedure sll_xml_grid_geometry_2d_low_level
     module procedure sll_xml_grid_geometry_3d_high_level
@@ -48,7 +62,7 @@ contains
   
  !> Create the XML file and begin to write first lines.
  !> You get the file unit number.
- subroutine sll_xml_file_create(filename,file_id,error)
+ subroutine sll_s_xml_file_create(filename,file_id,error)
 
     character(len=*) , intent(in)  :: filename   !< file name
     sll_int32        , intent(out) :: file_id    !< file unit number
@@ -80,16 +94,16 @@ contains
        
     write(file_id,"(a)")"<?xml version='1.0' ?>"
     write(file_id,"(a)")"<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []>"
-    write(file_id,"(a)")"<Xdmf Version='2.0'>"
+    write(file_id,"(a)")"<Xdmf xmlns:xi=""http://www.w3.org/2003/XInclude"" Version=""2.2"">"
     write(file_id,"(a)")"<Domain>"
        
-  end subroutine sll_xml_file_create
+  end subroutine sll_s_xml_file_create
      
   !> Close the XML file and finish to write last lines.
   !> You give the file unit number.
   !> \param[in]  file_id - the unit number or your xml file
   !> \param[out] error   - error parameter
-  subroutine sll_xml_file_close(file_id,error)
+  subroutine sll_s_xml_file_close(file_id,error)
 
      sll_int32, intent(in)  :: file_id !< xml file unit number
      sll_int32, intent(out) :: error   !< error code
@@ -99,8 +113,35 @@ contains
      write(file_id,"(a)")"</Xdmf>"
      close(file_id)
      error = 0
-  end subroutine sll_xml_file_close
+  end subroutine sll_s_xml_file_close
      
+  !> Write the description of a scalar field on a 1D mesh.
+  !> \param[in] file_id is the unit number or your xml file
+  !> \param[in] filename is the file name where the heavy data are 
+  !> (bin or h5)
+  !> \param[in] nnodes_x1 - nodes number along direction 1
+  !> \param[in] filetype  - heavy data format 'HDF' or 'Binary'
+  !>
+  !> The file named filename must exist.
+  !>
+  subroutine sll_xml_dataitem_1d( file_id,   &
+                                  filename,  &
+                                  nnodes_x1, &
+                                  filetype )
+       
+     sll_int32, intent(in)        :: file_id   !< file unit number
+     character(len=*), intent(in) :: filename  !< xmf file name
+     character(len=*), intent(in) :: filetype  !< data file format
+     sll_int32, intent(in)        :: nnodes_x1 !< x nodes number
+       
+     SLL_ASSERT(filetype == 'HDF' .or. filetype == 'Binary')
+     write(file_id,"(a,i10,a)")"<DataItem Dimensions='",nnodes_x1, &
+          "' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
+     write(file_id,"(a)")trim(filename)
+     write(file_id,"(a)")"</DataItem>"
+  end subroutine sll_xml_dataitem_1d
+     
+  !> Write the description of a scalar field on a 3D mesh.
   !> Write the description of a scalar field on a 2D mesh.
   !> \param[in] file_id is the unit number or your xml file
   !> \param[in] filename is the file name where the heavy data are 
@@ -152,6 +193,38 @@ contains
      write(file_id,"(a)")trim(filename)
      write(file_id,"(a)")"</DataItem>"
    end subroutine sll_xml_dataitem_3d
+     
+   !> Write the description of a scalar field on a 1D mesh.
+   !> \param[in] fieldname the dataset name where the heavy data are 
+   !> (hdf5 case)
+   !> \param[in] filename  the file name where the heavy data are 
+   !> (bin or h5)
+   !> \param[in] npoints_1 nodes or cells number along direction 1
+   !> \param[in] center    values are centered on nodes or cells 
+   !>
+   !> The file named filename-fieldname.bin must exist in case of binary 
+   !> output.
+   !> The file named filename.h5 with dataset fieldname must exist in case 
+   !> of hdf5 output.
+   subroutine sll_xml_field_1d( file_id,   &
+                                fieldname, &
+                                filename,  &
+                                npoints_1, &
+                                filetype,  &
+                                center)
+
+     sll_int32,        intent(in) :: file_id   !< the unit number or your xml file
+     character(len=*), intent(in) :: filename 
+     character(len=*), intent(in) :: fieldname
+     character(len=*), intent(in) :: center
+     character(len=*), intent(in) :: filetype   !< "HDF" or "Binary"
+     sll_int32,        intent(in) :: npoints_1
+     
+     write(file_id,"(a)") &
+     "<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
+     call sll_xml_dataitem_1d(file_id,filename,npoints_1,filetype)
+     write(file_id,"(a)")"</Attribute>"
+   end subroutine sll_xml_field_1d
      
    !> Write the description of a scalar field on a 2D mesh.
    !> \param[in] fieldname the dataset name where the heavy data are 

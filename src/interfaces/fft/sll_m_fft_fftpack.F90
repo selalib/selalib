@@ -14,7 +14,7 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 module sll_m_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -48,7 +48,7 @@ module sll_m_fft
   end interface 
   
   integer, parameter :: FFT_FORWARD = -1
-  integer, parameter :: FFT_INVERSE = 1
+  integer, parameter :: FFT_BACKWARD = 1
 
 
 ! Flags to pass when we create a new plan
@@ -58,9 +58,6 @@ module sll_m_fft
   integer, parameter :: FFT_NORMALIZE_FORWARD = 2**0
   integer, parameter :: FFT_NORMALIZE_INVERSE = 2**0
   integer, parameter :: FFT_NORMALIZE         = 2**0
-  integer, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
-  integer, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
-  integer, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
 
   integer, parameter :: FFTPACK_MOD = 100
 
@@ -192,7 +189,7 @@ contains
  
     if( plan%direction .eq. FFT_FORWARD ) then
       call zfftf( nx , array_out ,plan%twiddles )
-    else if( plan%direction .eq. FFT_INVERSE ) then
+    else if( plan%direction .eq. FFT_BACKWARD ) then
       call zfftb( nx, array_out , plan%twiddles )
     endif
 
@@ -242,7 +239,7 @@ contains
 
     if( plan%direction .eq. FFT_FORWARD ) then
       call dfftf( nx , array_out ,plan%twiddles )
-    else if( plan%direction .eq. FFT_INVERSE ) then
+    else if( plan%direction .eq. FFT_BACKWARD ) then
       call dfftb( nx, array_out , plan%twiddles )
     endif
 
@@ -385,3 +382,4 @@ contains
   end subroutine
 
 end module sll_m_fft
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -5,13 +5,13 @@ Create interface sections for all modules (and programs?) in a Fortran library.
 Modules required
 ----------------
   * Built-in  : os, sys, argparse
-  * Library   : maintenance_tools
+  * Library   : maintenance_tools, sll2py
 
 """
 #
 # Author: Yaman Güçlü, Oct 2015 - IPP Garching
 #
-# Last revision: 12 Nov 2015
+# Last revision: 04 Dec 2015
 #
 from __future__ import print_function
 
@@ -26,6 +26,18 @@ ignored_symbols = [ \
         'mudpack_curvilinear_cof',
         'mudpack_curvilinear_cofcr',
         'mudpack_curvilinear_bndcr',
+        'sol',
+        'mulku',
+        ]
+
+permissive_modules = ['sll_m_hdf5_io_parallel']
+
+forced_public_symbols = [ \
+        'sll_new',
+        'sll_create',
+        'sll_solve',
+        'sll_delete',
+        'operator(*)',
         ]
 
 def ignore_dir( d ):
@@ -86,10 +98,74 @@ def contains_exactly_1_module( filepath, verbose=False ):
     return (not skip_file)
 
 #==============================================================================
+# Overwrite instance methods (special cases)
+#==============================================================================
+
+def add_exported_symbols_permissive( self, *symbols ):
+    for s in symbols:
+        if not self.defines_symbol( s ):
+            mod_name, mod_obj = self.find_symbol_def( s )
+            if mod_name:
+                print( "WARNING processing file '%s':" % self.filepath )
+                print( "  symbol '%s' is imported but not defined here" % s )
+                print( "  original definition in module '%s'" % mod_name )
+            else:
+                print( "ERROR processing file '%s':" % self.filepath )
+                print( "  symbol '%' is neither defined nor imported here" % s )
+                raise SystemExit()
+        self._exported_symbols.add( s )
+
+def make_modules_permissive( *modules ):
+    from types import MethodType
+    for m in modules:
+        if m.name in permissive_modules:
+            m.add_exported_symbols = \
+                    MethodType( add_exported_symbols_permissive, m )
+
+#==============================================================================
+# HELPER FUNCTION
+#==============================================================================
+
+def parse_file_and_create_unit( fpath, modules, programs ):
+
+    from sll2py.fparser.api      import parse
+    from sll2py.fortran_module   import NewFortranModule
+    from sll2py.fortran_program  import FortranProgram
+
+    im = len(  modules )
+    ip = len( programs )
+
+    mod_names = find_module_def  ( fpath )
+    prg_names = find_program_name( fpath )
+
+    if len( mod_names ) == 1 and len( prg_names ) == 0:
+        # Create fparser module object
+        tree = parse( fpath, analyze=False )
+        fmod = tree.content[0]
+        # Create 'my' module object and store it in dictionary
+        print("  - read module  %3d: %s" % (im+1, fmod.name ) );  im += 1
+        modules.append( NewFortranModule( fpath, fmod ) )
+    elif len( mod_names ) == 0 and len( prg_names ) == 1:
+        # Create fparser program object
+        tree = parse( fpath, analyze=False )
+        fprg = tree.content[0]
+        # Create 'my' program object and store it in dictionary
+        print("  - read program %3d: %s" % (ip+1, fprg.name ) );  ip += 1
+        programs.append( FortranProgram( fpath, fprg ) )
+    elif len( mod_names ) == 0 and len( prg_names ) == 0:
+        print( "ERROR: No modules or programs in file %s" % fpath )
+        raise SystemExit()
+    else:
+        print( "ERROR: Multiple modules/programs in file %s" % fpath )
+        if mod_names: print( "  Modules  = [%s]" % ', '.join( mod_names ) )
+        if prg_names: print( "  Programs = [%s]" % ', '.join( prg_names ) )
+        raise SystemExit()
+
+#==============================================================================
 # MAIN FUNCTION
 #==============================================================================
 
-def create_interface_sections( root ):
+def create_interface_sections( root, src='src', interfaces='src/interfaces' ):
     """
     Create interface sections for all modules (and programs?)
     in a Fortran library.
@@ -100,52 +176,133 @@ def create_interface_sections( root ):
       Relative path to root of directory tree
 
     """
-    from maintenance_tools import recursive_file_search
-    from fortran_module    import FortranModule, populate_exported_symbols
-    from fparser.api       import parse
-
-    from fortran_external import external_modules, find_external_library
-
-    # Walk library tree and store FortranModule objects
-    print( "================================================================" )
-    print( "Processing library modules")
-    print( "================================================================" )
-    modules = {}
-    for fpath in recursive_file_search( root, ignore_dir, select_file ):
-        if contains_exactly_1_module( fpath, verbose=True ):
-            # Create fparser module object
-            tree = parse( fpath, analyze=False )
-            fmod = tree.content[0]
-            # Create 'my' module object and store it in dictionary
-            modules[fmod.name] = FortranModule( fpath, fmod )
+    import os
+    from maintenance_tools        import recursive_file_search
+    from sll2py.fortran_external  import external_modules, find_external_library
 
     print( "================================================================" )
-    print( "Link library modules against used ones" )
+    print( "[1] Processing library modules and programs")
     print( "================================================================" )
-    # [0] Link modules against used ones, creating a graph
-    for name,mmod in modules.items():
-        mmod.link_used_modules( modules.values(), externals=external_modules )
-        print("  - linked module '%s'" % name )
+    src_modules  = []
+    src_programs = []
+
+    # Walk library tree and store FortranModule (or FortranProgram) objects
+    src_root = os.path.join( root, src )
+    for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
+        if interfaces in fpath:
+            print( "WARNING: Interface. Skipping file %s" % fpath )
+            continue
+        parse_file_and_create_unit( fpath, src_modules, src_programs )
+
+    # Additional source directory (ad-hoc)
+    src_root = os.path.join( root, 'external/burkardt' )
+    for fpath in recursive_file_search( src_root, ignore_dir, select_file ):
+        parse_file_and_create_unit( fpath, src_modules, src_programs )
+
+    # Interface modules
+    print( "================================================================" )
+    print( "[2] Processing interface modules and programs" )
+    print( "================================================================" )
+    int_modules  = []
+    int_programs = []
+    int_root     = os.path.join( root, interfaces )
+    for fpath in recursive_file_search( int_root, ignore_dir, select_file ):
+        parse_file_and_create_unit( fpath, int_modules, int_programs )
+
+    # List with all the modules
+    all_modules = []
+    all_modules.extend( src_modules )
+    all_modules.extend( int_modules )
+
+    # Test: no modules with same name
+    from maintenance_tools import all_different, get_repetition_count
+    module_names = [mmod.name for mmod in all_modules]
+    if not all_different( *module_names ):
+        print("ERROR: repeated module names:")
+        for item,count in get_repetition_count( module_names ):
+            print("  . %d occurrences for module '%s'" % (count,item) )
+        raise SystemExit()
 
     print( "================================================================" )
-    print( "Search symbols in used modules" )
+    print( "[3] Library modules/programs: Link against used modules" )
     print( "================================================================" )
-    # [1] Update use statements (recursively search symbols in used modules)
-    for name,mmod in modules.items():
+    # Link library modules/programs against used modules, creating a graph
+    for i,mmod in enumerate( src_modules ):
+        print("  - link module %3d: %s" % (i+1,mmod.name) )
+        mmod.link_used_modules( all_modules, externals=external_modules )
+
+    # TODO: what about interface programs?
+    print( "----------------------------------------------------------------" )
+    for i,mprg in enumerate( src_programs ):
+        print("  - link program %3d: %s" % (i+1,mprg.name) )
+        mprg.link_used_modules( all_modules, externals=external_modules )
+
+    print( "================================================================" )
+    print( "[4] Library modules/programs: Search symbols in used modules" )
+    print( "================================================================" )
+    # Update use statements (recursively search symbols in used modules)
+    for i,mmod in enumerate( src_modules ):
+        print("  - update module %3d: %s" % (i+1,mmod.name) )
         mmod.update_use_statements( find_external_library, ignored_symbols )
-        print("  - updated module '%s'" % name )
 
-    #########################
-    return        # STOP HERE
-    #########################
+    print( "----------------------------------------------------------------" )
+    for i,mprg in enumerate( src_programs ):
+        print("  - update program %3d: %s" % (i+1,mprg.name) )
+        mprg.update_use_statements( find_external_library, ignored_symbols )
 
-    # [2] Populate exported symbols
-    populate_exported_symbols( *modules.values() )
+    print( "================================================================" )
+    print( "[5] Library modules/programs: Cleanup use statements" )
+    print( "================================================================" )
+    # Cleanup use statements (remove duplicate symbols and useless modules)
+    for i,mmod in enumerate( src_modules ):
+        print("  - cleanup module %3d: %s" % (i+1,mmod.name) )
+        mmod.cleanup_use_statements()
 
-    # [3] Generate interface sections
-    for name,mmod in modules.items():
+    print( "----------------------------------------------------------------" )
+    for i,mprg in enumerate( src_programs ):
+        print("  - cleanup program %3d: %s" % (i+1,mprg.name) )
+        mprg.cleanup_use_statements()
+
+    print( "================================================================" )
+    print( "[6] Library modules/programs: Scatter imported symbols" )
+    print( "================================================================" )
+
+    # Some modules must be made permissive
+    make_modules_permissive( *src_modules )
+
+    for i,mmod in enumerate( src_modules ):
+        print("  - scatter from module %3d: %s" % (i+1,mmod.name) )
+        mmod.scatter_imported_symbols()
+
+    print( "----------------------------------------------------------------" )
+    for i,mprg in enumerate( src_programs ):
+        print("  - scatter from program %3d: %s" % (i+1,mprg.name) )
+        mprg.scatter_imported_symbols()
+
+    # Force some symbols to be always public
+    for s in forced_public_symbols:
+        print( "----------------------------------------------------------------" )
+        for i,mmod in enumerate( src_modules ):
+            if mmod.defines_symbol( s ) and (s not in mmod.exported_symbols):
+                print("  - set '%s' public in module %3d: %s" % (s,i+1,mmod.name) )
+                mmod.add_exported_symbols( s )
+
+    print( "================================================================" )
+    print( "[7] Library modules/programs: Generate interface sections" )
+    print( "================================================================" )
+    for i,mmod in enumerate( src_modules ):
+        print("  - interface for module %3d: %s" % (i+1,mmod.name) )
         interface = mmod.generate_interface_section()
-        filepath  = mmod.filepath[:-4] + '-interface.txt'
+        if interface:
+            filepath  = mmod.filepath[:-4] + '-interface.txt'
+            with open( filepath, 'w' ) as f:
+                print( interface, file=f )
+
+    print( "----------------------------------------------------------------" )
+    for i,mprg in enumerate( src_programs ):
+        print("  - interface for program %3d: %s" % (i+1,mprg.name) )
+        interface = mprg.generate_interface_section()
+        filepath  = mprg.filepath[:-4] + '-interface.txt'
         with open( filepath, 'w' ) as f:
             print( interface, file=f )
 

@@ -19,21 +19,33 @@
 
 
 module sll_m_advection_1d_periodic
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_periodic_interp
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
 
-  type,extends(sll_advection_1d_base) :: periodic_1d_advector
+  use sll_m_periodic_interp, only: &
+    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp, &
+    sll_t_periodic_interp_work
+
+  implicit none
+
+  public :: &
+    sll_f_new_periodic_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_advection_1d_base) :: periodic_1d_advector
 
      sll_int32                            :: num_cells
      sll_real64                           :: xmin
      sll_real64                           :: xmax
-     type(periodic_interp_work), pointer  :: per_interp
+     type(sll_t_periodic_interp_work), pointer  :: per_interp
 
   contains
     procedure, pass(adv) :: initialize => &
@@ -48,7 +60,7 @@ implicit none
 contains
   
 
-  function new_periodic_1d_advector(&
+  function sll_f_new_periodic_1d_advector(&
     num_cells, &
     xmin, &
     xmax, &
@@ -72,7 +84,7 @@ contains
       type, &
       order)
     
-  end function new_periodic_1d_advector
+  end function sll_f_new_periodic_1d_advector
 
   
   subroutine initialize_periodic_1d_advector(&
@@ -90,7 +102,7 @@ contains
     sll_int32,  intent(in)               :: type
     sll_int32,  intent(in)               :: order
 
-    call initialize_periodic_interp( &
+    call sll_s_initialize_periodic_interp( &
       adv%per_interp, &
       num_cells, &
       type, &
@@ -131,7 +143,7 @@ contains
     xmax = adv%xmax
     shift = A*dt/(xmax-xmin)*real(num_cells,f64)
       
-    call periodic_interp( &
+    call sll_s_periodic_interp( &
       adv%per_interp, &
       output(1:num_cells), &
       input(1:num_cells), &

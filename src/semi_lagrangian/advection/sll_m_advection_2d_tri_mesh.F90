@@ -1,21 +1,28 @@
 !> This fortran module is dedicated to advection on
 !> triangular mesh.
 module sll_m_advection_2d_tri_mesh
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_meshes_base
-use sll_m_triangular_meshes
+  use sll_m_triangular_meshes, only: &
+    sll_t_triangular_mesh_2d
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_s_advection_2d, &
+    sll_f_new_advection_2d_tri_mesh, &
+    sll_t_advection_tri_mesh
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 2d advection on triangular mesh
-type :: sll_advection_tri_mesh
+type :: sll_t_advection_tri_mesh
 
-  type(sll_triangular_mesh_2d), pointer :: mesh  !< mesh
+  type(sll_t_triangular_mesh_2d), pointer :: mesh  !< mesh
   sll_int32,  dimension(:,:),   pointer :: nvoiv
   sll_int32,  dimension(:),     pointer :: nlpa
   sll_int32,  dimension(:),     pointer :: nbpama
@@ -33,7 +40,7 @@ type :: sll_advection_tri_mesh
   logical,    dimension(:),     pointer :: inzone
   sll_int32, dimension(:),      pointer :: numres
 
-end type sll_advection_tri_mesh
+end type sll_t_advection_tri_mesh
 
 ! type :: sll_degree_of_freedom
 !    sll_real64, dimension(:),  pointer :: func !> values of the distribution function
@@ -51,10 +58,10 @@ contains
 !> object.
 !> @param mesh triangular mesh
 !> @return a pointer to the newly allocated object.
-function new_advection_2d_tri_mesh( mesh ) result(adv)
+function sll_f_new_advection_2d_tri_mesh( mesh ) result(adv)
 
-  type(sll_triangular_mesh_2d), intent(in), target  :: mesh
-  type(sll_advection_tri_mesh),             pointer :: adv
+  type(sll_t_triangular_mesh_2d), intent(in), target  :: mesh
+  type(sll_t_advection_tri_mesh),             pointer :: adv
 
   sll_int32  :: ierr
   sll_int32  :: i
@@ -116,7 +123,7 @@ function new_advection_2d_tri_mesh( mesh ) result(adv)
   end do
 
 
-end function new_advection_2d_tri_mesh
+end function sll_f_new_advection_2d_tri_mesh
 
 !> @brief Computes degrees of freedom on one point
 !> @details Computes on a point the degrees of freedom (dof):
@@ -299,9 +306,9 @@ end subroutine
 !!                                                   
 !!    petitl - petite longueur de reference             
 !<
-subroutine advection_2d(adv, f_in, ex, ey, dt )
+subroutine sll_s_advection_2d(adv, f_in, ex, ey, dt )
 
-type(sll_advection_tri_mesh), intent(inout) :: adv  !< mesh
+type(sll_t_advection_tri_mesh), intent(inout) :: adv  !< mesh
 sll_real64, dimension(:),     intent(inout) :: f_in !< distribution function on nodes
 sll_real64, dimension(:),     intent(in)    :: ex   !< electric field on x1
 sll_real64, dimension(:),     intent(in)    :: ey   !< electric field on x2
@@ -621,6 +628,6 @@ end do
 
 f_in = adv%f_out
 
-end subroutine advection_2d
+end subroutine sll_s_advection_2d
 
 end module sll_m_advection_2d_tri_mesh

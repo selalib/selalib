@@ -21,20 +21,28 @@
 
 
 module sll_m_advection_2d_tensor_product
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_2d_base
-use sll_m_advection_1d_base
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-implicit none
+#include "sll_working_precision.h"
 
-  type,extends(sll_advection_2d_base) :: tensor_product_2d_advector
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_advection_2d_base, only: &
+    sll_c_advection_2d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_tensor_product_2d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_advection_2d_base) :: tensor_product_2d_advector
     
-    class(sll_advection_1d_base), pointer  :: advect_x1
-    class(sll_advection_1d_base), pointer  :: advect_x2
+    class(sll_c_advection_1d_base), pointer  :: advect_x1
+    class(sll_c_advection_1d_base), pointer  :: advect_x2
     sll_int32 :: Npts1
     sll_int32 :: Npts2
     sll_real64, dimension(:), pointer :: buf1d 
@@ -51,15 +59,15 @@ implicit none
 
 
 contains
-  function new_tensor_product_2d_advector( &
+  function sll_f_new_tensor_product_2d_advector( &
     advect_x1, &
     advect_x2, &
     Npts1, &
     Npts2 ) &
     result(adv)      
     type(tensor_product_2d_advector), pointer :: adv
-    class(sll_advection_1d_base), pointer :: advect_x1
-    class(sll_advection_1d_base), pointer :: advect_x2
+    class(sll_c_advection_1d_base), pointer :: advect_x1
+    class(sll_c_advection_1d_base), pointer :: advect_x2
     sll_int32, intent(in) :: Npts1 
     sll_int32, intent(in) :: Npts2 
     sll_int32 :: ierr
@@ -73,7 +81,7 @@ contains
       Npts1, &
       Npts2)
     
-  end function  new_tensor_product_2d_advector
+  end function  sll_f_new_tensor_product_2d_advector
 
 
   subroutine initialize_tensor_product_2d_advector(&
@@ -83,8 +91,8 @@ contains
     Npts1, &
     Npts2)
     class(tensor_product_2d_advector), intent(inout) :: adv
-    class(sll_advection_1d_base), pointer :: advect_x1
-    class(sll_advection_1d_base), pointer :: advect_x2
+    class(sll_c_advection_1d_base), pointer :: advect_x1
+    class(sll_c_advection_1d_base), pointer :: advect_x2
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_int32 :: ierr

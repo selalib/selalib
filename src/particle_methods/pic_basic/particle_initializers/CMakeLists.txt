@@ -4,5 +4,5 @@ TARGET_LINK_LIBRARIES( sll_particle_initializers
   sll_memory
   sll_assert
   sll_pic_interface
-  sll_sobol
-  sll_prob)
+  sobol
+  prob )

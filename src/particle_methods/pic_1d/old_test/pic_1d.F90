@@ -5,11 +5,11 @@ module sll_m_pic_1d
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_m_constants , only : sll_pi
+  use sll_m_constants , only : sll_p_pi
 !   use sll_m_collective !Parallel operations
    use sll_m_collective , only :  sll_collective_globalsum ,&
-     sll_world_collective, sll_collective_barrier ,&
-     sll_halt_collective
+     sll_v_world_collective, sll_collective_barrier ,&
+     sll_s_halt_collective
 
     
 !  use sll_m_arbitrary_degree_splines 
@@ -101,7 +101,7 @@ module sll_m_pic_1d
     !Mesh parameters
     sll_int32 :: mesh_cells
     sll_int32 :: spline_degree
-    sll_real :: interval_a=0, interval_b=4.0_f64*sll_pi  !Interval length [a,b], should be a parameter and changed from outside
+    sll_real :: interval_a=0, interval_b=4.0_f64*sll_p_pi  !Interval length [a,b], should be a parameter and changed from outside
     sll_real64 :: mesh_dx  
   
  
@@ -199,9 +199,9 @@ contains
 
 
         !really global variables
-        coll_rank = sll_get_collective_rank( sll_world_collective )
-        coll_size = sll_get_collective_size( sll_world_collective )
-        call sll_collective_barrier(sll_world_collective)
+        coll_rank = sll_f_get_collective_rank( sll_v_world_collective )
+        coll_size = sll_f_get_collective_size( sll_v_world_collective )
+        call sll_collective_barrier(sll_v_world_collective)
 
 
         !The Mesh is needed on every Node, it is global
@@ -224,9 +224,9 @@ contains
             print *, "Size of MPI-Collective: ", coll_size   !number of cores involved in calculus (mpirun argument)
         endif
 !parallel configuration
-        call sll_collective_barrier(sll_world_collective)
-        call sll_initialize_intrinsic_mpi_random(sll_world_collective)
-        call sll_collective_barrier(sll_world_collective)
+        call sll_collective_barrier(sll_v_world_collective)
+        call sll_initialize_intrinsic_mpi_random(sll_v_world_collective)
+        call sll_collective_barrier(sll_v_world_collective)
 
         !Set up Quasineutral solver
         
@@ -234,10 +234,10 @@ contains
                selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_IONBEAM)
                 fsolver=>new_pic_1d_field_solver(interval_a, interval_b, spline_degree, &
-                    mesh_cells, poisson_solver, sll_world_collective, SLL_DIRICHLET)
+                    mesh_cells, poisson_solver, sll_v_world_collective, sll_p_dirichlet)
             case default
                 fsolver=>new_pic_1d_field_solver(interval_a, interval_b, spline_degree, &
-                    mesh_cells, poisson_solver, sll_world_collective,SLL_PERIODIC)
+                    mesh_cells, poisson_solver, sll_v_world_collective,sll_p_periodic)
         endselect
 
         !Set pointer to external electric field
@@ -257,7 +257,7 @@ contains
     ! Destructor
     subroutine destroy_sll_pic_1d()
         call fsolver%delete()
-        call sll_halt_collective()
+        call sll_s_halt_collective()
 
     endsubroutine
 
@@ -302,7 +302,7 @@ contains
                     !analytical_solution=landau_alpha/((interval_b-interval_a)*landau_mode)*&
                             if (landau_alpha/=0) then
                         analytical_solution=landau_alpha/(landau_mode)*&
-                            sin(landau_mode*(knots(1:mesh_cells)+(sll_pi/6)*(knots(2)-knots(1))))
+                            sin(landau_mode*(knots(1:mesh_cells)+(sll_p_pi/6)*(knots(2)-knots(1))))
                         num_err_noise_max= maxval(abs((eval_solution(1:mesh_cells)-analytical_solution)))/&
                             maxval(abs(analytical_solution))
                         num_err_noise_l2=sum(((eval_solution(1:mesh_cells)-analytical_solution))**2)/&
@@ -345,7 +345,7 @@ contains
         !energy calculation and everything has to be paralellized
         nparticles=nparticles/coll_size
         print*, "#Core ", coll_rank, " handles particles", coll_rank*nparticles +1, "-", (coll_rank+1)*nparticles
-        call sll_collective_barrier(sll_world_collective)
+        call sll_collective_barrier(sll_v_world_collective)
         if (coll_rank==0) print*, "#Total Number of particles: ", nparticles*coll_size
 
 
@@ -385,7 +385,7 @@ contains
 
         particle_qm=species(1)%qm
 
-        call sll_collective_barrier(sll_world_collective)
+        call sll_collective_barrier(sll_v_world_collective)
         if (coll_rank==0) write(*,*) "#PIC1D: Particles loaded..."
 
         !Determine index of fastest particle
@@ -455,8 +455,8 @@ contains
 
 
         print *, "#Test initial field, and loading condition for landau damping"
-        !call sll_bspline_fem_solver_1d_eval_solution_derivative(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
-        call fsolver%evalE(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
+        !call sll_bspline_fem_solver_1d_eval_solution_derivative(knots(1:mesh_cells)+ (sll_p_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
+        call fsolver%evalE(knots(1:mesh_cells)+ (sll_p_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
         call  sll_pic_1d_initial_error_estimates()
 
 
@@ -521,7 +521,7 @@ contains
         !Write initial phasespace
 
         do jdx=0, coll_size
-            call sll_collective_barrier(sll_world_collective)
+            call sll_collective_barrier(sll_v_world_collective)
             if( coll_rank==jdx) then
                 if (jdx==0) then
                     open(unit=20, file=trim(root_path)//"initial_phasespace.dat")
@@ -1372,7 +1372,7 @@ contains
     !        SLL_ASSERT(size(particlespeed)==size(particleweight))
     !
     !        energy=0.5_f64*dot_product(particleweight*relmass,particlespeed**2)
-    !        call sll_collective_globalsum(sll_world_collective, energy, 0)
+    !        call sll_collective_globalsum(sll_v_world_collective, energy, 0)
     !    end function
 
 
@@ -1391,7 +1391,7 @@ contains
                             p_species(idx)%particle%weight,1.0_f64/abs(p_species(idx)%qm))
         enddo
 
-        call sll_collective_globalsum(sll_world_collective, energy, 0)
+        call sll_collective_globalsum(sll_v_world_collective, energy, 0)
         energy=energy+kineticenergy_offset
     end function
 
@@ -1409,7 +1409,7 @@ contains
                             p_species(idx)%particle%weight_const,1.0_f64/abs(p_species(idx)%qm))
         enddo
 
-        call sll_collective_globalsum(sll_world_collective, energy, 0)
+        call sll_collective_globalsum(sll_v_world_collective, energy, 0)
     end function
 
 
@@ -1439,7 +1439,7 @@ contains
                (p_species(idx)%particle%weight, p_species(idx)%particle%vx, &
                             1.0_f64/abs(p_species(idx)%qm))
         enddo
-        call sll_collective_globalsum(sll_world_collective, impulse, 0)
+        call sll_collective_globalsum(sll_v_world_collective, impulse, 0)
 
         impulse=impulse+impulse_offset
     end function
@@ -1458,7 +1458,7 @@ contains
                             1.0_f64/abs(p_species(idx)%qm))
         enddo
 
-        call sll_collective_globalsum(sll_world_collective, impulse, 0)
+        call sll_collective_globalsum(sll_v_world_collective, impulse, 0)
     end function
 
 
@@ -1483,11 +1483,11 @@ contains
         sll_real64 :: vth
         sll_real64 :: mean
         mean=dot_product(particlespeed,particleweight)
-        call sll_collective_globalsum(sll_world_collective, mean, 0)
+        call sll_collective_globalsum(sll_v_world_collective, mean, 0)
 
 
         vth=dot_product((particlespeed-mean)**2,particleweight)
-        call sll_collective_globalsum(sll_world_collective, vth, 0)
+        call sll_collective_globalsum(sll_v_world_collective, vth, 0)
     end function
 
 
@@ -1510,7 +1510,7 @@ contains
                 p_species(idx)%particle%dx)*(-1.0_f64)*p_species(idx)%qm/abs(p_species(idx)%qm)
         enddo
 
-        call sll_collective_globalsum(sll_world_collective, energy, 0)
+        call sll_collective_globalsum(sll_v_world_collective, energy, 0)
 
         !if (coll_rank==0)  energy=energy+0.5_f64*bspline_fem_solver_1d_H1seminorm_solution()/(interval_b-interval_a)
         if (coll_rank==0)  energy=energy+fsolver%fieldenergy()

@@ -22,13 +22,23 @@
 ! of the data to be initialized. It is for this reason that we include all
 ! the abstract types in the same file (this one).
 
-!>@defgroup fields  sll_m_scalar_field_initializers_base
+!>@defgroup fields  sll_fields
 module sll_m_scalar_field_initializers_base
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_coordinate_transformation_2d_base
 
   implicit none
-  integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
+
+  public :: &
+    sll_p_cell_centered_field, &
+    sll_p_node_centered_field, &
+    sll_c_scalar_field_2d_initializer_base, &
+    sll_c_scalar_field_4d_initializer_base, &
+    sll_c_scalar_field_6d_initializer_base
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  integer, parameter :: sll_p_node_centered_field = 0, sll_p_cell_centered_field = 1
 
 
   ! **************************************************************************
@@ -37,17 +47,17 @@ module sll_m_scalar_field_initializers_base
   !
   ! **************************************************************************
 
-  type, abstract :: scalar_field_2d_initializer_base
+  type, abstract :: sll_c_scalar_field_2d_initializer_base
      sll_int32   :: data_position
    contains
      procedure(scalar_field_2d_initializer), deferred, pass :: f_of_x1x2
-  end type scalar_field_2d_initializer_base
+  end type sll_c_scalar_field_2d_initializer_base
 
   abstract interface
      subroutine scalar_field_2d_initializer( init_obj, data_out )
        use sll_m_working_precision
-       import scalar_field_2d_initializer_base
-       class(scalar_field_2d_initializer_base), intent(inout) :: init_obj
+       import sll_c_scalar_field_2d_initializer_base
+       class(sll_c_scalar_field_2d_initializer_base), intent(inout) :: init_obj
        sll_real64, dimension(:,:), intent(out)                :: data_out
      end subroutine scalar_field_2d_initializer
   end interface
@@ -58,18 +68,18 @@ module sll_m_scalar_field_initializers_base
   !
   ! **************************************************************************
 
-  type, abstract :: scalar_field_4d_initializer_base
+  type, abstract :: sll_c_scalar_field_4d_initializer_base
      sll_int32 :: data_position
    contains
      procedure(scalar_field_4d_initializer), deferred, pass :: f_of_4args
-  end type scalar_field_4d_initializer_base
+  end type sll_c_scalar_field_4d_initializer_base
 
 
   abstract interface
      subroutine scalar_field_4d_initializer( init_obj, data_out )
        use sll_m_working_precision
-       import scalar_field_4d_initializer_base
-       class(scalar_field_4d_initializer_base), intent(inout) :: init_obj
+       import sll_c_scalar_field_4d_initializer_base
+       class(sll_c_scalar_field_4d_initializer_base), intent(inout) :: init_obj
        sll_real64, dimension(:,:,:,:), intent(out)            :: data_out
      end subroutine scalar_field_4d_initializer
   end interface
@@ -80,18 +90,18 @@ module sll_m_scalar_field_initializers_base
   !
   ! **************************************************************************
 
-  type, abstract :: scalar_field_6d_initializer_base
+  type, abstract :: sll_c_scalar_field_6d_initializer_base
      sll_int32 :: data_position
    contains
      procedure(scalar_field_6d_initializer), deferred, pass :: f_of_6args
-  end type scalar_field_6d_initializer_base
+  end type sll_c_scalar_field_6d_initializer_base
 
 
   abstract interface
      subroutine scalar_field_6d_initializer( init_obj, data_out )
        use sll_m_working_precision
-       import scalar_field_6d_initializer_base
-       class(scalar_field_6d_initializer_base), intent(inout) :: init_obj
+       import sll_c_scalar_field_6d_initializer_base
+       class(sll_c_scalar_field_6d_initializer_base), intent(inout) :: init_obj
        sll_real64, dimension(:,:,:,:,:,:), intent(out)        :: data_out
      end subroutine scalar_field_6d_initializer
   end interface

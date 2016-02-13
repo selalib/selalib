@@ -1,0 +1,49 @@
+# AUTHOR: Yaman Güçlü - IPP Garching
+#
+# NOTE:
+# . This file is in "selalib/package"
+# . At build time, "selalib.inc" is generated inside "<BUILD_DIR>/package"
+# . Upon installation, both files are copied to "<INSTALL_DIR>/pkg_info/selalib"
+#
+# USAGE:
+# . Build and install SeLaLib (see manual)
+# . Copy "makefile_template" and "selalib.inc" to your project directory
+# . Rename "makefile_template" as "makefile" (or "Makefile")
+# . Update the variables SOURCES and EXECUTABLE, and possibly other flags
+# . Upon "make", your project will be correctly built and linked against SeLaLib
+
+#===============================================================================
+# PROJECT information provided by user
+#===============================================================================
+SOURCES    =  # MANDATORY: Fortran sources
+EXECUTABLE =  # MANDATORY: Executable name
+FCFLAGS    =  # OPTIONAL : Fortran compiler flags
+LDFLAGS    =  # OPTIONAL : Linker flags
+LIBS       =  # OPTIONAL : Libraries to link
+
+#===============================================================================
+# Link project to SELALIB: include path and library list (do not change this)
+#===============================================================================
+include selalib.inc
+
+FCFLAGS := $(FCFLAGS) -I$(SLL_INCLUDE_PATH)
+LIBS := $(LIBS) $(SLL_LIB) $(SLL_EXT) $(SLL_DEPS)
+
+#==============================================================================
+# Standard targets: make, make all, make clean
+#==============================================================================
+OBJECTS = $(SOURCES:.F90=.o)
+
+all: $(SOURCES) $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	$(FC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
+
+%.o: %.F90
+	$(FC) $(FCFLAGS) -c $<
+%.o: %.f90
+	$(FC) $(FCFLAGS) -c $<
+
+.PHONY: clean
+clean:
+	$(RM) $(EXECUTABLE) *.o *.mod

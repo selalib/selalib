@@ -11,14 +11,15 @@
 !------------------------------------------------------------------------------
 module sll_m_xdmf_light_serial
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-
-  use sll_m_xml, only: &
-    sll_t_xml_document,    &
-    sll_t_xml_element
 
   use sll_m_io_utilities, only: &
     sll_s_ints_to_string
+
+  use sll_m_xml, only: &
+    sll_t_xml_document, &
+    sll_t_xml_element
 
   implicit none
 
@@ -26,6 +27,7 @@ module sll_m_xdmf_light_serial
     sll_t_xdmf_file
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !==============================================================================
 
@@ -132,7 +134,7 @@ contains
     type(sll_t_xml_element), pointer :: time, topology, dataitem
 
     ! Prepare strings with data
-    write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
+    write( time_str, '(g20.12)' ) self%time ! TODO: investigate format options
     call sll_s_ints_to_string( (/ dims(2), dims(1) /), dims_str )
 
     ! Add new grid to domain

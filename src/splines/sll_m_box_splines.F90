@@ -12,35 +12,64 @@
 !>     \@Condat2006 "Three-directional box splines"
 
 module sll_m_box_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_utilities, only : sll_factorial
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann, &
+    sll_p_periodic
+
+  use sll_m_constants, only: &
+    sll_p_epsilon_0, &
+    sll_p_sqrt3
+
   use sll_m_hex_pre_filters, only: &
-       pre_filter_pfir, &
-       pre_filter_int, &
-       pre_filter_piir2, &
-       pre_filter_piir1
-  use sll_m_hexagonal_meshes
-  use sll_m_constants, only : &
-       sll_sqrt3, &
-       sll_epsilon_0
-!  use sll_m_fekete_integration
-!  use sll_m_gauss_triangle_integration
+       sll_s_pre_filter_pfir, &
+       sll_s_pre_filter_int, &
+       sll_s_pre_filter_piir2, &
+       sll_s_pre_filter_piir1
 
+  use sll_m_hexagonal_meshes, only: &
+    sll_f_cart_to_hex1, &
+    sll_f_cart_to_hex2, &
+    sll_f_cells_to_origin, &
+    sll_f_change_elements_notation, &
+    sll_o_delete, &
+    sll_s_get_cell_vertices_index, &
+    sll_f_local_to_global, &
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d, &
+    sll_s_write_caid_files
+
+  use sll_m_utilities, only: &
+    sll_o_factorial
 
   implicit none
+
+  public :: &
+    sll_f_boxspline_x1_derivative, &
+    sll_f_boxspline_x2_derivative, &
+    sll_f_compute_box_spline, &
+    sll_f_hex_interpolate_value, &
+    sll_f_new_box_spline_2d, &
+    sll_t_box_spline_2d, &
+    sll_o_delete, &
+    sll_s_write_all_django_files, &
+    sll_s_write_connectivity
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief
   !> basic type for 2 dimensional box splines dara
   !> @details
   !> 2D Box spline type, containing the mesh information, the
   !> boundary condition, and the spline coefficients
-  type sll_box_spline_2d
-     type(sll_hex_mesh_2d), pointer  :: mesh !< Hexagonal mesh
-     sll_int32 SLL_PRIV :: bc_type !< Boundary conditions definition
+  type sll_t_box_spline_2d
+     type(sll_t_hex_mesh_2d), pointer  :: mesh !< Hexagonal mesh
+     sll_int32, private :: bc_type !< Boundary conditions definition
      sll_real64, dimension(:), pointer :: coeffs !< Spline coefficients
 
    contains
@@ -48,14 +77,14 @@ module sll_m_box_splines
      procedure, pass(spline) :: compute_coeff_box_spline_2d_diri
      procedure, pass(spline) :: compute_coeff_box_spline_2d_prdc
      procedure, pass(spline) :: compute_coeff_box_spline_2d_neum
-  end type sll_box_spline_2d
+  end type sll_t_box_spline_2d
 
   !> @brief Generic sub-routine defined for 2D box spline types.
   !> Deallocates the memory associated with the given box spline object.
   !> @param[inout] spline_object.
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_box_spline_2d
-  end interface sll_delete
+  end interface sll_o_delete
 
 contains  ! ****************************************************************
 
@@ -74,27 +103,27 @@ contains  ! ****************************************************************
   !> the given boundary conditions. Also allocates memory for the coefficients
   !> @param[in] mesh Hexagonal mesh on which the box spline will be defined
   !> @param[in] bc_type Integer defining the boundary condition, usual values
-  !> are SLL_PERIODIC, SLL_DIRICHLET, ...
+  !> are sll_p_periodic, sll_p_dirichlet, ...
   !> @return box spline element
-  function new_box_spline_2d( &
+  function sll_f_new_box_spline_2d( &
        mesh,         &
        bc_type)
 
-    type(sll_box_spline_2d), pointer  :: new_box_spline_2d
-    type(sll_hex_mesh_2d),   pointer  :: mesh
+    type(sll_t_box_spline_2d), pointer  :: sll_f_new_box_spline_2d
+    type(sll_t_hex_mesh_2d),   pointer  :: mesh
     sll_int32,  intent(in)        :: bc_type
     sll_int32                     :: ierr
 
 
-    SLL_ALLOCATE( new_box_spline_2d, ierr )
+    SLL_ALLOCATE( sll_f_new_box_spline_2d, ierr )
 
-    new_box_spline_2d%mesh => mesh
+    sll_f_new_box_spline_2d%mesh => mesh
 
-    new_box_spline_2d%bc_type = bc_type
+    sll_f_new_box_spline_2d%bc_type = bc_type
 
-    SLL_ALLOCATE( new_box_spline_2d%coeffs(1:mesh%num_pts_tot), ierr )
+    SLL_ALLOCATE( sll_f_new_box_spline_2d%coeffs(1:mesh%num_pts_tot), ierr )
 
-  end function new_box_spline_2d
+  end function sll_f_new_box_spline_2d
 
   !---------------------------------------------------------------------------
   !> @brief Computes box splines coefficients
@@ -104,20 +133,20 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d( spline, data, deg )
-    class(sll_box_spline_2d),         intent(inout) :: spline
+    class(sll_t_box_spline_2d),         intent(inout) :: spline
     sll_real64, dimension(:), target, intent(in) :: data
     sll_int32,                        intent(in) :: deg
 
     ! We make every case explicit to facilitate adding more BC types in
     ! the future.
     select case(spline%bc_type)
-    case(SLL_DIRICHLET)
+    case(sll_p_dirichlet)
        ! boundary condition type is dirichlet
        call spline%compute_coeff_box_spline_2d_diri( data, deg)
-    case(SLL_PERIODIC)
+    case(sll_p_periodic)
        ! boundary condition type is periodic
        call spline%compute_coeff_box_spline_2d_prdc( data, deg)
-    case(SLL_NEUMANN)
+    case(sll_p_neumann)
        ! boundary condition type is neumann
        call spline%compute_coeff_box_spline_2d_neum( data, deg)
     case default
@@ -137,7 +166,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_diri(spline, data, deg)
-    class(sll_box_spline_2d), intent(inout)          :: spline
+    class(sll_t_box_spline_2d), intent(inout)          :: spline
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     sll_int32,                intent(in)          :: deg
 
@@ -158,7 +187,7 @@ contains  ! ****************************************************************
 
     ! Create a table for the filter values and fill it:
 
-    ! call pre_filter_pfir(spline%mesh, deg, filter_array)
+    ! call sll_s_pre_filter_pfir(spline%mesh, deg, filter_array)
     ! If pINT, pIIR1 or  pIIR2:
     SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
     do k=1, num_pts_radius
@@ -199,7 +228,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_prdc(spline, data, deg)
-    class(sll_box_spline_2d), intent(inout)          :: spline
+    class(sll_t_box_spline_2d), intent(inout)          :: spline
     sll_int32,                intent(in)          :: deg
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
 
@@ -223,7 +252,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_neum(spline, data, deg)
-    class(sll_box_spline_2d), intent(inout)          :: spline
+    class(sll_t_box_spline_2d), intent(inout)          :: spline
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     sll_int32,                intent(in)          :: deg
 
@@ -254,8 +283,8 @@ contains  ! ****************************************************************
     else if (n .lt. k) then
        res = 0._f64
     else
-       res = real(sll_factorial(n),f64) / real((sll_factorial(k) &
-            * sll_factorial(n - k)), f64)
+       res = real(sll_o_factorial(n),f64) / real((sll_o_factorial(k) &
+            * sll_o_factorial(n - k)), f64)
     end if
   end function choose
 
@@ -302,8 +331,8 @@ contains  ! ****************************************************************
        ! Transformation to hexagonal coordinates :
        x1 = -abs(x1_in)
        x2 =  abs(x2_in)
-       u = x1 - x2/sll_sqrt3
-       v = x1 + x2/sll_sqrt3
+       u = x1 - x2/sll_p_sqrt3
+       v = x1 + x2/sll_p_sqrt3
        ! First generating vector (r1') symmetry
        if (v.gt.0) then
           v = -v
@@ -344,8 +373,8 @@ contains  ! ****************************************************************
                       aux2 = 0._f64
                    end if
                    val = val + coeff*choose(deg-1+d,d)   &
-                        /real(sll_factorial(2*deg-1+d), f64) &
-                        /real(sll_factorial(deg -1 -d), f64) &
+                        /real(sll_o_factorial(2*deg-1+d), f64) &
+                        /real(sll_o_factorial(deg -1 -d), f64) &
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
                    if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
@@ -366,8 +395,8 @@ contains  ! ****************************************************************
        ! Transformation to hexagonal coordinates :
        x1 = abs(x1_in)
        x2 = abs(x2_in)
-       u = x1 - x2/sll_sqrt3
-       v = x1 + x2/sll_sqrt3
+       u = x1 - x2/sll_p_sqrt3
+       v = x1 + x2/sll_p_sqrt3
        if (u.lt.0) then
           !Symmetry r2
           u = -u
@@ -405,8 +434,8 @@ contains  ! ****************************************************************
   !> @param[in] x2 real containing second coordinate of point
   !> @param[in] deg real containing the degree of the spline to be computed
   !> @return the value of the box spline at (x1,x2)
-  function compute_box_spline(spline, x1, x2, deg) result(val)
-    type(sll_box_spline_2d), pointer, intent(in):: spline
+  function sll_f_compute_box_spline(spline, x1, x2, deg) result(val)
+    type(sll_t_box_spline_2d), pointer, intent(in):: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_int32,  intent(in) :: deg
@@ -419,7 +448,7 @@ contains  ! ****************************************************************
 
     val = chi_gen_val(x1_basis, x2_basis, deg)
 
-  end function compute_box_spline
+  end function sll_f_compute_box_spline
 
 
 
@@ -432,7 +461,7 @@ contains  ! ****************************************************************
   !> @param[in] x2 real containing second coordinate of point
   !> @return the first coordinate after change of coordinate sys.
   function change_basis_x1(spline, x1, x2) result(x1_basis)
-    type(sll_box_spline_2d), pointer    :: spline
+    type(sll_t_box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_real64             :: delta_q
@@ -447,7 +476,7 @@ contains  ! ****************************************************************
 
     ! Algorithms basis
     r11 = 0.5_f64
-    r12 = -sll_sqrt3 * 0.5_f64
+    r12 = -sll_p_sqrt3 * 0.5_f64
     r21 =  r11
     r22 = -r12
 
@@ -476,7 +505,7 @@ contains  ! ****************************************************************
   function change_basis_x2(spline, x1, x2) result(x2_basis)
     ! This function allows to change a point of coordinates (x1, x2)
     ! on the spline basis to the mesh basis
-    type(sll_box_spline_2d), pointer           :: spline
+    type(sll_t_box_spline_2d), pointer           :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_real64             :: delta_q
@@ -492,7 +521,7 @@ contains  ! ****************************************************************
     ! Getting spline generator vectors coordinates
     ! Algorithms basis
     r11 =  0.5_f64
-    r12 = -0.5_f64 * sll_sqrt3
+    r12 = -0.5_f64 * sll_p_sqrt3
     r21 =  r11
     r22 = -r12
 
@@ -521,9 +550,9 @@ contains  ! ****************************************************************
   !> @param[in] spline box spline with coefficients already pre computed
   !> @param[in] deg integer with degree of splines
   !> @return real Interpolated value
-  function hex_interpolate_value(mesh_geom, x1, x2, spline, deg) result(val)
-    type(sll_hex_mesh_2d), pointer, intent(in) :: mesh_geom
-    type(sll_box_spline_2d), pointer           :: spline
+  function sll_f_hex_interpolate_value(mesh_geom, x1, x2, spline, deg) result(val)
+    type(sll_t_hex_mesh_2d), pointer, intent(in) :: mesh_geom
+    type(sll_t_box_spline_2d), pointer           :: spline
     sll_int32,  intent(in)  :: deg
     sll_real64, intent(in)  :: x1,      x2
     sll_real64              :: xm1,     xm2
@@ -555,8 +584,8 @@ contains  ! ****************************************************************
 
     ! First we need to compute the coordinates of
     ! the closest mesh point associated to (x1,x2)
-    k1_asso = cart_to_hex1(mesh_geom, x1, x2)
-    k2_asso = cart_to_hex2(mesh_geom, x1, x2)
+    k1_asso = sll_f_cart_to_hex1(mesh_geom, x1, x2)
+    k2_asso = sll_f_cart_to_hex2(mesh_geom, x1, x2)
 
     ! Then we will do a loop for all the points 
     ! on the envelopping rhomboid of radius=deg
@@ -565,7 +594,7 @@ contains  ! ****************************************************************
 
           k1  = k1_asso + ki
           k2  = k2_asso + kj
-          distance = cells_to_origin(k1, k2)
+          distance = sll_f_cells_to_origin(k1, k2)
 
           ! We test if we are in the domain
           if (distance.le.num_cells) then
@@ -587,7 +616,7 @@ contains  ! ****************************************************************
           else
              !! TREAT HERE BC
              ! TODO @LM
-             if (spline%bc_type .eq. SLL_DIRICHLET) then
+             if (spline%bc_type .eq. sll_p_dirichlet) then
                 val = val !no update
                 ind = spline%mesh%hex_to_global(k1_asso, k2_asso)
              else
@@ -597,7 +626,7 @@ contains  ! ****************************************************************
           end if
        end do
     end do
-  end function hex_interpolate_value
+  end function sll_f_hex_interpolate_value
 
 
   !---------------------------------------------------------
@@ -612,7 +641,7 @@ contains  ! ****************************************************************
   !> @param[OUT] index_nZ vector of size 3*deg*deg containing the global
   !> indices of all non-zero splines
   function non_zeros_splines(mesh, cell_index, deg) result(index_nZ)
-    type(sll_hex_mesh_2d), pointer, intent(in) :: mesh
+    type(sll_t_hex_mesh_2d), pointer, intent(in) :: mesh
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: cell_index
     sll_int32               :: index_nZ(3*deg*deg)
@@ -636,7 +665,7 @@ contains  ! ****************************************************************
     call mesh%cell_type(cell_index, type)
 
     !Getting the cell vertices which are the 1st indices of the non null splines
-    call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
+    call sll_s_get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
          mesh%center_cartesian_coord(2,cell_index),&
          mesh, &
          edge1, edge2, edge3)
@@ -665,7 +694,7 @@ contains  ! ****************************************************************
              print *, "ERROR in non_zero_splines: wrong index, i=", i
           end if
           do j=2,7 ! this represents the direct neighbours for a point
-             nei_point = local_to_global(mesh, last_point, j)
+             nei_point = sll_f_local_to_global(mesh, last_point, j)
              if ((nei_point.ne.-1).and.(.not.(ANY(index_nZ==nei_point)))) then
                 index_nZ(current_nZ) = nei_point
                 current_nZ = current_nZ + 1
@@ -683,7 +712,7 @@ contains  ! ****************************************************************
   !> @param[in] x2 real containing second coordinate of point
   !> @param[in] deg integer with degree of splines
   !> @return real derivative on x1 of box spline
-  function boxspline_x1_derivative(x1, x2, deg) result(val)
+  function sll_f_boxspline_x1_derivative(x1, x2, deg) result(val)
     sll_int32,  intent(in)  :: deg
     sll_real64, intent(in)  :: x1
     sll_real64, intent(in)  :: x2
@@ -695,7 +724,7 @@ contains  ! ****************************************************************
     sll_real64 :: val
 
     !Computing step on each direction
-    h = max(10.*sll_epsilon_0*abs(x1), sll_epsilon_0)
+    h = max(10.*sll_p_epsilon_0*abs(x1), sll_p_epsilon_0)
 
     ! Finite difference method of order 5
     fm2h = chi_gen_val(x1-2.0_f64*h, x2, deg)
@@ -705,7 +734,7 @@ contains  ! ****************************************************************
 
     val = ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h) / 12._f64 / h
 
-  end function boxspline_x1_derivative
+  end function sll_f_boxspline_x1_derivative
 
 
   !---------------------------------------------------------------------------
@@ -715,7 +744,7 @@ contains  ! ****************************************************************
   !> @param[in] x2 real containing second coordinate of point
   !> @param[in] deg integer with degree of splines
   !> @return real derivative on x2 of box spline
-  function boxspline_x2_derivative(x1, x2, deg) result(val)
+  function sll_f_boxspline_x2_derivative(x1, x2, deg) result(val)
     sll_int32,  intent(in)  :: deg
     sll_real64, intent(in)  :: x1
     sll_real64, intent(in)  :: x2
@@ -727,7 +756,7 @@ contains  ! ****************************************************************
     sll_real64 :: val
 
     !Computing step on each direction
-    h = max(10.*sll_epsilon_0*abs(x2), sll_epsilon_0)
+    h = max(10.*sll_p_epsilon_0*abs(x2), sll_p_epsilon_0)
 
     ! Finite difference method of order 5
     fm2h = chi_gen_val(x1, x2-2.0*h, deg)
@@ -737,7 +766,7 @@ contains  ! ****************************************************************
 
     val = 0.25/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
 
-  end function boxspline_x2_derivative
+  end function sll_f_boxspline_x2_derivative
 
 
   !---------------------------------------------------------------------------
@@ -760,11 +789,11 @@ contains  ! ****************************************************************
     sll_real64 :: x1_basis
     sll_real64 :: x2_basis
     sll_int32  :: ierr
-    type(sll_hex_mesh_2d),   pointer  :: mesh
-    type(sll_box_spline_2d), pointer  :: spline
+    type(sll_t_hex_mesh_2d),   pointer  :: mesh
+    type(sll_t_box_spline_2d), pointer  :: spline
 
-    mesh => new_hex_mesh_2d(1)
-    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+    mesh => sll_f_new_hex_mesh_2d(1)
+    spline => sll_f_new_box_spline_2d(mesh, sll_p_dirichlet)
     x1_basis = change_basis_x1(spline, x1, x2)
     x2_basis = change_basis_x2(spline, x1, x2)
 
@@ -776,14 +805,14 @@ contains  ! ****************************************************************
           val = chi_gen_val(x1_basis, x2_basis, deg)
        else if (nderiv2.eq.1) then
           !> derivative with respect to the second coo
-          val = boxspline_x2_derivative(x1_basis, x2_basis, deg)
+          val = sll_f_boxspline_x2_derivative(x1_basis, x2_basis, deg)
        else
           print *, "Error in boxspline_val_der : cannot compute this derivative"
        end if
     else if (nderiv1.eq.1) then
        ! derivative with respecto to the first coo
        if (nderiv2.eq.0) then
-          val = boxspline_x1_derivative(x1_basis, x2_basis, deg)
+          val = sll_f_boxspline_x1_derivative(x1_basis, x2_basis, deg)
        else
           print *, "Error in boxspline_val_der : cannot compute this derivative"
        end if
@@ -791,9 +820,8 @@ contains  ! ****************************************************************
 
     SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
     SLL_DEALLOCATE(spline,ierr)
-    call delete(mesh)
+    call sll_o_delete(mesh)
   end function boxspline_val_der
-
 
   !---------------------------------------------------------------------------
   !> @brief Writes connectivity for CAID / DJANGO
@@ -802,8 +830,8 @@ contains  ! ****************************************************************
   !> Output file : boxsplines_connectivity.txt
   !> @param[in]  mesh pointer to the hexagonal mesh
   !> @param[in]  deg  integer designing boxsplines degree
-  subroutine write_connectivity(mesh, deg)
-    type(sll_hex_mesh_2d), pointer :: mesh
+  subroutine sll_s_write_connectivity(mesh, deg)
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
@@ -829,7 +857,7 @@ contains  ! ****************************************************************
 
     do num_ele = 1,mesh%num_triangles
        ! We write cell ID number
-       write(out_unit, "(i6)") change_elements_notation(mesh, num_ele)
+       write(out_unit, "(i6)") sll_f_change_elements_notation(mesh, num_ele)
        ! We write number of non zero
        write(out_unit, "(i6)") non_zero
        ! We write the indices of the non zero splines
@@ -844,20 +872,21 @@ contains  ! ****************************************************************
 
     close(out_unit)
 
-  end subroutine write_connectivity
+  end subroutine sll_s_write_connectivity
+
 
   !> @brief Generic sub-routine defined for 2D box spline types.
   !> Deallocates the memory associated with the given box spline object.
   !> @param[inout] spline_object.
   subroutine delete_box_spline_2d(spline)
-    type(sll_box_spline_2d),  intent(inout), pointer :: spline
+    type(sll_t_box_spline_2d),  intent(inout), pointer :: spline
     sll_int32 :: ierr
 
     if( .not. associated(spline) ) then
        print *, 'delete_box_spline_2D(): passed spline is not associated'
        STOP
     end if
-    call delete(spline%mesh)
+    call sll_o_delete(spline%mesh)
     SLL_DEALLOCATE(spline%coeffs, ierr)
     SLL_DEALLOCATE(spline, ierr)
   end subroutine delete_box_spline_2d

@@ -20,7 +20,7 @@
 !> provides capabilities for data and derivative
 !> interpolation with quintic splines 
 !> @details
-!> inspl5 and spln5 routines come from
+!> sll_s_inspl5 and spln5 routines come from
 !> "An algorithm for the interpolation of functions using quintic splines"
 !> by E.H. Mund, P. Hallet and J.P. Hennart
 !> Journal of COmputational and Applied Mathematics, volume 1, number 4, 1975.
@@ -28,16 +28,23 @@
 !> Periodic boundary conditions are not implemented. You must set function value
 !> and its derivative a the boundary
 module sll_m_quintic_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_s_inspl5, &
+    sll_s_splin5
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
 !> Calculation of the parameters of an interpolating quintic splines
-subroutine inspl5(n,x,ind1,indn,cf,h)
+subroutine sll_s_inspl5(n,x,ind1,indn,cf,h)
 
 sll_int32,  intent(in)    :: n         !< number of interpolation points
 sll_real64, intent(in)    :: x(n)      !< vector of abscissae
@@ -239,11 +246,11 @@ goto 15
      im      =  im-6
    end do
 
-end subroutine inspl5
+end subroutine sll_s_inspl5
 
 !> Calculation of the values of an interpolating quintic pline
 !> and of its first and second derivatives at any point xx
-subroutine splin5(n,x,cf,xx,order,f)
+subroutine sll_s_splin5(n,x,cf,xx,order,f)
 sll_int32,  intent(in)  :: n          !< number of interpolation points
 sll_real64, intent(in)  :: x(n)       !< vector of abscissae
 sll_real64, intent(in)  :: cf(1:3,n)  !< ordinates, first and second derivatives
@@ -328,7 +335,7 @@ else
 
 end if
 
-end subroutine splin5
+end subroutine sll_s_splin5
 
 subroutine inspl5_periodic(n,dx,cf,h)
 

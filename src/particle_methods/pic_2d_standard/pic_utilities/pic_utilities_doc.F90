@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup pic_utilities sll_m_pic_utilities 
+!> @defgroup pic_utilities sll_pic_utilities 
 !> @brief Sorting algorithm and needed conversion tools
 !>       
 !> @author Sever Hirstoaga

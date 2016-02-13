@@ -30,23 +30,32 @@
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_1d_old
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_scalar_field_initializers_base
-  use sll_m_gnuplot
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_1d
+
+  use sll_m_gnuplot, only: &
+    sll_s_gnuplot_write
+
+  use sll_m_scalar_field_initializers_base, only: &
+    sll_p_cell_centered_field, &
+    sll_p_node_centered_field
 
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !I removed this line because, it not exists in 2d version
   !should be in base module
-  !integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
+  !integer, parameter :: sll_p_node_centered_field = 0, sll_p_cell_centered_field = 1
 
   type scalar_field_1d
-     class(sll_cartesian_mesh_1d), pointer :: mesh
+     class(sll_t_cartesian_mesh_1d), pointer :: mesh
      sll_real64, dimension(:), pointer       :: data
      sll_int32                               :: data_position
      character(len=64)                       :: name
@@ -71,7 +80,7 @@ contains   ! *i****************************************************************
 
     class(scalar_field_1d), intent(inout)   :: this
     character(len=*), intent(in)            :: field_name
-    class(sll_cartesian_mesh_1d), pointer   :: mesh
+    class(sll_t_cartesian_mesh_1d), pointer   :: mesh
     sll_int32, intent(in)                   :: data_position
     procedure(scalar_function_1D), optional :: init_function
 
@@ -92,7 +101,7 @@ contains   ! *i****************************************************************
     num_pts1   = mesh%num_cells+1
 
     this%data_position = data_position
-    if (data_position == NODE_CENTERED_FIELD) then
+    if (data_position == sll_p_node_centered_field) then
        SLL_ALLOCATE(this%data(num_pts1), ierr)
        if (present(init_function)) then
           do i1 = 1, num_pts1
@@ -101,7 +110,7 @@ contains   ! *i****************************************************************
        else 
           this%data = 0.0_f64 ! initialize to zero
        end if
-    else if (data_position == CELL_CENTERED_FIELD) then
+    else if (data_position == sll_p_cell_centered_field) then
        SLL_ALLOCATE(this%data(num_cells1), ierr)
        if (present(init_function)) then
           delta1 = 1.0_f64/real(num_cells1,f64)
@@ -153,7 +162,7 @@ contains   ! *i****************************************************************
       file_name = scalar_field%name
     endif 
 
-    call sll_gnuplot_write(scalar_field%data,file_name,error)
+    call sll_s_gnuplot_write(scalar_field%data,file_name,error)
   end subroutine write_scalar_field_1d
 
 end module sll_m_scalar_field_1d_old

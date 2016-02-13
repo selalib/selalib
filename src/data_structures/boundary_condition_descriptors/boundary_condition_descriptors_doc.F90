@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup boundary_condition_descriptors sll_m_boundary_condition_descriptors 
+!> @defgroup boundary_condition_descriptors sll_boundary_condition_descriptors 
 !> @brief 
 !> Descriptors for boundary conditions 
 !> @details
@@ -17,7 +17,7 @@
 !> <b> Headers file available </b>
 !>  - sll_m_boundary_condition_descriptors.h
 !>
-!> 	SLL_PERIODIC 	Periodic boundary condition u(1)=u(n)
-!>    SLL_DIRICHLET    	Dirichlet boundary condition 
-!> 	SLL_NEUMANN       Neumann boundary condition 
+!> 	sll_p_periodic 	Periodic boundary condition u(1)=u(n)
+!>    sll_p_dirichlet    	Dirichlet boundary condition 
+!> 	sll_p_neumann       Neumann boundary condition 
 !> 	SLL_HERMITE       Hermite boundary condition 
