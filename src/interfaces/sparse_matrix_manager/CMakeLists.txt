@@ -13,24 +13,16 @@ IF(SUITESPARSE_FOUND)
 
 ENDIF(SUITESPARSE_FOUND)
 
-#IF(PASTIX_FOUND)
-#
-#  #PasTiX is parallel
-#  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-#  INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
-#
-#  ADD_LIBRARY(sll_sparse_matrix STATIC 
-#              sll_m_pastix.F90
-#              sll_m_sparse_matrix_pastix.F90
-#              ${SPM_SOURCES})
-#
-#  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective
-#                                           sll_memory
-#                                           sll_assert
-#                                           ${PASTIX_LIBRARIES} 
-#                                           ${PTSCOTCH_LIBRARIES}
-#                                           ${SCOTCH_LIBRARIES}
-#                                           ${BLAS_LIBRARIES})
+IF(PASTIX_FOUND)
+
+  #PasTiX is parallel
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
+
+  SET(SPM_SOURCES ${SPM_SOURCES}
+              sll_m_pastix.F90)
+
+ENDIF(PASTIX_FOUND)
 
 ADD_LIBRARY(sll_sparse_matrix STATIC ${SPM_SOURCES})
 
@@ -43,6 +35,14 @@ IF(SUITESPARSE_FOUND)
 
 
 ENDIF()
+
+IF(PASTIX_FOUND)
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective
+                                           ${PASTIX_LIBRARIES} 
+                                           ${PTSCOTCH_LIBRARIES}
+                                           ${SCOTCH_LIBRARIES}
+                                           ${BLAS_LIBRARIES})
+ENDIF(PASTIX_FOUND)
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
