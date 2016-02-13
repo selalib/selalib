@@ -76,6 +76,11 @@ end type sll_t_csr_matrix
 
 sll_int32, parameter :: sll_p_umfpack = 1
 
+interface sll_f_new_csr_matrix
+  module procedure new_csr_matrix_with_dof
+  module procedure new_csr_matrix
+end interface sll_f_new_csr_matrix
+
 
 interface sll_o_delete
   module procedure sll_s_delete_csr_matrix
@@ -104,15 +109,15 @@ end subroutine sll_s_delete_csr_matrix
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
 !> @returns a pointer to the newly allocated object.
-function sll_f_new_csr_matrix( &
-        num_rows,              &
-        num_cols,              &
-        num_elts,          &
-        local_to_global_row,   &
-        num_local_dof_row,     &
-        local_to_global_col,   &
-        num_local_dof_col,     &
-        solver                 ) result(mat)
+function new_csr_matrix_with_dof( &
+        num_rows,                 &
+        num_cols,                 &
+        num_elts,                 &
+        local_to_global_row,      &
+        num_local_dof_row,        &
+        local_to_global_col,      &
+        num_local_dof_col,        &
+        solver                    ) result(mat)
 
 type(sll_t_csr_matrix), pointer          :: mat
 sll_int32,                    intent(in) :: num_rows
@@ -145,7 +150,57 @@ call sll_s_initialize_csr_matrix( &
   local_to_global_col,            &
   num_local_dof_col)
 
-end function sll_f_new_csr_matrix
+end function new_csr_matrix_with_dof
+
+!> @brief allocates the memory space for a new CSR matrix,
+!> @details
+!> initializes it with the given arguments and returns a pointer to the
+!> object.
+!> @param[in] num_rows    :  number of rows
+!> @param[in] num_cols    :  number of columns
+!> @param[in] num_element :  number of elements
+!> @param[in] solver      :  solver type
+!> @returns a pointer to the newly allocated object.
+function new_csr_matrix(          &
+        num_rows,                 &
+        num_cols,                 &
+        num_nz,                   &
+        solver                    ) result(mat)
+
+type(sll_t_csr_matrix), pointer          :: mat
+sll_int32,                    intent(in) :: num_rows
+sll_int32,                    intent(in) :: num_cols
+sll_int32,                    intent(in) :: num_nz
+sll_int32,                    optional   :: solver
+
+sll_int32 :: ierr
+
+SLL_ALLOCATE(mat, ierr)
+
+mat%solver = 0
+if (present(solver)) then
+#ifdef UMFPACK
+  mat%solver = solver
+#endif /* UMFPACK */
+endif
+
+mat%num_rows = num_rows
+mat%num_cols = num_cols
+mat%num_nz   = num_nz   
+
+#ifdef DEBUG
+print *,'#num_rows=',num_rows
+print *,'#num_cols=',num_cols
+print *,'#num_nz  =',num_nz
+#endif
+
+SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+SLL_CLEAR_ALLOCATE(mat%val(1:num_nz),ierr)
+mat%row_ptr = 0
+mat%col_ind = 0
+
+end function new_csr_matrix
 
 !> @brief initialization of CSR matrix type
 !> thanks to the global index of each local dof of each element
@@ -240,7 +295,7 @@ mat%num_nz   = num_nz
 #ifdef DEBUG
 print *,'#num_rows=',num_rows
 print *,'#num_cols=',num_cols
-print *,'#num_nz=',num_nz
+print *,'#num_nz  =',num_nz
 #endif
 
 SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
@@ -291,11 +346,13 @@ type(sll_t_csr_matrix), intent(in) :: mat_a
 sll_int32 :: ierr
 
 mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
-print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
 mat%num_rows = mat_a%num_rows  +  1
-print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
 mat%num_cols = mat_a%num_cols  +  1
+#ifdef DEBUG
+print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
+print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
 print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
+#endif /* DEBUG */
 
 SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
 SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
@@ -359,58 +416,57 @@ SLL_ASSERT(size(ia_out)         >= num_rows_out+1)
 SLL_ASSERT(size(ja_out)         >= num_nz_out)
 SLL_ASSERT(size(a_out)          >= num_nz_out)
 
-#ifdef UMFPACK 
+if (ia_in(num_rows_in+1) == num_nz_in) then ! UMFPACK
 
-SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in)
-s = 1
-do i=1,num_rows_in
-  ia_out(i) = s-1
-  do k = ia_in(i)+1, ia_in(i+1)
-    a_out(s) = a_in(k)
-    ja_out(s) = ja_in(k)
+  s = 1
+  do i=1,num_rows_in
+    ia_out(i) = s-1
+    do k = ia_in(i)+1, ia_in(i+1)
+      a_out(s) = a_in(k)
+      ja_out(s) = ja_in(k)
+      s = s+1
+    enddo
+    a_out(s) = constraint_vec(i)
+    ja_out(s) = num_rows_out-1
     s = s+1
   enddo
-  a_out(s) = constraint_vec(i)
-  ja_out(s) = num_rows_out-1
-  s = s+1
-enddo
-ia_out(num_rows_in+1) = s-1
-do i=1,num_rows_in
-  a_out(s) = constraint_vec(i)
-  ja_out(s) = i-1
-  s = s+1      
-enddo
-ia_out(num_rows_in+2) = s-1
- 
-SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out)
+  ia_out(num_rows_in+1) = s-1
+  do i=1,num_rows_in
+    a_out(s) = constraint_vec(i)
+    ja_out(s) = i-1
+    s = s+1      
+  enddo
+  ia_out(num_rows_in+2) = s-1
+   
+  SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out)
 
-#else
+else ! Default CG
 
-SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
-
-s = 1
-do i=1,num_rows_in
-  ia_out(i) = s
-  do k = ia_in(i), ia_in(i+1)-1
-    a_out(s) = a_in(k)
-    ja_out(s) = ja_in(k)
+  SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
+  
+  s = 1
+  do i=1,num_rows_in
+    ia_out(i) = s
+    do k = ia_in(i), ia_in(i+1)-1
+      a_out(s) = a_in(k)
+      ja_out(s) = ja_in(k)
+      s = s+1
+    enddo
+    a_out(s) = constraint_vec(i)
+    ja_out(s) = num_rows_out
     s = s+1
   enddo
-  a_out(s) = constraint_vec(i)
-  ja_out(s) = num_rows_out
-  s = s+1
-enddo
-ia_out(num_rows_in+1) = s
-do i=1,num_rows_in
-  a_out(s) = constraint_vec(i)
-  ja_out(s) = i
-  s = s+1      
-enddo
-ia_out(num_rows_in+2) = s
- 
-SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
+  ia_out(num_rows_in+1) = s
+  do i=1,num_rows_in
+    a_out(s) = constraint_vec(i)
+    ja_out(s) = i
+    s = s+1      
+  enddo
+  ia_out(num_rows_in+2) = s
+   
+  SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
 
-#endif
+endif
 
 end subroutine sll_s_csr_add_one_constraint
 
@@ -457,7 +513,7 @@ end if
 
 #else /* UMFPACK */
 
-SLL_ASSERT(associated(mat%val))
+SLL_ASSERT(associated(mat%val)) ! Just to avoid warning in debug mode
  
 #endif /* UMFPACK */
 
@@ -519,7 +575,7 @@ sll_real64, dimension(:), intent(out)   :: u
 
 #ifdef UMFPACK
 
-sll_int32  :: sys
+sll_int32                           :: sys
 sll_real64, dimension(umfpack_info) :: info
 
 #endif
@@ -552,7 +608,7 @@ print*, '#solve with umfpack'
 
 else
 
-  eps = 1.d-13
+  eps     = 1.d-13
   maxIter = 10000
   
   if ( mat%num_rows /= mat%num_cols ) then
@@ -561,14 +617,14 @@ else
   end if
   
   if ((abs(maxval(B)) < eps) .AND. (abs(minval(B)) < eps)) then
-    U = 0.0_8
+    U = 0.0_f64
     return
   end if
   
   SLL_ALLOCATE(Ad(mat%num_rows),err)
   SLL_ALLOCATE(d(mat%num_rows),err)
   
-  U   = 0.0_8
+  U    = 0.0_f64
   iter = 0
   
   NormInfb = maxval(abs(B))
@@ -611,7 +667,7 @@ else
     !==================================================!
     beta    = Norm2r1 / Norm2r0
     Norm2r0 = Norm2r1
-    d      = B + beta * d
+    d       = B + beta * d
            
     !-------------------!
     ! boucle suivante ? !
@@ -691,13 +747,15 @@ else
   SLL_ALLOCATE(Ux(mat%num_rows),err)
   SLL_ALLOCATE(one(mat%num_rows),err)
   
-  U(:)  = 0.0_8
+  U(:)   = 0.0_8
   one(:) = 1.0_f64
-  Ux(:) = U(:)
-  iter = 0
+  Ux(:)  = U(:)
+  iter   = 0
+
   call sll_s_mult_csr_matrix_vector( mat , Ux , Ad )
-  Ad = Ad - dot_product(Masse_tot, Ux)
-  r       = B - Ad
+
+  Ad       = Ad - dot_product(Masse_tot, Ux)
+  r        = B - Ad
   Norm2r0  = DOT_PRODUCT( r , r )
   NormInfb = maxval( abs( B ) )
   
@@ -772,14 +830,25 @@ subroutine sll_s_csr_todense( mat, dense_matrix)
   sll_real64, dimension(:,:) :: dense_matrix
   sll_int32                  :: i, j, k, l
 
-  l = 0
-  do i = 1, mat%num_rows 
-     do k = mat%row_ptr(i),mat%row_ptr(i+1)-1 
-        l = l + 1
-        j = mat%col_ind(l)
-        dense_matrix(i,j) = mat%val(l)
-     end do
-  end do
+  if (mat%solver == sll_p_umfpack) then
+    l = 0
+    do i = 1, mat%num_rows 
+       do k = mat%row_ptr(i)+1,mat%row_ptr(i+1)
+          l = l + 1
+          j = mat%col_ind(l)+1
+          dense_matrix(i,j) = mat%val(l)
+       end do
+    end do
+  else
+    l = 0
+    do i = 1, mat%num_rows 
+       do k = mat%row_ptr(i),mat%row_ptr(i+1)-1 
+          l = l + 1
+          j = mat%col_ind(l)
+          dense_matrix(i,j) = mat%val(l)
+       end do
+    end do
+  end if
 
 end subroutine sll_s_csr_todense
 
