@@ -19,7 +19,10 @@ module sll_m_box_splines
   use sll_m_utilities, only : sll_factorial
   use sll_m_boundary_condition_descriptors
   use sll_m_hex_pre_filters, only: &
-       pre_filter_pfir
+       pre_filter_pfir, &
+       pre_filter_int, &
+       pre_filter_piir2, &
+       pre_filter_piir1
   use sll_m_hexagonal_meshes
   use sll_m_constants, only : &
        sll_sqrt3, &
@@ -142,7 +145,7 @@ contains  ! ****************************************************************
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: k
     sll_int32  :: i
-    !sll_int32  :: ierr
+    sll_int32  :: ierr
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
     sll_real64 :: filter
@@ -155,7 +158,14 @@ contains  ! ****************************************************************
 
     ! Create a table for the filter values and fill it:
 
-    call pre_filter_pfir(spline%mesh, deg, filter_array)
+    ! call pre_filter_pfir(spline%mesh, deg, filter_array)
+    ! If pINT, pIIR1 or  pIIR2:
+    SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
+    do k=1, num_pts_radius
+       filter_array(k) = pre_filter_int(spline%mesh, k, deg)
+       ! filter_array(k) = pre_filter_piir1(spline%mesh, k, deg)
+       ! filter_array(k) = pre_filter_piir2(spline%mesh, k, deg)
+    end do
 
     do i = 1, num_pts_tot
 
