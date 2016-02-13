@@ -17,49 +17,58 @@
 
 
 module sll_m_particle_representations
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
 
   implicit none
 
-  type :: sll_particle_4d
+  public :: &
+    sll_t_particle_2d, &
+    sll_t_particle_2d_guard, &
+    sll_t_particle_2d_guard_ptr, &
+    sll_t_particle_4d, &
+    sll_t_particle_4d_guard, &
+    sll_t_particle_4d_guard_ptr
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type :: sll_t_particle_4d
      sll_int32  :: ic   ! cell index, linearly arranged
      sll_real32 :: dx!  sll_real64 :: dx!
      sll_real32 :: dy!  sll_real64 :: dy
      sll_real64 :: vx
      sll_real64 :: vy
      sll_real32 :: q!   sll_real64 :: q!      
-  end type sll_particle_4d
+  end type sll_t_particle_4d
 
-  type :: sll_particle_4d_guard
-     type(sll_particle_4d), pointer :: p
-  end type sll_particle_4d_guard
+  type :: sll_t_particle_4d_guard
+     type(sll_t_particle_4d), pointer :: p
+  end type sll_t_particle_4d_guard
 
-  type :: sll_particle_4d_guard_ptr
-     type(sll_particle_4d_guard), dimension(:), pointer :: g_list
-  end type sll_particle_4d_guard_ptr
+  type :: sll_t_particle_4d_guard_ptr
+     type(sll_t_particle_4d_guard), dimension(:), pointer :: g_list
+  end type sll_t_particle_4d_guard_ptr
 
 
 ! ------------------------------
 !  for the GUIDING CENTER model
 ! ------------------------------
-  type :: sll_particle_2d
+  type :: sll_t_particle_2d
      sll_int32  :: ic   ! cell index, linearly arranged
      sll_real32 :: dx
      sll_real32 :: dy
      sll_real32 :: q
-  end type sll_particle_2d
+  end type sll_t_particle_2d
 
-  type :: sll_particle_2d_guard
-     type(sll_particle_2d), pointer :: p
-  end type sll_particle_2d_guard
+  type :: sll_t_particle_2d_guard
+     type(sll_t_particle_2d), pointer :: p
+  end type sll_t_particle_2d_guard
 
-  type :: sll_particle_2d_guard_ptr
-     type(sll_particle_2d_guard), dimension(:), pointer :: g_list
-  end type sll_particle_2d_guard_ptr
+  type :: sll_t_particle_2d_guard_ptr
+     type(sll_t_particle_2d_guard), dimension(:), pointer :: g_list
+  end type sll_t_particle_2d_guard_ptr
 
 
 !contains

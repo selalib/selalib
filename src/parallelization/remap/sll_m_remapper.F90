@@ -21,60 +21,148 @@
 !> @brief
 !> Module for remapping
 module sll_m_remapper
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "sll_utilities.h"
-  use sll_m_utilities, only : is_even, is_power_of_two, int2string
-  use sll_m_collective
-  use iso_fortran_env, only: output_unit
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_f_collectives_are_same, &
+    sll_o_collective_allgather, &
+    sll_o_collective_allreduce, &
+    sll_o_collective_alltoall, &
+    sll_o_collective_alltoallv, &
+    sll_t_collective_t, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_f_new_collective
+
+  use sll_m_utilities, only: &
+    sll_s_int2string, &
+    sll_f_is_even, &
+    sll_f_is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_land
 
   implicit none
+
+  public :: &
+    sll_o_apply_remap_2d, &
+    sll_o_apply_remap_3d, &
+    sll_o_apply_remap_4d, &
+    sll_o_apply_remap_5d, &
+    sll_o_apply_remap_6d, &
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_collective, &
+    sll_o_get_layout_global_size_j, &
+    sll_o_get_layout_global_size_k, &
+    sll_o_get_layout_global_size_l, &
+    sll_o_get_layout_i_max, &
+    sll_o_get_layout_i_min, &
+    sll_o_get_layout_j_max, &
+    sll_o_get_layout_j_min, &
+    sll_o_get_layout_k_max, &
+    sll_o_get_layout_k_min, &
+    sll_o_get_layout_l_max, &
+    sll_o_get_layout_l_min, &
+    sll_o_get_layout_m_max, &
+    sll_o_get_layout_m_min, &
+    sll_o_get_layout_n_max, &
+    sll_o_get_layout_n_min, &
+    sll_o_global_to_local, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_t_layout_2d_ptr, &
+    sll_t_layout_3d, &
+    sll_t_layout_4d, &
+    sll_t_layout_4d_ptr, &
+    sll_t_layout_5d, &
+    sll_t_layout_6d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_f_new_layout_2d_from_layout_4d, &
+    sll_f_new_layout_3d, &
+    sll_f_new_layout_3d_from_layout_4d, &
+    sll_f_new_layout_4d, &
+    sll_f_new_layout_5d, &
+    sll_f_new_layout_6d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_2d_comp64, &
+    sll_t_remap_plan_2d_real64, &
+    sll_t_remap_plan_2d_real64_ptr, &
+    sll_t_remap_plan_3d_comp64, &
+    sll_t_remap_plan_3d_real64, &
+    sll_t_remap_plan_4d_real64, &
+    sll_t_remap_plan_4d_real64_ptr, &
+    sll_t_remap_plan_5d_real64, &
+    sll_t_remap_plan_6d_real64, &
+    sll_o_set_layout_i_max, &
+    sll_o_set_layout_i_min, &
+    sll_o_set_layout_j_max, &
+    sll_o_set_layout_j_min, &
+    sll_o_set_layout_k_max, &
+    sll_o_set_layout_k_min, &
+    sll_o_set_layout_l_max, &
+    sll_o_set_layout_l_min, &
+    sll_o_set_layout_m_max, &
+    sll_o_set_layout_m_min, &
+    sll_o_set_layout_n_max, &
+    sll_o_set_layout_n_min, &
+    sll_o_delete, &
+    sll_o_get_num_nodes, &
+    sll_o_view_lims
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_2D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
+  type :: box_2D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
   end type box_2D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_3D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
+  type :: box_3D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
   end type box_3D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_4D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
+  type :: box_4D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
   end type box_4D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_5D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
-     sll_int32 SLL_PRIV :: m_min, m_max
+  type :: box_5D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
+     sll_int32, private :: m_min, m_max
   end type box_5D
 
   !> @brief Index limits contained        
   !> in a given processor.
-  type SLL_PRIV :: box_6D
-     sll_int32 SLL_PRIV :: i_min, i_max
-     sll_int32 SLL_PRIV :: j_min, j_max
-     sll_int32 SLL_PRIV :: k_min, k_max
-     sll_int32 SLL_PRIV :: l_min, l_max
-     sll_int32 SLL_PRIV :: m_min, m_max
-     sll_int32 SLL_PRIV :: n_min, n_max
+  type :: box_6D
+     sll_int32, private :: i_min, i_max
+     sll_int32, private :: j_min, j_max
+     sll_int32, private :: k_min, k_max
+     sll_int32, private :: l_min, l_max
+     sll_int32, private :: m_min, m_max
+     sll_int32, private :: n_min, n_max
   end type box_6D
 
   
@@ -84,12 +172,12 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_2D
-     type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
-  end type layout_2D
+  type :: sll_t_layout_2d
+     type(sll_t_collective_t), pointer, private     :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     type(box_2D), dimension(:), pointer, private :: boxes
+  end type sll_t_layout_2d
 
   !> @brief Information on a collective and an
   !> array of boxes 
@@ -97,13 +185,13 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_3D
-     type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
-  end type layout_3D
+  type :: sll_t_layout_3d
+     type(sll_t_collective_t), pointer, private     :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     type(box_3D), dimension(:), pointer, private :: boxes
+  end type sll_t_layout_3d
 
   !> @brief Information on a collective and an
   !> array of boxes 
@@ -111,14 +199,14 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_4D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
-  end type layout_4D
+  type :: sll_t_layout_4d
+     type(sll_t_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     type(box_4D), dimension(:), pointer, private :: boxes
+  end type sll_t_layout_4d
 
   !> @brief Information on a collective and an
   !> array of boxes 
@@ -126,15 +214,15 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_5D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     sll_int32 SLL_PRIV                           :: global_sz5 !< size
-     type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
-  end type layout_5D
+  type :: sll_t_layout_5d
+     type(sll_t_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     sll_int32, private                           :: global_sz5 !< size
+     type(box_5D), dimension(:), pointer, private:: boxes
+  end type sll_t_layout_5d
 
   !> @brief Information on a collective and an
   !> array of boxes 
@@ -142,35 +230,35 @@ module sll_m_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type, public :: layout_6D
-     type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1 !< size
-     sll_int32 SLL_PRIV                           :: global_sz2 !< size
-     sll_int32 SLL_PRIV                           :: global_sz3 !< size
-     sll_int32 SLL_PRIV                           :: global_sz4 !< size
-     sll_int32 SLL_PRIV                           :: global_sz5 !< size
-     sll_int32 SLL_PRIV                           :: global_sz6 !< size
-     type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
-  end type layout_6D
+  type :: sll_t_layout_6d
+     type(sll_t_collective_t), pointer , private    :: collective
+     sll_int32, private                           :: global_sz1 !< size
+     sll_int32, private                           :: global_sz2 !< size
+     sll_int32, private                           :: global_sz3 !< size
+     sll_int32, private                           :: global_sz4 !< size
+     sll_int32, private                           :: global_sz5 !< size
+     sll_int32, private                           :: global_sz6 !< size
+     type(box_6D), dimension(:), pointer, private :: boxes
+  end type sll_t_layout_6d
 
 #define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
-  type, public :: name; \
+  type :: name; \
     type(layout_type), pointer :: l; \
   end type name
 
-MAKE_LAYOUT_POINTER_CONTAINER( layout_2d_ptr, layout_2D )
-MAKE_LAYOUT_POINTER_CONTAINER( layout_3d_ptr, layout_3D )
-MAKE_LAYOUT_POINTER_CONTAINER( layout_4d_ptr, layout_4D )
-MAKE_LAYOUT_POINTER_CONTAINER( layout_5d_ptr, layout_5D )
-MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, layout_6D )
+MAKE_LAYOUT_POINTER_CONTAINER( sll_t_layout_2d_ptr, sll_t_layout_2d )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_3d_ptr, sll_t_layout_3d )
+MAKE_LAYOUT_POINTER_CONTAINER( sll_t_layout_4d_ptr, sll_t_layout_4d )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_5d_ptr, sll_t_layout_5d )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, sll_t_layout_6d )
 
 #define MAKE_REMAP_POINTER_CONTAINER( name, plan_type ) \
-  type, public :: name; \
+  type :: name; \
     type(plan_type), pointer :: r; \
   end type name
 
-MAKE_REMAP_POINTER_CONTAINER( remap_plan_2d_real64_ptr, remap_plan_2d_real64 )
-MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 ) 
+MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_2d_real64_ptr, sll_t_remap_plan_2d_real64 )
+MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4d_real64 ) 
 
   ! Since the plan stores the information on box intersections, now
   ! we need a different type of plan for every dimension. It is also
@@ -187,198 +275,198 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   ! then replace the call to alltoallv by a call to alltoall.
 
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
-  type, public :: type_name;                                             \
-     type(layout_type), pointer SLL_PRIV            :: initial_layout=>null();\
-     type(layout_type), pointer SLL_PRIV            :: final_layout=>null();  \
-     integer, dimension(:), pointer SLL_PRIV        :: send_displs=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: send_counts=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_displs=>null();   \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_counts=>null();   \
-     type(box_type), dimension(:), pointer SLL_PRIV :: send_boxes=>null();    \
-     type(box_type), dimension(:), pointer SLL_PRIV :: recv_boxes=>null();    \
-     type(sll_collective_t), pointer SLL_PRIV       :: collective=>null();    \
-     data_type, dimension(:), pointer SLL_PRIV      :: send_buffer=>null();   \
-     data_type, dimension(:), pointer SLL_PRIV      :: recv_buffer=>null();   \
-     logical SLL_PRIV                               :: is_uniform=.false.;    \
+  type :: type_name;                                             \
+     type(layout_type), pointer, private            :: initial_layout=>null();\
+     type(layout_type), pointer, private            :: final_layout=>null();  \
+     integer, dimension(:), pointer, private        :: send_displs=>null();   \
+     integer, dimension(:), pointer, private        :: send_counts=>null();   \
+     integer, dimension(:), pointer, private        :: recv_displs=>null();   \
+     integer, dimension(:), pointer, private        :: recv_counts=>null();   \
+     type(box_type), dimension(:), pointer, private :: send_boxes=>null();    \
+     type(box_type), dimension(:), pointer, private :: recv_boxes=>null();    \
+     type(sll_t_collective_t), pointer, private       :: collective=>null();    \
+     data_type, dimension(:), pointer, private      :: send_buffer=>null();   \
+     data_type, dimension(:), pointer, private      :: recv_buffer=>null();   \
+     logical, private                               :: is_uniform=.false.;    \
   end type type_name
 
 
   ! 2D Remap types:
 
   !> @brief basic type for 2D remap for the 32-bit integer type.
-  MAKE_REMAP_PLAN(remap_plan_2D_int32, layout_2D, box_2D, sll_int32)
+  MAKE_REMAP_PLAN(remap_plan_2D_int32, sll_t_layout_2d, box_2D, sll_int32)
   !> @brief basic type for 2D remap for the 64-bit real type.
-  MAKE_REMAP_PLAN(remap_plan_2D_real64, layout_2D, box_2D, sll_real64)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_2d_real64, sll_t_layout_2d, box_2D, sll_real64)
   !> @brief basic type for 2D remap for the 64-bit complex type.
-  MAKE_REMAP_PLAN(remap_plan_2D_comp64, layout_2D, box_2D, sll_comp64)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_2d_comp64, sll_t_layout_2d, box_2D, sll_comp64)
 
   ! 3D Remap types:
 
   !> @brief basic type for 3D remap for the 32-bit integer type.
-  MAKE_REMAP_PLAN(remap_plan_3D_int32, layout_3D, box_3D, sll_int32)
+  MAKE_REMAP_PLAN(remap_plan_3D_int32, sll_t_layout_3d, box_3D, sll_int32)
   !> @brief basic type for 3D remap for the 64-bit real type.
-  MAKE_REMAP_PLAN(remap_plan_3D_real64, layout_3D, box_3D, sll_real64)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_3d_real64, sll_t_layout_3d, box_3D, sll_real64)
   !> @brief basic type for 3D remap for the 64-bit complex type.
-  MAKE_REMAP_PLAN(remap_plan_3D_comp64, layout_3D, box_3D, sll_comp64)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_3d_comp64, sll_t_layout_3d, box_3D, sll_comp64)
 
   ! 4D Remap types:
 
   !> @brief basic type for 4D remap for the 32-bit integer type.
-  MAKE_REMAP_PLAN(remap_plan_4D_int32, layout_4D, box_4D, sll_int32)
-  MAKE_REMAP_PLAN(remap_plan_4D_real64, layout_4D, box_4D, sll_real64)
-  MAKE_REMAP_PLAN(remap_plan_4D_comp64, layout_4D, box_4D, sll_comp64)
+  MAKE_REMAP_PLAN(remap_plan_4D_int32, sll_t_layout_4d, box_4D, sll_int32)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_4d_real64, sll_t_layout_4d, box_4D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_4D_comp64, sll_t_layout_4d, box_4D, sll_comp64)
 
   ! 5D Remap types:
 
   !> @brief basic type for 5D remap for the 32-bit integer type.
-  MAKE_REMAP_PLAN(remap_plan_5D_int32, layout_5D, box_5D, sll_int32)
-  MAKE_REMAP_PLAN(remap_plan_5D_real64, layout_5D, box_5D, sll_real64)
-  MAKE_REMAP_PLAN(remap_plan_5D_comp64, layout_5D, box_5D, sll_comp64)
+  MAKE_REMAP_PLAN(remap_plan_5D_int32, sll_t_layout_5d, box_5D, sll_int32)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_5d_real64, sll_t_layout_5d, box_5D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_5D_comp64, sll_t_layout_5d, box_5D, sll_comp64)
 
   ! 6D Remap types:
 
-  MAKE_REMAP_PLAN(remap_plan_6D_int32, layout_6D, box_6D, sll_int32)
-  MAKE_REMAP_PLAN(remap_plan_6D_real64, layout_6D, box_6D, sll_real64)
-  MAKE_REMAP_PLAN(remap_plan_6D_comp64, layout_6D, box_6D, sll_comp64)
+  MAKE_REMAP_PLAN(remap_plan_6D_int32, sll_t_layout_6d, box_6D, sll_int32)
+  MAKE_REMAP_PLAN(sll_t_remap_plan_6d_real64, sll_t_layout_6d, box_6D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_6D_comp64, sll_t_layout_6d, box_6D, sll_comp64)
 
   !> Get corner index
-  interface get_layout_i_min
+  interface sll_o_get_layout_i_min
      module procedure get_layout_2D_i_min, get_layout_3D_i_min, &
           get_layout_4D_i_min, get_layout_5D_i_min, get_layout_6D_i_min
   end interface
 
   !> Set layout index
-  interface set_layout_i_min
+  interface sll_o_set_layout_i_min
      module procedure set_layout_2D_i_min, set_layout_3D_i_min, &
           set_layout_4D_i_min, set_layout_5D_i_min, set_layout_6D_i_min
   end interface
 
   !> Get corner index
-  interface get_layout_i_max
+  interface sll_o_get_layout_i_max
      module procedure get_layout_2D_i_max, get_layout_3D_i_max, &
           get_layout_4D_i_max, get_layout_5D_i_max, get_layout_6D_i_max
   end interface
 
   !> Set layout index
-  interface set_layout_i_max
+  interface sll_o_set_layout_i_max
      module procedure set_layout_2D_i_max, set_layout_3D_i_max, &
           set_layout_4D_i_max, set_layout_5D_i_max, set_layout_6D_i_max
   end interface
 
   !> Get corner index
-  interface get_layout_j_min
+  interface sll_o_get_layout_j_min
      module procedure get_layout_2D_j_min, get_layout_3D_j_min, &
           get_layout_4D_j_min, get_layout_5D_j_min, get_layout_6D_j_min
   end interface
 
   !> Set layout index
-  interface set_layout_j_min
+  interface sll_o_set_layout_j_min
      module procedure set_layout_2D_j_min, set_layout_3D_j_min, &
           set_layout_4D_j_min, set_layout_5D_j_min, set_layout_6D_j_min  
   end interface
 
   !> Get corner index
-  interface get_layout_j_max
+  interface sll_o_get_layout_j_max
      module procedure get_layout_2D_j_max, get_layout_3D_j_max, &
           get_layout_4D_j_max, get_layout_5D_j_max, get_layout_6D_j_max
   end interface
 
   !> Set layout index
-  interface set_layout_j_max
+  interface sll_o_set_layout_j_max
      module procedure set_layout_2D_j_max, set_layout_3D_j_max, &
           set_layout_4D_j_max, set_layout_5D_j_max, set_layout_6D_j_max
   end interface
 
   !> Get corner index
-  interface get_layout_k_min
+  interface sll_o_get_layout_k_min
     module procedure get_layout_3D_k_min, get_layout_4D_k_min, &
          get_layout_5D_k_min, get_layout_6D_k_min
   end interface
 
   !> Set layout index
-  interface set_layout_k_min
+  interface sll_o_set_layout_k_min
      module procedure set_layout_3D_k_min, set_layout_4D_k_min, &
           set_layout_5D_k_min, set_layout_6D_k_min
   end interface
 
   !> Get corner index
-  interface get_layout_k_max
+  interface sll_o_get_layout_k_max
      module procedure get_layout_3D_k_max, get_layout_4D_k_max, &
           get_layout_5D_k_max, get_layout_6D_k_max
   end interface
 
   !> Set layout index
-  interface set_layout_k_max
+  interface sll_o_set_layout_k_max
      module procedure set_layout_3D_k_max, set_layout_4D_k_max, &
           set_layout_5D_k_max, set_layout_6D_k_max
   end interface
 
   !> Get corner index
-  interface get_layout_l_min
+  interface sll_o_get_layout_l_min
      module procedure get_layout_4D_l_min, get_layout_5D_l_min, &
           get_layout_6D_l_min
-  end interface get_layout_l_min
+  end interface sll_o_get_layout_l_min
 
   !> Set layout index
-  interface set_layout_l_min
+  interface sll_o_set_layout_l_min
      module procedure set_layout_4D_l_min, set_layout_5D_l_min, &
           set_layout_6D_l_min
-  end interface set_layout_l_min
+  end interface sll_o_set_layout_l_min
 
   !> Get corner index
-  interface get_layout_l_max
+  interface sll_o_get_layout_l_max
      module procedure get_layout_4D_l_max, get_layout_5D_l_max, &
           get_layout_6D_l_max 
-  end interface get_layout_l_max
+  end interface sll_o_get_layout_l_max
 
   !> Set layout index
-  interface set_layout_l_max
+  interface sll_o_set_layout_l_max
      module procedure set_layout_4D_l_max, set_layout_5D_l_max, &
           set_layout_6D_l_max
-  end interface set_layout_l_max
+  end interface sll_o_set_layout_l_max
 
   !> Get corner index
-  interface get_layout_m_min
+  interface sll_o_get_layout_m_min
      module procedure get_layout_5D_m_min, get_layout_6D_m_min
-  end interface get_layout_m_min
+  end interface sll_o_get_layout_m_min
 
   !> Get corner index
-  interface get_layout_m_max
+  interface sll_o_get_layout_m_max
      module procedure get_layout_5D_m_max, get_layout_6D_m_max
-  end interface get_layout_m_max
+  end interface sll_o_get_layout_m_max
 
   !> Set layout index
-  interface set_layout_m_min
+  interface sll_o_set_layout_m_min
      module procedure set_layout_5D_m_min, set_layout_6D_m_min
-  end interface set_layout_m_min
+  end interface sll_o_set_layout_m_min
 
   !> Set layout index
-  interface set_layout_m_max
+  interface sll_o_set_layout_m_max
      module procedure set_layout_5D_m_max, set_layout_6D_m_max
-  end interface set_layout_m_max
+  end interface sll_o_set_layout_m_max
 
   !> Get corner index
-  interface get_layout_n_min
+  interface sll_o_get_layout_n_min
      module procedure get_layout_6D_n_min
-  end interface get_layout_n_min
+  end interface sll_o_get_layout_n_min
 
   !> Get corner index
-  interface get_layout_n_max
+  interface sll_o_get_layout_n_max
      module procedure get_layout_6D_n_max
-  end interface get_layout_n_max
+  end interface sll_o_get_layout_n_max
 
   !> Set layout index
-  interface set_layout_n_min
+  interface sll_o_set_layout_n_min
      module procedure set_layout_6D_n_min
-  end interface set_layout_n_min
+  end interface sll_o_set_layout_n_min
 
   !> Set layout index
-  interface set_layout_n_max
+  interface sll_o_set_layout_n_max
      module procedure set_layout_6D_n_max
-  end interface set_layout_n_max
+  end interface sll_o_set_layout_n_max
 
   !> Display indices of the layout by processors
-  interface sll_view_lims
+  interface sll_o_view_lims
      module procedure &
           sll_view_lims_2d, &
           sll_view_lims_3d, &
@@ -408,17 +496,17 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   end interface
 
   !> Get parallel info
-  interface get_layout_collective
+  interface sll_o_get_layout_collective
      module procedure &
           get_layout_2D_collective, &
           get_layout_3D_collective, &
           get_layout_4D_collective, &
           get_layout_5D_collective, &
           get_layout_6D_collective
-  end interface get_layout_collective
+  end interface sll_o_get_layout_collective
 
   !> Get nodes number
-  interface sll_get_num_nodes
+  interface sll_o_get_num_nodes
      module procedure &
           sll_get_num_nodes_2D, &
           sll_get_num_nodes_3D, &
@@ -438,31 +526,31 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
    end interface get_layout_global_size_i
 
    !> Get global size
-   interface get_layout_global_size_j
+   interface sll_o_get_layout_global_size_j
       module procedure &
            get_layout_2d_global_size_2, &
            get_layout_3d_global_size_2, &
            get_layout_4d_global_size_2, &
            get_layout_5d_global_size_2, &
            get_layout_6d_global_size_2
-   end interface get_layout_global_size_j
+   end interface sll_o_get_layout_global_size_j
 
    !> Get global size
-   interface get_layout_global_size_k
+   interface sll_o_get_layout_global_size_k
       module procedure &
            get_layout_3d_global_size_3, &
            get_layout_4d_global_size_3, &
            get_layout_5d_global_size_3, &
            get_layout_6d_global_size_3
-   end interface get_layout_global_size_k
+   end interface sll_o_get_layout_global_size_k
 
    !> Get global size
-   interface get_layout_global_size_l
+   interface sll_o_get_layout_global_size_l
       module procedure &
            get_layout_4d_global_size_4, &
            get_layout_5d_global_size_4, &
            get_layout_6d_global_size_4
-   end interface get_layout_global_size_l
+   end interface sll_o_get_layout_global_size_l
 
    !> Get global size
    interface get_layout_global_size_m
@@ -510,7 +598,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
    end interface optimize_remap_plan
 
   !> Plan to apply remap
-  interface new_remap_plan
+  interface sll_o_new_remap_plan
      module procedure &
           new_remap_plan_2d_int32, &
           new_remap_plan_2d_real64, &
@@ -527,38 +615,38 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           new_remap_plan_6d_int32, &
           new_remap_plan_6d_real64, &
           new_remap_plan_6d_comp64
-  end interface new_remap_plan
+  end interface sll_o_new_remap_plan
 
   !> Execute plan
-  interface apply_remap_2D
+  interface sll_o_apply_remap_2d
      module procedure apply_remap_2D_double, apply_remap_2d_complex !, &
 !          apply_remap_2d_efield
-  end interface apply_remap_2D
+  end interface sll_o_apply_remap_2d
 
   !> Execute plan
-  interface apply_remap_3D
+  interface sll_o_apply_remap_3d
      module procedure apply_remap_3D_int, apply_remap_3D_double, &
           apply_remap_3D_complex
   end interface
 
   !> Execute plan
-  interface apply_remap_4D
+  interface sll_o_apply_remap_4d
      module procedure apply_remap_4D_double
-  end interface apply_remap_4D
+  end interface sll_o_apply_remap_4d
 
   !> Execute plan
-  interface apply_remap_5D
+  interface sll_o_apply_remap_5d
      module procedure apply_remap_5D_double, apply_remap_5D_int
-  end interface apply_remap_5D
+  end interface sll_o_apply_remap_5d
 
 
   !> Execute plan
-  interface apply_remap_6D
+  interface sll_o_apply_remap_6d
      module procedure apply_remap_6D_double, apply_remap_6D_int
-  end interface apply_remap_6D
+  end interface sll_o_apply_remap_6d
 
   !> Deallocate
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
           delete_layout_5D, delete_layout_6D, &
           delete_remap_2D_int32,  &
@@ -576,77 +664,37 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           delete_remap_6D_int32,  &
           delete_remap_6D_real64, &
           delete_remap_6D_comp64
-  end interface sll_delete
+  end interface sll_o_delete
 
   !> Get local sizes
-  interface compute_local_sizes
+  interface sll_o_compute_local_sizes
      module procedure compute_local_sizes_2d, compute_local_sizes_3d, &
           compute_local_sizes_4d, compute_local_sizes_5d, compute_local_sizes_6d
-  end interface compute_local_sizes
+  end interface sll_o_compute_local_sizes
 
   !> Get global indices
-  interface local_to_global
+  interface sll_o_local_to_global
      module procedure local_to_global_2D,local_to_global_3D, &
           local_to_global_4D, local_to_global_5D, local_to_global_6D
-  end interface local_to_global
+  end interface sll_o_local_to_global
 
   !> Get local indices
-  interface global_to_local
+  interface sll_o_global_to_local
      module procedure global_to_local_2D,global_to_local_3D, &
           global_to_local_4D, global_to_local_5D, global_to_local_6D
-  end interface global_to_local
+  end interface sll_o_global_to_local
 
   !> @brief Initialize layout 
   !> @details It should have been allocated with new(), which means that
   !> its memory is allocated in accordance with the size of collective.
-  interface initialize_layout_with_distributed_array
+  interface sll_o_initialize_layout_with_distributed_array
      module procedure initialize_layout_with_distributed_2d_array
      module procedure initialize_layout_with_distributed_3d_array
      module procedure initialize_layout_with_distributed_4d_array
      module procedure initialize_layout_with_distributed_5d_array
      module procedure initialize_layout_with_distributed_6d_array
-  end interface initialize_layout_with_distributed_array
+  end interface sll_o_initialize_layout_with_distributed_array
 
-  public :: initialize_layout_with_distributed_array
-  public :: sll_delete
-  public :: sll_view_lims
-  public :: sll_get_num_nodes
-  public :: new_remap_plan
-  public :: compute_local_sizes
-  public :: new_layout_2d
-  public :: new_layout_3d
-  public :: new_layout_4d
-  public :: new_layout_5d
-  public :: new_layout_6d
-  public :: local_to_global
-  public :: global_to_local
-  public :: get_layout_i_min, set_layout_i_min
-  public :: get_layout_i_max, set_layout_i_max
-  public :: get_layout_j_min, set_layout_j_min
-  public :: get_layout_j_max, set_layout_j_max
-  public :: get_layout_k_min, set_layout_k_min
-  public :: get_layout_k_max, set_layout_k_max
-  public :: get_layout_l_min, set_layout_l_min
-  public :: get_layout_l_max, set_layout_l_max
-  public :: get_layout_m_min, set_layout_m_min
-  public :: get_layout_m_max, set_layout_m_max
-  public :: get_layout_n_min, set_layout_n_min
-  public :: get_layout_n_max, set_layout_n_max
-  public :: apply_remap_2d
-  public :: apply_remap_3d
-  public :: apply_remap_4d
-  public :: apply_remap_5d
-  public :: apply_remap_6d
-  public :: get_layout_collective
-  public :: new_layout_2D_from_layout_4D
-  public :: new_layout_3D_from_layout_4D
-  public :: write_to_file
-  public :: get_layout_global_size_i
-  public :: get_layout_global_size_j
-  public :: get_layout_global_size_k
-  public :: get_layout_global_size_l
-  public :: get_layout_global_size_m
-  public :: get_layout_global_size_n
 
 contains  !******************************************************************
 
@@ -670,7 +718,7 @@ contains  !******************************************************************
   function func_name( col );                                    \
     intrinsic :: associated;                                    \
     type(layout_type), pointer          :: func_name;           \
-    type(sll_collective_t),  pointer    :: col;                 \
+    type(sll_t_collective_t),  pointer    :: col;                 \
     sll_int32                           :: n_nodes;             \
     sll_int32                           :: ierr;                \
     if( .not. associated(col) ) then;                           \
@@ -679,15 +727,15 @@ contains  !******************************************************************
     end if;                                                     \
     SLL_ALLOCATE( func_name, ierr )                             \
     func_name%collective => col;                                \
-    n_nodes              = sll_get_collective_size(col);        \
+    n_nodes              = sll_f_get_collective_size(col);        \
     SLL_ALLOCATE( func_name%boxes(0:(n_nodes-1)), ierr )        \
   end function func_name
 
-  NEW_LAYOUT_FUNCTION( new_layout_2D, layout_2D )
-  NEW_LAYOUT_FUNCTION( new_layout_3D, layout_3D )
-  NEW_LAYOUT_FUNCTION( new_layout_4D, layout_4D )
-  NEW_LAYOUT_FUNCTION( new_layout_5D, layout_5D )
-  NEW_LAYOUT_FUNCTION( new_layout_6D, layout_6D )
+  NEW_LAYOUT_FUNCTION( sll_f_new_layout_2d, sll_t_layout_2d )
+  NEW_LAYOUT_FUNCTION( sll_f_new_layout_3d, sll_t_layout_3d )
+  NEW_LAYOUT_FUNCTION( sll_f_new_layout_4d, sll_t_layout_4d )
+  NEW_LAYOUT_FUNCTION( sll_f_new_layout_5d, sll_t_layout_5d )
+  NEW_LAYOUT_FUNCTION( sll_f_new_layout_6d, sll_t_layout_6d )
 
 #define NEW_DELETE_LAYOUT_FUNCTION( fname, layout_type )        \
   subroutine fname( layout );                                   \
@@ -698,11 +746,11 @@ contains  !******************************************************************
     SLL_DEALLOCATE( layout, ierr );                             \
   end subroutine fname
 
-  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_2D, layout_2D )
-  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_3D, layout_3D )
-  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_4D, layout_4D )
-  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D )
-  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_6D, layout_6D )
+  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_2D, sll_t_layout_2d )
+  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_3D, sll_t_layout_3d )
+  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_4D, sll_t_layout_4d )
+  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, sll_t_layout_5d )
+  NEW_DELETE_LAYOUT_FUNCTION( delete_layout_6D, sll_t_layout_6d )
 
   ! Access functions for the boxes. This is really an overkill... On one hand,
   ! it is nice to hide everything behind access functions so that we 
@@ -715,14 +763,14 @@ contains  !******************************************************************
   function fname( layout ); \
     sll_int32                  :: fname; \
     type(layout_type), pointer :: layout; \
-    fname = sll_get_collective_size( layout%collective ); \
+    fname = sll_f_get_collective_size( layout%collective ); \
   end function fname
 
-  MAKE_NUM_NODES_FUNCTION( get_layout_2D_num_nodes, layout_2D )
-  MAKE_NUM_NODES_FUNCTION( get_layout_3D_num_nodes, layout_3D )
-  MAKE_NUM_NODES_FUNCTION( get_layout_4D_num_nodes, layout_4D )
-  MAKE_NUM_NODES_FUNCTION( get_layout_5D_num_nodes, layout_5D )
-  MAKE_NUM_NODES_FUNCTION( get_layout_6D_num_nodes, layout_6D )
+  MAKE_NUM_NODES_FUNCTION( get_layout_2D_num_nodes, sll_t_layout_2d )
+  MAKE_NUM_NODES_FUNCTION( get_layout_3D_num_nodes, sll_t_layout_3d )
+  MAKE_NUM_NODES_FUNCTION( get_layout_4D_num_nodes, sll_t_layout_4d )
+  MAKE_NUM_NODES_FUNCTION( get_layout_5D_num_nodes, sll_t_layout_5d )
+  MAKE_NUM_NODES_FUNCTION( get_layout_6D_num_nodes, sll_t_layout_6d )
 
 #define MAKE_GET_BOX_FUNCTION( fname, layout_type, box_type ) \
   function fname( layout, rank ); \
@@ -733,11 +781,11 @@ contains  !******************************************************************
     fname = layout%boxes(rank); \
   end function fname
 
-  MAKE_GET_BOX_FUNCTION( get_layout_2D_box, layout_2D, box_2D )
-  MAKE_GET_BOX_FUNCTION( get_layout_3D_box, layout_3D, box_3D )
-  MAKE_GET_BOX_FUNCTION( get_layout_4D_box, layout_4D, box_4D )
-  MAKE_GET_BOX_FUNCTION( get_layout_5D_box, layout_5D, box_5D )
-  MAKE_GET_BOX_FUNCTION( get_layout_6D_box, layout_6D, box_6D )
+  MAKE_GET_BOX_FUNCTION( get_layout_2D_box, sll_t_layout_2d, box_2D )
+  MAKE_GET_BOX_FUNCTION( get_layout_3D_box, sll_t_layout_3d, box_3D )
+  MAKE_GET_BOX_FUNCTION( get_layout_4D_box, sll_t_layout_4d, box_4D )
+  MAKE_GET_BOX_FUNCTION( get_layout_5D_box, sll_t_layout_5d, box_5D )
+  MAKE_GET_BOX_FUNCTION( get_layout_6D_box, sll_t_layout_6d, box_6D )
 
 #define MAKE_GET_LAYOUT_SLOT_FUNCTION( fname, datatype, slot )    \
   function fname( layout, rank );                                 \
@@ -769,124 +817,124 @@ contains  !******************************************************************
   ! dimensions.
 
   ! 2D case:
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_i_min, layout_2D, i_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_i_max, layout_2D, i_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_j_min, layout_2D, j_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_j_max, layout_2D, j_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_i_min, sll_t_layout_2d, i_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_i_max, sll_t_layout_2d, i_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_j_min, sll_t_layout_2d, j_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_j_max, sll_t_layout_2d, j_max )
 
-  MAKE_GET_LAYOUT_SLOT(get_layout_2d_global_size_1,layout_2d,sll_int32,global_sz1)
-  MAKE_GET_LAYOUT_SLOT(get_layout_2d_global_size_2,layout_2d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_2d_global_size_1,sll_t_layout_2d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_2d_global_size_2,sll_t_layout_2d,sll_int32,global_sz2)
 
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_i_min, layout_2D, i_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_i_max, layout_2D, i_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_j_min, layout_2D, j_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_j_max, layout_2D, j_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_i_min, sll_t_layout_2d, i_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_i_max, sll_t_layout_2d, i_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_j_min, sll_t_layout_2d, j_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_j_max, sll_t_layout_2d, j_max )
 
   ! 3D case:
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_i_min, layout_3D, i_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_i_max, layout_3D, i_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_j_min, layout_3D, j_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_j_max, layout_3D, j_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_k_min, layout_3D, k_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_k_max, layout_3D, k_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_i_min, sll_t_layout_3d, i_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_i_max, sll_t_layout_3d, i_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_j_min, sll_t_layout_3d, j_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_j_max, sll_t_layout_3d, j_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_k_min, sll_t_layout_3d, k_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_k_max, sll_t_layout_3d, k_max )
 
-  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_1,layout_3d,sll_int32,global_sz1)
-  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_2,layout_3d,sll_int32,global_sz2)
-  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_3,layout_3d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_1,sll_t_layout_3d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_2,sll_t_layout_3d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_3,sll_t_layout_3d,sll_int32,global_sz3)
 
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_i_min, layout_3D, i_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_i_max, layout_3D, i_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_j_min, layout_3D, j_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_j_max, layout_3D, j_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_k_min, layout_3D, k_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_k_max, layout_3D, k_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_i_min, sll_t_layout_3d, i_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_i_max, sll_t_layout_3d, i_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_j_min, sll_t_layout_3d, j_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_j_max, sll_t_layout_3d, j_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_k_min, sll_t_layout_3d, k_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_k_max, sll_t_layout_3d, k_max )
 
   ! 4D case:
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_i_min, layout_4D, i_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_i_max, layout_4D, i_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_j_min, layout_4D, j_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_j_max, layout_4D, j_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_k_min, layout_4D, k_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_k_max, layout_4D, k_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_l_min, layout_4D, l_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_l_max, layout_4D, l_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_i_min, sll_t_layout_4d, i_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_i_max, sll_t_layout_4d, i_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_j_min, sll_t_layout_4d, j_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_j_max, sll_t_layout_4d, j_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_k_min, sll_t_layout_4d, k_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_k_max, sll_t_layout_4d, k_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_l_min, sll_t_layout_4d, l_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_l_max, sll_t_layout_4d, l_max )
 
-  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_1, layout_4d,sll_int32,global_sz1)
-  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_2, layout_4d,sll_int32,global_sz2)
-  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_3, layout_4d,sll_int32,global_sz3)
-  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_4, layout_4d,sll_int32,global_sz4)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_1, sll_t_layout_4d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_2, sll_t_layout_4d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_3, sll_t_layout_4d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_4, sll_t_layout_4d,sll_int32,global_sz4)
 
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_i_min, layout_4D, i_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_i_max, layout_4D, i_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_j_min, layout_4D, j_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_j_max, layout_4D, j_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_k_min, layout_4D, k_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_k_max, layout_4D, k_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_l_min, layout_4D, l_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_l_max, layout_4D, l_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_i_min, sll_t_layout_4d, i_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_i_max, sll_t_layout_4d, i_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_j_min, sll_t_layout_4d, j_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_j_max, sll_t_layout_4d, j_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_k_min, sll_t_layout_4d, k_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_k_max, sll_t_layout_4d, k_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_l_min, sll_t_layout_4d, l_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_l_max, sll_t_layout_4d, l_max )
 
   ! 5D case:
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_i_min, layout_5D, i_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_i_max, layout_5D, i_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_j_min, layout_5D, j_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_j_max, layout_5D, j_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_k_min, layout_5D, k_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_k_max, layout_5D, k_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_l_min, layout_5D, l_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_l_max, layout_5D, l_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_m_min, layout_5D, m_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_m_max, layout_5D, m_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_i_min, sll_t_layout_5d, i_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_i_max, sll_t_layout_5d, i_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_j_min, sll_t_layout_5d, j_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_j_max, sll_t_layout_5d, j_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_k_min, sll_t_layout_5d, k_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_k_max, sll_t_layout_5d, k_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_l_min, sll_t_layout_5d, l_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_l_max, sll_t_layout_5d, l_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_m_min, sll_t_layout_5d, m_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_m_max, sll_t_layout_5d, m_max )
 
-  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_1, layout_5d,sll_int32,global_sz1)
-  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_2, layout_5d,sll_int32,global_sz2)
-  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_3, layout_5d,sll_int32,global_sz3)
-  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_4, layout_5d,sll_int32,global_sz4)
-  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_5, layout_5d,sll_int32,global_sz5)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_1, sll_t_layout_5d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_2, sll_t_layout_5d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_3, sll_t_layout_5d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_4, sll_t_layout_5d,sll_int32,global_sz4)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_5, sll_t_layout_5d,sll_int32,global_sz5)
 
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_i_min, layout_5D, i_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_i_max, layout_5D, i_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_j_min, layout_5D, j_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_j_max, layout_5D, j_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_k_min, layout_5D, k_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_k_max, layout_5D, k_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_l_min, layout_5D, l_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_l_max, layout_5D, l_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_m_min, layout_5D, m_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_m_max, layout_5D, m_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_i_min, sll_t_layout_5d, i_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_i_max, sll_t_layout_5d, i_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_j_min, sll_t_layout_5d, j_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_j_max, sll_t_layout_5d, j_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_k_min, sll_t_layout_5d, k_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_k_max, sll_t_layout_5d, k_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_l_min, sll_t_layout_5d, l_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_l_max, sll_t_layout_5d, l_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_m_min, sll_t_layout_5d, m_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_m_max, sll_t_layout_5d, m_max )
 
   ! 6D case:
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_i_min, layout_6D, i_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_i_max, layout_6D, i_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_j_min, layout_6D, j_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_j_max, layout_6D, j_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_k_min, layout_6D, k_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_k_max, layout_6D, k_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_l_min, layout_6D, l_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_l_max, layout_6D, l_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_m_min, layout_6D, m_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_m_max, layout_6D, m_max )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_n_min, layout_6D, n_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_n_max, layout_6D, n_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_i_min, sll_t_layout_6d, i_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_i_max, sll_t_layout_6d, i_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_j_min, sll_t_layout_6d, j_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_j_max, sll_t_layout_6d, j_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_k_min, sll_t_layout_6d, k_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_k_max, sll_t_layout_6d, k_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_l_min, sll_t_layout_6d, l_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_l_max, sll_t_layout_6d, l_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_m_min, sll_t_layout_6d, m_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_m_max, sll_t_layout_6d, m_max )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_n_min, sll_t_layout_6d, n_min )
+  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_n_max, sll_t_layout_6d, n_max )
 
-  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_1,layout_6d,sll_int32,global_sz1)
-  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_2,layout_6d,sll_int32,global_sz2)
-  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_3,layout_6d,sll_int32,global_sz3)
-  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_4,layout_6d,sll_int32,global_sz4)
-  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_5,layout_6d,sll_int32,global_sz5)
-  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_6,layout_6d,sll_int32,global_sz6)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_1,sll_t_layout_6d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_2,sll_t_layout_6d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_3,sll_t_layout_6d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_4,sll_t_layout_6d,sll_int32,global_sz4)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_5,sll_t_layout_6d,sll_int32,global_sz5)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_6,sll_t_layout_6d,sll_int32,global_sz6)
 
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_i_min, layout_6D, i_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_i_max, layout_6D, i_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_j_min, layout_6D, j_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_j_max, layout_6D, j_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_k_min, layout_6D, k_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_k_max, layout_6D, k_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_l_min, layout_6D, l_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_l_max, layout_6D, l_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_m_min, layout_6D, m_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_m_max, layout_6D, m_max )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_min, layout_6D, n_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_max, layout_6D, n_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_i_min, sll_t_layout_6d, i_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_i_max, sll_t_layout_6d, i_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_j_min, sll_t_layout_6d, j_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_j_max, sll_t_layout_6d, j_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_k_min, sll_t_layout_6d, k_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_k_max, sll_t_layout_6d, k_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_l_min, sll_t_layout_6d, l_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_l_max, sll_t_layout_6d, l_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_m_min, sll_t_layout_6d, m_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_m_max, sll_t_layout_6d, m_max )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_min, sll_t_layout_6d, n_min )
+  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_max, sll_t_layout_6d, n_max )
 
   ! Why should lims just give its collective nilly-willy? This is not 
   ! pretty but I have the suspicion that direct access of the collective 
@@ -894,7 +942,7 @@ contains  !******************************************************************
 #define MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( fname, layout_type ) \
   function fname( layout ); \
     intrinsic                       :: associated; \
-    type(sll_collective_t), pointer :: fname; \
+    type(sll_t_collective_t), pointer :: fname; \
     type(layout_type), pointer      :: layout; \
     if( .not. associated(layout) ) then; \
        stop 'ERROR: uninitialized argument, get_layout_XD_collective()'; \
@@ -902,11 +950,11 @@ contains  !******************************************************************
     fname => layout%collective; \
   end function fname
 
-  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_2D_collective, layout_2D )
-  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_3D_collective, layout_3D )
-  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_4D_collective, layout_4D )
-  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_5D_collective, layout_5D )
-  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_6D_collective, layout_6D )
+  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_2D_collective, sll_t_layout_2d )
+  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_3D_collective, sll_t_layout_3d )
+  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_4D_collective, sll_t_layout_4d )
+  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_5D_collective, sll_t_layout_5d )
+  MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( get_layout_6D_collective, sll_t_layout_6d )
 
   ! get_layout_XD_size() returns the size of the collective associated
   ! with a given layout.
@@ -918,14 +966,14 @@ contains  !******************************************************************
     if( .not. associated(layout) ) then; \
        STOP 'ERROR: not associated argument passed to get_layout_size().'; \
     end if; \
-    fname = sll_get_collective_size( layout%collective ); \
+    fname = sll_f_get_collective_size( layout%collective ); \
   end function fname
 
-  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_2D_size, layout_2D)
-  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_3D_size, layout_3D)
-  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_4D_size, layout_4D)
-  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_5D_size, layout_5D)
-  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_6D_size, layout_6D)
+  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_2D_size, sll_t_layout_2d)
+  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_3D_size, sll_t_layout_3d)
+  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_4D_size, sll_t_layout_4d)
+  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_5D_size, sll_t_layout_5d)
+  MAKE_GET_LAYOUT_SIZE_FUNCTION(get_layout_6D_size, sll_t_layout_6d)
 
   ! Utility functions to help build layouts.
   function linear_index_2D(npx1, i, j)
@@ -995,14 +1043,14 @@ contains  !******************************************************************
     num_proc_x2, &
     layout )
     
-    ! layout_2D should have been allocated with new(), which means that
+    ! sll_t_layout_2d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
     sll_int32, intent(in) :: global_npx1
     sll_int32, intent(in) :: global_npx2
     sll_int32, intent(in) :: num_proc_x1
     sll_int32, intent(in) :: num_proc_x2
-    type(layout_2D), pointer :: layout
+    type(sll_t_layout_2d), pointer :: layout
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: total_num_processors
@@ -1018,8 +1066,8 @@ contains  !******************************************************************
     sll_int32 :: j_max
 
     if( &
-       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x2,i64)) ) then
+       .not. sll_f_is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x2,i64)) ) then
        print *, 'ERROR: distribute_2D_array() needs that the integers that',&
             'describe the process mesh are powers of 2.'
        STOP
@@ -1069,10 +1117,10 @@ contains  !******************************************************************
           i_max = intervals_x1(1,i)
           j_min = intervals_x2(0,j)
           j_max = intervals_x2(1,j)
-          call set_layout_i_min( layout, node, i_min )
-          call set_layout_i_max( layout, node, i_max )
-          call set_layout_j_min( layout, node, j_min )
-          call set_layout_j_max( layout, node, j_max )
+          call sll_o_set_layout_i_min( layout, node, i_min )
+          call sll_o_set_layout_i_max( layout, node, i_max )
+          call sll_o_set_layout_j_min( layout, node, j_min )
+          call sll_o_set_layout_j_max( layout, node, j_max )
        end do
     end do
     SLL_DEALLOCATE_ARRAY( intervals_x1, err )
@@ -1097,7 +1145,7 @@ contains  !******************************************************************
     sll_int32, intent(in) :: num_proc_x1
     sll_int32, intent(in) :: num_proc_x2
     sll_int32, intent(in) :: num_proc_x3
-    type(layout_3D), pointer :: layout
+    type(sll_t_layout_3d), pointer :: layout
 
 
     sll_int32 :: i
@@ -1122,9 +1170,9 @@ contains  !******************************************************************
     sll_int32 :: k_max
 
     if( &
-       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x2,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x3,i64)) ) then
+       .not. sll_f_is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x2,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x3,i64)) ) then
        print *, 'ERROR: distribute_3D_array() needs that the integers that',&
             'describe the process mesh are powers of 2.'
        STOP
@@ -1183,12 +1231,12 @@ contains  !******************************************************************
              j_max = intervals_x2(1,j)
              k_min = intervals_x3(0,k)
              k_max = intervals_x3(1,k)
-             call set_layout_i_min( layout, node, i_min )
-             call set_layout_i_max( layout, node, i_max )
-             call set_layout_j_min( layout, node, j_min )
-             call set_layout_j_max( layout, node, j_max )
-             call set_layout_k_min( layout, node, k_min )
-             call set_layout_k_max( layout, node, k_max )
+             call sll_o_set_layout_i_min( layout, node, i_min )
+             call sll_o_set_layout_i_max( layout, node, i_max )
+             call sll_o_set_layout_j_min( layout, node, j_min )
+             call sll_o_set_layout_j_max( layout, node, j_max )
+             call sll_o_set_layout_k_min( layout, node, k_min )
+             call sll_o_set_layout_k_max( layout, node, k_max )
           end do
        end do
     end do
@@ -1209,7 +1257,7 @@ contains  !******************************************************************
     num_proc_x4, &
     layout )
     
-    ! layout_4D should have been allocated with new(), which means that
+    ! sll_t_layout_4d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
     sll_int32, intent(in) :: global_npx1
@@ -1220,7 +1268,7 @@ contains  !******************************************************************
     sll_int32, intent(in) :: num_proc_x2
     sll_int32, intent(in) :: num_proc_x3
     sll_int32, intent(in) :: num_proc_x4
-    type(layout_4D), pointer :: layout
+    type(sll_t_layout_4d), pointer :: layout
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
@@ -1243,10 +1291,10 @@ contains  !******************************************************************
     sll_int32 :: l_max
 
     if( &
-       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x2,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x3,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x4,i64)) ) then
+       .not. sll_f_is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x2,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x3,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x4,i64)) ) then
        print *, 'ERROR: distribute_4D_array() needs that the integers that',&
             'describe the process mesh are powers of 2.'
        STOP
@@ -1324,14 +1372,14 @@ contains  !******************************************************************
 
                 l_min = intervals_x4(0,l)
                 l_max = intervals_x4(1,l)
-                call set_layout_i_min( layout, node, i_min )
-                call set_layout_i_max( layout, node, i_max )
-                call set_layout_j_min( layout, node, j_min )
-                call set_layout_j_max( layout, node, j_max )
-                call set_layout_k_min( layout, node, k_min )
-                call set_layout_k_max( layout, node, k_max )
-                call set_layout_l_min( layout, node, l_min )
-                call set_layout_l_max( layout, node, l_max )
+                call sll_o_set_layout_i_min( layout, node, i_min )
+                call sll_o_set_layout_i_max( layout, node, i_max )
+                call sll_o_set_layout_j_min( layout, node, j_min )
+                call sll_o_set_layout_j_max( layout, node, j_max )
+                call sll_o_set_layout_k_min( layout, node, k_min )
+                call sll_o_set_layout_k_max( layout, node, k_max )
+                call sll_o_set_layout_l_min( layout, node, l_min )
+                call sll_o_set_layout_l_max( layout, node, l_max )
              end do
           end do
        end do
@@ -1356,7 +1404,7 @@ contains  !******************************************************************
     num_proc_x5, &
     layout )
     
-    ! layout_5D should have been allocated with new(), which means that
+    ! sll_t_layout_5d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
     sll_int32, intent(in) :: global_npx1
@@ -1370,7 +1418,7 @@ contains  !******************************************************************
     sll_int32, intent(in) :: num_proc_x4
     sll_int32, intent(in) :: num_proc_x5
 
-    type(layout_5D), pointer :: layout
+    type(sll_t_layout_5d), pointer :: layout
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
@@ -1397,11 +1445,11 @@ contains  !******************************************************************
     sll_int32 :: m_max
 
     if( &
-       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x2,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x3,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x4,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x5,i64)) ) then
+       .not. sll_f_is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x2,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x3,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x4,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x5,i64)) ) then
        print *, 'ERROR: distribute_5D_array() needs that the integers that',&
             'describe the process mesh are powers of 2.'
        STOP
@@ -1494,16 +1542,16 @@ contains  !******************************************************************
                       m_min = intervals_x5(0,m)
                       m_max = intervals_x5(1,m)
                                             
-                      call set_layout_i_min( layout, node, i_min )
-                      call set_layout_i_max( layout, node, i_max )
-                      call set_layout_j_min( layout, node, j_min )
-                      call set_layout_j_max( layout, node, j_max )
-                      call set_layout_k_min( layout, node, k_min )
-                      call set_layout_k_max( layout, node, k_max )
-                      call set_layout_l_min( layout, node, l_min )
-                      call set_layout_l_max( layout, node, l_max )
-                      call set_layout_m_min( layout, node, m_min )
-                      call set_layout_m_max( layout, node, m_max )
+                      call sll_o_set_layout_i_min( layout, node, i_min )
+                      call sll_o_set_layout_i_max( layout, node, i_max )
+                      call sll_o_set_layout_j_min( layout, node, j_min )
+                      call sll_o_set_layout_j_max( layout, node, j_max )
+                      call sll_o_set_layout_k_min( layout, node, k_min )
+                      call sll_o_set_layout_k_max( layout, node, k_max )
+                      call sll_o_set_layout_l_min( layout, node, l_min )
+                      call sll_o_set_layout_l_max( layout, node, l_max )
+                      call sll_o_set_layout_m_min( layout, node, m_min )
+                      call sll_o_set_layout_m_max( layout, node, m_max )
                    end do
                 end do
              end do
@@ -1533,7 +1581,7 @@ contains  !******************************************************************
     num_proc_x6, &
     layout )
     
-    ! layout_6D should have been allocated with new(), which means that
+    ! sll_t_layout_6d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
     sll_int32, intent(in) :: global_npx1
@@ -1549,7 +1597,7 @@ contains  !******************************************************************
     sll_int32, intent(in) :: num_proc_x5
     sll_int32, intent(in) :: num_proc_x6
 
-    type(layout_6D), pointer :: layout
+    type(sll_t_layout_6d), pointer :: layout
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
@@ -1580,12 +1628,12 @@ contains  !******************************************************************
     sll_int32 :: n_max
 
     if( &
-       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x2,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x3,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x4,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x5,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x6,i64)) ) then
+       .not. sll_f_is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x2,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x3,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x4,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x5,i64)) .or. &
+       .not. sll_f_is_power_of_two(int(num_proc_x6,i64)) ) then
        print *, 'ERROR: distribute_6D_array() needs that the integers that',&
             'describe the process mesh are powers of 2.'
        STOP
@@ -1690,18 +1738,18 @@ contains  !******************************************************************
                       n_min = intervals_x6(0,n)
                       n_max = intervals_x6(1,n)
                       
-                      call set_layout_i_min( layout, node, i_min )
-                      call set_layout_i_max( layout, node, i_max )
-                      call set_layout_j_min( layout, node, j_min )
-                      call set_layout_j_max( layout, node, j_max )
-                      call set_layout_k_min( layout, node, k_min )
-                      call set_layout_k_max( layout, node, k_max )
-                      call set_layout_l_min( layout, node, l_min )
-                      call set_layout_l_max( layout, node, l_max )
-                      call set_layout_m_min( layout, node, m_min )
-                      call set_layout_m_max( layout, node, m_max )
-                      call set_layout_n_min( layout, node, n_min )
-                      call set_layout_n_max( layout, node, n_max )
+                      call sll_o_set_layout_i_min( layout, node, i_min )
+                      call sll_o_set_layout_i_max( layout, node, i_max )
+                      call sll_o_set_layout_j_min( layout, node, j_min )
+                      call sll_o_set_layout_j_max( layout, node, j_max )
+                      call sll_o_set_layout_k_min( layout, node, k_min )
+                      call sll_o_set_layout_k_max( layout, node, k_max )
+                      call sll_o_set_layout_l_min( layout, node, l_min )
+                      call sll_o_set_layout_l_max( layout, node, l_max )
+                      call sll_o_set_layout_m_min( layout, node, m_min )
+                      call sll_o_set_layout_m_max( layout, node, m_max )
+                      call sll_o_set_layout_n_min( layout, node, n_min )
+                      call sll_o_set_layout_n_max( layout, node, n_max )
                    end do
                 end do
              end do
@@ -1770,7 +1818,7 @@ contains  !******************************************************************
     else
        ! split this interval and launch new recursions
        num_elems = max - min + 1
-       if( is_even(num_elems) ) then
+       if( sll_f_is_even(num_elems) ) then
           new_min1 = min
           new_max1 = min + (max-min+1)/2 - 1
           new_min2 = new_max1 + 1
@@ -1799,13 +1847,13 @@ contains  !******************************************************************
   end subroutine split_array_indices_aux
 
 
-  ! The new_remap_plan() functions define the communication pattern in a 
+  ! The sll_o_new_remap_plan() functions define the communication pattern in a 
   ! collective. From the perspective of an individual process, they examines
   ! the communication needs in a one-to-many and many-to-one sense. The
   ! plan produces information needed to feed a lower level function that
   ! will actually take care of the communications.
   !
-  ! To achieve this, new_remap_plan examines two things:
+  ! To achieve this, sll_o_new_remap_plan examines two things:
   ! - to whom does an individual process need to send its information, and
   ! - from whom does a process need to receive its information.
   ! Thus, while all processes make this call, the resulting plan will be
@@ -1826,8 +1874,8 @@ contains  !******************************************************************
     type(layout_type), pointer      :: initial; \
     type(layout_type), pointer      :: final; \
     array_type, array_dim           :: array; \
-    type(sll_collective_t), pointer :: coli; \
-    type(sll_collective_t), pointer :: colf; \
+    type(sll_t_collective_t), pointer :: coli; \
+    type(sll_t_collective_t), pointer :: colf; \
     type(box_type)                  :: ibox, fbox, inters; \
     sll_int32                       :: i, f; \
     sll_int32                       :: my_rank; \
@@ -1842,16 +1890,16 @@ contains  !******************************************************************
        print *, size(array); \
        stop; \
     end if; \
-    coli => get_layout_collective(initial); \
-    colf => get_layout_collective(final); \
-    if( .not. collectives_are_same( coli, colf ) ) then; \
-       print *, 'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'; \
+    coli => sll_o_get_layout_collective(initial); \
+    colf => sll_o_get_layout_collective(final); \
+    if( .not. sll_f_collectives_are_same( coli, colf ) ) then; \
+       print *, 'ERROR: init and final configurations given to sll_o_new_remap_plan do not refer to the same collective.'; \
        stop; \
     end if; \
     acc = 0; \
-    coli => get_layout_collective(initial); \
-    my_rank  = sll_get_collective_rank( coli ); \
-    col_size = sll_get_collective_size( coli ); \
+    coli => sll_o_get_layout_collective(initial); \
+    my_rank  = sll_f_get_collective_rank( coli ); \
+    col_size = sll_f_get_collective_size( coli ); \
     SLL_ALLOCATE( fname, ierr ); \
     SLL_ALLOCATE( fname%send_displs(0:col_size-1), ierr ); \
     fname%send_displs(:) = 0; \
@@ -1863,7 +1911,7 @@ contains  !******************************************************************
     fname%recv_counts(:) = 0; \
     SLL_ALLOCATE( fname%send_boxes(0:col_size-1), ierr ); \
     SLL_ALLOCATE( fname%recv_boxes(0:col_size-1), ierr ); \
-    fname%collective => get_layout_collective(initial); \
+    fname%collective => sll_o_get_layout_collective(initial); \
     send_counter = 0; \
     disp_counter = 0; \
     ibox = get_layout_box(initial, my_rank); \
@@ -1909,25 +1957,25 @@ contains  !******************************************************************
   end function fname
 
   ! 2D remaps
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_int32,remap_plan_2D_int32,layout_2D,box_2D, sll_int32, dimension(:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_real64,remap_plan_2D_real64,layout_2D,box_2D, sll_real64, dimension(:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_comp64,remap_plan_2D_comp64,layout_2D,box_2D, sll_comp64, dimension(:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_int32,remap_plan_2D_int32,sll_t_layout_2d,box_2D, sll_int32, dimension(:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_real64,sll_t_remap_plan_2d_real64,sll_t_layout_2d,box_2D, sll_real64, dimension(:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_comp64,sll_t_remap_plan_2d_comp64,sll_t_layout_2d,box_2D, sll_comp64, dimension(:,:) )
   ! 3D remaps
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_int32,remap_plan_3D_int32,layout_3D,box_3D, sll_int32, dimension(:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_real64,remap_plan_3D_real64,layout_3D, box_3D, sll_real64, dimension(:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_comp64,remap_plan_3D_comp64,layout_3D,box_3D, sll_comp64, dimension(:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_int32,remap_plan_3D_int32,sll_t_layout_3d,box_3D, sll_int32, dimension(:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_real64,sll_t_remap_plan_3d_real64,sll_t_layout_3d, box_3D, sll_real64, dimension(:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_comp64,sll_t_remap_plan_3d_comp64,sll_t_layout_3d,box_3D, sll_comp64, dimension(:,:,:) )
   ! 4D remaps
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_int32,remap_plan_4D_int32,layout_4D,box_4D, sll_int32, dimension(:,:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_real64,remap_plan_4D_real64,layout_4D,box_4D, sll_real64, dimension(:,:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_comp64,remap_plan_4D_comp64,layout_4D,box_4D, sll_comp64, dimension(:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_int32,remap_plan_4D_int32,sll_t_layout_4d,box_4D, sll_int32, dimension(:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_real64,sll_t_remap_plan_4d_real64,sll_t_layout_4d,box_4D, sll_real64, dimension(:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_comp64,remap_plan_4D_comp64,sll_t_layout_4d,box_4D, sll_comp64, dimension(:,:,:,:) )
   ! 5D remaps
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_5D_int32,remap_plan_5D_int32,layout_5D,box_5D, sll_int32, dimension(:,:,:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_5D_real64,remap_plan_5D_real64,layout_5D,box_5D, sll_real64, dimension(:,:,:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_5D_comp64,remap_plan_5D_comp64,layout_5D,box_5D, sll_comp64, dimension(:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_5D_int32,remap_plan_5D_int32,sll_t_layout_5d,box_5D, sll_int32, dimension(:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_5D_real64,sll_t_remap_plan_5d_real64,sll_t_layout_5d,box_5D, sll_real64, dimension(:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_5D_comp64,remap_plan_5D_comp64,sll_t_layout_5d,box_5D, sll_comp64, dimension(:,:,:,:,:) )
   ! 6D remaps
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_int32,remap_plan_6D_int32,layout_6D,box_6D, sll_int32, dimension(:,:,:,:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_real64,remap_plan_6D_real64,layout_6D,box_6D, sll_real64, dimension(:,:,:,:,:,:) )
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_comp64,remap_plan_6D_comp64,layout_6D,box_6D, sll_comp64, dimension(:,:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_int32,remap_plan_6D_int32,sll_t_layout_6d,box_6D, sll_int32, dimension(:,:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_real64,sll_t_remap_plan_6d_real64,sll_t_layout_6d,box_6D, sll_real64, dimension(:,:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_comp64,remap_plan_6D_comp64,sll_t_layout_6d,box_6D, sll_comp64, dimension(:,:,:,:,:,:) )
 
 
  ! Try to fix the name of the subroutine in the print statement by stringifying
@@ -1952,19 +2000,19 @@ contains  !******************************************************************
  end subroutine fname
 
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_int32, remap_plan_2D_int32 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_real64, remap_plan_2D_real64 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_comp64, remap_plan_2D_comp64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_real64, sll_t_remap_plan_2d_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_comp64, sll_t_remap_plan_2d_comp64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_int32, remap_plan_3D_int32 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_real64, remap_plan_3D_real64 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_comp64, remap_plan_3D_comp64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_real64, sll_t_remap_plan_3d_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_comp64, sll_t_remap_plan_3d_comp64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_int32, remap_plan_4D_int32 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_real64, remap_plan_4D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_real64, sll_t_remap_plan_4d_real64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_comp64, remap_plan_4D_comp64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_5D_int32, remap_plan_5D_int32 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_5D_real64, remap_plan_5D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_5D_real64, sll_t_remap_plan_5d_real64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_5D_comp64, remap_plan_5D_comp64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_int32, remap_plan_6D_int32 )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_real64, remap_plan_6D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_real64, sll_t_remap_plan_6d_real64 )
  MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_comp64, remap_plan_6D_comp64 )
 
 #if 0
@@ -1973,10 +2021,10 @@ contains  !******************************************************************
   function new_remap_plan_3D( initial, final, int32_data_size )
     intrinsic                       :: associated
     type(remap_plan_3D), pointer  :: new_remap_plan_3D 
-    type(layout_3D), pointer      :: initial
-    type(layout_3D), pointer      :: final
+    type(sll_t_layout_3d), pointer      :: initial
+    type(sll_t_layout_3d), pointer      :: final
     sll_int32, intent(in)           :: int32_data_size
-    type(sll_collective_t), pointer :: col
+    type(sll_t_collective_t), pointer :: col
     type(box_3D)                    :: ibox, fbox, inters
     sll_int32                       :: i, f          ! loop index
     sll_int32                       :: my_rank
@@ -1995,12 +2043,12 @@ contains  !******************************************************************
     if( .not. associated(get_layout_3D_collective(initial),&
          target=get_layout_3D_collective(final)) ) then
        call errout(6,'F', &
-         'init and final configurations given to new_remap_plan do not refer to the same collective.',1989,'sll_remap.F90')
+         'init and final configurations given to sll_o_new_remap_plan do not refer to the same collective.',1989,'sll_remap.F90')
     end if
   
     col => get_layout_3D_collective(initial)
-    my_rank  = sll_get_collective_rank( col )
-    col_size = sll_get_collective_size( col )
+    my_rank  = sll_f_get_collective_rank( col )
+    col_size = sll_f_get_collective_size( col )
 
     SLL_ALLOCATE( new_remap_plan_3D, ierr )
     SLL_ALLOCATE( new_remap_plan_3D%send_displs(0:col_size-1), ierr )
@@ -2119,164 +2167,63 @@ contains  !******************************************************************
   ! send_counts and displacements...  This introduces a
   ! problem: The optimized plan has a notion of a reduced collective, as well
   ! as compressed box arrays, but will still need the 'global' information
-  ! about the layouts, since the global_to_local function only has meaning 
+  ! about the layouts, since the sll_o_global_to_local function only has meaning 
   ! in the context of the global layout. I find this 'mixing' very unpleasant, 
   ! and it might invite confusing those two collectives (the parent and the
   ! reduced), for now see no clean & easy way to fix this. Fortunately, at 
   ! least, the reference to the larger collective is hidden inside the 'layout' 
-  ! information and used only by 'global_to_local()'.
+  ! information and used only by 'sll_o_global_to_local()'.
 #define MAKE_REMAP_OPTIMIZER( fname, remap_type, box_type ) \
 subroutine fname( plan ); \
  type(remap_type), pointer            :: plan; \
- sll_int32,dimension(:),pointer :: send_counts; \
- sll_int32, dimension(:), pointer     :: send_displs; \
- sll_int32, dimension(:), pointer     :: recv_counts; \
- sll_int32, dimension(:), pointer     :: recv_displs; \
- type(sll_collective_t), pointer      :: col; \
- sll_int32                            :: col_sz; \
- sll_int32, dimension(:), allocatable :: lowest_color; \
- sll_int32, dimension(:), allocatable :: colors; \
- sll_int32, dimension(:), allocatable :: colors_copy; \
- sll_int32                            :: ierr; \
- sll_int32                            :: my_rank; \
- sll_int32                            :: i; \
- type(sll_collective_t), pointer      :: new_collective; \
- sll_int32                            :: new_col_sz; \
- sll_int32, dimension(:), pointer     :: new_send_counts; \
- sll_int32, dimension(:), pointer     :: new_send_displs; \
- sll_int32, dimension(:), pointer     :: new_recv_counts; \
- sll_int32, dimension(:), pointer     :: new_recv_displs; \
  type(box_type), dimension(:), pointer :: new_send_boxes; \
- type(box_type), dimension(:), pointer :: new_recv_boxes; \
- sll_int32                            :: new_i; \
- sll_int32                            :: my_color; \
- sll_int32                            :: exchange_size_s; \
- sll_int32                            :: exchange_size_r; \
- logical, dimension(1:1)              :: is_uniform_local; \
- logical, dimension(1:1)              :: is_uniform_collective; \
- sll_int32                            :: new_sdisp; \
- sll_int32                            :: new_rdisp; \
- col         => plan%collective; \
- col_sz      = sll_get_collective_size( col ); \
- my_rank     = sll_get_collective_rank( col ); \
- send_counts => plan%send_counts; \
- send_displs => plan%send_displs; \
- recv_counts => plan%recv_counts; \
- recv_displs => plan%recv_displs; \
- SLL_ALLOCATE( lowest_color(1), ierr ); \
- lowest_color(1) = 0; \
- SLL_ALLOCATE( colors(0:col_sz-1), ierr ); \
- colors(:) = 0; \
- SLL_ALLOCATE( colors_copy(0:col_sz-1), ierr ); \
- colors_copy(:) = 0; \
- lowest_color(1) = my_rank; \
- call sll_collective_allgather(col,lowest_color,1,colors(0:col_sz-1),1); \
- do; \
-    colors_copy(0:col_sz-1) = colors(0:col_sz-1); \
-    do i=0,col_sz-1; \
-       if( (send_counts(i) .ne. 0) .or. (recv_counts(i) .ne. 0) ) then; \
-          if( colors(i) .lt. lowest_color(1) ) then; \
-             lowest_color(1) = colors(i); \
-          end if; \
-       end if; \
-    end do; \
-    call sll_collective_allgather(col,lowest_color,1,colors(0:col_sz-1),1); \
-    if(arrays_are_equal(colors, colors_copy, col_sz)) then; \
-       exit; \
-    end if; \
- end do; \
- new_collective => sll_new_collective( col, colors(my_rank), my_rank ); \
- new_col_sz     = sll_get_collective_size( new_collective ); \
- SLL_ALLOCATE( new_send_counts(0:new_col_sz-1), ierr ); \
- SLL_ALLOCATE( new_send_displs(0:new_col_sz-1), ierr ); \
- SLL_ALLOCATE( new_recv_counts(0:new_col_sz-1), ierr ); \
- SLL_ALLOCATE( new_recv_displs(0:new_col_sz-1), ierr ); \
- SLL_ALLOCATE( new_send_boxes( 0:new_col_sz-1), ierr ); \
- SLL_ALLOCATE( new_recv_boxes( 0:new_col_sz-1), ierr ); \
- new_i = 0; \
- my_color = colors(my_rank); \
- new_sdisp = 0; \
- new_rdisp = 0; \
- do i=0,col_sz-1; \
-    if( colors(i) .eq. my_color ) then; \
-       new_send_counts(new_i) = send_counts(i); \
-       new_send_displs(new_i) = new_sdisp; \
-       new_send_boxes(new_i)  = plan%send_boxes(i); \
-       new_sdisp              = new_sdisp + send_counts(i); \
-       new_recv_counts(new_i) = recv_counts(i); \
-       new_recv_displs(new_i) = new_rdisp; \
-       new_recv_boxes(new_i)  = plan%recv_boxes(i); \
-       new_rdisp              = new_rdisp + recv_counts(i); \
-       new_i                  = new_i + 1; \
-    end if; \
- end do; \
- plan%collective => new_collective; \
- SLL_DEALLOCATE( plan%send_counts, ierr ); \
- plan%send_counts => new_send_counts; \
- SLL_DEALLOCATE( plan%send_displs, ierr ); \
- plan%send_displs => new_send_displs; \
- SLL_DEALLOCATE( plan%recv_counts, ierr ); \
- plan%recv_counts => new_recv_counts; \
- SLL_DEALLOCATE( plan%recv_displs, ierr ); \
- plan%recv_displs => new_recv_displs; \
- SLL_DEALLOCATE( plan%send_boxes, ierr ); \
- plan%send_boxes => new_send_boxes; \
- SLL_DEALLOCATE( plan%recv_boxes, ierr ); \
- plan%recv_boxes => new_recv_boxes; \
- SLL_DEALLOCATE_ARRAY( lowest_color, ierr ); \
- SLL_DEALLOCATE_ARRAY( colors, ierr ); \
- SLL_DEALLOCATE_ARRAY( colors_copy, ierr ); \
- exchange_size_s = plan%send_counts(0); \
- do i=0,new_col_sz-1; \
-    if(plan%send_counts(i) .eq. exchange_size_s) then; \
-       is_uniform_local(1) = is_uniform_local(1) .and. .true.; \
-    else; \
-       is_uniform_local(1) = is_uniform_local(1) .and. .false.; \
-       exit; \
-    end if; \
- end do; \
- exchange_size_r = plan%recv_counts(0); \
- do i=0,new_col_sz-1; \
-    if(plan%recv_counts(i) .eq. exchange_size_r) then; \
-       is_uniform_local(1) = is_uniform_local(1) .and. .true.; \
-    else; \
-       is_uniform_local(1) = is_uniform_local(1) .and. .false.; \
-       exit; \
-    end if; \
- end do; \
- call sll_collective_allreduce(plan%collective,is_uniform_local(:),1,MPI_LAND, is_uniform_collective(:) ); \
- plan%is_uniform = is_uniform_collective(1); \
-end subroutine fname
+ type(box_type), dimension(:), pointer :: new_recv_boxes;
+!-------------------------------------------------------------------------------
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D_int32, remap_plan_2D_int32,box_2D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_2D_int32, remap_plan_2D_int32, box_2D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D_real64, remap_plan_2D_real64,box_2D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_2D_real64, sll_t_remap_plan_2d_real64,box_2D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D_comp64, remap_plan_2D_comp64,box_2D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_2D_comp64, sll_t_remap_plan_2d_comp64,box_2D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D_int32, remap_plan_3D_int32,box_3D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_3D_int32, remap_plan_3D_int32,box_3D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D_real64, remap_plan_3D_real64,box_3D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_3D_real64, sll_t_remap_plan_3d_real64, box_3D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D_comp64, remap_plan_3D_comp64,box_3D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_3D_comp64, sll_t_remap_plan_3d_comp64, box_3D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D_int32, remap_plan_4D_int32,box_4D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_4D_int32, remap_plan_4D_int32, box_4D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D_real64, remap_plan_4D_real64,box_4D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_4D_real64, sll_t_remap_plan_4d_real64, box_4D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D_comp64, remap_plan_4D_comp64,box_4D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_4D_comp64, remap_plan_4D_comp64, box_4D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_5D_int32, remap_plan_5D_int32,box_5D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_5D_int32, remap_plan_5D_int32, box_5D )
+#include "sll_k_make_remap_optimizer.F90"
   
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_5D_real64, remap_plan_5D_real64,box_5D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_5D_real64, sll_t_remap_plan_5d_real64, box_5D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_5D_comp64, remap_plan_5D_comp64,box_5D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_5D_comp64, remap_plan_5D_comp64, box_5D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D_int32, remap_plan_6D_int32,box_6D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_int32, remap_plan_6D_int32, box_6D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D_real64, remap_plan_6D_real64,box_6D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_real64, sll_t_remap_plan_6d_real64, box_6D )
+#include "sll_k_make_remap_optimizer.F90"
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D_comp64, remap_plan_6D_comp64,box_6D)
+MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6D )
+#include "sll_k_make_remap_optimizer.F90"
 
 #if 0
   ! We leave this here for reference, as it was the original and has comments.
@@ -2286,7 +2233,7 @@ end subroutine fname
     sll_int32, dimension(:), pointer     :: send_displs
     sll_int32, dimension(:), pointer     :: recv_counts
     sll_int32, dimension(:), pointer     :: recv_displs
-    type(sll_collective_t), pointer      :: col
+    type(sll_t_collective_t), pointer      :: col
     sll_int32                            :: col_sz
     sll_int32, dimension(:), allocatable :: lowest_color
     sll_int32, dimension(:), allocatable :: colors
@@ -2294,7 +2241,7 @@ end subroutine fname
     sll_int32                            :: ierr
     sll_int32                            :: my_rank
     sll_int32                            :: i
-    type(sll_collective_t), pointer      :: new_collective
+    type(sll_t_collective_t), pointer      :: new_collective
     sll_int32                            :: new_col_sz
     sll_int32, dimension(:), pointer     :: new_send_counts
     sll_int32, dimension(:), pointer     :: new_send_displs
@@ -2310,8 +2257,8 @@ end subroutine fname
     sll_int32                            :: new_sdisp
     sll_int32                            :: new_rdisp
     col         => plan%collective
-    col_sz      = sll_get_collective_size( col )
-    my_rank     = sll_get_collective_rank( col )
+    col_sz      = sll_f_get_collective_size( col )
+    my_rank     = sll_f_get_collective_rank( col )
     send_counts => plan%send_counts
     send_displs => plan%send_displs
     recv_counts => plan%recv_counts
@@ -2337,7 +2284,7 @@ end subroutine fname
     ! we want a starting point. This should not change for the lowest ranks 
     ! in the sub-collectives.
     lowest_color(1) = my_rank  
-    call sll_collective_allgather( &
+    call sll_o_collective_allgather( &
        col, &
        lowest_color(1:1), &
        1, &
@@ -2355,7 +2302,7 @@ end subroutine fname
           end if
        end do
        ! Gather the information from all processes
-       call sll_collective_allgather( &
+       call sll_o_collective_allgather( &
             col, &
             lowest_color(1:1), &
             1, &
@@ -2367,7 +2314,7 @@ end subroutine fname
        ! process communicates, and reassign the color accordingly.
        lowest_color(1) = colors(lowest_color(1))
 
-       call sll_collective_allgather( &
+       call sll_o_collective_allgather( &
             col, &
             lowest_color(1:1), &
             1, &
@@ -2383,8 +2330,8 @@ end subroutine fname
 #endif
     ! The results can now be used as the color for a collective-splitting 
     ! operation.
-    new_collective => sll_new_collective( col, colors(my_rank), my_rank )
-    new_col_sz     = sll_get_collective_size( new_collective )
+    new_collective => sll_f_new_collective( col, colors(my_rank), my_rank )
+    new_col_sz     = sll_f_get_collective_size( new_collective )
     ! Allocate the new counters and displacements with the reduced 
     ! collective size.
     SLL_ALLOCATE( new_send_counts(0:new_col_sz-1), ierr )
@@ -2456,7 +2403,7 @@ end subroutine fname
     ! the other processes in the collective. Hmmm... look at this slightly
     ! disastrous occurrence: the MPI reduction operation MPI_LAND got out of
     ! the cage... this needs to be addressed.
-    call sll_collective_allreduce(plan%collective, is_uniform_local(:), 1, &
+    call sll_o_collective_allreduce(plan%collective, is_uniform_local(:), 1, &
          MPI_LAND, is_uniform_collective(:) )
     plan%is_uniform = is_uniform_collective(1)
     ! This flag will be used for an optimized call in apply_remap_plan()
@@ -2464,9 +2411,9 @@ end subroutine fname
     write (*,'(a,i4)') 'collective color: ', &
          sll_get_collective_color(plan%collective)
     write (*,'(a,i4)') 'my_rank in new collective: ', &
-         sll_get_collective_rank(plan%collective)
+         sll_f_get_collective_rank(plan%collective)
     write (*,'(a,i4)') 'new collective size: ', &
-         sll_get_collective_size(plan%collective)
+         sll_f_get_collective_size(plan%collective)
     print *, plan%send_counts(:)
     print *, plan%send_displs(:)
     print *, plan%recv_counts(:)
@@ -2501,21 +2448,21 @@ end subroutine fname
     fname => plan%initial_layout; \
   end function fname
 
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_int32, layout_2D, remap_plan_2D_int32)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_real64, layout_2D, remap_plan_2D_real64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_comp64, layout_2D, remap_plan_2D_comp64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_int32, layout_3D, remap_plan_3D_int32)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_real64, layout_3D, remap_plan_3D_real64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_comp64, layout_3D, remap_plan_3D_comp64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_int32, layout_4D, remap_plan_4D_int32)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_real64, layout_4D, remap_plan_4D_real64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_comp64, layout_4D, remap_plan_4D_comp64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_5D_initial_layout_int32, layout_5D, remap_plan_5D_int32)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_5D_initial_layout_real64, layout_5D, remap_plan_5D_real64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_5D_initial_layout_comp64, layout_5D, remap_plan_5D_comp64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_int32, layout_6D, remap_plan_6D_int32)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_real64, layout_6D, remap_plan_6D_real64)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_comp64, layout_6D, remap_plan_6D_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_int32, sll_t_layout_2d, remap_plan_2D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_real64, sll_t_layout_2d, sll_t_remap_plan_2d_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_comp64, sll_t_layout_2d, sll_t_remap_plan_2d_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_int32, sll_t_layout_3d, remap_plan_3D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_real64, sll_t_layout_3d, sll_t_remap_plan_3d_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_comp64, sll_t_layout_3d, sll_t_remap_plan_3d_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_int32, sll_t_layout_4d, remap_plan_4D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_real64, sll_t_layout_4d, sll_t_remap_plan_4d_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_comp64, sll_t_layout_4d, remap_plan_4D_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_5D_initial_layout_int32, sll_t_layout_5d, remap_plan_5D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_5D_initial_layout_real64, sll_t_layout_5d, sll_t_remap_plan_5d_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_5D_initial_layout_comp64, sll_t_layout_5d, remap_plan_5D_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_int32, sll_t_layout_6d, remap_plan_6D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_real64, sll_t_layout_6d, sll_t_remap_plan_6d_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_comp64, sll_t_layout_6d, remap_plan_6D_comp64)
 
 #define MAKE_GET_REMAP_FINAL_LAYOUT( fname, layout_type, remap_type ) \
   function fname( plan ); \
@@ -2528,21 +2475,21 @@ end subroutine fname
     fname => plan%final_layout; \
   end function fname
 
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_int32,layout_2D,remap_plan_2d_int32)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_real64,layout_2D,remap_plan_2d_real64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_comp64,layout_2D,remap_plan_2d_comp64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_int32,layout_3D,remap_plan_3d_int32)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_real64,layout_3D,remap_plan_3d_real64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_comp64,layout_3D,remap_plan_3d_comp64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_int32,layout_4D,remap_plan_4d_int32)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_real64,layout_4D,remap_plan_4d_real64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_comp64,layout_4D,remap_plan_4d_comp64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_5D_final_layout_int32,layout_5D,remap_plan_5d_int32)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_5D_final_layout_real64,layout_5D,remap_plan_5d_real64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_5D_final_layout_comp64,layout_5D,remap_plan_5d_comp64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_int32,layout_6D,remap_plan_6d_int32)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_real64,layout_6D,remap_plan_6d_real64)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_comp64,layout_6D,remap_plan_6d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_int32,sll_t_layout_2d,remap_plan_2d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_real64,sll_t_layout_2d,sll_t_remap_plan_2d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_comp64,sll_t_layout_2d,sll_t_remap_plan_2d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_int32,sll_t_layout_3d,remap_plan_3d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_real64,sll_t_layout_3d,sll_t_remap_plan_3d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_comp64,sll_t_layout_3d,sll_t_remap_plan_3d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_int32,sll_t_layout_4d,remap_plan_4d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_real64,sll_t_layout_4d,sll_t_remap_plan_4d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_comp64,sll_t_layout_4d,remap_plan_4d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_5D_final_layout_int32,sll_t_layout_5d,remap_plan_5d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_5D_final_layout_real64,sll_t_layout_5d,sll_t_remap_plan_5d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_5D_final_layout_comp64,sll_t_layout_5d,remap_plan_5d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_int32,sll_t_layout_6d,remap_plan_6d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_real64,sll_t_layout_6d,sll_t_remap_plan_6d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_comp64,sll_t_layout_6d,remap_plan_6d_comp64)
 
   ! In this implementation, the user provides the memory location where the
   ! result of the remap operation will end up. The remap functions are
@@ -2561,7 +2508,7 @@ end subroutine fname
   ! step is to translate the arrays for counts and displacements in terms
   ! of their integer-sizes. While we would still need a different 
   ! apply_remap_XD() function for every new type, at least this will not 
-  ! affect the new_remap_plan() function.
+  ! affect the sll_o_new_remap_plan() function.
   !
   ! For apply_remap_XD_int(), we use this approach as a test case, even though
   ! it is not necessary since 'integer' is also a native MPI type.
@@ -2594,9 +2541,9 @@ end subroutine fname
     sll_int32, dimension(:), pointer         :: rdisp    ! receive displacements
     sll_int32, dimension(:), pointer         :: scnts    ! send counts
     sll_int32, dimension(:), pointer         :: rcnts    ! receive counts
-    type(sll_collective_t), pointer          :: col      ! collective
-    type(layout_3D), pointer                 :: init_layout  => NULL()
-    type(layout_3D), pointer                 :: final_layout => NULL()
+    type(sll_t_collective_t), pointer          :: col      ! collective
+    type(sll_t_layout_3d), pointer                 :: init_layout  => NULL()
+    type(sll_t_layout_3d), pointer                 :: final_layout => NULL()
     sll_int32                                :: id, jd, kd
     sll_int32                                :: i
     sll_int32                                :: col_sz
@@ -2615,10 +2562,10 @@ end subroutine fname
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_3D_initial_layout_int32(plan)
     final_layout => get_remap_3D_final_layout_int32(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
     ! load the send buffer
@@ -2668,14 +2615,14 @@ end subroutine fname
 !    flush( output_unit )
  
    if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -2718,7 +2665,7 @@ end subroutine fname
   end subroutine apply_remap_3D_int
 
   subroutine apply_remap_2D_double( plan, data_in, data_out )
-    type(remap_plan_2D_real64), pointer       :: plan
+    type(sll_t_remap_plan_2d_real64), pointer       :: plan
     sll_real64, dimension(:,:), intent(in)    :: data_in
     sll_real64, dimension(:,:), intent(out)   :: data_out
     sll_real64, dimension(:), pointer         :: sb     ! send buffer
@@ -2727,9 +2674,9 @@ end subroutine fname
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_2D), pointer                  :: init_layout  => NULL()
-    type(layout_2D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_2d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_2d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2755,10 +2702,10 @@ end subroutine fname
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_2D_initial_layout_real64(plan)
     final_layout => get_remap_2D_final_layout_real64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -2850,7 +2797,7 @@ end subroutine fname
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
 !!$                                      scntsi(0:col_sz-1), &
 !!$                                      sdispi(0:col_sz-1), &
                                       scnts(0:col_sz-1), &
@@ -2862,7 +2809,7 @@ end subroutine fname
                                       rdisp(0:col_sz-1), &
                                       col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
 !!$                                      scntsi(0), &
 !!$                                      rcntsi(0), &
                                       scnts(0), &
@@ -2911,7 +2858,7 @@ end subroutine fname
   end subroutine apply_remap_2D_double
 
   subroutine apply_remap_2D_complex( plan, data_in, data_out )
-    type(remap_plan_2D_comp64), pointer       :: plan
+    type(sll_t_remap_plan_2d_comp64), pointer       :: plan
     sll_comp64, dimension(:,:), intent(in)    :: data_in
     sll_comp64, dimension(:,:), intent(out)   :: data_out
     sll_comp64, dimension(:), pointer         :: sb     ! send buffer
@@ -2920,9 +2867,9 @@ end subroutine fname
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_2D), pointer                  :: init_layout  => NULL()
-    type(layout_2D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_2d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_2d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2941,10 +2888,10 @@ end subroutine fname
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_2D_initial_layout_comp64(plan)
     final_layout => get_remap_2D_final_layout_comp64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3007,14 +2954,14 @@ print *, 'remap 2d complex:'
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -3069,9 +3016,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_2D), pointer                :: init_layout  => NULL()
-    type(layout_2D), pointer                :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_2d), pointer                :: init_layout  => NULL()
+    type(sll_t_layout_2d), pointer                :: final_layout => NULL()
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3098,10 +3045,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_2D_initial_layout(plan)
     final_layout => get_remap_2D_final_layout(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3183,14 +3130,14 @@ print *, 'remap 2d complex:'
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scntsi(0:col_sz-1), &
                                       sdispi(0:col_sz-1), &
                                       rb(:),       &
                                       rcntsi(0:col_sz-1), &
                                       rdispi(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scntsi(0), &
                                       rcntsi(0), &
                                       rb(:), col )
@@ -3233,7 +3180,7 @@ print *, 'remap 2d complex:'
 #endif
 
   subroutine apply_remap_3D_double( plan, data_in, data_out )
-    type(remap_plan_3D_real64), pointer              :: plan
+    type(sll_t_remap_plan_3d_real64), pointer              :: plan
     sll_real64, dimension(:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:), intent(out) :: data_out
     sll_real64, dimension(:), pointer         :: sb     ! send buffer
@@ -3242,9 +3189,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_3D), pointer                  :: init_layout  => NULL()
-    type(layout_3D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_3d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_3d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3263,10 +3210,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_3D_initial_layout_real64(plan)
     final_layout => get_remap_3D_final_layout_real64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3325,14 +3272,14 @@ print *, 'remap 2d complex:'
 !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !    flush( output_unit )
    if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -3375,7 +3322,7 @@ print *, 'remap 2d complex:'
   end subroutine apply_remap_3D_double
 
   subroutine apply_remap_4D_double( plan, data_in, data_out )
-    type(remap_plan_4D_real64), pointer                :: plan
+    type(sll_t_remap_plan_4d_real64), pointer                :: plan
     sll_real64, dimension(:,:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:,:), intent(out) :: data_out
     sll_real64, dimension(:), pointer         :: sb     ! send buffer
@@ -3384,9 +3331,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_4D), pointer                  :: init_layout  => NULL()
-    type(layout_4D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_4d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_4d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd, ld
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3405,10 +3352,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_4D_initial_layout_real64(plan)
     final_layout => get_remap_4D_final_layout_real64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3471,14 +3418,14 @@ print *, 'remap 2d complex:'
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
     !    flush( output_unit )
     if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -3525,7 +3472,7 @@ print *, 'remap 2d complex:'
   end subroutine apply_remap_4D_double
 
   subroutine apply_remap_3D_complex( plan, data_in, data_out )
-    type(remap_plan_3D_comp64), pointer              :: plan
+    type(sll_t_remap_plan_3d_comp64), pointer              :: plan
     sll_comp64, dimension(:,:,:), intent(in)  :: data_in
     sll_comp64, dimension(:,:,:), intent(out) :: data_out
     sll_comp64, dimension(:), pointer          :: sb     ! send buffer
@@ -3534,9 +3481,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_3D), pointer                  :: init_layout  => NULL()
-    type(layout_3D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_3d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_3d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3555,10 +3502,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_3D_initial_layout_comp64(plan)
     final_layout => get_remap_3D_final_layout_comp64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3609,14 +3556,14 @@ print *, 'remap 2d complex:'
 !    flush( output_unit )
  
    if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -3661,7 +3608,7 @@ print *, 'remap 2d complex:'
 
 
   subroutine apply_remap_5D_double( plan, data_in, data_out )
-    type(remap_plan_5D_real64), pointer              :: plan
+    type(sll_t_remap_plan_5d_real64), pointer              :: plan
     sll_real64, dimension(:,:,:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:,:,:), intent(out) :: data_out
     sll_real64, dimension(:), pointer          :: sb     ! send buffer
@@ -3670,9 +3617,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_5D), pointer                  :: init_layout  => NULL()
-    type(layout_5D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_5d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_5d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd, ld, md
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3691,10 +3638,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_5D_initial_layout_real64(plan)
     final_layout => get_remap_5D_final_layout_real64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3761,14 +3708,14 @@ print *, 'remap 2d complex:'
 !!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -3831,9 +3778,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_5D), pointer                  :: init_layout  => NULL()
-    type(layout_5D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_5d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_5d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd, ld, md
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3851,10 +3798,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_5D_initial_layout_int32(plan)
     final_layout => get_remap_5D_final_layout_int32(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -3928,14 +3875,14 @@ print *, 'remap 2d complex:'
 !!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -3993,7 +3940,7 @@ print *, 'remap 2d complex:'
 
 
   subroutine apply_remap_6D_double( plan, data_in, data_out )
-    type(remap_plan_6D_real64), pointer              :: plan
+    type(sll_t_remap_plan_6d_real64), pointer              :: plan
     sll_real64, dimension(:,:,:,:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:,:,:,:), intent(out) :: data_out
     sll_real64, dimension(:), pointer          :: sb     ! send buffer
@@ -4002,9 +3949,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_6D), pointer                  :: init_layout  => NULL()
-    type(layout_6D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_6d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_6d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -4023,10 +3970,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_6D_initial_layout_real64(plan)
     final_layout => get_remap_6D_final_layout_real64(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -4097,14 +4044,14 @@ print *, 'remap 2d complex:'
 !!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -4169,9 +4116,9 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_6D), pointer                  :: init_layout  => NULL()
-    type(layout_6D), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer           :: col    ! collective
+    type(sll_t_layout_6d), pointer                  :: init_layout  => NULL()
+    type(sll_t_layout_6d), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -4189,10 +4136,10 @@ print *, 'remap 2d complex:'
     scnts        => plan%send_counts
     rcnts        => plan%recv_counts
     col          => plan%collective
-    col_sz       =  sll_get_collective_size(col)
+    col_sz       =  sll_f_get_collective_size(col)
     init_layout  => get_remap_6D_initial_layout_int32(plan)
     final_layout => get_remap_6D_final_layout_int32(plan)
-    my_rank      =  sll_get_collective_rank(col)
+    my_rank      =  sll_f_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
@@ -4270,14 +4217,14 @@ print *, 'remap 2d complex:'
 !!$    flush( output_unit )
 
     if( plan%is_uniform .eqv. .false. ) then 
-       call sll_collective_alltoallV( sb(:),       &
+       call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
                                       rb(:),       &
                                       rcnts(0:col_sz-1), &
                                       rdisp(0:col_sz-1), col )
     else
-       call sll_collective_alltoall ( sb(:), &
+       call sll_o_collective_alltoall ( sb(:), &
                                       scnts(0), &
                                       rcnts(0), &
                                       rb(:), col )
@@ -4402,32 +4349,32 @@ print *, 'remap 2d complex:'
 
   function sll_get_num_nodes_2D( lims )
     sll_int32                  :: sll_get_num_nodes_2D
-    type(layout_2D), pointer :: lims
-    sll_get_num_nodes_2D = sll_get_collective_size( lims%collective )
+    type(sll_t_layout_2d), pointer :: lims
+    sll_get_num_nodes_2D = sll_f_get_collective_size( lims%collective )
   end function sll_get_num_nodes_2D
 
   function sll_get_num_nodes_3D( lims )
     sll_int32                  :: sll_get_num_nodes_3D
-    type(layout_3D), pointer :: lims
-    sll_get_num_nodes_3D = sll_get_collective_size( lims%collective )
+    type(sll_t_layout_3d), pointer :: lims
+    sll_get_num_nodes_3D = sll_f_get_collective_size( lims%collective )
   end function sll_get_num_nodes_3D
 
   function sll_get_num_nodes_4D( lims )
     sll_int32                  :: sll_get_num_nodes_4D
-    type(layout_4D), pointer :: lims
-    sll_get_num_nodes_4D = sll_get_collective_size( lims%collective )
+    type(sll_t_layout_4d), pointer :: lims
+    sll_get_num_nodes_4D = sll_f_get_collective_size( lims%collective )
   end function sll_get_num_nodes_4D
 
   function sll_get_num_nodes_5D( lims )
     sll_int32                  :: sll_get_num_nodes_5D
-    type(layout_5D), pointer :: lims
-    sll_get_num_nodes_5D = sll_get_collective_size( lims%collective )
+    type(sll_t_layout_5d), pointer :: lims
+    sll_get_num_nodes_5D = sll_f_get_collective_size( lims%collective )
   end function sll_get_num_nodes_5D
 
   function sll_get_num_nodes_6D( lims )
     sll_int32                  :: sll_get_num_nodes_6D
-    type(layout_6D), pointer :: lims
-    sll_get_num_nodes_6D = sll_get_collective_size( lims%collective )
+    type(sll_t_layout_6d), pointer :: lims
+    sll_get_num_nodes_6D = sll_f_get_collective_size( lims%collective )
   end function sll_get_num_nodes_6D
 
 
@@ -4453,14 +4400,14 @@ print *, 'remap 2d complex:'
   ! things). Thus here we go for the first option.
   function local_to_global_2D( layout, doublet )
     sll_int32, dimension(1:2)             :: local_to_global_2D
-    type(layout_2D), pointer              :: layout
+    type(sll_t_layout_2d), pointer              :: layout
     sll_int32, intent(in), dimension(1:2) :: doublet
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_2D)                          :: box
     ! fixme: arg checking
     col                => get_layout_2D_collective( layout )
-    my_rank            =  sll_get_collective_rank( col )
+    my_rank            =  sll_f_get_collective_rank( col )
     box                =  get_layout_2D_box( layout, my_rank )
     local_to_global_2D(1) = get_box_2D_i_min(box) + doublet(1) - 1
     local_to_global_2D(2) = get_box_2D_j_min(box) + doublet(2) - 1
@@ -4468,14 +4415,14 @@ print *, 'remap 2d complex:'
 
   function local_to_global_3D( layout, triplet )
     sll_int32, dimension(1:3)             :: local_to_global_3D
-    type(layout_3D), pointer            :: layout
+    type(sll_t_layout_3d), pointer            :: layout
     sll_int32, intent(in), dimension(1:3) :: triplet
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_3D)                          :: box
     ! fixme: arg checking
     col                => get_layout_3D_collective( layout )
-    my_rank            =  sll_get_collective_rank( col )
+    my_rank            =  sll_f_get_collective_rank( col )
     box                =  get_layout_3D_box( layout, my_rank )
     local_to_global_3D(1) = get_box_3D_i_min(box) + triplet(1) - 1
     local_to_global_3D(2) = get_box_3D_j_min(box) + triplet(2) - 1
@@ -4484,14 +4431,14 @@ print *, 'remap 2d complex:'
 
   function local_to_global_4D( layout, quad )
     sll_int32, dimension(1:4)             :: local_to_global_4D
-    type(layout_4D), pointer              :: layout
+    type(sll_t_layout_4d), pointer              :: layout
     sll_int32, intent(in), dimension(1:4) :: quad
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_4D)                          :: box
     ! fixme: arg checking
     col                => get_layout_4D_collective( layout )
-    my_rank            =  sll_get_collective_rank( col )
+    my_rank            =  sll_f_get_collective_rank( col )
     box                =  get_layout_4D_box( layout, my_rank )
     local_to_global_4D(1) = get_box_4D_i_min(box) + quad(1) - 1
     local_to_global_4D(2) = get_box_4D_j_min(box) + quad(2) - 1
@@ -4501,14 +4448,14 @@ print *, 'remap 2d complex:'
 
   function local_to_global_5D( layout, quintet )
     sll_int32, dimension(1:5)             :: local_to_global_5D
-    type(layout_5D), pointer              :: layout
+    type(sll_t_layout_5d), pointer              :: layout
     sll_int32, intent(in), dimension(1:5) :: quintet
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_5D)                          :: box
     ! fixme: arg checking
     col                => get_layout_5D_collective( layout )
-    my_rank            =  sll_get_collective_rank( col )
+    my_rank            =  sll_f_get_collective_rank( col )
     box                =  get_layout_5D_box( layout, my_rank )
     local_to_global_5D(1) = get_box_5D_i_min(box) + quintet(1) - 1
     local_to_global_5D(2) = get_box_5D_j_min(box) + quintet(2) - 1
@@ -4521,14 +4468,14 @@ print *, 'remap 2d complex:'
 
   function local_to_global_6D( layout, hextet )
     sll_int32, dimension(1:6)             :: local_to_global_6D
-    type(layout_6D), pointer              :: layout
+    type(sll_t_layout_6d), pointer              :: layout
     sll_int32, intent(in), dimension(1:6) :: hextet
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_6D)                          :: box
     ! fixme: arg checking
     col                => get_layout_6D_collective( layout )
-    my_rank            =  sll_get_collective_rank( col )
+    my_rank            =  sll_f_get_collective_rank( col )
     box                =  get_layout_6D_box( layout, my_rank )
     local_to_global_6D(1) = get_box_6D_i_min(box) + hextet(1) - 1
     local_to_global_6D(2) = get_box_6D_j_min(box) + hextet(2) - 1
@@ -4547,9 +4494,9 @@ print *, 'remap 2d complex:'
   function global_to_local_2D( layout, gtuple )
     intrinsic                             :: associated
     sll_int32, dimension(1:2)             :: global_to_local_2D
-    type(layout_2D), pointer            :: layout
+    type(sll_t_layout_2d), pointer            :: layout
     sll_int32, dimension(1:2), intent(in) :: gtuple ! global indices, as array
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_2D)                          :: box
     if( .not. associated(get_layout_2D_collective(layout)) ) then
@@ -4557,7 +4504,7 @@ print *, 'remap 2d complex:'
        stop 'global_to_local_2D'
     end if
     col     => get_layout_2D_collective( layout )
-    my_rank =  sll_get_collective_rank( col )
+    my_rank =  sll_f_get_collective_rank( col )
     box     =  get_layout_2D_box( layout, my_rank )
     if( (gtuple(1) .ge. get_box_2D_i_min(box)) .and. &
         (gtuple(1) .le. get_box_2D_i_max(box)) .and. &
@@ -4574,9 +4521,9 @@ print *, 'remap 2d complex:'
   function global_to_local_3D( layout, gtuple )
     intrinsic                             :: associated
     sll_int32, dimension(1:3)             :: global_to_local_3D
-    type(layout_3D), pointer            :: layout
+    type(sll_t_layout_3d), pointer            :: layout
     sll_int32, dimension(1:3), intent(in) :: gtuple ! global indices, as array
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_3D)                          :: box
     if( .not. associated(get_layout_3D_collective(layout)) ) then
@@ -4584,7 +4531,7 @@ print *, 'remap 2d complex:'
        stop 'global_to_local_3D'
     end if
     col     => get_layout_3D_collective( layout )
-    my_rank =  sll_get_collective_rank( col )
+    my_rank =  sll_f_get_collective_rank( col )
     box     =  get_layout_3D_box( layout, my_rank )
     if( (gtuple(1) .ge. get_box_3D_i_min(box)) .and. &
          (gtuple(1) .le. get_box_3D_i_max(box)) .and. &
@@ -4605,9 +4552,9 @@ print *, 'remap 2d complex:'
   function global_to_local_4D( layout, gtuple )
     intrinsic                             :: associated
     sll_int32, dimension(1:4)             :: global_to_local_4D
-    type(layout_4D), pointer            :: layout
+    type(sll_t_layout_4d), pointer            :: layout
     sll_int32, dimension(1:4), intent(in) :: gtuple ! global indices, as array
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_4D)                          :: box
     if( .not. associated(get_layout_4D_collective(layout)) ) then
@@ -4615,7 +4562,7 @@ print *, 'remap 2d complex:'
        stop 'global_to_local_4D'
     end if
     col     => get_layout_4D_collective( layout )
-    my_rank =  sll_get_collective_rank( col )
+    my_rank =  sll_f_get_collective_rank( col )
     box     =  get_layout_4D_box( layout, my_rank )
     if( (gtuple(1) .ge. get_box_4D_i_min(box)) .and. &
         (gtuple(1) .le. get_box_4D_i_max(box)) .and. &
@@ -4640,9 +4587,9 @@ print *, 'remap 2d complex:'
   function global_to_local_5D( layout, gtuple )
     intrinsic                             :: associated
     sll_int32, dimension(1:5)             :: global_to_local_5D
-    type(layout_5D), pointer              :: layout
+    type(sll_t_layout_5d), pointer              :: layout
     sll_int32, dimension(1:5), intent(in) :: gtuple ! global indices, as array
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_5D)                          :: box
     if( .not. associated(get_layout_5D_collective(layout)) ) then
@@ -4650,7 +4597,7 @@ print *, 'remap 2d complex:'
        stop 'global_to_local_5D'
     end if
     col     => get_layout_5D_collective( layout )
-    my_rank =  sll_get_collective_rank( col )
+    my_rank =  sll_f_get_collective_rank( col )
     box     =  get_layout_5D_box( layout, my_rank )
     if( (gtuple(1) .ge. get_box_5D_i_min(box)) .and. &
         (gtuple(1) .le. get_box_5D_i_max(box)) .and. &
@@ -4682,9 +4629,9 @@ print *, 'remap 2d complex:'
   function global_to_local_6D( layout, gtuple )
     intrinsic                             :: associated
     sll_int32, dimension(1:6)             :: global_to_local_6D
-    type(layout_6D), pointer              :: layout
+    type(sll_t_layout_6d), pointer              :: layout
     sll_int32, dimension(1:6), intent(in) :: gtuple ! global indices, as array
-    type(sll_collective_t), pointer       :: col
+    type(sll_t_collective_t), pointer       :: col
     sll_int32                             :: my_rank
     type(box_6D)                          :: box
     if( .not. associated(get_layout_6D_collective(layout)) ) then
@@ -4692,7 +4639,7 @@ print *, 'remap 2d complex:'
        stop 'global_to_local_6D'
     end if
     col     => get_layout_6D_collective( layout )
-    my_rank =  sll_get_collective_rank( col )
+    my_rank =  sll_f_get_collective_rank( col )
     box     =  get_layout_6D_box( layout, my_rank )
     if( (gtuple(1) .ge. get_box_6D_i_min(box)) .and. &
         (gtuple(1) .le. get_box_6D_i_max(box)) .and. &
@@ -4773,10 +4720,10 @@ print *, 'remap 2d complex:'
 
 
   subroutine sll_view_lims_2D( layout )
-    type(layout_2D), pointer :: layout
+    type(sll_t_layout_2d), pointer :: layout
     sll_int32                  :: i
     sll_int32                  :: sz
-    sz = sll_get_num_nodes( layout )
+    sz = sll_o_get_num_nodes( layout )
     print *, 'limits: '
     do i=0,sz-1
        call view_box_2D(get_layout_2D_box( layout, i ))
@@ -4786,10 +4733,10 @@ print *, 'remap 2d complex:'
 
 
   subroutine sll_view_lims_3D( layout )
-    type(layout_3D), pointer :: layout
+    type(sll_t_layout_3d), pointer :: layout
     sll_int32                  :: i
     sll_int32                  :: sz
-    sz = sll_get_num_nodes( layout )
+    sz = sll_o_get_num_nodes( layout )
     print *, 'limits: '
     do i=0,sz-1
        call view_box_3D(get_layout_3D_box( layout, i ))
@@ -4798,10 +4745,10 @@ print *, 'remap 2d complex:'
   end subroutine sll_view_lims_3D
 
   subroutine sll_view_lims_4D( layout )
-    type(layout_4D), pointer :: layout
+    type(sll_t_layout_4d), pointer :: layout
     sll_int32                  :: i
     sll_int32                  :: sz
-    sz = sll_get_num_nodes( layout )
+    sz = sll_o_get_num_nodes( layout )
     print *, 'limits: '
     do i=0,sz-1
        call view_box_4D(get_layout_4D_box( layout, i ))
@@ -4810,10 +4757,10 @@ print *, 'remap 2d complex:'
   end subroutine sll_view_lims_4D
 
   subroutine sll_view_lims_5D( layout )
-    type(layout_5D), pointer :: layout
+    type(sll_t_layout_5d), pointer :: layout
     sll_int32                  :: i
     sll_int32                  :: sz
-    sz = sll_get_num_nodes( layout )
+    sz = sll_o_get_num_nodes( layout )
     print *, 'limits: '
     do i=0,sz-1
        call view_box_5D(get_layout_5D_box( layout, i ))
@@ -4823,10 +4770,10 @@ print *, 'remap 2d complex:'
 
 
   subroutine sll_view_lims_6D( layout )
-    type(layout_6D), pointer :: layout
+    type(sll_t_layout_6d), pointer :: layout
     sll_int32                  :: i
     sll_int32                  :: sz
-    sz = sll_get_num_nodes( layout )
+    sz = sll_o_get_num_nodes( layout )
     print *, 'limits: '
     do i=0,sz-1
        call view_box_6D(get_layout_6D_box( layout, i ))
@@ -5304,7 +5251,7 @@ print *, 'remap 2d complex:'
     loc_sz_m, &
     loc_sz_n )
 
-    type(layout_6D), pointer :: layout
+    type(sll_t_layout_6d), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32, intent(out) :: loc_sz_k
@@ -5329,7 +5276,7 @@ print *, 'remap 2d complex:'
        print *, 'Exiting...'
        STOP
     end if
-    my_rank = sll_get_collective_rank(get_layout_6D_collective(layout))
+    my_rank = sll_f_get_collective_rank(get_layout_6D_collective(layout))
     i_min = get_layout_6D_i_min( layout, my_rank )
     i_max = get_layout_6D_i_max( layout, my_rank )
     j_min = get_layout_6D_j_min( layout, my_rank )
@@ -5359,7 +5306,7 @@ print *, 'remap 2d complex:'
     loc_sz_l, &
     loc_sz_m )
 
-    type(layout_5D), pointer :: layout
+    type(sll_t_layout_5d), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32, intent(out) :: loc_sz_k
@@ -5381,7 +5328,7 @@ print *, 'remap 2d complex:'
        print *, 'Exiting...'
        STOP
     end if
-    my_rank = sll_get_collective_rank(get_layout_5D_collective(layout))
+    my_rank = sll_f_get_collective_rank(get_layout_5D_collective(layout))
     i_min = get_layout_5D_i_min( layout, my_rank )
     i_max = get_layout_5D_i_max( layout, my_rank )
     j_min = get_layout_5D_j_min( layout, my_rank )
@@ -5409,7 +5356,7 @@ print *, 'remap 2d complex:'
     loc_sz_k, &
     loc_sz_l )
 
-    type(layout_4D), pointer :: layout
+    type(sll_t_layout_4d), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32, intent(out) :: loc_sz_k
@@ -5428,7 +5375,7 @@ print *, 'remap 2d complex:'
        print *, 'Exiting...'
        STOP
     end if
-    my_rank = sll_get_collective_rank(get_layout_4D_collective(layout))
+    my_rank = sll_f_get_collective_rank(get_layout_4D_collective(layout))
     i_min = get_layout_4D_i_min( layout, my_rank )
     i_max = get_layout_4D_i_max( layout, my_rank )
     j_min = get_layout_4D_j_min( layout, my_rank )
@@ -5449,7 +5396,7 @@ print *, 'remap 2d complex:'
     loc_sz_j, &
     loc_sz_k )
 
-    type(layout_3D), pointer :: layout
+    type(sll_t_layout_3d), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32, intent(out) :: loc_sz_k
@@ -5465,7 +5412,7 @@ print *, 'remap 2d complex:'
        print *, 'Exiting...'
        STOP
     end if
-    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
+    my_rank = sll_f_get_collective_rank(get_layout_3D_collective(layout))
     i_min = get_layout_3D_i_min( layout, my_rank )
     i_max = get_layout_3D_i_max( layout, my_rank )
     j_min = get_layout_3D_j_min( layout, my_rank )
@@ -5482,7 +5429,7 @@ print *, 'remap 2d complex:'
     loc_sz_i, &
     loc_sz_j )
 
-    type(layout_2D), pointer :: layout
+    type(sll_t_layout_2d), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32 :: i_min
@@ -5495,7 +5442,7 @@ print *, 'remap 2d complex:'
        print *, 'Exiting...'
        STOP
     end if
-    my_rank = sll_get_collective_rank(get_layout_2D_collective(layout))
+    my_rank = sll_f_get_collective_rank(get_layout_2D_collective(layout))
     i_min = get_layout_2D_i_min( layout, my_rank )
     i_max = get_layout_2D_i_max( layout, my_rank )
     j_min = get_layout_2D_j_min( layout, my_rank )
@@ -5532,10 +5479,10 @@ print *, 'remap 2d complex:'
   !> a problem, but may be a sign that the usual way to allocate and initialize
   !> layouts might need to be merged.
   !> @returns a new layout allocated.
-  function new_layout_2D_from_layout_4D( layout4d )
-    type(layout_2D), pointer :: new_layout_2D_from_layout_4D
-    type(layout_4D), pointer :: layout4d
-    type(sll_collective_t), pointer :: coll
+  function sll_f_new_layout_2d_from_layout_4d( layout4d )
+    type(sll_t_layout_2d), pointer :: sll_f_new_layout_2d_from_layout_4d
+    type(sll_t_layout_4d), pointer :: layout4d
+    type(sll_t_collective_t), pointer :: coll
     sll_int32                :: coll_size
     sll_int32                :: process
     sll_int32                :: i_min
@@ -5548,27 +5495,27 @@ print *, 'remap 2d complex:'
     sll_int32                :: l_max
 
     SLL_ASSERT( associated(layout4d) )
-    coll                     => get_layout_collective( layout4d )
-    coll_size                = sll_get_collective_size( coll )
-    new_layout_2D_from_layout_4D => new_layout_2d( coll )
+    coll                     => sll_o_get_layout_collective( layout4d )
+    coll_size                = sll_f_get_collective_size( coll )
+    sll_f_new_layout_2d_from_layout_4d => sll_f_new_layout_2d( coll )
     ! Just copy the contents of the layout
     do process=0, coll_size-1
-       i_min = get_layout_i_min( layout4d, process )
-       i_max = get_layout_i_max( layout4d, process )
-       j_min = get_layout_j_min( layout4d, process )
-       j_max = get_layout_j_max( layout4d, process )
-       call set_layout_i_min( new_layout_2D_from_layout_4D, process, i_min )
-       call set_layout_i_max( new_layout_2D_from_layout_4D, process, i_max )
-       call set_layout_j_min( new_layout_2D_from_layout_4D, process, j_min )
-       call set_layout_j_max( new_layout_2D_from_layout_4D, process, j_max )
+       i_min = sll_o_get_layout_i_min( layout4d, process )
+       i_max = sll_o_get_layout_i_max( layout4d, process )
+       j_min = sll_o_get_layout_j_min( layout4d, process )
+       j_max = sll_o_get_layout_j_max( layout4d, process )
+       call sll_o_set_layout_i_min( sll_f_new_layout_2d_from_layout_4d, process, i_min )
+       call sll_o_set_layout_i_max( sll_f_new_layout_2d_from_layout_4d, process, i_max )
+       call sll_o_set_layout_j_min( sll_f_new_layout_2d_from_layout_4d, process, j_min )
+       call sll_o_set_layout_j_max( sll_f_new_layout_2d_from_layout_4d, process, j_max )
        ! For safety, check if there is any loss of information
-       k_min = get_layout_k_min( layout4d, process )
-       k_max = get_layout_k_max( layout4d, process )
-       l_min = get_layout_l_min( layout4d, process )
-       l_max = get_layout_l_max( layout4d, process )
+       k_min = sll_o_get_layout_k_min( layout4d, process )
+       k_max = sll_o_get_layout_k_max( layout4d, process )
+       l_min = sll_o_get_layout_l_min( layout4d, process )
+       l_max = sll_o_get_layout_l_max( layout4d, process )
 !!$       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
 !!$           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
-!!$           print *, 'WARNING, new_layout_2D_from_layout_4D(): there is loss ',&
+!!$           print *, 'WARNING, sll_f_new_layout_2d_from_layout_4d(): there is loss ',&
 !!$                'of information in the convertion. This may be the intention',&
 !!$                ' if you are essentially projecting one layout onto another.',&
 !!$                ' Printing values:'
@@ -5578,13 +5525,13 @@ print *, 'remap 2d complex:'
 !!$           print *, 'l_max = ', l_max
 !!$        end if
     end do
-  end function new_layout_2D_from_layout_4D
+  end function sll_f_new_layout_2d_from_layout_4d
 
   !> @returns a new layout allocated.
-  function new_layout_3D_from_layout_4D( layout4d )
-    type(layout_3D), pointer :: new_layout_3D_from_layout_4D
-    type(layout_4D), pointer :: layout4d
-    type(sll_collective_t), pointer :: coll
+  function sll_f_new_layout_3d_from_layout_4d( layout4d )
+    type(sll_t_layout_3d), pointer :: sll_f_new_layout_3d_from_layout_4d
+    type(sll_t_layout_4d), pointer :: layout4d
+    type(sll_t_collective_t), pointer :: coll
     sll_int32                :: coll_size
     sll_int32                :: process
     sll_int32                :: i_min
@@ -5597,26 +5544,26 @@ print *, 'remap 2d complex:'
     sll_int32                :: l_max
 
     SLL_ASSERT( associated(layout4d) )
-    coll                         => get_layout_collective( layout4d )
-    coll_size                    = sll_get_collective_size( coll )
-    new_layout_3D_from_layout_4D => new_layout_3d( coll )
+    coll                         => sll_o_get_layout_collective( layout4d )
+    coll_size                    = sll_f_get_collective_size( coll )
+    sll_f_new_layout_3d_from_layout_4d => sll_f_new_layout_3d( coll )
     ! Just copy the contents of the layout
     do process=0, coll_size-1
-       i_min = get_layout_i_min( layout4d, process )
-       i_max = get_layout_i_max( layout4d, process )
-       j_min = get_layout_j_min( layout4d, process )
-       j_max = get_layout_j_max( layout4d, process )
-       k_min = get_layout_k_min( layout4d, process )
-       k_max = get_layout_k_max( layout4d, process )
-       call set_layout_i_min( new_layout_3D_from_layout_4D, process, i_min )
-       call set_layout_i_max( new_layout_3D_from_layout_4D, process, i_max )
-       call set_layout_j_min( new_layout_3D_from_layout_4D, process, j_min )
-       call set_layout_j_max( new_layout_3D_from_layout_4D, process, j_max )
-       call set_layout_k_min( new_layout_3D_from_layout_4D, process, k_min )
-       call set_layout_k_max( new_layout_3D_from_layout_4D, process, k_max )
+       i_min = sll_o_get_layout_i_min( layout4d, process )
+       i_max = sll_o_get_layout_i_max( layout4d, process )
+       j_min = sll_o_get_layout_j_min( layout4d, process )
+       j_max = sll_o_get_layout_j_max( layout4d, process )
+       k_min = sll_o_get_layout_k_min( layout4d, process )
+       k_max = sll_o_get_layout_k_max( layout4d, process )
+       call sll_o_set_layout_i_min( sll_f_new_layout_3d_from_layout_4d, process, i_min )
+       call sll_o_set_layout_i_max( sll_f_new_layout_3d_from_layout_4d, process, i_max )
+       call sll_o_set_layout_j_min( sll_f_new_layout_3d_from_layout_4d, process, j_min )
+       call sll_o_set_layout_j_max( sll_f_new_layout_3d_from_layout_4d, process, j_max )
+       call sll_o_set_layout_k_min( sll_f_new_layout_3d_from_layout_4d, process, k_min )
+       call sll_o_set_layout_k_max( sll_f_new_layout_3d_from_layout_4d, process, k_max )
        ! For safety, check if there is any loss of information
-       l_min = get_layout_l_min( layout4d, process )
-       l_max = get_layout_l_max( layout4d, process )
+       l_min = sll_o_get_layout_l_min( layout4d, process )
+       l_max = sll_o_get_layout_l_max( layout4d, process )
        if(  &
            (l_min .ne. 1) .or. (l_max .ne. 1) ) then
            !print *, 'WARNING, layout_3D_from_layout_4D(): there is loss of ',&
@@ -5625,15 +5572,15 @@ print *, 'remap 2d complex:'
            !print *, 'l_max = ', l_max
         end if
     end do
-  end function new_layout_3D_from_layout_4D
+  end function sll_f_new_layout_3d_from_layout_4d
 
 
 
 #if 0
   function layout_4D_from_layout_2D( layout2d )
-    type(layout_4D), pointer :: layout_4D_from_layout_2D
-    type(layout_2D), pointer :: layout2d
-    type(sll_collective_t), pointer :: coll
+    type(sll_t_layout_4d), pointer :: layout_4D_from_layout_2D
+    type(sll_t_layout_2d), pointer :: layout2d
+    type(sll_t_collective_t), pointer :: coll
     sll_int32                :: coll_size
     sll_int32                :: process
     sll_int32                :: i_min
@@ -5646,24 +5593,24 @@ print *, 'remap 2d complex:'
     sll_int32                :: l_max
 
     SLL_ASSERT( associated(layout4d) )
-    coll                     => get_layout_collective( layout4d )
-    coll_size                = sll_get_collective_size( coll )
-    layout_2D_from_layout_4D => new_layout_4d( coll )
+    coll                     => sll_o_get_layout_collective( layout4d )
+    coll_size                = sll_f_get_collective_size( coll )
+    layout_2D_from_layout_4D => sll_f_new_layout_4d( coll )
     ! Just copy the contents of the layout
     do process=0, coll_size-1
-       i_min = get_layout_i_min( layout4d, process )
-       i_max = get_layout_i_max( layout4d, process )
-       j_min = get_layout_j_min( layout4d, process )
-       j_max = get_layout_j_max( layout4d, process )
-       call set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
-       call set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
-       call set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
-       call set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
+       i_min = sll_o_get_layout_i_min( layout4d, process )
+       i_max = sll_o_get_layout_i_max( layout4d, process )
+       j_min = sll_o_get_layout_j_min( layout4d, process )
+       j_max = sll_o_get_layout_j_max( layout4d, process )
+       call sll_o_set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
+       call sll_o_set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
+       call sll_o_set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
+       call sll_o_set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
        ! For safety, check if there is any loss of information
-       k_min = get_layout_k_min( layout4d, process )
-       k_max = get_layout_k_max( layout4d, process )
-       l_min = get_layout_l_min( layout4d, process )
-       l_max = get_layout_l_max( layout4d, process )
+       k_min = sll_o_get_layout_k_min( layout4d, process )
+       k_max = sll_o_get_layout_k_max( layout4d, process )
+       l_min = sll_o_get_layout_l_min( layout4d, process )
+       l_max = sll_o_get_layout_l_max( layout4d, process )
        if( (k_min .ne. 1) .or. (k_max .ne. 1) .or.
            (l_min .ne. 1) .or. (l_max .ne. 1) ) then
            print *, 'WARNING, layout_2D_from_layout_4D(): there is loss of ',&
@@ -5680,7 +5627,7 @@ print *, 'remap 2d complex:'
   !> Create file for plotmtv to display the MPI topology
   subroutine write_to_file( layout, fname )
 
-     type(layout_2d), pointer  :: layout
+     type(sll_t_layout_2d), pointer  :: layout
      character(len=*)          :: fname
      character(len=4)          :: cproc
 
@@ -5701,13 +5648,13 @@ print *, 'remap 2d complex:'
      write(44,*)"0.0 1.0"
      write(44,*)"1.0 1.0"
      write(44,*)"1.0 0.0"
-     sz = sll_get_num_nodes( layout )
+     sz = sll_o_get_num_nodes( layout )
      do i=0,sz-1
-        call int2string(i, cproc)
-        write(44,*)"@ rectangle x1=", get_layout_i_min(layout,i), &
-        &          " y1=",  get_layout_j_min(layout,i), " z1=0.0 "
-        write(44,*)" x2=", get_layout_i_max(layout,i), &
-        &          " y2=", get_layout_j_max(layout,i), " z2=0.0 "
+        call sll_s_int2string(i, cproc)
+        write(44,*)"@ rectangle x1=", sll_o_get_layout_i_min(layout,i), &
+        &          " y1=",  sll_o_get_layout_j_min(layout,i), " z1=0.0 "
+        write(44,*)" x2=", sll_o_get_layout_i_max(layout,i), &
+        &          " y2=", sll_o_get_layout_j_max(layout,i), " z2=0.0 "
         write(44,*) "fillcolor="//cproc//" filltype=1 linelabel='"//cproc//"'"
      end do
 

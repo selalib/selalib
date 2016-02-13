@@ -3,19 +3,26 @@
 !>\author 
 !>\date created: 
 module sll_m_hammersley
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_f_suite_hamm
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains 
 
 !! !> @brief Returns
 !! !> @param[in]
-  function suite_hamm (n,b)
+  function sll_f_suite_hamm (n,b)
     sll_int32, intent(in) :: n
     sll_int32, intent(in) :: b
-    sll_real64 :: suite_hamm
+    sll_real64 :: sll_f_suite_hamm
 
     sll_int32  :: m,u
     sll_real64 :: h,k
@@ -29,8 +36,8 @@ contains
        h = h +  b**(-k) * (m - u*b)
        m = u
     enddo
-    suite_hamm = h 
-  end function suite_hamm
+    sll_f_suite_hamm = h 
+  end function sll_f_suite_hamm
   
   function vandercorput(n, p1, p2)!  p1>p2  !
     sll_int32, intent(in) :: n

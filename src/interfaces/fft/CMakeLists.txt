@@ -19,17 +19,18 @@ ELSE()
 
 ENDIF()
 
+ADD_LIBRARY(sll_fft STATIC ${FFT_SRC})
+
 IF(FFTW_FOUND AND FFTW_ENABLED)
   SET(DEPENDENCIES ${DEPENDENCIES} ${FFTW_LIBRARIES})
-  SET(FFT_SRC ${FFT_SRC} sll_m_fftw3.F90)
+  ADD_LIBRARY(sll_fftw3 OBJECT sll_m_fftw3.F90)
+  ADD_DEPENDENCIES(sll_fft sll_fftw3)
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
-ADD_LIBRARY(sll_fft STATIC sll_m_fft_utils.F90 ${FFT_SRC})
 
 TARGET_LINK_LIBRARIES( sll_fft sll_utilities 
                                sll_memory 
                                sll_assert 
-                               sll_constants
                                ${DEPENDENCIES} )
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY( testing )

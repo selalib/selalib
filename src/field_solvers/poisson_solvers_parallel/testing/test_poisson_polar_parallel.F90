@@ -1,18 +1,44 @@
 program test_poisson_polar_parallel
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_collective
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_gnuplot_parallel
-  use sll_m_poisson_polar_parallel
-  use iso_fortran_env, only: output_unit
+  use iso_fortran_env, only: &
+    output_unit
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet
 
-type(sll_poisson_polar) :: poisson
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_gnuplot_parallel, only: &
+    sll_o_gnuplot_2d_parallel
+
+  use sll_m_poisson_polar_parallel, only: &
+    sll_o_initialize, &
+    sll_t_poisson_polar, &
+    sll_s_solve_poisson_polar
+
+  use sll_m_remapper, only: &
+    sll_o_compute_local_sizes, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_o_view_lims
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type(sll_t_poisson_polar) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -23,8 +49,8 @@ sll_real64, dimension(:,:), allocatable :: x
 sll_real64, dimension(:,:), allocatable :: y
 
 
-type(layout_2D), pointer :: layout_r ! sequential in r direction
-type(layout_2D), pointer :: layout_a ! sequential in theta direction
+type(sll_t_layout_2d), pointer :: layout_r ! sequential in r direction
+type(sll_t_layout_2d), pointer :: layout_a ! sequential in theta direction
 
 sll_int32, dimension(2)   :: global
 sll_int32                 :: gi, gj
@@ -47,43 +73,43 @@ r_min   = 1.0_f64
 r_max   = 2.0_f64
 
 a_min   = 0.0_f64
-a_max   = 2.0_f64 * sll_pi
+a_max   = 2.0_f64 * sll_p_pi
 
 nc_r    = 32 !256
 nc_a    = 64 !1024
 nr      = nc_r+1
 na      = nc_a+1
 delta_r = (r_max-r_min)/real(nr-1,f64)
-delta_a = 2.0_f64*sll_pi/real(na-1,f64)
+delta_a = 2.0_f64*sll_p_pi/real(na-1,f64)
 
 !Boot parallel environment
-call sll_boot_collective()
+call sll_s_boot_collective()
 
-psize  = sll_get_collective_size(sll_world_collective)
-prank  = sll_get_collective_rank(sll_world_collective)
+psize  = sll_f_get_collective_size(sll_v_world_collective)
+prank  = sll_f_get_collective_rank(sll_v_world_collective)
 
-layout_r => new_layout_2D( sll_world_collective )
-layout_a => new_layout_2D( sll_world_collective )
+layout_r => sll_f_new_layout_2d( sll_v_world_collective )
+layout_a => sll_f_new_layout_2d( sll_v_world_collective )
 
-call initialize_layout_with_distributed_array( nr,     &
+call sll_o_initialize_layout_with_distributed_array( nr,     &
                                                   na,     &
                                                   1,      &
                                                   psize,  &
                                                   layout_r )
 
-call initialize_layout_with_distributed_array( nr,     &
+call sll_o_initialize_layout_with_distributed_array( nr,     &
                                                   na,     &
                                                   psize,  &
                                                   1,      &
                                                   layout_a )
 flush( output_unit )
 if (prank == 0) then
-   call sll_view_lims(layout_a)
-   call sll_view_lims(layout_a)
+   call sll_o_view_lims(layout_a)
+   call sll_o_view_lims(layout_a)
 end if
 flush( output_unit )
 
-call compute_local_sizes(layout_a, nr_loc, na_loc )
+call sll_o_compute_local_sizes(layout_a, nr_loc, na_loc )
 SLL_CLEAR_ALLOCATE(rhs(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(phi(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(phi_cos(1:nr_loc,1:na_loc),error)
@@ -94,13 +120,13 @@ SLL_CLEAR_ALLOCATE(x(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(y(1:nr_loc,1:na_loc),error)
 
 do i = 1, nr_loc
-   global = local_to_global( layout_a, (/i, 1/))
+   global = sll_o_local_to_global( layout_a, (/i, 1/))
    gi = global(1)
    r(i)=r_min+(gi-1)*delta_r
 end do
 
 do j = 1, na_loc
-   global = local_to_global( layout_a, (/1, j/))
+   global = sll_o_local_to_global( layout_a, (/1, j/))
    gj = global(2)
    a(j)=(gj-1)*delta_a
 end do
@@ -114,15 +140,15 @@ do j=1,na_loc
    end do
 end do
 
-call initialize( poisson,   &
+call sll_o_initialize( poisson,   &
                  layout_r,      &
                  layout_a,      &
                  r_min,         &
                  r_max,         &
                  nc_r,          &
                  nc_a,          &
-                 SLL_DIRICHLET, &
-                 SLL_DIRICHLET)
+                 sll_p_dirichlet, &
+                 sll_p_dirichlet)
 
 do i =1,nr_loc
    do j=1,na_loc
@@ -130,13 +156,13 @@ do i =1,nr_loc
    end do
 end do
 
-call solve_poisson_polar(poisson, rhs, phi)
+call sll_s_solve_poisson_polar(poisson, rhs, phi)
 
-call sll_gnuplot_2d_parallel(x, y, phi_sin, 'phi_sin',  1, error)
-call sll_gnuplot_2d_parallel(x, y, phi,     'solution', 1, error)
+call sll_o_gnuplot_2d_parallel(x, y, phi_sin, 'phi_sin',  1, error)
+call sll_o_gnuplot_2d_parallel(x, y, phi,     'solution', 1, error)
 
 call error_max(phi_sin,phi,1e-4_f64)
-call sll_halt_collective()
+call sll_s_halt_collective()
 
 contains
 
@@ -172,7 +198,7 @@ sll_real64 function f_cos( r, theta )
    f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
            + ((r-r_max)*(r-r_min)*cos(n*theta)  &
            + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
-           + 2*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
+           + 2.0_f64*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
            + r*cos(n*theta))*r)/r
 
 
@@ -191,7 +217,7 @@ sll_real64 function f_sin( r, theta)
    f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
          + ((r-r_max)*(r-r_min)*sin(n*theta) &
          + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
-         + 2*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
+         + 2.0_f64*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
          + r*sin(n*theta))*r)/r
 
 end function f_sin

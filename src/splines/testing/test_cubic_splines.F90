@@ -1,15 +1,65 @@
 program test_cubic_splines
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-#define PRINT_SPLINE_COEFFS 0
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
 
-use util_constants
-use test_processes_module
-implicit none
+  use sll_m_constants, only: &
+    sll_p_pi
 
-intrinsic :: cos
+  use sll_m_cubic_splines, only: &
+    sll_s_compute_cubic_spline_2d, &
+    sll_f_interpolate_derivative, &
+    sll_f_interpolate_from_interpolant_value, &
+    sll_f_interpolate_value_2d, &
+    sll_f_interpolate_x1_derivative_2d, &
+    sll_f_interpolate_x2_derivative_2d, &
+    sll_f_new_cubic_spline_2d, &
+    sll_t_cubic_spline_2d
+
+  use test_processes_module, only: &
+    coscos, &
+    deriv1_polar_x, &
+    deriv1_polar_y, &
+    deriv2_polar_x, &
+    deriv2_polar_y, &
+    dmycos, &
+    fxy, &
+    interpolator_tester_1d_hrmt, &
+    interpolator_tester_1d_prdc, &
+    interpolator_tester_2d_hrmt_prdc, &
+    interpolator_tester_2d_prdc_prdc, &
+    line, &
+    mcossin, &
+    msincos, &
+    mycos, &
+    plane, &
+    plane2, &
+    plane2_deriv, &
+    plane3, &
+    plane3_deriv_x, &
+    plane3_deriv_y, &
+    plane_deriv, &
+    polar_x, &
+    polar_y, &
+    sincos_prod, &
+    sinsin, &
+    test_2d_spline_hrmt_hrmt, &
+    test_2d_spline_hrmt_hrmt_no_slopes, &
+    test_2d_spline_hrmt_prdc, &
+    test_2d_spline_hrmt_prdc_no_slopes, &
+    test_2d_spline_prdc_hrmt, &
+    test_2d_spline_prdc_hrmt_no_slopes, &
+    test_spline_1d_hrmt
+
+  use util_constants, only: &
+    npx1, &
+    npx2
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32                              :: ok
 
@@ -66,9 +116,9 @@ test_passed = .true.
   call interpolator_tester_1d_prdc( &
        mycos, &
        mycos, &
-       interpolate_value, &
+       sll_f_interpolate_from_interpolant_value, &
        0.0_f64, &
-       2.0_f64*sll_pi, &
+       2.0_f64*sll_p_pi, &
        33, &
        test_flag )
   call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_prdc')
@@ -78,9 +128,9 @@ test_passed = .true.
   call interpolator_tester_1d_prdc( &
        mycos, &
        dmycos, &
-       interpolate_derivative, &
+       sll_f_interpolate_derivative, &
        0.0_f64, &
-       2.0_f64*sll_pi, &
+       2.0_f64*sll_p_pi, &
        33, &
        test_flag, &
        6.0e-6_f64)
@@ -91,9 +141,9 @@ test_passed = .true.
   call interpolator_tester_1d_hrmt( &
        mycos, &
        dmycos, &
-       interpolate_derivative, &
+       sll_f_interpolate_derivative, &
        0.0_f64, &
-       2.0_f64*sll_pi, &
+       2.0_f64*sll_p_pi, &
        test_flag )
   call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_hrmt')
 
@@ -103,7 +153,7 @@ test_passed = .true.
   call interpolator_tester_2d_prdc_prdc( &
        coscos, &
        msincos, &
-       interpolate_x1_derivative_2D, &
+       sll_f_interpolate_x1_derivative_2d, &
        test_flag )
   call test_error_flag( test_flag, test_passed, &
        'interpolator_tester_2d_prdc_prdc')
@@ -113,7 +163,7 @@ test_passed = .true.
   call interpolator_tester_2d_prdc_prdc( &
        coscos, &
        mcossin, &
-       interpolate_x2_derivative_2D, &
+       sll_f_interpolate_x2_derivative_2d, &
        test_flag )
   call test_error_flag( test_flag, test_passed, &
        'interpolator_tester_2d_prdc_prdc')
@@ -162,7 +212,7 @@ test_passed = .true.
   call interpolator_tester_2d_hrmt_prdc( &
        polar_x, &
        deriv1_polar_x, &
-       interpolate_x1_derivative_2D, &
+       sll_f_interpolate_x1_derivative_2d, &
        deriv1_polar_x, &
        deriv1_polar_x, &
        test_flag )
@@ -174,7 +224,7 @@ test_passed = .true.
   call interpolator_tester_2d_hrmt_prdc( &
        polar_x, &
        deriv2_polar_x, &
-       interpolate_x2_derivative_2D, &
+       sll_f_interpolate_x2_derivative_2d, &
        deriv1_polar_x, &
        deriv1_polar_x, &
        test_flag )
@@ -186,7 +236,7 @@ test_passed = .true.
   call interpolator_tester_2d_hrmt_prdc( &
        polar_y, &
        deriv1_polar_y, &
-       interpolate_x1_derivative_2D, &
+       sll_f_interpolate_x1_derivative_2d, &
        deriv1_polar_y, &
        deriv1_polar_y, &
        test_flag )
@@ -198,7 +248,7 @@ test_passed = .true.
   call interpolator_tester_2d_hrmt_prdc( &
        polar_y, &
        deriv2_polar_y, &
-       interpolate_x2_derivative_2D, &
+       sll_f_interpolate_x2_derivative_2d, &
        deriv1_polar_y, &
        deriv1_polar_y, &
        test_flag )
@@ -245,9 +295,9 @@ test_passed = .true.
        'test_2d_spline_hrmt_hrmt_no_slopes')
 
   call test_2d_cubic_splines_periodic( sincos_prod, &
-  !     (/0.0_f64,1.0*sll_pi,0.0_f64,1.0*sll_pi/), 33,33)
-  !   (/0.0_f64,2.0_f64*sll_pi,0.0_f64,2.0_f64/), 33,33)
-       (/sll_pi,3.0_f64*sll_pi,sll_pi,3.0_f64*sll_pi/), 33,33, test_flag)
+  !     (/0.0_f64,1.0*sll_p_pi,0.0_f64,1.0*sll_p_pi/), 33,33)
+  !   (/0.0_f64,2.0_f64*sll_p_pi,0.0_f64,2.0_f64/), 33,33)
+       (/sll_p_pi,3.0_f64*sll_p_pi,sll_p_pi,3.0_f64*sll_p_pi/), 33,33, test_flag)
 
   call test_error_flag( test_flag, test_passed, &
        'test_2d_cubic_splines_periodic')
@@ -285,7 +335,7 @@ contains
     sll_real64, dimension(:), intent(in) :: lims
     sll_int32, intent(in) :: npts1, npts2
     logical, intent(out) :: test_flag
-    type(sll_cubic_spline_2d), pointer :: s
+    type(sll_t_cubic_spline_2d), pointer :: s
     sll_real64                              :: phase_x1, phase_x2
     sll_real64                              :: acc_2D, x1, x2
     sll_real64, allocatable, dimension(:,:) :: data_2d
@@ -323,17 +373,17 @@ contains
        end do
     end do
 
-    s => new_cubic_spline_2d( npts1, npts2, x1min, x1max, x2min, x2max, &
-         SLL_PERIODIC, SLL_PERIODIC )
+    s => sll_f_new_cubic_spline_2d( npts1, npts2, x1min, x1max, x2min, x2max, &
+         sll_p_periodic, sll_p_periodic )
 
-    call compute_cubic_spline_2d( data_2d, s )
-    acc_2D = 0.0
+    call sll_s_compute_cubic_spline_2d( data_2d, s )
+    acc_2D = 0.0_f64
     do j=1, npts2
        do i=1, npts1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
-               abs(data_2d(i,j) - interpolate_value_2D(x1,x2,s))
+               abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,s))
        end do
     end do
     print *, 'Average cumulative error, spline2d, periodic-periodic: ', &

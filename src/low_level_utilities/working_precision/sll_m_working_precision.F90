@@ -28,12 +28,17 @@
 !> to call selalib from python.
 module sll_m_working_precision
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   implicit none
-!  intrinsic :: kind, selected_real_kind
-  intrinsic :: selected_int_kind, selected_real_kind
 
-  public :: i32, i64, f32, f64
+  public :: &
+    f32, &
+    f64, &
+    i32, &
+    i64
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! The intent is that i32 will hold values up to 2**32-1
   !> i32 is the kind type for 32-bit integers

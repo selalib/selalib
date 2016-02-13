@@ -23,16 +23,20 @@
 
 module sll_m_bsl_lt_pic_4d_particle
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-
-  use sll_m_cartesian_meshes
+#include "sll_working_precision.h"
 
   implicit none
 
-  ! <<sll_bsl_lt_pic_4d_particle>>
-  type :: sll_bsl_lt_pic_4d_particle
+  public :: &
+    sll_t_bsl_lt_pic_4d_particle
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ! <<sll_t_bsl_lt_pic_4d_particle>>
+  type :: sll_t_bsl_lt_pic_4d_particle
     !> cell index in the x dimension (can be outside physical domain)
     sll_int32  :: i_cell_x
 
@@ -65,6 +69,6 @@ module sll_m_bsl_lt_pic_4d_particle
     sll_int32  :: ngb_vyright_index
     !> @}
 
-  end type sll_bsl_lt_pic_4d_particle
+  end type sll_t_bsl_lt_pic_4d_particle
 
 end module sll_m_bsl_lt_pic_4d_particle

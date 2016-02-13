@@ -17,51 +17,72 @@
 !>  Triangular mesh
 !------------------------------------------------------------------------------
 module sll_m_triangular_meshes
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_hexagonal_meshes
-use sll_m_tri_mesh_xmf
-use sll_m_constants, only : &
-     sll_pi
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_hexagonal_meshes, only: &
+    sll_s_get_cell_vertices_index, &
+    sll_t_hex_mesh_2d
+
+  implicit none
+
+  public :: &
+    sll_s_analyze_triangular_mesh, &
+    sll_s_map_to_circle, &
+    sll_o_new_triangular_mesh_2d, &
+    sll_s_read_from_file, &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_o_display, &
+    sll_t_triangular_mesh_2d, &
+    sll_s_write_triangular_mesh_mtv
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-!> @brief 2d triangular mesh
-type :: sll_triangular_mesh_2d
+!> @brief 2d hexagonal mesh
+!  vtaux  - composante x des vecteurs tangeants
+!  vtauy  - composante y des vecteurs tangeants
+type :: sll_t_triangular_mesh_2d
 
-  sll_int32           :: num_nodes     !> number of vertices
-  sll_int32           :: num_triangles !> number of triangles
-  sll_int32           :: num_edges     !> number of edges
-  sll_int32           :: num_bound     !> number of reference boundaries
+  sll_int32           :: num_nodes  
+  sll_int32           :: num_triangles 
+  sll_int32           :: num_edges     
+  sll_int32           :: num_bound     
 
-  sll_real64, pointer :: coord(:,:) !> vertices coordinates, size (2, num_nodes)
-  sll_int32,  pointer :: nodes(:,:) !> nodes in a triangle size(3,num_triangles)
+  sll_real64, pointer :: coord(:,:)
+  sll_int32,  pointer :: nodes(:,:)
 
-  sll_real64          :: eta1_min !> For triangular meshes from square: min eta1
-  sll_real64          :: eta1_max !> For triangular meshes from square: max eta1
-  sll_real64          :: eta2_min !> For triangular meshes from square: min eta2
-  sll_real64          :: eta2_max !> For triangular meshes from square: max eta2
+  sll_real64          :: eta1_min
+  sll_real64          :: eta1_max
+  sll_real64          :: eta2_min
+  sll_real64          :: eta2_max
 
-  sll_int32           :: nbcoti !> number of edges not on the boundary
-  sll_int32           :: nbtcot !> number of edges
-  sll_int32           :: nmxfr  !> maximum number of reference boundary
-  sll_int32           :: nelfr  !> number of triangles at the boundary
-  sll_int32           :: nmxsd  !> maximum number of subdomain
-  sll_int32           :: nctfrt !> number of edges on a boundary
-  sll_real64          :: petitl !> small reference length
-  sll_real64          :: grandl !> big reference length
+  sll_int32           :: nbcoti
+  sll_int32           :: nbtcot
+  sll_int32           :: nmxfr
+  sll_int32           :: nelfr
+  sll_int32           :: nmxsd
+  sll_int32           :: nctfrt
+  sll_real64          :: petitl
+  sll_real64          :: grandl
 
-  sll_real64, dimension(:),   pointer :: area   !> areas of triangles
-  sll_int32,  dimension(:),   pointer :: refs   !> flag if in boundary for nodes
-  sll_int32,  dimension(:),   pointer :: reft   !> flag if boundary for elements
-  sll_int32,  dimension(:,:), pointer :: nvois  !> neighbours of each triangle
-  sll_int32,  dimension(:),   pointer :: nusd   !> subdomain reference
-  sll_int32,  dimension(:),   pointer :: npoel1 !> triangles having the knot i
+  sll_real64, dimension(:),   pointer :: aire
+  sll_int32,  dimension(:),   pointer :: refs
+  sll_int32,  dimension(:),   pointer :: reft
+  sll_int32,  dimension(:,:), pointer :: nvois
+  sll_int32,  dimension(:),   pointer :: nusd
+  sll_int32,  dimension(:),   pointer :: npoel1
   sll_int32,  dimension(:),   pointer :: npoel2
   sll_int32,  dimension(:),   pointer :: krefro
   sll_int32,  dimension(:),   pointer :: kctfro
@@ -76,12 +97,10 @@ type :: sll_triangular_mesh_2d
   sll_int32,  dimension(:),   pointer :: nbcov
   sll_real64, dimension(:),   pointer :: xlcod
 
-  sll_real64, dimension(:),   pointer :: vtaux ! x component of tangent vector
-  sll_real64, dimension(:),   pointer :: vtauy ! y component of tangent vector
+  sll_real64, dimension(:),   pointer :: vtaux
+  sll_real64, dimension(:),   pointer :: vtauy
   sll_int32,  dimension (:),  pointer :: nctfro
   sll_int32,  dimension (:),  pointer :: nctfrp
-
-  sll_real64, dimension(:),   pointer :: jac ! jacobian of transf on a point
 
   logical :: analyzed = .false.
 
@@ -89,27 +108,34 @@ contains
 
    procedure, pass(mesh) :: global_to_x1
    procedure, pass(mesh) :: global_to_x2
+!     procedure, pass(mesh) :: eta1_node => eta1_node_hex
+!     procedure, pass(mesh) :: eta2_node => eta2_node_hex
+!     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
+!     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_triangular_two_arg
+!     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
+!     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_triangular_two_arg
+!     procedure, pass(mesh) :: display => display_triangular_mesh_2d
+!     procedure, pass(mesh) :: delete => delete_triangular_mesh_2d
 
-end type sll_triangular_mesh_2d
+end type sll_t_triangular_mesh_2d
 
-interface sll_create
+interface sll_o_create
    module procedure initialize_triangular_mesh_2d
-end interface sll_create
+end interface sll_o_create
 
-interface sll_delete
+interface sll_o_delete
    module procedure delete_triangular_mesh_2d
-end interface sll_delete
+end interface sll_o_delete
 
-interface sll_display
+interface sll_o_display
    module procedure display_triangular_mesh_2d
-end interface sll_display
+end interface sll_o_display
 
-interface new_triangular_mesh_2d
+interface sll_o_new_triangular_mesh_2d
   module procedure new_triangular_mesh_2d_from_file
   module procedure new_triangular_mesh_2d_from_hex_mesh
-  module procedure new_triangular_mesh_2d_aligned_from_hex_mesh
   module procedure new_triangular_mesh_2d_from_square
-end interface new_triangular_mesh_2d
+end interface sll_o_new_triangular_mesh_2d
 
 ! interface eta1_cell
 !    module procedure eta1_cell_one_arg, eta1_cell_two_arg
@@ -120,12 +146,31 @@ end interface new_triangular_mesh_2d
 ! end interface eta2_cell
 
 
+!Type: sll_triangular_mesh_2d
+!Structure du maillage
+!
+!nbs    - nombre de sommets
+!nbt    - nombre de triangles
+!nbtcot - nombre total de cotes
+!nbcoti - nombre de cotes internes
+!num_bound  - nombre total de frontieres referencees
+!nelfr  - nombre de triangles sur une frontiere
+!coor   - coordonnees des sommets
+!aire   - aires de elements
+!refs   - references des sommets
+!reft   - references des elements
+!nodes   - table de connectivite
+!nvois  - numeros des voisins (solveur)
 !nvoif  - numero local dans le voisin de la face commune
 !nusd   - references du sous-domaine
+!petitl - petite longueur de reference   
+!grandl - grande longueur de reference    
+!ncfrt  - nombre de cotes situes sur une frontiere
 !nbcfli - nombre de cotes internes ne satisfaisant pas la CFL
 !nndfnt - noeuds Dirichlet sur les frontieres internes       
 !noefnt - noeuds Dirichlet sur les frontieres internes 
 !irffnt - numeros de reference de ces noeuds Dirichlet
+!nmxsd  - nombre de sous domaines references
 
 contains
 
@@ -136,14 +181,14 @@ contains
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_file( maafil ) result(m)
 
-  type(sll_triangular_mesh_2d), pointer :: m
+  type(sll_t_triangular_mesh_2d), pointer :: m
   character(len=*), intent(in)          :: maafil
 
   sll_int32 :: ierr
   SLL_ALLOCATE(m, ierr)
-  call read_from_file(m, maafil)
+  call sll_s_read_from_file(m, maafil)
 
-  call compute_areas( m )
+  call compute_aires( m )
 
 end function new_triangular_mesh_2d_from_file
 
@@ -154,11 +199,11 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
-  type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
-  type(sll_triangular_mesh_2d),      pointer :: tri_mesh
+  type(sll_t_hex_mesh_2d), intent(in), pointer :: hex_mesh
+  type(sll_t_triangular_mesh_2d),      pointer :: tri_mesh
 
   sll_int32  :: ierr
-  sll_int32  :: is1, iv1
+  sll_int32  :: is1, iv1 
   sll_int32  :: is2, iv2
   sll_int32  :: is3, iv3
   sll_int32  :: i
@@ -169,8 +214,10 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   sll_real64 :: ya, yb, yc
   sll_real64 :: det
 
+
   SLL_ALLOCATE(tri_mesh, ierr)
 
+    
   tri_mesh%num_nodes     = hex_mesh%num_pts_tot
   tri_mesh%num_triangles = hex_mesh%num_triangles
   tri_mesh%nmxfr         = 1
@@ -189,11 +236,11 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
   nctfr = 0
   do i = 1, hex_mesh%num_triangles
-
+    
     x1 = hex_mesh%center_cartesian_coord(1, i)
     y1 = hex_mesh%center_cartesian_coord(2, i)
-
-    call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
+    
+    call sll_s_get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
     call hex_mesh%get_neighbours( i, iv1, iv2, iv3)
 
     xa = tri_mesh%coord(1,is1)
@@ -231,68 +278,10 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
   end do
 
-  call compute_areas( tri_mesh )
+  call compute_aires( tri_mesh )
 
 end function new_triangular_mesh_2d_from_hex_mesh
 
-
-!> @brief  Creates a new field aligned triangular mesh from a hex-mesh
-!> @details Allocates the memory space for a new 2D triangular mesh on the heap,
-!> initializes it with the given hexagonal mesh, mapps it to a fielad aligned
-!> mesh and returns a pointer to the new triangular mesh
-!> @param hex_mesh hexagonal mesh
-!> @return a pointer to the newly allocated object.
-function new_triangular_mesh_2d_aligned_from_hex_mesh(h_mesh, type) &
-     result(tri_mesh)
-
-  type(sll_hex_mesh_2d), intent(in), pointer :: h_mesh
-  character(len=*),      intent(in)          :: type
-  type(sll_triangular_mesh_2d),      pointer :: tri_mesh
-
-  !Local
-  sll_int32  :: i_node
-  sll_real64 :: x_aligned
-  sll_real64 :: y_aligned
-
-  !We start by initializing the mesh as a normal hex-mesh:
-  tri_mesh => new_triangular_mesh_2d_from_hex_mesh(h_mesh)
-
-  !We change now, point by point, the coordinates so that they are field aligned
-  do i_node = 1, tri_mesh%num_nodes
-
-!     call transf( &
-     call h_mesh%hex_to_aligned_pt( &
-          i_node, &
-          "TOKAMAK", & ! transformation
-          x_aligned, & ! aligned x coordinate (result)
-          y_aligned )  ! aligned x coordinate (result)
-
-     ! Replacing in the coordinate system
-     tri_mesh%coord(1, i_node) = x_aligned
-     tri_mesh%coord(2, i_node) = y_aligned
-
-  end do
-
-  call compute_areas( tri_mesh )
-
-end function new_triangular_mesh_2d_aligned_from_hex_mesh
-
-function compute_jacobian_pt(x_old, y_old, x_new, y_new) result(jac)
-  sll_real64, intent(in)  :: x_old
-  sll_real64, intent(in)  :: y_old
-  sll_real64, intent(in)  :: x_new
-  sll_real64, intent(in)  :: y_new
-  sll_real64              :: jac
-  !Local
-  sll_real64, dimension(2, 2) :: Mat
-  sll_real64, dimension(2, 1) :: Rhs
-  sll_int32,  dimension(2)    :: pivot
-  sll_int32  :: error_flag
-
-  ! Initializing system:
-  ! TODO @LM : Laura TODO
-  jac = -100000.0_f64
-end function compute_jacobian_pt
 
 !> @brief
 !> Allocates the memory space for a new 2D triangular mesh on the heap,
@@ -314,7 +303,7 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
                                              eta2_max, &
                                              bc ) result(m)
 
-  type(sll_triangular_mesh_2d), pointer :: m
+  type(sll_t_triangular_mesh_2d), pointer :: m
   sll_int32,  intent(in)                :: nc_eta1
   sll_real64, intent(in)                :: eta1_min
   sll_real64, intent(in)                :: eta1_max
@@ -327,7 +316,7 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
   SLL_ALLOCATE(m, ierr)
 
   if (present(bc)) then
-    SLL_ASSERT(bc == SLL_PERIODIC)
+    SLL_ASSERT(bc == sll_p_periodic)
   end if
  
   call initialize_triangular_mesh_2d( m,        &
@@ -338,7 +327,7 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
                                       eta2_min, &
                                       eta2_max)
 
-  call compute_areas( m )
+  call compute_aires( m )
 
 end function new_triangular_mesh_2d_from_square
 
@@ -352,7 +341,7 @@ subroutine initialize_triangular_mesh_2d( mesh,     &
                                           eta2_max, &
                                           bc )
 
-type(sll_triangular_mesh_2d) :: mesh
+type(sll_t_triangular_mesh_2d) :: mesh
 sll_int32,  intent(in)       :: nc_eta1
 sll_real64, intent(in)       :: eta1_min
 sll_real64, intent(in)       :: eta1_max
@@ -541,7 +530,7 @@ end subroutine initialize_triangular_mesh_2d
 
 !> Displays mesh information on the terminal
 subroutine display_triangular_mesh_2d(mesh)
-class(sll_triangular_mesh_2d), intent(in) :: mesh
+class(sll_t_triangular_mesh_2d), intent(in) :: mesh
 
 sll_real64 :: eta1_min, eta1_max, eta2_min, eta2_max
 sll_int32  :: i, nctfrt, nbtcot
@@ -575,7 +564,7 @@ end subroutine display_triangular_mesh_2d
 function global_to_x1(mesh, i) result(x1)
 ! Takes the global index of the point (see hex_to_global(...) for conventions)
 ! returns the first coordinate (x1) on the cartesian basis
-class(sll_triangular_mesh_2d) :: mesh
+class(sll_t_triangular_mesh_2d) :: mesh
 sll_int32  :: i
 sll_real64 :: x1
 
@@ -586,7 +575,7 @@ end function global_to_x1
 function global_to_x2(mesh, i) result(x2)
 ! Takes the global index of the point (see hex_to_global(...) for conventions)
 ! returns the second coordinate (x2) on the cartesian basis
-class(sll_triangular_mesh_2d) :: mesh
+class(sll_t_triangular_mesh_2d) :: mesh
 sll_int32  :: i
 sll_real64 :: x2
 
@@ -594,9 +583,9 @@ x2 = mesh%coord(2, i)
 
 end function global_to_x2
 
-subroutine write_triangular_mesh_mtv(mesh, mtv_file)
+subroutine sll_s_write_triangular_mesh_mtv(mesh, mtv_file)
 
-type(sll_triangular_mesh_2d), intent(in) :: mesh
+type(sll_t_triangular_mesh_2d), intent(in) :: mesh
 character(len=*),             intent(in) :: mtv_file
 
 sll_real64 :: x1, x2
@@ -854,20 +843,20 @@ end if
 write(out_unit,*)"$END"
 close(out_unit)
  
-end subroutine write_triangular_mesh_mtv
+end subroutine sll_s_write_triangular_mesh_mtv
 
 subroutine delete_triangular_mesh_2d( mesh )
 
-class(sll_triangular_mesh_2d), intent(inout) :: mesh
+class(sll_t_triangular_mesh_2d), intent(inout) :: mesh
 
 SLL_ASSERT(mesh%num_nodes>0)
-print*, 'delete mesh'
+print*, 'sll_o_delete mesh'
 
 end subroutine delete_triangular_mesh_2d
 
-subroutine read_from_file(mesh, maafil)
+subroutine sll_s_read_from_file(mesh, maafil)
 
-type(sll_triangular_mesh_2d) :: mesh
+type(sll_t_triangular_mesh_2d) :: mesh
 character(len=*), intent(in)  :: maafil
 
 sll_int32        :: nfmaa = 12
@@ -932,11 +921,11 @@ return
 80 continue
 SLL_ERROR( 'Read from file', 'Input file  '//maafil//'  not found.' )
 
-end subroutine read_from_file
+end subroutine sll_s_read_from_file
 
 subroutine get_cell_center( mesh, iel, x1, x2)
 
-class(sll_triangular_mesh_2d) :: mesh
+class(sll_t_triangular_mesh_2d) :: mesh
 sll_int32,  intent(in)        :: iel
 sll_real64, intent(out)       :: x1
 sll_real64, intent(out)       :: x2
@@ -966,9 +955,9 @@ end subroutine get_cell_center
 !> param[in]    num_cells is the num_cells parameter of the hexagonal mesh
 !> param[in]    order, optional if order=1 we move only points on the
 !> boundary
-subroutine map_to_circle( mesh, num_cells, order )
+subroutine sll_s_map_to_circle( mesh, num_cells, order )
 
-class(sll_triangular_mesh_2d), intent(inout) :: mesh
+class(sll_t_triangular_mesh_2d), intent(inout) :: mesh
 sll_int32,                     intent(in)    :: num_cells
 sll_int32, optional                          :: order
 
@@ -977,7 +966,7 @@ sll_real64 :: r, alpha
 
 if (present(order)) then
   layer = order
-else
+else 
   layer = num_cells
 end if
 
@@ -985,23 +974,23 @@ i = 2
 do cell = 1, num_cells
   if (cell > num_cells - layer) then
     r     = cell * 1.0_f64 / num_cells
-    alpha = sll_pi / 6.0_f64
+    alpha = sll_p_pi / 6.0_f64
     do j = 1, cell*6
       mesh%coord(1,i+j-1) = r * cos(alpha)
       mesh%coord(2,i+j-1) = r * sin(alpha)
-      alpha =  alpha + sll_pi / (3.0_f64 * cell)
+      alpha =  alpha + sll_p_pi / (3.0_f64 * cell)
     end do
   end if
   i = i + cell*6
 end do
 
-end subroutine map_to_circle
+end subroutine sll_s_map_to_circle
 
 !=======================================================================
 
-subroutine compute_areas( mesh )
+subroutine compute_aires( mesh )
 
-type(sll_triangular_mesh_2d), intent(inout) :: mesh !< mesh
+type(sll_t_triangular_mesh_2d), intent(inout) :: mesh !< mesh
 
 integer, dimension(:), allocatable :: indc
 
@@ -1028,12 +1017,12 @@ ylmu = maxval(mesh%coord(2,:))
 mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(real(mesh%num_nodes,8))
 mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 
-!*** Calcul des areas des triangles
+!*** Calcul des aires des triangles
 #ifdef DEBUG
-write(6,*)"*** Calcul des areas des triangles ***"
+write(6,*)"*** Calcul des aires des triangles ***"
 #endif /* DEBUG */
 
-allocate(mesh%area(mesh%num_triangles)); mesh%area=0.0_f64
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0_f64
 
 airtot = 0._f64
 
@@ -1044,17 +1033,17 @@ do it = 1, mesh%num_triangles
    lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
    ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
 
-   mesh%area(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
+   mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
 
-   if( mesh%area(it) <= 0. ) then
+   if( mesh%aire(it) <= 0. ) then
      write(6,*) " Triangle : ", it
      write(6,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
      write(6,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
      write(6,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
-     stop "Area de triangle negative"
+     stop "Aire de triangle negative"
    end if
 
-   airtot = airtot + mesh%area(it)
+   airtot = airtot + mesh%aire(it)
 
 end do
 
@@ -1062,7 +1051,7 @@ end do
 write(6,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
 write(6,"(/10x,'Limites x du domaine   :',2E15.5/   &
 &          10x,'Limites y du domaine   :',2E15.5/   &
-&          10x,'Area des triangles     :',E15.5 /)") xlml,xlmu,ylml,ylmu,airtot
+&          10x,'Aire des triangles     :',E15.5 /)") xlml,xlmu,ylml,ylmu,airtot
 
 #endif /* DEBUG */
 
@@ -1106,7 +1095,7 @@ end do
 allocate(mesh%npoel2(mesh%npoel1(mesh%num_nodes+1)))
 allocate(indc(mesh%num_nodes))
 
-indc   = 1  !Le tableau temporarea indc doit etre initialise a 1
+indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
 
 do it = 1,mesh%num_triangles
    do k = 1,3
@@ -1272,7 +1261,7 @@ do is=1,mesh%num_nodes
 
 end do
 
-end subroutine compute_areas
+end subroutine compute_aires
 
 !**************************************************************
 
@@ -1299,7 +1288,7 @@ end subroutine compute_areas
 !                                                               
 subroutine poclis(mesh, ncotcu, nuctfr)
 
-type(sll_triangular_mesh_2d) :: mesh
+type(sll_t_triangular_mesh_2d) :: mesh
 integer, dimension(:)        :: ncotcu
 integer, dimension(:)        :: nuctfr
 logical                      :: lerr
@@ -1503,7 +1492,7 @@ end subroutine poclis
 !>  refs - numeros de references des noeuds 
 !>  nodes - numeros des sommets              
 !>  nvois - numeros des voisins des triangles
-!>  area - areas des triangles              
+!>  aire - aires des triangles              
 !>  base - integrales des fonctions de base  
 !>  nusd - numeros de sous-domaine            
 !>
@@ -1517,11 +1506,11 @@ end subroutine poclis
 !>  nbcoti - number of edges not on the boundary
 !>
 !> From subroutine written by A. Adolf / L. Arnaud - Octobre 1991 
-subroutine analyze_triangular_mesh(mesh) 
+subroutine sll_s_analyze_triangular_mesh(mesh) 
 
 integer, parameter :: iout = 6
 integer            :: i, j, ifr
-type(sll_triangular_mesh_2d), intent(inout) :: mesh
+type(sll_t_triangular_mesh_2d), intent(inout) :: mesh
 
 integer, dimension (:), allocatable :: nuctfr
 integer, dimension (:), allocatable :: ncotcu
@@ -1921,50 +1910,9 @@ end do
 
 mesh%analyzed = .true.
 
-end subroutine analyze_triangular_mesh
+end subroutine sll_s_analyze_triangular_mesh
 
 
-  !---------------------------------------------------------------------------
-  !> @brief Writes a field defined in the mesh in xmf format
-  !> @details This function writes for every point of the mesh its cartesian
-  !> coordinate as well as the value of a given field(vector) at that point
-  !> @param[IN] mesh the triangular mesh
-  !> @param[IN] field a vector of size =(number of pts of the mesh) containg the
-  !> values of a field on every mesh point.
-  !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_field_tri_mesh_xmf(mesh, field, name)
-
-    class(sll_triangular_mesh_2d),   intent(in) :: mesh
-    sll_real64, dimension(:),        intent(in) :: field
-    character(len=*),                intent(in) :: name
-
-    sll_int32  :: i
-    sll_int32  :: num_triangles
-    sll_int32  :: num_pts_tot
-    sll_real64, allocatable :: coor(:,:)
-    sll_int32,  allocatable :: ntri(:,:)
-    sll_int32  :: error
-    sll_real64 :: x1, x2
-
-    num_pts_tot = mesh%num_nodes
-    num_triangles = mesh%num_triangles
-    SLL_ALLOCATE(coor(2,num_pts_tot),error)
-    SLL_ALLOCATE(ntri(3,num_triangles),error)
-
-    do i=1, num_pts_tot
-       coor(1,i) = mesh%coord(1,i)
-       coor(2,i) = mesh%coord(2,i)
-    end do
-
-    do i=1, num_triangles
-       ntri(1:3, i) = mesh%nvois(1:3, i)
-    end do
-
-    call write_tri_mesh_xmf(&
-         name, coor, ntri, &
-         num_pts_tot, num_triangles, field, 'values')
-
-  end subroutine write_field_tri_mesh_xmf
 
 
 end module sll_m_triangular_meshes

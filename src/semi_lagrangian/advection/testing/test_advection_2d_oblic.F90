@@ -16,17 +16,31 @@
 !**************************************************************
 
 program test_advection_2d_oblic
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_2d_oblic
-use sll_m_advection_1d_periodic
+#include "sll_working_precision.h"
 
-implicit none
-  type(oblic_2d_advector), pointer :: adv
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    sll_f_new_periodic_1d_advector
+
+  use sll_m_advection_2d_oblic, only: &
+    sll_f_new_oblic_2d_advector, &
+    sll_t_oblic_2d_advector, &
+    sll_s_oblic_advect_2d_constant
+
+  use sll_m_periodic_interp, only: &
+    sll_p_spline
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  type(sll_t_oblic_2d_advector), pointer :: adv
   sll_int32 :: Nc_x1
   sll_real64 :: x1_min
   sll_real64 :: x1_max
-  class(sll_advection_1d_base), pointer :: adv_x1
+  class(sll_c_advection_1d_base), pointer :: adv_x1
   sll_int32 :: Nc_x2
   sll_real64 :: x2_min
   sll_real64 :: x2_max
@@ -36,7 +50,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: output
   sll_int32 :: ierr
   sll_real64 :: err
-  sll_real64 :: iota
+  !sll_real64 :: iota
   sll_real64 :: A1  
   sll_real64 :: A2
   sll_real64 :: dt  
@@ -52,18 +66,18 @@ implicit none
   stencil_s = 2
   
   !iota = 0.43 ! !A1/A2
-  dt = 0.1
+  dt = 0.1_f64
   A1 = 1._f64
   A2 = 2._f64
   
-  adv_x1 => new_periodic_1d_advector( &
+  adv_x1 => sll_f_new_periodic_1d_advector( &
     Nc_x1, &
     x1_min, &
     x1_max, &
-    SPLINE, & 
+    sll_p_spline, & 
     4) 
     
-  adv => new_oblic_2d_advector( &
+  adv => sll_f_new_oblic_2d_advector( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -80,7 +94,7 @@ implicit none
   err = 0._f64
   
   input = 1._f64
-  call oblic_advect_2d_constant( &
+  call sll_s_oblic_advect_2d_constant( &
     adv, &
     !iota, &
     A1, &

@@ -16,19 +16,45 @@
 !**************************************************************
 
 module sll_m_pic_utilities
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_accumulators.h" 
-  use sll_m_particle_group_4d
-  use sll_m_particle_group_2d
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_accumulators.h"
+
+  use sll_m_accumulators, only: &
+    sll_t_charge_accumulator_2d, &
+    sll_t_charge_accumulator_2d_cs, &
+    sll_t_charge_accumulator_2d_cs_ptr, &
+    sll_t_charge_accumulator_2d_ptr
+
+  use sll_m_particle_group_2d, only: &
+    sll_t_particle_group_2d
+
+  use sll_m_particle_group_4d, only: &
+    sll_t_particle_group_4d
+
+  use sll_m_particle_representations, only: &
+    sll_t_particle_2d, &
+    sll_t_particle_4d
 
 #ifdef _OPENMP
-   use omp_lib
+  use omp_lib, only: &
+    omp_get_thread_num
+
 #endif
-implicit none
+  implicit none
+
+  public :: &
+    sll_s_first_charge_accumulation_2d, &
+    sll_s_first_charge_accumulation_2d_cs, &
+    sll_s_first_gc_charge_accumulation_2d, &
+    sll_s_first_gc_charge_accumulation_2d_cs
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #ifdef _OPENMP
-   logical :: openmp_st
+!   logical :: openmp_st
 #endif
 !!    !$ openmp_st = OMP_IN_PARALLEL()
 !!    print*, 'USE of omp', openmp_st
@@ -36,11 +62,11 @@ implicit none
 
 contains
 
-  subroutine sll_first_charge_accumulation_2d( p_group, q_accumulator )
-    type(sll_particle_group_4d), pointer                       :: p_group
-    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer :: q_accumulator
-    type(sll_particle_4d), dimension(:), pointer :: p
-    type(sll_charge_accumulator_2d), pointer :: q_accum
+  subroutine sll_s_first_charge_accumulation_2d( p_group, q_accumulator )
+    type(sll_t_particle_group_4d), pointer                       :: p_group
+    type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer :: q_accumulator
+    type(sll_t_particle_4d), dimension(:), pointer :: p
+    type(sll_t_charge_accumulator_2d), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
     sll_real64 :: tmp1
@@ -65,15 +91,15 @@ contains
     !$omp end do
     !$omp end parallel
 
-  end subroutine sll_first_charge_accumulation_2d
+  end subroutine sll_s_first_charge_accumulation_2d
 
-  subroutine sll_first_charge_accumulation_2d_CS( p_group, q_accumulator )
+  subroutine sll_s_first_charge_accumulation_2d_cs( p_group, q_accumulator )
 ! ----  Remember : _CS is for use of Cubic Splines  ----
 ! ------------------------------------------------------
-    type(sll_particle_group_4d), pointer         :: p_group
-    type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator
-    type(sll_particle_4d), dimension(:), pointer :: p
-    type(sll_charge_accumulator_2d_CS), pointer :: q_accum
+    type(sll_t_particle_group_4d), pointer         :: p_group
+    type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator
+    type(sll_t_particle_4d), dimension(:), pointer :: p
+    type(sll_t_charge_accumulator_2d_cs), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
     sll_real32 :: tmp(1:4,1:2), temp
@@ -97,15 +123,15 @@ contains
     !$omp end do
     !$omp end parallel
     
-  end subroutine sll_first_charge_accumulation_2d_CS
+  end subroutine sll_s_first_charge_accumulation_2d_cs
 
 
 !!$ - - - -  for the GUIDING CENTER model   - - - -
-  subroutine sll_first_gc_charge_accumulation_2d( p_group, q_accumulator )
-    type(sll_particle_group_2d), pointer                       :: p_group
-    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer :: q_accumulator
-    type(sll_particle_2d), dimension(:), pointer :: p
-    type(sll_charge_accumulator_2d), pointer :: q_accum
+  subroutine sll_s_first_gc_charge_accumulation_2d( p_group, q_accumulator )
+    type(sll_t_particle_group_2d), pointer                       :: p_group
+    type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer :: q_accumulator
+    type(sll_t_particle_2d), dimension(:), pointer :: p
+    type(sll_t_charge_accumulator_2d), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
     sll_real64 :: tmp1
@@ -130,13 +156,13 @@ contains
     !$omp end do
     !$omp end parallel
 
-  end subroutine sll_first_gc_charge_accumulation_2d
+  end subroutine sll_s_first_gc_charge_accumulation_2d
 
-  subroutine sll_first_gc_charge_accumulation_2d_CS( p_group, q_accumulator )
-    type(sll_particle_group_2d), pointer         :: p_group
-    type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator
-    type(sll_particle_2d), dimension(:), pointer :: p
-    type(sll_charge_accumulator_2d_CS), pointer :: q_accum
+  subroutine sll_s_first_gc_charge_accumulation_2d_cs( p_group, q_accumulator )
+    type(sll_t_particle_group_2d), pointer         :: p_group
+    type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator
+    type(sll_t_particle_2d), dimension(:), pointer :: p
+    type(sll_t_charge_accumulator_2d_cs), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
     sll_real32 :: tmp(1:4,1:2), temp
@@ -160,7 +186,7 @@ contains
     !$omp end do
     !$omp end parallel
     
-  end subroutine sll_first_gc_charge_accumulation_2d_CS
+  end subroutine sll_s_first_gc_charge_accumulation_2d_cs
 
 
 

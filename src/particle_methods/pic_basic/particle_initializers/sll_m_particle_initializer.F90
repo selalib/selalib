@@ -4,16 +4,32 @@
 !> @details ...
 module sll_m_particle_initializer
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
-  use sll_m_gaussian, only: gaussian_deviate_2D
-  use sll_m_sobol, only: i8_sobol
-  use sll_m_prob, only: normal_cdf_inv
-  
+  use sll_m_gaussian, only: &
+    sll_s_gaussian_deviate_2d
+
+  use sll_m_particle_group_base, only: &
+    sll_c_particle_group_base
+
+  use sll_m_prob, only: &
+    sll_s_normal_cdf_inv
+
+  use sll_m_sobol, only: &
+    sll_s_i8_sobol
+
   implicit none
+
+  public :: &
+    sll_s_particle_initialize_random_landau_1d2v, &
+    sll_s_particle_initialize_random_landau_2d2v, &
+    sll_s_particle_initialize_sobol_landau_1d2v, &
+    sll_s_particle_initialize_sobol_landau_2d2v
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! Different ansatz. Use or remove
 !!$  type :: sll_particle_initializer_2d2v
@@ -31,7 +47,7 @@ contains
 !!$  
 !!$  subroutine draw_product_density_2d2v (this, particle_group, random_seed)
 !!$    class(sll_particle_initializer_2d2v), intent(inout)         :: this
-!!$    class(sll_particle_group_base),  intent(inout)              :: particle_group
+!!$    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
 !!$    !sll_real64, intent(in)                                      :: thermal_velocity
 !!$    sll_int32,  intent(in)                                      :: random_seed
 !!$
@@ -49,7 +65,7 @@ contains
 !!$       Lx, &
 !!$       thermal_velocity, &
 !!$       rnd_seed)
-!!$    class(sll_particle_group_base),  intent(inout)              :: particle_group
+!!$    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
 !!$    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
 !!$    sll_real64, intent(in)                                      :: xmin(2) !< lower bound of the domain
 !!$    sll_real64, intent(in)                                      :: Lx(2) !< length of the domain.
@@ -82,7 +98,7 @@ contains
 !!$          x(2) = Lx(2) * rnd_no + xmin(2)
 !!$
 !!$          ! Draw velocities from 2D Gauss distribution
-!!$          call gaussian_deviate_2D(v(1:2))
+!!$          call sll_s_gaussian_deviate_2d(v(1:2))
 !!$          v(1:2) = v(1:2) * thermal_velocity
 !!$
 !!$          call particle_group%set_x(i_part, x)
@@ -106,7 +122,7 @@ contains
 !!$       Lx, &
 !!$       thermal_velocity, &
 !!$       rnd_seed)
-!!$    class(sll_particle_group_base),  intent(inout)              :: particle_group
+!!$    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
 !!$    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
 !!$    sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
 !!$    sll_real64, intent(in)                                      :: Lx !< length of the domain.
@@ -137,7 +153,7 @@ contains
 !!$          i_part = i_part + 1
 !!$
 !!$          ! Draw velocities from 2D Gauss distribution
-!!$          call gaussian_deviate_2D(v(1:2))
+!!$          call sll_s_gaussian_deviate_2d(v(1:2))
 !!$          v(1:2) = v(1:2) * thermal_velocity
 !!$
 !!$          call particle_group%set_x(i_part, x)
@@ -154,14 +170,14 @@ contains
 
 
 !> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
-  subroutine sll_particle_initialize_sobol_landau_1d2v(&
+  subroutine sll_s_particle_initialize_sobol_landau_1d2v(&
        particle_group, &
        landau_param, &
        xmin, &
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_particle_group_base),  intent(inout)              :: particle_group
+    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
     sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
     sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
     sll_real64, intent(in)                                      :: Lx !< length of the domain.
@@ -179,13 +195,13 @@ contains
     v = 0.0_f64
 
     !rdn(1) = 0.1_f64
-    !call normal_cdf_inv(rdn(1), 0.0_f64, 1.0_f64, v(1))
+    !call sll_s_normal_cdf_inv(rdn(1), 0.0_f64, 1.0_f64, v(1))
     !print*, 'cdf', v(1)
 
 
     do i_part = 1, particle_group%n_particles
        ! Generate Sobol numbers on [0,1]
-       call i8_sobol( int(3,8), rnd_seed, rdn)
+       call sll_s_i8_sobol( int(3,8), rnd_seed, rdn)
 
        ! Transform rdn to the interval
        x(1) = xmin + Lx * rdn(1)
@@ -194,7 +210,7 @@ contains
 
        ! Maxwellian distribution of the temperature
        do i_v = 1,2
-          call normal_cdf_inv( rdn(i_v+1), 0.0_f64, 1.0_f64, &
+          call sll_s_normal_cdf_inv( rdn(i_v+1), 0.0_f64, 1.0_f64, &
                v(i_v))
           v(i_v) = v(i_v)*(thermal_velocity(i_v))
        end do
@@ -208,17 +224,17 @@ contains
     end do
 
 
-  end subroutine sll_particle_initialize_sobol_landau_1d2v
+  end subroutine sll_s_particle_initialize_sobol_landau_1d2v
 
 !> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
-  subroutine sll_particle_initialize_random_landau_1d2v(&
+  subroutine sll_s_particle_initialize_random_landau_1d2v(&
        particle_group, &
        landau_param, &
        xmin, &
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_particle_group_base),  intent(inout)              :: particle_group
+    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
     sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
     sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
     sll_real64, intent(in)                                      :: Lx !< length of the domain.
@@ -249,7 +265,7 @@ contains
        ! Maxwellian distribution of the temperature
        do i_v = 1,2
           call random_number(rnd_no)
-          call normal_cdf_inv( rnd_no, 0.0_f64, 1.0_f64, &
+          call sll_s_normal_cdf_inv( rnd_no, 0.0_f64, 1.0_f64, &
                v(i_v))
           v(i_v) = v(i_v)*(thermal_velocity(i_v))
        end do
@@ -263,19 +279,19 @@ contains
     end do
 
 
-  end subroutine sll_particle_initialize_random_landau_1d2v
+  end subroutine sll_s_particle_initialize_random_landau_1d2v
 
 
 
 !> Initialize of a 2d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
-  subroutine sll_particle_initialize_sobol_landau_2d2v(&
+  subroutine sll_s_particle_initialize_sobol_landau_2d2v(&
        particle_group, &
        landau_param, &
        xmin, &
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_particle_group_base),  intent(inout)              :: particle_group
+    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
     sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
     sll_real64, intent(in)                                      :: xmin(2) !< lower bound of the domain
     sll_real64, intent(in)                                      :: Lx(2) !< length of the domain.
@@ -295,7 +311,7 @@ contains
 
     do i_part = 1, particle_group%n_particles
        ! Generate Sobol numbers on [0,1]
-       call i8_sobol( int(4,8), rnd_seed, rdn)
+       call sll_s_i8_sobol( int(4,8), rnd_seed, rdn)
 
        ! Transform rdn to the interval
        x(1:2) = xmin + Lx * rdn(1:2)
@@ -305,7 +321,7 @@ contains
 
        ! Maxwellian distribution of the temperature
        do i_v = 1,2
-          call normal_cdf_inv( rdn(i_v+2), 0.0_f64, 1.0_f64, &
+          call sll_s_normal_cdf_inv( rdn(i_v+2), 0.0_f64, 1.0_f64, &
                v(i_v))
           v(i_v) = v(i_v)*(thermal_velocity(i_v))
        end do
@@ -319,18 +335,18 @@ contains
     end do
 
 
-  end subroutine sll_particle_initialize_sobol_landau_2d2v
+  end subroutine sll_s_particle_initialize_sobol_landau_2d2v
 
 
 !> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
-  subroutine sll_particle_initialize_random_landau_2d2v(&
+  subroutine sll_s_particle_initialize_random_landau_2d2v(&
        particle_group, &
        landau_param, &
        xmin, &
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_particle_group_base),  intent(inout)              :: particle_group
+    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
     sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
     sll_real64, intent(in)                                      :: xmin(2) !< lower bound of the domain
     sll_real64, intent(in)                                      :: Lx(2) !< length of the domain.
@@ -364,7 +380,7 @@ contains
        ! Maxwellian distribution of the temperature
        do i_v = 1,2
           call random_number(rnd_no)
-          call normal_cdf_inv( rnd_no, 0.0_f64, 1.0_f64, &
+          call sll_s_normal_cdf_inv( rnd_no, 0.0_f64, 1.0_f64, &
                v(i_v))
           v(i_v) = v(i_v)*(thermal_velocity(i_v))
        end do
@@ -378,6 +394,6 @@ contains
     end do
 
 
-  end subroutine sll_particle_initialize_random_landau_2d2v
+  end subroutine sll_s_particle_initialize_random_landau_2d2v
 
 end module sll_m_particle_initializer

@@ -1,11 +1,23 @@
 program unit_test
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-use sll_m_arbitrary_degree_spline_interpolator_1d
-use sll_m_boundary_condition_descriptors
-implicit none
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    sll_s_set_values_at_boundary1d, &
+    sll_t_arbitrary_degree_spline_interpolator_1d, &
+    sll_o_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_hermite, &
+    sll_p_neumann, &
+    sll_p_periodic
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 31
 #define NPTS2 31 
@@ -13,7 +25,7 @@ implicit none
 #define X1MIN 0.0_f64
 #define X1MAX 1.0_f64
 
-type(sll_arbitrary_degree_spline_interpolator_1d) :: ad1d
+type(sll_t_arbitrary_degree_spline_interpolator_1d) :: ad1d
 
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: xprime
@@ -31,7 +43,7 @@ sll_real64 :: normL2_0, normL2_1,normL2_2,normL2_3
 sll_real64 :: normL2_4,normL2_5,normL2_6,normL2_7
 sll_real64 :: normH1_0,normH1_1,normH1_2,normH1_3
 sll_real64 :: normH1_4,normH1_5,normH1_6,normH1_7
-sll_real64, parameter :: dpi   = 2*sll_pi
+sll_real64, parameter :: dpi   = 2*sll_p_pi
 sll_real64, parameter :: dpisq = dpi*dpi
   
 h1 = (X1MAX-X1MIN)/real(NPTS1-1,f64)
@@ -45,11 +57,11 @@ allocate(eta1_prime(2))
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
   eta1_pos(i+1)  = eta1
-  x(i+1)         = sin(2.0_f64*sll_pi*eta1)
-  reference(i+1) = sin(2.0_f64*sll_pi*eta1)
+  x(i+1)         = sin(2.0_f64*sll_p_pi*eta1)
+  reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_PERIODIC,SLL_PERIODIC,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
 call ad1d%compute_interpolants(x)
   
 acc  = 0.0_f64
@@ -58,26 +70,26 @@ normL2_0 = 0.0_f64
 normH1_0 = 0.0_f64
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
-  node_val   = ad1d%interpolate_value(eta1)
-  ref        = sin(2.0_f64*sll_pi*eta1)
+  node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+  ref        = sin(2.0_f64*sll_p_pi*eta1)
   acc        = acc + abs(node_val-ref)
   normL2_0   = normL2_0  + (node_val-ref)**2*h1
-  deriv1_val = ad1d%interpolate_derivative_eta1(eta1)
-  ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
+  deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)
+  ref        = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*eta1)
   acc_der1   = acc_der1 + abs(deriv1_val-ref)
   normH1_0   = normH1_0  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
   
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
   eta1_pos(i+1)  = eta1
-  x(i+1)         = sin(2.0_f64*sll_pi*eta1)
-  reference(i+1) = sin(2.0_f64*sll_pi*eta1)
+  x(i+1)         = sin(2.0_f64*sll_p_pi*eta1)
+  reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
 call ad1d%compute_interpolants(x)
   
 acc1 = 0.0_f64
@@ -86,28 +98,28 @@ normL2_1 = 0.0_f64
 normH1_1 = 0.0_f64
 do i=0,NPTS1-2
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
-   ref        = sin(2.0_f64*sll_pi*eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+   ref        = sin(2.0_f64*sll_p_pi*eta1)
    acc1       = acc1 + abs(node_val-ref)
    normL2_1   = normL2_1  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-   ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+   ref        = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*eta1)
    acc1_der1  = acc1_der1 + abs(deriv1_val-ref)
    normH1_1   = normH1_1  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
   
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
   eta1_pos(i+1)  = eta1
-  x(i+1)         = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
-  reference(i+1) = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
+  x(i+1)         = sin(2.0_f64*sll_p_pi*eta1) + 3.0_f64
+  reference(i+1) = sin(2.0_f64*sll_p_pi*eta1) + 3.0_f64
 end do
   
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,value_left=3.0_f64,value_right=3.0_f64)
+call sll_s_set_values_at_boundary1d(ad1d,value_left=3.0_f64,value_right=3.0_f64)
   
 call ad1d%compute_interpolants(x)
   
@@ -117,32 +129,32 @@ normL2_2 = 0.0_f64
 normH1_2 = 0.0_f64
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
-  node_val   = ad1d%interpolate_value(eta1)
-  ref        = sin(2.0_f64*sll_pi*eta1)+ 3.0_f64
+  node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+  ref        = sin(2.0_f64*sll_p_pi*eta1)+ 3.0_f64
   acc2       = acc2 + abs(node_val-ref)
   normL2_2   = normL2_2  + (node_val-ref)**2*h1
-  deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-  ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
+  deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+  ref        = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*eta1)
   acc2_der1  = acc2_der1 + abs(deriv1_val-ref)
   normH1_2   = normH1_2  + (deriv1_val-ref)**2*h1
 end do
   
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 do i=0,NPTS1-1
      eta1               = X1MIN + real(i,f64)*h1
      eta1_pos(i+1)      = eta1
-     x(i+1)             = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
-     reference(i+1)     = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
+     x(i+1)             = sin(2.0_f64*sll_p_pi*eta1) + 3.0_f64
+     reference(i+1)     = sin(2.0_f64*sll_p_pi*eta1) + 3.0_f64
 end do
-xprime(1)     = cos(2.0_f64*sll_pi*eta1_pos(1))*2.0_f64*sll_pi
-xprime(2)     = cos(2.0_f64*sll_pi*eta1_pos(NPTS1))*2.0_f64*sll_pi
+xprime(1)     = cos(2.0_f64*sll_p_pi*eta1_pos(1))*2.0_f64*sll_p_pi
+xprime(2)     = cos(2.0_f64*sll_p_pi*eta1_pos(NPTS1))*2.0_f64*sll_p_pi
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
   
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_HERMITE,SLL_HERMITE,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_hermite,sll_p_hermite,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,                   &
+call sll_s_set_values_at_boundary1d(ad1d,                   &
                               value_left=3.0_f64,     &
                               value_right=3.0_f64,    &
                               slope_left=xprime(1),   &
@@ -156,33 +168,33 @@ normL2_3 = 0.0_f64
 normH1_3 = 0.0_f64
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
-  node_val   = ad1d%interpolate_value(eta1)
-  ref        = sin(2.0_f64*sll_pi*eta1)+ 3.0_f64
+  node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+  ref        = sin(2.0_f64*sll_p_pi*eta1)+ 3.0_f64
   acc3       = acc3 + abs(node_val-ref)
   normL2_3   = normL2_3  + (node_val-ref)**2*h1
-  deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-  ref        = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)
+  deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+  ref        = 2.0_f64*sll_p_pi*cos(2.0_f64*sll_p_pi*eta1)
   acc3_der1  = acc2_der1 + abs(deriv1_val-ref)
   normH1_3   = normH1_3  + (deriv1_val-ref)**2*h1
 end do
   
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 do i=0,NPTS1-1
   eta1               = X1MIN + real(i,f64)*h1
   eta1_pos(i+1)      = eta1
-  x(i+1)             = cos(2.0_f64*sll_pi*eta1)
-  reference(i+1)     = cos(2.0_f64*sll_pi*eta1)
+  x(i+1)             = cos(2.0_f64*sll_p_pi*eta1)
+  reference(i+1)     = cos(2.0_f64*sll_p_pi*eta1)
 end do
 
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_NEUMANN,SLL_DIRICHLET,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_dirichlet,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,                 &
+call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
                               value_right=1.0_f64,  &
                               slope_left=xprime(1), &
@@ -196,32 +208,32 @@ normL2_4 = 0.0_f64
 normH1_4 = 0.0_f64
 do i=0,NPTS1-2
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
-   ref        = cos(2.0_f64*sll_pi*eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+   ref        = cos(2.0_f64*sll_p_pi*eta1)
    acc4       = acc4 + abs(node_val-ref)
    normL2_4   = normL2_4  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-   ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+   ref        = -2.0_f64*sll_p_pi*sin(2.0_f64*sll_p_pi*eta1)
    acc4_der1  = acc4_der1 + abs(deriv1_val-ref)
    normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
    eta1_pos(i+1)  = eta1
-   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
+   x(i+1)         = cos(2.0_f64*sll_p_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_p_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_NEUMANN,SLL_DIRICHLET,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_dirichlet,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,                 &
+call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
                               value_right=1.0_f64,  &
                               slope_left=xprime(1), &
@@ -235,32 +247,32 @@ normL2_4 = 0.0_f64
 normH1_4 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
-   ref        = cos(2.0_f64*sll_pi*eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+   ref        = cos(2.0_f64*sll_p_pi*eta1)
    acc4       = acc4 + abs(node_val-ref)
    normL2_4   = normL2_4  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-   ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+   ref        = -2.0_f64*sll_p_pi*sin(2.0_f64*sll_p_pi*eta1)
    acc4_der1  = acc4_der1 + abs(deriv1_val-ref)
    normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
    eta1_pos(i+1)  = eta1
-   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
+   x(i+1)         = cos(2.0_f64*sll_p_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_p_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_NEUMANN,SLL_NEUMANN,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_neumann,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,                 &
+call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
                               value_right=1.0_f64,  &
                               slope_left=xprime(1), &
@@ -274,32 +286,32 @@ normL2_5 = 0.0_f64
 normH1_5 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
-   ref        = cos(2.0_f64*sll_pi*eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+   ref        = cos(2.0_f64*sll_p_pi*eta1)
    acc5       = acc5 + abs(node_val-ref)
    normL2_5   = normL2_5  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-   ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+   ref        = -2.0_f64*sll_p_pi*sin(2.0_f64*sll_p_pi*eta1)
    acc5_der1  = acc5_der1 + abs(deriv1_val-ref)
    normH1_5   = normH1_5  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
    eta1_pos(i+1)  = eta1
-   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
+   x(i+1)         = cos(2.0_f64*sll_p_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_p_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_HERMITE,SLL_NEUMANN,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_hermite,sll_p_neumann,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,                  &
+call sll_s_set_values_at_boundary1d(ad1d,                  &
                               value_left=1.0_f64,    &
                               value_right=1.0_f64,   &
                               slope_left=xprime(1),  &
@@ -313,32 +325,32 @@ normL2_6 = 0.0_f64
 normH1_6 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
-   ref        = cos(2.0_f64*sll_pi*eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+   ref        = cos(2.0_f64*sll_p_pi*eta1)
    acc6       = acc6 + abs(node_val-ref)
    normL2_6   = normL2_6  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-   ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+   ref        = -2.0_f64*sll_p_pi*sin(2.0_f64*sll_p_pi*eta1)
    acc6_der1  = acc6_der1 + abs(deriv1_val-ref)
    normH1_6   = normH1_6  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
    eta1_pos(i+1)  = eta1
-   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
+   x(i+1)         = cos(2.0_f64*sll_p_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_p_pi*eta1)
 end do
-xprime(1) = 0.0
-xprime(2) = 0.0
+xprime(1) = 0.0_f64
+xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_NEUMANN,SLL_HERMITE,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_hermite,SPL_DEG)
 
-call set_values_at_boundary1d(ad1d,                 &
+call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
                               value_right=1.0_f64,  &
                               slope_left=xprime(1), &
@@ -352,17 +364,17 @@ normL2_7 = 0.0_f64
 normH1_7 = 0.0_f64
 do i=0,NPTS1-1
    eta1       = X1MIN + real(i,f64)*h1
-   node_val   = ad1d%interpolate_value(eta1)
-   ref        = cos(2.0_f64*sll_pi*eta1)
+   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
+   ref        = cos(2.0_f64*sll_p_pi*eta1)
    acc7        = acc7 + abs(node_val-ref)
    normL2_7    = normL2_7  + (node_val-ref)**2*h1
-   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
-   ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
+   deriv1_val = ad1d%interpolate_from_interpolant_derivative_eta1(eta1)   
+   ref        = -2.0_f64*sll_p_pi*sin(2.0_f64*sll_p_pi*eta1)
    acc7_der1  = acc7_der1 + abs(deriv1_val-ref)
    normH1_7   = normH1_7  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_delete(ad1d)
+call sll_o_delete(ad1d)
 
 
 write(*,100)'--------------------------------------------'
@@ -423,14 +435,14 @@ if(( sqrt(normL2_0) <= h1**(SPL_DEG+1)) .AND. &
    ( sqrt(normL2_5) <= h1**(SPL_DEG+1)) .AND. &
    ( sqrt(normL2_6) <= h1**(SPL_DEG+1)) .AND. &
    ( sqrt(normL2_7) <= h1**(SPL_DEG+1)) .AND. &
-   ( sqrt(normH1_0) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_1) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_2) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_3) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_4) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_5) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_6) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
-   ( sqrt(normH1_7) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) ) then
+   ( sqrt(normH1_0) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_1) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_2) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_3) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_4) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_5) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_6) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) .AND. &
+   ( sqrt(normH1_7) <= h1**(SPL_DEG-3)*(2.0_f64*sll_p_pi)**2) ) then
 
   print *, 'PASSED'
 

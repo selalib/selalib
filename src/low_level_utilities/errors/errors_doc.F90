@@ -1,4 +1,4 @@
-!> @defgroup errors sll_m_errors
+!> @defgroup errors sll_errors
 !!
 !! @authors Yaman Güçlü - <yaman.guclu@gmail.com>
 !!

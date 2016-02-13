@@ -26,22 +26,31 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_1d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_scalar_field_1d_base
-  use sll_m_constants
-  use sll_m_cartesian_meshes
-  use sll_m_interpolators_1d_base
-  use sll_m_arbitrary_degree_spline_interpolator_1d
-  use sll_m_utilities
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gnuplot
-!  use sll_m_scalar_field_initializers_base
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_1d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_scalar_field_1d_base, only: &
+    sll_c_scalar_field_1d_base
+
   implicit none
+
+  public :: &
+    sll_f_new_scalar_field_1d_analytic, &
+    sll_f_new_scalar_field_1d_discrete, &
+    sll_t_scalar_field_1d_discrete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_analytic
+  type, extends(sll_c_scalar_field_1d_base) :: sll_scalar_field_1d_analytic
      procedure(one_var_parametrizable_function), pointer, nopass :: func
      procedure(one_var_parametrizable_function), pointer, nopass :: first_derivative
      sll_real64, dimension(:), pointer        :: params
@@ -49,7 +58,7 @@ module sll_m_scalar_field_1d
      !     sll_int32                          :: plot_counter
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( sll_cartesian_mesh_1d),pointer   :: mesh   
+     type( sll_t_cartesian_mesh_1d),pointer   :: mesh   
      ! allows to decide if the user put the derivative of the analiytic function: func
      logical :: present_derivative
    contains
@@ -70,19 +79,19 @@ module sll_m_scalar_field_1d
      procedure, pass(field) :: delete => delete_field_1d_analytic
   end type sll_scalar_field_1d_analytic
   
-  type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_discrete
+  type, extends(sll_c_scalar_field_1d_base) :: sll_t_scalar_field_1d_discrete
      sll_real64, dimension(:), pointer  :: values
      !sll_real64, dimension(:,:), pointer  :: coeff_spline
      !sll_int32                            :: sz_coeff1
      !sll_int32                            :: sz_coeff2
      character(len=64)                    :: name
      !     sll_int32                            :: plot_counter
-     class(sll_interpolator_1d_base), pointer :: interp_1d !!! a implementer
+     class(sll_c_interpolator_1d), pointer :: interp_1d !!! a implementer
      sll_real64, dimension(:), pointer :: point
      !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( sll_cartesian_mesh_1d),pointer :: mesh   
+     type( sll_t_cartesian_mesh_1d),pointer :: mesh   
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_1d_discrete
@@ -99,7 +108,7 @@ module sll_m_scalar_field_1d
           update_interp_coeffs_1d_discrete
      procedure, pass(field) :: write_to_file => write_to_file_discrete_1d
      procedure, pass(field) :: delete => delete_field_1d_discrete
-  end type sll_scalar_field_1d_discrete
+  end type sll_t_scalar_field_1d_discrete
 
 
 
@@ -177,7 +186,7 @@ contains   ! *****************************************************************
     
   end function derivative_value_at_index_analytic_1d
   
-  function new_scalar_field_1d_analytic( &
+  function sll_f_new_scalar_field_1d_analytic( &
        func, &
        field_name, &
        bc_left, &
@@ -194,7 +203,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32  :: ierr
-    type(sll_cartesian_mesh_1d),pointer   :: mesh
+    type(sll_t_cartesian_mesh_1d),pointer   :: mesh
  
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
@@ -205,7 +214,7 @@ contains   ! *****************************************************************
     mesh, &
     func_params,&
     first_derivative)
-  end function new_scalar_field_1d_analytic
+  end function sll_f_new_scalar_field_1d_analytic
 
   subroutine set_field_data_analytic_1d( field, values )
     class(sll_scalar_field_1d_analytic), intent(inout) :: field
@@ -250,7 +259,7 @@ contains   ! *****************************************************************
     procedure(one_var_parametrizable_function), optional :: first_derivative
     character(len=*), intent(in)                    :: field_name
     sll_real64, dimension(:), intent(in), optional, target :: func_params
-    type(sll_cartesian_mesh_1d),pointer   :: mesh
+    type(sll_t_cartesian_mesh_1d),pointer   :: mesh
 
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
@@ -293,7 +302,7 @@ contains   ! *****************************************************************
 
   function get_cartesian_mesh_1d_analytic( field ) result(res)
     class(sll_scalar_field_1d_analytic), intent(in) :: field
-    type(sll_cartesian_mesh_1d), pointer :: res
+    type(sll_t_cartesian_mesh_1d), pointer :: res
     res => field%mesh
   end function get_cartesian_mesh_1d_analytic
 
@@ -345,7 +354,7 @@ contains   ! *****************************************************************
   !
   ! **************************************************************************
 
-  function new_scalar_field_1d_discrete( &
+  function sll_f_new_scalar_field_1d_discrete( &
    ! array_1d, &
     field_name, &
     interpolator_1d, &
@@ -355,11 +364,11 @@ contains   ! *****************************************************************
     point_1d, &
     sz_point) result(obj)
 
-    type(sll_scalar_field_1d_discrete), pointer :: obj
+    type(sll_t_scalar_field_1d_discrete), pointer :: obj
 !    sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_1d_base), target        :: interpolator_1d ! a implementer
-     type(sll_cartesian_mesh_1d),pointer   :: mesh
+    class(sll_c_interpolator_1d), target        :: interpolator_1d ! a implementer
+     type(sll_t_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32, optional :: sz_point
     ! sll_real64, dimension(:,:), optional :: point2d
@@ -377,7 +386,7 @@ contains   ! *****************************************************************
          mesh,&
          point_1d,&
          sz_point)
-  end function new_scalar_field_1d_discrete
+  end function sll_f_new_scalar_field_1d_discrete
 
   
   subroutine initialize_scalar_field_1d_discrete( &
@@ -392,11 +401,11 @@ contains   ! *****************************************************************
     sz_point)
     
     
-    class(sll_scalar_field_1d_discrete)         :: field
+    class(sll_t_scalar_field_1d_discrete)         :: field
    ! sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_1d_base), target        :: interpolator_1d
-    type(sll_cartesian_mesh_1d),pointer   :: mesh
+    class(sll_c_interpolator_1d), target        :: interpolator_1d
+    type(sll_t_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32,optional :: sz_point
     sll_int32, intent(in) :: bc_left
@@ -439,7 +448,7 @@ contains   ! *****************************************************************
   
 
   subroutine set_field_data_discrete_1d( field, values )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     sll_real64, dimension(:), intent(in) :: values
     if ( size(field%values,1) .ne. size(values,1) ) then
       print *, 'WARNING, set_field_data_discrete_1d(), passed array ', &
@@ -452,7 +461,7 @@ contains   ! *****************************************************************
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_1d_discrete( field )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     ! just nullify pointers, nothing to deallocate that this object owns.
     !print*, associated(field%values)
     !print*, associated(field%interp_1d)
@@ -465,61 +474,61 @@ contains   ! *****************************************************************
   
 
   subroutine update_interp_coeffs_1d_discrete( field )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     call field%interp_1d%compute_interpolants( field%values )
   end subroutine update_interp_coeffs_1d_discrete
 
 
   function get_cartesian_mesh_1d_discrete( field ) result(res)
-    class(sll_scalar_field_1d_discrete), intent(in) :: field
-    type(sll_cartesian_mesh_1d), pointer :: res
+    class(sll_t_scalar_field_1d_discrete), intent(in) :: field
+    type(sll_t_cartesian_mesh_1d), pointer :: res
     res => field%mesh
   end function get_cartesian_mesh_1d_discrete
 
   function value_at_pt_discrete_1d( field, eta)
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: value_at_pt_discrete_1d
     
-    value_at_pt_discrete_1d = field%interp_1d%interpolate_value(eta)
+    value_at_pt_discrete_1d = field%interp_1d%interpolate_from_interpolant_value(eta)
   end function value_at_pt_discrete_1d
   
   function value_at_index_discrete_1d( field, i )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
+    value_at_index_discrete_1d = field%interp_1d%interpolate_from_interpolant_value(eta) 
   end function value_at_index_discrete_1d
   
   function derivative_value_at_pt_discrete_1d( field, eta )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_discrete_1d
     
     derivative_value_at_pt_discrete_1d = &
-         field%interp_1d%interpolate_derivative_eta1(eta)
+         field%interp_1d%interpolate_from_interpolant_derivative_eta1(eta)
   end function derivative_value_at_pt_discrete_1d
   
   function derivative_value_at_index_discrete_1d( field, i )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: derivative_value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     derivative_value_at_index_discrete_1d = &
-         field%interp_1d%interpolate_derivative_eta1(eta)
+         field%interp_1d%interpolate_from_interpolant_derivative_eta1(eta)
   end function derivative_value_at_index_discrete_1d
 
   subroutine write_to_file_discrete_1d( field, tag )
-    class(sll_scalar_field_1d_discrete), intent(inout) :: field
+    class(sll_t_scalar_field_1d_discrete), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
     sll_real64, dimension(:), allocatable :: values
     sll_real64                              :: eta
-    type(sll_cartesian_mesh_1d), pointer      :: mesh
+    type(sll_t_cartesian_mesh_1d), pointer      :: mesh
     sll_int32 :: i
     sll_int32 :: ierr
     

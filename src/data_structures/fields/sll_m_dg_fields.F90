@@ -1,27 +1,45 @@
-#define sll_transformation class(sll_coordinate_transformation_2d_base)
+#define sll_transformation class(sll_c_coordinate_transformation_2d_base)
 
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
 module sll_m_dg_fields
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_utilities, only : int2string
-  use sll_m_ascii_io
-  use sll_m_cartesian_meshes
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gauss_lobatto_integration, only : &
-       gauss_lobatto_points, &
-       gauss_lobatto_weights
+  use sll_m_ascii_io, only: &
+    sll_s_ascii_file_create
 
-implicit none
-private
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base, &
+    sll_p_io_gmsh, &
+    sll_p_io_mtv, &
+    sll_p_io_xdmf
+
+  use sll_m_gauss_lobatto_integration, only: &
+    sll_f_gauss_lobatto_points, &
+    sll_f_gauss_lobatto_weights
+
+  use sll_m_utilities, only: &
+    sll_s_int2string
+
+  implicit none
+
+  public :: &
+    sll_t_dg_field_2d, &
+    sll_o_new
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Object to describe field data with DG numerical method
-type, public :: sll_dg_field_2d
+type :: sll_t_dg_field_2d
 
    sll_int32                               :: degree  !< polynom degree
    sll_transformation, pointer             :: tau     !< coordinate transformation
@@ -36,15 +54,15 @@ contains
    procedure, pass :: write_to_file => write_dg_field_2d_to_file
    procedure, pass :: set_value => initialize_dg_field_2d 
 
-end type sll_dg_field_2d
+end type sll_t_dg_field_2d
 
 !> function that return a pointer to a DG field 2d
 !> @param[in] tau           transformation 
 !> @param[in] init_function function
 !> @param[in] degree        degree integration
-interface sll_new
+interface sll_o_new
   module procedure new_dg_field_2d
-end interface sll_new
+end interface sll_o_new
 
 !> sum operator DG field 2d
 interface operator(+)
@@ -56,9 +74,8 @@ interface operator(-)
   module procedure dg_field_sub
 end interface operator(-)
 
-public :: sll_new, operator(+), operator(-)
 
-sll_int32, private :: error
+sll_int32 :: error
 
 contains
 
@@ -69,9 +86,9 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
   sll_int32, intent(in)                 :: degree        !< degree integration
   sll_int32                             :: nc_eta1
   sll_int32                             :: nc_eta2
-  type(sll_dg_field_2d), pointer        :: this
+  type(sll_t_dg_field_2d), pointer        :: this
   sll_int32                             :: error
-  class(sll_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
   SLL_ALLOCATE(this, error)
   this%tau    => tau
   this%degree =  degree
@@ -79,8 +96,8 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
   SLL_ALLOCATE(this%xgalo(degree+1),error)
   SLL_ALLOCATE(this%wgalo(degree+1),error)
 
-  this%xgalo  = gauss_lobatto_points(degree+1,-1._f64,1._f64)
-  this%wgalo  = gauss_lobatto_weights(degree+1)
+  this%xgalo  = sll_f_gauss_lobatto_points(degree+1,-1._f64,1._f64)
+  this%wgalo  = sll_f_gauss_lobatto_weights(degree+1)
 
   lm => this%tau%get_cartesian_mesh()
   nc_eta1 = lm%num_cells1
@@ -99,14 +116,14 @@ end function new_dg_field_2d
 
 subroutine initialize_dg_field_2d( this, init_function, time) 
 
-  class(sll_dg_field_2d)      :: this
+  class(sll_t_dg_field_2d)      :: this
   sll_real64, external :: init_function
   sll_real64           :: time
   sll_real64           :: offset(2)
   sll_real64           :: eta1
   sll_real64           :: eta2
   sll_int32            :: i, j, ii, jj
-  class(sll_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
   
   SLL_ASSERT(associated(this%array))
 
@@ -132,18 +149,18 @@ end subroutine initialize_dg_field_2d
 
 subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
 
-  class(sll_dg_field_2d) :: this
+  class(sll_t_dg_field_2d) :: this
   character(len=*)       :: field_name
   sll_int32, optional    :: file_format
   sll_real64, optional   :: time
 
   if (present(file_format)) then
      select case(file_format)
-     case(SLL_IO_GMSH)
+     case(sll_p_io_gmsh)
      call plot_dg_field_2d_with_gmsh(this, field_name)
-     case(SLL_IO_MTV)
+     case(sll_p_io_mtv)
      call plot_dg_field_2d_with_plotmtv(this, field_name)
-     case(SLL_IO_XDMF)
+     case(sll_p_io_xdmf)
      if (present(time)) then
         call plot_dg_field_2d_with_xdmf(this, field_name, time)
      else
@@ -160,7 +177,7 @@ end subroutine write_dg_field_2d_to_file
 
 subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
-  class(sll_dg_field_2d) :: this
+  class(sll_t_dg_field_2d) :: this
   character(len=*)       :: field_name
   sll_int32              :: file_id
   sll_int32              :: gnu_id
@@ -168,14 +185,14 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
   sll_real64             :: offset(2)
   sll_int32              :: i, j, ii, jj
   character(len=4)       :: ctag
-  class(sll_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
 
-  call int2string(this%tag, ctag)
+  call sll_s_int2string(this%tag, ctag)
 
   gnu_id = this%file_id
 
   if (gnu_id == 0) then
-     call sll_ascii_file_create(field_name//".gnu", gnu_id, error)
+     call sll_s_ascii_file_create(field_name//".gnu", gnu_id, error)
      rewind(gnu_id)
   else
      open(unit=gnu_id, file=field_name//".gnu", position="append")
@@ -184,7 +201,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
   write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
   write(gnu_id,"(a)") "splot '"//field_name//ctag//".dat' w l"
 
-  call sll_ascii_file_create(field_name//ctag//".dat", file_id, error)
+  call sll_s_ascii_file_create(field_name//ctag//".dat", file_id, error)
 
   lm => this%tau%get_cartesian_mesh()
 
@@ -219,9 +236,9 @@ end subroutine plot_dg_field_2d_with_gnuplot
 
 function dg_field_add( W1, W2) result(W3)
 
-  type(sll_dg_field_2d), intent(in) :: W1
-  type(sll_dg_field_2d), intent(in) :: W2
-  type(sll_dg_field_2d)             :: W3
+  type(sll_t_dg_field_2d), intent(in) :: W1
+  type(sll_t_dg_field_2d), intent(in) :: W2
+  type(sll_t_dg_field_2d)             :: W3
  
   SLL_ASSERT(W1%degree == W2%degree)
   SLL_ASSERT(associated(W1%array))
@@ -233,9 +250,9 @@ end function dg_field_add
 
 function dg_field_sub( W1, W2) result(W3)
 
-  type(sll_dg_field_2d), intent(in) :: W1
-  type(sll_dg_field_2d), intent(in) :: W2
-  type(sll_dg_field_2d)             :: W3
+  type(sll_t_dg_field_2d), intent(in) :: W1
+  type(sll_t_dg_field_2d), intent(in) :: W2
+  type(sll_t_dg_field_2d)             :: W3
 
   SLL_ASSERT(W1%degree == W2%degree)
   SLL_ASSERT(associated(W1%array))
@@ -247,7 +264,7 @@ end function dg_field_sub
 
 subroutine plot_dg_field_2d_with_gmsh(this, field_name)
 
-  class(sll_dg_field_2d)        :: this
+  class(sll_t_dg_field_2d)        :: this
   character(len=*)       :: field_name
   sll_int32              :: file_id
 
@@ -264,7 +281,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
   sll_real64, allocatable, dimension(:)   :: values
   sll_real64 :: offset(2), eta1, eta2
   character(len=32) :: my_fmt
-  class(sll_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
 
   if (this%degree > 3) then
      write(*,*) 'ordre non prévu'
@@ -322,7 +339,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
      permut(invpermut(i))=i
   end do
      
-  call sll_ascii_file_create(field_name//".msh", file_id, error)
+  call sll_s_ascii_file_create(field_name//".msh", file_id, error)
   write(file_id,'(A)') '$MeshFormat'
   write(file_id,'(A)') '2 0 8'
   write(file_id,'(A)') '$EndMeshFormat'
@@ -365,16 +382,16 @@ end subroutine plot_dg_field_2d_with_gmsh
 
 subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
 
-  class(sll_dg_field_2d) :: this
+  class(sll_t_dg_field_2d) :: this
   character(len=*)       :: field_name
   sll_int32              :: file_id
   sll_int32              :: ni, nj, ino
   sll_int32              :: i, j, ii, jj
   sll_real64             :: offset(2)
   sll_real64             :: eta1, eta2
-  class(sll_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
 
-  call sll_ascii_file_create(field_name//".mtv", file_id, error)
+  call sll_s_ascii_file_create(field_name//".mtv", file_id, error)
 
   write(file_id,*)"$DATA=CONTCURVE"
   write(file_id,*)"%equalscale=T"
@@ -474,7 +491,7 @@ end subroutine plot_dg_field_2d_with_plotmtv
 
 subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
 
-  class(sll_dg_field_2d)   :: this
+  class(sll_t_dg_field_2d)   :: this
   character(len=*)         :: field_name
   sll_int32                :: file_id
   sll_int32                :: i, j, k, ii, jj
@@ -483,13 +500,13 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
   sll_int32                :: clength
   sll_real64, optional     :: time
 
-  class(sll_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
 
   clength = len_trim(field_name)
 
   SLL_ASSERT(this%degree < 10)
 
-  call sll_ascii_file_create(field_name//".xmf", file_id, error)
+  call sll_s_ascii_file_create(field_name//".xmf", file_id, error)
 
   write(file_id,"(a)") "<?xml version='1.0' ?>"
   write(file_id,"(a)") "<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []>"

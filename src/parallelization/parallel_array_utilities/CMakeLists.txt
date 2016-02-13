@@ -8,7 +8,7 @@ TARGET_LINK_LIBRARIES(sll_parallel_array_utilities
                       sll_file_io
                       sll_utilities
                       sll_meshes
-                      sll_common_array_initializers)
+                      sll_initial_profiles)
 
 
 IF(BUILD_TESTING)

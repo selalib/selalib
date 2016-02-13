@@ -14,7 +14,7 @@ ENDIF()
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
@@ -24,10 +24,11 @@ SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
 SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
-SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+SET(USE_MKL               OFF CACHE BOOL   "Using Intel Math Kernel Library")
+SET(BUILD_MUDPACK         OFF CACHE BOOL   "Build mudpack library")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE)
@@ -76,11 +77,9 @@ ADD_CUSTOM_TARGET( clear
   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 INCLUDE(FortranConfig)
-INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
-INCLUDE(HDF5Config)
+INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
-INCLUDE(CTest)
 INCLUDE(PreprocessorTarget)
 
 IF(MPI_ENABLED)
@@ -88,6 +87,9 @@ IF(MPI_ENABLED)
   INCLUDE(ProcessorCount)
   INCLUDE(POEConfig)
 ENDIF()
+
+INCLUDE(CTest)
+INCLUDE(HDF5Config)
 
 IF(PASTIX_ENABLED)
   FIND_PACKAGE(SCOTCH)
@@ -105,43 +107,19 @@ MACRO(SLL_TEST _NAME)
   SET(${_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDMACRO(SLL_TEST)
 
-EXECUTE_PROCESS(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT)
-STRING(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\3\\2\\1" 
-TODAY ${RESULT})
-STRING(REGEX REPLACE "([0-9][0-9][0-9][0-9])[0-9][0-9][0-9][0-9]" "\\1" 
-CPACK_PACKAGE_VERSION_MAJOR ${TODAY})
-STRING(REGEX REPLACE "[0-9][0-9][0-9][0-9]([0-9][0-9])[0-9][0-9]" "\\1" 
-CPACK_PACKAGE_VERSION_MINOR ${TODAY} )
-STRING(REGEX REPLACE "[0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9])" "\\1" 
-CPACK_PACKAGE_VERSION_PATCH ${TODAY} )
-
-IF(BUILD_PACKAGE)
-  SET(CMAKE_BUILD_TYPE Release
-    CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
-  INCLUDE(CPackConfig) 
-ELSE()
-  ENABLE_TESTING()
-ENDIF(BUILD_PACKAGE)
+ENABLE_TESTING()
 
 FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/src/*.h)
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
 
-
-IF(BUILD_PACKAGE)
-  ADD_SUBDIRECTORY(external/fftpack)
-  ADD_SUBDIRECTORY(external/mudpack)
-  ADD_SUBDIRECTORY(package)
-  MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
-ELSE()
-  ADD_SUBDIRECTORY(external)
-  ADD_SUBDIRECTORY(src)
-ENDIF(BUILD_PACKAGE)
+ADD_SUBDIRECTORY(external)
+ADD_SUBDIRECTORY(src)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  SET(PARALUTION_VERSION 1.1.0 CACHE STRING "Paralution version number")
   EXTERNALPROJECT_ADD( paralution
      URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
      CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
@@ -171,9 +149,9 @@ IF(BUILD_SPRNG)
      URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
      SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
      BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-     UPDATE_COMMAND autoreconf -if
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
-     BUILD_COMMAND ${MAKE} 
+     #UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --enable-silent-rules --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS} "CXXFLAGS=-w -g -O2"
+     BUILD_COMMAND ${MAKE}
      INSTALL_COMMAND ""
   )
 ENDIF()
@@ -201,8 +179,16 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
-IF(BUILD_PACKAGE)
-  MESSAGE(STATUS "Type make release to create an archive of selalib")
-ELSE()
-  ADD_PREPROCESSOR_TARGET()
-ENDIF()
+# Create single library 'libselalib.a' from smaller libraries in src
+ADD_SUBDIRECTORY( package )
+
+# Simulations
+IF( BUILD_SIMULATIONS )
+  GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE )
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH 
+    "simulations install dir")
+  ADD_SUBDIRECTORY( simulations )
+ENDIF( BUILD_SIMULATIONS )
+
+# CMake target for running C preprocessor on all source files used in build
+ADD_PREPROCESSOR_TARGET()

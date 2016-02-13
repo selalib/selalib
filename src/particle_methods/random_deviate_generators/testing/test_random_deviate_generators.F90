@@ -1,8 +1,15 @@
 program test_random_deviate_generators
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_gaussian
-  use sll_m_hammersley
+
+  use sll_m_gaussian, only: &
+    sll_f_gaussian_deviate
+
+  use sll_m_hammersley, only: &
+    sll_f_suite_hamm
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define Xmin  0._f64
 #define Xmax  5._f64
@@ -23,16 +30,16 @@ program test_random_deviate_generators
   shift = 0.0734_f64
   incr_index = 0
   do j=1, num_particles
-     pseudo_ran_Hamm_zero_one = suite_hamm(j, 2)
-     pseudo_ran_Hamm_zero_five = (Xmax - Xmin) * suite_hamm(j, 2) + Xmin! It replaces the 'call random(y)'
+     pseudo_ran_Hamm_zero_one = sll_f_suite_hamm(j, 2)
+     pseudo_ran_Hamm_zero_five = (Xmax - Xmin) * sll_f_suite_hamm(j, 2) + Xmin! It replaces the 'call random(y)'
      ! This gives a pseudo random sequence between Xmin and Xmax
 
-     z = gaussian_deviate() * the_spatial_variance + (the_mean)
+     z = sll_f_gaussian_deviate() * the_spatial_variance + (the_mean)
      ! This gives a Gaussian centered in 'the_mean'
-     pseudo_ran_Hamm_modif_zero_one = suite_hamm(j+incr_index, 2) - shift
+     pseudo_ran_Hamm_modif_zero_one = sll_f_suite_hamm(j+incr_index, 2) - shift
      do while (pseudo_ran_Hamm_modif_zero_one < 0._f64)
         incr_index = incr_index + 1
-        pseudo_ran_Hamm_modif_zero_one = suite_hamm(j+incr_index, 2) - shift
+        pseudo_ran_Hamm_modif_zero_one = sll_f_suite_hamm(j+incr_index, 2) - shift
      enddo
       pseudo_ran_Hamm_modif_zero_one =  pseudo_ran_Hamm_modif_zero_one / (1._f64 - shift)
 

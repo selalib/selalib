@@ -25,50 +25,75 @@
 module sll_m_time_splitting_coeff
 
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
   implicit none
 
-  sll_int32, parameter :: SLL_USER_DEFINED         = -3 
-  sll_int32, parameter :: SLL_LIE_TV               = -2 
-  sll_int32, parameter :: SLL_LIE_VT               = -1 
-  sll_int32, parameter :: SLL_STRANG_TVT           = 0 
-  sll_int32, parameter :: SLL_STRANG_VTV           = 1 
-  sll_int32, parameter :: SLL_TRIPLE_JUMP_TVT      = 2 
-  sll_int32, parameter :: SLL_TRIPLE_JUMP_VTV      = 3 
-  !sll_int32, parameter :: SLL_ORDER6_TVT           = 4 
-  sll_int32, parameter :: SLL_ORDER6_VTV           = 5 
-  sll_int32, parameter :: SLL_ORDER6VP_TVT         = 6 
-  sll_int32, parameter :: SLL_ORDER6VP_VTV         = 7 
-  sll_int32, parameter :: SLL_ORDER6VPnew_TVT      = 8 
-  sll_int32, parameter :: SLL_ORDER6VPnew1_VTV     = 9 
-  sll_int32, parameter :: SLL_ORDER6VPnew2_VTV     = 10 
-  sll_int32, parameter :: SLL_ORDER6VP2D_VTV     = 11 
-  sll_int32, parameter :: SLL_ORDER6VPOT_VTV     = 12 
-  sll_int32, parameter :: SLL_ORDER6_TVT           = 13 
-  sll_int32, parameter :: SLL_ORDER6VPOTnew1_VTV     = 14 
-  sll_int32, parameter :: SLL_ORDER6VPOTnew2_VTV     = 15 
-  sll_int32, parameter :: SLL_ORDER6VPOTnew3_VTV     = 16 
+  public :: &
+    sll_f_new_time_splitting_coeff, &
+    sll_p_lie_tv, &
+    sll_p_lie_vt, &
+    sll_p_order6_tvt, &
+    sll_p_order6_vtv, &
+    sll_p_order6vp2d_vtv, &
+    sll_p_order6vp_tvt, &
+    sll_p_order6vp_vtv, &
+    sll_p_order6vpnew1_vtv, &
+    sll_p_order6vpnew2_vtv, &
+    sll_p_order6vpnew_tvt, &
+    sll_p_order6vpot_vtv, &
+    sll_p_order6vpotnew1_vtv, &
+    sll_p_order6vpotnew2_vtv, &
+    sll_p_order6vpotnew3_vtv, &
+    sll_p_strang_tvt, &
+    sll_p_strang_vtv, &
+    sll_p_triple_jump_tvt, &
+    sll_p_triple_jump_vtv, &
+    sll_t_splitting_coeff
 
-  type splitting_coeff
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  sll_int32, parameter :: SLL_USER_DEFINED         = -3 
+  sll_int32, parameter :: sll_p_lie_tv               = -2 
+  sll_int32, parameter :: sll_p_lie_vt               = -1 
+  sll_int32, parameter :: sll_p_strang_tvt           = 0 
+  sll_int32, parameter :: sll_p_strang_vtv           = 1 
+  sll_int32, parameter :: sll_p_triple_jump_tvt      = 2 
+  sll_int32, parameter :: sll_p_triple_jump_vtv      = 3 
+  !sll_int32, parameter :: sll_p_order6_tvt           = 4 
+  sll_int32, parameter :: sll_p_order6_vtv           = 5 
+  sll_int32, parameter :: sll_p_order6vp_tvt         = 6 
+  sll_int32, parameter :: sll_p_order6vp_vtv         = 7 
+  sll_int32, parameter :: sll_p_order6vpnew_tvt      = 8 
+  sll_int32, parameter :: sll_p_order6vpnew1_vtv     = 9 
+  sll_int32, parameter :: sll_p_order6vpnew2_vtv     = 10 
+  sll_int32, parameter :: sll_p_order6vp2d_vtv     = 11 
+  sll_int32, parameter :: sll_p_order6vpot_vtv     = 12 
+  sll_int32, parameter :: sll_p_order6_tvt           = 13 
+  sll_int32, parameter :: sll_p_order6vpotnew1_vtv     = 14 
+  sll_int32, parameter :: sll_p_order6vpotnew2_vtv     = 15 
+  sll_int32, parameter :: sll_p_order6vpotnew3_vtv     = 16 
+
+  type sll_t_splitting_coeff
     sll_int32 :: split_case
     sll_real64, dimension(:), pointer :: split_step
     sll_int32 :: nb_split_step
     logical :: split_begin_T
     sll_int32 :: dim_split_V
-  end type splitting_coeff  
+  end type sll_t_splitting_coeff  
   
 contains
-  function new_time_splitting_coeff( &
+  function sll_f_new_time_splitting_coeff( &
     split_case, &
     split_step, &
     nb_split_step, &
     split_begin_T, &
     dt) &
     result(split)  
-    type(splitting_coeff), pointer :: split
+    type(sll_t_splitting_coeff), pointer :: split
     sll_int32, intent(in)  :: split_case
     sll_real64, dimension(:), intent(in), optional :: split_step
     sll_int32, intent(in), optional :: nb_split_step
@@ -85,7 +110,7 @@ contains
       split_begin_T, &
       dt)
       
-  end function new_time_splitting_coeff  
+  end function sll_f_new_time_splitting_coeff  
   
   subroutine initialize_time_splitting_coeff( &
     split, &
@@ -95,7 +120,7 @@ contains
     split_begin_T, &
     dt)
     
-    type(splitting_coeff) :: split
+    type(sll_t_splitting_coeff) :: split
     sll_int32, intent(in) :: split_case
     sll_real64, dimension(:), intent(in), optional :: split_step
     sll_int32, intent(in), optional :: nb_split_step
@@ -143,33 +168,33 @@ contains
           split%nb_split_step =nb_split_step
           split%split_begin_T = split_begin_T  
         endif
-      case (SLL_LIE_TV) 
+      case (sll_p_lie_tv) 
         split%nb_split_step = 2
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .true.
         split%split_step(1) = 1._f64
         split%split_step(2) = 1._f64
-      case (SLL_LIE_VT) 
+      case (sll_p_lie_vt) 
         split%nb_split_step = 2
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .false.
         split%split_step(1) = 1._f64
         split%split_step(2) = 1._f64
-      case (SLL_STRANG_TVT) ! Strang splitting TVT
+      case (sll_p_strang_tvt) ! Strang splitting TVT
         split%nb_split_step = 3
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .true.
         split%split_step(1) = 0.5_f64
         split%split_step(2) = 1._f64
         split%split_step(3) = split%split_step(1)
-      case (SLL_STRANG_VTV) ! Strang splitting VTV
+      case (sll_p_strang_vtv) ! Strang splitting VTV
         split%nb_split_step = 3
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .false.
         split%split_step(1) = 0.5_f64
         split%split_step(2) = 1._f64
         split%split_step(3) = split%split_step(1)
-      case (SLL_TRIPLE_JUMP_TVT) ! triple jump TVT
+      case (sll_p_triple_jump_tvt) ! triple jump TVT
         split%nb_split_step = 7
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .true.
@@ -180,7 +205,7 @@ contains
         split%split_step(5) = split%split_step(3)
         split%split_step(6) = split%split_step(2)
         split%split_step(7) = split%split_step(1)
-      case (SLL_TRIPLE_JUMP_VTV) ! triple jump VTV
+      case (sll_p_triple_jump_vtv) ! triple jump VTV
         split%nb_split_step = 7
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .false.
@@ -191,7 +216,7 @@ contains
         split%split_step(5) = split%split_step(3)
         split%split_step(6) = split%split_step(2)
         split%split_step(7) = split%split_step(1)
-      case (SLL_ORDER6_VTV) ! Order 6 VTV (O6-11 of Blanes)
+      case (sll_p_order6_vtv) ! Order 6 VTV (O6-11 of Blanes)
         split%nb_split_step = 23
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .false.
@@ -218,7 +243,7 @@ contains
         split%split_step(21) = split%split_step(3)
         split%split_step(22) = split%split_step(2)
         split%split_step(23) = split%split_step(1)          
-      case (SLL_ORDER6_TVT) ! Order 6 TVT (O6-14 of Blanes)
+      case (sll_p_order6_tvt) ! Order 6 TVT (O6-14 of Blanes)
         split%nb_split_step = 29
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .true.
@@ -252,7 +277,7 @@ contains
         split%split_step(28) = split%split_step(2)          
         split%split_step(29) = split%split_step(1)
                   
-      case (SLL_ORDER6VP_TVT) ! Order 6 for Vlasov-Poisson TVT 
+      case (sll_p_order6vp_tvt) ! Order 6 for Vlasov-Poisson TVT 
         if(present(dt))then
           split%nb_split_step = 9
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
@@ -271,10 +296,10 @@ contains
           split%split_step(8) = split%split_step(2)
           split%split_step(9) = split%split_step(1)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VP_TVT=',SLL_ORDER6VP_TVT
+          print *,'#provide dt for use of case sll_p_order6vp_tvt=',sll_p_order6vp_tvt
           stop
         endif  
-      case (SLL_ORDER6VP_VTV) ! Order 6 for Vlasov-Poisson VTV 
+      case (sll_p_order6vp_vtv) ! Order 6 for Vlasov-Poisson VTV 
         if(present(dt))then        
           split%nb_split_step = 9
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
@@ -295,10 +320,10 @@ contains
           split%split_step(8) = split%split_step(2)
           split%split_step(9) = split%split_step(1)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VP_VTV=',SLL_ORDER6VP_VTV
+          print *,'#provide dt for use of case sll_p_order6vp_vtv=',sll_p_order6vp_vtv
           stop
         endif  
-      case (SLL_ORDER6VPnew_TVT) ! Order 6 for Vlasov-Poisson TVT (new)
+      case (sll_p_order6vpnew_tvt) ! Order 6 for Vlasov-Poisson TVT (new)
         if(present(dt))then        
           split%nb_split_step = 9
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
@@ -318,11 +343,11 @@ contains
           split%split_step(8) = split%split_step(2)
           split%split_step(9) = split%split_step(1)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPnew_TVT=',SLL_ORDER6VPnew_TVT
+          print *,'#provide dt for use of case sll_p_order6vpnew_tvt=',sll_p_order6vpnew_tvt
           stop
         endif  
           
-      case (SLL_ORDER6VPnew1_VTV) ! Order 6 for Vlasov-Poisson VTV (new1)
+      case (sll_p_order6vpnew1_vtv) ! Order 6 for Vlasov-Poisson VTV (new1)
         if(present(dt))then        
           split%nb_split_step = 11
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
@@ -345,10 +370,10 @@ contains
           split%split_step(10) = split%split_step(2)
           split%split_step(11) = split%split_step(1)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPnew1_VTV=',SLL_ORDER6VPnew1_VTV
+          print *,'#provide dt for use of case sll_p_order6vpnew1_vtv=',sll_p_order6vpnew1_vtv
           stop
         endif  
-      case (SLL_ORDER6VP2D_VTV) ! Order 6 for Vlasov-Poisson VTV 2D
+      case (sll_p_order6vp2d_vtv) ! Order 6 for Vlasov-Poisson VTV 2D
         if(present(dt))then        
           split%nb_split_step = 11
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
@@ -368,10 +393,10 @@ contains
           split%split_step(10) = split%split_step(2)
           split%split_step(11) = split%split_step(1)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VP2D_VTV=',SLL_ORDER6VP2D_VTV
+          print *,'#provide dt for use of case sll_p_order6vp2d_vtv=',sll_p_order6vp2d_vtv
           stop
         endif  
-      case (SLL_ORDER6VPOT_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+      case (sll_p_order6vpot_vtv) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
         if(present(dt))then        
           split%nb_split_step = 11
           split%dim_split_V = 2
@@ -398,11 +423,11 @@ contains
           split%split_step(16) = split%split_step(1)
           split%split_step(17) = split%split_step(2)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPOT_VTV=',SLL_ORDER6VPOT_VTV
+          print *,'#provide dt for use of case sll_p_order6vpot_vtv=',sll_p_order6vpot_vtv
           stop
         endif  
 
-      case (SLL_ORDER6VPOTnew1_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+      case (sll_p_order6vpotnew1_vtv) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
         !we change also sign here
         if(present(dt))then        
           split%nb_split_step = 9
@@ -437,14 +462,14 @@ contains
           split%split_step(13) = split%split_step(1)
           split%split_step(14) = split%split_step(2)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPOTnew1_VTV=', &
-            SLL_ORDER6VPOTnew1_VTV
+          print *,'#provide dt for use of case sll_p_order6vpotnew1_vtv=', &
+            sll_p_order6vpotnew1_vtv
           stop
         endif  
 
 
 
-      case (SLL_ORDER6VPOTnew2_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+      case (sll_p_order6vpotnew2_vtv) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
         !warning we try with sign change of dt**2
         !this seems to be the right choice
         if(present(dt))then        
@@ -485,12 +510,12 @@ contains
           split%split_step(16) = split%split_step(1)
           split%split_step(17) = split%split_step(2)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPOT_VTV=',SLL_ORDER6VPOT_VTV
+          print *,'#provide dt for use of case sll_p_order6vpot_vtv=',sll_p_order6vpot_vtv
           stop
         endif  
 
 
-      case (SLL_ORDER6VPOTnew3_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+      case (sll_p_order6vpotnew3_vtv) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
         !we change also sign
         if(present(dt))then        
           split%nb_split_step = 13
@@ -536,7 +561,7 @@ contains
           split%split_step(19) = split%split_step(1)
           split%split_step(20) = split%split_step(2)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPOT_VTV=',SLL_ORDER6VPOT_VTV
+          print *,'#provide dt for use of case sll_p_order6vpot_vtv=',sll_p_order6vpot_vtv
           stop
         endif  
 
@@ -546,7 +571,7 @@ contains
 
 
 
-      case (SLL_ORDER6VPnew2_VTV) ! Order 6 for Vlasov-Poisson VTV (new2)
+      case (sll_p_order6vpnew2_vtv) ! Order 6 for Vlasov-Poisson VTV (new2)
         if(present(dt))then        
           split%nb_split_step = 11
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
@@ -570,7 +595,7 @@ contains
           split%split_step(10) = split%split_step(2)
           split%split_step(11) = split%split_step(1)
         else
-          print *,'#provide dt for use of case SLL_ORDER6VPnew2_VTV=',SLL_ORDER6VPnew2_VTV
+          print *,'#provide dt for use of case sll_p_order6vpnew2_vtv=',sll_p_order6vpnew2_vtv
           stop
         endif  
       case default

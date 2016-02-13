@@ -15,10 +15,18 @@
 
 program test_sll_penta_diagonal
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_m_penta_diagonal
+
+  use sll_m_penta_diagonal, only: &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_penta_diagonal_solver, &
+    sll_o_solve
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
   sll_int32                               :: n_max, nb_test
@@ -27,7 +35,7 @@ use sll_m_penta_diagonal
   sll_real64, dimension(:), allocatable   :: f
   sll_real64, dimension(:), allocatable   :: x, x_exact
   sll_real64                              :: error, norm
-  type(sll_penta_diagonal_solver), pointer :: plan
+  type(sll_t_penta_diagonal_solver), pointer :: plan
 
   print*,' '
   print*, 'Testing Toeplitz penta-diagonal solver...'
@@ -66,8 +74,8 @@ use sll_m_penta_diagonal
                                   b*x_exact(i+1) + c*x_exact(i+2)      
       enddo
 
-      plan => sll_create(n)
-      call  sll_solve(a, b, c, f, plan)
+      plan => sll_o_create(n)
+      call  sll_o_solve(a, b, c, f, plan)
       x = plan%solution
 
       error = 0.0_f64
@@ -88,7 +96,7 @@ use sll_m_penta_diagonal
       SLL_DEALLOCATE_ARRAY(f, ierr)
       SLL_DEALLOCATE_ARRAY(x, ierr)
       SLL_DEALLOCATE_ARRAY(x_exact, ierr)
-      call sll_delete(plan);
+      call sll_o_delete(plan);
 
     enddo
   enddo

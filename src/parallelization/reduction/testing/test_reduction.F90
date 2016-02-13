@@ -1,9 +1,13 @@
 program test_reduction
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_reduction
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_reduction, only: &
+    sll_s_compute_reduction_4d_to_3d_direction4
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:,:,:,:), allocatable   :: data_4d
   sll_real64, dimension(:,:,:), allocatable   :: data_3d
@@ -20,7 +24,7 @@ implicit none
   
   data_4d = 1._f64
   
-  call compute_reduction_4d_to_3d_direction4(&
+  call sll_s_compute_reduction_4d_to_3d_direction4(&
     data_4d, &
     data_3d, &
     Npts(1), &
@@ -31,7 +35,7 @@ implicit none
 
   err=maxval(abs(data_3d-1._f64))
   
-  call compute_reduction_4d_to_3d_direction4(&
+  call sll_s_compute_reduction_4d_to_3d_direction4(&
     data_4d, &
     data_3d, &
     Npts(1), &

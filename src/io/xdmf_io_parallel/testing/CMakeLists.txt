@@ -1,7 +1,6 @@
 # XDMF file creation using xdmf parallel type
 ADD_EXECUTABLE( test_xdmf_parallel unit_test_xdmf_parallel.F90 )
 TARGET_LINK_LIBRARIES( test_xdmf_parallel
-  sll_working_precision
   sll_xdmf_io_parallel
   sll_collective )
 

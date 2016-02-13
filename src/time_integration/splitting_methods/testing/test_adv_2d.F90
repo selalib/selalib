@@ -1,23 +1,53 @@
-!> @ingroup operator_splitting
+!> @ingroup sll_t_operator_splitting
 !> @brief Unit test for operator splitting. Constant coefficient advection.
 !> 
 program test_adv_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_field_2d.h"
-  use sll_m_split_advection_2d
-  use sll_m_advection_1d_BSL
-  use sll_m_characteristics_1d_explicit_euler
-  use sll_m_cubic_spline_interpolator_1d
-  use sll_m_operator_splitting
-  use sll_m_hdf5_io_serial
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_f_process_outside_point_periodic, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
+
+  use sll_m_characteristics_1d_explicit_euler, only: &
+    sll_f_new_explicit_euler_1d_charac
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_f_new_cubic_spline_interpolator_1d
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_operator_splitting, only: &
+    sll_s_do_split_steps, &
+    sll_p_strang_tvt
+
+  use sll_m_split_advection_2d, only: &
+    sll_f_new_split_advection_2d, &
+    sll_p_advective, &
+    sll_t_split_advection_2d
+
   implicit none
-  class(split_advection_2d), pointer :: split
-  class(sll_interpolator_1d_base), pointer :: interp1
-  class(sll_interpolator_1d_base), pointer :: interp2
-  class(sll_characteristics_1d_base), pointer :: charac1
-  class(sll_characteristics_1d_base), pointer :: charac2
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  class(sll_t_split_advection_2d), pointer :: split
+  class(sll_c_interpolator_1d), pointer :: interp1
+  class(sll_c_interpolator_1d), pointer :: interp2
+  class(sll_c_characteristics_1d_base), pointer :: charac1
+  class(sll_c_characteristics_1d_base), pointer :: charac2
   sll_real64, dimension(:,:), pointer :: f
   sll_real64,dimension(:,:), pointer :: A1
   sll_real64,dimension(:,:), pointer :: A2
@@ -36,13 +66,13 @@ program test_adv_2d
   sll_int32 :: num_cells_x2
   sll_real64, dimension(:), pointer :: x1_mesh
   sll_real64, dimension(:), pointer :: x2_mesh
-  type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+  type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
   sll_real64 :: err
   sll_int32 :: ierr
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
-  procedure(signature_process_outside_point_1d), pointer :: process_outside_point1
-  procedure(signature_process_outside_point_1d), pointer :: process_outside_point2
+  procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point1
+  procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point2
   
   x1_min = 0._f64
   x1_max = 1._f64
@@ -68,7 +98,7 @@ program test_adv_2d
     x2_mesh(i) = x2_min+real(i-1,f64)*delta_x2
   enddo
 
-  mesh_2d => new_cartesian_mesh_2d( &
+  mesh_2d => sll_f_new_cartesian_mesh_2d( &
     num_cells_x1, &
     num_cells_x2, &
     x1_min, &
@@ -76,8 +106,8 @@ program test_adv_2d
     x2_min, &
     x2_max)
   
-  process_outside_point1 =>  process_outside_point_periodic
-  process_outside_point2 =>  process_outside_point_periodic
+  process_outside_point1 =>  sll_f_process_outside_point_periodic
+  process_outside_point2 =>  sll_f_process_outside_point_periodic
 
 
   do j=1,num_cells_x2+1
@@ -96,33 +126,33 @@ program test_adv_2d
 
 
 
-  interp1 => new_cubic_spline_interpolator_1d( &
+  interp1 => sll_f_new_cubic_spline_interpolator_1d( &
     num_cells_x1+1, &
     x1_min, &
     x1_max, &
-    SLL_PERIODIC)
+    sll_p_periodic)
 
 
-  charac1 => new_explicit_euler_1d_charac(&
+  charac1 => sll_f_new_explicit_euler_1d_charac(&
     num_cells_x1+1, &
-    SLL_PERIODIC)
+    sll_p_periodic)
   
 
-  interp2 => new_cubic_spline_interpolator_1d( &
+  interp2 => sll_f_new_cubic_spline_interpolator_1d( &
     num_cells_x2+1, &
     x2_min, &
     x2_max, &
-    SLL_PERIODIC)
+    sll_p_periodic)
 
 
-  charac2 => new_explicit_euler_1d_charac(&
+  charac2 => sll_f_new_explicit_euler_1d_charac(&
     num_cells_x2+1, &
-    SLL_PERIODIC)
+    sll_p_periodic)
   
 
 
   ! initialize time splitting method
-  split => new_split_advection_2d( &
+  split => sll_f_new_split_advection_2d( &
       f, &
       A1, &
       A2, &
@@ -133,13 +163,13 @@ program test_adv_2d
       charac2, &
       process_outside_point2, &
       mesh_2d, &
-      SLL_ADVECTIVE, &
-      SLL_STRANG_TVT) 
+      sll_p_advective, &
+      sll_p_strang_tvt) 
   
   
   
   
-!  split => new_split_advection_2d( &
+!  split => sll_f_new_split_advection_2d( &
 !    f, &
 !    num_cells_x1+1, &
 !    num_cells_x2+1, &
@@ -149,18 +179,18 @@ program test_adv_2d
 !    A2, &
 !    adv_x1, &
 !    adv_x2, &
-!    SLL_ADVECTIVE, &
-!    SLL_STRANG_TVT)
+!    sll_p_advective, &
+!    sll_p_strang_tvt)
 
   ! do some steps of lie_splitting
   dt = 0.5_f64
-  call do_split_steps(split, dt, 4)
+  call sll_s_do_split_steps(split, dt, 4)
 
   ! save results
   filename = "data.h5"
-  call sll_hdf5_file_create(filename, file_id, ierr)
-  call sll_hdf5_write_array_2d(file_id, f, "data", ierr)
-  call sll_hdf5_file_close(file_id, ierr)
+  call sll_o_hdf5_file_create(filename, file_id, ierr)
+  call sll_o_hdf5_write_array_2d(file_id, f, "data", ierr)
+  call sll_o_hdf5_file_close(file_id, ierr)
 
 
   

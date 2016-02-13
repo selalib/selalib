@@ -5,10 +5,26 @@
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
 module sll_m_lobalap
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_map_function, only : map
-  
+
+  use sll_m_map_function, only: &
+    sll_s_map
+
   implicit none
+
+  public :: &
+    sll_s_assemb, &
+    sll_s_assemb_rhs, &
+    sll_s_compute_electric_field, &
+    sll_s_compute_phi, &
+    sll_s_computelu, &
+    sll_s_init, &
+    sll_s_plotgmsh, &
+    sll_s_release
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! ordre de l'interpolation élément fini
   integer :: order
   ! nombre de noeuds locaux dans chaque élément
@@ -82,9 +98,9 @@ contains
   ! variables physiques: (x,y)
   ! autres données calculées:
   ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
-!  ! subroutine map(u,v,x,y,jac,invjac,det)
+!  ! subroutine sll_s_map(u,v,x,y,jac,invjac,det)
 !  ! pour l'instant on n'utilise pas la jacobienne
-!  subroutine map(u,v,x,y)
+!  subroutine sll_s_map(u,v,x,y)
 !    implicit none
 !    sll_real64,intent(in) :: u,v
 !    sll_real64,intent(out) :: x,y
@@ -106,7 +122,7 @@ contains
 !    invjac=jac
 !    det=1
 !
-!  end subroutine map
+!  end subroutine sll_s_map
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -115,7 +131,7 @@ contains
     implicit none
 
 
-    write(*,*) 'Init tableaux points de Gauss...'
+    write(*,*) 'sll_s_init tableaux points de Gauss...'
 
     allocate(xpg(order+1))
     allocate(wpg(order+1))
@@ -219,7 +235,7 @@ contains
 
 
   ! tracé de la solution avec gmsh
-  subroutine plotgmsh()
+  subroutine sll_s_plotgmsh()
     implicit none
     integer,parameter :: nlocmax=25
     integer :: typelem
@@ -287,7 +303,7 @@ contains
 
     close(101)
 
-  end subroutine plotgmsh
+  end subroutine sll_s_plotgmsh
 
   ! construction du maillage
   subroutine build_mesh()
@@ -358,7 +374,7 @@ contains
           nbc=nbc+1
           indexbc(nbc)=ino
        end if
-       call map(u,v,x,y)
+       call sll_s_map(u,v,x,y)
        node(1,ino)=x
        node(2,ino)=y
     end do
@@ -374,7 +390,7 @@ contains
   end subroutine build_mesh
 
   ! alloue et prépare les données pour le calcul
-  subroutine init(nx0,ny0,order0)
+  subroutine sll_s_init(nx0,ny0,order0)
     implicit none
     integer,intent(in) :: nx0,ny0,order0
     integer :: ino,iel,i,ii,j,jj
@@ -443,7 +459,7 @@ contains
     vsup=0.0_f64
     
 
-  end subroutine init
+  end subroutine sll_s_init
 
   ! symbole de kronecker delta
   function delta(i,j)
@@ -488,7 +504,7 @@ contains
 
 
   ! calcul du champ électrique
-  subroutine compute_electric_field(dg_ex,dg_ey)
+  subroutine sll_s_compute_electric_field(dg_ex,dg_ey)
     implicit none
     ! matrice locale
     sll_real64 :: jac(2,2),cojac(2,2),det
@@ -519,7 +535,7 @@ contains
           xg=node(1,ig)
           yg=node(2,ig)
           ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec map plus tard
+          ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
@@ -558,14 +574,14 @@ contains
     end do
 
        
-  end subroutine compute_electric_field
+  end subroutine sll_s_compute_electric_field
 
 
 
 
 
   ! assemblage de la matrice élément fini et des conditions aux limites
-  subroutine assemb()
+  subroutine sll_s_assemb()
     implicit none
     ! matrice locale
     sll_real64 :: jac(2,2),cojac(2,2),det
@@ -590,7 +606,7 @@ contains
           ! on calcule la charge au point de Gauss
           vf=source(xg,yg)
           ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec map plus tard
+          ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
@@ -652,10 +668,10 @@ contains
 
 
        
-  end subroutine assemb
+  end subroutine sll_s_assemb
     
   ! assemblage du second membre
-  subroutine assemb_rhs(dg_rho)
+  subroutine sll_s_assemb_rhs(dg_rho)
     implicit none
     ! matrice locale
     sll_real64 :: jac(2,2),det
@@ -687,7 +703,7 @@ contains
           !write(*,*) 'vf=',vf
 
           ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec map plus tard
+          ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
           ! boucle sur les fonctions de base d'interpolation
           ! pour construire la jacobienne de la transformation
@@ -730,13 +746,13 @@ contains
 
 
 
-  end subroutine assemb_rhs
+  end subroutine sll_s_assemb_rhs
 
 
 
 
   ! compute (in place) the LU decomposition
-  subroutine computeLU()
+  subroutine sll_s_computelu()
     implicit none
 
     integer :: nsym=1,mp=6,ifac=1,isol=0,ier
@@ -747,11 +763,11 @@ contains
     call sol(vsup,vdiag,vinf,   &
          vfg,kld,vu,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)  
-  end subroutine computeLU
+  end subroutine sll_s_computelu
 
 
   ! résout le système linéaire
-  subroutine compute_phi()
+  subroutine sll_s_compute_phi()
     implicit none
 
     integer :: nsym=1,mp=6,ifac=0,isol=1,ier
@@ -763,7 +779,7 @@ contains
          rho,kld,phi,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)  
 
-  end subroutine compute_phi
+  end subroutine sll_s_compute_phi
 
 
   ! ajoute la valeur val  à la position (i,j)
@@ -794,7 +810,7 @@ contains
   end subroutine add
 
   ! libère la mémoire
-  subroutine release()
+  subroutine sll_s_release()
     implicit none
 
     write(*,*) 'Libération mémoire...'
@@ -813,7 +829,7 @@ contains
     deallocate(phi)
     deallocate(rho)
 
-  end subroutine release
+  end subroutine sll_s_release
 
 
 

@@ -1,12 +1,20 @@
 module sll_m_ode_solvers
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!#include "sll_field_2d.h"
-  
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_p_compact_ode, &
+    sll_s_implicit_ode_nonuniform, &
+    sll_p_periodic_ode
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  integer, parameter :: PERIODIC_ODE = 0, COMPACT_ODE = 1
+  integer, parameter :: sll_p_periodic_ode = 0, sll_p_compact_ode = 1
 
   abstract interface
      function scalar_function_1D( eta )
@@ -102,12 +110,12 @@ contains
     i = 1
     if ( a(i) + b(i) > 0 ) then
        ! search on the left
-       if (bt == PERIODIC_ODE) then
+       if (bt == sll_p_periodic_ode) then
           i0 = 0 
           do while ( i0 + c*deltat/deltax*( a(modulo(i0-1,ncx)+1) + b(i) ) >= i  ) 
              i0 = i0 - 1
           end do
-       else if (bt == COMPACT_ODE) then
+       else if (bt == sll_p_compact_ode) then
           i0 = 1
        else
           stop 'implicit_ode : boundary_type not implemented' 
@@ -131,10 +139,10 @@ contains
        !print*,  'out ',i, i0, i0 + c*deltat/deltax*( a(modulo(i0-1,ncx)+1) + b(i) )
        id = i - i0 
        ! handle boundary conditions
-       if (bt == PERIODIC_ODE) then
+       if (bt == sll_p_periodic_ode) then
           ileft = modulo(i0-1,ncx) + 1
           iright = modulo(i0,ncx) + 1
-       else if (bt == COMPACT_ODE) then
+       else if (bt == sll_p_compact_ode) then
           ileft = min(max(i0,1),ncx+1)
           iright = max(min(i0+1,ncx+1),1)
        else
@@ -149,9 +157,9 @@ contains
             /( deltax + c * deltat * (a(iright) - a(ileft)))
        xout(i) = xi - alpha * deltax 
        ! handle boundary conditions
-       if (bt == PERIODIC_ODE) then
+       if (bt == sll_p_periodic_ode) then
           xout(i) = modulo(xout(i)-xmin,xmax-xmin) + xmin 
-       else if (bt == COMPACT_ODE) then
+       else if (bt == sll_p_compact_ode) then
           if (xout(i) < xmin ) then
              ! put particles on the left of the domain on the left boundary
              xout(i) = xmin   
@@ -170,7 +178,7 @@ contains
 
 
 
-  subroutine implicit_ode_nonuniform( order,  &
+  subroutine sll_s_implicit_ode_nonuniform( order,  &
        deltat, &
        xin,   &
        ncx,    &
@@ -227,7 +235,7 @@ contains
 
     ! case of periodic boundary conditions
     !-------------------------------------
-    if (bt == PERIODIC_ODE) then
+    if (bt == sll_p_periodic_ode) then
        !begin modif 
        tmp = 0._f64  
        do i=1,ncx
@@ -320,7 +328,7 @@ contains
        ! due to periodicity, origin of last point is same as origin of first 
        ! point
        xout(ncx+1) = xout(1)
-    else if (bt == COMPACT_ODE) then
+    else if (bt == sll_p_compact_ode) then
        ! localize cell [i0, i0+1] containing origin of characteristic ending 
        ! at xmin
        i = 1
@@ -380,7 +388,7 @@ contains
        stop 'implicit_ode : boundary_type not implemented' 
     end if
 
-  end subroutine implicit_ode_nonuniform
+  end subroutine sll_s_implicit_ode_nonuniform
 
 
 
@@ -448,7 +456,7 @@ contains
 
     ! case of periodic boundary conditions
     !-------------------------------------
-    if (bt == PERIODIC_ODE) then
+    if (bt == sll_p_periodic_ode) then
       !begin modif 
       tmp = 0._f64  
       do i=1,ncx
@@ -537,7 +545,7 @@ contains
        end do
        ! due to periodicity, origin of last point is same as origin of first point
        xout(ncx+1) = xout(1)
-    else if (bt == COMPACT_ODE) then
+    else if (bt == sll_p_compact_ode) then
        ! localize cell [i0, i0+1] containing origin of characteristic ending at xmin
        i = 1
        if ( a(i) + b(i) > 0 ) then
@@ -679,9 +687,9 @@ contains
        do while (abs(eta_k-eta_kp1) > 1.0d-8)
           eta_k = eta_kp1
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_k = eta_min + modulo(eta_k - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_k < eta_min) then
                 eta_k = eta_min
                 cycle
@@ -760,9 +768,9 @@ contains
           ! first stage
           eta_kp1 = eta_k + deltatsub * a_n
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -786,9 +794,9 @@ contains
           eta_kp1 = eta_k + 0.5_f64 * deltatsub * (a_n + a_np1)
           ! handle boundary conditions      
           !print*, i, eta_kp1, eta_min, eta_max
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1  - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -866,9 +874,9 @@ contains
           ! second stage
           eta_kp1 = eta_k + 0.5_f64*deltatsub * a_n
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -888,9 +896,9 @@ contains
          ! third stage
           eta_kp1 = eta_k + 0.5_f64*deltatsub * k2
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -910,9 +918,9 @@ contains
           ! fourth stage
           eta_kp1 = eta_k + deltatsub * k3
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -932,9 +940,9 @@ contains
           eta_kp1 = eta_k + deltatsub/6.0_f64 * (a_n + 2.0_f64*(k2+k3) + k4)
           ! handle boundary conditions      
           !print*, i, eta_kp1, eta_min, eta_max
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1  - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -1006,9 +1014,9 @@ contains
           ! second stage
           eta_kp1 = eta_k + 0.5_f64*deltatsub * a_n
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -1028,9 +1036,9 @@ contains
          ! third stage
           eta_kp1 = eta_k + 0.5_f64*deltatsub * k2
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -1050,9 +1058,9 @@ contains
           ! fourth stage
           eta_kp1 = eta_k + deltatsub * k3
           ! handle boundary conditions         
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then
@@ -1075,9 +1083,9 @@ contains
           eta_kp1 = eta_k + deltatsub/6.0_f64 * (a_n + 2.0_f64*(k2+k3) + k4)
           ! handle boundary conditions      
           !print*, i, eta_kp1, eta_min, eta_max
-          if (bt == PERIODIC_ODE) then
+          if (bt == sll_p_periodic_ode) then
              eta_kp1 = eta_min + modulo(eta_kp1  - eta_min, eta_max - eta_min)
-          else if (bt == COMPACT_ODE) then
+          else if (bt == sll_p_compact_ode) then
              if (eta_kp1 < eta_min) then
                 eta_kp1 = eta_min
              else if (eta_kp1 > eta_max) then

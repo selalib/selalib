@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup memory sll_m_memory 
+!> @defgroup memory sll_memory 
 !> @author Edwin Chacon-Golcher
 !> @brief 
 !> Implements the error testing function and allocation related functionalities.

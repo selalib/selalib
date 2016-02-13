@@ -100,7 +100,7 @@ program csr_one_constraint
   allocate(ja2(num_nz2))
   allocate(a2(num_nz2))
   
-  call csr_add_one_constraint(ia,ja,a,num_rows,num_nz,constraint_vec,ia2,ja2,a2)
+  call sll_s_csr_add_one_constraint(ia,ja,a,num_rows,num_nz,constraint_vec,ia2,ja2,a2)
   
   print*,'#input'
   

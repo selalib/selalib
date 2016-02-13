@@ -4,38 +4,44 @@
 
 module sll_m_remapped_pic_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_accumulators, only: sll_charge_accumulator_2d
+  use sll_m_accumulators, only: &
+    sll_t_charge_accumulator_2d
 
   implicit none
-  private
 
-  public :: temp_species_new
+  public :: &
+    sll_c_remapped_particle_group, &
+    sll_f_temp_species_new
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   !> @brief Particle species (temporary: should use the common type for that)
   !============================================================================
-  type, public :: sll_temp_species
+  type :: sll_temp_species
     !      character(len=64) :: name !< species name
       sll_real64        :: q    !< charge of a single particle
       sll_real64        :: m    !< mass   of a single particle
 
   contains
     procedure, pass(self) :: q_over_m => get_q_over_m
-!    procedure  :: temp_species_new ! => create_temp_species_new      !! is that a good syntax for the constructor interface?
+!    procedure  :: sll_f_temp_species_new ! => create_temp_species_new      !! is that a good syntax for the constructor interface?
 
   end type sll_temp_species
 
 !  interface sll_temp_species
-!    procedure, public temp_species_new
+!    procedure, public sll_f_temp_species_new
 !  end interface
 
   !============================================================================
   !> @brief Particle group
   !============================================================================
-  type, public, abstract :: sll_c_remapped_particle_group       ! previous name sll_particle_group_base
+  type, abstract :: sll_c_remapped_particle_group       ! previous name sll_particle_group_base
 
     class( sll_temp_species ), pointer :: species
     sll_int32                     :: id
@@ -194,9 +200,9 @@ module sll_m_remapped_pic_base
   abstract interface
    subroutine dep_charge_2d( self, charge_accumulator, target_total_charge )
     use sll_m_working_precision
-    import sll_c_remapped_particle_group, sll_charge_accumulator_2d
+    import sll_c_remapped_particle_group, sll_t_charge_accumulator_2d
     class( sll_c_remapped_particle_group ),           intent( inout ) :: self
-    type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
+    type( sll_t_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
     sll_real64,                                 intent(in), optional :: target_total_charge
    end subroutine dep_charge_2d
   end interface
@@ -206,7 +212,7 @@ module sll_m_remapped_pic_base
 contains
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-  function temp_species_new( &
+  function sll_f_temp_species_new( &
       species_charge,     &
       species_mass        &
   ) result(res)
@@ -220,7 +226,7 @@ contains
     res%q = species_charge
     res%m = species_mass
 
-  end function temp_species_new
+  end function sll_f_temp_species_new
 
 
   !----------------------------------------------------------------------------
