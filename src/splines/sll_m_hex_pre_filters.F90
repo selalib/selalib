@@ -50,7 +50,7 @@ contains
           weight_tab(index+1) = 7._f64/240._f64
        end do
     case(4)
-       ! prefiltre PFIR for box-splines of deg =3 chi6
+       ! prefiltre PFIR for box-splines of deg =4 chi8
        ! with coefficients  h0 : -300538194444442.,
        ! h1 : 100179398148148.,   h2 : -100179398148149.0,
        ! h3 : 50089699074074.4, h4 : -0.0102843915343915
@@ -60,6 +60,34 @@ contains
           weight_tab(index+1) = -100179398148149.0_f64
           weight_tab(index)   =  50089699074074.4_f64
        end do
+       do index=19,36
+          if (modulo(index-1,3).ne.0) then
+             print *, index
+             weight_tab(index) = -0.0102843915343915_f64
+          end if
+       end do
+       print *, ""
+       print *, "sum =", SUM(weight_tab)
+       print *, ""
+    case(5)
+       weight_tab(1)   = 631779569171640.0_f64
+       weight_tab(2:7) = -192578390410100.0
+       do index=8,18,2
+          weight_tab(index+1) = 174563591096320.0
+          weight_tab(index)   = -105296594861938.41
+       end do
+       do index=19,36
+          if (modulo(index-1,3).ne.0) then
+             print *, index
+             weight_tab(index) = 18014799313778.578
+          else
+             weight_tab(index) = -18014799313778.602
+          end if
+       end do
+       print *, ""
+       print *, weight_tab
+       print *, "sum =", SUM(weight_tab)
+       print *, ""
     case default
        print *, 'ERROR: pre_filter_pfir(...): ', &
             '     function not implemented for splines of degree > 4'
