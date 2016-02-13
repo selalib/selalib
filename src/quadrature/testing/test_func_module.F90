@@ -1,6 +1,17 @@
 module test_function_module
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-implicit none
+
+  implicit none
+
+  public :: &
+    one, &
+    one_2d, &
+    test_func, &
+    test_func_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 

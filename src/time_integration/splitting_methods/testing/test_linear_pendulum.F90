@@ -1,13 +1,27 @@
-!> @ingroup operator_splitting
+!> @ingroup sll_t_operator_splitting
 !> @brief Unit test for operator splitting. Order check for linear pendulum 
 !> 
 
 program test_linear_pendulum
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  
-  use sll_m_linear_pendulum_operators
+#include "sll_working_precision.h"
+
+  use sll_m_linear_pendulum_operators, only: &
+    sll_s_check_order
+
+  use sll_m_operator_splitting, only: &
+    sll_p_lie_tv, &
+    sll_p_lie_vt, &
+    sll_p_order6_tvt, &
+    sll_p_order6_vtv, &
+    sll_p_strang_tvt, &
+    sll_p_strang_vtv, &
+    sll_p_triple_jump_tvt, &
+    sll_p_triple_jump_vtv
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
   ! variables
   logical :: test_passed
@@ -15,83 +29,83 @@ program test_linear_pendulum
   sll_real64 :: steps_fine
   sll_int32  :: expected_order
   
-  ! test SLL_LIE_TV
-  steps_fine = 200
+  ! test sll_p_lie_tv
+  steps_fine = real(200,f64)
   expected_order = 1
   test_passed = .true.
-  call check_order(SLL_LIE_TV,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_lie_tv,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_LIE_TV'
+     print*, 'Problem with order of sll_p_lie_tv'
      all_tests_passed = .false.
   end if
 
-  ! test SLL_LIE_VT
-  steps_fine = 200
+  ! test sll_p_lie_vt
+  steps_fine = real(200,f64)
   expected_order = 1
   test_passed = .true.
-  call check_order(SLL_LIE_VT,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_lie_vt,steps_fine, expected_order, test_passed)
    if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_LIE_VT'
+     print*, 'Problem with order of sll_p_lie_vt'
      all_tests_passed = .false.
   end if
 
-  ! test SLL_STRANG_TVT
-  steps_fine = 100
+  ! test sll_p_strang_tvt
+  steps_fine = real(100,f64)
   expected_order = 2
   test_passed = .true.
-  call check_order(SLL_STRANG_TVT,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_strang_tvt,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_STRANG_TVT'
+     print*, 'Problem with order of sll_p_strang_tvt'
      all_tests_passed = .false.
   end if
 
-  ! test SLL_STRANG_VTV
-  steps_fine = 100
+  ! test sll_p_strang_vtv
+  steps_fine = real(100,f64)
   expected_order = 2
   test_passed = .true.
-  call check_order(SLL_STRANG_VTV,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_strang_vtv,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_STRANG_VTV'
+     print*, 'Problem with order of sll_p_strang_vtv'
      all_tests_passed = .false.
   end if
 
-  ! test SLL_TRIPLE_JUMP_TVT
-  steps_fine = 64
+  ! test sll_p_triple_jump_tvt
+  steps_fine = real(64,f64)
   expected_order = 4
   test_passed = .true.
-  call check_order(SLL_TRIPLE_JUMP_TVT,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_triple_jump_tvt,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_TRIPLE_JUMP_TVT'
+     print*, 'Problem with order of sll_p_triple_jump_tvt'
      all_tests_passed = .false.
   end if
   
-  ! test SLL_TRIPLE_JUMP_VTV
-  steps_fine = 64
+  ! test sll_p_triple_jump_vtv
+  steps_fine = real(64,f64)
   expected_order = 4
   test_passed = .true.
-  call check_order(SLL_TRIPLE_JUMP_VTV,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_triple_jump_vtv,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_TRIPLE_JUMP_VTV'
+     print*, 'Problem with order of sll_p_triple_jump_vtv'
      all_tests_passed = .false.
   end if
   
-  ! test SLL_ORDER6_TVT 
-  steps_fine = 20
+  ! test sll_p_order6_tvt 
+  steps_fine = real(20,f64)
   expected_order = 6
   test_passed = .true.
-  call check_order(SLL_ORDER6_TVT,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_order6_tvt,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_ORDER6_TVT'
+     print*, 'Problem with order of sll_p_order6_tvt'
      all_tests_passed = .false.
   end if
 
-  ! test SLL_ORDER6_VTV 
-  steps_fine = 20
+  ! test sll_p_order6_vtv 
+  steps_fine = real(20,f64)
   expected_order = 6
   test_passed = .true.
-  call check_order(SLL_ORDER6_VTV,steps_fine, expected_order, test_passed)
+  call sll_s_check_order(sll_p_order6_vtv,steps_fine, expected_order, test_passed)
   if (.not.(test_passed)) then
-     print*, 'Problem with order of SLL_ORDER6_VTV'
+     print*, 'Problem with order of sll_p_order6_vtv'
      all_tests_passed = .false.
   end if
 

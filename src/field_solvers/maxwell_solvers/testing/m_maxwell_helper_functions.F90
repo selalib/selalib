@@ -1,15 +1,25 @@
 module m_maxwell_helper_functions
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-     
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  implicit none
+
+  public :: &
+    gaussian, &
+    sol_bz, &
+    sol_ex, &
+    sol_ey
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define MODE_X 2
 #define MODE_Y 2
-#define OMEGA sqrt((MODE_X*sll_pi)**2+(MODE_Y*sll_pi)**2)
+#define OMEGA sqrt((MODE_X*sll_p_pi)**2+(MODE_Y*sll_p_pi)**2)
 
-implicit none
 
  contains
 
@@ -20,8 +30,8 @@ implicit none
      sll_real64, intent(in) :: time
      
 
-     sol_bz =   - cos(MODE_X*sll_pi*x1)    &
-          * cos(MODE_Y*sll_pi*x2)    &
+     sol_bz =   - cos(MODE_X*sll_p_pi*x1)    &
+          * cos(MODE_Y*sll_p_pi*x2)    &
           * cos(OMEGA*time)
      
      return
@@ -34,9 +44,9 @@ implicit none
      sll_real64, intent(in) :: x2
      sll_real64, intent(in) :: time
 
-     sol_ex =   + cos(MODE_X*sll_pi*x1)    &
-          * sin(MODE_Y*sll_pi*x2)    &
-          * sin(OMEGA*time) * real(MODE_Y,f64)*sll_pi/OMEGA
+     sol_ex =   + cos(MODE_X*sll_p_pi*x1)    &
+          * sin(MODE_Y*sll_p_pi*x2)    &
+          * sin(OMEGA*time) * real(MODE_Y,f64)*sll_p_pi/OMEGA
      return
      
    end function sol_ex
@@ -47,9 +57,9 @@ implicit none
      sll_real64, intent(in) :: x2
      sll_real64, intent(in) :: time
    
-     sol_ey =   - sin(MODE_X*sll_pi*x1)    &
-          * cos(MODE_Y*sll_pi*x2)    &
-          * sin(OMEGA*time) * real(MODE_X,f64)*sll_pi/OMEGA
+     sol_ey =   - sin(MODE_X*sll_p_pi*x1)    &
+          * cos(MODE_Y*sll_p_pi*x2)    &
+          * sin(OMEGA*time) * real(MODE_X,f64)*sll_p_pi/OMEGA
      return
 
    end function sol_ey

@@ -4,32 +4,37 @@
 !> @details <DETAILED_DESCRIPTION>
 
 module sll_m_sparse_grid_4d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-use sll_m_periodic_interpolator_1d
-use sll_m_arbitrary_degree_splines
-use sll_m_lagrange_interpolator_1d
-use sll_m_sparse_grid_interpolator
-use sll_m_constants, only: sll_pi
+  use sll_m_constants, only: &
+    sll_p_pi
 
-implicit none
-private
+  use sll_m_sparse_grid_interpolator, only: &
+    sll_t_sparse_grid_interpolator
+
+  implicit none
+
+  public :: &
+    sll_t_sparse_grid_interpolator_4d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Sparse grid object for 4d with interpolation routines. Note in 4d we have only an implementation of a standard sparse grid with periodic boundary conditions, i.e. modified=0, boundary=0 compared to 2d and 3d).
-type, public, extends(sparse_grid_interpolator) :: sparse_grid_interpolator_4d
+type, extends(sll_t_sparse_grid_interpolator) :: sll_t_sparse_grid_interpolator_4d
 sll_int32, dimension(:,:,:,:), pointer  :: index !< 4d mapping: for each 4d index l on the sparse grid, \a index gives the index of the first node belonging to this level  
 
 contains
   procedure :: initialize => initialize_sg4d! Initialization routine
-  procedure :: interpolate_value ! Compute the value of the sparse grid interpolant at position eta
+  procedure :: interpolate_from_interpolant_value ! Compute the value of the sparse grid interpolant at position eta
   procedure :: interpolate_disp_nconst_in_1d ! Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
   procedure :: interpolate_disp_linnconst_in_1d => interpolate4d_disp_linnconst_in_1d
   procedure :: interpolate_disp_nconst_in_2d ! Interpolate along one (v)-direction with displacement non-constant in all x-directions
   procedure :: interpolate_const_disp
 
-end type sparse_grid_interpolator_4d
+end type sll_t_sparse_grid_interpolator_4d
 
 contains
 
@@ -41,19 +46,19 @@ contains
 
 
 !> Compute the value of the sparse grid interpolant at position eta
-  function interpolate_value( interpolator,data, eta ) result(val)
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
+  function interpolate_from_interpolant_value( interpolator,data, eta ) result(val)
+    class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
     sll_real64 :: val !< Interpolated value at eta
     sll_real64, dimension(:), intent(in) :: data !< Values of the hierarchical surplus 
     sll_real64, dimension(:), intent(in) :: eta !< Position where to interpolate
     val =  interpolate_from_hierarchical_surplus(&
          interpolator,data,eta)
 
-  end function interpolate_value
+  end function interpolate_from_interpolant_value
 
 !> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
   subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
+    class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
     sll_real64, dimension(:), intent(inout) :: data_in !< Values of the hierarchical surplus on input.
     sll_real64, dimension(:), intent(out) :: data_out !< Value of the function or the hierarchical surplus (depending on value of \a hiera) for the displaced data points. 
     sll_int32, dimension(:), intent(in) :: dorder !< dorder(1) gives the dimension along which we have the displacement; dorder(2:4) give the remaining dimensions
@@ -122,7 +127,7 @@ end subroutine Interpolate_const_disp
 
 !> Functionality: Interpolates the function values for a displacement on in dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is allowed to be non-constant in one other dimension (Dirichlet b.c. i.e. dimension 3 or 3).
 subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
-  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator !< sparse grid object
+  class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< sparse grid object
   sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus of the present function
   sll_real64, dimension(:), intent(out) :: data_out !< value of the displaced function
   sll_int32, dimension(:), intent(in) :: dorder !< dorder: Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where we want to displace, dorder(2) (=3 or 4) gives the dimension of which the displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3 or 4 not dorder(2).
@@ -136,11 +141,11 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
 
   ! Dehierarchization along dimension dorder(1) only
   do j=interpolator%order,2,-1
-     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+     call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part_order&
           (data_in,1,1,dorder,j)
   end do
 
-  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_in,1,1,dorder)
+  call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part(data_in,1,1,dorder)
   ! Interpolation in dorder(1)/dorder(2)-plane
   ind_order(dorder(1)) = 0
   no(dorder(1)) = 1
@@ -169,7 +174,7 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
                          +ind(ind_order(2)+1,2)*no(3)*no(4)+&
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
                     ! Evaluate along dorder(1)-stripe
-                    call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
+                    call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
                          (disp,dorder(1),&
                          min(interpolator%levels(dorder(1)),&
                          interpolator%max_level-ind_order(dorder(2))-&
@@ -187,7 +192,7 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
                             interpolator%length(dorder(2))*&
                             2**(interpolator%hierarchy(index_parent)%level(dorder(2))), factor,&
                             interpolator%hierarchy(index_parent)%function_type(dorder(2)))
-                       call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
+                       call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
                             (disp,factor,&
                             dorder(1),min(interpolator%levels(dorder(1)),&
                             interpolator%max_level-&
@@ -213,18 +218,18 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
 
   ! Dehierarchization along dimension dorder(3) dorder(4)
   do j=interpolator%order,2,-1
-     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+     call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part_order&
           (data_out,4,3,dorder,j)
   end do
 
-  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_out,4,3,dorder)
+  call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part(data_out,4,3,dorder)
 
 
 end subroutine Interpolate_disp_nconst_in_1d
 
 !> As \a interpolate_disp_nconst_in_1d but displacement dependent on displacement*coordinate(dorder(2))
 subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
-  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
+  class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
   sll_real64, dimension(:), intent(inout) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
   sll_int32, dimension(:), intent(in) :: dorder
@@ -238,11 +243,11 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
 
   ! Dehierarchization along dimension dorder(1) only
   do j=interpolator%order,2,-1
-     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+     call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part_order&
           (data_in,1,1,dorder,j)
   end do
 
-  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_in,1,1,dorder)
+  call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part(data_in,1,1,dorder)
 
  ! Interpolation in dorder(1)/dorder(2)-plane
   ind_order(dorder(1)) = 0
@@ -272,7 +277,7 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
                     disp = displacement*interpolator%hierarchy(counter)%coordinate(dorder(2))
                     ! Evaluate along dorder(1)-stripe
-                    call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
+                    call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
                     (disp,dorder(1),&
                     min(interpolator%levels(dorder(1)),interpolator%max_level&
                     -ind_order(dorder(2))-ind_order(dorder(3))-&
@@ -289,7 +294,7 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
                             interpolator%length(dorder(2))*&
                             2**(interpolator%hierarchy(index_parent)%level(dorder(2))), factor,&
                             interpolator%hierarchy(index_parent)%function_type(dorder(2)))
-                       call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
+                       call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
                             (disp,factor,&
                             dorder(1),min(interpolator%levels(dorder(1)),&
                             interpolator%max_level-&
@@ -315,11 +320,11 @@ subroutine interpolate4d_disp_linnconst_in_1d(interpolator,displacement,dorder,d
 
   ! Dehierarchization along dimension dorder(3) dorder(4)
   do j=interpolator%order,2,-1
-     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+     call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part_order&
           (data_out,4,3,dorder,j)
   end do
 
-  call interpolator%sparse_grid_interpolator%dehierarchical_part(data_out,4,3,dorder)
+  call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part(data_out,4,3,dorder)
 
 end subroutine Interpolate4d_disp_linnconst_in_1d
 
@@ -327,7 +332,7 @@ end subroutine Interpolate4d_disp_linnconst_in_1d
 
 !> As previous function but with displacement displacement*coordinate(dorder(2))
 subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_in, data_out)
-  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+  class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(inout) :: data_in
   sll_real64, dimension(:), intent(out) :: data_out
   sll_int32, dimension(:), intent(in) :: dorder
@@ -344,11 +349,11 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
 
   ! Dehierarchization along dimension dorder(1) only
   do j=interpolator%order,2,-1
-     call interpolator%sparse_grid_interpolator%dehierarchical_part_order&
+     call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part_order&
           (data_in,1,1,dorder,j)
   end do
 
-  call interpolator%sparse_grid_interpolator%dehierarchical_part(&
+  call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_part(&
        data_in,1,1,dorder)
 
   !print*, data_in
@@ -390,7 +395,7 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
                          ind(ind_order(3)+1,3)*no(4)+ind(ind_order(4)+1,4)
 
                     ! Evaluate along dorder(1)-stripe
-                    call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
+                    call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_self&
                          (disp,dorder(1),&
                          min(interpolator%levels(dorder(1)),&
                          interpolator%max_level-ind_order(dorder(2))-&
@@ -439,7 +444,7 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
                           !   print*, index_parent,data_out(30)
                           !end if
                          ! print*, counter, index_parent, factor, factor_upper, factor_lower
-                          call interpolator%sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
+                          call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
                                (disp,factor,&
                                dorder(1),min(interpolator%levels(dorder(1)),&
                                interpolator%max_level-&
@@ -469,21 +474,21 @@ subroutine interpolate_disp_nconst_in_2d(interpolator,displacement,dorder,data_i
   end do
 
 ! Hierarchization along dimension dorder(1)-dorder(3)
-call interpolator%sparse_grid_interpolator%hierarchical_part(data_out,3,1,dorder)
+call interpolator%sll_t_sparse_grid_interpolator%hierarchical_part(data_out,3,1,dorder)
 
 do j=2,interpolator%order
-   call interpolator%sparse_grid_interpolator%hierarchical_part_order&
+   call interpolator%sll_t_sparse_grid_interpolator%hierarchical_part_order&
         (data_out,3,1,dorder,j)
 end do
 
 
 ! Dehierarchization of the hierarchical surplus
 do j=interpolator%order,2,-1
-   call interpolator%sparse_grid_interpolator%dehierarchical_order&
+   call interpolator%sll_t_sparse_grid_interpolator%dehierarchical_order&
         (data_out,j)
 end do
 
-call interpolator%sparse_grid_interpolator%dehierarchical&
+call interpolator%sll_t_sparse_grid_interpolator%dehierarchical&
      (data_out)
 
 
@@ -494,7 +499,7 @@ end subroutine Interpolate_disp_nconst_in_2d
 !PN DEFINED BUT NOT USED
 !! Note dorder should contain: dorder(1) dimension with displacement (1 or 2), dorder(2) dimension where displacement is non-constant (3 or 4), dorder(3) other of 1 or 2, dorder(4) other of 3 or 4
 !subroutine displace_disp_nconst1(interpolator, surplus,  data, dorder,displacement)
-!  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+!  class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator
 !  sll_real64, dimension(:), intent(in) :: surplus
 !  sll_real64, dimension(:), intent(out) :: data
 !  sll_int32, dimension(:), intent(in) :: dorder
@@ -552,10 +557,10 @@ end subroutine Interpolate_disp_nconst_in_2d
 !     end do
 !  end do
 !
-!  call interpolator%sparse_grid_interpolator%hierarchical_part(data,2,1,dorder)
+!  call interpolator%sll_t_sparse_grid_interpolator%hierarchical_part(data,2,1,dorder)
 !
 !
-!  call interpolator%sparse_grid_interpolator%dehierarchical(data)
+!  call interpolator%sll_t_sparse_grid_interpolator%dehierarchical(data)
 !
 !
 !end subroutine displace_disp_nconst1
@@ -564,7 +569,7 @@ end subroutine Interpolate_disp_nconst_in_2d
 ! helper functions
 
  function interpolate_from_hierarchical_surplus( interpolator,data, eta ) result(val)
-   class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+   class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator
    sll_int32 :: j,l1,l2,l3,level
     sll_real64 :: val
     sll_real64,dimension(:), intent(in) :: data,eta
@@ -629,7 +634,7 @@ end subroutine Interpolate_disp_nconst_in_2d
 
 !PN DEFINED BUT NOT USED
 ! function interpolate_from_2D_hierarchical_surplus( interpolator, surplus,eta, dorder,no_in,ind,l ) result(val)
-!   class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+!   class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator
 !   sll_real64, dimension(:), intent(in) :: surplus
 !    sll_int32 :: j,l1,l2,level
 !    sll_real64 :: val
@@ -709,7 +714,7 @@ end subroutine Interpolate_disp_nconst_in_2d
     interpolation_type, &
     eta_min, &
     eta_max)
-    class(sparse_grid_interpolator_4d), intent(inout) :: interpolator !< sparse grid object 
+    class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< sparse grid object 
     sll_real64,dimension(:), intent(in)           :: eta_min !< \a eta_min defines the lower bound of the domain
 
     sll_real64,dimension(:), intent(in)           :: eta_max !< \a eta_max defines the upper bound of the domain
@@ -810,7 +815,7 @@ end subroutine Interpolate_disp_nconst_in_2d
 
 !> For a given sparse grid point fill the hierarchy information (4D specific)
 subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
-  class(sparse_grid_interpolator_4d), intent(inout) :: interpolator
+  class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator
   sll_int32 :: ld !< current level along dimension \a dim
   sll_int32 :: kd !< current index within level along dimension \a dim
   sll_int32,intent(in) :: cdim !< dimention to be filled
@@ -900,7 +905,7 @@ end subroutine set_hierarchy_info
 !subroutine fg_to_sg(interpolator,fg_values,sg_values)
 !sll_real64, dimension(:,:,:,:), intent(in) :: fg_values
 !sll_real64, dimension(:), intent(out) :: sg_values
-!class(sparse_grid_interpolator_4d), intent(in) :: interpolator
+!class(sll_t_sparse_grid_interpolator_4d), intent(in) :: interpolator
 !sll_int32 :: j
 !sll_int32, dimension(4) :: fg_ind
 !
@@ -916,7 +921,7 @@ end subroutine set_hierarchy_info
 function fg_index(interpolator,sg_index)  
 sll_int32, intent(in) :: sg_index
 sll_int32, dimension(4) :: fg_index
-class(sparse_grid_interpolator_4d), intent(in) :: interpolator
+class(sll_t_sparse_grid_interpolator_4d), intent(in) :: interpolator
 sll_int32 :: j
 
 do j=1,interpolator%dim

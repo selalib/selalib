@@ -17,22 +17,55 @@
 
 !> Class of arbitrary degree version of 2d irnterpolator
 module sll_m_arbitrary_degree_spline_interpolator_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_assert.h" 
-use sll_m_interpolators_2d_base
-use sll_m_utilities
-use sll_m_deboor_splines_1d, only: &
-  deboor_type, bsplvb, bsplvd, interv, bvalue, splint_der
-use sll_m_arbitrary_degree_spline_interpolator_1d
+#include "sll_working_precision.h"
 
-implicit none
-private
+! use F77_deboor, only: &
+!   banfac, &
+!   banslv
+
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    sll_f_new_arbitrary_degree_1d_interpolator, &
+    sll_s_set_values_at_boundary1d, &
+    sll_t_arbitrary_degree_spline_interpolator_1d, &
+    sll_o_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_hermite, &
+    sll_p_neumann, &
+    sll_p_periodic
+
+  use sll_m_deboor_splines_1d, only: &
+    sll_s_bsplvb, &
+    sll_s_bsplvd, &
+    sll_f_bvalue, &
+    sll_t_deboor_type, &
+    sll_s_interv, &
+    sll_s_splint_der
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    sll_s_initialize_ad2d_interpolator, &
+    sll_f_new_arbitrary_degree_spline_interp2d, &
+    sll_s_set_slope2d, &
+    sll_t_arbitrary_degree_spline_interpolator_2d, &
+    sll_t_arbitrary_degree_spline_interpolator_2d_ptr, &
+    sll_o_delete
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
-type, extends(sll_interpolator_2d_base) :: &
-  sll_arbitrary_degree_spline_interpolator_2d           
+type, extends(sll_c_interpolator_2d) :: &
+  sll_t_arbitrary_degree_spline_interpolator_2d           
 
   sll_int32                           :: num_pts1
   sll_int32                           :: num_pts2
@@ -77,55 +110,48 @@ type, extends(sll_interpolator_2d_base) :: &
   sll_real64, dimension(:,:), pointer :: gtau_der1
   sll_real64, dimension(:,:), pointer :: gtau_der2
 
-  type(deboor_type)                   :: deboor(2)  !< Deboor splines data object
+  type(sll_t_deboor_type)                   :: deboor(2)  !< Deboor splines data object
 
 contains
 
-  procedure :: initialize                  => initialize_ad2d_interpolator
+  procedure :: initialize                  => sll_s_initialize_ad2d_interpolator
   procedure :: set_coefficients            => set_coefficients_ad2d
   procedure :: coefficients_are_set        => coefficients_are_set_ad2d
   procedure :: compute_interpolants        => compute_interpolants_ad2d
-  procedure :: interpolate_value           => interpolate_value_ad2d
-  procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
-  procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
+  procedure :: interpolate_from_interpolant_value           => interpolate_value_ad2d
+  procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative1_ad2d
+  procedure :: interpolate_from_interpolant_derivative_eta2 => interpolate_derivative2_ad2d
   procedure :: interpolate_array           => interpolate_array_ad2d
   procedure :: interpolate_array_disp      => interpolate_2d_array_disp_ad2d
   procedure :: get_coefficients            => get_coefficients_ad2d
   procedure :: delete                      => delete_arbitrary_degree_2d_interpolator
   procedure :: set_values_at_boundary      => set_boundary_value2d
-  procedure :: set_slopes_at_boundary      => set_slope2d
+  procedure :: set_slopes_at_boundary      => sll_s_set_slope2d
 
-end type sll_arbitrary_degree_spline_interpolator_2d
+end type sll_t_arbitrary_degree_spline_interpolator_2d
 
 
 !> Pointer to arbitrary degree version of 2d interpolator
-type sll_arbitrary_degree_spline_interpolator_2d_ptr
-   type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp
-end type sll_arbitrary_degree_spline_interpolator_2d_ptr
+type sll_t_arbitrary_degree_spline_interpolator_2d_ptr
+   type(sll_t_arbitrary_degree_spline_interpolator_2d), pointer :: interp
+end type sll_t_arbitrary_degree_spline_interpolator_2d_ptr
 
 
 !> Deallocate the interpolator class
-interface sll_delete
+interface sll_o_delete
    module procedure delete_arbitrary_degree_2d_interpolator
-end interface sll_delete
+end interface sll_o_delete
 
-public sll_arbitrary_degree_spline_interpolator_2d           
-public sll_arbitrary_degree_spline_interpolator_2d_ptr
-public sll_delete
-public new_arbitrary_degree_spline_interp2d
-public set_slope2d
-public initialize_ad2d_interpolator
-public set_coeff_splines_values_1d
 
 contains
 
 !> Delete interpolator arbitrary degree splines.
 !> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 !
 subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
 sll_int32 :: ierr
 
 SLL_DEALLOCATE(interpolator%t1,ierr)
@@ -158,9 +184,9 @@ end subroutine delete_arbitrary_degree_2d_interpolator
 !> @param[in] bc2_max  the boundary condition at right in the direction eta2
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
-!> @return the type sll_arbitrary_degree_spline_interpolator_2d
+!> @return the type sll_t_arbitrary_degree_spline_interpolator_2d
 
-function new_arbitrary_degree_spline_interp2d( num_pts1,       &
+function sll_f_new_arbitrary_degree_spline_interp2d( num_pts1,       &
                                                num_pts2,       &
                                                eta1_min,       &
                                                eta1_max,       &
@@ -173,7 +199,7 @@ function new_arbitrary_degree_spline_interp2d( num_pts1,       &
                                                spline_degree1, &
                                                spline_degree2) result( res )
 
-type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: res
+type(sll_t_arbitrary_degree_spline_interpolator_2d), pointer :: res
 
 sll_int32,  intent(in) :: num_pts1
 sll_int32,  intent(in) :: num_pts2
@@ -192,7 +218,7 @@ sll_int32 :: ierr
 
 SLL_ALLOCATE(res,ierr)
 
-call initialize_ad2d_interpolator( res,            &
+call sll_s_initialize_ad2d_interpolator( res,            &
                                    num_pts1,       &
                                    num_pts2,       &
                                    eta1_min,       &
@@ -206,7 +232,7 @@ call initialize_ad2d_interpolator( res,            &
                                    spline_degree1, &
                                    spline_degree2)
 
-end function new_arbitrary_degree_spline_interp2d
+end function sll_f_new_arbitrary_degree_spline_interp2d
 
 ! -----------------------------------------------
 ! This subroutine allocate the type of interpolator
@@ -226,8 +252,8 @@ end function new_arbitrary_degree_spline_interp2d
 !> @param[in] bc2_max the boundary condition at right in the direction eta2
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
-!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-subroutine initialize_ad2d_interpolator( interpolator,   &
+!> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
+subroutine sll_s_initialize_ad2d_interpolator( interpolator,   &
                                          num_pts1,       &
                                          num_pts2,       &
                                          eta1_min,       &
@@ -241,7 +267,7 @@ subroutine initialize_ad2d_interpolator( interpolator,   &
                                          spline_degree1, &
                                          spline_degree2)
 
-class(sll_arbitrary_degree_spline_interpolator_2d):: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d):: interpolator
 
 sll_int32,  intent(in)  :: num_pts1
 sll_int32,  intent(in)  :: num_pts2
@@ -263,15 +289,15 @@ sll_int64 :: bc_selector
 
 
 ! do some argument checking...
-if( bc1_min == SLL_PERIODIC .and. bc1_max .ne. SLL_PERIODIC .or.&
-    bc1_max == SLL_PERIODIC .and. bc1_min .ne. SLL_PERIODIC )then
+if( bc1_min == sll_p_periodic .and. bc1_max .ne. sll_p_periodic .or.&
+    bc1_max == sll_p_periodic .and. bc1_min .ne. sll_p_periodic )then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in first direction.'
 end if
 
-if(((bc2_min == SLL_PERIODIC).and.(bc2_max .ne. SLL_PERIODIC)).or.&
-   ((bc2_max == SLL_PERIODIC).and.(bc2_min .ne. SLL_PERIODIC)))then
+if(((bc2_min == sll_p_periodic).and.(bc2_max .ne. sll_p_periodic)).or.&
+   ((bc2_max == sll_p_periodic).and.(bc2_min .ne. sll_p_periodic)))then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in second direction.'
@@ -279,18 +305,18 @@ end if
 
 bc_selector = 0
 
-if( bc1_min == SLL_DIRICHLET ) bc_selector = bc_selector + 1
-if( bc1_min == SLL_NEUMANN   ) bc_selector = bc_selector + 2
-if( bc1_min == SLL_HERMITE   ) bc_selector = bc_selector + 4
-if( bc1_max == SLL_DIRICHLET ) bc_selector = bc_selector + 8
-if( bc1_max == SLL_NEUMANN   ) bc_selector = bc_selector + 16
-if( bc1_max == SLL_HERMITE   ) bc_selector = bc_selector + 32
-if( bc2_min == SLL_DIRICHLET ) bc_selector = bc_selector + 64
-if( bc2_min == SLL_NEUMANN   ) bc_selector = bc_selector + 128
-if( bc2_min == SLL_HERMITE   ) bc_selector = bc_selector + 256
-if( bc2_max == SLL_DIRICHLET ) bc_selector = bc_selector + 512
-if( bc2_max == SLL_NEUMANN   ) bc_selector = bc_selector + 1024
-if( bc2_max == SLL_HERMITE   ) bc_selector = bc_selector + 2048
+if( bc1_min == sll_p_dirichlet ) bc_selector = bc_selector + 1
+if( bc1_min == sll_p_neumann   ) bc_selector = bc_selector + 2
+if( bc1_min == sll_p_hermite   ) bc_selector = bc_selector + 4
+if( bc1_max == sll_p_dirichlet ) bc_selector = bc_selector + 8
+if( bc1_max == sll_p_neumann   ) bc_selector = bc_selector + 16
+if( bc1_max == sll_p_hermite   ) bc_selector = bc_selector + 32
+if( bc2_min == sll_p_dirichlet ) bc_selector = bc_selector + 64
+if( bc2_min == sll_p_neumann   ) bc_selector = bc_selector + 128
+if( bc2_min == sll_p_hermite   ) bc_selector = bc_selector + 256
+if( bc2_max == sll_p_dirichlet ) bc_selector = bc_selector + 512
+if( bc2_max == sll_p_neumann   ) bc_selector = bc_selector + 1024
+if( bc2_max == sll_p_hermite   ) bc_selector = bc_selector + 2048
 
 interpolator%spline_degree1 = spline_degree1
 interpolator%spline_degree2 = spline_degree2
@@ -323,7 +349,7 @@ interpolator%coeff_splines(:,:) = 0.0_f64
 SLL_CLEAR_ALLOCATE( interpolator%t1(1:num_pts1*(spline_degree1+1)),ierr)
 SLL_CLEAR_ALLOCATE( interpolator%t2(1:num_pts2*(spline_degree2+1)),ierr) 
 
-end subroutine !initialize_ad2d_interpolator
+end subroutine !sll_s_initialize_ad2d_interpolator
 
 subroutine set_coeff_splines_values_1d( values,        &
                                         num_pts,       &
@@ -341,24 +367,24 @@ sll_int32,  intent(in)    :: bc_max
 sll_int32,  intent(in)    :: spline_degree
 sll_real64, intent(inout) :: values(num_pts)
 
-class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d => null()
+class(sll_t_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d => null()
 
-interp1d => new_arbitrary_degree_1d_interpolator( num_pts,      &
+interp1d => sll_f_new_arbitrary_degree_1d_interpolator( num_pts,      &
                                                   eta_min,      &
                                                   eta_max,      &
                                                   bc_min,       &
                                                   bc_max,       &
                                                   spline_degree )
 
-if (bc_min == SLL_DIRICHLET .and. bc_max == SLL_DIRICHLET) then
-  call set_values_at_boundary1d(interp1d, values(1), values(num_pts))
+if (bc_min == sll_p_dirichlet .and. bc_max == sll_p_dirichlet) then
+  call sll_s_set_values_at_boundary1d(interp1d, values(1), values(num_pts))
 end if
 
 call interp1d%compute_interpolants(values)
 
 values = interp1d%coeff_splines(1:num_pts)
 
-call sll_delete(interp1d)
+call sll_o_delete(interp1d)
 deallocate(interp1d)
 nullify(interp1d)
 
@@ -371,14 +397,14 @@ end subroutine set_coeff_splines_values_1d
 !> @param[in]  value_max1 a 1d array contains values in the right in the direction 1 
 !> @param[in]  value_min2 a 1d array contains values in the left  in the direction 2 
 !> @param[in]  value_max2 a 1d array contains values in the right in the direction 2
-!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 subroutine set_boundary_value2d( interpolator, &
                                  value_min1,   &
                                  value_max1,   &
                                  value_min2,   &
                                  value_max2)
 
-class(sll_arbitrary_degree_spline_interpolator_2d) :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d) :: interpolator
 
 sll_real64, dimension(:), optional :: value_min1
 sll_real64, dimension(:), optional :: value_max1
@@ -411,7 +437,7 @@ eta1_max       = interpolator%eta1_max
 eta2_min       = interpolator%eta2_min
 eta2_max       = interpolator%eta2_max
 
-if (bc1_min==SLL_DIRICHLET) then 
+if (bc1_min==sll_p_dirichlet) then 
 
   if (present(value_min1)) then 
   
@@ -431,7 +457,7 @@ if (bc1_min==SLL_DIRICHLET) then
 
 end if
   
-if (bc1_max==SLL_DIRICHLET) then 
+if (bc1_max==sll_p_dirichlet) then 
 
   if (present(value_max1)) then 
     call set_coeff_splines_values_1d( value_max1, &
@@ -450,7 +476,7 @@ if (bc1_max==SLL_DIRICHLET) then
 
 end if
 
-if (bc2_min==SLL_DIRICHLET) then 
+if (bc2_min==sll_p_dirichlet) then 
 
   if (present(value_min2)) then 
     call set_coeff_splines_values_1d( value_min2, &
@@ -469,7 +495,7 @@ if (bc2_min==SLL_DIRICHLET) then
 
 end if
   
-if (bc2_max==SLL_DIRICHLET) then 
+if (bc2_max==sll_p_dirichlet) then 
 
   if (present(value_max2)) then 
     call set_coeff_splines_values_1d( value_max2,    &
@@ -499,7 +525,7 @@ end subroutine set_boundary_value2d
 !>  depends on the boundary conditions.
 !> 
 !> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 !> @param[in]  coeffs_1d the 1d arrays corresponding of the splines coefficients
 !> @param[in]  coeffs_2d the 2d arrays corresponding of the splines coefficients
 !> @param[in]  coeff2d_size1 the number of rows of coeffs_2d
@@ -508,7 +534,7 @@ end subroutine set_boundary_value2d
 !> @param[in]  size_knots1 the size of knots in the direction eta1
 !> @param[in]  knots2  the knots in the direction eta2
 !> @param[in]  size_knots2 the size of knots in the direction eta2
-!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 subroutine set_coefficients_ad2d( interpolator,  &
                                   coeffs_1d,     &
                                   coeffs_2d,     &
@@ -519,7 +545,7 @@ subroutine set_coefficients_ad2d( interpolator,  &
                                   knots2,        &
                                   size_knots2)
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
 sll_real64, dimension(:)  , intent(in), optional :: coeffs_1d
 sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
@@ -1124,13 +1150,13 @@ end subroutine set_coefficients_ad2d
 !>  we consider that the values of the function is on the points in the mesh_2d
 !> 
 !> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 !> @param[in] data_array the 2d arrays corresponding at the values of a function
 !> @param[in] eta1_coords the 1d arrays corresponding at the points eta1 
 !> @param[in] size_eta1_coords the size of eta1_coords
 !> @param[in] eta2_coords the 1d arrays corresponding at the points eta2
 !> @param[in] size_eta2_coords the size of eta2_coords
-!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 
 subroutine compute_interpolants_ad2d( interpolator,     &
                                       data_array,       &
@@ -1139,7 +1165,7 @@ subroutine compute_interpolants_ad2d( interpolator,     &
                                       eta2_coords,      &
                                       size_eta2_coords )
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
 
 sll_real64, dimension(:,:), intent(in)           :: data_array
 sll_real64, dimension(:),   intent(in), optional :: eta1_coords
@@ -1950,7 +1976,7 @@ end subroutine compute_interpolants_ad2d
 
 function coefficients_are_set_ad2d( interpolator ) result(res)
 
-  class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+  class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
   logical :: res
 
   res = interpolator%coefficients_set
@@ -1962,13 +1988,13 @@ end function coefficients_are_set_ad2d
 !>  on the points eta1 and eta2 of arbitrary degree splines 2d
 !> 
 !> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 !> @param[in] eta1 points in the first direction
 !> @param[in] eta2 points in the second direction 
 !> @return val the values on the points eta1 and eta2 
 function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
 
 sll_real64, intent(in) :: eta1
 sll_real64, intent(in) :: eta2
@@ -2010,10 +2036,10 @@ x   = eta1
 y   = eta2
 val = 0.0_f64
 
-!if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
-!if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
-!if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
-!if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
+!if (interpolator%bc1_min==sll_p_periodic .and. eta1<interpolator%eta1_min) x = eta1 + length1 
+!if (interpolator%bc1_max==sll_p_periodic .and. eta1>interpolator%eta1_max) x = eta1 - length1
+!if (interpolator%bc2_min==sll_p_periodic .and. eta2<interpolator%eta2_min) y = eta2 + length2
+!if (interpolator%bc2_max==sll_p_periodic .and. eta2>interpolator%eta2_max) y = eta2 - length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
@@ -2024,18 +2050,18 @@ t1    => interpolator%t1(1:interpolator%size_t1)
 t2    => interpolator%t2(1:interpolator%size_t2)
 coeff => interpolator%coeff_splines(1:nx,1:ny)
 
-call interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr)
+call sll_s_interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr)
 
 if (ierr .ne. 0) return 
 
 do j = 1, ky
   tab     = interpolator%coeff_splines(1:nx,lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), t1(1:nx+kx), tab, nx, kx, x, 0)
+  coef(j) = sll_f_bvalue(interpolator%deboor(1), t1(1:nx+kx), tab, nx, kx, x, 0)
 end do
 
 ty = interpolator%t2(lefty-ky+1:lefty+ky)
 
-val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, 0)
+val = sll_f_bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, 0)
 
 deallocate(tab)
 deallocate(coef)
@@ -2050,13 +2076,13 @@ end function interpolate_value_ad2d
 !> on the points eta1 and eta2 of arbitrary degree splines 2d
 !> 
 !> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 !> @param[in] eta1 the point inthe first direction
 !> @param[in] eta2 the point inthe second direction 
 !> @return val the values on the points eta1 and eta2 of the first derivative in eta1
 function interpolate_derivative1_ad2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
 
 sll_real64, intent(in)         :: eta1
 sll_real64, intent(in)         :: eta2
@@ -2099,10 +2125,10 @@ ky = interpolator%spline_degree2+1
 x = eta1
 y = eta2
 
-if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1+length1 
-if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1-length1
-if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2+length2
-if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2-length2
+if (interpolator%bc1_min==sll_p_periodic .and. eta1<interpolator%eta1_min) x = eta1+length1 
+if (interpolator%bc1_max==sll_p_periodic .and. eta1>interpolator%eta1_max) x = eta1-length1
+if (interpolator%bc2_min==sll_p_periodic .and. eta2<interpolator%eta2_min) y = eta2+length2
+if (interpolator%bc2_max==sll_p_periodic .and. eta2>interpolator%eta2_max) y = eta2-length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
@@ -2113,7 +2139,7 @@ t1 => interpolator%t1(1:interpolator%size_t1)
 t2 => interpolator%t2(1:interpolator%size_t2)
 coeff => interpolator%coeff_splines(1:nx,1:nx)
 
-call interv(interpolator%deboor(2),t2,ny+ky,y,lefty,ierr)
+call sll_s_interv(interpolator%deboor(2),t2,ny+ky,y,lefty,ierr)
     
 if (ierr .ne. 0)  return 
 
@@ -2124,13 +2150,13 @@ SLL_ALLOCATE(ty(1:2*ky), ierr)
 do j = 1, ky
        
   tab     = interpolator%coeff_splines(1:nx,lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, deriv1 )
+  coef(j) = sll_f_bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, deriv1 )
        
 end do
 
 ty = t2(lefty-ky+1:lefty+ky)
 
-val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
+val = sll_f_bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 
 deallocate(ty)
 deallocate(tab)
@@ -2145,13 +2171,13 @@ end function interpolate_derivative1_ad2d
 !> on the points eta1 and eta2 of arbitrary degree splines 2d
 !> 
 !> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
 !> @param[in] eta1 the point inthe first direction
 !> @param[in] eta2 the point inthe second direction 
 !> @return val the values on the points eta1 and eta2 of the first derivative in eta2
 function interpolate_derivative2_ad2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
 
 sll_real64, intent(in)         :: eta1
 sll_real64, intent(in)         :: eta2
@@ -2188,10 +2214,10 @@ length2 = interpolator%eta2_max-interpolator%eta2_min
 
 x = eta1
 y = eta2
-if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1+length1 
-if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1-length1
-if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2+length2
-if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2-length2
+if (interpolator%bc1_min==sll_p_periodic .and. eta1<interpolator%eta1_min) x = eta1+length1 
+if (interpolator%bc1_max==sll_p_periodic .and. eta1>interpolator%eta1_max) x = eta1-length1
+if (interpolator%bc2_min==sll_p_periodic .and. eta2<interpolator%eta2_min) y = eta2+length2
+if (interpolator%bc2_max==sll_p_periodic .and. eta2>interpolator%eta2_max) y = eta2-length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
@@ -2202,7 +2228,7 @@ t1 => interpolator%t1(1:interpolator%size_t1)
 t2 => interpolator%t2(1:interpolator%size_t2)
 coeff => interpolator%coeff_splines(1:nx,1:ny)
 
-call interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr )
+call sll_s_interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr )
     
 if ( ierr .ne. 0 ) return
 
@@ -2213,12 +2239,12 @@ SLL_ALLOCATE(ty(1:2*ky), ierr)
 do j = 1, ky
        
   tab = interpolator%coeff_splines(1:nx, lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, deriv1 )
+  coef(j) = sll_f_bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, deriv1 )
        
 end do
 
 ty =  t2(lefty-ky+1:lefty+ky)
-val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
+val = sll_f_bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 
 deallocate(ty)
 deallocate(tab)
@@ -2227,14 +2253,15 @@ deallocate(coef)
 end function interpolate_derivative2_ad2d
 
   
-function interpolate_array_ad2d( this,            &
+subroutine interpolate_array_ad2d( this,            &
                                  num_points1,     &
                                  num_points2,     &
                                  data_in,         &
                                  eta1,            &
-                                 eta2 ) result(res)
+                                 eta2,            &
+                                 data_out)
   
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
 
 sll_real64, dimension(:,:), intent(in) :: eta1
 sll_real64, dimension(:,:), intent(in) :: eta2
@@ -2242,10 +2269,10 @@ sll_real64, dimension(:,:), intent(in) :: data_in
 sll_int32,                  intent(in) :: num_points1
 sll_int32,                  intent(in) :: num_points2
 
-sll_real64, dimension(num_points1,num_points2) :: res
+sll_real64,                 intent(out):: data_out(num_points1, num_points2)
 
 print *, '#interpolate_array_ad2d: not implemented'
-res = -1000000._f64
+data_out = -1000000._f64
 print *,this%num_pts1
 print *,maxval(eta1)
 print *,maxval(eta2)
@@ -2253,23 +2280,24 @@ print *,maxval(data_in)
 print *,num_points1
 print *,num_points2
 stop
-end function !interpolate_array_ad2d
+end subroutine interpolate_array_ad2d  !interpolate_array_ad2d
   
-function interpolate_2d_array_disp_ad2d( this,        &
+subroutine interpolate_2d_array_disp_ad2d( this,        &
                                          num_points1, &
                                          num_points2, &
                                          data_in,     &
                                          alpha1,      &
-                                         alpha2) result(res)
+                                         alpha2,      &
+                                         data_out)
     
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
 
 sll_int32,                  intent(in)         :: num_points1  
 sll_int32,                  intent(in)         :: num_points2 
 sll_real64, dimension(:,:), intent(in)         :: data_in
 sll_real64, dimension(:,:), intent(in)         :: alpha1
 sll_real64, dimension(:,:), intent(in)         :: alpha2  
-sll_real64, dimension(num_points1,num_points2) :: res
+sll_real64,                 intent(out)        :: data_out(num_points1,num_points2)
 
 print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
 !for preventing warning of unused objects
@@ -2279,13 +2307,13 @@ print *,num_points2
 print *,maxval(data_in)
 print *,alpha1
 print *,alpha2     
-res = -1000000._f64
+data_out = -1000000._f64
 stop
   
-end function !interpolate_2d_array_disp_ad2d
+end subroutine interpolate_2d_array_disp_ad2d  !interpolate_2d_array_disp_ad2d
     
 function get_coefficients_ad2d(interpolator)
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(in) :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in) :: interpolator
 sll_real64, dimension(:,:), pointer                            :: get_coefficients_ad2d     
 
 get_coefficients_ad2d => interpolator%coeff_splines
@@ -2298,20 +2326,20 @@ end function get_coefficients_ad2d
 !> @param[in] slope_max1 a 1d arrays contains values in the right in the direction eta1 
 !> @param[in] slope_min2 a 1d arrays contains values in the left in the direction eta2 
 !> @param[in] slope_max2 a 1d arrays contains values in the right in the direction eta2
-!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-subroutine set_slope2d( interpolator, &
+!> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
+subroutine sll_s_set_slope2d( interpolator, &
                         slope_min1,   &
                         slope_max1,   &
                         slope_min2,   &
                         slope_max2)
 
-class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d)    :: interpolator
 sll_real64, dimension(:),optional :: slope_min1
 sll_real64, dimension(:),optional :: slope_max1
 sll_real64, dimension(:),optional :: slope_min2
 sll_real64, dimension(:),optional :: slope_max2
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_min2=> null()
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_max2=> null()
+class(sll_t_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_min2=> null()
+class(sll_t_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_max2=> null()
 sll_int32 :: sz_slope_min2,sz_slope_max2
 sll_int64 :: bc_selector
 sll_int32 :: num_pts1
@@ -2358,7 +2386,7 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
         stop
      end if
      
-     interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+     interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
           interpolator%num_pts1, &
           interpolator%eta1_min, &
           interpolator%eta1_max, &
@@ -2370,7 +2398,7 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
      
      interpolator%slope_max2(1:sz_slope_max2+2) = &
           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-     call sll_delete(interp1d_max2)
+     call sll_o_delete(interp1d_max2)
      deallocate(interp1d_max2)
   else
      print*, 'problem with slope top in case 780'
@@ -2402,7 +2430,7 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
         stop
      end if
      
-     interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+     interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
           interpolator%num_pts1, &
           interpolator%eta1_min, &
           interpolator%eta1_max, &
@@ -2415,7 +2443,7 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
      
      interpolator%slope_max2(1:sz_slope_max2+2) = &
           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-     call sll_delete(interp1d_max2)
+     call sll_o_delete(interp1d_max2)
      deallocate(interp1d_max2)
   else
      print*, 'problem with slope top in case 780'
@@ -2440,7 +2468,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
         stop
      end if
      
-     interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+     interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
           interpolator%num_pts1, &
           interpolator%eta1_min, &
           interpolator%eta1_max, &
@@ -2453,7 +2481,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
      
      interpolator%slope_min2(1:sz_slope_min2+2) = &
           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-     call sll_delete(interp1d_min2)
+     call sll_o_delete(interp1d_min2)
      deallocate(interp1d_min2)
      interpolator%compute_slope_min2 = .FALSE.
   else
@@ -2470,7 +2498,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
         stop
      end if
      
-     interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+     interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
           interpolator%num_pts1, &
           interpolator%eta1_min, &
           interpolator%eta1_max, &
@@ -2483,7 +2511,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
      
      interpolator%slope_max2(1:sz_slope_max2+2) = &
           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-     call sll_delete(interp1d_max2)
+     call sll_o_delete(interp1d_max2)
      deallocate(interp1d_max2)
   else
      print*, 'problem with slope top in case 780'
@@ -2508,7 +2536,7 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2521,7 +2549,7 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 801'
@@ -2537,7 +2565,7 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2550,7 +2578,7 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 801'
@@ -2575,7 +2603,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
          print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
          stop
       end if
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2588,7 +2616,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -2605,7 +2633,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2618,7 +2646,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 801'
@@ -2646,7 +2674,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2659,7 +2687,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -2676,7 +2704,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2689,7 +2717,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
@@ -2714,7 +2742,7 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2727,7 +2755,7 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -2770,7 +2798,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2783,7 +2811,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2145'
@@ -2797,7 +2825,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2810,7 +2838,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -2838,7 +2866,7 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2851,7 +2879,7 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2145'
@@ -2865,7 +2893,7 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2878,7 +2906,7 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -2908,7 +2936,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2922,7 +2950,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
 
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
@@ -2936,7 +2964,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2949,7 +2977,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -2966,7 +2994,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -2979,7 +3007,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
@@ -3006,7 +3034,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3020,7 +3048,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
 
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
@@ -3034,7 +3062,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3047,7 +3075,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -3064,7 +3092,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3077,7 +3105,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
@@ -3103,7 +3131,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3116,7 +3144,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2340'
@@ -3130,7 +3158,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3143,7 +3171,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -3171,7 +3199,7 @@ case(2340) ! Hermite in al sides
          stop
       end if
       
-      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+      interp1d_max2 => sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3184,7 +3212,7 @@ case(2340) ! Hermite in al sides
       
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-      call sll_delete(interp1d_max2)
+      call sll_o_delete(interp1d_max2)
       deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2340'
@@ -3198,7 +3226,7 @@ case(2340) ! Hermite in al sides
          stop
       end if
       
-      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+      interp1d_min2 =>  sll_f_new_arbitrary_degree_1d_interpolator(&
            interpolator%num_pts1, &
            interpolator%eta1_min, &
            interpolator%eta1_max, &
@@ -3211,7 +3239,7 @@ case(2340) ! Hermite in al sides
       
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-      call sll_delete(interp1d_min2)
+      call sll_o_delete(interp1d_min2)
       deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
@@ -3219,14 +3247,14 @@ case(2340) ! Hermite in al sides
    end if
    
 case default
-   print*,'initialize_ad2d_interpolator: BC combination not implemented.'
+   print*,'sll_s_initialize_ad2d_interpolator: BC combination not implemented.'
 end select
   
-end subroutine set_slope2d
+end subroutine sll_s_set_slope2d
   
 subroutine spli2d_custom(db, nx, kx, taux, ny, ky, tauy, g, bcoef, tx, ty)
 
-type(deboor_type)                                :: db(2)
+type(sll_t_deboor_type)                                :: db(2)
 sll_int32,                           intent(in)  :: nx
 sll_int32,                           intent(in)  :: kx
 sll_int32,                           intent(in)  :: ny
@@ -3290,7 +3318,7 @@ end subroutine spli2d_custom
 !
 !  Discussion:
 !
-!    SPLI2D is an extended version of SPLINT.
+!    SPLI2D is an extended version of sll_s_splint.
 !
 !    SPLI2D produces the B-spline coefficients BCOEF(J,.) of the
 !    spline of order K with knots T(1:N+K), which takes on
@@ -3374,7 +3402,7 @@ end subroutine spli2d_custom
 !
 subroutine spli2d ( db, tau, gtau, t, n, k, m, work, q, bcoef, iflag )
     
-type(deboor_type)                                :: db
+type(sll_t_deboor_type)                                :: db
 sll_real64, dimension(:),            intent(in)  :: tau
 sll_real64, dimension(:,:), pointer, intent(in)  :: gtau
 sll_real64, dimension(:),   pointer, intent(in)  :: t
@@ -3450,7 +3478,7 @@ do i = 1, n
    !  nonzero.  These K numbers are returned, in WORK (used for
    !  temporary storage here), by the following call:
    !
-   call bsplvb ( db, t, k, 1, taui, left, work )
+   call sll_s_bsplvb ( db, t, k, 1, taui, left, work )
    !print*, 'achtung',taui
    ! print*, 'work', work(1:k)
    !
@@ -3527,7 +3555,7 @@ subroutine spli2d_custom_derder ( db,         &
                                   tx,         &
                                   ty          )
 
-type(deboor_type)                               :: db(2)
+type(sll_t_deboor_type)                               :: db(2)
 sll_int32,                           intent(in) :: nx
 sll_int32,                           intent(in) :: kx
 sll_int32,                           intent(in) :: ny
@@ -3576,7 +3604,7 @@ end if
 
 do j = 1, ny
    
-   call splint_der( db(1),          &
+   call sll_s_splint_der( db(1),          &
                     taux,           &
                     gtau(1:nx,j),   &
                     taux_der,       &
@@ -3595,7 +3623,7 @@ end do
 
 do i = 1, nx+mx
    
-    call splint_der( db(2),          &
+    call sll_s_splint_der( db(2),          &
                      tauy,           &
                      tmp(1:ny,i),    &
                      tauy_der,       &

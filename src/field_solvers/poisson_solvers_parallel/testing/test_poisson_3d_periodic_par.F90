@@ -15,16 +15,42 @@
 !************************************************************************
 
 program test_poisson_3d_periodic_par
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_remapper
-  use sll_m_constants
-  use sll_m_poisson_3d_periodic_par
-  use sll_m_collective
-  use iso_fortran_env, only: output_unit
+#include "sll_working_precision.h"
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_o_collective_reduce, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_poisson_3d_periodic_par, only: &
+    sll_s_delete_poisson_3d_periodic_plan_par, &
+    sll_f_new_poisson_3d_periodic_plan_par, &
+    sll_t_poisson_3d_periodic_plan_par, &
+    sll_s_solve_poisson_3d_periodic_par
+
+  use sll_m_remapper, only: &
+    sll_o_compute_local_sizes, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_3d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_3d
+
+  use sll_mpi, only: &
+    mpi_prod
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32                                    :: nx, ny, nz
   sll_int32                                    :: nx_loc, ny_loc, nz_loc
@@ -36,12 +62,12 @@ program test_poisson_3d_periodic_par
   sll_real64, dimension(:,:,:), allocatable    :: phi_an
   sll_real64, dimension(:,:,:), allocatable    :: phi
   sll_int32                                    :: i, j, k
-  type (poisson_3d_periodic_plan_par), pointer :: plan
+  type (sll_t_poisson_3d_periodic_plan_par), pointer :: plan
   sll_real64                                   :: average_err
   sll_int32, dimension(1:3)                    :: global
   sll_int32                                    :: gi, gj, gk
   sll_int32                                    :: myrank
-  type(layout_3D), pointer                     :: layout
+  type(sll_t_layout_3d), pointer                     :: layout
   sll_int64                                    :: colsz ! collective size
   sll_int32                                    :: i_test
   sll_int32                                    :: npx, npy, npz
@@ -50,38 +76,37 @@ program test_poisson_3d_periodic_par
   sll_real32   , dimension(1)                  :: prod4test
 
   !Boot parallel environment
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
   nx = 64
   ny = 64
   nz = 64
-  Lx = 2*sll_pi
-  Ly = 2*sll_pi
-  Lz = 2*sll_pi
+  Lx = 2*sll_p_pi
+  Ly = 2*sll_p_pi
+  Lz = 2*sll_p_pi
 
-  colsz  = sll_get_collective_size(sll_world_collective)
-  myrank = sll_get_collective_rank(sll_world_collective)
+  colsz  = int(sll_f_get_collective_size(sll_v_world_collective), i64)
+  myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
 
   dx = Lx/nx
   dy = Ly/ny
   dz = Lz/nz
 
-  colsz  = sll_get_collective_size(sll_world_collective)
   e = int(log(real(colsz))/log(2.))
 
   ! Layout and local sizes for FFTs in x-direction
-  layout => new_layout_3D( sll_world_collective )
+  layout => sll_f_new_layout_3d( sll_v_world_collective )
   npx = 1
   npy = 2**(e/2)
   npz = int(colsz)/npy
-  call initialize_layout_with_distributed_array( nx, ny, &
+  call sll_o_initialize_layout_with_distributed_array( nx, ny, &
                                   nz, npx, npy, npz, layout )
 
-  plan => new_poisson_3d_periodic_plan_par(layout, nx, ny, &
+  plan => sll_f_new_poisson_3d_periodic_plan_par(layout, nx, ny, &
                                              nz, Lx, Ly, Lz)
 
-  call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
+  call sll_o_compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
 
   SLL_ALLOCATE(rho(nx_loc,ny_loc,nz_loc), ierr)
   SLL_ALLOCATE(x(nx_loc,ny_loc,nz_loc),ierr)
@@ -92,7 +117,7 @@ program test_poisson_3d_periodic_par
   do k=1,nz_loc
      do j=1,ny_loc
         do i=1,nx_loc
-           global = local_to_global( layout, (/i, j, k/))
+           global = sll_o_local_to_global( layout, (/i, j, k/))
            gi = global(1)
            gj = global(2)
            gk = global(3)
@@ -108,7 +133,7 @@ program test_poisson_3d_periodic_par
      if (i_test==1) then
         phi_an = cos(x)*sin(y)*cos(z)
      else if (i_test == 2) then
-        phi_an = (4/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz)) &
+        phi_an = (4.0_f64/(sll_p_pi * sqrt(sll_p_pi)*Lx*Ly*Lz)) &
              * exp(-.5*(x-Lx/2)**2)                   &
              * exp(-.5*(y-Ly/2)**2) * sin(z)
      end if
@@ -128,7 +153,7 @@ program test_poisson_3d_periodic_par
      enddo
 
      SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
-     call solve_poisson_3d_periodic_par(plan, rho, phi)
+     call sll_s_solve_poisson_3d_periodic_par(plan, rho, phi)
 
      average_err  = 0._f64
 
@@ -158,7 +183,7 @@ program test_poisson_3d_periodic_par
 
   end do
 
-     call sll_collective_reduce(sll_world_collective, (/ ok /), &
+     call sll_o_collective_reduce(sll_v_world_collective, (/ ok /), &
           1, MPI_PROD, 0, prod4test )
      if (myrank==0) then
 
@@ -172,10 +197,11 @@ program test_poisson_3d_periodic_par
         endif
      endif           
 
-  call delete_poisson_3d_periodic_plan_par(plan)
+  call sll_s_delete_poisson_3d_periodic_plan_par(plan)
+  deallocate(plan)
 
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
   SLL_DEALLOCATE_ARRAY(rho, ierr)
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 end program test_poisson_3d_periodic_par

@@ -26,24 +26,65 @@
 !we use a lot of points in x1 and few points in x2
 
 program aligned_translation_2d
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_advection_1d_base
-use sll_m_advection_1d_periodic
-use sll_m_lagrange_interpolation
-use sll_m_advection_2d_oblic
-use sll_m_timer
-use sll_m_fcisl_toroidal
-use sll_m_constants
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
+#include "sll_working_precision.h"
 
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
 
-implicit none
-  type(oblic_2d_advector), pointer :: adv  
-  class(sll_advection_1d_base), pointer :: adv_x1
-  class(sll_advection_1d_base), pointer :: adv_x2
+  use sll_m_advection_1d_periodic, only: &
+    sll_f_new_periodic_1d_advector
+
+  use sll_m_advection_2d_oblic, only: &
+    sll_f_new_oblic_2d_advector, &
+    sll_t_oblic_2d_advector, &
+    sll_s_oblic_advect_2d_constant
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_f_new_cubic_spline_interpolator_2d
+
+  use sll_m_fcisl_toroidal, only: &
+    sll_s_compute_modulo_vect2d_inplace, &
+    sll_f_interpolate2d_toroidal
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_periodic_interp, only: &
+    sll_p_lagrange, &
+    sll_p_spline
+
+  use sll_m_timer, only: &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
+
+  use sll_m_utilities, only: &
+    sll_s_int2string
+
+  use sll_m_xdmf, only: &
+    sll_s_xdmf_close, &
+    sll_o_xdmf_open, &
+    sll_o_xdmf_write_array
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type(sll_t_oblic_2d_advector), pointer :: adv  
+  class(sll_c_advection_1d_base), pointer :: adv_x1
+  class(sll_c_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
   sll_int32 :: i2
   sll_int32 :: Nc_x1
@@ -73,8 +114,8 @@ implicit none
   sll_int32 :: step
   sll_int32 :: istep
   sll_real64 :: err
-  sll_real64 :: alpha
-  sll_int32 :: i0
+!  sll_real64 :: alpha
+!  sll_int32 :: i0
   sll_real64 :: dt_loc
   sll_real64, dimension(:,:), allocatable :: buf
   sll_real64, dimension(:,:), allocatable :: f_new
@@ -84,20 +125,20 @@ implicit none
   sll_real64, dimension(:), allocatable :: xx
   sll_real64, dimension(:), allocatable :: x1_array
   sll_real64, dimension(:), allocatable :: x2_array
-  sll_int32 :: ell
-  sll_int32 :: i2_loc
+!  sll_int32 :: ell
+!  sll_int32 :: i2_loc
   character(len=256) :: filename
   sll_int32 :: IO_stat
   sll_int32, parameter  :: input_file = 99
   sll_int32 :: i
   sll_real64 :: err0
-  sll_real64 :: err1
+!  sll_real64 :: err1
   sll_real64 :: err2
   sll_real64 :: dt_max0
   sll_real64 :: dt_max2
   sll_int32 :: num_dt1
   sll_int32 :: verbose
-  type(sll_time_mark) :: t0
+  type(sll_t_time_mark) :: t0
   sll_real64 :: time0
   sll_real64 :: time2
   sll_real64 :: time3
@@ -108,7 +149,7 @@ implicit none
   sll_real64 :: dt_max4
   sll_real64 :: err3  
   sll_real64 :: err4  
-  class(sll_interpolator_2d_base), pointer :: interp_classic
+  class(sll_c_interpolator_2d), pointer :: interp_classic
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p
@@ -245,40 +286,40 @@ implicit none
   enddo
   
   
-  adv_x1 => new_periodic_1d_advector( &
+  adv_x1 => sll_f_new_periodic_1d_advector( &
     Nc_x1, &
     x1_min, &
     x1_max, &
-!    LAGRANGE, & 
-    SPLINE, & 
+!    sll_p_lagrange, & 
+    sll_p_spline, & 
     4) 
-!  adv_x2 => new_periodic_1d_advector( &
+!  adv_x2 => sll_f_new_periodic_1d_advector( &
 !    Nc_x2, &
 !    x2_min, &
 !    x2_max, &
-!!    LAGRANGE, & 
-!    SPLINE, & 
+!!    sll_p_lagrange, & 
+!    sll_p_spline, & 
 !    4) 
 
-  adv_x2 => new_periodic_1d_advector( &
+  adv_x2 => sll_f_new_periodic_1d_advector( &
     Nc_x2, &
     x2_min, &
     x2_max, &
-    LAGRANGE, & 
+    sll_p_lagrange, & 
     d+1)
-!    SPLINE, & 
+!    sll_p_spline, & 
 !    4) 
 
 
-  interp_classic => new_cubic_spline_interpolator_2d( &
+  interp_classic => sll_f_new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
     x1_max, &
     x2_min, &
     x2_max, &
-    SLL_PERIODIC, &
-    SLL_PERIODIC)
+    sll_p_periodic, &
+    sll_p_periodic)
 
 
   SLL_ALLOCATE(params_aligned(11),ierr)
@@ -290,9 +331,9 @@ implicit none
   params_aligned(6) = real(lag_r,f64)
   params_aligned(7) = real(lag_s,f64)
   params_aligned(8) = 0._f64
-  params_aligned(9) = 2._f64*sll_pi
+  params_aligned(9) = 2._f64*sll_p_pi
   params_aligned(10) = 0._f64
-  params_aligned(11) = 2._f64*sll_pi
+  params_aligned(11) = 2._f64*sll_p_pi
 
 
 
@@ -319,16 +360,16 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_init(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1 - A1*real(nb_step,f64)*dt_loc
       x2 = x2 - A2*real(nb_step,f64)*dt_loc
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
     enddo
   enddo
 
-  call sll_set_time_mark(t0)
+  call sll_s_set_time_mark(t0)
 
   !classical method with splitting  
   f = f_init    
@@ -345,7 +386,7 @@ do istep = 1,num_dt1
     enddo          
   enddo
   
-  time0 = sll_time_elapsed_since(t0)
+  time0 = sll_f_time_elapsed_since(t0)
   print*,'#time for classical method', time0
     
   err = maxval(abs(f-f_exact))
@@ -422,7 +463,7 @@ enddo
 !      enddo
 !      ! interpolate between these values 
 !      do i1=1,Nc_x1+1
-!        f_new(i1,i2) = lagrange_interpolate(alpha, d, xx, buf(r:s,i1) )
+!        f_new(i1,i2) = sll_f_lagrange_interpolate(alpha, d, xx, buf(r:s,i1) )
 !      enddo
 !    enddo    
 !    f = f_new
@@ -433,7 +474,7 @@ enddo
 
   !new method using oblic advector
 
-  adv => new_oblic_2d_advector( &
+  adv => sll_f_new_oblic_2d_advector( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -457,21 +498,21 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_init(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1 - A1*real(nb_step,f64)*dt_loc
       x2 = x2 - A2*real(nb_step,f64)*dt_loc
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
 
     enddo
   enddo
 
-  call sll_set_time_mark(t0)
+  call sll_s_set_time_mark(t0)
 
 
   do step =1,nb_step
-    call oblic_advect_2d_constant( &
+    call sll_s_oblic_advect_2d_constant( &
       adv, &
       A1, &
       A2, &
@@ -481,7 +522,7 @@ do istep = 1,num_dt1
     f = f_new      
   enddo
 
-  time2 = sll_time_elapsed_since(t0)
+  time2 = sll_f_time_elapsed_since(t0)
   print*,'#time for new method', time2
   
     
@@ -512,11 +553,11 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_init(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1 - A1*real(nb_step,f64)*dt_loc
       x2 = x2 - A2*real(nb_step,f64)*dt_loc
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
@@ -526,24 +567,24 @@ do istep = 1,num_dt1
       feet_x2(i1,i2) = x2
     enddo
   enddo
-  call compute_modulo_vect2d_inplace(feet_x1,Nc_x1+1,Nc_x2+1,x1_max-x1_min)
-  call compute_modulo_vect2d_inplace(feet_x2,Nc_x1+1,Nc_x2+1,x2_max-x2_min)
+  call sll_s_compute_modulo_vect2d_inplace(feet_x1,Nc_x1+1,Nc_x2+1,x1_max-x1_min)
+  call sll_s_compute_modulo_vect2d_inplace(feet_x2,Nc_x1+1,Nc_x2+1,x2_max-x2_min)
 
   
-  call sll_set_time_mark(t0)
+  call sll_s_set_time_mark(t0)
 
 
   do step =1,nb_step
-    f_new = interp_classic%interpolate_array( &
+    call interp_classic%interpolate_array( &
       Nc_x1+1, &
       Nc_x2+1, &
       f, &
       feet_x1, &
-      feet_x2)
+      feet_x2, f_new)
     f = f_new      
   enddo
 
-  time3 = sll_time_elapsed_since(t0)
+  time3 = sll_f_time_elapsed_since(t0)
   print*,'#time for classical method using charac', time3
   
     
@@ -569,11 +610,11 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_init(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1 - A1*real(nb_step,f64)*dt_loc
       x2 = x2 - A2*real(nb_step,f64)*dt_loc
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+      f_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64) &
         *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
@@ -583,15 +624,15 @@ do istep = 1,num_dt1
       feet_x2(i1,i2) = x2
     enddo
   enddo
-  call compute_modulo_vect2d_inplace(feet_x1,Nc_x1+1,Nc_x2+1,x1_max-x1_min)
-  call compute_modulo_vect2d_inplace(feet_x2,Nc_x1+1,Nc_x2+1,x2_max-x2_min)
+  call sll_s_compute_modulo_vect2d_inplace(feet_x1,Nc_x1+1,Nc_x2+1,x1_max-x1_min)
+  call sll_s_compute_modulo_vect2d_inplace(feet_x2,Nc_x1+1,Nc_x2+1,x2_max-x2_min)
 
   
-  call sll_set_time_mark(t0)
+  call sll_s_set_time_mark(t0)
 
 
   do step =1,nb_step
-    f_new = interpolate2d_toroidal( &
+    f_new = sll_f_interpolate2d_toroidal( &
       Nc_x1+1, &
       Nc_x2+1, &
       f, &
@@ -601,7 +642,7 @@ do istep = 1,num_dt1
     f = f_new      
   enddo
 
-  time4 = sll_time_elapsed_since(t0)
+  time4 = sll_f_time_elapsed_since(t0)
   print*,'#time for new method using charac', time4
   
     
@@ -689,8 +730,7 @@ contains
     nnodes_x2, &
     array_name, time)    
     !mesh_2d)
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
+
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:), intent(in) :: node_positions_x1
@@ -716,24 +756,24 @@ contains
           x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
         end do
       end do
-      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
+      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
+      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(file_id, error)
       deallocate(x1)
       deallocate(x2)
 
     end if
 
-    call int2string(iplot,cplot)
-    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
+    call sll_s_int2string(iplot,cplot)
+    call sll_o_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
     write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
-    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
+    call sll_o_xdmf_write_array(trim(array_name)//cplot,f,"values", &
       error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
+    call sll_s_xdmf_close(file_id,error)
   end subroutine plot_f_cartesian
 
 #endif

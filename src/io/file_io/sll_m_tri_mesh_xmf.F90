@@ -1,5 +1,12 @@
 module sll_m_tri_mesh_xmf
-implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  implicit none
+
+  public :: &
+    sll_s_write_tri_mesh_xmf
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !*****************************************
 !   XDMF output for VisIt and paraview
@@ -8,7 +15,7 @@ implicit none
 contains
 
 
-subroutine write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field, label)
+subroutine sll_s_write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field, label)
 
 character(len=*), intent(in) :: filename
 character(len=*), intent(in) :: label
@@ -53,6 +60,6 @@ write(xmf,"(a)") "</Grid>"
 write(xmf,"(a)") "</Domain>"
 write(xmf,"(a)") "</Xdmf>" 
 
-end subroutine write_tri_mesh_xmf
+end subroutine sll_s_write_tri_mesh_xmf
 
 end module sll_m_tri_mesh_xmf

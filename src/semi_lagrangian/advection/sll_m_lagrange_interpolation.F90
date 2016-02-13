@@ -16,18 +16,32 @@
 !**************************************************************
 
 module sll_m_lagrange_interpolation
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_periodic
+
   implicit none
+
+  public :: &
+    sll_s_compact_derivative_weight, &
+    sll_s_compute_stencil_plus, &
+    sll_f_lagrange_interpolate, &
+    sll_o_weight_product_x1
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   integer, parameter :: SLL_SIZE_STENCIL_MAX = 30
   integer, parameter :: SLL_SIZE_STENCIL_MIN = -30
 !    
-  type, public :: finite_diff_1d_plan
+  type :: finite_diff_1d_plan
     sll_real64 ::   w(SLL_SIZE_STENCIL_MIN:SLL_SIZE_STENCIL_MIN) !< weights
     sll_int32  ::   r,s       !< stencil
-    sll_int32  ::   bc_type   !< SLL_PERIODIC or SLL_DIRICHLET     
+    sll_int32  ::   bc_type   !< sll_p_periodic or sll_p_dirichlet     
   end type finite_diff_1d_plan
   
   type hermite_base
@@ -53,7 +67,7 @@ use sll_m_boundary_condition_descriptors
     !integer, LEN  :: degree
   end type hermite
   
-  interface weight_product_x1
+  interface sll_o_weight_product_x1
      module procedure weight_product1d, &
        weight_product2d_x1
   end interface
@@ -107,15 +121,15 @@ contains
 
 
 
-  ! lagrange_interpolate returns the value of y(x), using a Lagrange 
+  ! sll_f_lagrange_interpolate returns the value of y(x), using a Lagrange 
   ! interpolation based on the given array values of x(i) and y(x(i)).
   ! The interpolating polynomial is of degree 'degree'.
-  function lagrange_interpolate( x, degree, xi, yi )
+  function sll_f_lagrange_interpolate( x, degree, xi, yi )
     sll_real64, intent(in)               :: x
     sll_int32, intent(in)                :: degree
     sll_real64, intent(in), dimension(:) :: xi
     sll_real64, intent(in), dimension(:) :: yi
-    sll_real64                           :: lagrange_interpolate
+    sll_real64                           :: sll_f_lagrange_interpolate
     sll_real64, dimension(1:degree+1)    :: p
     sll_int32                            :: i  
     sll_int32                            :: deg
@@ -126,7 +140,7 @@ contains
     SLL_ASSERT( degree   >= 0 )
 
     if( (x < xi(1)) .or. (x > xi(degree+1)) ) then
-       !print *, 'lagrange_interpolate() warning: x is outside of the range ', &
+       !print *, 'sll_f_lagrange_interpolate() warning: x is outside of the range ', &
        !     'xi given as argument.'
        !print *, 'x = ', x, 'xmin = ', xi(1), 'xmax = ',xi(degree+1)
     end if
@@ -147,21 +161,21 @@ contains
        end do
        m = m+1
     end do
-    lagrange_interpolate = p(1)
-  end function lagrange_interpolate
+    sll_f_lagrange_interpolate = p(1)
+  end function sll_f_lagrange_interpolate
 
 !  function new(bc_type,error) &
 !     result(this)
 !     type(finite_diff_1d_plan),pointer :: this     !< data structure
-!     sll_int32,intent(in)              :: bc_type  !< SLL_PERIODIC or SLL_DIRICHLET 
+!     sll_int32,intent(in)              :: bc_type  !< sll_p_periodic or sll_p_dirichlet 
 !     sll_int32, intent(out)            :: error    !< error code
 !
 !     SLL_ALLOCATE(this, error)
 !     this%bc_type = bc_type
 !     
 !     select case (bc_type)
-!       case (SLL_PERIODIC)
-!       case (SLL_DIRICHLET)
+!       case (sll_p_periodic)
+!       case (sll_p_dirichlet)
 !       case default
 !         print *,'#bad value of bc_type in new function'
 !         print *,'#of finite_diff_1d_plan type', bc_type
@@ -180,7 +194,7 @@ contains
   ! we call it sometimes compact finite difference formula
   ! we suppose that r<=0 and s>=0
      
-  subroutine compact_derivative_weight(w,r,s)
+  subroutine sll_s_compact_derivative_weight(w,r,s)
     integer,intent(in)::r,s
     sll_real64,intent(out)::w(r:s)
     sll_int32 ::i,j
@@ -257,17 +271,17 @@ contains
     !stop
 
   
-  end subroutine compact_derivative_weight
+  end subroutine sll_s_compact_derivative_weight
   
   
-  subroutine compute_stencil_plus(p,r,s)
+  subroutine sll_s_compute_stencil_plus(p,r,s)
     sll_int32,intent(in) :: p
     sll_int32,intent(out) :: r,s
     
     r = -p/2
     s = (p+1)/2
   
-  end subroutine compute_stencil_plus
+  end subroutine sll_s_compute_stencil_plus
 
   subroutine compute_stencil_minus(p,r,s)
     sll_int32,intent(in) :: p
@@ -359,9 +373,9 @@ contains
     sll_int32, intent(in) :: bc_type
     
     select case (bc_type)
-      case (SLL_PERIODIC)
+      case (sll_p_periodic)
         call weight_product1d_per(fin,fout,N,w(r:s),r,s)
-      case (SLL_DIRICHLET)
+      case (sll_p_dirichlet)
         call weight_product1d_nat(fin,fout,N,w(r:s),r,s)
       case default
         print *,'#bad type in weight_product1d'
@@ -473,13 +487,13 @@ contains
     sll_int32 :: r,s
 
     coef(1,1:N+1) = fin(1:N+1)    
-    call compute_stencil_plus(p,r,s)
-    call compact_derivative_weight(w(r:s),r,s)
-    call weight_product_x1(fin,coef(2,:),N,w(r:s),r,s,bc_type)
+    call sll_s_compute_stencil_plus(p,r,s)
+    call sll_s_compact_derivative_weight(w(r:s),r,s)
+    call sll_o_weight_product_x1(fin,coef(2,:),N,w(r:s),r,s,bc_type)
     if(modulo(p,2)==1)then
       call compute_stencil_minus(p,r,s)
-      call compact_derivative_weight(w(r:s),r,s)
-      call weight_product_x1(fin,coef(3,:),N,w(r:s),r,s,bc_type)    
+      call sll_s_compact_derivative_weight(w(r:s),r,s)
+      call sll_o_weight_product_x1(fin,coef(3,:),N,w(r:s),r,s,bc_type)    
     endif
     
   end subroutine compute_interpolants_hermite1d

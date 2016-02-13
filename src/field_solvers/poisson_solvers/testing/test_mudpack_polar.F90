@@ -1,16 +1,24 @@
 program test_mudpack_polar
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_mudpack
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_periodic
 
-implicit none
+  use sll_m_constants, only: &
+    sll_p_pi
 
-type(sll_mudpack_solver) :: poisson
+  use sll_m_mudpack, only: &
+    sll_s_initialize_mudpack_polar, &
+    sll_t_mudpack_solver, &
+    sll_s_solve_mudpack_polar
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type(sll_t_mudpack_solver) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -34,12 +42,12 @@ r_min   = 1.0_f64
 r_max   = 2.0_f64
 
 theta_min = 0.0_f64
-theta_max = 2.0_f64 * sll_pi
+theta_max = 2.0_f64 * sll_p_pi
 
 nr     = 33
 ntheta = 129
 delta_r     = (r_max-r_min)/(nr-1)
-delta_theta = 2.0_f64*sll_pi/(ntheta-1)
+delta_theta = 2.0_f64*sll_p_pi/(ntheta-1)
 
 SLL_CLEAR_ALLOCATE(rhs(1:nr,1:ntheta),error)
 SLL_CLEAR_ALLOCATE(phi(1:nr,1:ntheta),error)
@@ -64,12 +72,12 @@ end do
 
 tolmax   = 1.0e-4_f64
 
-call initialize_mudpack_polar(poisson,  &
+call sll_s_initialize_mudpack_polar(poisson,  &
                               r_min, r_max, nr, &
                               theta_min, theta_max, ntheta, &
-                              SLL_DIRICHLET, SLL_DIRICHLET, &
-                              SLL_PERIODIC, &
-                              SLL_PERIODIC )
+                              sll_p_dirichlet, sll_p_dirichlet, &
+                              sll_p_periodic, &
+                              sll_p_periodic )
 do i =1,nr
    do j=1,ntheta
       rhs(i,j) = f_cos(r(i), theta(j))
@@ -78,7 +86,7 @@ end do
 
 poisson%iguess = 0 ! no initial guess
 
-call solve_mudpack_polar(poisson, phi, rhs)
+call sll_s_solve_mudpack_polar(poisson, phi, rhs)
 
 call plot_field( "mudpack_polar_cos.dat", phi )
 
@@ -99,7 +107,7 @@ end do
 
 poisson%iguess = 0 ! no initial guess
 
-call solve_mudpack_polar(poisson, phi, rhs)
+call sll_s_solve_mudpack_polar(poisson, phi, rhs)
 
 call plot_field( "mudpack_polar_sin.dat", phi )
 

@@ -1,26 +1,40 @@
 program test_general_elliptic_solver_multipatch
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use m_multipatch_helper_functions, only: &
+    func_one, &
+    func_zero
 
-use sll_m_cartesian_meshes
-use sll_m_cartesian_meshes_multipatch
-use sll_m_coordinate_transformations_2d
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_multipatch
-use sll_m_scalar_field_2d
-use sll_m_scalar_field_2d_multipatch
-use sll_m_constants
-use sll_m_arbitrary_degree_spline_interpolator_2d
-use sll_m_timer
-use sll_m_general_coordinate_elliptic_solver_multipatch
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
 
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_f_new_coordinate_transformation_multipatch_2d, &
+    sll_t_coordinate_transformation_multipatch_2d, &
+    sll_o_delete
 
-use m_multipatch_helper_functions, only : &
-     func_zero, func_one
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_t_coordinate_transformation_2d_nurbs
 
-implicit none
+  use sll_m_general_coordinate_elliptic_solver, only: &
+    sll_p_es_gauss_legendre
+
+  use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
+    sll_s_factorize_mat_es_mp, &
+    sll_t_general_coordinate_elliptic_solver_mp, &
+    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_s_solve_general_coordinates_elliptic_eq_mp
+
+  use sll_m_scalar_field_2d_multipatch, only: &
+    sll_f_new_scalar_field_multipatch_2d, &
+    sll_o_delete, &
+    sll_t_scalar_field_multipatch_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
@@ -32,21 +46,21 @@ implicit none
 #define ETA2MAX           1.0_f64
 #define PRINT_COMPARISON  .false.
 
-type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-class(sll_cartesian_mesh_2d), pointer                      :: m
-class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
-type(general_coordinate_elliptic_solver_mp)                :: es_mp
-class(sll_scalar_field_multipatch_2d), pointer             :: a11_field_mat
-class(sll_scalar_field_multipatch_2d), pointer             :: a12_field_mat
-class(sll_scalar_field_multipatch_2d), pointer             :: a21_field_mat
-class(sll_scalar_field_multipatch_2d), pointer             :: a22_field_mat
-class(sll_scalar_field_multipatch_2d), pointer             :: b1_field_vect
-class(sll_scalar_field_multipatch_2d), pointer             :: b2_field_vect
-class(sll_scalar_field_multipatch_2d), pointer             :: c_field_scal
-class(sll_scalar_field_multipatch_2d), pointer             :: rho_field_scal
-class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_scal
-class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_ex
-class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_diff
+type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
+class(sll_t_cartesian_mesh_2d), pointer                      :: m
+class(sll_t_coordinate_transformation_2d_nurbs), pointer     :: transf
+type(sll_t_general_coordinate_elliptic_solver_mp)                :: es_mp
+class(sll_t_scalar_field_multipatch_2d), pointer             :: a11_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer             :: a12_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer             :: a21_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer             :: a22_field_mat
+class(sll_t_scalar_field_multipatch_2d), pointer             :: b1_field_vect
+class(sll_t_scalar_field_multipatch_2d), pointer             :: b2_field_vect
+class(sll_t_scalar_field_multipatch_2d), pointer             :: c_field_scal
+class(sll_t_scalar_field_multipatch_2d), pointer             :: rho_field_scal
+class(sll_t_scalar_field_multipatch_2d), pointer             :: phi_field_scal
+class(sll_t_scalar_field_multipatch_2d), pointer             :: phi_field_ex
+class(sll_t_scalar_field_multipatch_2d), pointer             :: phi_field_diff
 
 sll_int32  :: num_patches
 sll_int32  :: ipatch
@@ -63,29 +77,29 @@ sll_real64 :: x1
 sll_real64 :: x2
 
 
-T => new_coordinate_transformation_multipatch_2d("circle_mp5_pts12")
+T => sll_f_new_coordinate_transformation_multipatch_2d("circle_mp5_pts12")
 
-a11_field_mat => new_scalar_field_multipatch_2d("a11_field_multipatch", T)
+a11_field_mat => sll_f_new_scalar_field_multipatch_2d("a11_field_multipatch", T)
 call a11_field_mat%allocate_memory()
-a12_field_mat => new_scalar_field_multipatch_2d("a12_field_multipatch", T)
+a12_field_mat => sll_f_new_scalar_field_multipatch_2d("a12_field_multipatch", T)
 call a12_field_mat%allocate_memory()
-a21_field_mat => new_scalar_field_multipatch_2d("a21_field_multipatch", T)
+a21_field_mat => sll_f_new_scalar_field_multipatch_2d("a21_field_multipatch", T)
 call a21_field_mat%allocate_memory()
-a22_field_mat => new_scalar_field_multipatch_2d("a22_field_multipatch", T)
+a22_field_mat => sll_f_new_scalar_field_multipatch_2d("a22_field_multipatch", T)
 call a22_field_mat%allocate_memory()
-b1_field_vect => new_scalar_field_multipatch_2d("b1_field_multipatch", T)
+b1_field_vect => sll_f_new_scalar_field_multipatch_2d("b1_field_multipatch", T)
 call b1_field_vect%allocate_memory()
-b2_field_vect => new_scalar_field_multipatch_2d("b2_field_multipatch", T)
+b2_field_vect => sll_f_new_scalar_field_multipatch_2d("b2_field_multipatch", T)
 call b2_field_vect%allocate_memory()
-c_field_scal => new_scalar_field_multipatch_2d("c_field_multipatch", T)
+c_field_scal => sll_f_new_scalar_field_multipatch_2d("c_field_multipatch", T)
 call c_field_scal%allocate_memory()
-rho_field_scal => new_scalar_field_multipatch_2d("rho_field_multipatch", T)
+rho_field_scal => sll_f_new_scalar_field_multipatch_2d("rho_field_multipatch", T)
 call rho_field_scal%allocate_memory()
-phi_field_scal => new_scalar_field_multipatch_2d("phi_field_multipatch", T)
+phi_field_scal => sll_f_new_scalar_field_multipatch_2d("phi_field_multipatch", T)
 call phi_field_scal%allocate_memory()
-phi_field_ex => new_scalar_field_multipatch_2d("phi_field_ex_multipatch", T)
+phi_field_ex => sll_f_new_scalar_field_multipatch_2d("phi_field_ex_multipatch", T)
 call phi_field_ex%allocate_memory()
-phi_field_diff => new_scalar_field_multipatch_2d("phi_field_diff_multipatch", T)
+phi_field_diff => sll_f_new_scalar_field_multipatch_2d("phi_field_diff_multipatch", T)
 call phi_field_diff%allocate_memory()
 
 num_patches = phi_field_scal%get_number_patches()
@@ -154,13 +168,13 @@ call phi_field_ex%update_interpolation_coefficients()
 
 print*, 'Initialization solver elliptic multipacth '
 
-call initialize_general_elliptic_solver_mp( es_mp,             &
-                                            ES_GAUSS_LEGENDRE, &
-                                            ES_GAUSS_LEGENDRE, &
+call sll_s_initialize_general_elliptic_solver_mp( es_mp,             &
+                                            sll_p_es_gauss_legendre, &
+                                            sll_p_es_gauss_legendre, &
                                             T)
 
 print*, ' factorise matrix to solve the elleptic solver'
-call factorize_mat_es_mp( es_mp,         &
+call sll_s_factorize_mat_es_mp( es_mp,         &
                           a11_field_mat, &
                           a12_field_mat, &
                           a21_field_mat, &
@@ -171,7 +185,7 @@ call factorize_mat_es_mp( es_mp,         &
 
 print*, 'solve the elliptic solver'
 
-call solve_general_coordinates_elliptic_eq_mp( es_mp, rho_field_scal, phi_field_scal)
+call sll_s_solve_general_coordinates_elliptic_eq_mp( es_mp, rho_field_scal, phi_field_scal)
 
 do ipatch= 0,num_patches-1
    m        => rho_field_scal%get_cartesian_mesh(ipatch)
@@ -212,18 +226,18 @@ print *, 'writing to file...'
 call phi_field_diff%write_to_file(1)
 
 print*, 'delete object'
-call sll_delete(T)
-call sll_delete(a11_field_mat)
-call sll_delete(a21_field_mat)
-call sll_delete(a12_field_mat)
-call sll_delete(a22_field_mat)
-call sll_delete(b1_field_vect)
-call sll_delete(b2_field_vect)
-call sll_delete(c_field_scal)
-call sll_delete(rho_field_scal)
-call sll_delete(phi_field_scal)
-call sll_delete(phi_field_ex)
-call sll_delete(phi_field_diff)
+call sll_o_delete(T)
+call sll_o_delete(a11_field_mat)
+call sll_o_delete(a21_field_mat)
+call sll_o_delete(a12_field_mat)
+call sll_o_delete(a22_field_mat)
+call sll_o_delete(b1_field_vect)
+call sll_o_delete(b2_field_vect)
+call sll_o_delete(c_field_scal)
+call sll_o_delete(rho_field_scal)
+call sll_o_delete(phi_field_scal)
+call sll_o_delete(phi_field_ex)
+call sll_o_delete(phi_field_diff)
 print *, "PASSED"
 
 end program test_general_elliptic_solver_multipatch

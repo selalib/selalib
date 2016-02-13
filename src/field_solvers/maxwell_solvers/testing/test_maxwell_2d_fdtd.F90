@@ -19,17 +19,24 @@ program test_maxwell_2d_fdtd
 !------------------------------------------------------------------------
 !  test 2D Maxwell solver based on finite differences on a staggered grid
 !------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_maxwell_solvers_base
-  use sll_m_maxwell_2d_fdtd
+  use sll_m_constants, only: &
+    sll_p_pi
 
-implicit none
+  use sll_m_maxwell_2d_fdtd, only: &
+    sll_o_create, &
+    sll_t_maxwell_2d_fdtd, &
+    sll_o_solve
+
+  use sll_m_maxwell_solvers_base, only: &
+    sll_s_plot_two_fields
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
@@ -38,8 +45,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(sll_maxwell_2d_fdtd)                   :: maxwell_TE
-type(sll_maxwell_2d_fdtd)                   :: maxwell_TM
+type(sll_t_maxwell_2d_fdtd)                   :: maxwell_TE
+type(sll_t_maxwell_2d_fdtd)                   :: maxwell_TM
 
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
@@ -62,18 +69,18 @@ sll_real64                              :: cfl = 0.5_f64
 
 sll_int32,  parameter                   :: mode = 2
 
-eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
-eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
+eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
+eta2_min = .0_f64; eta2_max = 2.0_f64*sll_p_pi
 
 nc_eta1 = 64; nc_eta2 = 64
 
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
 
-call sll_create(maxwell_TE, 1, nc_eta1+1, 1,  &
+call sll_o_create(maxwell_TE, 1, nc_eta1+1, 1,  &
                 nc_eta2+1, delta_eta1, delta_eta2, TE_POLARIZATION)
 
-call sll_create(maxwell_TM, 1, nc_eta1+1, 1,  &
+call sll_o_create(maxwell_TM, 1, nc_eta1+1, 1,  &
                 nc_eta2+1, delta_eta1, delta_eta2, TM_POLARIZATION)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
@@ -81,10 +88,10 @@ dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
 time  = 0.0_f64
 
-omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
-        &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
+omega = sqrt( (mode*sll_p_pi/(nc_eta1*delta_eta1))**2   &
+        &    +(mode*sll_p_pi/(nc_eta2*delta_eta2))**2)
 
-nstep = floor(2.*sll_pi/(dt*omega))
+nstep = floor(2.*sll_p_pi/(dt*omega))
 
 SLL_CLEAR_ALLOCATE(ex(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(ey(1:nc_eta1+1,1:nc_eta2+1),error)
@@ -103,8 +110,8 @@ do istep = 1, nstep !*** Loop over time
 
    do j = 1, nc_eta2+1
    do i = 1, nc_eta1+1
-      bz_exact(i,j) =   - cos(mode*sll_pi*(i-0.5_f64)*delta_eta1)    &
-                        * cos(mode*sll_pi*(j-0.5_f64)*delta_eta2)    &
+      bz_exact(i,j) =   - cos(mode*sll_p_pi*(i-0.5_f64)*delta_eta1)    &
+                        * cos(mode*sll_p_pi*(j-0.5_f64)*delta_eta2)    &
                         * cos(omega*time)
    end do
    end do
@@ -127,10 +134,10 @@ do istep = 1, nstep !*** Loop over time
 
    end if
 
-   call sll_plot_two_fields('ez',nc_eta1+1,nc_eta2+1,ez,ez_exact,istep,time)
+   call sll_s_plot_two_fields('ez',nc_eta1+1,nc_eta2+1,ez,ez_exact,istep,time)
 
-   call sll_solve(maxwell_TE, ex, ey, bz, dt)
-   call sll_solve(maxwell_TM, bx, by, ez, dt)
+   call sll_o_solve(maxwell_TE, ex, ey, bz, dt)
+   call sll_o_solve(maxwell_TM, bx, by, ez, dt)
 
    time = time + 0.5_f64*dt
 

@@ -1,15 +1,34 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 module sll_m_vp_cartesian_2d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_field_2d.h"
-  use sll_m_interpolators_1d_base
-  use sll_m_time_splitting
-  use sll_m_distribution_function
-  use sll_m_poisson_1d_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_distribution_function, only: &
+    sll_t_distribution_function_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_poisson_1d_periodic, only: &
+    sll_t_poisson_1d_periodic, &
+    sll_o_solve
+
+  use sll_m_time_splitting, only: &
+    sll_c_time_splitting
+
   implicit none
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type :: app_field_params
      sll_real64 :: Edrmax, tflat, tL, tR, twL, twR, t0
@@ -17,10 +36,10 @@ module sll_m_vp_cartesian_2d
      logical    :: turn_drive_off, driven
   end type app_field_params
 
-  type, extends(time_splitting) :: vp_cartesian_2d
-     class(sll_interpolator_1d_base), pointer    :: interpx, interpv
-     type(sll_distribution_function_2d), pointer   :: dist_func
-     type(poisson_1d_periodic), pointer            :: poisson_1d
+  type, extends(sll_c_time_splitting) :: vp_cartesian_2d
+     class(sll_c_interpolator_1d), pointer    :: interpx, interpv
+     type(sll_t_distribution_function_2d), pointer   :: dist_func
+     type(sll_t_poisson_1d_periodic), pointer            :: poisson_1d
      sll_int32 :: Ncx, Ncv
      type(app_field_params)  :: params
    contains
@@ -32,10 +51,10 @@ contains
 
   subroutine vp_cartesian_2d_initialize(this, dist_func, poisson_1d, Ncx, Ncv, interpx, interpv, params)
     type(vp_cartesian_2d) :: this 
-    type(sll_distribution_function_2d), target   :: dist_func
-    type(poisson_1d_periodic), target            :: poisson_1d
+    type(sll_t_distribution_function_2d), target   :: dist_func
+    type(sll_t_poisson_1d_periodic), target            :: poisson_1d
     sll_int32 :: Ncx, Ncv
-    class(sll_interpolator_1d_base), pointer    :: interpx, interpv
+    class(sll_c_interpolator_1d), pointer    :: interpx, interpv
     type(app_field_params)  :: params
     this%dist_func  => dist_func
     this%poisson_1d => poisson_1d
@@ -54,7 +73,7 @@ contains
     sll_real64 :: displacement
     sll_int32 :: j
     sll_real64 :: vmin, vmax, delta_v
-    class(sll_cartesian_mesh_2d), pointer :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     mesh => this%dist_func%transf%get_cartesian_mesh()
 
@@ -62,9 +81,9 @@ contains
     vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
     delta_v = (vmax - vmin) /  mesh%num_cells2
     do j = 1, this%Ncv+1
-       displacement = (vmin + (j-1) * delta_v) * dt
+       displacement = -(vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
-       f1d = this%interpx%interpolate_array_disp(this%Ncx+1, f1d, displacement)
+       call this%interpx%interpolate_array_disp_inplace(this%Ncx+1, f1d, displacement)
     end do
   end subroutine 
 
@@ -81,7 +100,7 @@ contains
     sll_int32 :: i
     sll_real64 :: xmin, xmax, delta_x
     sll_real64 :: vmin, vmax, delta_v
-    class(sll_cartesian_mesh_2d), pointer :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer :: mesh
     
     time = this%current_time
 
@@ -98,7 +117,7 @@ contains
     !-----------------------
 
     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(this%dist_func), DIM = 2)
-    call solve(this%poisson_1d, efield, rho)
+    call sll_o_solve(this%poisson_1d, efield, rho)
     if (this%params%driven) then
        call PF_envelope(adr, time, this%params)
        do i = 1, this%Ncx + 1
@@ -108,9 +127,9 @@ contains
     endif
     ! do advection for given electric field
     do i = 1, this%Ncx+1
-        displacement = -(efield(i)+e_app(i)) * 0.5_f64 * dt
+        displacement = (efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(this%dist_func) (i,:) 
-        f1d = this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement)
+        call this%interpv%interpolate_array_disp_inplace(this%Ncv+1, f1d, displacement)
      end do
   end subroutine
 
@@ -118,7 +137,7 @@ contains
     sll_real64, intent(in) :: v
     sll_real64 :: f_equilibrium
 
-    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+    f_equilibrium = 1.0_f64/sqrt(2*sll_p_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
   subroutine PF_envelope(S, t, params)

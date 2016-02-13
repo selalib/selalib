@@ -1,13 +1,84 @@
 module test_processes_module
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_cubic_splines
-  use sll_m_constants
-  use util_constants
-  use test_func_module
-  use sll_m_boundary_condition_descriptors
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_cubic_splines, only: &
+    sll_s_compute_cubic_spline_1d, &
+    sll_s_compute_cubic_spline_2d, &
+    sll_f_interpolate_derivative, &
+    sll_s_interpolate_from_interpolant_array, &
+    sll_f_interpolate_from_interpolant_value, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_cubic_spline_1d, &
+    sll_f_new_cubic_spline_2d, &
+    sll_t_cubic_spline_1d, &
+    sll_t_cubic_spline_2d, &
+    sll_o_delete
+
+  use test_func_module, only: &
+    f, &
+    fprime
+
+  use util_constants, only: &
+    np, &
+    npx1, &
+    npx2, &
+    r1, &
+    r2, &
+    x1max, &
+    x1min, &
+    x2max, &
+    x2min, &
+    xmax, &
+    xmin
+
   implicit none
+
+  public :: &
+    coscos, &
+    deriv1_polar_x, &
+    deriv1_polar_y, &
+    deriv2_polar_x, &
+    deriv2_polar_y, &
+    dmycos, &
+    fxy, &
+    interpolator_tester_1d_hrmt, &
+    interpolator_tester_1d_prdc, &
+    interpolator_tester_2d_hrmt_prdc, &
+    interpolator_tester_2d_prdc_prdc, &
+    line, &
+    mcossin, &
+    msincos, &
+    mycos, &
+    plane, &
+    plane2, &
+    plane2_deriv, &
+    plane3, &
+    plane3_deriv_x, &
+    plane3_deriv_y, &
+    plane_deriv, &
+    polar_x, &
+    polar_y, &
+    sincos_prod, &
+    sinsin, &
+    test_2d_spline_hrmt_hrmt, &
+    test_2d_spline_hrmt_hrmt_no_slopes, &
+    test_2d_spline_hrmt_prdc, &
+    test_2d_spline_hrmt_prdc_no_slopes, &
+    test_2d_spline_prdc_hrmt, &
+    test_2d_spline_prdc_hrmt_no_slopes, &
+    test_spline_1d_hrmt
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   abstract interface
      function fx(x)
@@ -32,7 +103,7 @@ module test_processes_module
        use sll_m_cubic_splines
        sll_real64 :: spline_interpolator_1d
        sll_real64, intent(in) :: x
-       type(sll_cubic_spline_1D), pointer :: spline
+       type(sll_t_cubic_spline_1d), pointer :: spline
      end function spline_interpolator_1d
   end interface
 
@@ -44,7 +115,7 @@ module test_processes_module
        sll_real64 :: spline_interpolator_2d
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y
-       type(sll_cubic_spline_2D), pointer :: spline
+       type(sll_t_cubic_spline_2d), pointer :: spline
      end function spline_interpolator_2d
   end interface
 
@@ -55,8 +126,8 @@ contains
     implicit none
 
     sll_int32                             :: i_test, ok, i, err 
-    type(sll_cubic_spline_1d), pointer         :: sp1
-    type(sll_cubic_spline_1d), pointer         :: sp2
+    type(sll_t_cubic_spline_1d), pointer         :: sp1
+    type(sll_t_cubic_spline_1d), pointer         :: sp2
     sll_real64                            :: x
     sll_real64                            :: phase
     sll_real64, allocatable, dimension(:) :: coordinates
@@ -91,29 +162,29 @@ contains
     end do
      
     print *, 'proceed to allocate the spline...'
-    sp1 =>  new_cubic_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
-    call compute_cubic_spline_1D( data, sp1 )
-    sp2 =>  new_cubic_spline_1D( &
+    sp1 =>  sll_f_new_cubic_spline_1d( NP, XMIN, XMAX, sll_p_periodic )
+    call sll_s_compute_cubic_spline_1d( data, sp1 )
+    sp2 =>  sll_f_new_cubic_spline_1d( &
          NP, &
          XMIN, &
          XMAX, &
-         SLL_HERMITE, &
+         sll_p_hermite, &
          fprime(XMIN, i_test), &
          fprime(XMAX, i_test) )
-    call compute_cubic_spline_1D( data, sp2 )
+    call sll_s_compute_cubic_spline_1d( data, sp2 )
     
     print *, 'cumulative errors: '
     print *, 'periodic case, NP-1 points: '
     print *, 'interpolating individual values from 1 to NP-1:'
     do i=1, NP-1
        x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
-       accumulator1 = accumulator1 + abs(data(i) - interpolate_value(x, sp1))
+       accumulator1 = accumulator1 + abs(data(i) - sll_f_interpolate_from_interpolant_value(x, sp1))
     end do
     print *, 'checking periodicity:'
     print *, 'difference between values at points 1 and NP: ', &
-         abs(data(1) - interpolate_value(XMAX,sp1))
+         abs(data(1) - sll_f_interpolate_from_interpolant_value(XMAX,sp1))
     print *, 'interpolating the whole array:'
-    call interpolate_array_values(coordinates, out, NP-1, sp1)
+    call sll_s_interpolate_from_interpolant_array(coordinates, out, NP-1, sp1)
     do i=1, NP-1
        accumulator3 = accumulator3 + abs(data(i) - out(i))
     end do
@@ -121,9 +192,9 @@ contains
     print *, 'hermite case, NP points: '
     do i=1, NP
        x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
-       accumulator2 = accumulator2 + abs(data(i) - interpolate_value(x, sp2))
+       accumulator2 = accumulator2 + abs(data(i) - sll_f_interpolate_from_interpolant_value(x, sp2))
     end do
-    call interpolate_array_values(coordinates, out, NP, sp2)
+    call sll_s_interpolate_from_interpolant_array(coordinates, out, NP, sp2)
     do i=1, NP
        accumulator4 = accumulator4 + abs(data(i) - out(i))
     end do
@@ -137,11 +208,11 @@ contains
     print *, accumulator3/real(NP,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( XMIN,sp1)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( XMIN,sp1)
     
     write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0+XMIN,sp1)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( (XMAX-XMIN)/4.0+XMIN,sp1)
      
     if ( (accumulator1/real(NP,f64) >= 1.0e-15) .or. &
          (accumulator3/real(NP,f64) >= 1.0e-15) ) then 
@@ -157,10 +228,10 @@ contains
     print *, accumulator2/real(NP,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( 0.0_f64,sp2)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( 0.0_f64,sp2)
     write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4+1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0,sp2)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( (XMAX-XMIN)/4.0,sp2)
      print *, 'spline coefficients: '
      
     if ( (accumulator2/real(NP,f64) >= 1.0e-15) .or. &
@@ -176,9 +247,9 @@ contains
        do i=1, NP
           phase = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
           accumulator5 = accumulator5 + abs(deriv(i) - &
-                         interpolate_derivative(phase, sp1))
+                         sll_f_interpolate_derivative(phase, sp1))
           accumulator6 = accumulator6 + abs(deriv(i) - &
-                         interpolate_derivative(phase, sp2))
+                         sll_f_interpolate_derivative(phase, sp2))
        end do
     
        if ( &
@@ -195,8 +266,8 @@ contains
        end if
     endif
      
-    call sll_delete(sp1)
-    call sll_delete(sp2)
+    call sll_o_delete(sp1)
+    call sll_o_delete(sp2)
     
     SLL_DEALLOCATE_ARRAY(data, err)
     SLL_DEALLOCATE_ARRAY(deriv, err)
@@ -211,10 +282,10 @@ contains
 
     sll_int32                               :: i_test, j_test, ok
     sll_int32                               :: i, j, err
-    type(sll_cubic_spline_2d), pointer            :: sp2d_1
-    type(sll_cubic_spline_2d), pointer            :: sp2d_2
-    type(sll_cubic_spline_2d), pointer            :: sp2d_3
-    type(sll_cubic_spline_2d), pointer            :: sp2d_4
+    type(sll_t_cubic_spline_2d), pointer            :: sp2d_1
+    type(sll_t_cubic_spline_2d), pointer            :: sp2d_2
+    type(sll_t_cubic_spline_2d), pointer            :: sp2d_3
+    type(sll_t_cubic_spline_2d), pointer            :: sp2d_4
     sll_real64                              :: phase_x1, phase_x2
     sll_real64                              :: acc_2D, x1, x2
     sll_real64, allocatable, dimension(:,:) :: data_2d
@@ -242,18 +313,18 @@ contains
     end do
         
     ! Test the periodic-periodic spline2d 
-    sp2d_1 => new_cubic_spline_2D( NPX1, NPX2, &
+    sp2d_1 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         SLL_PERIODIC, SLL_PERIODIC )
-    call compute_cubic_spline_2D( data_2d, sp2d_1 )
+         sll_p_periodic, sll_p_periodic )
+    call sll_s_compute_cubic_spline_2d( data_2d, sp2d_1 )
     acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
-               abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_1))
+               abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_1))
        end do
     end do
     if (acc_2D/(NPX1*NPX2)>=1.e-14) then
@@ -266,20 +337,20 @@ contains
     endif
     ! Test the Hermite-periodic spline2d
     !print *, 'Testing hermite-periodic spline. Test 1'
-    sp2d_2 => new_cubic_spline_2D( NPX1, NPX2, &
+    sp2d_2 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         SLL_HERMITE, SLL_PERIODIC, &
+         sll_p_hermite, sll_p_periodic, &
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
-    call compute_cubic_spline_2D( data_2d, sp2d_2 )
+    call sll_s_compute_cubic_spline_2d( data_2d, sp2d_2 )
     acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
-               abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_2))
+               abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_2))
        end do
     end do
     if (acc_2D/(NPX1*NPX2)>=1.e-14) then
@@ -291,20 +362,20 @@ contains
        stop
     endif
     ! Test the periodic-Hermite spline2d
-    sp2d_3 => new_cubic_spline_2D( NPX1, NPX2, &
+    sp2d_3 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         SLL_PERIODIC, SLL_HERMITE, &
+         sll_p_periodic, sll_p_hermite, &
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
-    call compute_cubic_spline_2D( data_2d, sp2d_3 )
+    call sll_s_compute_cubic_spline_2d( data_2d, sp2d_3 )
     acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
-               abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_3))
+               abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_3))
        end do
     end do
     if (acc_2D/(NPX1*NPX2)>=1.e-14) then
@@ -316,20 +387,20 @@ contains
        stop
     endif
     ! Test the Hermite-Hermite spline2d
-    sp2d_4 => new_cubic_spline_2D( NPX1, NPX2, &
+    sp2d_4 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         SLL_HERMITE, SLL_HERMITE,&
+         sll_p_hermite, sll_p_hermite,&
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
-    call compute_cubic_spline_2D( data_2d, sp2d_4 )
+    call sll_s_compute_cubic_spline_2d( data_2d, sp2d_4 )
     acc_2D = 0.0_f64
     do j=1, NPX2
        do i=1, NPX1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
-               abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_4))
+               abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_4))
        end do
     end do
     if (acc_2D/(NPX1*NPX2)>=1.e-14) then
@@ -341,10 +412,10 @@ contains
        stop
     endif
      
-    call sll_delete(sp2d_1)
-    call sll_delete(sp2d_2)
-    call sll_delete(sp2d_3)
-    call sll_delete(sp2d_4)
+    call sll_o_delete(sp2d_1)
+    call sll_o_delete(sp2d_2)
+    call sll_o_delete(sp2d_3)
+    call sll_o_delete(sp2d_4)
     
     SLL_DEALLOCATE_ARRAY(data_2d, err)
     SLL_DEALLOCATE_ARRAY(coordinates_i,err)
@@ -388,7 +459,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_cubic_spline_1d), pointer :: spline
+    type(sll_t_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
  
     if(present(criterion)) then
@@ -409,13 +480,13 @@ contains
        correct_data_out(i+1) = result_f(x1)
     end do
 
-    spline => new_cubic_spline_1D( &
+    spline => sll_f_new_cubic_spline_1d( &
       npts, &
       xmin, &
       xmax, &
-      SLL_PERIODIC )
+      sll_p_periodic )
 
-    call compute_cubic_spline_1D(data_in, spline)
+    call sll_s_compute_cubic_spline_1d(data_in, spline)
     do i=0,npts-1
        x1 = xmin + real(i,f64)*h1 
        val = interpolator_f(x1,spline)
@@ -431,7 +502,7 @@ contains
        test_passed = .false.
     end if
     ! deallocate memory
-    call sll_delete(spline)
+    call sll_o_delete(spline)
     SLL_DEALLOCATE_ARRAY(data_in, ierr)
     SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
   end subroutine interpolator_tester_1d_prdc
@@ -462,7 +533,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_cubic_spline_1d), pointer :: spline
+    type(sll_t_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
  
     if(present(criterion)) then
@@ -487,13 +558,13 @@ contains
           correct_data_out(i+1) = result_f(x1)
        end do
 
-       spline => new_cubic_spline_1D( &
+       spline => sll_f_new_cubic_spline_1d( &
             npts, &
             xmin, &
             xmax, &
-            SLL_HERMITE )
+            sll_p_hermite )
 
-       call compute_cubic_spline_1D(data_in, spline)
+       call sll_s_compute_cubic_spline_1d(data_in, spline)
        do i=0,npts-2
           x1 = xmin + real(i,f64)*h1 
           val = interpolator_f(x1,spline)
@@ -517,7 +588,7 @@ contains
                average_error, 'delta^4 = ', h1**4
        end if
        ! deallocate memory
-       call sll_delete(spline)
+       call sll_o_delete(spline)
        SLL_DEALLOCATE_ARRAY(data_in, ierr)
        SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
     end do
@@ -539,7 +610,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_cubic_spline_1d), pointer :: spline
+    type(sll_t_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
     sll_int32, parameter :: np_min = 9
     sll_int32, parameter :: np_max = 129
@@ -558,23 +629,23 @@ contains
           x1 = X1MIN + real(i,f64)*h1 
           data_in(i+1) = func_1d(x1)
        end do
-       spline => new_cubic_spline_1D( &
+       spline => sll_f_new_cubic_spline_1d( &
             npts, &
             X1MIN, &
             X1MAX, &
-            SLL_HERMITE )
+            sll_p_hermite )
        
-       call compute_cubic_spline_1D( data_in, spline )
+       call sll_s_compute_cubic_spline_1d( data_in, spline )
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 
-          val = interpolate_value(x1,spline)
+          val = sll_f_interpolate_from_interpolant_value(x1,spline)
           !print *,'x = ', x1, 'true data: ',data_in(i+1), 'interpolated: ', val
           acc = acc + abs(val-data_in(i+1))  
        end do
        ! Do the last point separately because due to roundoff error, it ends
        ! up out of the range inside the loop.
-       val = interpolate_value(X1MAX, spline)
+       val = sll_f_interpolate_from_interpolant_value(X1MAX, spline)
        acc = acc + abs(val-data_in(npts))    
 
        average_error = acc/(real(npts,f64))
@@ -609,7 +680,7 @@ contains
     sll_real64 :: h1, h2 ! cell spacings
     sll_real64 :: x1, x2
     sll_real64 :: acc, val
-    type(sll_cubic_spline_2d), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
     h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
     h2 = (X2MAX - X2MIN)/real(NPX2-1,f64)
@@ -627,17 +698,17 @@ contains
        end do
     end do
 
-    spline => new_cubic_spline_2D( &
+    spline => sll_f_new_cubic_spline_2d( &
       NPX1, &
       NPX2, &
       X1MIN, &
       X1MAX, &
       X2MIN, &
       X2MAX, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC )
+      sll_p_periodic, &
+      sll_p_periodic )
 
-    call compute_cubic_spline_2D(data_in,spline)
+    call sll_s_compute_cubic_spline_2d(data_in,spline)
 
     do j=0,NPX2-1
        do i=0,NPX1-1
@@ -679,7 +750,7 @@ contains
     sll_real64 :: h1, h2 ! cell spacings
     sll_real64 :: x1, x2
     sll_real64 :: acc, val, err, min_err, max_err
-    type(sll_cubic_spline_2d), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
     h1  = 1.0_f64/real(NPX1-1,f64)
     h2  = 1.0_f64/real(NPX2-1,f64)
@@ -708,19 +779,19 @@ contains
        slopes_max(j+1) = slope_max_func(1.0_f64,x2)
     end do
 
-    spline => new_cubic_spline_2D( &
+    spline => sll_f_new_cubic_spline_2d( &
       NPX1, &
       NPX2, &
       0.0_f64, &
       1.0_f64, &
       0.0_f64, &
       1.0_f64, &
-      SLL_HERMITE, &
-      SLL_PERIODIC, &
+      sll_p_hermite, &
+      sll_p_periodic, &
       x1_min_slopes=slopes_min, &
       x1_max_slopes=slopes_max )
 
-    call compute_cubic_spline_2D(data_in,spline)
+    call sll_s_compute_cubic_spline_2d(data_in,spline)
 
     do j=0,NPX2-1
        do i=0,NPX1-1
@@ -769,7 +840,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta1_min_slopes
     sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_cubic_spline_2D), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -792,19 +863,19 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
-    spline =>new_cubic_spline_2D( &
+    spline =>sll_f_new_cubic_spline_2d( &
          NPX1, &
          NPX2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         SLL_HERMITE, &
-         SLL_PERIODIC, &
+         sll_p_hermite, &
+         sll_p_periodic, &
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes )
 
-    call compute_cubic_spline_2D( data, spline )
+    call sll_s_compute_cubic_spline_2d( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -812,7 +883,7 @@ contains
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
-          val      = interpolate_value_2D( eta1, eta2, spline )
+          val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
           if(abs(true_val-val).gt.1.0e-14) then
@@ -852,7 +923,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta1_min_slopes
     sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_cubic_spline_2D), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -875,19 +946,19 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
-    spline =>new_cubic_spline_2D( &
+    spline =>sll_f_new_cubic_spline_2d( &
          NPX1, &
          NPX2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         SLL_HERMITE, &
-         SLL_PERIODIC ) !, &
+         sll_p_hermite, &
+         sll_p_periodic ) !, &
 !         x1_min_slopes=eta1_min_slopes, &
 !         x1_max_slopes=eta1_max_slopes )
 
-    call compute_cubic_spline_2D( data, spline )
+    call sll_s_compute_cubic_spline_2d( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -895,7 +966,7 @@ contains
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
-          val      = interpolate_value_2D( eta1, eta2, spline )
+          val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
           if(abs(true_val-val).gt.1.0e-14) then
@@ -935,7 +1006,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_cubic_spline_2D), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -959,19 +1030,19 @@ contains
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_cubic_spline_2D( &
+    spline =>sll_f_new_cubic_spline_2d( &
          NPX1, &
          NPX2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         SLL_PERIODIC, &
-         SLL_HERMITE, & 
+         sll_p_periodic, &
+         sll_p_hermite, & 
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_cubic_spline_2D( data, spline )
+    call sll_s_compute_cubic_spline_2d( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -979,7 +1050,7 @@ contains
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
-          val      = interpolate_value_2D( eta1, eta2, spline )
+          val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
           if(abs(true_val-val).gt.1.0e-14) then
@@ -1018,7 +1089,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_cubic_spline_2D), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1042,19 +1113,19 @@ contains
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_cubic_spline_2D( &
+    spline =>sll_f_new_cubic_spline_2d( &
          NPX1, &
          NPX2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         SLL_PERIODIC, &
-         SLL_HERMITE ) !, & 
+         sll_p_periodic, &
+         sll_p_hermite ) !, & 
 !         x2_min_slopes=eta2_min_slopes, &
 !         x2_max_slopes=eta2_max_slopes )
 
-    call compute_cubic_spline_2D( data, spline )
+    call sll_s_compute_cubic_spline_2d( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1062,7 +1133,7 @@ contains
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
-          val      = interpolate_value_2D( eta1, eta2, spline )
+          val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
           if(abs(true_val-val).gt.1.0e-14) then
@@ -1107,7 +1178,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_cubic_spline_2D), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1141,21 +1212,21 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_cubic_spline_2D( &
+    spline =>sll_f_new_cubic_spline_2d( &
          NPX1, &
          NPX2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         SLL_HERMITE, &
-         SLL_HERMITE, & 
+         sll_p_hermite, &
+         sll_p_hermite, & 
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes, &
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_cubic_spline_2D( data, spline )
+    call sll_s_compute_cubic_spline_2d( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1163,7 +1234,7 @@ contains
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
-          val      = interpolate_value_2D( eta1, eta2, spline )
+          val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
           if(abs(true_val-val).gt.1.0e-14) then
@@ -1192,7 +1263,7 @@ contains
     sll_int32 :: i, j, im, jm, ierr
     sll_real64, dimension(:,:), allocatable :: data
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err, max_err
-    type(sll_cubic_spline_2D), pointer :: spline
+    type(sll_t_cubic_spline_2d), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1206,17 +1277,17 @@ contains
        end do
     end do
 
-    spline =>new_cubic_spline_2D( &
+    spline =>sll_f_new_cubic_spline_2d( &
          NPX1, &
          NPX2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         SLL_HERMITE, &
-         SLL_HERMITE )
+         sll_p_hermite, &
+         sll_p_hermite )
 
-    call compute_cubic_spline_2D( data, spline )
+    call sll_s_compute_cubic_spline_2d( data, spline )
 
     ! compare results
     max_err = 0.0_f64
@@ -1225,7 +1296,7 @@ contains
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
-          val      = interpolate_value_2D( eta1, eta2, spline )
+          val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           if( abs(val - true_val) > max_err ) then
              max_err = abs(val-true_val)
@@ -1305,37 +1376,37 @@ contains
   function polar_x( eta1, eta2 )
     sll_real64 :: polar_x
     sll_real64, intent(in) :: eta1, eta2
-    polar_x = (r1 + eta1*(r2-r1))*cos(2*sll_pi*eta2)
+    polar_x = (r1 + eta1*(r2-r1))*cos(2*sll_p_pi*eta2)
   end function polar_x
 
   function polar_y( eta1, eta2 )
     sll_real64 :: polar_y
     sll_real64, intent(in) :: eta1, eta2
-    polar_y = (r1 + eta1*(r2-r1))*sin(2*sll_pi*eta2)
+    polar_y = (r1 + eta1*(r2-r1))*sin(2*sll_p_pi*eta2)
   end function polar_y
 
   function deriv1_polar_x( eta1, eta2 )
     sll_real64 :: deriv1_polar_x
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)+0._f64*eta1
+    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_p_pi*eta2)+0._f64*eta1
   end function deriv1_polar_x
 
   function deriv2_polar_x( eta1, eta2 )
     sll_real64 :: deriv2_polar_x
     sll_real64, intent(in) :: eta1, eta2
-    deriv2_polar_x = -(r1+eta1*(r2-r1))*sin(2.0_f64*sll_pi*eta2)*2.0_f64*sll_pi
+    deriv2_polar_x = -(r1+eta1*(r2-r1))*sin(2.0_f64*sll_p_pi*eta2)*2.0_f64*sll_p_pi
   end function deriv2_polar_x
 
   function deriv1_polar_y( eta1, eta2 )
     sll_real64 :: deriv1_polar_y
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)+0._f64*eta1
+    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_p_pi*eta2)+0._f64*eta1
   end function deriv1_polar_y
 
   function deriv2_polar_y( eta1, eta2 )
     sll_real64 :: deriv2_polar_y
     sll_real64, intent(in) :: eta1, eta2
-    deriv2_polar_y = (r1+eta1*(r2-r1))*cos(2.0_f64*sll_pi*eta2)*2.0_f64*sll_pi
+    deriv2_polar_y = (r1+eta1*(r2-r1))*cos(2.0_f64*sll_p_pi*eta2)*2.0_f64*sll_p_pi
   end function deriv2_polar_y
 
   function mycos(x)
@@ -1373,7 +1444,7 @@ contains
   function sinsin(x,y)
     sll_real64 :: sinsin
     sll_real64, intent(in) :: x, y
-    sinsin = sin(2.0_f64*sll_pi*x)*sin(2.0_f64*sll_pi*y)
+    sinsin = sin(2.0_f64*sll_p_pi*x)*sin(2.0_f64*sll_p_pi*y)
   end function sinsin
 
 end module test_processes_module

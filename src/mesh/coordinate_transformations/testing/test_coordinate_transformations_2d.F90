@@ -1,28 +1,70 @@
 program unit_test_2d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_coordinate_transformations_2d
-  use sll_m_coordinate_transformations_2d_nurbs
-  use sll_m_common_coordinate_transformations
-  use sll_m_cartesian_meshes
-  use sll_m_constants
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_boundary_condition_descriptors
-  
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_o_delete
+
+  use sll_m_common_coordinate_transformations, only: &
+    sll_f_deriv1_jacobian_polar_f, &
+    sll_f_deriv_x1_polar_f_eta1, &
+    sll_f_deriv_x1_polar_f_eta2, &
+    sll_f_deriv_x2_polar_f_eta1, &
+    sll_f_deriv_x2_polar_f_eta2, &
+    sll_f_jacobian_polar_f, &
+    sll_f_sinprod_gen_jac, &
+    sll_f_sinprod_gen_jac11, &
+    sll_f_sinprod_gen_jac12, &
+    sll_f_sinprod_gen_jac21, &
+    sll_f_sinprod_gen_jac22, &
+    sll_f_sinprod_gen_x1, &
+    sll_f_sinprod_gen_x2, &
+    sll_f_sinprod_jac, &
+    sll_f_sinprod_jac11, &
+    sll_f_sinprod_jac12, &
+    sll_f_sinprod_jac21, &
+    sll_f_sinprod_jac22, &
+    sll_f_sinprod_x1, &
+    sll_f_sinprod_x2, &
+    sll_f_x1_polar_f, &
+    sll_f_x2_polar_f
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_p_io_mtv
+
+  use sll_m_coordinate_transformations_2d, only: &
+    sll_f_new_coordinate_transformation_2d_analytic, &
+    sll_t_coordinate_transformation_2d_analytic, &
+    sll_t_coordinate_transformation_2d_discrete, &
+    sll_o_delete
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_t_coordinate_transformation_2d_nurbs, &
+    sll_o_delete
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_t_cubic_spline_interpolator_2d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NPTS1 33
 #define NPTS2 33 
-  type(sll_cartesian_mesh_2d), pointer :: mesh
-  type(sll_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
-  type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
-  type(sll_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
-  type(sll_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
+  type(sll_t_cartesian_mesh_2d), pointer :: mesh
+  type(sll_t_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
+  type(sll_t_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
+  type(sll_t_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
+  type(sll_t_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
   ! for the discrete case...
-  type(sll_cubic_spline_interpolator_2d)   :: x1_interp
-  type(sll_cubic_spline_interpolator_2d)   :: x2_interp
-  type(sll_cubic_spline_interpolator_2d)   :: j_interp
+  type(sll_t_cubic_spline_interpolator_2d)   :: x1_interp
+  type(sll_t_cubic_spline_interpolator_2d)   :: x2_interp
+  type(sll_t_cubic_spline_interpolator_2d)   :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -63,9 +105,9 @@ program unit_test_2d
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
-        x1_tab(i+1,j+1)   = x1_polar_f(eta1,eta2,params) 
-        x2_tab(i+1,j+1)   = x2_polar_f(eta1,eta2,params) 
-        jacs(i+1,j+1) = jacobian_polar_f(eta1,eta2,params)
+        x1_tab(i+1,j+1)   = sll_f_x1_polar_f(eta1,eta2,params) 
+        x2_tab(i+1,j+1)   = sll_f_x2_polar_f(eta1,eta2,params) 
+        jacs(i+1,j+1) = sll_f_jacobian_polar_f(eta1,eta2,params)
      end do
   end do
 
@@ -73,11 +115,11 @@ program unit_test_2d
   do j=0,NPTS2-1
      eta1           = 0.0_f64
      eta2           = real(j,f64)*h2
-     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
-     x2_eta1_min(j+1) = deriv_x2_polar_f_eta1(eta1,eta2,params)
+     x1_eta1_min(j+1) = sll_f_deriv_x1_polar_f_eta1(eta1,eta2,params)
+     x2_eta1_min(j+1) = sll_f_deriv_x2_polar_f_eta1(eta1,eta2,params)
      eta1           = 1.0_f64
-     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
-     x2_eta1_max(j+1) = deriv_x2_polar_f_eta1(eta1,eta2,params)
+     x1_eta1_max(j+1) = sll_f_deriv_x1_polar_f_eta1(eta1,eta2,params)
+     x2_eta1_max(j+1) = sll_f_deriv_x2_polar_f_eta1(eta1,eta2,params)
   end do
 
   print *, '**********************************************************'
@@ -85,34 +127,34 @@ program unit_test_2d
   print *, '**********************************************************'
 
 
-  mesh => new_cartesian_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => sll_f_new_cartesian_mesh_2d( NPTS1-1, NPTS2-1 )
 
   ! Need to do something about these variables being always on the stack...
 
-  print *, x1_polar_f(1.0_f64,1.0_f64,params)
+  print *, sll_f_x1_polar_f(1.0_f64,1.0_f64,params)
   call t_a%initialize( &
        "map_a", &
        mesh, &
-       x1_polar_f, &
-       x2_polar_f, &
-       deriv_x1_polar_f_eta1, &
-       deriv_x1_polar_f_eta2, &
-       deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2, &
+       sll_f_x1_polar_f, &
+       sll_f_x2_polar_f, &
+       sll_f_deriv_x1_polar_f_eta1, &
+       sll_f_deriv_x1_polar_f_eta2, &
+       sll_f_deriv_x2_polar_f_eta1, &
+       sll_f_deriv_x2_polar_f_eta2, &
        params)
   print *, 'initialized analytic map'
 
   ! The following pointer is not used but wanted to test the 'new' function
   ! wrapper.
-  t_a_ptr => new_coordinate_transformation_2d_analytic( &
+  t_a_ptr => sll_f_new_coordinate_transformation_2d_analytic( &
        "map_a", &
        mesh, &
-       x1_polar_f, &
-       x2_polar_f, &
-       deriv_x1_polar_f_eta1, &
-       deriv_x1_polar_f_eta2, &
-       deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2, &
+       sll_f_x1_polar_f, &
+       sll_f_x2_polar_f, &
+       sll_f_deriv_x1_polar_f_eta1, &
+       sll_f_deriv_x1_polar_f_eta2, &
+       sll_f_deriv_x2_polar_f_eta1, &
+       sll_f_deriv_x2_polar_f_eta2, &
        params )
 
   print *, 'jacobian_2d(t_a, 0.5, 0.5) = ', t_a%jacobian(0.5_f64,0.5_f64)
@@ -135,7 +177,7 @@ program unit_test_2d
   print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
 
   call t_a%write_to_file()
-  !call t_a%write_to_file(SLL_IO_MTV)
+  !call t_a%write_to_file(sll_p_io_mtv)
 
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE TRANSFORMATION         '
@@ -150,8 +192,8 @@ program unit_test_2d
        1.0_f64, &      
        0.0_f64, &
        1.0_f64, &
-       SLL_HERMITE, &
-       SLL_PERIODIC, &
+       sll_p_hermite, &
+       sll_p_periodic, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
@@ -162,8 +204,8 @@ program unit_test_2d
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       SLL_HERMITE, &
-       SLL_PERIODIC, &
+       sll_p_hermite, &
+       sll_p_periodic, &
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
@@ -174,10 +216,10 @@ program unit_test_2d
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       SLL_HERMITE, &
-       SLL_PERIODIC, &
-       const_eta1_min_slope=deriv1_jacobian_polar_f(0.0_f64,0.0_f64,params), &
-       const_eta1_max_slope=deriv1_jacobian_polar_f(1.0_f64,0.0_f64,params) )
+       sll_p_hermite, &
+       sll_p_periodic, &
+       const_eta1_min_slope=sll_f_deriv1_jacobian_polar_f(0.0_f64,0.0_f64,params), &
+       const_eta1_max_slope=sll_f_deriv1_jacobian_polar_f(1.0_f64,0.0_f64,params) )
 
   print *, 'Initialized interpolators...'
 
@@ -237,11 +279,11 @@ program unit_test_2d
 
   call t_d%write_to_file()
   t_d%written = .false.
-  call t_d%write_to_file(SLL_IO_MTV)
+  call t_d%write_to_file(sll_p_io_mtv)
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
-  call sll_delete(t_a)
-  call sll_delete(t_d)
+  call sll_o_delete(t_a)
+  call sll_o_delete(t_d)
 
   print *, 'deleted transformations'
 
@@ -257,7 +299,7 @@ program unit_test_2d
 
   if (l_exists) then
      call t_n%read_from_file("domain_patch0.nml")
-     !t_n%mesh => new_cartesian_mesh_2d(64,64 )
+     !t_n%mesh => sll_f_new_cartesian_mesh_2d(64,64 )
      call t_n%write_to_file()
 
      param1 = (/ 0.05_f64,0.05_f64,1.0_f64,1.0_f64 /)
@@ -269,26 +311,26 @@ program unit_test_2d
            eta2 = t_n%mesh%eta2_node(i,j)
            val_approx1 = t_n%x1(eta1,eta2)
            val_approx2 = t_n%x2(eta1,eta2)
-           val_exacte1 = 2.0_f64*sinprod_x1(eta1,eta2,param1)-1.0_f64
-           val_exacte2 = 2.0_f64*sinprod_x2(eta1,eta2,param1)-1.0_f64
-           val_exacte1_bis = sinprod_gen_x1(eta1,eta2,param2)
-           val_exacte2_bis = sinprod_gen_x2(eta1,eta2,param2)
+           val_exacte1 = 2.0_f64*sll_f_sinprod_x1(eta1,eta2,param1)-1.0_f64
+           val_exacte2 = 2.0_f64*sll_f_sinprod_x2(eta1,eta2,param1)-1.0_f64
+           val_exacte1_bis = sll_f_sinprod_gen_x1(eta1,eta2,param2)
+           val_exacte2_bis = sll_f_sinprod_gen_x2(eta1,eta2,param2)
 
           ! print*, 'diff values composante eta1 ', abs(val_approx1-val_exacte1) , val_exacte1, val_exacte1_bis,val_approx1
           ! print*, 'diff values composante eta2 ', abs(val_approx2-val_exacte2) , val_exacte2, val_exacte2_bis,val_approx2 
 
            val_approx_jac = t_n%jacobian_matrix(eta1,eta2)
            val_jac_approx = t_n%jacobian(eta1,eta2)
-           j11 = 2.0_f64*sinprod_jac11(eta1,eta2,param1)
-           j12 = 2.0_f64*sinprod_jac12(eta1,eta2,param1)
-           j21 = 2.0_f64*sinprod_jac21(eta1,eta2,param1)
-           j22 = 2.0_f64*sinprod_jac22(eta1,eta2,param1)
-           jac = 2.0_f64*2.0_f64*sinprod_jac(eta1,eta2,param1)
-           j11_bis = sinprod_gen_jac11(eta1,eta2,param2)
-           j12_bis = sinprod_gen_jac12(eta1,eta2,param2)
-           j21_bis = sinprod_gen_jac21(eta1,eta2,param2)
-           j22_bis = sinprod_gen_jac22(eta1,eta2,param2)
-           jac_bis = sinprod_gen_jac  (eta1,eta2,param2)
+           j11 = 2.0_f64*sll_f_sinprod_jac11(eta1,eta2,param1)
+           j12 = 2.0_f64*sll_f_sinprod_jac12(eta1,eta2,param1)
+           j21 = 2.0_f64*sll_f_sinprod_jac21(eta1,eta2,param1)
+           j22 = 2.0_f64*sll_f_sinprod_jac22(eta1,eta2,param1)
+           jac = 2.0_f64*2.0_f64*sll_f_sinprod_jac(eta1,eta2,param1)
+           j11_bis = sll_f_sinprod_gen_jac11(eta1,eta2,param2)
+           j12_bis = sll_f_sinprod_gen_jac12(eta1,eta2,param2)
+           j21_bis = sll_f_sinprod_gen_jac21(eta1,eta2,param2)
+           j22_bis = sll_f_sinprod_gen_jac22(eta1,eta2,param2)
+           jac_bis = sll_f_sinprod_gen_jac  (eta1,eta2,param2)
           ! print*, 'Jacobian values composante j11 ', abs(val_approx_jac(1,1)-j11),j11,j11_bis, val_approx_jac(1,1) 
           ! print*, 'Jacobian values composante j12 ', abs(val_approx_jac(1,2)-j12),j12,j12_bis, val_approx_jac(1,2) 
           ! print*, 'Jacobian values composante j21 ', abs(val_approx_jac(2,1)-j21),j21,j21_bis, val_approx_jac(2,1) 
@@ -299,7 +341,7 @@ program unit_test_2d
 
      print*, 'label t_n', t_n%label
 
-     call sll_delete(t_n)
+     call sll_o_delete(t_n)
      !call write_to_file(t_d)
   else
      print *, 'nml file is missing '

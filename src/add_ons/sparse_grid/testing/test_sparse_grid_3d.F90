@@ -3,14 +3,18 @@
 !-------------------------------------------------------------------
 
 program test_interpolation_3d
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_sparse_grid_3d
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_sparse_grid_3d, only: &
+    sll_t_sparse_grid_interpolator_3d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, dimension(:), allocatable :: order
   sll_int32:: levels
@@ -24,7 +28,7 @@ program test_interpolation_3d
 
   sll_int32, dimension(3) :: dorder, levelsini
 
-  type(sparse_grid_interpolator_3d)   :: interp
+  type(sll_t_sparse_grid_interpolator_3d)   :: interp
 
   logical :: fail
 
@@ -35,9 +39,9 @@ program test_interpolation_3d
   ALLOCATE(tol(4*its));
 
   ! Set parameters
-  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_pi;
-  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_pi;
-  eta_min(3) = 0.0_f64; eta_max(3) = 4.0_f64*sll_pi;
+  eta_min(1) = 0.0_f64; eta_max(1) = 4.0_f64*sll_p_pi;
+  eta_min(2) = 0.0_f64; eta_max(2) = 4.0_f64*sll_p_pi;
+  eta_min(3) = 0.0_f64; eta_max(3) = 4.0_f64*sll_p_pi;
 
   levels =  8; order(1) = 1; order(2) = 3;
 
@@ -88,7 +92,7 @@ program test_interpolation_3d
              eta_max(3)-eta_min(3));
         dx(2) = interp%hierarchy(j)%coordinate(2);
         dx(1) = interp%hierarchy(j)%coordinate(1);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error
@@ -128,7 +132,7 @@ program test_interpolation_3d
              eta_max(2)-eta_min(2));
         dx(1) = interp%hierarchy(j)%coordinate(1);
         dx(3) = interp%hierarchy(j)%coordinate(3);
-        finterp(j) = interp%interpolate_value(f,dx);
+        finterp(j) = interp%interpolate_from_interpolant_value(f,dx);
         error = max(error,finterp(j)-fref(j));
      end do
      print*, 'Error standard interpolation:', error

@@ -20,24 +20,33 @@
 !> here it is a specification of 3d poisson solver
 
 module sll_m_qn_solver_3d_polar_parallel_x1_wrapper
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-  use sll_m_boundary_condition_descriptors
-  use sll_m_remapper, only: &
-    layout_2D
-  use sll_m_poisson_3d_base
+#include "sll_working_precision.h"
+
+  use sll_m_poisson_3d_base, only: &
+    sll_c_poisson_3d_base
+
   use sll_m_qn_solver_3d_polar_parallel_x1, only: &
-    sll_qn_solver_3d_polar_parallel_x1, &
-    new, &
-    solve_qns3d_polar
+    sll_o_new, &
+    sll_t_qn_solver_3d_polar_parallel_x1, &
+    sll_s_solve_qns3d_polar
 
-implicit none
+  use sll_m_remapper, only: &
+    sll_t_layout_2d
+
+  implicit none
+
+  public :: &
+    sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type,extends(sll_poisson_3d_base) :: qn_solver_3d_polar_parallel_x1_wrapper     
+  type,extends(sll_c_poisson_3d_base) :: qn_solver_3d_polar_parallel_x1_wrapper     
   
-  type(sll_qn_solver_3d_polar_parallel_x1), pointer :: poiss
+  type(sll_t_qn_solver_3d_polar_parallel_x1), pointer :: poiss
 
 
   contains
@@ -53,7 +62,7 @@ implicit none
   end type qn_solver_3d_polar_parallel_x1_wrapper
 
 contains
-  function new_qn_solver_3d_polar_parallel_x1_wrapper( &
+  function sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper( &
     layout_x1, &
     layout_x2, &
     x1_min, &
@@ -67,8 +76,8 @@ contains
     inv_Te) &
     result(poisson)
     
-    type(layout_2D), pointer         :: layout_x1 !< sequential in x1 direction
-    type(layout_2D), pointer         :: layout_x2 !< sequential in x2 direction
+    type(sll_t_layout_2d), pointer         :: layout_x1 !< sequential in x1 direction
+    type(sll_t_layout_2d), pointer         :: layout_x2 !< sequential in x2 direction
     sll_real64          , intent(in) :: x1_min    !< rmin
     sll_real64          , intent(in) :: x1_max    !< rmax
     sll_int32           , intent(in) :: num_cells_x1      !< number of cells radial
@@ -98,7 +107,7 @@ contains
       dlog_density, &
       inv_Te)
 
-  end function new_qn_solver_3d_polar_parallel_x1_wrapper
+  end function sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper
   
   ! TODO: check if this can be made a type-bound method
   subroutine initialize_qn_solver_3d_polar_parallel_x1_wrapper( &
@@ -116,8 +125,8 @@ contains
     inv_Te)
 
     type(qn_solver_3d_polar_parallel_x1_wrapper), intent(inout)  :: poisson     !< Poisson solver class
-    type(layout_2D), pointer         :: layout_x1 !< sequential in x1 direction
-    type(layout_2D), pointer         :: layout_x2 !< sequential in x2 direction
+    type(sll_t_layout_2d), pointer         :: layout_x1 !< sequential in x1 direction
+    type(sll_t_layout_2d), pointer         :: layout_x2 !< sequential in x2 direction
     sll_real64          , intent(in) :: x1_min    !< rmin
     sll_real64          , intent(in) :: x1_max    !< rmax
     sll_int32           , intent(in) :: num_cells_x1      !< number of cells radial
@@ -129,7 +138,7 @@ contains
     sll_real64, optional, intent(in) :: inv_Te(:)       !< for quasi neutral solver
     !local variables
     
-    poisson%poiss => new( &
+    poisson%poiss => sll_o_new( &
       layout_x1, &
       layout_x2, &
       x1_min, &
@@ -149,7 +158,7 @@ contains
     sll_real64,dimension(:,:,:),intent(in) :: rho
     sll_real64,dimension(:,:,:),intent(out) :: phi
     
-    call solve_qns3d_polar(poisson%poiss,rho,phi)
+    call sll_s_solve_qns3d_polar(poisson%poiss,rho,phi)
     
   end subroutine compute_phi_from_rho_3d_qns_polar_par_x1
     

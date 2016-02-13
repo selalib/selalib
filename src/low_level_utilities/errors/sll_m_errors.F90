@@ -1,10 +1,17 @@
 module sll_m_errors
 
-  use, intrinsic :: iso_fortran_env, only: error_unit
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  use iso_fortran_env, only: &
+    error_unit
+
   implicit none
 
-  public :: sll_error_handler, sll_warning_handler
+  public :: &
+    sll_s_error_handler, &
+    sll_s_warning_handler
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
@@ -26,7 +33,7 @@ contains
   !>  @details
   !>  
   !----------------------------------------------------------------------------
-  subroutine sll_warning_handler( file_name, line_num, caller, message )
+  subroutine sll_s_warning_handler( file_name, line_num, caller, message )
     character(len=*), intent(in) :: file_name !< file name
     integer         , intent(in) :: line_num  !< line number
     character(len=*), intent(in) :: caller    !< program/subroutine/function
@@ -34,7 +41,7 @@ contains
 
     call errout( error_unit, 'W', file_name, line_num, caller, message )
 
-  end subroutine sll_warning_handler
+  end subroutine sll_s_warning_handler
 
   !----------------------------------------------------------------------------
   !>  @brief
@@ -42,7 +49,7 @@ contains
   !>  @details
   !>  
   !----------------------------------------------------------------------------
-  subroutine sll_error_handler( file_name, line_num, caller, message )
+  subroutine sll_s_error_handler( file_name, line_num, caller, message )
     character(len=*), intent(in) :: file_name !< file name
     integer         , intent(in) :: line_num  !< line number
     character(len=*), intent(in) :: caller    !< program/subroutine/function
@@ -52,7 +59,7 @@ contains
     call abort_program()
 
 
-  end subroutine sll_error_handler
+  end subroutine sll_s_error_handler
 
   !----------------------------------------------------------------------------
   !>  @brief

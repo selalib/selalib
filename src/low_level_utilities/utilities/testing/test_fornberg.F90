@@ -30,16 +30,22 @@
 !Ondřej Čertík
 
 program main
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_constants, only : &
-       sll_pi
-  use test_fornberg
-  use sll_m_fornberg
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_fornberg, only: &
+    sll_s_apply_fd
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: n_pts = 65
   sll_int32, parameter  :: maxorder = 1
-  sll_real64 :: eta_min = - sll_pi
-  sll_real64 :: eta_max = + sll_pi
+  sll_real64 :: eta_min = - sll_p_pi
+  sll_real64 :: eta_max = + sll_p_pi
   sll_real64 :: delta_eta
   sll_real64 :: xdata(1:n_pts)
   sll_real64 :: ydata(1:n_pts)
@@ -62,15 +68,15 @@ program main
   do i = 1, n_pts
 
      if (i <= 3) then 
-        call apply_fd(nin,maxorder, &
+        call sll_s_apply_fd(nin,maxorder, &
              xdata(1:5),ydata(1:5), &
              xdata(i),zdata(0:1,i))
      else if (i >= n_pts-2) then
-        call apply_fd(nin,maxorder, &
+        call sll_s_apply_fd(nin,maxorder, &
              xdata(n_pts-4:n_pts),ydata(n_pts-4:n_pts), &
              xdata(i),zdata(0:1,i))
      else
-        call apply_fd(nin,maxorder, &
+        call sll_s_apply_fd(nin,maxorder, &
              xdata(i-2:i+2),ydata(i-2:i+2), &
              xdata(i),zdata(0:1,i))
      end if

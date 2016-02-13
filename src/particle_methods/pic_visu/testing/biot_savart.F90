@@ -1,15 +1,26 @@
 !test example to visualize particles
 module biot_savart
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
-  use sll_m_utilities, only : &
-       sll_new_file_id
+  use sll_m_constants, only: &
+    sll_p_pi
 
-implicit none
+  use sll_m_utilities, only: &
+    sll_s_new_file_id
+
+  implicit none
+
+  public :: &
+    deplace, &
+    getrealtimer, &
+    initialize, &
+    vitesse
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> vortex circulation
 real(8) :: gam0
@@ -117,12 +128,10 @@ getRealTimer = real(count,f64) / real(count_rate,f64)
 end function getRealTimer
 
 !> initialize particles positions
-subroutine initialize( nstep, imov, xp, yp, op, delta, dt, nbpart ) 
-
-namelist/donnees/nstep, dt, imov, amach, nray, r0, delta
+subroutine initialize( imov, xp, yp, op, delta, nbpart ) 
 
 integer, parameter :: nsec0 = 6
-integer :: nstep, imov, idm, nbpart, nray, nsec, nr
+integer :: imov, idm, nbpart, nray, nsec, nr
 real(8), dimension(:), pointer :: xp
 real(8), dimension(:), pointer :: yp
 real(8), dimension(:), pointer :: op
@@ -132,46 +141,27 @@ real(8), dimension(:), pointer :: zf
 real(8), dimension(:), pointer :: gam
 
 real(8) :: circ, al, ur, tau, aom, u0, r0
-real(8) :: amach, delta, dt
+real(8) :: amach, delta
 integer  :: k
-integer  :: error, file_id
+integer  :: error
 
-nstep = 200
-dt    = 0.02_f64
 imov  = 1
 amach = 0.1_f64 !0.56
 nray  = 10 !50
 r0    = 0.5_f64
 delta = 0.01_f64
 
-!open(10, file = "input" )
-!read(10,donnees)
-!close(10)
-
 u0 = amach 
 
-gam0   = u0 * 2.0_f64 * sll_pi / 0.7_f64 * r0!gaussienne
-!gam0   = 2. * sll_pi * r0 * u0	!constant
-!gam0   = 2. * sll_pi / 10.0
+gam0   = u0 * 2.0_f64 * sll_p_pi / 0.7_f64 * r0!gaussienne
+!gam0   = 2. * sll_p_pi * r0 * u0	!constant
+!gam0   = 2. * sll_p_pi / 10.0
 
-aom    = gam0 / ( sll_pi * r0**2 )  ! Amplitude du vortex
-tau    = 8.0_f64 * sll_pi**2 / gam0     ! Periode de co-rotation
-gomeg  = gam0/ (4.0_f64*sll_pi)         ! Vitesse angulaire
+aom    = gam0 / ( sll_p_pi * r0**2 )  ! Amplitude du vortex
+tau    = 8.0_f64 * sll_p_pi**2 / gam0     ! Periode de co-rotation
+gomeg  = gam0/ (4.0_f64*sll_p_pi)         ! Vitesse angulaire
 ur     = gomeg                  ! Vitesse tangentielle du vortex
 al     = 0.5_f64 * tau              ! Longeur d'onde
-
-call sll_new_file_id(file_id, error)
-open(file_id, file="particles.out")
-write(file_id,*) " iterations : ", nstep
-write(file_id,*) " pas de temps : ", dt
-write(file_id,*) " animation : ", imov, " steps "
-write(file_id,*) " aom = ", aom
-write(file_id,*) " r0 = ", r0
-write(file_id,*) " Circulation = ", gam0
-write(file_id,*) " Vitesse de rotation gomeg = ", gomeg
-write(file_id,*) " ur = ", ur
-write(file_id,*) " periode de corotation = ", tau
-write(file_id,*) " --------------------------------------------- "
 
 idm = 1
 nsec = 0
@@ -180,12 +170,10 @@ do k = 1, nray
    idm = idm + nsec
 end do
 
-write(*,*) "idm =", idm
 SLL_ALLOCATE(rf(idm),error)
 SLL_ALLOCATE(zf(idm),error)
 SLL_ALLOCATE(gam(idm),error)
 call distrib( rf, zf, gam, r0, idm, nray, nsec0, nr )
-write(*,*) "nr =", nr
 
 SLL_ASSERT(idm == nr)
 nbpart = 2 * nr
@@ -205,10 +193,6 @@ end do
 !Calcul de la vitesse de propagation du systeme
 
 circ = sum(op)
-
-write(file_id,*) ' Nombre total de particules =',nbpart
-write(file_id,*) ' Circulation totale  =',circ
-close(file_id)
 
 deallocate(rf,zf,gam)
 
@@ -242,13 +226,13 @@ integer :: file_id, error
 
 dr      = ray / ( nray + 0.5_f64 )
 dray    = 0.5_f64 * dr                !rayon de la section centrale
-surf    = sll_pi * ray * ray 
-dteta   = 2.0_f64 * sll_pi / real(nsec0,f64)
+surf    = sll_p_pi * ray * ray 
+dteta   = 2.0_f64 * sll_p_pi / real(nsec0,f64)
 
 k       = 1
 rf(  1) = 0.0_f64
 zf(  1) = 0.0_f64
-ds(  1) = sll_pi * dray * dray
+ds(  1) = sll_p_pi * dray * dray
 
 if ( gauss ) then
    gamt = gam0 / ( 1._f64 - exp( -1.0_f64 ) )
@@ -258,60 +242,59 @@ else
 end if
 sgam    = cir( 1 )
 
-call sll_new_file_id(file_id, error)
+call sll_s_new_file_id(file_id, error)
 open(file_id, file="particles_begin.out")
 write(file_id,1000) rf(1), zf(1), cir(1), ds(1)
 
 r1    = dray
-s1    = sll_pi * r1**2
+s1    = sll_p_pi * r1**2
 nsec  = 0
 
 !cpn   *** parametre de l'ellipse ***
 !c      eps = 0.01		! 0.0 --> disque
       eps = 0.0_f64
-!cpn   ******************************
 
 do i = 1, nray
 
-   nsec  = nsec + nsec0
-   dteta = 2.0_f64 * sll_pi / real(nsec,f64)
-   r     = real( i, f64 ) * dr 
+  nsec  = nsec + nsec0
+  dteta = 2.0_f64 * sll_p_pi / real(nsec,f64)
+  r     = real( i, f64 ) * dr 
 
-   r2  = r + 0.5_f64 * dr
-   s2  = sll_pi * r2**2 
-   dss = s2 - s1
-   s1  = s2
+  r2    = r + 0.5_f64 * dr
+  s2    = sll_p_pi * r2**2 
+  dss   = s2 - s1
+  s1    = s2
 
-   do j = 1, nsec
+  do j = 1, nsec
 
-      k = k + 1
-      if( k .gt. idm ) stop ' !! idm < Nr !! '
+     k = k + 1
+     if( k .gt. idm ) stop ' !! idm < Nr !! '
 
-      teta    = real( j, f64 ) * dteta 
-      sigma   = r * ( 1.0_f64 + eps * cos( 2.0_f64*teta ) )
-      rf( k ) = sigma * cos( teta )
-      zf( k ) = sigma * sin( teta )
+     teta    = real( j, f64 ) * dteta 
+     sigma   = r * ( 1.0_f64 + eps * cos( 2.0_f64*teta ) )
+     rf( k ) = sigma * cos( teta )
+     zf( k ) = sigma * sin( teta )
 
-      ds(  k ) = dss / real( nsec, f64 )
+     ds(  k ) = dss / real( nsec, f64 )
 
-      if ( gauss ) then
-         q       = 0.5_f64 * (exp(-(r1/ray)**2)-exp(-(r2/ray)**2) )
-         cir( k ) = gamt * dteta / sll_pi * q    ! gauss
-      else
-         cir( k ) = gam0 * ds( k ) / surf    ! uniforme
-      end if
+     if ( gauss ) then
+        q        = 0.5_f64 * (exp(-(r1/ray)**2)-exp(-(r2/ray)**2) )
+        cir( k ) = gamt * dteta / sll_p_pi * q    ! gauss
+     else
+        cir( k ) = gam0 * ds( k ) / surf    ! uniforme
+     end if
 
-      sgam     = sgam + cir( k )
+     sgam     = sgam + cir( k )
 
-      write(file_id,1000) rf(k), zf(k), cir(k), ds(k)
+     write(file_id,1000) rf(k), zf(k), cir(k), ds(k)
 
-    end do
+   end do
 
-    r1  = r2 
+   r1  = r2 
 
-    kd = k - nsec + 1 
-    write(file_id,1000) rf( kd ), zf( kd ), cir( kd ), ds(kd)
-    write(file_id,1000) 
+   kd = k - nsec + 1 
+   write(file_id,1000) rf( kd ), zf( kd ), cir( kd ), ds(kd)
+   write(file_id,1000) 
 
 end do
 
