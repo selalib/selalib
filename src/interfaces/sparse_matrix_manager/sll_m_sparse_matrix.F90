@@ -109,7 +109,7 @@ end subroutine sll_s_delete_csr_matrix
 function sll_f_new_csr_matrix( &
         num_rows,              &
         num_cols,              &
-        num_elements,          &
+        num_elts,          &
         local_to_global_row,   &
         num_local_dof_row,     &
         local_to_global_col,   &
@@ -119,7 +119,7 @@ function sll_f_new_csr_matrix( &
 type(sll_t_csr_matrix), pointer          :: mat
 sll_int32,                    intent(in) :: num_rows
 sll_int32,                    intent(in) :: num_cols
-sll_int32,                    intent(in) :: num_elements
+sll_int32,                    intent(in) :: num_elts
 sll_int32, dimension(:,:),    intent(in) :: local_to_global_row
 sll_int32, dimension(:,:),    intent(in) :: local_to_global_col
 sll_int32,                    intent(in) :: num_local_dof_row
@@ -141,7 +141,7 @@ call sll_s_initialize_csr_matrix( &
   mat,                            &
   num_rows,                       &
   num_cols,                       &
-  num_elements,                   &
+  num_elts,                   &
   local_to_global_row,            &
   num_local_dof_row,              &
   local_to_global_col,            &
@@ -165,7 +165,7 @@ end function sll_f_new_csr_matrix
 subroutine sll_s_initialize_csr_matrix( mat,                 &
                                         num_rows,            &
                                         num_cols,            &
-                                        num_elements,        &
+                                        num_elts,        &
                                         local_to_global_row, &
                                         num_local_dof_row,   &
                                         local_to_global_col, & 
@@ -174,7 +174,7 @@ subroutine sll_s_initialize_csr_matrix( mat,                 &
 type(sll_t_csr_matrix),    intent(inout) :: mat
 sll_int32,                 intent(in)    :: num_rows
 sll_int32,                 intent(in)    :: num_cols
-sll_int32,                 intent(in)    :: num_elements
+sll_int32,                 intent(in)    :: num_elts
 sll_int32, dimension(:,:), intent(in)    :: local_to_global_row
 sll_int32,                 intent(in)    :: num_local_dof_row
 sll_int32, dimension(:,:), intent(in)    :: local_to_global_col
@@ -200,13 +200,13 @@ print *,'#sll_s_initialize_csr_matrix'
 
 coef = 6
 
-SLL_ALLOCATE(lpi_col(num_rows, 0:coef*num_local_dof_col),ierr)
+SLL_ALLOCATE(lpi_col(num_rows,0:coef*num_local_dof_col),ierr)
 SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 
 lpi_col(:,:) = 0
 lpi_occ(:) = 0
 
-do elt = 1, num_elements  !Loop over cells
+do elt = 1, num_elts  !Loop over cells
   do ii = 1, num_local_dof_row
     row = local_to_global_row(ii, elt) !Row number in matrix
     if (row /= 0) then
@@ -255,7 +255,7 @@ do i = 1, mat%num_rows
   mat%row_ptr(i+1) = mat%row_ptr(1) + sum(lpi_occ(1:i))
 end do
 
-do elt = 1, num_elements
+do elt = 1, num_elts
   do ii = 1, num_local_dof_row
     row = local_to_global_row(ii, elt)
     if (row /= 0) then
@@ -751,77 +751,5 @@ subroutine sll_s_csr_todense( mat, dense_matrix)
   end do
 
 end subroutine sll_s_csr_todense
-
-!> @brief
-!> Test function to initialize a CSR matrix
-!> @details
-!> Fill a matrix in CSR format corresponding to a constant coefficient
-!> five-point stencil on a square grid. This function comes from AGMG
-!> test program.
-subroutine uni2d(mat,f)
-
-type(sll_t_csr_matrix) :: mat
-sll_real64           :: f(:)
-sll_real64, pointer  :: a(:)
-sll_int32            :: m
-sll_int32, pointer   :: ia(:)
-sll_int32, pointer   :: ja(:)
-integer              :: k,l,i,j
-
-real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
-
-a  => mat%val
-ia => mat%row_ptr
-ja => mat%col_ind
-
-m = mat%num_rows
-
-k=0
-l=0
-ia(1)=1
-do i=1,m
-  do j=1,m
-    k=k+1
-    l=l+1
-    a(l)=cd
-    ja(l)=k
-    f(k)=zero
-    if(j < m) then
-       l=l+1
-       a(l)=cx
-       ja(l)=k+1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i < m) then
-       l=l+1
-       a(l)=cy
-       ja(l)=k+m
-      else
-       f(k)=f(k)-cy
-    end if
-    if(j > 1) then
-       l=l+1
-       a(l)=cx
-       ja(l)=k-1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i >  1) then
-       l=l+1
-       a(l)=cy
-       ja(l)=k-m
-      else
-       f(k)=f(k)-cy
-    end if
-    ia(k+1)=l+1
-  end do
-end do
-
-mat%num_nz = l
-
-return
-end subroutine uni2D
-
 
 end module sll_m_sparse_matrix
