@@ -1411,8 +1411,6 @@ if (es%perper) then
 
   call sll_s_factorize_csr_matrix(es%csr_mat_with_constraint)
 
-  !SLL_WARNING("sll_general_coordinate_elliptic_solver","The full periodic version is deprecated")
-
 else   
 
   call sll_s_factorize_csr_matrix(es%csr_mat)
@@ -1422,7 +1420,7 @@ end if
 print *,'#end of sll_s_factorize_csr_matrix'
 
 es%csr_mat_source =>                                     &
-  sll_f_new_csr_matrix( size(es%masse,1),                      &
+  sll_f_new_csr_matrix( size(es%masse,1),                &
                   (nc_1+1)*(nc_2+1),                     &
                   nc_1*nc_2,                             &
                   es%local_to_global_indices_source_bis, &

@@ -67,8 +67,6 @@ type :: sll_t_csr_matrix
   sll_int32           :: solver = 0
 
 #ifdef UMFPACK
-  sll_int32,  dimension(:), pointer :: Ai
-  sll_int32,  dimension(:), pointer :: Ap
   integer(umf_void)                 :: umf_symbolic
   integer(umf_void)                 :: umf_numeric
   sll_real64, dimension(:), pointer :: umf_control
@@ -274,9 +272,8 @@ end do
 #ifdef UMFPACK
 if (mat%solver == sll_p_umfpack) then
   SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
-  SLL_ALLOCATE(mat%Ai(num_nz),ierr)
-  SLL_ALLOCATE(mat%Ap(num_rows+1),ierr)
-  
+  mat%row_ptr = mat%row_ptr-1 
+  mat%col_ind = mat%col_ind-1 
   call umf4def(mat%umf_control)  ! get the default configuration
 end if
 #endif /* UMFPACK */
@@ -309,8 +306,6 @@ mat%solver = mat_a%solver
 #ifdef UMFPACK
 if (mat%solver == sll_p_umfpack) then
   SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
-  SLL_ALLOCATE(mat%Ai(mat%num_nz),ierr)
-  SLL_ALLOCATE(mat%Ap(mat%num_rows+1),ierr)
   call umf4def(mat%umf_control)  
 end if
 #endif /* UMFPACK */
@@ -363,6 +358,34 @@ SLL_ASSERT(size(a_in)           >= num_nz_in)
 SLL_ASSERT(size(ia_out)         >= num_rows_out+1)
 SLL_ASSERT(size(ja_out)         >= num_nz_out)
 SLL_ASSERT(size(a_out)          >= num_nz_out)
+
+#ifdef UMFPACK 
+
+SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in)
+s = 1
+do i=1,num_rows_in
+  ia_out(i) = s-1
+  do k = ia_in(i)+1, ia_in(i+1)
+    a_out(s) = a_in(k)
+    ja_out(s) = ja_in(k)
+    s = s+1
+  enddo
+  a_out(s) = constraint_vec(i)
+  ja_out(s) = num_rows_out-1
+  s = s+1
+enddo
+ia_out(num_rows_in+1) = s-1
+do i=1,num_rows_in
+  a_out(s) = constraint_vec(i)
+  ja_out(s) = i-1
+  s = s+1      
+enddo
+ia_out(num_rows_in+2) = s-1
+ 
+SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out)
+
+#else
+
 SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
 
 s = 1
@@ -385,8 +408,10 @@ do i=1,num_rows_in
 enddo
 ia_out(num_rows_in+2) = s
  
-SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out+1)
-  
+SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
+
+#endif
+
 end subroutine sll_s_csr_add_one_constraint
 
 subroutine sll_s_factorize_csr_matrix(mat)
@@ -399,14 +424,11 @@ sll_real64, dimension(umfpack_info) :: info
   
 if (mat%solver == sll_p_umfpack) then
 
-  mat%Ap = mat%row_ptr(:) - 1
-  mat%Ai = mat%col_ind(:) - 1
-  
   ! pre-order and symbolic analysis
   call umf4sym( mat%num_rows,     &
                 mat%num_cols,     &
-                mat%Ap,           &
-                mat%Ai,           &
+                mat%row_ptr,      &
+                mat%col_ind,      &
                 mat%val,          &
                 mat%umf_symbolic, &
                 mat%umf_control,  &
@@ -418,8 +440,8 @@ if (mat%solver == sll_p_umfpack) then
   endif
   
   ! numeric factorization
-  call umf4num( mat%Ap,           &
-                mat%Ai,           &
+  call umf4num( mat%row_ptr,      &
+                mat%col_ind,      &
                 mat%val,          &
                 mat%umf_symbolic, &
                 mat%umf_numeric,  &
@@ -471,12 +493,21 @@ sll_int32,              intent(in)    :: col
 
 sll_int32 :: k
 
-do k = mat%row_ptr(row), mat%row_ptr(row+1) - 1
-  if (mat%col_ind(k) == col) then
-    mat%val(k) = mat%val(k) + val
-    exit
-  end if
-end do
+if (mat%solver == sll_p_umfpack) then
+  do k = mat%row_ptr(row)+1, mat%row_ptr(row+1)
+    if (mat%col_ind(k)+1 == col) then
+      mat%val(k) = mat%val(k) + val
+      exit
+    end if
+  end do
+else
+  do k = mat%row_ptr(row), mat%row_ptr(row+1) - 1
+    if (mat%col_ind(k) == col) then
+      mat%val(k) = mat%val(k) + val
+      exit
+    end if
+  end do
+endif
 
 end subroutine sll_s_add_to_csr_matrix
   
