@@ -41,27 +41,27 @@ use sll_m_qsort_partition, only : sll_s_qsortc
 
 implicit none
 
-public ::                                      &
-  sll_f_new_csr_matrix,                        &
-  sll_f_new_csr_matrix_with_constraint,        &
-  sll_s_csr_add_one_constraint,                &
-  sll_s_csr_todense,                           &
-  sll_s_free_csr_matrix,                     &
+public ::                                &
+  sll_f_new_csr_matrix,                  &
+  sll_f_new_csr_matrix_with_constraint,  &
+  sll_s_csr_add_one_constraint,          &
+  sll_s_csr_todense,                     &
+  sll_s_free_csr_matrix,                 &
   sll_s_init_csr_matrix_with_constraint, &
-  sll_s_add_to_csr_matrix,                     &
-  sll_t_csr_matrix,                            &
-  sll_s_factorize_csr_matrix,                  &
-  sll_s_mult_csr_matrix_vector,                &
-  sll_s_solve_csr_matrix,                      &
-  sll_s_solve_csr_matrix_perper,               &
-  sll_p_umfpack,                               &
+  sll_s_add_to_csr_matrix,               &
+  sll_t_csr_matrix,                      &
+  sll_s_factorize_csr_matrix,            &
+  sll_s_mult_csr_matrix_vector,          &
+  sll_s_solve_csr_matrix,                &
+  sll_s_solve_csr_matrix_perper,         &
+  sll_p_umfpack,                         &
   sll_p_pastix
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !> @brief type for CSR format
 type :: sll_t_csr_matrix
-  sll_int32           :: num_rows !< rows, public
+  sll_int32           :: num_rows !< rows
   sll_int32           :: num_cols !< columns
   sll_int32           :: num_nz   !< non zeros
   sll_int32,  pointer :: row_ptr(:)
@@ -140,7 +140,9 @@ sll_int32 :: ierr
 SLL_ALLOCATE(mat, ierr)
 
 mat%solver = 0
+#if defined(UMFPACK) || defined(PASTIX)
 if (present(solver)) mat%solver = solver
+#endif /* PASTIX or UMFPACK */
 
 call sll_s_init_csr_matrix( &
   mat,                            &
@@ -227,13 +229,13 @@ end function new_csr_matrix
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
 
 subroutine sll_s_init_csr_matrix( mat,                 &
-                                        num_rows,            &
-                                        num_cols,            &
-                                        num_elts,            &
-                                        local_to_global_row, &
-                                        num_local_dof_row,   &
-                                        local_to_global_col, & 
-                                        num_local_dof_col)
+                                  num_rows,            &
+                                  num_cols,            &
+                                  num_elts,            &
+                                  local_to_global_row, &
+                                  num_local_dof_row,   &
+                                  local_to_global_col, & 
+                                  num_local_dof_col)
 
 type(sll_t_csr_matrix),    intent(inout) :: mat
 sll_int32,                 intent(in)    :: num_rows
@@ -358,7 +360,6 @@ case (sll_p_pastix)
 
 end select
 
-
 end subroutine sll_s_init_csr_matrix
 
 subroutine sll_s_init_csr_matrix_with_constraint( mat, mat_a)
@@ -431,12 +432,12 @@ integer :: k
 num_rows_out = num_rows_in+1
 num_nz_out   = num_nz_in+2*num_rows_in
 
-SLL_ASSERT(size(ia_in)          >= num_rows_in+1)
-SLL_ASSERT(size(ja_in)          >= num_nz_in)
-SLL_ASSERT(size(a_in)           >= num_nz_in)
-SLL_ASSERT(size(ia_out)         >= num_rows_out+1)
-SLL_ASSERT(size(ja_out)         >= num_nz_out)
-SLL_ASSERT(size(a_out)          >= num_nz_out)
+SLL_ASSERT(size(ia_in)  >= num_rows_in+1)
+SLL_ASSERT(size(ja_in)  >= num_nz_in)
+SLL_ASSERT(size(a_in)   >= num_nz_in)
+SLL_ASSERT(size(ia_out) >= num_rows_out+1)
+SLL_ASSERT(size(ja_out) == num_nz_out)
+SLL_ASSERT(size(a_out)  >= num_nz_out)
 
 if (ia_in(num_rows_in+1) == num_nz_in) then ! UMFPACK
 
@@ -549,7 +550,6 @@ case default
   SLL_ASSERT(associated(mat%val)) ! Just to avoid warning in debug mode
 
 end select
-
 
 end subroutine sll_s_factorize_csr_matrix
   
@@ -759,14 +759,16 @@ logical    :: ll_continue
 sll_int32  :: maxIter
 sll_real64 :: eps
 
-if (mat%solver == sll_p_umfpack) then
+select case (mat%solver)
+
+case (sll_p_umfpack)
 
 #ifdef UMFPACK
   sys = 0
   call umf4sol(sys,U,B,mat%umf_numeric,mat%umf_control,info)
 #endif /* UMFPACK */
 
-else
+case default
 
   maxIter = 100000
   eps = 1.d-13
@@ -860,7 +862,7 @@ else
   deallocate(Ux)
   deallocate(one)
 
-endif
+end select
 
 end subroutine sll_s_solve_csr_matrix_perper
 
