@@ -5,8 +5,10 @@ ADD_LIBRARY( sll_meshes STATIC sll_m_meshes_base.F90
 ADD_DEPENDENCIES(sll_meshes sll_boundary_condition_descriptors)
 
 TARGET_LINK_LIBRARIES( sll_meshes sll_file_io
+                                  sll_errors
                                   sll_memory
-                                  sll_assert )
+                                  sll_assert
+                                  ${LAPACK_LIBRARIES} )
 
 # Tests
 IF(BUILD_TESTING)

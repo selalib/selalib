@@ -27,9 +27,9 @@ module sll_m_box_splines
 
   use sll_m_hex_pre_filters, only: &
        sll_s_pre_filter_pfir, &
-       sll_s_pre_filter_int, &
-       sll_s_pre_filter_piir2, &
-       sll_s_pre_filter_piir1
+       sll_f_pre_filter_int, &
+       sll_f_pre_filter_piir2, &
+       sll_f_pre_filter_piir1
 
   use sll_m_hexagonal_meshes, only: &
     sll_f_cart_to_hex1, &
@@ -54,9 +54,9 @@ module sll_m_box_splines
     sll_f_compute_box_spline, &
     sll_f_hex_interpolate_value, &
     sll_f_new_box_spline_2d, &
+    sll_f_boxspline_val_der, &
     sll_t_box_spline_2d, &
     sll_o_delete, &
-    sll_s_write_all_django_files, &
     sll_s_write_connectivity
 
   private
@@ -191,9 +191,9 @@ contains  ! ****************************************************************
     ! If pINT, pIIR1 or  pIIR2:
     SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
     do k=1, num_pts_radius
-       filter_array(k) = pre_filter_int(spline%mesh, k, deg)
-       ! filter_array(k) = pre_filter_piir1(spline%mesh, k, deg)
-       ! filter_array(k) = pre_filter_piir2(spline%mesh, k, deg)
+       filter_array(k) = sll_f_pre_filter_int(spline%mesh, k, deg)
+       ! filter_array(k) = sll_f_pre_filter_piir1(spline%mesh, k, deg)
+       ! filter_array(k) = sll_f_pre_filter_piir2(spline%mesh, k, deg)
     end do
 
     do i = 1, num_pts_tot
@@ -779,7 +779,7 @@ contains  ! ****************************************************************
   !> @param[in] nderiv1 integer number of times to derive on the x direction
   !> @param[in] nderiv2 integer number of times to derive on the y direction
   !> @return real nderiv-derivatives of boxspline
-  function boxspline_val_der(x1, x2, deg, nderiv1, nderiv2) result(val)
+  function sll_f_boxspline_val_der(x1, x2, deg, nderiv1, nderiv2) result(val)
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: nderiv1
     sll_int32,  intent(in)  :: nderiv2
@@ -807,21 +807,21 @@ contains  ! ****************************************************************
           !> derivative with respect to the second coo
           val = sll_f_boxspline_x2_derivative(x1_basis, x2_basis, deg)
        else
-          print *, "Error in boxspline_val_der : cannot compute this derivative"
+          print *, "Error in sll_f_boxspline_val_der : cannot compute this derivative"
        end if
     else if (nderiv1.eq.1) then
        ! derivative with respecto to the first coo
        if (nderiv2.eq.0) then
           val = sll_f_boxspline_x1_derivative(x1_basis, x2_basis, deg)
        else
-          print *, "Error in boxspline_val_der : cannot compute this derivative"
+          print *, "Error in sll_f_boxspline_val_der : cannot compute this derivative"
        end if
     end if
 
     SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
     SLL_DEALLOCATE(spline,ierr)
     call sll_o_delete(mesh)
-  end function boxspline_val_der
+  end function sll_f_boxspline_val_der
 
   !---------------------------------------------------------------------------
   !> @brief Writes connectivity for CAID / DJANGO

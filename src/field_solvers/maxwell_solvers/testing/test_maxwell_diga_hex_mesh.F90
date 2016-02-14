@@ -335,7 +335,7 @@ do i = 1, mesh%num_triangles
    x1 = mesh%center_cartesian_coord(1, i)
    y1 = mesh%center_cartesian_coord(2, i)
 
-   call get_cell_vertices_index( x1, y1, mesh, is1, is2, is3)
+   call sll_s_get_cell_vertices_index( x1, y1, mesh, is1, is2, is3)
 
    ntri(1,i) = is1
    ntri(2,i) = is2

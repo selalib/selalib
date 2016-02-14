@@ -23,6 +23,7 @@
 module sll_m_hexagonal_meshes
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
@@ -44,6 +45,8 @@ module sll_m_hexagonal_meshes
     sll_f_change_elements_notation, &
     sll_o_delete, &
     sll_s_delete_hex_mesh_2d, &
+    sll_s_write_hex_mesh_mtv, &
+    sll_s_write_hex_mesh_2d, &
     sll_s_write_field_hex_mesh_xmf, &
     sll_s_display_hex_mesh_2d, &
     sll_s_get_cell_vertices_index, &
@@ -119,8 +122,8 @@ module sll_m_hexagonal_meshes
      procedure, pass(mesh) :: sll_f_local_to_global
      procedure, pass(mesh) :: local_hex_to_global
      procedure, pass(mesh) :: cell_type
-     procedure, pass(mesh) :: write_hex_mesh_2d
-     procedure, pass(mesh) :: write_hex_mesh_mtv
+     procedure, pass(mesh) :: sll_s_write_hex_mesh_2d
+     procedure, pass(mesh) :: sll_s_write_hex_mesh_mtv
      procedure, pass(mesh) :: get_neighbours
      procedure, pass(mesh) :: hex_to_aligned_pt
      procedure, pass(mesh) :: hex_to_aligned_elmt
@@ -1535,7 +1538,7 @@ contains
   !> @param[OUT] x_new real the x-coordinate of mapped point
   !> @param[OUT] y_new real the y-coordinate of mapped point
   subroutine hex_to_aligned_pt(mesh, ind, transf, x_new, y_new)
-    class(sll_hex_mesh_2d), intent(in)  :: mesh
+    class(sll_t_hex_mesh_2d), intent(in)  :: mesh
     sll_int32,              intent(in)  :: ind
     character(len=*),       intent(in)  :: transf
     sll_real64,             intent(out) :: x_new
@@ -1570,10 +1573,10 @@ contains
        ! First we get the hexagonal coordinates
        k1 = mesh%hex_coord(1, ind)
        k2 = mesh%hex_coord(2, ind)
-       cells_dist = cells_to_origin(k1, k2)
+       cells_dist = sll_f_cells_to_origin(k1, k2)
        radius = mesh%radius / mesh%num_cells * cells_dist
 
-       if (dist_to_origin .le. sll_epsilon_0) then
+       if (dist_to_origin .le. sll_p_epsilon_0) then
           x_new = 0._f64
           y_new = 0._f64
        else
@@ -1616,7 +1619,7 @@ contains
   !> @param[OUT] transf_matA real matrix that contains the A matrix.
   !> @param[OUT] transf_vecB real vector that contains the B vector.
   subroutine hex_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
-    class(sll_hex_mesh_2d),     intent(in)  :: mesh
+    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
     sll_int32,                  intent(in)  :: i_elmt
     character(len=*),           intent(in)  :: transf
     sll_real64, dimension(2,2), intent(out) :: transf_matA
@@ -1642,7 +1645,7 @@ contains
     ! Getting the indices of the vertices, have to compute first the center coos
     ccx = mesh%center_cartesian_coord(1, i_elmt)
     ccy = mesh%center_cartesian_coord(2, i_elmt)
-    call get_cell_vertices_index(ccx, ccy, mesh, e1, e2, e3)
+    call sll_s_get_cell_vertices_index(ccx, ccy, mesh, e1, e2, e3)
 
     ! Getting the coordinates of the vertices of the element (in the hexmesh)
     x_v1 = mesh%cartesian_coord(1, e1)
@@ -1723,7 +1726,7 @@ contains
   !> @param[OUT] transf_matA real matrix that contains the A matrix.
   !> @param[OUT] transf_vecB real vector that contains the B vector.
   subroutine ref_to_hex_elmt(mesh, i_elmt, transf_matA, transf_vecB)
-    class(sll_hex_mesh_2d),     intent(in)  :: mesh
+    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
     sll_int32,                  intent(in)  :: i_elmt
     sll_real64, dimension(2,2), intent(out) :: transf_matA
     sll_real64, dimension(2),   intent(out) :: transf_vecB
@@ -1739,7 +1742,7 @@ contains
     ! We get the cells center coordinates in order to get its vertices
     x1 = mesh%center_cartesian_coord(1, i_elmt)
     y1 = mesh%center_cartesian_coord(2, i_elmt)
-    call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+    call sll_s_get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
 
     ! We get the lowest vertex coordinates (by default: e1's coordinates)
     x_v1 = mesh%cartesian_coord(1, e1)
@@ -1753,8 +1756,8 @@ contains
 
     if (type == 1) then
        transf_matA(1,1) = 0.5_f64 / mesh%num_cells
-       transf_matA(1,2) = -sll_sqrt3/2._f64 / mesh%num_cells
-       transf_matA(2,1) =  sll_sqrt3/2._f64 / mesh%num_cells
+       transf_matA(1,2) = -sll_p_sqrt3/2._f64 / mesh%num_cells
+       transf_matA(2,1) =  sll_p_sqrt3/2._f64 / mesh%num_cells
        transf_matA(2,2) = 0.5_f64 / mesh%num_cells
     else
        transf_matA(1,1) = 1._f64 / mesh%num_cells
@@ -1777,7 +1780,7 @@ contains
   !> @param[OUT] transf_matA real matrix that contains the A matrix.
   !> @param[OUT] transf_vecB real vector that contains the B vector.
   subroutine ref_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
-    class(sll_hex_mesh_2d),     intent(in)  :: mesh
+    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
     sll_int32,                  intent(in)  :: i_elmt
     character(len=*),           intent(in)  :: transf
     sll_real64, dimension(2,2), intent(out) :: transf_matA
@@ -1988,7 +1991,7 @@ contains
   !> the hexagonal and cartesian coordinates
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_hex_mesh_2d( mesh, name )
+  subroutine sll_s_write_hex_mesh_2d( mesh, name )
     class(sll_t_hex_mesh_2d), intent(in) :: mesh
     character(len=*)      , intent(in) :: name
 
@@ -2015,7 +2018,7 @@ contains
     end do
 
     close(out_unit)
-  end subroutine write_hex_mesh_2d
+  end subroutine sll_s_write_hex_mesh_2d
 
 
   !---------------------------------------------------------------------------
@@ -2073,7 +2076,7 @@ contains
   !> To visualize use plotmtv.
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_hex_mesh_mtv( mesh, mtv_file )
+  subroutine sll_s_write_hex_mesh_mtv( mesh, mtv_file )
     class(sll_t_hex_mesh_2d), intent(in) :: mesh
     character(len=*)      , intent(in) :: mtv_file
 
@@ -2217,7 +2220,7 @@ contains
     write(out_unit,*)"$END"
     close(out_unit)
 
-  end subroutine write_hex_mesh_mtv
+  end subroutine sll_s_write_hex_mesh_mtv
 
 
   !---------------------------------------------------------------------------

@@ -16,7 +16,11 @@ module sll_m_hex_pre_filters
   implicit none
 
   public :: &
-    sll_s_pre_filter_pfir
+    sll_s_pre_filter_pfir, &
+    sll_f_pre_filter_int, &
+    sll_f_pre_filter_piir2, &
+    sll_f_pre_filter_piir1
+
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -116,7 +120,7 @@ contains
   !> @param[IN] local_index integer: local index of the point we want the filter
   !> @param[IN] deg integer: degree of the spline
   !> @param[OUT] weight float: filter (aka weight) at the local index
-  function pre_filter_piir2(mesh, local_index, deg) result(weight)
+  function sll_f_pre_filter_piir2(mesh, local_index, deg) result(weight)
     type(sll_t_hex_mesh_2d)      :: mesh
     sll_int32, intent(in)      :: local_index
     sll_int32, intent(in)      :: deg
@@ -241,7 +245,7 @@ contains
           weight = 0._f64
        end if
     end if
-  end function pre_filter_piir2
+  end function sll_f_pre_filter_piir2
 
   !---------------------------------------------------------------------------
   !> @brief Pre-filter PIIR1 to compute the box splines coefficients
@@ -252,7 +256,7 @@ contains
   !> @param[IN] local_index integer: local index of the point we want the filter
   !> @param[IN] deg integer: degree of the spline
   !> @param[OUT] weight float: filter (aka weight) at the local index
-  function pre_filter_piir1(mesh, local_index, deg) result(weight)
+  function sll_f_pre_filter_piir1(mesh, local_index, deg) result(weight)
     type(sll_t_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
@@ -289,7 +293,7 @@ contains
        ! STOP
 
     end if
-  end function pre_filter_piir1
+  end function sll_f_pre_filter_piir1
 
   !---------------------------------------------------------------------------
   !> @brief Pre-filter PINT to compute the box splines coefficients
@@ -300,7 +304,7 @@ contains
   !> @param[IN] local_index integer: local index of the point we want the filter
   !> @param[IN] deg integer: degree of the spline
   !> @param[OUT] weight float: filter (aka weight) at the local index
-  function pre_filter_int(mesh, local_index, deg) result(weight)
+  function sll_f_pre_filter_int(mesh, local_index, deg) result(weight)
     type(sll_t_hex_mesh_2d) :: mesh
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
@@ -336,12 +340,12 @@ contains
           weight = 0._f64
        end if
     case default
-       print *, 'ERROR: pre_filter_int(...): ', &
+       print *, 'ERROR: sll_f_pre_filter_int(...): ', &
             '     function not implemented for degree > 2 splines '
        print *, "Exiting..."
        STOP
     end select
-  end function pre_filter_int
+  end function sll_f_pre_filter_int
 
 
 end module sll_m_hex_pre_filters

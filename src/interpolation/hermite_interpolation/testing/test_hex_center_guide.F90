@@ -345,9 +345,9 @@ program test_hex_hermite
      if (num_method /= 15) then
         call sll_s_int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf( phi, trim(filename))
         count = 0
         if ( num_method == 10 ) then
            filename  = "center_guide_rho_center"//trim(filenum)//".dat"
@@ -356,9 +356,9 @@ program test_hex_hermite
      elseif ( num_method == 15 ) then
         call sll_s_int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
-        call mesh2%write_field_hex_mesh_xmf(rho2, trim(filename))
+        call mesh2%sll_s_write_field_hex_mesh_xmf(rho2, trim(filename))
         filename  = "center_guide_phi"//trim(filenum)
-        call mesh2%write_field_hex_mesh_xmf(phi2, trim(filename))
+        call mesh2%sll_s_write_field_hex_mesh_xmf(phi2, trim(filename))
         count = 0
      endif
 
@@ -636,9 +636,9 @@ program test_hex_hermite
         if ( num_method /= 15 .and.count == 10.and.nloops<10000) then
            call sll_s_int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
-           call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
+           call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn1, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
-           call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+           call mesh%sll_s_write_field_hex_mesh_xmf(phi, trim(filename))
            count = 0
            if ( num_method == 10 ) then
 
@@ -648,9 +648,9 @@ program test_hex_hermite
         elseif ( num_method == 15 .and. count == 10.and.nloops<10000 ) then
            call sll_s_int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
-           call mesh2%write_field_hex_mesh_xmf( rho2, trim(filename))
+           call mesh2%sll_s_write_field_hex_mesh_xmf( rho2, trim(filename))
            filename  = "center_guide_phi"//trim(filenum)
-           call mesh2%write_field_hex_mesh_xmf( phi2, trim(filename))
+           call mesh2%sll_s_write_field_hex_mesh_xmf( phi2, trim(filename))
            count = 0
         endif
 

@@ -135,7 +135,7 @@ do iel = 1, mesh%num_triangles    !Boucle sur les elements
    x1 = mesh%center_cartesian_coord(1, iel)
    x2 = mesh%center_cartesian_coord(2, iel)
 
-   call get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
+   call sll_s_get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
 
    !Coordonnees des sommets du triangle
    xs1 = mesh%global_to_x1(is1)
