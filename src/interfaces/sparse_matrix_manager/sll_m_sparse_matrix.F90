@@ -95,7 +95,9 @@ contains
 
 subroutine sll_s_free_csr_matrix(mat)
 type(sll_t_csr_matrix),pointer :: mat
+#ifdef PASTIX
 if (mat%solver == sll_p_pastix) call delete(mat%pstx)
+#endif /* PASTIX */
 nullify(mat)
 end subroutine sll_s_free_csr_matrix
 
