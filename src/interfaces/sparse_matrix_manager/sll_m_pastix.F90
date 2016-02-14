@@ -5,22 +5,22 @@ module sll_m_pastix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-  use sll_m_collective, only:  &
-    sll_s_boot_collective,     &
-    sll_f_get_collective_rank, &
-    sll_f_get_collective_size, &
-    sll_v_world_collective
+use sll_m_collective, only:  &
+  sll_s_boot_collective,     &
+  sll_f_get_collective_rank, &
+  sll_f_get_collective_size, &
+  sll_v_world_collective
 
-  implicit none
+implicit none
 
-  public :: &
-    pastix_solver, &
-    initialize, &
-    factorize, &
-    solve, &
-    delete
+public :: &
+  pastix_solver, &
+  initialize, &
+  factorize, &
+  solve, &
+  delete
 
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 type :: pastix_solver
  pastix_data_ptr_t        :: pastix_data !< PaStiX structure (0 for first call)

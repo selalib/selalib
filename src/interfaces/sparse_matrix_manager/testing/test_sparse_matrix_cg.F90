@@ -64,6 +64,6 @@ else
   print *,'#system is not good resolved',maxval(abs(x))
 endif
 
-call sll_s_delete_csr_matrix(mat)
+call sll_s_free_csr_matrix(mat)
 
 end program test_sparse_matrix_cg

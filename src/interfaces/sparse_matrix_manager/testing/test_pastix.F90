@@ -21,7 +21,6 @@ sll_int32 :: istep, nstep = 1
 sll_int32 :: i, j, nrhs
 
 type(pastix_solver)                   :: linear_solver
-sll_int32                             :: n
 sll_int32                             :: nnzeros
 sll_int32,  dimension(:), allocatable :: ia,ja
 sll_real64, dimension(:), allocatable :: avals,rhs
@@ -77,7 +76,6 @@ call DGBTRS('N',n,KL,KU,NRHS,AB,LDAB,IPIV,X,n,INFO)
 end do
 write(*,100) X
 
-
 !Cholesky factorization of a real symmetric positive definite band matrix
 KD = 1
 LDAB=KD+1
@@ -99,7 +97,6 @@ write(*,100) X
 
 100 format(6(1x,f7.4))
 
-n = 5
 nnzeros = 3*n - 2
 ! Allocating
 allocate( ia     (n+1)    )
@@ -110,7 +107,7 @@ allocate( rhs    (n)      )
 ! Building ia, ja and avals and rhs
 j=1
 do i = 1, n
-  ia(i) = j               ! /* ONLY triangular inferior matrix */
+  ia(i)    = j            ! /* ONLY triangular inferior matrix */
   ja(j)    = i            ! /*       if (i != 0) */
   avals(j) = 2.0_f64      ! /*     { */
   j=j+1                   ! /*       (*ja)[j]    = i; */

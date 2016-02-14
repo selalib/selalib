@@ -17,8 +17,6 @@ sll_real64, dimension(:),   allocatable :: x
 sll_int32                               :: num_local_dof_row
 sll_int32                               :: ierr
 sll_int32                               :: i
-sll_int32                               :: n
-sll_int32                               :: nhinv
 sll_real64                              :: val
 
 num_elements      = 2000
@@ -70,6 +68,6 @@ else
   print *,'#system is not good resolved with umfpack',maxval(abs(x))
 endif
 
-call sll_s_delete_csr_matrix(mat)
+call sll_s_free_csr_matrix(mat)
 
 end program test_sparse_matrix_umfpack
