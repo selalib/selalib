@@ -144,7 +144,7 @@ call sll_s_initialize_csr_matrix( &
   mat,                            &
   num_rows,                       &
   num_cols,                       &
-  num_elts,                   &
+  num_elts,                       &
   local_to_global_row,            &
   num_local_dof_row,              &
   local_to_global_col,            &
@@ -161,17 +161,16 @@ end function new_csr_matrix_with_dof
 !> @param[in] num_element :  number of elements
 !> @param[in] solver      :  solver type
 !> @returns a pointer to the newly allocated object.
-function new_csr_matrix(          &
-        num_rows,                 &
-        num_cols,                 &
-        num_nz,                   &
-        solver                    ) result(mat)
+function new_csr_matrix( num_rows, &
+                         num_cols, &
+                         num_nz,   &
+                         solver    ) result(mat)
 
-type(sll_t_csr_matrix), pointer          :: mat
-sll_int32,                    intent(in) :: num_rows
-sll_int32,                    intent(in) :: num_cols
-sll_int32,                    intent(in) :: num_nz
-sll_int32,                    optional   :: solver
+type(sll_t_csr_matrix), pointer    :: mat
+sll_int32,              intent(in) :: num_rows
+sll_int32,              intent(in) :: num_cols
+sll_int32,              intent(in) :: num_nz
+sll_int32,              optional   :: solver
 
 sll_int32 :: ierr
 
@@ -194,11 +193,21 @@ print *,'#num_cols=',num_cols
 print *,'#num_nz  =',num_nz
 #endif
 
-SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+SLL_ALLOCATE(mat%row_ptr(num_rows+1),ierr)
 SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
-SLL_CLEAR_ALLOCATE(mat%val(1:num_nz),ierr)
+SLL_ALLOCATE(mat%val(1:num_nz),ierr)
 mat%row_ptr = 0
 mat%col_ind = 0
+mat%val = 0.0_f64
+
+#ifdef UMFPACK
+if (mat%solver == sll_p_umfpack) then
+  SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+  mat%row_ptr = mat%row_ptr-1 
+  mat%col_ind = mat%col_ind-1 
+  call umf4def(mat%umf_control)  ! get the default configuration
+end if
+#endif /* UMFPACK */
 
 end function new_csr_matrix
 
@@ -218,7 +227,7 @@ end function new_csr_matrix
 subroutine sll_s_initialize_csr_matrix( mat,                 &
                                         num_rows,            &
                                         num_cols,            &
-                                        num_elts,        &
+                                        num_elts,            &
                                         local_to_global_row, &
                                         num_local_dof_row,   &
                                         local_to_global_col, & 
@@ -826,7 +835,7 @@ end subroutine sll_s_solve_csr_matrix_perper
 
 subroutine sll_s_csr_todense( mat, dense_matrix)
 
-  type(sll_t_csr_matrix)       :: mat
+  type(sll_t_csr_matrix)     :: mat
   sll_real64, dimension(:,:) :: dense_matrix
   sll_int32                  :: i, j, k, l
 
