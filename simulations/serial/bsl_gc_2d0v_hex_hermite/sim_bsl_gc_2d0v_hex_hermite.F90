@@ -705,10 +705,10 @@ program sim_bsl_gc_2d0v_hex_hermite
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call sll_s_int2string(nloops,filenum)
               filename  = "center_guide_rho"//trim(filenum)
-              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
+              call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               if (model_name.eq."GC") then
                  filename  = "center_guide_phi"//trim(filenum)
-                 call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+                 call mesh%sll_s_write_field_hex_mesh_xmf(phi, trim(filename))
               end if
               count = 0
            endif
@@ -717,7 +717,7 @@ program sim_bsl_gc_2d0v_hex_hermite
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call sll_s_int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
-              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
+              call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               count = 0
            endif
         end if

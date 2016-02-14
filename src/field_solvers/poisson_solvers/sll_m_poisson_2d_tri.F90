@@ -608,7 +608,7 @@ end subroutine morse
 ! mors2  - tableau des numeros des termes de chaque ligne de la matrice
 !          morse symetrique                              
 ! ntri   - numeros des sommets des triangles              
-! aire   - aire des triangles                              
+! area   - area des triangles                              
 ! iprof  - profil de la matrice grad-grad                   
 !                                                            
 ! noefnt - noeuds internes Dirichlet                          
@@ -627,7 +627,7 @@ end subroutine morse
 ! grady  - matrice de l'operateur grady                            
 ! rotx   - matrice de l'operateur rotx                              
 ! roty   - matrice de l'operateur roty                               
-! aire   - surface de chaque element                                  
+! area   - surface de chaque element                                  
 !Auteur:
 !   612-POISMC     
 !
@@ -669,9 +669,9 @@ do iel=1,self%mesh%num_triangles
 
   !Contribution a la matrice de masse
 
-  amloc(1) = self%mesh%aire(iel)/3.
-  amloc(2) = self%mesh%aire(iel)/3.
-  amloc(3) = self%mesh%aire(iel)/3.
+  amloc(1) = self%mesh%area(iel)/3.
+  amloc(2) = self%mesh%area(iel)/3.
+  amloc(3) = self%mesh%area(iel)/3.
 
   !Assemblage
 
@@ -679,7 +679,7 @@ do iel=1,self%mesh%num_triangles
 
   !Contribution a la matrice grad-grad
 
-  coef=1./(4.*self%mesh%aire(iel))
+  coef=1./(4.*self%mesh%area(iel))
 
   aggloc(1)=(dntx1**2   +dnty1**2   )*coef
   aggloc(2)=(dntx1*dntx2+dnty1*dnty2)*coef

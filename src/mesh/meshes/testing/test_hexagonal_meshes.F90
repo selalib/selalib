@@ -40,8 +40,8 @@ program test_hexagonal_meshes
        "cells, mesh coordinates written in ./hex_mesh_coo.txt"
   mesh => sll_f_new_hex_mesh_2d(num_cells)
   call mesh%display()
-  call mesh%write_hex_mesh_2d( "hex_mesh_coo.txt")
-  call mesh%write_hex_mesh_mtv("hex_mesh_coo.mtv")
+  call mesh%sll_s_write_hex_mesh_2d( "hex_mesh_coo.txt")
+  call mesh%sll_s_write_hex_mesh_mtv("hex_mesh_coo.mtv")
   print *, ""
 
   SLL_ALLOCATE(field(mesh%num_pts_tot), error)
@@ -52,7 +52,7 @@ program test_hexagonal_meshes
      field(i) = cos(2*sll_p_pi*x1)*sin(2*sll_p_pi*x2)
   end do
 
-  call mesh%write_field_hex_mesh_xmf(field, 'field')
+  call mesh%sll_s_write_field_hex_mesh_xmf(field, 'field')
 
   call sll_o_delete(mesh)
 

@@ -877,9 +877,9 @@ program sim_bsl_ad_2d0v_hex_rot
              linf_err_loc
         call sll_s_int2string(count,filenum)
         filename  = trim(rho_name)//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = trim(rho_error_name)//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf( rho_exact-rho_tn, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf( rho_exact-rho_tn, trim(filename))
      endif
 
 

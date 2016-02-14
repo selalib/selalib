@@ -415,9 +415,9 @@ program sim_bsl_gc_2d0v_hex
   call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,thdiag_1d_id)
   !call sll_s_int2string(nloops,filenum)
   !     filename  = "guiding_center_rho"//trim(filenum)
-  !     call mesh%write_field_hex_mesh_xmf(rho_tn, trim(filename))
+  !     call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn, trim(filename))
   !     filename  = "guiding_center_phi"//trim(filenum)
-  !     call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+  !     call mesh%sll_s_write_field_hex_mesh_xmf(phi, trim(filename))
 
   !*********************************************************
   !                          Time loop
@@ -703,15 +703,15 @@ program sim_bsl_gc_2d0v_hex
         print *,"##time,step,count",t,step,count
         call sll_s_int2string(count,filenum)
         filename  = trim(rho_name)//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn1, trim(filename))
         filename  = trim(phi_name)//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf(phi, trim(filename))
 
         !call sll_s_int2string(nloops,filenum)
         !filename  = "guiding_center_rho"//trim(filenum)
-        !call mesh%write_field_hex_mesh_xmf( rho_tn1, trim(filename))
+        !call mesh%sll_s_write_field_hex_mesh_xmf( rho_tn1, trim(filename))
         !   filename  = "guiding_center_phi"//trim(filenum)
-        !   call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
+        !   call mesh%sll_s_write_field_hex_mesh_xmf( phi, trim(filename))
         !count = 0
      endif
 

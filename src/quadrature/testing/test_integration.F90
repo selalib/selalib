@@ -147,41 +147,6 @@ do i = 1, n
    write(*,string) ( dlag(i,j), j = 1, n)
 end do
 
-write(*,"(/,a)") "*********************************** "
-write(*,"(a)") "       FEKETE QUAD TEST       "
-write(*,"(a)") "*********************************** "
-
-!Definition of first triangle
-pxy1(:,1) = (/ 0._f64, 0._f64 /)
-pxy1(:,2) = (/ 1._f64, 0._f64 /)
-pxy1(:,3) = (/ 0._f64, 1._f64 /)
-
-!Definition of first triangle
-pxy2(:,1) = (/ 1._f64, 0._f64 /)
-pxy2(:,2) = (/ 1._f64, 1._f64 /)
-pxy2(:,3) = (/ 0._f64, 1._f64 /)
-
-rule = 2
-call sll_s_fekete_order_num ( rule, n )
-SLL_ALLOCATE(xyw(1:3, 1:n), ierr)
-
-write(*,"(a)") " Computing Fekete points and weights on reference triangle "
-write(*,"(/,a)") "           x                   y                    w"
-xyw = sll_f_fekete_points_and_weights(pxy1, rule)
-
-do j = 1, n
-   write(*, string) (xyw(i,j), i = 1, 3)
-end do
-
-print *, "sum weights = ", SUM(xyw(3,:))
-! write(*,"(/,a)") " --Test for a constant real function (=1) "
-! write(*,"(a)") "    on the squared domain [0,1]^2 divided on 2 triangles "
-
-! app_res = fekete_integral(one_2D, pxy1) + fekete_integral(one_2D, pxy2)
-
-! write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
-
-
 print*, 'PASSED'
 
 end program test_integration
