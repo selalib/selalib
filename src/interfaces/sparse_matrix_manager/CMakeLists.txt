@@ -14,11 +14,7 @@ SET(SPM_SOURCES sll_m_qsort_partition.F90
 IF(SUITESPARSE_FOUND)
 
   INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
-  ADD_DEFINITIONS(-DUMFPACK)
-
-  SET(SPM_SOURCES ${SPM_SOURCES}
-              sll_m_umfpack.F90
-              umf4_f77wrapper.c)
+  SET(SPM_SOURCES ${SPM_SOURCES} sll_m_umfpack.F90 umf4_f77wrapper.c)
 
 ENDIF(SUITESPARSE_FOUND)
 
@@ -28,8 +24,7 @@ IF(PASTIX_FOUND)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
 
-  SET(SPM_SOURCES ${SPM_SOURCES}
-              sll_m_pastix.F90)
+  SET(SPM_SOURCES ${SPM_SOURCES} sll_m_pastix.F90)
 
 ENDIF(PASTIX_FOUND)
 
@@ -38,11 +33,8 @@ ADD_LIBRARY(sll_sparse_matrix STATIC ${SPM_SOURCES})
 TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_memory sll_assert)
 
 IF(SUITESPARSE_FOUND)
-
   TARGET_LINK_LIBRARIES( sll_sparse_matrix ${SUITESPARSE_LIBRARIES}
                                            ${BLAS_LIBRARIES})
-
-
 ENDIF()
 
 IF(PASTIX_FOUND)

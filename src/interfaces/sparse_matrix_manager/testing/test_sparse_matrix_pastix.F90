@@ -17,8 +17,6 @@ sll_real64, dimension(:),   allocatable :: x
 sll_int32                               :: num_local_dof_row
 sll_int32                               :: ierr
 sll_int32                               :: i
-sll_int32                               :: n
-sll_int32                               :: nhinv
 sll_real64                              :: val
 sll_int32                               :: prank
 sll_int32                               :: psize
@@ -75,7 +73,7 @@ else
   print *,'#system is not good resolved',maxval(abs(x))
 endif
 
-call sll_s_delete_csr_matrix(mat)
+call sll_s_free_csr_matrix(mat)
 
 call sll_s_halt_collective()
 

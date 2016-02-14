@@ -79,7 +79,7 @@ module sll_m_general_coordinate_elliptic_solver
     sll_f_new_csr_matrix_with_constraint, &
     sll_s_add_to_csr_matrix, &
     sll_t_csr_matrix, &
-    sll_o_delete, &
+    sll_s_free_csr_matrix, &
     sll_s_factorize_csr_matrix, &
     sll_s_mult_csr_matrix_vector, &
     sll_s_solve_csr_matrix, &
@@ -951,9 +951,9 @@ SLL_DEALLOCATE(es%gauss_pts2,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
-call sll_o_delete(es%csr_mat)
-call sll_o_delete(es%csr_mat_with_constraint)
-call sll_o_delete(es%csr_mat_source)
+call sll_s_free_csr_matrix(es%csr_mat)
+call sll_s_free_csr_matrix(es%csr_mat_with_constraint)
+call sll_s_free_csr_matrix(es%csr_mat_source)
 SLL_DEALLOCATE(es%rho_vec,ierr)
 SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
 SLL_DEALLOCATE(es%phi_vec,ierr)
