@@ -65,7 +65,7 @@ program test_hexagonal_meshes
      call mesh%cell_type(i, type)
      print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
      print *, "element =", i
-     call mesh%hex_to_aligned_elmt(i, "CRICLE", transf_matA, transf_vecB)
+     call mesh%hex_to_aligned_elmt(i, "CIRCLE", transf_matA, transf_vecB)
      print *, transf_matA(1, :), transf_matA(2, :)
      print *, transf_vecB(:)
      print *, "---------------------------------"
