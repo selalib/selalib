@@ -20,7 +20,7 @@ program test_box_splines_derivatives
     sll_f_compute_box_spline, &
     sll_f_new_box_spline_2d, &
     sll_t_box_spline_2d, &
-    sll_s_hex_interpolate_value, &
+    sll_f_hex_interpolate_value
 
   use sll_m_hex_pre_filters, only: &
     sll_s_pre_filter_pfir
@@ -31,7 +31,7 @@ program test_box_splines_derivatives
     sll_t_hex_mesh_2d
 
   use sll_m_constants, only : &
-       sll_pi
+       sll_p_pi
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -96,7 +96,7 @@ program test_box_splines_derivatives
   do i=1, mesh%num_pts_tot
      x1 = mesh%global_to_x1(i)
      x2 = mesh%global_to_x2(i)
-     dist(i) = cos(x1*2.0*sll_pi)
+     dist(i) = cos(x1*2.0*sll_p_pi)
   end do
 
   do degree=1,max_deg
@@ -113,9 +113,9 @@ program test_box_splines_derivatives
            x1p = x1 - randnum/num_cells
            x2p = x2 - randnum/num_cells
            ! Interpolation on mesh points computation:
-           appx_f = hex_interpolate_value(mesh, x1p, x2p, spline, degree)
+           appx_f = sll_f_hex_interpolate_value(mesh, x1p, x2p, spline, degree)
            ! Computing errors:
-           error_current = ABS(cos(x1p*2.0*sll_pi) - appx_f)
+           error_current = ABS(cos(x1p*2.0*sll_p_pi) - appx_f)
            error_l2   = error_l2 + error_current**2
            error_linf = max(error_linf, error_current)
         end if
@@ -147,9 +147,9 @@ program test_box_splines_derivatives
 
 
   !Wrtting on docs:
-  call write_field_hex_mesh_xmf(mesh,   f2, "boxspline2")
-  call write_field_hex_mesh_xmf(mesh, dxf2, "der1_boxspline2")
-  call write_field_hex_mesh_xmf(mesh, dyf2, "der2_boxspline2")
+  call sll_s_write_field_hex_mesh_xmf(mesh,   f2, "boxspline2")
+  call sll_s_write_field_hex_mesh_xmf(mesh, dxf2, "der1_boxspline2")
+  call sll_s_write_field_hex_mesh_xmf(mesh, dyf2, "der2_boxspline2")
 
   SLL_DEALLOCATE_ARRAY(f, ierr)
   SLL_DEALLOCATE_ARRAY(dxf, ierr)
@@ -188,7 +188,7 @@ program test_box_splines_derivatives
   !    f(i) = sll_f_compute_box_spline(spline, x1, x2, degree)
   ! end do
   ! print *, sum(f)
-  ! call write_field_hex_mesh_xmf(mesh, f, "chi3")
+  ! call sll_s_write_field_hex_mesh_xmf(mesh, f, "chi3")
 
 
   ! Testing pre-filter:

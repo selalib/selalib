@@ -77,7 +77,7 @@ type :: sll_t_triangular_mesh_2d
   sll_real64          :: petitl
   sll_real64          :: grandl
 
-  sll_real64, dimension(:),   pointer :: aire
+  sll_real64, dimension(:),   pointer :: area
   sll_int32,  dimension(:),   pointer :: refs
   sll_int32,  dimension(:),   pointer :: reft
   sll_int32,  dimension(:,:), pointer :: nvois
@@ -156,7 +156,7 @@ end interface sll_o_new_triangular_mesh_2d
 !num_bound  - nombre total de frontieres referencees
 !nelfr  - nombre de triangles sur une frontiere
 !coor   - coordonnees des sommets
-!aire   - aires de elements
+!area   - areas de elements
 !refs   - references des sommets
 !reft   - references des elements
 !nodes   - table de connectivite
@@ -188,7 +188,7 @@ function new_triangular_mesh_2d_from_file( maafil ) result(m)
   SLL_ALLOCATE(m, ierr)
   call sll_s_read_from_file(m, maafil)
 
-  call compute_aires( m )
+  call compute_areas( m )
 
 end function new_triangular_mesh_2d_from_file
 
@@ -278,7 +278,7 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
   end do
 
-  call compute_aires( tri_mesh )
+  call compute_areas( tri_mesh )
 
 end function new_triangular_mesh_2d_from_hex_mesh
 
@@ -327,7 +327,7 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
                                       eta2_min, &
                                       eta2_max)
 
-  call compute_aires( m )
+  call compute_areas( m )
 
 end function new_triangular_mesh_2d_from_square
 
@@ -988,7 +988,7 @@ end subroutine sll_s_map_to_circle
 
 !=======================================================================
 
-subroutine compute_aires( mesh )
+subroutine compute_areas( mesh )
 
 type(sll_t_triangular_mesh_2d), intent(inout) :: mesh !< mesh
 
@@ -1022,7 +1022,7 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 write(6,*)"*** Calcul des aires des triangles ***"
 #endif /* DEBUG */
 
-allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0_f64
+allocate(mesh%area(mesh%num_triangles)); mesh%area=0.0_f64
 
 airtot = 0._f64
 
@@ -1033,9 +1033,9 @@ do it = 1, mesh%num_triangles
    lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
    ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
 
-   mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
+   mesh%area(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
 
-   if( mesh%aire(it) <= 0. ) then
+   if( mesh%area(it) <= 0. ) then
      write(6,*) " Triangle : ", it
      write(6,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
      write(6,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
@@ -1043,7 +1043,7 @@ do it = 1, mesh%num_triangles
      stop "Aire de triangle negative"
    end if
 
-   airtot = airtot + mesh%aire(it)
+   airtot = airtot + mesh%area(it)
 
 end do
 
@@ -1261,7 +1261,7 @@ do is=1,mesh%num_nodes
 
 end do
 
-end subroutine compute_aires
+end subroutine compute_areas
 
 !**************************************************************
 
@@ -1492,7 +1492,7 @@ end subroutine poclis
 !>  refs - numeros de references des noeuds 
 !>  nodes - numeros des sommets              
 !>  nvois - numeros des voisins des triangles
-!>  aire - aires des triangles              
+!>  area - areas des triangles              
 !>  base - integrales des fonctions de base  
 !>  nusd - numeros de sous-domaine            
 !>

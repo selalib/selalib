@@ -275,9 +275,9 @@ program sim_bsl_gc_2d0v_hex_splines
         call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
         call sll_s_int2string(nloops,filenum)
         filename  = "guiding_center_rho"//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf( rho_tn, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf( rho_tn, trim(filename))
         filename  = "guiding_center_phi"//trim(filenum)
-        call mesh%write_field_hex_mesh_xmf( phi, trim(filename))
+        call mesh%sll_s_write_field_hex_mesh_xmf( phi, trim(filename))
      elseif (model_name.eq."CIRCULAR") then
         call hex_diagnostics_circ(rho_tn, t, &
              mesh, nloops, spline_degree, &
@@ -387,10 +387,10 @@ program sim_bsl_gc_2d0v_hex_splines
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call sll_s_int2string(nloops,filenum)
               filename  = "guiding_center_rho"//trim(filenum)
-              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
+              call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               if (model_name.eq."GC") then
                  filename  = "guiding_center_phi"//trim(filenum)
-                 call mesh%write_field_hex_mesh_xmf(phi, trim(filename))
+                 call mesh%sll_s_write_field_hex_mesh_xmf(phi, trim(filename))
               end if
               count = 0
            endif
@@ -400,7 +400,7 @@ program sim_bsl_gc_2d0v_hex_splines
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call sll_s_int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
-              call mesh%write_field_hex_mesh_xmf(rho_tn1, trim(filename))
+              call mesh%sll_s_write_field_hex_mesh_xmf(rho_tn1, trim(filename))
               count = 0
            endif
         end if

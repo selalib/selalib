@@ -12,10 +12,21 @@ module sll_m_fekete_integration
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_hexagonal_meshes, only: &
+    sll_f_new_hex_mesh_2d, &
+    sll_s_write_caid_files, &
+    sll_t_hex_mesh_2d
+
+  use sll_m_box_splines, only: &
+    sll_s_write_connectivity, &
+    sll_f_boxspline_val_der
+
   implicit none
 
   public :: &
     sll_s_fekete_order_num, &
+    sll_s_write_all_django_files, &
+    sll_f_fekete_integral, &
     sll_f_fekete_points_and_weights
 
   private
@@ -809,9 +820,9 @@ contains
   !> @param[in]  pxy array of dimesion (2,3) containg the coordinates
   !>             of the edges of the triangle
   !> @return The value of the integral
-  function fekete_integral( f, pxy)
+  function sll_f_fekete_integral( f, pxy)
     sll_real64, dimension(2, 3), intent(in) :: pxy
-    sll_real64                  :: fekete_integral
+    sll_real64                  :: sll_f_fekete_integral
     procedure(function_2D)      :: f
     sll_real64, dimension(3,10) :: xyw
     sll_real64, dimension(2)    :: v1
@@ -830,9 +841,9 @@ contains
     xyw = sll_f_fekete_points_and_weights(pxy, 1)
 
     N = 10
-    fekete_integral = 0._f64
+    sll_f_fekete_integral = 0._f64
     do k=1,N
-       fekete_integral = fekete_integral + f(xyw(1,k), xyw(2,k))*xyw(3,k)
+       sll_f_fekete_integral = sll_f_fekete_integral + f(xyw(1,k), xyw(2,k))*xyw(3,k)
     end do
 
     ! Computing the area of the triangle
@@ -853,8 +864,8 @@ contains
     ! area
     area = sqrt(p*(p-a)*(p-b)*(p-c))
 
-    fekete_integral = fekete_integral * area
-  end function fekete_integral
+    sll_f_fekete_integral = sll_f_fekete_integral * area
+  end function sll_f_fekete_integral
 
   subroutine triangle_area ( node_xy, area )
     implicit none
@@ -910,9 +921,9 @@ end subroutine triangle_area
     print *, "area triangle = ", volume
 
     ! Computing fekete points on that triangle
-    call fekete_order_num(rule, num_fek)
+    call sll_s_fekete_order_num(rule, num_fek)
     SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
-    quad_pw = fekete_points_and_weights(ref_pts, rule)
+    quad_pw = sll_f_fekete_points_and_weights(ref_pts, rule)
     ! For Gaussian quadrature rule:
     ! num_fek = rule + 1
     ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
@@ -973,9 +984,9 @@ end subroutine triangle_area
     ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
 
     ! Computing fekete points on the reference triangle
-    call fekete_order_num ( rule, num_fek )
+    call sll_s_fekete_order_num ( rule, num_fek )
     SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
-    quad_pw = fekete_points_and_weights(ref_pts, rule)
+    quad_pw = sll_f_fekete_points_and_weights(ref_pts, rule)
     ! ! For Gaussian qudrature:
     ! num_fek = rule + 1
     ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
@@ -1002,7 +1013,7 @@ end subroutine triangle_area
           y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
-                val = boxspline_val_der(x, y, deg, idx, idy)
+                val = sll_f_boxspline_val_der(x, y, deg, idx, idy)
                 write(out_unit, "(1(g25.18))", advance='no') val
                 if ((idx<nderiv).or.(idy<nderiv-idx))  then
                    write(out_unit, "(1(a,1x))", advance='no') ","
@@ -1025,23 +1036,23 @@ end subroutine triangle_area
   !> mesh
   !> @param[in] deg integer degree of the splines that will be used for the
   !> interpolation
-  subroutine write_all_django_files(num_cells, deg, rule, transf)
+  subroutine sll_s_write_all_django_files(num_cells, deg, rule, transf)
     sll_int32, intent(in)          :: num_cells
     sll_int32, intent(in)          :: deg
     sll_int32, intent(in)          :: rule
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     character(len=*),  intent(in)  :: transf
 
-    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
+    mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
 
-    call write_caid_files(mesh, transf, deg)
-    call write_connectivity(mesh, deg)
+    call sll_s_write_caid_files(mesh, transf, deg)
+    call sll_s_write_connectivity(mesh, deg)
     call write_basis_values(deg, rule)
     call write_quadrature(rule)
 #ifdef DEBUG
-    print*, 'write_all_django_files rule=', rule
+    print*, 'sll_s_write_all_django_files rule=', rule
 #endif
 
-  end subroutine write_all_django_files
+  end subroutine sll_s_write_all_django_files
 
 end module sll_m_fekete_integration
