@@ -1,3 +1,12 @@
+IF(PASTIX_ENABLED)
+  FIND_PACKAGE(SCOTCH)
+  FIND_PACKAGE(PASTIX)
+ENDIF(PASTIX_ENABLED)
+
+IF(SUITESPARSE_ENABLED)
+  FIND_PACKAGE(SUITESPARSE)
+ENDIF(SUITESPARSE_ENABLED)
+
 SET(SPM_SOURCES sll_m_qsort_partition.F90 
                 sll_m_sparse_matrix.F90
                 sll_m_sparse_matrix_mp.F90)
