@@ -20,6 +20,16 @@ IF(SUITESPARSE_FOUND)
 
 ENDIF(SUITESPARSE_FOUND)
 
+IF(PASTIX_FOUND)
+
+  ADD_EXECUTABLE( test_sparse_matrix_pastix test_sparse_matrix_pastix.F90 )
+  TARGET_LINK_LIBRARIES( test_sparse_matrix_pastix sll_sparse_matrix )
+  ADD_TEST(NAME sparse_matrix_pastix COMMAND test_sparse_matrix_pastix )
+  SET_TESTS_PROPERTIES( sparse_matrix_pastix PROPERTIES 
+    PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
+
+ENDIF(PASTIX_FOUND)
+
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
 TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
 ADD_EXECUTABLE( test_csr_one_constraint test_csr_one_constraint.F90 )

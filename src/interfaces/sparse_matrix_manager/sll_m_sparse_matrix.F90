@@ -35,24 +35,27 @@ use sll_m_qsort_partition, only : sll_s_qsortc
   use iso_fortran_env, only: output_unit
 #endif /* UMFPACK */
 
+#ifdef PASTIX
+  use sll_m_pastix
+#endif /* PASTIX */
+
 implicit none
 
-public :: &
-  sll_f_new_csr_matrix, &
-  sll_f_new_csr_matrix_with_constraint, &
-  sll_s_csr_add_one_constraint, &
-  sll_s_csr_todense, &
-  sll_s_delete_csr_matrix, &
-  !sll_s_initialize_csr_matrix, &
-  sll_s_initialize_csr_matrix_with_constraint, &
-  sll_s_add_to_csr_matrix, &
-  sll_t_csr_matrix, &
-  sll_s_factorize_csr_matrix, &
-  sll_s_mult_csr_matrix_vector, &
-  sll_s_solve_csr_matrix, &
-  sll_s_solve_csr_matrix_perper, &
-  sll_p_umfpack,                 &
-  sll_o_delete
+public ::                                      &
+  sll_f_new_csr_matrix,                        &
+  sll_f_new_csr_matrix_with_constraint,        &
+  sll_s_csr_add_one_constraint,                &
+  sll_s_csr_todense,                           &
+  sll_s_free_csr_matrix,                     &
+  sll_s_init_csr_matrix_with_constraint, &
+  sll_s_add_to_csr_matrix,                     &
+  sll_t_csr_matrix,                            &
+  sll_s_factorize_csr_matrix,                  &
+  sll_s_mult_csr_matrix_vector,                &
+  sll_s_solve_csr_matrix,                      &
+  sll_s_solve_csr_matrix_perper,               &
+  sll_p_umfpack,                               &
+  sll_p_pastix
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -72,28 +75,29 @@ type :: sll_t_csr_matrix
   sll_real64, dimension(:), pointer :: umf_control
 #endif /* UMFPACK */
 
+#ifdef PASTIX
+  type(pastix_solver)               :: pstx
+#endif
+
 end type sll_t_csr_matrix
 
 sll_int32, parameter :: sll_p_umfpack = 1
+sll_int32, parameter :: sll_p_pastix  = 2
 
 interface sll_f_new_csr_matrix
   module procedure new_csr_matrix_with_dof
   module procedure new_csr_matrix
 end interface sll_f_new_csr_matrix
 
-
-interface sll_o_delete
-  module procedure sll_s_delete_csr_matrix
-end interface sll_o_delete
-     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine sll_s_delete_csr_matrix(csr_mat)
-type(sll_t_csr_matrix),pointer :: csr_mat
-nullify(csr_mat)
-end subroutine sll_s_delete_csr_matrix
+subroutine sll_s_free_csr_matrix(mat)
+type(sll_t_csr_matrix),pointer :: mat
+if (mat%solver == sll_p_pastix) call delete(mat%pstx)
+nullify(mat)
+end subroutine sll_s_free_csr_matrix
 
 !> @brief allocates the memory space for a new CSR matrix,
 !> @details
@@ -134,13 +138,9 @@ sll_int32 :: ierr
 SLL_ALLOCATE(mat, ierr)
 
 mat%solver = 0
-if (present(solver)) then
-#ifdef UMFPACK
-  mat%solver = solver
-#endif /* UMFPACK */
-endif
+if (present(solver)) mat%solver = solver
 
-call sll_s_initialize_csr_matrix( &
+call sll_s_init_csr_matrix( &
   mat,                            &
   num_rows,                       &
   num_cols,                       &
@@ -224,7 +224,7 @@ end function new_csr_matrix
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
 
-subroutine sll_s_initialize_csr_matrix( mat,                 &
+subroutine sll_s_init_csr_matrix( mat,                 &
                                         num_rows,            &
                                         num_cols,            &
                                         num_elts,            &
@@ -257,7 +257,7 @@ sll_int32                                :: sz
 logical                                  :: ll_done
 
 #ifdef DEBUG
-print *,'#sll_s_initialize_csr_matrix'
+print *,'#sll_s_init_csr_matrix'
 #endif
 
 coef = 6
@@ -333,22 +333,33 @@ do elt = 1, num_elts
   end do
 end do
 
-#ifdef UMFPACK
-if (mat%solver == sll_p_umfpack) then
-  SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
-  mat%row_ptr = mat%row_ptr-1 
-  mat%col_ind = mat%col_ind-1 
-  call umf4def(mat%umf_control)  ! get the default configuration
-end if
-#endif /* UMFPACK */
-
 mat%val(:) = 0.0_f64
 SLL_DEALLOCATE_ARRAY(lpi_col,ierr)
 SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
-end subroutine sll_s_initialize_csr_matrix
+select case (mat%solver)
 
-subroutine sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
+case (sll_p_umfpack)
+
+#ifdef UMFPACK
+  SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+  mat%row_ptr = mat%row_ptr-1 
+  mat%col_ind = mat%col_ind-1 
+  call umf4def(mat%umf_control)  ! get the default configuration
+#endif /* UMFPACK */
+
+case (sll_p_pastix)
+
+#ifdef PASTIX
+  call initialize(mat%pstx, num_rows, num_nz)
+#endif /* PASTIX */
+
+end select
+
+
+end subroutine sll_s_init_csr_matrix
+
+subroutine sll_s_init_csr_matrix_with_constraint( mat, mat_a)
 
 type(sll_t_csr_matrix), intent(inout) :: mat
 type(sll_t_csr_matrix), intent(in) :: mat_a
@@ -376,7 +387,7 @@ if (mat%solver == sll_p_umfpack) then
 end if
 #endif /* UMFPACK */
 
-end subroutine sll_s_initialize_csr_matrix_with_constraint
+end subroutine sll_s_init_csr_matrix_with_constraint
 
 function sll_f_new_csr_matrix_with_constraint(mat_a) result(mat)
 
@@ -385,7 +396,7 @@ type(sll_t_csr_matrix)          :: mat_a
 
 sll_int32 :: ierr
 SLL_ALLOCATE(mat, ierr)
-call sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
+call sll_s_init_csr_matrix_with_constraint( mat, mat_a)
 
 end function sll_f_new_csr_matrix_with_constraint
 
@@ -484,11 +495,14 @@ subroutine sll_s_factorize_csr_matrix(mat)
 type(sll_t_csr_matrix), intent(inout) :: mat
 
 #ifdef UMFPACK
-
 sll_real64, dimension(umfpack_info) :: info
+#endif /* UMFPACK */
   
-if (mat%solver == sll_p_umfpack) then
+select case (mat%solver)
 
+case (sll_p_umfpack) 
+
+#ifdef UMFPACK
   ! pre-order and symbolic analysis
   call umf4sym( mat%num_rows,     &
                 mat%num_cols,     &
@@ -512,19 +526,28 @@ if (mat%solver == sll_p_umfpack) then
                 mat%umf_numeric,  &
                 mat%umf_control,  &
                 info)
-      
+
   if (info(1) .lt. 0) then
     print *, '#Error occurred in umf4num: ', info(1)
     stop
   endif
-
-end if
-
-#else /* UMFPACK */
-
-SLL_ASSERT(associated(mat%val)) ! Just to avoid warning in debug mode
- 
 #endif /* UMFPACK */
+
+case (sll_p_pastix)
+
+#ifdef PASTIX
+  mat%pstx%colptr = mat%row_ptr
+  mat%pstx%row    = mat%col_ind
+  mat%pstx%avals  = mat%val
+  call factorize(mat%pstx)
+#endif /* PASTIX */
+
+case default
+
+  SLL_ASSERT(associated(mat%val)) ! Just to avoid warning in debug mode
+
+end select
+
 
 end subroutine sll_s_factorize_csr_matrix
   
@@ -605,17 +628,23 @@ sll_real64 :: alpha
 sll_int32  :: iter
 sll_int32  :: err
 
-if (mat%solver == sll_p_umfpack) then
+select case (mat%solver)
 
-#ifdef DEBUG
-print*, '#solve with umfpack'
-#endif /* DEBUG */
+case (sll_p_umfpack)
+
 #ifdef UMFPACK
   sys = 0
   call umf4sol(sys,U,B,mat%umf_numeric,mat%umf_control,info)
 #endif /* UMFPACK */
 
-else
+case (sll_p_pastix)
+
+#ifdef PASTIX
+  u = b
+  call solve(mat%pstx, u)
+#endif /* PASTIX */
+
+case default
 
   eps     = 1.d-13
   maxIter = 10000
@@ -693,7 +722,7 @@ else
   deallocate(Ad)
   deallocate(d)
 
-endif 
+end select 
 
 end subroutine sll_s_solve_csr_matrix
 
