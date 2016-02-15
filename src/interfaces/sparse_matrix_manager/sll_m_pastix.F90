@@ -109,7 +109,7 @@ subroutine init_pastix(self,n,nnzeros,row_ptr,col_ind,val)
   self%iparm(IPARM_THREAD_NBR) = self%nbthread  
   self%iparm(IPARM_VERBOSE)    = self%verbose
 
-  self%iparm(IPARM_SYM)           = API_SYM_YES !API_SYM_NO
+  self%iparm(IPARM_SYM)           = API_SYM_NO !API_SYM_YES !API_SYM_NO
   self%iparm(IPARM_FACTORIZATION) = API_FACT_LU !API_FACT_LDLT
 
   self%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
