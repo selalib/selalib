@@ -1,8 +1,8 @@
 #PN sll_collective is necessary when PasTiX is used
 
-IF(PASTIX_FOUND)
+IF(PASTIX_FOUND OR MUMPS_FOUND)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(PASTIX_FOUND)
+ENDIF(PASTIX_FOUND OR MUMPS_FOUND)
 
 ADD_EXECUTABLE( test_sparse_matrix_cg test_sparse_matrix_cg.F90 )
 TARGET_LINK_LIBRARIES( test_sparse_matrix_cg sll_sparse_matrix )
@@ -30,6 +30,7 @@ IF(PASTIX_FOUND)
 
 ENDIF(PASTIX_FOUND)
 
+
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
 TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
 ADD_EXECUTABLE( test_csr_one_constraint test_csr_one_constraint.F90 )
@@ -56,7 +57,7 @@ IF(BUILD_PARALUTION)
 
 ENDIF(BUILD_PARALUTION)
 
-IF(PASTIX_FOUND)
+IF(PASTIX_FOUND) #Simple test from the library 
   
   ADD_EXECUTABLE(test_pastix test_pastix.F90)
   TARGET_LINK_LIBRARIES(test_pastix sll_sparse_matrix
@@ -66,7 +67,16 @@ IF(PASTIX_FOUND)
                                     ${PTSCOTCH_LIBRARIES}
                                     ${SCOTCH_LIBRARIES}
                                     ${BLAS_LIBRARIES})
-  ADD_TEST( NAME pastix COMMAND test_pastix )
-  SET_TESTS_PROPERTIES( pastix PROPERTIES TIMEOUT 20 )
 
 ENDIF(PASTIX_FOUND)
+
+IF(MUMPS_FOUND) #Simple test from the library 
+
+  ADD_EXECUTABLE( test_mumps dsimpletest.F90 )
+  TARGET_LINK_LIBRARIES( test_mumps ${MUMPS_LIBRARIES} )
+  SET(EXECUTABLE "${CMAKE_BINARY_DIR}/bin/test_mumps")
+  SET(INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/input_simpletest_real")
+  ADD_TEST( NAME mumps COMMAND ${EXECUTABLE} ${INPUT_FILE} )
+  SET_TESTS_PROPERTIES( mumps PROPERTIES TIMEOUT 10 )
+
+ENDIF(MUMPS_FOUND)
