@@ -18,7 +18,7 @@ ADD_EXECUTABLE(bsl_2d_omp unit_test_2d_omp.F90)
 TARGET_LINK_LIBRARIES(bsl_2d_omp sll_interpolators)
 
 ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
-TARGET_LINK_LIBRARIES(bsl_landau_1d sll_interpolators sll_poisson_solvers dfftpack )
+TARGET_LINK_LIBRARIES(bsl_landau_1d sll_interpolators sll_poisson_solvers )
 
 ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
 TARGET_LINK_LIBRARIES(bsl_landau_2d sll_interpolators 
