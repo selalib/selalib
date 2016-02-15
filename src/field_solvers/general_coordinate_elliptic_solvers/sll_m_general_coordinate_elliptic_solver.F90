@@ -73,17 +73,18 @@ module sll_m_general_coordinate_elliptic_solver
   use sll_m_scalar_field_2d_base, only: &
     sll_c_scalar_field_2d_base
 
-  use sll_m_sparse_matrix, only: &
-    sll_s_csr_add_one_constraint, &
-    sll_f_new_csr_matrix, &
+  use sll_m_sparse_matrix, only:          &
+    sll_s_csr_add_one_constraint,         &
+    sll_f_new_csr_matrix,                 &
     sll_f_new_csr_matrix_with_constraint, &
-    sll_s_add_to_csr_matrix, &
-    sll_t_csr_matrix, &
-    sll_s_free_csr_matrix, &
-    sll_s_factorize_csr_matrix, &
-    sll_s_mult_csr_matrix_vector, &
-    sll_s_solve_csr_matrix, &
-    sll_p_umfpack
+    sll_s_add_to_csr_matrix,              &
+    sll_t_csr_matrix,                     &
+    sll_s_free_csr_matrix,                &
+    sll_s_factorize_csr_matrix,           &
+    sll_s_mult_csr_matrix_vector,         &
+    sll_s_solve_csr_matrix,               &
+    sll_p_umfpack,                        &
+    sll_p_pastix
 
 #ifdef _OPENMP
 use omp_lib
@@ -155,9 +156,9 @@ type :: sll_t_general_coordinate_elliptic_solver
   !sll_real64, dimension(:,:,:,:), pointer :: v_splines1_check
   !sll_real64, dimension(:,:,:,:), pointer :: v_splines2_check
 
-  type(sll_t_csr_matrix),           pointer :: csr_mat
-  type(sll_t_csr_matrix),           pointer :: csr_mat_with_constraint
-  type(sll_t_csr_matrix),           pointer :: csr_mat_source
+  type(sll_t_csr_matrix),         pointer :: csr_mat
+  type(sll_t_csr_matrix),         pointer :: csr_mat_with_constraint
+  type(sll_t_csr_matrix),         pointer :: csr_mat_source
   sll_real64, dimension(:),       pointer :: rho_vec
   sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
@@ -505,7 +506,6 @@ call initialize_knots( spline_degree2, &
 &                      bc2_max,        &
 &                      es%knots2 )
 
-  
 es%csr_mat => sll_f_new_csr_matrix( solution_size,        &
 &                             solution_size,              &
 &                             num_cells1*num_cells2,      &
@@ -952,8 +952,10 @@ SLL_DEALLOCATE(es%local_to_global_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
 call sll_s_free_csr_matrix(es%csr_mat)
-call sll_s_free_csr_matrix(es%csr_mat_with_constraint)
-call sll_s_free_csr_matrix(es%csr_mat_source)
+if (associated(es%csr_mat_source))  &
+  call sll_s_free_csr_matrix(es%csr_mat_source)
+if (associated(es%csr_mat_with_constraint))  &
+  call sll_s_free_csr_matrix(es%csr_mat_with_constraint)
 SLL_DEALLOCATE(es%rho_vec,ierr)
 SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
 SLL_DEALLOCATE(es%phi_vec,ierr)
@@ -1711,8 +1713,8 @@ if(bc1_min==sll_p_periodic .and. bc1_max==sll_p_periodic .and.&
    bc2_min==sll_p_periodic .and. bc2_max==sll_p_periodic) then
 
   call sll_s_solve_csr_matrix(es%csr_mat_with_constraint, &
-                            es%tmp_rho_vec,             &
-                            es%phi_vec)
+                              es%tmp_rho_vec,             &
+                              es%phi_vec)
 
   !SLL_WARNING("sll_general_coordinate_elliptic_solver","Use sll_gces_full_periodic")
 else
@@ -3563,18 +3565,16 @@ if (es%with_constraint) then
  es%csr_mat_with_constraint => sll_f_new_csr_matrix_with_constraint(es%csr_mat)  
 
  call sll_s_csr_add_one_constraint( es%csr_mat%row_ptr,                 &  
-                              es%csr_mat%col_ind,                 &
-                              es%csr_mat%val,                     &
-                              es%csr_mat%num_rows,                &
-                              es%csr_mat%num_nz,                  &
-                              es%masse,                           &
-                              es%csr_mat_with_constraint%row_ptr, &
-                              es%csr_mat_with_constraint%col_ind, &
-                              es%csr_mat_with_constraint%val)  
+                                    es%csr_mat%col_ind,                 &
+                                    es%csr_mat%val,                     &
+                                    es%csr_mat%num_rows,                &
+                                    es%csr_mat%num_nz,                  &
+                                    es%masse,                           &
+                                    es%csr_mat_with_constraint%row_ptr, &
+                                    es%csr_mat_with_constraint%col_ind, &
+                                    es%csr_mat_with_constraint%val)  
 
   call sll_s_factorize_csr_matrix(es%csr_mat_with_constraint)
-
-  !SLL_WARNING("sll_general_coordinate_elliptic_solver","The full periodic version is deprecated")
 
 else   
 
@@ -3777,77 +3777,73 @@ call compute_index_coeff( &
   bc2_max, &
   index_coeff2)
 
-  
-  
-      
+int_rho = 0.0_f64
+int_jac = 0.0_f64
 
-  int_rho = 0.0_f64
-  int_jac = 0.0_f64
+SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
 
-  SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
-  
-  if(es%precompute_rhs)then
-    call sll_s_mult_csr_matrix_vector( &
-      es%csr_mat_source,&
-      es%rho_coeff_1d, &
-      es%rho_vec)    
-  else
-    if(present(rho_field))then
-  do j=1, nc_2
-    do i=1, nc_1
-      M_rho_loc = 0.0_f64
-      eta1  = es%eta1_min + real(i-1,f64)*es%delta_eta1
-      eta2  = es%eta2_min + real(j-1,f64)*es%delta_eta2
-      do jj=1,num_pts_g2
-        gpt2  = eta2 + es%gauss_pts2(1,jj)
-        wgpt2 = es%gauss_pts2(2,jj)
-        do ii=1,num_pts_g1
-          gpt1  = eta1 + es%gauss_pts1(1,ii)
-          wgpt1 = es%gauss_pts1(2,ii)
-      
-          val_f   = rho_field%value_at_point(gpt1,gpt2)
-          
-          jac_mat = rho_field%get_jacobian_matrix(gpt1,gpt2)
-          val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
-          val_j   = val_j*wgpt1*wgpt2
-          valfj   = val_f*val_j
-          int_rho = int_rho + valfj 
-          int_jac = int_jac + val_j
-      
-          do ll = 1,es%spline_degree2+1
-            spline2 = es%v_splines2(1,ll,jj,j)*valfj
-            do kk = 1,es%spline_degree1+1
-              spline1 = es%v_splines1(1,kk,ii,i)
-              n = kk + (ll-1)*(es%spline_degree1+1)
-              M_rho_loc(n)= M_rho_loc(n) + spline1*spline2
-            end do
+if(es%precompute_rhs)then
+  call sll_s_mult_csr_matrix_vector( &
+    es%csr_mat_source,&
+    es%rho_coeff_1d, &
+    es%rho_vec)    
+else
+  if(present(rho_field))then
+do j=1, nc_2
+  do i=1, nc_1
+    M_rho_loc = 0.0_f64
+    eta1  = es%eta1_min + real(i-1,f64)*es%delta_eta1
+    eta2  = es%eta2_min + real(j-1,f64)*es%delta_eta2
+    do jj=1,num_pts_g2
+      gpt2  = eta2 + es%gauss_pts2(1,jj)
+      wgpt2 = es%gauss_pts2(2,jj)
+      do ii=1,num_pts_g1
+        gpt1  = eta1 + es%gauss_pts1(1,ii)
+        wgpt1 = es%gauss_pts1(2,ii)
+    
+        val_f   = rho_field%value_at_point(gpt1,gpt2)
+        
+        jac_mat = rho_field%get_jacobian_matrix(gpt1,gpt2)
+        val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
+        val_j   = val_j*wgpt1*wgpt2
+        valfj   = val_f*val_j
+        int_rho = int_rho + valfj 
+        int_jac = int_jac + val_j
+    
+        do ll = 1,es%spline_degree2+1
+          spline2 = es%v_splines2(1,ll,jj,j)*valfj
+          do kk = 1,es%spline_degree1+1
+            spline1 = es%v_splines1(1,kk,ii,i)
+            n = kk + (ll-1)*(es%spline_degree1+1)
+            M_rho_loc(n)= M_rho_loc(n) + spline1*spline2
           end do
         end do
       end do
+    end do
 
-      do mm = 0,es%spline_degree2
-        index3 = index_eta2(j + mm)
-      
-        do nn = 0,es%spline_degree1
-          index1 = index_eta1(i + nn)      
-          x             =  index1 + (index3-1)*vec_sz1
-          b             =  nn + 1 + mm * (es%spline_degree1+1)
-          es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
-            
-        end do
+    do mm = 0,es%spline_degree2
+      index3 = index_eta2(j + mm)
+    
+      do nn = 0,es%spline_degree1
+        index1 = index_eta1(i + nn)      
+        x             =  index1 + (index3-1)*vec_sz1
+        b             =  nn + 1 + mm * (es%spline_degree1+1)
+        es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
+          
       end do
     end do
   end do
-    else
-      SLL_ERROR('sll_s_solve_general_coordinates_elliptic_eq_prototype&
-      &','rho_field should be given')
-    endif  
-  endif
+end do
+  else
+    SLL_ERROR('sll_s_solve_general_coordinates_elliptic_eq_prototype&
+    &','rho_field should be given')
+  endif  
+endif
 
-  !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
-  print *,'sum(es%rho_vec)=',int_rho,sum(es%rho_vec)
-  if (es%zero_mean) es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
-  print *,'after sum(es%rho_vec)=',sum(es%rho_vec)
+!if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
+print *,'sum(es%rho_vec)=',int_rho,sum(es%rho_vec)
+if (es%zero_mean) es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+print *,'after sum(es%rho_vec)=',sum(es%rho_vec)
 
 bc1_min = es%bc1_min
 bc1_max = es%bc1_max
@@ -3872,8 +3868,8 @@ es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
 
 if(es%with_constraint)then
   call sll_s_solve_csr_matrix(es%csr_mat_with_constraint, &
-                            es%tmp_rho_vec,             &
-                            es%phi_vec)
+                              es%tmp_rho_vec,             &
+                              es%phi_vec)
 else
 
   call sll_s_solve_csr_matrix(es%csr_mat, es%tmp_rho_vec, es%phi_vec)

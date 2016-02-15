@@ -20,10 +20,12 @@ sll_int32 :: kd, kl, ku, ldab, info
 sll_int32 :: istep, nstep = 1
 sll_int32 :: i, j, nrhs
 
-type(pastix_solver)                   :: linear_solver
-sll_int32                             :: nnzeros
-sll_int32,  dimension(:), allocatable :: ia,ja
-sll_real64, dimension(:), allocatable :: avals,rhs
+type(pastix_solver)               :: linear_solver
+sll_int32                         :: nnzeros
+sll_int32,  dimension(:), pointer :: ia
+sll_int32,  dimension(:), pointer :: ja
+sll_real64, dimension(:), pointer :: avals
+sll_real64, dimension(:), pointer :: rhs
 
 call sll_s_boot_collective()
 
@@ -122,11 +124,8 @@ ia(n+1) = j
 rhs(1)  = 1.0_f64
 rhs(n)  = 1.0_f64
 
-call initialize(linear_solver,n,nnzeros)
+call initialize(linear_solver,n,nnzeros,ia,ja,avals)
 
-linear_solver%colptr = ia
-linear_solver%row    = ja
-linear_solver%avals  = avals
 print *,'#enter factorize'
 call factorize(linear_solver)
 print *,'#end of factorize'
