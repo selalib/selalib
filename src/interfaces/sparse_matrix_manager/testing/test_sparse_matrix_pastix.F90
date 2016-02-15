@@ -62,6 +62,8 @@ do i=1,num_rows
 enddo
 print *,'#end add_to_csr_matrix'
 
+call sll_s_factorize_csr_matrix(mat)
+
 x = 0.0_f64
 print *,'#begin sll_s_solve_csr_matrix with pastix'
 call sll_s_solve_csr_matrix(mat, b, x)

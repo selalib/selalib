@@ -45,6 +45,8 @@ mat => sll_f_new_csr_matrix(  num_rows,            &
 
 print *,'#end sll_f_new_csr_matrix'
 
+call sll_s_factorize_csr_matrix(mat)
+
 !do identity matrix
 print *,'#begin add_to_csr_matrix'
 val = 1._f64

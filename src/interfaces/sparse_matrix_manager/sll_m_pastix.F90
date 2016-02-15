@@ -40,8 +40,7 @@ end type pastix_solver
 
 
 interface initialize
-   module procedure initialize_pastix
-   !module procedure initialize_pastix_with_csc_matrix
+   module procedure init_pastix
 end interface initialize
 
 interface solve
@@ -54,168 +53,184 @@ interface factorize
 end interface factorize
 
 interface delete
-   module procedure delete_pastix
+   module procedure free_pastix
 end interface delete
 
 contains
 
-subroutine initialize_pastix(this,n,nnzeros,row_ptr,col_ind,val)
+subroutine init_pastix(self,n,nnzeros,row_ptr,col_ind,val)
 
-  type(pastix_solver)                :: this
-  sll_int32,    intent(in)           :: n
-  pastix_int_t, intent(in)           :: nnzeros
-  sll_int32,    intent(in), optional :: row_ptr(:)
-  sll_int32,    intent(in), optional :: col_ind(:)
-  sll_real64,   intent(in), optional :: val(:)
-  sll_int32                          :: error
-  sll_int32                          :: comm    
-  sll_int32                          :: prank    
-  sll_int32                          :: psize
+  type(pastix_solver)              :: self
+  sll_int32,    intent(in)         :: n
+  pastix_int_t, intent(in)         :: nnzeros
+  sll_int32,    intent(in), target :: row_ptr(:)
+  sll_int32,    intent(in), target :: col_ind(:)
+  sll_real64,   intent(in), target :: val(:)
+  sll_int32                        :: error
+  sll_int32                        :: comm    
+  sll_int32                        :: prank    
+  sll_int32                        :: psize
 
   if( .not. associated(sll_v_world_collective)) then
      call sll_s_boot_collective()
   end if
-  this%ncols = n
+  self%ncols = n
   prank = sll_f_get_collective_rank( sll_v_world_collective )
   psize = sll_f_get_collective_size( sll_v_world_collective )
   comm  = sll_v_world_collective%comm
 
   ! Get options ftom command line
-  this%nbthread = 1
-  this%verbose  = API_VERBOSE_NO
+  self%nbthread = 1
+  self%verbose  = API_VERBOSE_NO
 
   ! Allocating
-  SLL_ALLOCATE( this%colptr(1:n+1), error)
-  if (present(row_ptr)) this%colptr = row_ptr
-  SLL_ALLOCATE( this%row(1:nnzeros), error)
-  if (present(col_ind)) this%row    = col_ind
-  SLL_ALLOCATE( this%avals(1:nnzeros), error)
-  if (present(val)) this%avals  = val
-  SLL_ALLOCATE( this%rhs(1:n), error)
+  self%colptr => row_ptr
+  self%row    => col_ind
+  self%avals  => val
+  SLL_CLEAR_ALLOCATE(self%rhs(nnzeros), error)
 
   ! First PaStiX call to initiate parameters
 
-  this%pastix_data                   = 0
-  this%nrhs                          = 1
-  this%iparm(IPARM_MODIFY_PARAMETER) = API_NO
-  this%iparm(IPARM_START_TASK)       = API_TASK_INIT
-  this%iparm(IPARM_END_TASK)         = API_TASK_INIT
+  self%pastix_data                   = 0
+  self%nrhs                          = 1
+  self%iparm(IPARM_MODIFY_PARAMETER) = API_NO
+  self%iparm(IPARM_START_TASK)       = API_TASK_INIT
+  self%iparm(IPARM_END_TASK)         = API_TASK_INIT
 
-  SLL_ALLOCATE(this%perm(n), error)
-  SLL_ALLOCATE(this%invp(n), error)
+  SLL_ALLOCATE(self%perm(n), error)
+  SLL_ALLOCATE(self%invp(n), error)
 
-  call pastix_fortran(this%pastix_data,comm,n,this%colptr,this%row, &
-                      this%avals,this%perm,this%invp,this%rhs,    &
-                      this%nrhs,this%iparm,this%dparm)
+  call pastix_fortran(self%pastix_data,comm,n,self%colptr,self%row, &
+                      self%avals,self%perm,self%invp,self%rhs,    &
+                      self%nrhs,self%iparm,self%dparm)
 
   ! Customize some parameters
 
-  this%iparm(IPARM_THREAD_NBR) = this%nbthread  
-  this%iparm(IPARM_VERBOSE)    = this%verbose
+  self%iparm(IPARM_THREAD_NBR) = self%nbthread  
+  self%iparm(IPARM_VERBOSE)    = self%verbose
 
-  this%iparm(IPARM_SYM)           = API_SYM_YES !API_SYM_NO
-  this%iparm(IPARM_FACTORIZATION) = API_FACT_LU !API_FACT_LDLT
+  self%iparm(IPARM_SYM)           = API_SYM_YES !API_SYM_NO
+  self%iparm(IPARM_FACTORIZATION) = API_FACT_LU !API_FACT_LDLT
 
-  this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
+  self%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
   
   !The matrix is in CSR format, we transpose to get CSC
-  this%iparm(IPARM_TRANSPOSE_SOLVE) = API_YES
+  self%iparm(IPARM_TRANSPOSE_SOLVE) = API_YES
   
-end subroutine initialize_pastix
+end subroutine init_pastix
 
-subroutine factorize_pastix(this)
+subroutine factorize_pastix(self)
 
-  type(pastix_solver) :: this
+  type(pastix_solver) :: self
   sll_int32           :: comm    
    
   comm  = sll_v_world_collective%comm
   ! Call PaStiX first steps (Scotch - Fax - Blend)
-  this%iparm(IPARM_START_TASK) = API_TASK_ORDERING
-  this%iparm(IPARM_END_TASK)   = API_TASK_ANALYSE
+  self%iparm(IPARM_START_TASK) = API_TASK_ORDERING
+  self%iparm(IPARM_END_TASK)   = API_TASK_ANALYSE
 
-  call pastix_fortran(this%pastix_data,comm,this%ncols,this%colptr,     &
-                      this%row,this%avals,this%perm,this%invp,    &
-                      this%rhs,this%nrhs,this%iparm,this%dparm)
+  call pastix_fortran(self%pastix_data, &
+                      comm,             &
+                      self%ncols,       &
+                      self%colptr,      &
+                      self%row,         &
+                      self%avals,       &
+                      self%perm,        &
+                      self%invp,        &
+                      self%rhs,         &
+                      self%nrhs,        &
+                      self%iparm,       &
+                      self%dparm        )
 
   ! Call PaStiX factorization
-  this%iparm(IPARM_START_TASK) = API_TASK_NUMFACT
-  this%iparm(IPARM_END_TASK)   = API_TASK_NUMFACT
-  call pastix_fortran(this%pastix_data,comm,this%ncols,this%colptr,this%row, &
-                      this%avals,this%perm,this%invp,this%rhs,this%nrhs, &
-                      this%iparm,this%dparm)
+  self%iparm(IPARM_START_TASK) = API_TASK_NUMFACT
+  self%iparm(IPARM_END_TASK)   = API_TASK_NUMFACT
+
+  call pastix_fortran(self%pastix_data, &
+                      comm,             &
+                      self%ncols,       &
+                      self%colptr,      &
+                      self%row,         &
+                      self%avals,       &
+                      self%perm,        &
+                      self%invp,        &
+                      self%rhs,         &
+                      self%nrhs,        &
+                      self%iparm,       &
+                      self%dparm)
 
 end subroutine factorize_pastix
 
-subroutine solve_pastix_without_rhs(this, sol)
+subroutine solve_pastix_without_rhs(self, sol)
 
-  type(pastix_solver)      :: this
-  sll_real64, dimension(:) :: sol
-  sll_int32                :: comm    
+  type(pastix_solver)              :: self
+  sll_real64, dimension(:), target :: sol
+  sll_int32                        :: comm    
 
   comm = sll_v_world_collective%comm
 
-  this%rhs = sol
+  self%rhs => sol
 
   ! Call PaStiX updown and refinement
-  this%iparm(IPARM_START_TASK) = API_TASK_SOLVE
-  this%iparm(IPARM_END_TASK)   = API_TASK_REFINE
+  self%iparm(IPARM_START_TASK) = API_TASK_SOLVE
+  self%iparm(IPARM_END_TASK)   = API_TASK_REFINE
   ! rhs will be changed to solution 
-  call pastix_fortran(this%pastix_data ,comm,                  &
-                      this%ncols,this%colptr,this%row,         &
-                      this%avals,this%perm,this%invp,          &
-                      this%rhs,this%nrhs,this%iparm,this%dparm)
+  call pastix_fortran(self%pastix_data ,comm,                  &
+                      self%ncols,self%colptr,self%row,         &
+                      self%avals,self%perm,self%invp,          &
+                      self%rhs,self%nrhs,self%iparm,self%dparm)
 
-  sol = this%rhs
+  sol = self%rhs
 
 end subroutine solve_pastix_without_rhs
 
-subroutine solve_pastix_with_rhs(this, rhs, sol)
+subroutine solve_pastix_with_rhs(self, rhs, sol)
 
-  type(pastix_solver)      :: this
+  type(pastix_solver)      :: self
   sll_real64, dimension(:) :: rhs
   sll_real64, dimension(:) :: sol
   sll_int32                :: comm    
 
   comm = sll_v_world_collective%comm
 
-  this%rhs = rhs
+  self%rhs = rhs
 
   ! Call PaStiX updown and refinement
-  this%iparm(IPARM_START_TASK) = API_TASK_SOLVE
-  this%iparm(IPARM_END_TASK)   = API_TASK_REFINE
+  self%iparm(IPARM_START_TASK) = API_TASK_SOLVE
+  self%iparm(IPARM_END_TASK)   = API_TASK_REFINE
   ! rhs will be changed to solution 
-  call pastix_fortran(this%pastix_data ,comm,                  &
-                      this%ncols,this%colptr,this%row,         &
-                      this%avals,this%perm,this%invp,          &
-                      this%rhs,this%nrhs,this%iparm,this%dparm)
+  call pastix_fortran(self%pastix_data ,comm,                  &
+                      self%ncols,self%colptr,self%row,         &
+                      self%avals,self%perm,self%invp,          &
+                      self%rhs,self%nrhs,self%iparm,self%dparm)
 
-  sol = this%rhs
+  sol = self%rhs
 
 end subroutine solve_pastix_with_rhs
 
-subroutine delete_pastix(this)
+subroutine free_pastix(self)
 
-  type(pastix_solver) :: this
+  type(pastix_solver) :: self
   sll_int32           :: comm    
 
   comm = sll_v_world_collective%comm
 
   ! Call PaStiX clean
-  this%iparm(IPARM_START_TASK)       = API_TASK_CLEAN
-  this%iparm(IPARM_END_TASK)         = API_TASK_CLEAN
+  self%iparm(IPARM_START_TASK)       = API_TASK_CLEAN
+  self%iparm(IPARM_END_TASK)         = API_TASK_CLEAN
    
-  call pastix_fortran(this%pastix_data ,comm,                  &
-                      this%ncols,this%colptr,this%row,         &
-                      this%avals,this%perm,this%invp,          &
-                      this%rhs,this%nrhs,this%iparm,this%dparm)
+  call pastix_fortran(self%pastix_data ,comm,                  &
+                      self%ncols,self%colptr,self%row,         &
+                      self%avals,self%perm,self%invp,          &
+                      self%rhs,self%nrhs,self%iparm,self%dparm)
    
-  deallocate(this%colptr)
-  deallocate(this%row)
-  deallocate(this%avals)
-  deallocate(this%perm)
-  deallocate(this%invp)
-  deallocate(this%rhs)
+  deallocate(self%colptr)
+  deallocate(self%row)
+  deallocate(self%avals)
+  deallocate(self%perm)
+  deallocate(self%invp)
+  deallocate(self%rhs)
    
-end subroutine delete_pastix
+end subroutine free_pastix
 
 end module sll_m_pastix
