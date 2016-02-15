@@ -380,7 +380,6 @@ case (sll_p_pastix)
 
 end select
 
-print*, 'associated mat%pstx%colptr', associated(mat%pstx%colptr)
 end subroutine sll_s_init_csr_matrix
 
 subroutine sll_s_init_csr_matrix_with_constraint( mat, mat_a)
@@ -685,10 +684,6 @@ type(sll_t_csr_matrix)            :: mat
 sll_real64, dimension(:)          :: u
 sll_real64, dimension(:)          :: b
 sll_real64, dimension(:), pointer :: masse_tot
-
-#ifdef DEBUG
-print*,'# solve_csr_matrix_perper '
-#endif /* DEBUG */
 
 #ifdef UMFPACK
 
