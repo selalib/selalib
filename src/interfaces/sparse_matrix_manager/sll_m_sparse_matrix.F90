@@ -95,9 +95,6 @@ contains
 
 subroutine sll_s_free_csr_matrix(mat)
 type(sll_t_csr_matrix),pointer :: mat
-#ifdef PASTIX
-if (mat%solver == sll_p_pastix) call delete(mat%pstx)
-#endif /* PASTIX */
 if (associated(mat)) nullify(mat)
 end subroutine sll_s_free_csr_matrix
 
@@ -219,6 +216,8 @@ case(sll_p_umfpack)
   mat%row_ptr = mat%row_ptr-1 
   mat%col_ind = mat%col_ind-1 
   call umf4def(mat%umf_control)  ! get the default configuration
+#else
+  stop 'Problem with UMFPACK'
 #endif /* UMFPACK */
 case(sll_p_pastix) 
 #ifdef DEBUG
@@ -381,6 +380,7 @@ case (sll_p_pastix)
 
 end select
 
+print*, 'associated mat%pstx%colptr', associated(mat%pstx%colptr)
 end subroutine sll_s_init_csr_matrix
 
 subroutine sll_s_init_csr_matrix_with_constraint( mat, mat_a)
@@ -404,12 +404,18 @@ SLL_CLEAR_ALLOCATE(mat%val(1:mat%num_nz),ierr)
 
 mat%solver = mat_a%solver
 
+select case(mat%solver)
 #ifdef UMFPACK
-if (mat%solver == sll_p_umfpack) then
+case(sll_p_umfpack) 
   SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
   call umf4def(mat%umf_control)  
-end if
 #endif /* UMFPACK */
+case(sll_p_pastix) 
+#ifdef PASTIX
+  call initialize(mat%pstx, mat%num_rows, mat%num_nz, mat%row_ptr, &
+                  mat%col_ind, mat%val)
+#endif /* PASTIX */
+end select
 
 end subroutine sll_s_init_csr_matrix_with_constraint
 
