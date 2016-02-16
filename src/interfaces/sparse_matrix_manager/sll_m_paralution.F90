@@ -1,9 +1,11 @@
 module sll_m_paralution
+#include "sll_working_precision.h"
+#include "sll_memory.h"
 use, intrinsic :: ISO_C_BINDING
 
 implicit none
 
-type sll_paralution_solver
+type paralution_solver
 
   integer(kind=C_INT)          :: num_rows
   integer(kind=C_INT)          :: num_cols
@@ -12,9 +14,15 @@ type sll_paralution_solver
   integer(kind=C_INT), pointer :: col_ind(:)
   real(kind=C_DOUBLE), pointer :: val(:)
 
-end type sll_paralution_solver
+end type paralution_solver
 
 interface
+
+  subroutine paralution_init() BIND(C)
+  end subroutine paralution_init
+
+  subroutine paralution_stop() BIND(C)
+  end subroutine paralution_stop
 
   subroutine paralution_fortran_solve_csr( n, m, nnz, solver,       &
                                            mformat, preconditioner, &
@@ -41,72 +49,103 @@ interface
 
 end interface
 
+interface initialize
+   module procedure init_paralution
+end interface initialize
+
+interface solve
+   module procedure solve_paralution_with_rhs
+end interface solve
+
+interface factorize
+   module procedure factorize_paralution
+end interface factorize
+
+interface delete
+   module procedure free_paralution
+end interface delete
+
 contains
 
-!> @brief
-!> Test function to initialize a CSR matrix
-!> @details
-!> Fill a matrix in CSR format corresponding to a constant coefficient
-!> five-point stencil on a square grid
-!> RHS is set to get solution = 1
-subroutine uni2d(mat,f)
-type(sll_paralution_solver) :: mat
-real(kind=C_DOUBLE)         :: f(:)
-integer                     :: i, j, k, l, m
+subroutine init_paralution(self,n,nnz)
 
-real(kind(0d0)), parameter :: zero =  0.0d0
-real(kind(0d0)), parameter :: cx   = -1.0d0
-real(kind(0d0)), parameter :: cy   = -1.0d0
-real(kind(0d0)), parameter :: cd   =  4.0d0
+  type(paralution_solver)          :: self
+  sll_int32,    intent(in)         :: n
+  sll_int32,    intent(in)         :: nnz
+  sll_int32                        :: error
 
-m = mat%num_rows
+  ! Allocate memory for CSR format specific arrays
+  self%num_rows = n
+  self%num_cols = n
+  self%num_nz   = nnz
+  SLL_ALLOCATE(self%val(nnz), error)
+  SLL_ALLOCATE(self%col_ind(nnz), error)
+  SLL_ALLOCATE(self%row_ptr(n+1), error)
 
-k=0
-l=0
-mat%row_ptr(1)=1
-do i=1,m
-  do j=1,m
-    k=k+1
-    l=l+1
-    mat%val(l)=cd
-    mat%col_ind(l)=k
-    f(k)=zero
-    if(j < m) then
-       l=l+1
-       mat%val(l)=cx
-       mat%col_ind(l)=k+1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i < m) then
-       l=l+1
-       mat%val(l)=cy
-       mat%col_ind(l)=k+m
-      else
-       f(k)=f(k)-cy
-    end if
-    if(j > 1) then
-       l=l+1
-       mat%val(l)=cx
-       mat%col_ind(l)=k-1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i >  1) then
-       l=l+1
-       mat%val(l)=cy
-       mat%col_ind(l)=k-m
-      else
-       f(k)=f(k)-cy
-    end if
-    mat%row_ptr(k+1)=l+1
-  end do
-end do
+  ! Initialize PARALUTION backend
+  call paralution_init
 
-mat%num_nz = l
+end subroutine init_paralution
 
-return
-end subroutine uni2D
+subroutine factorize_paralution(self)
+
+  type(paralution_solver) :: self
+
+end subroutine factorize_paralution
+
+subroutine solve_paralution_with_rhs(self, rhs, sol)
+
+  type(paralution_solver)  :: self
+  real(kind=C_DOUBLE), target :: sol(:)
+  real(kind=C_DOUBLE), target :: rhs(:)
+
+  integer(kind=C_INT)   :: iter
+  integer(kind=C_INT)   :: ierr
+  real(kind=C_DOUBLE)   :: resnorm
+
+  ! Run paralution C function for CSR matrices
+  ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
+  ! Check paralution documentation for a detailed argument explanation
+  call paralution_fortran_solve_csr(       &
+    self%num_rows,                         &
+    self%num_cols,                         &
+    self%num_nz,                           &
+    'CG' // C_NULL_CHAR,                   &
+    'CSR' // C_NULL_CHAR,                  & 
+    'MultiColoredILU' // C_NULL_CHAR,      &
+    'CSR' // C_NULL_CHAR,                  &
+    C_LOC(self%row_ptr(1)),                &
+    C_LOC(self%col_ind(1)),                &
+    C_LOC(self%val(1)),                    &
+    C_LOC(rhs),                            &
+    1e-15_C_DOUBLE,                        &
+    1e-8_C_DOUBLE,                         &
+    1e+8_C_DOUBLE,                         &
+    5000,                                  &
+    30,                                    &
+    0,                                     &
+    1,                                     &
+    C_LOC(sol),                            &
+    iter,                                  &
+    resnorm,                               &
+    ierr )
+
+  ! Print solver details
+  if ( ierr .eq. 0 ) then
+    write(*,fmt='(A,I0,A,E12.5,A)') '(Fortran) Solver took ', iter, ' iterations with residual norm ', resnorm, '.'
+  else
+    write(*,fmt='(A,I0)') '(Fortran) Solver returned status code ', ierr
+  end if
+
+end subroutine solve_paralution_with_rhs
+
+subroutine free_paralution(self)
+
+  type(paralution_solver) :: self
+
+  ! Stop PARALUTION backend
+  call paralution_stop
+
+end subroutine free_paralution
 
 end module sll_m_paralution
-
