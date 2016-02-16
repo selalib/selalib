@@ -39,6 +39,10 @@ use sll_m_qsort_partition, only : sll_s_qsortc
   use sll_m_pastix
 #endif /* PASTIX */
 
+#ifdef MUMPS
+  use sll_m_mumps
+#endif /* MUMPS */
+
 implicit none
 
 public ::                                &
@@ -55,7 +59,8 @@ public ::                                &
   sll_s_solve_csr_matrix,                &
   sll_s_solve_csr_matrix_perper,         &
   sll_p_umfpack,                         &
-  sll_p_pastix
+  sll_p_pastix,                          &
+  sll_p_mumps
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -78,11 +83,15 @@ type :: sll_t_csr_matrix
 #ifdef PASTIX
   type(pastix_solver)               :: pstx
 #endif
+#ifdef MUMPS
+  type(mumps_solver)                :: mmps
+#endif
 
 end type sll_t_csr_matrix
 
 sll_int32, parameter :: sll_p_umfpack = 1
 sll_int32, parameter :: sll_p_pastix  = 2
+sll_int32, parameter :: sll_p_mumps   = 3
 
 interface sll_f_new_csr_matrix
   module procedure new_csr_matrix_with_dof
@@ -144,6 +153,9 @@ if (present(solver)) then
 #ifdef PASTIX
   if (solver == sll_p_pastix) mat%solver = solver
 #endif /* PASTIX */
+#ifdef MUMPS
+  if (solver == sll_p_mumps) mat%solver = solver
+#endif /* MUMPS */
 end if
 
 call sll_s_init_csr_matrix( &
@@ -184,9 +196,9 @@ SLL_ALLOCATE(mat, ierr)
 
 mat%solver = 0
 if (present(solver)) then
-#if defined(UMFPACK) || defined(PASTIX)
+#if defined(UMFPACK) || defined(PASTIX) || defined(MUMPS)
   mat%solver = solver
-#endif /* UMFPACK or PASTIX */
+#endif /* UMFPACK or PASTIX or MUMPS */
 endif
 
 mat%num_rows = num_rows
@@ -226,9 +238,16 @@ case(sll_p_pastix)
 #ifdef PASTIX
   call initialize(mat%pstx, num_rows, num_nz, mat%row_ptr, mat%col_ind, mat%val)
 #endif /* PASTIX */
+case(sll_p_mumps) 
+#ifdef DEBUG
+  print*, "# We use MUMPS to solve the system "
+#endif /* DEBUG   */
+#ifdef MUMPS
+  call initialize(mat%mmps, num_rows, num_nz, mat%row_ptr, mat%col_ind, mat%val)
+#endif /* MUMPS */
 case default
 #ifdef DEBUG
-  print*, "# We use CG to solve the system "
+  print*, "# We use homemade CG to solve the system "
 #endif /* DEBUG   */
 end select
 
@@ -378,6 +397,12 @@ case (sll_p_pastix)
   call initialize(mat%pstx, num_rows, num_nz, mat%row_ptr, mat%col_ind, mat%val)
 #endif /* PASTIX */
 
+case (sll_p_mumps)
+
+#ifdef MUMPS
+  call initialize(mat%mmps, num_rows, num_nz, mat%row_ptr, mat%col_ind, mat%val)
+#endif /* MUMPS */
+
 end select
 
 end subroutine sll_s_init_csr_matrix
@@ -414,6 +439,11 @@ case(sll_p_pastix)
   call initialize(mat%pstx, mat%num_rows, mat%num_nz, mat%row_ptr, &
                   mat%col_ind, mat%val)
 #endif /* PASTIX */
+case(sll_p_mumps) 
+#ifdef MUMPS
+  call initialize(mat%mmps, mat%num_rows, mat%num_nz, mat%row_ptr, &
+                  mat%col_ind, mat%val)
+#endif /* MUMPS */
 end select
 
 end subroutine sll_s_init_csr_matrix_with_constraint
@@ -573,6 +603,12 @@ case (sll_p_pastix)
   call factorize(mat%pstx)
 #endif /* PASTIX */
 
+case (sll_p_mumps)
+
+#ifdef MUMPS
+  call factorize(mat%mmps)
+#endif /* MUMPS */
+
 case default
 
   SLL_ASSERT(associated(mat%val)) ! Just to avoid warning in debug mode
@@ -666,6 +702,13 @@ case (sll_p_pastix)
   call solve(mat%pstx, u)
 #endif /* PASTIX */
 
+case (sll_p_mumps)
+
+#ifdef MUMPS
+  u = b
+  call solve(mat%mmps, u)
+#endif /* MUMPS */
+
 case default
 
   call solve_with_cg(mat, b, u)
@@ -707,6 +750,13 @@ case (sll_p_pastix)
   u = b
   call solve(mat%pstx, u)
 #endif /* PASTIX */
+
+case (sll_p_mumps)
+
+#ifdef MUMPS
+  u = b
+  call solve(mat%mmps, u)
+#endif /* MUMPS */
 
 case default
 

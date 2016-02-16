@@ -42,5 +42,7 @@ ENDIF(MUMPS_FOUND)
 
 MARK_AS_ADVANCED(MUMPS_INCLUDE_DIRS
                  MUMPS_LIBRARY
+                 MUMPS_COMMON_LIBRARY
+                 MUMPS_SIMPLE_LIBRARY
                  MUMPS_LIBRARIES)
                  
