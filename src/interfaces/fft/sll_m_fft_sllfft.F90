@@ -85,8 +85,8 @@ module sll_m_fft
      sll_int32                        :: direction
      sll_int32                        :: problem_rank
      sll_int32, allocatable           :: problem_shape(:)
-     sll_int32, allocatable, private  :: scramble_index(:)
-     sll_int32, private                :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
+     sll_int32, pointer, private      :: scramble_index(:)
+     sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
   end type sll_t_fft
 
 
@@ -690,8 +690,8 @@ contains
  !> Compute fast Fourier transform in real to complex mode.
   subroutine sll_s_fft_exec_r2c_2d(plan,array_in,array_out)
     type(sll_t_fft), intent(in)           :: plan      !< FFT planner object
-    sll_real64,      intent(inout)        :: array_in(0:,:)  !< Real input data to be Fourier transformed
-    sll_comp64,      intent(out)          :: array_out(0:,:) !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
+    sll_real64,      intent(inout)        :: array_in(0:,0:)  !< Real input data to be Fourier transformed
+    sll_comp64,      intent(out)          :: array_out(0:,0:) !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
 
     sll_int32                                       :: nx, i, ny, k
     sll_real64 :: factor
