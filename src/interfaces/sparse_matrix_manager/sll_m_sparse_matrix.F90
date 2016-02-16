@@ -95,7 +95,6 @@ sll_int32, parameter :: sll_p_mumps   = 3
 
 interface sll_f_new_csr_matrix
   module procedure new_csr_matrix_with_dof
-  module procedure new_csr_matrix
 end interface sll_f_new_csr_matrix
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -169,89 +168,6 @@ call sll_s_init_csr_matrix( &
   num_local_dof_col)
 
 end function new_csr_matrix_with_dof
-
-!> @brief allocates the memory space for a new CSR matrix,
-!> @details
-!> initializes it with the given arguments and returns a pointer to the
-!> object.
-!> @param[in] num_rows    :  number of rows
-!> @param[in] num_cols    :  number of columns
-!> @param[in] num_element :  number of elements
-!> @param[in] solver      :  solver type
-!> @returns a pointer to the newly allocated object.
-function new_csr_matrix( num_rows, &
-                         num_cols, &
-                         num_nz,   &
-                         solver    ) result(mat)
-
-type(sll_t_csr_matrix), pointer    :: mat
-sll_int32,              intent(in) :: num_rows
-sll_int32,              intent(in) :: num_cols
-sll_int32,              intent(in) :: num_nz
-sll_int32,              optional   :: solver
-
-sll_int32 :: ierr
-
-SLL_ALLOCATE(mat, ierr)
-
-mat%solver = 0
-if (present(solver)) then
-#if defined(UMFPACK) || defined(PASTIX) || defined(MUMPS)
-  mat%solver = solver
-#endif /* UMFPACK or PASTIX or MUMPS */
-endif
-
-mat%num_rows = num_rows
-mat%num_cols = num_cols
-mat%num_nz   = num_nz   
-
-#ifdef DEBUG
-print *,'#num_rows=',num_rows
-print *,'#num_cols=',num_cols
-print *,'#num_nz  =',num_nz
-#endif
-
-SLL_ALLOCATE(mat%row_ptr(num_rows+1),ierr)
-SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
-SLL_ALLOCATE(mat%val(1:num_nz),ierr)
-mat%row_ptr = 0
-mat%col_ind = 0
-mat%val = 0.0_f64
-
-select case (mat%solver)
-case(sll_p_umfpack) 
-#ifdef DEBUG
-  print*, "# We use UMFPACK to solve the system "
-#endif /* DEBUG   */
-#ifdef UMFPACK
-  SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
-  mat%row_ptr = mat%row_ptr-1 
-  mat%col_ind = mat%col_ind-1 
-  call umf4def(mat%umf_control)  ! get the default configuration
-#else
-  stop 'Problem with UMFPACK'
-#endif /* UMFPACK */
-case(sll_p_pastix) 
-#ifdef DEBUG
-  print*, "# We use PASTIX to solve the system "
-#endif /* DEBUG   */
-#ifdef PASTIX
-  call initialize(mat%pstx, num_rows, num_nz, mat%row_ptr, mat%col_ind, mat%val)
-#endif /* PASTIX */
-case(sll_p_mumps) 
-#ifdef DEBUG
-  print*, "# We use MUMPS to solve the system "
-#endif /* DEBUG   */
-#ifdef MUMPS
-  call initialize(mat%mmps, num_rows, num_nz, mat%row_ptr, mat%col_ind, mat%val)
-#endif /* MUMPS */
-case default
-#ifdef DEBUG
-  print*, "# We use homemade CG to solve the system "
-#endif /* DEBUG   */
-end select
-
-end function new_csr_matrix
 
 !> @brief initialization of CSR matrix type
 !> thanks to the global index of each local dof of each element
@@ -417,9 +333,10 @@ mat%num_nz   = mat_a%num_nz + 2*mat_a%num_rows
 mat%num_rows = mat_a%num_rows  +  1
 mat%num_cols = mat_a%num_cols  +  1
 #ifdef DEBUG
-print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
-print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
-print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
+print*,'# sll_s_init_csr_matrix_with_constraint'
+print*,'# num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
+print*,'# num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
+print*,'# num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 #endif /* DEBUG */
 
 SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
@@ -441,8 +358,7 @@ case(sll_p_pastix)
 #endif /* PASTIX */
 case(sll_p_mumps) 
 #ifdef MUMPS
-  call initialize(mat%mmps, mat%num_rows, mat%num_nz, mat%row_ptr, &
-                  mat%col_ind, mat%val)
+  call initialize(mat%mmps, mat%num_rows, mat%num_nz, mat%row_ptr, mat%col_ind, mat%val)
 #endif /* MUMPS */
 end select
 
@@ -556,6 +472,9 @@ type(sll_t_csr_matrix), intent(inout) :: mat
 #ifdef UMFPACK
 sll_real64, dimension(umfpack_info) :: info
 #endif /* UMFPACK */
+#ifdef MUMPS
+sll_int32 :: i, k, l
+#endif /* MUMPS */
 
 #ifdef DEBUG
 call print_solver_type(mat)
@@ -606,6 +525,15 @@ case (sll_p_pastix)
 case (sll_p_mumps)
 
 #ifdef MUMPS
+  l = 0
+  do i = 1, mat%num_rows
+     do k = mat%row_ptr(i),mat%row_ptr(i+1)-1 
+        l = l + 1
+        mat%mmps%mumps_par%irn(l) = i
+        mat%mmps%mumps_par%jcn(l) = mat%col_ind(l)
+        mat%mmps%mumps_par%a(l)   = mat%val(l)
+     end do
+  end do
   call factorize(mat%mmps)
 #endif /* MUMPS */
 
@@ -904,6 +832,8 @@ subroutine print_solver_type (mat)
     print*, "# We use UMFPACK to solve the system "
   case(sll_p_pastix) 
     print*, "# We use PASTIX to solve the system "
+  case(sll_p_mumps) 
+    print*, "# We use MUMPS to solve the system "
   case default
     print*, "# We use CG to solve the system "
   end select
