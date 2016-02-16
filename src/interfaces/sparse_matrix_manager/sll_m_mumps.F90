@@ -89,15 +89,15 @@ subroutine init_mumps(self,n,nnzeros,row_ptr,col_ind,val)
   SLL_ALLOCATE( self%mumps_par%A(    self%mumps_par%NZ ) , error)
   SLL_ALLOCATE( self%mumps_par%rhs ( self%mumps_par%N  ) , error)
 
-  l = 0
-    do i = 1, n
-       do k = row_ptr(i),row_ptr(i+1)-1 
-          l = l + 1
-          self%mumps_par%IRN(l) = i
-          self%mumps_par%JCN(l) = col_ind(l)
-          self%mumps_par%A(l)   = val(l)
-       end do
-    end do
+  !l = 0
+  !do i = 1, n
+  !  do k = row_ptr(i),row_ptr(i+1)-1 
+  !    l = l + 1
+  !    self%mumps_par%IRN(l) = i
+  !    self%mumps_par%JCN(l) = col_ind(l)
+  !    self%mumps_par%A(l)   = val(l)
+  !  end do
+  !end do
 
   self%mumps_par%rhs = 0.0_f64
 
@@ -109,6 +109,11 @@ subroutine factorize_mumps(self)
 
   self%mumps_par%JOB = 4
   call dmumps(self%mumps_par)
+  if (self%mumps_par%infog(1) < 0) then
+   write(6,'(A,A,I6,A,I9)') " ERROR RETURN: ", &
+              "  mumps_par%infog(1)= ", self%mumps_par%infog(1),  &
+              "  mumps_par%infog(2)= ", self%mumps_par%infog(2) 
+  end if
 
 end subroutine factorize_mumps
 
