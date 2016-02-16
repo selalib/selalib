@@ -270,7 +270,8 @@ program test_fft
         do j=1,t
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
-        if( ierr > err_max ) then
+        if( ierr > err_max*1000_f64 ) then
+           print*, 'average error', err_max
            stop 'Average error too big'
         endif
      enddo
