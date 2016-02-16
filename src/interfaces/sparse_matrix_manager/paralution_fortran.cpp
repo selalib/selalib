@@ -28,7 +28,7 @@
 
 
 
-// PARALUTION version 1.0.0 
+// PARALUTION version 1.1.0 
 
 
 // #######################################################################################################
@@ -40,6 +40,16 @@
 // ###                                                                                                 ###
 // ###        C function name: "void paralution_fortran_function_();"                                  ###
 // ###        Fortran syntax: "call paralution_fortran_function()"                                     ###
+// ###                                                                                                 ###
+// #######################################################################################################
+// ###                                                                                                 ###
+// ###     paralution_init                                                                             ###
+// ###        Initalize the PARALUTION backend                                                         ###
+// ###                                                                                                 ###
+// #######################################################################################################
+// ###                                                                                                 ###
+// ###     paralution_stop                                                                             ###
+// ###        Stops the PARALUTION backend                                                             ###
 // ###                                                                                                 ###
 // #######################################################################################################
 // ###                                                                                                 ###
@@ -136,18 +146,17 @@
 // #######################################################################################################
 #include <paralution.hpp>
 
-
 extern "C" 
 {
+  void paralution_init(void);
+  void paralution_stop(void);
   void paralution_fortran_solve_coo(int, int, int, char*, char*, char*, char*, const int*, const int*,
                                     const double*, const double*, double, double, double, int, int,
                                     int, int, double*, int&, double&, int&);
-
   void paralution_fortran_solve_csr(int, int, int, char*, char*, char*, char*, const int*, const int*,
                                     const double*, const double*, double, double, double, int, int,
                                     int, int, double*, int&, double&, int&);
 }
-
 
 enum _solver_type{
   BiCGStab,
@@ -167,21 +176,30 @@ enum _precond_type{
   FSAI
 };
 
-
 void paralution_fortran_solve(char*, char*, char*, char*, double, double, double, int, int, int, int,
                               paralution::LocalMatrix<double>*, paralution::LocalVector<double>*,
                               paralution::LocalVector<double>*, int&, double&, int&);
 
+/// Initializes the PARALUTION backend
+void paralution_init(void) {
+
+  paralution::init_paralution();
+  paralution::info_paralution();
+
+}
+
+/// Stops the PARALUTION backend
+void paralution_stop(void) {
+
+  paralution::stop_paralution();
+
+}
 
 /// Solves a linear system for given COO matrix, rhs, solution vector, solver and preconditioner.
 void paralution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mformat, char *precond, char *pformat,
                                   const int *fortran_row, const int *fortran_col, const double *fortran_val,
                                   const double *fortran_rhs, double atol, double rtol, double div, int maxiter,
-                                  int basis, int p, int q, double *fortran_x, int &iter, double &resnorm, int &err)
-{
-
-  paralution::init_paralution();
-  paralution::info_paralution();
+                                  int basis, int p, int q, double *fortran_x, int &iter, double &resnorm, int &err) {
 
   paralution::LocalVector<double> paralution_x;
   paralution::LocalVector<double> paralution_rhs;
@@ -232,8 +250,6 @@ void paralution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mfo
 
   delete [] in_x;
 
-  paralution::stop_paralution();
-
 }
 
 
@@ -241,11 +257,7 @@ void paralution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mfo
 void paralution_fortran_solve_csr(int n, int m, int nnz, char *solver, char *mformat, char *precond, char *pformat,
                                   const int *fortran_row_offset, const int *fortran_col, const double *fortran_val,
                                   const double *fortran_rhs, double atol, double rtol, double div, int maxiter,
-                                  int basis, int p, int q, double *fortran_x, int &iter, double &resnorm, int &err)
-{
-
-  paralution::init_paralution();
-  paralution::info_paralution();
+                                  int basis, int p, int q, double *fortran_x, int &iter, double &resnorm, int &err) {
 
   paralution::LocalVector<double> paralution_x;
   paralution::LocalVector<double> paralution_rhs;
@@ -297,16 +309,13 @@ void paralution_fortran_solve_csr(int n, int m, int nnz, char *solver, char *mfo
 
   delete [] in_x;
 
-  paralution::stop_paralution();
-
 }
 
 
 void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *pformat, double atol, double rtol,
                               double div, int maxiter, int basis, int p, int q, paralution::LocalMatrix<double> *mat,
                               paralution::LocalVector<double> *rhs, paralution::LocalVector<double> *x,
-                              int &iter, double &resnorm, int &err)
-{
+                              int &iter, double &resnorm, int &err) {
 
   // Iterative Linear Solver and Preconditioner
   paralution::IterativeLinearSolver<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *ls = NULL;
@@ -318,62 +327,60 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
   paralution::_matrix_format preformat;
 
   // Prepare solver type
-  if      ( std::string(solver) == "BiCGStab" )   psolver = BiCGStab;
-  else if ( std::string(solver) == "CG" )         psolver = CG;
-  else if ( std::string(solver) == "FixedPoint" ) psolver = FixedPoint;
-  else if ( std::string(solver) == "GMRES" )      psolver = GMRES;
-  else if ( std::string(solver) == "FGMRES" )     psolver = FGMRES;
+  if      (std::string(solver) == "BiCGStab")   psolver = BiCGStab;
+  else if (std::string(solver) == "CG")         psolver = CG;
+  else if (std::string(solver) == "FixedPoint") psolver = FixedPoint;
+  else if (std::string(solver) == "GMRES")      psolver = GMRES;
+  else if (std::string(solver) == "FGMRES")     psolver = FGMRES;
   else {
     err = 5;
     return;
   }
 
   // Prepare preconditioner type
-  if      ( std::string(precond) == "None" ||
-            std::string(precond) == "" )                pprecond = None;
-  else if ( std::string(precond) == "Jacobi" )          pprecond = Jacobi;
-  else if ( std::string(precond) == "MultiColoredGS" )  pprecond = MultiColoredGS;
-  else if ( std::string(precond) == "MultiColoredSGS" ) pprecond = MultiColoredSGS;
-  else if ( std::string(precond) == "ILU" )             pprecond = ILU;
-  else if ( std::string(precond) == "MultiColoredILU" ) pprecond = MultiColoredILU;
-  else if ( std::string(precond) == "FSAI" )            pprecond = FSAI;
+  if      (std::string(precond) == "None" ||
+            std::string(precond) == "")               pprecond = None;
+  else if (std::string(precond) == "Jacobi")          pprecond = Jacobi;
+  else if (std::string(precond) == "MultiColoredGS")  pprecond = MultiColoredGS;
+  else if (std::string(precond) == "MultiColoredSGS") pprecond = MultiColoredSGS;
+  else if (std::string(precond) == "ILU")             pprecond = ILU;
+  else if (std::string(precond) == "MultiColoredILU") pprecond = MultiColoredILU;
+  else if (std::string(precond) == "FSAI")            pprecond = FSAI;
   else {
     err = 6;
     return;
   }
 
   // Prepare matrix format for solving
-  if      ( std::string(mformat) == "CSR" )   matformat = paralution::CSR;
-  else if ( std::string(mformat) == "MCSR" )  matformat = paralution::MCSR;
-  else if ( std::string(mformat) == "BCSR" )  matformat = paralution::BCSR;
-  else if ( std::string(mformat) == "COO" )   matformat = paralution::COO;
-  else if ( std::string(mformat) == "DIA" )   matformat = paralution::DIA;
-  else if ( std::string(mformat) == "ELL" )   matformat = paralution::ELL;
-  else if ( std::string(mformat) == "HYB" )   matformat = paralution::HYB;
-  else if ( std::string(mformat) == "DENSE" ) matformat = paralution::DENSE;
+  if      (std::string(mformat) == "CSR")   matformat = paralution::CSR;
+  else if (std::string(mformat) == "MCSR")  matformat = paralution::MCSR;
+  else if (std::string(mformat) == "BCSR")  matformat = paralution::BCSR;
+  else if (std::string(mformat) == "COO")   matformat = paralution::COO;
+  else if (std::string(mformat) == "DIA")   matformat = paralution::DIA;
+  else if (std::string(mformat) == "ELL")   matformat = paralution::ELL;
+  else if (std::string(mformat) == "HYB")   matformat = paralution::HYB;
+  else if (std::string(mformat) == "DENSE") matformat = paralution::DENSE;
   else {
     err = 7;
     return;
   }
 
   // Prepare preconditioner format
-  if      ( std::string(pformat) == "CSR" )   preformat = paralution::CSR;
-  else if ( std::string(pformat) == "MCSR" )  preformat = paralution::MCSR;
-  else if ( std::string(pformat) == "BCSR" )  preformat = paralution::BCSR;
-  else if ( std::string(pformat) == "COO" )   preformat = paralution::COO;
-  else if ( std::string(pformat) == "DIA" )   preformat = paralution::DIA;
-  else if ( std::string(pformat) == "ELL" )   preformat = paralution::ELL;
-  else if ( std::string(pformat) == "HYB" )   preformat = paralution::HYB;
-  else if ( std::string(pformat) == "DENSE" ) preformat = paralution::DENSE;
-  else if ( pprecond != None )
-  {
+  if      (std::string(pformat) == "CSR")   preformat = paralution::CSR;
+  else if (std::string(pformat) == "MCSR")  preformat = paralution::MCSR;
+  else if (std::string(pformat) == "BCSR")  preformat = paralution::BCSR;
+  else if (std::string(pformat) == "COO")   preformat = paralution::COO;
+  else if (std::string(pformat) == "DIA")   preformat = paralution::DIA;
+  else if (std::string(pformat) == "ELL")   preformat = paralution::ELL;
+  else if (std::string(pformat) == "HYB")   preformat = paralution::HYB;
+  else if (std::string(pformat) == "DENSE") preformat = paralution::DENSE;
+  else if (pprecond != None) {
     err = 8;
     return;
   }
 
   // Switch for solver selection
-  switch( psolver )
-  {
+  switch(psolver) {
     case BiCGStab:
       ls = new paralution::BiCGStab<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
       break;
@@ -398,8 +405,7 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
   }
 
   // Switch for preconditioner selection
-  switch( pprecond )
-  {
+  switch(pprecond) {
     case None:
       break;
     case Jacobi:
@@ -409,7 +415,6 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
     case MultiColoredGS:
       paralution::MultiColoredGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_mcgs;
       p_mcgs = new paralution::MultiColoredGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
-
       p_mcgs->SetPrecondMatrixFormat(preformat);
       pr = p_mcgs;
       ls->SetPreconditioner(*pr);
@@ -417,7 +422,6 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
     case MultiColoredSGS:
       paralution::MultiColoredSGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_mcsgs;
       p_mcsgs = new paralution::MultiColoredSGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
-
       p_mcsgs->SetPrecondMatrixFormat(preformat);
       pr = p_mcsgs;
       ls->SetPreconditioner(*pr);
@@ -425,7 +429,6 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
     case ILU:
       paralution::ILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_ilu;
       p_ilu = new paralution::ILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
-
       p_ilu->Set(p);
       pr = p_ilu;
       ls->SetPreconditioner(*pr);
@@ -433,7 +436,6 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
     case MultiColoredILU:
       paralution::MultiColoredILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_mcilu;
       p_mcilu = new paralution::MultiColoredILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
-
       p_mcilu->Set(p,q);
       p_mcilu->SetPrecondMatrixFormat(preformat);
       pr = p_mcilu;
@@ -442,7 +444,6 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
     case FSAI:
       paralution::FSAI<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_fsai;
       p_fsai = new paralution::FSAI<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
-
       p_fsai->Set(q);
       p_fsai->SetPrecondMatrixFormat(preformat);
       pr = p_fsai;
@@ -460,8 +461,7 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
 
   ls->Build();
 
-  switch( matformat )
-  {
+  switch(matformat) {
     case paralution::CSR:
       mat->ConvertToCSR();
       break;
@@ -500,11 +500,9 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
 
   ls->Clear();
   delete ls;
-  if ( pr != NULL )
-  {
+  if ( pr != NULL ) {
     pr->Clear();
     delete pr;
   }
 
 }
-
