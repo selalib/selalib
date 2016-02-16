@@ -61,6 +61,11 @@ IF(MUMPS_FOUND)
   TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective ${MUMPS_LIBRARIES} )
 ENDIF(MUMPS_FOUND)
 
+IF(BUILD_PARALUTION)
+  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
+  ADD_LIBRARY(sll_paralution paralution_fortran.cpp sll_m_paralution.F90)
+ENDIF()
+
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)

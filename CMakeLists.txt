@@ -11,10 +11,17 @@ IF(OPTIONS_FILE)
   MESSAGE("OPTIONS_FILE ARE READ")
 ENDIF()
 
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+
+IF (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})                            
+  MESSAGE(SEND_ERROR)                                                           
+  MESSAGE("-- ERROR: in-tree-build not allowed.")                               
+  MESSAGE("-- TRY: rm -f CMakeCache.txt; mkdir -p build; cd build; cmake ..; make")
+  RETURN()                                                                      
+ENDIF()                               
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
