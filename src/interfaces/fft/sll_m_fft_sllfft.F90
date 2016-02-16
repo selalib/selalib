@@ -849,7 +849,7 @@ contains
     sll_comp64, dimension(1:n/2), intent(out) :: t
     sll_int32                                 :: k
     sll_real64                                :: theta
-    if ( n .eq. 0 ) then
+    if ( n .eq. 0 .or. n .eq. 1) then
        print *, "ERROR: Zero array size passed to compute_twiddle_factors()."
        return
     else if (size(t) .lt. n/2) then
