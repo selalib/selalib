@@ -349,6 +349,8 @@ program test_fft
   print *, 'OK', ierr
 #endif
 
+  print*, 'PASSED'
+
 contains
 
   FUNCTION ERROR_MAX(tab) RESULT(error)
